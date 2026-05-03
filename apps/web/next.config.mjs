@@ -16,6 +16,14 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
     outputFileTracingRoot: resolve(__dirname, "../../"),
+    // Force-include the Prisma query engine binary in the standalone output.
+    // Next.js file tracing skips native .node binaries; without this the
+    // standalone image throws PrismaClientInitializationError at runtime.
+    outputFileTracingIncludes: {
+      "/**": [
+        "./node_modules/**/.prisma/client/libquery_engine-*.node",
+      ],
+    },
   },
 };
 

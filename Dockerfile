@@ -46,6 +46,16 @@ COPY . .
 RUN pnpm --filter @feedbackme/db prisma:generate
 RUN pnpm --filter @feedbackme/web build
 
+# ---------- prisma-engine (extracts native binary for the runner) ----------
+# Next.js standalone file tracing skips native .node binaries.  We locate the
+# linux-musl engine in the builder's pnpm virtual store and park it in /tmp
+# so the runner can COPY it to one of the paths Prisma searches at runtime.
+FROM builder AS prisma-engine
+RUN set -eux; \
+    engine=$(find /app/node_modules -name "libquery_engine-linux-musl-openssl-3.0.x.so.node" -print -quit); \
+    test -n "$engine" || { echo "ERROR: Prisma engine binary not found"; exit 1; }; \
+    cp "$engine" /tmp/query_engine.node
+
 # ---------- migrator (Prisma CLI + schema + generated client) ----------
 FROM base AS migrator
 ENV NODE_ENV=production
@@ -77,6 +87,13 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+
+# Prisma query engine — native .node binary that Next.js file tracer skips.
+# Drop it into .next/server/ which is one of the paths Prisma searches at runtime
+# (see "The following locations have been searched" in PrismaClientInitializationError).
+COPY --from=prisma-engine --chown=nextjs:nodejs \
+     /tmp/query_engine.node \
+     /app/apps/web/.next/server/libquery_engine-linux-musl-openssl-3.0.x.so.node
 
 # Persisted user uploads.
 RUN mkdir -p /app/apps/web/uploads && chown -R nextjs:nodejs /app/apps/web/uploads
