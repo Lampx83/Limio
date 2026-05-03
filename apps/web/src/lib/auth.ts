@@ -52,12 +52,18 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Tell NextAuth where its API routes are mounted.
-  // Without this, next-auth/react calls /api/auth/... (no basePath prefix),
-  // which under a sub-path proxy hits the wrong server entirely.
-  basePath: `${BASE}/api/auth`,
+  // Next.js strips the app basePath (/limio) BEFORE the handler runs, so
+  // NextAuth always sees /api/auth/… — the default "/api/auth" is correct.
+  // DO NOT prepend NEXT_PUBLIC_BASE_PATH here: that causes UnknownAction
+  // because NextAuth would try to strip "/limio/api/auth" from "/api/auth/…".
+  // next-auth/react picks up __NEXT_ROUTER_BASEPATH automatically, so
+  // client-side fetch calls already include the /limio prefix.
+  basePath: `/api/auth`,
   session: { strategy: "jwt" },
-  // Must include basePath so NextAuth generates the correct absolute redirect
-  // URL when sending unauthenticated users to the sign-in page.
+  // pages.signIn MUST include the Next.js basePath (/limio) because NextAuth
+  // constructs the redirect URL relative to the request origin, not NEXTAUTH_URL.
+  // "/limio/signin" → https://fit.neu.edu.vn/limio/signin  ✓
+  // "/signin"       → https://fit.neu.edu.vn/signin         ✗
   pages: { signIn: `${BASE}/signin` },
   // Allows NextAuth to accept requests from plain-HTTP origins (IP:PORT) and
   // from behind reverse proxies. Without this, NextAuth v5 throws UntrustedHost
