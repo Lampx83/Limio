@@ -63,8 +63,7 @@ export default async function BadgesPage() {
         {earned.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-100 text-2xl">
-              🏅
-            </div>
+                          </div>
             <p className="mt-4 text-muted">
               Chưa có huy hiệu nào. Bắt đầu học và làm quiz để mở khóa!
             </p>
@@ -80,7 +79,7 @@ export default async function BadgesPage() {
               >
                 <div className="absolute inset-x-0 -top-12 mx-auto h-24 w-24 rounded-full bg-accent-300/30 blur-2xl transition-opacity group-hover:opacity-100" aria-hidden />
                 <div className="relative text-4xl drop-shadow-sm">
-                  {u.badge.emoji ?? "🏅"}
+                  {u.badge.emoji ?? ""}
                 </div>
                 <div className="relative mt-2 text-sm font-semibold leading-tight">
                   {u.badge.name}
@@ -110,7 +109,7 @@ export default async function BadgesPage() {
                 title={b.description}
                 className="rounded-2xl border border-dashed border-token bg-[rgb(var(--surface-muted))] p-5 text-center opacity-80 transition-opacity hover:opacity-100"
               >
-                <div className="text-4xl grayscale">{b.emoji ?? "🔒"}</div>
+                <div className="text-4xl grayscale">{b.emoji ?? ""}</div>
                 <div className="mt-2 text-sm font-semibold leading-tight text-muted">
                   {b.name}
                 </div>

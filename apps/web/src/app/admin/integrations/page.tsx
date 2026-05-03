@@ -13,7 +13,7 @@ export default async function IntegrationsAdminPage() {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Chỉ admin mới quản lý được integration credentials.
+          Chỉ admin mới quản lý được integration credentials.
         </div>
       </main>
     );

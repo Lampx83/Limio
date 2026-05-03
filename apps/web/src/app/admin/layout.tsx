@@ -16,14 +16,14 @@ export default async function AdminLayout({
 
   // If admin is impersonating, session.user.id is the *target* — they won't
   // pass isAdmin(). Show an explicit "you're impersonating" prompt instead of
-  // the generic 🚫 so the way out is obvious.
+  // the generic so the way out is obvious.
   const impersonator = session.user.impersonator;
   if (impersonator) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-warning-200 bg-warning-50 p-6 text-warning-900">
           <h1 className="h-display text-xl font-bold">
-            👤 Đang xem dưới vai trò {session.user.name ?? session.user.email}
+            Đang xem dưới vai trò {session.user.name ?? session.user.email}
           </h1>
           <p className="mt-2 text-sm">
             Khu vực admin chỉ truy cập bằng tài khoản admin thật. Bạn đang xem
@@ -41,7 +41,7 @@ export default async function AdminLayout({
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Chỉ admin mới truy cập được.
+          Chỉ admin mới truy cập được.
         </div>
       </main>
     );

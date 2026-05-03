@@ -2,9 +2,21 @@ import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import type { DbClient } from "./tokens";
 
+// Accept either an absolute https?: URL or an internal relative path
+// (e.g. "/api/avatars/abc.jpg" produced by the avatar upload route).
+const AvatarUrl = z
+  .string()
+  .max(500)
+  .refine(
+    (s) =>
+      s.startsWith("/") ||
+      /^https?:\/\//i.test(s),
+    { message: "must be absolute URL or internal path" },
+  );
+
 export const ProfileUpdateInput = z.object({
   displayName: z.string().min(1).max(80).trim().optional(),
-  avatarUrl: z.string().url().max(500).optional().nullable(),
+  avatarUrl: AvatarUrl.optional().nullable(),
   locale: z.string().min(2).max(10).optional(),
   timezone: z.string().min(1).max(64).optional(),
   // Phase 1 C5 — opt out of public course leaderboards (spec §5.5).

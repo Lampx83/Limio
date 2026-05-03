@@ -42,7 +42,7 @@ export default function ImpersonateButton({
       className="btn-secondary btn-sm"
       title="Read-only — mọi write vẫn được log dưới tên admin"
     >
-      👤 {busy ? "…" : "Xem dưới vai trò này"}
+      {busy ? "…" : "Xem dưới vai trò này"}
     </button>
   );
 }

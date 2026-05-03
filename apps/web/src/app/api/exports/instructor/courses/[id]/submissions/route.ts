@@ -6,10 +6,13 @@ import { csvResponse } from "@/lib/csvExport";
 
 export const runtime = "nodejs";
 
-/**
- * Full assignment submission text + grades for a course. Useful for
- * archiving / regrading offline.
- */
+const SUBMISSION_STATUS: Record<string, string> = {
+  submitted: "Đã nộp",
+  graded: "Đã chấm",
+  pending: "Chờ chấm",
+  late: "Nộp muộn",
+};
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
@@ -37,20 +40,19 @@ export async function GET(
   });
 
   const rows = subs.map((s) => ({
-    learner_email: s.user.email,
-    learner_name: s.user.displayName,
-    lesson: s.assignment.lesson.title,
-    assignment: s.assignment.title,
-    status: s.status,
-    score: s.score ?? "",
-    max_score: s.assignment.maxScore,
-    feedback: s.feedback ?? "",
-    body: s.body,
-    attachment_url: s.attachmentUrl ?? "",
-    submitted_at: s.submittedAt,
-    graded_at: s.gradedAt ?? "",
+    "Họ tên học viên": s.user.displayName ?? "",
+    "Email học viên": s.user.email,
+    "Bài học": s.assignment.lesson.title,
+    "Bài tập": s.assignment.title,
+    "Trạng thái": SUBMISSION_STATUS[s.status] ?? s.status,
+    "Điểm": s.score !== null ? `${s.score}/${s.assignment.maxScore}` : "Chưa chấm",
+    "Nhận xét giảng viên": s.feedback ?? "",
+    "Nội dung bài nộp": s.body,
+    "File đính kèm": s.attachmentUrl ?? "",
+    "Nộp lúc": s.submittedAt,
+    "Chấm lúc": s.gradedAt ?? "",
   }));
 
-  const filename = `submissions-${params.id.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const filename = `bai-nop-${params.id.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.csv`;
   return csvResponse(filename, rows);
 }

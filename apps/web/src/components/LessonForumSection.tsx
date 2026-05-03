@@ -54,7 +54,7 @@ export default function LessonForumSection({
   return (
     <section>
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xl font-semibold">💬 Thảo luận</h2>
+        <h2 className="text-xl font-semibold">Thảo luận</h2>
         {!open && (
           <button onClick={() => setOpen(true)} className="link text-sm">
             + Đặt câu hỏi
@@ -86,7 +86,7 @@ export default function LessonForumSection({
           />
           <div className="flex flex-wrap items-center gap-2">
             <button type="submit" disabled={busy} className="btn-primary btn-sm">
-              {busy ? "..." : "📤 Đăng câu hỏi"}
+              {busy ? "..." : "Đăng câu hỏi"}
             </button>
             <button
               type="button"

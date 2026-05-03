@@ -6,10 +6,6 @@ import { csvResponse } from "@/lib/csvExport";
 
 export const runtime = "nodejs";
 
-/**
- * AI usage report — joins AiUsageLog with user identity. One row per
- * (user, day, model). Includes turns + tokens + cost.
- */
 export async function GET(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -32,17 +28,16 @@ export async function GET(req: Request) {
   });
 
   const rows = logs.map((l) => ({
-    day: l.dayKey,
-    user_email: l.user.email,
-    user_name: l.user.displayName,
-    model: l.model,
-    turns: l.turns,
-    tokens_input: l.tokensInput,
-    tokens_output: l.tokensOutput,
-    tokens_total: l.tokensInput + l.tokensOutput,
-    cost_usd: l.costUsd,
-    updated_at: l.updatedAt,
+    "Ngày": l.dayKey,
+    "Họ tên": l.user.displayName ?? "",
+    "Email": l.user.email,
+    "Model AI": l.model,
+    "Số lượt hội thoại": l.turns,
+    "Token đầu vào": l.tokensInput,
+    "Token đầu ra": l.tokensOutput,
+    "Tổng token": l.tokensInput + l.tokensOutput,
+    "Chi phí (USD)": l.costUsd.toFixed(6),
   }));
 
-  return csvResponse(`ai-usage-${days}d-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  return csvResponse(`ai-usage-${days}-ngay-${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }

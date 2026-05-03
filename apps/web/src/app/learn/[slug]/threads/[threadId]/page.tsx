@@ -78,7 +78,7 @@ export default async function ThreadPage({
       {/* Replies */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold">
-          💬 Trả lời{" "}
+          Trả lời{" "}
           <span className="text-sm font-normal text-faint">
             ({thread.posts.length})
           </span>

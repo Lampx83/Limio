@@ -106,7 +106,7 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
   return (
     <div className="flex justify-end gap-1">
       <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa quiz">
-        ✎ Sửa quiz
+        Sửa quiz
       </button>
       <button
         onClick={remove}
@@ -115,8 +115,7 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
         aria-label="Xóa quiz"
         className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
       >
-        🗑
-      </button>
+              </button>
     </div>
   );
 }

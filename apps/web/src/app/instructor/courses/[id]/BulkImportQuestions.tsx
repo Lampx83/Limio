@@ -50,7 +50,7 @@ export default function BulkImportQuestions({ quizId }: { quizId: string }) {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
-        📥 Bulk import CSV
+        Bulk import CSV
       </button>
     );
   }
@@ -58,7 +58,7 @@ export default function BulkImportQuestions({ quizId }: { quizId: string }) {
   return (
     <div className="w-full rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3 text-xs">
       <div className="flex items-center justify-between">
-        <p className="font-semibold">📥 Bulk import questions từ CSV</p>
+        <p className="font-semibold">Bulk import questions từ CSV</p>
         <button
           onClick={() => setOpen(false)}
           className="text-faint hover:text-[rgb(var(--text))]"

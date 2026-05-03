@@ -76,8 +76,7 @@ export default async function StrugglingStudentsPage({
         <Header courseId={course.id} courseTitle={course.title} />
         <div className="mt-6 rounded-2xl border border-dashed border-token p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-            👥
-          </div>
+                      </div>
           <p className="mt-4 text-muted">
             Chưa có học viên nào đăng ký khóa này.
           </p>
@@ -302,7 +301,7 @@ function Stat({
 function Forbidden() {
   return (
     <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-      🚫 Bạn không có quyền xem trang này.
+      Bạn không có quyền xem trang này.
     </div>
   );
 }

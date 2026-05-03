@@ -176,7 +176,7 @@ export function LessonNotes({ lessonId }: { lessonId: string }) {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold">📓 Ghi chú của tôi</h2>
+      <h2 className="text-xl font-semibold">Ghi chú của tôi</h2>
       <form
         onSubmit={onSubmit}
         className="mt-4 space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
@@ -202,7 +202,7 @@ export function LessonNotes({ lessonId }: { lessonId: string }) {
             disabled={submitting || !body.trim()}
             className="btn-primary btn-sm"
           >
-            💾 Lưu ghi chú
+            Lưu ghi chú
           </button>
         </div>
       </form>

@@ -6,6 +6,28 @@ import { csvResponse } from "@/lib/csvExport";
 
 export const runtime = "nodejs";
 
+// Map technical action names to readable Vietnamese labels
+const ACTION_LABELS: Record<string, string> = {
+  "user.role.granted": "Cấp vai trò",
+  "user.role.revoked": "Thu hồi vai trò",
+  "impersonation.started": "Bắt đầu xem dưới vai trò",
+  "impersonation.stopped": "Kết thúc xem dưới vai trò",
+  "course.created": "Tạo khoá học",
+  "course.published": "Xuất bản khoá học",
+  "course.archived": "Lưu trữ khoá học",
+  "enrollment.created": "Đăng ký khoá học",
+  "enrollment.dropped": "Huỷ đăng ký",
+};
+
+function summarisePayload(payload: unknown): string {
+  if (!payload || typeof payload !== "object") return "";
+  const p = payload as Record<string, unknown>;
+  return Object.entries(p)
+    .filter(([, v]) => v !== null && v !== undefined && v !== "")
+    .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`)
+    .join("; ");
+}
+
 export async function GET(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -28,14 +50,15 @@ export async function GET(req: Request) {
   });
 
   const rows = logs.map((a) => ({
-    occurred_at: a.occurredAt,
-    action: a.action,
-    actor_email: a.actor?.email ?? "",
-    actor_name: a.actor?.displayName ?? "",
-    target_email: a.target?.email ?? "",
-    target_name: a.target?.displayName ?? "",
-    payload: a.payload,
+    "Thời gian": a.occurredAt,
+    "Hành động": ACTION_LABELS[a.action] ?? a.action,
+    "Mã hành động": a.action,
+    "Người thực hiện": a.actor?.displayName ?? "",
+    "Email người thực hiện": a.actor?.email ?? "",
+    "Đối tượng": a.target?.displayName ?? "",
+    "Email đối tượng": a.target?.email ?? "",
+    "Chi tiết": summarisePayload(a.payload),
   }));
 
-  return csvResponse(`audit-${days}d-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  return csvResponse(`audit-log-${days}-ngay-${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }

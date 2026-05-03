@@ -168,14 +168,14 @@ export default function SkillTagsEditor({
           disabled={aiSuggesting}
           className="rounded-full border border-dashed border-brand-300 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100 disabled:opacity-50"
         >
-          {aiSuggesting ? "🪄 ..." : "🪄 AI suggest"}
+          {aiSuggesting ? "..." : "AI suggest"}
         </button>
       </div>
 
       {aiSuggestions.length > 0 && (
         <div className="mt-3 rounded-xl border border-brand-200 bg-brand-soft p-3 text-xs">
           <p className="mb-2 font-semibold text-brand-700">
-            🪄 AI đề xuất ({aiSuggestions.length}):
+            AI đề xuất ({aiSuggestions.length}):
           </p>
           <ul className="space-y-1.5">
             {aiSuggestions.map((s) => (

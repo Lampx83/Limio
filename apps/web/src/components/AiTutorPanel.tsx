@@ -143,7 +143,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
         onClick={() => setOpen(true)}
         className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-brand-gradient px-5 py-3 text-sm font-semibold text-white shadow-brand-glow transition-all hover:scale-105"
       >
-        💬 AI Tutor
+        AI Tutor
       </button>
     );
   }
@@ -153,8 +153,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
       <header className="flex items-center justify-between gap-2 bg-brand-gradient px-4 py-3 text-white">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-sm backdrop-blur">
-            💬
-          </span>
+                      </span>
           <div>
             <p className="text-sm font-semibold leading-tight">AI Tutor</p>
             <p className="text-xs opacity-80">Hỏi gì cũng được</p>

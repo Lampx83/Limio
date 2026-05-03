@@ -14,15 +14,15 @@ const LABELS: Record<string, { name: string; placeholder: string; help?: string;
     name: "OpenAI API key",
     placeholder: "sk-proj-...",
     help: "Dùng cho AI tutor, auto-tag skill, generate feedback. Lấy ở console.openai.com.",
-    emoji: "🤖",
+    emoji: "",
   },
   "stripe.secret": {
     name: "Stripe secret key",
     placeholder: "sk_live_... / sk_test_...",
-    emoji: "💳",
+    emoji: "",
   },
-  "vnpay.secret": { name: "VNPay secret", placeholder: "VNPAY_HASH_SECRET", emoji: "🏦" },
-  "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY", emoji: "📱" },
+  "vnpay.secret": { name: "VNPay secret", placeholder: "VNPAY_HASH_SECRET", emoji: "" },
+  "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY", emoji: "" },
 };
 
 export default function IntegrationsManager({
@@ -54,7 +54,7 @@ function IntegrationRow({
   status: Status;
   onChange: () => void;
 }) {
-  const meta = LABELS[status.key] ?? { name: status.key, placeholder: "", emoji: "🔑" };
+  const meta = LABELS[status.key] ?? { name: status.key, placeholder: "", emoji: "" };
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -146,7 +146,7 @@ function IntegrationRow({
     <section className="card">
       <header className="flex items-start justify-between gap-3 border-b border-token pb-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="text-2xl">{meta.emoji ?? "🔑"}</span>
+          <span className="text-2xl">{meta.emoji ?? ""}</span>
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold">{meta.name}</h2>
             <p className="mt-0.5 text-xs text-faint">
@@ -185,7 +185,7 @@ function IntegrationRow({
               disabled={busy || !value}
               className="btn-primary btn-sm"
             >
-              {busy ? "..." : "🔒 Lưu (encrypted)"}
+              {busy ? "..." : "Lưu (encrypted)"}
             </button>
             {status.hasValue && (
               <button

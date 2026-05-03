@@ -59,13 +59,13 @@ export default async function InstructorCoursesPage() {
       {/* Tools */}
       <nav className="mt-6 flex flex-wrap gap-2">
         <Link href="/instructor/feedback-templates" className="btn-secondary btn-sm">
-          📊 Feedback templates
+          Feedback templates
         </Link>
         <Link href="/instructor/feedback-generator" className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100">
-          🪄 AI feedback gen
+          AI feedback gen
         </Link>
         <Link href="/instructor/tournaments/new" className="btn-secondary btn-sm">
-          🏆 Tournament
+          Tournament
         </Link>
       </nav>
 
@@ -73,8 +73,7 @@ export default async function InstructorCoursesPage() {
       {courses.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-token p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-            📚
-          </div>
+                      </div>
           <p className="mt-4 text-muted">
             Chưa có khóa học nào. Tạo khóa đầu tiên để bắt đầu.
           </p>

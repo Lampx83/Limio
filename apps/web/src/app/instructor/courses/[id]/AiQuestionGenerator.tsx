@@ -91,7 +91,7 @@ export default function AiQuestionGenerator({
         onClick={() => setOpen(true)}
         className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
       >
-        🪄 AI generate batch
+        AI generate batch
       </button>
     );
   }
@@ -99,7 +99,7 @@ export default function AiQuestionGenerator({
   return (
     <div className="w-full rounded-xl border border-brand-200 bg-brand-soft p-3 text-xs">
       <div className="flex items-center justify-between">
-        <p className="font-semibold text-brand-700">🪄 AI Question Generator</p>
+        <p className="font-semibold text-brand-700">AI Question Generator</p>
         <button
           onClick={() => setOpen(false)}
           className="text-faint hover:text-[rgb(var(--text))]"
@@ -137,7 +137,7 @@ export default function AiQuestionGenerator({
           disabled={generating}
           className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
         >
-          {generating ? "🪄 ..." : "🪄 Generate"}
+          {generating ? "..." : "Generate"}
         </button>
       </div>
 

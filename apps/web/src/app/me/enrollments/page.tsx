@@ -79,8 +79,7 @@ export default async function MyEnrollmentsPage() {
       {withProgress.length === 0 ? (
         <div className="mt-12 rounded-2xl border border-dashed border-token p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-            🎒
-          </div>
+                      </div>
           <p className="mt-4 text-muted">
             Bạn chưa enroll khóa học nào. Khám phá catalog để bắt đầu.
           </p>
@@ -132,7 +131,7 @@ export default async function MyEnrollmentsPage() {
 
                   <div className="mt-4 flex items-center justify-between border-t border-token pt-3 text-xs">
                     <span className="text-faint">
-                      {isDone ? "🎉 Đã hoàn thành" : "Tiếp tục học"}
+                      {isDone ? "Đã hoàn thành" : "Tiếp tục học"}
                     </span>
                     <span className="font-medium text-brand-600">→</span>
                   </div>

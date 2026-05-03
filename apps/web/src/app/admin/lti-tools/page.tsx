@@ -14,7 +14,7 @@ export default async function LtiToolsAdminPage() {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Chỉ admin mới đăng ký được LTI tools.
+          Chỉ admin mới đăng ký được LTI tools.
         </div>
       </main>
     );
@@ -93,8 +93,7 @@ export default async function LtiToolsAdminPage() {
         {tools.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-              🔌
-            </div>
+                          </div>
             <p className="mt-4 text-sm text-muted">Chưa có tool nào.</p>
           </div>
         ) : (

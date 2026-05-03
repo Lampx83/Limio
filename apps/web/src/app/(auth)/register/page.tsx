@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { LimeSliceIcon } from "@/components/BrandIcons";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -40,7 +41,7 @@ export default function RegisterPage() {
           <span className="chip-brand w-max">Bắt đầu miễn phí</span>
           <h1 className="mt-4 h-display text-4xl font-bold leading-tight">
             Học thông minh hơn với{" "}
-            <span className="text-gradient">FeedBackMe</span>
+            <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
             Tạo tài khoản trong 30 giây. Nhận feedback cá nhân hóa, lộ trình học
@@ -48,10 +49,10 @@ export default function RegisterPage() {
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {[
-              { i: "🎯", t: "Adaptive path", d: "Học đúng thứ bạn cần, đúng lúc" },
-              { i: "🤖", t: "AI tutor 24/7", d: "Hỏi gì cũng có người trả lời" },
-              { i: "🏆", t: "XP & badge", d: "Gamification giữ động lực" },
-              { i: "📊", t: "Skill profile", d: "Thấy rõ điểm mạnh, điểm yếu" },
+              { i: "", t: "Adaptive path", d: "Học đúng thứ bạn cần, đúng lúc" },
+              { i: "", t: "AI tutor 24/7", d: "Hỏi gì cũng có người trả lời" },
+              { i: "", t: "XP & badge", d: "Gamification giữ động lực" },
+              { i: "", t: "Skill profile", d: "Thấy rõ điểm mạnh, điểm yếu" },
             ].map((f) => (
               <div key={f.t} className="rounded-xl border border-token bg-[rgb(var(--surface))/0.6] p-3 backdrop-blur">
                 <div className="text-xl">{f.i}</div>
@@ -66,9 +67,7 @@ export default function RegisterPage() {
         <div className="mx-auto w-full max-w-md animate-fade-in-up">
           <div className="card shadow-card-hover">
             <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-gradient text-lg font-bold text-white shadow-brand-glow">
-                F
-              </div>
+              <LimeSliceIcon className="mx-auto h-14 w-14 drop-shadow-md" />
               <h1 className="mt-4 h-display text-2xl font-bold">Tạo tài khoản</h1>
               <p className="mt-1 text-sm text-muted">Miễn phí — không cần thẻ tín dụng</p>
             </div>
@@ -144,7 +143,7 @@ export default function RegisterPage() {
           </div>
 
           <p className="mt-4 text-center text-xs text-faint">
-            Bằng cách đăng ký, bạn đồng ý với điều khoản sử dụng của FeedBackMe.
+            Bằng cách đăng ký, bạn đồng ý với điều khoản sử dụng của Limio.
           </p>
         </div>
       </div>

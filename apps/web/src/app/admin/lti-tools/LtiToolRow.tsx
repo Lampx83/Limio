@@ -30,7 +30,7 @@ export default function LtiToolRow({ tool }: { tool: Tool }) {
     <div className="card">
       <div className="flex items-start justify-between gap-3 border-b border-token pb-3">
         <div>
-          <p className="text-base font-semibold">🔌 {tool.name}</p>
+          <p className="text-base font-semibold">{tool.name}</p>
           <p className="mt-1 text-xs text-faint">
             Đăng ký {new Date(tool.createdAt).toLocaleDateString("vi-VN")}
           </p>

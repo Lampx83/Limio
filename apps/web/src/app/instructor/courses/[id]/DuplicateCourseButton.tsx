@@ -25,7 +25,7 @@ export default function DuplicateCourseButton({ courseId }: { courseId: string }
 
   return (
     <button onClick={duplicate} disabled={busy} className="btn-secondary btn-sm">
-      {busy ? "..." : "📋 Duplicate"}
+      {busy ? "..." : "Duplicate"}
     </button>
   );
 }

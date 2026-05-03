@@ -68,7 +68,7 @@ export default function PublishControls({
         }
         className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-success-600 px-3 py-1.5 font-medium text-white transition-all hover:bg-success-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy ? "Publishing..." : "🚀 Publish"}
+        {busy ? "Publishing..." : "Publish"}
       </button>
       {blocked && (
         <p className="max-w-xs text-right text-xs text-accent-700">

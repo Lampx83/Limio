@@ -7,16 +7,16 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: "#EEF0FF",
-          100: "#E0E4FF",
-          200: "#C5CCFF",
-          300: "#9AA5FF",
-          400: "#7079FF",
-          500: "#4F46E5",
-          600: "#4338CA",
-          700: "#3730A3",
-          800: "#2E2882",
-          900: "#1F1B6B",
+          50: "#F7FEE7",
+          100: "#ECFCCB",
+          200: "#D9F99D",
+          300: "#BEF264",
+          400: "#A3E635",
+          500: "#84CC16",
+          600: "#65A30D",
+          700: "#4D7C0F",
+          800: "#3F6212",
+          900: "#365314",
         },
         accent: {
           50: "#FFF8E6",
@@ -79,16 +79,17 @@ const config: Config = {
       },
       boxShadow: {
         card: "0 1px 2px 0 rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08)",
-        "card-hover": "0 2px 4px 0 rgb(15 23 42 / 0.06), 0 12px 24px -8px rgb(79 70 229 / 0.18)",
-        "brand-glow": "0 8px 24px -8px rgb(79 70 229 / 0.45)",
+        "card-hover": "0 2px 4px 0 rgb(15 23 42 / 0.06), 0 12px 24px -8px rgb(236 72 153 / 0.22)",
+        "brand-glow": "0 8px 24px -8px rgb(236 72 153 / 0.55)",
       },
       backgroundImage: {
+        // Watermelon — lime rind fading through to pink flesh.
         "brand-gradient":
-          "linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #DB2777 100%)",
+          "linear-gradient(135deg, #84CC16 0%, #65A30D 35%, #EC4899 100%)",
         "brand-gradient-soft":
-          "linear-gradient(135deg, #EEF0FF 0%, #F5E8FF 50%, #FCE7F3 100%)",
+          "linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 50%, #FCE7F3 100%)",
         "hero-grid":
-          "radial-gradient(circle at 1px 1px, rgb(79 70 229 / 0.12) 1px, transparent 0)",
+          "radial-gradient(circle at 1px 1px, rgb(101 163 13 / 0.18) 1px, transparent 0)",
       },
       keyframes: {
         "fade-in-up": {

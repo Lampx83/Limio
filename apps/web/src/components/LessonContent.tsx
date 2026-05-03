@@ -128,7 +128,7 @@ function ContentBlock({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
         >
-          🔗 {p.title ?? p.url}
+          {p.title ?? p.url}
         </a>
       );
     }
@@ -140,7 +140,7 @@ function ContentBlock({
           download
           className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
         >
-          📎 {p.filename}
+          {p.filename}
         </a>
       );
     }
@@ -161,7 +161,7 @@ function ContentBlock({
         <div>
           {p.title && (
             <p className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-muted">
-              <span>📦</span>
+              <span></span>
               {p.title}
             </p>
           )}
@@ -203,7 +203,7 @@ function ContentBlock({
         <div>
           {p.title && (
             <p className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-muted">
-              <span>📄</span>
+              <span></span>
               {p.title}
             </p>
           )}

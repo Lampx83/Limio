@@ -167,8 +167,7 @@ export default function UsersBrowser() {
                         className="chip-warning"
                         title="Email chưa xác thực"
                       >
-                        ⚠
-                      </span>
+                                              </span>
                     )}
                   </div>
                 </td>
@@ -206,7 +205,7 @@ export default function UsersBrowser() {
                       className="btn-ghost btn-sm"
                       title="Xem ứng dụng dưới vai trò user này (read-only)"
                     >
-                      {impersonatingId === u.id ? "…" : "👤 Xem"}
+                      {impersonatingId === u.id ? "…" : "Xem"}
                     </button>
                   </div>
                 </td>

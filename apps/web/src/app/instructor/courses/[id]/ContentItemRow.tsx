@@ -40,15 +40,15 @@ function summarize(type: string, payload: unknown): string {
 }
 
 const ICON: Record<string, string> = {
-  video: "🎬",
-  markdown: "📝",
-  embed: "🔲",
-  file: "📎",
-  external_link: "🔗",
-  pdf: "📄",
-  scorm: "📦",
-  lti: "🔗",
-  h5p: "✨",
+  video: "",
+  markdown: "",
+  embed: "",
+  file: "",
+  external_link: "",
+  pdf: "",
+  scorm: "",
+  lti: "",
+  h5p: "",
 };
 
 export default function ContentItemRow({ item }: { item: Item }) {
@@ -87,7 +87,7 @@ export default function ContentItemRow({ item }: { item: Item }) {
         />
       ) : (
         <span className="text-xl shrink-0" aria-hidden>
-          {ICON[item.type] ?? "📄"}
+          {ICON[item.type] ?? ""}
         </span>
       )}
 
@@ -110,8 +110,7 @@ export default function ContentItemRow({ item }: { item: Item }) {
         aria-label="Xóa"
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover:opacity-100 disabled:opacity-50"
       >
-        🗑
-      </button>
+              </button>
     </div>
   );
 }

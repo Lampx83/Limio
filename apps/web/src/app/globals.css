@@ -13,8 +13,8 @@
   --text-muted: 100 110 130;    /* secondary copy */
   --text-faint: 148 158 178;    /* placeholder, captions */
 
-  --brand: 79 70 229;           /* indigo-600 */
-  --brand-soft: 238 240 255;    /* tint */
+  --brand: 101 163 13;          /* lime-600 */
+  --brand-soft: 247 254 231;    /* lime-50 tint */
   --accent: 245 158 11;         /* amber-500 */
   --success: 16 185 129;        /* emerald-500 */
   --danger: 225 29 72;          /* rose-600 */
@@ -29,7 +29,7 @@
   --text: 240 242 250;
   --text-muted: 160 168 188;
   --text-faint: 110 118 138;
-  --brand-soft: 35 32 80;
+  --brand-soft: 33 50 12;       /* dark lime-tinted surface */
 }
 
 @layer base {
@@ -146,14 +146,14 @@
     @apply chip bg-danger-100 text-danger-700;
   }
 
-  /* Brand text gradient */
+  /* Brand text gradient — Watermelon: lime → pink */
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(
       120deg,
-      #4f46e5 0%,
-      #7c3aed 50%,
-      #db2777 100%
+      #65a30d 0%,
+      #84cc16 30%,
+      #ec4899 100%
     );
   }
 

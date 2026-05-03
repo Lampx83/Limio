@@ -12,12 +12,16 @@ export default async function SettingsPage() {
   const me = await prisma.user.findUniqueOrThrow({
     where: { id: session.user.id },
     select: {
+      email: true,
       displayName: true,
+      avatarUrl: true,
       locale: true,
       timezone: true,
       leaderboardOptOut: true,
+      authProviders: { select: { provider: true } },
     },
   });
+  const hasPassword = me.authProviders.some((p) => p.provider === "password");
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -29,7 +33,17 @@ export default async function SettingsPage() {
         </p>
       </div>
       <div className="mt-8">
-        <SettingsForm initial={me} />
+        <SettingsForm
+          initial={{
+            email: me.email,
+            displayName: me.displayName,
+            avatarUrl: me.avatarUrl,
+            locale: me.locale,
+            timezone: me.timezone,
+            leaderboardOptOut: me.leaderboardOptOut,
+            hasPassword,
+          }}
+        />
       </div>
     </main>
   );

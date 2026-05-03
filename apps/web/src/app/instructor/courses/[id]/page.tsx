@@ -10,6 +10,7 @@ import PublishControls from "./PublishControls";
 import DuplicateCourseButton from "./DuplicateCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
 import ViewModeToggle from "./ViewModeToggle";
+import ImportStudentsButton from "./ImportStudentsButton";
 
 export const dynamic = "force-dynamic";
 
@@ -127,11 +128,12 @@ export default async function InstructorCourseEditPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ViewModeToggle />
+          <ImportStudentsButton courseId={course.id} />
           <Link
             href={`/instructor/courses/${course.id}/struggling-students`}
             className="btn-secondary btn-sm"
           >
-            👥 Học viên cần hỗ trợ
+            Học viên cần hỗ trợ
           </Link>
           <DuplicateCourseButton courseId={course.id} />
           <PublishControls
@@ -147,7 +149,7 @@ export default async function InstructorCourseEditPage({
         {view === "preview" && (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft p-4">
             <p className="text-sm text-brand-700">
-              👁 Bạn đang xem dưới góc nhìn học viên — controls editor đã ẩn.
+              Bạn đang xem dưới góc nhìn học viên — controls editor đã ẩn.
               Chuyển về <span className="font-semibold">Sửa</span> để chỉnh.
             </p>
           </div>
@@ -157,7 +159,7 @@ export default async function InstructorCourseEditPage({
         {untaggedLessonIds.length > 0 && view === "edit" && (
           <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-4">
             <p className="text-sm font-semibold text-accent-700">
-              ⚠️ {untaggedLessonIds.length} bài chưa tag skill
+              {untaggedLessonIds.length} bài chưa tag skill
             </p>
             <p className="mt-1 text-xs text-accent-700/80">
               Khóa không thể publish khi còn bài chưa được tag — personalization
@@ -177,6 +179,8 @@ export default async function InstructorCourseEditPage({
                 level: course.level,
                 language: course.language,
                 category: course.category ?? "",
+                priceCents: course.priceCents,
+                currency: course.currency ?? "VND",
               }}
             />
           </section>

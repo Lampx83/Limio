@@ -39,8 +39,7 @@ export default function FeedbackRater({
             : "border border-token bg-[rgb(var(--surface))] hover:border-success-300 hover:bg-success-50"
         }`}
       >
-        👍
-      </button>
+              </button>
       <button
         onClick={() => rate(1)}
         disabled={busy}
@@ -51,8 +50,7 @@ export default function FeedbackRater({
             : "border border-token bg-[rgb(var(--surface))] hover:border-accent-300 hover:bg-accent-50"
         }`}
       >
-        👎
-      </button>
+              </button>
     </div>
   );
 }

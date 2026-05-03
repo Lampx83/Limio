@@ -46,7 +46,7 @@ export default function AssignmentSubmitForm({
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
-        ✏️ Nộp bài / sửa bài đã nộp
+        Nộp bài / sửa bài đã nộp
       </button>
     );
   }
@@ -73,7 +73,7 @@ export default function AssignmentSubmitForm({
       />
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
-          {busy ? "..." : "📤 Nộp bài"}
+          {busy ? "..." : "Nộp bài"}
         </button>
         <button
           type="button"

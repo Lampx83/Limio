@@ -80,7 +80,7 @@ export default function QuestionRow({
           )}
           {question.explanation && (
             <p className="mt-2 rounded-md bg-[rgb(var(--surface-muted))] px-2 py-1 text-xs italic text-muted">
-              💡 {question.explanation}
+              {question.explanation}
             </p>
           )}
         </div>

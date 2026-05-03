@@ -147,7 +147,7 @@ export default function CreateTournamentForm({
           <span className="mr-auto text-sm text-danger-600">Lỗi: {error}</span>
         )}
         <button type="submit" disabled={busy} className="btn-primary">
-          {busy ? "..." : "🏆 Tạo nháp"}
+          {busy ? "..." : "Tạo nháp"}
         </button>
       </div>
     </form>

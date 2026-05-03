@@ -9,6 +9,8 @@ interface Initial {
   level: string;
   language: string;
   category: string;
+  priceCents: number | null;
+  currency: string;
 }
 
 export default function CourseMetaForm({
@@ -25,12 +27,18 @@ export default function CourseMetaForm({
   const [level, setLevel] = useState(initial.level);
   const [language, setLanguage] = useState(initial.language);
   const [category, setCategory] = useState(initial.category);
+  const [priceCents, setPriceCents] = useState<string>(
+    initial.priceCents !== null && initial.priceCents !== undefined
+      ? String(initial.priceCents)
+      : "",
+  );
+  const [currency, setCurrency] = useState(initial.currency || "VND");
   const [busy, setBusy] = useState(false);
 
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="link text-sm">
-        ✎ Sửa thông tin course
+        Sửa thông tin course
       </button>
     );
   }
@@ -38,7 +46,8 @@ export default function CourseMetaForm({
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res = await fetch(`/api/courses/${courseId}`, {
+    const parsedPrice = priceCents.trim() === "" ? null : parseInt(priceCents, 10);
+    const res = await fetch(`/api/instructor/courses/${courseId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -47,6 +56,8 @@ export default function CourseMetaForm({
         level,
         language,
         category: category.trim() || null,
+        priceCents: parsedPrice,
+        currency,
       }),
     });
     setBusy(false);
@@ -118,6 +129,40 @@ export default function CourseMetaForm({
             maxLength={80}
             className="input mt-1.5"
           />
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="sm:col-span-2">
+          <label className="label" htmlFor="cm-price">
+            Giá khoá học
+          </label>
+          <div className="mt-1.5 flex gap-2">
+            <input
+              id="cm-price"
+              type="number"
+              min={0}
+              step={1000}
+              value={priceCents}
+              onChange={(e) => setPriceCents(e.target.value)}
+              placeholder="Để trống = miễn phí"
+              className="input flex-1"
+            />
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="select w-24"
+            >
+              <option value="VND">VND</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+          <p className="mt-1 text-xs text-faint">
+            {currency === "VND"
+              ? "Nhập số nguyên (đồng). Ví dụ: 299000"
+              : "Nhập số cents. Ví dụ: 999 = $9.99"}
+          </p>
         </div>
       </div>
       <div className="flex justify-end gap-2 border-t border-token pt-4">

@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { LimeSliceIcon } from "@/components/BrandIcons";
 
 interface DemoAccount {
   email: string;
@@ -109,7 +110,7 @@ export default function SignInPage() {
         <div className="hidden flex-col justify-center lg:flex">
           <span className="chip-brand w-max">Welcome back</span>
           <h1 className="mt-4 h-display text-4xl font-bold leading-tight">
-            Quay lại nhịp học cùng <span className="text-gradient">FeedBackMe</span>
+            Quay lại nhịp học cùng <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
             Tiếp tục từ chỗ bạn dừng lại — tracking BKT, streak, và XP của bạn
@@ -135,13 +136,10 @@ export default function SignInPage() {
         <div className="mx-auto w-full max-w-md animate-fade-in-up">
           <div className="card shadow-card-hover">
             <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-gradient text-lg font-bold text-white shadow-brand-glow">
-                F
-              </div>
+              <LimeSliceIcon className="mx-auto h-14 w-14 drop-shadow-md" />
               <h1 className="mt-4 h-display text-2xl font-bold">Đăng nhập</h1>
               <p className="mt-1 text-sm text-muted">
-                Chào mừng quay lại 👋
-              </p>
+                Chào mừng quay lại               </p>
             </div>
 
             {hasSso && (
@@ -269,8 +267,7 @@ export default function SignInPage() {
             <section className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-4">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-500 text-xs font-bold text-white">
-                  ⚡
-                </span>
+                                  </span>
                 <h2 className="text-sm font-semibold text-accent-900">
                   Tài khoản demo (dev only)
                 </h2>

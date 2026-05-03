@@ -27,6 +27,8 @@ export const UpdateCourseInput = z.object({
   level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
   category: z.string().max(80).optional().nullable(),
   coverUrl: z.string().url().max(500).optional().nullable(),
+  priceCents: z.number().int().min(0).optional().nullable(),
+  currency: z.enum(["VND", "USD"]).optional(),
 });
 
 export class CourseError extends Error {
@@ -262,6 +264,8 @@ export async function listPublishedCourses(
       language: true,
       coverUrl: true,
       publishedAt: true,
+      priceCents: true,
+      currency: true,
     },
   });
 

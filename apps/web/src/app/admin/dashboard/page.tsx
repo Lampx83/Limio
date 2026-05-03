@@ -13,7 +13,7 @@ export default async function AdminDashboard() {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Chỉ admin mới truy cập được.
+          Chỉ admin mới truy cập được.
         </div>
       </main>
     );
@@ -95,8 +95,7 @@ export default async function AdminDashboard() {
           <span className="text-gradient">
             {session.user.name ?? session.user.email}
           </span>{" "}
-          👋
-        </h1>
+                  </h1>
         <p className="mt-2 text-muted">
           Tổng quan hệ thống, audit log, integration, AI cost.
         </p>
@@ -105,19 +104,19 @@ export default async function AdminDashboard() {
       {/* Quick actions */}
       <div className="mt-6 flex flex-wrap gap-2">
         <Link href="/admin/integrations" className="btn-secondary btn-sm">
-          🔑 Integrations
+          Integrations
         </Link>
         <Link href="/admin/lti-tools" className="btn-secondary btn-sm">
-          🔌 LTI tools
+          LTI tools
         </Link>
         <a href="/api/exports/admin/users" className="btn-ghost btn-sm">
-          📥 Users.csv
+          Users.csv
         </a>
         <a href="/api/exports/admin/audit" className="btn-ghost btn-sm">
-          📥 Audit log.csv
+          Audit log.csv
         </a>
         <a href="/api/exports/admin/ai-usage" className="btn-ghost btn-sm">
-          📥 AI usage.csv
+          AI usage.csv
         </a>
       </div>
 
@@ -127,33 +126,33 @@ export default async function AdminDashboard() {
           label="Tổng users"
           value={totalUsers}
           sub={`+${usersThisWeek} tuần này`}
-          icon="👥"
+          icon=""
           tone="brand"
         />
         <Kpi
           label="Khóa published"
           value={courseCountMap.published ?? 0}
           sub={`draft: ${courseCountMap.draft ?? 0}`}
-          icon="📚"
+          icon=""
           tone="success"
         />
         <Kpi
           label="Enrollment 7d"
           value={enrollmentsThisWeek}
-          icon="📥"
+          icon=""
           tone="brand"
         />
         <Kpi
           label="Events hôm nay"
           value={eventsToday}
-          icon="⚡"
+          icon=""
           tone="accent"
         />
         <Kpi
           label="AI cost tháng"
           value={`$${aiCostMonth.toFixed(4)}`}
           sub={`${aiTokensMonth.toLocaleString()} tokens`}
-          icon="💸"
+          icon=""
           tone="brand"
         />
         <IntegrationKpi label="OpenAI" ok={openaiOk} />
@@ -165,7 +164,7 @@ export default async function AdminDashboard() {
         {/* Recent audit log */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">🔒 Audit log gần đây</h2>
+            <h2 className="text-base font-semibold">Audit log gần đây</h2>
             <span className="text-xs text-faint">{auditLogRecent.length}</span>
           </header>
           {auditLogRecent.length === 0 ? (
@@ -200,7 +199,7 @@ export default async function AdminDashboard() {
         {/* AI top users this month */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">💸 Top AI cost tháng này</h2>
+            <h2 className="text-base font-semibold">Top AI cost tháng này</h2>
             <span className="text-xs text-faint font-mono">{monthKey}</span>
           </header>
           {aiTopUsers.length === 0 ? (
@@ -295,7 +294,7 @@ function IntegrationKpi({
   return (
     <div className={`rounded-xl border p-5 shadow-card ${toneStyle}`}>
       <div className="flex items-baseline justify-between">
-        <span className="text-xl">🔑</span>
+        <span className="text-xl"></span>
         <span className={`h-display text-2xl font-bold ${valueColor}`}>
           {ok ? "✓" : "—"}
         </span>

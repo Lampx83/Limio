@@ -480,7 +480,7 @@ function VideoUrlPreview({ url }: { url: string }) {
   if (!v) {
     return (
       <div className="flex items-start gap-2 rounded-lg border border-accent-200 bg-accent-50 px-3 py-2 text-xs text-accent-700">
-        <span aria-hidden>⚠️</span>
+        <span aria-hidden></span>
         <span>
           URL chưa nhận diện được provider. Hệ thống sẽ thử mở như video file
           (.mp4/.webm). Hỗ trợ: YouTube, Vimeo, Loom, Wistia, Bunny, Mux.
@@ -503,8 +503,7 @@ function VideoUrlPreview({ url }: { url: string }) {
         />
       ) : (
         <div className="flex h-12 w-20 shrink-0 items-center justify-center rounded-md bg-success-100 text-2xl">
-          🎬
-        </div>
+                  </div>
       )}
       <div className="min-w-0 flex-1 text-xs">
         <p className="font-semibold text-success-700">

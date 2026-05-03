@@ -75,7 +75,7 @@ export default async function AdminUserDetailPage({
             {user.emailVerifiedAt ? (
               <span className="ml-2 chip-success">✓ Email verified</span>
             ) : (
-              <span className="ml-2 chip-warning">⚠ Email chưa verify</span>
+              <span className="ml-2 chip-warning">Email chưa verify</span>
             )}
           </p>
         </div>
@@ -85,7 +85,7 @@ export default async function AdminUserDetailPage({
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* Roles */}
         <section className="card">
-          <h2 className="mb-3 text-base font-semibold">🛡️ Roles</h2>
+          <h2 className="mb-3 text-base font-semibold">Roles</h2>
           <UserRoleManager
             userId={user.id}
             initialRoles={user.userRoles.map((ur) => ({
@@ -100,7 +100,7 @@ export default async function AdminUserDetailPage({
 
         {/* Auth providers */}
         <section className="card">
-          <h2 className="mb-3 text-base font-semibold">🔐 Đăng nhập</h2>
+          <h2 className="mb-3 text-base font-semibold">Đăng nhập</h2>
           {user.authProviders.length === 0 ? (
             <p className="text-sm text-muted">Không có provider nào.</p>
           ) : (
@@ -127,7 +127,7 @@ export default async function AdminUserDetailPage({
 
         {/* Audit log */}
         <section className="card lg:col-span-2">
-          <h2 className="mb-3 text-base font-semibold">🔒 Audit log gần đây</h2>
+          <h2 className="mb-3 text-base font-semibold">Audit log gần đây</h2>
           {auditLogs.length === 0 ? (
             <p className="text-sm text-muted">Chưa có audit log nào.</p>
           ) : (

@@ -20,8 +20,8 @@ export default function ViewModeToggle() {
   }
 
   const items: Array<{ value: View; label: string; icon: string }> = [
-    { value: "edit", label: "Sửa", icon: "✎" },
-    { value: "preview", label: "Xem trước", icon: "👁" },
+    { value: "edit", label: "Sửa", icon: "" },
+    { value: "preview", label: "Xem trước", icon: "" },
   ];
 
   return (

@@ -67,7 +67,7 @@ export default function LtiLaunch({
     <div className="space-y-2">
       {title && (
         <p className="inline-flex items-center gap-2 text-sm font-medium text-muted">
-          <span>🔗</span>
+          <span></span>
           {title}
         </p>
       )}

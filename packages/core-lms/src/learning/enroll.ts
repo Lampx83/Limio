@@ -31,6 +31,7 @@ export async function enrollInCourse(
   userId: string,
   courseId: string,
   db: PrismaClient = prisma,
+  opts?: { skipPaymentCheck?: boolean },
 ): Promise<EnrollResult> {
   const course = await db.course.findUnique({ where: { id: courseId } });
   if (!course) throw new EnrollError("course_not_found");
@@ -51,7 +52,8 @@ export async function enrollInCourse(
 
   // Paid course gating: must have a paid Order to enroll. Webhook auto-enrolls
   // on payment, so this branch fires only when self-enroll is attempted via UI.
-  if (course.priceCents !== null && course.priceCents > 0) {
+  // Skip when payment is globally disabled (admin toggle).
+  if (!opts?.skipPaymentCheck && course.priceCents !== null && course.priceCents > 0) {
     const paidOrder = await db.order.findFirst({
       where: { userId, courseId, status: "paid" },
     });

@@ -14,6 +14,7 @@ interface Lesson {
   title: string;
   description: string | null;
   orderIndex: number;
+  previewable: boolean;
   contentItems: Array<{
     id: string;
     type: string;
@@ -83,7 +84,8 @@ export default function LessonSection({
           <span className="mr-2 text-sm font-normal text-faint">Lesson {order}</span>
           {lesson.title}
         </span>
-        {noSkill && <span className="chip-accent">⚠️ chưa tag skill</span>}
+        {noSkill && <span className="chip-accent">chưa tag skill</span>}
+        {lesson.previewable && <span className="chip">Preview</span>}
         <span className="ml-auto text-sm text-muted">
           {lesson.contentItems.length} content · {lesson.quizzes.length} quiz ·{" "}
           {lesson.assignments.length} assignment
@@ -95,6 +97,7 @@ export default function LessonSection({
           title={lesson.title}
           description={lesson.description}
           orderIndex={lesson.orderIndex}
+          previewable={lesson.previewable}
         />
 
         <SubSection label="Skills">
@@ -173,7 +176,7 @@ export default function LessonSection({
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium transition-colors group-hover:text-brand-600">
-                          📝 {q.title}
+                          {q.title}
                         </p>
                         <p className="mt-1 text-xs text-faint">
                           {q.questions.length} câu · diff {q.difficulty ?? "—"} ·
@@ -221,7 +224,7 @@ export default function LessonSection({
                     className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-token pb-3">
-                      <p className="font-semibold">📋 {a.title}</p>
+                      <p className="font-semibold">{a.title}</p>
                       <span className="text-xs text-faint">
                         max <span className="font-semibold">{a.maxScore}</span>đ
                         {a.dueAt && (

@@ -18,6 +18,7 @@ export const UpdateLessonInput = z.object({
   orderIndex: z.number().int().nonnegative().optional(),
   completionThresholdPct: z.number().int().min(1).max(100).optional().nullable(),
   durationSec: z.number().int().nonnegative().optional().nullable(),
+  previewable: z.boolean().optional(),
 });
 
 async function getCourseIdForLesson(lessonId: string, db: DbClient): Promise<string> {

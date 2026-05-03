@@ -29,7 +29,7 @@ export default async function StudentMisconceptionsPage({
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Bạn không có quyền xem trang này.
+          Bạn không có quyền xem trang này.
         </div>
       </main>
     );
@@ -119,14 +119,14 @@ export default async function StudentMisconceptionsPage({
       {/* Unresolved */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold">
-          ⚠️ Lỗi tư duy chưa khắc phục{" "}
+          Lỗi tư duy chưa khắc phục{" "}
           <span className="text-sm font-normal text-faint">
             ({unresolved.length})
           </span>
         </h2>
         {unresolved.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-token p-8 text-center text-sm text-muted">
-            🎉 Học viên này hiện không còn lỗi tư duy nào trong khóa.
+            Học viên này hiện không còn lỗi tư duy nào trong khóa.
           </div>
         ) : (
           <ul className="mt-4 space-y-3">

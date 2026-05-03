@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RoleName } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
+import { LimeSliceIcon, WatermelonSliceIcon } from "@/components/BrandIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -30,20 +31,30 @@ function LandingPage() {
         />
         <div className="absolute inset-x-0 -top-32 -z-10 mx-auto h-96 max-w-3xl rounded-full bg-brand-gradient-soft blur-3xl opacity-70" aria-hidden />
 
+        {/* Floating fruit decorations — only visible on larger screens */}
+        <LimeSliceIcon
+          className="pointer-events-none absolute left-6 top-24 hidden h-24 w-24 -rotate-12 opacity-90 drop-shadow-xl md:block lg:left-16 lg:h-32 lg:w-32"
+          aria-hidden
+        />
+        <WatermelonSliceIcon
+          className="pointer-events-none absolute right-6 top-32 hidden h-28 w-28 rotate-12 opacity-90 drop-shadow-xl md:block lg:right-16 lg:h-36 lg:w-36"
+          aria-hidden
+        />
+
         <div className="mx-auto max-w-6xl px-6 pt-20 pb-16 sm:pt-28 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center animate-fade-in-up">
             <span className="chip-brand mb-5">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
-              LMS thế hệ mới · Personalized Feedback
+              Limio · Learn your way
             </span>
             <h1 className="h-display text-4xl font-bold leading-tight sm:text-6xl">
-              Học nhanh hơn nhờ{" "}
-              <span className="text-gradient">feedback cá nhân hóa</span>
+              Học{" "}
+              <span className="text-gradient">theo cách của bạn</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted">
-              FeedBackMe model hóa kiến thức thành skill graph, theo dõi mastery
-              của từng learner và đưa ra phản hồi đúng lúc — kèm gamification để
-              giữ động lực mỗi ngày.
+              Limio model hóa kiến thức thành skill graph, theo dõi mastery của
+              từng learner và đưa ra phản hồi đúng lúc — kèm gamification để
+              giữ động lực mỗi ngày. Tươi như chanh.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link href="/catalog" className="btn-primary btn-lg">
@@ -126,7 +137,7 @@ function LandingPage() {
             Bắt đầu hành trình học tập hôm nay
           </h2>
           <p className="relative mx-auto mt-3 max-w-xl text-white/85">
-            Đăng ký miễn phí, enroll khóa đầu tiên, và để FeedBackMe chỉ cho bạn
+            Đăng ký miễn phí, enroll khóa đầu tiên, và để Limio chỉ cho bạn
             chính xác cần học gì tiếp theo.
           </p>
           <div className="relative mt-8 flex flex-wrap items-center justify-center gap-3">

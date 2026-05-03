@@ -43,7 +43,7 @@ export default async function InstructorDashboard() {
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-accent-200 bg-accent-50 p-5">
           <p className="text-sm font-semibold text-accent-700">
-            ⚠️ Bạn chưa phải instructor của khóa nào.
+            Bạn chưa phải instructor của khóa nào.
           </p>
           <Link href="/instructor/courses/new" className="btn-primary mt-4 inline-flex">
             + Tạo khóa đầu tiên
@@ -118,8 +118,7 @@ export default async function InstructorDashboard() {
           <span className="text-gradient">
             {session.user.name ?? session.user.email}
           </span>{" "}
-          👋
-        </h1>
+                  </h1>
         <p className="mt-2 text-muted">
           Tổng quan {ownedCourses.length} khóa của bạn.
         </p>
@@ -131,48 +130,48 @@ export default async function InstructorDashboard() {
           + Tạo khóa học
         </Link>
         <Link href="/instructor/courses" className="btn-secondary btn-sm">
-          📚 Tất cả khóa
+          Tất cả khóa
         </Link>
         <Link
           href="/instructor/feedback-generator"
           className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
         >
-          🪄 AI feedback gen
+          AI feedback gen
         </Link>
         <Link
           href="/instructor/feedback-templates"
           className="btn-secondary btn-sm"
         >
-          📊 Feedback quality
+          Feedback quality
         </Link>
         <Link
           href="/instructor/tournaments/new"
           className="btn-secondary btn-sm"
         >
-          🏆 Tournament
+          Tournament
         </Link>
       </div>
 
       {/* KPI cards */}
       <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <Kpi label="Tổng học viên" value={totalStudents} icon="👥" tone="brand" />
+        <Kpi label="Tổng học viên" value={totalStudents} icon="" tone="brand" />
         <Kpi
           label="Bài essay chờ chấm"
           value={pendingEssays}
-          icon="📝"
+          icon=""
           tone={pendingEssays > 0 ? "accent" : "success"}
         />
         <Kpi
           label="Assignment chờ chấm"
           value={pendingSubmissions}
-          icon="📋"
+          icon=""
           tone={pendingSubmissions > 0 ? "accent" : "success"}
         />
         <Kpi
           label="AI cost (7 ngày)"
           value={`$${aiCostWeek.toFixed(4)}`}
           sub={`${aiTokensWeek.toLocaleString()} tokens`}
-          icon="💸"
+          icon=""
           tone="brand"
         />
       </section>
@@ -181,7 +180,7 @@ export default async function InstructorDashboard() {
         {/* Owned courses */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">📚 Khóa của tôi</h2>
+            <h2 className="text-base font-semibold">Khóa của tôi</h2>
             <span className="text-xs text-faint">{ownedCourses.length}</span>
           </header>
           <ul className="mt-4 space-y-3">
@@ -209,19 +208,19 @@ export default async function InstructorDashboard() {
                     href={`/api/exports/instructor/courses/${c.id}/gradebook`}
                     className="btn-ghost btn-sm"
                   >
-                    📥 Gradebook
+                    Gradebook
                   </a>
                   <a
                     href={`/api/exports/instructor/courses/${c.id}/submissions`}
                     className="btn-ghost btn-sm"
                   >
-                    📥 Submissions
+                    Submissions
                   </a>
                   <Link
                     href={`/instructor/courses/${c.id}/struggling-students`}
                     className="btn-ghost btn-sm"
                   >
-                    👥 HV cần hỗ trợ
+                    HV cần hỗ trợ
                   </Link>
                 </div>
               </li>
@@ -232,7 +231,7 @@ export default async function InstructorDashboard() {
         {/* Recent unresolved forum threads */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">💬 Forum chưa giải đáp</h2>
+            <h2 className="text-base font-semibold">Forum chưa giải đáp</h2>
             <span className="text-xs text-faint">{recentForumThreads.length}</span>
           </header>
           {recentForumThreads.length === 0 ? (

@@ -3,6 +3,7 @@ export * from "./register";
 export * from "./login";
 export * from "./verify";
 export * from "./reset";
+export * from "./password";
 export * from "./profile";
 export * from "./roles";
 export * from "./audit";

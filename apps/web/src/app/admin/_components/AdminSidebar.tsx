@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV: Array<{ href: string; label: string; icon: string }> = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/admin/users", label: "Người dùng", icon: "👥" },
-  { href: "/admin/integrations", label: "Integrations", icon: "🔑" },
-  { href: "/admin/lti-tools", label: "LTI tools", icon: "🔌" },
+  { href: "/admin/dashboard", label: "Dashboard", icon: "" },
+  { href: "/admin/users", label: "Người dùng", icon: "" },
+  { href: "/admin/integrations", label: "Integrations", icon: "" },
+  { href: "/admin/lti-tools", label: "LTI tools", icon: "" },
+  { href: "/admin/settings", label: "Cài đặt", icon: "" },
 ];
 
 export default function AdminSidebar() {

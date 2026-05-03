@@ -84,7 +84,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                 className="flex items-center gap-2 rounded-xl bg-accent-500/95 px-3 py-2 text-sm font-semibold shadow-sm"
                 title={`Kỷ lục dài nhất: ${streak.longestStreak} ngày`}
               >
-                <span className="text-lg">🔥</span>
+                <span className="text-lg"></span>
                 <span>
                   {streak.currentStreak} ngày
                   {streak.isActiveToday && (
@@ -123,7 +123,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                 href={`/learn/${params.slug}/lessons/${enrollment.lastLessonId}`}
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02]"
               >
-                ▶ Tiếp tục bài gần nhất
+                Tiếp tục bài gần nhất
               </Link>
             )}
             {adaptiveNext && (
@@ -134,7 +134,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                   adaptiveNext.masteryProbability * 100,
                 )}%)`}
               >
-                🧭 Đề xuất: {adaptiveNext.lessonTitle}
+                Đề xuất: {adaptiveNext.lessonTitle}
               </Link>
             )}
             {isComplete && (
@@ -142,7 +142,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                 href={`/learn/${params.slug}/certificate`}
                 className="inline-flex items-center gap-2 rounded-lg border-2 border-accent-300 bg-accent-400/20 px-4 py-2 text-sm font-semibold backdrop-blur transition-all hover:bg-accent-400/30"
               >
-                🏆 Xem chứng nhận
+                Xem chứng nhận
               </Link>
             )}
           </div>
@@ -216,7 +216,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
 
           {isComplete && (
             <div className="rounded-2xl border border-success-100 bg-success-50 p-5 text-center">
-              <p className="text-2xl">🎉</p>
+              <p className="text-2xl"></p>
               <p className="mt-1 font-semibold text-success-700">
                 Bạn đã hoàn thành khóa học này!
               </p>
@@ -229,7 +229,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
           {/* Daily quests */}
           {dailyQuests.length > 0 && (
             <section className="card">
-              <h2 className="text-base font-semibold">🎯 Nhiệm vụ hôm nay</h2>
+              <h2 className="text-base font-semibold">Nhiệm vụ hôm nay</h2>
               <ul className="mt-4 space-y-3">
                 {dailyQuests.map((q) => {
                   const pct = Math.min(100, Math.round((q.count / q.target) * 100));
@@ -272,7 +272,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
           {/* Leaderboard */}
           <section className="card">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-base font-semibold">🏆 BXH tuần</h2>
+              <h2 className="text-base font-semibold">BXH tuần</h2>
               <span className="text-xs text-faint">
                 {leaderboard.totalParticipants} người
               </span>
@@ -303,11 +303,11 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                   >
                     <span className="w-6 shrink-0 text-right tabular-nums text-faint">
                       {e.rank === 1
-                        ? "🥇"
+                        ? ""
                         : e.rank === 2
-                          ? "🥈"
+                          ? ""
                           : e.rank === 3
-                            ? "🥉"
+                            ? ""
                             : `#${e.rank}`}
                     </span>
                     <span className="flex-1 truncate">{e.displayName}</span>
@@ -331,7 +331,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
           {champions.entries.length > 0 && (
             <section className="card">
               <div className="flex items-baseline justify-between">
-                <h2 className="text-base font-semibold">🌟 Champions</h2>
+                <h2 className="text-base font-semibold">Champions</h2>
                 <span className="text-xs text-faint">
                   {champions.lookbackDays} ngày
                 </span>
@@ -349,11 +349,11 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                   >
                     <span className="w-6 shrink-0 text-right tabular-nums text-faint">
                       {e.rank === 1
-                        ? "🥇"
+                        ? ""
                         : e.rank === 2
-                          ? "🥈"
+                          ? ""
                           : e.rank === 3
-                            ? "🥉"
+                            ? ""
                             : `#${e.rank}`}
                     </span>
                     <span className="flex-1 truncate">{e.displayName}</span>
@@ -387,7 +387,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                         : "border-dashed border-token bg-[rgb(var(--surface-muted))] opacity-50 grayscale"
                     }`}
                   >
-                    <div className="text-xl">{b.emoji ?? "🏅"}</div>
+                    <div className="text-xl">{b.emoji ?? ""}</div>
                     <div className="mt-0.5 text-[10px] font-medium leading-tight">
                       {b.name}
                     </div>

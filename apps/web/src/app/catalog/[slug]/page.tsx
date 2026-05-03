@@ -4,6 +4,8 @@ import { prisma } from "@feedbackme/db";
 import { getCourseDetail, CourseError } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import EnrollButton from "@/components/EnrollButton";
+import { isFree, formatPrice } from "@/lib/formatPrice";
+import { getPaymentEnabled } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +17,13 @@ const LEVEL_LABEL: Record<string, string> = {
 
 export default async function CourseDetailPage({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  searchParams?: { paywall?: string };
 }) {
-  const session = await auth();
+  const showPaywall = searchParams?.paywall === "1";
+  const [session, paymentEnabled] = await Promise.all([auth(), getPaymentEnabled()]);
   let course;
   try {
     course = await getCourseDetail(params.slug, session?.user?.id ?? null);
@@ -43,6 +48,19 @@ export default async function CourseDetailPage({
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
         ← Catalog
       </Link>
+
+      {/* Paywall notice */}
+      {showPaywall && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-danger-200 bg-danger-50 px-5 py-4">
+          <span className="text-xl"></span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-danger-700">Nội dung có phí</p>
+            <p className="text-xs text-danger-600">
+              Bài học này yêu cầu đăng ký khoá học. Mua khoá để truy cập toàn bộ nội dung.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-8 text-white shadow-card-hover sm:p-10">
@@ -83,15 +101,29 @@ export default async function CourseDetailPage({
             </p>
           )}
 
-          {/* Stats */}
+          {/* Stats + price */}
           <div className="mt-6 flex flex-wrap gap-3">
             <HeroStat label="Modules" value={course.modules.length} />
             <HeroStat label="Bài học" value={totalLessons} />
+            {paymentEnabled && !isFree(course.priceCents) && (
+              <div className="rounded-xl bg-accent-500/80 px-4 py-2 backdrop-blur">
+                <div className="text-xs uppercase tracking-wide opacity-80">Học phí</div>
+                <div className="text-lg font-bold tabular-nums">
+                  {formatPrice(course.priceCents!, course.currency)}
+                </div>
+              </div>
+            )}
           </div>
 
           {course.status === "published" && (
             <div className="mt-7">
-              <EnrollButton slug={params.slug} alreadyEnrolled={enrolled} />
+              <EnrollButton
+                slug={params.slug}
+                alreadyEnrolled={enrolled}
+                priceCents={course.priceCents}
+                currency={course.currency}
+                paymentEnabled={paymentEnabled}
+              />
             </div>
           )}
         </div>
@@ -133,7 +165,23 @@ export default async function CourseDetailPage({
                         {li + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm">{l.title}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {l.previewable && !enrolled ? (
+                            <Link
+                              href={`/learn/${params.slug}/lessons/${l.id}`}
+                              className="text-sm font-medium text-brand-600 hover:underline"
+                            >
+                              {l.title}
+                            </Link>
+                          ) : (
+                            <p className="text-sm">{l.title}</p>
+                          )}
+                          {l.previewable && !enrolled && (
+                            <span className="inline-flex items-center rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+                              Preview
+                            </span>
+                          )}
+                        </div>
                         {l.skillTags.length > 0 && (
                           <div className="mt-1 flex flex-wrap gap-1">
                             {l.skillTags.map((t) => (

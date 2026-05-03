@@ -44,7 +44,7 @@ export default function QuizSection({
   return (
     <details className="group overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] transition-colors hover:border-brand-200">
       <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-3 py-2.5 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
-        <span className="text-lg" aria-hidden>📝</span>
+        <span className="text-lg" aria-hidden></span>
         <span className="text-sm font-semibold">{quiz.title}</span>
         <span className="ml-auto text-sm text-muted">
           {quiz.questions.length} câu · diff {quiz.difficulty ?? "—"} · pass{" "}

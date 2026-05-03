@@ -37,7 +37,7 @@ export default async function SubmissionsPage({
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Bạn không có quyền xem trang này.
+          Bạn không có quyền xem trang này.
         </div>
       </main>
     );
@@ -58,7 +58,7 @@ export default async function SubmissionsPage({
 
       {/* Header */}
       <div className="mt-4">
-        <span className="chip-brand">📋 Bài tập</span>
+        <span className="chip-brand">Bài tập</span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
           {assignment.title}
         </h1>
@@ -93,8 +93,7 @@ export default async function SubmissionsPage({
         {submissions.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-              📥
-            </div>
+                          </div>
             <p className="mt-4 text-muted">Chưa có học viên nào nộp bài.</p>
           </div>
         ) : (
@@ -130,7 +129,7 @@ export default async function SubmissionsPage({
                     </div>
                     <div className="text-right text-xs">
                       <p className="font-medium">
-                        {isGraded ? "✓ Đã chấm" : "⏳ Chờ chấm"}
+                        {isGraded ? "✓ Đã chấm" : "Chờ chấm"}
                       </p>
                       <p className="opacity-70">
                         {new Date(s.submittedAt).toLocaleString("vi-VN")}
@@ -147,7 +146,7 @@ export default async function SubmissionsPage({
                       </p>
                       {s.attachmentUrl && (
                         <p className="mt-2 text-xs">
-                          📎{" "}
+                          {" "}
                           <a
                             href={s.attachmentUrl}
                             target="_blank"

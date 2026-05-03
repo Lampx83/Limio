@@ -233,6 +233,8 @@ model Lesson {
   // completionThreshold = % of video duration. NULL for non-video.
   completionThresholdPct Int?    @default(80)
   durationSec            Int?
+  // True = visible to non-enrolled users as a free preview sample
+  previewable            Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1269,6 +1271,17 @@ model AiUsageLog {
   @@index([userId, dayKey])
 }
 
+
+// =====================================================================
+// Site-wide settings — key/value store for admin-controlled flags.
+// Keys: "payment.enabled" (bool string "true"/"false")
+// =====================================================================
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
 
 // =====================================================================
 // Payments — Stripe primary; VNPay/Momo can adopt the same Order shape.

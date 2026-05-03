@@ -8,6 +8,7 @@ interface Lesson {
   title: string;
   description: string | null;
   orderIndex: number;
+  previewable: boolean;
   contentItems: Array<{
     id: string;
     type: string;

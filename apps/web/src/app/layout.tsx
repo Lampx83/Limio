@@ -12,9 +12,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FeedBackMe — LMS với feedback cá nhân hóa",
+  title: "Limio — Learn your way",
   description:
-    "LMS thế hệ mới: skill graph, BKT learner model, AI tutor và gamification. Học nhanh hơn nhờ feedback đúng lúc.",
+    "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và gamification. Học theo cách của bạn — fresh, focused, your own pace.",
 };
 
 // Runs before React hydration to set the dark class — prevents flash of wrong theme.

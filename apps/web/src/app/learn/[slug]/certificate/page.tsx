@@ -39,7 +39,7 @@ export default async function CertificatePage({
         </Link>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-6">
           <p className="text-sm font-semibold text-accent-700">
-            ⏳ Bạn chưa hoàn thành khóa này ({progress.courseCompletionPct}%)
+            Bạn chưa hoàn thành khóa này ({progress.courseCompletionPct}%)
           </p>
           <p className="mt-2 text-sm text-accent-700/90">
             Hãy hoàn thành tất cả bài học để nhận chứng nhận.
@@ -97,7 +97,7 @@ export default async function CertificatePage({
 
         <div className="relative">
           <p className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1 text-xs font-bold uppercase tracking-[0.3em] text-accent-700 backdrop-blur">
-            🏆 Chứng nhận hoàn thành
+            Chứng nhận hoàn thành
           </p>
 
           <h1 className="mt-8 h-display text-xl font-medium text-muted">

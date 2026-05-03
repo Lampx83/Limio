@@ -19,7 +19,7 @@ export default async function FeedbackGeneratorPage() {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Chỉ instructor hoặc admin mới truy cập được.
+          Chỉ instructor hoặc admin mới truy cập được.
         </div>
       </main>
     );
@@ -47,7 +47,7 @@ export default async function FeedbackGeneratorPage() {
 
       <div className="mt-4">
         <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-soft px-2.5 py-0.5 text-xs font-medium text-brand-700">
-          🪄 AI tools
+          AI tools
         </span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
           AI Feedback Generator

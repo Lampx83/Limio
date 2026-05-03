@@ -19,7 +19,7 @@ export default async function FeedbackTemplatesPage() {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Chỉ instructor hoặc admin mới xem được trang này.
+          Chỉ instructor hoặc admin mới xem được trang này.
         </div>
       </main>
     );
@@ -42,7 +42,7 @@ export default async function FeedbackTemplatesPage() {
           Chất lượng feedback templates
         </h1>
         <p className="mt-2 text-muted">
-          Sắp xếp theo netScore (👍 − 👎) tăng dần — template tệ nhất ở trên cùng
+          Sắp xếp theo netScore (− ) tăng dần — template tệ nhất ở trên cùng
           để bạn ưu tiên sửa.
         </p>
       </div>
@@ -50,8 +50,7 @@ export default async function FeedbackTemplatesPage() {
       {stats.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-token p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-            💬
-          </div>
+                      </div>
           <p className="mt-4 text-muted">Chưa có template nào.</p>
         </div>
       ) : (
@@ -63,8 +62,8 @@ export default async function FeedbackTemplatesPage() {
                 <th className="px-4 py-3">Body (snippet)</th>
                 <th className="px-4 py-3 text-right">Đã gửi</th>
                 <th className="px-4 py-3 text-right">Đã rate</th>
-                <th className="px-4 py-3 text-right">👍</th>
-                <th className="px-4 py-3 text-right">👎</th>
+                <th className="px-4 py-3 text-right"></th>
+                <th className="px-4 py-3 text-right"></th>
                 <th className="px-4 py-3 text-right">Net</th>
               </tr>
             </thead>

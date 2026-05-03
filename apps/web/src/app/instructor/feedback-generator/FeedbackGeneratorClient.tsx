@@ -108,14 +108,14 @@ export default function FeedbackGeneratorClient({
         <section className="rounded-2xl border border-brand-200 bg-brand-soft p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-brand-700">
-              🪄 Generate feedback body
+              Generate feedback body
             </h2>
             <button
               onClick={generate}
               disabled={generating}
               className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
-              {generating ? "🪄 Đang sinh..." : "🪄 AI Generate"}
+              {generating ? "Đang sinh..." : "AI Generate"}
             </button>
           </div>
 
@@ -145,14 +145,14 @@ export default function FeedbackGeneratorClient({
                       : "bg-brand-600 text-white hover:bg-brand-700"
                   }`}
                 >
-                  {saved ? "✓ Đã lưu" : "💾 Lưu làm template"}
+                  {saved ? "✓ Đã lưu" : "Lưu làm template"}
                 </button>
                 <button
                   onClick={generate}
                   disabled={generating}
                   className="btn-secondary btn-sm"
                 >
-                  🔁 Regenerate
+                  Regenerate
                 </button>
               </div>
             </div>

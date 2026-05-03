@@ -37,19 +37,19 @@ export default async function SkillsPage() {
             label="Đã master"
             value={masteredCount}
             tone="accent"
-            icon="🏆"
+            icon=""
           />
           <SummaryCard
             label="Đang học"
             value={learningCount}
             tone="brand"
-            icon="📘"
+            icon=""
           />
           <SummaryCard
             label="Cần ôn"
             value={weakCount}
             tone="danger"
-            icon="⚠️"
+            icon=""
           />
         </div>
       )}
@@ -57,8 +57,7 @@ export default async function SkillsPage() {
       {skills.length === 0 ? (
         <div className="mt-12 rounded-2xl border border-dashed border-token p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-            🧠
-          </div>
+                      </div>
           <p className="mt-4 text-muted">
             Chưa có dữ liệu skill nào. Làm vài quiz trong{" "}
             <Link href="/catalog" className="link">
@@ -95,7 +94,7 @@ export default async function SkillsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      {isMastered && <span className="text-lg">🏆</span>}
+                      {isMastered && <span className="text-lg"></span>}
                       <p className="truncate text-base font-semibold">{s.skillName}</p>
                     </div>
                     <p className="mt-0.5 font-mono text-xs text-faint">
@@ -122,13 +121,13 @@ export default async function SkillsPage() {
 
                 {isMastered && (
                   <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-accent-700">
-                    <span>🏆</span>
+                    <span></span>
                     Đã master — bạn đã được trao badge Skill Master.
                   </p>
                 )}
                 {!isMastered && s.isWeak && (
                   <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-danger-600">
-                    <span>⚠️</span>
+                    <span></span>
                     Skill yếu — mastery dưới 50% sau ≥2 câu. Nên ôn lại.
                   </p>
                 )}

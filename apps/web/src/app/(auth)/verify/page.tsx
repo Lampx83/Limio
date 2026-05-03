@@ -46,7 +46,7 @@ export default function VerifyPage() {
                   : "bg-brand-soft text-brand-700"
             }`}
           >
-            {status === "ok" ? "✓" : status === "error" ? "✕" : "⏳"}
+            {status === "ok" ? "✓" : status === "error" ? "✕" : ""}
           </div>
           <h1 className="mt-5 h-display text-2xl font-bold">Xác thực email</h1>
 

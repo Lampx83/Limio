@@ -54,8 +54,7 @@ export default async function QuizPage({
           </Link>
           <div className="mt-6 rounded-2xl border border-danger-100 bg-danger-50 p-8 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-danger-100 text-2xl">
-              🚫
-            </div>
+                          </div>
             <h1 className="mt-4 h-display text-2xl font-bold text-danger-700">
               Không thể bắt đầu quiz
             </h1>

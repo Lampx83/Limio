@@ -25,7 +25,7 @@ export default async function NewTournamentPage() {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          🚫 Bạn không phải instructor của khóa nào. Chỉ instructor hoặc admin
+          Bạn không phải instructor của khóa nào. Chỉ instructor hoặc admin
           mới tạo được tournament.
         </div>
       </main>
@@ -42,7 +42,7 @@ export default async function NewTournamentPage() {
       </Link>
 
       <div className="mt-4">
-        <span className="chip-accent">🏆 Tournament</span>
+        <span className="chip-accent">Tournament</span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
           Tạo tournament mới
         </h1>

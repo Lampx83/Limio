@@ -41,8 +41,7 @@ export default function ResetPage() {
         <div className="card shadow-card-hover animate-fade-in-up">
           <div className="text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-gradient text-lg font-bold text-white shadow-brand-glow">
-              🔒
-            </div>
+                          </div>
             <h1 className="mt-4 h-display text-2xl font-bold">
               Đặt mật khẩu mới
             </h1>

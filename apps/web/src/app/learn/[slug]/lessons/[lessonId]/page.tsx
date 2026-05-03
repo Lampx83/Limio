@@ -32,7 +32,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: true } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true } } } },
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: { select: { id: true, title: true } },
       assignments: {
@@ -54,8 +54,14 @@ export default async function LessonPage({
   });
   if (!lesson || lesson.module.course.slug !== params.slug) notFound();
 
-  if (!(await isUserEnrolled(userId, lesson.module.course.id))) {
-    redirect(`/catalog/${params.slug}`);
+  const enrolled = await isUserEnrolled(userId, lesson.module.course.id);
+  if (!enrolled) {
+    if (lesson.previewable) {
+      // Allow viewing — fall through and render as preview below
+    } else {
+      const paid = lesson.module.course.priceCents !== null && lesson.module.course.priceCents > 0;
+      redirect(`/catalog/${params.slug}${paid ? "?paywall=1" : ""}`);
+    }
   }
 
   const allLessons = await prisma.lesson.findMany({
@@ -66,6 +72,49 @@ export default async function LessonPage({
   const idx = allLessons.findIndex((l) => l.id === lesson.id);
   const prev = idx > 0 ? allLessons[idx - 1]! : null;
   const next = idx < allLessons.length - 1 ? allLessons[idx + 1]! : null;
+
+  // Preview mode: non-enrolled user accessing a previewable lesson.
+  // Skip enrollment-dependent queries and render with a CTA banner.
+  if (!enrolled) {
+    const threads = await listThreadsForLesson(lesson.id);
+    const course = lesson.module.course;
+    const paid = course.priceCents !== null && course.priceCents > 0;
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <Link href={`/catalog/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
+          ← {course.title}
+        </Link>
+        {/* Preview banner */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft px-5 py-3">
+          <div>
+            <p className="text-sm font-semibold text-brand-700">Bài học preview miễn phí</p>
+            <p className="text-xs text-brand-600">
+              {paid ? "Mua khoá học để truy cập toàn bộ nội dung." : "Đăng ký miễn phí để học toàn bộ khoá."}
+            </p>
+          </div>
+          <a
+            href={`/catalog/${params.slug}`}
+            className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+          >
+            {paid ? "Xem khoá học" : "Đăng ký ngay"}
+          </a>
+        </div>
+        <header className="mt-6">
+          <span className="chip">{lesson.module.title}</span>
+          <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">{lesson.title}</h1>
+          {lesson.description && <p className="mt-3 text-muted">{lesson.description}</p>}
+        </header>
+        <div className="mt-8">
+          <LessonContent
+            items={lesson.contentItems.map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex }))}
+            courseId={course.id}
+            lessonId={lesson.id}
+          />
+        </div>
+        <LessonForumSection threads={threads} lessonId={lesson.id} courseSlug={params.slug} />
+      </main>
+    );
+  }
 
   const enrollment = await prisma.enrollment.findUniqueOrThrow({
     where: { userId_courseId: { userId, courseId: lesson.module.course.id } },
@@ -153,7 +202,7 @@ export default async function LessonPage({
       {/* Quizzes */}
       {lesson.quizzes.length > 0 && (
         <section className="mt-10">
-          <h2 className="text-xl font-semibold">📝 Bài kiểm tra</h2>
+          <h2 className="text-xl font-semibold">Bài kiểm tra</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {lesson.quizzes.map((q) => (
               <li key={q.id}>
@@ -175,7 +224,7 @@ export default async function LessonPage({
       {/* Assignments */}
       {lesson.assignments.length > 0 && (
         <section className="mt-10">
-          <h2 className="text-xl font-semibold">📋 Bài tập</h2>
+          <h2 className="text-xl font-semibold">Bài tập</h2>
           <ul className="mt-4 space-y-4">
             {lesson.assignments.map((a) => {
               const sub = a.submissions[0] ?? null;
@@ -210,7 +259,7 @@ export default async function LessonPage({
                   )}
                   {sub?.status === "submitted" && (
                     <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent-50 px-3 py-1.5 text-sm font-medium text-accent-700">
-                      ⏳ Đã nộp lúc{" "}
+                      Đã nộp lúc{" "}
                       {new Date(sub.submittedAt).toLocaleString("vi-VN")} · chờ chấm
                     </p>
                   )}

@@ -123,7 +123,7 @@ export default function H5pPlayer({
       <div className="flex items-baseline justify-between">
         {title && (
           <p className="inline-flex items-center gap-2 text-sm font-medium text-muted">
-            <span>✨</span>
+            <span></span>
             {title}
           </p>
         )}

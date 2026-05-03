@@ -79,8 +79,7 @@ export default async function LearnerDashboard() {
           <span className="text-gradient">
             {session.user.name ?? session.user.email}
           </span>{" "}
-          👋
-        </h1>
+                  </h1>
         <p className="mt-2 text-muted">Tổng quan tiến độ học của bạn.</p>
       </header>
 
@@ -98,7 +97,7 @@ export default async function LearnerDashboard() {
           <div className="relative flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide backdrop-blur">
-                ▶ Tiếp tục học
+                Tiếp tục học
               </span>
               <p className="mt-3 h-display text-2xl font-bold sm:text-3xl">
                 {continueTarget.e.course.title}
@@ -128,7 +127,7 @@ export default async function LearnerDashboard() {
           label="Khóa đã enroll"
           value={enrollments.length}
           tone="brand"
-          icon="📚"
+          icon=""
           href="/me/enrollments"
         />
         <Stat
@@ -141,33 +140,25 @@ export default async function LearnerDashboard() {
           label="Skill master"
           value={masteredSkills}
           tone="accent"
-          icon="🏆"
+          icon=""
           href="/me/skills"
         />
         <Stat
           label="Huy hiệu"
           value={recentBadges.length}
           tone="brand"
-          icon="🎖"
+          icon=""
           href="/me/badges"
         />
       </div>
 
-      {/* Quick exports */}
-      <div className="mt-6 flex flex-wrap gap-2">
-        <a href="/api/exports/learner/grades" className="btn-secondary btn-sm">
-          📥 Xuất điểm (.csv)
-        </a>
-        <a href="/api/exports/learner/activity" className="btn-secondary btn-sm">
-          📥 Xuất nhật ký hoạt động
-        </a>
-      </div>
+
 
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
         {/* Enrolled courses */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">📚 Khóa đã đăng ký</h2>
+            <h2 className="text-base font-semibold">Khóa đã đăng ký</h2>
             <span className="text-xs text-faint">{enrollments.length}</span>
           </header>
           {enrollments.length === 0 ? (
@@ -226,7 +217,7 @@ export default async function LearnerDashboard() {
         {/* Recent badges */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">🏆 Huy hiệu gần đây</h2>
+            <h2 className="text-base font-semibold">Huy hiệu gần đây</h2>
             <Link href="/me/badges" className="link text-sm">
               Tất cả →
             </Link>
@@ -241,7 +232,7 @@ export default async function LearnerDashboard() {
                   title={b.badge.name}
                   className="rounded-xl border border-accent-200 bg-accent-50 p-3 text-center"
                 >
-                  <div className="text-2xl">{b.badge.emoji ?? "🏅"}</div>
+                  <div className="text-2xl">{b.badge.emoji ?? ""}</div>
                   <div className="mt-1 truncate text-xs font-medium text-accent-700">
                     {b.badge.name}
                   </div>
@@ -254,7 +245,7 @@ export default async function LearnerDashboard() {
         {/* Weak skills */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">🎯 Skill cần ôn</h2>
+            <h2 className="text-base font-semibold">Skill cần ôn</h2>
             <Link href="/me/skills" className="link text-sm">
               Skill profile →
             </Link>
@@ -285,7 +276,7 @@ export default async function LearnerDashboard() {
         {/* Upcoming assignments */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">📋 Bài tập</h2>
+            <h2 className="text-base font-semibold">Bài tập</h2>
             <span className="text-xs text-faint">{upcomingAssignments.length}</span>
           </header>
           {upcomingAssignments.length === 0 ? (
@@ -298,7 +289,7 @@ export default async function LearnerDashboard() {
                   ? { label: "Chưa nộp", chip: "chip-accent" }
                   : sub.status === "graded"
                     ? { label: `✓ ${sub.score}/${a.maxScore}`, chip: "chip-success" }
-                    : { label: "⏳ Đã nộp", chip: "chip-brand" };
+                    : { label: "Đã nộp", chip: "chip-brand" };
                 return (
                   <li
                     key={a.id}
@@ -329,7 +320,7 @@ export default async function LearnerDashboard() {
           <section className="card lg:col-span-2">
             <header className="flex items-baseline justify-between border-b border-token pb-3">
               <h2 className="text-base font-semibold">
-                🌟 Khắc phục lỗi tư duy gần đây
+                Khắc phục lỗi tư duy gần đây
               </h2>
               <span className="text-xs text-faint">{recentResolved.length}</span>
             </header>

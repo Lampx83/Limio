@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { listPublishedCourses } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
+import { isFree, formatPrice } from "@/lib/formatPrice";
+import { getPaymentEnabled } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +29,7 @@ export default async function CatalogPage({
 }: {
   searchParams: { category?: string; level?: string; language?: string; q?: string };
 }) {
-  const [{ items }, categories] = await Promise.all([
+  const [{ items }, categories, paymentEnabled] = await Promise.all([
     listPublishedCourses({
       category: searchParams.category,
       level: searchParams.level,
@@ -35,6 +37,7 @@ export default async function CatalogPage({
       q: searchParams.q,
     }),
     getDistinctCategories(),
+    getPaymentEnabled(),
   ]);
 
   const hasFilter =
@@ -67,7 +70,7 @@ export default async function CatalogPage({
       >
         <div className="relative flex-1 min-w-[220px]">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint">
-            ⌕
+            
           </span>
           <input
             name="q"
@@ -117,8 +120,7 @@ export default async function CatalogPage({
       {items.length === 0 ? (
         <div className="mt-16 rounded-2xl border border-dashed border-token p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-            📚
-          </div>
+                      </div>
           <p className="mt-4 text-muted">
             Chưa tìm thấy khóa học phù hợp. Thử điều chỉnh bộ lọc nhé.
           </p>
@@ -162,7 +164,12 @@ export default async function CatalogPage({
                 <p className="mt-2 line-clamp-3 text-sm text-muted">{c.description}</p>
 
                 <div className="mt-4 flex items-center justify-between border-t border-token pt-3 text-xs text-faint">
-                  <span>Khám phá →</span>
+                  {paymentEnabled && !isFree(c.priceCents) && (
+                    <span className="font-semibold text-accent-600">
+                      {formatPrice(c.priceCents!, c.currency)}
+                    </span>
+                  )}
+                  <span className="ml-auto">Khám phá →</span>
                 </div>
               </Link>
             </li>

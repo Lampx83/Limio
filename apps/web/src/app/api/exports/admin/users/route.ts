@@ -6,6 +6,13 @@ import { csvResponse } from "@/lib/csvExport";
 
 export const runtime = "nodejs";
 
+const ROLE_LABELS: Record<string, string> = {
+  learner: "Học viên",
+  instructor: "Giảng viên",
+  admin: "Quản trị",
+  mentor: "Mentor",
+};
+
 export async function GET() {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -28,19 +35,20 @@ export async function GET() {
   });
 
   const rows = users.map((u) => ({
-    id: u.id,
-    email: u.email,
-    display_name: u.displayName,
-    locale: u.locale,
-    timezone: u.timezone,
-    email_verified: u.emailVerifiedAt ? "yes" : "no",
-    leaderboard_opt_out: u.leaderboardOptOut,
-    roles: u.userRoles.map((r) => r.role.name).join(";"),
-    enrollments: u._count.enrollments,
-    quiz_attempts: u._count.quizAttempts,
-    assignments: u._count.assignmentSubmissions,
-    created_at: u.createdAt,
+    "Họ tên": u.displayName ?? "",
+    "Email": u.email,
+    "Đã xác minh email": u.emailVerifiedAt ? "Có" : "Chưa",
+    "Vai trò": u.userRoles
+      .map((r) => ROLE_LABELS[r.role.name] ?? r.role.name)
+      .join(", "),
+    "Số khoá đăng ký": u._count.enrollments,
+    "Số lần làm quiz": u._count.quizAttempts,
+    "Số bài tập nộp": u._count.assignmentSubmissions,
+    "Ẩn bảng xếp hạng": u.leaderboardOptOut ? "Có" : "Không",
+    "Ngôn ngữ": u.locale ?? "",
+    "Múi giờ": u.timezone ?? "",
+    "Ngày tạo tài khoản": u.createdAt,
   }));
 
-  return csvResponse(`users-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  return csvResponse(`danh-sach-nguoi-dung-${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }

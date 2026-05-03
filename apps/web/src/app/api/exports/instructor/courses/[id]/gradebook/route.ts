@@ -6,11 +6,18 @@ import { csvResponse } from "@/lib/csvExport";
 
 export const runtime = "nodejs";
 
-/**
- * Course gradebook CSV — one row per (learner, item). Items = quizzes +
- * assignments. Columns: learner_email, learner_name, item_type, item_title,
- * score_pct, raw_score, max_score, status, submitted_at.
- */
+const ITEM_TYPE: Record<string, string> = {
+  quiz: "Quiz",
+  assignment: "Bài tập",
+};
+
+const SUBMISSION_STATUS: Record<string, string> = {
+  submitted: "Đã nộp",
+  graded: "Đã chấm",
+  pending: "Chờ chấm",
+  late: "Nộp muộn",
+};
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
@@ -69,38 +76,40 @@ export async function GET(
   );
 
   const rows: Array<Record<string, unknown>> = [];
+
   for (const a of quizAttempts) {
     const u = userMap.get(a.userId);
     rows.push({
-      learner_email: u?.email ?? "",
-      learner_name: u?.name ?? "",
-      item_type: "quiz",
-      item_title: a.quiz.title,
-      score_pct: a.scorePct ?? 0,
-      passed: a.passed ?? false,
-      pass_threshold_pct: a.quiz.passThresholdPct,
-      submitted_at: a.submittedAt,
-    });
-  }
-  for (const s of submissions) {
-    const u = userMap.get(s.userId);
-    rows.push({
-      learner_email: u?.email ?? "",
-      learner_name: u?.name ?? "",
-      item_type: "assignment",
-      item_title: s.assignment.title,
-      score_pct:
-        s.score !== null
-          ? Math.round((s.score / s.assignment.maxScore) * 1000) / 10
-          : null,
-      raw_score: s.score,
-      max_score: s.assignment.maxScore,
-      status: s.status,
-      submitted_at: s.submittedAt,
-      graded_at: s.gradedAt,
+      "Họ tên học viên": u?.name ?? "",
+      "Email học viên": u?.email ?? "",
+      "Loại": ITEM_TYPE.quiz,
+      "Tiêu đề": a.quiz.title,
+      "Điểm (%)": a.scorePct ?? 0,
+      "Ngưỡng đạt (%)": a.quiz.passThresholdPct,
+      "Kết quả": a.passed ? "Đạt" : "Chưa đạt",
+      "Nộp lúc": a.submittedAt,
     });
   }
 
-  const filename = `gradebook-${course.title.replace(/[^\w]+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
+  for (const s of submissions) {
+    const u = userMap.get(s.userId);
+    const scorePct =
+      s.score !== null
+        ? `${Math.round((s.score / s.assignment.maxScore) * 1000) / 10}%`
+        : "";
+    rows.push({
+      "Họ tên học viên": u?.name ?? "",
+      "Email học viên": u?.email ?? "",
+      "Loại": ITEM_TYPE.assignment,
+      "Tiêu đề": s.assignment.title,
+      "Điểm": s.score !== null ? `${s.score}/${s.assignment.maxScore}` : "Chưa chấm",
+      "Điểm (%)": scorePct,
+      "Trạng thái": SUBMISSION_STATUS[s.status] ?? s.status,
+      "Nộp lúc": s.submittedAt,
+      "Chấm lúc": s.gradedAt ?? "",
+    });
+  }
+
+  const filename = `bang-diem-${course.title.replace(/[^\w\s]/g, "").trim().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
   return csvResponse(filename, rows);
 }

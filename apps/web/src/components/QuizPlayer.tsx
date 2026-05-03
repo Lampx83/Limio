@@ -177,10 +177,10 @@ export default function QuizPlayer({
             {quiz.questions.length} câu
           </span>
           {quiz.timeLimitSec && (
-            <span>⏱ {Math.floor(quiz.timeLimitSec / 60)} phút</span>
+            <span>{Math.floor(quiz.timeLimitSec / 60)} phút</span>
           )}
           {quiz.requireConfidence && (
-            <span>⚖️ Cần đánh giá độ tự tin</span>
+            <span>Cần đánh giá độ tự tin</span>
           )}
         </div>
 

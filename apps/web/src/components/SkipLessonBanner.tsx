@@ -45,7 +45,7 @@ export default function SkipLessonBanner({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-sm font-semibold text-success-700">
-            🎯 Bạn có thể bỏ qua bài này
+            Bạn có thể bỏ qua bài này
           </p>
           <p className="mt-2 text-xs text-success-700/90">
             Hệ thống thấy bạn đã master các skill liên quan:

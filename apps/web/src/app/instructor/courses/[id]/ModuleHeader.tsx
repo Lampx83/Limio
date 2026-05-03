@@ -94,7 +94,7 @@ export default function ModuleHeader({
       </h3>
       <div className="flex gap-1">
         <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa module">
-          ✎ Sửa
+          Sửa
         </button>
         <button
           onClick={remove}
@@ -103,8 +103,7 @@ export default function ModuleHeader({
           aria-label="Xóa"
           className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover:opacity-100 disabled:opacity-50"
         >
-          🗑
-        </button>
+                  </button>
       </div>
     </div>
   );

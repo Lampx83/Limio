@@ -65,7 +65,7 @@ export default function AssignmentSection({
       {!editing ? (
         <>
           <div className="flex items-start justify-between gap-3">
-            <p className="text-base font-semibold">📋 {assignment.title}</p>
+            <p className="text-base font-semibold">{assignment.title}</p>
             <span className="shrink-0 text-sm text-muted">
               max <span className="font-semibold">{assignment.maxScore}</span>đ
               {assignment.dueAt && (
@@ -84,14 +84,14 @@ export default function AssignmentSection({
               href={`/instructor/assignments/${assignment.id}/submissions`}
               className="btn-secondary btn-sm"
             >
-              📥 Xem bài nộp
+              Xem bài nộp
             </Link>
             <button
               onClick={() => setEditing(true)}
               className="btn-ghost btn-sm"
               title="Sửa assignment"
             >
-              ✎ Sửa
+              Sửa
             </button>
             <button
               onClick={remove}
@@ -100,8 +100,7 @@ export default function AssignmentSection({
               aria-label="Xóa"
               className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover/as:opacity-100 disabled:opacity-50"
             >
-              🗑
-            </button>
+                          </button>
           </div>
         </>
       ) : (

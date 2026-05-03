@@ -180,7 +180,7 @@ export default async function ResultPage({
           </p>
           {xpPayload?.amount !== undefined && (
             <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 backdrop-blur">
-              <span className="text-lg">⚡</span>
+              <span className="text-lg"></span>
               <span className="font-semibold">+{xpPayload.amount} XP</span>
               {xpPayload.adaptiveMultiplier !== undefined &&
                 xpPayload.adaptiveMultiplier !== 1 && (
@@ -200,7 +200,7 @@ export default async function ResultPage({
       {resolvedMcs.length > 0 && (
         <div className="mt-6 rounded-2xl border border-success-100 bg-success-50 p-5">
           <p className="text-sm font-semibold text-success-700">
-            🌟 Bạn vừa khắc phục {resolvedMcs.length} lỗi tư duy
+            Bạn vừa khắc phục {resolvedMcs.length} lỗi tư duy
             {resolvedXpTotal > 0 && (
               <span className="ml-2 text-accent-700">+{resolvedXpTotal} XP</span>
             )}
@@ -225,7 +225,7 @@ export default async function ResultPage({
       {remedial?.shouldShow && remedial.weakestSkill && (
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
           <p className="flex items-center gap-2 text-sm font-semibold text-accent-700">
-            🎯 Đề xuất ôn lại
+            Đề xuất ôn lại
           </p>
           <p className="mt-2 text-sm text-accent-800">
             Bạn đang struggle với{" "}
@@ -240,7 +240,7 @@ export default async function ResultPage({
               href={`/learn/${remedial.lesson.courseSlug}/lessons/${remedial.lesson.id}`}
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-700 hover:scale-[1.02]"
             >
-              📖 Mở: {remedial.lesson.title}
+              Mở: {remedial.lesson.title}
             </Link>
           )}
         </div>
@@ -316,7 +316,7 @@ export default async function ResultPage({
                                   href={`/learn/${l.courseSlug}/lessons/${lid}`}
                                   className="inline-flex items-center gap-1 text-sm font-medium text-danger-700 underline-offset-2 hover:underline"
                                 >
-                                  📖 {l.title}
+                                  {l.title}
                                 </Link>
                               </li>
                             );
