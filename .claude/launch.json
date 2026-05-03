@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "/Users/joynguyen/Library/pnpm/pnpm",
+      "runtimeArgs": ["--filter", "@feedbackme/web", "dev"],
+      "port": 3000
+    }
+  ]
+}

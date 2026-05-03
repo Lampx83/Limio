@@ -1,0 +1,1313 @@
+// FeedBackMe — Phase 0 schema
+// Source of truth: docs/SPEC.docx §3 (Module A), §6.1 (events), §7 (data model).
+// Scope of this file: tables required to deliver Phase 0 features
+// A1 (Auth), A2 (Course mgmt), A3 (Course player), A4 (Quiz),
+// plus Bridge (Skill graph + LearningEvent).
+// Other modules (Feedback Engine, Gamification, Tournament) added in later phases.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto]
+}
+
+// =====================================================================
+// A1 — Authentication & User Management
+// =====================================================================
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String?
+  displayName     String
+  avatarUrl       String?
+  locale          String   @default("vi")
+  timezone        String   @default("Asia/Ho_Chi_Minh")
+  // Phase 1 C5: when true, user's XP transactions are excluded from public
+  // leaderboards. Per spec §5.5 "opt-out leaderboard hoàn toàn được".
+  leaderboardOptOut Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  authProviders        AuthProvider[]
+  userRoles            UserRole[]
+  enrollments          Enrollment[]
+  authoredCourses      CourseInstructor[]
+  quizAttempts         QuizAttempt[]
+  learningEvents       LearningEvent[]
+  verificationTokens   VerificationToken[]
+  notes                Note[]
+  courseProgress       UserCourseProgress[]
+  xpTransactions       XpTransaction[]
+  userBadges           UserBadge[]
+  streakRecords        StreakRecord[]
+  skillStates          LearnerSkillState[]
+  misconceptionFlags   MisconceptionFlag[]
+  feedbackDeliveries   FeedbackDelivery[]
+  assignmentSubmissions AssignmentSubmission[] @relation("Submitter")
+  gradedSubmissions     AssignmentSubmission[] @relation("Grader")
+  forumThreads         ForumThread[]
+  forumPosts           ForumPost[]
+  questProgress        UserQuestProgress[]
+  tournamentRegistrations TournamentRegistration[]
+  tournamentCreated     Tournament[] @relation("TournamentCreator")
+  scormAttempts         ScormAttempt[]
+  scormPackagesUploaded ScormPackage[] @relation("ScormUploader")
+  ltiToolsRegistered    LtiTool[]      @relation("LtiToolRegistrar")
+  ltiLaunches           LtiLaunch[]
+  h5pPackagesUploaded   H5pPackage[]   @relation("H5pUploader")
+  h5pAttempts           H5pAttempt[]
+  aiConversations       AiConversation[]
+  aiUsageLogs           AiUsageLog[]
+  orders                Order[]
+  auditEntriesAsActor  AuditLog[]         @relation("AuditActor")
+  auditEntriesAsTarget AuditLog[]         @relation("AuditTarget")
+
+  @@index([createdAt])
+}
+
+model AuthProvider {
+  id             String   @id @default(uuid())
+  userId         String
+  provider       String   // "password" | "google"
+  providerUserId String   // email for password, sub for google
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  name        String     @unique // "learner" | "instructor" | "admin" | "mentor"
+  description String?
+  userRoles   UserRole[]
+}
+
+// Role can be scoped per-course (A1 acceptance: "1 user là learner ở course A,
+// instructor ở course B"). courseId NULL = platform-wide role.
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  courseId  String?
+  grantedAt DateTime @default(now())
+  grantedBy String?
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role    @relation(fields: [roleId], references: [id])
+  course Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+enum TokenPurpose {
+  email_verify
+  password_reset
+}
+
+// Single-use tokens for email verification and password reset.
+// We store SHA-256 of the raw token, never the raw token itself —
+// defense in depth if DB leaks.
+model VerificationToken {
+  id         String       @id @default(uuid())
+  userId     String
+  purpose    TokenPurpose
+  tokenHash  String       @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+}
+
+// A1 acceptance: "Audit log mọi thay đổi role".
+// Generic audit table — not just for roles, but role changes are the
+// minimum required for Phase 0.
+model AuditLog {
+  id           String   @id @default(uuid())
+  action       String   // e.g. "role.granted", "role.revoked", "user.email_changed"
+  actorUserId  String?
+  targetUserId String?
+  payload      Json     // before/after, plus action-specific fields
+  occurredAt   DateTime @default(now())
+
+  actor  User? @relation("AuditActor", fields: [actorUserId], references: [id])
+  target User? @relation("AuditTarget", fields: [targetUserId], references: [id])
+
+  @@index([action, occurredAt])
+  @@index([targetUserId, occurredAt])
+}
+
+// =====================================================================
+// A2 — Course Management
+// =====================================================================
+
+enum CourseStatus {
+  draft
+  review
+  published
+  archived
+}
+
+model Course {
+  id              String       @id @default(uuid())
+  slug            String       @unique
+  title           String
+  description     String       @db.Text
+  language        String       @default("vi")
+  level           String       @default("beginner") // beginner | intermediate | advanced
+  category        String?
+  coverUrl        String?
+  status          CourseStatus @default(draft)
+  // Course versioning (A2 acceptance: "học viên đang học bản cũ không bị break").
+  // Bump this when publishing a breaking change; new enrollments take the new version.
+  version         Int          @default(1)
+  publishedAt     DateTime?
+  // Pricing — null = free; positive = paid (cents of `currency`).
+  priceCents      Int?
+  currency        String       @default("USD")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  modules     Module[]
+  enrollments Enrollment[]
+  instructors CourseInstructor[]
+  userRoles   UserRole[]
+  userProgress UserCourseProgress[]
+  xpTransactions XpTransaction[]
+  streakRecords StreakRecord[]
+  tournaments  Tournament[]
+  orders      Order[]
+
+  @@index([status, publishedAt])
+  @@index([category, level])
+}
+
+model CourseInstructor {
+  id        String   @id @default(uuid())
+  courseId  String
+  userId    String
+  role      String   @default("owner") // owner | co-instructor
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([courseId, userId])
+}
+
+model Module {
+  id         String   @id @default(uuid())
+  courseId   String
+  title      String
+  orderIndex Int
+  createdAt  DateTime @default(now())
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@unique([courseId, orderIndex])
+  @@index([courseId])
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  moduleId    String
+  title       String
+  description String?
+  orderIndex  Int
+  // A3 acceptance: lesson hoàn thành khi xem ≥80% video, hoặc click mark complete.
+  // completionThreshold = % of video duration. NULL for non-video.
+  completionThresholdPct Int?    @default(80)
+  durationSec            Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module       Module        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  contentItems ContentItem[]
+  quizzes      Quiz[]
+  assignments  Assignment[]
+  forumThreads ForumThread[]
+  aiConversations AiConversation[]
+  notes        Note[]
+  skillTags    ContentSkillMapping[] @relation("LessonSkill")
+
+  @@unique([moduleId, orderIndex])
+  @@index([moduleId])
+}
+
+enum ContentType {
+  video
+  markdown
+  embed
+  file
+  external_link
+  pdf
+  scorm
+  lti
+  h5p
+}
+
+model ContentItem {
+  id         String      @id @default(uuid())
+  lessonId   String
+  type       ContentType
+  // type-specific payload: { url, transcriptUrl, durationSec } for video, etc.
+  payload    Json
+  orderIndex Int
+  createdAt  DateTime    @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  notes  Note[]
+
+  @@index([lessonId])
+}
+
+// =====================================================================
+// A3 — Learning Experience (Enrollment)
+// =====================================================================
+
+enum EnrollmentStatus {
+  active
+  completed
+  dropped
+  refunded
+}
+
+model Enrollment {
+  id              String           @id @default(uuid())
+  userId          String
+  courseId        String
+  // Frozen at enrollment time (A2 acceptance: học viên không bị break khi course update).
+  courseVersion   Int
+  status          EnrollmentStatus @default(active)
+  enrolledAt      DateTime         @default(now())
+  completedAt     DateTime?
+  // A3 acceptance: resume position lưu mỗi 10s.
+  lastLessonId    String?
+  lastPositionSec Int?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([userId, status])
+}
+
+// A3 — Note attached to a lesson, optionally to a content item, optionally
+// pinned to a video timestamp. Private to the user who created it.
+model Note {
+  id            String   @id @default(uuid())
+  userId        String
+  lessonId      String
+  contentItemId String?
+  // Timestamp into the video (sec). Null for non-video notes.
+  timestampSec  Int?
+  body          String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  contentItem ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+
+  @@index([userId, lessonId])
+}
+
+// =====================================================================
+// A4 — Assessment Engine (Quiz)
+// =====================================================================
+
+enum QuestionType {
+  mcq
+  true_false
+  fill_in
+  ordering
+  matching
+  numerical
+  essay
+  short_answer
+}
+
+model Quiz {
+  id                 String   @id @default(uuid())
+  // A quiz can attach to a lesson, or stand alone within a course.
+  lessonId           String?
+  courseId           String?
+  title              String
+  description        String?
+  // 1-5 (per spec gamification XP table). Null until set by instructor.
+  difficulty         Int?
+  passThresholdPct   Int      @default(70)
+  timeLimitSec       Int?
+  maxAttempts        Int?
+  randomizeOrder     Boolean  @default(false)
+  // A4 acceptance: confidence rating bắt buộc trước khi xem đáp án (per-quiz toggle).
+  requireConfidence  Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  lesson    Lesson?       @relation(fields: [lessonId], references: [id])
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@index([lessonId])
+  @@index([courseId])
+}
+
+model QuizQuestion {
+  id          String       @id @default(uuid())
+  quizId      String
+  type        QuestionType
+  prompt      String       @db.Text
+  explanation String?      @db.Text
+  points      Int          @default(1)
+  orderIndex  Int
+  // Type-specific metadata. Examples:
+  //   numerical:   { expected: number, tolerance: number }
+  //   short_answer: { acceptedRegexes: string[] }   // case-insensitive
+  //   essay:       null (manual graded)
+  extra       Json?
+
+  quiz       Quiz             @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options    QuestionOption[]
+  responses  AnswerResponse[]
+  skillTags  QuestionSkillTag[]
+
+  @@index([quizId, orderIndex])
+}
+
+model QuestionOption {
+  id              String   @id @default(uuid())
+  questionId      String
+  label           String   @db.Text
+  isCorrect       Boolean
+  orderIndex      Int
+  // A4.2: tag misconception cho từng đáp án sai — dùng cho Feedback Engine.
+  misconceptionId String?
+  // Type-specific extras. For `matching` questions: { side: "left"|"right", pairKey: string }
+  // (two options with same pairKey + opposite sides form a match pair).
+  extra           Json?
+
+  question      QuizQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  misconception Misconception? @relation(fields: [misconceptionId], references: [id])
+
+  @@index([questionId])
+}
+
+enum AttemptStatus {
+  in_progress
+  submitted
+  abandoned
+}
+
+model QuizAttempt {
+  id          String        @id @default(uuid())
+  quizId      String
+  userId      String
+  status      AttemptStatus @default(in_progress)
+  startedAt   DateTime      @default(now())
+  submittedAt DateTime?
+  scorePct    Float?
+  passed      Boolean?
+
+  quiz      Quiz             @relation(fields: [quizId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
+  responses AnswerResponse[]
+
+  @@index([userId, quizId])
+  @@index([quizId, status])
+}
+
+model AnswerResponse {
+  id              String   @id @default(uuid())
+  attemptId       String
+  questionId      String
+  // Shape per type:
+  //   mcq/true_false/ordering: string[] (option IDs, ordered for ordering)
+  //   fill_in/short_answer/essay: string
+  //   numerical: number
+  //   matching: Array<{ leftId: string, rightId: string }>
+  response        Json
+  // For essay: nullable until instructor grades. False until then.
+  isCorrect       Boolean
+  // Set true when grader/auto-grader has decided. Distinguishes pending essay
+  // (needsGrading=true) from auto-graded incorrect answers.
+  needsGrading    Boolean  @default(false)
+  // Manually-awarded points for essay/short_answer when partial credit applies.
+  manualScore     Int?
+  // 1-5 confidence rating (A4.3).
+  confidence      Int?
+  responseTimeMs  Int
+  answeredAt      DateTime @default(now())
+
+  attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [questionId], references: [id])
+
+  @@unique([attemptId, questionId])
+  @@index([questionId, isCorrect])
+}
+
+model Misconception {
+  id          String   @id @default(uuid())
+  // Stable code used by feedback templates, e.g. "confused_correlation_with_causation".
+  code        String   @unique
+  name        String
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+
+  options       QuestionOption[]
+  flags         MisconceptionFlag[]
+  templates     FeedbackTemplate[]
+}
+
+// =====================================================================
+// Bridge — Skill graph (B2 schema only; UI editor in Phase 2)
+// =====================================================================
+
+model Skill {
+  id          String   @id @default(uuid())
+  code        String   @unique // e.g. "linear_regression.basics"
+  name        String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  prerequisites    SkillPrerequisite[] @relation("SkillToPrerequisite")
+  dependents       SkillPrerequisite[] @relation("PrerequisiteToSkill")
+  contentMappings  ContentSkillMapping[]
+  questionTags     QuestionSkillTag[]
+  learnerStates    LearnerSkillState[]
+  feedbackTemplates FeedbackTemplate[]
+}
+
+// DAG edge: skill (skillId) requires prerequisiteSkillId.
+// Cycle prevention enforced at application layer.
+model SkillPrerequisite {
+  skillId             String
+  prerequisiteSkillId String
+  createdAt           DateTime @default(now())
+
+  skill        Skill @relation("SkillToPrerequisite", fields: [skillId], references: [id], onDelete: Cascade)
+  prerequisite Skill @relation("PrerequisiteToSkill", fields: [prerequisiteSkillId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, prerequisiteSkillId])
+  @@index([prerequisiteSkillId])
+}
+
+// Polymorphic by contentType.
+// contentId references Lesson.id when contentType = "lesson", etc.
+enum SkillContentType {
+  lesson
+  content_item
+  quiz
+}
+
+model ContentSkillMapping {
+  id              String           @id @default(uuid())
+  contentType     SkillContentType
+  contentId       String
+  skillId         String
+  // Coverage weight (0-1): how much this content covers the skill.
+  // Used by Feedback Engine remediation query.
+  coverageWeight  Float            @default(1.0)
+  createdAt       DateTime         @default(now())
+
+  skill  Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  // Soft FK to Lesson (only when contentType = "lesson") — enforced app-side.
+  lesson Lesson? @relation("LessonSkill", fields: [contentId], references: [id], map: "csm_lesson_fk")
+
+  @@unique([contentType, contentId, skillId])
+  @@index([skillId])
+  @@index([contentType, contentId])
+}
+
+model QuestionSkillTag {
+  questionId String
+  skillId    String
+  weight     Float  @default(1.0)
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  skill    Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, skillId])
+  @@index([skillId])
+}
+
+// =====================================================================
+// Phase 1 — Gamification: C1 (XP + Level)
+// XP is per-course (spec §5.1). One row per (user, course).
+// =====================================================================
+
+model UserCourseProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  xp        Int      @default(0)
+  level     Int      @default(1)
+  // Reserved for D5 growth-adjusted leaderboard (Phase 3+).
+  growthScore Float?
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  // Hot index for course leaderboard queries (spec §7.3).
+  @@index([courseId, xp])
+}
+
+// Append-only ledger of XP grants. Idempotency by (userId, reason, sourceId) —
+// re-emitting the same gamification trigger never double-awards.
+model XpTransaction {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String
+  amount     Int      // can be 0 when capped or speed-run, for audit
+  reason     String   // "lesson.completed", "quiz.passed.first_try", "xp.capped.daily", ...
+  sourceId   String?  // lesson id / attempt id / null
+  occurredAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // sourceId nullable — Postgres treats nulls as distinct in unique, so events
+  // without a source can be many rows; events with sourceId are deduped.
+  @@unique([userId, reason, sourceId])
+  @@index([userId, courseId, occurredAt])
+  @@index([courseId, occurredAt])
+}
+
+// =====================================================================
+// Phase 2 — Feedback Engine: B1 (Learner Modeling) + B3 (Diagnostic)
+// =====================================================================
+
+// Per-skill mastery estimate. One row per (user, skill).
+// Updated by BKT after every quiz.question.answered for a skill-tagged question.
+model LearnerSkillState {
+  id                 String   @id @default(uuid())
+  userId             String
+  skillId            String
+  // BKT P(L_t). Default 0.1 = "assume not yet mastered" prior (spec §4.1).
+  masteryProbability Float    @default(0.1)
+  attempts           Int      @default(0)
+  correctCount       Int      @default(0)
+  lastUpdatedAt      DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  // Hot index for "weak skill" queries (spec §7.3).
+  @@index([userId, masteryProbability])
+}
+
+// Tracks how often a learner has triggered a specific misconception. Resolved
+// flag flips when learner answers correctly the next time the same misconception
+// path could have been chosen — Phase 2 leaves resolved logic for Phase 3+.
+model MisconceptionFlag {
+  id              String    @id @default(uuid())
+  userId          String
+  misconceptionId String
+  count           Int       @default(1)
+  firstDetectedAt DateTime  @default(now())
+  lastDetectedAt  DateTime  @default(now())
+  resolved        Boolean   @default(false)
+  resolvedAt      DateTime?
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  misconception Misconception @relation(fields: [misconceptionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, misconceptionId])
+  @@index([userId, resolved])
+}
+
+enum FeedbackTemplateScope {
+  generic
+  per_misconception
+  per_skill
+}
+
+// Plain-text feedback templates. Phase 2 uses static strings; Phase 4 will
+// allow LLM-generated bodies (with the same delivery pipeline).
+model FeedbackTemplate {
+  id              String                @id @default(uuid())
+  scope           FeedbackTemplateScope
+  misconceptionId String?
+  skillId         String?
+  body            String                @db.Text
+  // Lower = higher priority when multiple templates match.
+  priority        Int                   @default(100)
+  createdAt       DateTime              @default(now())
+
+  misconception Misconception?    @relation(fields: [misconceptionId], references: [id], onDelete: Cascade)
+  skill         Skill?            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  deliveries    FeedbackDelivery[]
+
+  @@index([scope, misconceptionId])
+  @@index([scope, skillId])
+}
+
+// Audit + UI history of every feedback impression. body is snapshotted so
+// editing the template later doesn't change historical text.
+model FeedbackDelivery {
+  id                   String   @id @default(uuid())
+  userId               String
+  attemptId            String?
+  questionId           String?
+  templateId           String?
+  body                 String   @db.Text
+  // Array of lesson IDs surfaced as remediation. Stored as Json for flexibility.
+  remediationLessonIds Json
+  // Optional learner rating 1-5 — picked up later in B8 quality loop.
+  rating               Int?
+  deliveredAt          DateTime @default(now())
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template FeedbackTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([userId, deliveredAt])
+  @@index([attemptId])
+}
+
+// =====================================================================
+// Phase 1 — Gamification: C3 (Badges)
+// =====================================================================
+
+model Badge {
+  id          String   @id @default(uuid())
+  // Stable code referenced by handlers + tests, e.g. "first_step".
+  code        String   @unique
+  name        String
+  description String   @db.Text
+  emoji       String?
+  // "milestone" for Phase 1. Future: "skill", "social", "hidden", "tournament".
+  category    String   @default("milestone")
+  // Reserved for D4 (Phase 3+) when rarity is computed from % of users earning.
+  rarity      String   @default("common")
+  // Configurable criteria JSON for future custom badges. Phase 1 milestone
+  // logic is hard-coded so this is null.
+  criteria    Json?
+  createdAt   DateTime @default(now())
+
+  awards UserBadge[]
+}
+
+// =====================================================================
+// Phase 1 — Gamification: C4 (Streak per course)
+// =====================================================================
+
+model StreakRecord {
+  id             String   @id @default(uuid())
+  userId         String
+  courseId       String
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  // UTC date of the most recent qualifying activity. Null = never active.
+  lastActiveDate DateTime? @db.Date
+  updatedAt      DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId, currentStreak])
+}
+
+model UserBadge {
+  id       String   @id @default(uuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+  // Optional context — e.g. {courseId, attemptId} — for filtering on profile pages.
+  context  Json?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId, earnedAt])
+}
+
+// =====================================================================
+// Bridge — LearningEvent (event sourcing, append-only — see CLAUDE.md §5.1)
+// =====================================================================
+
+model LearningEvent {
+  id         BigInt   @id @default(autoincrement())
+  // Idempotency key — clients pass this to allow safe replay/retry.
+  // NULL allowed for server-generated events.
+  eventKey   String?  @unique
+  userId     String
+  // Matches LearningEventType in @feedbackme/shared-types.
+  eventType  String
+  // Schema-validated per eventType (Zod schemas in core packages).
+  payload    Json
+  // Optional context — courseId/lessonId/quizId etc, for partition pruning.
+  courseId   String?
+  occurredAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Hot indexes per SPEC §7.3.
+  @@index([userId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([courseId, occurredAt])
+}
+
+// =====================================================================
+// Phase 0 — A5 Assignments (manual-graded coursework attached to a lesson).
+// =====================================================================
+
+model Assignment {
+  id          String   @id @default(uuid())
+  lessonId    String
+  title       String
+  description String   @db.Text
+  // Optional deadline shown to learners; not enforced server-side in MVP.
+  dueAt       DateTime?
+  // Maximum score the instructor can award (0..maxScore).
+  maxScore    Int      @default(100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lesson      Lesson                 @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  submissions AssignmentSubmission[]
+
+  @@index([lessonId])
+}
+
+enum SubmissionStatus {
+  submitted
+  graded
+}
+
+model AssignmentSubmission {
+  id            String           @id @default(uuid())
+  assignmentId  String
+  userId        String
+  body          String           @db.Text
+  attachmentUrl String?
+  status        SubmissionStatus @default(submitted)
+  submittedAt   DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  // Grading fields — set when status flips to graded.
+  score    Int?
+  feedback String?   @db.Text
+  graderId String?
+  gradedAt DateTime?
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
+  grader     User?      @relation("Grader", fields: [graderId], references: [id])
+
+  // Idempotent — one row per (assignment, user). Re-submission updates this row.
+  @@unique([assignmentId, userId])
+  @@index([userId, submittedAt])
+  @@index([assignmentId, status])
+}
+
+// =====================================================================
+// Phase 0 — A6 Forum/discussion. One thread per question, posts threaded
+// flat (Phase 0 simple — no nested replies). Author can be a learner or
+// instructor — moderation flags reserved for Phase 4.
+// =====================================================================
+
+model ForumThread {
+  id        String   @id @default(uuid())
+  lessonId  String
+  authorId  String
+  title     String
+  body      String   @db.Text
+  // Author or instructor can mark a post as the resolution.
+  resolvedPostId String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  author User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  posts  ForumPost[]
+
+  @@index([lessonId, createdAt])
+  @@index([authorId])
+}
+
+model ForumPost {
+  id        String   @id @default(uuid())
+  threadId  String
+  authorId  String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  thread ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+// =====================================================================
+// Phase 1 — C2 Quests. A static catalog of daily missions with target
+// counters; per-user per-day progress rows track completion.
+// =====================================================================
+
+enum QuestKind {
+  daily
+  weekly
+}
+
+enum QuestObjective {
+  complete_lessons
+  pass_quizzes
+  resolve_misconceptions
+  earn_xp
+}
+
+model Quest {
+  id          String         @id @default(uuid())
+  // Stable code referenced by handlers + seeds, e.g. "daily_one_lesson".
+  code        String         @unique
+  name        String
+  description String         @db.Text
+  emoji       String?
+  kind        QuestKind      @default(daily)
+  objective   QuestObjective
+  // Numeric target — interpretation depends on objective.
+  target      Int            @default(1)
+  // Reward XP granted once when target is met.
+  rewardXp    Int            @default(20)
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+
+  userProgress UserQuestProgress[]
+}
+
+// =====================================================================
+// Phase 3 — Tournament. 5-table schema per spec §7.5. Stub for Phase 0+
+// (table only, no UI logic yet — UI lands in Phase 3).
+// =====================================================================
+
+enum TournamentStatus {
+  draft
+  published
+  active
+  ended
+}
+
+model Tournament {
+  id          String           @id @default(uuid())
+  // Optional course context — null = platform-wide tournament.
+  courseId    String?
+  creatorId   String
+  title       String
+  description String           @db.Text
+  status      TournamentStatus @default(draft)
+  startsAt    DateTime
+  endsAt      DateTime
+  // Optional max team size (1 = solo, >1 = team-based).
+  teamSize    Int              @default(1)
+  // Total prize XP — distributed to top finishers per `prizeDistribution`.
+  prizeXp     Int              @default(0)
+  prizeDistribution Json?      // e.g. { "1": 50, "2": 30, "3": 20 } percentages
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  course        Course?                 @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  creator       User                    @relation("TournamentCreator", fields: [creatorId], references: [id])
+  registrations TournamentRegistration[]
+  missions      TournamentMission[]
+  rankings      TournamentRanking[]
+
+  @@index([status, startsAt])
+  @@index([courseId, status])
+}
+
+model TournamentRegistration {
+  id            String   @id @default(uuid())
+  tournamentId  String
+  userId        String
+  // Team identifier — null when teamSize=1 (solo).
+  teamId        String?
+  registeredAt  DateTime @default(now())
+  disqualifiedAt DateTime?
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId, teamId])
+}
+
+model TournamentMission {
+  id            String   @id @default(uuid())
+  tournamentId  String
+  title         String
+  description   String   @db.Text
+  // Order in the tournament's mission list.
+  orderIndex    Int
+  // Points awarded for completing this mission.
+  points        Int      @default(100)
+  // Optional unlock dependency — must complete this mission first.
+  prerequisiteId String?
+  createdAt     DateTime @default(now())
+
+  tournament   Tournament         @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  prerequisite TournamentMission? @relation("MissionPrereq", fields: [prerequisiteId], references: [id])
+  unlocks      TournamentMission[] @relation("MissionPrereq")
+
+  @@unique([tournamentId, orderIndex])
+}
+
+model TournamentRanking {
+  id           String   @id @default(uuid())
+  tournamentId String
+  // Either userId (solo) or teamId (team) — exactly one is set.
+  userId       String?
+  teamId       String?
+  rank         Int
+  totalPoints  Int      @default(0)
+  // Materialized view — rebuilt on every mission completion event.
+  updatedAt    DateTime @updatedAt
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+  @@unique([tournamentId, teamId])
+  @@index([tournamentId, rank])
+}
+
+model UserQuestProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  questId   String
+  // Day key — yyyy-mm-dd in UTC for daily quests, ISO week for weekly.
+  periodKey String
+  count     Int      @default(0)
+  completed Boolean  @default(false)
+  completedAt DateTime?
+  // Optional course context — only set when the triggering action was
+  // course-scoped (lesson/quiz/misconception in a specific course).
+  courseId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quest Quest @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questId, periodKey])
+  @@index([userId, periodKey])
+}
+
+
+// =====================================================================
+// SCORM 1.2 — uploaded packages + per-user attempts (cmi.* state).
+// Files unzipped to apps/web/uploads/scorm/{packageId}/ and served via a
+// Next route handler. For prod, swap to S3/R2 (see API route).
+// =====================================================================
+
+model ScormPackage {
+  id          String   @id @default(uuid())
+  // SHA256 of original .zip — for dedupe + integrity check.
+  fileHash    String
+  // SCORM version detected from manifest. Phase 1 supports "1.2" only.
+  version     String   @default("1.2")
+  // Title pulled from imsmanifest.xml organization/title.
+  title       String
+  // Relative path to entry HTML (e.g. "shared/launchpage.html").
+  entryHref   String
+  // Original filename for display.
+  originalName String
+  // Total size of unzipped folder, bytes.
+  sizeBytes   Int
+  uploaderId  String
+  uploadedAt  DateTime @default(now())
+
+  uploader   User           @relation("ScormUploader", fields: [uploaderId], references: [id], onDelete: Cascade)
+  attempts   ScormAttempt[]
+
+  @@index([uploaderId, uploadedAt])
+}
+
+model ScormAttempt {
+  id            String   @id @default(uuid())
+  packageId     String
+  userId        String
+  // Optional course context — set when launched from a Lesson, null for sandbox.
+  courseId      String?
+  lessonId      String?
+  // SCORM CMI fields (1.2 subset).
+  lessonStatus  String   @default("not attempted") // passed/completed/failed/incomplete/browsed/not attempted
+  completionStatus String?
+  // Numeric score 0..100. Mapped from cmi.core.score.raw.
+  scoreRaw      Float?
+  scoreMin      Float?
+  scoreMax      Float?
+  // suspend_data (resume state) — string up to 64KB per spec.
+  suspendData   String?  @db.Text
+  // location (bookmark) — string up to 255 per spec.
+  location      String?
+  // Time spent in this attempt, "HHHH:MM:SS.SS" per spec.
+  totalTime     String?
+  // Timestamp of last LMSCommit.
+  lastCommitAt  DateTime?
+  // True after LMSFinish or browser close detected.
+  finished      Boolean  @default(false)
+  startedAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  package ScormPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, userId])
+  @@index([userId, updatedAt])
+  @@index([packageId, finished])
+}
+
+
+
+// =====================================================================
+// LTI 1.3 — FeedBackMe acts as the Platform (LMS) embedding external tools.
+// Each tool registers issuer + clientId + keys; learners launch via signed
+// JWT id_token that the tool verifies against our public JWKS.
+// =====================================================================
+
+model LtiTool {
+  id             String   @id @default(uuid())
+  // Display name shown when authoring.
+  name           String
+  // Tool's canonical identifier (per spec). Usually the tool's domain.
+  toolUrl        String
+  // OIDC login initiation URL — where we redirect on launch.
+  loginInitUrl   String
+  // Where the tool POSTs its public key set (for incoming msg verify).
+  // Either a JWKS URL or a static set; we store URL in MVP.
+  jwksUrl        String?
+  // The OAuth 2 client_id we issue to the tool when registering with us.
+  clientId       String   @unique
+  // Optional deployment ID — most tools hardcode "1".
+  deploymentId   String   @default("1")
+  // RSA private key (PEM) for signing id_tokens. Generated on creation.
+  // For prod: store in KMS / Vault. MVP: PEM string in DB.
+  privateKey     String   @db.Text
+  // RSA public key kid (key ID) — surfaced via /.well-known/jwks.json.
+  publicKeyKid   String
+  // Public key (PEM) — duplicated in JSON form as JWKS for tool to fetch.
+  publicKeyPem   String   @db.Text
+  registeredById String
+  createdAt      DateTime @default(now())
+
+  registeredBy User       @relation("LtiToolRegistrar", fields: [registeredById], references: [id])
+  launches    LtiLaunch[]
+
+  @@index([clientId])
+}
+
+model LtiLaunch {
+  id            String   @id @default(uuid())
+  toolId        String
+  userId        String
+  // Optional course context.
+  courseId      String?
+  lessonId      String?
+  // resource_link_id per spec — uniquely identifies the placement.
+  resourceLinkId String
+  // nonce + issuedAt — anti-replay. Same nonce can't be reused within 5 min.
+  nonce         String   @unique
+  // Issued at + expires (typically 5 min for OIDC id_tokens).
+  issuedAt      DateTime @default(now())
+  expiresAt     DateTime
+
+  tool LtiTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  user User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([toolId, userId, issuedAt])
+}
+
+// =====================================================================
+// H5P — interactive content (.h5p package). Player via h5p-standalone.
+// Files unzipped to apps/web/uploads/h5p/{packageId}/ similar to SCORM.
+// =====================================================================
+
+model H5pPackage {
+  id           String   @id @default(uuid())
+  fileHash     String
+  // Library identifier (mainLibrary from h5p.json), e.g. "H5P.MultiChoice".
+  mainLibrary  String
+  // Title from h5p.json metadata.
+  title        String
+  originalName String
+  sizeBytes    Int
+  uploaderId   String
+  uploadedAt   DateTime @default(now())
+
+  uploader User         @relation("H5pUploader", fields: [uploaderId], references: [id], onDelete: Cascade)
+  attempts H5pAttempt[]
+
+  @@index([uploaderId, uploadedAt])
+}
+
+model H5pAttempt {
+  id        String   @id @default(uuid())
+  packageId String
+  userId    String
+  courseId  String?
+  lessonId  String?
+  // Last xAPI score (0..1 normalized).
+  scoreRaw  Float?
+  scoreMax  Float?
+  // Latest xAPI verb seen — "completed" / "answered" / "experienced".
+  lastVerb  String?
+  // Latest xAPI result success flag.
+  success   Boolean?
+  // Free-form xAPI state cache for resume.
+  state     Json?
+  startedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  package H5pPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, userId])
+  @@index([userId, updatedAt])
+}
+
+
+// =====================================================================
+// Integration credentials — admin-managed secrets (OpenAI, Stripe, etc).
+// Values encrypted at rest with SECRETS_MASTER_KEY env var (AES-256-GCM).
+// Plaintext NEVER returned to client; only server reads via getIntegrationSecret().
+// =====================================================================
+
+model IntegrationCredential {
+  // Stable key, e.g. "openai", "stripe.secret", "vnpay.secret".
+  key            String   @id
+  // Base64( nonce(12) || ciphertext || authTag(16) ).
+  encryptedValue String   @db.Text
+  // Optional non-secret metadata, e.g. {"model": "gpt-4o-mini"}.
+  meta           Json?
+  updatedById    String
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+}
+
+
+// =====================================================================
+// AI Tutor — Phase 4. Per-lesson conversations + cost tracking.
+// =====================================================================
+
+model AiConversation {
+  id        String   @id @default(uuid())
+  userId    String
+  lessonId  String
+  title     String?  // First user message snippet, set after first turn.
+  model     String   @default("gpt-4o-mini")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson   Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([userId, lessonId, updatedAt])
+}
+
+enum AiMessageRole {
+  system
+  user
+  assistant
+}
+
+model AiMessage {
+  id             String        @id @default(uuid())
+  conversationId String
+  role           AiMessageRole
+  content        String        @db.Text
+  // Tokens consumed by THIS message — for assistant messages = output tokens
+  // generated; for user messages = input tokens billed when this turn was sent.
+  tokensInput    Int?
+  tokensOutput   Int?
+  costUsd        Float?
+  createdAt      DateTime      @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+// Daily aggregate per user for rate/cost capping. Cheaper than scanning AiMessage.
+model AiUsageLog {
+  id           String   @id @default(uuid())
+  userId       String
+  // Day key — yyyy-mm-dd UTC.
+  dayKey       String
+  model        String
+  // Total tokens + cost on this day, this model, this user.
+  tokensInput  Int      @default(0)
+  tokensOutput Int      @default(0)
+  costUsd      Float    @default(0)
+  // Number of completed turns (assistant messages) on this day.
+  turns        Int      @default(0)
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayKey, model])
+  @@index([userId, dayKey])
+}
+
+
+// =====================================================================
+// Payments — Stripe primary; VNPay/Momo can adopt the same Order shape.
+// Course pricing lives on Course.priceCents; free courses keep null.
+// =====================================================================
+
+enum OrderStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum PaymentProvider {
+  stripe
+  vnpay
+  momo
+}
+
+model Order {
+  id            String          @id @default(uuid())
+  userId        String
+  courseId      String
+  // Locked at order time so price changes don't affect pending orders.
+  amountCents   Int
+  currency      String          @default("USD")
+  provider      PaymentProvider @default(stripe)
+  status        OrderStatus     @default(pending)
+  // Provider-specific reference (Stripe Checkout Session id, VNPay txn ref, ...)
+  providerRef   String?         @unique
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([courseId, status])
+  @@index([status, createdAt])
+}

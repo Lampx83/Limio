@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+.DS_Store
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+
+# prisma
+packages/db/prisma/migrations/dev.db*
+
+# legacy snapshot
+legacy-v1/node_modules/
+legacy-v1/.next/

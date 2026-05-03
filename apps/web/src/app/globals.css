@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Design tokens ---------- */
+:root {
+  color-scheme: light;
+  --bg: 250 250 252;            /* page background — slightly cool off-white */
+  --surface: 255 255 255;       /* cards, modals */
+  --surface-muted: 244 244 248; /* alt rows, chips */
+  --border: 226 226 232;        /* hairlines */
+  --text: 17 24 39;             /* slate-900 */
+  --text-muted: 100 110 130;    /* secondary copy */
+  --text-faint: 148 158 178;    /* placeholder, captions */
+
+  --brand: 79 70 229;           /* indigo-600 */
+  --brand-soft: 238 240 255;    /* tint */
+  --accent: 245 158 11;         /* amber-500 */
+  --success: 16 185 129;        /* emerald-500 */
+  --danger: 225 29 72;          /* rose-600 */
+}
+
+.dark, :root.dark {
+  color-scheme: dark;
+  --bg: 9 11 20;
+  --surface: 17 19 32;
+  --surface-muted: 24 27 43;
+  --border: 38 42 60;
+  --text: 240 242 250;
+  --text-muted: 160 168 188;
+  --text-faint: 110 118 138;
+  --brand-soft: 35 32 80;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+      Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  ::selection {
+    background-color: rgb(var(--brand) / 0.25);
+  }
+  *:focus-visible {
+    outline: 2px solid rgb(var(--brand));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* ---------- Component classes ----------
+   Defaults Tailwind sizes everywhere except text-xs which is bumped 2x.
+   .chip locks back to 12px because chips/badges need to stay compact even
+   when text-xs (used for body captions) gets larger. */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed select-none;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700 hover:shadow-brand-glow active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply btn border bg-[rgb(var(--surface))] text-[rgb(var(--text))] hover:bg-[rgb(var(--surface-muted))];
+    border-color: rgb(var(--border));
+  }
+  .btn-ghost {
+    @apply btn text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))];
+  }
+  .btn-danger {
+    @apply btn bg-danger-600 text-white hover:bg-danger-700 active:scale-[0.98];
+  }
+  .btn-sm {
+    @apply px-3 py-1.5;
+    font-size: 0.8125rem; /* 13px — explicit so we don't pick up bumped text-xs */
+    line-height: 1.125rem;
+  }
+  .btn-lg {
+    @apply px-6 py-3 text-base rounded-xl;
+  }
+
+  /* Inputs */
+  .input,
+  .select,
+  .textarea {
+    @apply block w-full rounded-lg border bg-[rgb(var(--surface))] px-3 py-2 text-sm text-[rgb(var(--text))] placeholder:text-[rgb(var(--text-faint))] transition-shadow duration-150;
+    border-color: rgb(var(--border));
+  }
+  .input:hover,
+  .select:hover,
+  .textarea:hover {
+    border-color: rgb(var(--brand) / 0.4);
+  }
+  .input:focus,
+  .select:focus,
+  .textarea:focus {
+    outline: none;
+    border-color: rgb(var(--brand));
+    box-shadow: 0 0 0 3px rgb(var(--brand) / 0.15);
+  }
+  .label {
+    @apply block text-sm font-medium text-[rgb(var(--text))];
+  }
+  .help {
+    @apply mt-1 block text-[rgb(var(--text-faint))];
+    /* Intentionally uses Tailwind text-xs (now 24px) — this is the 'smallest body text' that user wanted bumped 2x. */
+    font-size: 0.875rem; /* keep readable but not chunky for forms */
+    line-height: 1.25rem;
+  }
+
+  /* Surfaces */
+  .card {
+    @apply rounded-xl border bg-[rgb(var(--surface))] p-5 shadow-card transition-shadow duration-200;
+    border-color: rgb(var(--border));
+  }
+  .card-hover {
+    @apply card hover:shadow-card-hover hover:-translate-y-0.5 transition-transform duration-200;
+  }
+  .surface {
+    background-color: rgb(var(--surface));
+    border-color: rgb(var(--border));
+  }
+  .surface-muted {
+    background-color: rgb(var(--surface-muted));
+  }
+
+  /* Chips & badges — locked to 12px so the bumped text-xs doesn't make them chunky. */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-medium;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    background-color: rgb(var(--surface-muted));
+    color: rgb(var(--text-muted));
+  }
+  .chip-brand {
+    @apply chip;
+    background-color: rgb(var(--brand-soft));
+    color: rgb(var(--brand));
+  }
+  .chip-accent {
+    @apply chip bg-accent-100 text-accent-700;
+  }
+  .chip-success {
+    @apply chip bg-success-100 text-success-700;
+  }
+  .chip-danger {
+    @apply chip bg-danger-100 text-danger-700;
+  }
+
+  /* Brand text gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      120deg,
+      #4f46e5 0%,
+      #7c3aed 50%,
+      #db2777 100%
+    );
+  }
+
+  /* Section heading + muted text helpers */
+  .h-display {
+    @apply font-display tracking-tight;
+  }
+  .text-muted {
+    color: rgb(var(--text-muted));
+  }
+  .text-faint {
+    color: rgb(var(--text-faint));
+  }
+  .border-token {
+    border-color: rgb(var(--border));
+  }
+
+  /* Link */
+  .link {
+    @apply text-brand-600 hover:text-brand-700 hover:underline underline-offset-2;
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+.env.local
+.env
+data/*.db
+data/*.db-journal
+data/.master.key
+*.log
+.DS_Store
+next-env.d.ts

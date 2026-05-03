@@ -1,0 +1,388 @@
+import OpenAI from "openai";
+import { z } from "zod";
+import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
+
+/**
+ * AI authoring generators — used by instructor UI to draft skill tags,
+ * feedback templates, and quiz questions. All return STRUCTURED suggestions
+ * that the instructor reviews + confirms before persisting.
+ *
+ * Each generator logs its usage to AiUsageLog so cost tracking is unified
+ * with AI Tutor (per-day-per-model bucket per user).
+ */
+
+export class AiGenerationError extends Error {
+  constructor(
+    public readonly code:
+      | "validation_failed"
+      | "openai_error"
+      | "json_parse_failed",
+    public readonly details?: unknown,
+  ) {
+    super(code);
+  }
+}
+
+const PRICE_PER_1K_INPUT: Record<string, number> = {
+  "gpt-4o-mini": 0.00015,
+  "gpt-4o": 0.0025,
+};
+const PRICE_PER_1K_OUTPUT: Record<string, number> = {
+  "gpt-4o-mini": 0.0006,
+  "gpt-4o": 0.01,
+};
+
+function dayKey(now = new Date()): string {
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+async function logUsage(
+  userId: string,
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  db: PrismaClient,
+) {
+  const inP = PRICE_PER_1K_INPUT[model] ?? 0;
+  const outP = PRICE_PER_1K_OUTPUT[model] ?? 0;
+  const costUsd = (inputTokens / 1000) * inP + (outputTokens / 1000) * outP;
+  const k = dayKey();
+  await db.aiUsageLog.upsert({
+    where: { userId_dayKey_model: { userId, dayKey: k, model } },
+    create: {
+      userId,
+      dayKey: k,
+      model,
+      tokensInput: inputTokens,
+      tokensOutput: outputTokens,
+      costUsd,
+      turns: 1,
+    },
+    update: {
+      tokensInput: { increment: inputTokens },
+      tokensOutput: { increment: outputTokens },
+      costUsd: { increment: costUsd },
+      turns: { increment: 1 },
+    },
+  });
+  return costUsd;
+}
+
+/** Wraps OpenAI's structured-output API. Returns parsed JSON + usage. */
+async function callJsonModel<T>(
+  openai: OpenAI,
+  model: string,
+  systemPrompt: string,
+  userPrompt: string,
+  schemaName: string,
+  schemaDef: Record<string, unknown>,
+): Promise<{ data: T; inputTokens: number; outputTokens: number }> {
+  try {
+    const res = await openai.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: schemaName,
+          strict: true,
+          schema: schemaDef,
+        },
+      },
+      temperature: 0.3,
+      max_tokens: 2000,
+    });
+    const content = res.choices[0]?.message?.content ?? "";
+    let data: T;
+    try {
+      data = JSON.parse(content);
+    } catch {
+      throw new AiGenerationError("json_parse_failed", content.slice(0, 200));
+    }
+    return {
+      data,
+      inputTokens: res.usage?.prompt_tokens ?? 0,
+      outputTokens: res.usage?.completion_tokens ?? 0,
+    };
+  } catch (e) {
+    if (e instanceof AiGenerationError) throw e;
+    throw new AiGenerationError("openai_error", (e as Error).message);
+  }
+}
+
+// =====================================================================
+// (a) Skill suggester — match content against existing Skill catalog.
+// =====================================================================
+
+export interface SkillSuggestion {
+  skillId: string;
+  skillCode: string;
+  skillName: string;
+  /** 0..1 confidence — model-reported. */
+  confidence: number;
+  /** Why this skill matches — shown to instructor for review. */
+  rationale: string;
+}
+
+const SKILL_SUGGEST_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    suggestions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          skillCode: { type: "string" },
+          confidence: { type: "number" },
+          rationale: { type: "string" },
+        },
+        required: ["skillCode", "confidence", "rationale"],
+      },
+    },
+  },
+  required: ["suggestions"],
+};
+
+export async function suggestSkillsForContent(
+  userId: string,
+  contentText: string,
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<SkillSuggestion[]> {
+  if (!contentText.trim()) {
+    throw new AiGenerationError("validation_failed", "empty_content");
+  }
+  const skills = await db.skill.findMany({
+    select: { id: true, code: true, name: true, description: true },
+    orderBy: { code: "asc" },
+  });
+  if (skills.length === 0) return [];
+
+  const catalog = skills
+    .map(
+      (s) =>
+        `- code=${s.code} | name=${s.name}${s.description ? ` | desc=${s.description}` : ""}`,
+    )
+    .join("\n");
+
+  const system = `You are an expert curriculum designer. Match LMS content to skills from a fixed catalog.
+Return ONLY JSON. Pick at most 5 most-relevant skills. Confidence is your subjective relevance score [0..1].
+NEVER invent a skill code that isn't in the catalog — if no match, return empty list.`;
+
+  const user = `# Skill catalog
+${catalog}
+
+# Content to tag
+"""
+${contentText.slice(0, 6000)}
+"""
+
+Return JSON: { suggestions: [{ skillCode, confidence, rationale }] }`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<{
+    suggestions: Array<{ skillCode: string; confidence: number; rationale: string }>;
+  }>(openai, model, system, user, "skill_suggestions", SKILL_SUGGEST_SCHEMA);
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+
+  // Resolve skillCode → id; drop suggestions for unknown codes.
+  const byCode = new Map(skills.map((s) => [s.code, s]));
+  return data.suggestions
+    .map((s) => {
+      const sk = byCode.get(s.skillCode);
+      if (!sk) return null;
+      return {
+        skillId: sk.id,
+        skillCode: sk.code,
+        skillName: sk.name,
+        confidence: Math.max(0, Math.min(1, s.confidence)),
+        rationale: s.rationale,
+      };
+    })
+    .filter((x): x is SkillSuggestion => x !== null)
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, 5);
+}
+
+// =====================================================================
+// (b) Feedback template body generator.
+// =====================================================================
+
+export interface FeedbackBodyDraft {
+  body: string;
+  /** Why this body matches the misconception — for instructor sanity check. */
+  rationale: string;
+}
+
+const FEEDBACK_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    body: { type: "string" },
+    rationale: { type: "string" },
+  },
+  required: ["body", "rationale"],
+};
+
+export async function generateFeedbackBody(
+  userId: string,
+  input: {
+    misconceptionName: string;
+    misconceptionDescription: string;
+    /** Optional course/lesson context to ground the feedback. */
+    context?: string;
+    /** Optional skill names linked to this misconception. */
+    skillNames?: string[];
+  },
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<FeedbackBodyDraft> {
+  if (!input.misconceptionName.trim() || !input.misconceptionDescription.trim()) {
+    throw new AiGenerationError("validation_failed");
+  }
+
+  const system = `Bạn là chuyên gia giáo dục viết phản hồi (feedback) cho học viên.
+Nhiệm vụ: Khi học viên trả lời sai vì rơi vào misconception, viết một đoạn ngắn (60-150 từ) bằng TIẾNG VIỆT để:
+1. Chỉ ra rõ misconception đó là gì.
+2. Giải thích tại sao nó SAI.
+3. Hướng dẫn cách tư duy đúng (ngắn gọn, không spoil đáp án bài tập cụ thể).
+Phong cách: thân thiện, không phán xét. Markdown được phép.`;
+
+  const user = `# Misconception
+- Tên: ${input.misconceptionName}
+- Mô tả: ${input.misconceptionDescription}
+${input.skillNames?.length ? `- Liên quan skill: ${input.skillNames.join(", ")}` : ""}
+${input.context ? `\n# Context bài học\n${input.context.slice(0, 3000)}` : ""}
+
+Trả về JSON: { body, rationale }`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<FeedbackBodyDraft>(
+    openai,
+    model,
+    system,
+    user,
+    "feedback_body_draft",
+    FEEDBACK_SCHEMA,
+  );
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+  return data;
+}
+
+// =====================================================================
+// (c) Quiz question generator.
+// =====================================================================
+
+export interface QuestionDraft {
+  type: "mcq" | "true_false" | "fill_in";
+  prompt: string;
+  options: Array<{
+    label: string;
+    isCorrect: boolean;
+    /** When non-null, the option represents a known misconception. */
+    misconceptionHint: string | null;
+  }>;
+  explanation: string;
+  /** Suggested skill codes from the catalog this question tests. */
+  skillCodes: string[];
+}
+
+const QUESTIONS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          type: { type: "string", enum: ["mcq", "true_false", "fill_in"] },
+          prompt: { type: "string" },
+          options: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                label: { type: "string" },
+                isCorrect: { type: "boolean" },
+                misconceptionHint: { type: ["string", "null"] },
+              },
+              required: ["label", "isCorrect", "misconceptionHint"],
+            },
+          },
+          explanation: { type: "string" },
+          skillCodes: { type: "array", items: { type: "string" } },
+        },
+        required: ["type", "prompt", "options", "explanation", "skillCodes"],
+      },
+    },
+  },
+  required: ["questions"],
+};
+
+export const QuestionDraftInput = z.object({
+  lessonContent: z.string().min(20).max(8000),
+  count: z.number().int().min(1).max(10).default(3),
+  /** Difficulty hint — drives prompt tone. */
+  difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
+});
+
+export async function generateQuestions(
+  userId: string,
+  input: z.infer<typeof QuestionDraftInput>,
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<QuestionDraft[]> {
+  const skills = await db.skill.findMany({ select: { code: true, name: true } });
+  const catalog = skills.map((s) => `- ${s.code}: ${s.name}`).join("\n");
+
+  const system = `Bạn là chuyên gia ra đề kiểm tra cho LMS.
+Nhiệm vụ: Đọc nội dung bài học, sinh ra ${input.count} câu hỏi chất lượng cao bằng TIẾNG VIỆT (trừ khi nội dung bài học toàn tiếng Anh).
+
+Quy tắc:
+1. Mỗi câu CÓ ÍT NHẤT một option đúng.
+2. type="mcq" có 3-4 options, đúng đa số 1 (multi nếu cần).
+3. type="true_false" có ĐÚNG 2 options ("Đúng"/"Sai" hoặc "True"/"False"), 1 đúng.
+4. type="fill_in" mỗi option label = đáp án chấp nhận được.
+5. Với MCQ, các option SAI nên reflect MISCONCEPTION cụ thể — set "misconceptionHint" mô tả ngắn lỗi tư duy đó. Option đúng có misconceptionHint=null.
+6. explanation: vài câu giải thích tại sao đáp án đúng.
+7. skillCodes: chọn từ catalog dưới đây (skip nếu không match).
+
+# Skill catalog
+${catalog || "(empty — bỏ trống skillCodes)"}
+
+Difficulty: ${input.difficulty}`;
+
+  const user = `# Lesson content
+"""
+${input.lessonContent}
+"""
+
+Trả về JSON: { questions: [...] }`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<{
+    questions: QuestionDraft[];
+  }>(openai, model, system, user, "question_drafts", QUESTIONS_SCHEMA);
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+
+  // Sanity: only return questions that satisfy at least 1 isCorrect option.
+  return data.questions
+    .filter(
+      (q) => Array.isArray(q.options) && q.options.some((o) => o.isCorrect),
+    )
+    .slice(0, input.count);
+}

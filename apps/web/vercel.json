@@ -1,0 +1,31 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && pnpm --filter @feedbackme/db prisma:generate && pnpm --filter @feedbackme/web build",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "functions": {
+    "src/app/api/ai/tutor/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/ai/generate-questions/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/scorm-packages/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/h5p-packages/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/streak-grace-check",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/tournament-tick",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
