@@ -28,6 +28,13 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
 # ---------- builder ----------
 FROM base AS builder
 ENV NEXT_TELEMETRY_DISABLED=1
+# Placeholder env for build-time only. Next.js may evaluate routes that touch
+# Prisma / NextAuth during prerender — these vars must exist for parsers to pass,
+# but no real connection is made. Real values are injected at runtime by compose.
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public"
+ENV NEXTAUTH_SECRET="build-time-placeholder-not-used-at-runtime"
+ENV NEXTAUTH_URL="http://localhost:3000"
+ENV SKIP_ENV_VALIDATION=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
