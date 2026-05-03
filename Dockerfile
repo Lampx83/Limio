@@ -84,6 +84,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# Carry the sub-path prefix into the runner so the HEALTHCHECK curl hits
+# the correct URL. Must match NEXT_PUBLIC_BASE_PATH used at build time.
+# Empty = served from domain root (e.g. docker build without --build-arg).
+ARG NEXT_PUBLIC_BASE_PATH=""
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
@@ -106,7 +112,10 @@ VOLUME ["/app/apps/web/uploads"]
 USER nextjs
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -fsS http://127.0.0.1:3000/ >/dev/null || exit 1
+# NEXT_PUBLIC_BASE_PATH is "" or "/limio" — include it so the healthcheck
+# hits an actual route.  With basePath=/limio, GET / returns 404; only
+# /limio/... routes exist.  Shell form (no brackets) expands the env var.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -fsS "http://127.0.0.1:3000${NEXT_PUBLIC_BASE_PATH}/" >/dev/null || exit 1
 
 CMD ["node", "apps/web/server.js"]
