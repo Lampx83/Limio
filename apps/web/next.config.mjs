@@ -20,14 +20,11 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
     outputFileTracingRoot: resolve(__dirname, "../../"),
-    // Force-include the Prisma query engine binary in the standalone output.
-    // Next.js file tracing skips native .node binaries; without this the
-    // standalone image throws PrismaClientInitializationError at runtime.
-    outputFileTracingIncludes: {
-      "/**": [
-        "./node_modules/**/.prisma/client/libquery_engine-*.node",
-      ],
-    },
+    // NOTE: outputFileTracingIncludes is intentionally omitted.
+    // A glob over node_modules/**  in a pnpm workspace (with its large
+    // virtual store) exhausts the Node.js heap during "Collecting build
+    // traces".  The Prisma query engine binary is instead copied into the
+    // image explicitly by the `prisma-engine` stage in the Dockerfile.
   },
 };
 

@@ -67,6 +67,10 @@ jobs:
         run: pnpm test
 
       - name: Build (verify Next.js standalone output)
+        # Increase heap for "Collecting build traces" — the pnpm virtual
+        # store is large enough that the default 2 GB V8 limit is hit.
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: pnpm --filter @feedbackme/web build
 
   docker-build:
