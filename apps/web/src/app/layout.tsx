@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   title: "Limio — Learn your way",
   description:
     "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và gamification. Học theo cách của bạn — fresh, focused, your own pace.",
+  icons: {
+    // SVG favicon — Next.js automatically prepends basePath so the <link>
+    // tag will reference /limio/favicon.svg when basePath=/limio.
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/favicon.svg",
+  },
 };
 
 // Runs before React hydration to set the dark class — prevents flash of wrong theme.

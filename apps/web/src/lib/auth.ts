@@ -46,9 +46,19 @@ if (
   );
 }
 
+// Build-time base path (e.g. "/limio"). Empty when served from root.
+// Baked into the bundle via NEXT_PUBLIC_BASE_PATH Docker build-arg.
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Tell NextAuth where its API routes are mounted.
+  // Without this, next-auth/react calls /api/auth/... (no basePath prefix),
+  // which under a sub-path proxy hits the wrong server entirely.
+  basePath: `${BASE}/api/auth`,
   session: { strategy: "jwt" },
-  pages: { signIn: "/signin" },
+  // Must include basePath so NextAuth generates the correct absolute redirect
+  // URL when sending unauthenticated users to the sign-in page.
+  pages: { signIn: `${BASE}/signin` },
   // Allows NextAuth to accept requests from plain-HTTP origins (IP:PORT) and
   // from behind reverse proxies. Without this, NextAuth v5 throws UntrustedHost
   // for any non-localhost / non-HTTPS origin in production.
