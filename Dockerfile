@@ -51,6 +51,10 @@ FROM base AS migrator
 ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/db ./packages/db
+# shared-types is needed by seed scripts (imported as @feedbackme/shared-types).
+# pnpm links workspace packages via a symlink in node_modules that points to the
+# actual source directory — so the source must exist in the image too.
+COPY --from=builder /app/packages/shared-types ./packages/shared-types
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 WORKDIR /app/packages/db

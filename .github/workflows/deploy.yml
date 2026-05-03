@@ -52,6 +52,15 @@ jobs:
           docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" \
             run --rm migrate
 
+      - name: Seed demo users
+        run: |
+          set -euo pipefail
+          # Idempotent: seed-demo-users checks existence before inserting.
+          # Reuses the migrator image (same DATABASE_URL env) but overrides CMD.
+          docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" \
+            run --rm migrate \
+            ./node_modules/.bin/tsx src/seed-demo-users.ts
+
       - name: Roll out services
         run: |
           set -euo pipefail
