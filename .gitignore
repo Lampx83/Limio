@@ -22,3 +22,6 @@ packages/db/prisma/migrations/dev.db*
 # legacy snapshot
 legacy-v1/node_modules/
 legacy-v1/.next/
+
+# claude harness lock files
+.claude/*.lock
