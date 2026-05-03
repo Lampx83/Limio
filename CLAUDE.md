@@ -122,7 +122,7 @@ Production chạy **hoàn toàn bằng Docker** trên một server nội bộ (g
 
 ```
 GitHub push (main)
-   └─ deploy.yml chạy trên runner labels: [self-hosted, feedbackme]
+   └─ deploy.yml chạy trên runner labels: [self-hosted, Linux]
        └─ docker compose -f docker-compose.prod.yml --env-file /etc/feedbackme/.env.prod
            ├─ postgres (volume postgres-data)
            ├─ redis    (volume redis-data)
@@ -142,16 +142,17 @@ Reverse proxy ngoài compose (Caddy/Nginx/Traefik) đứng trước `web` để 
 | `docker/cron/*` | Sidecar thay 2 cron Vercel cũ (`streak-grace-check` daily, `tournament-tick` mỗi 5 phút). |
 | `.env.prod.example` | Template biến môi trường production. **Không commit** `.env.prod`. |
 | `.github/workflows/ci.yml` | Lint/typecheck/test/build trên `ubuntu-latest` (cloud, free) + verify Docker image build. |
-| `.github/workflows/deploy.yml` | Chạy trên `[self-hosted, feedbackme]`. Build → migrate → roll out → wait healthy → prune. |
+| `.github/workflows/deploy.yml` | Chạy trên `[self-hosted, Linux]`. Build → migrate → roll out → wait healthy → prune. |
 
 ### 7.3. Setup 1 lần trên server 224
 
-1. **Cài runner** với label `feedbackme`:
+1. **Cài runner** (workflow chỉ cần label mặc định `self-hosted` + `Linux`):
    ```bash
    ./config.sh --url https://github.com/Lampx83/FeedBackMe --token <TOKEN> \
-               --labels feedbackme --name feedbackme-prod
+               --name feedbackme-prod
    sudo ./svc.sh install && sudo ./svc.sh start
    ```
+   Nếu sau này có nhiều runner và muốn pin riêng cho repo này → thêm `--labels feedbackme` rồi sửa `runs-on` trong `deploy.yml` thành `[self-hosted, feedbackme]`.
 2. **Tạo env file** (mặc định workflow đọc tại `/etc/feedbackme/.env.prod`; override bằng repo variable `ENV_FILE`):
    ```bash
    sudo install -d -m 750 /etc/feedbackme

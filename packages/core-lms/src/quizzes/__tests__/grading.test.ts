@@ -10,6 +10,7 @@ function mcq(opts: Array<{ id: string; isCorrect: boolean; misconceptionCode?: s
     explanation: null,
     points: 1,
     orderIndex: 0,
+    extra: null,
     options: opts.map((o, i) => ({
       id: o.id,
       label: o.id,
@@ -18,6 +19,7 @@ function mcq(opts: Array<{ id: string; isCorrect: boolean; misconceptionCode?: s
       misconceptionId: o.misconceptionCode ? `m-${o.id}` : null,
       questionId: "q1",
       misconception: o.misconceptionCode ? { code: o.misconceptionCode } : null,
+      extra: null,
     })),
   };
 }
@@ -81,6 +83,7 @@ describe("gradeAnswer", () => {
           misconceptionId: null,
           questionId: "q1",
           misconception: null,
+          extra: null,
         },
         {
           id: "b",
@@ -90,6 +93,7 @@ describe("gradeAnswer", () => {
           misconceptionId: null,
           questionId: "q1",
           misconception: null,
+          extra: null,
         },
       ],
     };

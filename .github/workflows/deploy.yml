@@ -17,7 +17,7 @@ concurrency:
 jobs:
   deploy:
     name: Build & deploy production stack
-    runs-on: [self-hosted, feedbackme]
+    runs-on: [self-hosted, Linux]
     timeout-minutes: 30
 
     # Đường dẫn file .env.prod trên server. Có thể override bằng repo variable cùng tên.
