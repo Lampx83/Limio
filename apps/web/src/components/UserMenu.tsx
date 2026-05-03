@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { useEffect, useRef, useState } from "react";
 
 const ROLE_BADGES: Record<string, { label: string; className: string }> = {
@@ -108,7 +110,7 @@ export default function UserMenu({
 
           {/* Sign out */}
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => signOut({ callbackUrl: `${BASE}/` })}
             className="block w-full border-t border-token px-4 py-2.5 text-left text-sm font-medium text-danger-600 transition-colors hover:bg-danger-50 dark:hover:bg-danger-950/30"
           >
             Đăng xuất

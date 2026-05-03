@@ -4,6 +4,7 @@ import "./globals.css";
 import AppHeader from "@/components/AppHeader";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
 import Toaster from "@/components/Toaster";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -45,10 +46,12 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
       <body className="min-h-screen">
-        <ImpersonationBanner />
-        <AppHeader />
-        {children}
-        <Toaster />
+        <Providers>
+          <ImpersonationBanner />
+          <AppHeader />
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
