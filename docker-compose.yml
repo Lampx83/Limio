@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: feedbackme
       POSTGRES_DB: feedbackme
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - feedbackme-pg:/var/lib/postgresql/data
     healthcheck:

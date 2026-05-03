@@ -1,0 +1,94 @@
+name: Deploy (self-hosted)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch / tag / SHA)"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy production stack
+    runs-on: [self-hosted, feedbackme]
+    timeout-minutes: 30
+
+    # Đường dẫn file .env.prod trên server. Có thể override bằng repo variable cùng tên.
+    env:
+      ENV_FILE: ${{ vars.ENV_FILE || '/etc/feedbackme/.env.prod' }}
+      COMPOSE_FILE: docker-compose.prod.yml
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Verify prerequisites on runner
+        run: |
+          set -euo pipefail
+          docker version
+          docker compose version
+          test -f "$ENV_FILE" || { echo "::error::Missing $ENV_FILE on runner"; exit 1; }
+
+      - name: Build images
+        run: |
+          set -euo pipefail
+          docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build \
+            --pull \
+            --build-arg BUILDKIT_INLINE_CACHE=1
+
+      - name: Apply database migrations
+        run: |
+          set -euo pipefail
+          docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" \
+            run --rm migrate
+
+      - name: Roll out services
+        run: |
+          set -euo pipefail
+          docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d \
+            --remove-orphans \
+            --no-build \
+            postgres redis web cron
+
+      - name: Wait for web to become healthy
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' \
+              "$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps -q web)" 2>/dev/null || echo starting)
+            echo "[$i] web health: $status"
+            case "$status" in
+              healthy) exit 0 ;;
+              unhealthy) docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=200 web; exit 1 ;;
+            esac
+            sleep 5
+          done
+          echo "::error::web did not become healthy in time"
+          docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=200 web
+          exit 1
+
+      - name: Prune dangling images
+        if: always()
+        run: docker image prune -f
+
+      - name: Summary
+        if: success()
+        run: |
+          {
+            echo "### Deployed"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Image tag: \`$IMAGE_TAG\`"
+            echo "- Compose file: \`$COMPOSE_FILE\`"
+            echo "- Env file: \`$ENV_FILE\`"
+          } >> "$GITHUB_STEP_SUMMARY"

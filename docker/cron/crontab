@@ -1,0 +1,4 @@
+# FeedBackMe scheduled jobs (replaces Vercel cron from apps/web/vercel.json)
+# Endpoints authenticate via Bearer ${CRON_SECRET}.
+0 0 * * *    /usr/local/bin/run.sh streak-grace-check
+*/5 * * * *  /usr/local/bin/run.sh tournament-tick

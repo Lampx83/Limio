@@ -114,7 +114,78 @@ Năm nguyên tắc dưới đây tổng hợp từ spec §6.1 (event-driven boun
 - Build theo Phase Roadmap (§8 spec). Không build P1/P2 trước khi xong P0 của phase đang làm.
 - Sau mỗi feature, pause để user review trước khi sang feature kế.
 
-## 7. Tham chiếu nhanh
+## 7. Deployment (production — server 224)
+
+Production chạy **hoàn toàn bằng Docker** trên một server nội bộ (gọi tắt **server 224**). CI/CD qua GitHub Actions với **self-hosted runner cài ngay trên server 224** — runner build và `docker compose up` tại chỗ, không cần SSH/registry trung gian.
+
+### 7.1. Topology
+
+```
+GitHub push (main)
+   └─ deploy.yml chạy trên runner labels: [self-hosted, feedbackme]
+       └─ docker compose -f docker-compose.prod.yml --env-file /etc/feedbackme/.env.prod
+           ├─ postgres (volume postgres-data)
+           ├─ redis    (volume redis-data)
+           ├─ migrate  (one-shot: prisma migrate deploy)
+           ├─ web      (Next.js standalone, port WEB_PORT → 3000)
+           └─ cron     (busybox crond → curl WEB ${CRON_SECRET})
+```
+
+Reverse proxy ngoài compose (Caddy/Nginx/Traefik) đứng trước `web` để TLS + serve `NEXTAUTH_URL`.
+
+### 7.2. Files liên quan
+
+| File | Vai trò |
+|---|---|
+| `Dockerfile` | Multi-stage: `deps → builder → migrator | runner`. Runner dùng Next.js standalone, non-root user (uid 1001), HEALTHCHECK qua curl. |
+| `docker-compose.prod.yml` | Stack production. Image tag = `${IMAGE_TAG:-latest}` (CI override = git SHA). |
+| `docker/cron/*` | Sidecar thay 2 cron Vercel cũ (`streak-grace-check` daily, `tournament-tick` mỗi 5 phút). |
+| `.env.prod.example` | Template biến môi trường production. **Không commit** `.env.prod`. |
+| `.github/workflows/ci.yml` | Lint/typecheck/test/build trên `ubuntu-latest` (cloud, free) + verify Docker image build. |
+| `.github/workflows/deploy.yml` | Chạy trên `[self-hosted, feedbackme]`. Build → migrate → roll out → wait healthy → prune. |
+
+### 7.3. Setup 1 lần trên server 224
+
+1. **Cài runner** với label `feedbackme`:
+   ```bash
+   ./config.sh --url https://github.com/Lampx83/FeedBackMe --token <TOKEN> \
+               --labels feedbackme --name feedbackme-prod
+   sudo ./svc.sh install && sudo ./svc.sh start
+   ```
+2. **Tạo env file** (mặc định workflow đọc tại `/etc/feedbackme/.env.prod`; override bằng repo variable `ENV_FILE`):
+   ```bash
+   sudo install -d -m 750 /etc/feedbackme
+   sudo cp .env.prod.example /etc/feedbackme/.env.prod
+   sudo chmod 600 /etc/feedbackme/.env.prod
+   # Bắt buộc điền: POSTGRES_PASSWORD, NEXTAUTH_URL, NEXTAUTH_SECRET, CRON_SECRET
+   ```
+   Sinh secret: `openssl rand -base64 32` (NEXTAUTH_SECRET) / `openssl rand -hex 32` (CRON_SECRET).
+3. **User chạy runner phải vào group `docker`** (`usermod -aG docker <runner-user>`), tránh sudo trong workflow.
+4. **Reverse proxy** trỏ `NEXTAUTH_URL` → `127.0.0.1:${WEB_PORT}` (mặc định 3000) và lo TLS.
+
+### 7.4. Vận hành thủ công (bỏ qua CI)
+
+```bash
+ENV=/etc/feedbackme/.env.prod
+COMPOSE="docker compose --env-file $ENV -f docker-compose.prod.yml"
+
+$COMPOSE build --pull            # build images
+$COMPOSE run --rm migrate        # áp migration (one-shot)
+$COMPOSE up -d postgres redis web cron
+$COMPOSE logs -f web             # tail log
+$COMPOSE down                    # dừng stack (giữ volume)
+```
+
+Rollback nhanh: `IMAGE_TAG=<git-sha-cũ> $COMPOSE up -d web` (image cũ phải còn, đừng prune ngay sau deploy nếu chưa chắc).
+
+### 7.5. Lưu ý vận hành
+
+- **`LearningEvent` append-only** (xem §4.5) → không bao giờ DROP/TRUNCATE trong production. Migration nào đụng tới event/audit table phải review tay.
+- **Volume cần backup**: `feedbackme_postgres-data`, `feedbackme_web-uploads`. Redis có thể mất (chỉ là cache + queue) — nhưng BullMQ job đang chờ sẽ mất theo, lưu ý khi restore.
+- **Cron secret rotation**: đổi `CRON_SECRET` trong `.env.prod` rồi `$COMPOSE up -d web cron` (cả hai cần cùng giá trị).
+- **Healthcheck web** dùng `GET /` — nếu đổi sang đường health riêng (vd. `/api/health`), nhớ sửa cả `Dockerfile` và workflow `Wait for web to become healthy`.
+
+## 8. Tham chiếu nhanh
 
 - Spec đầy đủ: `docs/SPEC.docx` (hiện đang ở `Feedback me 2/FeedBackMe-Specification-v2.docx`)
 - Schema Prisma: `packages/db/schema.prisma` (chưa tồn tại — sẽ build từ spec §7)
