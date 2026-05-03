@@ -127,7 +127,7 @@ GitHub push (main)
            ├─ postgres (volume postgres-data)
            ├─ redis    (volume redis-data)
            ├─ migrate  (one-shot: prisma migrate deploy)
-           ├─ web      (Next.js standalone, port WEB_PORT → 3000)
+           ├─ web      (Next.js standalone, host port WEB_PORT=8004 → container 3000)
            └─ cron     (busybox crond → curl WEB ${CRON_SECRET})
 ```
 
@@ -161,7 +161,7 @@ Reverse proxy ngoài compose (Caddy/Nginx/Traefik) đứng trước `web` để 
    ```
    Sinh secret: `openssl rand -base64 32` (NEXTAUTH_SECRET) / `openssl rand -hex 32` (CRON_SECRET).
 3. **User chạy runner phải vào group `docker`** (`usermod -aG docker <runner-user>`), tránh sudo trong workflow.
-4. **Reverse proxy** trỏ `NEXTAUTH_URL` → `127.0.0.1:${WEB_PORT}` (mặc định 3000) và lo TLS.
+4. **Reverse proxy** trỏ `NEXTAUTH_URL` → `127.0.0.1:${WEB_PORT}` (mặc định production = **8004**) và lo TLS.
 
 ### 7.4. Vận hành thủ công (bỏ qua CI)
 

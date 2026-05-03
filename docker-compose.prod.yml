@@ -5,7 +5,7 @@
 # Required env (.env.prod or shell):
 #   POSTGRES_PASSWORD, NEXTAUTH_SECRET, NEXTAUTH_URL, CRON_SECRET
 # Optional:
-#   IMAGE_TAG (default "latest"), WEB_PORT (default 3000),
+#   IMAGE_TAG (default "latest"), WEB_PORT (default 8004),
 #   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ANTHROPIC_API_KEY, SENTRY_DSN, ...
 
 name: feedbackme
@@ -73,7 +73,7 @@ services:
     restart: unless-stopped
     environment: *web-env
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "${WEB_PORT:-8004}:3000"
     volumes:
       - web-uploads:/app/apps/web/uploads
     depends_on:
