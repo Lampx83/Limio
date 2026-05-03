@@ -6,7 +6,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  outputFileTracingRoot: resolve(__dirname, "../../"),
   transpilePackages: [
     "@feedbackme/core-lms",
     "@feedbackme/core-feedback",
@@ -16,6 +15,7 @@ const nextConfig = {
   ],
   experimental: {
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
+    outputFileTracingRoot: resolve(__dirname, "../../"),
   },
 };
 
