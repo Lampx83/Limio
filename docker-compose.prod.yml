@@ -77,6 +77,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        NEXT_PUBLIC_BASE_PATH: "${NEXT_PUBLIC_BASE_PATH:-}"
     image: feedbackme/web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment: *web-env

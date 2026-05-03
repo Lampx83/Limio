@@ -35,6 +35,10 @@ ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public"
 ENV NEXTAUTH_SECRET="build-time-placeholder-not-used-at-runtime"
 ENV NEXTAUTH_URL="http://localhost:3000"
 ENV SKIP_ENV_VALIDATION=1
+# Optional sub-path prefix (e.g. /limio). Empty = serve from root.
+# Override at build time: docker compose build --build-arg NEXT_PUBLIC_BASE_PATH=/limio
+ARG NEXT_PUBLIC_BASE_PATH=""
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
