@@ -2,7 +2,11 @@
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+// Build-time base path (e.g. "/limio"). Empty string when served from root.
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 
 interface DemoAccount {
@@ -45,6 +49,7 @@ const SHOW_DEMO = process.env.NODE_ENV !== "production";
 type ProvidersMap = Record<string, { id: string; name: string }>;
 
 export default function SignInPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -53,7 +58,7 @@ export default function SignInPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/auth/providers")
+    fetch(`${BASE}/api/auth/providers`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!cancelled && data) setProviders(data as ProvidersMap);
@@ -80,7 +85,8 @@ export default function SignInPage() {
       setStatus("error");
       setError("Email hoặc mật khẩu không đúng.");
     } else {
-      window.location.href = "/";
+      // router.push respects Next.js basePath; window.location.href would not.
+      router.push("/");
     }
   }
 
@@ -147,7 +153,7 @@ export default function SignInPage() {
                 {hasGoogle && (
                   <button
                     type="button"
-                    onClick={() => signIn("google", { callbackUrl: "/" })}
+                    onClick={() => signIn("google", { callbackUrl: `${BASE}/` })}
                     className="btn-secondary flex w-full items-center justify-center gap-2"
                   >
                     <svg
@@ -180,7 +186,7 @@ export default function SignInPage() {
                   <button
                     type="button"
                     onClick={() =>
-                      signIn("microsoft-entra-id", { callbackUrl: "/" })
+                      signIn("microsoft-entra-id", { callbackUrl: `${BASE}/` })
                     }
                     className="btn-secondary flex w-full items-center justify-center gap-2"
                   >
