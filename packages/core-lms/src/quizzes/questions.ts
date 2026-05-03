@@ -140,6 +140,16 @@ export const UpdateQuestionInput = z.object({
   explanation: z.string().max(5_000).optional().nullable(),
   points: z.number().int().min(1).max(100).optional(),
   orderIndex: z.number().int().nonnegative().optional(),
+  /**
+   * Full replacement of all options. If omitted, existing options are left
+   * untouched. Validated with the same rules as CreateQuestionInput (caller
+   * must also supply the question `type` for cross-field validation).
+   */
+  options: z.array(OptionInput).max(40).optional(),
+  /** Replaces all skill tags when provided (supply [] to clear). */
+  skillIds: z.array(z.string().uuid()).max(20).optional(),
+  /** Type-specific metadata replacement (numerical expected/tolerance, etc.) */
+  extra: z.record(z.unknown()).optional().nullable(),
 });
 
 async function getCourseIdForQuiz(quizId: string, db: PrismaClient): Promise<string | null> {
@@ -218,9 +228,58 @@ export async function updateQuestion(
   await assertCanEditCourse(actorUserId, courseId, db);
   const parsed = UpdateQuestionInput.safeParse(rawInput);
   if (!parsed.success) throw new QuizError("validation_failed", parsed.error.flatten());
-  const data = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
-  if (Object.keys(data).length === 0) return;
-  await db.quizQuestion.update({ where: { id: questionId }, data });
+  const { options, skillIds, extra, ...scalarFields } = parsed.data;
+
+  // Build scalar update (prompt, points, explanation, orderIndex, extra).
+  const scalarData = Object.fromEntries(
+    Object.entries({ ...scalarFields, extra }).filter(([, v]) => v !== undefined),
+  ) as Record<string, unknown>;
+
+  // Normalise extra: null → Prisma.JsonNull so Prisma doesn't skip the field.
+  if ("extra" in scalarData) {
+    scalarData.extra =
+      scalarData.extra === null ? Prisma.JsonNull : (scalarData.extra as Prisma.InputJsonValue);
+  }
+
+  const needsScalarUpdate = Object.keys(scalarData).length > 0;
+  const needsOptionsUpdate = options !== undefined;
+  const needsSkillsUpdate = skillIds !== undefined;
+
+  if (!needsScalarUpdate && !needsOptionsUpdate && !needsSkillsUpdate) return;
+
+  await db.$transaction(async (tx) => {
+    if (needsScalarUpdate) {
+      await tx.quizQuestion.update({ where: { id: questionId }, data: scalarData });
+    }
+
+    if (needsOptionsUpdate) {
+      // Replace all options atomically.
+      await tx.questionOption.deleteMany({ where: { questionId } });
+      if (options.length > 0) {
+        await tx.questionOption.createMany({
+          data: options.map((o, i) => ({
+            questionId,
+            label: o.label,
+            isCorrect: o.isCorrect,
+            misconceptionId: o.misconceptionId ?? null,
+            orderIndex: i,
+            extra: o.extra ? (o.extra as Prisma.InputJsonValue) : Prisma.JsonNull,
+          })),
+        });
+      }
+    }
+
+    if (needsSkillsUpdate) {
+      // Replace all skill tags atomically.
+      await tx.questionSkillTag.deleteMany({ where: { questionId } });
+      if (skillIds.length > 0) {
+        await tx.questionSkillTag.createMany({
+          data: skillIds.map((skillId) => ({ questionId, skillId })),
+          skipDuplicates: true,
+        });
+      }
+    }
+  });
 }
 
 export async function deleteQuestion(

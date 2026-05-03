@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import { toast } from "@/lib/toast";
+import EditContentItemForm from "./EditContentItemForm";
 
 interface Item {
   id: string;
@@ -54,19 +56,47 @@ const ICON: Record<string, string> = {
 export default function ContentItemRow({ item }: { item: Item }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   async function remove() {
-    if (!confirm(`Xóa ${item.type}?`)) return;
+    if (!confirm(`Xoá content "${item.type}"? Hành động này không thể hoàn tác.`)) return;
     setBusy(true);
-    const res = await fetch(`/api/contents/${item.id}`, { method: "DELETE" });
+    let res: Response;
+    try {
+      res = await fetch(`/api/contents/${item.id}`, { method: "DELETE" });
+    } catch (networkErr) {
+      setBusy(false);
+      console.error("[ContentItemRow] network error", networkErr);
+      toast.error("Không kết nối được tới server");
+      return;
+    }
     setBusy(false);
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      toast.success("Đã xoá content");
+      router.refresh();
+      return;
+    }
+    const d = await res.json().catch(() => ({}));
+    const code = (d as { error?: string }).error ?? `http_${res.status}`;
+    console.error("[ContentItemRow] delete failed", res.status, d);
+    toast.error(`Xoá thất bại: ${code}`);
   }
 
   const videoMeta =
     item.type === "video"
       ? parseVideoUrl(String((item.payload as { url?: string })?.url ?? ""))
       : null;
+
+  if (editing) {
+    return (
+      <div className="rounded-lg border border-brand-300 bg-[rgb(var(--surface))] p-3">
+        <EditContentItemForm
+          item={item}
+          onClose={() => setEditing(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2.5 transition-colors hover:border-brand-200">
@@ -103,14 +133,26 @@ export default function ContentItemRow({ item }: { item: Item }) {
         </p>
       </div>
 
-      <button
-        onClick={remove}
-        disabled={busy}
-        title="Xóa content này"
-        aria-label="Xóa"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover:opacity-100 disabled:opacity-50"
-      >
-              </button>
+      <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          disabled={busy}
+          title="Sửa content"
+          className="rounded-lg px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-brand-soft hover:text-brand-700 disabled:opacity-50"
+        >
+          Sửa
+        </button>
+        <button
+          type="button"
+          onClick={remove}
+          disabled={busy}
+          title="Xoá content"
+          className="rounded-lg px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
+        >
+          Xoá
+        </button>
+      </div>
     </div>
   );
 }

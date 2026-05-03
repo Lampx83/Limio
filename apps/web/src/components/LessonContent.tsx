@@ -1,11 +1,16 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { parseVideoUrl } from "@/lib/videoUrl";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
 const H5pPlayer = dynamic(() => import("./H5pPlayer"), { ssr: false });
+const VideoWithCuepoints = dynamic(() => import("./VideoWithCuepoints"), {
+  ssr: false,
+});
 
 interface ContentItem {
   id: string;
@@ -35,6 +40,7 @@ interface VideoPayload {
   url: string;
   transcriptUrl?: string;
   durationSec?: number;
+  cuepoints?: Array<{ atSec: number; quizId: string }>;
 }
 interface MarkdownPayload {
   body: string;
@@ -100,9 +106,33 @@ function ContentBlock({
   switch (type) {
     case "video": {
       const p = payload as VideoPayload;
+      // Cuepoints only fire on native <video> (uploaded files / direct
+      // .mp4/.webm). Provider-iframe URLs (YouTube/Vimeo/...) pass back
+      // through the standard VideoEmbed since we can't intercept their
+      // playback without each provider's JS API.
+      const isNativeVideo = isNativeVideoUrl(p.url);
+      const hasCuepoints = (p.cuepoints?.length ?? 0) > 0;
       return (
         <div>
-          <VideoEmbed url={p.url} />
+          {isNativeVideo && hasCuepoints && lessonId ? (
+            <VideoWithCuepoints
+              url={p.url}
+              cuepoints={p.cuepoints!}
+              contentItemId={itemId}
+              lessonId={lessonId}
+            />
+          ) : (
+            <>
+              <VideoEmbed url={p.url} />
+              {hasCuepoints && !isNativeVideo && (
+                <p className="mt-1 text-[11px] text-accent-700">
+                  Lesson này có {p.cuepoints!.length} cuepoint quiz, nhưng player của
+                  provider này không chặn được — học viên sẽ không bị bắt trả lời. Đổi
+                  sang upload file để bật cuepoint.
+                </p>
+              )}
+            </>
+          )}
           {p.transcriptUrl && (
             <a href={p.transcriptUrl} className="link mt-2 inline-block text-sm">
               Xem transcript
@@ -114,9 +144,26 @@ function ContentBlock({
     case "markdown": {
       const p = payload as MarkdownPayload;
       return (
-        <pre className="whitespace-pre-wrap rounded-xl border border-token bg-[rgb(var(--surface))] p-4 text-sm leading-relaxed font-sans">
-          {p.body}
-        </pre>
+        <div className="prose prose-sm max-w-none rounded-xl border border-token bg-[rgb(var(--surface))] p-4 dark:prose-invert">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            // Render external links safely in a new tab.
+            components={{
+              a: ({ href, children, ...rest }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...rest}
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {p.body}
+          </ReactMarkdown>
+        </div>
       );
     }
     case "external_link": {
@@ -233,6 +280,23 @@ function ContentBlock({
         </p>
       );
   }
+}
+
+/**
+ * True when the URL will be played by the native <video> element rather
+ * than a provider iframe. Cuepoints can only intercept native playback.
+ *
+ * Mirrors the fallthrough rules in VideoEmbed: same-origin paths,
+ * unrecognized URLs, and recognized direct-file URLs all fall through
+ * to <video src=...>; recognized providers (YouTube/Vimeo/...) render
+ * an <iframe> instead.
+ */
+function isNativeVideoUrl(url: string): boolean {
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  if (trimmed.startsWith("/")) return true; // same-origin path (uploaded file)
+  const v = parseVideoUrl(trimmed);
+  return v === null || v.kind === "file";
 }
 
 function VideoEmbed({ url }: { url: string }) {

@@ -14,6 +14,7 @@ const NAV: Record<string, NavItem[]> = {
   learner: [
     { href: "/catalog", label: "Catalog" },
     { href: "/me/enrollments", label: "Khóa của tôi" },
+    { href: "/tournaments", label: "🏆 Đấu trường thi đấu" },
     { href: "/me/skills", label: "Skill" },
     { href: "/me/badges", label: "Huy hiệu" },
     { href: "/me/dashboard", label: "Tổng quan" },
@@ -22,7 +23,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/catalog", label: "Catalog" },
     { href: "/instructor/courses", label: "Khoá học" },
     { href: "/instructor/assignments", label: "Bài tập" },
-    { href: "/instructor/tournaments", label: "Tournament" },
+    { href: "/instructor/tournaments", label: "🏆 Đấu trường thi đấu" },
     { href: "/instructor/feedback-generator", label: "Feedback AI" },
   ],
   admin: [

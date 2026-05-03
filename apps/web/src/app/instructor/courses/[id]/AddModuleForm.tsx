@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "@/lib/toast";
 
 export default function AddModuleForm({
   courseId,
@@ -31,20 +32,34 @@ export default function AddModuleForm({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(`/api/courses/${courseId}/modules`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, orderIndex: nextOrderIndex }),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`/api/courses/${courseId}/modules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, orderIndex: nextOrderIndex }),
+      });
+    } catch (networkErr) {
+      setBusy(false);
+      console.error("[AddModuleForm] network error", networkErr);
+      const msg = "Không kết nối được tới server";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
     setBusy(false);
     if (res.ok) {
+      toast.success("Đã tạo module");
       setTitle("");
       setOpen(false);
       router.refresh();
-    } else {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "create_failed");
+      return;
     }
+    const d = await res.json().catch(() => ({}));
+    const code = (d as { error?: string }).error ?? `http_${res.status}`;
+    console.error("[AddModuleForm] create failed", res.status, d);
+    setError(code);
+    toast.error(`Tạo module thất bại: ${code}`);
   }
 
   return (

@@ -51,9 +51,14 @@ export default async function InstructorCoursesPage() {
               : "Bạn chưa tạo khóa học nào."}
           </p>
         </div>
-        <Link href="/instructor/courses/new" className="btn-primary">
-          + Tạo khóa học
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/instructor/courses/new" className="btn-primary">
+            + Tạo khóa học
+          </Link>
+          <Link href="/instructor/tournaments/new" className="btn-primary">
+            🏆 Tạo tournament
+          </Link>
+        </div>
       </div>
 
       {/* Tools */}
@@ -64,8 +69,8 @@ export default async function InstructorCoursesPage() {
         <Link href="/instructor/feedback-generator" className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100">
           AI feedback gen
         </Link>
-        <Link href="/instructor/tournaments/new" className="btn-secondary btn-sm">
-          Tournament
+        <Link href="/instructor/tournaments" className="btn-secondary btn-sm">
+          Xem tất cả tournaments
         </Link>
       </nav>
 

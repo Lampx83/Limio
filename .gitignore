@@ -25,3 +25,8 @@ legacy-v1/.next/
 
 # claude harness lock files
 .claude/*.lock
+
+# local upload storage (avatars, lesson videos, scorm/h5p packages)
+uploads/
+apps/web/uploads/
+.claude/worktrees/

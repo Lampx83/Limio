@@ -19,6 +19,7 @@ interface Quiz {
     points: number;
     orderIndex: number;
     explanation: string | null;
+    extra: unknown;
     options: Array<{
       id: string;
       label: string;
@@ -26,6 +27,7 @@ interface Quiz {
       orderIndex: number;
       misconceptionId: string | null;
       misconception: { id: string; code: string; name: string } | null;
+      extra: unknown;
     }>;
     skillTags: Array<{
       skillId: string;

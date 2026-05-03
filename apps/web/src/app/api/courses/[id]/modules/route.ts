@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createLesson } from "@feedbackme/core-lms";
+import { createModule } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -7,19 +7,20 @@ export const runtime = "nodejs";
 
 export async function POST(
   req: Request,
-  { params }: { params: { moduleId: string } },
+  { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await readJson(req);
   try {
-    const result = await createLesson(userId, params.moduleId, body);
+    const result = await createModule(userId, params.id, body);
     return NextResponse.json(result, { status: 201 });
   } catch (e) {
     const mapped = mapKnownError(e);
     if (mapped) return mapped;
-    // Unique-constraint on (moduleId, orderIndex). Surface as 409 instead
-    // of leaking 500 — happens on double-click or stale orderIndex.
+    // Prisma unique-constraint on (courseId, orderIndex). Surface as a friendly
+    // 409 instead of leaking 500 — this happens when client posts a stale
+    // orderIndex (e.g. user double-clicked or page didn't refresh).
     if (
       typeof e === "object" &&
       e !== null &&
@@ -30,7 +31,7 @@ export async function POST(
         { status: 409 },
       );
     }
-    console.error("[POST /api/modules/:moduleId/lessons] unexpected", e);
+    console.error("[POST /api/courses/:id/modules] unexpected", e);
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

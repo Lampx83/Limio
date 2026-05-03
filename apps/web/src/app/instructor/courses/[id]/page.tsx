@@ -101,15 +101,36 @@ export default async function InstructorCourseEditPage({
       </Link>
 
       {/* Header */}
-      <header className="mt-4 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+      <header className="mt-4 space-y-3">
+        {/* Row 1: status chips + action buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex items-center gap-2">
             <span className="chip-brand">Editor</span>
             <span className={STATUS_TONE[course.status] ?? "chip"}>
               {STATUS_LABEL[course.status] ?? course.status}
             </span>
           </div>
-          <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          <div className="flex flex-wrap items-center gap-2">
+            <ViewModeToggle />
+            <ImportStudentsButton courseId={course.id} />
+            <Link
+              href={`/instructor/courses/${course.id}/struggling-students`}
+              className="btn-secondary btn-sm"
+            >
+              Học viên cần hỗ trợ
+            </Link>
+            <DuplicateCourseButton courseId={course.id} />
+            <PublishControls
+              courseId={course.id}
+              status={course.status}
+              untaggedLessons={untaggedLessonIds}
+            />
+          </div>
+        </div>
+
+        {/* Row 2: course title + meta — full width */}
+        <div>
+          <h1 className="h-display text-3xl font-bold leading-tight sm:text-4xl">
             {course.title}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-faint">
@@ -125,22 +146,6 @@ export default async function InstructorCourseEditPage({
             <span>·</span>
             <span>{totalQuizzes} quizzes</span>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <ViewModeToggle />
-          <ImportStudentsButton courseId={course.id} />
-          <Link
-            href={`/instructor/courses/${course.id}/struggling-students`}
-            className="btn-secondary btn-sm"
-          >
-            Học viên cần hỗ trợ
-          </Link>
-          <DuplicateCourseButton courseId={course.id} />
-          <PublishControls
-            courseId={course.id}
-            status={course.status}
-            untaggedLessons={untaggedLessonIds}
-          />
         </div>
       </header>
 

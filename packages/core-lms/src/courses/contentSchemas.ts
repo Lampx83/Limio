@@ -1,9 +1,44 @@
 import { z } from "zod";
 
+/**
+ * URL or same-origin path. Accepts either:
+ *   - an absolute http(s) URL (`https://example.com/foo`)
+ *   - a same-origin absolute path (`/api/lesson-media/videos/abc.mp4`)
+ *
+ * Used for content payloads where the file may be either externally
+ * hosted (YouTube, Vimeo, partner CDN) OR uploaded to our own
+ * storage and served via a relative API route.
+ *
+ * Strict-URL fields (e.g. transcript URLs, external_link, embed) keep
+ * `z.string().url()` since those are always external.
+ */
+export const UrlOrPath = z.string().refine(
+  (v) => v.startsWith("/") || /^https?:\/\//i.test(v),
+  { message: "must be an absolute http(s) URL or same-origin path starting with /" },
+);
+
+/**
+ * In-video cuepoint that gates further playback on a quiz pass. The
+ * player pauses when `currentTime` first crosses `atSec`, shows the
+ * referenced quiz's questions inline, and only resumes when the learner
+ * answers all questions correctly. Forward-seeking past an unpassed
+ * cuepoint is blocked.
+ *
+ * Only triggers for native <video> playback (uploaded files / direct
+ * .mp4/.webm URLs). Provider-iframe videos (YouTube/Vimeo/Loom/...)
+ * silently ignore cuepoints — pausing those would require each
+ * provider's JS API.
+ */
+export const VideoCuepoint = z.object({
+  atSec: z.number().nonnegative(),
+  quizId: z.string().uuid(),
+});
+
 export const VideoPayload = z.object({
-  url: z.string().url(),
+  url: UrlOrPath,
   transcriptUrl: z.string().url().optional(),
   durationSec: z.number().int().positive().optional(),
+  cuepoints: z.array(VideoCuepoint).max(20).optional(),
 });
 
 export const MarkdownPayload = z.object({
@@ -16,7 +51,7 @@ export const EmbedPayload = z.object({
 });
 
 export const FilePayload = z.object({
-  url: z.string().url(),
+  url: UrlOrPath,
   filename: z.string().min(1).max(200),
   sizeBytes: z.number().int().nonnegative().optional(),
   mimeType: z.string().max(200).optional(),
@@ -28,7 +63,7 @@ export const ExternalLinkPayload = z.object({
 });
 
 export const PdfPayload = z.object({
-  url: z.string().url(),
+  url: UrlOrPath,
   // Optional title shown above the embedded viewer.
   title: z.string().max(200).optional(),
   // Optional total page count — used for analytics later, not for rendering.

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "@/lib/toast";
 
 export default function AddLessonForm({
   moduleId,
@@ -15,6 +16,7 @@ export default function AddLessonForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!open) {
     return (
@@ -30,22 +32,40 @@ export default function AddLessonForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res = await fetch(`/api/modules/${moduleId}/lessons`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        description: description.trim() || undefined,
-        orderIndex: nextOrderIndex,
-      }),
-    });
+    setError(null);
+    let res: Response;
+    try {
+      res = await fetch(`/api/modules/${moduleId}/lessons`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description: description.trim() || undefined,
+          orderIndex: nextOrderIndex,
+        }),
+      });
+    } catch (networkErr) {
+      setBusy(false);
+      console.error("[AddLessonForm] network error", networkErr);
+      const msg = "Không kết nối được tới server";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
     setBusy(false);
     if (res.ok) {
+      toast.success("Đã tạo lesson");
       setTitle("");
       setDescription("");
       setOpen(false);
       router.refresh();
+      return;
     }
+    const d = await res.json().catch(() => ({}));
+    const code = (d as { error?: string }).error ?? `http_${res.status}`;
+    console.error("[AddLessonForm] create failed", res.status, d);
+    setError(code);
+    toast.error(`Tạo lesson thất bại: ${code}`);
   }
 
   return (
@@ -82,6 +102,9 @@ export default function AddLessonForm({
           Hủy
         </button>
       </div>
+      {error && (
+        <p className="text-xs text-danger-600">Lỗi: {error}</p>
+      )}
     </form>
   );
 }

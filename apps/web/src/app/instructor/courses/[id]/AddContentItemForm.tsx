@@ -26,6 +26,19 @@ interface LtiToolRow {
   clientId: string;
 }
 
+interface LessonQuizRow {
+  id: string;
+  title: string;
+  questionCount: number;
+}
+
+interface CuepointDraft {
+  /** Local key for React list rendering. Not sent to server. */
+  uid: string;
+  atSec: number;
+  quizId: string;
+}
+
 type ContentType =
   | "video"
   | "markdown"
@@ -74,6 +87,9 @@ export default function AddContentItemForm({
   const [ltiToolId, setLtiToolId] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // In-video cuepoint editor state — only used when type === "video".
+  const [lessonQuizzes, setLessonQuizzes] = useState<LessonQuizRow[]>([]);
+  const [cuepoints, setCuepoints] = useState<CuepointDraft[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -95,7 +111,13 @@ export default function AddContentItemForm({
         .then((d) => setLtiTools(d.tools ?? []))
         .catch(() => {});
     }
-  }, [type, open]);
+    if (type === "video") {
+      fetch(`/api/lessons/${lessonId}/quizzes`)
+        .then((r) => r.json())
+        .then((d) => setLessonQuizzes(d.quizzes ?? []))
+        .catch(() => {});
+    }
+  }, [type, open, lessonId]);
 
   async function uploadScormFile(file: File) {
     setUploading(true);
@@ -143,6 +165,7 @@ export default function AddContentItemForm({
     setScormPackageId("");
     setH5pPackageId("");
     setLtiToolId("");
+    setCuepoints([]);
     setError(null);
   }
 
@@ -153,9 +176,19 @@ export default function AddContentItemForm({
 
     let payload: Record<string, unknown>;
     switch (type) {
-      case "video":
-        payload = { url };
+      case "video": {
+        // Validate cuepoints client-side: every row must have a quiz selected
+        // and atSec >= 0. Server re-validates against the full schema.
+        const validCuepoints = cuepoints
+          .filter((c) => c.quizId && c.atSec >= 0)
+          .map((c) => ({ atSec: c.atSec, quizId: c.quizId }))
+          .sort((a, b) => a.atSec - b.atSec);
+        payload =
+          validCuepoints.length > 0
+            ? { url, cuepoints: validCuepoints }
+            : { url };
         break;
+      }
       case "markdown":
         payload = { body };
         break;
@@ -276,18 +309,40 @@ export default function AddContentItemForm({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
-            type="url"
+            // For video / file / pdf the URL may be a same-origin path
+            // (e.g. /api/lesson-media/videos/<file>) populated by the upload
+            // panel below. type="url" rejects path-only values, so we use
+            // type="text" for those and keep type="url" for purely-external
+            // fields (embed, external_link).
+            type={
+              type === "embed" || type === "external_link" ? "url" : "text"
+            }
             placeholder={
               type === "video"
-                ? "YouTube · Vimeo · Loom · Wistia · Bunny · Mux · hoặc file .mp4"
+                ? "Dán URL: YouTube · Vimeo · Loom · Wistia · Bunny · Mux — hoặc upload file bên dưới"
                 : type === "pdf"
-                  ? "URL PDF (https://.../file.pdf)"
+                  ? "URL PDF (https://.../file.pdf) — hoặc tự host"
                   : "URL"
             }
             className="input"
           />
+          {type === "video" && (
+            <VideoUploadPanel
+              uploading={uploading}
+              setUploading={setUploading}
+              setError={setError}
+              onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+            />
+          )}
           {type === "video" && url.trim() && (
             <VideoUrlPreview url={url} />
+          )}
+          {type === "video" && (
+            <CuepointEditor
+              cuepoints={cuepoints}
+              setCuepoints={setCuepoints}
+              quizzes={lessonQuizzes}
+            />
           )}
         </div>
       )}
@@ -474,8 +529,258 @@ export default function AddContentItemForm({
   );
 }
 
+/**
+ * In-video cuepoint editor. Each row binds a timestamp (mm:ss) to a
+ * Quiz on the same lesson — when the learner's playback reaches that
+ * timestamp the player pauses and forces them to answer that quiz.
+ *
+ * Only meaningful for native <video> playback (uploaded files / direct
+ * URL); provider iframes (YouTube/Vimeo/...) ignore cuepoints.
+ */
+function CuepointEditor({
+  cuepoints,
+  setCuepoints,
+  quizzes,
+}: {
+  cuepoints: CuepointDraft[];
+  setCuepoints: (next: CuepointDraft[]) => void;
+  quizzes: LessonQuizRow[];
+}) {
+  function add() {
+    if (cuepoints.length >= 20) return;
+    setCuepoints([
+      ...cuepoints,
+      {
+        uid: Math.random().toString(36).slice(2, 10),
+        atSec: 0,
+        quizId: quizzes[0]?.id ?? "",
+      },
+    ]);
+  }
+  function remove(uid: string) {
+    setCuepoints(cuepoints.filter((c) => c.uid !== uid));
+  }
+  function update(uid: string, patch: Partial<CuepointDraft>) {
+    setCuepoints(cuepoints.map((c) => (c.uid === uid ? { ...c, ...patch } : c)));
+  }
+
+  return (
+    <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+          Câu hỏi gài trong video ({cuepoints.length})
+        </p>
+        <button
+          type="button"
+          onClick={add}
+          disabled={quizzes.length === 0 || cuepoints.length >= 20}
+          className="btn-secondary btn-sm"
+        >
+          + Thêm cuepoint
+        </button>
+      </div>
+      {quizzes.length === 0 ? (
+        <p className="mt-2 text-xs text-muted">
+          Chưa có quiz nào trong lesson — tạo quiz trước rồi gài vào timestamp ở đây.
+        </p>
+      ) : (
+        <p className="mt-1 text-[11px] text-muted">
+          Player sẽ pause tại mỗi timestamp, học viên phải trả lời đúng quiz được chọn
+          mới được xem tiếp. Chỉ áp dụng cho video upload / file trực tiếp (.mp4/.webm) —
+          YouTube/Vimeo không intercept được.
+        </p>
+      )}
+      {cuepoints.length > 0 && (
+        <ul className="mt-2 space-y-2">
+          {cuepoints.map((c) => (
+            <li
+              key={c.uid}
+              className="flex flex-wrap items-center gap-2 rounded-md border border-token bg-[rgb(var(--surface-muted))/0.5] p-2"
+            >
+              <CuepointTimeInput
+                value={c.atSec}
+                onChange={(v) => update(c.uid, { atSec: v })}
+              />
+              <select
+                value={c.quizId}
+                onChange={(e) => update(c.uid, { quizId: e.target.value })}
+                className="select min-w-[200px] flex-1"
+              >
+                {quizzes.map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.title} ({q.questionCount} câu)
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => remove(c.uid)}
+                className="btn-secondary btn-sm"
+                aria-label="Xoá cuepoint"
+              >
+                Xoá
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function CuepointTimeInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  function format(sec: number): string {
+    const s = Math.max(0, Math.floor(sec));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  }
+  function parse(text: string): number | null {
+    // Accept "mm:ss" or "ss". Reject anything else.
+    const trimmed = text.trim();
+    if (/^\d+$/.test(trimmed)) return Number(trimmed);
+    const m = /^(\d+):([0-5]?\d)$/.exec(trimmed);
+    if (!m) return null;
+    return Number(m[1]) * 60 + Number(m[2]);
+  }
+  const [text, setText] = useState(format(value));
+  return (
+    <input
+      type="text"
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        const parsed = parse(e.target.value);
+        if (parsed !== null) onChange(parsed);
+      }}
+      onBlur={() => setText(format(value))}
+      placeholder="mm:ss"
+      title="Định dạng mm:ss (vd 01:30) hoặc số giây thuần"
+      className="input w-24 font-mono text-center"
+    />
+  );
+}
+
+/**
+ * Video file uploader. Shown alongside the URL input on the "video"
+ * type — instructors can either paste a provider URL (YouTube/Vimeo/...)
+ * or upload a raw file from their machine. On successful upload we
+ * push the resulting `/api/lesson-media/videos/<file>` URL into the
+ * shared `url` field so the rest of the create flow proceeds unchanged.
+ */
+const VIDEO_UPLOAD_FORMATS = [
+  { ext: "MP4", note: "khuyến nghị, H.264/H.265" },
+  { ext: "WebM", note: "VP8/VP9" },
+  { ext: "MOV", note: "QuickTime" },
+  { ext: "MKV", note: "" },
+  { ext: "OGV", note: "Ogg Theora" },
+];
+
+const VIDEO_UPLOAD_ACCEPT =
+  "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,.mp4,.webm,.ogv,.mov,.mkv";
+
+function VideoUploadPanel({
+  uploading,
+  setUploading,
+  setError,
+  onUploaded,
+}: {
+  uploading: boolean;
+  setUploading: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  onUploaded: (url: string) => void;
+}) {
+  async function handleFile(file: File) {
+    setUploading(true);
+    setError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch("/api/lesson-media/videos", {
+        method: "POST",
+        body: fd,
+      });
+    } catch (networkErr) {
+      setUploading(false);
+      console.error("[VideoUploadPanel] network error", networkErr);
+      setError("network_error");
+      return;
+    }
+    setUploading(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      return;
+    }
+    const data = (await res.json()) as { url: string };
+    onUploaded(data.url);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+        Hoặc upload file video từ máy
+      </p>
+      <input
+        type="file"
+        accept={VIDEO_UPLOAD_ACCEPT}
+        disabled={uploading}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+        }}
+        className="mt-2 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {uploading && (
+        <p className="mt-1 text-xs text-muted">Đang upload...</p>
+      )}
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
+        <span className="font-semibold uppercase tracking-wide">Định dạng hỗ trợ:</span>
+        {VIDEO_UPLOAD_FORMATS.map((f) => (
+          <span key={f.ext}>
+            <span className="font-mono font-semibold text-faint">{f.ext}</span>
+            {f.note && <span className="text-muted"> ({f.note})</span>}
+          </span>
+        ))}
+        <span className="text-faint">· tối đa 500 MB</span>
+      </div>
+    </div>
+  );
+}
+
 function VideoUrlPreview({ url }: { url: string }) {
-  const v = parseVideoUrl(url);
+  const trimmed = url.trim();
+
+  // Same-origin uploaded file (populated by VideoUploadPanel). Show a
+  // confirm card instead of the "unrecognized provider" warning, since
+  // we know exactly what this is.
+  if (trimmed.startsWith("/api/lesson-media/videos/")) {
+    const filename = trimmed.split("/").pop() ?? trimmed;
+    return (
+      <div className="flex items-start gap-3 rounded-lg border border-success-100 bg-success-50 p-2.5 text-xs">
+        <div className="flex h-12 w-20 shrink-0 items-center justify-center rounded-md bg-success-100 font-mono text-success-700">
+          file
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-success-700">
+            ✓ Đã upload, sẽ phát bằng player nội bộ
+          </p>
+          <p className="mt-0.5 font-mono text-success-700/80 truncate">
+            {filename}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const v = parseVideoUrl(trimmed);
 
   if (!v) {
     return (

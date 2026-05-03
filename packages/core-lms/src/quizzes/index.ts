@@ -4,3 +4,4 @@ export * from "./questions";
 export * from "./grading";
 export * from "./attempts";
 export * from "./misconceptions";
+export * from "./inline";

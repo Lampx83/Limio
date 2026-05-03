@@ -9,6 +9,8 @@ export const LearningEventType = {
   // LMS
   LessonViewed: "lesson.viewed",
   LessonCompleted: "lesson.completed",
+  /** In-video quiz cuepoint passed (formative — not a full QuizAttempt). */
+  VideoCuepointPassed: "video.cuepoint.passed",
   QuizStarted: "quiz.started",
   QuizSubmitted: "quiz.submitted",
   QuizQuestionAnswered: "quiz.question.answered",
@@ -91,4 +93,21 @@ export interface QuizQuestionAnsweredPayload {
 export interface EnrollmentCreatedPayload {
   enrollmentId: string;
   courseId: string;
+}
+
+export interface VideoCuepointPassedPayload {
+  /** ContentItem.id of the video this cuepoint belongs to. */
+  contentItemId: string;
+  /** Lesson the video lives in (denormalized for query convenience). */
+  lessonId: string;
+  /** Cuepoint timestamp in seconds. */
+  atSec: number;
+  /** Quiz that was rendered at this cuepoint. */
+  quizId: string;
+  /** Number of questions in the quiz. */
+  questionCount: number;
+  /** Total ms from cuepoint pause until learner pressed submit (sum of attempts). */
+  totalDurationMs?: number;
+  /** How many submissions before all questions were correct (≥ 1). */
+  attemptCount: number;
 }

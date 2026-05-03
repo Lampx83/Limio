@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import EditQuestionForm from "./EditQuestionForm";
 
 interface Question {
   id: string;
@@ -10,6 +11,7 @@ interface Question {
   points: number;
   orderIndex: number;
   explanation: string | null;
+  extra: unknown;
   options: Array<{
     id: string;
     label: string;
@@ -17,6 +19,7 @@ interface Question {
     orderIndex: number;
     misconceptionId: string | null;
     misconception: { id: string; code: string; name: string } | null;
+    extra: unknown;
   }>;
   skillTags: Array<{
     skillId: string;
@@ -33,6 +36,7 @@ export default function QuestionRow({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   async function remove() {
     if (!confirm(`Xóa câu hỏi "${question.prompt.slice(0, 50)}..."?`)) return;
@@ -40,6 +44,15 @@ export default function QuestionRow({
     const res = await fetch(`/api/questions/${question.id}`, { method: "DELETE" });
     setBusy(false);
     if (res.ok) router.refresh();
+  }
+
+  if (editing) {
+    return (
+      <EditQuestionForm
+        question={question}
+        onClose={() => setEditing(false)}
+      />
+    );
   }
 
   return (
@@ -84,13 +97,23 @@ export default function QuestionRow({
             </p>
           )}
         </div>
-        <button
-          onClick={remove}
-          disabled={busy}
-          className="btn-sm shrink-0 inline-flex items-center justify-center gap-2 rounded-lg border border-danger-100 bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
-        >
-          Xóa
-        </button>
+
+        {/* Actions */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={() => setEditing(true)}
+            className="btn-sm inline-flex items-center justify-center gap-1 rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
+          >
+            Sửa
+          </button>
+          <button
+            onClick={remove}
+            disabled={busy}
+            className="btn-sm inline-flex items-center justify-center gap-1 rounded-lg border border-danger-100 bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
+          >
+            Xóa
+          </button>
+        </div>
       </div>
     </div>
   );
