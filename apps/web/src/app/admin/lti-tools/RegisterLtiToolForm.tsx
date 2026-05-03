@@ -40,46 +40,60 @@ export default function RegisterLtiToolForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-3 space-y-2 text-sm">
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        placeholder="Tên hiển thị (e.g. Khan Academy)"
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
-      />
-      <input
-        value={toolUrl}
-        onChange={(e) => setToolUrl(e.target.value)}
-        required
-        type="url"
-        placeholder="Tool URL (target_link_uri)"
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
-      />
-      <input
-        value={loginInitUrl}
-        onChange={(e) => setLoginInitUrl(e.target.value)}
-        required
-        type="url"
-        placeholder="Login init URL (OIDC)"
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
-      />
-      <input
-        value={jwksUrl}
-        onChange={(e) => setJwksUrl(e.target.value)}
-        type="url"
-        placeholder="Tool JWKS URL (optional)"
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
-      />
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
+    <form onSubmit={onSubmit} className="card space-y-3">
+      <div>
+        <label className="label" htmlFor="lti-name">Tên hiển thị</label>
+        <input
+          id="lti-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder="e.g. Khan Academy"
+          className="input mt-1.5"
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor="lti-url">Tool URL (target_link_uri)</label>
+        <input
+          id="lti-url"
+          value={toolUrl}
+          onChange={(e) => setToolUrl(e.target.value)}
+          required
+          type="url"
+          placeholder="https://tool.example.com/launch"
+          className="input mt-1.5"
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor="lti-login">Login init URL (OIDC)</label>
+        <input
+          id="lti-login"
+          value={loginInitUrl}
+          onChange={(e) => setLoginInitUrl(e.target.value)}
+          required
+          type="url"
+          placeholder="https://tool.example.com/lti/login"
+          className="input mt-1.5"
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor="lti-jwks">Tool JWKS URL (optional)</label>
+        <input
+          id="lti-jwks"
+          value={jwksUrl}
+          onChange={(e) => setJwksUrl(e.target.value)}
+          type="url"
+          placeholder="https://tool.example.com/.well-known/jwks.json"
+          className="input mt-1.5"
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-2 border-t border-token pt-3">
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "..." : "Đăng ký"}
         </button>
-        {error && <span className="text-red-600">Lỗi: {error}</span>}
+        {error && (
+          <span className="text-xs text-danger-600">Lỗi: {error}</span>
+        )}
       </div>
     </form>
   );

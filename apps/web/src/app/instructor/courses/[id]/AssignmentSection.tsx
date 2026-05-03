@@ -61,13 +61,13 @@ export default function AssignmentSection({
   }
 
   return (
-    <div className="rounded border border-slate-300 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
+    <div className="group/as rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
       {!editing ? (
         <>
-          <div className="flex items-baseline justify-between">
-            <p className="font-medium">📋 {assignment.title}</p>
-            <span className="text-xs text-slate-500">
-              max {assignment.maxScore}đ
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-base font-semibold">📋 {assignment.title}</p>
+            <span className="shrink-0 text-sm text-muted">
+              max <span className="font-semibold">{assignment.maxScore}</span>đ
               {assignment.dueAt && (
                 <>
                   {" · "}đến{" "}
@@ -76,73 +76,72 @@ export default function AssignmentSection({
               )}
             </span>
           </div>
-          <p className="mt-1 whitespace-pre-wrap text-xs text-slate-700 dark:text-slate-300">
+          <p className="mt-2 whitespace-pre-wrap text-sm text-muted">
             {assignment.description}
           </p>
-          <div className="mt-2 flex gap-2 text-xs">
+          <div className="mt-3 flex flex-wrap items-center gap-1">
             <Link
               href={`/instructor/assignments/${assignment.id}/submissions`}
-              className="rounded border border-slate-300 px-2 py-0.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+              className="btn-secondary btn-sm"
             >
-              Xem bài nộp
+              📥 Xem bài nộp
             </Link>
             <button
               onClick={() => setEditing(true)}
-              className="rounded border border-slate-300 px-2 py-0.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+              className="btn-ghost btn-sm"
+              title="Sửa assignment"
             >
-              Sửa
+              ✎ Sửa
             </button>
             <button
               onClick={remove}
               disabled={busy}
-              className="rounded border border-red-300 px-2 py-0.5 text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+              title="Xóa assignment"
+              aria-label="Xóa"
+              className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover/as:opacity-100 disabled:opacity-50"
             >
-              Xóa
+              🗑
             </button>
           </div>
         </>
       ) : (
-        <form onSubmit={save} className="space-y-2 text-xs">
+        <form onSubmit={save} className="space-y-2">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+            className="input"
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
             rows={3}
-            className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+            className="textarea"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               type="datetime-local"
               value={dueAt}
               onChange={(e) => setDueAt(e.target.value)}
-              className="flex-1 rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+              className="input flex-1"
             />
             <input
               type="number"
               min={1}
               value={maxScore}
               onChange={(e) => setMaxScore(e.target.value)}
-              className="w-20 rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+              className="input w-24"
             />
           </div>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded bg-slate-900 px-2 py-1 font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-            >
+            <button type="submit" disabled={busy} className="btn-primary btn-sm">
               Lưu
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="rounded border border-slate-300 px-2 py-1 dark:border-slate-700"
+              className="btn-secondary btn-sm"
             >
               Hủy
             </button>

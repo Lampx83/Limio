@@ -54,294 +54,385 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
     progress.modules.flatMap((m) => m.lessons.filter((l) => l.completed).map((l) => l.id)),
   );
 
+  const isComplete = progress.courseCompletionPct >= 100;
+
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <Link href={`/catalog/${params.slug}`} className="text-sm underline">
+    <main className="mx-auto max-w-5xl px-6 py-10">
+      {/* Breadcrumb */}
+      <Link
+        href={`/catalog/${params.slug}`}
+        className="link inline-flex items-center gap-1 text-sm"
+      >
         ← Course detail
       </Link>
-      <h1 className="mt-3 text-3xl font-bold">{course.title}</h1>
 
-      {streak.currentStreak > 0 && (
-        <p
-          className="mt-2 inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-200"
-          title={`Kỷ lục dài nhất: ${streak.longestStreak} ngày`}
-        >
-          🔥 {streak.currentStreak} ngày liên tiếp
-          {streak.isActiveToday && <span className="text-xs opacity-70"> · hôm nay ✓</span>}
-        </p>
-      )}
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {/* Course completion progress */}
-        <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-4 py-3 dark:bg-slate-900">
-          <div className="flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              Tiến độ học
-            </p>
-            <div className="mt-1 h-2 rounded-full bg-slate-300 dark:bg-slate-700">
-              <div
-                className="h-2 rounded-full bg-emerald-500 transition-all"
-                style={{ width: `${progress.courseCompletionPct}%` }}
-              />
-            </div>
-          </div>
-          <span className="text-sm font-medium tabular-nums">
-            {progress.courseCompletionPct}%
-          </span>
-        </div>
-
-        {/* XP / Level */}
-        <div className="flex items-center gap-3 rounded-lg bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
-          <div className="flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-amber-800 dark:text-amber-300">
-              Level {xp.level} · {xp.levelName}
-            </p>
-            <div className="mt-1 h-2 rounded-full bg-amber-200 dark:bg-amber-900/50">
-              <div
-                className="h-2 rounded-full bg-amber-500 transition-all"
-                style={{ width: `${xp.levelProgressPct}%` }}
-              />
-            </div>
-          </div>
-          <span className="text-sm font-medium tabular-nums">
-            {xp.xp} XP
-            {!xp.isMaxLevel && (
-              <span className="block text-xs text-amber-700 dark:text-amber-400">
-                +{xp.xpToNext} → L{xp.level + 1}
+      {/* Hero header */}
+      <header className="mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
+        <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
+        <div className="relative">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
+                {course.level} · {course.language}
               </span>
-            )}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        {progress.courseCompletionPct >= 100 && (
-          <Link
-            href={`/learn/${params.slug}/certificate`}
-            className="inline-block rounded border-2 border-amber-400 bg-amber-50 px-4 py-2 font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
-          >
-            🏆 Xem chứng nhận
-          </Link>
-        )}
-        {enrollment.lastLessonId && (
-          <Link
-            href={`/learn/${params.slug}/lessons/${enrollment.lastLessonId}`}
-            className="inline-block rounded bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700"
-          >
-            Tiếp tục bài học gần nhất →
-          </Link>
-        )}
-        {adaptiveNext && (
-          <Link
-            href={`/learn/${params.slug}/lessons/${adaptiveNext.lessonId}`}
-            className="inline-block rounded border border-violet-300 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-900 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-100 dark:hover:bg-violet-950/60"
-            title={`Skill yếu nhất hiện tại: ${adaptiveNext.weakestSkillName} (${Math.round(
-              adaptiveNext.masteryProbability * 100,
-            )}%)`}
-          >
-            🧭 Đề xuất tiếp theo: {adaptiveNext.lessonTitle}
-          </Link>
-        )}
-      </div>
-
-      {/* Leaderboard — Phase 1 C5. Top 20 weekly XP, percentile for others. */}
-      <section className="mt-8">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">Bảng xếp hạng tuần này</h2>
-          <span className="text-xs text-slate-500">
-            {leaderboard.totalParticipants} người tham gia
-          </span>
-        </div>
-        {leaderboard.selfOptedOut && (
-          <p className="mt-2 text-xs text-slate-500">
-            Bạn đã tắt bảng xếp hạng. Bật lại trong{" "}
-            <a href="/me/settings" className="underline">cài đặt</a>.
-          </p>
-        )}
-        {leaderboard.entries.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">
-            Chưa có ai có XP tuần này. Trở thành người đầu tiên!
-          </p>
-        ) : (
-          <ol className="mt-3 divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
-            {leaderboard.entries.map((e) => (
-              <li
-                key={e.userId}
-                className={`flex items-center gap-3 px-3 py-2 text-sm ${
-                  e.isYou ? "bg-emerald-50 font-medium dark:bg-emerald-900/20" : ""
-                }`}
+              <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+                {course.title}
+              </h1>
+            </div>
+            {streak.currentStreak > 0 && (
+              <div
+                className="flex items-center gap-2 rounded-xl bg-accent-500/95 px-3 py-2 text-sm font-semibold shadow-sm"
+                title={`Kỷ lục dài nhất: ${streak.longestStreak} ngày`}
               >
-                <span className="w-6 text-right tabular-nums text-slate-500">
-                  {e.rank === 1 ? "🥇" : e.rank === 2 ? "🥈" : e.rank === 3 ? "🥉" : `#${e.rank}`}
-                </span>
-                <span className="flex-1 truncate">
-                  {e.displayName}
-                  {e.isYou && <span className="ml-1 text-xs text-emerald-600">(bạn)</span>}
-                </span>
-                <span className="text-xs text-slate-500">L{e.level}</span>
-                <span className="w-16 text-right tabular-nums">{e.weeklyXp} XP</span>
-              </li>
-            ))}
-          </ol>
-        )}
-        {leaderboard.selfRank && (
-          <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900">
-            Bạn đang ở Top {leaderboard.selfRank.percentile}% ({leaderboard.selfRank.weeklyXp} XP tuần này)
-          </p>
-        )}
-      </section>
-
-      {/* C2 — Daily quests. */}
-      {dailyQuests.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold">🎯 Nhiệm vụ hôm nay</h2>
-          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {dailyQuests.map((q) => {
-              const pct = Math.min(100, Math.round((q.count / q.target) * 100));
-              return (
-                <li
-                  key={q.id}
-                  title={q.description}
-                  className={`rounded-lg border p-3 text-sm ${
-                    q.completed
-                      ? "border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
-                      : "border-slate-200 dark:border-slate-800"
-                  }`}
-                >
-                  <div className="flex items-baseline justify-between">
-                    <p className="font-medium">
-                      {q.emoji} {q.name}
-                    </p>
-                    <span className="text-xs text-amber-700 dark:text-amber-300">
-                      +{q.rewardXp} XP
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800">
-                    <div
-                      className={`h-1.5 rounded-full transition-all ${
-                        q.completed
-                          ? "bg-emerald-500"
-                          : "bg-slate-500 dark:bg-slate-400"
-                      }`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {q.completed
-                      ? "✓ Đã hoàn thành"
-                      : `${q.count} / ${q.target}`}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      {/* D2 — Misconception champions: top learners by # resolved this week. */}
-      {champions.entries.length > 0 && (
-        <section className="mt-8">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">
-              🌟 Champions khắc phục lỗi tư duy
-            </h2>
-            <span className="text-xs text-slate-500">
-              {champions.lookbackDays} ngày qua
-            </span>
-          </div>
-          <ol className="mt-3 divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
-            {champions.entries.map((e) => (
-              <li
-                key={e.userId}
-                className={`flex items-center gap-3 px-3 py-2 text-sm ${
-                  e.isYou ? "bg-emerald-50 font-medium dark:bg-emerald-900/20" : ""
-                }`}
-              >
-                <span className="w-6 text-right tabular-nums text-slate-500">
-                  {e.rank === 1 ? "🥇" : e.rank === 2 ? "🥈" : e.rank === 3 ? "🥉" : `#${e.rank}`}
-                </span>
-                <span className="flex-1 truncate">
-                  {e.displayName}
-                  {e.isYou && (
-                    <span className="ml-1 text-xs text-emerald-600">(bạn)</span>
+                <span className="text-lg">🔥</span>
+                <span>
+                  {streak.currentStreak} ngày
+                  {streak.isActiveToday && (
+                    <span className="ml-1 text-xs opacity-80">· hôm nay ✓</span>
                   )}
                 </span>
-                <span className="w-24 text-right tabular-nums text-emerald-700 dark:text-emerald-300">
-                  {e.resolvedCount} đã khắc phục
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+              </div>
+            )}
+          </div>
 
-      {/* Milestone badges — Phase 1 C3. Earned shown in color, locked dim. */}
-      <section className="mt-8">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">Huy hiệu</h2>
-          <span className="text-xs text-slate-500">
-            {earnedCodes.size} / {catalog.length}
-          </span>
-        </div>
-        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {catalog.map((b) => {
-            const isEarned = earnedCodes.has(b.code);
-            return (
-              <li
-                key={b.code}
-                title={b.description}
-                className={`rounded-lg border p-3 text-center transition ${
-                  isEarned
-                    ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
-                    : "border-slate-200 bg-slate-50 opacity-50 grayscale dark:border-slate-800 dark:bg-slate-900"
-                }`}
+          {/* Progress + XP */}
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <ProgressTile
+              label="Tiến độ học"
+              value={`${progress.courseCompletionPct}%`}
+              pct={progress.courseCompletionPct}
+              barClass="bg-white"
+              tone="white"
+            />
+            <ProgressTile
+              label={`Level ${xp.level} · ${xp.levelName}`}
+              value={`${xp.xp} XP`}
+              hint={
+                xp.isMaxLevel ? null : `+${xp.xpToNext} → L${xp.level + 1}`
+              }
+              pct={xp.levelProgressPct}
+              barClass="bg-accent-300"
+              tone="white"
+            />
+          </div>
+
+          {/* Action buttons */}
+          <div className="mt-5 flex flex-wrap gap-2">
+            {enrollment.lastLessonId && (
+              <Link
+                href={`/learn/${params.slug}/lessons/${enrollment.lastLessonId}`}
+                className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02]"
               >
-                <div className="text-2xl">{b.emoji ?? "🏅"}</div>
-                <div className="mt-1 text-xs font-medium">{b.name}</div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+                ▶ Tiếp tục bài gần nhất
+              </Link>
+            )}
+            {adaptiveNext && (
+              <Link
+                href={`/learn/${params.slug}/lessons/${adaptiveNext.lessonId}`}
+                className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur transition-all hover:bg-white/20"
+                title={`Skill yếu nhất: ${adaptiveNext.weakestSkillName} (${Math.round(
+                  adaptiveNext.masteryProbability * 100,
+                )}%)`}
+              >
+                🧭 Đề xuất: {adaptiveNext.lessonTitle}
+              </Link>
+            )}
+            {isComplete && (
+              <Link
+                href={`/learn/${params.slug}/certificate`}
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-accent-300 bg-accent-400/20 px-4 py-2 text-sm font-semibold backdrop-blur transition-all hover:bg-accent-400/30"
+              >
+                🏆 Xem chứng nhận
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
 
-      <ol className="mt-8 space-y-4">
-        {course.modules.map((m, mi) => (
-          <li key={m.id} className="rounded border border-slate-200 p-4 dark:border-slate-800">
-            <h3 className="font-medium">
-              Module {mi + 1}: {m.title}
-            </h3>
-            <ol className="mt-2 space-y-1 text-sm">
-              {m.lessons.map((l, li) => (
-                <li key={l.id} className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs ${
-                      completedSet.has(l.id)
-                        ? "bg-emerald-500 text-white"
-                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+      {/* Content grid */}
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-8">
+          {/* Modules */}
+          <section>
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-xl font-semibold">Lộ trình học</h2>
+              <span className="text-xs text-faint">
+                {progress.completedLessons}/{progress.totalLessons} bài đã hoàn thành
+              </span>
+            </div>
+            <ol className="mt-4 space-y-4">
+              {course.modules.map((m, mi) => {
+                const total = m.lessons.length;
+                const done = m.lessons.filter((l) => completedSet.has(l.id)).length;
+                return (
+                  <li key={m.id} className="card">
+                    <header className="flex items-baseline justify-between gap-3 border-b border-token pb-3">
+                      <h3 className="font-semibold">
+                        <span className="mr-2 text-faint">Module {mi + 1}</span>
+                        {m.title}
+                      </h3>
+                      <span className="text-xs text-faint tabular-nums">
+                        {done}/{total}
+                      </span>
+                    </header>
+                    <ol className="mt-3 space-y-1.5">
+                      {m.lessons.map((l, li) => {
+                        const completed = completedSet.has(l.id);
+                        return (
+                          <li key={l.id}>
+                            <Link
+                              href={`/learn/${params.slug}/lessons/${l.id}`}
+                              className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                            >
+                              <span
+                                className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                                  completed
+                                    ? "bg-success-500 text-white"
+                                    : "bg-[rgb(var(--surface-muted))] text-muted"
+                                }`}
+                              >
+                                {completed ? "✓" : li + 1}
+                              </span>
+                              <span
+                                className={`flex-1 text-sm transition-colors group-hover:text-brand-600 ${
+                                  completed ? "text-muted line-through" : ""
+                                }`}
+                              >
+                                {l.title}
+                              </span>
+                              <span className="text-xs text-faint opacity-0 transition-opacity group-hover:opacity-100">
+                                →
+                              </span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+
+          {isComplete && (
+            <div className="rounded-2xl border border-success-100 bg-success-50 p-5 text-center">
+              <p className="text-2xl">🎉</p>
+              <p className="mt-1 font-semibold text-success-700">
+                Bạn đã hoàn thành khóa học này!
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <aside className="space-y-5">
+          {/* Daily quests */}
+          {dailyQuests.length > 0 && (
+            <section className="card">
+              <h2 className="text-base font-semibold">🎯 Nhiệm vụ hôm nay</h2>
+              <ul className="mt-4 space-y-3">
+                {dailyQuests.map((q) => {
+                  const pct = Math.min(100, Math.round((q.count / q.target) * 100));
+                  return (
+                    <li
+                      key={q.id}
+                      title={q.description}
+                      className={`rounded-lg border p-3 ${
+                        q.completed
+                          ? "border-success-100 bg-success-50"
+                          : "border-token"
+                      }`}
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="text-sm font-medium leading-tight">
+                          {q.emoji} {q.name}
+                        </p>
+                        <span className="chip-accent shrink-0">+{q.rewardXp} XP</span>
+                      </div>
+                      <div className="mt-2 h-1.5 rounded-full bg-[rgb(var(--surface-muted))]">
+                        <div
+                          className={`h-1.5 rounded-full transition-all ${
+                            q.completed
+                              ? "bg-success-500"
+                              : "bg-gradient-to-r from-brand-500 to-brand-700"
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <p className="mt-1.5 text-xs text-faint">
+                        {q.completed ? "✓ Đã hoàn thành" : `${q.count} / ${q.target}`}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          {/* Leaderboard */}
+          <section className="card">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-base font-semibold">🏆 BXH tuần</h2>
+              <span className="text-xs text-faint">
+                {leaderboard.totalParticipants} người
+              </span>
+            </div>
+            {leaderboard.selfOptedOut && (
+              <p className="mt-2 text-xs text-faint">
+                Bạn đã tắt BXH. Bật lại trong{" "}
+                <Link href="/me/settings" className="link">
+                  cài đặt
+                </Link>
+                .
+              </p>
+            )}
+            {leaderboard.entries.length === 0 ? (
+              <p className="mt-3 text-sm text-faint">
+                Chưa ai có XP tuần này. Trở thành người đầu tiên!
+              </p>
+            ) : (
+              <ol className="mt-3 space-y-1">
+                {leaderboard.entries.map((e) => (
+                  <li
+                    key={e.userId}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${
+                      e.isYou
+                        ? "bg-brand-soft font-semibold text-brand-700"
+                        : ""
                     }`}
                   >
-                    {completedSet.has(l.id) ? "✓" : li + 1}
-                  </span>
-                  <Link
-                    href={`/learn/${params.slug}/lessons/${l.id}`}
-                    className="hover:underline"
-                  >
-                    {l.title}
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </li>
-        ))}
-      </ol>
+                    <span className="w-6 shrink-0 text-right tabular-nums text-faint">
+                      {e.rank === 1
+                        ? "🥇"
+                        : e.rank === 2
+                          ? "🥈"
+                          : e.rank === 3
+                            ? "🥉"
+                            : `#${e.rank}`}
+                    </span>
+                    <span className="flex-1 truncate">{e.displayName}</span>
+                    <span className="text-xs text-faint">L{e.level}</span>
+                    <span className="w-14 text-right text-xs tabular-nums font-medium">
+                      {e.weeklyXp} XP
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {leaderboard.selfRank && (
+              <p className="mt-3 rounded-lg bg-[rgb(var(--surface-muted))] px-3 py-2 text-xs">
+                Bạn ở Top {leaderboard.selfRank.percentile}% ·{" "}
+                {leaderboard.selfRank.weeklyXp} XP
+              </p>
+            )}
+          </section>
 
-      {progress.courseCompletionPct === 100 && (
-        <div className="mt-8 rounded-lg bg-emerald-50 p-4 dark:bg-emerald-900/20">
-          <p className="font-medium text-emerald-900 dark:text-emerald-200">
-            🎉 Bạn đã hoàn thành khóa học này!
-          </p>
-        </div>
-      )}
+          {/* Champions */}
+          {champions.entries.length > 0 && (
+            <section className="card">
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-base font-semibold">🌟 Champions</h2>
+                <span className="text-xs text-faint">
+                  {champions.lookbackDays} ngày
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-faint">Khắc phục lỗi tư duy</p>
+              <ol className="mt-3 space-y-1">
+                {champions.entries.map((e) => (
+                  <li
+                    key={e.userId}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${
+                      e.isYou
+                        ? "bg-success-50 font-semibold text-success-700"
+                        : ""
+                    }`}
+                  >
+                    <span className="w-6 shrink-0 text-right tabular-nums text-faint">
+                      {e.rank === 1
+                        ? "🥇"
+                        : e.rank === 2
+                          ? "🥈"
+                          : e.rank === 3
+                            ? "🥉"
+                            : `#${e.rank}`}
+                    </span>
+                    <span className="flex-1 truncate">{e.displayName}</span>
+                    <span className="text-xs font-medium tabular-nums text-success-600">
+                      {e.resolvedCount}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {/* Badges */}
+          <section className="card">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-base font-semibold">Huy hiệu</h2>
+              <span className="text-xs text-faint">
+                {earnedCodes.size}/{catalog.length}
+              </span>
+            </div>
+            <ul className="mt-3 grid grid-cols-3 gap-2">
+              {catalog.map((b) => {
+                const isEarned = earnedCodes.has(b.code);
+                return (
+                  <li
+                    key={b.code}
+                    title={b.description}
+                    className={`rounded-lg border p-2 text-center transition ${
+                      isEarned
+                        ? "border-accent-200 bg-accent-50"
+                        : "border-dashed border-token bg-[rgb(var(--surface-muted))] opacity-50 grayscale"
+                    }`}
+                  >
+                    <div className="text-xl">{b.emoji ?? "🏅"}</div>
+                    <div className="mt-0.5 text-[10px] font-medium leading-tight">
+                      {b.name}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </aside>
+      </div>
     </main>
+  );
+}
+
+function ProgressTile({
+  label,
+  value,
+  hint,
+  pct,
+  barClass,
+  tone,
+}: {
+  label: string;
+  value: string;
+  hint?: string | null;
+  pct: number;
+  barClass: string;
+  tone: "white";
+}) {
+  void tone;
+  return (
+    <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide opacity-80">
+          {label}
+        </p>
+        <p className="text-sm font-bold tabular-nums">{value}</p>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/25">
+        <div
+          className={`h-2 rounded-full transition-all ${barClass}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {hint && <p className="mt-1 text-xs opacity-75">{hint}</p>}
+    </div>
   );
 }

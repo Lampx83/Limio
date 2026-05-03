@@ -101,14 +101,9 @@ function ContentBlock({
       const p = payload as VideoPayload;
       return (
         <div>
-          <video
-            src={p.url}
-            controls
-            className="w-full rounded bg-black"
-            preload="metadata"
-          />
+          <VideoEmbed url={p.url} />
           {p.transcriptUrl && (
-            <a href={p.transcriptUrl} className="mt-2 inline-block text-sm underline">
+            <a href={p.transcriptUrl} className="link mt-2 inline-block text-sm">
               Xem transcript
             </a>
           )}
@@ -117,8 +112,11 @@ function ContentBlock({
     }
     case "markdown": {
       const p = payload as MarkdownPayload;
-      // Simple text rendering — full Markdown parsing is post-Phase 0.
-      return <pre className="whitespace-pre-wrap text-sm leading-relaxed">{p.body}</pre>;
+      return (
+        <pre className="whitespace-pre-wrap rounded-xl border border-token bg-[rgb(var(--surface))] p-4 text-sm leading-relaxed font-sans">
+          {p.body}
+        </pre>
+      );
     }
     case "external_link": {
       const p = payload as ExternalLinkPayload;
@@ -127,7 +125,7 @@ function ContentBlock({
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block rounded border border-slate-300 px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
         >
           🔗 {p.title ?? p.url}
         </a>
@@ -139,7 +137,7 @@ function ContentBlock({
         <a
           href={p.url}
           download
-          className="inline-block rounded border border-slate-300 px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
         >
           📎 {p.filename}
         </a>
@@ -151,7 +149,7 @@ function ContentBlock({
         <iframe
           src={p.url}
           height={p.height ?? 480}
-          className="w-full rounded border border-slate-300 dark:border-slate-700"
+          className="w-full rounded-xl border border-token shadow-card"
           allowFullScreen
         />
       );
@@ -161,8 +159,9 @@ function ContentBlock({
       return (
         <div>
           {p.title && (
-            <p className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-              📦 {p.title}
+            <p className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-muted">
+              <span>📦</span>
+              {p.title}
             </p>
           )}
           <ScormPlayer
@@ -199,28 +198,26 @@ function ContentBlock({
     }
     case "pdf": {
       const p = payload as PdfPayload;
-      // Browsers' built-in PDF viewer renders inline via <iframe>. Always
-      // include a download fallback in case the browser blocks (e.g. mobile
-      // Safari without a viewer extension).
       return (
         <div>
           {p.title && (
-            <p className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-              📄 {p.title}
+            <p className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-muted">
+              <span>📄</span>
+              {p.title}
             </p>
           )}
           <iframe
             src={p.url}
-            className="h-[80vh] w-full rounded border border-slate-300 dark:border-slate-700"
+            className="h-[80vh] w-full rounded-xl border border-token shadow-card"
             title={p.title ?? "PDF"}
           />
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-faint">
             Không xem được?{" "}
             <a
               href={p.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-slate-700 dark:hover:text-slate-300"
+              className="link"
             >
               Mở PDF trong tab mới
             </a>
@@ -229,6 +226,121 @@ function ContentBlock({
       );
     }
     default:
-      return <p className="text-sm text-slate-500">Unknown content type: {type}</p>;
+      return (
+        <p className="rounded-lg border border-dashed border-token px-3 py-2 text-sm text-faint">
+          Unknown content type: {type}
+        </p>
+      );
   }
+}
+
+type ParsedVideo =
+  | { kind: "youtube"; id: string; start?: number }
+  | { kind: "vimeo"; id: string }
+  | { kind: "loom"; id: string }
+  | null;
+
+function parseVideoUrl(url: string): ParsedVideo {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "");
+
+    // YouTube short link: youtu.be/<id>
+    if (host === "youtu.be") {
+      const id = u.pathname.slice(1).split("/")[0];
+      if (id) {
+        const t = u.searchParams.get("t");
+        return { kind: "youtube", id, start: t ? parseTimeToSeconds(t) : undefined };
+      }
+    }
+    // YouTube long: youtube.com/watch?v=<id>, /embed/<id>, /shorts/<id>, /live/<id>
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+      const v = u.searchParams.get("v");
+      if (v) {
+        const t = u.searchParams.get("t") ?? u.searchParams.get("start");
+        return { kind: "youtube", id: v, start: t ? parseTimeToSeconds(t) : undefined };
+      }
+      const m = u.pathname.match(/^\/(?:embed|shorts|live)\/([\w-]{6,})/);
+      if (m) return { kind: "youtube", id: m[1]! };
+    }
+    // Vimeo: vimeo.com/<id> or player.vimeo.com/video/<id>
+    if (host.endsWith("vimeo.com")) {
+      const m = u.pathname.match(/\/(\d+)(?:\/|$)/);
+      if (m) return { kind: "vimeo", id: m[1]! };
+    }
+    // Loom: loom.com/share/<id>
+    if (host === "loom.com" || host.endsWith(".loom.com")) {
+      const m = u.pathname.match(/\/share\/([a-z0-9]+)/i);
+      if (m) return { kind: "loom", id: m[1]! };
+    }
+  } catch {
+    /* not a URL */
+  }
+  return null;
+}
+
+function parseTimeToSeconds(t: string): number | undefined {
+  // Accept "90", "1m30s", "1h2m3s"
+  if (/^\d+$/.test(t)) return Number(t);
+  const m = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+  if (!m) return undefined;
+  const h = Number(m[1] ?? 0);
+  const min = Number(m[2] ?? 0);
+  const s = Number(m[3] ?? 0);
+  return h * 3600 + min * 60 + s;
+}
+
+function VideoEmbed({ url }: { url: string }) {
+  const v = parseVideoUrl(url);
+
+  if (v?.kind === "youtube") {
+    const params = new URLSearchParams({ rel: "0", modestbranding: "1" });
+    if (v.start) params.set("start", String(v.start));
+    return (
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${v.id}?${params.toString()}`}
+        title="YouTube video"
+        loading="lazy"
+        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        allowFullScreen
+        className="aspect-video w-full overflow-hidden rounded-xl border border-token bg-black shadow-card"
+      />
+    );
+  }
+
+  if (v?.kind === "vimeo") {
+    return (
+      <iframe
+        src={`https://player.vimeo.com/video/${v.id}`}
+        title="Vimeo video"
+        loading="lazy"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen
+        className="aspect-video w-full overflow-hidden rounded-xl border border-token bg-black shadow-card"
+      />
+    );
+  }
+
+  if (v?.kind === "loom") {
+    return (
+      <iframe
+        src={`https://www.loom.com/embed/${v.id}`}
+        title="Loom video"
+        loading="lazy"
+        allow="fullscreen"
+        allowFullScreen
+        className="aspect-video w-full overflow-hidden rounded-xl border border-token bg-black shadow-card"
+      />
+    );
+  }
+
+  // Direct video file (.mp4, .webm, .mov, ...)
+  return (
+    <video
+      src={url}
+      controls
+      className="aspect-video w-full rounded-xl bg-black shadow-card"
+      preload="metadata"
+    />
+  );
 }

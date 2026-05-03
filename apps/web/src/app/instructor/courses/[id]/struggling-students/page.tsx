@@ -32,15 +32,11 @@ export default async function StrugglingStudentsPage({
   if (!ok) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <p className="rounded border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
-          Bạn không có quyền xem trang này.
-        </p>
+        <Forbidden />
       </main>
     );
   }
 
-  // Step 1: misconception IDs that are testable in this course (any option of
-  // any question in any quiz of this course).
   const courseMcRows = await prisma.questionOption.findMany({
     where: {
       misconceptionId: { not: null },
@@ -53,7 +49,6 @@ export default async function StrugglingStudentsPage({
     .map((r) => r.misconceptionId)
     .filter((x): x is string => x !== null);
 
-  // Step 2: skill IDs tagged on lessons or questions in this course.
   const [csm, qst] = await Promise.all([
     prisma.contentSkillMapping.findMany({
       where: { contentType: "lesson", lesson: { module: { courseId: course.id } } },
@@ -68,7 +63,6 @@ export default async function StrugglingStudentsPage({
     new Set([...csm.map((r) => r.skillId), ...qst.map((r) => r.skillId)]),
   );
 
-  // Step 3: enrolled students.
   const enrollments = await prisma.enrollment.findMany({
     where: { courseId: course.id },
     include: {
@@ -78,18 +72,22 @@ export default async function StrugglingStudentsPage({
 
   if (enrollments.length === 0) {
     return (
-      <main className="mx-auto max-w-4xl px-6 py-12">
+      <main className="mx-auto max-w-5xl px-6 py-10">
         <Header courseId={course.id} courseTitle={course.title} />
-        <p className="mt-6 text-sm text-slate-600 dark:text-slate-400">
-          Chưa có học viên nào đăng ký khóa này.
-        </p>
+        <div className="mt-6 rounded-2xl border border-dashed border-token p-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
+            👥
+          </div>
+          <p className="mt-4 text-muted">
+            Chưa có học viên nào đăng ký khóa này.
+          </p>
+        </div>
       </main>
     );
   }
 
   const userIds = enrollments.map((e) => e.user.id);
 
-  // Step 4: per-user unresolved-flag count (course-scoped).
   const unresolvedFlagGroups =
     courseMcIds.length === 0
       ? []
@@ -106,7 +104,6 @@ export default async function StrugglingStudentsPage({
     unresolvedFlagGroups.map((g) => [g.userId, g._count._all]),
   );
 
-  // Step 5: per-user weak-skill count (course-scoped).
   const weakStateRows =
     courseSkillIds.length === 0
       ? []
@@ -124,7 +121,6 @@ export default async function StrugglingStudentsPage({
     weakByUser.set(r.userId, (weakByUser.get(r.userId) ?? 0) + 1);
   }
 
-  // Step 6: most recent activity per user (any LearningEvent in this course).
   const lastEventRows = await prisma.learningEvent.groupBy({
     by: ["userId"],
     where: { userId: { in: userIds }, courseId: course.id },
@@ -156,70 +152,99 @@ export default async function StrugglingStudentsPage({
     return b.weakSkills - a.weakSkills;
   });
 
+  const needHelpCount = rows.filter(
+    (r) => r.unresolvedFlags > 0 || r.weakSkills > 0,
+  ).length;
+
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main className="mx-auto max-w-5xl px-6 py-10">
       <Header courseId={course.id} courseTitle={course.title} />
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+      <p className="mt-2 text-muted">
         Học viên được sắp xếp theo số lỗi tư duy chưa khắc phục, sau đó số kỹ năng yếu.
       </p>
 
-      <table className="mt-6 w-full text-sm">
-        <thead>
-          <tr className="border-b border-slate-300 text-left text-xs uppercase tracking-wide text-slate-500 dark:border-slate-700">
-            <th className="py-2 pr-3">Học viên</th>
-            <th className="py-2 pr-3">Lỗi tư duy chưa khắc phục</th>
-            <th className="py-2 pr-3">Kỹ năng yếu</th>
-            <th className="py-2 pr-3">Hoạt động gần nhất</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr
-              key={r.userId}
-              className="border-b border-slate-200 dark:border-slate-800"
-            >
-              <td className="py-2 pr-3">
-                <Link
-                  href={`/instructor/courses/${course.id}/struggling-students/${r.userId}`}
-                  className="block hover:underline"
-                >
-                  <div className="font-medium">{r.displayName}</div>
-                  <div className="text-xs text-slate-500">{r.email}</div>
-                </Link>
-              </td>
-              <td className="py-2 pr-3">
-                {r.unresolvedFlags > 0 ? (
-                  <span
-                    className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      r.unresolvedFlags >= 3
-                        ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
-                    }`}
-                  >
-                    {r.unresolvedFlags}
-                  </span>
-                ) : (
-                  <span className="text-slate-400">—</span>
-                )}
-              </td>
-              <td className="py-2 pr-3">
-                {r.weakSkills > 0 ? (
-                  <span className="text-slate-700 dark:text-slate-300">
-                    {r.weakSkills}
-                  </span>
-                ) : (
-                  <span className="text-slate-400">—</span>
-                )}
-              </td>
-              <td className="py-2 pr-3 text-slate-600 dark:text-slate-400">
-                {r.lastActivity
-                  ? new Date(r.lastActivity).toLocaleString("vi-VN")
-                  : "Chưa có"}
-              </td>
+      {/* Summary stats */}
+      <div className="mt-6 grid grid-cols-3 gap-3 sm:gap-4">
+        <Stat label="Tổng học viên" value={rows.length} tone="brand" />
+        <Stat
+          label="Cần hỗ trợ"
+          value={needHelpCount}
+          tone={needHelpCount > 0 ? "danger" : "success"}
+        />
+        <Stat
+          label="Đang ổn định"
+          value={rows.length - needHelpCount}
+          tone="success"
+        />
+      </div>
+
+      {/* Table inside card */}
+      <div className="mt-8 overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
+        <table className="w-full text-sm">
+          <thead className="bg-[rgb(var(--surface-muted))]">
+            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
+              <th className="px-4 py-3">Học viên</th>
+              <th className="px-4 py-3">Lỗi tư duy chưa khắc phục</th>
+              <th className="px-4 py-3">Kỹ năng yếu</th>
+              <th className="px-4 py-3">Hoạt động gần nhất</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-token">
+            {rows.map((r) => (
+              <tr
+                key={r.userId}
+                className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
+              >
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/instructor/courses/${course.id}/struggling-students/${r.userId}`}
+                    className="group block"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-gradient text-xs font-semibold text-white">
+                        {r.displayName.charAt(0).toUpperCase()}
+                      </span>
+                      <div>
+                        <div className="font-semibold transition-colors group-hover:text-brand-600">
+                          {r.displayName}
+                        </div>
+                        <div className="text-xs text-faint">{r.email}</div>
+                      </div>
+                    </div>
+                  </Link>
+                </td>
+                <td className="px-4 py-3">
+                  {r.unresolvedFlags > 0 ? (
+                    <span
+                      className={
+                        r.unresolvedFlags >= 3 ? "chip-danger" : "chip-accent"
+                      }
+                    >
+                      {r.unresolvedFlags}
+                    </span>
+                  ) : (
+                    <span className="text-faint">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {r.weakSkills > 0 ? (
+                    <span className="font-medium tabular-nums">
+                      {r.weakSkills}
+                    </span>
+                  ) : (
+                    <span className="text-faint">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-xs text-muted">
+                  {r.lastActivity
+                    ? new Date(r.lastActivity).toLocaleString("vi-VN")
+                    : "Chưa có"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }
@@ -235,13 +260,49 @@ function Header({
     <>
       <Link
         href={`/instructor/courses/${courseId}`}
-        className="text-sm underline"
+        className="link inline-flex items-center gap-1 text-sm"
       >
         ← Quay lại khóa học
       </Link>
-      <h1 className="mt-3 text-2xl font-bold">
-        Học viên cần hỗ trợ — {courseTitle}
-      </h1>
+      <div className="mt-4">
+        <span className="chip-brand">Analytics</span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          Học viên cần hỗ trợ
+        </h1>
+        <p className="mt-1 text-sm text-faint">{courseTitle}</p>
+      </div>
     </>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "brand" | "success" | "danger";
+}) {
+  const toneClass = {
+    brand: "text-brand-600",
+    success: "text-success-600",
+    danger: "text-danger-600",
+  }[tone];
+  return (
+    <div className="card">
+      <div className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
+        {value}
+      </div>
+      <div className="mt-1 text-xs text-muted sm:text-sm">{label}</div>
+    </div>
+  );
+}
+
+function Forbidden() {
+  return (
+    <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
+      🚫 Bạn không có quyền xem trang này.
+    </div>
   );
 }

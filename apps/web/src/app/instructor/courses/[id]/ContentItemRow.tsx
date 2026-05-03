@@ -63,21 +63,29 @@ export default function ContentItemRow({ item }: { item: Item }) {
   }
 
   return (
-    <div className="flex items-start gap-2 rounded border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-800">
-      <span className="font-mono text-slate-500">{item.orderIndex}</span>
-      <span>{ICON[item.type] ?? "📄"}</span>
-      <span className="flex-1 truncate">
-        <span className="font-medium uppercase text-slate-500">{item.type}</span>
-        <span className="ml-2 text-slate-700 dark:text-slate-300">
-          {summarize(item.type, item.payload)}
-        </span>
+    <div className="group flex items-center gap-3 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2.5 transition-colors hover:border-brand-200">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-sm font-mono font-semibold text-faint tabular-nums">
+        {item.orderIndex}
       </span>
+      <span className="text-xl shrink-0" aria-hidden>
+        {ICON[item.type] ?? "📄"}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="chip">{item.type}</span>
+        </div>
+        <p className="mt-1 truncate text-sm text-muted">
+          {summarize(item.type, item.payload)}
+        </p>
+      </div>
       <button
         onClick={remove}
         disabled={busy}
-        className="rounded border border-red-300 px-1.5 py-0.5 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+        title="Xóa content này"
+        aria-label="Xóa"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover:opacity-100 disabled:opacity-50"
       >
-        Xóa
+        🗑
       </button>
     </div>
   );

@@ -27,29 +27,40 @@ export default function LtiToolRow({ tool }: { tool: Tool }) {
   }
 
   return (
-    <div className="rounded border border-slate-200 p-3 text-xs dark:border-slate-800">
-      <div className="flex items-baseline justify-between">
-        <p className="text-sm font-medium">{tool.name}</p>
+    <div className="card">
+      <div className="flex items-start justify-between gap-3 border-b border-token pb-3">
+        <div>
+          <p className="text-base font-semibold">🔌 {tool.name}</p>
+          <p className="mt-1 text-xs text-faint">
+            Đăng ký {new Date(tool.createdAt).toLocaleDateString("vi-VN")}
+          </p>
+        </div>
         <button
           onClick={remove}
           disabled={busy}
-          className="rounded border border-red-300 px-2 py-0.5 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+          className="btn-sm shrink-0 inline-flex items-center justify-center gap-2 rounded-lg border border-danger-100 bg-[rgb(var(--surface))] px-3 py-1.5 font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
         >
           Xóa
         </button>
       </div>
-      <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 font-mono">
-        <dt className="text-slate-500">tool URL</dt>
-        <dd className="break-all">{tool.toolUrl}</dd>
-        <dt className="text-slate-500">login init</dt>
-        <dd className="break-all">{tool.loginInitUrl}</dd>
-        <dt className="text-slate-500">client_id</dt>
-        <dd className="break-all">{tool.clientId}</dd>
-        <dt className="text-slate-500">deployment_id</dt>
-        <dd>{tool.deploymentId}</dd>
-        <dt className="text-slate-500">kid</dt>
-        <dd className="break-all">{tool.publicKeyKid}</dd>
+      <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-xs">
+        <Field label="tool URL" value={tool.toolUrl} />
+        <Field label="login init" value={tool.loginInitUrl} />
+        <Field label="client_id" value={tool.clientId} />
+        <Field label="deployment_id" value={tool.deploymentId} />
+        <Field label="kid" value={tool.publicKeyKid} />
       </dl>
     </div>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <>
+      <dt className="font-semibold uppercase tracking-wide text-faint">
+        {label}
+      </dt>
+      <dd className="break-all font-mono text-muted">{value}</dd>
+    </>
   );
 }

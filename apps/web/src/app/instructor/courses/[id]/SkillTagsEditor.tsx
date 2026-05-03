@@ -137,12 +137,12 @@ export default function SkillTagsEditor({
   }
 
   return (
-    <div ref={ref} className="relative mt-1">
-      <div className="flex flex-wrap items-center gap-1">
+    <div ref={ref} className="relative">
+      <div className="flex flex-wrap items-center gap-2">
         {tags.map((t) => (
           <span
             key={t.skillId}
-            className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-800"
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-sm text-brand-700"
           >
             <span className="font-mono">{t.code}</span>
             <span className="opacity-60">·</span>
@@ -150,7 +150,7 @@ export default function SkillTagsEditor({
             <button
               onClick={() => detach(t.skillId)}
               disabled={busy}
-              className="ml-1 text-slate-500 hover:text-red-600 disabled:opacity-50"
+              className="ml-1 text-base leading-none text-brand-500 transition-colors hover:text-danger-600 disabled:opacity-50"
               aria-label="Untag"
             >
               ×
@@ -159,29 +159,29 @@ export default function SkillTagsEditor({
         ))}
         <button
           onClick={() => setPicking((v) => !v)}
-          className="rounded-full border border-dashed border-slate-300 px-2 py-0.5 text-xs text-slate-500 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="rounded-full border border-dashed border-token bg-[rgb(var(--surface))] px-3 py-1 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
         >
           + Tag skill
         </button>
         <button
           onClick={aiSuggest}
           disabled={aiSuggesting}
-          className="rounded-full border border-dashed border-violet-300 px-2 py-0.5 text-xs text-violet-700 hover:border-violet-400 hover:bg-violet-50 disabled:opacity-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
+          className="rounded-full border border-dashed border-brand-300 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100 disabled:opacity-50"
         >
           {aiSuggesting ? "🪄 ..." : "🪄 AI suggest"}
         </button>
       </div>
 
       {aiSuggestions.length > 0 && (
-        <div className="mt-2 rounded border border-violet-200 bg-violet-50 p-2 text-xs dark:border-violet-800 dark:bg-violet-950/40">
-          <p className="mb-1 font-medium text-violet-800 dark:text-violet-200">
+        <div className="mt-3 rounded-xl border border-brand-200 bg-brand-soft p-3 text-xs">
+          <p className="mb-2 font-semibold text-brand-700">
             🪄 AI đề xuất ({aiSuggestions.length}):
           </p>
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {aiSuggestions.map((s) => (
               <li
                 key={s.skillId}
-                className="flex items-start gap-2 rounded bg-white p-1.5 dark:bg-slate-900"
+                className="flex items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] p-2"
               >
                 <button
                   onClick={() => {
@@ -191,20 +191,18 @@ export default function SkillTagsEditor({
                     );
                   }}
                   disabled={busy}
-                  className="rounded bg-violet-600 px-1.5 py-0.5 text-[10px] font-medium text-white disabled:opacity-50"
+                  className="rounded-md bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
                 >
                   +
                 </button>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <p>
                     <span className="font-mono">{s.skillCode}</span> · {s.skillName}
-                    <span className="ml-1 text-[10px] text-slate-500">
+                    <span className="ml-1 text-faint">
                       ({Math.round(s.confidence * 100)}%)
                     </span>
                   </p>
-                  <p className="text-[10px] text-slate-600 dark:text-slate-400">
-                    {s.rationale}
-                  </p>
+                  <p className="mt-0.5 text-faint">{s.rationale}</p>
                 </div>
                 <button
                   onClick={() =>
@@ -212,7 +210,8 @@ export default function SkillTagsEditor({
                       prev.filter((x) => x.skillId !== s.skillId),
                     )
                   }
-                  className="text-[10px] text-slate-500 hover:text-slate-700"
+                  className="text-faint transition-colors hover:text-[rgb(var(--text))]"
+                  aria-label="Bỏ qua"
                 >
                   ✕
                 </button>
@@ -223,13 +222,13 @@ export default function SkillTagsEditor({
       )}
 
       {picking && !createMode && (
-        <div className="absolute z-10 mt-1 w-72 rounded border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
+        <div className="absolute z-10 mt-1 w-72 overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] shadow-card-hover animate-fade-in-up">
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm skill..."
-            className="w-full rounded-t border-b border-slate-200 px-2 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-800"
+            className="w-full border-b border-token bg-transparent px-3 py-2 text-sm focus:outline-none"
           />
           <ul className="max-h-48 overflow-y-auto">
             {skills
@@ -240,9 +239,9 @@ export default function SkillTagsEditor({
                   <button
                     onClick={() => attach(s.id)}
                     disabled={busy}
-                    className="block w-full px-2 py-1 text-left text-sm hover:bg-slate-50 disabled:opacity-50 dark:hover:bg-slate-800"
+                    className="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-brand-600 disabled:opacity-50"
                   >
-                    <span className="font-mono text-xs">{s.code}</span>
+                    <span className="font-mono text-xs text-faint">{s.code}</span>
                     <span className="ml-2">{s.name}</span>
                   </button>
                 </li>
@@ -250,7 +249,7 @@ export default function SkillTagsEditor({
           </ul>
           <button
             onClick={() => setCreateMode(true)}
-            className="block w-full border-t border-slate-200 px-2 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="block w-full border-t border-token px-3 py-2 text-left text-xs font-medium text-brand-600 transition-colors hover:bg-brand-soft"
           >
             + Tạo skill mới...
           </button>
@@ -260,7 +259,7 @@ export default function SkillTagsEditor({
       {picking && createMode && (
         <form
           onSubmit={createSkill}
-          className="absolute z-10 mt-1 w-72 space-y-2 rounded border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-950"
+          className="absolute z-10 mt-1 w-72 space-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 shadow-card-hover"
         >
           <input
             value={newCode}
@@ -268,35 +267,33 @@ export default function SkillTagsEditor({
             required
             pattern="[a-z][a-z0-9._-]*"
             placeholder="code (e.g. math.algebra.linear)"
-            className="w-full rounded border border-slate-300 px-2 py-1 text-sm dark:bg-slate-900 dark:border-slate-700"
+            className="input"
           />
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             required
             placeholder="Tên hiển thị"
-            className="w-full rounded border border-slate-300 px-2 py-1 text-sm dark:bg-slate-900 dark:border-slate-700"
+            className="input"
           />
-          <div className="flex gap-1">
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded bg-slate-900 px-2 py-1 text-xs font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-            >
+          <div className="flex gap-2">
+            <button type="submit" disabled={busy} className="btn-primary btn-sm">
               Tạo + tag
             </button>
             <button
               type="button"
               onClick={() => setCreateMode(false)}
-              className="rounded border border-slate-300 px-2 py-1 text-xs dark:border-slate-700"
+              className="btn-secondary btn-sm"
             >
               Hủy
             </button>
           </div>
-          {error && <p className="text-xs text-red-600">Lỗi: {error}</p>}
+          {error && <p className="text-xs text-danger-600">Lỗi: {error}</p>}
         </form>
       )}
-      {error && !picking && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && !picking && (
+        <p className="mt-1 text-xs text-danger-600">{error}</p>
+      )}
     </div>
   );
 }

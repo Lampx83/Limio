@@ -51,6 +51,17 @@ interface AnswerState {
   confidence: number | null;
 }
 
+const TYPE_LABEL: Record<QType, string> = {
+  mcq: "Chọn nhiều",
+  true_false: "Đúng/Sai",
+  fill_in: "Điền từ",
+  ordering: "Sắp xếp",
+  matching: "Ghép cặp",
+  numerical: "Số",
+  essay: "Tự luận",
+  short_answer: "Trả lời ngắn",
+};
+
 export default function QuizPlayer({
   attemptId,
   courseSlug,
@@ -79,7 +90,13 @@ export default function QuizPlayer({
       });
   }, [attemptId]);
 
-  if (!data) return <p className="text-slate-500">Đang tải...</p>;
+  if (!data) {
+    return (
+      <div className="card text-center text-sm text-faint">
+        <span className="inline-block animate-pulse">Đang tải quiz…</span>
+      </div>
+    );
+  }
   const { quiz } = data;
 
   function setResponse(qId: string, response: Response) {
@@ -143,69 +160,125 @@ export default function QuizPlayer({
     window.location.href = `/learn/${courseSlug}/attempts/${attemptId}/result`;
   }
 
+  const answeredCount = quiz.questions.filter(
+    (q) => !isResponseEmpty(q, answers[q.id]?.response ?? null),
+  ).length;
+
   return (
     <div>
-      <h1 className="text-3xl font-bold">{quiz.title}</h1>
-      {quiz.timeLimitSec && (
-        <p className="mt-1 text-sm text-slate-500">
-          Thời gian: {Math.floor(quiz.timeLimitSec / 60)} phút
-        </p>
-      )}
+      {/* Header */}
+      <header>
+        <span className="chip-brand">Quiz</span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          {quiz.title}
+        </h1>
+        <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted">
+          <span>
+            {quiz.questions.length} câu
+          </span>
+          {quiz.timeLimitSec && (
+            <span>⏱ {Math.floor(quiz.timeLimitSec / 60)} phút</span>
+          )}
+          {quiz.requireConfidence && (
+            <span>⚖️ Cần đánh giá độ tự tin</span>
+          )}
+        </div>
 
-      <ol className="mt-8 space-y-8">
-        {quiz.questions.map((q, qi) => (
-          <li
-            key={q.id}
-            className="rounded-lg border border-slate-200 p-5 dark:border-slate-800"
-          >
-            <p className="text-sm font-medium text-slate-500">
-              Câu {qi + 1} · {q.points} điểm · {q.type}
-            </p>
-            <p className="mt-1 whitespace-pre-wrap">{q.prompt}</p>
-
-            <QuestionInput
-              question={q}
-              answer={answers[q.id]}
-              onChange={(r) => setResponse(q.id, r)}
-              onBlur={() => saveAnswer(q)}
+        {/* Progress */}
+        <div className="mt-5">
+          <div className="flex items-baseline justify-between text-xs">
+            <span className="text-muted">Đã trả lời</span>
+            <span className="font-semibold tabular-nums">
+              {answeredCount}/{quiz.questions.length}
+            </span>
+          </div>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+            <div
+              className="h-2 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
+              style={{
+                width: `${(answeredCount / Math.max(1, quiz.questions.length)) * 100}%`,
+              }}
             />
+          </div>
+        </div>
+      </header>
+
+      <ol className="mt-8 space-y-6">
+        {quiz.questions.map((q, qi) => (
+          <li key={q.id} className="card">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700">
+                  {qi + 1}
+                </span>
+                <span className="chip">{TYPE_LABEL[q.type] ?? q.type}</span>
+              </div>
+              <span className="text-xs font-medium text-faint">
+                {q.points} điểm
+              </span>
+            </div>
+            <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed">
+              {q.prompt}
+            </p>
+
+            <div className="mt-4">
+              <QuestionInput
+                question={q}
+                answer={answers[q.id]}
+                onChange={(r) => setResponse(q.id, r)}
+                onBlur={() => saveAnswer(q)}
+              />
+            </div>
 
             {quiz.requireConfidence && (
-              <div className="mt-4 flex items-center gap-2">
-                <span className="text-xs text-slate-500">Độ tự tin:</span>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => {
-                      setConfidence(q.id, n);
-                      setTimeout(() => saveAnswer(q), 0);
-                    }}
-                    className={`h-7 w-7 rounded text-xs ${
-                      answers[q.id]?.confidence === n
-                        ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                        : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
+              <div className="mt-5 flex items-center gap-2 border-t border-token pt-4">
+                <span className="text-xs font-medium text-muted">
+                  Độ tự tin:
+                </span>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => {
+                        setConfidence(q.id, n);
+                        setTimeout(() => saveAnswer(q), 0);
+                      }}
+                      className={`h-8 w-8 rounded-lg text-xs font-semibold transition-all ${
+                        answers[q.id]?.confidence === n
+                          ? "bg-brand-600 text-white shadow-sm"
+                          : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-brand-soft hover:text-brand-700"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs text-faint">1 = đoán · 5 = chắc chắn</span>
               </div>
             )}
           </li>
         ))}
       </ol>
 
-      <div className="mt-8">
-        <button
-          onClick={onSubmit}
-          disabled={submitting}
-          className="rounded bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-        >
-          {submitting ? "Đang nộp..." : "Nộp bài"}
+      {/* Submit bar — sticky */}
+      <div className="sticky bottom-4 mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))/0.92] p-3 shadow-card-hover backdrop-blur">
+        <p className="text-sm text-muted">
+          Đã trả lời{" "}
+          <span className="font-semibold text-[rgb(var(--text))]">
+            {answeredCount}/{quiz.questions.length}
+          </span>{" "}
+          câu
+        </p>
+        <button onClick={onSubmit} disabled={submitting} className="btn-primary btn-lg">
+          {submitting ? "Đang nộp..." : "Nộp bài →"}
         </button>
-        {error && <p className="mt-3 text-sm text-red-600">Lỗi: {error}</p>}
       </div>
+      {error && (
+        <p className="mt-3 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">
+          Lỗi: {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -230,7 +303,7 @@ function QuestionInput({
           value={typeof answer?.response === "string" ? answer.response : ""}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
-          className="mt-3 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+          className="input"
           placeholder="Nhập đáp án của bạn..."
         />
       );
@@ -242,7 +315,7 @@ function QuestionInput({
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           rows={6}
-          className="mt-3 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+          className="textarea"
           placeholder="Viết câu trả lời của bạn..."
         />
       );
@@ -258,7 +331,7 @@ function QuestionInput({
             onChange(Number.isFinite(n) ? n : 0);
           }}
           onBlur={onBlur}
-          className="mt-3 w-48 rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+          className="input w-48"
           placeholder="Nhập số..."
         />
       );
@@ -288,20 +361,43 @@ function QuestionInput({
       }
       const isRadio = question.type === "true_false";
       return (
-        <ul className="mt-3 space-y-2">
-          {question.options.map((opt) => (
-            <li key={opt.id}>
-              <label className="flex cursor-pointer items-center gap-2 rounded border border-slate-200 px-3 py-2 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900">
-                <input
-                  type={isRadio ? "radio" : "checkbox"}
-                  name={`q-${question.id}`}
-                  checked={selected.includes(opt.id)}
-                  onChange={() => toggle(opt.id)}
-                />
-                <span className="text-sm">{opt.label}</span>
-              </label>
-            </li>
-          ))}
+        <ul className="space-y-2">
+          {question.options.map((opt) => {
+            const isSelected = selected.includes(opt.id);
+            return (
+              <li key={opt.id}>
+                <label
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all ${
+                    isSelected
+                      ? "border-brand-500 bg-brand-soft shadow-sm"
+                      : "border-token bg-[rgb(var(--surface))] hover:border-brand-200 hover:bg-[rgb(var(--surface-muted))]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center ${
+                      isRadio ? "rounded-full" : "rounded-md"
+                    } border-2 transition-colors ${
+                      isSelected
+                        ? "border-brand-600 bg-brand-600 text-white"
+                        : "border-token bg-[rgb(var(--surface))]"
+                    }`}
+                  >
+                    {isSelected && (
+                      <span className="text-xs leading-none">{isRadio ? "•" : "✓"}</span>
+                    )}
+                  </span>
+                  <input
+                    type={isRadio ? "radio" : "checkbox"}
+                    name={`q-${question.id}`}
+                    checked={isSelected}
+                    onChange={() => toggle(opt.id)}
+                    className="sr-only"
+                  />
+                  <span className="text-sm">{opt.label}</span>
+                </label>
+              </li>
+            );
+          })}
         </ul>
       );
     }
@@ -319,12 +415,9 @@ function OrderingInput({
   onChange: (r: Response) => void;
   onBlur: () => void;
 }) {
-  // Initialize order: use existing response if any, else show options in
-  // shuffled-ish display order (orderIndex). Learner uses up/down arrows.
   const initial = Array.isArray(answer?.response)
     ? (answer!.response as string[])
     : question.options.map((o) => o.id);
-  // Validate that all referenced ids exist; otherwise fall back.
   const ids = initial.every((id) => question.options.find((o) => o.id === id))
     ? initial
     : question.options.map((o) => o.id);
@@ -340,30 +433,34 @@ function OrderingInput({
   }
 
   return (
-    <ol className="mt-3 space-y-1">
+    <ol className="space-y-2">
       {ids.map((id, i) => (
         <li
           key={id}
-          className="flex items-center gap-2 rounded border border-slate-200 px-3 py-2 dark:border-slate-800"
+          className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
         >
-          <span className="font-mono text-xs text-slate-500">{i + 1}.</span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700 tabular-nums">
+            {i + 1}
+          </span>
           <span className="flex-1 text-sm">{optById.get(id)?.label}</span>
-          <button
-            type="button"
-            disabled={i === 0}
-            onClick={() => move(i, -1)}
-            className="rounded border border-slate-300 px-1.5 text-xs disabled:opacity-30 dark:border-slate-700"
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            disabled={i === ids.length - 1}
-            onClick={() => move(i, +1)}
-            className="rounded border border-slate-300 px-1.5 text-xs disabled:opacity-30 dark:border-slate-700"
-          >
-            ↓
-          </button>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              disabled={i === 0}
+              onClick={() => move(i, -1)}
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-xs transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              disabled={i === ids.length - 1}
+              onClick={() => move(i, +1)}
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-xs transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+            >
+              ↓
+            </button>
+          </div>
         </li>
       ))}
     </ol>
@@ -400,18 +497,18 @@ function MatchingInput({
   }
 
   return (
-    <ul className="mt-3 space-y-2">
+    <ul className="space-y-2">
       {lefts.map((l) => (
         <li
           key={l.id}
-          className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 dark:border-slate-800"
+          className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
         >
-          <span className="flex-1 text-sm">{l.label}</span>
-          <span className="text-slate-400">→</span>
+          <span className="flex-1 text-sm font-medium">{l.label}</span>
+          <span className="text-faint">→</span>
           <select
             value={byLeft.get(l.id) ?? ""}
             onChange={(e) => pick(l.id, e.target.value)}
-            className="rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-900"
+            className="select max-w-[220px]"
           >
             <option value="">— chọn —</option>
             {rights.map((r) => (

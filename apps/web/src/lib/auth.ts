@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { loginCredentials } from "@feedbackme/core-lms";
+import { loginCredentials, getRolesForUser } from "@feedbackme/core-lms";
 
 // Google OAuth provider is stubbed for Phase 0.
 // To enable: install @auth/google and add the import + provider config below.
@@ -32,10 +32,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // Google({ clientId: process.env.GOOGLE_CLIENT_ID!, clientSecret: process.env.GOOGLE_CLIENT_SECRET! }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.userId = user.id;
         token.isEmailVerified = (user as { isEmailVerified?: boolean }).isEmailVerified ?? false;
+      }
+      // Refresh roles on login and on explicit session update; covers `update()` from client.
+      const shouldRefreshRoles = Boolean(user) || trigger === "update" || token.roles === undefined;
+      if (shouldRefreshRoles && token.userId) {
+        const rows = await getRolesForUser(token.userId as string);
+        const unique = Array.from(new Set(rows.map((r) => r.roleName)));
+        token.roles = unique;
       }
       return token;
     },
@@ -43,6 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.userId && session.user) {
         session.user.id = token.userId as string;
         session.user.isEmailVerified = Boolean(token.isEmailVerified);
+        session.user.roles = Array.isArray(token.roles) ? (token.roles as string[]) : [];
       }
       return session;
     },

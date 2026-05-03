@@ -112,9 +112,9 @@ export default function H5pPlayer({
 
   if (error) {
     return (
-      <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+      <div className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
         Lỗi tải H5P: {error}
-      </p>
+      </div>
     );
   }
 
@@ -122,19 +122,18 @@ export default function H5pPlayer({
     <div className="space-y-2">
       <div className="flex items-baseline justify-between">
         {title && (
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            ✨ {title}
+          <p className="inline-flex items-center gap-2 text-sm font-medium text-muted">
+            <span>✨</span>
+            {title}
           </p>
         )}
         {scoreText && (
-          <span className="text-xs text-emerald-700 dark:text-emerald-300">
-            {scoreText}
-          </span>
+          <span className="chip-success font-mono">{scoreText}</span>
         )}
       </div>
       <div
         ref={containerRef}
-        className="min-h-[200px] rounded border border-slate-300 dark:border-slate-700"
+        className="min-h-[200px] overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] shadow-card"
       />
     </div>
   );

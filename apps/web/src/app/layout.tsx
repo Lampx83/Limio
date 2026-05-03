@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AppHeader from "@/components/AppHeader";
+import Toaster from "@/components/Toaster";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -15,16 +16,31 @@ export const metadata: Metadata = {
     "LMS thế hệ mới: skill graph, BKT learner model, AI tutor và gamification. Học nhanh hơn nhờ feedback đúng lúc.",
 };
 
+// Runs before React hydration to set the dark class — prevents flash of wrong theme.
+const NO_FLASH_SCRIPT = `
+(function() {
+  try {
+    var t = localStorage.getItem('fbm-theme') || 'system';
+    var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.classList.add('dark');
+  } catch (e) {}
+})();
+`.trim();
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={inter.variable}>
+    <html lang="vi" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+      </head>
       <body className="min-h-screen">
         <AppHeader />
         {children}
+        <Toaster />
       </body>
     </html>
   );

@@ -68,26 +68,24 @@ export default function LessonSection({
   lesson: Lesson;
   order: number;
 }) {
+  const noSkill = lesson.skillTags.length === 0;
   return (
     <details
       open
-      className="rounded-md border border-slate-200 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/20"
+      className="overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))]"
     >
-      <summary className="cursor-pointer px-3 py-2 text-sm">
-        <span className="font-medium">
-          Lesson {order}: {lesson.title}
+      <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-4 py-3 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
+        <span className="text-base font-semibold">
+          <span className="mr-2 text-sm font-normal text-faint">Lesson {order}</span>
+          {lesson.title}
         </span>
-        {lesson.skillTags.length === 0 && (
-          <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
-            chưa tag skill
-          </span>
-        )}
-        <span className="ml-2 text-xs text-slate-500">
-          · {lesson.contentItems.length} content · {lesson.quizzes.length} quiz ·{" "}
+        {noSkill && <span className="chip-accent">⚠️ chưa tag skill</span>}
+        <span className="ml-auto text-sm text-muted">
+          {lesson.contentItems.length} content · {lesson.quizzes.length} quiz ·{" "}
           {lesson.assignments.length} assignment
         </span>
       </summary>
-      <div className="border-t border-slate-200 px-3 py-3 dark:border-slate-800">
+      <div className="border-t border-token px-4 py-4 space-y-5">
         <LessonHeader
           lessonId={lesson.id}
           title={lesson.title}
@@ -95,8 +93,7 @@ export default function LessonSection({
           orderIndex={lesson.orderIndex}
         />
 
-        <div className="mt-3">
-          <p className="text-xs font-medium uppercase text-slate-500">Skills</p>
+        <SubSection label="Skills">
           <SkillTagsEditor
             lessonId={lesson.id}
             tags={lesson.skillTags.map((t) => ({
@@ -105,12 +102,9 @@ export default function LessonSection({
               name: t.skill.name,
             }))}
           />
-        </div>
+        </SubSection>
 
-        <div className="mt-3">
-          <p className="text-xs font-medium uppercase text-slate-500">
-            Nội dung ({lesson.contentItems.length})
-          </p>
+        <SubSection label={`Nội dung (${lesson.contentItems.length})`}>
           <ContentItemsList items={lesson.contentItems} />
           <div className="mt-2">
             <AddContentItemForm
@@ -118,40 +112,63 @@ export default function LessonSection({
               nextOrderIndex={lesson.contentItems.length}
             />
           </div>
-        </div>
+        </SubSection>
 
-        <div className="mt-4">
-          <p className="text-xs font-medium uppercase text-slate-500">
-            Quizzes ({lesson.quizzes.length})
-          </p>
-          <ol className="mt-1 space-y-2">
-            {lesson.quizzes.map((q) => (
-              <li key={q.id}>
-                <QuizSection quiz={q} lessonId={lesson.id} />
-              </li>
-            ))}
-          </ol>
+        <SubSection label={`Quizzes (${lesson.quizzes.length})`}>
+          {lesson.quizzes.length === 0 ? (
+            <p className="mb-2 rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
+              Chưa có quiz nào — tạo quiz để kiểm tra hiểu biết của học viên.
+            </p>
+          ) : (
+            <ol className="space-y-2">
+              {lesson.quizzes.map((q) => (
+                <li key={q.id}>
+                  <QuizSection quiz={q} lessonId={lesson.id} />
+                </li>
+              ))}
+            </ol>
+          )}
           <div className="mt-2">
             <AddQuizForm lessonId={lesson.id} />
           </div>
-        </div>
+        </SubSection>
 
-        <div className="mt-4">
-          <p className="text-xs font-medium uppercase text-slate-500">
-            Assignments ({lesson.assignments.length})
-          </p>
-          <ol className="mt-1 space-y-2">
-            {lesson.assignments.map((a) => (
-              <li key={a.id}>
-                <AssignmentSection assignment={a} />
-              </li>
-            ))}
-          </ol>
+        <SubSection label={`Assignments (${lesson.assignments.length})`}>
+          {lesson.assignments.length === 0 ? (
+            <p className="mb-2 rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
+              Chưa có assignment nào — bài tập sẽ được instructor chấm tay.
+            </p>
+          ) : (
+            <ol className="space-y-2">
+              {lesson.assignments.map((a) => (
+                <li key={a.id}>
+                  <AssignmentSection assignment={a} />
+                </li>
+              ))}
+            </ol>
+          )}
           <div className="mt-2">
             <AddAssignmentForm lessonId={lesson.id} />
           </div>
-        </div>
+        </SubSection>
       </div>
     </details>
+  );
+}
+
+function SubSection({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <p className="mb-2.5 text-sm font-semibold uppercase tracking-wide text-muted">
+        {label}
+      </p>
+      {children}
+    </div>
   );
 }

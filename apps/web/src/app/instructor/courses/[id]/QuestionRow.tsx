@@ -43,44 +43,43 @@ export default function QuestionRow({
   }
 
   return (
-    <div className="rounded border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/40">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1">
-          <p>
-            <span className="font-mono text-slate-500">Câu {order}</span>
-            <span className="ml-2 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] uppercase dark:bg-slate-800">
-              {question.type}
+    <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700 tabular-nums">
+              {order}
             </span>
-            <span className="ml-2 text-slate-500">{question.points} điểm</span>
-          </p>
-          <p className="mt-1 whitespace-pre-wrap">{question.prompt}</p>
-          <ul className="mt-1 ml-4 space-y-0.5 text-[11px]">
+            <span className="chip">{question.type}</span>
+            <span className="text-xs text-faint">{question.points} điểm</span>
+          </div>
+          <p className="mt-2 whitespace-pre-wrap text-sm">{question.prompt}</p>
+          <ul className="mt-2 space-y-0.5 pl-1 text-xs">
             {question.options.map((o) => (
-              <li key={o.id}>
+              <li key={o.id} className="flex items-center gap-1.5">
                 <span
                   className={
-                    o.isCorrect
-                      ? "text-emerald-700 dark:text-emerald-300"
-                      : "text-slate-600 dark:text-slate-400"
+                    o.isCorrect ? "font-semibold text-success-700" : "text-muted"
                   }
                 >
                   {o.isCorrect ? "✓" : "·"} {o.label}
                 </span>
                 {o.misconception && (
-                  <span className="ml-2 rounded bg-amber-100 px-1 text-[10px] text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
-                    {o.misconception.code}
-                  </span>
+                  <span className="chip-accent">{o.misconception.code}</span>
                 )}
               </li>
             ))}
           </ul>
           {question.skillTags.length > 0 && (
-            <p className="mt-1 text-[11px] text-slate-500">
-              Skills: {question.skillTags.map((t) => t.skill.code).join(", ")}
+            <p className="mt-2 text-xs text-faint">
+              Skills:{" "}
+              <span className="font-mono">
+                {question.skillTags.map((t) => t.skill.code).join(", ")}
+              </span>
             </p>
           )}
           {question.explanation && (
-            <p className="mt-1 italic text-[11px] text-slate-500">
+            <p className="mt-2 rounded-md bg-[rgb(var(--surface-muted))] px-2 py-1 text-xs italic text-muted">
               💡 {question.explanation}
             </p>
           )}
@@ -88,7 +87,7 @@ export default function QuestionRow({
         <button
           onClick={remove}
           disabled={busy}
-          className="rounded border border-red-300 px-1.5 py-0.5 text-[10px] text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+          className="btn-sm shrink-0 inline-flex items-center justify-center gap-2 rounded-lg border border-danger-100 bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
         >
           Xóa
         </button>

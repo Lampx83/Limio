@@ -72,14 +72,14 @@ export default function ModuleSection({
   order: number;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/40">
+    <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
       <ModuleHeader
         moduleId={module.id}
         title={module.title}
         order={order}
         orderIndex={module.orderIndex}
       />
-      <div className="border-t border-slate-200 p-4 dark:border-slate-800">
+      <div className="border-t border-token bg-[rgb(var(--surface-muted))/0.4] p-4">
         <SortableModulesWrapper
           reorderEndpoint={`/api/modules/${module.id}/lessons/reorder`}
           payloadKey="orderedLessonIds"

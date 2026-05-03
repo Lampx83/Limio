@@ -24,11 +24,7 @@ export default function DuplicateCourseButton({ courseId }: { courseId: string }
   }
 
   return (
-    <button
-      onClick={duplicate}
-      disabled={busy}
-      className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-900"
-    >
+    <button onClick={duplicate} disabled={busy} className="btn-secondary btn-sm">
       {busy ? "..." : "📋 Duplicate"}
     </button>
   );

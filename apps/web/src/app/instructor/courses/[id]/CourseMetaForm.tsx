@@ -29,10 +29,7 @@ export default function CourseMetaForm({
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="mt-4 text-sm text-slate-500 underline hover:text-slate-700 dark:hover:text-slate-300"
-      >
+      <button onClick={() => setOpen(true)} className="link text-sm">
         ✎ Sửa thông tin course
       </button>
     );
@@ -60,78 +57,79 @@ export default function CourseMetaForm({
   }
 
   return (
-    <form
-      onSubmit={onSave}
-      className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/40"
-    >
-      <label className="block">
-        <span className="text-xs font-medium uppercase text-slate-500">Tiêu đề</span>
+    <form onSubmit={onSave} className="card space-y-4">
+      <header className="border-b border-token pb-3">
+        <h3 className="text-base font-semibold">Thông tin course</h3>
+      </header>
+      <div>
+        <label className="label" htmlFor="cm-title">Tiêu đề</label>
         <input
+          id="cm-title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+          className="input mt-1.5"
           required
           maxLength={200}
         />
-      </label>
-      <label className="block">
-        <span className="text-xs font-medium uppercase text-slate-500">Mô tả</span>
+      </div>
+      <div>
+        <label className="label" htmlFor="cm-desc">Mô tả</label>
         <textarea
+          id="cm-desc"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+          className="textarea mt-1.5"
           required
         />
-      </label>
-      <div className="grid grid-cols-3 gap-3">
-        <label className="block">
-          <span className="text-xs font-medium uppercase text-slate-500">Level</span>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div>
+          <label className="label" htmlFor="cm-level">Level</label>
           <select
+            id="cm-level"
             value={level}
             onChange={(e) => setLevel(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+            className="select mt-1.5"
           >
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
+            <option value="beginner">Cơ bản</option>
+            <option value="intermediate">Trung cấp</option>
+            <option value="advanced">Nâng cao</option>
           </select>
-        </label>
-        <label className="block">
-          <span className="text-xs font-medium uppercase text-slate-500">Ngôn ngữ</span>
+        </div>
+        <div>
+          <label className="label" htmlFor="cm-lang">Ngôn ngữ</label>
           <select
+            id="cm-lang"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+            className="select mt-1.5"
           >
             <option value="vi">Tiếng Việt</option>
             <option value="en">English</option>
           </select>
-        </label>
-        <label className="block">
-          <span className="text-xs font-medium uppercase text-slate-500">Category</span>
+        </div>
+        <div>
+          <label className="label" htmlFor="cm-cat">Category</label>
           <input
+            id="cm-cat"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             maxLength={80}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+            className="input mt-1.5"
           />
-        </label>
+        </div>
       </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          {busy ? "Đang lưu..." : "Lưu"}
-        </button>
+      <div className="flex justify-end gap-2 border-t border-token pt-4">
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          className="btn-ghost"
         >
           Hủy
+        </button>
+        <button type="submit" disabled={busy} className="btn-primary">
+          {busy ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
       </div>
     </form>

@@ -17,7 +17,6 @@ interface OptionDraft {
   label: string;
   isCorrect: boolean;
   misconceptionId: string | null;
-  // matching: { side: 'left' | 'right', pairKey: string }
   extra: { side?: "left" | "right"; pairKey?: string } | null;
 }
 
@@ -60,6 +59,17 @@ const DEFAULTS: Record<QuestionType, OptionDraft[]> = {
   essay: [],
 };
 
+const TYPE_LABEL: Record<QuestionType, string> = {
+  mcq: "MCQ — Chọn nhiều",
+  true_false: "Đúng / Sai",
+  fill_in: "Điền từ",
+  ordering: "Sắp xếp",
+  matching: "Ghép cặp",
+  numerical: "Số",
+  essay: "Tự luận (chấm tay)",
+  short_answer: "Trả lời ngắn (regex)",
+};
+
 export default function AddQuestionForm({
   quizId,
   nextOrderIndex,
@@ -77,10 +87,8 @@ export default function AddQuestionForm({
   const [skills, setSkills] = useState<Skill[]>([]);
   const [misconceptions, setMisconceptions] = useState<Misconception[]>([]);
   const [pickedSkillIds, setPickedSkillIds] = useState<string[]>([]);
-  // numerical-specific:
   const [numExpected, setNumExpected] = useState("");
   const [numTolerance, setNumTolerance] = useState("0");
-  // short_answer-specific:
   const [acceptedRegexes, setAcceptedRegexes] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -209,7 +217,7 @@ export default function AddQuestionForm({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-xs text-slate-500 underline hover:text-slate-700 dark:hover:text-slate-300"
+        className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
       >
         + Thêm câu hỏi
       </button>
@@ -219,35 +227,37 @@ export default function AddQuestionForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-3 rounded border border-slate-300 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-900/40"
+      className="space-y-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4"
     >
-      <div className="flex items-center gap-3">
-        <label>
-          <span className="font-medium uppercase text-slate-500">Type</span>
+      {/* Type + points */}
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="block flex-1 min-w-[200px]">
+          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+            Loại câu hỏi
+          </span>
           <select
             value={type}
             onChange={(e) => changeType(e.target.value as QuestionType)}
-            className="ml-1 rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+            className="select mt-1"
           >
-            <option value="mcq">mcq</option>
-            <option value="true_false">true_false</option>
-            <option value="fill_in">fill_in</option>
-            <option value="ordering">ordering</option>
-            <option value="matching">matching</option>
-            <option value="numerical">numerical</option>
-            <option value="essay">essay (manual graded)</option>
-            <option value="short_answer">short_answer (regex)</option>
+            {(Object.keys(TYPE_LABEL) as QuestionType[]).map((t) => (
+              <option key={t} value={t}>
+                {TYPE_LABEL[t]}
+              </option>
+            ))}
           </select>
         </label>
-        <label>
-          <span className="font-medium uppercase text-slate-500">Points</span>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+            Điểm
+          </span>
           <input
             type="number"
             min={1}
             max={100}
             value={points}
             onChange={(e) => setPoints(Number(e.target.value))}
-            className="ml-1 w-14 rounded border border-slate-300 px-1 py-0.5 dark:bg-slate-900 dark:border-slate-700"
+            className="input mt-1 w-20"
           />
         </label>
       </div>
@@ -257,40 +267,43 @@ export default function AddQuestionForm({
         onChange={(e) => setPrompt(e.target.value)}
         required
         rows={2}
-        placeholder="Câu hỏi"
-        className="w-full rounded border border-slate-300 px-2 py-1 text-sm dark:bg-slate-900 dark:border-slate-700"
+        placeholder="Câu hỏi..."
+        className="textarea"
       />
 
-      {/* Per-type body */}
       {type === "essay" && (
-        <p className="rounded bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+        <p className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-xs text-accent-700">
           Essay chấm tay — học viên nộp text, instructor chấm điểm tại trang
           submissions.
         </p>
       )}
 
       {type === "numerical" && (
-        <div className="grid grid-cols-2 gap-2">
-          <label>
-            <span className="font-medium uppercase text-slate-500">Đáp án (số)</span>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+              Đáp án (số)
+            </span>
             <input
               type="number"
               step="any"
               required
               value={numExpected}
               onChange={(e) => setNumExpected(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+              className="input mt-1"
             />
           </label>
-          <label>
-            <span className="font-medium uppercase text-slate-500">Tolerance</span>
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+              Tolerance
+            </span>
             <input
               type="number"
               step="any"
               min={0}
               value={numTolerance}
               onChange={(e) => setNumTolerance(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+              className="input mt-1"
             />
           </label>
         </div>
@@ -303,18 +316,23 @@ export default function AddQuestionForm({
         type === "ordering" ||
         type === "matching") && (
         <div>
-          <p className="font-medium uppercase text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-wide text-faint">
             Options ({options.length})
-            {type === "mcq" && " — đánh dấu nhiều câu đúng nếu cần"}
-            {type === "true_false" && " — chọn đáp án đúng (radio)"}
-            {type === "fill_in" && " — mỗi label = đáp án chấp nhận được"}
-            {type === "short_answer" && " — labels = exact match (case-insensitive)"}
-            {type === "ordering" && " — thứ tự đúng = thứ tự bạn nhập"}
-            {type === "matching" && " — mỗi pairKey phải có 1 left + 1 right"}
           </p>
-          <ul className="mt-1 space-y-1">
+          <p className="mt-0.5 text-xs text-faint">
+            {type === "mcq" && "Đánh dấu nhiều câu đúng nếu cần"}
+            {type === "true_false" && "Chọn đáp án đúng (radio)"}
+            {type === "fill_in" && "Mỗi label = đáp án chấp nhận được"}
+            {type === "short_answer" && "Labels = exact match (case-insensitive)"}
+            {type === "ordering" && "Thứ tự đúng = thứ tự bạn nhập"}
+            {type === "matching" && "Mỗi pairKey phải có 1 left + 1 right"}
+          </p>
+          <ul className="mt-2 space-y-2">
             {options.map((o, i) => (
-              <li key={i} className="flex items-center gap-2">
+              <li
+                key={i}
+                className="flex items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] p-2"
+              >
                 {(type === "mcq" || type === "true_false") && (
                   <input
                     type={type === "true_false" ? "radio" : "checkbox"}
@@ -324,7 +342,7 @@ export default function AddQuestionForm({
                       if (type === "true_false") setSingleCorrect(i);
                       else setOption(i, { isCorrect: e.target.checked });
                     }}
-                    className="h-4 w-4"
+                    className="h-4 w-4 accent-success-600"
                   />
                 )}
                 {type === "matching" && (
@@ -339,7 +357,7 @@ export default function AddQuestionForm({
                           },
                         })
                       }
-                      className="rounded border border-slate-300 px-1 py-0.5 text-[11px] dark:border-slate-700 dark:bg-slate-900"
+                      className="select w-14 px-1.5 text-xs"
                     >
                       <option value="left">L</option>
                       <option value="right">R</option>
@@ -355,7 +373,7 @@ export default function AddQuestionForm({
                         })
                       }
                       placeholder="pairKey"
-                      className="w-16 rounded border border-slate-300 px-1 py-0.5 text-[11px] dark:border-slate-700 dark:bg-slate-900"
+                      className="input w-20 text-xs"
                     />
                   </>
                 )}
@@ -368,7 +386,7 @@ export default function AddQuestionForm({
                       ? "Đáp án chấp nhận được"
                       : `Option ${i + 1}`
                   }
-                  className="flex-1 rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+                  className="input flex-1"
                 />
                 {(type === "mcq" || type === "true_false") && !o.isCorrect && (
                   <select
@@ -376,7 +394,7 @@ export default function AddQuestionForm({
                     onChange={(e) =>
                       setOption(i, { misconceptionId: e.target.value || null })
                     }
-                    className="rounded border border-slate-300 px-1 py-1 text-[10px] dark:bg-slate-900 dark:border-slate-700"
+                    className="select max-w-[160px] text-xs"
                     title="Misconception"
                   >
                     <option value="">no misconception</option>
@@ -391,7 +409,8 @@ export default function AddQuestionForm({
                   <button
                     type="button"
                     onClick={() => removeOption(i)}
-                    className="rounded border border-red-300 px-1 py-0.5 text-[10px] text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-danger-100 text-xs text-danger-600 hover:bg-danger-50"
+                    aria-label="Xóa option"
                   >
                     ×
                   </button>
@@ -399,30 +418,24 @@ export default function AddQuestionForm({
               </li>
             ))}
           </ul>
-          {type !== "true_false" && (
-            <button
-              type="button"
-              onClick={addOption}
-              className="mt-1 text-[11px] text-slate-500 underline"
-            >
-              + Thêm option
-            </button>
-          )}
-          {(type === "mcq" || type === "true_false") && (
-            <button
-              type="button"
-              onClick={createMisconception}
-              className="mt-1 ml-3 text-[11px] text-slate-500 underline"
-            >
-              + Tạo misconception mới
-            </button>
-          )}
+          <div className="mt-2 flex flex-wrap gap-3 text-xs">
+            {type !== "true_false" && (
+              <button type="button" onClick={addOption} className="link">
+                + Thêm option
+              </button>
+            )}
+            {(type === "mcq" || type === "true_false") && (
+              <button type="button" onClick={createMisconception} className="link">
+                + Tạo misconception mới
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       {type === "short_answer" && (
         <label className="block">
-          <span className="font-medium uppercase text-slate-500">
+          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
             Regex chấp nhận thêm (mỗi dòng 1 pattern, optional)
           </span>
           <textarea
@@ -430,7 +443,7 @@ export default function AddQuestionForm({
             onChange={(e) => setAcceptedRegexes(e.target.value)}
             rows={2}
             placeholder="^h(e|a)llo$"
-            className="mt-1 w-full rounded border border-slate-300 px-2 py-1 font-mono text-xs dark:bg-slate-900 dark:border-slate-700"
+            className="textarea mt-1 font-mono text-xs"
           />
         </label>
       )}
@@ -440,12 +453,14 @@ export default function AddQuestionForm({
         onChange={(e) => setExplanation(e.target.value)}
         rows={2}
         placeholder="Giải thích (hiện trên result page, optional)"
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+        className="textarea"
       />
 
       <div>
-        <p className="font-medium uppercase text-slate-500">Tag skills</p>
-        <div className="mt-1 flex flex-wrap gap-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+          Tag skills
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {skills.map((s) => {
             const picked = pickedSkillIds.includes(s.id);
             return (
@@ -457,10 +472,10 @@ export default function AddQuestionForm({
                     picked ? curr.filter((id) => id !== s.id) : [...curr, s.id],
                   )
                 }
-                className={`rounded-full px-2 py-0.5 text-[10px] ${
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
                   picked
-                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                    : "border border-slate-300 dark:border-slate-700"
+                    ? "bg-brand-600 text-white"
+                    : "border border-token bg-[rgb(var(--surface))] text-muted hover:border-brand-300 hover:text-brand-700"
                 }`}
               >
                 {s.code}
@@ -470,12 +485,8 @@ export default function AddQuestionForm({
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-3 py-1.5 font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
+      <div className="flex flex-wrap items-center gap-2 border-t border-token pt-3">
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "..." : "Tạo câu hỏi"}
         </button>
         <button
@@ -484,12 +495,14 @@ export default function AddQuestionForm({
             reset();
             setOpen(false);
           }}
-          className="rounded border border-slate-300 px-3 py-1.5 dark:border-slate-700"
+          className="btn-secondary btn-sm"
         >
           Hủy
         </button>
+        {error && (
+          <span className="text-xs text-danger-600">Lỗi: {error}</span>
+        )}
       </div>
-      {error && <p className="text-red-600">Lỗi: {error}</p>}
     </form>
   );
 }

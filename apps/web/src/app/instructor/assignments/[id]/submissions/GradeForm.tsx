@@ -45,39 +45,45 @@ export default function GradeForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-2 rounded border border-slate-300 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-    >
-      <div className="flex items-center gap-2">
-        <label className="text-xs text-slate-500">Điểm</label>
+    <form onSubmit={onSubmit} className="space-y-3">
+      <div className="flex items-center gap-3">
+        <label className="label" htmlFor={`grade-score-${submissionId}`}>
+          Điểm
+        </label>
         <input
+          id={`grade-score-${submissionId}`}
           type="number"
           min={0}
           max={maxScore}
           value={score}
           onChange={(e) => setScore(e.target.value)}
           required
-          className="w-24 rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+          className="input w-24"
         />
-        <span className="text-xs text-slate-500">/ {maxScore}</span>
+        <span className="text-xs text-faint">
+          / <span className="font-semibold">{maxScore}</span>
+        </span>
       </div>
-      <textarea
-        value={feedback}
-        onChange={(e) => setFeedback(e.target.value)}
-        rows={3}
-        placeholder="Nhận xét (optional)..."
-        className="w-full rounded border border-slate-300 px-2 py-1 text-xs dark:bg-slate-900 dark:border-slate-700"
-      />
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          {busy ? "..." : isGraded ? "Cập nhật điểm" : "Chấm điểm"}
+      <div>
+        <label className="label" htmlFor={`grade-fb-${submissionId}`}>
+          Nhận xét
+        </label>
+        <textarea
+          id={`grade-fb-${submissionId}`}
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          rows={3}
+          placeholder="Nhận xét cho học viên (optional)..."
+          className="textarea mt-1.5"
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
+          {busy ? "..." : isGraded ? "Cập nhật điểm" : "✓ Chấm điểm"}
         </button>
-        {error && <span className="text-xs text-red-600">Lỗi: {error}</span>}
+        {error && (
+          <span className="text-xs text-danger-600">Lỗi: {error}</span>
+        )}
       </div>
     </form>
   );

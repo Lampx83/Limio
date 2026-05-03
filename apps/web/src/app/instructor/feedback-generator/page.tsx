@@ -18,9 +18,9 @@ export default async function FeedbackGeneratorPage() {
   if (!admin && !anyCourse) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <p className="rounded border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
-          Chỉ instructor hoặc admin mới truy cập được.
-        </p>
+        <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
+          🚫 Chỉ instructor hoặc admin mới truy cập được.
+        </div>
       </main>
     );
   }
@@ -37,25 +37,39 @@ export default async function FeedbackGeneratorPage() {
   });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <Link href="/instructor/courses" className="text-sm underline">
+    <main className="mx-auto max-w-5xl px-6 py-10">
+      <Link
+        href="/instructor/courses"
+        className="link inline-flex items-center gap-1 text-sm"
+      >
         ← Khóa của tôi
       </Link>
-      <h1 className="mt-3 text-2xl font-bold">🪄 AI Feedback Generator</h1>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        Chọn misconception → AI sinh feedback body → review → save làm template.
-        Khi học viên trả lời sai vào option có misconception này, hệ feedback
-        engine sẽ dùng template để render.
-      </p>
-      <FeedbackGeneratorClient
-        misconceptions={misconceptions.map((m) => ({
-          id: m.id,
-          code: m.code,
-          name: m.name,
-          description: m.description,
-          existingTemplates: m.templates.length,
-        }))}
-      />
+
+      <div className="mt-4">
+        <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-soft px-2.5 py-0.5 text-xs font-medium text-brand-700">
+          🪄 AI tools
+        </span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          AI Feedback Generator
+        </h1>
+        <p className="mt-2 max-w-2xl text-muted">
+          Chọn misconception → AI sinh feedback body → review → save làm template.
+          Khi học viên trả lời sai vào option có misconception này, hệ feedback
+          engine sẽ dùng template để render.
+        </p>
+      </div>
+
+      <div className="mt-8">
+        <FeedbackGeneratorClient
+          misconceptions={misconceptions.map((m) => ({
+            id: m.id,
+            code: m.code,
+            name: m.name,
+            description: m.description,
+            existingTemplates: m.templates.length,
+          }))}
+        />
+      </div>
     </main>
   );
 }

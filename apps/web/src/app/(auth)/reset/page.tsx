@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function ResetPage() {
@@ -32,35 +33,67 @@ export default function ResetPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
-      <h1 className="text-3xl font-bold">Đặt mật khẩu mới</h1>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        <label className="block">
-          <span className="text-sm font-medium">Mật khẩu mới</span>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            minLength={8}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={!token || status === "submitting"}
-          className="w-full rounded bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          {status === "submitting" ? "Đang lưu..." : "Đặt mật khẩu mới"}
-        </button>
-      </form>
-      {status === "ok" && (
-        <p className="mt-4 text-emerald-600">
-          Đã đổi mật khẩu. <a href="/signin" className="underline">Đăng nhập</a>.
-        </p>
-      )}
-      {status === "error" && <p className="mt-4 text-red-600">Lỗi: {error}</p>}
-      {!token && <p className="mt-4 text-sm text-slate-500">Thiếu token trong URL.</p>}
+    <main className="relative min-h-[calc(100vh-65px)] overflow-hidden">
+      <div className="absolute inset-x-0 top-0 -z-10 h-[420px] bg-brand-gradient-soft" aria-hidden />
+      <div className="absolute inset-0 -z-10 bg-hero-grid opacity-40" style={{ backgroundSize: "24px 24px" }} aria-hidden />
+
+      <div className="mx-auto max-w-md px-6 py-16">
+        <div className="card shadow-card-hover animate-fade-in-up">
+          <div className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-gradient text-lg font-bold text-white shadow-brand-glow">
+              🔒
+            </div>
+            <h1 className="mt-4 h-display text-2xl font-bold">
+              Đặt mật khẩu mới
+            </h1>
+            <p className="mt-1 text-sm text-muted">
+              Chọn mật khẩu mới (tối thiểu 8 ký tự).
+            </p>
+          </div>
+
+          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+            <div>
+              <label className="label" htmlFor="rs-pw">Mật khẩu mới</label>
+              <input
+                id="rs-pw"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                placeholder="Tối thiểu 8 ký tự"
+                className="input mt-1.5"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!token || status === "submitting"}
+              className="btn-primary w-full"
+            >
+              {status === "submitting" ? "Đang lưu..." : "Đặt mật khẩu mới"}
+            </button>
+            {status === "ok" && (
+              <div className="rounded-lg border border-success-100 bg-success-50 px-3 py-2 text-sm text-success-700">
+                ✓ Đã đổi mật khẩu.{" "}
+                <Link href="/signin" className="font-semibold underline">
+                  Đăng nhập ngay →
+                </Link>
+              </div>
+            )}
+            {status === "error" && (
+              <div className="rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">
+                Lỗi: {error}
+              </div>
+            )}
+            {!token && (
+              <p className="text-xs text-faint">
+                Thiếu token trong URL — kiểm tra link em đã gửi qua email.
+              </p>
+            )}
+          </form>
+        </div>
+      </div>
     </main>
   );
 }

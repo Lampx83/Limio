@@ -5,6 +5,18 @@ import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const STATUS_TONE: Record<string, string> = {
+  draft: "chip-accent",
+  published: "chip-success",
+  archived: "chip",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Nháp",
+  published: "Đã publish",
+  archived: "Lưu trữ",
+};
+
 export default async function InstructorCoursesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/courses");
@@ -25,67 +37,86 @@ export default async function InstructorCoursesPage() {
   });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-3xl font-bold">Khóa học của tôi</h1>
-        <div className="flex gap-2">
-          <Link
-            href="/instructor/feedback-templates"
-            className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-          >
-            Feedback templates
-          </Link>
-          <Link
-            href="/instructor/feedback-generator"
-            className="rounded border border-violet-300 px-3 py-2 text-sm text-violet-700 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
-          >
-            🪄 AI feedback gen
-          </Link>
-          <Link
-            href="/instructor/tournaments/new"
-            className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-          >
-            🏆 Tournament
-          </Link>
-          <Link
-            href="/instructor/courses/new"
-            className="rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white dark:bg-slate-100 dark:text-slate-900"
-          >
-            Tạo khóa học
-          </Link>
+    <main className="mx-auto max-w-5xl px-6 py-12">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="chip-brand">Instructor</span>
+          <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+            Khóa học của tôi
+          </h1>
+          <p className="mt-2 text-muted">
+            {courses.length > 0
+              ? `${courses.length} khóa bạn đang phụ trách`
+              : "Bạn chưa tạo khóa học nào."}
+          </p>
         </div>
+        <Link href="/instructor/courses/new" className="btn-primary">
+          + Tạo khóa học
+        </Link>
       </div>
 
+      {/* Tools */}
+      <nav className="mt-6 flex flex-wrap gap-2">
+        <Link href="/instructor/feedback-templates" className="btn-secondary btn-sm">
+          📊 Feedback templates
+        </Link>
+        <Link href="/instructor/feedback-generator" className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100">
+          🪄 AI feedback gen
+        </Link>
+        <Link href="/instructor/tournaments/new" className="btn-secondary btn-sm">
+          🏆 Tournament
+        </Link>
+      </nav>
+
+      {/* Courses list */}
       {courses.length === 0 ? (
-        <p className="mt-12 text-center text-slate-500">
-          Chưa có khóa học. <Link href="/instructor/courses/new" className="underline">Tạo mới</Link>.
-        </p>
+        <div className="mt-10 rounded-2xl border border-dashed border-token p-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
+            📚
+          </div>
+          <p className="mt-4 text-muted">
+            Chưa có khóa học nào. Tạo khóa đầu tiên để bắt đầu.
+          </p>
+          <Link href="/instructor/courses/new" className="btn-primary mt-5 inline-flex">
+            + Tạo khóa học
+          </Link>
+        </div>
       ) : (
-        <ul className="mt-6 divide-y divide-slate-200 dark:divide-slate-800">
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {courses.map((c) => (
-            <li key={c.id} className="py-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
+            <li key={c.id}>
+              <div className="card-hover group h-full">
+                <div className="flex items-start justify-between gap-3">
                   <Link
                     href={`/instructor/courses/${c.id}`}
-                    className="font-medium hover:underline"
+                    className="text-base font-semibold transition-colors group-hover:text-brand-600"
                   >
                     {c.title}
                   </Link>
-                  <p className="mt-1 text-xs text-slate-500">
-                    /{c.slug} · v{c.version} · {c.status}
-                  </p>
+                  <span className={STATUS_TONE[c.status] ?? "chip"}>
+                    {STATUS_LABEL[c.status] ?? c.status}
+                  </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-faint">
+                  <code className="rounded bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono">
+                    /{c.slug}
+                  </code>
+                  <span>·</span>
+                  <span>v{c.version}</span>
+                  <span>·</span>
+                  <span>cập nhật {new Date(c.updatedAt).toLocaleDateString("vi-VN")}</span>
+                </div>
+                <div className="mt-4 flex items-center justify-between border-t border-token pt-3">
                   <Link
                     href={`/catalog/${c.slug}`}
-                    className="text-slate-500 underline hover:text-slate-700 dark:hover:text-slate-300"
+                    className="link text-xs"
                   >
                     Xem (learner view)
                   </Link>
                   <Link
                     href={`/instructor/courses/${c.id}`}
-                    className="rounded border border-slate-300 px-2 py-1 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                    className="text-sm font-medium text-brand-600 hover:text-brand-700"
                   >
                     Sửa →
                   </Link>

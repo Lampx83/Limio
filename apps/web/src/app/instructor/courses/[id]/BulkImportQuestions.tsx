@@ -49,42 +49,43 @@ export default function BulkImportQuestions({ quizId }: { quizId: string }) {
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-      >
+      <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
         📥 Bulk import CSV
       </button>
     );
   }
 
   return (
-    <div className="w-full rounded border border-slate-300 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-900/40">
+    <div className="w-full rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3 text-xs">
       <div className="flex items-center justify-between">
-        <p className="font-medium">📥 Bulk import questions từ CSV</p>
+        <p className="font-semibold">📥 Bulk import questions từ CSV</p>
         <button
           onClick={() => setOpen(false)}
-          className="text-slate-500 hover:text-slate-800"
+          className="text-faint hover:text-[rgb(var(--text))]"
+          aria-label="Đóng"
         >
           ✕
         </button>
       </div>
-      <p className="mt-2 text-slate-600 dark:text-slate-400">
+      <p className="mt-2 text-muted">
         Format: 1 dòng = 1 option. Required columns:{" "}
-        <code>prompt,type,option_label,is_correct</code>. Optional:{" "}
-        <code>explanation,points</code>. Multi-option = lặp prompt qua các dòng.
+        <code className="rounded bg-[rgb(var(--surface))] px-1 py-0.5 font-mono">
+          prompt,type,option_label,is_correct
+        </code>
+        . Optional:{" "}
+        <code className="rounded bg-[rgb(var(--surface))] px-1 py-0.5 font-mono">
+          explanation,points
+        </code>
+        . Multi-option = lặp prompt qua các dòng.
       </p>
-      <div className="mt-2 flex gap-2">
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         <input
           type="file"
           accept=".csv,text/csv"
           onChange={pickFile}
-          className="text-xs"
+          className="text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-2 file:py-1 file:text-brand-700"
         />
-        <button
-          onClick={() => setCsv(SAMPLE)}
-          className="rounded border border-slate-300 px-2 py-0.5 hover:bg-white dark:border-slate-700 dark:hover:bg-slate-800"
-        >
+        <button onClick={() => setCsv(SAMPLE)} className="btn-ghost btn-sm">
           Insert sample
         </button>
       </div>
@@ -93,27 +94,27 @@ export default function BulkImportQuestions({ quizId }: { quizId: string }) {
         onChange={(e) => setCsv(e.target.value)}
         rows={8}
         placeholder="Paste CSV content here..."
-        className="mt-2 w-full rounded border border-slate-300 px-2 py-1 font-mono text-[11px] dark:border-slate-700 dark:bg-slate-900"
+        className="textarea mt-2 font-mono text-xs"
       />
       <div className="mt-2 flex gap-2">
         <button
           onClick={importCsv}
           disabled={busy || !csv.trim()}
-          className="rounded bg-slate-900 px-3 py-1 font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+          className="btn-primary btn-sm"
         >
           {busy ? "Đang import..." : "Import"}
         </button>
       </div>
       {result && (
         <div className="mt-3 space-y-1">
-          <p className="text-emerald-700 dark:text-emerald-300">
+          <p className="font-medium text-success-700">
             ✓ Đã tạo {result.created}/{result.totalGroups} câu hỏi
           </p>
           {result.errors.length > 0 && (
-            <ul className="space-y-0.5 text-red-700 dark:text-red-300">
+            <ul className="space-y-0.5 text-danger-600">
               {result.errors.map((e, i) => (
                 <li key={i}>
-                  ✗ Row {e.index + 1}: "{e.prompt}" — {e.error}
+                  ✗ Row {e.index + 1}: &quot;{e.prompt}&quot; — {e.error}
                 </li>
               ))}
             </ul>

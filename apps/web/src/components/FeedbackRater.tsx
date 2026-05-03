@@ -27,16 +27,16 @@ export default function FeedbackRater({
   const isDown = rating !== null && rating <= 2;
 
   return (
-    <div className="flex items-center gap-1">
-      <span className="mr-1 text-xs text-red-700 dark:text-red-300">Hữu ích?</span>
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs font-medium text-faint">Hữu ích?</span>
       <button
         onClick={() => rate(5)}
         disabled={busy}
         title="Hữu ích"
-        className={`rounded px-1.5 py-0.5 text-sm transition disabled:opacity-50 ${
+        className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
           isUp
-            ? "bg-emerald-200 dark:bg-emerald-800"
-            : "hover:bg-red-100 dark:hover:bg-red-900"
+            ? "bg-success-100 ring-1 ring-success-400"
+            : "border border-token bg-[rgb(var(--surface))] hover:border-success-300 hover:bg-success-50"
         }`}
       >
         👍
@@ -45,10 +45,10 @@ export default function FeedbackRater({
         onClick={() => rate(1)}
         disabled={busy}
         title="Không hữu ích"
-        className={`rounded px-1.5 py-0.5 text-sm transition disabled:opacity-50 ${
+        className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
           isDown
-            ? "bg-amber-200 dark:bg-amber-800"
-            : "hover:bg-red-100 dark:hover:bg-red-900"
+            ? "bg-accent-100 ring-1 ring-accent-400"
+            : "border border-token bg-[rgb(var(--surface))] hover:border-accent-300 hover:bg-accent-50"
         }`}
       >
         👎

@@ -44,36 +44,46 @@ export default function LtiLaunch({
 
   if (error) {
     return (
-      <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+      <div className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
         Lỗi khởi chạy LTI tool: {error}
-      </p>
+      </div>
     );
   }
 
   if (!launchUrl) {
-    return <p className="text-sm text-slate-500">Đang khởi chạy LTI tool...</p>;
+    return (
+      <p className="inline-flex items-center gap-1.5 text-sm text-faint">
+        <span className="inline-flex gap-0.5">
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "0ms" }} />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "150ms" }} />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "300ms" }} />
+        </span>
+        Đang khởi chạy LTI tool...
+      </p>
+    );
   }
 
   return (
     <div className="space-y-2">
       {title && (
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          🔗 {title}
+        <p className="inline-flex items-center gap-2 text-sm font-medium text-muted">
+          <span>🔗</span>
+          {title}
         </p>
       )}
       <iframe
         src={launchUrl}
         title={title ?? "LTI tool"}
-        className="h-[80vh] w-full rounded border border-slate-300 dark:border-slate-700"
+        className="h-[80vh] w-full overflow-hidden rounded-xl border border-token shadow-card"
         allow="fullscreen; microphone; camera; midi; autoplay; clipboard-write"
       />
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-faint">
         Tool không hiển thị?{" "}
         <a
           href={launchUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-slate-700 dark:hover:text-slate-300"
+          className="link"
         >
           Mở trong tab mới
         </a>

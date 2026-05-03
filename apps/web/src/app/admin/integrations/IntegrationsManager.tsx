@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface Status {
   key: string;
@@ -9,18 +9,20 @@ interface Status {
   updatedAt: string | Date | null;
 }
 
-const LABELS: Record<string, { name: string; placeholder: string; help?: string }> = {
+const LABELS: Record<string, { name: string; placeholder: string; help?: string; emoji?: string }> = {
   openai: {
     name: "OpenAI API key",
     placeholder: "sk-proj-...",
     help: "Dùng cho AI tutor, auto-tag skill, generate feedback. Lấy ở console.openai.com.",
+    emoji: "🤖",
   },
   "stripe.secret": {
     name: "Stripe secret key",
     placeholder: "sk_live_... / sk_test_...",
+    emoji: "💳",
   },
-  "vnpay.secret": { name: "VNPay secret", placeholder: "VNPAY_HASH_SECRET" },
-  "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY" },
+  "vnpay.secret": { name: "VNPay secret", placeholder: "VNPAY_HASH_SECRET", emoji: "🏦" },
+  "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY", emoji: "📱" },
 };
 
 export default function IntegrationsManager({
@@ -37,7 +39,7 @@ export default function IntegrationsManager({
   }
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="space-y-4">
       {statuses.map((s) => (
         <IntegrationRow key={s.key} status={s} onChange={refresh} />
       ))}
@@ -52,7 +54,7 @@ function IntegrationRow({
   status: Status;
   onChange: () => void;
 }) {
-  const meta = LABELS[status.key] ?? { name: status.key, placeholder: "" };
+  const meta = LABELS[status.key] ?? { name: status.key, placeholder: "", emoji: "🔑" };
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -129,43 +131,43 @@ function IntegrationRow({
     }
   }
 
+  const statusChip = status.hasValue
+    ? status.source === "env"
+      ? "chip-brand"
+      : "chip-success"
+    : "chip";
+  const statusLabel = status.hasValue
+    ? status.source === "env"
+      ? "✓ env"
+      : "✓ saved"
+    : "Chưa cấu hình";
+
   return (
-    <section className="rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-      <div className="flex items-baseline justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">{meta.name}</h2>
-          <p className="text-xs text-slate-500">
-            <code className="font-mono">{status.key}</code>
-          </p>
-          {meta.help && (
-            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-              {meta.help}
+    <section className="card">
+      <header className="flex items-start justify-between gap-3 border-b border-token pb-3">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <span className="text-2xl">{meta.emoji ?? "🔑"}</span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold">{meta.name}</h2>
+            <p className="mt-0.5 text-xs text-faint">
+              <code className="font-mono">{status.key}</code>
             </p>
-          )}
+            {meta.help && (
+              <p className="mt-1.5 text-xs text-muted">{meta.help}</p>
+            )}
+          </div>
         </div>
-        <span
-          className={`rounded px-2 py-0.5 text-xs font-medium ${
-            status.hasValue
-              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-          }`}
-        >
-          {status.hasValue
-            ? status.source === "env"
-              ? "✓ env"
-              : "✓ saved"
-            : "Chưa cấu hình"}
-        </span>
-      </div>
+        <span className={statusChip}>{statusLabel}</span>
+      </header>
 
       {showInput ? (
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 space-y-3">
           <input
             type="password"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder={meta.placeholder}
-            className="w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm dark:border-slate-700 dark:bg-slate-900"
+            className="input font-mono"
             autoComplete="off"
           />
           <div className="flex flex-wrap gap-2">
@@ -173,7 +175,7 @@ function IntegrationRow({
               <button
                 onClick={testInline}
                 disabled={busy || !value}
-                className="rounded border border-slate-300 px-3 py-1 text-xs disabled:opacity-50 dark:border-slate-700"
+                className="btn-secondary btn-sm"
               >
                 Test trước khi lưu
               </button>
@@ -181,9 +183,9 @@ function IntegrationRow({
             <button
               onClick={save}
               disabled={busy || !value}
-              className="rounded bg-slate-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+              className="btn-primary btn-sm"
             >
-              {busy ? "..." : "Lưu (encrypted)"}
+              {busy ? "..." : "🔒 Lưu (encrypted)"}
             </button>
             {status.hasValue && (
               <button
@@ -192,7 +194,7 @@ function IntegrationRow({
                   setValue("");
                   setTestResult(null);
                 }}
-                className="rounded border border-slate-300 px-3 py-1 text-xs dark:border-slate-700"
+                className="btn-ghost btn-sm"
               >
                 Hủy
               </button>
@@ -200,10 +202,10 @@ function IntegrationRow({
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <button
             onClick={() => setShowInput(true)}
-            className="rounded border border-slate-300 px-3 py-1 text-xs dark:border-slate-700"
+            className="btn-secondary btn-sm"
           >
             Thay đổi
           </button>
@@ -211,7 +213,7 @@ function IntegrationRow({
             <button
               onClick={testSaved}
               disabled={busy}
-              className="rounded border border-slate-300 px-3 py-1 text-xs dark:border-slate-700"
+              className="btn-secondary btn-sm"
             >
               Test key đã lưu
             </button>
@@ -220,7 +222,7 @@ function IntegrationRow({
             <button
               onClick={clearKey}
               disabled={busy}
-              className="rounded border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+              className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-danger-100 bg-[rgb(var(--surface))] px-3 py-1.5 font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
             >
               Xóa
             </button>
@@ -230,12 +232,12 @@ function IntegrationRow({
 
       {testResult && (
         <p
-          className={`mt-3 text-xs ${
+          className={`mt-3 rounded-lg px-3 py-2 text-xs ${
             testResult.startsWith("✓")
-              ? "text-emerald-700 dark:text-emerald-300"
+              ? "border border-success-100 bg-success-50 text-success-700"
               : testResult.startsWith("✗") || testResult.startsWith("Lỗi")
-                ? "text-red-700 dark:text-red-300"
-                : "text-slate-600 dark:text-slate-400"
+                ? "border border-danger-100 bg-danger-50 text-danger-700"
+                : "border border-token bg-[rgb(var(--surface-muted))] text-muted"
           }`}
         >
           {testResult}
@@ -243,7 +245,7 @@ function IntegrationRow({
       )}
 
       {status.updatedAt && (
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-3 text-xs text-faint">
           Cập nhật: {new Date(status.updatedAt).toLocaleString("vi-VN")}
         </p>
       )}

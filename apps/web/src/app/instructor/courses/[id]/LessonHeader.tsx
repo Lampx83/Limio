@@ -51,24 +51,28 @@ export default function LessonHeader({
   if (editing) {
     return (
       <form onSubmit={save} className="space-y-2">
-        <div className="flex items-end gap-2">
-          <label className="flex-1 block">
-            <span className="text-xs font-medium uppercase text-slate-500">Title</span>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="block flex-1">
+            <span className="text-xs font-medium uppercase tracking-wide text-faint">
+              Title
+            </span>
             <input
               value={t}
               onChange={(e) => setT(e.target.value)}
               required
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
+              className="input mt-1"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium uppercase text-slate-500">Order</span>
+            <span className="text-xs font-medium uppercase tracking-wide text-faint">
+              Order
+            </span>
             <input
               type="number"
               min={0}
               value={oi}
               onChange={(e) => setOi(Number(e.target.value))}
-              className="mt-1 w-20 rounded border border-slate-300 px-2 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
+              className="input mt-1 w-20"
             />
           </label>
         </div>
@@ -77,20 +81,16 @@ export default function LessonHeader({
           onChange={(e) => setD(e.target.value)}
           rows={2}
           placeholder="Mô tả ngắn"
-          className="w-full rounded border border-slate-300 px-3 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
+          className="textarea"
         />
         <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-          >
+          <button type="submit" disabled={busy} className="btn-primary btn-sm">
             Lưu
           </button>
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+            className="btn-secondary btn-sm"
           >
             Hủy
           </button>
@@ -100,25 +100,22 @@ export default function LessonHeader({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="group/lh flex items-start justify-between gap-3">
       <div className="flex-1">
-        {description && (
-          <p className="text-xs text-slate-600 dark:text-slate-400">{description}</p>
-        )}
+        {description && <p className="text-sm text-muted">{description}</p>}
       </div>
       <div className="flex gap-1">
-        <button
-          onClick={() => setEditing(true)}
-          className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
-          Sửa
+        <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa lesson">
+          ✎ Sửa
         </button>
         <button
           onClick={remove}
           disabled={busy}
-          className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+          title="Xóa lesson"
+          aria-label="Xóa"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover/lh:opacity-100 disabled:opacity-50"
         >
-          Xóa
+          🗑
         </button>
       </div>
     </div>

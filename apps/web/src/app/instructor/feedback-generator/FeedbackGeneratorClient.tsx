@@ -70,10 +70,13 @@ export default function FeedbackGeneratorClient({
   }
 
   return (
-    <div className="mt-6 space-y-4">
-      <section>
-        <label className="text-sm font-medium">Chọn misconception</label>
+    <div className="space-y-5">
+      <section className="card">
+        <label className="label" htmlFor="fg-mc">
+          Chọn misconception
+        </label>
         <select
+          id="fg-mc"
           value={selectedId}
           onChange={(e) => {
             setSelectedId(e.target.value);
@@ -82,7 +85,7 @@ export default function FeedbackGeneratorClient({
             setSaved(false);
             setError(null);
           }}
-          className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+          className="select mt-1.5"
         >
           <option value="">— chọn —</option>
           {misconceptions.map((m) => (
@@ -92,57 +95,74 @@ export default function FeedbackGeneratorClient({
           ))}
         </select>
         {selected && (
-          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-            <span className="font-medium">Description:</span>{" "}
-            {selected.description}
-          </p>
+          <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+              Description
+            </p>
+            <p className="mt-1 text-muted">{selected.description}</p>
+          </div>
         )}
       </section>
 
       {selected && (
-        <section className="rounded-lg border border-slate-300 p-4 dark:border-slate-700">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold">Generate feedback body</h2>
+        <section className="rounded-2xl border border-brand-200 bg-brand-soft p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-brand-700">
+              🪄 Generate feedback body
+            </h2>
             <button
               onClick={generate}
               disabled={generating}
-              className="rounded bg-violet-600 px-3 py-1 text-xs font-medium text-white disabled:opacity-50 hover:bg-violet-700"
+              className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
               {generating ? "🪄 Đang sinh..." : "🪄 AI Generate"}
             </button>
           </div>
 
           {draft && (
-            <div className="mt-3 space-y-2">
-              <p className="text-xs italic text-violet-700 dark:text-violet-300">
-                Rationale: {draft.rationale}
-              </p>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">
+                  Rationale
+                </p>
+                <p className="mt-1 text-xs italic text-muted">
+                  {draft.rationale}
+                </p>
+              </div>
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={8}
-                className="w-full rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-900"
+                className="textarea"
               />
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={save}
                   disabled={!body.trim() || saved}
-                  className="rounded bg-slate-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+                  className={`btn-sm inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 font-medium transition-colors disabled:opacity-50 ${
+                    saved
+                      ? "bg-success-50 text-success-700"
+                      : "bg-brand-600 text-white hover:bg-brand-700"
+                  }`}
                 >
-                  {saved ? "✓ Đã lưu" : "Lưu làm template"}
+                  {saved ? "✓ Đã lưu" : "💾 Lưu làm template"}
                 </button>
                 <button
                   onClick={generate}
                   disabled={generating}
-                  className="rounded border border-slate-300 px-3 py-1 text-xs disabled:opacity-50 dark:border-slate-700"
+                  className="btn-secondary btn-sm"
                 >
-                  Regenerate
+                  🔁 Regenerate
                 </button>
               </div>
             </div>
           )}
 
-          {error && <p className="mt-2 text-xs text-red-600">Lỗi: {error}</p>}
+          {error && (
+            <p className="mt-3 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-xs text-danger-700">
+              Lỗi: {error}
+            </p>
+          )}
         </section>
       )}
     </div>

@@ -38,7 +38,7 @@ export default function PublishControls({
   }
 
   if (status === "archived") {
-    return <span className="text-xs text-slate-500">Đã archived</span>;
+    return <span className="chip">Đã archived</span>;
   }
 
   if (status === "published") {
@@ -46,7 +46,7 @@ export default function PublishControls({
       <button
         onClick={archive}
         disabled={busy}
-        className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+        className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-danger-100 bg-[rgb(var(--surface))] px-3 py-1.5 font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
       >
         Archive
       </button>
@@ -55,7 +55,7 @@ export default function PublishControls({
 
   const blocked = untaggedLessons.length > 0;
   return (
-    <div className="text-right">
+    <div className="flex flex-col items-end gap-1">
       <button
         onClick={publish}
         disabled={busy || blocked}
@@ -66,16 +66,16 @@ export default function PublishControls({
                 .join(", ")}`
             : ""
         }
-        className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-success-600 px-3 py-1.5 font-medium text-white transition-all hover:bg-success-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy ? "Publishing..." : "Publish"}
+        {busy ? "Publishing..." : "🚀 Publish"}
       </button>
       {blocked && (
-        <p className="mt-1 max-w-xs text-xs text-amber-700 dark:text-amber-300">
+        <p className="max-w-xs text-right text-xs text-accent-700">
           {untaggedLessons.length} lesson cần tag skill trước khi publish
         </p>
       )}
-      {error && <p className="mt-1 text-xs text-red-600">Lỗi: {error}</p>}
+      {error && <p className="text-xs text-danger-600">Lỗi: {error}</p>}
     </div>
   );
 }

@@ -251,22 +251,27 @@ export default function ScormPlayer({
 
   if (error) {
     return (
-      <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+      <div className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
         Lỗi tải SCORM: {error}
-      </p>
+      </div>
     );
   }
 
+  const isComplete =
+    status === "completed" || status === "passed" || status === "succeeded";
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>SCORM 1.2 · trạng thái: {status}</span>
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-faint">SCORM 1.2</span>
+        <span className={isComplete ? "chip-success" : "chip"}>
+          {status}
+        </span>
       </div>
       <iframe
         ref={iframeRef}
         title="SCORM content"
-        className="h-[80vh] w-full rounded border border-slate-300 dark:border-slate-700"
-        // src set after API installs (see useEffect)
+        className="h-[80vh] w-full overflow-hidden rounded-xl border border-token bg-white shadow-card"
       />
     </div>
   );

@@ -89,7 +89,7 @@ export default function AiQuestionGenerator({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded border border-violet-300 px-2 py-1 text-xs text-violet-700 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
+        className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
       >
         🪄 AI generate batch
       </button>
@@ -97,36 +97,35 @@ export default function AiQuestionGenerator({
   }
 
   return (
-    <div className="w-full rounded-lg border border-violet-300 bg-violet-50 p-3 text-xs dark:border-violet-800 dark:bg-violet-950/30">
+    <div className="w-full rounded-xl border border-brand-200 bg-brand-soft p-3 text-xs">
       <div className="flex items-center justify-between">
-        <p className="font-medium text-violet-800 dark:text-violet-200">
-          🪄 AI Question Generator
-        </p>
+        <p className="font-semibold text-brand-700">🪄 AI Question Generator</p>
         <button
           onClick={() => setOpen(false)}
-          className="text-slate-500 hover:text-slate-800"
+          className="text-faint hover:text-[rgb(var(--text))]"
+          aria-label="Đóng"
         >
           ✕
         </button>
       </div>
-      <div className="mt-2 flex flex-wrap items-end gap-2">
+      <div className="mt-3 flex flex-wrap items-end gap-3">
         <label className="block">
-          <span className="text-slate-500">Số câu</span>
+          <span className="text-faint">Số câu</span>
           <input
             type="number"
             min={1}
             max={10}
             value={count}
             onChange={(e) => setCount(Number(e.target.value) || 3)}
-            className="ml-1 w-12 rounded border border-slate-300 px-1 py-0.5 dark:border-slate-700 dark:bg-slate-900"
+            className="input ml-2 w-16"
           />
         </label>
         <label className="block">
-          <span className="text-slate-500">Difficulty</span>
+          <span className="text-faint">Difficulty</span>
           <select
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value as "easy" | "medium" | "hard")}
-            className="ml-1 rounded border border-slate-300 px-1 py-0.5 dark:border-slate-700 dark:bg-slate-900"
+            className="select ml-2 w-28"
           >
             <option value="easy">easy</option>
             <option value="medium">medium</option>
@@ -136,24 +135,25 @@ export default function AiQuestionGenerator({
         <button
           onClick={generate}
           disabled={generating}
-          className="rounded bg-violet-600 px-3 py-1 font-medium text-white disabled:opacity-50 hover:bg-violet-700"
+          className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
         >
           {generating ? "🪄 ..." : "🪄 Generate"}
         </button>
       </div>
 
-      {error && <p className="mt-2 text-red-600">Lỗi: {error}</p>}
+      {error && <p className="mt-2 text-danger-600">Lỗi: {error}</p>}
 
       {drafts.length > 0 && (
-        <ul className="mt-3 space-y-3">
+        <ul className="mt-3 space-y-2">
           {drafts.map((d, i) => (
             <li
               key={i}
-              className="rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900"
+              className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3"
             >
-              <div className="flex items-baseline justify-between">
-                <p className="text-[11px] uppercase text-slate-500">
-                  {d.type} · {d.options.length} options
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-faint">
+                  <span className="chip mr-1">{d.type}</span>
+                  <span>{d.options.length} options</span>
                   {d.skillCodes.length > 0 && (
                     <> · skills: {d.skillCodes.join(", ")}</>
                   )}
@@ -161,27 +161,29 @@ export default function AiQuestionGenerator({
                 <button
                   onClick={() => importDraft(i)}
                   disabled={importing === i || imported.has(i)}
-                  className="rounded bg-slate-900 px-2 py-0.5 text-[11px] font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+                  className={`btn-sm shrink-0 inline-flex items-center justify-center gap-2 rounded-lg px-2.5 py-1 font-medium transition-colors disabled:opacity-50 ${
+                    imported.has(i)
+                      ? "bg-success-50 text-success-700"
+                      : "bg-brand-600 text-white hover:bg-brand-700"
+                  }`}
                 >
                   {imported.has(i) ? "✓ Đã import" : importing === i ? "..." : "Import"}
                 </button>
               </div>
-              <p className="mt-1 whitespace-pre-wrap font-medium">{d.prompt}</p>
-              <ul className="mt-1 space-y-0.5">
+              <p className="mt-2 whitespace-pre-wrap font-medium">{d.prompt}</p>
+              <ul className="mt-2 space-y-0.5">
                 {d.options.map((o, oi) => (
-                  <li key={oi} className="flex items-start gap-1">
+                  <li key={oi} className="flex items-start gap-1.5">
                     <span
                       className={
-                        o.isCorrect
-                          ? "text-emerald-600"
-                          : "text-slate-400"
+                        o.isCorrect ? "text-success-600" : "text-faint"
                       }
                     >
                       {o.isCorrect ? "✓" : "·"}
                     </span>
                     <span className="flex-1">{o.label}</span>
                     {o.misconceptionHint && (
-                      <span className="text-[10px] italic text-amber-700 dark:text-amber-300">
+                      <span className="italic text-accent-700">
                         ↳ {o.misconceptionHint}
                       </span>
                     )}
@@ -189,7 +191,7 @@ export default function AiQuestionGenerator({
                 ))}
               </ul>
               {d.explanation && (
-                <p className="mt-1 text-[11px] italic text-slate-600 dark:text-slate-400">
+                <p className="mt-2 italic text-faint">
                   Giải thích: {d.explanation}
                 </p>
               )}

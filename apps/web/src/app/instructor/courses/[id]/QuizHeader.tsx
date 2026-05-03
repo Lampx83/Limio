@@ -47,57 +47,54 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
 
   if (editing) {
     return (
-      <form onSubmit={save} className="space-y-2">
+      <form onSubmit={save} className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+          className="input"
         />
-        <div className="flex gap-2">
-          <label>
-            difficulty:
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <label className="flex items-center gap-2">
+            <span className="text-xs text-muted">Difficulty</span>
             <input
               type="number"
               min={1}
               max={5}
               value={difficulty}
               onChange={(e) => setDifficulty(Number(e.target.value))}
-              className="ml-1 w-14 rounded border border-slate-300 px-1 py-0.5 dark:bg-slate-900 dark:border-slate-700"
+              className="input w-16"
             />
           </label>
-          <label>
-            pass%:
+          <label className="flex items-center gap-2">
+            <span className="text-xs text-muted">Pass %</span>
             <input
               type="number"
               min={0}
               max={100}
               value={passThresholdPct}
               onChange={(e) => setPassThresholdPct(Number(e.target.value))}
-              className="ml-1 w-14 rounded border border-slate-300 px-1 py-0.5 dark:bg-slate-900 dark:border-slate-700"
+              className="input w-16"
             />
           </label>
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-2 text-xs">
             <input
               type="checkbox"
               checked={requireConfidence}
               onChange={(e) => setRequireConfidence(e.target.checked)}
+              className="h-4 w-4 rounded border-token accent-brand-600"
             />
-            confidence
+            <span>Yêu cầu đánh giá độ tự tin</span>
           </label>
         </div>
         <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded bg-slate-900 px-2 py-1 font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-          >
+          <button type="submit" disabled={busy} className="btn-primary btn-sm">
             Lưu
           </button>
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="rounded border border-slate-300 px-2 py-1 dark:border-slate-700"
+            className="btn-secondary btn-sm"
           >
             Hủy
           </button>
@@ -108,18 +105,17 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
 
   return (
     <div className="flex justify-end gap-1">
-      <button
-        onClick={() => setEditing(true)}
-        className="rounded border border-slate-300 px-2 py-0.5 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-      >
-        Sửa quiz
+      <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa quiz">
+        ✎ Sửa quiz
       </button>
       <button
         onClick={remove}
         disabled={busy}
-        className="rounded border border-red-300 px-2 py-0.5 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+        title="Xóa quiz"
+        aria-label="Xóa quiz"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
       >
-        Xóa quiz
+        🗑
       </button>
     </div>
   );

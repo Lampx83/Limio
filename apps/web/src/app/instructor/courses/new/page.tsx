@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 export default function NewCoursePage() {
@@ -35,72 +36,104 @@ export default function NewCoursePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Tạo khóa học mới</h1>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        <label className="block">
-          <span className="text-sm font-medium">Tiêu đề</span>
+      <Link
+        href="/instructor/courses"
+        className="link inline-flex items-center gap-1 text-sm"
+      >
+        ← Khóa của tôi
+      </Link>
+
+      <div className="mt-4">
+        <span className="chip-brand">Instructor</span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          Tạo khóa học mới
+        </h1>
+        <p className="mt-2 text-muted">
+          Khởi tạo nháp — bạn có thể bổ sung module, lesson, quiz ở bước tiếp theo.
+        </p>
+      </div>
+
+      <form onSubmit={onSubmit} className="mt-8 card space-y-5">
+        <div>
+          <label className="label" htmlFor="title">Tiêu đề</label>
           <input
+            id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
             maxLength={200}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+            placeholder="Ví dụ: Đại số cơ bản"
+            className="input mt-1.5"
           />
-        </label>
-        <label className="block">
-          <span className="text-sm font-medium">Mô tả</span>
+        </div>
+        <div>
+          <label className="label" htmlFor="description">Mô tả</label>
           <textarea
+            id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
             rows={5}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+            placeholder="Khóa học này dành cho ai? Học xong sẽ làm được gì?"
+            className="textarea mt-1.5"
           />
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          <label className="block">
-            <span className="text-sm font-medium">Level</span>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <label className="label" htmlFor="level">Level</label>
             <select
+              id="level"
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+              className="select mt-1.5"
             >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
+              <option value="beginner">Cơ bản</option>
+              <option value="intermediate">Trung cấp</option>
+              <option value="advanced">Nâng cao</option>
             </select>
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium">Ngôn ngữ</span>
+          </div>
+          <div>
+            <label className="label" htmlFor="language">Ngôn ngữ</label>
             <select
+              id="language"
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+              className="select mt-1.5"
             >
               <option value="vi">Tiếng Việt</option>
               <option value="en">English</option>
             </select>
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium">Category</span>
+          </div>
+          <div>
+            <label className="label" htmlFor="category">Category</label>
             <input
+              id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               maxLength={80}
-              placeholder="e.g. data-science"
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+              placeholder="data-science"
+              className="input mt-1.5"
             />
-          </label>
+          </div>
         </div>
-        <button
-          type="submit"
-          disabled={status === "submitting"}
-          className="w-full rounded bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          {status === "submitting" ? "Đang tạo..." : "Tạo khóa học"}
-        </button>
+        {error && (
+          <div className="rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">
+            Lỗi: {error}
+          </div>
+        )}
+        <div className="flex items-center justify-end gap-3 border-t border-token pt-4">
+          <Link href="/instructor/courses" className="btn-ghost">
+            Hủy
+          </Link>
+          <button
+            type="submit"
+            disabled={status === "submitting"}
+            className="btn-primary"
+          >
+            {status === "submitting" ? "Đang tạo..." : "Tạo khóa học"}
+          </button>
+        </div>
       </form>
-      {error && <p className="mt-4 text-sm text-red-600">Lỗi: {error}</p>}
     </main>
   );
 }

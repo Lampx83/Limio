@@ -58,7 +58,6 @@ export default async function LessonPage({
     redirect(`/catalog/${params.slug}`);
   }
 
-  // Find prev/next lesson by walking modules in orderIndex order.
   const allLessons = await prisma.lesson.findMany({
     where: { module: { courseId: lesson.module.course.id } },
     orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
@@ -72,7 +71,6 @@ export default async function LessonPage({
     where: { userId_courseId: { userId, courseId: lesson.module.course.id } },
   });
 
-  // Check if this lesson is already completed.
   const completedEvent = await prisma.learningEvent.findFirst({
     where: {
       userId,
@@ -85,40 +83,61 @@ export default async function LessonPage({
   const progress = await getCourseProgress(userId, lesson.module.course.id);
   const threads = await listThreadsForLesson(lesson.id);
 
-  // B4 — show skip banner only when this lesson hasn't been completed yet AND
-  // the learner has mastered all of its tagged skills.
   const skipSuggestion = completedEvent
     ? null
     : await shouldSkipLesson(userId, lesson.id);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <Link href={`/learn/${params.slug}`} className="text-sm underline">
-        ← {lesson.module.course.title}
-      </Link>
-      <p className="mt-3 text-xs text-slate-500">
-        {lesson.module.title} · {idx + 1} / {allLessons.length} · {progress.courseCompletionPct}% hoàn
-        thành
-      </p>
-      <h1 className="mt-1 text-3xl font-bold">{lesson.title}</h1>
-      {lesson.description && (
-        <p className="mt-2 text-slate-600 dark:text-slate-400">{lesson.description}</p>
-      )}
+    <main className="mx-auto max-w-3xl px-6 py-10">
+      {/* Breadcrumb + lesson meta */}
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <Link
+          href={`/learn/${params.slug}`}
+          className="link inline-flex items-center gap-1 text-sm"
+        >
+          ← {lesson.module.course.title}
+        </Link>
+        <span className="text-xs text-faint">
+          Bài {idx + 1} / {allLessons.length} · {progress.courseCompletionPct}% hoàn thành
+        </span>
+      </div>
+
+      {/* Header */}
+      <header className="mt-4">
+        <span className="chip">{lesson.module.title}</span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          {lesson.title}
+        </h1>
+        {lesson.description && (
+          <p className="mt-3 text-muted">{lesson.description}</p>
+        )}
+      </header>
+
+      {/* Lesson progress mini-bar */}
+      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+        <div
+          className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
+          style={{ width: `${progress.courseCompletionPct}%` }}
+        />
+      </div>
 
       {skipSuggestion?.shouldSkip && (
-        <SkipLessonBanner
-          lessonId={lesson.id}
-          courseSlug={params.slug}
-          nextLessonId={next?.id ?? null}
-          masteries={skipSuggestion.masteries.map((m) => ({
-            skillCode: m.skillCode,
-            skillName: m.skillName,
-            masteryProbability: m.masteryProbability,
-          }))}
-        />
+        <div className="mt-6">
+          <SkipLessonBanner
+            lessonId={lesson.id}
+            courseSlug={params.slug}
+            nextLessonId={next?.id ?? null}
+            masteries={skipSuggestion.masteries.map((m) => ({
+              skillCode: m.skillCode,
+              skillName: m.skillName,
+              masteryProbability: m.masteryProbability,
+            }))}
+          />
+        </div>
       )}
 
-      <div className="mt-6">
+      {/* Lesson content */}
+      <div className="mt-8">
         <LessonContent
           items={lesson.contentItems.map((c) => ({
             id: c.id,
@@ -131,17 +150,21 @@ export default async function LessonPage({
         />
       </div>
 
+      {/* Quizzes */}
       {lesson.quizzes.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold">Bài kiểm tra</h2>
-          <ul className="mt-3 space-y-2">
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold">📝 Bài kiểm tra</h2>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {lesson.quizzes.map((q) => (
               <li key={q.id}>
                 <Link
                   href={`/learn/${params.slug}/quizzes/${q.id}`}
-                  className="inline-block rounded border border-slate-300 px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                  className="card-hover group flex items-center justify-between gap-3"
                 >
-                  📝 {q.title}
+                  <span className="font-medium transition-colors group-hover:text-brand-600">
+                    {q.title}
+                  </span>
+                  <span className="text-brand-600">→</span>
                 </Link>
               </li>
             ))}
@@ -149,21 +172,19 @@ export default async function LessonPage({
         </section>
       )}
 
+      {/* Assignments */}
       {lesson.assignments.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold">📋 Assignments</h2>
-          <ul className="mt-3 space-y-4">
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold">📋 Bài tập</h2>
+          <ul className="mt-4 space-y-4">
             {lesson.assignments.map((a) => {
               const sub = a.submissions[0] ?? null;
               return (
-                <li
-                  key={a.id}
-                  className="rounded-lg border border-slate-300 p-4 dark:border-slate-700"
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <p className="font-medium">{a.title}</p>
-                    <span className="text-xs text-slate-500">
-                      max {a.maxScore}đ
+                <li key={a.id} className="card">
+                  <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-token pb-3">
+                    <p className="font-semibold">{a.title}</p>
+                    <span className="text-xs text-faint">
+                      max <span className="font-semibold">{a.maxScore}</span>đ
                       {a.dueAt && (
                         <>
                           {" · hạn "}
@@ -171,30 +192,31 @@ export default async function LessonPage({
                         </>
                       )}
                     </span>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">
+                  </header>
+                  <p className="mt-3 whitespace-pre-wrap text-sm text-muted">
                     {a.description}
                   </p>
                   {sub?.status === "graded" && (
-                    <div className="mt-3 rounded border border-emerald-300 bg-emerald-50 p-3 text-sm dark:border-emerald-800 dark:bg-emerald-900/20">
-                      <p className="font-medium text-emerald-900 dark:text-emerald-100">
-                        ✅ Đã chấm: {sub.score} / {a.maxScore} điểm
+                    <div className="mt-4 rounded-lg border border-success-100 bg-success-50 p-3">
+                      <p className="text-sm font-semibold text-success-700">
+                        ✓ Đã chấm: {sub.score} / {a.maxScore} điểm
                       </p>
                       {sub.feedback && (
-                        <p className="mt-1 whitespace-pre-wrap text-emerald-800 dark:text-emerald-200">
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-success-700/90">
                           {sub.feedback}
                         </p>
                       )}
                     </div>
                   )}
                   {sub?.status === "submitted" && (
-                    <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent-50 px-3 py-1.5 text-sm font-medium text-accent-700">
                       ⏳ Đã nộp lúc{" "}
-                      {new Date(sub.submittedAt).toLocaleString("vi-VN")} — chờ
-                      chấm điểm
+                      {new Date(sub.submittedAt).toLocaleString("vi-VN")} · chờ chấm
                     </p>
                   )}
-                  <AssignmentSubmitForm assignmentId={a.id} />
+                  <div className="mt-4">
+                    <AssignmentSubmitForm assignmentId={a.id} />
+                  </div>
                 </li>
               );
             })}
@@ -202,52 +224,67 @@ export default async function LessonPage({
         </section>
       )}
 
-      <LessonActions
-        lessonId={lesson.id}
-        courseSlug={params.slug}
-        initiallyCompleted={completedEvent !== null}
-        initialResumeSec={
-          enrollment.lastLessonId === lesson.id ? enrollment.lastPositionSec ?? 0 : 0
-        }
-        nextLessonId={next?.id ?? null}
-      />
+      <div className="mt-10">
+        <LessonActions
+          lessonId={lesson.id}
+          courseSlug={params.slug}
+          initiallyCompleted={completedEvent !== null}
+          initialResumeSec={
+            enrollment.lastLessonId === lesson.id ? enrollment.lastPositionSec ?? 0 : 0
+          }
+          nextLessonId={next?.id ?? null}
+        />
+      </div>
 
-      <LessonNotes lessonId={lesson.id} />
+      <div className="mt-8">
+        <LessonNotes lessonId={lesson.id} />
+      </div>
 
-      <LessonForumSection
-        lessonId={lesson.id}
-        courseSlug={params.slug}
-        threads={threads.map((t) => ({
-          id: t.id,
-          title: t.title,
-          body: t.body,
-          resolvedPostId: t.resolvedPostId,
-          createdAt: t.createdAt,
-          author: { displayName: t.author.displayName },
-          _count: { posts: t._count.posts },
-        }))}
-      />
+      <div className="mt-8">
+        <LessonForumSection
+          lessonId={lesson.id}
+          courseSlug={params.slug}
+          threads={threads.map((t) => ({
+            id: t.id,
+            title: t.title,
+            body: t.body,
+            resolvedPostId: t.resolvedPostId,
+            createdAt: t.createdAt,
+            author: { displayName: t.author.displayName },
+            _count: { posts: t._count.posts },
+          }))}
+        />
+      </div>
 
-      <nav className="mt-10 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-800">
+      {/* Prev / Next nav */}
+      <nav className="mt-10 flex items-center justify-between gap-4 border-t border-token pt-5">
         {prev ? (
           <Link
             href={`/learn/${params.slug}/lessons/${prev.id}`}
-            className="text-sm hover:underline"
+            className="group flex flex-1 items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 transition-all hover:border-brand-200 hover:shadow-card"
           >
-            ← {prev.title}
+            <span className="text-faint group-hover:text-brand-600">←</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-faint">Bài trước</p>
+              <p className="truncate text-sm font-medium">{prev.title}</p>
+            </div>
           </Link>
         ) : (
-          <span />
+          <span className="flex-1" />
         )}
         {next ? (
           <Link
             href={`/learn/${params.slug}/lessons/${next.id}`}
-            className="text-sm hover:underline"
+            className="group flex flex-1 items-center justify-end gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-right transition-all hover:border-brand-200 hover:shadow-card"
           >
-            {next.title} →
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-faint">Bài tiếp</p>
+              <p className="truncate text-sm font-medium">{next.title}</p>
+            </div>
+            <span className="text-faint group-hover:text-brand-600">→</span>
           </Link>
         ) : (
-          <span />
+          <span className="flex-1" />
         )}
       </nav>
 

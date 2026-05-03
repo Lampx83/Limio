@@ -48,14 +48,10 @@ export default async function ResultPage({
   const correctCount = result.items.filter((i) => i.isCorrect).length;
   const passed = result.attempt.passed ?? false;
 
-  // B4 — remedial inject after consecutive failures.
   const remedial = passed
     ? null
     : await getRemedialSuggestion(userId, result.attempt.quizId);
 
-  // D3 — read the xp.awarded event for this attempt to surface the adaptive
-  // multiplier annotation. Null if no XP was granted (failed quiz, speed-run,
-  // or capped).
   const xpEvent = await prisma.learningEvent.findFirst({
     where: {
       userId,
@@ -73,9 +69,6 @@ export default async function ResultPage({
       }
     | undefined;
 
-  // B2.5 / D1 — misconceptions resolved by this very attempt. Each resolution
-  // emits one MisconceptionResolved event keyed by attemptId, and one
-  // XpAwarded event with reason="misconception.resolved" per first-time clear.
   const resolvedEvents = await prisma.learningEvent.findMany({
     where: {
       userId,
@@ -117,8 +110,6 @@ export default async function ResultPage({
     return acc;
   }, 0);
 
-  // Pull all FeedbackDelivery rows persisted by core-feedback at submit time.
-  // Pick the most recent one per questionId (deliveries are already DESC).
   const deliveries = await getDeliveriesForAttempt(userId, params.attemptId);
   const feedbackByQuestion = new Map<string, FeedbackByQuestion>();
   for (const d of deliveries) {
@@ -133,7 +124,6 @@ export default async function ResultPage({
     });
   }
 
-  // Resolve remediation lesson titles + slugs in one query.
   const allRemediationIds = Array.from(
     new Set(
       [...feedbackByQuestion.values()].flatMap((f) => f.remediationLessonIds),
@@ -159,76 +149,87 @@ export default async function ResultPage({
         );
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <Link href={`/learn/${params.slug}`} className="text-sm underline">
+    <main className="mx-auto max-w-3xl px-6 py-10">
+      <Link
+        href={`/learn/${params.slug}`}
+        className="link inline-flex items-center gap-1 text-sm"
+      >
         ← Quay lại khóa học
       </Link>
 
-      <div
-        className={`mt-6 rounded-lg p-5 ${
+      {/* Hero score */}
+      <section
+        className={`relative mt-6 overflow-hidden rounded-2xl p-8 text-white shadow-card-hover ${
           passed
-            ? "bg-emerald-50 dark:bg-emerald-900/20"
-            : "bg-amber-50 dark:bg-amber-900/20"
+            ? "bg-gradient-to-br from-success-500 via-emerald-600 to-success-700"
+            : "bg-gradient-to-br from-accent-500 via-accent-600 to-accent-700"
         }`}
       >
-        <p className="text-sm uppercase tracking-wide text-slate-500">
-          {passed ? "Đạt yêu cầu" : "Chưa đạt"}
-        </p>
-        <p className="mt-1 text-4xl font-bold">
-          {result.attempt.scorePct?.toFixed(1) ?? "—"}%
-        </p>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          {correctCount}/{result.items.length} câu đúng
-        </p>
-        {xpPayload?.amount !== undefined && (
-          <p className="mt-2 text-sm">
-            <span className="font-medium text-amber-700 dark:text-amber-300">
-              +{xpPayload.amount} XP
-            </span>
-            {xpPayload.adaptiveMultiplier !== undefined &&
-              xpPayload.adaptiveMultiplier !== 1 && (
-                <span className="ml-2 text-xs text-slate-600 dark:text-slate-400">
-                  · ×{xpPayload.adaptiveMultiplier}
-                  {xpPayload.adaptiveMultiplier < 1
-                    ? " (đã master skill này)"
-                    : " (skill khó với bạn — bonus)"}
-                </span>
-              )}
+        <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/15 blur-3xl" aria-hidden />
+        <div className="absolute -bottom-16 -left-12 h-56 w-56 rounded-full bg-white/10 blur-3xl" aria-hidden />
+        <div className="relative">
+          <p className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur">
+            {passed ? "✓ Đạt yêu cầu" : "✗ Chưa đạt"}
           </p>
-        )}
-      </div>
+          <p className="mt-4 h-display text-6xl font-bold tabular-nums">
+            {result.attempt.scorePct?.toFixed(1) ?? "—"}
+            <span className="text-3xl opacity-70">%</span>
+          </p>
+          <p className="mt-2 text-sm opacity-90">
+            {correctCount}/{result.items.length} câu đúng
+          </p>
+          {xpPayload?.amount !== undefined && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 backdrop-blur">
+              <span className="text-lg">⚡</span>
+              <span className="font-semibold">+{xpPayload.amount} XP</span>
+              {xpPayload.adaptiveMultiplier !== undefined &&
+                xpPayload.adaptiveMultiplier !== 1 && (
+                  <span className="text-xs opacity-80">
+                    · ×{xpPayload.adaptiveMultiplier}
+                    {xpPayload.adaptiveMultiplier < 1
+                      ? " (đã master)"
+                      : " (skill khó · bonus)"}
+                  </span>
+                )}
+            </div>
+          )}
+        </div>
+      </section>
 
+      {/* Misconceptions resolved */}
       {resolvedMcs.length > 0 && (
-        <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
-          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+        <div className="mt-6 rounded-2xl border border-success-100 bg-success-50 p-5">
+          <p className="text-sm font-semibold text-success-700">
             🌟 Bạn vừa khắc phục {resolvedMcs.length} lỗi tư duy
             {resolvedXpTotal > 0 && (
-              <span className="ml-2 text-amber-700 dark:text-amber-300">
-                +{resolvedXpTotal} XP
-              </span>
+              <span className="ml-2 text-accent-700">+{resolvedXpTotal} XP</span>
             )}
           </p>
-          <ul className="mt-2 space-y-1 text-sm text-emerald-800 dark:text-emerald-200">
+          <ul className="mt-3 space-y-1.5 text-sm text-success-700/90">
             {resolvedMcs.map((m) => (
-              <li key={m.id}>✓ {m.name}</li>
+              <li key={m.id} className="flex items-center gap-2">
+                <span className="text-success-600">✓</span>
+                {m.name}
+              </li>
             ))}
           </ul>
           {resolvedXpTotal === 0 && resolvedMcs.length > 0 && (
-            <p className="mt-2 text-xs italic opacity-70">
+            <p className="mt-3 text-xs italic text-success-700/70">
               (Đã thưởng XP cho lần khắc phục đầu tiên — lần này không cộng thêm.)
             </p>
           )}
         </div>
       )}
 
+      {/* Remedial */}
       {remedial?.shouldShow && remedial.weakestSkill && (
-        <div className="mt-6 rounded-lg border border-orange-300 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-900/20">
-          <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
+        <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
+          <p className="flex items-center gap-2 text-sm font-semibold text-accent-700">
             🎯 Đề xuất ôn lại
           </p>
-          <p className="mt-1 text-sm text-orange-800 dark:text-orange-200">
+          <p className="mt-2 text-sm text-accent-800">
             Bạn đang struggle với{" "}
-            <span className="font-medium">{remedial.weakestSkill.skillName}</span>{" "}
+            <span className="font-semibold">{remedial.weakestSkill.skillName}</span>{" "}
             <span className="text-xs opacity-70">
               ({Math.round(remedial.weakestSkill.masteryProbability * 100)}% mastery)
             </span>
@@ -237,7 +238,7 @@ export default async function ResultPage({
           {remedial.lesson && (
             <Link
               href={`/learn/${remedial.lesson.courseSlug}/lessons/${remedial.lesson.id}`}
-              className="mt-3 inline-block rounded bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-700 hover:scale-[1.02]"
             >
               📖 Mở: {remedial.lesson.title}
             </Link>
@@ -245,71 +246,98 @@ export default async function ResultPage({
         </div>
       )}
 
-      <ol className="mt-8 space-y-6">
+      {/* Per-question results */}
+      <ol className="mt-8 space-y-4">
         {result.items.map((item, i) => {
           const fb = feedbackByQuestion.get(item.questionId);
+          const isCorrect = item.isCorrect;
           return (
             <li
               key={item.questionId}
-              className={`rounded-lg border p-4 ${
-                item.isCorrect
-                  ? "border-emerald-300 dark:border-emerald-800"
-                  : "border-red-300 dark:border-red-900"
+              className={`overflow-hidden rounded-2xl border bg-[rgb(var(--surface))] shadow-card ${
+                isCorrect ? "border-success-100" : "border-danger-100"
               }`}
             >
-              <p className="text-sm text-slate-500">
-                Câu {i + 1} · {item.points} điểm · {item.isCorrect ? "✓ đúng" : "✗ sai"}
-                {item.confidence !== null && ` · tự tin: ${item.confidence}/5`}
-              </p>
-              <p className="mt-1 whitespace-pre-wrap font-medium">{item.prompt}</p>
+              <header
+                className={`flex items-center justify-between gap-3 px-5 py-3 ${
+                  isCorrect
+                    ? "bg-success-50 text-success-700"
+                    : "bg-danger-50 text-danger-700"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                      isCorrect ? "bg-success-500 text-white" : "bg-danger-500 text-white"
+                    }`}
+                  >
+                    {isCorrect ? "✓" : "✗"}
+                  </span>
+                  <span className="text-sm font-semibold">
+                    Câu {i + 1} · {item.points} điểm
+                  </span>
+                </div>
+                {item.confidence !== null && (
+                  <span className="text-xs opacity-80">
+                    Tự tin: {item.confidence}/5
+                  </span>
+                )}
+              </header>
 
-              {/* Phase 2 B3 — diagnostic feedback for wrong answers. */}
-              {!item.isCorrect && fb && (
-                <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm dark:bg-red-950/30">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-red-800 dark:text-red-300">
-                      Phản hồi
-                    </p>
-                    <FeedbackRater
-                      deliveryId={fb.deliveryId}
-                      initialRating={fb.rating}
-                    />
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-red-900 dark:text-red-100">
-                    {fb.body}
-                  </p>
-                  {fb.remediationLessonIds.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-red-800 dark:text-red-300">
-                        Tài liệu nên xem lại
+              <div className="p-5">
+                <p className="whitespace-pre-wrap font-medium">{item.prompt}</p>
+
+                {!isCorrect && fb && (
+                  <div className="mt-4 rounded-xl bg-danger-50 p-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-danger-700">
+                        Phản hồi
                       </p>
-                      <ul className="mt-1 space-y-1">
-                        {fb.remediationLessonIds.map((lid) => {
-                          const l = lessonMap.get(lid);
-                          if (!l) return null;
-                          return (
-                            <li key={lid}>
-                              <Link
-                                href={`/learn/${l.courseSlug}/lessons/${lid}`}
-                                className="text-sm text-red-900 underline hover:no-underline dark:text-red-100"
-                              >
-                                {l.title}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
+                      <FeedbackRater
+                        deliveryId={fb.deliveryId}
+                        initialRating={fb.rating}
+                      />
                     </div>
-                  )}
-                </div>
-              )}
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-danger-700/90">
+                      {fb.body}
+                    </p>
+                    {fb.remediationLessonIds.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-danger-700">
+                          Tài liệu nên xem lại
+                        </p>
+                        <ul className="mt-2 space-y-1">
+                          {fb.remediationLessonIds.map((lid) => {
+                            const l = lessonMap.get(lid);
+                            if (!l) return null;
+                            return (
+                              <li key={lid}>
+                                <Link
+                                  href={`/learn/${l.courseSlug}/lessons/${lid}`}
+                                  className="inline-flex items-center gap-1 text-sm font-medium text-danger-700 underline-offset-2 hover:underline"
+                                >
+                                  📖 {l.title}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              {item.explanation && (
-                <div className="mt-3 rounded bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                  <p className="text-xs font-medium uppercase text-slate-500">Giải thích</p>
-                  <p className="mt-1 whitespace-pre-wrap">{item.explanation}</p>
-                </div>
-              )}
+                {item.explanation && (
+                  <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      Giải thích
+                    </p>
+                    <p className="mt-1.5 whitespace-pre-wrap text-sm">
+                      {item.explanation}
+                    </p>
+                  </div>
+                )}
+              </div>
             </li>
           );
         })}

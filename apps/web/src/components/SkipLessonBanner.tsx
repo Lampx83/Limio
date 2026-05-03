@@ -41,26 +41,29 @@ export default function SkipLessonBanner({
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+    <div className="rounded-2xl border border-success-200 bg-gradient-to-br from-success-50 to-transparent p-5 shadow-card">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 text-sm font-semibold text-success-700">
             🎯 Bạn có thể bỏ qua bài này
           </p>
-          <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
+          <p className="mt-2 text-xs text-success-700/90">
             Hệ thống thấy bạn đã master các skill liên quan:
           </p>
-          <ul className="mt-2 space-y-0.5 text-xs text-emerald-900 dark:text-emerald-100">
+          <ul className="mt-2 space-y-1">
             {masteries.map((m) => (
-              <li key={m.skillCode}>
-                • {m.skillName}{" "}
-                <span className="opacity-70">
-                  ({Math.round(m.masteryProbability * 100)}%)
+              <li key={m.skillCode} className="flex items-center gap-2 text-xs">
+                <span className="text-success-600">✓</span>
+                <span className="font-medium text-success-700">
+                  {m.skillName}
+                </span>
+                <span className="text-success-700/70">
+                  {Math.round(m.masteryProbability * 100)}%
                 </span>
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+          <p className="mt-3 text-xs italic text-success-700/80">
             Bỏ qua sẽ đánh dấu bài này hoàn thành. Bạn vẫn có thể đọc nội dung
             bên dưới nếu muốn.
           </p>
@@ -69,13 +72,13 @@ export default function SkipLessonBanner({
           <button
             onClick={onSkip}
             disabled={skipping}
-            className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-success-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-success-700 disabled:opacity-50"
           >
             {skipping ? "Đang xử lý..." : "Bỏ qua →"}
           </button>
           <button
             onClick={() => setDismissed(true)}
-            className="rounded border border-emerald-300 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
+            className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-success-200 bg-[rgb(var(--surface))] px-3 py-1.5 font-medium text-success-700 transition-colors hover:bg-success-50"
           >
             Học bình thường
           </button>

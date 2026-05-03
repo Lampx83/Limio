@@ -56,9 +56,8 @@
 }
 
 /* ---------- Component classes ----------
-   Defaults Tailwind sizes everywhere except text-xs which is bumped 2x.
-   .chip locks back to 12px because chips/badges need to stay compact even
-   when text-xs (used for body captions) gets larger. */
+   All components use Tailwind utilities consistent with the modular type scale
+   defined in tailwind.config.ts. */
 @layer components {
   /* Buttons */
   .btn {
@@ -78,9 +77,7 @@
     @apply btn bg-danger-600 text-white hover:bg-danger-700 active:scale-[0.98];
   }
   .btn-sm {
-    @apply px-3 py-1.5;
-    font-size: 0.8125rem; /* 13px — explicit so we don't pick up bumped text-xs */
-    line-height: 1.125rem;
+    @apply px-3 py-1.5 text-xs;
   }
   .btn-lg {
     @apply px-6 py-3 text-base rounded-xl;
@@ -109,10 +106,7 @@
     @apply block text-sm font-medium text-[rgb(var(--text))];
   }
   .help {
-    @apply mt-1 block text-[rgb(var(--text-faint))];
-    /* Intentionally uses Tailwind text-xs (now 24px) — this is the 'smallest body text' that user wanted bumped 2x. */
-    font-size: 0.875rem; /* keep readable but not chunky for forms */
-    line-height: 1.25rem;
+    @apply mt-1 block text-xs text-[rgb(var(--text-faint))];
   }
 
   /* Surfaces */
@@ -131,11 +125,9 @@
     background-color: rgb(var(--surface-muted));
   }
 
-  /* Chips & badges — locked to 12px so the bumped text-xs doesn't make them chunky. */
+  /* Chips & badges */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-medium;
-    font-size: 0.75rem;
-    line-height: 1rem;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
     background-color: rgb(var(--surface-muted));
     color: rgb(var(--text-muted));
   }
@@ -184,3 +176,22 @@
     @apply text-brand-600 hover:text-brand-700 hover:underline underline-offset-2;
   }
 }
+
+/* ---------- View modes ----------
+   When a wrapper has data-view="preview", hide all editing affordances:
+   - <button> (edit, delete, add, drag handles, skill add, etc.)
+   - <form>   (open Add* forms, edit forms)
+   Keep elements explicitly marked with data-view-keep (e.g. the toggle itself,
+   <summary> which is for collapse/expand, links). */
+[data-view="preview"] button:not([data-view-keep]) {
+  display: none !important;
+}
+[data-view="preview"] form:not([data-view-keep]) {
+  display: none !important;
+}
+/* SortableModulesWrapper renders an empty <li> wrapper with the drag handle
+   button on the left. When the button is hidden, collapse the gap. */
+[data-view="preview"] .group > li > div {
+  margin-left: 0 !important;
+}
+

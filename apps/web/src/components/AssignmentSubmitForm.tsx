@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "@/lib/toast";
 
 export default function AssignmentSubmitForm({
   assignmentId,
@@ -13,12 +14,10 @@ export default function AssignmentSubmitForm({
   const [body, setBody] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
     const res = await fetch(`/api/assignments/${assignmentId}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -29,63 +28,63 @@ export default function AssignmentSubmitForm({
     });
     setBusy(false);
     if (res.ok) {
+      toast.success("Đã nộp bài", {
+        description: "Chờ instructor chấm điểm.",
+      });
       setBody("");
       setAttachmentUrl("");
       setOpen(false);
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "submit_failed");
+      toast.error("Nộp bài thất bại", {
+        description: d.error ?? "Vui lòng thử lại.",
+      });
     }
   }
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="mt-3 rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-      >
+      <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
         ✏️ Nộp bài / sửa bài đã nộp
       </button>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-3 space-y-2 text-sm">
+    <form
+      onSubmit={onSubmit}
+      className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
+    >
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         required
         rows={6}
         placeholder="Nội dung bài làm..."
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+        className="textarea"
       />
       <input
         value={attachmentUrl}
         onChange={(e) => setAttachmentUrl(e.target.value)}
         type="url"
-        placeholder="URL đính kèm (Google Drive, Github...) — optional"
-        className="w-full rounded border border-slate-300 px-2 py-1 text-xs dark:bg-slate-900 dark:border-slate-700"
+        placeholder="URL đính kèm (Google Drive, GitHub...) — optional"
+        className="input text-xs"
       />
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          {busy ? "..." : "Nộp bài"}
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
+          {busy ? "..." : "📤 Nộp bài"}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          className="btn-secondary btn-sm"
         >
           Hủy
         </button>
-        {error && <span className="text-xs text-red-600">Lỗi: {error}</span>}
       </div>
-      <p className="text-xs text-slate-500">
-        Nộp lại sẽ ghi đè bài cũ và trở về trạng thái "chưa chấm".
+      <p className="text-xs text-faint">
+        Nộp lại sẽ ghi đè bài cũ và trở về trạng thái &ldquo;chưa chấm&rdquo;.
       </p>
     </form>
   );

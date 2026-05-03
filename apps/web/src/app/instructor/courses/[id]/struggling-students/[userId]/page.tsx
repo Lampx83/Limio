@@ -28,9 +28,9 @@ export default async function StudentMisconceptionsPage({
   if (!(await canEditCourse(me, course.id))) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <p className="rounded border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
-          Bạn không có quyền xem trang này.
-        </p>
+        <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
+          🚫 Bạn không có quyền xem trang này.
+        </div>
       </main>
     );
   }
@@ -41,8 +41,6 @@ export default async function StudentMisconceptionsPage({
   });
   if (!student) notFound();
 
-  // Course-scoped misconceptions: only those tested by some quiz option in this
-  // course's quizzes.
   const courseMcOpts = await prisma.questionOption.findMany({
     where: {
       misconceptionId: { not: null },
@@ -75,7 +73,6 @@ export default async function StudentMisconceptionsPage({
         orderBy: [{ resolved: "asc" }, { lastDetectedAt: "desc" }],
       });
 
-  // Group trap options by misconceptionId for display.
   const trapsByMc = new Map<
     string,
     Array<{ questionId: string; prompt: string; quizTitle: string; wrongLabel: string }>
@@ -96,64 +93,80 @@ export default async function StudentMisconceptionsPage({
   const resolved = flags.filter((f) => f.resolved);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <main className="mx-auto max-w-4xl px-6 py-10">
       <Link
         href={`/instructor/courses/${course.id}/struggling-students`}
-        className="text-sm underline"
+        className="link inline-flex items-center gap-1 text-sm"
       >
         ← Tất cả học viên
       </Link>
-      <h1 className="mt-3 text-2xl font-bold">
-        {student.displayName}{" "}
-        <span className="text-base font-normal text-slate-500">— {course.title}</span>
-      </h1>
-      <p className="mt-1 text-sm text-slate-500">{student.email}</p>
 
+      {/* Student header */}
+      <header className="mt-4 flex items-start gap-4 card">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-base font-semibold text-white shadow-sm">
+          {student.displayName.charAt(0).toUpperCase()}
+        </span>
+        <div className="min-w-0 flex-1">
+          <span className="chip-brand">Hồ sơ học viên</span>
+          <h1 className="mt-2 h-display text-2xl font-bold sm:text-3xl">
+            {student.displayName}
+          </h1>
+          <p className="mt-1 text-sm text-muted">{student.email}</p>
+          <p className="mt-1 text-xs text-faint">{course.title}</p>
+        </div>
+      </header>
+
+      {/* Unresolved */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold">
-          Lỗi tư duy chưa khắc phục ({unresolved.length})
+          ⚠️ Lỗi tư duy chưa khắc phục{" "}
+          <span className="text-sm font-normal text-faint">
+            ({unresolved.length})
+          </span>
         </h2>
         {unresolved.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">
-            Học viên này hiện không còn lỗi tư duy nào trong khóa.
-          </p>
+          <div className="mt-4 rounded-2xl border border-dashed border-token p-8 text-center text-sm text-muted">
+            🎉 Học viên này hiện không còn lỗi tư duy nào trong khóa.
+          </div>
         ) : (
-          <ul className="mt-3 space-y-3">
+          <ul className="mt-4 space-y-3">
             {unresolved.map((f) => {
               const traps = trapsByMc.get(f.misconceptionId) ?? [];
               return (
                 <li
                   key={f.id}
-                  className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+                  className="rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-50 to-transparent p-5 shadow-card"
                 >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <p className="font-medium">{f.misconception.name}</p>
-                    <span className="text-xs text-slate-500">
-                      {f.count} lần · gần nhất {new Date(f.lastDetectedAt).toLocaleString("vi-VN")}
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="font-semibold">{f.misconception.name}</p>
+                    <span className="text-xs text-faint">
+                      {f.count} lần · gần nhất{" "}
+                      {new Date(f.lastDetectedAt).toLocaleString("vi-VN")}
                     </span>
                   </div>
                   {f.misconception.description && (
-                    <p className="mt-1 text-sm text-amber-900 dark:text-amber-100">
+                    <p className="mt-2 text-sm text-accent-800">
                       {f.misconception.description}
                     </p>
                   )}
                   {traps.length > 0 && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-xs text-amber-800 hover:underline dark:text-amber-200">
+                    <details className="mt-3">
+                      <summary className="cursor-pointer text-xs font-medium text-accent-700 hover:underline">
                         Xem {traps.length} câu đã bẫy lỗi này
                       </summary>
-                      <ul className="mt-2 space-y-2 text-sm">
+                      <ul className="mt-3 space-y-2">
                         {traps.map((t, i) => (
                           <li
                             key={`${t.questionId}-${i}`}
-                            className="rounded bg-white p-2 dark:bg-slate-900"
+                            className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-sm"
                           >
-                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                            <p className="text-xs font-medium uppercase tracking-wide text-faint">
                               {t.quizTitle}
                             </p>
-                            <p className="mt-0.5 whitespace-pre-wrap">{t.prompt}</p>
-                            <p className="mt-1 text-xs text-red-700 dark:text-red-300">
-                              Đáp án bẫy: <span className="font-mono">{t.wrongLabel}</span>
+                            <p className="mt-1 whitespace-pre-wrap">{t.prompt}</p>
+                            <p className="mt-2 text-xs text-danger-700">
+                              Đáp án bẫy:{" "}
+                              <span className="font-mono">{t.wrongLabel}</span>
                             </p>
                           </li>
                         ))}
@@ -167,25 +180,32 @@ export default async function StudentMisconceptionsPage({
         )}
       </section>
 
+      {/* Resolved */}
       {resolved.length > 0 && (
-        <section className="mt-8">
+        <section className="mt-10">
           <h2 className="text-lg font-semibold">
-            Đã khắc phục ({resolved.length})
+            ✓ Đã khắc phục{" "}
+            <span className="text-sm font-normal text-faint">
+              ({resolved.length})
+            </span>
           </h2>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {resolved.map((f) => (
               <li
                 key={f.id}
-                className="rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm dark:border-emerald-800 dark:bg-emerald-900/20"
+                className="flex items-start gap-2 rounded-xl border border-success-100 bg-success-50 p-3"
               >
-                <span className="text-emerald-900 dark:text-emerald-100">
-                  ✓ {f.misconception.name}
-                </span>
-                <span className="ml-2 text-xs text-slate-500">
-                  {f.resolvedAt
-                    ? `khắc phục ${new Date(f.resolvedAt).toLocaleString("vi-VN")}`
-                    : ""}
-                </span>
+                <span className="text-success-600">✓</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-success-700">
+                    {f.misconception.name}
+                  </p>
+                  {f.resolvedAt && (
+                    <p className="mt-0.5 text-xs text-success-700/70">
+                      Khắc phục {new Date(f.resolvedAt).toLocaleString("vi-VN")}
+                    </p>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

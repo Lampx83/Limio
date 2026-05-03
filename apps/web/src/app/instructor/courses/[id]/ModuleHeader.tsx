@@ -46,37 +46,37 @@ export default function ModuleHeader({
 
   if (editing) {
     return (
-      <form onSubmit={save} className="flex items-end gap-2 p-4">
-        <label className="flex-1 block">
-          <span className="text-xs font-medium uppercase text-slate-500">Tên module</span>
+      <form onSubmit={save} className="flex flex-wrap items-end gap-2 p-4">
+        <label className="block flex-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-faint">
+            Tên module
+          </span>
           <input
             value={t}
             onChange={(e) => setT(e.target.value)}
             required
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
+            className="input mt-1"
           />
         </label>
         <label className="block">
-          <span className="text-xs font-medium uppercase text-slate-500">Order</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-faint">
+            Order
+          </span>
           <input
             type="number"
             min={0}
             value={oi}
             onChange={(e) => setOi(Number(e.target.value))}
-            className="mt-1 w-20 rounded border border-slate-300 px-2 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
+            className="input mt-1 w-20"
           />
         </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
           Lưu
         </button>
         <button
           type="button"
           onClick={() => setEditing(false)}
-          className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          className="btn-secondary btn-sm"
         >
           Hủy
         </button>
@@ -85,23 +85,25 @@ export default function ModuleHeader({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 p-4">
-      <h3 className="text-base font-semibold">
-        Module {order}: {title}
+    <div className="group flex items-center justify-between gap-3 p-4">
+      <h3 className="flex items-baseline gap-3">
+        <span className="rounded-md bg-brand-soft px-2 py-0.5 text-sm font-bold text-brand-700">
+          Module {order}
+        </span>
+        <span className="text-lg font-bold">{title}</span>
       </h3>
       <div className="flex gap-1">
-        <button
-          onClick={() => setEditing(true)}
-          className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
-          Sửa
+        <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa module">
+          ✎ Sửa
         </button>
         <button
           onClick={remove}
           disabled={busy}
-          className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+          title="Xóa module"
+          aria-label="Xóa"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover:opacity-100 disabled:opacity-50"
         >
-          Xóa
+          🗑
         </button>
       </div>
     </div>

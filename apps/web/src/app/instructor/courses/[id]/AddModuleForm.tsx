@@ -20,7 +20,7 @@ export default function AddModuleForm({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full rounded border-2 border-dashed border-slate-300 py-3 text-sm text-slate-500 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+        className="w-full rounded-xl border-2 border-dashed border-token py-4 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
       >
         + Thêm module
       </button>
@@ -48,38 +48,36 @@ export default function AddModuleForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="rounded border border-slate-300 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/40"
-    >
-      <div className="flex items-end gap-2">
-        <label className="flex-1 block">
-          <span className="text-xs font-medium uppercase text-slate-500">Tên module</span>
+    <form onSubmit={onSubmit} className="card">
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="block flex-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-faint">
+            Tên module
+          </span>
           <input
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
             maxLength={200}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
+            className="input mt-1"
+            placeholder="Ví dụ: Phương trình bậc 1"
           />
         </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "..." : "Tạo"}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          className="btn-secondary btn-sm"
         >
           Hủy
         </button>
       </div>
-      {error && <p className="mt-2 text-xs text-red-600">Lỗi: {error}</p>}
+      {error && (
+        <p className="mt-2 text-xs text-danger-600">Lỗi: {error}</p>
+      )}
     </form>
   );
 }

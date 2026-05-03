@@ -7,6 +7,11 @@ import QuizPlayer from "@/components/QuizPlayer";
 
 export const dynamic = "force-dynamic";
 
+const ERROR_LABEL: Record<string, string> = {
+  max_attempts_exceeded: "Bạn đã hết số lần làm bài cho phép.",
+  no_questions: "Quiz này chưa có câu hỏi nào.",
+};
+
 export default async function QuizPage({
   params,
 }: {
@@ -33,7 +38,6 @@ export default async function QuizPage({
     redirect(`/catalog/${params.slug}`);
   }
 
-  // Start (or reuse) attempt.
   let attemptId: string;
   try {
     const result = await startAttempt(userId, quiz.id);
@@ -42,17 +46,23 @@ export default async function QuizPage({
     if (e instanceof QuizError) {
       return (
         <main className="mx-auto max-w-2xl px-6 py-12">
-          <Link href={`/learn/${params.slug}`} className="text-sm underline">
+          <Link
+            href={`/learn/${params.slug}`}
+            className="link inline-flex items-center gap-1 text-sm"
+          >
             ← Quay lại khóa học
           </Link>
-          <h1 className="mt-3 text-3xl font-bold">Không thể bắt đầu quiz</h1>
-          <p className="mt-3 text-red-600">Lỗi: {e.code}</p>
-          {e.code === "max_attempts_exceeded" && (
-            <p className="mt-2 text-sm text-slate-500">Bạn đã hết số lần làm bài cho phép.</p>
-          )}
-          {e.code === "no_questions" && (
-            <p className="mt-2 text-sm text-slate-500">Quiz chưa có câu hỏi nào.</p>
-          )}
+          <div className="mt-6 rounded-2xl border border-danger-100 bg-danger-50 p-8 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-danger-100 text-2xl">
+              🚫
+            </div>
+            <h1 className="mt-4 h-display text-2xl font-bold text-danger-700">
+              Không thể bắt đầu quiz
+            </h1>
+            <p className="mt-3 text-sm text-danger-600">
+              {ERROR_LABEL[e.code] ?? `Lỗi: ${e.code}`}
+            </p>
+          </div>
         </main>
       );
     }
@@ -60,8 +70,11 @@ export default async function QuizPage({
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <Link href={`/learn/${params.slug}`} className="text-sm underline">
+    <main className="mx-auto max-w-3xl px-6 py-10">
+      <Link
+        href={`/learn/${params.slug}`}
+        className="link inline-flex items-center gap-1 text-sm"
+      >
         ← Quay lại khóa học
       </Link>
       <div className="mt-6">

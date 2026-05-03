@@ -103,7 +103,7 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
       <button
         {...attributes}
         {...listeners}
-        className="mt-3 cursor-grab rounded border border-slate-200 bg-white px-1.5 py-0.5 text-xs text-slate-400 hover:text-slate-700 active:cursor-grabbing dark:border-slate-700 dark:bg-slate-900"
+        className="mt-3 flex h-6 w-6 cursor-grab items-center justify-center rounded-md border border-token bg-[rgb(var(--surface))] text-xs text-faint transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] active:cursor-grabbing"
         aria-label="Kéo để sắp xếp"
         type="button"
       >

@@ -4,7 +4,39 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 
-export default function UserMenu({ name, email }: { name: string; email: string }) {
+type RoleBadge = {
+  label: string;
+  className: string;
+};
+
+const ROLE_BADGES: Record<string, RoleBadge> = {
+  learner: {
+    label: "Học viên",
+    className: "bg-brand-50 text-brand-700",
+  },
+  instructor: {
+    label: "Giảng viên",
+    className: "bg-amber-50 text-amber-700",
+  },
+  admin: {
+    label: "Quản trị",
+    className: "bg-rose-50 text-rose-700",
+  },
+  mentor: {
+    label: "Mentor",
+    className: "bg-emerald-50 text-emerald-700",
+  },
+};
+
+export default function UserMenu({
+  name,
+  email,
+  roles,
+}: {
+  name: string;
+  email: string;
+  roles: string[];
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -24,6 +56,10 @@ export default function UserMenu({ name, email }: { name: string; email: string 
     .map((p) => p[0]!.toUpperCase())
     .join("");
 
+  const isInstructor = roles.includes("instructor");
+  const isAdmin = roles.includes("admin");
+  const close = () => setOpen(false);
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -38,37 +74,83 @@ export default function UserMenu({ name, email }: { name: string; email: string 
         <span className="text-faint" aria-hidden>▾</span>
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-60 overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] shadow-card-hover animate-fade-in-up">
+        <div className="absolute right-0 z-20 mt-2 w-72 overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] shadow-card-hover animate-fade-in-up">
           <div className="border-b border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
             <p className="text-sm font-semibold leading-tight">{name}</p>
-            <p className="mt-0.5 truncate text-muted" style={{ fontSize: "0.75rem" }}>{email}</p>
+            <p className="mt-0.5 truncate text-xs text-muted">{email}</p>
+            {roles.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {roles.map((role) => {
+                  const badge = ROLE_BADGES[role];
+                  if (!badge) return null;
+                  return (
+                    <span
+                      key={role}
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${badge.className}`}
+                    >
+                      {badge.label}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
-          <div className="py-1">
-            <MenuItem href="/me/dashboard" onClick={() => setOpen(false)}>
-              📊 Bảng điều khiển
+
+          <Section label="Tài khoản">
+            <MenuItem href="/me/dashboard" onClick={close}>
+              Bảng điều khiển
             </MenuItem>
-            <MenuItem href="/me/enrollments" onClick={() => setOpen(false)}>
+            <MenuItem href="/me/enrollments" onClick={close}>
               Khóa học của tôi
             </MenuItem>
-            <MenuItem href="/me/skills" onClick={() => setOpen(false)}>
+            <MenuItem href="/me/skills" onClick={close}>
               Skill profile
             </MenuItem>
-            <MenuItem href="/me/badges" onClick={() => setOpen(false)}>
+            <MenuItem href="/me/badges" onClick={close}>
               Huy hiệu
             </MenuItem>
-            <MenuItem href="/instructor/dashboard" onClick={() => setOpen(false)}>
-              📊 Instructor dashboard
+            <MenuItem href="/me/settings" onClick={close}>
+              Cài đặt tài khoản
             </MenuItem>
-            <MenuItem href="/instructor/courses" onClick={() => setOpen(false)}>
-              Khóa của tôi (instructor)
-            </MenuItem>
-            <MenuItem href="/admin/dashboard" onClick={() => setOpen(false)}>
-              📊 Admin dashboard
-            </MenuItem>
-            <MenuItem href="/me/settings" onClick={() => setOpen(false)}>
-              Cài đặt
-            </MenuItem>
-          </div>
+          </Section>
+
+          {isInstructor && (
+            <Section label="Giảng dạy" divider>
+              <MenuItem href="/instructor/dashboard" onClick={close}>
+                Tổng quan
+              </MenuItem>
+              <MenuItem href="/instructor/courses" onClick={close}>
+                Khóa giảng dạy
+              </MenuItem>
+              <MenuItem href="/instructor/assignments" onClick={close}>
+                Bài tập & chấm điểm
+              </MenuItem>
+              <MenuItem href="/instructor/tournaments" onClick={close}>
+                Cuộc thi (Tournament)
+              </MenuItem>
+              <MenuItem href="/instructor/feedback-generator" onClick={close}>
+                Tạo feedback AI
+              </MenuItem>
+              <MenuItem href="/instructor/feedback-templates" onClick={close}>
+                Mẫu feedback
+              </MenuItem>
+            </Section>
+          )}
+
+          {isAdmin && (
+            <Section label="Quản trị" divider>
+              <MenuItem href="/admin/dashboard" onClick={close}>
+                Tổng quan
+              </MenuItem>
+              <MenuItem href="/admin/lti-tools" onClick={close}>
+                Tích hợp LTI
+              </MenuItem>
+              <MenuItem href="/admin/integrations" onClick={close}>
+                Tích hợp & thanh toán
+              </MenuItem>
+            </Section>
+          )}
+
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="block w-full border-t border-token px-4 py-2.5 text-left text-sm font-medium text-danger-600 transition-colors hover:bg-danger-50"
@@ -77,6 +159,25 @@ export default function UserMenu({ name, email }: { name: string; email: string 
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function Section({
+  label,
+  children,
+  divider,
+}: {
+  label: string;
+  children: React.ReactNode;
+  divider?: boolean;
+}) {
+  return (
+    <div className={divider ? "border-t border-token" : undefined}>
+      <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-faint">
+        {label}
+      </p>
+      <div className="pb-1">{children}</div>
     </div>
   );
 }

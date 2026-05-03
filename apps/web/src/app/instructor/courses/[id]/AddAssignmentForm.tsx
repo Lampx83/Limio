@@ -51,7 +51,7 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-xs text-slate-500 underline hover:text-slate-700 dark:hover:text-slate-300"
+        className="w-full rounded-lg border border-dashed border-token bg-[rgb(var(--surface))] py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
       >
         + Thêm assignment
       </button>
@@ -61,7 +61,7 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-2 rounded border border-slate-300 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-900/40"
+      className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
     >
       <input
         value={title}
@@ -69,7 +69,7 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
         required
         maxLength={200}
         placeholder="Tiêu đề assignment"
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+        className="input"
       />
       <textarea
         value={description}
@@ -77,36 +77,32 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
         required
         rows={4}
         placeholder="Mô tả nhiệm vụ..."
-        className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+        className="textarea"
       />
-      <div className="flex gap-2">
-        <label className="flex-1">
-          <span className="text-slate-500">Hạn nộp (optional)</span>
+      <div className="flex flex-wrap gap-2">
+        <label className="block flex-1">
+          <span className="text-xs text-faint">Hạn nộp (optional)</span>
           <input
             type="datetime-local"
             value={dueAt}
             onChange={(e) => setDueAt(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+            className="input mt-1"
           />
         </label>
-        <label className="w-24">
-          <span className="text-slate-500">Điểm tối đa</span>
+        <label className="block w-28">
+          <span className="text-xs text-faint">Điểm tối đa</span>
           <input
             type="number"
             min={1}
             max={1000}
             value={maxScore}
             onChange={(e) => setMaxScore(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+            className="input mt-1"
           />
         </label>
       </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded bg-slate-900 px-2 py-1 font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "..." : "Tạo"}
         </button>
         <button
@@ -115,11 +111,13 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
             reset();
             setOpen(false);
           }}
-          className="rounded border border-slate-300 px-2 py-1 dark:border-slate-700"
+          className="btn-secondary btn-sm"
         >
           Hủy
         </button>
-        {error && <span className="text-red-600">Lỗi: {error}</span>}
+        {error && (
+          <span className="text-xs text-danger-600">Lỗi: {error}</span>
+        )}
       </div>
     </form>
   );

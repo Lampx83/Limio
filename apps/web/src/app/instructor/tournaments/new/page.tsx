@@ -15,11 +15,8 @@ export default async function NewTournamentPage() {
   const userId = session.user.id;
 
   const admin = await isAdmin(userId);
-  // Build the list of courses the user can attach a tournament to.
   const myCourses = await prisma.course.findMany({
-    where: admin
-      ? {}
-      : { instructors: { some: { userId } } },
+    where: admin ? {} : { instructors: { some: { userId } } },
     orderBy: { title: "asc" },
     select: { id: true, title: true },
   });
@@ -27,29 +24,40 @@ export default async function NewTournamentPage() {
   if (!admin && myCourses.length === 0) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <p className="rounded border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
-          Bạn không phải instructor của khóa nào. Chỉ instructor hoặc admin mới
-          tạo được tournament.
-        </p>
+        <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
+          🚫 Bạn không phải instructor của khóa nào. Chỉ instructor hoặc admin
+          mới tạo được tournament.
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12">
-      <Link href="/instructor/courses" className="text-sm underline">
+    <main className="mx-auto max-w-2xl px-6 py-10">
+      <Link
+        href="/instructor/courses"
+        className="link inline-flex items-center gap-1 text-sm"
+      >
         ← Khóa của tôi
       </Link>
-      <h1 className="mt-3 text-2xl font-bold">Tạo tournament mới</h1>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        Phase 3 stub — chỉ tạo bản nháp. Mission, ranking, prize sẽ ship ở các
-        phase tiếp theo.
-      </p>
 
-      <CreateTournamentForm
-        courses={myCourses}
-        canCreatePlatformWide={admin}
-      />
+      <div className="mt-4">
+        <span className="chip-accent">🏆 Tournament</span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          Tạo tournament mới
+        </h1>
+        <p className="mt-2 text-muted">
+          Phase 3 stub — chỉ tạo bản nháp. Mission, ranking, prize sẽ ship ở các
+          phase tiếp theo.
+        </p>
+      </div>
+
+      <div className="mt-8">
+        <CreateTournamentForm
+          courses={myCourses}
+          canCreatePlatformWide={admin}
+        />
+      </div>
     </main>
   );
 }

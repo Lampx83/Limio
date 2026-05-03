@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "@/lib/toast";
 
 interface InitialSettings {
   displayName: string;
@@ -22,8 +23,13 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ displayName, leaderboardOptOut: optOut }),
     });
-    setStatus(res.ok ? "ok" : "error");
-    if (res.ok) setTimeout(() => setStatus("idle"), 1800);
+    if (res.ok) {
+      toast.success("Đã lưu thay đổi");
+      setStatus("idle");
+    } else {
+      toast.error("Lưu thất bại", { description: "Vui lòng thử lại." });
+      setStatus("error");
+    }
   }
 
   return (
@@ -84,24 +90,11 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
 
       {/* Save bar */}
       <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))/0.85] p-3 shadow-card backdrop-blur">
-        <div className="text-sm">
-          {status === "ok" && (
-            <span className="inline-flex items-center gap-1.5 text-success-600">
-              <span>✓</span> Đã lưu thay đổi
-            </span>
-          )}
-          {status === "error" && (
-            <span className="inline-flex items-center gap-1.5 text-danger-600">
-              <span>✕</span> Có lỗi xảy ra, vui lòng thử lại
-            </span>
-          )}
-          {status === "idle" && (
-            <span className="text-faint">Thay đổi sẽ được lưu khi bạn nhấn Lưu.</span>
-          )}
-          {status === "saving" && (
-            <span className="text-muted">Đang lưu…</span>
-          )}
-        </div>
+        <span className="text-sm text-faint">
+          {status === "saving"
+            ? "Đang lưu…"
+            : "Thay đổi sẽ được lưu khi bạn nhấn Lưu."}
+        </span>
         <button type="submit" disabled={status === "saving"} className="btn-primary">
           {status === "saving" ? "Đang lưu..." : "Lưu thay đổi"}
         </button>

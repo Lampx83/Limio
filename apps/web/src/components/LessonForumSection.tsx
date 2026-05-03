@@ -52,14 +52,11 @@ export default function LessonForumSection({
   }
 
   return (
-    <section className="mt-8">
+    <section>
       <div className="flex items-baseline justify-between">
         <h2 className="text-xl font-semibold">💬 Thảo luận</h2>
         {!open && (
-          <button
-            onClick={() => setOpen(true)}
-            className="text-sm text-slate-600 underline hover:text-slate-800 dark:text-slate-400"
-          >
+          <button onClick={() => setOpen(true)} className="link text-sm">
             + Đặt câu hỏi
           </button>
         )}
@@ -68,7 +65,7 @@ export default function LessonForumSection({
       {open && (
         <form
           onSubmit={onSubmit}
-          className="mt-3 space-y-2 rounded border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900/40"
+          className="mt-4 space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4"
         >
           <input
             value={title}
@@ -76,23 +73,20 @@ export default function LessonForumSection({
             required
             maxLength={200}
             placeholder="Tiêu đề câu hỏi"
-            className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+            className="input"
+            autoFocus
           />
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             required
             rows={4}
-            placeholder="Mô tả chi tiết..."
-            className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+            placeholder="Mô tả chi tiết — context, lỗi gặp phải, đã thử gì..."
+            className="textarea"
           />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded bg-slate-900 px-3 py-1 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-            >
-              {busy ? "..." : "Đăng"}
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="submit" disabled={busy} className="btn-primary btn-sm">
+              {busy ? "..." : "📤 Đăng câu hỏi"}
             </button>
             <button
               type="button"
@@ -100,46 +94,46 @@ export default function LessonForumSection({
                 setOpen(false);
                 setError(null);
               }}
-              className="rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-700"
+              className="btn-secondary btn-sm"
             >
               Hủy
             </button>
-            {error && <span className="text-xs text-red-600">Lỗi: {error}</span>}
+            {error && (
+              <span className="text-xs text-danger-600">Lỗi: {error}</span>
+            )}
           </div>
         </form>
       )}
 
       {threads.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">
+        <div className="mt-4 rounded-2xl border border-dashed border-token p-8 text-center text-sm text-faint">
           Chưa có câu hỏi nào. Đặt câu hỏi đầu tiên!
-        </p>
+        </div>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-4 space-y-3">
           {threads.map((t) => (
-            <li
-              key={t.id}
-              className="rounded border border-slate-200 p-3 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
-            >
+            <li key={t.id}>
               <Link
                 href={`/learn/${courseSlug}/threads/${t.id}`}
-                className="block"
+                className="card-hover group block"
               >
-                <div className="flex items-baseline justify-between">
-                  <p className="font-medium">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2">
                     {t.resolvedPostId && (
-                      <span className="mr-1 text-emerald-600">✓</span>
+                      <span className="mt-0.5 chip-success">✓</span>
                     )}
-                    {t.title}
-                  </p>
-                  <span className="text-xs text-slate-500">
-                    {t._count.posts} câu trả lời
+                    <p className="font-semibold transition-colors group-hover:text-brand-600">
+                      {t.title}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-faint">
+                    {t._count.posts} trả lời
                   </span>
                 </div>
-                <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">
-                  {t.body}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {t.author.displayName} ·{" "}
+                <p className="mt-2 line-clamp-2 text-sm text-muted">{t.body}</p>
+                <p className="mt-2 text-xs text-faint">
+                  <span className="font-medium">{t.author.displayName}</span>
+                  <span className="mx-1.5">·</span>
                   {new Date(t.createdAt).toLocaleString("vi-VN")}
                 </p>
               </Link>

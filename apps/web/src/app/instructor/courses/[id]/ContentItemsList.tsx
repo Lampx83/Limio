@@ -9,10 +9,14 @@ interface Item {
 
 export default function ContentItemsList({ items }: { items: Item[] }) {
   if (items.length === 0) {
-    return <p className="mt-1 text-xs text-slate-500">Chưa có content nào.</p>;
+    return (
+      <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
+        Chưa có content nào — thêm video, markdown, file, SCORM, H5P, LTI...
+      </p>
+    );
   }
   return (
-    <ol className="mt-1 space-y-1">
+    <ol className="space-y-1.5">
       {items.map((item) => (
         <li key={item.id}>
           <ContentItemRow item={item} />
