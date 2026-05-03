@@ -49,6 +49,10 @@ if (
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/signin" },
+  // Allows NextAuth to accept requests from plain-HTTP origins (IP:PORT) and
+  // from behind reverse proxies. Without this, NextAuth v5 throws UntrustedHost
+  // for any non-localhost / non-HTTPS origin in production.
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {
