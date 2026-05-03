@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AppHeader from "@/components/AppHeader";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 import Toaster from "@/components/Toaster";
 
 const inter = Inter({
@@ -38,6 +39,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
       <body className="min-h-screen">
+        <ImpersonationBanner />
         <AppHeader />
         {children}
         <Toaster />

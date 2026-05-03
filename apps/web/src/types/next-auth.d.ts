@@ -10,6 +10,15 @@ declare module "next-auth" {
       image?: string | null;
       isEmailVerified?: boolean;
       roles?: string[];
+      /**
+       * When set, the current `id`/`email`/`name`/`roles` are the impersonated
+       * user's; `impersonator` is the actual admin who initiated the swap.
+       */
+      impersonator?: {
+        id: string;
+        email?: string | null;
+        name?: string | null;
+      };
     };
   }
 
