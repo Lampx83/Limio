@@ -67,9 +67,11 @@ interface Module {
 export default function ModuleSection({
   module,
   order,
+  courseSlug,
 }: {
   module: Module;
   order: number;
+  courseSlug: string;
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
@@ -85,7 +87,7 @@ export default function ModuleSection({
           payloadKey="orderedLessonIds"
           items={module.lessons.map((l, i) => ({
             id: l.id,
-            node: <LessonSection lesson={l} order={i + 1} />,
+            node: <LessonSection lesson={l} order={i + 1} courseSlug={courseSlug} />,
           }))}
         />
         <div className="mt-3">

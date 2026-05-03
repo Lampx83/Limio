@@ -13,30 +13,22 @@ export default async function LearnerDashboard() {
   if (!session?.user?.id) redirect("/signin?callbackUrl=/me/dashboard");
   const userId = session.user.id;
 
-  // Enrolled courses with course meta + progress + xp.
   const enrollments = await prisma.enrollment.findMany({
     where: { userId },
-    include: {
-      course: { select: { id: true, slug: true, title: true } },
-    },
+    include: { course: { select: { id: true, slug: true, title: true } } },
     orderBy: { enrolledAt: "desc" },
   });
 
   const progressByCourse = await Promise.all(
     enrollments.map((e) => getCourseProgress(userId, e.course.id)),
   );
-  const xpByCourse = await prisma.userCourseProgress.findMany({
-    where: { userId },
-  });
+  const xpByCourse = await prisma.userCourseProgress.findMany({ where: { userId } });
   const xpMap = new Map(xpByCourse.map((x) => [x.courseId, x]));
 
-  // Top weak skills (across all courses).
   const allSkillStates = await getLearnerSkillStates(userId, undefined);
-  const weakSkills = allSkillStates
-    .filter((s) => s.isWeak)
-    .slice(0, 5);
+  const weakSkills = allSkillStates.filter((s) => s.isWeak).slice(0, 5);
+  const masteredSkills = allSkillStates.filter((s) => s.masteryProbability >= 0.9).length;
 
-  // Recent badges.
   const recentBadges = await prisma.userBadge.findMany({
     where: { userId },
     orderBy: { earnedAt: "desc" },
@@ -44,16 +36,11 @@ export default async function LearnerDashboard() {
     include: { badge: { select: { code: true, name: true, emoji: true } } },
   });
 
-  // Pending assignments (assignments in enrolled courses with no submission OR
-  // submission but not yet graded, due within 14 days).
   const courseIds = enrollments.map((e) => e.courseId);
   const upcomingAssignments = await prisma.assignment.findMany({
     where: {
       lesson: { module: { courseId: { in: courseIds } } },
-      OR: [
-        { dueAt: null },
-        { dueAt: { gte: new Date() } },
-      ],
+      OR: [{ dueAt: null }, { dueAt: { gte: new Date() } }],
     },
     include: {
       submissions: { where: { userId } },
@@ -68,170 +55,266 @@ export default async function LearnerDashboard() {
     orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }],
   });
 
-  // Recent misconception resolutions (events).
   const recentResolved = await prisma.learningEvent.findMany({
     where: { userId, eventType: LearningEventType.MisconceptionResolved },
     orderBy: { occurredAt: "desc" },
     take: 5,
   });
 
-  return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-3xl font-bold">Bảng điều khiển — Học viên</h1>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        Xin chào {session.user.name ?? session.user.email}. Tổng quan tiến độ
-        học của bạn.
-      </p>
+  // "Continue learning" — most-recent in-progress enrollment with lastLessonId.
+  const continueTarget = enrollments
+    .map((e, i) => ({ e, p: progressByCourse[i]! }))
+    .filter((x) => x.e.lastLessonId && x.p.courseCompletionPct < 100)[0];
 
-      <div className="mt-6 flex flex-wrap gap-2 text-sm">
-        <a
-          href="/api/exports/learner/grades"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+  const totalLessons = progressByCourse.reduce((s, p) => s + p.totalLessons, 0);
+  const completedLessons = progressByCourse.reduce((s, p) => s + p.completedLessons, 0);
+
+  return (
+    <main className="mx-auto max-w-6xl px-6 py-10">
+      {/* Greeting */}
+      <header>
+        <span className="chip-brand">Học viên</span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          Xin chào,{" "}
+          <span className="text-gradient">
+            {session.user.name ?? session.user.email}
+          </span>{" "}
+          👋
+        </h1>
+        <p className="mt-2 text-muted">Tổng quan tiến độ học của bạn.</p>
+      </header>
+
+      {/* Continue learning hero CTA */}
+      {continueTarget && (
+        <Link
+          href={`/learn/${continueTarget.e.course.slug}/lessons/${continueTarget.e.lastLessonId}`}
+          className="group relative mt-6 block overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover transition-transform hover:-translate-y-0.5 sm:p-8"
         >
+          <div
+            className="absolute inset-0 bg-hero-grid opacity-20"
+            style={{ backgroundSize: "20px 20px" }}
+            aria-hidden
+          />
+          <div className="relative flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide backdrop-blur">
+                ▶ Tiếp tục học
+              </span>
+              <p className="mt-3 h-display text-2xl font-bold sm:text-3xl">
+                {continueTarget.e.course.title}
+              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="h-2 w-48 overflow-hidden rounded-full bg-white/25">
+                  <div
+                    className="h-full rounded-full bg-white transition-all"
+                    style={{ width: `${continueTarget.p.courseCompletionPct}%` }}
+                  />
+                </div>
+                <span className="text-sm font-medium tabular-nums">
+                  {continueTarget.p.courseCompletionPct}%
+                </span>
+              </div>
+            </div>
+            <span className="text-3xl transition-transform group-hover:translate-x-2">
+              →
+            </span>
+          </div>
+        </Link>
+      )}
+
+      {/* KPI cards */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <Stat
+          label="Khóa đã enroll"
+          value={enrollments.length}
+          tone="brand"
+          icon="📚"
+          href="/me/enrollments"
+        />
+        <Stat
+          label="Bài đã hoàn thành"
+          value={`${completedLessons}/${totalLessons}`}
+          tone="success"
+          icon="✓"
+        />
+        <Stat
+          label="Skill master"
+          value={masteredSkills}
+          tone="accent"
+          icon="🏆"
+          href="/me/skills"
+        />
+        <Stat
+          label="Huy hiệu"
+          value={recentBadges.length}
+          tone="brand"
+          icon="🎖"
+          href="/me/badges"
+        />
+      </div>
+
+      {/* Quick exports */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        <a href="/api/exports/learner/grades" className="btn-secondary btn-sm">
           📥 Xuất điểm (.csv)
         </a>
-        <a
-          href="/api/exports/learner/activity"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
-          📥 Xuất nhật ký hoạt động (.csv)
+        <a href="/api/exports/learner/activity" className="btn-secondary btn-sm">
+          📥 Xuất nhật ký hoạt động
         </a>
       </div>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="mt-10 grid gap-8 lg:grid-cols-2">
         {/* Enrolled courses */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            📚 Khóa đã đăng ký ({enrollments.length})
-          </h2>
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">📚 Khóa đã đăng ký</h2>
+            <span className="text-xs text-faint">{enrollments.length}</span>
+          </header>
           {enrollments.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-4 text-sm text-muted">
               Chưa có khóa nào.{" "}
-              <Link href="/catalog" className="underline">
+              <Link href="/catalog" className="link">
                 Vào catalog
               </Link>
               .
             </p>
           ) : (
-            <ul className="mt-3 space-y-3">
-              {enrollments.map((e, i) => {
+            <ul className="mt-4 space-y-3">
+              {enrollments.slice(0, 5).map((e, i) => {
                 const p = progressByCourse[i]!;
                 const xp = xpMap.get(e.course.id);
+                const done = p.courseCompletionPct >= 100;
                 return (
-                  <li
-                    key={e.id}
-                    className="rounded border border-slate-100 p-2 dark:border-slate-900"
-                  >
+                  <li key={e.id}>
                     <Link
                       href={`/learn/${e.course.slug}`}
-                      className="text-sm font-medium hover:underline"
+                      className="group block rounded-xl border border-token p-3 transition-colors hover:border-brand-200"
                     >
-                      {e.course.title}
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="font-medium transition-colors group-hover:text-brand-600">
+                          {e.course.title}
+                        </p>
+                        {done && <span className="chip-success">✓</span>}
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-2 text-xs text-faint">
+                        <span>{p.courseCompletionPct}% hoàn thành</span>
+                        {xp && (
+                          <>
+                            <span>·</span>
+                            <span>L{xp.level} · {xp.xp} XP</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+                        <div
+                          className={`h-1.5 rounded-full transition-all ${
+                            done
+                              ? "bg-success-500"
+                              : "bg-gradient-to-r from-brand-500 to-brand-700"
+                          }`}
+                          style={{ width: `${p.courseCompletionPct}%` }}
+                        />
+                      </div>
                     </Link>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-                      <span>{p.courseCompletionPct}% hoàn thành</span>
-                      {xp && (
-                        <>
-                          <span>·</span>
-                          <span>L{xp.level} · {xp.xp} XP</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
-                      <div
-                        className="h-1.5 rounded-full bg-emerald-500"
-                        style={{ width: `${p.courseCompletionPct}%` }}
-                      />
-                    </div>
                   </li>
                 );
               })}
             </ul>
           )}
-        </div>
+        </section>
 
         {/* Recent badges */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            🏆 Huy hiệu gần đây ({recentBadges.length})
-          </h2>
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">🏆 Huy hiệu gần đây</h2>
+            <Link href="/me/badges" className="link text-sm">
+              Tất cả →
+            </Link>
+          </header>
           {recentBadges.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
-              Chưa có huy hiệu nào.
-            </p>
+            <p className="mt-4 text-sm text-muted">Chưa có huy hiệu nào.</p>
           ) : (
-            <ul className="mt-3 space-y-1 text-sm">
+            <ul className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
               {recentBadges.map((b) => (
-                <li key={b.id} className="flex items-center gap-2">
-                  <span className="text-lg">{b.badge.emoji ?? "🏅"}</span>
-                  <span className="flex-1">{b.badge.name}</span>
-                  <span className="text-xs text-slate-500">
-                    {new Date(b.earnedAt).toLocaleDateString("vi-VN")}
-                  </span>
+                <li
+                  key={b.id}
+                  title={b.badge.name}
+                  className="rounded-xl border border-accent-200 bg-accent-50 p-3 text-center"
+                >
+                  <div className="text-2xl">{b.badge.emoji ?? "🏅"}</div>
+                  <div className="mt-1 truncate text-xs font-medium text-accent-700">
+                    {b.badge.name}
+                  </div>
                 </li>
               ))}
             </ul>
           )}
-          <Link
-            href="/me/badges"
-            className="mt-3 block text-xs text-slate-600 underline hover:text-slate-800 dark:text-slate-400"
-          >
-            Xem tất cả huy hiệu →
-          </Link>
-        </div>
+        </section>
 
         {/* Weak skills */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            🎯 Skill cần rèn luyện ({weakSkills.length})
-          </h2>
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">🎯 Skill cần ôn</h2>
+            <Link href="/me/skills" className="link text-sm">
+              Skill profile →
+            </Link>
+          </header>
           {weakSkills.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-4 text-sm text-muted">
               Chưa có skill yếu rõ rệt — tiếp tục học để hệ thống đánh giá!
             </p>
           ) : (
-            <ul className="mt-3 space-y-1 text-sm">
+            <ul className="mt-4 space-y-2">
               {weakSkills.map((s) => (
-                <li key={s.skillId} className="flex items-center gap-2">
-                  <span className="flex-1">{s.skillName}</span>
-                  <span className="text-xs text-amber-700 dark:text-amber-300">
+                <li
+                  key={s.skillId}
+                  className="flex items-center gap-2 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm"
+                >
+                  <span className="flex-1 font-medium text-danger-700">
+                    {s.skillName}
+                  </span>
+                  <span className="text-xs font-semibold tabular-nums text-danger-600">
                     {Math.round(s.masteryProbability * 100)}%
                   </span>
                 </li>
               ))}
             </ul>
           )}
-          <Link
-            href="/me/skills"
-            className="mt-3 block text-xs text-slate-600 underline hover:text-slate-800 dark:text-slate-400"
-          >
-            Skill profile chi tiết →
-          </Link>
-        </div>
+        </section>
 
         {/* Upcoming assignments */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            📋 Assignment ({upcomingAssignments.length})
-          </h2>
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">📋 Bài tập</h2>
+            <span className="text-xs text-faint">{upcomingAssignments.length}</span>
+          </header>
           {upcomingAssignments.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Không có bài tập nào.</p>
+            <p className="mt-4 text-sm text-muted">Không có bài tập nào.</p>
           ) : (
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-4 space-y-2">
               {upcomingAssignments.slice(0, 5).map((a) => {
                 const sub = a.submissions[0];
                 const status = !sub
-                  ? "Chưa nộp"
+                  ? { label: "Chưa nộp", chip: "chip-accent" }
                   : sub.status === "graded"
-                    ? `✓ ${sub.score}/${a.maxScore}`
-                    : "⏳ Đã nộp";
+                    ? { label: `✓ ${sub.score}/${a.maxScore}`, chip: "chip-success" }
+                    : { label: "⏳ Đã nộp", chip: "chip-brand" };
                 return (
-                  <li key={a.id}>
-                    <p className="font-medium">{a.title}</p>
-                    <p className="text-xs text-slate-500">
-                      {a.lesson.module.course.title} · {status}
+                  <li
+                    key={a.id}
+                    className="rounded-lg border border-token p-3 text-sm"
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="font-medium">{a.title}</p>
+                      <span className={status.chip}>{status.label}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-faint">
+                      {a.lesson.module.course.title}
                       {a.dueAt && (
-                        <> · hạn {new Date(a.dueAt).toLocaleDateString("vi-VN")}</>
+                        <>
+                          {" · hạn "}
+                          {new Date(a.dueAt).toLocaleDateString("vi-VN")}
+                        </>
                       )}
                     </p>
                   </li>
@@ -239,41 +322,81 @@ export default async function LearnerDashboard() {
               })}
             </ul>
           )}
-        </div>
+        </section>
 
-        {/* Recent misconception resolutions */}
-        <div className="rounded-lg border border-slate-200 p-4 md:col-span-2 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            🌟 Khắc phục lỗi tư duy gần đây ({recentResolved.length})
-          </h2>
-          {recentResolved.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
-              Chưa có. Khi học viên trả lời sai → đúng cho cùng lỗi tư duy, đây
-              sẽ là ghi nhận.
-            </p>
-          ) : (
-            <ul className="mt-3 space-y-1 text-sm">
+        {/* Recent misconception resolutions full-width */}
+        {recentResolved.length > 0 && (
+          <section className="card lg:col-span-2">
+            <header className="flex items-baseline justify-between border-b border-token pb-3">
+              <h2 className="text-base font-semibold">
+                🌟 Khắc phục lỗi tư duy gần đây
+              </h2>
+              <span className="text-xs text-faint">{recentResolved.length}</span>
+            </header>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
               {recentResolved.map((e) => {
                 const p = e.payload as {
                   misconceptionCode?: string;
                   misconceptionId?: string;
                 };
                 return (
-                  <li key={String(e.id)} className="flex items-center gap-2">
-                    <span className="text-emerald-600">✓</span>
-                    <span className="flex-1 font-mono text-xs">
+                  <li
+                    key={String(e.id)}
+                    className="flex items-center gap-2 rounded-lg border border-success-100 bg-success-50 px-3 py-2 text-sm"
+                  >
+                    <span className="text-success-600">✓</span>
+                    <span className="flex-1 font-mono text-xs text-success-700">
                       {p.misconceptionCode ?? "—"}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-success-700/70">
                       {new Date(e.occurredAt).toLocaleDateString("vi-VN")}
                     </span>
                   </li>
                 );
               })}
             </ul>
-          )}
-        </div>
-      </section>
+          </section>
+        )}
+      </div>
     </main>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  tone,
+  icon,
+  href,
+}: {
+  label: string;
+  value: string | number;
+  tone: "brand" | "success" | "accent" | "danger";
+  icon: string;
+  href?: string;
+}) {
+  const toneClass = {
+    brand: "text-brand-600",
+    success: "text-success-600",
+    accent: "text-accent-600",
+    danger: "text-danger-600",
+  }[tone];
+  const inner = (
+    <>
+      <div className="flex items-baseline justify-between">
+        <span className="text-xl">{icon}</span>
+        <span className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
+          {value}
+        </span>
+      </div>
+      <div className="mt-1 text-xs text-muted sm:text-sm">{label}</div>
+    </>
+  );
+  return href ? (
+    <Link href={href} className="card-hover block">
+      {inner}
+    </Link>
+  ) : (
+    <div className="card">{inner}</div>
   );
 }

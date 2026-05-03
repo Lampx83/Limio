@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { parseVideoUrl } from "@/lib/videoUrl";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
@@ -234,107 +235,30 @@ function ContentBlock({
   }
 }
 
-type ParsedVideo =
-  | { kind: "youtube"; id: string; start?: number }
-  | { kind: "vimeo"; id: string }
-  | { kind: "loom"; id: string }
-  | null;
-
-function parseVideoUrl(url: string): ParsedVideo {
-  try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, "");
-
-    // YouTube short link: youtu.be/<id>
-    if (host === "youtu.be") {
-      const id = u.pathname.slice(1).split("/")[0];
-      if (id) {
-        const t = u.searchParams.get("t");
-        return { kind: "youtube", id, start: t ? parseTimeToSeconds(t) : undefined };
-      }
-    }
-    // YouTube long: youtube.com/watch?v=<id>, /embed/<id>, /shorts/<id>, /live/<id>
-    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
-      const v = u.searchParams.get("v");
-      if (v) {
-        const t = u.searchParams.get("t") ?? u.searchParams.get("start");
-        return { kind: "youtube", id: v, start: t ? parseTimeToSeconds(t) : undefined };
-      }
-      const m = u.pathname.match(/^\/(?:embed|shorts|live)\/([\w-]{6,})/);
-      if (m) return { kind: "youtube", id: m[1]! };
-    }
-    // Vimeo: vimeo.com/<id> or player.vimeo.com/video/<id>
-    if (host.endsWith("vimeo.com")) {
-      const m = u.pathname.match(/\/(\d+)(?:\/|$)/);
-      if (m) return { kind: "vimeo", id: m[1]! };
-    }
-    // Loom: loom.com/share/<id>
-    if (host === "loom.com" || host.endsWith(".loom.com")) {
-      const m = u.pathname.match(/\/share\/([a-z0-9]+)/i);
-      if (m) return { kind: "loom", id: m[1]! };
-    }
-  } catch {
-    /* not a URL */
-  }
-  return null;
-}
-
-function parseTimeToSeconds(t: string): number | undefined {
-  // Accept "90", "1m30s", "1h2m3s"
-  if (/^\d+$/.test(t)) return Number(t);
-  const m = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
-  if (!m) return undefined;
-  const h = Number(m[1] ?? 0);
-  const min = Number(m[2] ?? 0);
-  const s = Number(m[3] ?? 0);
-  return h * 3600 + min * 60 + s;
-}
-
 function VideoEmbed({ url }: { url: string }) {
   const v = parseVideoUrl(url);
 
-  if (v?.kind === "youtube") {
-    const params = new URLSearchParams({ rel: "0", modestbranding: "1" });
-    if (v.start) params.set("start", String(v.start));
+  // Recognized provider — render iframe embed.
+  if (v && v.kind !== "file") {
+    const allow =
+      v.kind === "youtube"
+        ? "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        : v.kind === "vimeo"
+          ? "autoplay; fullscreen; picture-in-picture"
+          : "fullscreen";
     return (
       <iframe
-        src={`https://www.youtube-nocookie.com/embed/${v.id}?${params.toString()}`}
-        title="YouTube video"
+        src={v.embedUrl}
+        title={`${v.providerName} video`}
         loading="lazy"
-        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        allow={allow}
         allowFullScreen
         className="aspect-video w-full overflow-hidden rounded-xl border border-token bg-black shadow-card"
       />
     );
   }
 
-  if (v?.kind === "vimeo") {
-    return (
-      <iframe
-        src={`https://player.vimeo.com/video/${v.id}`}
-        title="Vimeo video"
-        loading="lazy"
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen
-        className="aspect-video w-full overflow-hidden rounded-xl border border-token bg-black shadow-card"
-      />
-    );
-  }
-
-  if (v?.kind === "loom") {
-    return (
-      <iframe
-        src={`https://www.loom.com/embed/${v.id}`}
-        title="Loom video"
-        loading="lazy"
-        allow="fullscreen"
-        allowFullScreen
-        className="aspect-video w-full overflow-hidden rounded-xl border border-token bg-black shadow-card"
-      />
-    );
-  }
-
-  // Direct video file (.mp4, .webm, .mov, ...)
+  // Recognized direct file or fallback for unknown URL — try native <video>.
   return (
     <video
       src={url}

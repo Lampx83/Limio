@@ -45,7 +45,7 @@ export default async function CourseDetailPage({
       </Link>
 
       {/* Hero */}
-      <header className="mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-8 text-white shadow-card-hover sm:p-10">
+      <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-8 text-white shadow-card-hover sm:p-10">
         <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">

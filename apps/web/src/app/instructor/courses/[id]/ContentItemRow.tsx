@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { parseVideoUrl } from "@/lib/videoUrl";
 
 interface Item {
   id: string;
@@ -62,22 +63,46 @@ export default function ContentItemRow({ item }: { item: Item }) {
     if (res.ok) router.refresh();
   }
 
+  const videoMeta =
+    item.type === "video"
+      ? parseVideoUrl(String((item.payload as { url?: string })?.url ?? ""))
+      : null;
+
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2.5 transition-colors hover:border-brand-200">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-sm font-mono font-semibold text-faint tabular-nums">
         {item.orderIndex}
       </span>
-      <span className="text-xl shrink-0" aria-hidden>
-        {ICON[item.type] ?? "📄"}
-      </span>
+
+      {/* Visual: thumbnail for video items, emoji for others */}
+      {videoMeta?.thumbnailUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={videoMeta.thumbnailUrl}
+          alt=""
+          className="h-12 w-20 shrink-0 rounded-md border border-token bg-black object-cover"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
+      ) : (
+        <span className="text-xl shrink-0" aria-hidden>
+          {ICON[item.type] ?? "📄"}
+        </span>
+      )}
+
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="chip">{item.type}</span>
+          {videoMeta && videoMeta.kind !== "file" && (
+            <span className="chip-brand">{videoMeta.providerName}</span>
+          )}
         </div>
         <p className="mt-1 truncate text-sm text-muted">
           {summarize(item.type, item.payload)}
         </p>
       </div>
+
       <button
         onClick={remove}
         disabled={busy}

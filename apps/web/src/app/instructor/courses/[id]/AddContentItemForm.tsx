@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { parseVideoUrl } from "@/lib/videoUrl";
 
 interface ScormPackageRow {
   id: string;
@@ -270,16 +271,25 @@ export default function AddContentItemForm({
         type === "file" ||
         type === "external_link" ||
         type === "pdf") && (
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          required
-          type="url"
-          placeholder={
-            type === "pdf" ? "URL PDF (https://.../file.pdf)" : "URL"
-          }
-          className="input"
-        />
+        <div className="space-y-2">
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+            type="url"
+            placeholder={
+              type === "video"
+                ? "YouTube · Vimeo · Loom · Wistia · Bunny · Mux · hoặc file .mp4"
+                : type === "pdf"
+                  ? "URL PDF (https://.../file.pdf)"
+                  : "URL"
+            }
+            className="input"
+          />
+          {type === "video" && url.trim() && (
+            <VideoUrlPreview url={url} />
+          )}
+        </div>
       )}
 
       {type === "pdf" && (
@@ -461,5 +471,53 @@ export default function AddContentItemForm({
         )}
       </div>
     </form>
+  );
+}
+
+function VideoUrlPreview({ url }: { url: string }) {
+  const v = parseVideoUrl(url);
+
+  if (!v) {
+    return (
+      <div className="flex items-start gap-2 rounded-lg border border-accent-200 bg-accent-50 px-3 py-2 text-xs text-accent-700">
+        <span aria-hidden>⚠️</span>
+        <span>
+          URL chưa nhận diện được provider. Hệ thống sẽ thử mở như video file
+          (.mp4/.webm). Hỗ trợ: YouTube, Vimeo, Loom, Wistia, Bunny, Mux.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-success-100 bg-success-50 p-2.5">
+      {v.thumbnailUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={v.thumbnailUrl}
+          alt=""
+          className="h-12 w-20 shrink-0 rounded-md border border-success-200 bg-black object-cover"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
+      ) : (
+        <div className="flex h-12 w-20 shrink-0 items-center justify-center rounded-md bg-success-100 text-2xl">
+          🎬
+        </div>
+      )}
+      <div className="min-w-0 flex-1 text-xs">
+        <p className="font-semibold text-success-700">
+          ✓ {v.providerName}
+        </p>
+        <p className="mt-0.5 font-mono text-success-700/80 truncate">
+          ID: {v.id}
+          {v.start ? ` · bắt đầu ${v.start}s` : ""}
+        </p>
+        <p className="mt-0.5 text-success-700/70">
+          Sẽ hiển thị bằng iframe embed.
+        </p>
+      </div>
+    </div>
   );
 }

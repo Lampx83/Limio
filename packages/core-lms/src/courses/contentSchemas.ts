@@ -38,6 +38,10 @@ export const PdfPayload = z.object({
 export const ScormPayload = z.object({
   packageId: z.string().uuid(),
   title: z.string().max(200).optional(),
+  // Optional entry override — relative path inside the SCORM zip. Defaults to
+  // the resource href in the manifest. Use to point at a specific page when
+  // the manifest entry is a placeholder (e.g. CP samples).
+  entryHref: z.string().max(500).optional(),
 });
 
 export const LtiPayload = z.object({

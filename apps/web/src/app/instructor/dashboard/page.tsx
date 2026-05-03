@@ -6,6 +6,18 @@ import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const STATUS_TONE: Record<string, string> = {
+  draft: "chip-accent",
+  published: "chip-success",
+  archived: "chip",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Nháp",
+  published: "Đã publish",
+  archived: "Lưu trữ",
+};
+
 export default async function InstructorDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/dashboard");
@@ -29,20 +41,20 @@ export default async function InstructorDashboard() {
   if (!admin && ownedCourses.length === 0) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <p className="rounded border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100">
-          Bạn chưa phải instructor của khóa nào.{" "}
-          <Link href="/instructor/courses/new" className="underline">
-            Tạo khóa đầu tiên
+        <div className="rounded-2xl border border-accent-200 bg-accent-50 p-5">
+          <p className="text-sm font-semibold text-accent-700">
+            ⚠️ Bạn chưa phải instructor của khóa nào.
+          </p>
+          <Link href="/instructor/courses/new" className="btn-primary mt-4 inline-flex">
+            + Tạo khóa đầu tiên
           </Link>
-          .
-        </p>
+        </div>
       </main>
     );
   }
 
   const courseIds = ownedCourses.map((c) => c.id);
 
-  // Pending essay grading + assignment grading counts.
   const [pendingEssays, pendingSubmissions, recentForumThreads, aiUsageWeek] =
     await Promise.all([
       prisma.answerResponse.count({
@@ -92,142 +104,165 @@ export default async function InstructorDashboard() {
     (s, l) => s + l.tokensInput + l.tokensOutput,
     0,
   );
+  const totalStudents = ownedCourses.reduce((s, c) => s + c._count.enrollments, 0);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-3xl font-bold">Bảng điều khiển — Instructor</h1>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        Tổng quan {ownedCourses.length} khóa của bạn.
-      </p>
+    <main className="mx-auto max-w-6xl px-6 py-10">
+      {/* Greeting */}
+      <header>
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+          Giảng viên
+        </span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          Xin chào,{" "}
+          <span className="text-gradient">
+            {session.user.name ?? session.user.email}
+          </span>{" "}
+          👋
+        </h1>
+        <p className="mt-2 text-muted">
+          Tổng quan {ownedCourses.length} khóa của bạn.
+        </p>
+      </header>
 
-      <div className="mt-6 flex flex-wrap gap-2 text-sm">
-        <Link
-          href="/instructor/courses"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
-          Tất cả khóa của tôi
+      {/* Quick actions */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link href="/instructor/courses/new" className="btn-primary btn-sm">
+          + Tạo khóa học
+        </Link>
+        <Link href="/instructor/courses" className="btn-secondary btn-sm">
+          📚 Tất cả khóa
         </Link>
         <Link
           href="/instructor/feedback-generator"
-          className="rounded border border-violet-300 px-3 py-1.5 text-violet-700 hover:bg-violet-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950/40"
+          className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
         >
           🪄 AI feedback gen
         </Link>
         <Link
           href="/instructor/feedback-templates"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="btn-secondary btn-sm"
         >
-          Feedback quality
+          📊 Feedback quality
+        </Link>
+        <Link
+          href="/instructor/tournaments/new"
+          className="btn-secondary btn-sm"
+        >
+          🏆 Tournament
         </Link>
       </div>
 
-      {/* KPIs */}
-      <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Kpi
-          label="Tổng học viên"
-          value={ownedCourses.reduce((s, c) => s + c._count.enrollments, 0)}
-        />
+      {/* KPI cards */}
+      <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <Kpi label="Tổng học viên" value={totalStudents} icon="👥" tone="brand" />
         <Kpi
           label="Bài essay chờ chấm"
           value={pendingEssays}
-          tone={pendingEssays > 0 ? "warn" : "ok"}
+          icon="📝"
+          tone={pendingEssays > 0 ? "accent" : "success"}
         />
         <Kpi
           label="Assignment chờ chấm"
           value={pendingSubmissions}
-          tone={pendingSubmissions > 0 ? "warn" : "ok"}
+          icon="📋"
+          tone={pendingSubmissions > 0 ? "accent" : "success"}
         />
         <Kpi
           label="AI cost (7 ngày)"
           value={`$${aiCostWeek.toFixed(4)}`}
           sub={`${aiTokensWeek.toLocaleString()} tokens`}
+          icon="💸"
+          tone="brand"
         />
       </section>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Owned courses with quick exports */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            📚 Khóa của tôi ({ownedCourses.length})
-          </h2>
-          <ul className="mt-3 space-y-3 text-sm">
+      <div className="mt-10 grid gap-8 lg:grid-cols-2">
+        {/* Owned courses */}
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">📚 Khóa của tôi</h2>
+            <span className="text-xs text-faint">{ownedCourses.length}</span>
+          </header>
+          <ul className="mt-4 space-y-3">
             {ownedCourses.map((c) => (
               <li
                 key={c.id}
-                className="rounded border border-slate-100 p-2 dark:border-slate-900"
+                className="rounded-xl border border-token p-3 transition-colors hover:border-brand-200"
               >
-                <div className="flex items-baseline justify-between gap-2">
+                <div className="flex items-start justify-between gap-2">
                   <Link
                     href={`/instructor/courses/${c.id}`}
-                    className="font-medium hover:underline"
+                    className="font-semibold transition-colors hover:text-brand-600"
                   >
                     {c.title}
                   </Link>
-                  <span
-                    className={`rounded px-1.5 py-0.5 text-[10px] ${
-                      c.status === "published"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
-                    }`}
-                  >
-                    {c.status}
+                  <span className={STATUS_TONE[c.status] ?? "chip"}>
+                    {STATUS_LABEL[c.status] ?? c.status}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="mt-1 text-xs text-faint">
                   {c._count.enrollments} học viên · {c._count.modules} modules
                 </p>
-                <div className="mt-2 flex flex-wrap gap-1 text-xs">
+                <div className="mt-3 flex flex-wrap gap-1">
                   <a
                     href={`/api/exports/instructor/courses/${c.id}/gradebook`}
-                    className="rounded border border-slate-300 px-1.5 py-0.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                    className="btn-ghost btn-sm"
                   >
                     📥 Gradebook
                   </a>
                   <a
                     href={`/api/exports/instructor/courses/${c.id}/submissions`}
-                    className="rounded border border-slate-300 px-1.5 py-0.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                    className="btn-ghost btn-sm"
                   >
                     📥 Submissions
                   </a>
                   <Link
                     href={`/instructor/courses/${c.id}/struggling-students`}
-                    className="rounded border border-slate-300 px-1.5 py-0.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                    className="btn-ghost btn-sm"
                   >
-                    HV cần hỗ trợ
+                    👥 HV cần hỗ trợ
                   </Link>
                 </div>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
 
         {/* Recent unresolved forum threads */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            💬 Forum chưa giải đáp ({recentForumThreads.length})
-          </h2>
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">💬 Forum chưa giải đáp</h2>
+            <span className="text-xs text-faint">{recentForumThreads.length}</span>
+          </header>
           {recentForumThreads.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Tất cả thread đã có người trả lời.</p>
+            <p className="mt-4 text-sm text-muted">
+              Tất cả thread đã có người trả lời.
+            </p>
           ) : (
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-4 space-y-2">
               {recentForumThreads.map((t) => (
-                <li key={t.id} className="rounded border border-slate-100 p-2 dark:border-slate-900">
+                <li
+                  key={t.id}
+                  className="rounded-lg border border-token p-3"
+                >
                   <Link
                     href={`/learn/${t.lesson.module.course.slug}/threads/${t.id}`}
-                    className="font-medium hover:underline"
+                    className="font-medium text-sm hover:text-brand-600"
                   >
                     {t.title}
                   </Link>
-                  <p className="text-xs text-slate-500">
-                    {t.author.displayName} · lesson "{t.lesson.title}" ·{" "}
+                  <p className="mt-1 text-xs text-faint">
+                    <span className="font-medium">{t.author.displayName}</span> ·
+                    bài &ldquo;{t.lesson.title}&rdquo; ·{" "}
                     {new Date(t.createdAt).toLocaleDateString("vi-VN")}
                   </p>
                 </li>
               ))}
             </ul>
           )}
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
@@ -236,24 +271,31 @@ function Kpi({
   label,
   value,
   sub,
-  tone = "ok",
+  icon,
+  tone,
 }: {
   label: string;
   value: string | number;
   sub?: string;
-  tone?: "ok" | "warn";
+  icon: string;
+  tone: "brand" | "success" | "accent" | "danger";
 }) {
+  const toneClass = {
+    brand: "text-brand-600",
+    success: "text-success-600",
+    accent: "text-accent-600",
+    danger: "text-danger-600",
+  }[tone];
   return (
-    <div
-      className={`rounded-lg border p-3 ${
-        tone === "warn"
-          ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
-          : "border-slate-200 dark:border-slate-800"
-      }`}
-    >
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-slate-500">{sub}</p>}
+    <div className="card">
+      <div className="flex items-baseline justify-between">
+        <span className="text-xl">{icon}</span>
+        <span className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
+          {value}
+        </span>
+      </div>
+      <div className="mt-1 text-xs text-muted sm:text-sm">{label}</div>
+      {sub && <div className="mt-0.5 text-xs text-faint">{sub}</div>}
     </div>
   );
 }

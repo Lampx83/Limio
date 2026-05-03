@@ -67,7 +67,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
       </Link>
 
       {/* Hero header */}
-      <header className="mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
+      <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
         <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
         <div className="relative">
           <div className="flex flex-wrap items-start justify-between gap-3">

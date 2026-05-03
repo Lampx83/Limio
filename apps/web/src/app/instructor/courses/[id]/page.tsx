@@ -209,7 +209,7 @@ export default async function InstructorCourseEditPage({
               payloadKey="orderedModuleIds"
               items={course.modules.map((m, i) => ({
                 id: m.id,
-                node: <ModuleSection module={m} order={i + 1} />,
+                node: <ModuleSection module={m} order={i + 1} courseSlug={course.slug} />,
               }))}
             />
           </div>

@@ -12,9 +12,9 @@ export default async function AdminDashboard() {
   if (!(await isAdmin(session.user.id))) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <p className="rounded border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
-          Chỉ admin mới truy cập được.
-        </p>
+        <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
+          🚫 Chỉ admin mới truy cập được.
+        </div>
       </main>
     );
   }
@@ -48,9 +48,7 @@ export default async function AdminDashboard() {
       },
     }),
     listIntegrationStatuses(),
-    prisma.aiUsageLog.findMany({
-      where: { dayKey: { startsWith: monthKey } },
-    }),
+    prisma.aiUsageLog.findMany({ where: { dayKey: { startsWith: monthKey } } }),
   ]);
 
   const aiCostMonth = aiLogsMonth.reduce((s, l) => s + l.costUsd, 0);
@@ -79,137 +77,155 @@ export default async function AdminDashboard() {
     coursesByStatus.map((c) => [c.status, c._count._all]),
   );
 
+  const openaiOk = integrations.find((i) => i.key === "openai")?.hasValue ?? false;
+  const stripeOk =
+    integrations.find((i) => i.key === "stripe.secret")?.hasValue ?? false;
+  const vnpayOk =
+    integrations.find((i) => i.key === "vnpay.secret")?.hasValue ?? false;
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <h1 className="text-3xl font-bold">Bảng điều khiển — Admin</h1>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        Tổng quan hệ thống, audit log, integration, AI cost.
-      </p>
+      {/* Greeting */}
+      <header>
+        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700">
+          Quản trị
+        </span>
+        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          Xin chào,{" "}
+          <span className="text-gradient">
+            {session.user.name ?? session.user.email}
+          </span>{" "}
+          👋
+        </h1>
+        <p className="mt-2 text-muted">
+          Tổng quan hệ thống, audit log, integration, AI cost.
+        </p>
+      </header>
 
-      <div className="mt-6 flex flex-wrap gap-2 text-sm">
-        <Link
-          href="/admin/integrations"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
-          Integrations
+      {/* Quick actions */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link href="/admin/integrations" className="btn-secondary btn-sm">
+          🔑 Integrations
         </Link>
-        <Link
-          href="/admin/lti-tools"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
-          LTI tools
+        <Link href="/admin/lti-tools" className="btn-secondary btn-sm">
+          🔌 LTI tools
         </Link>
-        <a
-          href="/api/exports/admin/users"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
+        <a href="/api/exports/admin/users" className="btn-ghost btn-sm">
           📥 Users.csv
         </a>
-        <a
-          href="/api/exports/admin/audit"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
+        <a href="/api/exports/admin/audit" className="btn-ghost btn-sm">
           📥 Audit log.csv
         </a>
-        <a
-          href="/api/exports/admin/ai-usage"
-          className="rounded border border-slate-300 px-3 py-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
-        >
+        <a href="/api/exports/admin/ai-usage" className="btn-ghost btn-sm">
           📥 AI usage.csv
         </a>
       </div>
 
-      {/* KPIs */}
-      <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Kpi label="Tổng users" value={totalUsers} sub={`+${usersThisWeek} tuần này`} />
+      {/* KPI cards */}
+      <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <Kpi
+          label="Tổng users"
+          value={totalUsers}
+          sub={`+${usersThisWeek} tuần này`}
+          icon="👥"
+          tone="brand"
+        />
         <Kpi
           label="Khóa published"
           value={courseCountMap.published ?? 0}
           sub={`draft: ${courseCountMap.draft ?? 0}`}
+          icon="📚"
+          tone="success"
         />
-        <Kpi label="Enrollment 7d" value={enrollmentsThisWeek} />
-        <Kpi label="Events hôm nay" value={eventsToday} />
+        <Kpi
+          label="Enrollment 7d"
+          value={enrollmentsThisWeek}
+          icon="📥"
+          tone="brand"
+        />
+        <Kpi
+          label="Events hôm nay"
+          value={eventsToday}
+          icon="⚡"
+          tone="accent"
+        />
         <Kpi
           label="AI cost tháng"
           value={`$${aiCostMonth.toFixed(4)}`}
           sub={`${aiTokensMonth.toLocaleString()} tokens`}
+          icon="💸"
+          tone="brand"
         />
-        <Kpi
-          label="OpenAI"
-          value={
-            integrations.find((i) => i.key === "openai")?.hasValue ? "✓" : "✗"
-          }
-          tone={
-            integrations.find((i) => i.key === "openai")?.hasValue ? "ok" : "warn"
-          }
-        />
-        <Kpi
-          label="Stripe"
-          value={
-            integrations.find((i) => i.key === "stripe.secret")?.hasValue
-              ? "✓"
-              : "—"
-          }
-        />
-        <Kpi
-          label="VNPay"
-          value={
-            integrations.find((i) => i.key === "vnpay.secret")?.hasValue
-              ? "✓"
-              : "—"
-          }
-        />
+        <IntegrationKpi label="OpenAI" ok={openaiOk} />
+        <IntegrationKpi label="Stripe" ok={stripeOk} optional />
+        <IntegrationKpi label="VNPay" ok={vnpayOk} optional />
       </section>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="mt-10 grid gap-8 lg:grid-cols-2">
         {/* Recent audit log */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            🔒 Audit log gần đây
-          </h2>
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">🔒 Audit log gần đây</h2>
+            <span className="text-xs text-faint">{auditLogRecent.length}</span>
+          </header>
           {auditLogRecent.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Chưa có audit log nào.</p>
+            <p className="mt-4 text-sm text-muted">Chưa có audit log nào.</p>
           ) : (
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-4 space-y-2">
               {auditLogRecent.map((a) => (
                 <li
                   key={a.id}
-                  className="rounded border border-slate-100 p-2 dark:border-slate-900"
+                  className="rounded-lg border border-token p-3 text-sm"
                 >
-                  <p className="font-mono text-xs">{a.action}</p>
-                  <p className="text-xs text-slate-500">
-                    {a.actor?.displayName ?? "system"} →{" "}
-                    {a.target?.displayName ?? "—"} ·{" "}
+                  <p className="font-mono text-xs font-semibold text-brand-700">
+                    {a.action}
+                  </p>
+                  <p className="mt-1 text-xs text-faint">
+                    <span className="font-medium text-muted">
+                      {a.actor?.displayName ?? "system"}
+                    </span>{" "}
+                    →{" "}
+                    <span className="font-medium text-muted">
+                      {a.target?.displayName ?? "—"}
+                    </span>
+                    {" · "}
                     {new Date(a.occurredAt).toLocaleString("vi-VN")}
                   </p>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </section>
 
         {/* AI top users this month */}
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">
-            💸 Top AI cost tháng này ({monthKey})
-          </h2>
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">💸 Top AI cost tháng này</h2>
+            <span className="text-xs text-faint font-mono">{monthKey}</span>
+          </header>
           {aiTopUsers.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
-              Chưa có usage AI tháng này.
-            </p>
+            <p className="mt-4 text-sm text-muted">Chưa có usage AI tháng này.</p>
           ) : (
-            <ul className="mt-3 space-y-1 text-sm">
+            <ul className="mt-4 space-y-1.5">
               {aiTopUsers.map(([uid, cost]) => {
                 const u = topUserMap.get(uid);
                 return (
-                  <li key={uid} className="flex items-center gap-2">
-                    <span className="flex-1">
-                      {u?.displayName ?? uid.slice(0, 8)}
-                      <span className="ml-1 text-xs text-slate-500">
-                        {u?.email ?? ""}
-                      </span>
+                  <li
+                    key={uid}
+                    className="flex items-center gap-3 rounded-lg border border-token p-2.5"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-xs font-semibold text-white">
+                      {(u?.displayName ?? "?").charAt(0).toUpperCase()}
                     </span>
-                    <span className="font-mono text-xs tabular-nums">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {u?.displayName ?? uid.slice(0, 8)}
+                      </p>
+                      <p className="truncate text-xs text-faint">
+                        {u?.email ?? ""}
+                      </p>
+                    </div>
+                    <span className="font-mono text-sm font-semibold tabular-nums text-accent-600">
                       ${cost.toFixed(4)}
                     </span>
                   </li>
@@ -217,8 +233,8 @@ export default async function AdminDashboard() {
               })}
             </ul>
           )}
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
@@ -227,24 +243,64 @@ function Kpi({
   label,
   value,
   sub,
-  tone = "ok",
+  icon,
+  tone,
 }: {
   label: string;
   value: string | number;
   sub?: string;
-  tone?: "ok" | "warn";
+  icon: string;
+  tone: "brand" | "success" | "accent" | "danger";
 }) {
+  const toneClass = {
+    brand: "text-brand-600",
+    success: "text-success-600",
+    accent: "text-accent-600",
+    danger: "text-danger-600",
+  }[tone];
   return (
-    <div
-      className={`rounded-lg border p-3 ${
-        tone === "warn"
-          ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
-          : "border-slate-200 dark:border-slate-800"
-      }`}
-    >
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-slate-500">{sub}</p>}
+    <div className="card">
+      <div className="flex items-baseline justify-between">
+        <span className="text-xl">{icon}</span>
+        <span className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
+          {value}
+        </span>
+      </div>
+      <div className="mt-1 text-xs text-muted sm:text-sm">{label}</div>
+      {sub && <div className="mt-0.5 text-xs text-faint">{sub}</div>}
+    </div>
+  );
+}
+
+function IntegrationKpi({
+  label,
+  ok,
+  optional,
+}: {
+  label: string;
+  ok: boolean;
+  optional?: boolean;
+}) {
+  const tone = ok ? "success" : optional ? "default" : "danger";
+  const toneStyle = {
+    success: "border-success-100 bg-success-50",
+    default: "border-token bg-[rgb(var(--surface))]",
+    danger: "border-danger-100 bg-danger-50",
+  }[tone];
+  const valueColor = {
+    success: "text-success-600",
+    default: "text-faint",
+    danger: "text-danger-600",
+  }[tone];
+  return (
+    <div className={`rounded-xl border p-5 shadow-card ${toneStyle}`}>
+      <div className="flex items-baseline justify-between">
+        <span className="text-xl">🔑</span>
+        <span className={`h-display text-2xl font-bold ${valueColor}`}>
+          {ok ? "✓" : "—"}
+        </span>
+      </div>
+      <div className="mt-1 text-xs text-muted sm:text-sm">{label}</div>
     </div>
   );
 }

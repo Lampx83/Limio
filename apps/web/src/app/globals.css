@@ -189,6 +189,17 @@
 [data-view="preview"] form:not([data-view-keep]) {
   display: none !important;
 }
+/* Explicit subtree swap: editor-only nodes hidden in preview, preview-only
+   nodes hidden by default and shown in preview. */
+.preview-only {
+  display: none;
+}
+[data-view="preview"] .editor-only {
+  display: none !important;
+}
+[data-view="preview"] .preview-only {
+  display: block !important;
+}
 /* SortableModulesWrapper renders an empty <li> wrapper with the drag handle
    button on the left. When the button is hidden, collapse the gap. */
 [data-view="preview"] .group > li > div {

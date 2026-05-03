@@ -1,6 +1,24 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { RoleName } from "@feedbackme/shared-types";
+import { auth } from "@/lib/auth";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  // Logged-in users → role-appropriate dashboard. Admin > Instructor > Learner.
+  const session = await auth();
+  if (session?.user?.id) {
+    const roles = session.user.roles ?? [];
+    if (roles.includes(RoleName.Admin)) redirect("/admin/dashboard");
+    if (roles.includes(RoleName.Instructor)) redirect("/instructor/dashboard");
+    redirect("/me/dashboard");
+  }
+
+  return <LandingPage />;
+}
+
+function LandingPage() {
   return (
     <main>
       {/* Hero */}
