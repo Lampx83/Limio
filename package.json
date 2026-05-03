@@ -10,7 +10,7 @@
     "dev": "pnpm --filter @feedbackme/web dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --workspace-concurrency=1 test",
     "db:generate": "pnpm --filter @feedbackme/db prisma:generate",
     "db:migrate": "pnpm --filter @feedbackme/db prisma:migrate",
     "db:studio": "pnpm --filter @feedbackme/db prisma:studio",
