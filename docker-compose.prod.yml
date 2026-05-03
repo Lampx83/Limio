@@ -3,7 +3,7 @@
 # Migrate    : docker compose -f docker-compose.prod.yml run --rm migrate
 #
 # Required env (.env.prod or shell):
-#   POSTGRES_PASSWORD, NEXTAUTH_SECRET, NEXTAUTH_URL, CRON_SECRET
+#   POSTGRES_PASSWORD, NEXTAUTH_SECRET (or AUTH_SECRET), NEXTAUTH_URL, CRON_SECRET
 # Optional:
 #   IMAGE_TAG (default "latest"), WEB_PORT (default 8004),
 #   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ANTHROPIC_API_KEY, SENTRY_DSN, ...
@@ -15,7 +15,10 @@ x-web-env: &web-env
   DATABASE_URL: postgresql://feedbackme:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@postgres:5432/feedbackme?schema=public
   REDIS_URL: redis://redis:6379
   NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
-  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET required}
+  # NextAuth v5 reads AUTH_SECRET (not NEXTAUTH_SECRET) in production.
+  # We derive it from NEXTAUTH_SECRET so existing .env.prod files need no change.
+  AUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET required}
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
   CRON_SECRET: ${CRON_SECRET:?CRON_SECRET required}
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
