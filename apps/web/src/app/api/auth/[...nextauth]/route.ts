@@ -1,5 +1,5 @@
 import { handlers } from "@/lib/auth";
-import { type NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 
 // NEXT_PUBLIC_BASE_PATH is baked at Docker build time (e.g. "/limio").
 // Next.js strips this prefix from request.url BEFORE the route handler runs,
@@ -10,23 +10,23 @@ import { type NextRequest } from "next/server";
 //   = "https://host/api/auth/callback/google"   ← missing /limio → mismatch
 //
 // Fix: prepend BASE back onto the pathname so NextAuth sees the full path.
-// With auth.ts basePath="/limio/api/auth", NextAuth then strips "/limio/api/auth"
-// from "/limio/api/auth/..." correctly AND builds URLs that include /limio.
+// With auth.ts basePath="${BASE}/api/auth" (= "/limio/api/auth"), NextAuth
+// strips "/limio/api/auth" from "/limio/api/auth/..." correctly AND builds
+// redirect_uri / error-page URLs that include /limio.
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-function withBasePath(req: NextRequest): Request {
+function withBasePath(req: NextRequest): NextRequest {
   if (!BASE) return req;
   const url = new URL(req.url);
   url.pathname = `${BASE}${url.pathname}`;
-  return new Request(url.toString(), {
+  // Construct a new NextRequest (not plain Request) so NextAuth retains
+  // access to NextRequest-specific fields (cookies, nextUrl, etc.).
+  return new NextRequest(url, {
     method: req.method,
-    headers: new Headers(req.headers),
+    headers: req.headers,
     body: req.body,
-    // Node.js 18+ requires duplex:"half" when body is a ReadableStream
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(req.body ? { duplex: "half" } : {}),
-  } as RequestInit);
+  });
 }
 
 export async function GET(req: NextRequest) {
