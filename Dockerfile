@@ -61,16 +61,25 @@ RUN set -eux; \
     cp "$engine" /tmp/query_engine.node
 
 # ---------- migrator (Prisma CLI + schema + generated client) ----------
+# IMPORTANT: migrator intentionally does NOT inherit from builder.
+# builder runs `next build` (~70 s). When compose builds web+migrate in
+# parallel both used to run next build — doubling build time for no reason.
+# migrator only needs prisma CLI + schema; we copy node_modules from the
+# deps stage and run prisma:generate here (~5 s) instead.
 FROM base AS migrator
 ENV NODE_ENV=production
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/db ./packages/db
+# Pre-installed node_modules (no generated Prisma client yet — deps runs
+# pnpm install but not prisma generate).
+COPY --from=deps /app/node_modules ./node_modules
+# Source files from the build context (not from builder).
+COPY packages/db ./packages/db
 # shared-types is needed by seed scripts (imported as @feedbackme/shared-types).
-# pnpm links workspace packages via a symlink in node_modules that points to the
-# actual source directory — so the source must exist in the image too.
-COPY --from=builder /app/packages/shared-types ./packages/shared-types
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+# pnpm links workspace packages via a symlink in node_modules that points to
+# the actual source directory — so the source must exist in the image too.
+COPY packages/shared-types ./packages/shared-types
+COPY package.json pnpm-workspace.yaml ./
+# Generate Prisma client (~5 s). Writes into /app/node_modules.
+RUN pnpm --filter @feedbackme/db prisma:generate
 WORKDIR /app/packages/db
 CMD ["pnpm", "exec", "prisma", "migrate", "deploy"]
 

@@ -42,9 +42,16 @@ jobs:
       - name: Build images
         run: |
           set -euo pipefail
-          docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build \
-            --pull \
-            --build-arg BUILDKIT_INLINE_CACHE=1
+          # --pull omitted: base images (node:20-alpine, alpine:3.20) are
+          # cached on the self-hosted runner and pulling on every commit adds
+          # ~10 s for a registry manifest check with no benefit.
+          # Run `docker compose pull` manually on the runner when you want to
+          # pick up base-image security patches.
+          #
+          # BUILDKIT_INLINE_CACHE omitted: it embeds cache metadata inside the
+          # image for registry-pull scenarios. We build and run locally so it
+          # only bloats image size with no speedup.
+          docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
 
       - name: Apply database migrations
         run: |
