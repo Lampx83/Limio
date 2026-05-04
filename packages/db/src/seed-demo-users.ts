@@ -48,10 +48,35 @@ const USERS: DemoUser[] = [
 ];
 
 async function ensureUser(u: DemoUser): Promise<string> {
-  const existing = await prisma.user.findUnique({ where: { email: u.email } });
-  if (existing) return existing.id;
-
+  // Always (re-)hash so running the seed on an existing DB resets demo passwords.
+  // bcrypt is slow by design — 12 rounds is fine for a one-off seed script.
   const passwordHash = await bcrypt.hash(PASSWORD, 12);
+
+  const existing = await prisma.user.findUnique({
+    where: { email: u.email },
+    include: { authProviders: true },
+  });
+
+  if (existing) {
+    // Refresh password + mark email verified in case the row was created by
+    // direct SQL or an older seed that left passwordHash/emailVerifiedAt wrong.
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: { passwordHash, emailVerifiedAt: new Date() },
+    });
+    // Ensure the password AuthProvider row exists (direct-SQL inserts may omit it).
+    const hasPasswordProvider = existing.authProviders.some(
+      (p) => p.provider === "password",
+    );
+    if (!hasPasswordProvider) {
+      await prisma.authProvider.create({
+        data: { userId: existing.id, provider: "password", providerUserId: u.email },
+      });
+    }
+    console.log(`Refreshed ${u.email}`);
+    return existing.id;
+  }
+
   const created = await prisma.user.create({
     data: {
       email: u.email,

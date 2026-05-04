@@ -51,14 +51,21 @@ if (
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Tell NextAuth where its API routes are mounted.
-  // Next.js strips the app basePath (/limio) BEFORE the handler runs, so
-  // NextAuth always sees /api/auth/… — the default "/api/auth" is correct.
-  // DO NOT prepend NEXT_PUBLIC_BASE_PATH here: that causes UnknownAction
-  // because NextAuth would try to strip "/limio/api/auth" from "/api/auth/…".
-  // next-auth/react picks up __NEXT_ROUTER_BASEPATH automatically, so
-  // client-side fetch calls already include the /limio prefix.
-  basePath: `/api/auth`,
+  // Tell NextAuth where its API routes are mounted — full path including the
+  // Next.js app basePath (/limio).  This is intentionally "/limio/api/auth",
+  // not just "/api/auth".
+  //
+  // Why it works despite Next.js stripping /limio before the handler runs:
+  //   apps/web/src/app/api/auth/[...nextauth]/route.ts wraps every request
+  //   and INJECTS BASE back onto the pathname before passing to handlers.GET/POST.
+  //   NextAuth therefore sees the full path and can both route correctly and
+  //   build redirect_uri / error-page URLs that include /limio.
+  //
+  // Benefits over basePath="/api/auth":
+  //   • OAuth redirect_uri = https://host/limio/api/auth/callback/google ✓
+  //   • Error redirect    = https://host/limio/api/auth/error            ✓
+  //   • env-url-basepath-mismatch warning disappears                     ✓
+  basePath: `${BASE}/api/auth`,
   session: { strategy: "jwt" },
   // pages.signIn MUST include the Next.js basePath (/limio) because NextAuth
   // constructs the redirect URL relative to the request origin, not NEXTAUTH_URL.
