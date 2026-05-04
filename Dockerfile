@@ -47,7 +47,9 @@ COPY --from=deps /app/packages/core-feedback/node_modules ./packages/core-feedba
 COPY --from=deps /app/packages/core-gamification/node_modules ./packages/core-gamification/node_modules
 COPY --from=deps /app/packages/shared-types/node_modules ./packages/shared-types/node_modules
 COPY . .
-RUN pnpm --filter @feedbackme/db prisma:generate
+# Generate Prisma client for builder. Use cd instead of pnpm --filter
+# to avoid workspace symlink issues in Docker.
+RUN cd packages/db && ../../node_modules/.bin/prisma generate
 # Persistent BuildKit cache for Next.js incremental compilation.
 # On the self-hosted runner (server 224) this cache survives between deploys:
 # unchanged modules are NOT recompiled, cutting typical build time by ~50%.
@@ -86,7 +88,8 @@ COPY packages/db ./packages/db
 COPY packages/shared-types ./packages/shared-types
 COPY package.json pnpm-workspace.yaml ./
 # Generate Prisma client (~5 s). Writes into /app/node_modules.
-RUN pnpm --filter @feedbackme/db prisma:generate
+# Use cd instead of pnpm --filter to avoid workspace symlink issues in Docker.
+RUN cd packages/db && ../../node_modules/.bin/prisma generate
 WORKDIR /app/packages/db
 CMD ["pnpm", "exec", "prisma", "migrate", "deploy"]
 
