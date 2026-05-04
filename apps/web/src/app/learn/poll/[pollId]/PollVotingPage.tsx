@@ -12,7 +12,7 @@ interface Poll {
     lesson: {
       title: string;
       module: { course: { title: string } };
-    };
+    } | null;
   };
 }
 

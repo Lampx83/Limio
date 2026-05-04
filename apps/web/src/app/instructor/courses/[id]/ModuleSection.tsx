@@ -9,11 +9,13 @@ interface Lesson {
   description: string | null;
   orderIndex: number;
   previewable: boolean;
+  isHidden: boolean;
   contentItems: Array<{
     id: string;
     type: string;
     payload: unknown;
     orderIndex: number;
+    isHidden: boolean;
   }>;
   skillTags: Array<{
     id: string;
@@ -26,6 +28,7 @@ interface Lesson {
     description: string;
     dueAt: Date | null;
     maxScore: number;
+    isHidden: boolean;
   }>;
   quizzes: Array<{
     id: string;
@@ -35,6 +38,7 @@ interface Lesson {
     requireConfidence: boolean;
     timeLimitSec: number | null;
     maxAttempts: number | null;
+    isHidden: boolean;
     questions: Array<{
       id: string;
       type: string;

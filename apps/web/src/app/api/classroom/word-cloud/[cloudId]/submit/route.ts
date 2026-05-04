@@ -37,6 +37,10 @@ export async function POST(
     }
 
     // Check if user is enrolled in the course for this lesson
+    if (!wordCloud.session.lessonId) {
+      return Response.json({ error: "Invalid word cloud session" }, { status: 400 });
+    }
+
     const lesson = await prisma.lesson.findUnique({
       where: { id: wordCloud.session.lessonId },
       select: { module: { select: { course: { select: { id: true } } } } },

@@ -10,7 +10,7 @@ interface WordCloud {
     lesson: {
       title: string;
       module: { course: { title: string } };
-    };
+    } | null;
   };
 }
 

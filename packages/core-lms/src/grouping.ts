@@ -89,7 +89,7 @@ export function balanceStudentsIntoGroups(
   // Highest skill students go to different groups first
   students.forEach((student, index) => {
     const groupIndex = index % numGroups;
-    groups[groupIndex].userIds.push(student.userId);
+    groups[groupIndex]!.userIds.push(student.userId);
   });
 
   return groups;

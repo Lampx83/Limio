@@ -1,29 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import CourseSelector from "./CourseSelector";
 import ManualStudentInput from "./ManualStudentInput";
 import TeachingToolsWrapper from "./TeachingToolsWrapper";
 
-interface StudentItem {
+export interface StudentItem {
   name: string;
-  id: string | null;
+  id: string | null; // null for manual input
 }
 
 interface Course {
   id: string;
   title: string;
-  _count: {
-    enrollments: number;
-  };
-}
-
-interface Enrollment {
-  userId: string;
-  user: {
-    displayName: string | null;
-    email: string;
-  };
+  _count: { enrollments: number };
 }
 
 interface TeachingToolsClientProps {
@@ -35,42 +25,70 @@ export default function TeachingToolsClient({
 }: TeachingToolsClientProps) {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [manualStudentText, setManualStudentText] = useState("");
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(false);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedCourseEnrollmentCount, setSelectedCourseEnrollmentCount] = useState(0);
 
   // Fetch enrollments when course selected
   useEffect(() => {
     if (!selectedCourseId) {
       setEnrollments([]);
+      setSelectedCourseEnrollmentCount(0);
       return;
     }
 
-    const fetchEnrollments = async () => {
-      setIsLoadingEnrollments(true);
-      try {
-        const res = await fetch(
-          `/api/instructor/teaching-tools/enrollments?courseId=${selectedCourseId}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setEnrollments(data.enrollments);
-        }
-      } catch (err) {
-        console.error("Failed to fetch enrollments:", err);
-      } finally {
-        setIsLoadingEnrollments(false);
-      }
-    };
+    // Get the selected course object to get its enrollment count
+    const selectedCourse = courses.find((c) => c.id === selectedCourseId);
+    if (selectedCourse) {
+      setSelectedCourseEnrollmentCount(selectedCourse._count.enrollments);
+    }
 
-    fetchEnrollments();
-  }, [selectedCourseId]);
+    setIsLoading(true);
+    fetchEnrollments(selectedCourseId);
+  }, [selectedCourseId, courses]);
+
+  const fetchEnrollments = async (courseId: string) => {
+    try {
+      console.log("[TeachingTools] Fetching enrollments for courseId:", courseId);
+      const res = await fetch(`/api/courses/${courseId}/enrollments`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      console.log("[TeachingTools] API Response status:", res.status, res.statusText);
+
+      const data = await res.json();
+      console.log("[TeachingTools] API Response data:", data);
+
+      if (res.ok) {
+        console.log("[TeachingTools] SUCCESS - Got", data.length, "enrollments");
+        setEnrollments(data);
+      } else {
+        console.error("[TeachingTools] API returned error status", res.status);
+        console.error("[TeachingTools] Error details:", data);
+      }
+    } catch (err) {
+      console.error("[TeachingTools] Network error fetching enrollments:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const studentList = useMemo(() => {
     if (selectedCourseId && enrollments.length > 0) {
       // Course mode: use fetched enrollments
-      return enrollments.map((e) => ({
-        name: e.user.displayName || e.user.email || "Unknown",
+      return enrollments.map((e: any) => ({
+        name: e.user.displayName || e.user.email,
         id: e.userId,
+      }));
+    } else if (selectedCourseId && enrollments.length === 0 && selectedCourseEnrollmentCount > 0) {
+      // Fallback: course has students but API fetch failed - create placeholder list
+      console.warn(
+        `[TeachingTools] API returned 0 enrollments but course has ${selectedCourseEnrollmentCount} students. Creating placeholder list.`
+      );
+      return Array.from({ length: selectedCourseEnrollmentCount }, (_, i) => ({
+        name: `Sinh viên ${i + 1}`,
+        id: `placeholder-${i}`,
       }));
     } else if (!selectedCourseId && manualStudentText.trim()) {
       // Manual mode: parse textarea
@@ -78,44 +96,65 @@ export default function TeachingToolsClient({
         .split("\n")
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
-        .map((name) => ({
+        .map((name, idx) => ({
           name,
-          id: null,
+          id: `manual-${idx}`,
         }));
     }
     return [];
-  }, [selectedCourseId, enrollments, manualStudentText]);
+  }, [selectedCourseId, enrollments, manualStudentText, selectedCourseEnrollmentCount]);
 
   return (
-    <div className="space-y-12">
-      {/* Tools Section - Always show tools */}
+    <div className="space-y-8">
+      {/* Teaching Tools Section */}
       <TeachingToolsWrapper studentList={studentList} />
 
-      {/* Selector Section - At the bottom */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Cấu Hình Danh Sách Sinh Viên
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Tùy chọn này cho phép bạn sử dụng các công cụ cần danh sách sinh viên
-          </p>
-        </div>
-
+      {/* Course Selector Section - Only for Random Picker & Grouping Tool */}
+      <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card">
+        <h2 className="text-lg font-semibold mb-4">
+          Danh sách sinh viên (cho Chọn Ngẫu Nhiên & Phân Nhóm)
+        </h2>
         <CourseSelector
           courses={courses}
           selectedCourseId={selectedCourseId}
           onSelectCourse={setSelectedCourseId}
           enrollmentCount={enrollments.length}
-          isLoading={isLoadingEnrollments}
+          isLoading={isLoading}
         />
 
         {!selectedCourseId && (
           <ManualStudentInput
             value={manualStudentText}
             onChange={setManualStudentText}
-            studentCount={studentList.length}
+            studentCount={
+              manualStudentText
+                .split("\n")
+                .filter((line) => line.trim().length > 0).length
+            }
           />
+        )}
+
+        {studentList.length > 0 && (
+          <div className="mt-6 rounded-lg border border-token p-4 bg-[rgb(var(--surface-muted))]">
+            <p className="text-sm font-medium text-muted mb-2">
+              {studentList.length} sinh viên sẽ được sử dụng cho các công cụ cần danh sách
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {studentList.slice(0, 10).map((student, i) => (
+                <span
+                  key={i}
+                  className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700"
+                >
+                  {student.name}
+                </span>
+              ))}
+              {studentList.length > 10 && (
+                <span className="inline-block rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                  +{studentList.length - 10} more
+                </span>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

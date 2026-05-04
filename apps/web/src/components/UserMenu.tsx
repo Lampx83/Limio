@@ -47,7 +47,7 @@ export default function UserMenu({
     .join("");
 
   const close = () => setOpen(false);
-  const activeBadge = ROLE_BADGES[activeRole];
+  const activeBadge = activeRole ? ROLE_BADGES[activeRole] : undefined;
 
   const smallAvatar = avatarUrl ? (
     /* eslint-disable-next-line @next/next/no-img-element */

@@ -12,51 +12,67 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { lessonId, prompt } = z
       .object({
-        lessonId: z.string().uuid(),
+        lessonId: z.string().uuid().optional(),
         prompt: z.string().min(1).max(200),
       })
       .parse(body);
 
-    // Verify lesson exists and user is instructor
-    const lesson = await prisma.lesson.findUnique({
-      where: { id: lessonId },
-      select: {
-        id: true,
-        module: { select: { course: { select: { id: true } } } },
-      },
-    });
+    let sessionId: string;
 
-    if (!lesson) {
-      return Response.json({ error: "Lesson not found" }, { status: 404 });
+    // If lessonId provided, use classroom session
+    if (lessonId) {
+      // Verify lesson exists and user is instructor
+      const lesson = await prisma.lesson.findUnique({
+        where: { id: lessonId },
+        select: {
+          id: true,
+          module: { select: { course: { select: { id: true } } } },
+        },
+      });
+
+      if (!lesson) {
+        return Response.json({ error: "Lesson not found" }, { status: 404 });
+      }
+
+      const courseId = lesson.module.course.id;
+
+      // Check if user is instructor for this course
+      const instructor = await prisma.courseInstructor.findUnique({
+        where: {
+          courseId_userId: { courseId, userId: session.user.id },
+        },
+      });
+
+      if (!instructor) {
+        return Response.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      // Get or create classroom session
+      const classroomSession = await prisma.classroomSession.findFirst({
+        where: { lessonId, endedAt: null },
+        select: { id: true },
+      });
+
+      sessionId =
+        classroomSession?.id ||
+        (
+          await prisma.classroomSession.create({
+            data: { lessonId },
+            select: { id: true },
+          })
+        ).id;
+    } else {
+      // Standalone mode - create a temporary session without lesson using raw SQL
+      const result = await prisma.$queryRaw<{ id: string }[]>`
+        INSERT INTO "ClassroomSession" (id, "startedAt", "createdAt")
+        VALUES (gen_random_uuid(), NOW(), NOW())
+        RETURNING id
+      `;
+      if (!result || !result[0]) {
+        throw new Error("Failed to create classroom session");
+      }
+      sessionId = result[0].id;
     }
-
-    const courseId = lesson.module.course.id;
-
-    // Check if user is instructor for this course
-    const instructor = await prisma.courseInstructor.findUnique({
-      where: {
-        courseId_userId: { courseId, userId: session.user.id },
-      },
-    });
-
-    if (!instructor) {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    // Get or create classroom session
-    const classroomSession = await prisma.classroomSession.findFirst({
-      where: { lessonId, endedAt: null },
-      select: { id: true },
-    });
-
-    const sessionId =
-      classroomSession?.id ||
-      (
-        await prisma.classroomSession.create({
-          data: { lessonId },
-          select: { id: true },
-        })
-      ).id;
 
     // Create word cloud
     const wordCloud = await prisma.wordCloud.create({
@@ -72,7 +88,9 @@ export async function POST(req: Request) {
       prompt: wordCloud.prompt,
     });
   } catch (err) {
-    console.error("[classroom/word-cloud/create]", err);
-    return Response.json({ error: "Invalid request" }, { status: 400 });
+    console.error("[classroom/word-cloud/create] Error:", err);
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[classroom/word-cloud/create] Message:", errorMsg);
+    return Response.json({ error: errorMsg }, { status: 400 });
   }
 }

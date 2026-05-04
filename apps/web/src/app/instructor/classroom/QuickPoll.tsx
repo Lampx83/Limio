@@ -32,9 +32,10 @@ interface PollResults {
 interface QuickPollProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
+  onExit?: () => void;
 }
 
-export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
+export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollProps) {
   const [currentPoll, setCurrentPoll] = useState<Poll | null>(null);
   const [results, setResults] = useState<PollResults | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -46,7 +47,14 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
   const [votesByOption, setVotesByOption] = useState<Record<string, number>>({});
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Store original poll data for reset functionality
+  const [originalQuestion, setOriginalQuestion] = useState("");
+  const [originalOptions, setOriginalOptions] = useState<string[]>([]);
+
   const isStateless = !!studentList && !lessonId;
+  const isStandalone = !lessonId && !studentList;
+  const showManualVoting = isStateless; // Only show manual buttons in stateless mode
+  const showQRCode = lessonId || isStandalone; // Show QR in classroom or standalone mode
 
   const handleCreatePoll = async () => {
     if (!question.trim()) {
@@ -96,6 +104,11 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
       }
 
       const data = await res.json();
+
+      // Save original poll data for reset functionality
+      setOriginalQuestion(question.trim());
+      setOriginalOptions(filledOptions);
+
       setCurrentPoll({
         id: data.id,
         question: data.question,
@@ -140,17 +153,65 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
     setIsPolling(false);
   };
 
-  const handleReset = () => {
-    setCurrentPoll(null);
-    setResults(null);
-    setVotesByOption({});
-    setIsPolling(false);
-    setQuestion("");
-    setOptions(["", ""]);
+  const handleReset = async () => {
+    // If there's an active poll, create a new session with same question/options
+    if (currentPoll && originalQuestion && originalOptions.length > 0) {
+      setIsCreating(true);
+      try {
+        const res = await fetch("/api/classroom/quick-poll/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId,
+            question: originalQuestion,
+            options: originalOptions,
+            isAnonymous: true,
+          }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          toast.error(error.error || "Lỗi tạo poll mới");
+          return;
+        }
+
+        const data = await res.json();
+        setCurrentPoll({
+          id: data.id,
+          question: data.question,
+          options: data.options,
+          isAnonymous: data.isAnonymous,
+        });
+
+        // Reset vote tracking and results
+        setResults(null);
+        setVotesByOption(Object.fromEntries(originalOptions.map((_, idx) => [idx.toString(), 0])));
+
+        // Start polling for results
+        setIsPolling(true);
+        fetchResults(data.id);
+        toast.success("Poll mới được tạo!");
+      } catch (err) {
+        console.error("[QuickPoll Reset]", err);
+        toast.error("Lỗi tạo poll mới");
+      } finally {
+        setIsCreating(false);
+      }
+    } else {
+      // No active poll, just reset form
+      setCurrentPoll(null);
+      setResults(null);
+      setVotesByOption({});
+      setIsPolling(false);
+      setQuestion("");
+      setOptions(["", ""]);
+      setOriginalQuestion("");
+      setOriginalOptions([]);
+    }
   };
 
   const handleVote = (optionIndex: string) => {
-    if (isStateless) {
+    if (isStateless || isStandalone) {
       setVotesByOption((prev) => ({
         ...prev,
         [optionIndex]: (prev[optionIndex] || 0) + 1,
@@ -166,8 +227,13 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
     setOptions(options.filter((_, i) => i !== idx));
   };
 
-  if (isFullscreen && currentPoll && (results || isStateless)) {
-    const displayResults = isStateless
+  // Calculate pollUrl for both fullscreen and normal views
+  const pollUrl = currentPoll && !isStateless
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/learn/poll/${currentPoll.id}`
+    : null;
+
+  if (isFullscreen && currentPoll && (results || isStateless || isStandalone)) {
+    const displayResults = (isStateless || isStandalone)
       ? {
           question: currentPoll.question,
           options: currentPoll.options,
@@ -179,9 +245,6 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
     if (!displayResults) return null;
 
     const maxVotes = Math.max(...Object.values(displayResults.votesByOption), 1);
-    const pollUrl = !isStateless
-      ? `${typeof window !== 'undefined' ? window.location.origin : ''}/learn/poll/${currentPoll.id}`
-      : null;
 
     return (
       <div className="fixed inset-0 bg-[rgb(var(--surface))] flex flex-col p-6 z-50 overflow-y-auto">
@@ -206,6 +269,15 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
             >
               ⛶ Thoát
             </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="btn-secondary text-sm"
+                title="Exit tool"
+              >
+                ✕ Exit
+              </button>
+            )}
           </div>
         </div>
 
@@ -336,8 +408,8 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
     );
   }
 
-  if (currentPoll && (results || isStateless)) {
-    const displayResults = isStateless
+  if (currentPoll && (results || isStateless || isStandalone)) {
+    const displayResults = (isStateless || isStandalone)
       ? {
           question: currentPoll.question,
           options: currentPoll.options,
@@ -373,12 +445,35 @@ export default function QuickPoll({ lessonId, studentList }: QuickPollProps) {
             >
               ⛶ Full
             </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="btn-secondary btn-sm text-xs"
+                title="Exit"
+              >
+                ✕ Exit
+              </button>
+            )}
           </div>
         </div>
 
         <p className="text-lg font-semibold text-center mb-6">
           {displayResults.question}
         </p>
+
+        {/* QR Code Section - Show in normal view when available */}
+        {pollUrl && (
+          <div className="mb-6 flex justify-center">
+            <div className="bg-white p-3 rounded-lg border border-token">
+              <QRCode
+                value={pollUrl}
+                size={150}
+                level="H"
+                includeMargin={true}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           {displayResults.options.map((option, idx) => {

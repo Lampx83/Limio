@@ -17,9 +17,10 @@ interface Student {
 interface RandomPickerProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
+  onExit?: () => void;
 }
 
-export default function RandomPicker({ lessonId, studentList }: RandomPickerProps) {
+export default function RandomPicker({ lessonId, studentList, onExit }: RandomPickerProps) {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -188,6 +189,15 @@ export default function RandomPicker({ lessonId, studentList }: RandomPickerProp
             >
               ⛶ Thoát
             </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="btn-secondary text-sm"
+                title="Exit tool"
+              >
+                ✕ Exit
+              </button>
+            )}
           </div>
         </div>
 
@@ -277,6 +287,15 @@ export default function RandomPicker({ lessonId, studentList }: RandomPickerProp
           >
             ⛶ Full
           </button>
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="btn-secondary btn-sm text-xs"
+              title="Exit"
+            >
+              ✕ Exit
+            </button>
+          )}
         </div>
       </div>
 

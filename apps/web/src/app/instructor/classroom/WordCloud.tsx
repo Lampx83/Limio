@@ -27,9 +27,10 @@ interface WordFrequencyResult {
 interface WordCloudProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
+  onExit?: () => void;
 }
 
-export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
+export default function WordCloud({ lessonId, studentList, onExit }: WordCloudProps) {
   const [currentCloud, setCurrentCloud] = useState<WordCloud | null>(null);
   const [results, setResults] = useState<WordFrequencyResult | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -40,8 +41,10 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
 
   // Form state
   const [prompt, setPrompt] = useState("");
+  const [originalPrompt, setOriginalPrompt] = useState("");
 
   const isStateless = !!studentList && !lessonId;
+  const isStandalone = !lessonId && !studentList;
 
   const handleCreateCloud = async () => {
     console.log("[WordCloud] handleCreateCloud called, prompt:", prompt);
@@ -56,6 +59,7 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
       if (isStateless) {
         // Client-side mode: create cloud without API call
         const cloudId = `local-${Date.now()}`;
+        setOriginalPrompt(prompt.trim());
         setCurrentCloud({
           id: cloudId,
           prompt: prompt.trim(),
@@ -83,6 +87,10 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
       }
 
       const data = await res.json();
+
+      // Save original prompt for reset functionality
+      setOriginalPrompt(prompt.trim());
+
       setCurrentCloud({
         id: data.id,
         prompt: data.prompt,
@@ -125,13 +133,71 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
     setIsPolling(false);
   };
 
-  const handleReset = () => {
-    setCurrentCloud(null);
-    setResults(null);
-    setSubmissions([]);
-    setSubmissionInput("");
-    setIsPolling(false);
-    setPrompt("");
+  const handleReset = async () => {
+    // If there's an active cloud, create a new session with same prompt
+    if (currentCloud && originalPrompt) {
+      setIsCreating(true);
+      try {
+        if (isStateless) {
+          // Client-side mode
+          const cloudId = `local-${Date.now()}`;
+          setCurrentCloud({
+            id: cloudId,
+            prompt: originalPrompt,
+          });
+          setResults(null);
+          setSubmissions([]);
+          setSubmissionInput("");
+          toast.success("Word cloud mới được tạo!");
+          return;
+        }
+
+        const res = await fetch("/api/classroom/word-cloud/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId,
+            prompt: originalPrompt,
+          }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          toast.error(error.error || "Lỗi tạo word cloud mới");
+          return;
+        }
+
+        const data = await res.json();
+        setCurrentCloud({
+          id: data.id,
+          prompt: data.prompt,
+        });
+
+        // Reset submissions and results
+        setResults(null);
+        setSubmissions([]);
+        setSubmissionInput("");
+
+        // Start polling for results
+        setIsPolling(true);
+        fetchResults(data.id);
+        toast.success("Word cloud mới được tạo!");
+      } catch (err) {
+        console.error("[WordCloud Reset]", err);
+        toast.error("Lỗi tạo word cloud mới");
+      } finally {
+        setIsCreating(false);
+      }
+    } else {
+      // No active cloud, just reset form
+      setCurrentCloud(null);
+      setResults(null);
+      setSubmissions([]);
+      setSubmissionInput("");
+      setIsPolling(false);
+      setPrompt("");
+      setOriginalPrompt("");
+    }
   };
 
   const handleAddSubmission = () => {
@@ -156,8 +222,13 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
     "from-pink-400 to-pink-500",
   ];
 
-  if (isFullscreen && currentCloud && (results || isStateless)) {
-    const wordFrequency = isStateless
+  // Calculate cloudUrl for both fullscreen and normal views
+  const cloudUrl = currentCloud && !isStateless
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/learn/word-cloud/${currentCloud.id}`
+    : null;
+
+  if (isFullscreen && currentCloud && (results || isStateless || isStandalone)) {
+    const wordFrequency = (isStateless || isStandalone)
       ? submissions.reduce(
           (acc, submission) => {
             const words = submission
@@ -173,9 +244,6 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
       : results?.wordFrequency || {};
 
     const totalSubmissions = isStateless ? submissions.length : results?.totalSubmissions || 0;
-    const cloudUrl = !isStateless
-      ? `${typeof window !== 'undefined' ? window.location.origin : ''}/learn/word-cloud/${currentCloud.id}`
-      : null;
 
     const maxFrequency = Math.max(...Object.values(wordFrequency), 1);
     const sortedWords = Object.entries(wordFrequency)
@@ -204,6 +272,15 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
             >
               ⛶ Thoát
             </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="btn-secondary text-sm"
+                title="Exit tool"
+              >
+                ✕ Exit
+              </button>
+            )}
           </div>
         </div>
 
@@ -331,8 +408,8 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
     );
   }
 
-  if (currentCloud && (results || isStateless)) {
-    const wordFrequency = isStateless
+  if (currentCloud && (results || isStateless || isStandalone)) {
+    const wordFrequency = (isStateless || isStandalone)
       ? submissions.reduce(
           (acc, submission) => {
             const words = submission
@@ -348,10 +425,6 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
       : results?.wordFrequency || {};
 
     const totalSubmissions = isStateless ? submissions.length : results?.totalSubmissions || 0;
-    const cloudUrl = !isStateless
-      ? `${typeof window !== 'undefined' ? window.location.origin : ''}/learn/word-cloud/${currentCloud.id}`
-      : null;
-
     const maxFrequency = Math.max(...Object.values(wordFrequency), 1);
     const sortedWords = Object.entries(wordFrequency)
       .sort(([, a], [, b]) => b - a)
@@ -380,6 +453,15 @@ export default function WordCloud({ lessonId, studentList }: WordCloudProps) {
             >
               ⛶ Full
             </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="btn-secondary btn-sm text-xs"
+                title="Exit"
+              >
+                ✕ Exit
+              </button>
+            )}
           </div>
         </div>
 

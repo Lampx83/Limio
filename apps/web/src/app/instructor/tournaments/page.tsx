@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { TournamentStatus } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import TournamentFilter from "./TournamentFilter";
@@ -20,6 +21,8 @@ const STATUS_LABEL: Record<string, string> = {
   active: "Đang diễn ra",
   ended: "Đã kết thúc",
 };
+
+const VALID_STATUSES: TournamentStatus[] = ["draft", "published", "active", "ended"];
 
 function formatDate(d: Date) {
   return new Date(d).toLocaleDateString("vi-VN", {
@@ -41,10 +44,15 @@ export default async function InstructorTournamentsPage({
   const admin = await isAdmin(userId);
   const statusFilter = searchParams.status;
 
+  // Validate status filter is a valid enum value
+  const validStatus = statusFilter && statusFilter !== "all" && VALID_STATUSES.includes(statusFilter as TournamentStatus)
+    ? (statusFilter as TournamentStatus)
+    : undefined;
+
   const tournaments = await prisma.tournament.findMany({
     where: {
       ...(admin ? {} : { creatorId: userId }),
-      ...(statusFilter && statusFilter !== "all" ? { status: statusFilter } : {}),
+      ...(validStatus ? { status: validStatus } : {}),
     },
     orderBy: { createdAt: "desc" },
     include: {

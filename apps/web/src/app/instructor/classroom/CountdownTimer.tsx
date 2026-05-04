@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Clock } from "lucide-react";
+import { TimerTemplate } from "@feedbackme/db";
 import NotesEditor from "./NotesEditor";
+import TemplateSelector from "../teaching-tools/TimerTemplates/TemplateSelector";
 
 const MUSIC_OPTIONS = [
   { id: "none", name: "Không có âm nhạc", src: "" },
@@ -18,7 +20,11 @@ const TIMER_PRESETS = [
   { label: "20 phút", seconds: 1200 },
 ];
 
-export default function CountdownTimer() {
+interface CountdownTimerProps {
+  onExit?: () => void;
+}
+
+export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
   const [minutes, setMinutes] = useState(5);
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -27,6 +33,7 @@ export default function CountdownTimer() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedMusic, setSelectedMusic] = useState("upbeat");
   const [notesHeightPercent, setNotesHeightPercent] = useState(60);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
@@ -127,6 +134,24 @@ export default function CountdownTimer() {
     if (isRunning || totalSeconds > 0) return;
     setMinutes(Math.floor(seconds / 60));
     setSeconds(seconds % 60);
+  };
+
+  const handleSelectTemplate = (template: TimerTemplate | null) => {
+    if (!template) {
+      setSelectedTemplateId(null);
+      return;
+    }
+
+    // Load template data
+    setSelectedTemplateId(template.id);
+    setMinutes(Math.floor(template.durationSeconds / 60));
+    setSeconds(template.durationSeconds % 60);
+    if (template.notes) {
+      setNotes(template.notes);
+    }
+    if (template.musicId) {
+      setSelectedMusic(template.musicId);
+    }
   };
 
   const getTimerState = () => {
@@ -314,6 +339,15 @@ export default function CountdownTimer() {
           >
             ⛶ Thoát
           </button>
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="btn-secondary text-sm"
+              title="Exit tool"
+            >
+              ✕ Exit
+            </button>
+          )}
         </div>
 
         {/* Fullscreen Layout: Mission (top) + Timer (bottom) with draggable divider */}
@@ -392,12 +426,27 @@ export default function CountdownTimer() {
           >
             ⛶ Toàn màn hình
           </button>
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="btn-secondary text-sm"
+              title="Exit"
+            >
+              ✕ Exit
+            </button>
+          )}
         </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Timer Display & Controls */}
         <div className="flex flex-col gap-3">
+          {/* Template Selector */}
+          <TemplateSelector
+            selectedTemplateId={selectedTemplateId}
+            onSelectTemplate={handleSelectTemplate}
+          />
+
           {/* Quick Presets */}
           <div>
             <label className="block text-xs font-medium text-muted mb-2">

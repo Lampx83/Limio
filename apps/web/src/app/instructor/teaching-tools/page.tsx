@@ -1,9 +1,15 @@
-import { notFound, redirect } from "next/navigation";
-import { prisma } from "@feedbackme/db";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { prisma } from "@feedbackme/db";
 import TeachingToolsClient from "./TeachingToolsClient";
 
 export const dynamic = "force-dynamic";
+
+interface Course {
+  id: string;
+  title: string;
+  _count: { enrollments: number };
+}
 
 export default async function TeachingToolsPage() {
   const session = await auth();
@@ -11,7 +17,7 @@ export default async function TeachingToolsPage() {
     redirect("/signin");
   }
 
-  // Fetch instructor's courses
+  // Fetch instructor's courses for Random Picker / Grouping Tool dropdowns
   const courses = await prisma.course.findMany({
     where: {
       instructors: {
@@ -32,15 +38,15 @@ export default async function TeachingToolsPage() {
     orderBy: {
       updatedAt: "desc",
     },
-  });
+  }) as Course[];
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <header className="mb-8">
         <h1 className="text-4xl font-bold">Công cụ Giảng dạy</h1>
         <p className="mt-2 text-muted">
-          Chọn một khóa học hoặc nhập danh sách sinh viên thủ công để sử dụng
-          các công cụ
+          Sử dụng các công cụ để tương tác với lớp học. Học viên quét mã QR để tham gia.
+          Chọn khóa học hoặc nhập danh sách sinh viên thủ công cho các công cụ cần danh sách.
         </p>
       </header>
 

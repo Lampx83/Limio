@@ -40,6 +40,10 @@ export async function POST(
     }
 
     // Check if user is enrolled in the course for this lesson
+    if (!poll.session.lessonId) {
+      return Response.json({ error: "Invalid poll session" }, { status: 400 });
+    }
+
     const lesson = await prisma.lesson.findUnique({
       where: { id: poll.session.lessonId },
       select: { module: { select: { course: { select: { id: true } } } } },

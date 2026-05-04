@@ -74,6 +74,7 @@ model User {
   classroomPollVotes   ClassroomPollVote[]
   wordCloudSubmissions WordCloudSubmission[]
   groupMemberships     GroupMembership[]
+  timerTemplates       TimerTemplate[]
 
   @@index([createdAt])
 }
@@ -197,6 +198,7 @@ model Course {
   streakRecords StreakRecord[]
   tournaments  Tournament[]
   orders      Order[]
+  timerTemplates TimerTemplate[]
 
   @@index([status, publishedAt])
   @@index([category, level])
@@ -1348,8 +1350,8 @@ model Order {
 
 model ClassroomSession {
   id        String   @id @default(cuid())
-  lessonId  String
-  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId  String?
+  lesson    Lesson?   @relation(fields: [lessonId], references: [id], onDelete: SetNull)
 
   startedAt DateTime @default(now())
   endedAt   DateTime?
@@ -1473,4 +1475,27 @@ model GroupMembership {
   @@unique([groupingId, userId])
   @@index([groupingId, groupNum])
   @@index([userId])
+}
+
+// Timer Templates - Pre-made countdown timer configurations
+// Allows instructors to create reusable timer templates with duration, notes, and music
+model TimerTemplate {
+  id              String   @id @default(uuid())
+  userId          String   // Template owner (instructor)
+  courseId        String?  // Optional: for course-specific templates
+  name            String   // e.g. "Group Discussion - 10min"
+  description     String?  // Optional description
+  durationSeconds Int      // Total duration in seconds (e.g., 600 for 10 minutes)
+  notes           String?  @db.Text // Instructions/notes for students
+  musicId         String?  // Selected background music identifier (optional)
+  isPublic        Boolean  @default(false) // Can be shared with other instructors
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([isPublic])
 }

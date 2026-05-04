@@ -17,6 +17,7 @@ interface GroupInfo {
 interface GroupingToolProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
+  onExit?: () => void;
 }
 
 type GroupingMode = "groupSize" | "numGroups";
@@ -24,6 +25,7 @@ type GroupingMode = "groupSize" | "numGroups";
 export default function GroupingTool({
   lessonId,
   studentList,
+  onExit,
 }: GroupingToolProps) {
   const [mode, setMode] = useState<GroupingMode>("groupSize");
   const [groupSize, setGroupSize] = useState(3);
@@ -235,6 +237,12 @@ export default function GroupingTool({
     setGroups(newGroups);
     setDraggedUserId(null);
 
+    // Skip API call in stateless mode (client-side only)
+    if (isStateless) {
+      toast.success("Cập nhật nhóm thành công");
+      return;
+    }
+
     // Persist to backend
     try {
       const payload = {
@@ -368,6 +376,15 @@ export default function GroupingTool({
             >
               ⛶ Thoát
             </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="btn-secondary text-sm"
+                title="Exit tool"
+              >
+                ✕ Exit
+              </button>
+            )}
           </div>
         </div>
 
@@ -449,6 +466,15 @@ export default function GroupingTool({
           >
             ⛶ Full
           </button>
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="btn-secondary text-sm"
+              title="Exit"
+            >
+              ✕ Exit
+            </button>
+          )}
         </div>
       </div>
 
