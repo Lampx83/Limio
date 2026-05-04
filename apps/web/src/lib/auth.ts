@@ -17,6 +17,24 @@ import {
  * and Microsoft Entra ID. SSO providers are conditionally registered based on
  * env vars so missing config in dev doesn't break sign-in.
  */
+// Build-time base path (e.g. "/limio"). Empty when served from root.
+// Baked into the bundle via NEXT_PUBLIC_BASE_PATH Docker build-arg.
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+// The OAuth redirect_uri must include the app basePath (/limio) so it
+// matches what is registered in Google / Microsoft developer consoles.
+// NEXTAUTH_URL = "https://fit.neu.edu.vn/limio" in production.
+// redirectProxyUrl tells NextAuth to use this as the base for building
+// redirect_uri: `${redirectProxyUrl}/callback/${provider}`.
+// Result: https://fit.neu.edu.vn/limio/api/auth/callback/google ✓
+//
+// Without redirectProxyUrl, NextAuth would compute the redirect_uri from
+// request.url + basePath which—after Next.js strips /limio—would give
+// https://fit.neu.edu.vn/api/auth/callback/google (missing /limio).
+const AUTH_URL =
+  process.env.NEXTAUTH_URL ?? process.env.AUTH_URL ?? "";
+const redirectProxyUrl = AUTH_URL ? `${AUTH_URL}/api/auth` : undefined;
+
 const ssoProviders = [];
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -27,6 +45,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       // Always show the account chooser. Avoids silent re-login with the wrong
       // Google account when learner has multiple Gmails open.
       authorization: { params: { prompt: "select_account" } },
+      // Override the redirect_uri sent to Google so it includes the /limio
+      // basePath.  See comment above for redirectProxyUrl explanation.
+      redirectProxyUrl,
     }),
   );
 }
@@ -42,36 +63,26 @@ if (
       // `common` = work, school, AND personal Microsoft accounts. Override
       // with the tenant ID for single-tenant orgs.
       issuer: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID ?? "common"}/v2.0`,
+      redirectProxyUrl,
     }),
   );
 }
 
-// Build-time base path (e.g. "/limio"). Empty when served from root.
-// Baked into the bundle via NEXT_PUBLIC_BASE_PATH Docker build-arg.
-const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Tell NextAuth where its API routes are mounted — full path including the
-  // Next.js app basePath (/limio).  This is intentionally "/limio/api/auth",
-  // not just "/api/auth".
-  //
-  // Why it works despite Next.js stripping /limio before the handler runs:
-  //   apps/web/src/app/api/auth/[...nextauth]/route.ts wraps every request
-  //   and INJECTS BASE back onto the pathname before passing to handlers.GET/POST.
-  //   NextAuth therefore sees the full path and can both route correctly and
-  //   build redirect_uri / error-page URLs that include /limio.
-  //
-  // Benefits over basePath="/api/auth":
-  //   • OAuth redirect_uri = https://host/limio/api/auth/callback/google ✓
-  //   • Error redirect    = https://host/limio/api/auth/error            ✓
-  //   • env-url-basepath-mismatch warning disappears                     ✓
-  basePath: `${BASE}/api/auth`,
+  // Next.js strips the app basePath (/limio) before the route handler runs,
+  // so NextAuth always receives /api/auth/... — keep basePath="/api/auth".
+  // The full sub-path redirect_uri is handled via redirectProxyUrl above.
+  basePath: `/api/auth`,
   session: { strategy: "jwt" },
-  // pages.signIn MUST include the Next.js basePath (/limio) because NextAuth
-  // constructs the redirect URL relative to the request origin, not NEXTAUTH_URL.
-  // "/limio/signin" → https://fit.neu.edu.vn/limio/signin  ✓
-  // "/signin"       → https://fit.neu.edu.vn/signin         ✗
-  pages: { signIn: `${BASE}/signin` },
+  // Both page URLs must include the Next.js basePath (/limio) because NextAuth
+  // constructs redirects relative to the request origin (not NEXTAUTH_URL).
+  // "/limio/signin"           → https://fit.neu.edu.vn/limio/signin  ✓
+  // "/limio/api/auth/error"   → https://fit.neu.edu.vn/limio/api/auth/error ✓
+  // Without the prefix the browser ends up at the domain root, not /limio.
+  pages: {
+    signIn: `${BASE}/signin`,
+    error: `${BASE}/api/auth/error`,
+  },
   // Allows NextAuth to accept requests from plain-HTTP origins (IP:PORT) and
   // from behind reverse proxies. Without this, NextAuth v5 throws UntrustedHost
   // for any non-localhost / non-HTTPS origin in production.
