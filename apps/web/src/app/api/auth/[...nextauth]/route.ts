@@ -13,6 +13,13 @@ import { NextRequest } from "next/server";
 // With auth.ts basePath="${BASE}/api/auth" (= "/limio/api/auth"), NextAuth
 // strips "/limio/api/auth" from "/limio/api/auth/..." correctly AND builds
 // redirect_uri / error-page URLs that include /limio.
+//
+// Implementation: use a Proxy to override only `url`, forwarding everything
+// else (body, headers, cookies…) to the original request unchanged.
+// This avoids the body re-streaming problem: passing req.body to a new
+// Request/NextRequest constructor in Node.js 18+ requires duplex:"half" which
+// NextRequest's TypeScript types don't accept. The Proxy sidesteps that
+// entirely — the original ReadableStream is never duplicated.
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -20,13 +27,14 @@ function withBasePath(req: NextRequest): NextRequest {
   if (!BASE) return req;
   const url = new URL(req.url);
   url.pathname = `${BASE}${url.pathname}`;
-  // Construct a new NextRequest (not plain Request) so NextAuth retains
-  // access to NextRequest-specific fields (cookies, nextUrl, etc.).
-  return new NextRequest(url, {
-    method: req.method,
-    headers: req.headers,
-    body: req.body,
-  });
+  const patched = url.toString();
+  return new Proxy(req, {
+    get(target, prop, receiver) {
+      if (prop === "url") return patched;
+      const value = Reflect.get(target, prop, receiver);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  }) as unknown as NextRequest;
 }
 
 export async function GET(req: NextRequest) {
