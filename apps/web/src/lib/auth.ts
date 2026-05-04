@@ -45,9 +45,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       // Always show the account chooser. Avoids silent re-login with the wrong
       // Google account when learner has multiple Gmails open.
       authorization: { params: { prompt: "select_account" } },
-      // Override the redirect_uri sent to Google so it includes the /limio
-      // basePath.  See comment above for redirectProxyUrl explanation.
-      redirectProxyUrl,
     }),
   );
 }
@@ -63,7 +60,6 @@ if (
       // `common` = work, school, AND personal Microsoft accounts. Override
       // with the tenant ID for single-tenant orgs.
       issuer: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID ?? "common"}/v2.0`,
-      redirectProxyUrl,
     }),
   );
 }
@@ -71,8 +67,11 @@ if (
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Next.js strips the app basePath (/limio) before the route handler runs,
   // so NextAuth always receives /api/auth/... — keep basePath="/api/auth".
-  // The full sub-path redirect_uri is handled via redirectProxyUrl above.
+  // redirectProxyUrl tells NextAuth to compute redirect_uri from NEXTAUTH_URL,
+  // not from the stripped request URL.
   basePath: `/api/auth`,
+  // Set redirectProxyUrl at config level so it applies to all SSO providers
+  ...(AUTH_URL && { redirectProxyUrl: `${AUTH_URL}/api/auth` }),
   session: { strategy: "jwt" },
   // Both page URLs must include the Next.js basePath (/limio) because NextAuth
   // constructs redirects relative to the request origin (not NEXTAUTH_URL).
