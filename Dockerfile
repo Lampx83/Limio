@@ -76,9 +76,11 @@ RUN set -eux; \
 # deps stage and run prisma:generate here (~5 s) instead.
 FROM base AS migrator
 ENV NODE_ENV=production
-# Pre-installed node_modules (no generated Prisma client yet — deps runs
-# pnpm install but not prisma generate).
+# Root node_modules from deps stage.
 COPY --from=deps /app/node_modules ./node_modules
+# packages/db/node_modules from deps stage — prisma CLI lives here in pnpm
+# workspaces (it is a devDependency of packages/db, not hoisted to root).
+COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
 # Source files from the build context (not from builder).
 COPY packages/db ./packages/db
 # shared-types is needed by seed scripts (imported as @feedbackme/shared-types).
@@ -86,9 +88,15 @@ COPY packages/db ./packages/db
 # the actual source directory — so the source must exist in the image too.
 COPY packages/shared-types ./packages/shared-types
 COPY package.json pnpm-workspace.yaml ./
-# Generate Prisma client (~5 s). Writes into /app/node_modules.
-# Use absolute path to avoid workspace symlink issues in Docker.
-RUN /app/node_modules/.bin/prisma generate --schema=/app/packages/db/prisma/schema.prisma
+# Generate Prisma client (~5 s). Try packages/db/node_modules first (pnpm
+# workspace location), fall back to root node_modules (hoisted setups).
+RUN set -eux; \
+    PRISMA=$( \
+      find /app/packages/db/node_modules/.bin /app/node_modules/.bin \
+           -name prisma -type f 2>/dev/null | head -1 \
+    ); \
+    test -n "$PRISMA" || { echo "ERROR: prisma binary not found"; exit 1; }; \
+    "$PRISMA" generate --schema=/app/packages/db/prisma/schema.prisma
 WORKDIR /app/packages/db
 CMD ["pnpm", "exec", "prisma", "migrate", "deploy"]
 
