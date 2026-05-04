@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import TournamentFilter from "./TournamentFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -28,15 +29,23 @@ function formatDate(d: Date) {
   });
 }
 
-export default async function InstructorTournamentsPage() {
+export default async function InstructorTournamentsPage({
+  searchParams,
+}: {
+  searchParams: { status?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/tournaments");
   const userId = session.user.id;
 
   const admin = await isAdmin(userId);
+  const statusFilter = searchParams.status;
 
   const tournaments = await prisma.tournament.findMany({
-    where: admin ? {} : { creatorId: userId },
+    where: {
+      ...(admin ? {} : { creatorId: userId }),
+      ...(statusFilter && statusFilter !== "all" ? { status: statusFilter } : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: {
       course: { select: { title: true, slug: true } },
@@ -46,8 +55,16 @@ export default async function InstructorTournamentsPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
+      {/* Back link */}
+      <Link
+        href="/instructor/dashboard"
+        className="link inline-flex items-center gap-1 text-sm"
+      >
+        ← Dashboard
+      </Link>
+
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <span className="chip-accent">Tournament</span>
           <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
@@ -63,6 +80,9 @@ export default async function InstructorTournamentsPage() {
           + Tạo tournament mới
         </Link>
       </div>
+
+      {/* Filter */}
+      <TournamentFilter />
 
       {/* List */}
       {tournaments.length === 0 ? (

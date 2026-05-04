@@ -20,11 +20,11 @@ const ROLE_DEFAULT_PATH: Record<string, string> = {
 export default function RoleSwitcher({
   roles,
   activeRole,
-  variant = "header",
+  variant = "switch",
 }: {
   roles: string[];
   activeRole: string;
-  variant?: "header" | "menu";
+  variant?: "header" | "switch";
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -44,32 +44,34 @@ export default function RoleSwitcher({
     setBusy(false);
   }
 
-  if (variant === "menu") {
+  if (variant === "switch") {
     return (
-      <div className="flex flex-col gap-1 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-1">
-        {roles.map((role) => {
-          const isActive = role === activeRole;
-          return (
-            <button
-              key={role}
-              onClick={() => switchTo(role)}
-              disabled={busy || isActive}
-              className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
-                isActive
-                  ? "bg-[rgb(var(--surface))] font-semibold text-[rgb(var(--text))] shadow-sm"
-                  : "text-muted hover:bg-[rgb(var(--surface))] hover:text-[rgb(var(--text))]"
-              }`}
-            >
-              <span
-                className={`h-2 w-2 rounded-full ${isActive ? "bg-brand-500" : "bg-transparent border border-muted"}`}
-              />
-              {ROLE_LABELS[role] ?? role}
-              {isActive && (
-                <span className="ml-auto text-[10px] text-muted">Hiện tại</span>
-              )}
-            </button>
-          );
-        })}
+      <div className="flex flex-col gap-1 py-2">
+        <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+          Chuyển vai trò
+        </p>
+        <div className="flex flex-col gap-1">
+          {roles.map((role) => {
+            const isActive = role === activeRole;
+            return (
+              <button
+                key={role}
+                onClick={() => switchTo(role)}
+                disabled={busy || isActive}
+                className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
+                  isActive
+                    ? "bg-[rgb(var(--surface-muted))] font-semibold text-[rgb(var(--text))]"
+                    : "text-muted hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+                } disabled:opacity-50`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full shrink-0 ${isActive ? "bg-brand-500" : "bg-transparent border border-muted"}`}
+                />
+                {ROLE_LABELS[role] ?? role}
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   }

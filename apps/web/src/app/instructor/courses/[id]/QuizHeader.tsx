@@ -11,6 +11,7 @@ interface Quiz {
   requireConfidence: boolean;
   timeLimitSec: number | null;
   maxAttempts: number | null;
+  isHidden: boolean;
 }
 
 export default function QuizHeader({ quiz }: { quiz: Quiz }) {
@@ -21,6 +22,7 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
   const [difficulty, setDifficulty] = useState(quiz.difficulty ?? 1);
   const [passThresholdPct, setPassThresholdPct] = useState(quiz.passThresholdPct);
   const [requireConfidence, setRequireConfidence] = useState(quiz.requireConfidence);
+  const [isHidden, setIsHidden] = useState(quiz.isHidden);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -35,6 +37,17 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
       setEditing(false);
       router.refresh();
     }
+  }
+
+  async function toggleHidden() {
+    const next = !isHidden;
+    setIsHidden(next);
+    await fetch(`/api/quizzes/${quiz.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isHidden: next }),
+    });
+    router.refresh();
   }
 
   async function remove() {
@@ -104,18 +117,33 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
   }
 
   return (
-    <div className="flex justify-end gap-1">
-      <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa quiz">
-        Sửa quiz
+    <div className="flex items-center justify-end gap-3">
+      <label className="flex items-center gap-2 cursor-pointer" title={isHidden ? "Quiz bị ẩn khỏi học viên" : "Quiz hiển thị với học viên"}>
+        <input
+          type="checkbox"
+          checked={isHidden}
+          onChange={toggleHidden}
+          className="w-5 h-5 rounded border-token cursor-pointer accent-danger-600"
+        />
+        <span className="text-xs font-medium text-muted">Ẩn</span>
+      </label>
+      <button
+        onClick={() => setEditing(true)}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
+        title="Sửa quiz"
+        aria-label="Sửa"
+      >
+        ✎
       </button>
       <button
         onClick={remove}
         disabled={busy}
         title="Xóa quiz"
-        aria-label="Xóa quiz"
+        aria-label="Xóa"
         className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
       >
-              </button>
+        🗑️
+      </button>
     </div>
   );
 }

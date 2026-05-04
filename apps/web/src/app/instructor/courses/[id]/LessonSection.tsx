@@ -15,11 +15,13 @@ interface Lesson {
   description: string | null;
   orderIndex: number;
   previewable: boolean;
+  isHidden: boolean;
   contentItems: Array<{
     id: string;
     type: string;
     payload: unknown;
     orderIndex: number;
+    isHidden: boolean;
   }>;
   skillTags: Array<{
     id: string;
@@ -32,6 +34,7 @@ interface Lesson {
     description: string;
     dueAt: Date | null;
     maxScore: number;
+    isHidden: boolean;
   }>;
   quizzes: Array<{
     id: string;
@@ -41,6 +44,7 @@ interface Lesson {
     requireConfidence: boolean;
     timeLimitSec: number | null;
     maxAttempts: number | null;
+    isHidden: boolean;
     questions: Array<{
       id: string;
       type: string;
@@ -76,22 +80,38 @@ export default function LessonSection({
   courseSlug: string;
 }) {
   const noSkill = lesson.skillTags.length === 0;
+  const hiddenContent = lesson.contentItems.filter(c => c.isHidden).length;
+  const hiddenQuizzes = lesson.quizzes.filter(q => q.isHidden).length;
+  const hiddenAssignments = lesson.assignments.filter(a => a.isHidden).length;
+  const totalHiddenItems = hiddenContent + hiddenQuizzes + hiddenAssignments;
+
   return (
     <details
       open
-      className="overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))]"
+      className={`overflow-hidden rounded-xl border-2 transition-colors ${
+        lesson.isHidden
+          ? 'border-danger-200 bg-danger-50/50'
+          : 'border-brand-200 bg-[rgb(var(--surface))]'
+      }`}
     >
       <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-4 py-3 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
         <span className="text-base font-semibold">
           <span className="mr-2 text-sm font-normal text-faint">Lesson {order}</span>
           {lesson.title}
         </span>
+        {lesson.isHidden && <span className="chip-danger">👁️ Ẩn</span>}
         {noSkill && <span className="chip-accent">chưa tag skill</span>}
         {lesson.previewable && <span className="chip">Preview</span>}
         <span className="ml-auto text-sm text-muted">
           {lesson.contentItems.length} content · {lesson.quizzes.length} quiz ·{" "}
           {lesson.assignments.length} assignment
         </span>
+        {totalHiddenItems > 0 && (
+          <span className="flex items-center gap-1 text-xs text-danger-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
+            {totalHiddenItems} ẩn
+          </span>
+        )}
       </summary>
       <div className="border-t border-token px-4 py-4 space-y-5">
         <LessonHeader
@@ -100,7 +120,15 @@ export default function LessonSection({
           description={lesson.description}
           orderIndex={lesson.orderIndex}
           previewable={lesson.previewable}
+          isHidden={lesson.isHidden}
         />
+
+        <Link
+          href={`/instructor/classroom/${lesson.id}`}
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+        >
+          🎲 Công cụ Dạy Học Trực Tiếp
+        </Link>
 
         <SubSection label="Skills">
           <SkillTagsEditor

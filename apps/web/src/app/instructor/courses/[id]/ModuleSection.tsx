@@ -64,6 +64,7 @@ interface Module {
   id: string;
   title: string;
   orderIndex: number;
+  isHidden: boolean;
   lessons: Lesson[];
 }
 
@@ -76,15 +77,37 @@ export default function ModuleSection({
   order: number;
   courseSlug: string;
 }) {
+  const hiddenLessons = module.lessons.filter(l => l.isHidden).length;
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
+    <div className={`overflow-hidden rounded-2xl border-2 transition-colors ${
+      module.isHidden
+        ? 'border-danger-200 bg-danger-50/50'
+        : 'border-brand-200 bg-[rgb(var(--surface))]'
+    } shadow-card`}>
       <ModuleHeader
         moduleId={module.id}
         title={module.title}
         order={order}
         orderIndex={module.orderIndex}
+        isHidden={module.isHidden}
       />
-      <div className="border-t border-token bg-[rgb(var(--surface-muted))/0.4] p-4">
+
+      {/* Module Stats */}
+      <div className="border-t border-token px-4 py-2.5 flex items-center justify-between text-sm bg-[rgb(var(--surface-muted))/0.3]">
+        <div className="flex items-center gap-4 text-xs text-muted">
+          <span>{module.lessons.length} bài học</span>
+          {hiddenLessons > 0 && (
+            <span className="flex items-center gap-1 text-danger-600">
+              <span className="w-2 h-2 rounded-full bg-danger-600"></span>
+              {hiddenLessons} ẩn
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Lessons Container */}
+      <div className="border-t border-token bg-[rgb(var(--surface-muted))/0.2] p-4 space-y-3">
         <SortableModulesWrapper
           reorderEndpoint={`/api/modules/${module.id}/lessons/reorder`}
           payloadKey="orderedLessonIds"
@@ -93,7 +116,7 @@ export default function ModuleSection({
             node: <LessonSection lesson={l} order={i + 1} courseSlug={courseSlug} />,
           }))}
         />
-        <div className="mt-3">
+        <div className="mt-2">
           <AddLessonForm
             moduleId={module.id}
             nextOrderIndex={module.lessons.length}

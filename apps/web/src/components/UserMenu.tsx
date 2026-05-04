@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { useEffect, useRef, useState } from "react";
+import RoleSwitcher from "./RoleSwitcher";
 
 const ROLE_BADGES: Record<string, { label: string; className: string }> = {
   learner:    { label: "Học viên",   className: "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300" },
@@ -23,8 +24,8 @@ export default function UserMenu({
   name: string;
   email: string;
   avatarUrl?: string | null;
-  roles: string[];
-  activeRole: string;
+  roles?: string[];
+  activeRole?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -107,6 +108,13 @@ export default function UserMenu({
             <Item href="/me/dashboard" onClick={close}>Tổng quan của tôi</Item>
             <Item href="/me/settings" onClick={close}>Cài đặt tài khoản</Item>
           </div>
+
+          {/* Role switcher */}
+          {roles && roles.length > 1 && activeRole && (
+            <div className="border-t border-token px-4">
+              <RoleSwitcher roles={roles} activeRole={activeRole} variant="switch" />
+            </div>
+          )}
 
           {/* Sign out */}
           <button

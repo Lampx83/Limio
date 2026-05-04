@@ -35,6 +35,22 @@ export default function TournamentPublishBar({
     }
   }
 
+  async function endEarly() {
+    setBusy(true);
+    setError(null);
+    const res = await fetch(`/api/tournaments/${tournamentId}/end`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    setBusy(false);
+    if (res.ok) {
+      router.refresh();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error ?? "end_failed");
+    }
+  }
+
   if (status === "draft") {
     const blocked = missionCount === 0;
     return (
@@ -68,7 +84,7 @@ export default function TournamentPublishBar({
   if (status === "published") {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent-200 bg-accent-50 px-5 py-4">
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-medium text-accent-800">
             Đã publish — đang chờ bắt đầu
           </p>
@@ -78,8 +94,21 @@ export default function TournamentPublishBar({
               <> {registrationCount} người đã đăng ký.</>
             )}
           </p>
+          {error && (
+            <p className="mt-1 text-xs text-danger-600">Lỗi: {error}</p>
+          )}
         </div>
-        <span className="chip-accent">Chờ bắt đầu</span>
+        <div className="flex gap-2">
+          <button
+            onClick={endEarly}
+            disabled={busy}
+            className="btn-sm inline-flex items-center justify-center rounded-lg bg-warning-600 px-4 py-2 font-medium text-white transition-all hover:bg-warning-700 disabled:cursor-not-allowed disabled:opacity-50"
+            title="Hủy tournament trước khi bắt đầu"
+          >
+            {busy ? "Đang hủy..." : "Hủy tournament"}
+          </button>
+          <span className="chip-accent">Chờ bắt đầu</span>
+        </div>
       </div>
     );
   }
@@ -87,7 +116,7 @@ export default function TournamentPublishBar({
   if (status === "active") {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-success-200 bg-success-50 px-5 py-4">
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-medium text-success-800">Đang diễn ra</p>
           <p className="mt-0.5 text-xs text-success-700">
             Tournament đang hoạt động. Không thể hoàn tác.
@@ -95,8 +124,18 @@ export default function TournamentPublishBar({
               <> {registrationCount} người tham gia.</>
             )}
           </p>
+          {error && (
+            <p className="mt-1 text-xs text-danger-600">Lỗi: {error}</p>
+          )}
         </div>
-        <span className="chip-success">Active</span>
+        <button
+          onClick={endEarly}
+          disabled={busy}
+          className="btn-sm inline-flex items-center justify-center rounded-lg bg-danger-600 px-4 py-2 font-medium text-white transition-all hover:bg-danger-700 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Kết thúc tournament sớm trước deadline"
+        >
+          {busy ? "Đang kết thúc..." : "Kết thúc sớm"}
+        </button>
       </div>
     );
   }

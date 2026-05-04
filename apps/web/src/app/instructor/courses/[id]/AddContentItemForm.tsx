@@ -248,7 +248,7 @@ export default function AddContentItemForm({
     if (res.ok) {
       reset();
       setOpen(false);
-      router.refresh();
+      setTimeout(() => window.location.reload(), 200);
     } else {
       const d = await res.json().catch(() => ({}));
       setError(d.error ?? "create_failed");

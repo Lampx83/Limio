@@ -157,27 +157,46 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
             <div className="flex items-baseline justify-between">
               <h2 className="text-xl font-semibold">Lộ trình học</h2>
               <span className="text-xs text-faint">
-                {progress.completedLessons}/{progress.totalLessons} bài đã hoàn thành
+                {
+                  course.modules
+                    .flatMap((m) => m.lessons)
+                    .filter((l) => !l.isHidden && completedSet.has(l.id)).length
+                }
+                /
+                {
+                  course.modules
+                    .flatMap((m) => m.lessons)
+                    .filter((l) => !l.isHidden).length
+                }{" "}
+                bài đã hoàn thành
               </span>
             </div>
             <ol className="mt-4 space-y-4">
-              {course.modules.map((m, mi) => {
-                const total = m.lessons.length;
-                const done = m.lessons.filter((l) => completedSet.has(l.id)).length;
-                return (
-                  <li key={m.id} className="card">
+              {course.modules
+                .filter((m) => !m.isHidden)
+                .map((m, mi) => {
+                  const visibleLessons = m.lessons.filter((l) => !l.isHidden);
+                  const done = visibleLessons.filter((l) =>
+                    completedSet.has(l.id)
+                  ).length;
+
+                  return (
+                    <li key={m.id} className="card">
                     <header className="flex items-baseline justify-between gap-3 border-b border-token pb-3">
                       <h3 className="font-semibold">
                         <span className="mr-2 text-faint">Module {mi + 1}</span>
                         {m.title}
                       </h3>
                       <span className="text-xs text-faint tabular-nums">
-                        {done}/{total}
+                        {done}/{visibleLessons.length}
                       </span>
                     </header>
                     <ol className="mt-3 space-y-1.5">
                       {m.lessons.map((l, li) => {
+                        if (l.isHidden) return null;
+
                         const completed = completedSet.has(l.id);
+
                         return (
                           <li key={l.id}>
                             <Link

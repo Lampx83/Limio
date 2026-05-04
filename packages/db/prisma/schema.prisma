@@ -69,6 +69,12 @@ model User {
   auditEntriesAsActor  AuditLog[]         @relation("AuditActor")
   auditEntriesAsTarget AuditLog[]         @relation("AuditTarget")
 
+  // Classroom tools
+  classroomRandomPicks ClassroomRandomPick[]
+  classroomPollVotes   ClassroomPollVote[]
+  wordCloudSubmissions WordCloudSubmission[]
+  groupMemberships     GroupMembership[]
+
   @@index([createdAt])
 }
 
@@ -214,6 +220,8 @@ model Module {
   courseId   String
   title      String
   orderIndex Int
+  // Instructor-controlled visibility (false = hidden from all learners)
+  isHidden   Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -235,6 +243,8 @@ model Lesson {
   durationSec            Int?
   // True = visible to non-enrolled users as a free preview sample
   previewable            Boolean @default(false)
+  // Instructor-controlled visibility (false = hidden from all learners)
+  isHidden               Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -246,6 +256,7 @@ model Lesson {
   aiConversations AiConversation[]
   notes        Note[]
   skillTags    ContentSkillMapping[] @relation("LessonSkill")
+  classroomSessions ClassroomSession[]
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
@@ -270,6 +281,8 @@ model ContentItem {
   // type-specific payload: { url, transcriptUrl, durationSec } for video, etc.
   payload    Json
   orderIndex Int
+  // Instructor-controlled visibility (false = hidden from all learners)
+  isHidden   Boolean     @default(false)
   createdAt  DateTime    @default(now())
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -359,6 +372,8 @@ model Quiz {
   randomizeOrder     Boolean  @default(false)
   // A4 acceptance: confidence rating bắt buộc trước khi xem đáp án (per-quiz toggle).
   requireConfidence  Boolean  @default(true)
+  // Instructor-controlled visibility (false = hidden from all learners)
+  isHidden           Boolean  @default(false)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -782,6 +797,8 @@ model Assignment {
   dueAt       DateTime?
   // Maximum score the instructor can award (0..maxScore).
   maxScore    Int      @default(100)
+  // Instructor-controlled visibility (false = hidden from all learners)
+  isHidden    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1323,4 +1340,137 @@ model Order {
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
+}
+
+// =====================================================================
+// Classroom Teaching Tools (Phase 0 Extension)
+// =====================================================================
+
+model ClassroomSession {
+  id        String   @id @default(cuid())
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+
+  // Tool data
+  randomPicks ClassroomRandomPick[]
+  polls       ClassroomPoll[]
+  wordClouds  WordCloud[]
+  groupings   GroupingSession[]
+
+  createdAt DateTime @default(now())
+
+  @@index([lessonId, startedAt])
+  @@index([startedAt])
+}
+
+// Random Student Picker
+model ClassroomRandomPick {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   ClassroomSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pickedAt  DateTime @default(now())
+
+  @@index([sessionId, pickedAt])
+  @@index([userId])
+}
+
+// Quick Poll
+model ClassroomPoll {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   ClassroomSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  question  String
+  options   String[] // JSON array: ["A", "B", "C", ...]
+  isAnonymous Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  votes     ClassroomPollVote[]
+
+  @@index([sessionId, createdAt])
+}
+
+model ClassroomPollVote {
+  id      String   @id @default(cuid())
+  pollId  String
+  poll    ClassroomPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  choice  String   // index of selected option (0, 1, 2, ...)
+
+  createdAt DateTime @default(now())
+
+  @@index([pollId])
+  @@index([userId])
+}
+
+// Word Cloud
+model WordCloud {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   ClassroomSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  prompt    String   // e.g., "Bạn học được gì hôm nay?"
+
+  submissions WordCloudSubmission[]
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model WordCloudSubmission {
+  id        String   @id @default(cuid())
+  cloudId   String
+  cloud     WordCloud @relation(fields: [cloudId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  text      String   // Free text submission (1-2 words typically)
+
+  createdAt DateTime @default(now())
+
+  @@index([cloudId])
+  @@index([userId])
+}
+
+// Quick Grouping
+model GroupingSession {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   ClassroomSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  numGroups Int      // Number of groups
+  name      String?  // Optional grouping name (e.g., "Discussion Groups")
+
+  groups    GroupMembership[]
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model GroupMembership {
+  id        String   @id @default(cuid())
+  groupingId String
+  grouping  GroupingSession @relation(fields: [groupingId], references: [id], onDelete: Cascade)
+
+  groupNum  Int      // Group number (1, 2, 3, ...)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupingId, userId])
+  @@index([groupingId, groupNum])
+  @@index([userId])
 }

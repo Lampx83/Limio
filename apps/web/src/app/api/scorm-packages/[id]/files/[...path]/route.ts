@@ -44,7 +44,10 @@ export async function GET(
     where: { id: params.id },
     select: { id: true },
   });
-  if (!pkg) return new NextResponse("not_found", { status: 404 });
+  if (!pkg) {
+    console.error(`[SCORM] Package not found: ${params.id}`);
+    return new NextResponse("package_not_found", { status: 404 });
+  }
 
   const root = path.join(packageRoot(), params.id);
   const rel = (params.path ?? []).join("/");
@@ -52,16 +55,21 @@ export async function GET(
 
   // Path traversal guard.
   if (!abs.startsWith(root + path.sep) && abs !== root) {
+    console.error(`[SCORM] Path traversal attempt: ${abs} vs root ${root}`);
     return new NextResponse("forbidden", { status: 403 });
   }
 
   let stat;
   try {
     stat = await fs.stat(abs);
-  } catch {
-    return new NextResponse("not_found", { status: 404 });
+  } catch (e) {
+    console.error(`[SCORM] File not found: ${abs}`, e);
+    return new NextResponse(`file_not_found:${rel}`, { status: 404 });
   }
-  if (!stat.isFile()) return new NextResponse("not_found", { status: 404 });
+  if (!stat.isFile()) {
+    console.error(`[SCORM] Not a file: ${abs}`);
+    return new NextResponse("not_a_file", { status: 404 });
+  }
 
   const buf = await fs.readFile(abs);
   const ext = path.extname(abs).toLowerCase();

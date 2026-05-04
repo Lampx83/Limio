@@ -10,6 +10,7 @@ interface Assignment {
   description: string;
   dueAt: Date | null;
   maxScore: number;
+  isHidden: boolean;
 }
 
 export default function AssignmentSection({
@@ -27,6 +28,7 @@ export default function AssignmentSection({
       : "",
   );
   const [maxScore, setMaxScore] = useState(String(assignment.maxScore));
+  const [isHidden, setIsHidden] = useState(assignment.isHidden);
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -50,6 +52,17 @@ export default function AssignmentSection({
     }
   }
 
+  async function toggleHidden() {
+    const next = !isHidden;
+    setIsHidden(next);
+    await fetch(`/api/assignments/${assignment.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isHidden: next }),
+    });
+    router.refresh();
+  }
+
   async function remove() {
     if (!confirm("Xóa assignment này?")) return;
     setBusy(true);
@@ -61,37 +74,55 @@ export default function AssignmentSection({
   }
 
   return (
-    <div className="group/as rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+    <div className={`group/as rounded-xl border-2 p-4 transition-colors ${
+      isHidden
+        ? 'border-danger-200 bg-danger-50/50'
+        : 'border-token bg-[rgb(var(--surface))]'
+    }`}>
       {!editing ? (
         <>
           <div className="flex items-start justify-between gap-3">
-            <p className="text-base font-semibold">{assignment.title}</p>
-            <span className="shrink-0 text-sm text-muted">
-              max <span className="font-semibold">{assignment.maxScore}</span>đ
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-base font-semibold">{assignment.title}</p>
+                {isHidden && <span className="chip-danger text-xs">👁️ Ẩn</span>}
+              </div>
+              {assignment.description && (
+                <p className="mt-2 text-sm text-muted">{assignment.description}</p>
+              )}
+            </div>
+            <span className="shrink-0 text-right text-sm text-muted">
+              <div className="font-semibold text-base">{assignment.maxScore}đ</div>
               {assignment.dueAt && (
-                <>
-                  {" · "}đến{" "}
+                <div className="text-xs text-faint mt-1">
                   {new Date(assignment.dueAt).toLocaleString("vi-VN")}
-                </>
+                </div>
               )}
             </span>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-muted">
-            {assignment.description}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-1">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Link
               href={`/instructor/assignments/${assignment.id}/submissions`}
               className="btn-secondary btn-sm"
             >
               Xem bài nộp
             </Link>
+            <label className="flex items-center gap-2 cursor-pointer" title={isHidden ? "Assignment bị ẩn khỏi học viên" : "Assignment hiển thị với học viên"}>
+              <input
+                type="checkbox"
+                checked={isHidden}
+                onChange={toggleHidden}
+                className="w-5 h-5 rounded border-token cursor-pointer accent-danger-600"
+              />
+              <span className="text-xs font-medium text-muted">Ẩn</span>
+            </label>
             <button
               onClick={() => setEditing(true)}
-              className="btn-ghost btn-sm"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-brand-soft hover:text-brand-600 group-hover/as:opacity-100"
               title="Sửa assignment"
+              aria-label="Sửa"
             >
-              Sửa
+              ✎
             </button>
             <button
               onClick={remove}
@@ -100,7 +131,8 @@ export default function AssignmentSection({
               aria-label="Xóa"
               className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover/as:opacity-100 disabled:opacity-50"
             >
-                          </button>
+              🗑️
+            </button>
           </div>
         </>
       ) : (

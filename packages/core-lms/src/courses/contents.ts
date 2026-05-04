@@ -17,6 +17,7 @@ export const UpdateContentInput = z.object({
   type: TypeEnum.optional(),
   payload: z.unknown().optional(),
   orderIndex: z.number().int().nonnegative().optional(),
+  isHidden: z.boolean().optional(),
 });
 
 async function getCourseIdForLesson(lessonId: string, db: DbClient): Promise<string> {
@@ -107,6 +108,7 @@ export async function updateContentItem(
   }
   if (parsed.data.type !== undefined) data.type = parsed.data.type;
   if (parsed.data.orderIndex !== undefined) data.orderIndex = parsed.data.orderIndex;
+  if (parsed.data.isHidden !== undefined) data.isHidden = parsed.data.isHidden;
   if (Object.keys(data).length === 0) return;
   await db.contentItem.update({ where: { id: contentId }, data });
 }

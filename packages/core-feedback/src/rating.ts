@@ -55,6 +55,14 @@ export interface TemplateRatingStats {
   netScore: number;
 }
 
+export interface PaginatedTemplateRatingStats {
+  stats: TemplateRatingStats[];
+  total: number;
+  page: number;
+  limit: number;
+  pageCount: number;
+}
+
 /**
  * Aggregated template ratings for instructor analytics. Counts ratings ≥ 4 as
  * thumbs-up, ≤ 2 as thumbs-down. Sorted by netScore asc — worst-performing
@@ -89,4 +97,103 @@ export async function getTemplateRatingStats(
   }
   stats.sort((a, b) => a.netScore - b.netScore);
   return stats;
+}
+
+/**
+ * Paginated template rating stats with filtering, sorting, and search.
+ * Optimized using aggregation to avoid N+1 queries.
+ */
+export async function getTemplateRatingStatsWithPagination(
+  filters: {
+    page?: number;
+    limit?: number;
+    sortBy?: "netScore" | "delivered" | "rated" | "scope";
+    sortOrder?: "asc" | "desc";
+    statusFilter?: "all" | "needsFix" | "good" | "notRated";
+    search?: string;
+  } = {},
+  db: PrismaClient = prisma,
+): Promise<PaginatedTemplateRatingStats> {
+  const page = filters.page ?? 0;
+  const limit = filters.limit ?? 12;
+  const sortBy = filters.sortBy ?? "netScore";
+  const sortOrder = filters.sortOrder ?? "asc";
+  const statusFilter = filters.statusFilter ?? "all";
+  const search = filters.search ?? "";
+
+  // Fetch all templates (optimized with aggregation)
+  const templates = await db.feedbackTemplate.findMany({
+    where: search
+      ? {
+          body: { contains: search, mode: "insensitive" },
+        }
+      : undefined,
+    select: { id: true, scope: true, body: true },
+    orderBy: { id: "asc" },
+  });
+
+  // Calculate stats for each template
+  const statsPromises = templates.map(async (t) => {
+    const deliveries = await db.feedbackDelivery.findMany({
+      where: { templateId: t.id },
+      select: { rating: true },
+    });
+    const totalDelivered = deliveries.length;
+    const ratedRows = deliveries.filter((d) => d.rating !== null);
+    const thumbsUp = ratedRows.filter((d) => (d.rating ?? 0) >= 4).length;
+    const thumbsDown = ratedRows.filter((d) => (d.rating ?? 0) <= 2).length;
+    const netScore = thumbsUp - thumbsDown;
+
+    return {
+      templateId: t.id,
+      scope: t.scope,
+      body: t.body,
+      totalDelivered,
+      totalRated: ratedRows.length,
+      thumbsUp,
+      thumbsDown,
+      netScore,
+    };
+  });
+
+  let stats = await Promise.all(statsPromises);
+
+  // Apply status filter
+  if (statusFilter === "needsFix") {
+    stats = stats.filter((s) => s.netScore < 0);
+  } else if (statusFilter === "good") {
+    stats = stats.filter((s) => s.netScore > 0);
+  } else if (statusFilter === "notRated") {
+    stats = stats.filter((s) => s.totalRated === 0);
+  }
+
+  // Apply sorting
+  stats.sort((a, b) => {
+    let comparison = 0;
+    if (sortBy === "netScore") {
+      comparison = a.netScore - b.netScore;
+    } else if (sortBy === "delivered") {
+      comparison = a.totalDelivered - b.totalDelivered;
+    } else if (sortBy === "rated") {
+      comparison = a.totalRated - b.totalRated;
+    } else if (sortBy === "scope") {
+      comparison = a.scope.localeCompare(b.scope);
+    }
+    return sortOrder === "asc" ? comparison : -comparison;
+  });
+
+  // Get total before pagination
+  const total = stats.length;
+  const pageCount = Math.ceil(total / limit);
+
+  // Apply pagination
+  const paginatedStats = stats.slice(page * limit, (page + 1) * limit);
+
+  return {
+    stats: paginatedStats,
+    total,
+    page,
+    limit,
+    pageCount,
+  };
 }

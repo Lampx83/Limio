@@ -12,6 +12,7 @@ export const CreateQuizInput = z.object({
   maxAttempts: z.number().int().positive().max(100).optional(),
   randomizeOrder: z.boolean().optional(),
   requireConfidence: z.boolean().optional(),
+  isHidden: z.boolean().optional(),
 });
 
 export const UpdateQuizInput = CreateQuizInput.partial();

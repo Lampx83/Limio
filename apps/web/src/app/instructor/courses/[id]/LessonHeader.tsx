@@ -9,12 +9,14 @@ export default function LessonHeader({
   description,
   orderIndex,
   previewable: initialPreviewable,
+  isHidden: initialIsHidden,
 }: {
   lessonId: string;
   title: string;
   description: string | null;
   orderIndex: number;
   previewable: boolean;
+  isHidden: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -22,6 +24,7 @@ export default function LessonHeader({
   const [d, setD] = useState(description ?? "");
   const [oi, setOi] = useState(orderIndex);
   const [previewable, setPreviewable] = useState(initialPreviewable);
+  const [isHidden, setIsHidden] = useState(initialIsHidden);
   const [busy, setBusy] = useState(false);
 
   async function togglePreviewable() {
@@ -31,6 +34,17 @@ export default function LessonHeader({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ previewable: next }),
+    });
+    router.refresh();
+  }
+
+  async function toggleHidden() {
+    const next = !isHidden;
+    setIsHidden(next);
+    await fetch(`/api/lessons/${lessonId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isHidden: next }),
     });
     router.refresh();
   }
@@ -118,20 +132,32 @@ export default function LessonHeader({
       <div className="flex-1">
         {description && <p className="text-sm text-muted">{description}</p>}
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-2 cursor-pointer" title={isHidden ? "Bài học bị ẩn khỏi học viên" : "Bài học hiển thị với học viên"}>
+          <input
+            type="checkbox"
+            checked={isHidden}
+            onChange={toggleHidden}
+            className="w-5 h-5 rounded border-token cursor-pointer accent-danger-600"
+          />
+          <span className="text-xs font-medium text-muted">Ẩn</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer" title={previewable ? "Học viên chưa mua có thể xem preview bài này" : "Chỉ học viên đã mua/đăng ký mới có thể xem"}>
+          <input
+            type="checkbox"
+            checked={previewable}
+            onChange={togglePreviewable}
+            className="w-5 h-5 rounded border-token cursor-pointer accent-brand-600"
+          />
+          <span className="text-xs font-medium text-muted">Preview</span>
+        </label>
         <button
-          onClick={togglePreviewable}
-          title={previewable ? "Đang cho preview — bấm để tắt" : "Bật preview miễn phí"}
-          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-            previewable
-              ? "bg-brand-soft text-brand-700 hover:bg-brand-100"
-              : "text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-          }`}
+          onClick={() => setEditing(true)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-brand-soft hover:text-brand-600 group-hover/lh:opacity-100"
+          title="Sửa lesson"
+          aria-label="Sửa"
         >
-          {previewable ? "Preview" : ""}
-        </button>
-        <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa lesson">
-          Sửa
+          ✎
         </button>
         <button
           onClick={remove}
@@ -140,7 +166,8 @@ export default function LessonHeader({
           aria-label="Xóa"
           className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover/lh:opacity-100 disabled:opacity-50"
         >
-                  </button>
+          🗑️
+        </button>
       </div>
     </div>
   );

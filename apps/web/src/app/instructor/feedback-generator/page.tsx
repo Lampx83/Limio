@@ -39,10 +39,10 @@ export default async function FeedbackGeneratorPage() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <Link
-        href="/instructor/courses"
+        href="/instructor/dashboard"
         className="link inline-flex items-center gap-1 text-sm"
       >
-        ← Khóa của tôi
+        ← Dashboard
       </Link>
 
       <div className="mt-4">

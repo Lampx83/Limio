@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
+import { getTemplateRatingStats } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +56,7 @@ export default async function InstructorDashboard() {
 
   const courseIds = ownedCourses.map((c) => c.id);
 
-  const [pendingEssays, pendingSubmissions, recentForumThreads, aiUsageWeek] =
+  const [pendingEssays, pendingSubmissions, recentForumThreads, aiUsageWeek, templateStats] =
     await Promise.all([
       prisma.answerResponse.count({
         where: {
@@ -97,6 +98,7 @@ export default async function InstructorDashboard() {
           },
         },
       }),
+      getTemplateRatingStats(),
     ]);
 
   const aiCostWeek = aiUsageWeek.reduce((s, l) => s + l.costUsd, 0);
@@ -126,26 +128,20 @@ export default async function InstructorDashboard() {
 
       {/* Quick actions */}
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/instructor/courses/new" className="btn-primary btn-sm">
-          + Tạo khóa học
-        </Link>
-        <Link href="/instructor/courses" className="btn-secondary btn-sm">
-          Tất cả khóa
+        <Link
+          href="/instructor/teaching-tools"
+          className="btn-primary btn-sm"
+        >
+          Công cụ Giảng dạy
         </Link>
         <Link
           href="/instructor/feedback-generator"
-          className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
+          className="btn-secondary btn-sm"
         >
           AI feedback gen
         </Link>
         <Link
-          href="/instructor/feedback-templates"
-          className="btn-secondary btn-sm"
-        >
-          Feedback quality
-        </Link>
-        <Link
-          href="/instructor/tournaments/new"
+          href="/instructor/tournaments"
           className="btn-secondary btn-sm"
         >
           Tournament
@@ -180,9 +176,17 @@ export default async function InstructorDashboard() {
         {/* Owned courses */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Khóa của tôi</h2>
+            <Link
+              href="/instructor/courses"
+              className="text-base font-semibold transition-colors hover:text-brand-600"
+            >
+              Khóa của tôi
+            </Link>
             <span className="text-xs text-faint">{ownedCourses.length}</span>
           </header>
+          <Link href="/instructor/courses/new" className="btn-primary btn-sm mt-4 block w-full text-center">
+            + Tạo khóa học
+          </Link>
           <ul className="mt-4 space-y-3">
             {ownedCourses.map((c) => (
               <li
@@ -262,6 +266,77 @@ export default async function InstructorDashboard() {
           )}
         </section>
       </div>
+
+      {/* Feedback Quality Stats - Preview */}
+      {templateStats.length > 0 && (
+        <section className="mt-10">
+          <header className="flex items-baseline justify-between border-b border-token pb-3 mb-4">
+            <h2 className="text-base font-semibold">Chất lượng feedback templates</h2>
+            <Link
+              href="/instructor/feedback-templates"
+              className="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1"
+            >
+              Xem chi tiết <span className="text-lg">→</span>
+            </Link>
+          </header>
+
+          {/* Show only first 5 templates as preview */}
+          <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
+            <table className="w-full text-sm">
+              <thead className="bg-[rgb(var(--surface-muted))]">
+                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
+                  <th className="px-4 py-3">Scope</th>
+                  <th className="px-4 py-3">Body (snippet)</th>
+                  <th className="px-4 py-3 text-right">Đã gửi</th>
+                  <th className="px-4 py-3 text-right">Đã rate</th>
+                  <th className="px-4 py-3 text-right">👍</th>
+                  <th className="px-4 py-3 text-right">👎</th>
+                  <th className="px-4 py-3 text-right">Net</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-token">
+                {templateStats.slice(0, 5).map((s) => (
+                  <tr
+                    key={s.templateId}
+                    className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                  >
+                    <td className="px-4 py-3 align-top">
+                      <span className="chip">{s.scope}</span>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <p className="line-clamp-2 max-w-md text-sm">{s.body}</p>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums align-top">
+                      {s.totalDelivered}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-faint align-top">
+                      {s.totalRated}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-success-600 align-top">
+                      {s.thumbsUp}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-danger-600 align-top">
+                      {s.thumbsDown}
+                    </td>
+                    <td
+                      className={`px-4 py-3 text-right tabular-nums font-semibold align-top ${
+                        s.netScore < 0
+                          ? "text-danger-600"
+                          : s.netScore > 0
+                            ? "text-success-600"
+                            : "text-faint"
+                      }`}
+                    >
+                      {s.netScore > 0 ? "+" : ""}
+                      {s.netScore}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

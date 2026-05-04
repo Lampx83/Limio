@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import RoleSwitcher from "./RoleSwitcher";
 
 type NavItem = { href: string; label: string };
 
@@ -194,16 +193,6 @@ export default function RightMenu({
             >
               Đăng ký
             </Link>
-          </div>
-        )}
-
-        {/* Role switcher */}
-        {isLoggedIn && roles.length > 1 && (
-          <div className="border-t border-token p-3">
-            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              Chuyển vai trò
-            </p>
-            <RoleSwitcher roles={roles} activeRole={activeRole} variant="menu" />
           </div>
         )}
       </div>

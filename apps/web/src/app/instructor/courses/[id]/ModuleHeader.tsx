@@ -8,16 +8,19 @@ export default function ModuleHeader({
   title,
   order,
   orderIndex,
+  isHidden: initialIsHidden,
 }: {
   moduleId: string;
   title: string;
   order: number;
   orderIndex: number;
+  isHidden: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [t, setT] = useState(title);
   const [oi, setOi] = useState(orderIndex);
+  const [isHidden, setIsHidden] = useState(initialIsHidden);
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -33,6 +36,17 @@ export default function ModuleHeader({
       setEditing(false);
       router.refresh();
     }
+  }
+
+  async function toggleHidden() {
+    const next = !isHidden;
+    setIsHidden(next);
+    await fetch(`/api/modules/${moduleId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isHidden: next }),
+    });
+    router.refresh();
   }
 
   async function remove() {
@@ -92,9 +106,23 @@ export default function ModuleHeader({
         </span>
         <span className="text-lg font-bold">{title}</span>
       </h3>
-      <div className="flex gap-1">
-        <button onClick={() => setEditing(true)} className="btn-ghost btn-sm" title="Sửa module">
-          Sửa
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-2 cursor-pointer" title={isHidden ? "Module bị ẩn khỏi học viên" : "Module hiển thị với học viên"}>
+          <input
+            type="checkbox"
+            checked={isHidden}
+            onChange={toggleHidden}
+            className="w-5 h-5 rounded border-token cursor-pointer accent-brand-600"
+          />
+          <span className="text-xs font-medium text-muted">Ẩn</span>
+        </label>
+        <button
+          onClick={() => setEditing(true)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-brand-soft hover:text-brand-600 group-hover:opacity-100"
+          title="Sửa module"
+          aria-label="Sửa"
+        >
+          ✎
         </button>
         <button
           onClick={remove}
@@ -103,7 +131,8 @@ export default function ModuleHeader({
           aria-label="Xóa"
           className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover:opacity-100 disabled:opacity-50"
         >
-                  </button>
+          🗑️
+        </button>
       </div>
     </div>
   );

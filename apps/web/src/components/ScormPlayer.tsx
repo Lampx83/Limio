@@ -73,7 +73,9 @@ export default function ScormPlayer({
         }),
       });
       if (!attemptRes.ok) {
-        setError("attempt_init_failed");
+        const details = await attemptRes.text().catch(() => "");
+        console.error("SCORM attempt init failed:", attemptRes.status, details);
+        setError(`attempt_init_failed_${attemptRes.status}`);
         return;
       }
       const a = (await attemptRes.json()) as AttemptInit;
@@ -81,7 +83,14 @@ export default function ScormPlayer({
       attemptId = a.attemptId;
 
       // 2. Dynamic-import scorm-again on the client only. Pick API class by version.
-      const mod = await import("scorm-again");
+      let mod;
+      try {
+        mod = await import("scorm-again");
+      } catch (e) {
+        console.error("Failed to import scorm-again:", e);
+        setError("scorm_lib_import_failed");
+        return;
+      }
       const ApiClass = (
         version === "2004"
           ? (mod as unknown as { Scorm2004API: new (settings: unknown) => unknown })
@@ -90,6 +99,7 @@ export default function ScormPlayer({
               .Scorm12API
       );
       if (!ApiClass) {
+        console.error(`ScormAPI class not found for version ${version}`);
         setError("scorm_api_load_failed");
         return;
       }
@@ -204,7 +214,11 @@ export default function ScormPlayer({
 
       // 4. Now load the iframe (after API is ready).
       if (iframeRef.current) {
-        iframeRef.current.src = `/api/scorm-packages/${packageId}/files/${entryHref}`;
+        const src = `/api/scorm-packages/${packageId}/files/${entryHref}`;
+        console.log("Loading SCORM iframe:", src);
+        iframeRef.current.src = src;
+        iframeRef.current.onload = () => console.log("SCORM iframe loaded successfully");
+        iframeRef.current.onerror = () => console.error("SCORM iframe failed to load");
       }
       setStatus(a.lessonStatus);
     }
@@ -250,29 +264,50 @@ export default function ScormPlayer({
   }, [packageId, entryHrefProp, courseId, lessonId]);
 
   if (error) {
+    const errorMessages: Record<string, string> = {
+      attempt_init_failed_401: "Chưa đăng nhập",
+      attempt_init_failed_403: "Không có quyền truy cập",
+      attempt_init_failed: "Không thể tạo phiên làm bài",
+      scorm_lib_import_failed: "Không thể tải thư viện SCORM",
+      scorm_api_load_failed: "Không thể khởi tạo SCORM API",
+    };
+    const msg = errorMessages[error] || `Lỗi: ${error}`;
     return (
       <div className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
-        Lỗi tải SCORM: {error}
+        ⚠️ {msg}. Hãy tải lại trang hoặc liên hệ hỗ trợ nếu lỗi vẫn tiếp tục.
       </div>
     );
   }
 
   const isComplete =
     status === "completed" || status === "passed" || status === "succeeded";
+  const isLoading = status === "loading";
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-xs">
         <span className="text-faint">SCORM 1.2</span>
-        <span className={isComplete ? "chip-success" : "chip"}>
-          {status}
+        <span className={isComplete ? "chip-success" : isLoading ? "chip" : "chip"}>
+          {isLoading ? "⏳ Đang tải..." : status}
         </span>
       </div>
-      <iframe
-        ref={iframeRef}
-        title="SCORM content"
-        className="h-[80vh] w-full overflow-hidden rounded-xl border border-token bg-white shadow-card"
-      />
+      <div className="relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/50 backdrop-blur-sm">
+            <div className="text-center">
+              <div className="animate-spin mb-2">⚙️</div>
+              <p className="text-xs text-muted">Đang khởi tạo...</p>
+            </div>
+          </div>
+        )}
+        <iframe
+          ref={iframeRef}
+          title="SCORM content"
+          className="h-[80vh] w-full overflow-hidden rounded-xl border border-token bg-white shadow-card"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+          allow="fullscreen"
+        />
+      </div>
     </div>
   );
 }

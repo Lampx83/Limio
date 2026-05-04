@@ -38,8 +38,16 @@ export default async function InstructorCoursesPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
+      {/* Back link */}
+      <Link
+        href="/instructor/dashboard"
+        className="link inline-flex items-center gap-1 text-sm"
+      >
+        ← Dashboard
+      </Link>
+
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <span className="chip-brand">Instructor</span>
           <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
@@ -51,14 +59,9 @@ export default async function InstructorCoursesPage() {
               : "Bạn chưa tạo khóa học nào."}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link href="/instructor/courses/new" className="btn-primary">
-            + Tạo khóa học
-          </Link>
-          <Link href="/instructor/tournaments/new" className="btn-primary">
-            🏆 Tạo tournament
-          </Link>
-        </div>
+        <Link href="/instructor/courses/new" className="btn-primary">
+          + Tạo khóa học
+        </Link>
       </div>
 
       {/* Tools */}
@@ -68,9 +71,6 @@ export default async function InstructorCoursesPage() {
         </Link>
         <Link href="/instructor/feedback-generator" className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100">
           AI feedback gen
-        </Link>
-        <Link href="/instructor/tournaments" className="btn-secondary btn-sm">
-          Xem tất cả tournaments
         </Link>
       </nav>
 

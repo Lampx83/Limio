@@ -12,6 +12,7 @@ interface Quiz {
   requireConfidence: boolean;
   timeLimitSec: number | null;
   maxAttempts: number | null;
+  isHidden: boolean;
   questions: Array<{
     id: string;
     type: string;
@@ -44,10 +45,15 @@ export default function QuizSection({
   lessonId: string;
 }) {
   return (
-    <details className="group overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] transition-colors hover:border-brand-200">
+    <details className={`group overflow-hidden rounded-xl border transition-colors ${
+      quiz.isHidden
+        ? 'border-danger-200 bg-danger-50/50'
+        : 'border-token bg-[rgb(var(--surface))] hover:border-brand-200'
+    }`}>
       <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-3 py-2.5 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
         <span className="text-lg" aria-hidden></span>
         <span className="text-sm font-semibold">{quiz.title}</span>
+        {quiz.isHidden && <span className="chip-danger text-xs">👁️ Ẩn</span>}
         <span className="ml-auto text-sm text-muted">
           {quiz.questions.length} câu · diff {quiz.difficulty ?? "—"} · pass{" "}
           {quiz.passThresholdPct}%

@@ -34,10 +34,16 @@ export default async function LessonPage({
     include: {
       module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true } } } },
       contentItems: { orderBy: { orderIndex: "asc" } },
-      quizzes: { select: { id: true, title: true } },
+      quizzes: { select: { id: true, title: true, isHidden: true } },
       assignments: {
         orderBy: { createdAt: "asc" },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          dueAt: true,
+          maxScore: true,
+          isHidden: true,
           submissions: {
             where: { userId },
             select: {
@@ -53,6 +59,7 @@ export default async function LessonPage({
     },
   });
   if (!lesson || lesson.module.course.slug !== params.slug) notFound();
+  if (lesson.isHidden) notFound();
 
   const enrolled = await isUserEnrolled(userId, lesson.module.course.id);
   if (!enrolled) {
@@ -106,7 +113,9 @@ export default async function LessonPage({
         </header>
         <div className="mt-8">
           <LessonContent
-            items={lesson.contentItems.map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex }))}
+            items={lesson.contentItems
+              .filter((c) => !c.isHidden)
+              .map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex }))}
             courseId={course.id}
             lessonId={lesson.id}
           />
@@ -188,23 +197,25 @@ export default async function LessonPage({
       {/* Lesson content */}
       <div className="mt-8">
         <LessonContent
-          items={lesson.contentItems.map((c) => ({
-            id: c.id,
-            type: c.type,
-            payload: c.payload,
-            orderIndex: c.orderIndex,
-          }))}
+          items={lesson.contentItems
+            .filter((c) => !c.isHidden)
+            .map((c) => ({
+              id: c.id,
+              type: c.type,
+              payload: c.payload,
+              orderIndex: c.orderIndex,
+            }))}
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
         />
       </div>
 
       {/* Quizzes */}
-      {lesson.quizzes.length > 0 && (
+      {lesson.quizzes.filter((q) => !q.isHidden).length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold">Bài kiểm tra</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {lesson.quizzes.map((q) => (
+            {lesson.quizzes.filter((q) => !q.isHidden).map((q) => (
               <li key={q.id}>
                 <Link
                   href={`/learn/${params.slug}/quizzes/${q.id}`}
@@ -222,11 +233,11 @@ export default async function LessonPage({
       )}
 
       {/* Assignments */}
-      {lesson.assignments.length > 0 && (
+      {lesson.assignments.filter((a) => !a.isHidden).length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold">Bài tập</h2>
           <ul className="mt-4 space-y-4">
-            {lesson.assignments.map((a) => {
+            {lesson.assignments.filter((a) => !a.isHidden).map((a) => {
               const sub = a.submissions[0] ?? null;
               return (
                 <li key={a.id} className="card">

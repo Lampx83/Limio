@@ -6,3 +6,4 @@ export * from "./scorm/index";
 export * from "./lti/index";
 export * from "./h5p/index";
 export * from "./integrations/index";
+export * from "./grouping";

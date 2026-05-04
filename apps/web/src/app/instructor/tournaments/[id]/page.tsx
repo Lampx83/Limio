@@ -3,9 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
-import TournamentMetaForm from "./TournamentMetaForm";
 import TournamentPublishBar from "./TournamentPublishBar";
-import TournamentMissionManager from "./TournamentMissionManager";
+import InstructorTournamentTabs from "./InstructorTournamentTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +85,7 @@ export default async function TournamentDetailPage({
       _count: { select: { registrations: true } },
     },
   });
+  // prizeDistribution is already included in default select
 
   if (!tournament) notFound();
 
@@ -180,81 +180,72 @@ export default async function TournamentDetailPage({
         />
       </section>
 
-      {/* C. Metadata edit form */}
-      {canEdit && (
-        <section className="mt-8">
-          <TournamentMetaForm
-            tournamentId={tournament.id}
-            initial={{
-              title: tournament.title,
-              description: tournament.description,
-              startsAt: tournament.startsAt.toISOString(),
-              endsAt: tournament.endsAt.toISOString(),
-              prizeXp: tournament.prizeXp,
-            }}
-          />
-        </section>
-      )}
-
-      {/* E. Mission manager */}
-      <section className="mt-10">
-        <TournamentMissionManager
-          tournamentId={tournament.id}
-          status={tournament.status}
-          missions={tournament.missions}
-        />
-      </section>
-
-      {/* F. Rankings — only when active or ended */}
-      {(tournament.status === "active" || tournament.status === "ended") &&
-        rankings.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold">Bảng xếp hạng (Top 10)</h2>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-token">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-token bg-[rgb(var(--surface-muted))] text-left text-xs text-muted">
-                    <th className="px-4 py-3 font-medium">#</th>
-                    <th className="px-4 py-3 font-medium">Người chơi</th>
-                    <th className="px-4 py-3 font-medium text-right">Điểm</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rankings.map((r, idx) => (
-                    <tr
-                      key={r.id}
-                      className={`border-b border-token last:border-0 ${
-                        idx < 3 ? "font-semibold" : ""
-                      }`}
-                    >
-                      <td className="px-4 py-3">
-                        {r.rank <= 3 ? (
-                          <span
-                            className={
-                              r.rank === 1
-                                ? "text-accent-500"
-                                : r.rank === 2
-                                  ? "text-muted"
-                                  : "text-orange-600"
-                            }
-                          >
-                            {r.rank}
-                          </span>
-                        ) : (
-                          r.rank
-                        )}
-                      </td>
-                      <td className="px-4 py-3">{r.displayName}</td>
-                      <td className="px-4 py-3 text-right">
-                        {r.totalPoints.toLocaleString()}
-                      </td>
+      {/* E. Tab interface — Basic Info, Missions, Prize, Leaderboard */}
+      <InstructorTournamentTabs
+        tournamentId={tournament.id}
+        status={tournament.status}
+        canEdit={canEdit}
+        initial={{
+          title: tournament.title,
+          description: tournament.description,
+          startsAt: tournament.startsAt.toISOString(),
+          endsAt: tournament.endsAt.toISOString(),
+          prizeXp: tournament.prizeXp,
+        }}
+        missions={tournament.missions}
+        prizeDistribution={tournament.prizeDistribution}
+        prizeXp={tournament.prizeXp}
+        leaderboardSection={
+          (tournament.status === "active" || tournament.status === "ended") &&
+          rankings.length > 0 ? (
+            <div>
+              <div className="mt-4 overflow-hidden rounded-2xl border border-token">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-token bg-[rgb(var(--surface-muted))] text-left text-xs text-muted">
+                      <th className="px-4 py-3 font-medium">#</th>
+                      <th className="px-4 py-3 font-medium">Người chơi</th>
+                      <th className="px-4 py-3 font-medium text-right">Điểm</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rankings.map((r, idx) => (
+                      <tr
+                        key={r.id}
+                        className={`border-b border-token last:border-0 ${
+                          idx < 3 ? "font-semibold" : ""
+                        }`}
+                      >
+                        <td className="px-4 py-3">
+                          {r.rank <= 3 ? (
+                            <span
+                              className={
+                                r.rank === 1
+                                  ? "text-accent-500"
+                                  : r.rank === 2
+                                    ? "text-muted"
+                                    : "text-orange-600"
+                              }
+                            >
+                              {r.rank}
+                            </span>
+                          ) : (
+                            r.rank
+                          )}
+                        </td>
+                        <td className="px-4 py-3">{r.displayName}</td>
+                        <td className="px-4 py-3 text-right">
+                          {r.totalPoints.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </section>
-        )}
+          ) : null
+        }
+      />
     </main>
   );
 }

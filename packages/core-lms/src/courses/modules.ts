@@ -12,6 +12,7 @@ export const CreateModuleInput = z.object({
 export const UpdateModuleInput = z.object({
   title: z.string().min(1).max(200).trim().optional(),
   orderIndex: z.number().int().nonnegative().optional(),
+  isHidden: z.boolean().optional(),
 });
 
 export async function createModule(

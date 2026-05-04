@@ -28,6 +28,7 @@ const CreateInput = z.object({
     .optional()
     .transform((v) => (v === undefined ? null : new Date(v))),
   maxScore: z.number().int().positive().max(1000).default(100),
+  isHidden: z.boolean().optional(),
 });
 
 const UpdateInput = CreateInput.partial();
@@ -109,6 +110,7 @@ export async function updateAssignment(
       ...(parsed.data.description !== undefined && { description: parsed.data.description }),
       ...(parsed.data.dueAt !== undefined && { dueAt: parsed.data.dueAt }),
       ...(parsed.data.maxScore !== undefined && { maxScore: parsed.data.maxScore }),
+      ...(parsed.data.isHidden !== undefined && { isHidden: parsed.data.isHidden }),
     },
   });
 }

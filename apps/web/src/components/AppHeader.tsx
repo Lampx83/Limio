@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@feedbackme/db";
 import UserMenu from "./UserMenu";
 import ThemeToggle from "./ThemeToggle";
-import RightMenu from "./RightMenu";
 import { getActiveRole } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 
@@ -71,7 +70,6 @@ export default async function AppHeader() {
               </Link>
             </div>
           )}
-          <RightMenu roles={roles} activeRole={activeRole} isLoggedIn={!!user} />
         </div>
       </div>
     </header>
