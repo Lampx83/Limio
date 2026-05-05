@@ -82,6 +82,13 @@ export async function POST(req: Request) {
       },
     });
 
+    console.log("[classroom/quick-poll/create] Poll created successfully:", {
+      pollId: poll.id,
+      sessionId,
+      question: poll.question,
+      optionCount: poll.options.length,
+    });
+
     return Response.json({
       id: poll.id,
       sessionId,

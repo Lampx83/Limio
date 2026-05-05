@@ -9,6 +9,8 @@ export default async function LearnerPollPage({
 }: {
   params: { pollId: string };
 }) {
+  console.log("[learn/poll/[pollId]] Attempting to load poll:", params.pollId);
+
   // Get poll details without auth check - public page
   const poll = await prisma.classroomPoll.findUnique({
     where: { id: params.pollId },
@@ -30,7 +32,10 @@ export default async function LearnerPollPage({
     },
   });
 
+  console.log("[learn/poll/[pollId]] Poll lookup result:", poll ? "Found" : "Not found");
+
   if (!poll) {
+    console.log("[learn/poll/[pollId]] Poll not found, returning 404 for pollId:", params.pollId);
     notFound();
   }
 
