@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function NewCoursePage() {
   const [title, setTitle] = useState("");
@@ -16,7 +17,7 @@ export default function NewCoursePage() {
     e.preventDefault();
     setStatus("submitting");
     setError(null);
-    const res = await fetch("/api/courses", {
+    const res = await fetch(apiUrl("/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, language, level, category: category || undefined }),

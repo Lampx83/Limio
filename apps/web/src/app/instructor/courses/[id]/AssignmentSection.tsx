@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Assignment {
   id: string;
@@ -40,7 +41,7 @@ export default function AssignmentSection({
       maxScore: Number(maxScore) || 100,
     };
     if (dueAt) payload.dueAt = new Date(dueAt).toISOString();
-    const res = await fetch(`/api/assignments/${assignment.id}`, {
+    const res = await fetch(apiUrl(`/api/assignments/${assignment.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -55,7 +56,7 @@ export default function AssignmentSection({
   async function toggleHidden() {
     const next = !isHidden;
     setIsHidden(next);
-    await fetch(`/api/assignments/${assignment.id}`, {
+    await fetch(apiUrl(`/api/assignments/${assignment.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isHidden: next }),
@@ -66,7 +67,7 @@ export default function AssignmentSection({
   async function remove() {
     if (!confirm("Xóa assignment này?")) return;
     setBusy(true);
-    const res = await fetch(`/api/assignments/${assignment.id}`, {
+    const res = await fetch(apiUrl(`/api/assignments/${assignment.id}`, {
       method: "DELETE",
     });
     setBusy(false);

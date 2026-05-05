@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 const ROLE_LABELS: Record<string, string> = {
   learner: "Học viên",
@@ -34,7 +35,7 @@ export default function RoleSwitcher({
   async function switchTo(role: string) {
     if (role === activeRole || busy) return;
     setBusy(true);
-    await fetch("/api/switch-role", {
+    await fetch(apiUrl("/api/switch-role", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),

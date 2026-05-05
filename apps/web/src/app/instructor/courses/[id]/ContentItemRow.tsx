@@ -5,6 +5,7 @@ import { useState } from "react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { toast } from "@/lib/toast";
 import EditContentItemForm from "./EditContentItemForm";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Item {
   id: string;
@@ -63,7 +64,7 @@ export default function ContentItemRow({ item }: { item: Item }) {
   async function toggleHidden() {
     const next = !isHidden;
     setIsHidden(next);
-    await fetch(`/api/contents/${item.id}`, {
+    await fetch(apiUrl(`/api/contents/${item.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isHidden: next }),
@@ -76,7 +77,7 @@ export default function ContentItemRow({ item }: { item: Item }) {
     setBusy(true);
     let res: Response;
     try {
-      res = await fetch(`/api/contents/${item.id}`, { method: "DELETE" });
+      res = await fetch(apiUrl(`/api/contents/${item.id}`, { method: "DELETE" });
     } catch (networkErr) {
       setBusy(false);
       console.error("[ContentItemRow] network error", networkErr);

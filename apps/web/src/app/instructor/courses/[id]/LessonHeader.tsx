@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function LessonHeader({
   lessonId,
@@ -30,7 +31,7 @@ export default function LessonHeader({
   async function togglePreviewable() {
     const next = !previewable;
     setPreviewable(next);
-    await fetch(`/api/lessons/${lessonId}`, {
+    await fetch(apiUrl(`/api/lessons/${lessonId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ previewable: next }),
@@ -41,7 +42,7 @@ export default function LessonHeader({
   async function toggleHidden() {
     const next = !isHidden;
     setIsHidden(next);
-    await fetch(`/api/lessons/${lessonId}`, {
+    await fetch(apiUrl(`/api/lessons/${lessonId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isHidden: next }),
@@ -52,7 +53,7 @@ export default function LessonHeader({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res = await fetch(`/api/lessons/${lessonId}`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -71,7 +72,7 @@ export default function LessonHeader({
   async function remove() {
     if (!confirm(`Xóa lesson "${title}"? Cascade content + quiz + skill tags + notes.`)) return;
     setBusy(true);
-    const res = await fetch(`/api/lessons/${lessonId}`, { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}`, { method: "DELETE" });
     setBusy(false);
     if (res.ok) router.refresh();
   }

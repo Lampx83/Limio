@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 /**
  * H5P player. Uses h5p-standalone (frontend-only lib) to load the unzipped
@@ -30,7 +31,7 @@ export default function H5pPlayer({
     async function init() {
       // Open/resume attempt — pass lesson/course context so the bridge can
       // attribute xAPI events to the correct skill set + course for XP.
-      const res = await fetch("/api/h5p-attempts", {
+      const res = await fetch(apiUrl("/api/h5p-attempts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ packageId, courseId, lessonId }),
@@ -94,7 +95,7 @@ export default function H5pPlayer({
           if (scoreRaw !== null && scoreMax !== null) {
             setScoreText(`${scoreRaw} / ${scoreMax}`);
           }
-          await fetch(`/api/h5p-attempts/${attemptId}/xapi`, {
+          await fetch(apiUrl(`/api/h5p-attempts/${attemptId}/xapi`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ verb, scoreRaw, scoreMax, success }),

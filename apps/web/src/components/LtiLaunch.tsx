@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 /**
  * Launches an LTI 1.3 tool. We POST to /api/lti/launch to get the tool's OIDC
@@ -26,7 +27,7 @@ export default function LtiLaunch({
 
   useEffect(() => {
     async function init() {
-      const res = await fetch("/api/lti/launch", {
+      const res = await fetch(apiUrl("/api/lti/launch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ toolId, resourceLinkId, courseId, lessonId }),

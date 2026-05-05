@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface AttemptInit {
   attemptId: string;
@@ -47,7 +48,7 @@ export default function ScormPlayer({
       // Resolve entryHref + version from package list.
       let entryHref = entryHrefProp;
       let version = "1.2";
-      const pkgRes = await fetch("/api/scorm-packages");
+      const pkgRes = await fetch(apiUrl("/api/scorm-packages");
       if (pkgRes.ok) {
         const data = (await pkgRes.json()) as { packages: PackageMeta[] };
         const found = data.packages.find((p) => p.id === packageId);
@@ -63,7 +64,7 @@ export default function ScormPlayer({
       }
 
       // 1. Open/resume attempt to load CMI state.
-      const attemptRes = await fetch("/api/scorm-attempts", {
+      const attemptRes = await fetch(apiUrl("/api/scorm-attempts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,7 +160,7 @@ export default function ScormPlayer({
         const location = safeGet(isV2004 ? "cmi.location" : "cmi.core.lesson_location");
         const totalTime =
           safeGet(isV2004 ? "cmi.total_time" : "cmi.core.total_time") || undefined;
-        await fetch(`/api/scorm-attempts/${attemptId}/commit`, {
+        await fetch(apiUrl(`/api/scorm-attempts/${attemptId}/commit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -194,7 +195,7 @@ export default function ScormPlayer({
           const r = origFinish.call(this, s);
           await commit();
           if (attemptId) {
-            await fetch(`/api/scorm-attempts/${attemptId}/commit`, {
+            await fetch(apiUrl(`/api/scorm-attempts/${attemptId}/commit`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ finished: true }),

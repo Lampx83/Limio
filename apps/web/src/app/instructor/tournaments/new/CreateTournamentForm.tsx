@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function CreateTournamentForm({
   courses,
@@ -35,7 +36,7 @@ export default function CreateTournamentForm({
     };
     if (courseId && courseId !== "PLATFORM") payload.courseId = courseId;
 
-    const res = await fetch("/api/tournaments", {
+    const res = await fetch(apiUrl("/api/tournaments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LimeSliceIcon } from "@/components/BrandIcons";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setStatus("submitting");
     setMessage(null);
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch(apiUrl("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, displayName }),

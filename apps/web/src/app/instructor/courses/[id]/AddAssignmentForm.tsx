@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
       maxScore: Number(maxScore) || 100,
     };
     if (dueAt) payload.dueAt = new Date(dueAt).toISOString();
-    const res = await fetch(`/api/lessons/${lessonId}/assignments`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/assignments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

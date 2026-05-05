@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 const SAMPLE = `prompt,type,option_label,is_correct,explanation,points
 "Phương trình bậc 1 có dạng nào?",mcq,"ax + b = 0",true,"Đáp án chuẩn theo SGK",1
@@ -24,7 +25,7 @@ export default function BulkImportQuestions({ quizId }: { quizId: string }) {
   async function importCsv() {
     setBusy(true);
     setResult(null);
-    const res = await fetch(`/api/quizzes/${quizId}/questions/bulk-import`, {
+    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions/bulk-import`, {
       method: "POST",
       headers: { "Content-Type": "text/csv" },
       body: csv,

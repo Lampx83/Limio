@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Cloud } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
+import { apiUrl } from "@/lib/apiUrl";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -71,7 +72,7 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
         return;
       }
 
-      const res = await fetch("/api/classroom/word-cloud/create", {
+      const res = await fetch(apiUrl("/api/classroom/word-cloud/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,7 +113,7 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
 
   const fetchResults = async (cloudId: string) => {
     try {
-      const res = await fetch(`/api/classroom/word-cloud/${cloudId}/results`);
+      const res = await fetch(apiUrl(`/api/classroom/word-cloud/${cloudId}/results`);
       if (!res.ok) return;
 
       const data = await res.json();
@@ -152,7 +153,7 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
           return;
         }
 
-        const res = await fetch("/api/classroom/word-cloud/create", {
+        const res = await fetch(apiUrl("/api/classroom/word-cloud/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

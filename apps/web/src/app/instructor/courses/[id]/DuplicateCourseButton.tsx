@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function DuplicateCourseButton({ courseId }: { courseId: string }) {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function DuplicateCourseButton({ courseId }: { courseId: string }
       return;
     }
     setBusy(true);
-    const res = await fetch(`/api/courses/${courseId}/duplicate`, { method: "POST" });
+    const res = await fetch(apiUrl(`/api/courses/${courseId}/duplicate`, { method: "POST" });
     setBusy(false);
     if (res.ok) {
       const d = await res.json();

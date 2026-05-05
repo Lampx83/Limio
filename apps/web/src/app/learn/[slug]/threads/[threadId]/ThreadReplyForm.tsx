@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function ThreadReplyForm({ threadId }: { threadId: string }) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function ThreadReplyForm({ threadId }: { threadId: string }) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(`/api/forum-threads/${threadId}/posts`, {
+    const res = await fetch(apiUrl(`/api/forum-threads/${threadId}/posts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body }),

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function AddLessonForm({
   moduleId,
@@ -35,7 +36,7 @@ export default function AddLessonForm({
     setError(null);
     let res: Response;
     try {
-      res = await fetch(`/api/modules/${moduleId}/lessons`, {
+      res = await fetch(apiUrl(`/api/modules/${moduleId}/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

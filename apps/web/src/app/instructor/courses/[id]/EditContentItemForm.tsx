@@ -15,6 +15,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { apiUrl } from "@/lib/apiUrl";
 
 type ContentType =
   | "video"
@@ -97,7 +98,7 @@ export default function EditContentItemForm({ item, onClose }: Props) {
 
     let res: Response;
     try {
-      res = await fetch(`/api/contents/${item.id}`, {
+      res = await fetch(apiUrl(`/api/contents/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payload }),

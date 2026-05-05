@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface InitialSettings {
   email: string;
@@ -53,7 +54,7 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
   async function onProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
     setProfileSaving(true);
-    const res = await fetch("/api/me", {
+    const res = await fetch(apiUrl("/api/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ displayName, leaderboardOptOut: optOut }),
@@ -88,7 +89,7 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
     setAvatarUploading(true);
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/me/avatar", { method: "POST", body: fd });
+    const res = await fetch(apiUrl("/api/me/avatar", { method: "POST", body: fd });
     setAvatarUploading(false);
     if (res.ok) {
       const data = (await res.json()) as { avatarUrl: string };
@@ -107,7 +108,7 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
     if (!avatarUrl) return;
     if (!confirm("Xóa ảnh đại diện hiện tại?")) return;
     setAvatarUploading(true);
-    const res = await fetch("/api/me/avatar", { method: "DELETE" });
+    const res = await fetch(apiUrl("/api/me/avatar", { method: "DELETE" });
     setAvatarUploading(false);
     if (res.ok) {
       setAvatarUrl(null);
@@ -130,7 +131,7 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
       return;
     }
     setPasswordSaving(true);
-    const res = await fetch("/api/me/password", {
+    const res = await fetch(apiUrl("/api/me/password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ currentPassword, newPassword }),

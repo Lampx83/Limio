@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 const SAMPLE = `name,email
 Nguyễn Văn An,an.nguyen@example.com
@@ -64,7 +65,7 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
     setBusy(true);
     setResult(null);
     try {
-      const res = await fetch(`/api/instructor/courses/${courseId}/enroll-bulk`, {
+      const res = await fetch(apiUrl(`/api/instructor/courses/${courseId}/enroll-bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ students: parsed }),

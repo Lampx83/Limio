@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface MasteryRow {
   skillCode: string;
@@ -26,7 +27,7 @@ export default function SkipLessonBanner({
 
   async function onSkip() {
     setSkipping(true);
-    const res = await fetch(`/api/lessons/${lessonId}/complete`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/complete`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reason: "skipped" }),

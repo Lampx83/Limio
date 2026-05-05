@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Quiz {
   id: string;
@@ -27,7 +28,7 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res = await fetch(`/api/quizzes/${quiz.id}`, {
+    const res = await fetch(apiUrl(`/api/quizzes/${quiz.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, difficulty, passThresholdPct, requireConfidence }),
@@ -42,7 +43,7 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
   async function toggleHidden() {
     const next = !isHidden;
     setIsHidden(next);
-    await fetch(`/api/quizzes/${quiz.id}`, {
+    await fetch(apiUrl(`/api/quizzes/${quiz.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isHidden: next }),
@@ -53,7 +54,7 @@ export default function QuizHeader({ quiz }: { quiz: Quiz }) {
   async function remove() {
     if (!confirm(`Xóa quiz "${quiz.title}"? Cascade questions, options, attempts.`)) return;
     setBusy(true);
-    const res = await fetch(`/api/quizzes/${quiz.id}`, { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/quizzes/${quiz.id}`, { method: "DELETE" });
     setBusy(false);
     if (res.ok) router.refresh();
   }

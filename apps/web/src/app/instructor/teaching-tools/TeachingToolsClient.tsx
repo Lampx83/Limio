@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import CourseSelector from "./CourseSelector";
 import ManualStudentInput from "./ManualStudentInput";
 import TeachingToolsWrapper from "./TeachingToolsWrapper";
+import { apiUrl } from "@/lib/apiUrl";
 
 export interface StudentItem {
   name: string;
@@ -50,7 +51,7 @@ export default function TeachingToolsClient({
   const fetchEnrollments = async (courseId: string) => {
     try {
       console.log("[TeachingTools] Fetching enrollments for courseId:", courseId);
-      const res = await fetch(`/api/courses/${courseId}/enrollments`, {
+      const res = await fetch(apiUrl(`/api/courses/${courseId}/enrollments`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { BarChart3 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
+import { apiUrl } from "@/lib/apiUrl";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -86,7 +87,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
         return;
       }
 
-      const res = await fetch("/api/classroom/quick-poll/create", {
+      const res = await fetch(apiUrl("/api/classroom/quick-poll/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -133,7 +134,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
 
   const fetchResults = async (pollId: string) => {
     try {
-      const res = await fetch(`/api/classroom/quick-poll/${pollId}/results`);
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/results`);
       if (!res.ok) return;
 
       const data = await res.json();
@@ -158,7 +159,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
     if (currentPoll && originalQuestion && originalOptions.length > 0) {
       setIsCreating(true);
       try {
-        const res = await fetch("/api/classroom/quick-poll/create", {
+        const res = await fetch(apiUrl("/api/classroom/quick-poll/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function ResetPage() {
   const [token, setToken] = useState("");
@@ -18,7 +19,7 @@ export default function ResetPage() {
     e.preventDefault();
     setStatus("submitting");
     setError(null);
-    const res = await fetch("/api/auth/reset", {
+    const res = await fetch(apiUrl("/api/auth/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, newPassword }),

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function ResetRequestPage() {
   const [email, setEmail] = useState("");
@@ -10,7 +11,7 @@ export default function ResetRequestPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("submitting");
-    await fetch("/api/auth/reset-request", {
+    await fetch(apiUrl("/api/auth/reset-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

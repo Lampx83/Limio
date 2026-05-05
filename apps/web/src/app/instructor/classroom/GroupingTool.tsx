@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Users } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { GroupMemberCard } from "./GroupMemberCard";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface GroupInfo {
   groupNum: number;
@@ -92,7 +93,7 @@ export default function GroupingTool({
           ? { lessonId, groupSize }
           : { lessonId, numGroups };
 
-      const res = await fetch("/api/classroom/grouping/create", {
+      const res = await fetch(apiUrl("/api/classroom/grouping/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -161,7 +162,7 @@ export default function GroupingTool({
           ? { lessonId, groupSize }
           : { lessonId, numGroups };
 
-      const res = await fetch("/api/classroom/grouping/create", {
+      const res = await fetch(apiUrl("/api/classroom/grouping/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

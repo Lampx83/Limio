@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Initial {
   title: string;
@@ -45,7 +46,7 @@ export default function TournamentMetaForm({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(`/api/tournaments/${tournamentId}`, {
+    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

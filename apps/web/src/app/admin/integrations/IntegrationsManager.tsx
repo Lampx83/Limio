@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Status {
   key: string;
@@ -33,7 +34,7 @@ export default function IntegrationsManager({
   const [statuses, setStatuses] = useState<Status[]>(initialStatuses);
 
   async function refresh() {
-    const r = await fetch("/api/admin/integrations");
+    const r = await fetch(apiUrl("/api/admin/integrations"));
     const j = await r.json();
     setStatuses(j.statuses ?? []);
   }
@@ -65,7 +66,7 @@ function IntegrationRow({
     setBusy(true);
     setTestResult(null);
     const res = await fetch(
-      `/api/admin/integrations/${encodeURIComponent(status.key)}`,
+      apiUrl(`/api/admin/integrations/${encodeURIComponent(status.key)}`),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -88,7 +89,7 @@ function IntegrationRow({
     if (!value.trim()) return;
     setBusy(true);
     setTestResult("Testing...");
-    const res = await fetch("/api/admin/integrations/openai/test", {
+    const res = await fetch(apiUrl("/api/admin/integrations/openai/test"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value: value.trim() }),
@@ -103,7 +104,7 @@ function IntegrationRow({
   async function testSaved() {
     setBusy(true);
     setTestResult("Testing...");
-    const res = await fetch("/api/admin/integrations/openai/test", {
+    const res = await fetch(apiUrl("/api/admin/integrations/openai/test"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
@@ -119,7 +120,7 @@ function IntegrationRow({
     if (!confirm(`Xóa key "${status.key}"?`)) return;
     setBusy(true);
     const res = await fetch(
-      `/api/admin/integrations/${encodeURIComponent(status.key)}`,
+      apiUrl(`/api/admin/integrations/${encodeURIComponent(status.key)}`),
       { method: "DELETE" },
     );
     setBusy(false);

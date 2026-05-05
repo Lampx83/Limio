@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function GradeForm({
   submissionId,
@@ -28,7 +29,7 @@ export default function GradeForm({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(`/api/submissions/${submissionId}/grade`, {
+    const res = await fetch(apiUrl(`/api/submissions/${submissionId}/grade`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

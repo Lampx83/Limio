@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function AssignmentSubmitForm({
   assignmentId,
@@ -18,7 +19,7 @@ export default function AssignmentSubmitForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res = await fetch(`/api/assignments/${assignmentId}/submit`, {
+    const res = await fetch(apiUrl(`/api/assignments/${assignmentId}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

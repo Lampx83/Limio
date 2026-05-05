@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import EditQuestionForm from "./EditQuestionForm";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Question {
   id: string;
@@ -41,7 +42,7 @@ export default function QuestionRow({
   async function remove() {
     if (!confirm(`Xóa câu hỏi "${question.prompt.slice(0, 50)}..."?`)) return;
     setBusy(true);
-    const res = await fetch(`/api/questions/${question.id}`, { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/questions/${question.id}`, { method: "DELETE" });
     setBusy(false);
     if (res.ok) router.refresh();
   }

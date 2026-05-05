@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface RoleEntry {
   userRoleId: string;
@@ -25,7 +26,7 @@ export default function UserRoleManager({
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
-    const res = await fetch(`/api/admin/users/${userId}/roles`);
+    const res = await fetch(apiUrl(`/api/admin/users/${userId}/roles`);
     if (!res.ok) return;
     const data = (await res.json()) as { roles: Array<{
       userRoleId: string;
@@ -50,7 +51,7 @@ export default function UserRoleManager({
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/users/${userId}/roles`, {
+      const res = await fetch(apiUrl(`/api/admin/users/${userId}/roles`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ roleName: pickRole }),

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiUrl } from "@/lib/apiUrl";
 
 type QuestionType =
   | "mcq"
@@ -95,11 +96,11 @@ export default function AddQuestionForm({
 
   useEffect(() => {
     if (!open) return;
-    fetch("/api/skills")
+    fetch(apiUrl("/api/skills")
       .then((r) => r.json())
       .then((d) => setSkills(d.items ?? []))
       .catch(() => {});
-    fetch("/api/misconceptions")
+    fetch(apiUrl("/api/misconceptions")
       .then((r) => r.json())
       .then((d) => setMisconceptions(d.items ?? []))
       .catch(() => {});
@@ -144,7 +145,7 @@ export default function AddQuestionForm({
     if (!name) return;
     const description = window.prompt("Mô tả:", "");
     if (description === null) return;
-    const res = await fetch("/api/misconceptions", {
+    const res = await fetch(apiUrl("/api/misconceptions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, name, description: description || name }),
@@ -153,7 +154,7 @@ export default function AddQuestionForm({
       alert("Tạo misconception thất bại");
       return;
     }
-    const fresh = await fetch("/api/misconceptions").then((r) => r.json());
+    const fresh = await fetch(apiUrl("/api/misconceptions").then((r) => r.json());
     setMisconceptions(fresh.items ?? []);
   }
 
@@ -188,7 +189,7 @@ export default function AddQuestionForm({
             : undefined
           : undefined;
 
-    const res = await fetch(`/api/quizzes/${quizId}/questions`, {
+    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

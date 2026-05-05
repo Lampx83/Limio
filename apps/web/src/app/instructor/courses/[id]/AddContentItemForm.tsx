@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface ScormPackageRow {
   id: string;
@@ -94,25 +95,25 @@ export default function AddContentItemForm({
   useEffect(() => {
     if (!open) return;
     if (type === "scorm") {
-      fetch("/api/scorm-packages")
+      fetch(apiUrl("/api/scorm-packages")
         .then((r) => r.json())
         .then((d) => setScormPackages(d.packages ?? []))
         .catch(() => {});
     }
     if (type === "h5p") {
-      fetch("/api/h5p-packages")
+      fetch(apiUrl("/api/h5p-packages")
         .then((r) => r.json())
         .then((d) => setH5pPackages(d.packages ?? []))
         .catch(() => {});
     }
     if (type === "lti") {
-      fetch("/api/lti-tools")
+      fetch(apiUrl("/api/lti-tools")
         .then((r) => r.json())
         .then((d) => setLtiTools(d.tools ?? []))
         .catch(() => {});
     }
     if (type === "video") {
-      fetch(`/api/lessons/${lessonId}/quizzes`)
+      fetch(apiUrl(`/api/lessons/${lessonId}/quizzes`)
         .then((r) => r.json())
         .then((d) => setLessonQuizzes(d.quizzes ?? []))
         .catch(() => {});
@@ -124,7 +125,7 @@ export default function AddContentItemForm({
     setError(null);
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/scorm-packages", { method: "POST", body: fd });
+    const res = await fetch(apiUrl("/api/scorm-packages", { method: "POST", body: fd });
     setUploading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
@@ -132,7 +133,7 @@ export default function AddContentItemForm({
       return;
     }
     const data = await res.json();
-    const fresh = await fetch("/api/scorm-packages").then((r) => r.json());
+    const fresh = await fetch(apiUrl("/api/scorm-packages").then((r) => r.json());
     setScormPackages(fresh.packages ?? []);
     setScormPackageId(data.id);
     if (!linkTitle) setLinkTitle(data.title ?? "");
@@ -143,7 +144,7 @@ export default function AddContentItemForm({
     setError(null);
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/h5p-packages", { method: "POST", body: fd });
+    const res = await fetch(apiUrl("/api/h5p-packages", { method: "POST", body: fd });
     setUploading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
@@ -151,7 +152,7 @@ export default function AddContentItemForm({
       return;
     }
     const data = await res.json();
-    const fresh = await fetch("/api/h5p-packages").then((r) => r.json());
+    const fresh = await fetch(apiUrl("/api/h5p-packages").then((r) => r.json());
     setH5pPackages(fresh.packages ?? []);
     setH5pPackageId(data.id);
     if (!linkTitle) setLinkTitle(data.title ?? "");
@@ -239,7 +240,7 @@ export default function AddContentItemForm({
         break;
     }
 
-    const res = await fetch(`/api/lessons/${lessonId}/contents`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/contents`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type, orderIndex: nextOrderIndex, payload }),
@@ -703,7 +704,7 @@ function VideoUploadPanel({
     fd.append("file", file);
     let res: Response;
     try {
-      res = await fetch("/api/lesson-media/videos", {
+      res = await fetch(apiUrl("/api/lesson-media/videos", {
         method: "POST",
         body: fd,
       });

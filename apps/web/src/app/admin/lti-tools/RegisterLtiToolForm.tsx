@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function RegisterLtiToolForm() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function RegisterLtiToolForm() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch("/api/lti-tools", {
+    const res = await fetch(apiUrl("/api/lti-tools", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

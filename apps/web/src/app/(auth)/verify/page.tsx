@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function VerifyPage() {
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
@@ -14,7 +15,7 @@ export default function VerifyPage() {
       setError("Thiếu token");
       return;
     }
-    fetch(`/api/auth/verify?token=${encodeURIComponent(token)}`)
+    fetch(apiUrl(`/api/auth/verify?token=${encodeURIComponent(token)}`)
       .then(async (res) => {
         if (res.ok) {
           setStatus("ok");

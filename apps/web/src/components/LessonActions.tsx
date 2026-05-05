@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Note {
   id: string;
@@ -29,7 +30,7 @@ export default function LessonActions({
   const [posSaved, setPosSaved] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/lessons/${lessonId}/view`, {
+    fetch(apiUrl(`/api/lessons/${lessonId}/view`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ positionSec: initialResumeSec }),
@@ -39,7 +40,7 @@ export default function LessonActions({
 
   async function onComplete() {
     setCompleting(true);
-    const res = await fetch(`/api/lessons/${lessonId}/complete`, { method: "POST" });
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/complete`, { method: "POST" });
     if (res.ok) {
       const data = await res.json();
       setCompleted(true);
@@ -53,7 +54,7 @@ export default function LessonActions({
   async function onSavePosition() {
     setSavingPos(true);
     setPosSaved(false);
-    await fetch(`/api/lessons/${lessonId}/view`, {
+    await fetch(apiUrl(`/api/lessons/${lessonId}/view`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ positionSec: position }),
@@ -139,7 +140,7 @@ export function LessonNotes({ lessonId }: { lessonId: string }) {
   const [submitting, setSubmitting] = useState(false);
 
   async function load() {
-    const res = await fetch(`/api/lessons/${lessonId}/notes`);
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/notes`);
     if (res.ok) {
       const data = await res.json();
       setNotes(data.items);
@@ -156,7 +157,7 @@ export function LessonNotes({ lessonId }: { lessonId: string }) {
     if (!body.trim()) return;
     setSubmitting(true);
     const ts = timestamp.trim() === "" ? null : Number(timestamp);
-    const res = await fetch(`/api/lessons/${lessonId}/notes`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/notes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body, timestampSec: ts }),
@@ -170,7 +171,7 @@ export function LessonNotes({ lessonId }: { lessonId: string }) {
   }
 
   async function onDelete(id: string) {
-    const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/notes/${id}`, { method: "DELETE" });
     if (res.ok) await load();
   }
 

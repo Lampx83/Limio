@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function ExitImpersonationButton() {
   const [busy, setBusy] = useState(false);
   async function exit() {
     setBusy(true);
-    await fetch("/api/admin/impersonate/exit", { method: "POST" });
+    await fetch(apiUrl("/api/admin/impersonate/exit", { method: "POST" });
     window.location.href = "/admin/users";
   }
   return (

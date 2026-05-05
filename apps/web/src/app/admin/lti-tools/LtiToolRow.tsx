@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Tool {
   id: string;
@@ -21,7 +22,7 @@ export default function LtiToolRow({ tool }: { tool: Tool }) {
   async function remove() {
     if (!confirm(`Xóa tool "${tool.name}"?`)) return;
     setBusy(true);
-    const res = await fetch(`/api/lti-tools/${tool.id}`, { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/lti-tools/${tool.id}`, { method: "DELETE" });
     setBusy(false);
     if (res.ok) router.refresh();
   }

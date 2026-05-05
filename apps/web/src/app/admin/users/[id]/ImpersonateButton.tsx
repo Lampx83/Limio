@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export default function ImpersonateButton({
   userId,
@@ -20,7 +21,7 @@ export default function ImpersonateButton({
       return;
     }
     setBusy(true);
-    const res = await fetch("/api/admin/impersonate", {
+    const res = await fetch(apiUrl("/api/admin/impersonate", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ targetUserId: userId }),

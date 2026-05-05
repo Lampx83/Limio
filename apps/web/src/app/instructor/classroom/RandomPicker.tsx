@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Dice6 } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { apiUrl } from "@/lib/apiUrl";
 
 const Confetti = dynamic(() => import("react-confetti"), { ssr: false });
 
@@ -104,7 +105,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
           return;
         }
 
-        const res = await fetch("/api/classroom/random-pick", {
+        const res = await fetch(apiUrl("/api/classroom/random-pick", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lessonId }),
