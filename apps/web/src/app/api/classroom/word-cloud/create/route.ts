@@ -62,16 +62,12 @@ export async function POST(req: Request) {
           })
         ).id;
     } else {
-      // Standalone mode - create a temporary session without lesson using raw SQL
-      const result = await prisma.$queryRaw<{ id: string }[]>`
-        INSERT INTO "ClassroomSession" (id, "startedAt", "createdAt")
-        VALUES (gen_random_uuid(), NOW(), NOW())
-        RETURNING id
-      `;
-      if (!result || !result[0]) {
-        throw new Error("Failed to create classroom session");
-      }
-      sessionId = result[0].id;
+      // Standalone mode - create a temporary session without lesson
+      const session = await prisma.classroomSession.create({
+        data: {},
+        select: { id: true },
+      });
+      sessionId = session.id;
     }
 
     // Create word cloud
