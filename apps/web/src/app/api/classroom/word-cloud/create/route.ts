@@ -63,11 +63,11 @@ export async function POST(req: Request) {
         ).id;
     } else {
       // Standalone mode - create a temporary session without lesson
-      const session = await prisma.classroomSession.create({
+      const classroomSession = await prisma.classroomSession.create({
         data: {},
         select: { id: true },
       });
-      sessionId = session.id;
+      sessionId = classroomSession.id;
     }
 
     // Create word cloud
