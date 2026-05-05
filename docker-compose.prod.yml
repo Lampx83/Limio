@@ -78,7 +78,9 @@ services:
       dockerfile: Dockerfile
       target: runner
       args:
-        NEXT_PUBLIC_BASE_PATH: "${NEXT_PUBLIC_BASE_PATH:-}"
+        # Empty basePath for root domain serving (e.g., fit.neu.edu.vn/)
+        # Set to "/limio" only if serving at sub-path (e.g., domain.com/limio/)
+        NEXT_PUBLIC_BASE_PATH: "${NEXT_PUBLIC_BASE_PATH}"
     image: feedbackme/web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment: *web-env
