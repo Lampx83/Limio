@@ -80,7 +80,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
           options: filledOptions,
           isAnonymous: true,
         });
-        setVotesByOption(Object.fromEntries(filledOptions.map((_, idx) => [idx.toString(), 0]));
+        setVotesByOption(Object.fromEntries(filledOptions.map((_, idx) => [idx.toString(), 0])));
         setQuestion("");
         setOptions(["", ""]);
         toast.success("Poll tạo thành công");
@@ -186,7 +186,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
 
         // Reset vote tracking and results
         setResults(null);
-        setVotesByOption(Object.fromEntries(originalOptions.map((_, idx) => [idx.toString(), 0]));
+        setVotesByOption(Object.fromEntries(originalOptions.map((_, idx) => [idx.toString(), 0])));
 
         // Start polling for results
         setIsPolling(true);

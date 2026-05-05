@@ -119,10 +119,10 @@ export default function EditQuestionForm({
 
   // ── option helpers ─────────────────────────────────────────────────────────
   function setOption(i: number, patch: Partial<OptionDraft>) {
-    setOptions((curr) => curr.map((o, idx) => (idx === i ? { ...o, ...patch } : o));
+    setOptions((curr) => curr.map((o, idx) => (idx === i ? { ...o, ...patch } : o)));
   }
   function setSingleCorrect(i: number) {
-    setOptions((curr) => curr.map((o, idx) => ({ ...o, isCorrect: idx === i }));
+    setOptions((curr) => curr.map((o, idx) => ({ ...o, isCorrect: idx === i })));
   }
   function addOption() {
     setOptions((curr) => [...curr, { label: "", isCorrect: false, misconceptionId: null, extra: null }]);

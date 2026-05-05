@@ -26,7 +26,7 @@ export async function GET(
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const courseId = params.id;
-  if (!(await canEditCourse(userId, courseId)) {
+  if (!(await canEditCourse(userId, courseId))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

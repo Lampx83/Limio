@@ -562,7 +562,7 @@ function CuepointEditor({
     setCuepoints(cuepoints.filter((c) => c.uid !== uid));
   }
   function update(uid: string, patch: Partial<CuepointDraft>) {
-    setCuepoints(cuepoints.map((c) => (c.uid === uid ? { ...c, ...patch } : c));
+    setCuepoints(cuepoints.map((c) => (c.uid === uid ? { ...c, ...patch } : c)));
   }
 
   return (

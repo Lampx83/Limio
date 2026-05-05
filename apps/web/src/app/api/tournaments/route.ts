@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   // rights on the linked course.
   const admin = await isAdmin(userId);
   if (parsed.data.courseId && !admin) {
-    if (!(await canEditCourse(userId, parsed.data.courseId)) {
+    if (!(await canEditCourse(userId, parsed.data.courseId))) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
   } else if (!parsed.data.courseId && !admin) {

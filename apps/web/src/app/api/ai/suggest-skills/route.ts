@@ -76,7 +76,7 @@ export async function POST(req: Request) {
   // Authz: course-scoped requests need editor rights; rawText (no course) needs
   // any-instructor-or-admin since we don't know which course this affects.
   if (courseId) {
-    if (!(await canEditCourse(userId, courseId)) {
+    if (!(await canEditCourse(userId, courseId))) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
   } else {

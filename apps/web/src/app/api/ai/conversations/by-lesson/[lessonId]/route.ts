@@ -25,7 +25,7 @@ export async function GET(
     select: { module: { select: { courseId: true } } },
   });
   if (!lesson) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (!(await isUserEnrolled(userId, lesson.module.courseId)) {
+  if (!(await isUserEnrolled(userId, lesson.module.courseId))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

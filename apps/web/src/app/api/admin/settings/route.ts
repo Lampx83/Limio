@@ -11,12 +11,12 @@ type AllowedKey = (typeof ALLOWED_KEYS)[number];
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user?.id) return null;
-  if (!(await isAdmin(session.user.id)) return null;
+  if (!(await isAdmin(session.user.id))) return null;
   return session.user.id;
 }
 
 export async function GET() {
-  if (!(await requireAdmin()) {
+  if (!(await requireAdmin())) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-  if (!(await requireAdmin()) {
+  if (!(await requireAdmin())) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

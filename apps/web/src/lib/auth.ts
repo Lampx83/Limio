@@ -155,7 +155,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const shouldRefreshRoles = Boolean(user) || trigger === "update" || token.roles === undefined;
       if (shouldRefreshRoles && token.userId) {
         const rows = await getRolesForUser(token.userId as string);
-        const unique = Array.from(new Set(rows.map((r) => r.roleName));
+        const unique = Array.from(new Set(rows.map((r) => r.roleName)));
         token.roles = unique;
       }
       return token;

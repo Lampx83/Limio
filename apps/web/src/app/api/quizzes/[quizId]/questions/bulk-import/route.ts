@@ -63,7 +63,7 @@ export async function POST(
 
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i]!;
-    if (r.every((cell) => !cell.trim()) continue; // blank line
+    if (r.every((cell) => !cell.trim())) continue; // blank line
     const prompt = r[promptI]?.trim();
     const type = (r[typeI] ?? "").trim() || "mcq";
     if (!prompt) continue;

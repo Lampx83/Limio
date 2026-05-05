@@ -120,7 +120,7 @@ export default function AddQuestionForm({
 
   function changeType(next: QuestionType) {
     setType(next);
-    setOptions(DEFAULTS[next].map((o) => ({ ...o, extra: o.extra ? { ...o.extra } : null }));
+    setOptions(DEFAULTS[next].map((o) => ({ ...o, extra: o.extra ? { ...o.extra } : null })));
   }
 
   function setOption(i: number, patch: Partial<OptionDraft>) {
@@ -129,7 +129,7 @@ export default function AddQuestionForm({
     );
   }
   function setSingleCorrect(i: number) {
-    setOptions((curr) => curr.map((o, idx) => ({ ...o, isCorrect: idx === i }));
+    setOptions((curr) => curr.map((o, idx) => ({ ...o, isCorrect: idx === i })));
   }
   function addOption() {
     setOptions((curr) => [...curr, blank({ isCorrect: false })]);

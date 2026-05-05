@@ -34,7 +34,7 @@ export default async function QuizPage({
   });
   if (!course || course.slug !== params.slug) notFound();
 
-  if (!(await isUserEnrolled(userId, quiz.courseId)) {
+  if (!(await isUserEnrolled(userId, quiz.courseId))) {
     redirect(`/catalog/${params.slug}`);
   }
 
