@@ -17,7 +17,7 @@ export default function RegisterLtiToolForm() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl("/api/lti-tools", {
+    const res = await fetch(apiUrl("/api/lti-tools"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

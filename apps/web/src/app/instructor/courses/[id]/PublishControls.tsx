@@ -20,7 +20,7 @@ export default function PublishControls({
   async function publish() {
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl(`/api/courses/${courseId}/publish`, { method: "POST" });
+    const res = await fetch(apiUrl(`/api/courses/${courseId}/publish`), { method: "POST" });
     setBusy(false);
     if (res.ok) {
       router.refresh();
@@ -33,7 +33,7 @@ export default function PublishControls({
   async function archive() {
     if (!confirm("Archive course này? Không thể publish lại.")) return;
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/courses/${courseId}`, { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/courses/${courseId}`), { method: "DELETE" });
     setBusy(false);
     if (res.ok) router.refresh();
   }

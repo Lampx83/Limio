@@ -60,8 +60,8 @@ export async function GET(req: Request) {
     avatarUrl: u.avatarUrl,
     emailVerified: u.emailVerifiedAt !== null,
     createdAt: u.createdAt,
-    roles: Array.from(new Set(u.userRoles.map((ur) => ur.role.name))),
-    providers: Array.from(new Set(u.authProviders.map((p) => p.provider))),
+    roles: Array.from(new Set(u.userRoles.map((ur) => ur.role.name)),
+    providers: Array.from(new Set(u.authProviders.map((p) => p.provider)),
   }));
 
   return NextResponse.json({

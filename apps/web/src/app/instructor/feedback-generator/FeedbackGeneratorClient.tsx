@@ -33,7 +33,7 @@ export default function FeedbackGeneratorClient({
     setError(null);
     setDraft(null);
     setSaved(false);
-    const res = await fetch(apiUrl("/api/ai/generate-feedback", {
+    const res = await fetch(apiUrl("/api/ai/generate-feedback"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ misconceptionId: selectedId }),
@@ -52,7 +52,7 @@ export default function FeedbackGeneratorClient({
   async function save() {
     if (!body.trim() || !selectedId) return;
     setError(null);
-    const res = await fetch(apiUrl("/api/feedback-templates", {
+    const res = await fetch(apiUrl("/api/feedback-templates"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -36,7 +36,7 @@ export default function AddLessonForm({
     setError(null);
     let res: Response;
     try {
-      res = await fetch(apiUrl(`/api/modules/${moduleId}/lessons`, {
+      res = await fetch(apiUrl(`/api/modules/${moduleId}/lessons`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -35,7 +35,7 @@ export default function LessonForumSection({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/forum-threads`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/forum-threads`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, body }),

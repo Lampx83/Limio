@@ -35,7 +35,7 @@ export default function AddModuleForm({
     setError(null);
     let res: Response;
     try {
-      res = await fetch(apiUrl(`/api/courses/${courseId}/modules`, {
+      res = await fetch(apiUrl(`/api/courses/${courseId}/modules`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, orderIndex: nextOrderIndex }),

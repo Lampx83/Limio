@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export async function GET() {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(await isAdmin(userId))) {
+  if (!(await isAdmin(userId)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const statuses = await listIntegrationStatuses();

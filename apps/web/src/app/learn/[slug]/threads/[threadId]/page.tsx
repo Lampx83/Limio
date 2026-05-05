@@ -34,7 +34,7 @@ export default async function ThreadPage({
     where: { slug: params.slug },
     select: { id: true },
   });
-  if (!(await isUserEnrolled(userId, course.id))) {
+  if (!(await isUserEnrolled(userId, course.id)) {
     redirect(`/catalog/${params.slug}`);
   }
 

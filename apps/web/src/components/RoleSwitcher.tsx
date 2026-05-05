@@ -35,7 +35,7 @@ export default function RoleSwitcher({
   async function switchTo(role: string) {
     if (role === activeRole || busy) return;
     setBusy(true);
-    await fetch(apiUrl("/api/switch-role", {
+    await fetch(apiUrl("/api/switch-role"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),

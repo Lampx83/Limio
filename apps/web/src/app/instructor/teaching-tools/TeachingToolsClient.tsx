@@ -51,7 +51,7 @@ export default function TeachingToolsClient({
   const fetchEnrollments = async (courseId: string) => {
     try {
       console.log("[TeachingTools] Fetching enrollments for courseId:", courseId);
-      const res = await fetch(apiUrl(`/api/courses/${courseId}/enrollments`, {
+      const res = await fetch(apiUrl(`/api/courses/${courseId}/enrollments`), {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });

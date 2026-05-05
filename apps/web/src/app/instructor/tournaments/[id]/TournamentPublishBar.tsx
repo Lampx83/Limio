@@ -22,7 +22,7 @@ export default function TournamentPublishBar({
   async function publish() {
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}`, {
+    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "published" }),
@@ -39,7 +39,7 @@ export default function TournamentPublishBar({
   async function endEarly() {
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/end`, {
+    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/end`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     });

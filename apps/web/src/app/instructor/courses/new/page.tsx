@@ -17,7 +17,7 @@ export default function NewCoursePage() {
     e.preventDefault();
     setStatus("submitting");
     setError(null);
-    const res = await fetch(apiUrl("/api/courses", {
+    const res = await fetch(apiUrl("/api/courses"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, language, level, category: category || undefined }),

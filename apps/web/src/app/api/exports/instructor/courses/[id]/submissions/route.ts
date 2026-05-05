@@ -20,7 +20,7 @@ export async function GET(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!(await canEditCourse(userId, params.id))) {
+  if (!(await canEditCourse(userId, params.id)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

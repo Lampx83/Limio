@@ -49,7 +49,7 @@ export default function TournamentMissionManager({
     };
     if (newPrereqId) payload.prerequisiteId = newPrereqId;
 
-    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/missions`, {
+    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/missions`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -80,7 +80,7 @@ export default function TournamentMissionManager({
     if (!confirm("Xoá mission này?")) return;
     setDeleting(missionId);
     setError(null);
-    const res = await fetch(apiUrl(`/api/tournament-missions/${missionId}`, {
+    const res = await fetch(apiUrl(`/api/tournament-missions/${missionId}`), {
       method: "DELETE",
     });
     setDeleting(null);

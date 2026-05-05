@@ -23,7 +23,7 @@ export default async function CertificatePage({
     select: { id: true, title: true, description: true, language: true },
   });
   if (!course) notFound();
-  if (!(await isUserEnrolled(userId, course.id))) {
+  if (!(await isUserEnrolled(userId, course.id)) {
     redirect(`/catalog/${params.slug}`);
   }
 

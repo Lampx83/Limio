@@ -73,7 +73,7 @@ export default function TournamentRegisterButton({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/register`, {
+      const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/register`), {
         method: "POST",
       });
       if (res.ok) {

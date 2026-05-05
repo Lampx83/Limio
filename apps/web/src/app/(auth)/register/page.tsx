@@ -16,7 +16,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setStatus("submitting");
     setMessage(null);
-    const res = await fetch(apiUrl("/api/auth/register", {
+    const res = await fetch(apiUrl("/api/auth/register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, displayName }),

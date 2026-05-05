@@ -33,7 +33,7 @@ export default function QuickPollVote({ pollId }: { pollId: string }) {
 
   const fetchResults = async () => {
     try {
-      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/results`);
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/results`));
       if (!res.ok) return;
 
       const data = await res.json();
@@ -58,7 +58,7 @@ export default function QuickPollVote({ pollId }: { pollId: string }) {
 
     setIsLoading(true);
     try {
-      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/vote`, {
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/vote`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ choice: selectedChoice.toString() }),

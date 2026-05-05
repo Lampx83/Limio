@@ -27,7 +27,7 @@ export default function LtiLaunch({
 
   useEffect(() => {
     async function init() {
-      const res = await fetch(apiUrl("/api/lti/launch", {
+      const res = await fetch(apiUrl("/api/lti/launch"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ toolId, resourceLinkId, courseId, lessonId }),

@@ -96,11 +96,11 @@ export default function AddQuestionForm({
 
   useEffect(() => {
     if (!open) return;
-    fetch(apiUrl("/api/skills")
+    fetch(apiUrl("/api/skills"))
       .then((r) => r.json())
       .then((d) => setSkills(d.items ?? []))
       .catch(() => {});
-    fetch(apiUrl("/api/misconceptions")
+    fetch(apiUrl("/api/misconceptions"))
       .then((r) => r.json())
       .then((d) => setMisconceptions(d.items ?? []))
       .catch(() => {});
@@ -120,7 +120,7 @@ export default function AddQuestionForm({
 
   function changeType(next: QuestionType) {
     setType(next);
-    setOptions(DEFAULTS[next].map((o) => ({ ...o, extra: o.extra ? { ...o.extra } : null })));
+    setOptions(DEFAULTS[next].map((o) => ({ ...o, extra: o.extra ? { ...o.extra } : null }));
   }
 
   function setOption(i: number, patch: Partial<OptionDraft>) {
@@ -129,7 +129,7 @@ export default function AddQuestionForm({
     );
   }
   function setSingleCorrect(i: number) {
-    setOptions((curr) => curr.map((o, idx) => ({ ...o, isCorrect: idx === i })));
+    setOptions((curr) => curr.map((o, idx) => ({ ...o, isCorrect: idx === i }));
   }
   function addOption() {
     setOptions((curr) => [...curr, blank({ isCorrect: false })]);
@@ -145,7 +145,7 @@ export default function AddQuestionForm({
     if (!name) return;
     const description = window.prompt("Mô tả:", "");
     if (description === null) return;
-    const res = await fetch(apiUrl("/api/misconceptions", {
+    const res = await fetch(apiUrl("/api/misconceptions"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, name, description: description || name }),
@@ -154,7 +154,7 @@ export default function AddQuestionForm({
       alert("Tạo misconception thất bại");
       return;
     }
-    const fresh = await fetch(apiUrl("/api/misconceptions").then((r) => r.json());
+    const fresh = await fetch(apiUrl("/api/misconceptions")).then((r) => r.json());
     setMisconceptions(fresh.items ?? []);
   }
 
@@ -189,7 +189,7 @@ export default function AddQuestionForm({
             : undefined
           : undefined;
 
-    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions`, {
+    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -39,7 +39,7 @@ export default function PollVotingPage({ poll }: { poll: Poll }) {
 
     setIsLoading(true);
     try {
-      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${poll.id}/vote`, {
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${poll.id}/vote`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ choice: selectedChoice.toString() }),

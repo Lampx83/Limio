@@ -15,7 +15,7 @@ export default function FeedbackRater({
 
   async function rate(value: number) {
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/feedback-deliveries/${deliveryId}/rate`, {
+    const res = await fetch(apiUrl(`/api/feedback-deliveries/${deliveryId}/rate`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rating: value }),

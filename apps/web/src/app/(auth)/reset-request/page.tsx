@@ -11,7 +11,7 @@ export default function ResetRequestPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("submitting");
-    await fetch(apiUrl("/api/auth/reset-request", {
+    await fetch(apiUrl("/api/auth/reset-request"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

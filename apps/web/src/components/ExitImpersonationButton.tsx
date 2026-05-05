@@ -7,7 +7,7 @@ export default function ExitImpersonationButton() {
   const [busy, setBusy] = useState(false);
   async function exit() {
     setBusy(true);
-    await fetch(apiUrl("/api/admin/impersonate/exit", { method: "POST" });
+    await fetch(apiUrl("/api/admin/impersonate/exit"), { method: "POST" });
     window.location.href = "/admin/users";
   }
   return (

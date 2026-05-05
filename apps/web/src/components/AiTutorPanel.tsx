@@ -28,7 +28,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
   useEffect(() => {
     if (!open || conversationId) return;
     void (async () => {
-      const r = await fetch(apiUrl(`/api/ai/conversations/by-lesson/${lessonId}`);
+      const r = await fetch(apiUrl(`/api/ai/conversations/by-lesson/${lessonId}`));
       if (!r.ok) {
         setError("conversation_load_failed");
         return;
@@ -63,7 +63,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
 
     let acc = "";
     try {
-      const res = await fetch(apiUrl("/api/ai/tutor", {
+      const res = await fetch(apiUrl("/api/ai/tutor"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lessonId, message: text, conversationId }),

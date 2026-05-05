@@ -40,7 +40,7 @@ export default function AiQuestionGenerator({
     setError(null);
     setDrafts([]);
     setImported(new Set());
-    const res = await fetch(apiUrl("/api/ai/generate-questions", {
+    const res = await fetch(apiUrl("/api/ai/generate-questions"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lessonId, count, difficulty }),
@@ -71,7 +71,7 @@ export default function AiQuestionGenerator({
         isCorrect: o.isCorrect,
       })),
     };
-    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions`, {
+    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

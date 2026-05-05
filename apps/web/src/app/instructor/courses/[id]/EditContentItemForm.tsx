@@ -98,7 +98,7 @@ export default function EditContentItemForm({ item, onClose }: Props) {
 
     let res: Response;
     try {
-      res = await fetch(apiUrl(`/api/contents/${item.id}`, {
+      res = await fetch(apiUrl(`/api/contents/${item.id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payload }),

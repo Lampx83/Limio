@@ -33,7 +33,7 @@ export default async function SubmissionsPage({
   if (!assignment) notFound();
 
   const courseId = assignment.lesson.module.course.id;
-  if (!(await canEditCourse(userId, courseId))) {
+  if (!(await canEditCourse(userId, courseId)) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">

@@ -15,7 +15,7 @@ export default function VerifyPage() {
       setError("Thiếu token");
       return;
     }
-    fetch(apiUrl(`/api/auth/verify?token=${encodeURIComponent(token)}`)
+    fetch(apiUrl(`/api/auth/verify?token=${encodeURIComponent(token)}`))
       .then(async (res) => {
         if (res.ok) {
           setStatus("ok");

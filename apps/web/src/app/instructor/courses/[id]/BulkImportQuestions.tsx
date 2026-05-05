@@ -25,7 +25,7 @@ export default function BulkImportQuestions({ quizId }: { quizId: string }) {
   async function importCsv() {
     setBusy(true);
     setResult(null);
-    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions/bulk-import`, {
+    const res = await fetch(apiUrl(`/api/quizzes/${quizId}/questions/bulk-import`), {
       method: "POST",
       headers: { "Content-Type": "text/csv" },
       body: csv,

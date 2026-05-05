@@ -47,7 +47,7 @@ export default function UsersBrowser() {
     if (role) params.set("role", role);
     params.set("page", String(page));
     params.set("limit", "25");
-    fetch(apiUrl(`/api/admin/users?${params}`)
+    fetch(apiUrl(`/api/admin/users?${params}`))
       .then((r) => (r.ok ? r.json() : null))
       .then((d: UsersResponse | null) => {
         if (!cancelled) setData(d);
@@ -63,7 +63,7 @@ export default function UsersBrowser() {
   async function impersonate(userId: string) {
     setImpersonatingId(userId);
     try {
-      const res = await fetch(apiUrl("/api/admin/impersonate", {
+      const res = await fetch(apiUrl("/api/admin/impersonate"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ targetUserId: userId }),

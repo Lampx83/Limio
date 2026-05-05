@@ -27,7 +27,7 @@ export default function AddQuizForm({ lessonId }: { lessonId: string }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/quizzes`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/quizzes`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

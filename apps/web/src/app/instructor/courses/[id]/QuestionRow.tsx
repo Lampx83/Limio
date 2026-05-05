@@ -42,7 +42,7 @@ export default function QuestionRow({
   async function remove() {
     if (!confirm(`Xóa câu hỏi "${question.prompt.slice(0, 50)}..."?`)) return;
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/questions/${question.id}`, { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/questions/${question.id}`), { method: "DELETE" });
     setBusy(false);
     if (res.ok) router.refresh();
   }

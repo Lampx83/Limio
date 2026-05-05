@@ -76,7 +76,7 @@ export default function QuizPlayer({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(apiUrl(`/api/attempts/${attemptId}`)
+    fetch(apiUrl(`/api/attempts/${attemptId}`))
       .then((res) => res.json())
       .then((d: AttemptData) => {
         setData(d);
@@ -134,7 +134,7 @@ export default function QuizPlayer({
     if (!a) return;
     if (isResponseEmpty(question, a.response)) return;
     if (quiz.requireConfidence && a.confidence === null) return;
-    await fetch(apiUrl(`/api/attempts/${attemptId}/answers`, {
+    await fetch(apiUrl(`/api/attempts/${attemptId}/answers`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -151,7 +151,7 @@ export default function QuizPlayer({
     for (const q of quiz.questions) {
       await saveAnswer(q);
     }
-    const res = await fetch(apiUrl(`/api/attempts/${attemptId}/submit`, { method: "POST" });
+    const res = await fetch(apiUrl(`/api/attempts/${attemptId}/submit`), { method: "POST" });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       setError(d.error ?? "submit_failed");

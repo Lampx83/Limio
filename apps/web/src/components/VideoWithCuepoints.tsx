@@ -105,7 +105,7 @@ export default function VideoWithCuepoints({
     const cached = quizCacheRef.current.get(quizId);
     if (cached) return cached;
     try {
-      const res = await fetch(apiUrl(`/api/quizzes/${quizId}/learner`);
+      const res = await fetch(apiUrl(`/api/quizzes/${quizId}/learner`));
       if (!res.ok) return null;
       const data = (await res.json()) as { quiz: LearnerQuiz };
       quizCacheRef.current.set(quizId, data.quiz);
@@ -203,7 +203,7 @@ export default function VideoWithCuepoints({
     const nextAttemptCount = active.attemptCount + 1;
     let res: Response;
     try {
-      res = await fetch(apiUrl(`/api/quizzes/${active.quiz.id}/inline-grade`, {
+      res = await fetch(apiUrl(`/api/quizzes/${active.quiz.id}/inline-grade`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

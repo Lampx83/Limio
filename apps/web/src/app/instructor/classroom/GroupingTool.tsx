@@ -93,7 +93,7 @@ export default function GroupingTool({
           ? { lessonId, groupSize }
           : { lessonId, numGroups };
 
-      const res = await fetch(apiUrl("/api/classroom/grouping/create", {
+      const res = await fetch(apiUrl("/api/classroom/grouping/create"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -162,7 +162,7 @@ export default function GroupingTool({
           ? { lessonId, groupSize }
           : { lessonId, numGroups };
 
-      const res = await fetch(apiUrl("/api/classroom/grouping/create", {
+      const res = await fetch(apiUrl("/api/classroom/grouping/create"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

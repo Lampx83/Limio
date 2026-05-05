@@ -47,7 +47,7 @@ export default function SkillTagsEditor({
   useEffect(() => {
     if (!picking) return;
     const ctrl = new AbortController();
-    fetch(apiUrl(`/api/skills?q=${encodeURIComponent(query)}`, { signal: ctrl.signal })
+    fetch(apiUrl(`/api/skills?q=${encodeURIComponent(query)}`), { signal: ctrl.signal })
       .then((res) => res.json())
       .then((d) => setSkills(d.items ?? []))
       .catch(() => {});
@@ -68,7 +68,7 @@ export default function SkillTagsEditor({
   async function attach(skillId: string) {
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/skills`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/skills`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ skillId }),
@@ -85,7 +85,7 @@ export default function SkillTagsEditor({
 
   async function detach(skillId: string) {
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/skills/${skillId}`, {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/skills/${skillId}`), {
       method: "DELETE",
     });
     setBusy(false);
@@ -96,7 +96,7 @@ export default function SkillTagsEditor({
     setAiSuggesting(true);
     setAiSuggestions([]);
     setError(null);
-    const res = await fetch(apiUrl("/api/ai/suggest-skills", {
+    const res = await fetch(apiUrl("/api/ai/suggest-skills"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lessonId }),
@@ -119,7 +119,7 @@ export default function SkillTagsEditor({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl("/api/skills", {
+    const res = await fetch(apiUrl("/api/skills"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: newCode, name: newName }),

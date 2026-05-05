@@ -37,7 +37,7 @@ export default async function AdminLayout({
     );
   }
 
-  if (!(await isAdmin(session.user.id))) {
+  if (!(await isAdmin(session.user.id)) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">

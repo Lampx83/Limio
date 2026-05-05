@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       { status: 404, headers: { "content-type": "application/json" } },
     );
   }
-  if (!(await isUserEnrolled(userId, lesson.module.courseId))) {
+  if (!(await isUserEnrolled(userId, lesson.module.courseId)) {
     return new Response(
       JSON.stringify({ error: "not_enrolled" }),
       { status: 403, headers: { "content-type": "application/json" } },

@@ -16,7 +16,7 @@ export default function MarkResolvedButton({
 
   async function onClick() {
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/forum-threads/${threadId}/resolve`, {
+    const res = await fetch(apiUrl(`/api/forum-threads/${threadId}/resolve`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ postId }),

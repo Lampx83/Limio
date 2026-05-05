@@ -105,7 +105,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
           return;
         }
 
-        const res = await fetch(apiUrl("/api/classroom/random-pick", {
+        const res = await fetch(apiUrl("/api/classroom/random-pick"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lessonId }),

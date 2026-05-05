@@ -43,7 +43,7 @@ export default function EnrollButton({
     }
 
     setSubmitting(true);
-    const res = await fetch(apiUrl(`/api/courses/${slug}/enroll`, { method: "POST" });
+    const res = await fetch(apiUrl(`/api/courses/${slug}/enroll`), { method: "POST" });
     if (res.status === 401) {
       window.location.href = `/signin?callbackUrl=/catalog/${slug}`;
       return;

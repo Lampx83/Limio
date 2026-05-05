@@ -59,7 +59,7 @@ export async function POST(req: Request) {
   }
 
   if (courseId) {
-    if (!(await canEditCourse(userId, courseId))) {
+    if (!(await canEditCourse(userId, courseId)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
   } else {

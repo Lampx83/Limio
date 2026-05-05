@@ -48,7 +48,7 @@ export default function CourseMetaForm({
     e.preventDefault();
     setBusy(true);
     const parsedPrice = priceCents.trim() === "" ? null : parseInt(priceCents, 10);
-    const res = await fetch(apiUrl(`/api/instructor/courses/${courseId}`, {
+    const res = await fetch(apiUrl(`/api/instructor/courses/${courseId}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

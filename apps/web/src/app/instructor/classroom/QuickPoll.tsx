@@ -80,14 +80,14 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
           options: filledOptions,
           isAnonymous: true,
         });
-        setVotesByOption(Object.fromEntries(filledOptions.map((_, idx) => [idx.toString(), 0])));
+        setVotesByOption(Object.fromEntries(filledOptions.map((_, idx) => [idx.toString(), 0]));
         setQuestion("");
         setOptions(["", ""]);
         toast.success("Poll tạo thành công");
         return;
       }
 
-      const res = await fetch(apiUrl("/api/classroom/quick-poll/create", {
+      const res = await fetch(apiUrl("/api/classroom/quick-poll/create"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,7 +134,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
 
   const fetchResults = async (pollId: string) => {
     try {
-      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/results`);
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/results`));
       if (!res.ok) return;
 
       const data = await res.json();
@@ -159,7 +159,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
     if (currentPoll && originalQuestion && originalOptions.length > 0) {
       setIsCreating(true);
       try {
-        const res = await fetch(apiUrl("/api/classroom/quick-poll/create", {
+        const res = await fetch(apiUrl("/api/classroom/quick-poll/create"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -186,7 +186,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
 
         // Reset vote tracking and results
         setResults(null);
-        setVotesByOption(Object.fromEntries(originalOptions.map((_, idx) => [idx.toString(), 0])));
+        setVotesByOption(Object.fromEntries(originalOptions.map((_, idx) => [idx.toString(), 0]));
 
         // Start polling for results
         setIsPolling(true);

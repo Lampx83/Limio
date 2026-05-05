@@ -13,7 +13,7 @@ export default function DuplicateCourseButton({ courseId }: { courseId: string }
       return;
     }
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/courses/${courseId}/duplicate`, { method: "POST" });
+    const res = await fetch(apiUrl(`/api/courses/${courseId}/duplicate`), { method: "POST" });
     setBusy(false);
     if (res.ok) {
       const d = await res.json();

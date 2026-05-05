@@ -286,7 +286,7 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
                   value={totalSeconds === 0 ? minutes : displayMinutes}
                   onChange={(e) => {
                     if (totalSeconds === 0) {
-                      setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
+                      setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
                     }
                   }}
                   disabled={isRunning || totalSeconds > 0}
@@ -302,7 +302,7 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
                   value={totalSeconds === 0 ? seconds : displaySeconds}
                   onChange={(e) => {
                     if (totalSeconds === 0) {
-                      setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
+                      setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
                     }
                   }}
                   disabled={isRunning || totalSeconds > 0}
@@ -479,7 +479,7 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
                 value={totalSeconds === 0 ? minutes : displayMinutes}
                 onChange={(e) => {
                   if (totalSeconds === 0) {
-                    setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
+                    setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
                   }
                 }}
                 disabled={isRunning || totalSeconds > 0}
@@ -497,7 +497,7 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
                 value={totalSeconds === 0 ? seconds : displaySeconds}
                 onChange={(e) => {
                   if (totalSeconds === 0) {
-                    setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
+                    setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
                   }
                 }}
                 disabled={isRunning || totalSeconds > 0}

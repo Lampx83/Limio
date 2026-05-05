@@ -53,7 +53,7 @@ export default function SettingsClient({
   async function togglePayment(val: boolean) {
     setPaymentEnabled(val);
     startTransition(async () => {
-      const res = await fetch(apiUrl("/api/admin/settings", {
+      const res = await fetch(apiUrl("/api/admin/settings"), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ "payment.enabled": val ? "true" : "false" }),
