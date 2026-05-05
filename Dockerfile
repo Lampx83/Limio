@@ -47,8 +47,15 @@ COPY --from=deps /app/packages/core-feedback/node_modules ./packages/core-feedba
 COPY --from=deps /app/packages/core-gamification/node_modules ./packages/core-gamification/node_modules
 COPY --from=deps /app/packages/shared-types/node_modules ./packages/shared-types/node_modules
 COPY . .
-# Generate Prisma client for builder. Use absolute path to avoid Docker cd issues.
-RUN /app/node_modules/.bin/prisma generate --schema=/app/packages/db/prisma/schema.prisma
+# Generate Prisma client for builder. prisma CLI lives in packages/db/node_modules
+# (pnpm workspace devDependency), not necessarily hoisted to root — use find.
+RUN set -eux; \
+    PRISMA=$( \
+      find /app/packages/db/node_modules/.bin /app/node_modules/.bin \
+           -name prisma -type f 2>/dev/null | head -1 \
+    ); \
+    test -n "$PRISMA" || { echo "ERROR: Prisma CLI not found"; exit 1; }; \
+    "$PRISMA" generate --schema=/app/packages/db/prisma/schema.prisma
 # Persistent BuildKit cache for Next.js incremental compilation.
 # On the self-hosted runner (server 224) this cache survives between deploys:
 # unchanged modules are NOT recompiled, cutting typical build time by ~50%.
