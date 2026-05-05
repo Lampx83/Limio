@@ -64,7 +64,9 @@ export async function POST(req: Request) {
     } else {
       // Standalone mode - create a temporary session without lesson
       const classroomSession = await prisma.classroomSession.create({
-        data: {},
+        data: {
+          startedAt: new Date(),
+        },
         select: { id: true },
       });
       sessionId = classroomSession.id;
