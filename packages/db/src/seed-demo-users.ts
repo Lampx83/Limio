@@ -12,7 +12,7 @@
  * Run AFTER seed-sample-course.ts so the course exists for Bob to enroll in.
  */
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/client";
 import { RoleName } from "@feedbackme/shared-types";
 
 const prisma = new PrismaClient();

@@ -1,5 +1,5 @@
 /** Seed Phase 1 daily quests. Idempotent. */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/client";
 
 const prisma = new PrismaClient();
 

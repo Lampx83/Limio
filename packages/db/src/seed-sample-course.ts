@@ -9,7 +9,7 @@
  * Idempotent: safe to run repeatedly. Each run skips entities that already exist by slug/email/code.
  */
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/client";
 import { RoleName } from "@feedbackme/shared-types";
 
 const prisma = new PrismaClient();
