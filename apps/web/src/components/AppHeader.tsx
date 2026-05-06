@@ -16,12 +16,10 @@ export default async function AppHeader() {
   // reading from DB on each request keeps the header always fresh. Cheap
   // single-row PK lookup on Postgres.
   const avatarUrl = user?.id
-    ? (
-        await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { avatarUrl: true },
-        })
-      )?.avatarUrl ?? null
+    ? await prisma.user
+        .findUnique({ where: { id: user.id }, select: { avatarUrl: true } })
+        .then((r) => r?.avatarUrl ?? null)
+        .catch(() => null)
     : null;
 
   return (

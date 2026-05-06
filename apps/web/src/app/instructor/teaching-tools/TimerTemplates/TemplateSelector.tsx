@@ -69,7 +69,7 @@ export default function TemplateSelector({
     <div className="space-y-3">
       <div>
         <label className="label mb-1 block text-sm font-medium">
-          Timer Template
+          Mẫu hẹn giờ
         </label>
         <div className="flex gap-2">
           <select
@@ -78,7 +78,7 @@ export default function TemplateSelector({
             disabled={isLoading}
             className="input flex-1"
           >
-            <option value="">No template (manual setup)</option>
+            <option value="">Không dùng mẫu (thiết lập thủ công)</option>
             {templates.map((template) => (
               <option key={template.id} value={template.id}>
                 {template.name} ({Math.floor(template.durationSeconds / 60)}m{template.durationSeconds % 60}s)
@@ -99,7 +99,7 @@ export default function TemplateSelector({
       {selectedTemplateId && templates.length > 0 && (
         <div className="rounded border border-green-200 bg-green-50 p-3">
           <p className="text-xs font-medium text-green-800">
-            ✓ Template selected
+            ✓ Đã chọn mẫu
           </p>
         </div>
       )}
@@ -109,13 +109,13 @@ export default function TemplateSelector({
           onClick={() => setShowForm(true)}
           className="btn btn-secondary btn-sm text-xs"
         >
-          + Create template
+          + Tạo mẫu
         </button>
         <a
           href="/instructor/teaching-tools/templates"
           className="btn btn-secondary btn-sm text-xs"
         >
-          Manage templates →
+          Quản lý mẫu →
         </a>
       </div>
     </div>
