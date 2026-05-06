@@ -18,6 +18,7 @@ pnpm-debug.log*
 
 # prisma
 packages/db/prisma/migrations/dev.db*
+packages/db/src/generated/
 
 # legacy snapshot
 legacy-v1/node_modules/
