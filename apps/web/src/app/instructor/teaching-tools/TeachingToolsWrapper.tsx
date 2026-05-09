@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { BarChart3, Cloud, Clock, Users, Shuffle } from "lucide-react";
 import QuickPoll from "../classroom/QuickPoll";
 import WordCloud from "../classroom/WordCloud";
@@ -9,10 +8,12 @@ import RandomPicker from "../classroom/RandomPicker";
 import GroupingTool from "../classroom/GroupingTool";
 import type { StudentItem } from "./TeachingToolsClient";
 
-type ToolType = "poll" | "wordcloud" | "timer" | "random-picker" | "grouping" | null;
+export type ToolType = "poll" | "wordcloud" | "timer" | "random-picker" | "grouping" | null;
 
 interface TeachingToolsWrapperProps {
   studentList: StudentItem[];
+  selectedTool: ToolType;
+  onSelectTool: (tool: ToolType) => void;
 }
 
 const TOOLS = [
@@ -60,25 +61,25 @@ const TOOLS = [
 
 export default function TeachingToolsWrapper({
   studentList,
+  selectedTool,
+  onSelectTool,
 }: TeachingToolsWrapperProps) {
-  const [selectedTool, setSelectedTool] = useState<ToolType>(null);
-
   if (selectedTool) {
     return (
       <div>
         <button
-          onClick={() => setSelectedTool(null)}
+          onClick={() => onSelectTool(null)}
           className="mb-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
         >
           ← Quay lại
         </button>
 
-        {selectedTool === "poll" && <QuickPoll onExit={() => setSelectedTool(null)} />}
-        {selectedTool === "wordcloud" && <WordCloud onExit={() => setSelectedTool(null)} />}
-        {selectedTool === "timer" && <CountdownTimer onExit={() => setSelectedTool(null)} />}
+        {selectedTool === "poll" && <QuickPoll onExit={() => onSelectTool(null)} />}
+        {selectedTool === "wordcloud" && <WordCloud onExit={() => onSelectTool(null)} />}
+        {selectedTool === "timer" && <CountdownTimer onExit={() => onSelectTool(null)} />}
         {selectedTool === "random-picker" && (
           studentList.length > 0 ? (
-            <RandomPicker studentList={studentList} onExit={() => setSelectedTool(null)} />
+            <RandomPicker studentList={studentList} onExit={() => onSelectTool(null)} />
           ) : (
             <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card text-center">
               <p className="text-muted">Vui lòng chọn khóa học hoặc nhập danh sách sinh viên trước</p>
@@ -87,7 +88,7 @@ export default function TeachingToolsWrapper({
         )}
         {selectedTool === "grouping" && (
           studentList.length > 0 ? (
-            <GroupingTool studentList={studentList} onExit={() => setSelectedTool(null)} />
+            <GroupingTool studentList={studentList} onExit={() => onSelectTool(null)} />
           ) : (
             <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card text-center">
               <p className="text-muted">Vui lòng chọn khóa học hoặc nhập danh sách sinh viên trước</p>
@@ -109,7 +110,7 @@ export default function TeachingToolsWrapper({
             return (
               <button
                 key={tool.id}
-                onClick={() => setSelectedTool(tool.id as ToolType)}
+                onClick={() => onSelectTool(tool.id as ToolType)}
                 className="group relative overflow-hidden rounded-xl border-2 border-accent-200 bg-gradient-to-br from-accent-50 to-accent-100/50 p-6 transition-all duration-300 hover:border-accent-400 hover:shadow-lg dark:border-accent-800 dark:from-accent-900/20 dark:to-accent-800/10"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-accent-200/0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
@@ -149,7 +150,7 @@ export default function TeachingToolsWrapper({
             return (
               <button
                 key={tool.id}
-                onClick={() => !isDisabled && setSelectedTool(tool.id as ToolType)}
+                onClick={() => !isDisabled && onSelectTool(tool.id as ToolType)}
                 disabled={isDisabled}
                 className={`group relative overflow-hidden rounded-xl border-2 p-6 transition-all duration-300 ${
                   isDisabled

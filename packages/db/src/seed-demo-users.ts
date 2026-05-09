@@ -57,11 +57,25 @@ async function ensureUser(u: DemoUser): Promise<string> {
     include: { authProviders: true },
   });
 
+  const userId = existing ? existing.id : (await (async () => {
+    const created = await prisma.user.create({
+      data: {
+        email: u.email,
+        passwordHash,
+        displayName: u.displayName,
+        emailVerifiedAt: new Date(),
+        authProviders: { create: { provider: "password", providerUserId: u.email } },
+      },
+    });
+    console.log(`Created ${u.email}`);
+    return created.id;
+  })());
+
   if (existing) {
     // Refresh password + mark email verified in case the row was created by
     // direct SQL or an older seed that left passwordHash/emailVerifiedAt wrong.
     await prisma.user.update({
-      where: { id: existing.id },
+      where: { id: userId },
       data: { passwordHash, emailVerifiedAt: new Date() },
     });
     // Ensure the password AuthProvider row exists (direct-SQL inserts may omit it).
@@ -70,31 +84,25 @@ async function ensureUser(u: DemoUser): Promise<string> {
     );
     if (!hasPasswordProvider) {
       await prisma.authProvider.create({
-        data: { userId: existing.id, provider: "password", providerUserId: u.email },
+        data: { userId, provider: "password", providerUserId: u.email },
       });
     }
-    console.log(`Refreshed ${u.email}`);
-    return existing.id;
   }
 
-  const created = await prisma.user.create({
-    data: {
-      email: u.email,
-      passwordHash,
-      displayName: u.displayName,
-      emailVerifiedAt: new Date(),
-      authProviders: { create: { provider: "password", providerUserId: u.email } },
-    },
-  });
-
+  // Ensure all expected roles are assigned (idempotent for existing users).
   for (const roleName of u.roles) {
     const role = await prisma.role.findUniqueOrThrow({ where: { name: roleName } });
-    await prisma.userRole.create({
-      data: { userId: created.id, roleId: role.id, grantedBy: created.id },
+    const hasRole = await prisma.userRole.findFirst({
+      where: { userId, roleId: role.id },
     });
+    if (!hasRole) {
+      await prisma.userRole.create({
+        data: { userId, roleId: role.id, grantedBy: userId },
+      });
+    }
   }
-  console.log(`Created ${u.email} (${u.roles.join(", ")})`);
-  return created.id;
+  console.log(`${existing ? "Refreshed" : "Created"} ${u.email} (${u.roles.join(", ")})`);
+  return userId;
 }
 
 async function ensureBobIsHalfwayThrough(bobId: string) {

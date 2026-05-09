@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import CourseSelector from "./CourseSelector";
 import ManualStudentInput from "./ManualStudentInput";
 import TeachingToolsWrapper from "./TeachingToolsWrapper";
+import type { ToolType } from "./TeachingToolsWrapper";
 import { apiUrl } from "@/lib/apiUrl";
 
 export interface StudentItem {
@@ -21,14 +23,54 @@ interface TeachingToolsClientProps {
   courses: Course[];
 }
 
+const VALID_TOOLS: ToolType[] = ["poll", "wordcloud", "timer", "random-picker", "grouping"];
+
 export default function TeachingToolsClient({
   courses,
 }: TeachingToolsClientProps) {
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const initialTool = (searchParams.get("tool") as ToolType | null);
+  const initialCourse = searchParams.get("course");
+
+  const [selectedTool, setSelectedToolState] = useState<ToolType>(
+    initialTool && VALID_TOOLS.includes(initialTool) ? initialTool : null,
+  );
+  const [selectedCourseId, setSelectedCourseIdState] = useState<string | null>(
+    initialCourse ?? null,
+  );
   const [manualStudentText, setManualStudentText] = useState("");
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCourseEnrollmentCount, setSelectedCourseEnrollmentCount] = useState(0);
+
+  const updateUrl = useCallback(
+    (tool: ToolType, courseId: string | null) => {
+      const params = new URLSearchParams();
+      if (tool) params.set("tool", tool);
+      if (courseId) params.set("course", courseId);
+      const qs = params.toString();
+      router.replace(qs ? `?${qs}` : "?", { scroll: false });
+    },
+    [router],
+  );
+
+  const setSelectedTool = useCallback(
+    (tool: ToolType) => {
+      setSelectedToolState(tool);
+      updateUrl(tool, selectedCourseId);
+    },
+    [selectedCourseId, updateUrl],
+  );
+
+  const setSelectedCourseId = useCallback(
+    (courseId: string | null) => {
+      setSelectedCourseIdState(courseId);
+      updateUrl(selectedTool, courseId);
+    },
+    [selectedTool, updateUrl],
+  );
 
   // Fetch enrollments when course selected
   useEffect(() => {
@@ -108,7 +150,11 @@ export default function TeachingToolsClient({
   return (
     <div className="space-y-8">
       {/* Teaching Tools Section */}
-      <TeachingToolsWrapper studentList={studentList} />
+      <TeachingToolsWrapper
+        studentList={studentList}
+        selectedTool={selectedTool}
+        onSelectTool={setSelectedTool}
+      />
 
       {/* Course Selector Section - Only for Random Picker & Grouping Tool */}
       <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card">

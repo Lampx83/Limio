@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { Type, List, Palette } from "lucide-react";
 
 interface NotesEditorProps {
@@ -9,6 +9,7 @@ interface NotesEditorProps {
   placeholder?: string;
   className?: string;
   rows?: number;
+  autoFit?: boolean;
 }
 
 const COLORS = [
@@ -26,10 +27,41 @@ export default function NotesEditor({
   placeholder = "Nhập ghi chú...",
   className = "input w-full h-full resize font-mono text-sm",
   rows = 8,
+  autoFit = false,
 }: NotesEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const outerRef = useRef<HTMLDivElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
+  const fitRef = useRef<(() => void) | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!autoFit || !outerRef.current || !editorRef.current) return;
+
+    const fit = () => {
+      const outer = outerRef.current!;
+      const inner = editorRef.current!;
+      inner.style.fontSize = "8px";
+
+      let lo = 8, hi = 400;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        inner.style.fontSize = `${mid}px`;
+        if (inner.scrollHeight <= outer.clientHeight && inner.scrollWidth <= outer.clientWidth) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+      inner.style.fontSize = `${lo}px`;
+    };
+
+    fitRef.current = fit;
+    const ro = new ResizeObserver(fit);
+    ro.observe(outerRef.current);
+    fit();
+    return () => { ro.disconnect(); fitRef.current = null; };
+  }, [autoFit]);
 
   useEffect(() => {
     if (editorRef.current && !isInitialized) {
@@ -87,7 +119,7 @@ export default function NotesEditor({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col gap-2${autoFit ? " h-full" : ""}`}>
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2 items-center">
         {/* Font Size Input */}
@@ -217,22 +249,44 @@ export default function NotesEditor({
       </div>
 
       {/* Editor */}
-      <div
-        ref={editorRef}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={() => {
-          if (editorRef.current) {
-            onChange(editorRef.current.innerHTML);
-          }
-        }}
-        onBlur={() => {
-          closeColorPicker();
-        }}
-        style={{ outline: "none" }}
-        className={className}
-        data-placeholder={placeholder}
-      />
+      {autoFit ? (
+        <div ref={outerRef} style={{ flex: 1, overflow: "hidden", position: "relative", minHeight: 0 }}>
+          <div
+            ref={editorRef}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={() => {
+              if (editorRef.current) {
+                onChange(editorRef.current.innerHTML);
+                fitRef.current?.();
+              }
+            }}
+            onBlur={() => {
+              closeColorPicker();
+            }}
+            style={{ outline: "none" }}
+            className={className}
+            data-placeholder={placeholder}
+          />
+        </div>
+      ) : (
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={() => {
+            if (editorRef.current) {
+              onChange(editorRef.current.innerHTML);
+            }
+          }}
+          onBlur={() => {
+            closeColorPicker();
+          }}
+          style={{ outline: "none" }}
+          className={className}
+          data-placeholder={placeholder}
+        />
+      )}
 
       <style>{`
         [contenteditable]:empty:before {

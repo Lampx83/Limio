@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useRouter } from "next/navigation";
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 
 interface SortableItem {
   id: string;
@@ -39,6 +39,10 @@ export default function SortableModulesWrapper({
   const router = useRouter();
   const [localItems, setLocalItems] = useState(items);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setLocalItems(items);
+  }, [items]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   async function onDragEnd(e: DragEndEvent) {

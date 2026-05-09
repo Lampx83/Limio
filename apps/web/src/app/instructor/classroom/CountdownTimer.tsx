@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Clock } from "lucide-react";
-import { TimerTemplate } from "@feedbackme/db";
+import type { TimerTemplate } from "@feedbackme/db";
 import NotesEditor from "./NotesEditor";
 import TemplateSelector from "../teaching-tools/TimerTemplates/TemplateSelector";
 
@@ -32,11 +32,9 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
   const [notes, setNotes] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedMusic, setSelectedMusic] = useState("upbeat");
-  const [notesHeightPercent, setNotesHeightPercent] = useState(60);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const dividerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -201,31 +199,6 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const handleDividerMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const startY = e.clientY;
-    const container = containerRef.current;
-    if (!container) return;
-
-    const startHeight = container.clientHeight;
-    const startPercent = notesHeightPercent;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const deltaY = moveEvent.clientY - startY;
-      const percentChange = (deltaY / startHeight) * 100;
-      const newPercent = Math.max(30, Math.min(80, startPercent + percentChange));
-      setNotesHeightPercent(newPercent);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
   const formatTime = (num: number) => String(num).padStart(2, "0");
   const displayMinutes = totalSeconds > 0 ? Math.floor(totalSeconds / 60) : minutes;
   const displaySeconds = totalSeconds > 0 ? totalSeconds % 60 : seconds;
@@ -350,42 +323,31 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
           )}
         </div>
 
-        {/* Fullscreen Layout: Mission (top) + Timer (bottom) with draggable divider */}
-        <div className="flex flex-col flex-1 min-h-0">
-          {/* Notes/Mission Content - Top (resizable) */}
-          <div
-            className="flex flex-col min-h-0"
-            style={{ height: `${notesHeightPercent}%` }}
-          >
+        {/* Fullscreen Layout: Notes (flex-1) + Timer (fixed 20vh) */}
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+          {/* Notes/Mission Content */}
+          <div className="flex flex-col flex-1 min-h-0">
             <label className="text-sm font-semibold mb-2">📋 Nhiệm vụ / Hướng dẫn cho sinh viên</label>
             <NotesEditor
               value={notes}
               onChange={setNotes}
               placeholder="Nhập hướng dẫn cho sinh viên..."
-              className="input flex-1 resize-none text-base p-4 leading-relaxed overflow-auto"
+              className="input w-full h-full resize-none p-4 leading-relaxed overflow-hidden"
+              autoFit
             />
           </div>
 
-          {/* Draggable Divider */}
+          {/* Timer Display - fixed 20vh */}
           <div
-            ref={dividerRef}
-            onMouseDown={handleDividerMouseDown}
-            className="h-1 bg-purple-300 cursor-row-resize hover:bg-purple-500 transition-colors"
-            title="Kéo để thay đổi kích thước"
-          />
-
-          {/* Timer Display - Bottom (resizable) */}
-          <div
-            className={`flex flex-col justify-center items-center min-h-0 border-4 rounded-lg transition-all duration-300 ${stateClasses[timerState]}`}
-            style={{ height: `${100 - notesHeightPercent}%` }}
+            className={`flex items-center justify-center border-4 rounded-lg transition-all duration-300 ${stateClasses[timerState]}`}
+            style={{ height: "20vh" }}
           >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <span className="text-4xl">{stateIcons[timerState]}</span>
-              <p className="text-2xl text-muted">Thời gian còn lại</p>
-            </div>
-            <div className="text-8xl font-bold text-purple-700 font-mono leading-none">
+            <span
+              className="font-bold text-purple-700 font-mono leading-none whitespace-nowrap"
+              style={{ fontSize: "15vh" }}
+            >
               {formatTime(displayMinutes)}:{formatTime(displaySeconds)}
-            </div>
+            </span>
           </div>
         </div>
         <audio ref={audioRef} crossOrigin="anonymous" />

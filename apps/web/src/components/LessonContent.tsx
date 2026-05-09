@@ -11,6 +11,7 @@ const H5pPlayer = dynamic(() => import("./H5pPlayer"), { ssr: false });
 const VideoWithCuepoints = dynamic(() => import("./VideoWithCuepoints"), {
   ssr: false,
 });
+const PdfViewer = dynamic(() => import("./PdfViewer"), { ssr: false });
 
 interface ContentItem {
   id: string;
@@ -246,32 +247,7 @@ function ContentBlock({
     }
     case "pdf": {
       const p = payload as PdfPayload;
-      return (
-        <div>
-          {p.title && (
-            <p className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-muted">
-              <span></span>
-              {p.title}
-            </p>
-          )}
-          <iframe
-            src={p.url}
-            className="h-[80vh] w-full rounded-xl border border-token shadow-card"
-            title={p.title ?? "PDF"}
-          />
-          <p className="mt-2 text-xs text-faint">
-            Không xem được?{" "}
-            <a
-              href={p.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link"
-            >
-              Mở PDF trong tab mới
-            </a>
-          </p>
-        </div>
-      );
+      return <PdfViewer url={p.url} title={p.title} />;
     }
     default:
       return (

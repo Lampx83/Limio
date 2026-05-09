@@ -4,14 +4,27 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 
-export default function AddQuizForm({ lessonId }: { lessonId: string }) {
+export default function AddQuizForm({
+  lessonId,
+  embedded = false,
+  onCancel,
+}: {
+  lessonId: string;
+  embedded?: boolean;
+  onCancel?: () => void;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState(1);
   const [passThresholdPct, setPassThresholdPct] = useState(70);
   const [requireConfidence, setRequireConfidence] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  function close() {
+    if (embedded) onCancel?.();
+    else setOpen(false);
+  }
 
   if (!open) {
     return (
@@ -40,7 +53,7 @@ export default function AddQuizForm({ lessonId }: { lessonId: string }) {
     setBusy(false);
     if (res.ok) {
       setTitle("");
-      setOpen(false);
+      close();
       router.refresh();
     }
   }
@@ -97,7 +110,7 @@ export default function AddQuizForm({ lessonId }: { lessonId: string }) {
         </button>
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={close}
           className="btn-secondary btn-sm"
         >
           Hủy

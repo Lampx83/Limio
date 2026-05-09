@@ -66,12 +66,22 @@ const TYPE_LABEL: Record<ContentType, string> = {
 export default function AddContentItemForm({
   lessonId,
   nextOrderIndex,
+  embedded = false,
+  onCancel,
 }: {
   lessonId: string;
   nextOrderIndex: number;
+  embedded?: boolean;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
+
+  function close() {
+    if (embedded) onCancel?.();
+    else setOpen(false);
+  }
+
   const [type, setType] = useState<ContentType>("markdown");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -248,8 +258,8 @@ export default function AddContentItemForm({
     setBusy(false);
     if (res.ok) {
       reset();
-      setOpen(false);
-      setTimeout(() => window.location.reload(), 200);
+      close();
+      router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
       setError(d.error ?? "create_failed");
@@ -322,13 +332,21 @@ export default function AddContentItemForm({
               type === "video"
                 ? "Dán URL: YouTube · Vimeo · Loom · Wistia · Bunny · Mux — hoặc upload file bên dưới"
                 : type === "pdf"
-                  ? "URL PDF (https://.../file.pdf) — hoặc tự host"
+                  ? "URL PDF (https://.../file.pdf) — hoặc upload file bên dưới"
                   : "URL"
             }
             className="input"
           />
           {type === "video" && (
             <VideoUploadPanel
+              uploading={uploading}
+              setUploading={setUploading}
+              setError={setError}
+              onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+            />
+          )}
+          {type === "pdf" && (
+            <PdfUploadPanel
               uploading={uploading}
               setUploading={setUploading}
               setError={setError}
@@ -516,7 +534,7 @@ export default function AddContentItemForm({
           type="button"
           onClick={() => {
             reset();
-            setOpen(false);
+            close();
           }}
           className="btn-secondary btn-sm"
         >
@@ -752,6 +770,72 @@ function VideoUploadPanel({
         ))}
         <span className="text-faint">· tối đa 500 MB</span>
       </div>
+    </div>
+  );
+}
+
+const PDF_MAX_MB = 50;
+
+function PdfUploadPanel({
+  uploading,
+  setUploading,
+  setError,
+  onUploaded,
+}: {
+  uploading: boolean;
+  setUploading: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  onUploaded: (url: string) => void;
+}) {
+  async function handleFile(file: File) {
+    setUploading(true);
+    setError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(apiUrl("/api/lesson-media/pdfs"), {
+        method: "POST",
+        body: fd,
+      });
+    } catch (networkErr) {
+      setUploading(false);
+      console.error("[PdfUploadPanel] network error", networkErr);
+      setError("network_error");
+      return;
+    }
+    setUploading(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      return;
+    }
+    const data = (await res.json()) as { url: string };
+    onUploaded(data.url);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+        Hoặc upload file PDF từ máy
+      </p>
+      <input
+        type="file"
+        accept="application/pdf,.pdf"
+        disabled={uploading}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+        }}
+        className="mt-2 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {uploading && (
+        <p className="mt-1 text-xs text-muted">Đang upload...</p>
+      )}
+      <p className="mt-2 text-[11px] text-muted">
+        Chỉ nhận file <span className="font-mono font-semibold text-faint">PDF</span>
+        {" · "}tối đa <span className="font-semibold">{PDF_MAX_MB} MB</span>
+      </p>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TimerTemplate } from "@feedbackme/db";
+import type { TimerTemplate } from "@feedbackme/db";
 import { toast } from "@/lib/toast";
+import TemplateForm from "./TemplateForm";
 
 interface TemplateSelectorProps {
   courseId?: string;
@@ -104,20 +105,37 @@ export default function TemplateSelector({
         </div>
       )}
 
-      <div className="flex gap-2">
-        <button
-          onClick={() => setShowForm(true)}
-          className="btn btn-secondary btn-sm text-xs"
-        >
-          + Tạo mẫu
-        </button>
-        <a
-          href="/instructor/teaching-tools/templates"
-          className="btn btn-secondary btn-sm text-xs"
-        >
-          Quản lý mẫu →
-        </a>
-      </div>
+      {!showForm && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn btn-secondary btn-sm text-xs"
+          >
+            + Tạo mẫu
+          </button>
+          <a
+            href="/instructor/teaching-tools/templates"
+            className="btn btn-secondary btn-sm text-xs"
+          >
+            Quản lý mẫu →
+          </a>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-4">
+          <p className="text-sm font-semibold mb-3">Tạo mẫu mới</p>
+          <TemplateForm
+            courseId={courseId}
+            onSave={(saved) => {
+              setTemplates((prev) => [saved, ...prev]);
+              onSelectTemplate(saved);
+              setShowForm(false);
+            }}
+            onCancel={() => setShowForm(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

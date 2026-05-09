@@ -1,13 +1,12 @@
 import Link from "next/link";
 import LessonHeader from "./LessonHeader";
 import ContentItemsList from "./ContentItemsList";
-import AddContentItemForm from "./AddContentItemForm";
 import SkillTagsEditor from "./SkillTagsEditor";
 import QuizSection from "./QuizSection";
-import AddQuizForm from "./AddQuizForm";
 import AssignmentSection from "./AssignmentSection";
-import AddAssignmentForm from "./AddAssignmentForm";
 import LessonContent from "@/components/LessonContent";
+import LessonAddBar from "./LessonAddBar";
+import EmptyState from "./EmptyState";
 
 interface Lesson {
   id: string;
@@ -74,10 +73,12 @@ export default function LessonSection({
   lesson,
   order,
   courseSlug,
+  flat = false,
 }: {
   lesson: Lesson;
   order: number;
   courseSlug: string;
+  flat?: boolean;
 }) {
   const noSkill = lesson.skillTags.length === 0;
   const hiddenContent = lesson.contentItems.filter(c => c.isHidden).length;
@@ -85,50 +86,26 @@ export default function LessonSection({
   const hiddenAssignments = lesson.assignments.filter(a => a.isHidden).length;
   const totalHiddenItems = hiddenContent + hiddenQuizzes + hiddenAssignments;
 
-  return (
-    <details
-      open
-      className={`overflow-hidden rounded-xl border-2 transition-colors ${
-        lesson.isHidden
-          ? 'border-danger-200 bg-danger-50/50'
-          : 'border-brand-200 bg-[rgb(var(--surface))]'
-      }`}
-    >
-      <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-4 py-3 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
-        <span className="text-base font-semibold">
-          <span className="mr-2 text-sm font-normal text-faint">Lesson {order}</span>
-          {lesson.title}
-        </span>
-        {lesson.isHidden && <span className="chip-danger">👁️ Ẩn</span>}
-        {noSkill && <span className="chip-accent">chưa tag skill</span>}
-        {lesson.previewable && <span className="chip">Preview</span>}
-        <span className="ml-auto text-sm text-muted">
-          {lesson.contentItems.length} content · {lesson.quizzes.length} quiz ·{" "}
-          {lesson.assignments.length} assignment
-        </span>
-        {totalHiddenItems > 0 && (
-          <span className="flex items-center gap-1 text-xs text-danger-600">
-            <span className="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
-            {totalHiddenItems} ẩn
-          </span>
-        )}
-      </summary>
-      <div className="border-t border-token px-4 py-4 space-y-5">
+  const body = (
+      <div className={flat ? "space-y-5" : "border-t border-token px-4 py-4 space-y-5"}>
         <LessonHeader
           lessonId={lesson.id}
           title={lesson.title}
           description={lesson.description}
+          order={order}
           orderIndex={lesson.orderIndex}
           previewable={lesson.previewable}
           isHidden={lesson.isHidden}
+          noSkill={noSkill}
+          showTitle={flat}
         />
 
-        <Link
-          href={`/instructor/classroom/${lesson.id}`}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
-        >
-          🎲 Công cụ Dạy Học Trực Tiếp
-        </Link>
+        <div className="editor-only">
+          <LessonAddBar
+            lessonId={lesson.id}
+            nextContentOrderIndex={lesson.contentItems.length}
+          />
+        </div>
 
         <SubSection label="Skills">
           <SkillTagsEditor
@@ -144,12 +121,6 @@ export default function LessonSection({
         <SubSection label={`Nội dung (${lesson.contentItems.length})`}>
           <div className="editor-only">
             <ContentItemsList items={lesson.contentItems} />
-            <div className="mt-2">
-              <AddContentItemForm
-                lessonId={lesson.id}
-                nextOrderIndex={lesson.contentItems.length}
-              />
-            </div>
           </div>
           <div className="preview-only">
             {lesson.contentItems.length === 0 ? (
@@ -173,9 +144,16 @@ export default function LessonSection({
         <SubSection label={`Quizzes (${lesson.quizzes.length})`}>
           <div className="editor-only">
             {lesson.quizzes.length === 0 ? (
-              <p className="mb-2 rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
-                Chưa có quiz nào — tạo quiz để kiểm tra hiểu biết của học viên.
-              </p>
+              <EmptyState
+                icon="❓"
+                title="Chưa có quiz"
+                description="Quiz giúp kiểm tra hiểu biết của học viên ngay sau khi học."
+                cta={{
+                  label: "+ Thêm quiz",
+                  eventName: "lesson-add:open",
+                  eventDetail: { mode: "quiz" },
+                }}
+              />
             ) : (
               <ol className="space-y-2">
                 {lesson.quizzes.map((q) => (
@@ -185,9 +163,6 @@ export default function LessonSection({
                 ))}
               </ol>
             )}
-            <div className="mt-2">
-              <AddQuizForm lessonId={lesson.id} />
-            </div>
           </div>
           <div className="preview-only">
             {lesson.quizzes.length === 0 ? (
@@ -225,9 +200,16 @@ export default function LessonSection({
         <SubSection label={`Assignments (${lesson.assignments.length})`}>
           <div className="editor-only">
             {lesson.assignments.length === 0 ? (
-              <p className="mb-2 rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
-                Chưa có assignment nào — bài tập sẽ được instructor chấm tay.
-              </p>
+              <EmptyState
+                icon="📝"
+                title="Chưa có assignment"
+                description="Assignment sẽ được instructor chấm tay."
+                cta={{
+                  label: "+ Thêm assignment",
+                  eventName: "lesson-add:open",
+                  eventDetail: { mode: "assignment" },
+                }}
+              />
             ) : (
               <ol className="space-y-2">
                 {lesson.assignments.map((a) => (
@@ -237,9 +219,6 @@ export default function LessonSection({
                 ))}
               </ol>
             )}
-            <div className="mt-2">
-              <AddAssignmentForm lessonId={lesson.id} />
-            </div>
           </div>
           <div className="preview-only">
             {lesson.assignments.length === 0 ? (
@@ -275,6 +254,39 @@ export default function LessonSection({
           </div>
         </SubSection>
       </div>
+  );
+
+  if (flat) return body;
+
+  return (
+    <details
+      open
+      className={`overflow-hidden rounded-xl border-2 transition-colors ${
+        lesson.isHidden
+          ? 'border-danger-200 bg-danger-50/50'
+          : 'border-brand-200 bg-[rgb(var(--surface))]'
+      }`}
+    >
+      <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-4 py-3 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
+        <span className="text-base font-semibold">
+          <span className="mr-2 text-sm font-normal text-faint">Lesson {order}</span>
+          {lesson.title}
+        </span>
+        {lesson.isHidden && <span className="chip-danger">👁️ Ẩn</span>}
+        {noSkill && <span className="chip-accent">chưa tag skill</span>}
+        {lesson.previewable && <span className="chip">Preview</span>}
+        <span className="ml-auto text-sm text-muted">
+          {lesson.contentItems.length} content · {lesson.quizzes.length} quiz ·{" "}
+          {lesson.assignments.length} assignment
+        </span>
+        {totalHiddenItems > 0 && (
+          <span className="flex items-center gap-1 text-xs text-danger-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
+            {totalHiddenItems} ẩn
+          </span>
+        )}
+      </summary>
+      {body}
     </details>
   );
 }
@@ -287,11 +299,9 @@ function SubSection({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <p className="mb-2.5 text-sm font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </p>
+    <section>
+      <h3 className="mb-2 text-sm font-semibold text-default">{label}</h3>
       {children}
-    </div>
+    </section>
   );
 }

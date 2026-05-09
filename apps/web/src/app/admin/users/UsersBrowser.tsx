@@ -38,6 +38,14 @@ export default function UsersBrowser() {
   const [role, setRole] = useState("");
   const [page, setPage] = useState(0);
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState("learner");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createOk, setCreateOk] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +66,54 @@ export default function UsersBrowser() {
     return () => {
       cancelled = true;
     };
-  }, [q, role, page]);
+  }, [q, role, page, reloadKey]);
+
+  async function createUser(e: React.FormEvent) {
+    e.preventDefault();
+    setCreateError(null);
+    setCreateOk(null);
+    setCreating(true);
+    try {
+      const res = await fetch(apiUrl("/api/admin/users"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          displayName: newName,
+          email: newEmail,
+          password: newPassword,
+          role: newRole,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg =
+          data?.error === "invalid_email"
+            ? "Email không hợp lệ"
+            : data?.error === "missing_name"
+              ? "Tên không được bỏ trống"
+              : data?.error === "invalid_password"
+                ? "Mật khẩu phải từ 8 đến 128 ký tự"
+                : data?.error === "invalid_role"
+                  ? "Role không hợp lệ"
+                  : data?.error === "email_exists"
+                    ? "Email đã tồn tại"
+                    : `Lỗi: ${data?.error ?? res.status}`;
+        setCreateError(msg);
+        return;
+      }
+      setCreateOk(`Đã tạo người dùng ${data.user.email}`);
+      setNewName("");
+      setNewEmail("");
+      setNewPassword("");
+      setNewRole("learner");
+      setPage(0);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      setCreateError(`Lỗi mạng: ${(err as Error).message}`);
+    } finally {
+      setCreating(false);
+    }
+  }
 
   async function impersonate(userId: string) {
     setImpersonatingId(userId);
@@ -83,6 +138,92 @@ export default function UsersBrowser() {
 
   return (
     <>
+      {/* Create user */}
+      <form onSubmit={createUser} className="card mb-4">
+        <div className="mb-2">
+          <h2 className="text-base font-semibold">Thêm người dùng mới</h2>
+          <p className="text-xs text-muted">
+            Nhập tên, email và mật khẩu để tạo tài khoản. Email chưa được
+            xác thực.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[200px] flex-1">
+            <label htmlFor="new-user-name" className="label">
+              Tên hiển thị
+            </label>
+            <input
+              id="new-user-name"
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="input mt-1"
+              placeholder="vd: Nguyễn Văn A"
+              required
+            />
+          </div>
+          <div className="min-w-[240px] flex-1">
+            <label htmlFor="new-user-email" className="label">
+              Email
+            </label>
+            <input
+              id="new-user-email"
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="input mt-1"
+              placeholder="vd: a@example.com"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="new-user-role" className="label">
+              Role
+            </label>
+            <select
+              id="new-user-role"
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value)}
+              className="select mt-1"
+            >
+              <option value="learner">Learner</option>
+              <option value="instructor">Instructor</option>
+              <option value="mentor">Mentor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div className="min-w-[200px] flex-1">
+            <label htmlFor="new-user-password" className="label">
+              Mật khẩu
+            </label>
+            <input
+              id="new-user-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="input mt-1"
+              placeholder="Tối thiểu 8 ký tự"
+              minLength={8}
+              maxLength={128}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={creating}
+            className="btn-primary"
+          >
+            {creating ? "Đang tạo…" : "Thêm người dùng"}
+          </button>
+        </div>
+        {createError && (
+          <p className="mt-2 text-sm text-danger">{createError}</p>
+        )}
+        {createOk && (
+          <p className="mt-2 text-sm text-success">{createOk}</p>
+        )}
+      </form>
+
       {/* Filters */}
       <div className="card mb-4">
         <div className="flex flex-wrap items-end gap-3">

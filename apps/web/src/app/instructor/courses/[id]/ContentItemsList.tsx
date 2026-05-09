@@ -1,4 +1,5 @@
 import ContentItemRow from "./ContentItemRow";
+import EmptyState from "./EmptyState";
 
 interface Item {
   id: string;
@@ -10,9 +11,16 @@ interface Item {
 export default function ContentItemsList({ items }: { items: Item[] }) {
   if (items.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
-        Chưa có content nào — thêm video, markdown, file, SCORM, H5P, LTI...
-      </p>
+      <EmptyState
+        icon="📄"
+        title="Chưa có nội dung"
+        description="Thêm video, markdown, file, PDF, SCORM, H5P, hay LTI để bắt đầu."
+        cta={{
+          label: "+ Thêm nội dung",
+          eventName: "lesson-add:open",
+          eventDetail: { mode: "content" },
+        }}
+      />
     );
   }
   return (

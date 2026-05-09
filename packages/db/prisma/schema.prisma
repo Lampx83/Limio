@@ -73,6 +73,8 @@ model User {
   // Classroom tools
   classroomRandomPicks ClassroomRandomPick[]
   classroomPollVotes   ClassroomPollVote[]
+  createdPolls         ClassroomPoll[]       @relation("PollCreator")
+  createdWordClouds    WordCloud[]           @relation("WordCloudCreator")
   wordCloudSubmissions WordCloudSubmission[]
   groupMemberships     GroupMembership[]
   timerTemplates       TimerTemplate[]
@@ -1394,11 +1396,15 @@ model ClassroomPoll {
   options   String[] // JSON array: ["A", "B", "C", ...]
   isAnonymous Boolean @default(true)
 
+  createdById String?
+  createdBy   User?   @relation("PollCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
 
   votes     ClassroomPollVote[]
 
   @@index([sessionId, createdAt])
+  @@index([createdById, createdAt])
 }
 
 model ClassroomPollVote {
@@ -1406,8 +1412,8 @@ model ClassroomPollVote {
   pollId  String
   poll    ClassroomPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
 
-  userId  String
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String?
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   choice  String   // index of selected option (0, 1, 2, ...)
 
@@ -1425,11 +1431,15 @@ model WordCloud {
 
   prompt    String   // e.g., "Bạn học được gì hôm nay?"
 
+  createdById String?
+  createdBy   User?   @relation("WordCloudCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
   submissions WordCloudSubmission[]
 
   createdAt DateTime @default(now())
 
   @@index([sessionId])
+  @@index([createdById, createdAt])
 }
 
 model WordCloudSubmission {
@@ -1437,8 +1447,8 @@ model WordCloudSubmission {
   cloudId   String
   cloud     WordCloud @relation(fields: [cloudId], references: [id], onDelete: Cascade)
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   text      String   // Free text submission (1-2 words typically)
 

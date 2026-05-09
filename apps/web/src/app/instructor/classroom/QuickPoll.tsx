@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { BarChart3 } from "lucide-react";
+import { useState } from "react";
+import { BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
@@ -36,21 +36,27 @@ interface QuickPollProps {
   onExit?: () => void;
 }
 
+interface PollHistoryItem {
+  id: string;
+  question: string;
+  options: string[];
+  createdAt: string;
+  _count: { votes: number };
+}
+
 export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollProps) {
   const [currentPoll, setCurrentPoll] = useState<Poll | null>(null);
   const [results, setResults] = useState<PollResults | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [isPolling, setIsPolling] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [history, setHistory] = useState<PollHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Form state
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [votesByOption, setVotesByOption] = useState<Record<string, number>>({});
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  // Store original poll data for reset functionality
-  const [originalQuestion, setOriginalQuestion] = useState("");
-  const [originalOptions, setOriginalOptions] = useState<string[]>([]);
 
   const isStateless = !!studentList && !lessonId;
   const isStandalone = !lessonId && !studentList;
@@ -106,10 +112,6 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
 
       const data = await res.json();
 
-      // Save original poll data for reset functionality
-      setOriginalQuestion(question.trim());
-      setOriginalOptions(filledOptions);
-
       setCurrentPoll({
         id: data.id,
         question: data.question,
@@ -121,8 +123,6 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
       setQuestion("");
       setOptions(["", ""]);
 
-      // Start polling for results
-      setIsPolling(true);
       fetchResults(data.id);
     } catch (err) {
       console.error("[QuickPoll]", err);
@@ -147,67 +147,44 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
     }
   };
 
-  const handleClosePoll = () => {
-    setCurrentPoll(null);
-    setResults(null);
-    setVotesByOption({});
-    setIsPolling(false);
+  const handleRefresh = async () => {
+    if (!currentPoll) return;
+    setIsRefreshing(true);
+    try {
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${currentPoll.id}/results`));
+      if (!res.ok) { toast.error("Không thể tải kết quả"); return; }
+      const data = await res.json();
+      setResults(data);
+    } catch {
+      toast.error("Lỗi mạng");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
-  const handleReset = async () => {
-    // If there's an active poll, create a new session with same question/options
-    if (currentPoll && originalQuestion && originalOptions.length > 0) {
-      setIsCreating(true);
-      try {
-        const res = await fetch(apiUrl("/api/classroom/quick-poll/create"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lessonId,
-            question: originalQuestion,
-            options: originalOptions,
-            isAnonymous: true,
-          }),
-        });
+  const loadHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await fetch(apiUrl("/api/classroom/quick-poll/list"));
+      if (res.ok) setHistory(await res.json());
+    } catch {
+      toast.error("Lỗi tải lịch sử");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
-        if (!res.ok) {
-          const error = await res.json();
-          toast.error(error.error || "Lỗi tạo poll mới");
-          return;
-        }
-
-        const data = await res.json();
-        setCurrentPoll({
-          id: data.id,
-          question: data.question,
-          options: data.options,
-          isAnonymous: data.isAnonymous,
-        });
-
-        // Reset vote tracking and results
-        setResults(null);
-        setVotesByOption(Object.fromEntries(originalOptions.map((_, idx) => [idx.toString(), 0])));
-
-        // Start polling for results
-        setIsPolling(true);
-        fetchResults(data.id);
-        toast.success("Poll mới được tạo!");
-      } catch (err) {
-        console.error("[QuickPoll Reset]", err);
-        toast.error("Lỗi tạo poll mới");
-      } finally {
-        setIsCreating(false);
-      }
-    } else {
-      // No active poll, just reset form
-      setCurrentPoll(null);
-      setResults(null);
-      setVotesByOption({});
-      setIsPolling(false);
-      setQuestion("");
-      setOptions(["", ""]);
-      setOriginalQuestion("");
-      setOriginalOptions([]);
+  const handleLoadPoll = async (item: PollHistoryItem) => {
+    setCurrentPoll({ id: item.id, question: item.question, options: item.options, isAnonymous: true });
+    setResults(null);
+    setIsRefreshing(true);
+    try {
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${item.id}/results`));
+      if (res.ok) setResults(await res.json());
+    } catch {
+      toast.error("Lỗi tải kết quả");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -233,8 +210,8 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/learn/poll/${currentPoll.id}`
     : null;
 
-  if (isFullscreen && currentPoll && (results || isStateless || isStandalone)) {
-    const displayResults = (isStateless || isStandalone)
+  if (isFullscreen && currentPoll && (results || isStateless)) {
+    const displayResults = isStateless
       ? {
           question: currentPoll.question,
           options: currentPoll.options,
@@ -257,11 +234,13 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
           </div>
           <div className="flex gap-2">
             <button
-              onClick={handleReset}
-              className="btn-secondary text-sm"
-              title="Reset"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="btn-secondary text-sm flex items-center gap-1"
+              title="Làm mới kết quả"
             >
-              ↺ Reset
+              <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+              {isRefreshing ? "Đang tải..." : "Làm mới"}
             </button>
             <button
               onClick={() => setIsFullscreen(false)}
@@ -400,17 +379,19 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
         </div>
 
         <button
-          onClick={handleReset}
-          className="btn-secondary w-full mt-6"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="btn-secondary w-full mt-6 flex items-center justify-center gap-2"
         >
-          ↺ Reset
+          <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+          {isRefreshing ? "Đang tải..." : "Làm mới"}
         </button>
       </div>
     );
   }
 
-  if (currentPoll && (results || isStateless || isStandalone)) {
-    const displayResults = (isStateless || isStandalone)
+  if (currentPoll && (results || isStateless)) {
+    const displayResults = isStateless
       ? {
           question: currentPoll.question,
           options: currentPoll.options,
@@ -433,11 +414,13 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
           </div>
           <div className="flex gap-2">
             <button
-              onClick={handleReset}
-              className="btn-secondary btn-sm text-xs"
-              title="Reset"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="btn-secondary btn-sm text-xs flex items-center gap-1"
+              title="Làm mới kết quả"
             >
-              ↺ Reset
+              <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
+              {isRefreshing ? "..." : "Làm mới"}
             </button>
             <button
               onClick={() => setIsFullscreen(true)}
@@ -581,6 +564,38 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
         >
           {isCreating ? "Đang tạo..." : "Bắt đầu Poll"}
         </button>
+      </div>
+
+      {/* Poll history */}
+      <div className="mt-6 border-t border-token pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-medium text-muted">Poll đã tạo trước đây</p>
+          <button
+            onClick={loadHistory}
+            disabled={isLoadingHistory}
+            className="btn-secondary btn-sm text-xs flex items-center gap-1"
+          >
+            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
+            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
+          </button>
+        </div>
+        {history.length === 0 && !isLoadingHistory && (
+          <p className="text-xs text-muted text-center py-2">Bấm "Tải lịch sử" để xem các poll cũ</p>
+        )}
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {history.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleLoadPoll(item)}
+              className="w-full text-left rounded-lg border border-token p-3 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-colors"
+            >
+              <p className="text-sm font-medium truncate">{item.question}</p>
+              <p className="text-xs text-muted mt-0.5">
+                {item._count.votes} phiếu · {new Date(item.createdAt).toLocaleString("vi-VN")}
+              </p>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

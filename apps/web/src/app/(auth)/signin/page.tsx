@@ -2,7 +2,6 @@
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Build-time base path (e.g. "/limio"). Empty string when served from root.
@@ -49,7 +48,6 @@ const SHOW_DEMO = process.env.NODE_ENV !== "production";
 type ProvidersMap = Record<string, { id: string; name: string }>;
 
 export default function SignInPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -85,8 +83,12 @@ export default function SignInPage() {
       setStatus("error");
       setError("Email hoặc mật khẩu không đúng.");
     } else {
-      // router.push respects Next.js basePath; window.location.href would not.
-      router.push("/");
+      // Use a hard navigation so the browser re-fetches the root layout from
+      // the server. router.push() is a soft navigation that keeps the cached
+      // pre-login layout alive, causing AppHeader to still show the
+      // "Đăng nhập" buttons even after a successful credentials login.
+      // Prepending BASE handles sub-path deployments (e.g. /limio/).
+      window.location.href = `${BASE}/`;
     }
   }
 

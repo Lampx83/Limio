@@ -4,9 +4,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 
-export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
+export default function AddAssignmentForm({
+  lessonId,
+  embedded = false,
+  onCancel,
+}: {
+  lessonId: string;
+  embedded?: boolean;
+  onCancel?: () => void;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
+
+  function close() {
+    if (embedded) onCancel?.();
+    else setOpen(false);
+  }
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueAt, setDueAt] = useState("");
@@ -40,7 +54,7 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
     setBusy(false);
     if (res.ok) {
       reset();
-      setOpen(false);
+      close();
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
@@ -110,7 +124,7 @@ export default function AddAssignmentForm({ lessonId }: { lessonId: string }) {
           type="button"
           onClick={() => {
             reset();
-            setOpen(false);
+            close();
           }}
           className="btn-secondary btn-sm"
         >

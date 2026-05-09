@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TimerTemplate } from "@feedbackme/db";
+import type { TimerTemplate } from "@feedbackme/db";
 import { toast } from "@/lib/toast";
 import TemplateForm from "./TemplateForm";
 

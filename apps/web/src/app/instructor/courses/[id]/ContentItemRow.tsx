@@ -94,9 +94,8 @@ export default function ContentItemRow({ item }: { item: Item }) {
       toast.error(`Xoá thất bại: ${code}`);
     }
 
-    // Reload page to sync with server state
     setBusy(false);
-    setTimeout(() => window.location.reload(), 300);
+    router.refresh();
   }
 
   const videoMeta =

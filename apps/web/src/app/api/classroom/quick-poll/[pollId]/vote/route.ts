@@ -6,30 +6,23 @@ export async function POST(
   req: Request,
   { params }: { params: { pollId: string } }
 ) {
+  // Public endpoint — no login required (QR code voting from classroom)
   const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = session?.user?.id ?? null;
 
   try {
     const body = await req.json();
     const { choice } = z.object({ choice: z.string() }).parse(body);
 
-    // Verify poll exists
     const poll = await prisma.classroomPoll.findUnique({
       where: { id: params.pollId },
-      select: {
-        id: true,
-        options: true,
-        session: { select: { lessonId: true } },
-      },
+      select: { id: true, options: true },
     });
 
     if (!poll) {
       return Response.json({ error: "Poll not found" }, { status: 404 });
     }
 
-    // Verify choice is valid
     const choiceIndex = parseInt(choice);
     if (
       isNaN(choiceIndex) ||
@@ -39,37 +32,6 @@ export async function POST(
       return Response.json({ error: "Invalid choice" }, { status: 400 });
     }
 
-    // Check if user is enrolled in the course for this lesson
-    if (!poll.session.lessonId) {
-      return Response.json({ error: "Invalid poll session" }, { status: 400 });
-    }
-
-    const lesson = await prisma.lesson.findUnique({
-      where: { id: poll.session.lessonId },
-      select: { module: { select: { course: { select: { id: true } } } } },
-    });
-
-    if (!lesson) {
-      return Response.json({ error: "Lesson not found" }, { status: 404 });
-    }
-
-    const enrollment = await prisma.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: session.user.id,
-          courseId: lesson.module.course.id,
-        },
-      },
-    });
-
-    if (!enrollment) {
-      return Response.json(
-        { error: "Not enrolled in course" },
-        { status: 403 }
-      );
-    }
-
-    // Check if poll has reached 500 total submissions
     const submissionCount = await prisma.classroomPollVote.count({
       where: { pollId: params.pollId },
     });
@@ -81,11 +43,10 @@ export async function POST(
       );
     }
 
-    // Create vote (allow multiple votes per user)
     const vote = await prisma.classroomPollVote.create({
       data: {
         pollId: params.pollId,
-        userId: session.user.id,
+        userId,
         choice,
       },
     });

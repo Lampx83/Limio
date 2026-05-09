@@ -4,13 +4,16 @@ import { prisma } from "@feedbackme/db";
 import { canEditCourse } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
+import LessonSection from "./LessonSection";
 import ModuleSection from "./ModuleSection";
+import ModuleOverviewCard from "./ModuleOverviewCard";
 import AddModuleForm from "./AddModuleForm";
 import PublishControls from "./PublishControls";
 import DuplicateCourseButton from "./DuplicateCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
 import ViewModeToggle from "./ViewModeToggle";
 import ImportStudentsButton from "./ImportStudentsButton";
+import EditorSidebar from "./EditorSidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +34,11 @@ export default async function InstructorCourseEditPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams?: { view?: string };
+  searchParams?: { view?: string; lesson?: string };
 }) {
   const view: "edit" | "preview" =
     searchParams?.view === "preview" ? "preview" : "edit";
+  const selectedLessonId = searchParams?.lesson;
   const session = await auth();
   if (!session?.user?.id) {
     redirect(`/signin?callbackUrl=/instructor/courses/${params.id}`);
@@ -91,8 +95,42 @@ export default async function InstructorCourseEditPage({
     0,
   );
 
+  // Find selected lesson + parent module for split-pane editing
+  let selectedLesson: typeof course.modules[number]["lessons"][number] | null = null;
+  let selectedModule: typeof course.modules[number] | null = null;
+  let selectedLessonOrder = 0;
+  if (selectedLessonId) {
+    for (const m of course.modules) {
+      const idx = m.lessons.findIndex((l) => l.id === selectedLessonId);
+      if (idx !== -1) {
+        selectedModule = m;
+        selectedLesson = m.lessons[idx];
+        selectedLessonOrder = idx + 1;
+        break;
+      }
+    }
+  }
+
+  // Sidebar tree shape — only the data we need
+  const sidebarModules = course.modules.map((m) => ({
+    id: m.id,
+    title: m.title,
+    isHidden: m.isHidden,
+    lessons: m.lessons.map((l) => ({
+      id: l.id,
+      title: l.title,
+      isHidden: l.isHidden,
+      noSkill: l.skillTags.length === 0,
+      contentCount: l.contentItems.length,
+      quizCount: l.quizzes.length,
+      assignmentCount: l.assignments.length,
+    })),
+  }));
+
+  const useSidebarLayout = view === "edit";
+
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className={useSidebarLayout ? "mx-auto max-w-7xl px-6 py-10" : "mx-auto max-w-5xl px-6 py-10"}>
       <Link
         href="/instructor/courses"
         className="link inline-flex items-center gap-1 text-sm"
@@ -149,87 +187,163 @@ export default async function InstructorCourseEditPage({
         </div>
       </header>
 
-      <div data-view={view}>
-        {/* Preview mode banner */}
-        {view === "preview" && (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft p-4">
-            <p className="text-sm text-brand-700">
-              Bạn đang xem dưới góc nhìn học viên — controls editor đã ẩn.
-              Chuyển về <span className="font-semibold">Sửa</span> để chỉnh.
-            </p>
-          </div>
+      <div data-view={view} className={useSidebarLayout ? "mt-6 flex gap-6" : ""}>
+        {useSidebarLayout && (
+          <EditorSidebar
+            courseId={course.id}
+            modules={sidebarModules}
+            activeLessonId={selectedLessonId}
+            view={view}
+          />
         )}
 
-        {/* Untagged lessons warning */}
-        {untaggedLessonIds.length > 0 && view === "edit" && (
-          <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-4">
-            <p className="text-sm font-semibold text-accent-700">
-              {untaggedLessonIds.length} bài chưa tag skill
-            </p>
-            <p className="mt-1 text-xs text-accent-700/80">
-              Khóa không thể publish khi còn bài chưa được tag — personalization
-              sẽ không hoạt động cho những bài này.
-            </p>
-          </div>
-        )}
+        <div className="min-w-0 flex-1">
+          {/* Preview mode — flat layout, no sidebar */}
+          {view === "preview" && (
+            <>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft p-4">
+                <p className="text-sm text-brand-700">
+                  Bạn đang xem dưới góc nhìn học viên — controls editor đã ẩn.
+                  Chuyển về <span className="font-semibold">Sửa</span> để chỉnh.
+                </p>
+              </div>
+              <section className="mt-6 card">
+                <p className="whitespace-pre-wrap text-base leading-relaxed">
+                  {course.description}
+                </p>
+              </section>
+              <section className="mt-10">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-xl font-semibold">Lộ trình học</h2>
+                  <span className="text-sm text-muted">
+                    {course.modules.length} modules · {totalLessons} bài
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <SortableModulesWrapper
+                    reorderEndpoint={`/api/courses/${course.id}/modules/reorder`}
+                    payloadKey="orderedModuleIds"
+                    items={course.modules.map((m, i) => ({
+                      id: m.id,
+                      node: <ModuleSection module={m} order={i + 1} courseSlug={course.slug} />,
+                    }))}
+                  />
+                </div>
+              </section>
+            </>
+          )}
 
-        {/* Meta form (edit only) */}
-        {view === "edit" && (
-          <section className="mt-8">
-            <CourseMetaForm
-              courseId={course.id}
-              initial={{
-                title: course.title,
-                description: course.description,
-                level: course.level,
-                language: course.language,
-                category: course.category ?? "",
-                priceCents: course.priceCents,
-                currency: course.currency ?? "VND",
-              }}
-            />
-          </section>
-        )}
+          {/* Edit mode — selected lesson */}
+          {view === "edit" && selectedLesson && selectedModule && (
+            <article className="space-y-5">
+              <nav className="flex items-center gap-2 text-sm text-muted">
+                <Link href={`/instructor/courses/${course.id}`} className="link">
+                  Tổng quan
+                </Link>
+                <span className="text-faint">›</span>
+                <span className="truncate">{selectedModule.title}</span>
+                <span className="text-faint">›</span>
+                <span className="font-medium text-default truncate">
+                  {selectedLesson.title}
+                </span>
+              </nav>
+              <div
+                className={`rounded-2xl border-2 p-6 ${
+                  selectedLesson.isHidden
+                    ? "border-danger-200 bg-danger-50/30"
+                    : "border-token bg-[rgb(var(--surface))]"
+                }`}
+              >
+                <LessonSection
+                  lesson={selectedLesson}
+                  order={selectedLessonOrder}
+                  courseSlug={course.slug}
+                  flat
+                />
+              </div>
+            </article>
+          )}
 
-        {/* Course description (preview only) */}
-        {view === "preview" && (
-          <section className="mt-6 card">
-            <p className="whitespace-pre-wrap text-base leading-relaxed">
-              {course.description}
-            </p>
-          </section>
-        )}
+          {/* Edit mode — course overview (no lesson selected) */}
+          {view === "edit" && !selectedLesson && (
+            <>
+              {untaggedLessonIds.length > 0 && (
+                <div className="rounded-2xl border border-accent-200 bg-accent-50 p-4">
+                  <p className="text-sm font-semibold text-accent-700">
+                    {untaggedLessonIds.length} bài chưa tag skill
+                  </p>
+                  <p className="mt-1 text-xs text-accent-700/80">
+                    Khóa không thể publish khi còn bài chưa được tag —
+                    personalization sẽ không hoạt động cho những bài này.
+                  </p>
+                </div>
+              )}
 
-        {/* Modules */}
-        <section className="mt-10">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-semibold">
-              {view === "preview" ? "Lộ trình học" : "Modules"}
-            </h2>
-            <span className="text-sm text-muted">
-              {course.modules.length} modules ·{" "}
-              {course.modules.reduce((s, m) => s + m.lessons.length, 0)} bài
-            </span>
-          </div>
+              <section className="mt-6">
+                <CourseMetaForm
+                  courseId={course.id}
+                  initial={{
+                    title: course.title,
+                    description: course.description,
+                    level: course.level,
+                    language: course.language,
+                    category: course.category ?? "",
+                    priceCents: course.priceCents,
+                    currency: course.currency ?? "VND",
+                  }}
+                />
+              </section>
 
-          <div className="mt-4">
-            <SortableModulesWrapper
-              reorderEndpoint={`/api/courses/${course.id}/modules/reorder`}
-              payloadKey="orderedModuleIds"
-              items={course.modules.map((m, i) => ({
-                id: m.id,
-                node: <ModuleSection module={m} order={i + 1} courseSlug={course.slug} />,
-              }))}
-            />
-          </div>
+              <section className="mt-10">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-xl font-semibold">Modules</h2>
+                  <span className="text-sm text-muted">
+                    {course.modules.length} modules · {totalLessons} bài
+                  </span>
+                </div>
 
-          <div className="mt-6">
-            <AddModuleForm
-              courseId={course.id}
-              nextOrderIndex={course.modules.length}
-            />
-          </div>
-        </section>
+                {course.modules.length === 0 ? (
+                  <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-token bg-[rgb(var(--surface-muted))/0.4] px-6 py-12 text-center">
+                    <span className="text-5xl" aria-hidden>
+                      📚
+                    </span>
+                    <h3 className="text-lg font-semibold">
+                      Khóa chưa có module nào
+                    </h3>
+                    <p className="max-w-md text-sm text-muted">
+                      Module gom các bài học cùng chủ đề lại với nhau. Tạo
+                      module đầu tiên để bắt đầu thêm bài học.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {course.modules.map((m, i) => (
+                      <ModuleOverviewCard
+                        key={m.id}
+                        courseId={course.id}
+                        module={{
+                          id: m.id,
+                          title: m.title,
+                          orderIndex: m.orderIndex,
+                          isHidden: m.isHidden,
+                          lessons: sidebarModules[i].lessons,
+                        }}
+                        order={i + 1}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-6">
+                  <AddModuleForm
+                    courseId={course.id}
+                    nextOrderIndex={course.modules.length}
+                  />
+                </div>
+              </section>
+            </>
+          )}
+        </div>
       </div>
     </main>
   );
