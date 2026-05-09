@@ -96,7 +96,7 @@ export default async function InstructorCourseEditPage({
   );
 
   // Find selected lesson + parent module for split-pane editing
-  let selectedLesson: typeof course.modules[number]["lessons"][number] | null = null;
+  let selectedLesson: (typeof course.modules[number]["lessons"][number]) | null = null;
   let selectedModule: typeof course.modules[number] | null = null;
   let selectedLessonOrder = 0;
   if (selectedLessonId) {
@@ -104,7 +104,7 @@ export default async function InstructorCourseEditPage({
       const idx = m.lessons.findIndex((l) => l.id === selectedLessonId);
       if (idx !== -1) {
         selectedModule = m;
-        selectedLesson = m.lessons[idx];
+        selectedLesson = m.lessons[idx] as typeof selectedLesson;
         selectedLessonOrder = idx + 1;
         break;
       }
@@ -317,20 +317,24 @@ export default async function InstructorCourseEditPage({
                   </div>
                 ) : (
                   <div className="mt-4 space-y-4">
-                    {course.modules.map((m, i) => (
-                      <ModuleOverviewCard
-                        key={m.id}
-                        courseId={course.id}
-                        module={{
-                          id: m.id,
-                          title: m.title,
-                          orderIndex: m.orderIndex,
-                          isHidden: m.isHidden,
-                          lessons: sidebarModules[i].lessons,
-                        }}
-                        order={i + 1}
-                      />
-                    ))}
+                    {course.modules.map((m, i) => {
+                      const sidebarModule = sidebarModules[i];
+                      if (!sidebarModule) return null;
+                      return (
+                        <ModuleOverviewCard
+                          key={m.id}
+                          courseId={course.id}
+                          module={{
+                            id: m.id,
+                            title: m.title,
+                            orderIndex: m.orderIndex,
+                            isHidden: m.isHidden,
+                            lessons: sidebarModule.lessons,
+                          }}
+                          order={i + 1}
+                        />
+                      );
+                    })}
                   </div>
                 )}
 
