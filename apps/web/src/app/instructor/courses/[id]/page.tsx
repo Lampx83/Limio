@@ -96,15 +96,15 @@ export default async function InstructorCourseEditPage({
   );
 
   // Find selected lesson + parent module for split-pane editing
-  let selectedLesson: (typeof course.modules[number]["lessons"][number]) | null = null;
-  let selectedModule: typeof course.modules[number] | null = null;
+  let selectedLesson = null as any;
+  let selectedModule = null as any;
   let selectedLessonOrder = 0;
   if (selectedLessonId) {
     for (const m of course.modules) {
       const idx = m.lessons.findIndex((l) => l.id === selectedLessonId);
       if (idx !== -1) {
         selectedModule = m;
-        selectedLesson = m.lessons[idx] as typeof selectedLesson;
+        selectedLesson = m.lessons[idx];
         selectedLessonOrder = idx + 1;
         break;
       }
