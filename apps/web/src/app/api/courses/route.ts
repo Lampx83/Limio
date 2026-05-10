@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createCourse, listPublishedCourses } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -29,6 +30,30 @@ export async function POST(req: Request) {
   const body = await readJson(req);
   try {
     const result = await createCourse(userId, body);
+    // Scaffold a default 3 modules × 3 lessons skeleton so the editor opens
+    // with a navigable structure instead of a blank state. Done here (API
+    // layer) rather than in business logic so tests can call createCourse()
+    // without hitting the (courseId, orderIndex) unique constraint.
+    await prisma.$transaction(async (tx) => {
+      for (let m = 0; m < 3; m++) {
+        const moduleRow = await tx.module.create({
+          data: {
+            courseId: result.courseId,
+            title: `Module ${m + 1}`,
+            orderIndex: m,
+          },
+        });
+        for (let l = 0; l < 3; l++) {
+          await tx.lesson.create({
+            data: {
+              moduleId: moduleRow.id,
+              title: `Bài học ${l + 1}`,
+              orderIndex: l,
+            },
+          });
+        }
+      }
+    });
     return NextResponse.json(result, { status: 201 });
   } catch (e) {
     const mapped = mapKnownError(e);

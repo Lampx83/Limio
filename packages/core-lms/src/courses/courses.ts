@@ -80,28 +80,6 @@ export async function createCourse(
       data: { courseId: course.id, userId: actorUserId, role: "owner" },
     });
 
-    // Scaffold a default 3 modules × 3 lessons skeleton so the editor opens
-    // with a navigable structure instead of a blank state. Instructor renames
-    // / deletes / extends freely.
-    for (let m = 0; m < 3; m++) {
-      const moduleRow = await tx.module.create({
-        data: {
-          courseId: course.id,
-          title: `Module ${m + 1}`,
-          orderIndex: m,
-        },
-      });
-      for (let l = 0; l < 3; l++) {
-        await tx.lesson.create({
-          data: {
-            moduleId: moduleRow.id,
-            title: `Bài học ${l + 1}`,
-            orderIndex: l,
-          },
-        });
-      }
-    }
-
     // Auto-grant platform-wide instructor role if absent.
     const hasInstructor = await tx.userRole.findFirst({
       where: { userId: actorUserId, roleId: instructorRole.id, courseId: null },
