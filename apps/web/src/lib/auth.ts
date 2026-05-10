@@ -17,23 +17,9 @@ import {
  * and Microsoft Entra ID. SSO providers are conditionally registered based on
  * env vars so missing config in dev doesn't break sign-in.
  */
-// Build-time base path (e.g. "/limio"). Empty when served from root.
-// Baked into the bundle via NEXT_PUBLIC_BASE_PATH Docker build-arg.
+// Build-time base path (e.g. "/foo" when proxied at a sub-path).
+// Empty when served from root domain — current production (limio.vn).
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
-// The OAuth redirect_uri must include the app basePath (/limio) so it
-// matches what is registered in Google / Microsoft developer consoles.
-// NEXTAUTH_URL = "https://fit.neu.edu.vn/limio" in production.
-// redirectProxyUrl tells NextAuth to use this as the base for building
-// redirect_uri: `${redirectProxyUrl}/callback/${provider}`.
-// Result: https://fit.neu.edu.vn/limio/api/auth/callback/google ✓
-//
-// Without redirectProxyUrl, NextAuth would compute the redirect_uri from
-// request.url + basePath which—after Next.js strips /limio—would give
-// https://fit.neu.edu.vn/api/auth/callback/google (missing /limio).
-const AUTH_URL =
-  process.env.NEXTAUTH_URL ?? process.env.AUTH_URL ?? "";
-const redirectProxyUrl = AUTH_URL ? `${AUTH_URL}/api/auth` : undefined;
 
 const ssoProviders = [];
 
@@ -65,22 +51,13 @@ if (
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Next.js strips the app basePath (/limio) before the route handler runs,
-  // so NextAuth always receives /api/auth/... — keep basePath="/api/auth".
-  // redirectProxyUrl tells NextAuth to compute redirect_uri from NEXTAUTH_URL,
-  // not from the stripped request URL.
   basePath: `/api/auth`,
-  // Set redirectProxyUrl at config level so it applies to all SSO providers
-  ...(AUTH_URL && { redirectProxyUrl: `${AUTH_URL}/api/auth` }),
   session: { strategy: "jwt" },
-  // Both page URLs must include the Next.js basePath (/limio) because NextAuth
-  // constructs redirects relative to the request origin (not NEXTAUTH_URL).
-  // "/limio/signin"           → https://fit.neu.edu.vn/limio/signin  ✓
-  // "/limio/api/auth/error"   → https://fit.neu.edu.vn/limio/api/auth/error ✓
-  // Without the prefix the browser ends up at the domain root, not /limio.
+  // pages.error intentionally omitted: pointing it at /api/auth/error (the
+  // NextAuth API route itself) creates a redirect loop. Letting NextAuth fall
+  // back to its built-in error UI avoids that.
   pages: {
     signIn: `${BASE}/signin`,
-    error: `${BASE}/api/auth/error`,
   },
   // Allows NextAuth to accept requests from plain-HTTP origins (IP:PORT) and
   // from behind reverse proxies. Without this, NextAuth v5 throws UntrustedHost
