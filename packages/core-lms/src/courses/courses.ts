@@ -37,7 +37,9 @@ export class CourseError extends Error {
       | "validation_failed"
       | "not_found"
       | "lessons_missing_skills"
-      | "invalid_status_transition",
+      | "invalid_status_transition"
+      | "has_enrollments"
+      | "title_mismatch",
     public readonly details?: unknown,
   ) {
     super(code);
@@ -131,6 +133,63 @@ export async function updateCourse(
   );
   if (Object.keys(data).length === 0) return;
   await db.course.update({ where: { id: courseId }, data });
+}
+
+/**
+ * Hard-delete a course. Only allowed when:
+ *   - actor can edit (instructor/admin), and
+ *   - course has zero enrollments (Enrollment.course has no cascade — DB would
+ *     reject anyway, we surface a clean error first), and
+ *   - `confirmTitle` matches the course's current title exactly (UX guard
+ *     against accidental clicks).
+ *
+ * Cascades to modules/lessons/contentItems/quizzes/questions/options/assignments
+ * via Prisma onDelete=Cascade. `LearningEvent` rows reference courseId only as
+ * an unconstrained string in payload — they remain (append-only, §4.5).
+ */
+export async function deleteCourse(
+  actorUserId: string,
+  courseId: string,
+  confirmTitle: string,
+  options: { force?: boolean } = {},
+  db: PrismaClient = prisma,
+): Promise<{ deletedEnrollments: number }> {
+  await assertCanEditCourse(actorUserId, courseId, db);
+  const course = await db.course.findUniqueOrThrow({
+    where: { id: courseId },
+    select: { id: true, title: true, slug: true },
+  });
+  if (confirmTitle !== course.title) {
+    throw new CourseError("title_mismatch");
+  }
+  const enrollCount = await db.enrollment.count({ where: { courseId } });
+  if (enrollCount > 0 && !options.force) {
+    throw new CourseError("has_enrollments", { count: enrollCount });
+  }
+  return db.$transaction(async (tx) => {
+    let deletedEnrollments = 0;
+    if (enrollCount > 0) {
+      // Enrollment.course has no onDelete:Cascade — wipe explicitly when forced.
+      const r = await tx.enrollment.deleteMany({ where: { courseId } });
+      deletedEnrollments = r.count;
+    }
+    await tx.course.delete({ where: { id: courseId } });
+    await logAudit(
+      {
+        action: "course.deleted",
+        actorUserId,
+        payload: {
+          courseId,
+          slug: course.slug,
+          title: course.title,
+          forced: enrollCount > 0,
+          deletedEnrollments,
+        },
+      },
+      tx,
+    );
+    return { deletedEnrollments };
+  });
 }
 
 export async function archiveCourse(

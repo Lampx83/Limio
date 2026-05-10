@@ -16,6 +16,8 @@ export const LearningEventType = {
   QuizQuestionAnswered: "quiz.question.answered",
   AssignmentSubmitted: "assignment.submitted",
   AssignmentGraded: "assignment.graded",
+  AssignmentSelfRated: "assignment.self_rated",
+  AssignmentReflected: "assignment.reflected",
   ForumPosted: "forum.posted",
   ForumUpvoted: "forum.upvoted",
   ForumAnswered: "forum.answered",

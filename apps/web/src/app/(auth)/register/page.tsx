@@ -8,6 +8,7 @@ import { apiUrl } from "@/lib/apiUrl";
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "ok" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
@@ -102,17 +103,28 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label className="label" htmlFor="password">Mật khẩu</label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className="input mt-1.5"
-                  placeholder="Tối thiểu 8 ký tự"
-                />
+                <div className="relative mt-1.5">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    className="input w-full pr-12"
+                    placeholder="Tối thiểu 8 ký tự"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    aria-pressed={showPassword}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-xs text-neutral-500 hover:text-neutral-700"
+                  >
+                    {showPassword ? "Ẩn" : "Hiện"}
+                  </button>
+                </div>
                 <span className="help">Tối thiểu 8 ký tự, nên trộn chữ + số.</span>
               </div>
               <button

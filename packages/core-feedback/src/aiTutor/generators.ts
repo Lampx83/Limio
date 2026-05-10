@@ -214,6 +214,118 @@ Return JSON: { suggestions: [{ skillCode, confidence, rationale }] }`;
 }
 
 // =====================================================================
+// (a2) Generative learning activity suggester — propose 2–3 generative
+// activities (Fiorella & Mayer 2016 taxonomy) for a lesson's content.
+// Output is a draft the instructor reviews + edits before saving.
+// =====================================================================
+
+export type GenerativeActivityTypeName =
+  | "summarizing"
+  | "self_explaining"
+  | "imagining"
+  | "mapping"
+  | "drawing"
+  | "teaching"
+  | "enacting";
+
+export interface ActivitySuggestion {
+  type: GenerativeActivityTypeName;
+  title: string;
+  /** Concrete prompt the instructor can paste into the assignment. */
+  prompt: string;
+  /** Why this activity fits this content — for instructor sanity check. */
+  rationale: string;
+  /** 0..1 model-reported. */
+  confidence: number;
+}
+
+const ACTIVITY_TYPES: GenerativeActivityTypeName[] = [
+  "summarizing",
+  "self_explaining",
+  "imagining",
+  "mapping",
+  "drawing",
+  "teaching",
+  "enacting",
+];
+
+const ACTIVITY_SUGGEST_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    suggestions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          type: { type: "string", enum: ACTIVITY_TYPES },
+          title: { type: "string" },
+          prompt: { type: "string" },
+          rationale: { type: "string" },
+          confidence: { type: "number" },
+        },
+        required: ["type", "title", "prompt", "rationale", "confidence"],
+      },
+    },
+  },
+  required: ["suggestions"],
+};
+
+export async function suggestActivitiesForContent(
+  userId: string,
+  contentText: string,
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<ActivitySuggestion[]> {
+  if (!contentText.trim()) {
+    throw new AiGenerationError("validation_failed", "empty_content");
+  }
+  const system = `Bạn là chuyên gia thiết kế hoạt động học sâu (generative learning, Fiorella & Mayer 2016).
+Nhiệm vụ: Đọc nội dung bài học và đề xuất 2–3 hoạt động học sâu phù hợp giúp học viên CHỦ ĐỘNG xây dựng kiến thức (thay vì học thuộc).
+Mỗi hoạt động phải gắn với 1 trong 7 type:
+- summarizing: học viên viết/nói lại nội dung bằng lời mình
+- self_explaining: học viên giải thích vì sao điều đó đúng/xảy ra
+- imagining: học viên tưởng tượng/hình dung tình huống mô tả
+- mapping: tạo concept map / sơ đồ
+- drawing: vẽ minh hoạ
+- teaching: dạy lại nội dung cho người khác
+- enacting: thực hiện hành động/cử chỉ minh hoạ
+Prompt cần CỤ THỂ với nội dung bài, không nói chung chung. Tiếng Việt.
+NEVER invent một type ngoài danh sách trên.`;
+
+  const user = `# Nội dung bài học
+"""
+${contentText.slice(0, 6000)}
+"""
+
+Trả về JSON: { suggestions: [{ type, title, prompt, rationale, confidence }] } — 2 hoặc 3 phần tử.`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<{
+    suggestions: ActivitySuggestion[];
+  }>(
+    openai,
+    model,
+    system,
+    user,
+    "activity_suggestions",
+    ACTIVITY_SUGGEST_SCHEMA,
+  );
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+
+  const allowed = new Set(ACTIVITY_TYPES);
+  return data.suggestions
+    .filter((s) => allowed.has(s.type))
+    .map((s) => ({
+      ...s,
+      confidence: Math.max(0, Math.min(1, s.confidence)),
+    }))
+    .slice(0, 3);
+}
+
+// =====================================================================
 // (b) Feedback template body generator.
 // =====================================================================
 

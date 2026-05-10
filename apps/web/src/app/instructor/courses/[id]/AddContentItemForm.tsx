@@ -804,6 +804,17 @@ function PdfUploadPanel({
   async function handleFile(file: File) {
     setUploading(true);
     setError(null);
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+
+    // Pre-flight check: catch oversize file before sending it over the network.
+    if (file.size > PDF_MAX_MB * 1024 * 1024) {
+      setUploading(false);
+      setError(
+        `File quá lớn (${sizeMb} MB). Giới hạn của hệ thống là ${PDF_MAX_MB} MB.`,
+      );
+      return;
+    }
+
     const fd = new FormData();
     fd.append("file", file);
     let res: Response;
@@ -820,8 +831,26 @@ function PdfUploadPanel({
     }
     setUploading(false);
     if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      // 413 with a JSON error means our own route rejected it (file_too_large).
+      // 413 without JSON means the reverse proxy stripped the body before it
+      // reached Next.js — proxy body-size limit is the culprit, not our cap.
+      const ct = res.headers.get("content-type") ?? "";
+      const d = ct.includes("application/json")
+        ? ((await res.json().catch(() => ({}))) as { error?: string })
+        : {};
+      if (res.status === 413) {
+        if (d.error === "file_too_large") {
+          setError(
+            `File quá lớn (${sizeMb} MB). Giới hạn của hệ thống là ${PDF_MAX_MB} MB.`,
+          );
+        } else {
+          setError(
+            `Reverse proxy chặn upload (413). File ${sizeMb} MB vượt giới hạn body của proxy — báo admin tăng client_max_body_size lên ≥ ${PDF_MAX_MB} MB.`,
+          );
+        }
+        return;
+      }
+      setError(`upload_failed: ${d.error ?? res.status}`);
       return;
     }
     const data = (await res.json()) as { url: string };

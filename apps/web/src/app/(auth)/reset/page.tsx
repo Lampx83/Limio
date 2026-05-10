@@ -7,6 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 export default function ResetPage() {
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -54,17 +55,28 @@ export default function ResetPage() {
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div>
               <label className="label" htmlFor="rs-pw">Mật khẩu mới</label>
-              <input
-                id="rs-pw"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-                placeholder="Tối thiểu 8 ký tự"
-                className="input mt-1.5"
-              />
+              <div className="relative mt-1.5">
+                <input
+                  id="rs-pw"
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  placeholder="Tối thiểu 8 ký tự"
+                  className="input w-full pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-xs text-neutral-500 hover:text-neutral-700"
+                >
+                  {showPassword ? "Ẩn" : "Hiện"}
+                </button>
+              </div>
             </div>
             <button
               type="submit"

@@ -29,6 +29,18 @@ interface Lesson {
     dueAt: Date | null;
     maxScore: number;
     isHidden: boolean;
+    pedagogicalIntent?:
+      | "summarizing"
+      | "mapping"
+      | "drawing"
+      | "imagining"
+      | "self_explaining"
+      | "teaching"
+      | "enacting"
+      | null;
+    requireSelfRating?: boolean;
+    requireReflection?: boolean;
+    countsTowardGrade?: boolean;
   }>;
   quizzes: Array<{
     id: string;

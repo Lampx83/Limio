@@ -50,6 +50,7 @@ type ProvidersMap = Record<string, { id: string; name: string }>;
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [providers, setProviders] = useState<ProvidersMap | null>(null);
@@ -238,16 +239,27 @@ export default function SignInPage() {
                     Quên mật khẩu?
                   </Link>
                 </div>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  className="input mt-1.5"
-                  placeholder="••••••••"
-                />
+                <div className="relative mt-1.5">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    className="input w-full pr-12"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    aria-pressed={showPassword}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-xs text-neutral-500 hover:text-neutral-700"
+                  >
+                    {showPassword ? "Ẩn" : "Hiện"}
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"

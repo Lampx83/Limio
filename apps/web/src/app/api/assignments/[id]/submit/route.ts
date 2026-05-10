@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { submitAssignment } from "@feedbackme/core-lms";
+import { onAssignmentDeepReflection } from "@feedbackme/core-gamification";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -12,7 +13,14 @@ export async function POST(
   const body = await readJson(req);
   try {
     const r = await submitAssignment(userId, params.id, body);
-    return NextResponse.json(r);
+    const gamification = await onAssignmentDeepReflection({
+      userId,
+      courseId: r.courseId,
+      assignmentId: r.assignmentId,
+      selfRating: r.selfRating,
+      reflectionLength: r.reflectionLength,
+    });
+    return NextResponse.json({ ...r, gamification });
   } catch (e) {
     const m = mapKnownError(e);
     if (m) return m;

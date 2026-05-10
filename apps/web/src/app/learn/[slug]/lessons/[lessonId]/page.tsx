@@ -44,6 +44,11 @@ export default async function LessonPage({
           dueAt: true,
           maxScore: true,
           isHidden: true,
+          pedagogicalIntent: true,
+          responseFormat: true,
+          requireSelfRating: true,
+          requireReflection: true,
+          countsTowardGrade: true,
           submissions: {
             where: { userId },
             select: {
@@ -52,6 +57,8 @@ export default async function LessonPage({
               submittedAt: true,
               score: true,
               feedback: true,
+              selfRating: true,
+              reflection: true,
             },
           },
         },
@@ -275,7 +282,13 @@ export default async function LessonPage({
                     </p>
                   )}
                   <div className="mt-4">
-                    <AssignmentSubmitForm assignmentId={a.id} />
+                    <AssignmentSubmitForm
+                      assignmentId={a.id}
+                      pedagogicalIntent={a.pedagogicalIntent}
+                      responseFormat={a.responseFormat}
+                      requireSelfRating={a.requireSelfRating}
+                      requireReflection={a.requireReflection}
+                    />
                   </div>
                 </li>
               );

@@ -270,6 +270,51 @@ export async function onH5pCompleted(
   return { xp, streak };
 }
 
+// =====================================================================
+// Assignment — generative learning rewards.
+// XP granted only when learner submits with BOTH self-rating set AND
+// reflection length ≥ MIN. Idempotent on (userId, assignmentId) — re-
+// submission doesn't re-award.
+// =====================================================================
+
+export interface AssignmentDeepReflectionInput {
+  userId: string;
+  courseId: string;
+  assignmentId: string;
+  selfRating: number | null;
+  reflectionLength: number;
+}
+
+const ASSIGNMENT_DEEP_REFLECTION_XP = 15;
+const REFLECTION_MIN_CHARS = 20;
+
+export async function onAssignmentDeepReflection(
+  input: AssignmentDeepReflectionInput,
+  db: PrismaClient = prisma,
+): Promise<{ xp: AwardResult | null }> {
+  if (
+    input.selfRating == null ||
+    input.reflectionLength < REFLECTION_MIN_CHARS
+  ) {
+    return { xp: null };
+  }
+  const xp = await awardXp(
+    {
+      userId: input.userId,
+      courseId: input.courseId,
+      amount: ASSIGNMENT_DEEP_REFLECTION_XP,
+      reason: "assignment.deep_reflection",
+      sourceId: input.assignmentId,
+      extraEventPayload: {
+        selfRating: input.selfRating,
+        reflectionLength: input.reflectionLength,
+      },
+    },
+    db,
+  );
+  return { xp };
+}
+
 export async function onMisconceptionResolved(
   input: MisconceptionResolvedInput,
   db: PrismaClient = prisma,

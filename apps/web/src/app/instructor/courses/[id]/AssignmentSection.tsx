@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import {
+  GENERATIVE_PRESETS,
+  GENERATIVE_TYPE_OPTIONS,
+  type GenerativeActivityType,
+} from "@/lib/generativeActivity";
 
 interface Assignment {
   id: string;
@@ -13,6 +18,10 @@ interface Assignment {
   dueAt: Date | null;
   maxScore: number;
   isHidden: boolean;
+  pedagogicalIntent?: GenerativeActivityType | null;
+  requireSelfRating?: boolean;
+  requireReflection?: boolean;
+  countsTowardGrade?: boolean;
 }
 
 export default function AssignmentSection({
@@ -31,6 +40,18 @@ export default function AssignmentSection({
   );
   const [maxScore, setMaxScore] = useState(String(assignment.maxScore));
   const [isHidden, setIsHidden] = useState(assignment.isHidden);
+  const [pedagogicalIntent, setPedagogicalIntent] = useState<
+    GenerativeActivityType | ""
+  >(assignment.pedagogicalIntent ?? "");
+  const [requireSelfRating, setRequireSelfRating] = useState(
+    assignment.requireSelfRating ?? false,
+  );
+  const [requireReflection, setRequireReflection] = useState(
+    assignment.requireReflection ?? false,
+  );
+  const [countsTowardGrade, setCountsTowardGrade] = useState(
+    assignment.countsTowardGrade ?? true,
+  );
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -40,7 +61,15 @@ export default function AssignmentSection({
       title,
       description,
       maxScore: Number(maxScore) || 100,
+      pedagogicalIntent: pedagogicalIntent || null,
+      requireSelfRating,
+      requireReflection,
+      countsTowardGrade,
     };
+    if (pedagogicalIntent) {
+      payload.responseFormat =
+        GENERATIVE_PRESETS[pedagogicalIntent].responseFormat;
+    }
     if (dueAt) payload.dueAt = new Date(dueAt).toISOString();
     const res = await fetch(apiUrl(`/api/assignments/${assignment.id}`), {
       method: "PATCH",
@@ -85,8 +114,13 @@ export default function AssignmentSection({
         <>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="text-base font-semibold">{assignment.title}</p>
+                {assignment.pedagogicalIntent && (
+                  <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-700">
+                    {GENERATIVE_PRESETS[assignment.pedagogicalIntent].label}
+                  </span>
+                )}
                 {isHidden && <span className="chip-danger text-xs">👁️ Ẩn</span>}
               </div>
               {assignment.description && (
@@ -148,6 +182,26 @@ export default function AssignmentSection({
         </>
       ) : (
         <form onSubmit={save} className="space-y-2">
+          <label className="block">
+            <span className="text-xs text-faint">Loại hoạt động (tuỳ chọn)</span>
+            <select
+              value={pedagogicalIntent}
+              onChange={(e) =>
+                setPedagogicalIntent(
+                  e.target.value as GenerativeActivityType | "",
+                )
+              }
+              className="input mt-1"
+            >
+              <option value="">Bài tập thường</option>
+              {GENERATIVE_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value} disabled={!o.available}>
+                  {o.label}
+                  {!o.available ? " (sắp có)" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -161,6 +215,32 @@ export default function AssignmentSection({
             rows={3}
             className="textarea"
           />
+          <fieldset className="grid grid-cols-1 gap-1 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2 text-xs sm:grid-cols-3">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={requireSelfRating}
+                onChange={(e) => setRequireSelfRating(e.target.checked)}
+              />
+              Yêu cầu tự đánh giá
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={requireReflection}
+                onChange={(e) => setRequireReflection(e.target.checked)}
+              />
+              Yêu cầu reflection
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={countsTowardGrade}
+                onChange={(e) => setCountsTowardGrade(e.target.checked)}
+              />
+              Tính vào điểm
+            </label>
+          </fieldset>
           <div className="flex flex-wrap gap-2">
             <input
               type="datetime-local"

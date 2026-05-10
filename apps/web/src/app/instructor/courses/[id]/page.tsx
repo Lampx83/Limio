@@ -10,6 +10,7 @@ import ModuleOverviewCard from "./ModuleOverviewCard";
 import AddModuleForm from "./AddModuleForm";
 import PublishControls from "./PublishControls";
 import DuplicateCourseButton from "./DuplicateCourseButton";
+import DeleteCourseButton from "./DeleteCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
 import LessonViewToggle from "./LessonViewToggle";
 import ImportStudentsButton from "./ImportStudentsButton";
@@ -230,6 +231,7 @@ export default async function InstructorCourseEditPage({
             <h2 className="mb-3 text-base font-semibold">Hành động khóa</h2>
             <div className="flex flex-wrap items-center gap-2">
               <DuplicateCourseButton courseId={course.id} />
+              <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
             </div>
           </section>
         </div>

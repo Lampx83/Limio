@@ -793,6 +793,35 @@ model LearningEvent {
 // Phase 0 — A5 Assignments (manual-graded coursework attached to a lesson).
 // =====================================================================
 
+// Generative learning activity taxonomy (Fiorella & Mayer 2016).
+// Optional metadata on Assignment — null = plain instructor-graded coursework.
+enum GenerativeActivityType {
+  summarizing       // Tóm tắt
+  mapping           // Vẽ sơ đồ / concept map
+  drawing           // Vẽ minh hoạ
+  imagining         // Tưởng tượng / hình dung
+  self_explaining   // Tự giải thích
+  teaching          // Dạy lại
+  enacting          // Diễn thực hành
+}
+
+enum AssessmentMode {
+  instructor_graded
+  self_assessed
+  ai_assessed
+  peer_reviewed
+}
+
+enum ResponseFormat {
+  text
+  file
+  image
+  audio
+  video
+  concept_map
+  mixed
+}
+
 model Assignment {
   id          String   @id @default(uuid())
   lessonId    String
@@ -804,6 +833,15 @@ model Assignment {
   maxScore    Int      @default(100)
   // Instructor-controlled visibility (false = hidden from all learners)
   isHidden    Boolean  @default(false)
+
+  // Generative learning metadata. Null = traditional instructor-graded assignment.
+  pedagogicalIntent GenerativeActivityType?
+  responseFormat    ResponseFormat   @default(text)
+  assessmentModes   AssessmentMode[] @default([instructor_graded])
+  requireSelfRating Boolean          @default(false)
+  requireReflection Boolean          @default(false)
+  countsTowardGrade Boolean          @default(true)
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -833,6 +871,14 @@ model AssignmentSubmission {
   feedback String?   @db.Text
   graderId String?
   gradedAt DateTime?
+
+  // Generative learning metadata captured at submission time.
+  // selfRating: 1..5 metacognitive self-assessment.
+  // reflection: free-text "what did I learn / where am I unsure".
+  // aiFeedback: populated later by Feedback Engine (Phase 2+).
+  selfRating Int?
+  reflection String? @db.Text
+  aiFeedback Json?
 
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   user       User       @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)

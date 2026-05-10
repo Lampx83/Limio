@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prisma, type PrismaClient } from "@feedbackme/db";
+import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditCourse } from "./authz";
 import { isUserEnrolled } from "../learning/enroll";
@@ -20,6 +20,33 @@ export class AssignmentError extends Error {
   }
 }
 
+const GenerativeActivityTypeSchema = z.enum([
+  "summarizing",
+  "mapping",
+  "drawing",
+  "imagining",
+  "self_explaining",
+  "teaching",
+  "enacting",
+]);
+
+const AssessmentModeSchema = z.enum([
+  "instructor_graded",
+  "self_assessed",
+  "ai_assessed",
+  "peer_reviewed",
+]);
+
+const ResponseFormatSchema = z.enum([
+  "text",
+  "file",
+  "image",
+  "audio",
+  "video",
+  "concept_map",
+  "mixed",
+]);
+
 const CreateInput = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(1).max(20_000),
@@ -29,13 +56,23 @@ const CreateInput = z.object({
     .transform((v) => (v === undefined ? null : new Date(v))),
   maxScore: z.number().int().positive().max(1000).default(100),
   isHidden: z.boolean().optional(),
+  pedagogicalIntent: GenerativeActivityTypeSchema.nullable().optional(),
+  responseFormat: ResponseFormatSchema.optional(),
+  assessmentModes: z.array(AssessmentModeSchema).min(1).optional(),
+  requireSelfRating: z.boolean().optional(),
+  requireReflection: z.boolean().optional(),
+  countsTowardGrade: z.boolean().optional(),
 });
 
 const UpdateInput = CreateInput.partial();
 
+const REFLECTION_MIN_CHARS = 20;
+
 const SubmitInput = z.object({
   body: z.string().trim().min(1).max(50_000),
   attachmentUrl: z.string().url().max(500).optional().nullable(),
+  selfRating: z.number().int().min(1).max(5).optional().nullable(),
+  reflection: z.string().trim().max(20_000).optional().nullable(),
 });
 
 const GradeInput = z.object({
@@ -85,6 +122,24 @@ export async function createAssignment(
       description: parsed.data.description,
       dueAt: parsed.data.dueAt,
       maxScore: parsed.data.maxScore,
+      ...(parsed.data.pedagogicalIntent !== undefined && {
+        pedagogicalIntent: parsed.data.pedagogicalIntent,
+      }),
+      ...(parsed.data.responseFormat !== undefined && {
+        responseFormat: parsed.data.responseFormat,
+      }),
+      ...(parsed.data.assessmentModes !== undefined && {
+        assessmentModes: parsed.data.assessmentModes,
+      }),
+      ...(parsed.data.requireSelfRating !== undefined && {
+        requireSelfRating: parsed.data.requireSelfRating,
+      }),
+      ...(parsed.data.requireReflection !== undefined && {
+        requireReflection: parsed.data.requireReflection,
+      }),
+      ...(parsed.data.countsTowardGrade !== undefined && {
+        countsTowardGrade: parsed.data.countsTowardGrade,
+      }),
     },
   });
   return { assignmentId: created.id };
@@ -111,6 +166,24 @@ export async function updateAssignment(
       ...(parsed.data.dueAt !== undefined && { dueAt: parsed.data.dueAt }),
       ...(parsed.data.maxScore !== undefined && { maxScore: parsed.data.maxScore }),
       ...(parsed.data.isHidden !== undefined && { isHidden: parsed.data.isHidden }),
+      ...(parsed.data.pedagogicalIntent !== undefined && {
+        pedagogicalIntent: parsed.data.pedagogicalIntent,
+      }),
+      ...(parsed.data.responseFormat !== undefined && {
+        responseFormat: parsed.data.responseFormat,
+      }),
+      ...(parsed.data.assessmentModes !== undefined && {
+        assessmentModes: parsed.data.assessmentModes,
+      }),
+      ...(parsed.data.requireSelfRating !== undefined && {
+        requireSelfRating: parsed.data.requireSelfRating,
+      }),
+      ...(parsed.data.requireReflection !== undefined && {
+        requireReflection: parsed.data.requireReflection,
+      }),
+      ...(parsed.data.countsTowardGrade !== undefined && {
+        countsTowardGrade: parsed.data.countsTowardGrade,
+      }),
     },
   });
 }
@@ -132,7 +205,17 @@ export async function submitAssignment(
   rawInput: unknown,
   db: PrismaClient = prisma,
 ) {
-  const { courseId } = await loadAssignmentCourse(assignmentId, db);
+  const a = await db.assignment.findUnique({
+    where: { id: assignmentId },
+    select: {
+      id: true,
+      requireSelfRating: true,
+      requireReflection: true,
+      lesson: { select: { module: { select: { courseId: true } } } },
+    },
+  });
+  if (!a) throw new AssignmentError("assignment_not_found");
+  const courseId = a.lesson.module.courseId;
   if (!(await isUserEnrolled(userId, courseId, db))) {
     throw new AssignmentError("not_enrolled");
   }
@@ -140,6 +223,22 @@ export async function submitAssignment(
   if (!parsed.success) {
     throw new AssignmentError("validation_failed", parsed.error.flatten());
   }
+  const reflectionTrimmed = parsed.data.reflection?.trim() ?? null;
+  const selfRating = parsed.data.selfRating ?? null;
+
+  if (a.requireSelfRating && selfRating == null) {
+    throw new AssignmentError("validation_failed", "self_rating_required");
+  }
+  if (
+    a.requireReflection &&
+    (!reflectionTrimmed || reflectionTrimmed.length < REFLECTION_MIN_CHARS)
+  ) {
+    throw new AssignmentError("validation_failed", "reflection_required");
+  }
+  // Anti-farming: rating without any submission body is rejected up-front
+  // by SubmitInput.body.min(1); reflection-only with empty body would also
+  // fail there. Rating outside 1..5 caught by zod.
+
   const submission = await db.assignmentSubmission.upsert({
     where: { assignmentId_userId: { assignmentId, userId } },
     create: {
@@ -147,10 +246,14 @@ export async function submitAssignment(
       userId,
       body: parsed.data.body,
       attachmentUrl: parsed.data.attachmentUrl ?? null,
+      selfRating,
+      reflection: reflectionTrimmed,
     },
     update: {
       body: parsed.data.body,
       attachmentUrl: parsed.data.attachmentUrl ?? null,
+      selfRating,
+      reflection: reflectionTrimmed,
       // Re-submission resets to "submitted" — instructor must re-grade.
       status: "submitted",
       score: null,
@@ -169,7 +272,35 @@ export async function submitAssignment(
     { courseId },
     db,
   );
-  return { submissionId: submission.id };
+  if (selfRating != null) {
+    await emitEvent(
+      userId,
+      LearningEventType.AssignmentSelfRated,
+      { assignmentId, submissionId: submission.id, rating: selfRating },
+      { courseId },
+      db,
+    );
+  }
+  if (reflectionTrimmed) {
+    await emitEvent(
+      userId,
+      LearningEventType.AssignmentReflected,
+      {
+        assignmentId,
+        submissionId: submission.id,
+        length: reflectionTrimmed.length,
+      },
+      { courseId },
+      db,
+    );
+  }
+  return {
+    submissionId: submission.id,
+    courseId,
+    assignmentId,
+    selfRating,
+    reflectionLength: reflectionTrimmed?.length ?? 0,
+  };
 }
 
 export async function gradeSubmission(
@@ -239,29 +370,48 @@ export async function listAssignmentsForLesson(
       dueAt: true,
       maxScore: true,
       createdAt: true,
+      pedagogicalIntent: true,
+      responseFormat: true,
+      assessmentModes: true,
+      requireSelfRating: true,
+      requireReflection: true,
+      countsTowardGrade: true,
     },
   });
 }
+
+const assignmentForLearnerSelect = {
+  id: true,
+  title: true,
+  description: true,
+  dueAt: true,
+  maxScore: true,
+  lessonId: true,
+  pedagogicalIntent: true,
+  responseFormat: true,
+  assessmentModes: true,
+  requireSelfRating: true,
+  requireReflection: true,
+  countsTowardGrade: true,
+} satisfies Prisma.AssignmentSelect;
 
 export async function getAssignmentForLearner(
   userId: string,
   assignmentId: string,
   db: PrismaClient = prisma,
-) {
+): Promise<{
+  assignment: Prisma.AssignmentGetPayload<{
+    select: typeof assignmentForLearnerSelect;
+  }>;
+  submission: Prisma.AssignmentSubmissionGetPayload<true> | null;
+}> {
   const { courseId } = await loadAssignmentCourse(assignmentId, db);
   if (!(await isUserEnrolled(userId, courseId, db))) {
     throw new AssignmentError("not_enrolled");
   }
   const a = await db.assignment.findUniqueOrThrow({
     where: { id: assignmentId },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      dueAt: true,
-      maxScore: true,
-      lessonId: true,
-    },
+    select: assignmentForLearnerSelect,
   });
   const submission = await db.assignmentSubmission.findUnique({
     where: { assignmentId_userId: { assignmentId, userId } },
@@ -269,18 +419,26 @@ export async function getAssignmentForLearner(
   return { assignment: a, submission };
 }
 
+const submissionForInstructorInclude = {
+  user: { select: { id: true, displayName: true, email: true } },
+} satisfies Prisma.AssignmentSubmissionInclude;
+
 export async function listSubmissionsForInstructor(
   userId: string,
   assignmentId: string,
   db: PrismaClient = prisma,
-) {
+): Promise<
+  Array<
+    Prisma.AssignmentSubmissionGetPayload<{
+      include: typeof submissionForInstructorInclude;
+    }>
+  >
+> {
   const { courseId } = await loadAssignmentCourse(assignmentId, db);
   await assertCanEditCourse(userId, courseId, db);
   return db.assignmentSubmission.findMany({
     where: { assignmentId },
     orderBy: [{ status: "asc" }, { submittedAt: "desc" }],
-    include: {
-      user: { select: { id: true, displayName: true, email: true } },
-    },
+    include: submissionForInstructorInclude,
   });
 }

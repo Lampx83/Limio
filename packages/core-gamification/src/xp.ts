@@ -10,6 +10,7 @@ export const DAILY_CAPS: Record<string, number> = {
   "lesson.completed": 10,
   "quiz.passed.first_try": 5,
   "quiz.passed.retry": 5,
+  "assignment.deep_reflection": 5,
 };
 
 export type AwardReason =
@@ -19,7 +20,8 @@ export type AwardReason =
   | "misconception.resolved"
   | "quest.completed"
   | "h5p.completed"
-  | "tournament.prize";
+  | "tournament.prize"
+  | "assignment.deep_reflection";
 
 export interface AwardInput {
   userId: string;
