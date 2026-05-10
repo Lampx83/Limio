@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface Assignment {
@@ -108,32 +109,41 @@ export default function AssignmentSection({
             >
               Xem bài nộp
             </Link>
-            <label className="flex items-center gap-2 cursor-pointer" title={isHidden ? "Assignment bị ẩn khỏi học viên" : "Assignment hiển thị với học viên"}>
-              <input
-                type="checkbox"
-                checked={isHidden}
-                onChange={toggleHidden}
-                className="w-5 h-5 rounded border-token cursor-pointer accent-danger-600"
-              />
-              <span className="text-xs font-medium text-muted">Ẩn</span>
-            </label>
-            <button
-              onClick={() => setEditing(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-brand-soft hover:text-brand-600 group-hover/as:opacity-100"
-              title="Sửa assignment"
-              aria-label="Sửa"
-            >
-              ✎
-            </button>
-            <button
-              onClick={remove}
-              disabled={busy}
-              title="Xóa assignment"
-              aria-label="Xóa"
-              className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger-50 hover:text-danger-600 group-hover/as:opacity-100 disabled:opacity-50"
-            >
-              🗑️
-            </button>
+            <div className="ml-auto flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5 opacity-60 transition-opacity group-hover/as:opacity-100">
+              <button
+                type="button"
+                onClick={toggleHidden}
+                className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+                  isHidden
+                    ? "bg-danger-50 text-danger-600 hover:bg-danger-100"
+                    : "text-faint hover:bg-brand-soft hover:text-brand-600"
+                }`}
+                title={isHidden ? "Đang ẩn — bấm để hiện" : "Đang hiện — bấm để ẩn"}
+                aria-label={isHidden ? "Hiện assignment" : "Ẩn assignment"}
+                aria-pressed={isHidden}
+              >
+                {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
+                title="Sửa assignment"
+                aria-label="Sửa"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={remove}
+                disabled={busy}
+                title="Xóa assignment"
+                aria-label="Xóa"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </>
       ) : (

@@ -20,6 +20,7 @@ export const LearningEventType = {
   ForumUpvoted: "forum.upvoted",
   ForumAnswered: "forum.answered",
   EnrollmentCreated: "enrollment.created",
+  EnrollmentStatusChanged: "enrollment.status_changed",
   CourseCompleted: "course.completed",
 
   // Feedback

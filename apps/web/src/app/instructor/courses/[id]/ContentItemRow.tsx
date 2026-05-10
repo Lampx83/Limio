@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { toast } from "@/lib/toast";
 import EditContentItemForm from "./EditContentItemForm";
@@ -149,25 +150,31 @@ export default function ContentItemRow({ item }: { item: Item }) {
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        <label className="flex items-center gap-2 cursor-pointer" title={isHidden ? "Content bị ẩn khỏi học viên" : "Content hiển thị với học viên"}>
-          <input
-            type="checkbox"
-            checked={isHidden}
-            onChange={toggleHidden}
-            className="w-5 h-5 rounded border-token cursor-pointer accent-danger-600"
-          />
-          <span className="text-xs font-medium text-muted">Ẩn</span>
-        </label>
+      <div className="flex shrink-0 items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
+        <button
+          type="button"
+          onClick={toggleHidden}
+          disabled={busy}
+          className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:opacity-50 ${
+            isHidden
+              ? "bg-danger-50 text-danger-600 hover:bg-danger-100"
+              : "text-faint hover:bg-brand-soft hover:text-brand-600"
+          }`}
+          title={isHidden ? "Đang ẩn — bấm để hiện" : "Đang hiện — bấm để ẩn"}
+          aria-label={isHidden ? "Hiện content" : "Ẩn content"}
+          aria-pressed={isHidden}
+        >
+          {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
         <button
           type="button"
           onClick={() => setEditing(true)}
           disabled={busy}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-brand-soft hover:text-brand-600 disabled:opacity-50"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600 disabled:opacity-50"
           title="Sửa content"
           aria-label="Sửa"
         >
-          ✎
+          <Pencil className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -175,9 +182,9 @@ export default function ContentItemRow({ item }: { item: Item }) {
           disabled={busy}
           title="Xoá content"
           aria-label="Xoá"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
         >
-          🗑️
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </div>

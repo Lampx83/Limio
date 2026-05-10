@@ -55,7 +55,7 @@ export default function ModuleOverviewCard({
         {module.lessons.map((l, i) => (
           <li key={l.id}>
             <Link
-              href={`/instructor/courses/${courseId}?lesson=${l.id}`}
+              href={`/instructor/courses/${courseId}?tab=content&lesson=${l.id}`}
               className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[rgb(var(--surface-muted))]"
             >
               <span className="w-6 flex-shrink-0 text-xs font-medium text-faint">

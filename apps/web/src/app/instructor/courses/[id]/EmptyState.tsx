@@ -15,7 +15,6 @@ export default function EmptyState({
     label: string;
     /**
      * If set, dispatch a CustomEvent on window with this name when clicked.
-     * Used to wire empty-state CTAs to LessonAddBar without lifting state.
      */
     eventName?: string;
     eventDetail?: unknown;

@@ -1,4 +1,7 @@
-import QuizHeader from "./QuizHeader";
+"use client";
+
+import { useState } from "react";
+import { QuizActionButtons, QuizEditForm } from "./QuizHeader";
 import QuestionRow from "./QuestionRow";
 import AddQuestionForm from "./AddQuestionForm";
 import AiQuestionGenerator from "./AiQuestionGenerator";
@@ -44,6 +47,8 @@ export default function QuizSection({
   quiz: Quiz;
   lessonId: string;
 }) {
+  const [editing, setEditing] = useState(false);
+
   return (
     <details className={`group overflow-hidden rounded-xl border transition-colors ${
       quiz.isHidden
@@ -53,17 +58,19 @@ export default function QuizSection({
       <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-3 py-2.5 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
         <span className="text-lg" aria-hidden></span>
         <span className="text-sm font-semibold">{quiz.title}</span>
-        {quiz.isHidden && <span className="chip-danger text-xs">👁️ Ẩn</span>}
         <span className="ml-auto text-sm text-muted">
           {quiz.questions.length} câu · diff {quiz.difficulty ?? "—"} · pass{" "}
           {quiz.passThresholdPct}%
         </span>
+        <QuizActionButtons quiz={quiz} onEdit={() => setEditing(true)} />
         <span className="text-xs text-faint opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden>
           ▾
         </span>
       </summary>
       <div className="border-t border-token px-4 py-3 space-y-3">
-        <QuizHeader quiz={quiz} />
+        {editing && (
+          <QuizEditForm quiz={quiz} onClose={() => setEditing(false)} />
+        )}
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">

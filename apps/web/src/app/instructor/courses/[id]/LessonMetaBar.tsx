@@ -1,0 +1,165 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, AlertTriangle } from "lucide-react";
+import { apiUrl } from "@/lib/apiUrl";
+import SkillTagsEditor from "./SkillTagsEditor";
+import LessonActionMenu from "./LessonActionMenu";
+
+interface Tag {
+  skillId: string;
+  code: string;
+  name: string;
+}
+
+interface ModuleRef {
+  id: string;
+  title: string;
+}
+
+export default function LessonMetaBar({
+  lessonId,
+  order,
+  isHidden: initialIsHidden,
+  previewable: initialPreviewable,
+  tags,
+  title,
+  onEdit,
+  moduleId,
+  siblingLessonIds,
+  modules,
+}: {
+  lessonId: string;
+  order?: number;
+  isHidden: boolean;
+  previewable: boolean;
+  tags: Tag[];
+  title?: string;
+  onEdit?: () => void;
+  moduleId?: string;
+  siblingLessonIds?: string[];
+  modules?: ModuleRef[];
+}) {
+  const router = useRouter();
+  const [isHidden, setIsHidden] = useState(initialIsHidden);
+  const [previewable, setPreviewable] = useState(initialPreviewable);
+  const [skillsOpen, setSkillsOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!skillsOpen) return;
+    function onDoc(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setSkillsOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setSkillsOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [skillsOpen]);
+
+  async function patch(body: Record<string, unknown>) {
+    await fetch(apiUrl(`/api/lessons/${lessonId}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    router.refresh();
+  }
+
+  async function toggleHidden() {
+    const next = !isHidden;
+    setIsHidden(next);
+    await patch({ isHidden: next });
+  }
+
+  async function togglePreviewable() {
+    const next = !previewable;
+    setPreviewable(next);
+    await patch({ previewable: next });
+  }
+
+  const noSkill = tags.length === 0;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
+      {typeof order === "number" && (
+        <span className="text-faint">Lesson {order}</span>
+      )}
+
+      {onEdit && (
+        <>
+          <Sep />
+          <div className="inline-flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
+            <LessonActionMenu
+              lessonId={lessonId}
+              title={title ?? ""}
+              onEdit={onEdit}
+              moduleId={moduleId}
+              siblingLessonIds={siblingLessonIds}
+              modules={modules}
+              isHidden={isHidden}
+              previewable={previewable}
+              onToggleHidden={toggleHidden}
+              onTogglePreviewable={togglePreviewable}
+            />
+          </div>
+        </>
+      )}
+
+      <Sep />
+
+      {/* Skills cluster */}
+      <div ref={popoverRef} className="relative inline-flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setSkillsOpen((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 transition-colors ${
+            noSkill
+              ? "border-accent-200 bg-accent-50 text-accent-700 hover:bg-accent-100"
+              : "border-token bg-[rgb(var(--surface-muted))] text-default hover:bg-[rgb(var(--surface))]"
+          }`}
+          aria-haspopup="dialog"
+          aria-expanded={skillsOpen}
+          title={noSkill ? "Bài học chưa được tag skill — bấm để thêm" : `${tags.length} skill đã tag — bấm để chỉnh sửa`}
+        >
+          {noSkill ? (
+            <span className="inline-flex items-center gap-1 font-medium">
+              <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+              chưa tag skill
+            </span>
+          ) : (
+            <>
+              <span>{tags.length} skill{tags.length > 1 ? "s" : ""}</span>
+              <span className="hidden sm:inline text-faint">
+                {tags
+                  .slice(0, 2)
+                  .map((t) => t.code)
+                  .join(" · ")}
+                {tags.length > 2 && ` +${tags.length - 2}`}
+              </span>
+            </>
+          )}
+          <ChevronDown className="h-3.5 w-3.5 text-faint" aria-hidden />
+        </button>
+
+        {skillsOpen && (
+          <div className="absolute left-0 top-full z-30 mt-1 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 shadow-2xl">
+            <SkillTagsEditor lessonId={lessonId} tags={tags} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Sep() {
+  return <span aria-hidden className="text-faint">·</span>;
+}

@@ -47,11 +47,38 @@ export async function POST(req: Request) {
     courseId = lesson.module.courseId;
     const parts: string[] = [`# ${lesson.title}`];
     if (lesson.description) parts.push(lesson.description);
+    const TEXT_KEYS = [
+      "body",
+      "text",
+      "content",
+      "transcript",
+      "transcriptText",
+      "caption",
+      "title",
+      "description",
+      "summary",
+      "url",
+    ];
     for (const c of lesson.contentItems) {
       const p = (c.payload ?? {}) as Record<string, unknown>;
-      if (c.type === "markdown" && typeof p.body === "string") parts.push(p.body);
+      const chunk: string[] = [];
+      for (const k of TEXT_KEYS) {
+        const v = p[k];
+        if (typeof v === "string" && v.trim()) chunk.push(v.trim());
+      }
+      if (chunk.length) parts.push(`[${c.type}] ${chunk.join(" — ")}`);
     }
     lessonContent = parts.join("\n\n");
+    if (lessonContent.trim().length < 20) {
+      return NextResponse.json(
+        {
+          error: "lesson_content_too_short",
+          message:
+            "Bài học chưa có đủ nội dung văn bản để AI sinh câu hỏi. Hãy thêm phần mô tả hoặc một content item dạng markdown/transcript.",
+        },
+        { status: 400 },
+      );
+    }
   } else if (body.rawText) {
     lessonContent = body.rawText;
   } else {

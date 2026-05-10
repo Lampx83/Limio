@@ -56,7 +56,20 @@ export default function PublishControls({
 
   const blocked = untaggedLessons.length > 0;
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex items-center gap-2">
+      {blocked && (
+        <span
+          className="chip-accent text-xs"
+          title={`Lesson chưa tag: ${untaggedLessons.map((l) => l.title).join(", ")}`}
+        >
+          ⚠ {untaggedLessons.length} chưa tag skill
+        </span>
+      )}
+      {error && (
+        <span className="text-xs text-danger-600" title={error}>
+          Lỗi
+        </span>
+      )}
       <button
         onClick={publish}
         disabled={busy || blocked}
@@ -71,12 +84,6 @@ export default function PublishControls({
       >
         {busy ? "Publishing..." : "Publish"}
       </button>
-      {blocked && (
-        <p className="max-w-xs text-right text-xs text-accent-700">
-          {untaggedLessons.length} lesson cần tag skill trước khi publish
-        </p>
-      )}
-      {error && <p className="text-xs text-danger-600">Lỗi: {error}</p>}
     </div>
   );
 }

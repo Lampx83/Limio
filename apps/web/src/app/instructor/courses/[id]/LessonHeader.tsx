@@ -2,7 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import LessonMetaBar from "./LessonMetaBar";
+
+interface SkillTag {
+  skillId: string;
+  code: string;
+  name: string;
+}
+
+interface ModuleRef {
+  id: string;
+  title: string;
+}
 
 export default function LessonHeader({
   lessonId,
@@ -14,6 +27,10 @@ export default function LessonHeader({
   isHidden: initialIsHidden,
   noSkill = false,
   showTitle = false,
+  tags = [],
+  moduleId,
+  siblingLessonIds,
+  modules,
 }: {
   lessonId: string;
   title: string;
@@ -24,6 +41,10 @@ export default function LessonHeader({
   isHidden: boolean;
   noSkill?: boolean;
   showTitle?: boolean;
+  tags?: SkillTag[];
+  moduleId?: string;
+  siblingLessonIds?: string[];
+  modules?: ModuleRef[];
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -76,9 +97,16 @@ export default function LessonHeader({
   }
 
   async function remove() {
-    if (!confirm(`Xóa lesson "${title}"? Cascade content + quiz + skill tags + notes.`)) return;
+    if (
+      !confirm(
+        `Xóa lesson "${title}"? Cascade content + quiz + skill tags + notes.`,
+      )
+    )
+      return;
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/lessons/${lessonId}`), { method: "DELETE" });
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}`), {
+      method: "DELETE",
+    });
     setBusy(false);
     if (res.ok) router.refresh();
   }
@@ -134,45 +162,34 @@ export default function LessonHeader({
     );
   }
 
+  // Flat (lesson editor pane) — Option C compact layout.
+  if (showTitle) {
+    return (
+      <header className="space-y-1.5">
+        <h2 className="text-2xl font-bold leading-tight">{title}</h2>
+        <LessonMetaBar
+          lessonId={lessonId}
+          order={order}
+          isHidden={isHidden}
+          previewable={previewable}
+          tags={tags}
+          title={title}
+          onEdit={() => setEditing(true)}
+          moduleId={moduleId}
+          siblingLessonIds={siblingLessonIds}
+          modules={modules}
+        />
+        {description && (
+          <p className="pt-1 text-sm italic text-muted">{description}</p>
+        )}
+      </header>
+    );
+  }
+
+  // Non-flat (preview list) — keep older TogglePill row.
   return (
     <header className="space-y-2">
-      {showTitle && (
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline gap-2 text-xs text-faint">
-              {typeof order === "number" && <span>Lesson {order}</span>}
-            </div>
-            <h2 className="mt-0.5 text-2xl font-bold leading-tight">{title}</h2>
-            {description && (
-              <p className="mt-1.5 text-sm text-muted">{description}</p>
-            )}
-          </div>
-          <div className="flex flex-shrink-0 items-center gap-1">
-            <button
-              onClick={() => setEditing(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
-              title="Sửa lesson"
-              aria-label="Sửa"
-            >
-              ✎
-            </button>
-            <button
-              onClick={remove}
-              disabled={busy}
-              title="Xóa lesson"
-              aria-label="Xóa"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
-            >
-              🗑️
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!showTitle && description && (
-        <p className="text-sm text-muted">{description}</p>
-      )}
-
+      {description && <p className="text-sm text-muted">{description}</p>}
       <div className="flex flex-wrap items-center gap-1.5">
         <TogglePill
           active={isHidden}
@@ -180,7 +197,11 @@ export default function LessonHeader({
           onClick={toggleHidden}
           icon="👁"
           label={isHidden ? "Đang ẩn" : "Hiển thị"}
-          title={isHidden ? "Bài học bị ẩn khỏi học viên" : "Bài học hiển thị với học viên — bấm để ẩn"}
+          title={
+            isHidden
+              ? "Bài học bị ẩn khỏi học viên"
+              : "Bài học hiển thị với học viên — bấm để ẩn"
+          }
         />
         <TogglePill
           active={previewable}
@@ -188,32 +209,34 @@ export default function LessonHeader({
           onClick={togglePreviewable}
           icon="🔓"
           label={previewable ? "Cho preview" : "Không preview"}
-          title={previewable ? "Học viên chưa mua có thể xem preview bài này" : "Chỉ học viên đã mua/đăng ký mới có thể xem — bấm để mở preview"}
+          title={
+            previewable
+              ? "Học viên chưa mua có thể xem preview bài này"
+              : "Chỉ học viên đã mua/đăng ký mới có thể xem — bấm để mở preview"
+          }
         />
-        {noSkill && (
-          <span className="chip-accent text-xs">chưa tag skill</span>
-        )}
-        {!showTitle && (
-          <div className="ml-auto flex items-center gap-1">
-            <button
-              onClick={() => setEditing(true)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
-              title="Sửa lesson"
-              aria-label="Sửa"
-            >
-              ✎
-            </button>
-            <button
-              onClick={remove}
-              disabled={busy}
-              title="Xóa lesson"
-              aria-label="Xóa"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
-            >
-              🗑️
-            </button>
-          </div>
-        )}
+        {noSkill && <span className="chip-accent text-xs">chưa tag skill</span>}
+        <div className="ml-auto flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
+            title="Sửa lesson"
+            aria-label="Sửa"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={remove}
+            disabled={busy}
+            title="Xóa lesson"
+            aria-label="Xóa"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
     </header>
   );

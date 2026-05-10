@@ -2,8 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
+
+const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
+  ssr: false,
+});
 
 interface ScormPackageRow {
   id: string;
@@ -68,11 +73,13 @@ export default function AddContentItemForm({
   nextOrderIndex,
   embedded = false,
   onCancel,
+  lockedType,
 }: {
   lessonId: string;
   nextOrderIndex: number;
   embedded?: boolean;
   onCancel?: () => void;
+  lockedType?: ContentType;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(embedded);
@@ -82,7 +89,7 @@ export default function AddContentItemForm({
     else setOpen(false);
   }
 
-  const [type, setType] = useState<ContentType>("markdown");
+  const [type, setType] = useState<ContentType>(lockedType ?? "markdown");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -282,22 +289,24 @@ export default function AddContentItemForm({
       onSubmit={onSubmit}
       className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
     >
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Loại
-        </label>
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value as ContentType)}
-          className="select max-w-[180px]"
-        >
-          {(Object.keys(TYPE_LABEL) as ContentType[]).map((t) => (
-            <option key={t} value={t}>
-              {TYPE_LABEL[t]}
-            </option>
-          ))}
-        </select>
-      </div>
+      {!lockedType && (
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold uppercase tracking-wide text-faint">
+            Loại
+          </label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as ContentType)}
+            className="select max-w-[180px]"
+          >
+            {(Object.keys(TYPE_LABEL) as ContentType[]).map((t) => (
+              <option key={t} value={t}>
+                {TYPE_LABEL[t]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {type === "markdown" && (
         <textarea
@@ -355,6 +364,11 @@ export default function AddContentItemForm({
           )}
           {type === "video" && url.trim() && (
             <VideoUrlPreview url={url} />
+          )}
+          {type === "pdf" && url.trim() && (
+            <div className="rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.4] p-3">
+              <PdfViewer url={url.trim()} title={linkTitle || undefined} />
+            </div>
           )}
           {type === "video" && (
             <CuepointEditor

@@ -1,12 +1,8 @@
 import Link from "next/link";
 import LessonHeader from "./LessonHeader";
-import ContentItemsList from "./ContentItemsList";
 import SkillTagsEditor from "./SkillTagsEditor";
-import QuizSection from "./QuizSection";
-import AssignmentSection from "./AssignmentSection";
 import LessonContent from "@/components/LessonContent";
-import LessonAddBar from "./LessonAddBar";
-import EmptyState from "./EmptyState";
+import ActivitySection from "./ActivitySection";
 
 interface Lesson {
   id: string;
@@ -74,11 +70,17 @@ export default function LessonSection({
   order,
   courseSlug,
   flat = false,
+  moduleId,
+  siblingLessonIds,
+  modules,
 }: {
   lesson: Lesson;
   order: number;
   courseSlug: string;
   flat?: boolean;
+  moduleId?: string;
+  siblingLessonIds?: string[];
+  modules?: Array<{ id: string; title: string }>;
 }) {
   const noSkill = lesson.skillTags.length === 0;
   const hiddenContent = lesson.contentItems.filter(c => c.isHidden).length;
@@ -98,31 +100,40 @@ export default function LessonSection({
           isHidden={lesson.isHidden}
           noSkill={noSkill}
           showTitle={flat}
+          tags={lesson.skillTags.map((t) => ({
+            skillId: t.skillId,
+            code: t.skill.code,
+            name: t.skill.name,
+          }))}
+          moduleId={moduleId}
+          siblingLessonIds={siblingLessonIds}
+          modules={modules}
         />
 
+        {!flat && (
+          <SubSection label="Skills">
+            <SkillTagsEditor
+              lessonId={lesson.id}
+              tags={lesson.skillTags.map((t) => ({
+                skillId: t.skillId,
+                code: t.skill.code,
+                name: t.skill.name,
+              }))}
+            />
+          </SubSection>
+        )}
+
         <div className="editor-only">
-          <LessonAddBar
+          <ActivitySection
             lessonId={lesson.id}
-            nextContentOrderIndex={lesson.contentItems.length}
+            contentItems={lesson.contentItems}
+            quizzes={lesson.quizzes}
+            assignments={lesson.assignments}
           />
         </div>
 
-        <SubSection label="Skills">
-          <SkillTagsEditor
-            lessonId={lesson.id}
-            tags={lesson.skillTags.map((t) => ({
-              skillId: t.skillId,
-              code: t.skill.code,
-              name: t.skill.name,
-            }))}
-          />
-        </SubSection>
-
-        <SubSection label={`Nội dung (${lesson.contentItems.length})`}>
-          <div className="editor-only">
-            <ContentItemsList items={lesson.contentItems} />
-          </div>
-          <div className="preview-only">
+        <div className="preview-only space-y-5">
+          <SubSection label={`Nội dung (${lesson.contentItems.length})`}>
             {lesson.contentItems.length === 0 ? (
               <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
                 Bài này chưa có nội dung.
@@ -138,33 +149,9 @@ export default function LessonSection({
                 lessonId={lesson.id}
               />
             )}
-          </div>
-        </SubSection>
+          </SubSection>
 
-        <SubSection label={`Quizzes (${lesson.quizzes.length})`}>
-          <div className="editor-only">
-            {lesson.quizzes.length === 0 ? (
-              <EmptyState
-                icon="❓"
-                title="Chưa có quiz"
-                description="Quiz giúp kiểm tra hiểu biết của học viên ngay sau khi học."
-                cta={{
-                  label: "+ Thêm quiz",
-                  eventName: "lesson-add:open",
-                  eventDetail: { mode: "quiz" },
-                }}
-              />
-            ) : (
-              <ol className="space-y-2">
-                {lesson.quizzes.map((q) => (
-                  <li key={q.id}>
-                    <QuizSection quiz={q} lessonId={lesson.id} />
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
-          <div className="preview-only">
+          <SubSection label={`Quizzes (${lesson.quizzes.length})`}>
             {lesson.quizzes.length === 0 ? (
               <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
                 Bài này chưa có quiz.
@@ -194,33 +181,9 @@ export default function LessonSection({
                 ))}
               </ul>
             )}
-          </div>
-        </SubSection>
+          </SubSection>
 
-        <SubSection label={`Assignments (${lesson.assignments.length})`}>
-          <div className="editor-only">
-            {lesson.assignments.length === 0 ? (
-              <EmptyState
-                icon="📝"
-                title="Chưa có assignment"
-                description="Assignment sẽ được instructor chấm tay."
-                cta={{
-                  label: "+ Thêm assignment",
-                  eventName: "lesson-add:open",
-                  eventDetail: { mode: "assignment" },
-                }}
-              />
-            ) : (
-              <ol className="space-y-2">
-                {lesson.assignments.map((a) => (
-                  <li key={a.id}>
-                    <AssignmentSection assignment={a} />
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
-          <div className="preview-only">
+          <SubSection label={`Assignments (${lesson.assignments.length})`}>
             {lesson.assignments.length === 0 ? (
               <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
                 Bài này chưa có assignment.
@@ -251,8 +214,8 @@ export default function LessonSection({
                 ))}
               </ul>
             )}
-          </div>
-        </SubSection>
+          </SubSection>
+        </div>
       </div>
   );
 

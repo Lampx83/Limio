@@ -36,11 +36,54 @@ export default function CourseMetaForm({
   const [currency, setCurrency] = useState(initial.currency || "VND");
   const [busy, setBusy] = useState(false);
 
+  const LEVEL_LABEL: Record<string, string> = {
+    beginner: "Cơ bản",
+    intermediate: "Trung cấp",
+    advanced: "Nâng cao",
+  };
+
   if (!open) {
+    const priceDisplay =
+      initial.priceCents === null || initial.priceCents === undefined
+        ? "Miễn phí"
+        : `${Number(initial.priceCents).toLocaleString("vi-VN")} ${initial.currency || "VND"}`;
+
     return (
-      <button onClick={() => setOpen(true)} className="link text-sm">
-        Sửa thông tin course
-      </button>
+      <div className="card space-y-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold leading-snug">{initial.title}</h3>
+            {initial.description && (
+              <p className="mt-2 whitespace-pre-wrap text-sm text-muted leading-relaxed">
+                {initial.description}
+              </p>
+            )}
+          </div>
+          <button onClick={() => setOpen(true)} className="btn-secondary btn-sm shrink-0">
+            Sửa
+          </button>
+        </div>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-token pt-4 text-sm sm:grid-cols-4">
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-faint">Level</dt>
+            <dd className="mt-0.5 font-medium">{LEVEL_LABEL[initial.level] ?? initial.level}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-faint">Ngôn ngữ</dt>
+            <dd className="mt-0.5 font-medium">{initial.language === "vi" ? "Tiếng Việt" : "English"}</dd>
+          </div>
+          {initial.category && (
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-faint">Category</dt>
+              <dd className="mt-0.5 font-medium">{initial.category}</dd>
+            </div>
+          )}
+          <div>
+            <dt className="text-xs font-medium uppercase tracking-wide text-faint">Giá</dt>
+            <dd className="mt-0.5 font-medium">{priceDisplay}</dd>
+          </div>
+        </dl>
+      </div>
     );
   }
 

@@ -14,8 +14,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+
+const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
+  ssr: false,
+});
 
 type ContentType =
   | "video"
@@ -183,6 +188,12 @@ export default function EditContentItemForm({ item, onClose }: Props) {
           placeholder="Tiêu đề (optional)"
           className="input"
         />
+      )}
+
+      {type === "pdf" && url.trim() && (
+        <div className="rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.4] p-3">
+          <PdfViewer url={url.trim()} title={linkTitle || undefined} />
+        </div>
       )}
 
       {(type === "scorm" || type === "h5p" || type === "lti") && (

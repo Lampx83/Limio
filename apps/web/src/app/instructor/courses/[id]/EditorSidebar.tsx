@@ -29,11 +29,14 @@ export default function EditorSidebar({
   view: "edit" | "preview";
 }) {
   const baseHref = `/instructor/courses/${courseId}`;
-  const overviewHref = view === "preview" ? `${baseHref}?view=preview` : baseHref;
+  const overviewHref =
+    view === "preview"
+      ? `${baseHref}?tab=content&view=preview`
+      : `${baseHref}?tab=content`;
   const lessonHref = (lessonId: string) =>
     view === "preview"
-      ? `${baseHref}?view=preview&lesson=${lessonId}`
-      : `${baseHref}?lesson=${lessonId}`;
+      ? `${baseHref}?tab=content&view=preview&lesson=${lessonId}`
+      : `${baseHref}?tab=content&lesson=${lessonId}`;
 
   const isOverviewActive = !activeLessonId;
 
