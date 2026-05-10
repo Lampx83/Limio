@@ -23,8 +23,15 @@ export async function POST(
           ? 404
           : e.code === "not_registered" || e.code === "prereq_not_completed"
             ? 403
-            : 400;
-      return NextResponse.json({ error: e.code }, { status });
+            : e.code === "condition_not_met"
+              ? 422
+              : 400;
+      // Include progress detail for condition_not_met so UI can show a
+      // progress bar (e.g. "3/5 quiz passed — keep going!").
+      return NextResponse.json(
+        { error: e.code, ...(e.detail ? { progress: e.detail } : {}) },
+        { status },
+      );
     }
     throw e;
   }

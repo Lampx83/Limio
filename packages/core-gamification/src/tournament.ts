@@ -1,6 +1,7 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { awardXp } from "./xp";
+import { checkMissionCondition } from "./missionCondition";
 
 /**
  * Tournament runtime — Phase 3.
@@ -21,7 +22,10 @@ export class TournamentError extends Error {
       | "not_registered"
       | "mission_not_found"
       | "prereq_not_completed"
+      | "condition_not_met"
       | "validation_failed",
+    /** Optional progress detail returned to the caller for UI display. */
+    public readonly detail?: { current: number; required: number },
   ) {
     super(code);
   }
@@ -68,7 +72,11 @@ export async function completeMission(
 ): Promise<{ alreadyCompleted: boolean; points: number }> {
   const mission = await db.tournamentMission.findUnique({
     where: { id: missionId },
-    include: { tournament: true },
+    include: {
+      tournament: true,
+      // conditionSkillCode and other condition fields are on the mission itself;
+      // Prisma includes all scalar fields by default in findUnique.
+    },
   });
   if (!mission) throw new TournamentError("mission_not_found");
 
@@ -89,6 +97,30 @@ export async function completeMission(
     });
     if (!prereqEvent) {
       throw new TournamentError("prereq_not_completed");
+    }
+  }
+
+  // C5 — Verify condition (if configured). "manual" and null conditionType
+  // are skipped here — the route that calls completeMission() is then
+  // responsible for verifying the underlying activity before calling us.
+  if (mission.conditionType && mission.conditionType !== "manual") {
+    const check = await checkMissionCondition(
+      userId,
+      {
+        conditionType: mission.conditionType,
+        conditionValue: mission.conditionValue,
+        conditionScope: mission.conditionScope,
+        conditionMinScore: mission.conditionMinScore,
+        conditionSkillCode: mission.conditionSkillCode,
+      },
+      t.courseId,
+      db,
+    );
+    if (!check.met) {
+      throw new TournamentError("condition_not_met", {
+        current: check.current,
+        required: check.required,
+      });
     }
   }
 

@@ -18,6 +18,7 @@
     "seed:badges": "node --env-file=.env --import tsx src/seed-badges.ts",
     "seed:feedback-templates": "node --env-file=.env --import tsx src/seed-feedback-templates.ts",
     "seed:quests": "node --env-file=.env --import tsx src/seed-quests.ts",
+    "seed:mission-templates": "node --env-file=.env --import tsx src/seed-mission-templates.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
