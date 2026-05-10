@@ -281,7 +281,7 @@ export default async function InstructorCourseEditPage({
                     courseSlug={course.slug}
                     flat
                     moduleId={selectedModule.id}
-                    siblingLessonIds={selectedModule.lessons.map((l) => l.id)}
+                    siblingLessonIds={selectedModule.lessons.map((l: { id: string }) => l.id)}
                     modules={course.modules.map((m) => ({
                       id: m.id,
                       title: m.title,
