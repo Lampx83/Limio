@@ -167,7 +167,7 @@ export async function duplicateLesson(
     // Skill tags on the lesson itself
     for (const t of src.skillTags) {
       await tx.contentSkillMapping.create({
-        data: { lessonId: dup.id, skillId: t.skillId },
+        data: { contentType: "lesson", contentId: dup.id, skillId: t.skillId },
       });
     }
 
