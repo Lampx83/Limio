@@ -22,6 +22,9 @@ x-web-env: &web-env
   # Allow NextAuth to accept plain-HTTP and proxied requests (IP:PORT, etc.).
   AUTH_TRUST_HOST: "1"
   CRON_SECRET: ${CRON_SECRET:?CRON_SECRET required}
+  # 32-byte key (hex 64 chars) dùng để mã hoá IntegrationCredential (OpenAI key, v.v.).
+  # Sinh bằng: openssl rand -hex 32. KHÔNG ĐỔI sau khi đã lưu credential.
+  SECRETS_MASTER_KEY: ${SECRETS_MASTER_KEY:?SECRETS_MASTER_KEY required}
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
   MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
