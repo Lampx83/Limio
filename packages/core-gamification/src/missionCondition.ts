@@ -252,7 +252,7 @@ export async function checkMissionCondition(
           status: "graded",
           score: { gte: minScore },
           ...(scopedCourseId
-            ? { assignment: { lesson: { courseId: scopedCourseId } } }
+            ? { assignment: { lesson: { module: { courseId: scopedCourseId } } } }
             : {}),
         },
       });
