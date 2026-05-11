@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
+import ImportQuestionsModal from "./ImportQuestionsModal";
 
 interface Skill {
   id: string;
@@ -62,6 +63,7 @@ export default function ContentManager({ examId, editable, passages, questions }
   const router = useRouter();
   const [edit, setEdit] = useState<EditState>({ kind: "idle" });
   const [working, setWorking] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   /** Source index + scope captured at dragstart. Uses ref so it survives the
    *  drag lifecycle without re-renders (state would not update in time). */
   const dragRef = useRef<{ scope: string; from: number } | null>(null);
@@ -286,6 +288,24 @@ export default function ContentManager({ examId, editable, passages, questions }
 
   return (
     <div className="space-y-6">
+      <ImportQuestionsModal
+        examId={examId}
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+      />
+
+      {editable && (
+        <div className="-mt-3 mb-1 flex flex-wrap justify-end gap-2 text-xs">
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="rounded border border-default px-3 py-1 hover:bg-slate-50"
+          >
+            📤 Import từ Excel
+          </button>
+        </div>
+      )}
+
       {/* Passages */}
       <section>
         <div className="mb-3 flex items-center justify-between">

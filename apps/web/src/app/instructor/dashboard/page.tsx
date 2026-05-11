@@ -129,8 +129,14 @@ export default async function InstructorDashboard() {
       {/* Quick actions */}
       <div className="mt-6 flex flex-wrap gap-2">
         <Link
-          href="/instructor/teaching-tools"
+          href="/instructor/exams"
           className="btn-primary btn-sm"
+        >
+          🧪 Online Exam
+        </Link>
+        <Link
+          href="/instructor/teaching-tools"
+          className="btn-secondary btn-sm"
         >
           Công cụ Giảng dạy
         </Link>
