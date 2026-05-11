@@ -1871,3 +1871,22 @@ model ExamIncident {
   @@index([attemptId, occurredAt])
   @@index([type, occurredAt])
 }
+
+// =====================================================================
+// System — Release log (ghi bởi deploy workflow, đọc bởi admin UI)
+// Append-only: không bao giờ UPDATE/DELETE.
+// =====================================================================
+model SystemRelease {
+  id         String   @id @default(uuid())
+  // Tag git tương ứng, vd: "deploy-c704542"
+  tag        String   @unique
+  // 7-char git SHA
+  sha        String
+  // Markdown body của release (phân loại theo conventional commits)
+  body       String   @db.Text
+  // Thời điểm deploy hoàn thành (UTC, ghi bởi deploy script)
+  deployedAt DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([deployedAt])
+}

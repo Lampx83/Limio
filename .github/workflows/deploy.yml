@@ -109,6 +109,60 @@ jobs:
             echo "- Env file: \`$ENV_FILE\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # Ghi release vào DB để admin xem trên /admin/changelog.
+      # Đọc NEXTAUTH_URL + CRON_SECRET từ .env.prod — không cần secret riêng trong GitHub.
+      # Bước này non-fatal: deploy không bị revert nếu ghi DB thất bại.
+      - name: Record release in app DB
+        if: success()
+        run: |
+          set -euo pipefail
+          SHORT="${{ github.sha }}"
+          SHORT="${SHORT:0:7}"
+          TAG="deploy-${SHORT}"
+          DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          # Đọc các biến cần thiết từ .env.prod
+          APP_URL=$(grep -E '^NEXTAUTH_URL=' "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' || true)
+          CRON_SEC=$(grep -E '^CRON_SECRET=' "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' || true)
+
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SEC" ]; then
+            echo "Warning: NEXTAUTH_URL hoặc CRON_SECRET chưa được cấu hình trong $ENV_FILE — bỏ qua ghi changelog."
+            exit 0
+          fi
+
+          # Build changelog body từ git log (kể từ tag trước hoặc 20 commit gần nhất)
+          LAST_TAG=$(git tag --sort=-creatordate | grep '^deploy-' | head -1 || true)
+          if [ -n "$LAST_TAG" ]; then
+            LOG_RANGE="${LAST_TAG}..HEAD"
+          else
+            LOG_RANGE="HEAD~20..HEAD"
+          fi
+
+          BODY=$(git log $LOG_RANGE --pretty=format:"%s" --no-merges | awk '
+            /^feat/     { print "- ✨ " $0 }
+            /^fix/      { print "- 🐛 " $0 }
+            /^perf/     { print "- ⚡ " $0 }
+            /^refactor/ { print "- ♻️  " $0 }
+            /^style/    { print "- 💄 " $0 }
+            /^test/     { print "- 🧪 " $0 }
+            /^docs/     { print "- 📚 " $0 }
+            /^chore/    { print "- 🔧 " $0 }
+            /^ci/       { print "- 🔄 " $0 }
+            /^build/    { print "- 🏗️  " $0 }
+            /^revert/   { print "- ⏪ " $0 }
+            !/^(feat|fix|perf|refactor|style|test|docs|chore|ci|build|revert|Merge)/ { print "- 📦 " $0 }
+          ' || echo "- Deploy $SHORT")
+
+          # Escape body thành JSON string
+          BODY_JSON=$(echo "$BODY" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+
+          curl -s -f -X POST "${APP_URL}/api/system/releases" \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${CRON_SEC}" \
+            -d "{\"tag\":\"${TAG}\",\"sha\":\"${{ github.sha }}\",\"body\":${BODY_JSON},\"deployedAt\":\"${DEPLOYED_AT}\"}" \
+            && echo "Release ${TAG} đã ghi vào DB." \
+            || echo "Warning: ghi changelog vào DB thất bại (non-fatal)."
+
   # ─────────────────────────────────────────────────────────────────────────────
   # Tạo GitHub Release với changelog tự động sau mỗi deploy thành công.
   # Chạy trên ubuntu-latest (GitHub-hosted) để luôn có đủ tool (gh, node...).
