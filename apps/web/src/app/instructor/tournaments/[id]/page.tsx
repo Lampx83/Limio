@@ -193,6 +193,7 @@ export default async function TournamentDetailPage({
           prizeXp: tournament.prizeXp,
         }}
         missions={tournament.missions}
+        courseId={tournament.courseId}
         prizeDistribution={tournament.prizeDistribution}
         prizeXp={tournament.prizeXp}
         leaderboardSection={

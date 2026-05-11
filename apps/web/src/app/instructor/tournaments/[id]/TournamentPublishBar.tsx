@@ -4,6 +4,61 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface ValidationIssue {
+  code: string;
+  missionId?: string;
+  missionTitle?: string;
+  message: string;
+}
+
+interface ValidateResult {
+  valid: boolean;
+  errors: ValidationIssue[];
+  warnings: ValidationIssue[];
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function IssueList({
+  items,
+  variant,
+}: {
+  items: ValidationIssue[];
+  variant: "error" | "warning";
+}) {
+  if (items.length === 0) return null;
+
+  const styles = {
+    error: {
+      wrapper: "rounded-lg border border-danger-200 bg-danger-50 p-3",
+      badge: "inline-block rounded bg-danger-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-danger-700",
+      text: "text-danger-800",
+    },
+    warning: {
+      wrapper: "rounded-lg border border-warning-200 bg-warning-50 p-3",
+      badge: "inline-block rounded bg-warning-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-warning-700",
+      text: "text-warning-800",
+    },
+  };
+
+  const s = styles[variant];
+
+  return (
+    <ul className={`space-y-1.5 ${s.wrapper}`}>
+      {items.map((issue) => (
+        <li key={`${issue.code}-${issue.missionId ?? "global"}`} className="flex items-start gap-2 text-xs">
+          <span className={s.badge}>{issue.code}</span>
+          <span className={s.text}>{issue.message}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export default function TournamentPublishBar({
   tournamentId,
   status,
@@ -19,7 +74,65 @@ export default function TournamentPublishBar({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function publish() {
+  // Validate state
+  const [validating, setValidating] = useState(false);
+  const [validateResult, setValidateResult] = useState<ValidateResult | null>(null);
+  // Once validated with only warnings, instructor can confirm to publish anyway
+  const [confirmWarnings, setConfirmWarnings] = useState(false);
+
+  // ── Validate then publish flow ──────────────────────────────────────────────
+
+  async function handlePublishClick() {
+    setError(null);
+
+    // If we already validated and have only warnings + instructor confirmed → go straight to publish
+    if (validateResult && validateResult.valid && confirmWarnings) {
+      await doPublish();
+      return;
+    }
+
+    // Step 1: validate
+    setValidating(true);
+    setValidateResult(null);
+    setConfirmWarnings(false);
+
+    let result: ValidateResult;
+    try {
+      const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/validate`));
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error ?? "validate_failed");
+        setValidating(false);
+        return;
+      }
+      result = (await res.json()) as ValidateResult;
+    } catch {
+      setError("Không thể kết nối máy chủ để validate.");
+      setValidating(false);
+      return;
+    }
+
+    setValidateResult(result);
+    setValidating(false);
+
+    // Step 2: if errors → stop (UI shows them)
+    if (!result.valid) return;
+
+    // Step 3: if warnings → show them and wait for confirmation
+    if (result.warnings.length > 0) return;
+
+    // Step 4: no errors, no warnings → publish immediately
+    await doPublish();
+  }
+
+  // Instructor clicked "Publish anyway" after seeing warnings
+  async function handlePublishAnyway() {
+    setConfirmWarnings(true);
+    await doPublish();
+  }
+
+  // Core publish API call
+  async function doPublish() {
     setBusy(true);
     setError(null);
     const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}`), {
@@ -52,35 +165,117 @@ export default function TournamentPublishBar({
     }
   }
 
+  // ── Draft state ─────────────────────────────────────────────────────────────
+
   if (status === "draft") {
-    const blocked = missionCount === 0;
+    const hasBlockingIssues = validateResult !== null && !validateResult.valid;
+    const hasWarningsOnly =
+      validateResult !== null &&
+      validateResult.valid &&
+      validateResult.warnings.length > 0 &&
+      !confirmWarnings;
+
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-token bg-[rgb(var(--surface-muted))] px-5 py-4">
-        <div>
-          <p className="text-sm font-medium">Tournament chưa publish</p>
-          <p className="mt-0.5 text-xs text-muted">
-            Publish để cho phép learner đăng ký. Cron tự flip sang active khi
-            đến giờ bắt đầu.
-          </p>
-          {blocked && (
-            <p className="mt-1 text-xs text-accent-700">
-              Cần có ít nhất 1 mission trước khi publish.
+      <div className="space-y-3">
+        {/* Main bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-token bg-[rgb(var(--surface-muted))] px-5 py-4">
+          <div>
+            <p className="text-sm font-medium">Tournament chưa publish</p>
+            <p className="mt-0.5 text-xs text-muted">
+              Publish để cho phép learner đăng ký. Cron tự flip sang active khi đến giờ bắt đầu.
             </p>
-          )}
-          {error && (
-            <p className="mt-1 text-xs text-danger-600">Lỗi: {error}</p>
-          )}
+            {error && (
+              <p className="mt-1 text-xs text-danger-600">Lỗi: {error}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Re-validate button — only shown after a failed check */}
+            {validateResult !== null && !validateResult.valid && (
+              <button
+                onClick={() => { setValidateResult(null); setError(null); }}
+                disabled={validating || busy}
+                className="btn-sm inline-flex items-center justify-center rounded-lg border border-token px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface))] disabled:opacity-50"
+              >
+                Kiểm tra lại
+              </button>
+            )}
+
+            {/* Publish / Publish anyway */}
+            {hasWarningsOnly ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setValidateResult(null)}
+                  disabled={busy}
+                  className="btn-sm inline-flex items-center justify-center rounded-lg border border-token px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface))] disabled:opacity-50"
+                >
+                  Xem lại
+                </button>
+                <button
+                  onClick={handlePublishAnyway}
+                  disabled={busy}
+                  className="btn-sm inline-flex items-center justify-center rounded-lg bg-warning-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-warning-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {busy ? "Đang publish..." : "Vẫn publish"}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handlePublishClick}
+                disabled={busy || validating || hasBlockingIssues || missionCount === 0}
+                className="btn-sm inline-flex items-center justify-center rounded-lg bg-success-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-success-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {validating
+                  ? "Đang kiểm tra..."
+                  : busy
+                    ? "Đang publish..."
+                    : "Publish"}
+              </button>
+            )}
+          </div>
         </div>
-        <button
-          onClick={publish}
-          disabled={busy || blocked}
-          className="btn-sm inline-flex items-center justify-center rounded-lg bg-success-600 px-4 py-2 font-medium text-white transition-all hover:bg-success-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {busy ? "Đang publish..." : "Publish"}
-        </button>
+
+        {/* Validation result panels */}
+        {validateResult && (
+          <div className="space-y-2">
+            {validateResult.valid && validateResult.warnings.length === 0 && (
+              <div className="flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-800">
+                <span>✅</span>
+                <span>Không có lỗi — đang publish…</span>
+              </div>
+            )}
+
+            {validateResult.errors.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-danger-700">
+                  {validateResult.errors.length} lỗi phải sửa trước khi publish:
+                </p>
+                <IssueList items={validateResult.errors} variant="error" />
+              </div>
+            )}
+
+            {validateResult.warnings.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-warning-700">
+                  {validateResult.warnings.length} cảnh báo (không bắt buộc sửa):
+                </p>
+                <IssueList items={validateResult.warnings} variant="warning" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Static hint when missionCount = 0 and no validate result yet */}
+        {missionCount === 0 && !validateResult && (
+          <p className="text-xs text-warning-700">
+            ⚠ Cần có ít nhất 1 mission trước khi publish.
+          </p>
+        )}
       </div>
     );
   }
+
+  // ── Published state ────────────────────────────────────────────────────────
 
   if (status === "published") {
     return (
@@ -114,6 +309,8 @@ export default function TournamentPublishBar({
     );
   }
 
+  // ── Active state ───────────────────────────────────────────────────────────
+
   if (status === "active") {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-success-200 bg-success-50 px-5 py-4">
@@ -141,14 +338,15 @@ export default function TournamentPublishBar({
     );
   }
 
+  // ── Ended state ────────────────────────────────────────────────────────────
+
   if (status === "ended") {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-token bg-[rgb(var(--surface-muted))] px-5 py-4">
         <div>
           <p className="text-sm font-medium">Tournament đã kết thúc</p>
           <p className="mt-0.5 text-xs text-muted">
-            {registrationCount} người tham gia · {missionCount} missions.
-            Giải thưởng đã được phân phối tự động.
+            {registrationCount} người tham gia · {missionCount} missions. Giải thưởng đã được phân phối tự động.
           </p>
         </div>
         <span className="chip">Đã kết thúc</span>

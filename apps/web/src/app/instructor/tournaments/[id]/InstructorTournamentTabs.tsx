@@ -23,6 +23,7 @@ export default function InstructorTournamentTabs({
   canEdit,
   initial,
   missions,
+  courseId,
   leaderboardSection,
   prizeDistribution,
   prizeXp,
@@ -32,6 +33,7 @@ export default function InstructorTournamentTabs({
   canEdit: boolean;
   initial: any;
   missions: any[];
+  courseId: string | null;
   leaderboardSection: React.ReactNode;
   prizeDistribution: any;
   prizeXp: number;
@@ -90,6 +92,7 @@ export default function InstructorTournamentTabs({
               tournamentId={tournamentId}
               status={status}
               missions={missions}
+              courseId={courseId}
             />
           </div>
         )}

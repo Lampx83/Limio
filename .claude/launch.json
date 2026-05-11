@@ -5,8 +5,7 @@
       "name": "web",
       "runtimeExecutable": "/Users/joynguyen/Library/pnpm/pnpm",
       "runtimeArgs": ["--filter", "@feedbackme/web", "dev"],
-      "port": 3000,
-      "autoPort": true
+      "port": 3000
     }
   ]
 }

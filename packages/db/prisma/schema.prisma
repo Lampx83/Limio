@@ -1030,6 +1030,32 @@ model TournamentRegistration {
   @@index([tournamentId, teamId])
 }
 
+// =====================================================================
+// C5 — Mission Template catalog (admin-managed, domain-agnostic building blocks).
+// Instructors pick a template when authoring tournament missions so they never
+// have to type raw conditionType strings.
+// =====================================================================
+model MissionTemplate {
+  id               String   @id @default(uuid())
+  // Stable code referenced by seed scripts and tests.
+  code             String   @unique
+  name             String   // Human label shown in UI picker
+  description      String   @db.Text
+  emoji            String?
+  // Maps to the conditionType switch in checkMissionCondition().
+  conditionType    String
+  // Sensible defaults — instructor may override.
+  defaultValue     Int      @default(1)
+  defaultMinScore  Int?
+  // UI hints: which extra controls appear when this template is selected.
+  hasMinScore      Boolean  @default(false)
+  requiresSkillGroup Boolean @default(false)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  missions TournamentMission[]
+}
+
 model TournamentMission {
   id            String   @id @default(uuid())
   tournamentId  String
@@ -1043,11 +1069,29 @@ model TournamentMission {
   prerequisiteId String?
   createdAt     DateTime @default(now())
 
+  // ── Condition fields (C5) ───────────────────────────────────────────
+  // Null templateId = fully custom (developer-created). Non-null = derived
+  // from a MissionTemplate; conditionType must match template.conditionType.
+  templateId         String?
+  // Core condition — which metric to check and minimum count/days required.
+  conditionType      String?
+  conditionValue     Int?
+  // "course" (default) = scoped to tournament.courseId; "global" = platform-wide.
+  conditionScope     String?  @default("course")
+  // Minimum score % required (quiz, assignment). Only meaningful when
+  // conditionType is quiz_passed_min_score or assignment_graded_min_score.
+  conditionMinScore  Int?
+  // Skill group prefix filter for skill_mastered_in_group.
+  // e.g. "zh_tech.vocab" matches all skills whose code starts with that string.
+  conditionSkillCode String?
+
   tournament   Tournament         @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   prerequisite TournamentMission? @relation("MissionPrereq", fields: [prerequisiteId], references: [id])
   unlocks      TournamentMission[] @relation("MissionPrereq")
+  template     MissionTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
 
   @@unique([tournamentId, orderIndex])
+  @@index([templateId])
 }
 
 model TournamentRanking {
