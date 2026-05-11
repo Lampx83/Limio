@@ -16,7 +16,9 @@
     "db:studio": "pnpm --filter @feedbackme/db prisma:studio",
     "db:seed": "pnpm --filter @feedbackme/db seed",
     "db:up": "docker compose up -d postgres",
-    "db:down": "docker compose down"
+    "db:down": "docker compose down",
+    "changelog": "npx --yes git-cliff@latest --output CHANGELOG.md",
+    "changelog:preview": "npx --yes git-cliff@latest"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

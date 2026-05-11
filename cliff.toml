@@ -1,0 +1,69 @@
+# cliff.toml — git-cliff configuration
+# Chạy local: npx git-cliff@latest -o CHANGELOG.md
+# hoặc: pnpm changelog
+
+[changelog]
+header = """
+# Changelog
+
+Tất cả thay đổi đáng chú ý của **FeedBackMe** được ghi lại ở đây.
+Format theo [Conventional Commits](https://www.conventionalcommits.org/).
+
+"""
+body = """
+{% if version %}\
+## 🚀 [{{ version }}] — {{ timestamp | date(format="%d/%m/%Y") }}
+{% else %}\
+## 🔧 [Chưa phát hành]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}\
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
+{{ commit.message | upper_first }} ([`{{ commit.id | truncate(length=7, end="") }}`]({{ commit.id }}))\
+{% endfor %}
+{% endfor %}\
+"""
+footer = """
+---
+_Được tạo tự động bởi [git-cliff](https://github.com/orhun/git-cliff)_
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+split_commits = false
+
+commit_parsers = [
+  # Bỏ qua commit merge và WIP
+  { message = "^Merge", skip = true },
+  { message = "^wip", skip = true },
+  { message = "^WIP", skip = true },
+  # Bỏ qua Co-Author trailer
+  { body = "Co-Authored-By", skip = false },
+
+  # Nhóm theo loại commit
+  { message = "^feat",     group = "✨ Tính năng mới" },
+  { message = "^fix",      group = "🐛 Sửa lỗi" },
+  { message = "^perf",     group = "⚡ Hiệu năng" },
+  { message = "^refactor", group = "♻️  Cải tiến code" },
+  { message = "^style",    group = "💄 Giao diện" },
+  { message = "^test",     group = "🧪 Kiểm thử" },
+  { message = "^docs",     group = "📚 Tài liệu" },
+  { message = "^chore",    group = "🔧 Bảo trì" },
+  { message = "^ci",       group = "🔄 CI/CD" },
+  { message = "^build",    group = "🏗️  Build" },
+  { message = "^revert",   group = "⏪ Revert" },
+  # Catch-all
+  { message = ".*",        group = "📦 Thay đổi khác" },
+]
+
+protect_breaking_commits = false
+filter_commits = false
+# Match tag pattern của deploy workflow: deploy-XXXXXXX
+tag_pattern = "deploy-[a-f0-9]+"
+skip_tags = ""
+ignore_tags = ""
+topo_order = false
+sort_commits = "newest"

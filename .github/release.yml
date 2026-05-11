@@ -1,0 +1,38 @@
+# .github/release.yml
+# Cấu hình GitHub Auto-generated Release Notes.
+# Áp dụng cho cả release tạo thủ công lẫn qua deploy workflow.
+# Xem: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+    authors:
+      - dependabot
+  categories:
+    - title: "✨ Tính năng mới"
+      labels:
+        - feature
+        - enhancement
+    - title: "🐛 Sửa lỗi"
+      labels:
+        - bug
+        - fix
+    - title: "⚡ Hiệu năng"
+      labels:
+        - performance
+    - title: "♻️ Cải tiến code"
+      labels:
+        - refactor
+    - title: "📚 Tài liệu"
+      labels:
+        - documentation
+    - title: "🔒 Bảo mật"
+      labels:
+        - security
+    - title: "🔧 Bảo trì & CI"
+      labels:
+        - chore
+        - ci
+        - maintenance
+    - title: "📦 Thay đổi khác"

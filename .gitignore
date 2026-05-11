@@ -31,3 +31,6 @@ legacy-v1/.next/
 uploads/
 apps/web/uploads/
 .claude/worktrees/
+
+# Local changelog preview (pnpm changelog)
+CHANGELOG.md
