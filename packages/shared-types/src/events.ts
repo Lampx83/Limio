@@ -25,6 +25,22 @@ export const LearningEventType = {
   EnrollmentStatusChanged: "enrollment.status_changed",
   CourseCompleted: "course.completed",
 
+  // A7 Exam
+  ExamCreated: "exam.created",
+  ExamPublished: "exam.published",
+  ExamStarted: "exam.started",
+  ExamQuestionAnswered: "exam.question.answered",
+  ExamAutosaved: "exam.autosaved",
+  ExamSubmitted: "exam.submitted",
+  ExamAutoSubmitted: "exam.auto_submitted",
+  ExamGraded: "exam.graded",
+  ExamRegraded: "exam.regraded",
+  ExamIncidentFlagged: "exam.incident.flagged",
+  // Audio runtime — P1 only
+  ExamAudioPlayed: "exam.audio.played",
+  ExamAudioCompleted: "exam.audio.completed",
+  ExamPassageViewed: "exam.passage.viewed",
+
   // Feedback
   SkillStateUpdated: "skill.state.updated",
   MisconceptionDetected: "misconception.detected",
@@ -96,6 +112,116 @@ export interface QuizQuestionAnsweredPayload {
 export interface EnrollmentCreatedPayload {
   enrollmentId: string;
   courseId: string;
+}
+
+// =====================================================================
+// A7 Exam payloads
+// =====================================================================
+
+export interface ExamCreatedPayload {
+  examId: string;
+  courseId: string;
+}
+
+export interface ExamPublishedPayload {
+  examId: string;
+  courseId: string;
+  questionCount: number;
+  totalPoints: number;
+}
+
+export interface ExamStartedPayload {
+  examId: string;
+  attemptId: string;
+  durationSec: number;
+}
+
+export interface ExamQuestionAnsweredPayload {
+  examId: string;
+  attemptId: string;
+  questionId: string;
+  passageId?: string;
+  /** Server-canonical answer (shape per question type). */
+  answerJson: unknown;
+  /** Dedup key — hash(answerJson). */
+  answerHash: string;
+  /** Milliseconds since attempt start when this answer was saved. */
+  elapsedMs: number;
+}
+
+export interface ExamAutosavedPayload {
+  attemptId: string;
+  questionId: string;
+  answerHash: string;
+}
+
+export interface ExamSubmittedPayload {
+  examId: string;
+  attemptId: string;
+  /** Total points awarded across already-auto-graded questions. */
+  autoScore: number;
+  /** True when no manual grading is pending. */
+  fullyGraded: boolean;
+}
+
+export interface ExamAutoSubmittedPayload {
+  examId: string;
+  attemptId: string;
+  reason: "timer_expired" | "close_window_passed";
+  autoScore: number;
+  fullyGraded: boolean;
+}
+
+export interface ExamGradedPayload {
+  examId: string;
+  attemptId: string;
+  score: number;
+  scorePct: number;
+  passed: boolean;
+}
+
+export interface ExamRegradedPayload {
+  attemptId: string;
+  answerId: string;
+  questionId: string;
+  oldScore: number | null;
+  newScore: number;
+  changedBy: string;
+  reason?: string;
+}
+
+export interface ExamIncidentFlaggedPayload {
+  attemptId: string;
+  incidentId: string;
+  type:
+    | "tab_blur"
+    | "fullscreen_exit"
+    | "paste"
+    | "multi_tab"
+    | "network_lost"
+    | "multi_face";
+  payload?: Record<string, unknown>;
+}
+
+/** Audio events — P1 only, types declared now for forward-compat. */
+export interface ExamAudioPlayedPayload {
+  attemptId: string;
+  passageId: string;
+  assetId: string;
+  playNumber: number;
+}
+
+export interface ExamAudioCompletedPayload {
+  attemptId: string;
+  passageId: string;
+  assetId: string;
+  playNumber: number;
+}
+
+export interface ExamPassageViewedPayload {
+  attemptId: string;
+  passageId: string;
+  dwellMs: number;
 }
 
 export interface VideoCuepointPassedPayload {

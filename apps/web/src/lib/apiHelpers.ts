@@ -4,6 +4,7 @@ import {
   CourseAuthzError,
   CourseError,
   EnrollError,
+  ExamError,
   LearningError,
   MisconceptionError,
   NoteError,
@@ -95,6 +96,31 @@ export function mapKnownError(err: unknown): NextResponse | null {
   if (err instanceof MisconceptionError) {
     const status = err.code === "code_taken" ? 409 : 400;
     return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof ExamError) {
+    const status =
+      err.code === "exam_not_found" ||
+      err.code === "attempt_not_found" ||
+      err.code === "passage_not_found" ||
+      err.code === "asset_not_found" ||
+      err.code === "answer_not_found"
+        ? 404
+        : err.code === "attempt_belongs_to_other" || err.code === "not_enrolled"
+          ? 403
+          : err.code === "exam_has_attempts" ||
+              err.code === "exam_not_draft" ||
+              err.code === "attempt_already_submitted" ||
+              err.code === "session_stale" ||
+              err.code === "exam_not_open" ||
+              err.code === "exam_window_closed"
+            ? 409
+            : err.code === "exam_not_publishable"
+              ? 422
+              : 400;
+    return NextResponse.json(
+      err.details ? { error: err.code, details: err.details } : { error: err.code },
+      { status },
+    );
   }
   if (err instanceof AssignmentError) {
     const status =

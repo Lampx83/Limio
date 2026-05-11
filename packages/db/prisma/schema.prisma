@@ -70,6 +70,12 @@ model User {
   auditEntriesAsActor  AuditLog[]         @relation("AuditActor")
   auditEntriesAsTarget AuditLog[]         @relation("AuditTarget")
 
+  // A7 Exam
+  examAttempts          ExamAttempt[]
+  examAssetsUploaded    ExamAsset[]        @relation("ExamAssetUploader")
+  examAnswersGraded     ExamAnswer[]       @relation("ExamGrader")
+  examGradeChanges      ExamGradeHistory[] @relation("ExamGradeChanger")
+
   // Classroom tools
   classroomRandomPicks ClassroomRandomPick[]
   classroomPollVotes   ClassroomPollVote[]
@@ -202,6 +208,7 @@ model Course {
   tournaments  Tournament[]
   orders      Order[]
   timerTemplates TimerTemplate[]
+  exams       Exam[]
 
   @@index([status, publishedAt])
   @@index([category, level])
@@ -513,6 +520,8 @@ model Skill {
   questionTags     QuestionSkillTag[]
   learnerStates    LearnerSkillState[]
   feedbackTemplates FeedbackTemplate[]
+  examPassageTags  ExamPassageSkillTag[]
+  examQuestionTags ExamQuestionSkillTag[]
 }
 
 // DAG edge: skill (skillId) requires prerequisiteSkillId.
@@ -1555,4 +1564,310 @@ model TimerTemplate {
   @@index([userId])
   @@index([courseId])
   @@index([isPublic])
+}
+
+// =====================================================================
+// A7 — Exam (Online Exam with passage-based / IELTS-style questions)
+// Spec: docs/A7-exam-P0-acceptance.md
+// Separate from A4 Quiz: exam has server-authoritative timer, incident log,
+// hybrid grading, and stimulus passages (text + image P0, audio/video later).
+// =====================================================================
+
+enum ExamStatus {
+  draft
+  published
+  archived
+}
+
+enum ExamAttemptPolicy {
+  single
+  multi
+}
+
+enum ExamGradingMode {
+  auto
+  manual
+  hybrid
+}
+
+enum ExamProctoringLevel {
+  none
+  basic
+  strict
+}
+
+enum ExamAttemptStatus {
+  in_progress
+  submitted
+  auto_submitted
+  graded
+  flagged
+}
+
+enum ExamQuestionType {
+  mcq
+  multi
+  true_false_notgiven
+  gap_fill
+  short_answer
+  essay
+  matching_heading // P1
+}
+
+enum ExamAssetType {
+  image
+  audio // P1
+  video // P2
+}
+
+enum ExamPassageAudioPolicy {
+  free_replay
+  limited_replay
+  once_only
+}
+
+enum ExamPassageRevealMode {
+  all_at_once
+  sequential // P2
+}
+
+enum ExamIncidentType {
+  tab_blur
+  fullscreen_exit
+  paste
+  multi_tab
+  network_lost
+  multi_face // P1+
+}
+
+model Exam {
+  id                     String              @id @default(uuid())
+  courseId               String
+  title                  String
+  description            String?             @db.Text
+  durationMin            Int
+  openAt                 DateTime
+  closeAt                DateTime
+  attemptPolicy          ExamAttemptPolicy   @default(single)
+  gradingMode            ExamGradingMode     @default(hybrid)
+  proctoringLevel        ExamProctoringLevel @default(none)
+  // Passing threshold as % of total points (0-100).
+  passScore              Int                 @default(50)
+  shuffleQuestions       Boolean             @default(true)
+  shuffleOptions         Boolean             @default(true)
+  // When true, learner sees per-question correct/incorrect after final grade.
+  showResultsAfterSubmit Boolean             @default(true)
+  status                 ExamStatus          @default(draft)
+  publishedAt            DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+
+  course    Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  passages  ExamPassage[]
+  questions ExamQuestion[]
+  attempts  ExamAttempt[]
+  assets    ExamAsset[]
+
+  @@index([courseId, status])
+  @@index([status, openAt, closeAt])
+}
+
+model ExamPassage {
+  id            String                 @id @default(uuid())
+  examId        String
+  title         String
+  // Tiptap doc JSON. Image/audio nodes reference ExamAsset.id.
+  contentJson   Json
+  orderIndex    Int
+  audioPolicy   ExamPassageAudioPolicy @default(free_replay)
+  // Only when audioPolicy = limited_replay. Range 1-10 (app-validated).
+  maxAudioPlays Int?
+  revealMode    ExamPassageRevealMode  @default(all_at_once)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  exam      Exam                  @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questions ExamQuestion[]
+  skillTags ExamPassageSkillTag[]
+
+  @@unique([examId, orderIndex])
+  @@index([examId])
+}
+
+model ExamPassageSkillTag {
+  passageId String
+  skillId   String
+  weight    Float  @default(1.0)
+
+  passage ExamPassage @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  skill   Skill       @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([passageId, skillId])
+  @@index([skillId])
+}
+
+model ExamAsset {
+  id           String        @id @default(uuid())
+  examId       String
+  type         ExamAssetType
+  s3Key        String
+  mimeType     String
+  sizeBytes    Int
+  // image: {width, height}; audio/video: {durationSec, sampleRate?}
+  metadata     Json?
+  // Required for image (app-validated). Accessibility + dispute evidence.
+  altText      String?
+  // Required for audio (P1) when audioPolicy != free_replay.
+  transcript   String?       @db.Text
+  uploadedById String
+  uploadedAt   DateTime      @default(now())
+
+  exam       Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation("ExamAssetUploader", fields: [uploadedById], references: [id])
+
+  @@index([examId, type])
+}
+
+model ExamQuestion {
+  id             String           @id @default(uuid())
+  examId         String
+  passageId      String?
+  type           ExamQuestionType
+  prompt         String           @db.Text
+  // Type-specific payload:
+  //   mcq/multi: { options: [{id, label, isCorrect}] }
+  //   true_false_notgiven: { correct: "true"|"false"|"notgiven" }
+  //   gap_fill: { blanks: [{ id, acceptedAnswers: string[], matchMode }] }
+  //   short_answer: { acceptedAnswers: string[], matchMode }
+  //   essay: { rubric?: string, minWords?: number }
+  //   matching_heading (P1): { headings: [...], items: [...], correctPairs: [...] }
+  config         Json
+  // Span in passage that justifies the answer — for diagnostic feedback (P1+).
+  // { startOffset, endOffset } against passage.contentJson plain-text view.
+  evidenceSpan   Json?
+  points         Int              @default(1)
+  // Order WITHIN passage. Null for standalone.
+  orderInPassage Int?
+  // Order in the exam (used when passageId is null, or for top-level ordering).
+  orderInExam    Int
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  exam      Exam                   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  passage   ExamPassage?           @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  answers   ExamAnswer[]
+  skillTags ExamQuestionSkillTag[]
+
+  @@index([examId, orderInExam])
+  @@index([passageId, orderInPassage])
+}
+
+model ExamQuestionSkillTag {
+  questionId String
+  skillId    String
+  weight     Float  @default(1.0)
+
+  question ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  skill    Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, skillId])
+  @@index([skillId])
+}
+
+model ExamAttempt {
+  id              String            @id @default(uuid())
+  examId          String
+  userId          String
+  status          ExamAttemptStatus @default(in_progress)
+  startedAt       DateTime          @default(now())
+  submittedAt     DateTime?
+  gradedAt        DateTime?
+  // Frozen at start — server uses startedAt + durationSec for timer (A7.4.3).
+  durationSec     Int
+  // Single-tab lock token (A7.4.7). Rotated when learner claims session from new tab.
+  sessionToken    String            @unique @default(uuid())
+  // Incremented every time learner resumes after disconnect (A7.4.5 analytics).
+  resumeCount     Int               @default(0)
+  // Deterministic shuffle seed snapshot — { questionOrder: [qid...], optionOrder: { qid: [optId...] } }
+  shuffleSnapshot Json?
+  // Total points awarded (sum auto + manual). Null until any grading happens.
+  score           Float?
+  // 0-100, derived from score / totalPoints * 100.
+  scorePct        Float?
+  passed          Boolean?
+
+  exam      Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers   ExamAnswer[]
+  incidents ExamIncident[]
+
+  // P0 single attempt per user per exam. When attemptPolicy=multi (P1+),
+  // drop this and add attemptNumber + composite unique (examId, userId, attemptNumber).
+  @@unique([examId, userId])
+  @@index([examId, status])
+  @@index([userId, submittedAt])
+  // Hot index for autosubmit job (A7.5.2) — find in-progress attempts past deadline.
+  @@index([status, startedAt])
+}
+
+model ExamAnswer {
+  id           String    @id @default(uuid())
+  attemptId    String
+  questionId   String
+  // Shape per ExamQuestion.type — see config comment above.
+  answerJson   Json?
+  // Set by auto-grader (MCQ/MULTI/TF_NG/GAP_FILL). Null for ESSAY/SHORT (manual).
+  autoScore    Float?
+  // Set by instructor for ESSAY/SHORT, or override of autoScore on regrade.
+  manualScore  Float?
+  // True until autograder or instructor decides. Distinguishes pending essay
+  // from auto-graded zero.
+  needsGrading Boolean   @default(false)
+  // Dedup key for idempotent autosave (A7.7.2). Hash of answerJson canonical form.
+  answerHash   String?
+  graderId     String?
+  gradedAt     DateTime?
+  comment      String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  attempt  ExamAttempt        @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question ExamQuestion       @relation(fields: [questionId], references: [id])
+  grader   User?              @relation("ExamGrader", fields: [graderId], references: [id])
+  history  ExamGradeHistory[]
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId, needsGrading])
+  @@index([questionId])
+}
+
+// Append-only regrade audit trail (A7.6.3).
+model ExamGradeHistory {
+  id          String   @id @default(uuid())
+  answerId    String
+  oldScore    Float?
+  newScore    Float?
+  reason      String?
+  changedById String
+  changedAt   DateTime @default(now())
+
+  answer    ExamAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  changedBy User       @relation("ExamGradeChanger", fields: [changedById], references: [id])
+
+  @@index([answerId, changedAt])
+}
+
+// Append-only incident log (A7.7.3 / A7.8). Reviewed by instructor — not auto-DQ.
+model ExamIncident {
+  id         String           @id @default(uuid())
+  attemptId  String
+  type       ExamIncidentType
+  // Type-specific: { pastedLength }, { offlineSec }, { tabId }, ...
+  payload    Json?
+  occurredAt DateTime         @default(now())
+
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId, occurredAt])
+  @@index([type, occurredAt])
 }

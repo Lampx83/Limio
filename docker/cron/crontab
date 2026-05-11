@@ -2,3 +2,4 @@
 # Endpoints authenticate via Bearer ${CRON_SECRET}.
 0 0 * * *    /usr/local/bin/run.sh streak-grace-check
 */5 * * * *  /usr/local/bin/run.sh tournament-tick
+*    * * * *  /usr/local/bin/run.sh exam-autosubmit

@@ -16,6 +16,19 @@ async function cleanDb() {
     prisma.userRole.deleteMany(),
     prisma.authProvider.deleteMany(),
     prisma.learningEvent.deleteMany(),
+    // Exam graph — children first (FK order); ExamAttempt cascades to ExamAnswer
+    // and ExamIncident, ExamAnswer cascades to ExamGradeHistory, but cascade does
+    // not extend through deleteMany so we sweep each explicitly.
+    prisma.examGradeHistory.deleteMany(),
+    prisma.examIncident.deleteMany(),
+    prisma.examAnswer.deleteMany(),
+    prisma.examAttempt.deleteMany(),
+    prisma.examQuestionSkillTag.deleteMany(),
+    prisma.examQuestion.deleteMany(),
+    prisma.examPassageSkillTag.deleteMany(),
+    prisma.examPassage.deleteMany(),
+    prisma.examAsset.deleteMany(),
+    prisma.exam.deleteMany(),
     prisma.answerResponse.deleteMany(),
     prisma.quizAttempt.deleteMany(),
     prisma.questionOption.deleteMany(),

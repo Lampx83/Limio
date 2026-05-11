@@ -1,0 +1,297 @@
+import { z } from "zod";
+import { ExamStatus, prisma, type PrismaClient } from "@feedbackme/db";
+import { LearningEventType } from "@feedbackme/shared-types";
+import { assertCanEditCourse } from "../courses/authz";
+import { emitEvent } from "../learning/events";
+import { ExamError } from "./types";
+
+const examAttemptPolicy = z.enum(["single", "multi"]);
+const examGradingMode = z.enum(["auto", "manual", "hybrid"]);
+const examProctoringLevel = z.enum(["none", "basic", "strict"]);
+
+export const CreateExamInput = z
+  .object({
+    title: z.string().min(1).max(200).trim(),
+    description: z.string().max(5_000).optional(),
+    durationMin: z.number().int().positive().max(24 * 60),
+    openAt: z.coerce.date(),
+    closeAt: z.coerce.date(),
+    attemptPolicy: examAttemptPolicy.optional(),
+    gradingMode: examGradingMode.optional(),
+    proctoringLevel: examProctoringLevel.optional(),
+    passScore: z.number().int().min(0).max(100).optional(),
+    shuffleQuestions: z.boolean().optional(),
+    shuffleOptions: z.boolean().optional(),
+    showResultsAfterSubmit: z.boolean().optional(),
+  })
+  .refine((d) => d.openAt < d.closeAt, {
+    message: "openAt must be before closeAt",
+    path: ["closeAt"],
+  });
+
+/** Fields editable in any status (metadata + closeAt extension only after publish). */
+export const UpdateExamInput = z
+  .object({
+    title: z.string().min(1).max(200).trim().optional(),
+    description: z.string().max(5_000).optional(),
+    durationMin: z.number().int().positive().max(24 * 60).optional(),
+    openAt: z.coerce.date().optional(),
+    closeAt: z.coerce.date().optional(),
+    attemptPolicy: examAttemptPolicy.optional(),
+    gradingMode: examGradingMode.optional(),
+    proctoringLevel: examProctoringLevel.optional(),
+    passScore: z.number().int().min(0).max(100).optional(),
+    shuffleQuestions: z.boolean().optional(),
+    shuffleOptions: z.boolean().optional(),
+    showResultsAfterSubmit: z.boolean().optional(),
+  });
+
+/** A7.1.1 — Create exam in DRAFT status. */
+export async function createExam(
+  actorUserId: string,
+  courseId: string,
+  rawInput: unknown,
+  db: PrismaClient = prisma,
+): Promise<{ examId: string }> {
+  await assertCanEditCourse(actorUserId, courseId, db);
+  const parsed = CreateExamInput.safeParse(rawInput);
+  if (!parsed.success) {
+    throw new ExamError("validation_failed", parsed.error.flatten());
+  }
+  const d = parsed.data;
+  const exam = await db.exam.create({
+    data: {
+      courseId,
+      title: d.title,
+      description: d.description ?? null,
+      durationMin: d.durationMin,
+      openAt: d.openAt,
+      closeAt: d.closeAt,
+      attemptPolicy: d.attemptPolicy ?? "single",
+      gradingMode: d.gradingMode ?? "hybrid",
+      proctoringLevel: d.proctoringLevel ?? "none",
+      passScore: d.passScore ?? 50,
+      shuffleQuestions: d.shuffleQuestions ?? true,
+      shuffleOptions: d.shuffleOptions ?? true,
+      showResultsAfterSubmit: d.showResultsAfterSubmit ?? true,
+    },
+    select: { id: true },
+  });
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamCreated,
+    { examId: exam.id, courseId },
+    { courseId, eventKey: `exam.created:${exam.id}` },
+    db,
+  );
+  return { examId: exam.id };
+}
+
+async function loadExam(examId: string, db: PrismaClient) {
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: {
+      id: true,
+      courseId: true,
+      status: true,
+    },
+  });
+  if (!exam) throw new ExamError("exam_not_found");
+  return exam;
+}
+
+/** A7.1.3 — When PUBLISHED, only metadata + closeAt are editable. */
+export async function updateExam(
+  actorUserId: string,
+  examId: string,
+  rawInput: unknown,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const exam = await loadExam(examId, db);
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  const parsed = UpdateExamInput.safeParse(rawInput);
+  if (!parsed.success) {
+    throw new ExamError("validation_failed", parsed.error.flatten());
+  }
+  const data = Object.fromEntries(
+    Object.entries(parsed.data).filter(([, v]) => v !== undefined),
+  );
+  if (Object.keys(data).length === 0) return;
+
+  if (exam.status === "published") {
+    const hasAttempts =
+      (await db.examAttempt.count({ where: { examId } })) > 0;
+    if (hasAttempts) {
+      // Only title/description/closeAt allowed once attempts exist.
+      const allowed = new Set(["title", "description", "closeAt"]);
+      const rejected = Object.keys(data).filter((k) => !allowed.has(k));
+      if (rejected.length > 0) {
+        throw new ExamError("exam_has_attempts", { fields: rejected });
+      }
+    }
+  }
+
+  // Re-validate openAt < closeAt across merge of stored + patch.
+  if (data.openAt || data.closeAt) {
+    const current = await db.exam.findUniqueOrThrow({
+      where: { id: examId },
+      select: { openAt: true, closeAt: true },
+    });
+    const openAt = (data.openAt as Date | undefined) ?? current.openAt;
+    const closeAt = (data.closeAt as Date | undefined) ?? current.closeAt;
+    if (openAt >= closeAt) {
+      throw new ExamError("validation_failed", "openAt must be before closeAt");
+    }
+  }
+
+  await db.exam.update({ where: { id: examId }, data });
+}
+
+/** A7.1.2 — Publish-time validation. */
+export async function publishExam(
+  actorUserId: string,
+  examId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const exam = await loadExam(examId, db);
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  if (exam.status !== "draft") {
+    throw new ExamError("exam_not_draft");
+  }
+
+  const full = await db.exam.findUniqueOrThrow({
+    where: { id: examId },
+    select: {
+      id: true,
+      openAt: true,
+      closeAt: true,
+      durationMin: true,
+      passages: {
+        select: {
+          id: true,
+          _count: { select: { questions: true } },
+        },
+      },
+      questions: {
+        select: {
+          id: true,
+          points: true,
+          _count: { select: { skillTags: true } },
+        },
+      },
+    },
+  });
+
+  const errors: string[] = [];
+  if (full.passages.length === 0 && full.questions.length === 0) {
+    errors.push("exam has no passages and no standalone questions");
+  }
+  for (const p of full.passages) {
+    if (p._count.questions === 0) {
+      errors.push(`passage ${p.id} has no questions`);
+    }
+  }
+  for (const q of full.questions) {
+    if (q._count.skillTags === 0) {
+      errors.push(`question ${q.id} has no skill tags`);
+    }
+  }
+  if (full.openAt >= full.closeAt) errors.push("openAt must be before closeAt");
+  if (full.durationMin <= 0) errors.push("durationMin must be positive");
+  const totalPoints = full.questions.reduce((sum, q) => sum + q.points, 0);
+  if (totalPoints <= 0) errors.push("total points must be > 0");
+
+  if (errors.length > 0) {
+    throw new ExamError("exam_not_publishable", { errors });
+  }
+
+  await db.exam.update({
+    where: { id: examId },
+    data: { status: ExamStatus.published, publishedAt: new Date() },
+  });
+
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamPublished,
+    {
+      examId,
+      courseId: exam.courseId,
+      questionCount: full.questions.length,
+      totalPoints,
+    },
+    { courseId: exam.courseId, eventKey: `exam.published:${examId}` },
+    db,
+  );
+}
+
+export async function getExam(
+  actorUserId: string,
+  examId: string,
+  db: PrismaClient = prisma,
+): Promise<ExamWithRelations> {
+  const exam = await loadExam(examId, db);
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  return db.exam.findUniqueOrThrow({
+    where: { id: examId },
+    include: {
+      passages: {
+        orderBy: { orderIndex: "asc" },
+        include: { skillTags: true },
+      },
+      questions: {
+        orderBy: [{ orderInExam: "asc" }],
+        include: { skillTags: true },
+      },
+    },
+  });
+}
+
+type ExamWithRelations = Awaited<ReturnType<PrismaClient["exam"]["findUniqueOrThrow"]>> & {
+  passages: Array<
+    Awaited<ReturnType<PrismaClient["examPassage"]["findUniqueOrThrow"]>> & {
+      skillTags: Awaited<ReturnType<PrismaClient["examPassageSkillTag"]["findMany"]>>;
+    }
+  >;
+  questions: Array<
+    Awaited<ReturnType<PrismaClient["examQuestion"]["findUniqueOrThrow"]>> & {
+      skillTags: Awaited<ReturnType<PrismaClient["examQuestionSkillTag"]["findMany"]>>;
+    }
+  >;
+};
+
+export async function listExamsForCourse(
+  actorUserId: string,
+  courseId: string,
+  db: PrismaClient = prisma,
+) {
+  await assertCanEditCourse(actorUserId, courseId, db);
+  return db.exam.findMany({
+    where: { courseId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      durationMin: true,
+      openAt: true,
+      closeAt: true,
+      publishedAt: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function deleteExam(
+  actorUserId: string,
+  examId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const exam = await loadExam(examId, db);
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  if (exam.status === "published") {
+    const hasAttempts =
+      (await db.examAttempt.count({ where: { examId } })) > 0;
+    if (hasAttempts) throw new ExamError("exam_has_attempts");
+  }
+  await db.exam.delete({ where: { id: examId } });
+}

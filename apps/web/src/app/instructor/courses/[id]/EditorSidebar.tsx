@@ -52,6 +52,12 @@ export default function EditorSidebar({
       >
         Tổng quan khóa
       </Link>
+      <Link
+        href={`${baseHref}/exams`}
+        className="block rounded-lg px-3 py-2 text-sm hover:bg-[rgb(var(--surface-muted))]"
+      >
+        🧪 Bài thi
+      </Link>
 
       <div className="mt-2 space-y-1">
         {modules.length === 0 && (
