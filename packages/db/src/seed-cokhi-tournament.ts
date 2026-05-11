@@ -585,7 +585,7 @@ async function main() {
     data: [
       ...quiz2.questions.map((q) => ({ questionId: q.id, skillId: toolsSkillId })),
       // câu hỏi về thước kẹp (index 1) cũng tag measurements
-      { questionId: quiz2.questions[1].id, skillId: measurementsSkillId },
+      { questionId: quiz2.questions[1]!.id, skillId: measurementsSkillId },
     ],
     skipDuplicates: true,
   });
