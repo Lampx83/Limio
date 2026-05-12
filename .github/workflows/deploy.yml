@@ -207,10 +207,10 @@ jobs:
             const now   = new Date();
 
             // ── Đọc semver từ package.json ──────────────────────────────────
-            const { execSync: exec } = require('child_process');
+            const { execSync } = require('child_process');
             let version = '';
             try {
-              version = exec('node -p "require(\'./package.json\').version"', { encoding: 'utf8' }).trim();
+              version = execSync('node -p "require(\'./package.json\').version"', { encoding: 'utf8' }).trim();
             } catch (_) {}
 
             // ── Format ngày giờ theo múi giờ Việt Nam (UTC+7) ──────────────
@@ -230,7 +230,6 @@ jobs:
             } catch (_) {}
 
             // ── Build nội dung release notes từ git log ─────────────────────
-            const { execSync } = require('child_process');
             let logRange = previousTag ? `${previousTag}..HEAD` : 'HEAD~20..HEAD';
             let rawLog = '';
             try {
