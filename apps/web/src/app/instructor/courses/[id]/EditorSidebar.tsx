@@ -92,7 +92,7 @@ export default function EditorSidebar({
                         href={lessonHref(l.id)}
                         className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors ${
                           active
-                            ? "bg-brand-soft font-medium text-brand-700"
+                            ? "bg-pink-50 font-medium text-pink-500 dark:bg-pink-500/10"
                             : "text-default hover:bg-[rgb(var(--surface-muted))]"
                         }`}
                       >

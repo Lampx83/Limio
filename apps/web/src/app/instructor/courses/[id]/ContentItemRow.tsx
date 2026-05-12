@@ -25,6 +25,10 @@ function summarize(type: string, payload: unknown): string {
       const body = String(p.body ?? "");
       return body.length > 80 ? body.slice(0, 80) + "…" : body;
     }
+    case "richtext": {
+      const text = String(p.html ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      return text.length > 80 ? text.slice(0, 80) + "…" : text || "(văn bản trống)";
+    }
     case "embed":
       return String(p.url ?? "(no url)");
     case "file":

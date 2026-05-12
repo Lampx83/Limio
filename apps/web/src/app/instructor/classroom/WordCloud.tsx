@@ -166,7 +166,13 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
   const getWordFrequency = (): Record<string, number> => {
     if (isStateless) {
       return submissions.reduce((acc, s) => {
-        (s.toLowerCase().match(/\b\w+\b/g) || []).forEach((w) => { acc[w] = (acc[w] || 0) + 1; });
+        const phrase = s
+          .toLowerCase()
+          .normalize("NFC")
+          .replace(/\s+/g, " ")
+          .replace(/^[\s\p{P}]+|[\s\p{P}]+$/gu, "")
+          .trim();
+        if (phrase.length > 0) acc[phrase] = (acc[phrase] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
     }

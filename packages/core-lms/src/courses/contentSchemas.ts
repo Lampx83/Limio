@@ -45,6 +45,15 @@ export const MarkdownPayload = z.object({
   body: z.string().min(1).max(200_000),
 });
 
+/**
+ * Rich-text content authored via WYSIWYG editor (Tiptap). Stored as HTML
+ * string — server-side validation only enforces non-empty + length cap;
+ * actual sanitization happens at render time via DOMPurify on the client.
+ */
+export const RichTextPayload = z.object({
+  html: z.string().min(1).max(200_000),
+});
+
 export const EmbedPayload = z.object({
   url: z.string().url(),
   height: z.number().int().positive().optional(),
@@ -94,6 +103,7 @@ export const H5pPayload = z.object({
 const PAYLOAD_BY_TYPE = {
   video: VideoPayload,
   markdown: MarkdownPayload,
+  richtext: RichTextPayload,
   embed: EmbedPayload,
   file: FilePayload,
   external_link: ExternalLinkPayload,

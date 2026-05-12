@@ -41,11 +41,11 @@ export default function CreateTournamentForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    const d = await res.json().catch(() => ({}));
     setBusy(false);
-    if (res.ok) {
-      router.push("/instructor/courses");
+    if (res.ok && d.tournamentId) {
+      router.push(`/instructor/tournaments/${d.tournamentId}`);
     } else {
-      const d = await res.json().catch(() => ({}));
       setError(d.error ?? "create_failed");
     }
   }

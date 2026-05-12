@@ -105,7 +105,11 @@ RUN set -eux; \
     test -n "$PRISMA" || { echo "ERROR: prisma binary not found"; exit 1; }; \
     "$PRISMA" generate --schema=/app/packages/db/prisma/schema.prisma
 WORKDIR /app/packages/db
-CMD ["pnpm", "exec", "prisma", "migrate", "deploy"]
+# Run migrations, then idempotent seeds (upsert-based — safe to run every deploy).
+# Mission templates are required for the instructor tournament mission picker UI;
+# without them the picker renders empty and instructors can't author missions.
+# Seed failures are non-fatal: migrations have already succeeded, web can boot.
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && (pnpm exec tsx src/seed-mission-templates.ts || echo 'WARN: mission-templates seed failed (non-fatal)')"]
 
 # ---------- runner (Next.js standalone) ----------
 FROM node:${NODE_VERSION} AS runner

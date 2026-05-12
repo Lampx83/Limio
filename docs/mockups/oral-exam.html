@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<title>Vấn đáp AI (text) — UI mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wave span { display:inline-block; width:3px; margin:0 1px; background:#0ea5e9; border-radius:2px; animation:bar 1s infinite ease-in-out; }
+  .wave span:nth-child(2){animation-delay:.1s} .wave span:nth-child(3){animation-delay:.2s}
+  .wave span:nth-child(4){animation-delay:.3s} .wave span:nth-child(5){animation-delay:.4s}
+  .wave span:nth-child(6){animation-delay:.5s} .wave span:nth-child(7){animation-delay:.6s}
+  @keyframes bar { 0%,100%{height:6px} 50%{height:28px} }
+  .pulse-ring { box-shadow:0 0 0 0 rgba(239,68,68,.6); animation:pulse 1.6s infinite; }
+  @keyframes pulse { 70%{box-shadow:0 0 0 22px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+<header class="bg-white border-b">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div>
+      <div class="text-xs text-slate-500">Mockup • Phase 0 — Oral Exam (ORAL_AI) · <span class="text-violet-600">text-only</span></div>
+      <h1 class="text-lg font-semibold">Vấn đáp cùng AI (trả lời bằng text) — 4 màn hình chính</h1>
+    </div>
+    <nav class="text-sm space-x-3">
+      <a href="#s1" class="text-sky-600 hover:underline">1. Briefing</a>
+      <a href="#s2" class="text-sky-600 hover:underline">2. AI hỏi</a>
+      <a href="#s3" class="text-sky-600 hover:underline">3. SV trả lời</a>
+      <a href="#s4" class="text-sky-600 hover:underline">4. Kết quả</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8 space-y-12">
+
+<!-- ============ S1: BRIEFING ============ -->
+<section id="s1">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 class="text-xl font-semibold">① Briefing — trước khi bắt đầu</h2>
+    <span class="text-xs text-slate-500">Route: <code>/learn/[slug]/exams/[examId]</code></span>
+  </div>
+  <div class="bg-white rounded-2xl shadow-sm p-8 border border-slate-200">
+    <div class="grid grid-cols-3 gap-8">
+      <div class="col-span-2">
+        <div class="inline-flex items-center gap-2 bg-violet-100 text-violet-700 text-xs font-medium px-2 py-1 rounded">🎙 ORAL · AI giám khảo</div>
+        <h3 class="text-2xl font-bold mt-3">Vấn đáp giữa kỳ — Cấu trúc dữ liệu</h3>
+        <p class="text-slate-600 mt-2">AI sẽ hỏi 5 câu xoay quanh <em>cây nhị phân, độ phức tạp, đệ quy</em>. Bạn trả lời bằng giọng nói; AI có thể hỏi đào sâu (follow-up).</p>
+
+        <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+          <div class="p-3 bg-slate-50 rounded-lg"><div class="text-slate-500">Thời lượng</div><div class="font-semibold">~15 phút</div></div>
+          <div class="p-3 bg-slate-50 rounded-lg"><div class="text-slate-500">Số câu hỏi</div><div class="font-semibold">5 câu chính + tối đa 2 follow-up/câu</div></div>
+          <div class="p-3 bg-slate-50 rounded-lg"><div class="text-slate-500">Tối đa/câu</div><div class="font-semibold">90 giây trả lời</div></div>
+          <div class="p-3 bg-slate-50 rounded-lg"><div class="text-slate-500">Số lần làm</div><div class="font-semibold">1 lần duy nhất</div></div>
+        </div>
+
+        <div class="mt-6 p-4 border border-amber-200 bg-amber-50 rounded-lg text-sm text-amber-900">
+          <div class="font-semibold mb-1">⚠️ Lưu ý quan trọng</div>
+          <ul class="list-disc ml-5 space-y-1">
+            <li>Phiên sẽ được ghi âm, lưu trữ phục vụ chấm và phúc tra.</li>
+            <li>Mất kết nối &gt; 30s sẽ tự nộp bài với điểm cho phần đã trả lời.</li>
+            <li>Không có người thật ở đầu kia — AI chấm theo rubric do giảng viên cấu hình.</li>
+          </ul>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3 text-sm">
+          <label class="flex items-center gap-2"><input type="checkbox" checked class="rounded"> Tôi đã đọc và đồng ý ghi âm</label>
+        </div>
+      </div>
+
+      <aside class="col-span-1">
+        <div class="p-4 rounded-xl border border-slate-200">
+          <div class="text-sm font-semibold mb-3">Kiểm tra thiết bị</div>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center justify-between"><span>🎤 Micro</span><span class="text-emerald-600 font-medium">OK</span></div>
+            <div class="flex items-center justify-between"><span>🔊 Loa / tai nghe</span><span class="text-emerald-600 font-medium">OK</span></div>
+            <div class="flex items-center justify-between"><span>🌐 Mạng</span><span class="text-emerald-600 font-medium">42 ms</span></div>
+          </div>
+          <div class="mt-3 h-10 bg-slate-50 rounded flex items-center justify-center wave">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="text-xs text-slate-500 mt-1 text-center">Nói thử "xin chào" để test mic</div>
+        </div>
+
+        <button class="mt-4 w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 rounded-xl">Bắt đầu vấn đáp →</button>
+        <div class="text-xs text-center text-slate-500 mt-2">Phiên bắt đầu ngay khi bấm nút</div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ S2: AI ASKING ============ -->
+<section id="s2">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 class="text-xl font-semibold">② AI đang hỏi (TTS phát câu hỏi)</h2>
+    <span class="text-xs text-slate-500">State: <code>turn.status = "asking"</code></span>
+  </div>
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200">
+    <!-- top bar -->
+    <div class="px-6 py-3 border-b flex items-center justify-between text-sm">
+      <div class="flex items-center gap-3">
+        <span class="font-semibold">Câu 2 / 5</span>
+        <span class="text-slate-400">·</span>
+        <span class="text-slate-600">Skill: <code class="text-violet-700">tree.binary-tree</code>, <code class="text-violet-700">complexity.big-o</code></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-slate-500">⏱ Tổng: 06:42</span>
+        <button class="text-rose-600 hover:underline">Kết thúc sớm</button>
+      </div>
+    </div>
+
+    <div class="px-6 py-2 bg-slate-100 h-2"><div class="h-full bg-violet-500 rounded" style="width:40%"></div></div>
+
+    <div class="p-8 grid grid-cols-5 gap-6">
+      <!-- examiner -->
+      <div class="col-span-3">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center text-2xl">🤖</div>
+          <div class="flex-1">
+            <div class="text-xs text-slate-500 mb-1">AI giám khảo • đang nói…</div>
+            <div class="bg-violet-50 border border-violet-200 rounded-2xl rounded-tl-none p-4 text-slate-800 leading-relaxed">
+              "Cho một cây nhị phân tìm kiếm cân bằng có <strong>n</strong> nút. Hãy giải thích vì sao thao tác tìm kiếm có độ phức tạp <strong>O(log n)</strong>, và điều gì xảy ra nếu cây mất cân bằng?"
+            </div>
+            <div class="mt-2 flex items-center gap-3 text-xs text-slate-500">
+              <span class="wave"><span></span><span></span><span></span><span></span><span></span></span>
+              <button class="underline">⏸ Tạm dừng phát</button>
+              <button class="underline">🔁 Nghe lại</button>
+              <button class="underline">📄 Xem chữ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- previous turn collapsed -->
+        <details class="mt-6 text-sm">
+          <summary class="cursor-pointer text-slate-500 hover:text-slate-700">▸ Câu 1 — đã trả lời (1:12, điểm tạm: 8/10)</summary>
+          <div class="mt-2 pl-4 border-l-2 border-slate-200 text-slate-600">
+            <p class="italic">"Định nghĩa độ phức tạp thuật toán là…"</p>
+          </div>
+        </details>
+      </div>
+
+      <!-- side: rubric hidden, hints -->
+      <aside class="col-span-2">
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm">
+          <div class="font-semibold mb-2">Gợi ý cấu trúc trả lời</div>
+          <ol class="list-decimal ml-5 space-y-1 text-slate-600">
+            <li>Nêu định nghĩa / công thức</li>
+            <li>Giải thích cơ chế</li>
+            <li>Ví dụ minh hoạ</li>
+            <li>Trường hợp đặc biệt / phản ví dụ</li>
+          </ol>
+          <div class="text-xs text-slate-400 mt-3">Gợi ý hiển thị nếu giảng viên bật <code>show_outline=true</code></div>
+        </div>
+
+        <div class="mt-4 p-4 rounded-xl border border-dashed border-slate-300 text-center">
+          <div class="text-xs text-slate-500 mb-2">Sẵn sàng trả lời?</div>
+          <button class="w-16 h-16 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-2xl">🎙</button>
+          <div class="text-xs text-slate-500 mt-2">Bấm để bắt đầu ghi âm<br/>(hoặc Space)</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ S3: STUDENT ANSWERING ============ -->
+<section id="s3">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 class="text-xl font-semibold">③ Sinh viên trả lời (đang ghi âm + STT live)</h2>
+    <span class="text-xs text-slate-500">State: <code>turn.status = "recording"</code></span>
+  </div>
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200">
+    <div class="px-6 py-3 border-b flex items-center justify-between text-sm">
+      <div><span class="font-semibold">Câu 2 / 5</span> <span class="text-slate-400 ml-2">đang ghi âm…</span></div>
+      <div class="flex items-center gap-4">
+        <span class="text-rose-600 font-mono">● 00:38 / 01:30</span>
+      </div>
+    </div>
+    <div class="px-6 py-2 bg-slate-100 h-2"><div class="h-full bg-rose-500 rounded" style="width:42%"></div></div>
+
+    <div class="p-8 grid grid-cols-5 gap-6">
+      <div class="col-span-3">
+        <!-- question collapsed -->
+        <div class="text-sm text-slate-500 italic mb-4">🤖 "Cho một cây nhị phân tìm kiếm cân bằng… O(log n)…"</div>
+
+        <!-- live transcript -->
+        <div class="border border-slate-200 rounded-2xl p-5 bg-slate-50">
+          <div class="text-xs text-slate-500 mb-2 flex items-center gap-2">
+            <span class="inline-block w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
+            Bản ghi trực tiếp (Whisper)
+          </div>
+          <p class="leading-relaxed text-slate-800">
+            "Tìm kiếm trên cây nhị phân cân bằng có độ phức tạp <span class="bg-yellow-100">O(log n)</span> vì mỗi bước so sánh chúng ta loại bỏ được một nửa số nút còn lại. Cụ thể, chiều cao của cây cân bằng xấp xỉ <span class="bg-yellow-100">log₂(n)</span>, nên trong trường hợp xấu nhất ta đi từ gốc xuống lá mất đúng chừng đó bước…
+            <span class="text-slate-400">[đang nói]</span>
+          </p>
+        </div>
+
+        <!-- waveform -->
+        <div class="mt-4 h-16 bg-slate-900 rounded-xl flex items-center justify-center gap-1 wave">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <aside class="col-span-2 flex flex-col items-center justify-center">
+        <button class="w-24 h-24 rounded-full bg-rose-500 text-white text-3xl pulse-ring flex items-center justify-center">■</button>
+        <div class="mt-3 font-semibold">Dừng & gửi</div>
+        <div class="text-xs text-slate-500 mt-1">Hoặc tự dừng sau 5 giây im lặng</div>
+
+        <div class="mt-6 text-xs text-slate-500 space-y-1 text-center">
+          <div>Space — Dừng</div>
+          <div>R — Ghi lại từ đầu</div>
+          <div>Esc — Bỏ qua câu (-50%)</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <p class="text-xs text-slate-500 mt-2">Khi gửi: audio → S3 → emit <code>exam.oral.turn.answered</code> → STT + LLM chấm → AI quyết định follow-up hay câu tiếp.</p>
+</section>
+
+<!-- ============ S4: RESULT ============ -->
+<section id="s4">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 class="text-xl font-semibold">④ Kết quả & feedback chi tiết</h2>
+    <span class="text-xs text-slate-500">State: <code>session.status = "ended"</code></span>
+  </div>
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="text-sm text-slate-500">Vấn đáp giữa kỳ — Cấu trúc dữ liệu</div>
+        <h3 class="text-2xl font-bold mt-1">8.4 / 10</h3>
+        <div class="text-emerald-600 font-medium mt-1">✓ Đạt — xếp hạng Khá–Giỏi</div>
+      </div>
+      <div class="text-right text-sm text-slate-500">
+        <div>Thời lượng: 13 phút 22</div>
+        <div>5 câu chính + 3 follow-up</div>
+        <div>Hoàn thành: 11/05/2026 14:32</div>
+      </div>
+    </div>
+
+    <!-- skill radar simplified -->
+    <div class="mt-6 grid grid-cols-3 gap-4">
+      <div class="p-4 rounded-xl border border-slate-200">
+        <div class="text-xs text-slate-500">tree.binary-tree</div>
+        <div class="font-semibold">Thành thạo</div>
+        <div class="mt-2 h-2 bg-slate-100 rounded"><div class="h-full bg-emerald-500 rounded" style="width:88%"></div></div>
+        <div class="text-xs text-slate-500 mt-1">Mastery: 0.88 ↑ +0.12</div>
+      </div>
+      <div class="p-4 rounded-xl border border-slate-200">
+        <div class="text-xs text-slate-500">complexity.big-o</div>
+        <div class="font-semibold">Tốt</div>
+        <div class="mt-2 h-2 bg-slate-100 rounded"><div class="h-full bg-sky-500 rounded" style="width:74%"></div></div>
+        <div class="text-xs text-slate-500 mt-1">Mastery: 0.74 ↑ +0.08</div>
+      </div>
+      <div class="p-4 rounded-xl border border-slate-200">
+        <div class="text-xs text-slate-500">recursion.base-case</div>
+        <div class="font-semibold text-amber-700">Cần ôn lại</div>
+        <div class="mt-2 h-2 bg-slate-100 rounded"><div class="h-full bg-amber-500 rounded" style="width:48%"></div></div>
+        <div class="text-xs text-slate-500 mt-1">Mastery: 0.48 ↓ -0.05 · misconception phát hiện</div>
+      </div>
+    </div>
+
+    <!-- per-turn breakdown -->
+    <div class="mt-8">
+      <h4 class="font-semibold mb-3">Chi tiết từng câu</h4>
+      <div class="divide-y divide-slate-200 border border-slate-200 rounded-xl">
+        <div class="p-4">
+          <div class="flex items-center justify-between">
+            <div class="font-medium">Câu 2 — O(log n) trên BST cân bằng</div>
+            <div class="text-emerald-600 font-semibold">9 / 10</div>
+          </div>
+          <button class="text-xs text-sky-600 mt-1">▸ Nghe lại bản ghi · xem transcript · xem feedback</button>
+        </div>
+        <div class="p-4 bg-amber-50">
+          <div class="flex items-center justify-between">
+            <div class="font-medium">Câu 4 — Đệ quy duyệt cây</div>
+            <div class="text-amber-700 font-semibold">5 / 10</div>
+          </div>
+          <div class="mt-2 text-sm text-slate-700">
+            <strong>AI feedback:</strong> Bạn nêu đúng ý tưởng duyệt in-order nhưng <em>quên điều kiện dừng (base case)</em> khi node = null. Đây là lỗi <span class="underline">misconception về base case</span> đã thấy ở 2 lần trước.
+            <div class="mt-2"><strong>Gợi ý ôn:</strong> Bài "Recursion — Base case patterns" + 3 quiz luyện.</div>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="flex items-center justify-between">
+            <div class="font-medium">Câu 5 — Trade-off BST vs Hash table</div>
+            <div class="text-emerald-600 font-semibold">8 / 10</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex items-center gap-3">
+      <button class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-5 py-2.5 rounded-lg">Vào lộ trình ôn cá nhân hoá →</button>
+      <button class="border border-slate-300 hover:bg-slate-50 px-5 py-2.5 rounded-lg">Tải bản ghi (.mp3 + .txt)</button>
+      <button class="text-rose-600 hover:underline ml-auto">Khiếu nại điểm</button>
+    </div>
+  </div>
+</section>
+
+<footer class="text-center text-xs text-slate-500 pt-6">
+  Mockup tĩnh • không kèm logic • chỉ minh hoạ luồng
+</footer>
+
+</main>
+</body>
+</html>

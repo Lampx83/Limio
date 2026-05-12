@@ -277,6 +277,7 @@ model Lesson {
 enum ContentType {
   video
   markdown
+  richtext
   embed
   file
   external_link

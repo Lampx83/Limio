@@ -10,6 +10,10 @@ const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
 });
 
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
+
 interface ScormPackageRow {
   id: string;
   title: string;
@@ -48,6 +52,7 @@ interface CuepointDraft {
 type ContentType =
   | "video"
   | "markdown"
+  | "richtext"
   | "embed"
   | "file"
   | "external_link"
@@ -57,6 +62,7 @@ type ContentType =
   | "h5p";
 
 const TYPE_LABEL: Record<ContentType, string> = {
+  richtext: "Văn bản (rich text)",
   markdown: "Markdown",
   video: "Video",
   embed: "Embed",
@@ -95,6 +101,7 @@ export default function AddContentItemForm({
 
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
+  const [html, setHtml] = useState("");
   const [filename, setFilename] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
   const [scormPackages, setScormPackages] = useState<ScormPackageRow[]>([]);
@@ -178,6 +185,7 @@ export default function AddContentItemForm({
   function reset() {
     setUrl("");
     setBody("");
+    setHtml("");
     setFilename("");
     setLinkTitle("");
     setScormPackageId("");
@@ -209,6 +217,14 @@ export default function AddContentItemForm({
       }
       case "markdown":
         payload = { body };
+        break;
+      case "richtext":
+        if (!html.trim()) {
+          setError("empty_content");
+          setBusy(false);
+          return;
+        }
+        payload = { html };
         break;
       case "embed":
         payload = { url };
@@ -316,6 +332,14 @@ export default function AddContentItemForm({
           rows={4}
           placeholder="Nội dung markdown..."
           className="textarea"
+        />
+      )}
+
+      {type === "richtext" && (
+        <RichTextEditor
+          value={html}
+          onChange={setHtml}
+          placeholder="Nhập nội dung văn bản..."
         />
       )}
 

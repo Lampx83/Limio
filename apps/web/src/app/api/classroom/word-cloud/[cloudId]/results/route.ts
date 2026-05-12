@@ -1,39 +1,22 @@
 import { prisma } from "@feedbackme/db";
 
-// Stop words in English and Vietnamese
-const STOP_WORDS = new Set([
-  // English
-  "the", "a", "an", "and", "or", "is", "are", "be", "to", "of", "in", "on", "at", "by", "for", "with", "from", "as", "was", "were", "been", "have", "has", "had", "do", "does", "did", "will", "would", "could", "should", "may", "might", "must", "can", "it", "this", "that", "these", "those", "i", "you", "he", "she", "we", "they", "me", "him", "her", "us", "them", "what", "which", "who", "when", "where", "why", "how",
-  // Vietnamese
-  "là", "và", "của", "có", "được", "như", "từ", "trong", "trên", "hay", "hoặc", "nếu", "khi", "mà", "sẽ", "đã", "đang", "không", "các", "cái", "chiếc", "những", "cơ", "về", "cho", "với", "qua", "do", "nơi", "bởi", "vì", "nên", "mặc", "dù", "tuy", "nhên", "nhưng", "song", "tuy", "vậy", "thế", "mà", "nên", "thì", "để", "nhằm", "phục", "vụ",
-]);
+function normalizePhrase(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s\p{P}]+|[\s\p{P}]+$/gu, "")
+    .trim();
+}
 
-function tokenizeAndCountWords(submissions: { text: string }[]): Record<string, number> {
-  const wordFrequency: Record<string, number> = {};
-
-  for (const submission of submissions) {
-    // Split by whitespace and normalize
-    const words = submission.text
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(word => word.length > 0);
-
-    for (const word of words) {
-      // Skip stop words
-      if (STOP_WORDS.has(word)) {
-        continue;
-      }
-
-      // Remove punctuation from edges
-      const cleanWord = word.replace(/^[^\w]+|[^\w]+$/g, "");
-
-      if (cleanWord.length > 0) {
-        wordFrequency[cleanWord] = (wordFrequency[cleanWord] || 0) + 1;
-      }
-    }
+function countPhrases(submissions: { text: string }[]): Record<string, number> {
+  const freq: Record<string, number> = {};
+  for (const { text } of submissions) {
+    const phrase = normalizePhrase(text);
+    if (phrase.length === 0) continue;
+    freq[phrase] = (freq[phrase] || 0) + 1;
   }
-
-  return wordFrequency;
+  return freq;
 }
 
 export async function GET(
@@ -61,7 +44,7 @@ export async function GET(
     });
 
     // Aggregate word frequencies
-    const wordFrequency = tokenizeAndCountWords(submissions);
+    const wordFrequency = countPhrases(submissions);
 
     return Response.json({
       cloudId: params.cloudId,

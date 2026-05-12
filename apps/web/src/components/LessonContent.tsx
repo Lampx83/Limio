@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import SafeHtml from "./SafeHtml";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
@@ -45,6 +46,9 @@ interface VideoPayload {
 }
 interface MarkdownPayload {
   body: string;
+}
+interface RichTextPayload {
+  html: string;
 }
 interface FilePayload {
   url: string;
@@ -165,6 +169,15 @@ function ContentBlock({
             {p.body}
           </ReactMarkdown>
         </div>
+      );
+    }
+    case "richtext": {
+      const p = payload as RichTextPayload;
+      return (
+        <SafeHtml
+          html={p.html}
+          className="prose prose-sm max-w-none rounded-xl border border-token bg-[rgb(var(--surface))] p-4 dark:prose-invert"
+        />
       );
     }
     case "external_link": {

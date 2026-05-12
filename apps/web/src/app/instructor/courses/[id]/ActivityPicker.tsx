@@ -7,6 +7,7 @@ import AddAssignmentForm from "./AddAssignmentForm";
 
 type ContentSubtype =
   | "markdown"
+  | "richtext"
   | "video"
   | "pdf"
   | "file"
@@ -39,12 +40,21 @@ type Tile = {
 
 const TILES: Tile[] = [
   {
-    key: "markdown",
+    key: "richtext",
     group: "resource",
     icon: "📝",
     name: "Văn bản",
-    description: "Markdown — viết hướng dẫn, lý thuyết, ghi chú",
-    keywords: "markdown text note",
+    description: "Soạn thảo trực quan (rich text) — bold, list, link, heading",
+    keywords: "text richtext wysiwyg editor van ban",
+    pick: { kind: "content", subtype: "richtext" },
+  },
+  {
+    key: "markdown",
+    group: "resource",
+    icon: "🅼",
+    name: "Markdown",
+    description: "Viết markdown thô — cho người quen cú pháp",
+    keywords: "markdown md note",
     pick: { kind: "content", subtype: "markdown" },
   },
   {

@@ -5,7 +5,7 @@ import { assertCanEditCourse, CourseAuthzError } from "./authz";
 import { CourseError } from "./courses";
 import { validateContentPayload, type ContentTypeKey } from "./contentSchemas";
 
-const TypeEnum = z.enum(["video", "markdown", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p"]);
+const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p"]);
 
 export const CreateContentInput = z.object({
   type: TypeEnum,

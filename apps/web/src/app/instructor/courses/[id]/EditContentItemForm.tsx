@@ -22,9 +22,14 @@ const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
 });
 
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
+
 type ContentType =
   | "video"
   | "markdown"
+  | "richtext"
   | "embed"
   | "file"
   | "external_link"
@@ -52,6 +57,7 @@ export default function EditContentItemForm({ item, onClose }: Props) {
 
   // Common scalar fields, pre-filled from the existing payload.
   const [body, setBody] = useState<string>(String(initial.body ?? ""));
+  const [html, setHtml] = useState<string>(String(initial.html ?? ""));
   const [url, setUrl] = useState<string>(String(initial.url ?? ""));
   const [filename, setFilename] = useState<string>(String(initial.filename ?? ""));
   const [linkTitle, setLinkTitle] = useState<string>(String(initial.title ?? ""));
@@ -65,6 +71,14 @@ export default function EditContentItemForm({ item, onClose }: Props) {
     switch (type) {
       case "markdown":
         payload = { body };
+        break;
+      case "richtext":
+        if (!html.trim()) {
+          setError("empty_content");
+          setBusy(false);
+          return;
+        }
+        payload = { html };
         break;
       case "video":
       case "embed":
@@ -148,6 +162,10 @@ export default function EditContentItemForm({ item, onClose }: Props) {
           placeholder="Nội dung markdown..."
           className="textarea"
         />
+      )}
+
+      {type === "richtext" && (
+        <RichTextEditor value={html} onChange={setHtml} />
       )}
 
       {(type === "video" ||
