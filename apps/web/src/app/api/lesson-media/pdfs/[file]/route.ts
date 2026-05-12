@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { lessonPdfKeyFromFilename } from "@/lib/storage-keys";
 import {
   isSafeFilename,
-  resolveWithLegacy,
+  resolveKey,
   streamWithRange,
 } from "@/lib/storage-serve";
 
@@ -17,11 +17,7 @@ export async function GET(
     return new NextResponse("forbidden", { status: 403 });
   }
 
-  const resolved = await resolveWithLegacy(
-    lessonPdfKeyFromFilename(file),
-    "lesson-pdfs",
-    file,
-  );
+  const resolved = await resolveKey(lessonPdfKeyFromFilename(file));
   if (!resolved) return new NextResponse("not_found", { status: 404 });
 
   if (resolved.absPath) {

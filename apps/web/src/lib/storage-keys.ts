@@ -124,16 +124,3 @@ export function tmpKey(
   return { layer: "tmp", key: `${ymd(now)}/${session}/${filename}` };
 }
 
-/**
- * Legacy flat paths used by code before the layered layout (e.g. `lesson-images/`
- * directly under uploads root). Serving routes try the new sharded path first
- * and fall back to these so files uploaded pre-migration keep resolving.
- */
-export const LEGACY_NAMESPACE: Record<string, string> = {
-  avatars: "avatars",
-  "lesson-images": "lesson-images",
-  "lesson-videos": "lesson-videos",
-  "lesson-pdfs": "lesson-pdfs",
-  "exam-assets": "exam-assets",
-  "assignment-submissions": "assignment-submissions",
-};

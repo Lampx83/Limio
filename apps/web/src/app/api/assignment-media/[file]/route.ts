@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { submissionKeyFromFilename } from "@/lib/storage-keys";
 import {
   isSafeFilename,
-  resolveWithLegacy,
+  resolveKey,
   streamWithRange,
 } from "@/lib/storage-serve";
 
@@ -49,11 +49,7 @@ export async function GET(
     return new NextResponse("forbidden", { status: 403 });
   }
 
-  const resolved = await resolveWithLegacy(
-    submissionKeyFromFilename(file),
-    "assignment-submissions",
-    file,
-  );
+  const resolved = await resolveKey(submissionKeyFromFilename(file));
   if (!resolved) return new NextResponse("not_found", { status: 404 });
 
   const ext = path.extname(file).toLowerCase();

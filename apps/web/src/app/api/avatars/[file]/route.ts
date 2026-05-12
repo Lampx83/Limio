@@ -1,7 +1,7 @@
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { avatarKeyFromFilename } from "@/lib/storage-keys";
-import { isSafeFilename, resolveWithLegacy } from "@/lib/storage-serve";
+import { isSafeFilename, resolveKey } from "@/lib/storage-serve";
 
 export const runtime = "nodejs";
 
@@ -30,11 +30,7 @@ export async function GET(
     return new NextResponse("forbidden", { status: 403 });
   }
 
-  const resolved = await resolveWithLegacy(
-    avatarKeyFromFilename(file),
-    "avatars",
-    file,
-  );
+  const resolved = await resolveKey(avatarKeyFromFilename(file));
   if (!resolved) return new NextResponse("not_found", { status: 404 });
 
   const buf = await resolved.get();

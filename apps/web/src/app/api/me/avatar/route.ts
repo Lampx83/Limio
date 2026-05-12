@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
-import { getLayerStorage, storageFor } from "@/lib/storage";
+import { storageFor } from "@/lib/storage";
 import { avatarKey, avatarKeyFromFilename } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
@@ -19,7 +19,7 @@ const MIME_TO_EXT: Record<string, string> = {
 /**
  * Best-effort delete of a previously uploaded avatar living under our
  * own /api/avatars/ namespace. Anything else (external URL, missing
- * file) is ignored. Tries new sharded path first, then legacy flat path.
+ * file) is ignored.
  */
 async function deletePreviousAvatar(prevUrl: string | null): Promise<void> {
   if (!prevUrl || !prevUrl.startsWith("/api/avatars/")) return;
@@ -27,14 +27,8 @@ async function deletePreviousAvatar(prevUrl: string | null): Promise<void> {
   if (!filename || filename.includes("/") || filename.includes("\\")) return;
   const sharded = avatarKeyFromFilename(filename);
   if (sharded) {
-    await storageFor(sharded).delete(sharded.key);
+    await storageFor(sharded).delete(sharded.key).catch(() => undefined);
   }
-  // Legacy fallback: pre-migration avatars sat in `uploads/avatars/<file>`.
-  // Now we keep them in the public layer for backward-compat reads, so the
-  // physical legacy path lives at `uploads/public/avatars/<file>` only if
-  // never migrated. Best-effort cleanup of both.
-  const publicAdapter = getLayerStorage("public");
-  await publicAdapter.delete(`avatars/${filename}`).catch(() => undefined);
 }
 
 export async function POST(req: Request) {

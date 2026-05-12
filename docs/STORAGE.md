@@ -49,32 +49,32 @@ Sharding by `userId` makes "delete everything for user X" a single
 
 URLs in DB rows stay **flat** even though on-disk paths are sharded:
 
-| URL                                    | On-disk (new)                                                  | On-disk (legacy, pre-migration)    |
-| -------------------------------------- | -------------------------------------------------------------- | ---------------------------------- |
-| `/api/avatars/{file}`                  | `public/avatars/{userId}/{file}`                               | `avatars/{file}`                   |
-| `/api/lesson-media/images/{file}`      | `public/lesson-media/images/{yyyy}/{mm}/{file}`                | `lesson-images/{file}`             |
-| `/api/lesson-media/videos/{file}`      | `public/lesson-media/videos/{yyyy}/{mm}/{file}`                | `lesson-videos/{file}`             |
-| `/api/lesson-media/pdfs/{file}`        | `public/lesson-media/pdfs/{yyyy}/{mm}/{file}`                  | `lesson-pdfs/{file}`               |
-| `/api/exam-assets/{file}`              | `public/exam-assets/{yyyy}/{mm}/{file}`                        | `exam-assets/{file}`               |
-| `/api/assignment-media/{file}`         | `private/submissions/{yyyy}/{mm}/{file}`                       | `assignment-submissions/{file}`    |
+| URL                               | On-disk                                          |
+| --------------------------------- | ------------------------------------------------ |
+| `/api/avatars/{file}`             | `public/avatars/{userId}/{file}`                 |
+| `/api/lesson-media/images/{file}` | `public/lesson-media/images/{yyyy}/{mm}/{file}`  |
+| `/api/lesson-media/videos/{file}` | `public/lesson-media/videos/{yyyy}/{mm}/{file}`  |
+| `/api/lesson-media/pdfs/{file}`   | `public/lesson-media/pdfs/{yyyy}/{mm}/{file}`    |
+| `/api/exam-assets/{file}`         | `public/exam-assets/{yyyy}/{mm}/{file}`          |
+| `/api/assignment-media/{file}`    | `private/submissions/{yyyy}/{mm}/{file}`         |
 
-The serving route derives the sharded path from the filename (timestamp or
-userId encoded in the name) and falls back to the legacy flat path. So:
+The serving route derives the sharded path from the filename — timestamp or
+userId encoded in the name. Malformed filenames (no parseable shard) return
+404 at the serving layer.
 
-- New uploads land in the new layout immediately.
-- Old files keep serving from the legacy path.
-- Migration is a separate, optional housekeeping pass.
+## Historical: one-off migration
 
-## Migration
-
-Run from repo root:
+The repo previously stored uploads in a flat `uploads/<kind>/{file}` layout.
+A one-off script moved those files into the sharded layout:
 
 ```bash
 node scripts/migrate-uploads.mjs          # dry-run, prints plan
 node scripts/migrate-uploads.mjs --apply  # actually move files
 ```
 
-Idempotent — safe to re-run. Does **not** touch the database; only moves files.
+Kept around (idempotent, safe to re-run) in case a dev environment still has
+legacy files; production has none. New code does **not** read from the legacy
+paths — those routes were dropped after migration.
 
 ## Tmp / commit pattern
 

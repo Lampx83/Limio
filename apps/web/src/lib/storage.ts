@@ -237,27 +237,3 @@ export function localAbsPath(key: StorageKey): string | null {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// Legacy namespace shim
-// ---------------------------------------------------------------------------
-
-/**
- * Legacy flat-namespace adapter. Maps the old `getStorage("foo")` form to the
- * pre-layered on-disk path `uploads/foo/`. Kept so serving routes can fall
- * back to legacy locations for files uploaded before the layout migration.
- *
- * @deprecated New code should build a {@link StorageKey} via storage-keys and
- *   call {@link storageFor} or {@link getLayerStorage} instead.
- */
-export function getStorage(namespace: string): StorageAdapter {
-  const client = s3Client();
-  if (client) {
-    return new S3Adapter(
-      client,
-      process.env.S3_BUCKET!,
-      namespace,
-      process.env.S3_PUBLIC_BASE_URL ?? null,
-    );
-  }
-  return new LocalFsAdapter(path.join(localRoot(), namespace));
-}

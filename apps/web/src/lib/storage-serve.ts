@@ -1,17 +1,16 @@
 import { createReadStream, promises as fs } from "node:fs";
 import { Readable } from "node:stream";
 import { NextResponse } from "next/server";
-import { getStorage, localAbsPath, storageFor } from "./storage";
+import { localAbsPath, storageFor } from "./storage";
 import type { StorageKey } from "./storage-keys";
 
 /**
  * Helpers for the serving side of uploads.
  *
- * Each upload kind moved to the new sharded layout — but DB rows still point
- * at flat URLs like `/api/lesson-media/images/<filename>`. We can't change the
- * URL contract, so serving routes derive the sharded key from the filename and
- * fall back to the legacy flat namespace for files uploaded before the
- * migration. {@link resolveWithLegacy} encapsulates that fallback.
+ * URLs in DB rows are flat (`/api/lesson-media/images/<filename>`); the
+ * sharded on-disk key is reconstructed from the filename by the matching
+ * `*KeyFromFilename` helper in `storage-keys.ts`. Routes pass the resulting
+ * key here to read the blob.
  */
 
 const SAFE_FILENAME = /^[A-Za-z0-9._-]+$/;
@@ -21,33 +20,20 @@ export function isSafeFilename(name: string): boolean {
 }
 
 /**
- * Try the new sharded key first; if missing, fall back to the legacy flat
- * namespace (under `uploads/<namespace>/<filename>`). Returns the resolved
- * adapter+key+local-path triple, or null when both miss.
+ * Resolve a sharded storage key into a readable handle. Returns null when the
+ * key is unparseable (caller already 403'd on bad filename) or the file is
+ * missing.
  */
-export async function resolveWithLegacy(
-  shardedKey: StorageKey | null,
-  legacyNamespace: string,
-  filename: string,
-): Promise<{ get(): Promise<Buffer>; absPath: string | null; size?: number } | null> {
-  if (shardedKey) {
-    const adapter = storageFor(shardedKey);
-    if (await adapter.exists(shardedKey.key)) {
-      return {
-        get: () => adapter.get(shardedKey.key),
-        absPath: localAbsPath(shardedKey),
-      };
-    }
-  }
-  const legacy = getStorage(legacyNamespace);
-  if (await legacy.exists(filename)) {
-    return {
-      get: () => legacy.get(filename),
-      // Best-effort absolute path for the legacy LocalFsAdapter — for streaming.
-      absPath: (legacy as unknown as { absPath?: (k: string) => string }).absPath?.(filename) ?? null,
-    };
-  }
-  return null;
+export async function resolveKey(
+  key: StorageKey | null,
+): Promise<{ get(): Promise<Buffer>; absPath: string | null } | null> {
+  if (!key) return null;
+  const adapter = storageFor(key);
+  if (!(await adapter.exists(key.key))) return null;
+  return {
+    get: () => adapter.get(key.key),
+    absPath: localAbsPath(key),
+  };
 }
 
 function readableToWeb(stream: Readable): ReadableStream<Uint8Array> {
