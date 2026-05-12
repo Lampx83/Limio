@@ -1,13 +1,14 @@
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { getStorage } from "@/lib/storage";
+import { examAssetKeyFromFilename } from "@/lib/storage-keys";
+import { isSafeFilename, resolveWithLegacy } from "@/lib/storage-serve";
 
 export const runtime = "nodejs";
 
 /**
- * Serve uploaded exam image assets. Capability-based access: filename embeds
- * randomBytes(8) so URLs are unguessable. Auth tightening (per-exam) deferred
- * to a later phase when learner-facing exam UI lands.
+ * Serve uploaded exam image/audio assets. Capability-based access: filename
+ * embeds randomBytes(8) so URLs are unguessable. Auth tightening (per-exam)
+ * deferred to a later phase when learner-facing exam UI lands.
  */
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -28,14 +29,18 @@ export async function GET(
   { params }: { params: { file: string } },
 ) {
   const file = params.file;
-  if (!/^[a-zA-Z0-9._-]+$/.test(file) || file.includes("..")) {
+  if (!isSafeFilename(file)) {
     return new NextResponse("forbidden", { status: 403 });
   }
-  const storage = getStorage("exam-assets");
-  if (!(await storage.exists(file))) {
-    return new NextResponse("not_found", { status: 404 });
-  }
-  const buf = await storage.get(file);
+
+  const resolved = await resolveWithLegacy(
+    examAssetKeyFromFilename(file),
+    "exam-assets",
+    file,
+  );
+  if (!resolved) return new NextResponse("not_found", { status: 404 });
+
+  const buf = await resolved.get();
   const ext = path.extname(file).toLowerCase();
   const mime = MIME_BY_EXT[ext] ?? "application/octet-stream";
   return new NextResponse(new Uint8Array(buf), {

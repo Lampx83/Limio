@@ -1,17 +1,17 @@
 import { randomBytes } from "node:crypto";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/session";
+import { storageFor } from "@/lib/storage";
+import { lessonVideoKey } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
 
 /**
  * Lesson video upload (Phase 0 / dev-friendly).
  *
- * Stores raw video files on the local filesystem under LESSON_MEDIA_ROOT
- * (default: ./uploads/lesson-videos). Returns a URL pointing at the
- * /api/lesson-media/videos/[file] streaming endpoint, which the
+ * Stores raw video files under the public storage layer at
+ * `lesson-media/videos/{yyyy}/{mm}/{filename}`. Returns a URL pointing at
+ * the /api/lesson-media/videos/[file] streaming endpoint, which the
  * AddContentItemForm video branch then uses as the `url` payload.
  *
  * Auth: any authenticated user (instructor/admin) may upload. We don't
@@ -19,8 +19,8 @@ export const runtime = "nodejs";
  * created and the same blob may be reused. Cleanup of orphaned blobs is
  * a separate background task.
  *
- * Production note: real deployment should swap this for S3/R2 (see
- * CLAUDE.md tech stack). For now local FS keeps Phase 0 simple.
+ * Production note: real deployment should swap local FS for S3/R2 (see
+ * CLAUDE.md tech stack); the storage adapter abstracts that switch.
  */
 
 const MAX_VIDEO_BYTES = 500 * 1024 * 1024; // 500 MB
@@ -44,13 +44,6 @@ const ALLOWED_MIME = new Set(SUPPORTED_VIDEO_MIMES.map((m) => m.mime));
 const MIME_TO_EXT: Record<string, string> = Object.fromEntries(
   SUPPORTED_VIDEO_MIMES.map((m) => [m.mime, m.ext]),
 );
-
-function videoRoot(): string {
-  return (
-    process.env.LESSON_MEDIA_ROOT ??
-    path.join(process.cwd(), "uploads", "lesson-videos")
-  );
-}
 
 export async function POST(req: Request) {
   const userId = await requireUserId();
@@ -92,13 +85,12 @@ export async function POST(req: Request) {
   }
 
   const ext = MIME_TO_EXT[file.type] ?? "bin";
+  const now = new Date();
   const suffix = randomBytes(8).toString("hex");
-  const filename = `${userId}-${Date.now()}-${suffix}.${ext}`;
-  const root = videoRoot();
-  await fs.mkdir(root, { recursive: true });
-  const fullPath = path.join(root, filename);
+  const filename = `${userId}-${now.getTime()}-${suffix}.${ext}`;
+  const key = lessonVideoKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(fullPath, buf);
+  await storageFor(key).put(key.key, buf, file.type);
 
   return NextResponse.json(
     {

@@ -1,7 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/session";
-import { getStorage } from "@/lib/storage";
+import { storageFor } from "@/lib/storage";
+import { submissionKey } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
 
@@ -82,11 +83,12 @@ export async function POST(req: Request) {
     );
   }
 
+  const now = new Date();
   const suffix = randomBytes(8).toString("hex");
-  const filename = `${userId}-${Date.now()}-${suffix}.${meta.ext}`;
+  const filename = `${userId}-${now.getTime()}-${suffix}.${meta.ext}`;
+  const key = submissionKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
-  const storage = getStorage("assignment-submissions");
-  await storage.put(filename, buf, file.type);
+  await storageFor(key).put(key.key, buf, file.type);
 
   return NextResponse.json(
     {

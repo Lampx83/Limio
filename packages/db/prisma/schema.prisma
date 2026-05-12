@@ -859,6 +859,10 @@ model Assignment {
   submissions AssignmentSubmission[]
 
   @@index([lessonId])
+  // `/me/dashboard` filters Assignment by dueAt >= now (or null) and orders by
+  // dueAt asc to surface upcoming work. Without this index Postgres falls back
+  // to a seq scan + sort once a course accumulates a few thousand assignments.
+  @@index([dueAt])
 }
 
 enum SubmissionStatus {

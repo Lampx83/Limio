@@ -1,18 +1,19 @@
-import { createReadStream } from "node:fs";
-import { promises as fs } from "node:fs";
 import path from "node:path";
-import { Readable } from "node:stream";
 import { NextResponse } from "next/server";
+import { lessonVideoKeyFromFilename } from "@/lib/storage-keys";
+import {
+  isSafeFilename,
+  resolveWithLegacy,
+  streamWithRange,
+} from "@/lib/storage-serve";
 
 export const runtime = "nodejs";
 
 /**
  * Stream an uploaded lesson video. Honors HTTP Range so the browser can
  * seek (essential — without 206 partial responses, scrubbing the video
- * triggers a full re-download from byte 0).
- *
- * Public read for now (capability-based: filename embeds a random
- * suffix). Tighten when we wire enroll-aware access checks.
+ * triggers a full re-download from byte 0). Public read for now
+ * (capability-based: filename embeds a random suffix).
  */
 
 const MIME: Record<string, string> = {
@@ -23,108 +24,36 @@ const MIME: Record<string, string> = {
   ".mkv": "video/x-matroska",
 };
 
-function videoRoot(): string {
-  return (
-    process.env.LESSON_MEDIA_ROOT ??
-    path.join(process.cwd(), "uploads", "lesson-videos")
-  );
-}
-
-function readableToWeb(stream: Readable): ReadableStream<Uint8Array> {
-  // Node 18+: built-in helper. Falls back to a manual adapter on older runtimes.
-  const anyStream = stream as unknown as {
-    [Symbol.asyncIterator]?: () => AsyncIterableIterator<Buffer>;
-  };
-  if (typeof (Readable as unknown as { toWeb?: unknown }).toWeb === "function") {
-    return (Readable as unknown as {
-      toWeb: (s: Readable) => ReadableStream<Uint8Array>;
-    }).toWeb(stream);
-  }
-  return new ReadableStream<Uint8Array>({
-    async start(controller) {
-      try {
-        for await (const chunk of anyStream as AsyncIterable<Buffer>) {
-          controller.enqueue(new Uint8Array(chunk));
-        }
-        controller.close();
-      } catch (e) {
-        controller.error(e);
-      }
-    },
-  });
-}
-
 export async function GET(
   req: Request,
   { params }: { params: { file: string } },
 ) {
   const file = params.file;
-  if (!/^[a-zA-Z0-9._-]+$/.test(file) || file.includes("..")) {
+  if (!isSafeFilename(file)) {
     return new NextResponse("forbidden", { status: 403 });
   }
 
-  const root = videoRoot();
-  const abs = path.normalize(path.join(root, file));
-  if (!abs.startsWith(root + path.sep) && abs !== path.join(root, file)) {
-    return new NextResponse("forbidden", { status: 403 });
-  }
+  const resolved = await resolveWithLegacy(
+    lessonVideoKeyFromFilename(file),
+    "lesson-videos",
+    file,
+  );
+  if (!resolved) return new NextResponse("not_found", { status: 404 });
 
-  let stat;
-  try {
-    stat = await fs.stat(abs);
-  } catch {
-    return new NextResponse("not_found", { status: 404 });
-  }
-  if (!stat.isFile()) return new NextResponse("not_found", { status: 404 });
-
-  const ext = path.extname(abs).toLowerCase();
+  const ext = path.extname(file).toLowerCase();
   const mime = MIME[ext] ?? "application/octet-stream";
-  const total = stat.size;
 
-  const range = req.headers.get("range");
-  if (range) {
-    // bytes=START-END  (END optional)
-    const m = /^bytes=(\d+)-(\d+)?$/.exec(range);
-    if (!m) {
-      return new NextResponse("invalid_range", {
-        status: 416,
-        headers: { "content-range": `bytes */${total}` },
-      });
-    }
-    const start = Number(m[1]);
-    const end = m[2] ? Number(m[2]) : total - 1;
-    if (
-      Number.isNaN(start) ||
-      Number.isNaN(end) ||
-      start > end ||
-      start >= total
-    ) {
-      return new NextResponse("invalid_range", {
-        status: 416,
-        headers: { "content-range": `bytes */${total}` },
-      });
-    }
-    const clampedEnd = Math.min(end, total - 1);
-    const chunkSize = clampedEnd - start + 1;
-    const stream = createReadStream(abs, { start, end: clampedEnd });
-    return new NextResponse(readableToWeb(stream), {
-      status: 206,
-      headers: {
-        "content-type": mime,
-        "content-length": String(chunkSize),
-        "content-range": `bytes ${start}-${clampedEnd}/${total}`,
-        "accept-ranges": "bytes",
-        "cache-control": "public, max-age=604800, immutable",
-      },
-    });
+  // Local FS → stream with Range support (essential for video scrubbing).
+  // S3 → buffer and return 200; switch to redirect-to-signed-URL when we
+  // move public assets onto a CDN.
+  if (resolved.absPath) {
+    return streamWithRange(resolved.absPath, mime, req);
   }
-
-  // Full-file response — still advertise Range so the browser can use it next.
-  const stream = createReadStream(abs);
-  return new NextResponse(readableToWeb(stream), {
+  const buf = await resolved.get();
+  return new NextResponse(new Uint8Array(buf), {
     headers: {
       "content-type": mime,
-      "content-length": String(total),
+      "content-length": String(buf.length),
       "accept-ranges": "bytes",
       "cache-control": "public, max-age=604800, immutable",
     },

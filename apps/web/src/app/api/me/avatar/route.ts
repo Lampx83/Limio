@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
+import { getLayerStorage, storageFor } from "@/lib/storage";
+import { avatarKey, avatarKeyFromFilename } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
 
@@ -16,29 +16,25 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/gif": "gif",
 };
 
-function avatarRoot(): string {
-  return (
-    process.env.AVATAR_STORAGE_ROOT ??
-    path.join(process.cwd(), "uploads", "avatars")
-  );
-}
-
 /**
  * Best-effort delete of a previously uploaded avatar living under our
  * own /api/avatars/ namespace. Anything else (external URL, missing
- * file) is ignored.
+ * file) is ignored. Tries new sharded path first, then legacy flat path.
  */
 async function deletePreviousAvatar(prevUrl: string | null): Promise<void> {
-  if (!prevUrl) return;
-  if (!prevUrl.startsWith("/api/avatars/")) return; // external URL, leave it
+  if (!prevUrl || !prevUrl.startsWith("/api/avatars/")) return;
   const filename = prevUrl.replace(/^\/api\/avatars\//, "").split("?")[0];
   if (!filename || filename.includes("/") || filename.includes("\\")) return;
-  const fullPath = path.join(avatarRoot(), filename);
-  try {
-    await fs.unlink(fullPath);
-  } catch {
-    // not fatal — file may have been already removed
+  const sharded = avatarKeyFromFilename(filename);
+  if (sharded) {
+    await storageFor(sharded).delete(sharded.key);
   }
+  // Legacy fallback: pre-migration avatars sat in `uploads/avatars/<file>`.
+  // Now we keep them in the public layer for backward-compat reads, so the
+  // physical legacy path lives at `uploads/public/avatars/<file>` only if
+  // never migrated. Best-effort cleanup of both.
+  const publicAdapter = getLayerStorage("public");
+  await publicAdapter.delete(`avatars/${filename}`).catch(() => undefined);
 }
 
 export async function POST(req: Request) {
@@ -84,11 +80,9 @@ export async function POST(req: Request) {
   const ext = MIME_TO_EXT[file.type] ?? "bin";
   const suffix = randomBytes(6).toString("hex");
   const filename = `${userId}-${suffix}.${ext}`;
-  const root = avatarRoot();
-  await fs.mkdir(root, { recursive: true });
-  const fullPath = path.join(root, filename);
+  const key = avatarKey(userId, filename);
   const buf = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(fullPath, buf);
+  await storageFor(key).put(key.key, buf, file.type);
 
   const avatarUrl = `/api/avatars/${filename}`;
 

@@ -1,20 +1,13 @@
 import { randomBytes } from "node:crypto";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/session";
+import { storageFor } from "@/lib/storage";
+import { lessonPdfKey } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
 
 const MAX_PDF_MB = 50;
 const MAX_PDF_BYTES = MAX_PDF_MB * 1024 * 1024;
-
-function pdfRoot(): string {
-  return (
-    process.env.LESSON_PDF_ROOT ??
-    path.join(process.cwd(), "uploads", "lesson-pdfs")
-  );
-}
 
 export async function POST(req: Request) {
   const userId = await requireUserId();
@@ -53,12 +46,12 @@ export async function POST(req: Request) {
     );
   }
 
+  const now = new Date();
   const suffix = randomBytes(8).toString("hex");
-  const filename = `${userId}-${Date.now()}-${suffix}.pdf`;
-  const root = pdfRoot();
-  await fs.mkdir(root, { recursive: true });
+  const filename = `${userId}-${now.getTime()}-${suffix}.pdf`;
+  const key = lessonPdfKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(root, filename), buf);
+  await storageFor(key).put(key.key, buf, file.type);
 
   return NextResponse.json(
     {

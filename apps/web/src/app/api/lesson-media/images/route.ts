@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/session";
+import { storageFor } from "@/lib/storage";
+import { lessonImageKey } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
 
@@ -16,13 +16,6 @@ const ALLOWED_MIME: Record<string, string> = {
   "image/webp": "webp",
   "image/svg+xml": "svg",
 };
-
-function imgRoot(): string {
-  return (
-    process.env.LESSON_IMAGE_ROOT ??
-    path.join(process.cwd(), "uploads", "lesson-images")
-  );
-}
 
 export async function POST(req: Request) {
   const userId = await requireUserId();
@@ -56,12 +49,12 @@ export async function POST(req: Request) {
     );
   }
 
+  const now = new Date();
   const suffix = randomBytes(8).toString("hex");
-  const filename = `${userId}-${Date.now()}-${suffix}.${ext}`;
-  const root = imgRoot();
-  await fs.mkdir(root, { recursive: true });
+  const filename = `${userId}-${now.getTime()}-${suffix}.${ext}`;
+  const key = lessonImageKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(root, filename), buf);
+  await storageFor(key).put(key.key, buf, file.type);
 
   return NextResponse.json(
     {

@@ -11,7 +11,8 @@ import {
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
-import { getStorage } from "@/lib/storage";
+import { storageFor } from "@/lib/storage";
+import { examAssetKey } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
 
@@ -81,10 +82,12 @@ export async function POST(
 
   const examId = params.id;
   const ext = EXT_BY_MIME[file.type]!;
-  const filename = `${examId}-${Date.now()}-${randomBytes(8).toString("hex")}.${ext}`;
+  const now = new Date();
+  const filename = `${examId}-${now.getTime()}-${randomBytes(8).toString("hex")}.${ext}`;
+  const key = examAssetKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
-  const storage = getStorage("exam-assets");
-  await storage.put(filename, buf, file.type);
+  const storage = storageFor(key);
+  await storage.put(key.key, buf, file.type);
 
   try {
     const input = {
@@ -109,7 +112,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (e) {
-    await storage.delete(filename).catch(() => undefined);
+    await storage.delete(key.key).catch(() => undefined);
     if (e instanceof ExamError) {
       const mapped = mapKnownError(e);
       if (mapped) return mapped;
