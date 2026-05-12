@@ -4,6 +4,8 @@ import { prisma } from "@feedbackme/db";
 import { getCourseDetail, CourseError } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import EnrollButton from "@/components/EnrollButton";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
 
@@ -89,9 +91,10 @@ export default async function CourseDetailPage({
           <h1 className="mt-4 h-display text-3xl font-bold leading-tight sm:text-5xl">
             {course.title}
           </h1>
-          <p className="mt-4 max-w-2xl text-base text-white/90 sm:text-lg">
-            {course.description}
-          </p>
+          <SafeHtml
+            html={plainToRichHtml(course.description)}
+            className="prose prose-invert mt-4 max-w-2xl text-base text-white/90 sm:text-lg"
+          />
           {course.instructors.length > 0 && (
             <p className="mt-3 text-sm text-white/80">
               <span className="opacity-70">Giảng dạy bởi</span>{" "}

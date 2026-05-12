@@ -3,8 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+import SafeHtml from "@/components/SafeHtml";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 import {
   GENERATIVE_PRESETS,
   GENERATIVE_TYPE_OPTIONS,
@@ -32,7 +39,7 @@ export default function AssignmentSection({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(assignment.title);
-  const [description, setDescription] = useState(assignment.description);
+  const [description, setDescription] = useState(plainToRichHtml(assignment.description));
   const [dueAt, setDueAt] = useState(
     assignment.dueAt
       ? new Date(assignment.dueAt).toISOString().slice(0, 16)
@@ -124,7 +131,10 @@ export default function AssignmentSection({
                 {isHidden && <span className="chip-danger text-xs">👁️ Ẩn</span>}
               </div>
               {assignment.description && (
-                <p className="mt-2 text-sm text-muted">{assignment.description}</p>
+                <SafeHtml
+                  html={plainToRichHtml(assignment.description)}
+                  className="prose prose-sm mt-2 max-w-none text-muted dark:prose-invert"
+                />
               )}
             </div>
             <span className="shrink-0 text-right text-sm text-muted">
@@ -208,13 +218,7 @@ export default function AssignmentSection({
             required
             className="input"
           />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-            rows={3}
-            className="textarea"
-          />
+          <RichTextEditor value={description} onChange={setDescription} />
           <fieldset className="grid grid-cols-1 gap-1 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2 text-xs sm:grid-cols-3">
             <label className="flex items-center gap-2">
               <input

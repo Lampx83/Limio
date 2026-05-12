@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 export default function CreateTournamentForm({
   courses,
@@ -66,15 +71,13 @@ export default function CreateTournamentForm({
       </div>
       <div>
         <label className="label" htmlFor="t-desc">Mô tả</label>
-        <textarea
-          id="t-desc"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-          rows={4}
-          placeholder="Mục tiêu, luật chơi, phần thưởng..."
-          className="textarea mt-1.5"
-        />
+        <div className="mt-1.5">
+          <RichTextEditor
+            value={description}
+            onChange={setDescription}
+            placeholder="Mục tiêu, luật chơi, phần thưởng..."
+          />
+        </div>
       </div>
       <div>
         <label className="label" htmlFor="t-course">Khóa học</label>

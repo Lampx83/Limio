@@ -199,7 +199,7 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
                 className={`px-3 py-1.5 rounded-full text-white font-semibold bg-gradient-to-r ${WORD_COLORS[idx % WORD_COLORS.length]} transition-transform hover:scale-110`}
                 style={{ fontSize: `${getWordSize(freq, maxFrequency)}rem` }}
               >
-                {word} ({freq})
+                {word}
               </span>
             )) : (
               <p className="text-muted text-sm">Chưa có gửi nào...</p>
@@ -247,13 +247,13 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
                 </button>
               </div>
               <div className="md:col-span-2">
-                <p className="text-lg font-semibold text-center mb-6">{currentCloud.prompt}</p>
+                <p className="text-4xl md:text-5xl font-bold text-center mb-8 leading-tight">{currentCloud.prompt}</p>
                 <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
               </div>
             </div>
           ) : (
             <div className="mt-6">
-              <p className="text-lg font-semibold text-center mb-6">{currentCloud.prompt}</p>
+              <p className="text-4xl md:text-5xl font-bold text-center mb-8 leading-tight">{currentCloud.prompt}</p>
               <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
               {isStateless && (
                 <div className="mt-6 space-y-4">

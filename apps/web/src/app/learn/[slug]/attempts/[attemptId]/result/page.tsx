@@ -9,6 +9,8 @@ import {
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import FeedbackRater from "@/components/FeedbackRater";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
 
@@ -332,9 +334,10 @@ export default async function ResultPage({
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                       Giải thích
                     </p>
-                    <p className="mt-1.5 whitespace-pre-wrap text-sm">
-                      {item.explanation}
-                    </p>
+                    <SafeHtml
+                      html={plainToRichHtml(item.explanation)}
+                      className="prose prose-sm mt-1.5 max-w-none dark:prose-invert"
+                    />
                   </div>
                 )}
               </div>

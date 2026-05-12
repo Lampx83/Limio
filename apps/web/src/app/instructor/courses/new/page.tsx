@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 export default function NewCoursePage() {
   const [title, setTitle] = useState("");
@@ -69,15 +74,13 @@ export default function NewCoursePage() {
         </div>
         <div>
           <label className="label" htmlFor="description">Mô tả</label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-            rows={5}
-            placeholder="Khóa học này dành cho ai? Học xong sẽ làm được gì?"
-            className="textarea mt-1.5"
-          />
+          <div className="mt-1.5">
+            <RichTextEditor
+              value={description}
+              onChange={setDescription}
+              placeholder="Khóa học này dành cho ai? Học xong sẽ làm được gì?"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>

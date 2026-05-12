@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import EditQuestionForm from "./EditQuestionForm";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+import SafeHtml from "@/components/SafeHtml";
 
 interface Question {
   id: string;
@@ -93,9 +95,12 @@ export default function QuestionRow({
             </p>
           )}
           {question.explanation && (
-            <p className="mt-2 rounded-md bg-[rgb(var(--surface-muted))] px-2 py-1 text-xs italic text-muted">
-              {question.explanation}
-            </p>
+            <div className="mt-2 rounded-md bg-[rgb(var(--surface-muted))] px-2 py-1 italic">
+              <SafeHtml
+                html={plainToRichHtml(question.explanation)}
+                className="prose prose-sm max-w-none text-xs text-muted dark:prose-invert"
+              />
+            </div>
           )}
         </div>
 

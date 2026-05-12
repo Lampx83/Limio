@@ -2,8 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
 import SkillPicker from "./SkillPicker";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 interface Skill {
   id: string;
@@ -104,7 +110,7 @@ export default function QuestionEditor({
       s.shortAccepted = ((cfg.acceptedAnswers as string[]) ?? []).join("; ");
       s.shortMatchMode = (cfg.matchMode as State["shortMatchMode"]) ?? "case_insensitive";
     } else if (s.type === "essay") {
-      s.essayRubric = (cfg.rubric as string) ?? "";
+      s.essayRubric = plainToRichHtml((cfg.rubric as string) ?? "");
       s.essayMinWords = (cfg.minWords as number) ?? 0;
     }
     return s;
@@ -423,16 +429,17 @@ export default function QuestionEditor({
 
       {v.type === "essay" && (
         <div className="space-y-2 rounded border border-default bg-white p-3">
-          <label className="block">
+          <div>
             <span className="block text-sm font-medium">Rubric (tuỳ chọn)</span>
-            <textarea
-              rows={3}
-              value={v.essayRubric}
-              onChange={(e) => setV({ ...v, essayRubric: e.target.value })}
-              placeholder="Tiêu chí chấm bài…"
-              className="mt-1 w-full rounded border border-default px-2 py-1 text-sm"
-            />
-          </label>
+            <div className="mt-1">
+              <RichTextEditor
+                value={v.essayRubric}
+                onChange={(html) => setV({ ...v, essayRubric: html })}
+                placeholder="Tiêu chí chấm bài…"
+                minHeight={100}
+              />
+            </div>
+          </div>
           <label className="block">
             <span className="block text-sm font-medium">Số từ tối thiểu (0 = không yêu cầu)</span>
             <input

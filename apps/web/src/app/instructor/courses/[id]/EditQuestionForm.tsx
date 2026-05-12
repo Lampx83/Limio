@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 interface OptionDraft {
   label: string;
@@ -69,7 +75,7 @@ export default function EditQuestionForm({
   // ── scalar fields ──────────────────────────────────────────────────────────
   const [prompt, setPrompt] = useState(question.prompt);
   const [points, setPoints] = useState(question.points);
-  const [explanation, setExplanation] = useState(question.explanation ?? "");
+  const [explanation, setExplanation] = useState(plainToRichHtml(question.explanation ?? ""));
 
   // ── options ────────────────────────────────────────────────────────────────
   const [options, setOptions] = useState<OptionDraft[]>(() =>
@@ -395,12 +401,11 @@ export default function EditQuestionForm({
       )}
 
       {/* Explanation */}
-      <textarea
+      <RichTextEditor
         value={explanation}
-        onChange={(e) => setExplanation(e.target.value)}
-        rows={2}
+        onChange={setExplanation}
         placeholder="Giải thích (hiện trên result page, optional)"
-        className="textarea"
+        minHeight={100}
       />
 
       {/* Skills */}

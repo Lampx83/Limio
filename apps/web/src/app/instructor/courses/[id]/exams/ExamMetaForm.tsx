@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 interface InitialValues {
   title: string;
@@ -36,7 +42,10 @@ export default function ExamMetaForm({
   lockedFields,
 }: Props) {
   const router = useRouter();
-  const [v, setV] = useState<InitialValues>(initial);
+  const [v, setV] = useState<InitialValues>({
+    ...initial,
+    description: plainToRichHtml(initial.description),
+  });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -102,13 +111,12 @@ export default function ExamMetaForm({
         <label className="block text-sm font-medium" htmlFor="description">
           Mô tả (tuỳ chọn)
         </label>
-        <textarea
-          id="description"
-          rows={3}
-          value={v.description}
-          onChange={(e) => setV({ ...v, description: e.target.value })}
-          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
-        />
+        <div className="mt-1">
+          <RichTextEditor
+            value={v.description}
+            onChange={(html) => setV({ ...v, description: html })}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -2,7 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+import SafeHtml from "@/components/SafeHtml";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 interface Initial {
   title: string;
@@ -24,7 +31,7 @@ export default function CourseMetaForm({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(initial.title);
-  const [description, setDescription] = useState(initial.description);
+  const [description, setDescription] = useState(plainToRichHtml(initial.description));
   const [level, setLevel] = useState(initial.level);
   const [language, setLanguage] = useState(initial.language);
   const [category, setCategory] = useState(initial.category);
@@ -54,9 +61,10 @@ export default function CourseMetaForm({
           <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold leading-snug">{initial.title}</h3>
             {initial.description && (
-              <p className="mt-2 whitespace-pre-wrap text-sm text-muted leading-relaxed">
-                {initial.description}
-              </p>
+              <SafeHtml
+                html={plainToRichHtml(initial.description)}
+                className="prose prose-sm mt-2 max-w-none text-muted dark:prose-invert"
+              />
             )}
           </div>
           <button onClick={() => setOpen(true)} className="btn-secondary btn-sm shrink-0">
@@ -129,14 +137,9 @@ export default function CourseMetaForm({
       </div>
       <div>
         <label className="label" htmlFor="cm-desc">Mô tả</label>
-        <textarea
-          id="cm-desc"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={4}
-          className="textarea mt-1.5"
-          required
-        />
+        <div className="mt-1.5">
+          <RichTextEditor value={description} onChange={setDescription} />
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>

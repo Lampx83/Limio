@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -184,9 +186,10 @@ export default async function TournamentDetailPage({
           {tournament.description && (
             <section className="card">
               <h2 className="text-lg font-semibold">Mô tả</h2>
-              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted">
-                {tournament.description}
-              </p>
+              <SafeHtml
+                html={plainToRichHtml(tournament.description)}
+                className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+              />
             </section>
           )}
 
@@ -229,9 +232,10 @@ export default async function TournamentDetailPage({
                           </span>
                         </div>
                         {mission.description && (
-                          <p className="mt-1 text-sm text-muted">
-                            {mission.description}
-                          </p>
+                          <SafeHtml
+                            html={plainToRichHtml(mission.description)}
+                            className="prose prose-sm mt-1 max-w-none text-muted dark:prose-invert"
+                          />
                         )}
                         {mission.prerequisiteId && (
                           <p className="mt-1.5 text-xs text-faint">

@@ -2,6 +2,8 @@ import Link from "next/link";
 import LessonHeader from "./LessonHeader";
 import SkillTagsEditor from "./SkillTagsEditor";
 import LessonContent from "@/components/LessonContent";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 import ActivitySection from "./ActivitySection";
 
 interface Lesson {
@@ -219,9 +221,10 @@ export default function LessonSection({
                         )}
                       </span>
                     </div>
-                    <p className="mt-3 whitespace-pre-wrap text-sm text-muted">
-                      {a.description}
-                    </p>
+                    <SafeHtml
+                      html={plainToRichHtml(a.description)}
+                      className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+                    />
                   </li>
                 ))}
               </ul>

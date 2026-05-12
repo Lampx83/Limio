@@ -2,7 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 import {
   GENERATIVE_PRESETS,
   GENERATIVE_TYPE_OPTIONS,
@@ -75,8 +81,9 @@ export default function AddAssignmentForm({
   function applySuggestion(s: AiSuggestion) {
     applyPreset(s.type);
     setTitle(s.title);
-    setDescription(s.prompt);
-    lastPrefill.current = s.prompt;
+    const promptHtml = plainToRichHtml(s.prompt);
+    setDescription(promptHtml);
+    lastPrefill.current = promptHtml;
     setAiSuggestions(null);
   }
 
@@ -106,8 +113,9 @@ export default function AddAssignmentForm({
     }
     const preset = GENERATIVE_PRESETS[value];
     if (!description.trim() || description === lastPrefill.current) {
-      setDescription(preset.promptTemplate);
-      lastPrefill.current = preset.promptTemplate;
+      const tplHtml = plainToRichHtml(preset.promptTemplate);
+      setDescription(tplHtml);
+      lastPrefill.current = tplHtml;
     }
     if (!title.trim()) setTitle(preset.label);
     setRequireSelfRating(true);
@@ -235,13 +243,10 @@ export default function AddAssignmentForm({
         placeholder="Tiêu đề assignment"
         className="input"
       />
-      <textarea
+      <RichTextEditor
         value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        required
-        rows={4}
+        onChange={setDescription}
         placeholder="Mô tả nhiệm vụ..."
-        className="textarea"
       />
       <div className="flex flex-wrap gap-2">
         <label className="block flex-1">

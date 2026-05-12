@@ -2,8 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 export default function AddLessonForm({
   moduleId,
@@ -83,13 +88,11 @@ export default function AddLessonForm({
         placeholder="Tên lesson"
         className="input"
       />
-      <textarea
+      <RichTextEditor
         value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={2}
-        maxLength={2_000}
+        onChange={setDescription}
         placeholder="Mô tả ngắn (optional)"
-        className="textarea"
+        minHeight={80}
       />
       <div className="flex gap-2">
         <button type="submit" disabled={busy} className="btn-primary btn-sm">

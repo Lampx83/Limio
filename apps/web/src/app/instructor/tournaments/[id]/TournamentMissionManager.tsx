@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -173,7 +179,7 @@ export default function TournamentMissionManager({
                     <p className="font-medium">{m.title}</p>
                     {m.description && (
                       <p className="mt-0.5 line-clamp-2 text-xs text-muted">
-                        {m.description}
+                        {m.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
                       </p>
                     )}
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -279,7 +285,7 @@ function AddMissionForm({
       setConditionSkillCode("");
       // Pre-fill title from template if empty
       if (!title) setTitle(tmpl.name);
-      if (!desc) setDesc(tmpl.description);
+      if (!desc) setDesc(plainToRichHtml(tmpl.description));
     } else {
       setConditionValue("");
       setConditionMinScore("");
@@ -471,15 +477,14 @@ function AddMissionForm({
 
       <div>
         <label className="label text-xs" htmlFor="nm-desc">Mô tả</label>
-        <textarea
-          id="nm-desc"
-          value={desc}
-          onChange={(e) => setDesc(e.target.value)}
-          required
-          rows={2}
-          placeholder="Hướng dẫn cho học viên..."
-          className="textarea mt-1 text-sm"
-        />
+        <div className="mt-1">
+          <RichTextEditor
+            value={desc}
+            onChange={setDesc}
+            placeholder="Hướng dẫn cho học viên..."
+            minHeight={80}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

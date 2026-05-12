@@ -2,7 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 interface Initial {
   title: string;
@@ -27,7 +33,7 @@ export default function TournamentMetaForm({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(initial.title);
-  const [description, setDescription] = useState(initial.description);
+  const [description, setDescription] = useState(plainToRichHtml(initial.description));
   const [startsAt, setStartsAt] = useState(toDatetimeLocal(initial.startsAt));
   const [endsAt, setEndsAt] = useState(toDatetimeLocal(initial.endsAt));
   const [prizeXp, setPrizeXp] = useState(String(initial.prizeXp));
@@ -91,14 +97,9 @@ export default function TournamentMetaForm({
         <label className="label" htmlFor="tm-desc">
           Mô tả
         </label>
-        <textarea
-          id="tm-desc"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-          rows={4}
-          className="textarea mt-1.5"
-        />
+        <div className="mt-1.5">
+          <RichTextEditor value={description} onChange={setDescription} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

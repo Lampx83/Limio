@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 type QuestionType =
   | "mcq"
@@ -449,12 +454,11 @@ export default function AddQuestionForm({
         </label>
       )}
 
-      <textarea
+      <RichTextEditor
         value={explanation}
-        onChange={(e) => setExplanation(e.target.value)}
-        rows={2}
+        onChange={setExplanation}
         placeholder="Giải thích (hiện trên result page, optional)"
-        className="textarea"
+        minHeight={100}
       />
 
       <div>

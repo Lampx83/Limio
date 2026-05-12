@@ -2,9 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+import SafeHtml from "@/components/SafeHtml";
 import LessonMetaBar from "./LessonMetaBar";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 interface SkillTag {
   skillId: string;
@@ -49,7 +56,7 @@ export default function LessonHeader({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [t, setT] = useState(title);
-  const [d, setD] = useState(description ?? "");
+  const [d, setD] = useState(plainToRichHtml(description ?? ""));
   const [oi, setOi] = useState(orderIndex);
   const [previewable, setPreviewable] = useState(initialPreviewable);
   const [isHidden, setIsHidden] = useState(initialIsHidden);
@@ -139,12 +146,11 @@ export default function LessonHeader({
             />
           </label>
         </div>
-        <textarea
+        <RichTextEditor
           value={d}
-          onChange={(e) => setD(e.target.value)}
-          rows={2}
+          onChange={setD}
           placeholder="Mô tả ngắn"
-          className="textarea"
+          minHeight={100}
         />
         <div className="flex gap-2">
           <button type="submit" disabled={busy} className="btn-primary btn-sm">
@@ -180,7 +186,10 @@ export default function LessonHeader({
           modules={modules}
         />
         {description && (
-          <p className="pt-1 text-sm italic text-muted">{description}</p>
+          <SafeHtml
+            html={plainToRichHtml(description)}
+            className="prose prose-sm max-w-none pt-1 italic text-muted dark:prose-invert"
+          />
         )}
       </header>
     );
@@ -189,7 +198,12 @@ export default function LessonHeader({
   // Non-flat (preview list) — keep older TogglePill row.
   return (
     <header className="space-y-2">
-      {description && <p className="text-sm text-muted">{description}</p>}
+      {description && (
+        <SafeHtml
+          html={plainToRichHtml(description)}
+          className="prose prose-sm max-w-none text-muted dark:prose-invert"
+        />
+      )}
       <div className="flex flex-wrap items-center gap-1.5">
         <TogglePill
           active={isHidden}

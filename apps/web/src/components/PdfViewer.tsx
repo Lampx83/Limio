@@ -109,14 +109,6 @@ export default function PdfViewer({
 
       {!loading && !error && (
         <>
-          <div className="w-full overflow-auto rounded-xl border border-token shadow-card">
-            <canvas
-              ref={canvasRef}
-              className="mx-auto block"
-              aria-label={title ?? "PDF"}
-            />
-          </div>
-
           {totalPages > 1 && (
             <div className="flex items-center gap-3">
               <button
@@ -124,6 +116,7 @@ export default function PdfViewer({
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
                 className="btn-secondary btn-sm"
+                data-view-keep
               >
                 ← Trước
               </button>
@@ -135,11 +128,20 @@ export default function PdfViewer({
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
                 className="btn-secondary btn-sm"
+                data-view-keep
               >
                 Sau →
               </button>
             </div>
           )}
+
+          <div className="w-full overflow-auto rounded-xl border border-token shadow-card">
+            <canvas
+              ref={canvasRef}
+              className="mx-auto block"
+              aria-label={title ?? "PDF"}
+            />
+          </div>
 
           <a
             href={url}

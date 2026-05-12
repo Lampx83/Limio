@@ -15,6 +15,8 @@ import SkipLessonBanner from "@/components/SkipLessonBanner";
 import AssignmentSubmitForm from "@/components/AssignmentSubmitForm";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
 
@@ -116,7 +118,12 @@ export default async function LessonPage({
         <header className="mt-6">
           <span className="chip">{lesson.module.title}</span>
           <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">{lesson.title}</h1>
-          {lesson.description && <p className="mt-3 text-muted">{lesson.description}</p>}
+          {lesson.description && (
+            <SafeHtml
+              html={plainToRichHtml(lesson.description)}
+              className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+            />
+          )}
         </header>
         <div className="mt-8">
           <LessonContent
@@ -174,7 +181,10 @@ export default async function LessonPage({
           {lesson.title}
         </h1>
         {lesson.description && (
-          <p className="mt-3 text-muted">{lesson.description}</p>
+          <SafeHtml
+            html={plainToRichHtml(lesson.description)}
+            className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+          />
         )}
       </header>
 
@@ -260,9 +270,10 @@ export default async function LessonPage({
                       )}
                     </span>
                   </header>
-                  <p className="mt-3 whitespace-pre-wrap text-sm text-muted">
-                    {a.description}
-                  </p>
+                  <SafeHtml
+                    html={plainToRichHtml(a.description)}
+                    className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+                  />
                   {sub?.status === "graded" && (
                     <div className="mt-4 rounded-lg border border-success-100 bg-success-50 p-3">
                       <p className="text-sm font-semibold text-success-700">
