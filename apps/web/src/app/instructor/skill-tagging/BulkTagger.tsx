@@ -96,7 +96,7 @@ export default function BulkTagger({
       for (const r of body.results as Result[]) {
         initial[r.id] = {};
         for (const s of r.suggestions) {
-          initial[r.id][s.skillId] = s.confidence >= AUTO_PICK_THRESHOLD;
+          initial[r.id]![s.skillId] = s.confidence >= AUTO_PICK_THRESHOLD;
         }
       }
       setPicks(initial);
@@ -301,8 +301,8 @@ export default function BulkTagger({
         </div>
       )}
 
-      {/* Review panel */}
-      {phase === "review" && (
+      {/* Review panel — visible during "review" and while "applying" (spinner on Apply button) */}
+      {(phase === "review" || phase === "applying") && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/40 dark:bg-amber-950/10">
           <header className="flex items-baseline justify-between border-b border-amber-200 pb-3 dark:border-amber-900/40">
             <h3 className="font-semibold">

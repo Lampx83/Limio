@@ -69,7 +69,7 @@ const QUESTIONS = [
 async function ensureLearner(displayName: string): Promise<string> {
   const existing = await prisma.user.findFirst({ where: { displayName } });
   if (existing) return existing.id;
-  const email = `${displayName.split(" ")[0].toLowerCase()}.demo+${Date.now()}@feedbackme.dev`;
+  const email = `${displayName.split(" ")[0]!.toLowerCase()}.demo+${Date.now()}@feedbackme.dev`;
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
   const learnerRole = await prisma.role.findUniqueOrThrow({
     where: { name: RoleName.Learner },
@@ -105,7 +105,7 @@ async function ensureLessonSkillTags(courseId: string, skillIds: string[]) {
       data: {
         contentType: "lesson",
         contentId: l.id,
-        skillId: pickedSkill,
+        skillId: pickedSkill!,
         coverageWeight: 1.0,
       },
     });
@@ -136,6 +136,7 @@ async function ensureQuiz(lessonId: string, courseId: string, skillIds: string[]
   if (existingQs === 0) {
     for (let i = 0; i < QUESTIONS.length; i++) {
       const q = QUESTIONS[i];
+      if (!q) continue;
       const created = await prisma.quizQuestion.create({
         data: {
           quizId: quiz.id,
@@ -159,7 +160,7 @@ async function ensureQuiz(lessonId: string, courseId: string, skillIds: string[]
                 }
               : undefined,
           skillTags: {
-            create: [{ skillId: skillIds[i % skillIds.length], weight: 1.0 }],
+            create: [{ skillId: skillIds[i % skillIds.length]!, weight: 1.0 }],
           },
         },
       });
@@ -274,6 +275,7 @@ async function seedAttemptAndAnswers(
 
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
+    if (!q) continue;
     totalPoints += q.points;
     const isEssay = q.type === "essay";
     if (isEssay && includeEssay === "skip") continue;
@@ -331,7 +333,7 @@ async function seedAttemptAndAnswers(
 async function runBktForAttempts(userIds: string[]) {
   // Lazy-import to avoid circular workspace deps when running standalone.
   const { updateLearnerStateFromAttempt } = await import(
-    "../../core-feedback/src/learnerState"
+    "@feedbackme/core-feedback"
   );
   let updated = 0;
   for (const userId of userIds) {
@@ -378,19 +380,19 @@ async function ensureForumThreads(lessonId: string, learnerIds: string[]) {
       title: "Có ai gợi ý sách về giao tiếp không?",
       daysAgo: 1,
       resolved: false,
-      author: learnerIds[0],
+      author: learnerIds[0]!,
     },
     {
       title: "Bài tập về xung đột có cần dài 200 từ không?",
       daysAgo: 4,
       resolved: false,
-      author: learnerIds[1],
+      author: learnerIds[1]!,
     },
     {
       title: "Cách áp dụng lắng nghe chủ động vào meeting công ty?",
       daysAgo: 10,
       resolved: true,
-      author: learnerIds[2],
+      author: learnerIds[2]!,
     },
   ];
 
@@ -413,7 +415,7 @@ async function ensureForumThreads(lessonId: string, learnerIds: string[]) {
       const post = await prisma.forumPost.create({
         data: {
           threadId: thread.id,
-          authorId: learnerIds[0],
+          authorId: learnerIds[0]!,
           body: "Mình thường dùng cách paraphrase trước khi phản hồi — rất hữu ích.",
         },
       });
@@ -435,8 +437,8 @@ async function main() {
     where: { instructors: { some: { userId: alice.id } } },
     include: { modules: { include: { lessons: { orderBy: { orderIndex: "asc" } } } } },
   });
-  const firstLesson = course.modules[0].lessons[0];
-  const secondLesson = course.modules[0].lessons[1] ?? firstLesson;
+  const firstLesson = course.modules[0]!.lessons[0]!;
+  const secondLesson = course.modules[0]!.lessons[1] ?? firstLesson;
 
   const skills = await prisma.skill.findMany({ take: 3, orderBy: { code: "asc" } });
   if (skills.length < 3) {
@@ -465,7 +467,7 @@ async function main() {
   // Enrollments with mixed enrolledAt.
   const enrollmentDays = [3, 5, 1, 8, 35, 60]; // last two are stale
   for (let i = 0; i < learnerIds.length; i++) {
-    await ensureEnrollment(learnerIds[i], course.id, enrollmentDays[i]);
+    await ensureEnrollment(learnerIds[i]!, course.id, enrollmentDays[i]!);
   }
 
   // Quiz attempts. Vary correctness + essay state per learner.
@@ -477,8 +479,8 @@ async function main() {
   }> = [
     { userId: bob.id, correctness: [true, true, true], daysAgo: 1, essay: "pending" },
     { userId: charlie.id, correctness: [true, false, true], daysAgo: 2, essay: "graded" },
-    { userId: extraIds[0], correctness: [true, true, false], daysAgo: 3, essay: "pending" },
-    { userId: extraIds[1], correctness: [false, true, true], daysAgo: 6, essay: "skip" },
+    { userId: extraIds[0]!, correctness: [true, true, false], daysAgo: 3, essay: "pending" },
+    { userId: extraIds[1]!, correctness: [false, true, true], daysAgo: 6, essay: "skip" },
     // Frank and Grace are stale — no attempts.
   ];
   for (const p of attemptPlans) {
@@ -489,15 +491,15 @@ async function main() {
 
   // Assignment submissions: 2 pending, 1 graded.
   await ensureAssignmentSubmission(assignment.id, bob.id, "submitted", 2);
-  await ensureAssignmentSubmission(assignment.id, extraIds[0], "submitted", 4);
+  await ensureAssignmentSubmission(assignment.id, extraIds[0]!, "submitted", 4);
   await ensureAssignmentSubmission(assignment.id, charlie.id, "graded", 5);
 
   // LearningEvents — recent lesson views from active learners; none from stale ones.
-  const activeLearners = [bob.id, charlie.id, extraIds[0], extraIds[1]];
+  const activeLearners = [bob.id, charlie.id, extraIds[0]!, extraIds[1]!];
   let eventCount = 0;
   for (const userId of activeLearners) {
     for (const lessonIdx of [0, 1, 2]) {
-      const lesson = course.modules[0].lessons[lessonIdx];
+      const lesson = course.modules[0]!.lessons[lessonIdx];
       if (!lesson) continue;
       await emitEvent(
         userId,

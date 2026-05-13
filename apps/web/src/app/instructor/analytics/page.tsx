@@ -43,7 +43,7 @@ export default async function InstructorAnalyticsPage({
   const selectedId =
     searchParams?.course && ownedCourses.some((c) => c.id === searchParams.course)
       ? searchParams.course
-      : ownedCourses[0].id;
+      : ownedCourses[0]!.id;
   const selected = ownedCourses.find((c) => c.id === selectedId)!;
 
   // ── Aggregate metrics ─────────────────────────────────────────────────
