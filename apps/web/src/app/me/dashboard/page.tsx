@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { getCourseProgress } from "@feedbackme/core-lms";
 import { getLearnerSkillStates } from "@feedbackme/core-feedback";
+import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 
@@ -59,6 +60,13 @@ export default async function LearnerDashboard() {
     where: { userId, eventType: LearningEventType.MisconceptionResolved },
     orderBy: { occurredAt: "desc" },
     take: 5,
+  });
+
+  const weeklyBoard = await getLeaderboard({
+    scope: "global",
+    period: "weekly",
+    viewerId: userId,
+    limit: 5,
   });
 
   // "Continue learning" — most-recent in-progress enrollment with lastLessonId.
@@ -312,6 +320,67 @@ export default async function LearnerDashboard() {
                 );
               })}
             </ul>
+          )}
+        </section>
+
+        {/* Weekly leaderboard widget */}
+        <section className="card">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">BXH tuần này</h2>
+            <Link href="/leaderboard" className="link text-sm">
+              Xem tất cả →
+            </Link>
+          </header>
+          {weeklyBoard.selfOptedOut ? (
+            <p className="mt-4 text-sm text-muted">
+              Bạn đang ẩn khỏi BXH.{" "}
+              <Link href="/me/settings" className="link">
+                Bật lại
+              </Link>
+              .
+            </p>
+          ) : weeklyBoard.entries.length === 0 ? (
+            <p className="mt-4 text-sm text-muted">Chưa có ai có XP tuần này.</p>
+          ) : (
+            <>
+              <ul className="mt-4 space-y-2">
+                {weeklyBoard.entries.map((e) => (
+                  <li
+                    key={e.userId}
+                    className={
+                      e.isYou
+                        ? "flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm"
+                        : "flex items-center gap-3 rounded-lg border border-token px-3 py-2 text-sm"
+                    }
+                  >
+                    <span className="w-6 text-center font-mono text-xs font-semibold tabular-nums text-faint">
+                      #{e.rank}
+                    </span>
+                    <span className="flex-1 truncate font-medium">
+                      {e.displayName}
+                      {e.isYou && (
+                        <span className="ml-2 chip-brand text-[10px]">Bạn</span>
+                      )}
+                    </span>
+                    <span className="font-mono text-xs font-semibold tabular-nums text-brand-700">
+                      {e.xp.toLocaleString("vi-VN")} XP
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {weeklyBoard.me &&
+                !weeklyBoard.entries.some((e) => e.isYou) && (
+                  <div className="mt-3 flex items-center gap-3 rounded-lg border border-dashed border-brand-200 bg-brand-50/50 px-3 py-2 text-sm">
+                    <span className="w-6 text-center font-mono text-xs font-semibold tabular-nums text-brand-700">
+                      #{weeklyBoard.me.rank}
+                    </span>
+                    <span className="flex-1 font-medium text-brand-700">Bạn</span>
+                    <span className="font-mono text-xs font-semibold tabular-nums text-brand-700">
+                      {weeklyBoard.me.xp.toLocaleString("vi-VN")} XP
+                    </span>
+                  </div>
+                )}
+            </>
           )}
         </section>
 

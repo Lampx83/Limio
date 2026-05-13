@@ -11,6 +11,20 @@ export async function getPaymentEnabled(): Promise<boolean> {
   return val === "true";
 }
 
+export const DEFAULT_FOOTER_TEXT =
+  "Thiết kế và phát triển bởi Cô giáo Huyền, Khoa Khoa học và Công nghệ Giáo dục, Đại học Bách Khoa Hà Nội";
+
+export async function getFooterSettings(): Promise<{ text: string; enabled: boolean }> {
+  const [text, enabled] = await Promise.all([
+    getSiteSetting("footer.text"),
+    getSiteSetting("footer.enabled"),
+  ]);
+  return {
+    text: text ?? DEFAULT_FOOTER_TEXT,
+    enabled: enabled !== "false",
+  };
+}
+
 export async function setSiteSetting(key: string, value: string): Promise<void> {
   await prisma.siteSetting.upsert({
     where: { key },

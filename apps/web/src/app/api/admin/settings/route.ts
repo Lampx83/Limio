@@ -5,7 +5,7 @@ import { getSiteSetting, setSiteSetting } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 
-const ALLOWED_KEYS = ["payment.enabled"] as const;
+const ALLOWED_KEYS = ["payment.enabled", "footer.text", "footer.enabled"] as const;
 type AllowedKey = (typeof ALLOWED_KEYS)[number];
 
 async function requireAdmin() {

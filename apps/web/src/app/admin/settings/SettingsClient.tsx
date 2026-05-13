@@ -44,11 +44,60 @@ function ToggleRow({
 
 export default function SettingsClient({
   initialPaymentEnabled,
+  initialFooterText,
+  initialFooterEnabled,
 }: {
   initialPaymentEnabled: boolean;
+  initialFooterText: string;
+  initialFooterEnabled: boolean;
 }) {
   const [paymentEnabled, setPaymentEnabled] = useState(initialPaymentEnabled);
+  const [footerText, setFooterText] = useState(initialFooterText);
+  const [footerEnabled, setFooterEnabled] = useState(initialFooterEnabled);
+  const [savedFooterText, setSavedFooterText] = useState(initialFooterText);
   const [pending, startTransition] = useTransition();
+
+  const footerDirty = footerText !== savedFooterText;
+
+  async function patchSettings(body: Record<string, string>) {
+    const res = await fetch(apiUrl("/api/admin/settings"), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.ok;
+  }
+
+  function toggleFooterEnabled(val: boolean) {
+    setFooterEnabled(val);
+    startTransition(async () => {
+      const ok = await patchSettings({ "footer.enabled": val ? "true" : "false" });
+      if (!ok) {
+        setFooterEnabled(!val);
+        toast.error("Cập nhật thất bại", { description: "Vui lòng thử lại." });
+      } else {
+        toast.success(val ? "Đã bật footer" : "Đã tắt footer");
+      }
+    });
+  }
+
+  function saveFooterText() {
+    const trimmed = footerText.trim();
+    if (trimmed.length > 500) {
+      toast.error("Nội dung quá dài", { description: "Tối đa 500 ký tự." });
+      return;
+    }
+    startTransition(async () => {
+      const ok = await patchSettings({ "footer.text": trimmed });
+      if (!ok) {
+        toast.error("Cập nhật thất bại", { description: "Vui lòng thử lại." });
+      } else {
+        setSavedFooterText(trimmed);
+        setFooterText(trimmed);
+        toast.success("Đã lưu nội dung footer");
+      }
+    });
+  }
 
   async function togglePayment(val: boolean) {
     setPaymentEnabled(val);
@@ -101,6 +150,66 @@ export default function SettingsClient({
             nhưng thanh toán thực tế chưa hoạt động. Cần cấu hình Stripe/VNPay trước khi thu tiền thật.
           </div>
         )}
+      </section>
+
+      {/* Footer section */}
+      <section className="card">
+        <header className="border-b border-token pb-4">
+          <h2 className="text-base font-semibold">Footer trang công khai</h2>
+          <p className="mt-1 text-xs text-muted">
+            Dòng thông tin hiển thị ở cuối các trang công khai và trang học viên. Không hiển thị trong
+            khu admin / instructor.
+          </p>
+        </header>
+
+        <div className="divide-y divide-token">
+          <ToggleRow
+            label="Hiển thị footer"
+            description={
+              footerEnabled
+                ? "Đang bật — footer hiển thị ở cuối các trang."
+                : "Đang tắt — footer bị ẩn hoàn toàn."
+            }
+            checked={footerEnabled}
+            onChange={toggleFooterEnabled}
+            disabled={pending}
+          />
+
+          <div className="py-4">
+            <label className="text-sm font-semibold" htmlFor="footer-text">
+              Nội dung footer
+            </label>
+            <p className="mt-0.5 text-xs text-muted">
+              Plain text, tối đa 500 ký tự. Hiển thị căn giữa ở cuối trang.
+            </p>
+            <textarea
+              id="footer-text"
+              value={footerText}
+              onChange={(e) => setFooterText(e.target.value)}
+              rows={3}
+              maxLength={500}
+              className="mt-2 w-full rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-muted">{footerText.length}/500</span>
+              <button
+                type="button"
+                onClick={saveFooterText}
+                disabled={pending || !footerDirty}
+                className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {pending ? "Đang lưu…" : "Lưu"}
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-muted">Xem trước</p>
+              <p className="mt-1 text-center text-sm text-muted">
+                {footerText.trim() || "(trống)"}
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

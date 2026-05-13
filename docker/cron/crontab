@@ -1,5 +1,7 @@
 # FeedBackMe scheduled jobs (replaces Vercel cron from apps/web/vercel.json)
 # Endpoints authenticate via Bearer ${CRON_SECRET}.
 0 0 * * *    /usr/local/bin/run.sh streak-grace-check
+# Ranking board — endpoint internally detects which periods just closed at VN midnight (daily always; weekly on Mon; monthly on day 1). Runs 5 min after streak job to spread DB load at 00:00 VN.
+5 0 * * *    /usr/local/bin/run.sh leaderboard-close
 */5 * * * *  /usr/local/bin/run.sh tournament-tick
 *    * * * *  /usr/local/bin/run.sh exam-autosubmit

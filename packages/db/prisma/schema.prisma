@@ -85,6 +85,8 @@ model User {
   groupMemberships     GroupMembership[]
   timerTemplates       TimerTemplate[]
 
+  leaderboardEntries   LeaderboardEntry[]
+
   @@index([createdAt])
 }
 
@@ -1137,6 +1139,39 @@ model UserQuestProgress {
 
   @@unique([userId, questId, periodKey])
   @@index([userId, periodKey])
+}
+
+
+// =====================================================================
+// Ranking board snapshots — written by `closePeriod` when a daily/weekly/
+// monthly window ends (VN+07). Top-N per (scope, courseId?, period,
+// periodKey) is persisted for history + rank-delta lookups; live ranking
+// during the open period is computed from XpTransaction directly.
+// =====================================================================
+
+model LeaderboardEntry {
+  id         String   @id @default(uuid())
+  // "global" | "course"
+  scope      String
+  // Set only when scope = "course".
+  courseId   String?
+  // "daily" | "weekly" | "monthly" | "all_time"
+  period     String
+  // VN+07 bucket key: yyyy-mm-dd | yyyy-'W'ww | yyyy-mm | "all_time"
+  periodKey  String
+  userId     String
+  rank       Int
+  xp         Int
+  capturedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Top-N read for a closed bucket.
+  @@index([scope, courseId, period, periodKey, rank])
+  // Look up "my rank yesterday" for delta.
+  @@index([userId, period, periodKey])
+  // Idempotent close: one row per (bucket, user).
+  @@unique([scope, courseId, period, periodKey, userId])
 }
 
 

@@ -292,10 +292,16 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
           <section className="card">
             <div className="flex items-baseline justify-between">
               <h2 className="text-base font-semibold">BXH tuần</h2>
-              <span className="text-xs text-faint">
-                {leaderboard.totalParticipants} người
-              </span>
+              <Link
+                href={`/leaderboard?scope=course&courseId=${course.id}`}
+                className="link text-xs"
+              >
+                Đầy đủ →
+              </Link>
             </div>
+            <p className="mt-0.5 text-xs text-faint">
+              {leaderboard.totalParticipants} người tham gia
+            </p>
             {leaderboard.selfOptedOut && (
               <p className="mt-2 text-xs text-faint">
                 Bạn đã tắt BXH. Bật lại trong{" "}

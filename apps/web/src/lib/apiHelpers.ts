@@ -36,7 +36,9 @@ export function mapKnownError(err: unknown): NextResponse | null {
         ? 404
         : err.code === "skill_code_taken"
           ? 409
-          : 400;
+          : err.code === "skill_in_use"
+            ? 409
+            : 400;
     return NextResponse.json(
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },

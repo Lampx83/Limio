@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSkill, listSkills } from "@feedbackme/core-lms";
-import { requireUserId } from "@/lib/session";
+import { requireAdmin, requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
 export async function GET(req: Request) {
@@ -15,6 +15,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const adminId = await requireAdmin();
+  if (!adminId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = await readJson(req);
   try {
     const result = await createSkill(body);

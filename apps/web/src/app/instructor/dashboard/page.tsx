@@ -1,22 +1,54 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { isAdmin } from "@feedbackme/core-lms";
-import { getTemplateRatingStats } from "@feedbackme/core-feedback";
+import { getInstructorSkillCoverage } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_TONE: Record<string, string> = {
-  draft: "chip-accent",
-  published: "chip-success",
-  archived: "chip",
+const ESSAY_STALE_HOURS = 48;
+const ASSIGNMENT_STALE_HOURS = 24;
+const FORUM_STALE_HOURS = 48;
+const LEARNER_STALE_DAYS = 14;
+const ACTIVITY_FEED_HOURS = 72;
+const ACTIVITY_FEED_LIMIT = 12;
+
+type Priority = "high" | "med" | "low";
+
+interface PriorityItem {
+  id: string;
+  priority: Priority;
+  title: string;
+  detail: string;
+  href: string;
+  count: number;
+}
+
+const PRIORITY_ORDER: Record<Priority, number> = { high: 0, med: 1, low: 2 };
+const PRIORITY_STYLES: Record<Priority, { chip: string; dot: string }> = {
+  high: { chip: "chip-danger", dot: "bg-danger-500" },
+  med: { chip: "chip-accent", dot: "bg-amber-500" },
+  low: { chip: "chip", dot: "bg-[rgb(var(--text-faint))]" },
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: "Nháp",
-  published: "Đã publish",
-  archived: "Lưu trữ",
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Chào buổi sáng";
+  if (h < 18) return "Chào buổi chiều";
+  return "Chào buổi tối";
+}
+
+const EVENT_LABEL: Record<string, (payload: Record<string, unknown>) => string> = {
+  "lesson.viewed": () => "đã xem 1 bài học",
+  "lesson.completed": () => "hoàn thành 1 bài học",
+  "quiz.submitted": () => "nộp 1 bài quiz",
+  "quiz.question.answered": () => "trả lời 1 câu hỏi",
+  "assignment.submitted": () => "nộp 1 assignment",
+  "assignment.graded": () => "đã được chấm assignment",
+  "forum.posted": () => "đăng câu hỏi mới trong forum",
+  "forum.answered": () => "trả lời 1 thread forum",
+  "enrollment.created": () => "ghi danh khoá học",
+  "course.completed": () => "🎉 hoàn thành khoá học",
 };
 
 export default async function InstructorDashboard() {
@@ -24,30 +56,28 @@ export default async function InstructorDashboard() {
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/dashboard");
   const userId = session.user.id;
 
-  const [admin, ownedCourses] = await Promise.all([
-    isAdmin(userId),
-    prisma.course.findMany({
-      where: { instructors: { some: { userId } } },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        status: true,
-        _count: { select: { enrollments: true, modules: true } },
-      },
-      orderBy: { updatedAt: "desc" },
-    }),
-  ]);
+  const ownedCourses = await prisma.course.findMany({
+    where: { instructors: { some: { userId } } },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      status: true,
+      _count: { select: { enrollments: true } },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
 
-  if (!admin && ownedCourses.length === 0) {
+  if (ownedCourses.length === 0) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <div className="rounded-2xl border border-accent-200 bg-accent-50 p-5">
+        <h1 className="h-display text-3xl font-bold">{greeting()}</h1>
+        <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
           <p className="text-sm font-semibold text-accent-700">
-            Bạn chưa phải instructor của khóa nào.
+            Bạn chưa là instructor của khoá nào.
           </p>
           <Link href="/instructor/courses/new" className="btn-primary mt-4 inline-flex">
-            + Tạo khóa đầu tiên
+            + Tạo khoá đầu tiên
           </Link>
         </div>
       </main>
@@ -55,58 +85,207 @@ export default async function InstructorDashboard() {
   }
 
   const courseIds = ownedCourses.map((c) => c.id);
-
-  const [pendingEssays, pendingSubmissions, recentForumThreads, aiUsageWeek, templateStats] =
-    await Promise.all([
-      prisma.answerResponse.count({
-        where: {
-          needsGrading: true,
-          manualScore: null,
-          attempt: { quiz: { courseId: { in: courseIds } } },
-        },
-      }),
-      prisma.assignmentSubmission.count({
-        where: {
-          status: "submitted",
-          assignment: { lesson: { module: { courseId: { in: courseIds } } } },
-        },
-      }),
-      prisma.forumThread.findMany({
-        where: {
-          lesson: { module: { courseId: { in: courseIds } } },
-          resolvedPostId: null,
-        },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        include: {
-          author: { select: { displayName: true } },
-          lesson: {
-            select: {
-              title: true,
-              module: { select: { course: { select: { slug: true } } } },
-            },
-          },
-        },
-      }),
-      prisma.aiUsageLog.findMany({
-        where: {
-          userId,
-          dayKey: {
-            gte: new Date(Date.now() - 7 * 24 * 3600 * 1000)
-              .toISOString()
-              .slice(0, 10),
-          },
-        },
-      }),
-      getTemplateRatingStats(),
-    ]);
-
-  const aiCostWeek = aiUsageWeek.reduce((s, l) => s + l.costUsd, 0);
-  const aiTokensWeek = aiUsageWeek.reduce(
-    (s, l) => s + l.tokensInput + l.tokensOutput,
-    0,
+  const now = Date.now();
+  const essayCutoff = new Date(now - ESSAY_STALE_HOURS * 3600 * 1000);
+  const assignmentCutoff = new Date(now - ASSIGNMENT_STALE_HOURS * 3600 * 1000);
+  const forumCutoff = new Date(now - FORUM_STALE_HOURS * 3600 * 1000);
+  const learnerStaleCutoff = new Date(
+    now - LEARNER_STALE_DAYS * 24 * 3600 * 1000,
   );
-  const totalStudents = ownedCourses.reduce((s, c) => s + c._count.enrollments, 0);
+  const activityCutoff = new Date(now - ACTIVITY_FEED_HOURS * 3600 * 1000);
+
+  // ── Compute priority queue items ──────────────────────────────────────
+  const [
+    staleEssays,
+    pendingEssaysTotal,
+    staleAssignments,
+    pendingAssignmentsTotal,
+    staleForumThreads,
+    activeEnrollments,
+    recentActivityEvents,
+  ] = await Promise.all([
+    prisma.answerResponse.count({
+      where: {
+        needsGrading: true,
+        manualScore: null,
+        answeredAt: { lt: essayCutoff },
+        attempt: { quiz: { courseId: { in: courseIds } } },
+      },
+    }),
+    prisma.answerResponse.count({
+      where: {
+        needsGrading: true,
+        manualScore: null,
+        attempt: { quiz: { courseId: { in: courseIds } } },
+      },
+    }),
+    prisma.assignmentSubmission.count({
+      where: {
+        status: "submitted",
+        submittedAt: { lt: assignmentCutoff },
+        assignment: { lesson: { module: { courseId: { in: courseIds } } } },
+      },
+    }),
+    prisma.assignmentSubmission.count({
+      where: {
+        status: "submitted",
+        assignment: { lesson: { module: { courseId: { in: courseIds } } } },
+      },
+    }),
+    prisma.forumThread.count({
+      where: {
+        resolvedPostId: null,
+        createdAt: { lt: forumCutoff },
+        lesson: { module: { courseId: { in: courseIds } } },
+      },
+    }),
+    prisma.enrollment.findMany({
+      where: { courseId: { in: courseIds }, status: "active" },
+      select: { userId: true, courseId: true },
+    }),
+    prisma.learningEvent.findMany({
+      where: {
+        courseId: { in: courseIds },
+        occurredAt: { gte: activityCutoff },
+      },
+      orderBy: { occurredAt: "desc" },
+      take: ACTIVITY_FEED_LIMIT,
+      select: {
+        id: true,
+        userId: true,
+        eventType: true,
+        occurredAt: true,
+        payload: true,
+        courseId: true,
+        user: { select: { displayName: true } },
+      },
+    }),
+  ]);
+
+  // Stale learners — active enrollments with no event in last LEARNER_STALE_DAYS.
+  let staleLearnerCount = 0;
+  if (activeEnrollments.length > 0) {
+    const recentActiveEvents = await prisma.learningEvent.groupBy({
+      by: ["userId", "courseId"],
+      where: {
+        userId: { in: activeEnrollments.map((e) => e.userId) },
+        courseId: { in: courseIds },
+        occurredAt: { gte: learnerStaleCutoff },
+      },
+      _max: { occurredAt: true },
+    });
+    const recentSet = new Set(
+      recentActiveEvents.map((e) => `${e.userId}:${e.courseId}`),
+    );
+    staleLearnerCount = activeEnrollments.filter(
+      (e) => !recentSet.has(`${e.userId}:${e.courseId}`),
+    ).length;
+  }
+
+  // Skill coverage gaps.
+  const coverage = await getInstructorSkillCoverage(userId);
+  const untaggedLiveLessons = coverage.totals.untaggedLiveLessons;
+  const untaggedLiveQuestions = coverage.totals.untaggedLiveQuestions;
+
+  // Build priority items list.
+  const items: PriorityItem[] = [];
+  if (staleEssays > 0) {
+    items.push({
+      id: "essays-stale",
+      priority: "high",
+      title: `${staleEssays} essay đã chờ > ${ESSAY_STALE_HOURS}h`,
+      detail: `Tổng ${pendingEssaysTotal} essay chờ chấm`,
+      href: "/instructor/grade-essays",
+      count: staleEssays,
+    });
+  } else if (pendingEssaysTotal > 0) {
+    items.push({
+      id: "essays-pending",
+      priority: "med",
+      title: `${pendingEssaysTotal} essay chờ chấm`,
+      detail: "Chấm tay theo từng response",
+      href: "/instructor/grade-essays",
+      count: pendingEssaysTotal,
+    });
+  }
+  if (staleForumThreads > 0) {
+    items.push({
+      id: "forum-stale",
+      priority: "high",
+      title: `${staleForumThreads} thread forum > ${FORUM_STALE_HOURS}h chưa giải đáp`,
+      detail: "Học viên đang chờ phản hồi từ bạn",
+      href: "/instructor/forum?status=stale",
+      count: staleForumThreads,
+    });
+  }
+  if (staleAssignments > 0) {
+    items.push({
+      id: "assignments-stale",
+      priority: "med",
+      title: `${staleAssignments} assignment đã chờ > ${ASSIGNMENT_STALE_HOURS}h`,
+      detail: `Tổng ${pendingAssignmentsTotal} chờ chấm`,
+      href: "/instructor/assignments?view=pending",
+      count: staleAssignments,
+    });
+  } else if (pendingAssignmentsTotal > 0) {
+    items.push({
+      id: "assignments-pending",
+      priority: "low",
+      title: `${pendingAssignmentsTotal} assignment chờ chấm`,
+      detail: "Stream theo nộp sớm nhất",
+      href: "/instructor/assignments?view=pending",
+      count: pendingAssignmentsTotal,
+    });
+  }
+  if (staleLearnerCount > 0) {
+    items.push({
+      id: "learners-stale",
+      priority: "med",
+      title: `${staleLearnerCount} học viên không hoạt động > ${LEARNER_STALE_DAYS} ngày`,
+      detail: "Cân nhắc gửi reminder hoặc check-in",
+      href: "/instructor/enrollments?status=stale",
+      count: staleLearnerCount,
+    });
+  }
+  if (untaggedLiveLessons > 0) {
+    items.push({
+      id: "skill-lessons",
+      priority: "low",
+      title: `${untaggedLiveLessons} lesson live chưa tag skill`,
+      detail: "Cần tag để BKT track mastery cho học viên",
+      href: "/instructor/skill-tagging",
+      count: untaggedLiveLessons,
+    });
+  }
+  if (untaggedLiveQuestions > 0) {
+    items.push({
+      id: "skill-questions",
+      priority: "low",
+      title: `${untaggedLiveQuestions} question live chưa tag skill`,
+      detail: "Câu hỏi chưa tag không feed vào BKT learner model",
+      href: "/instructor/skill-tagging",
+      count: untaggedLiveQuestions,
+    });
+  }
+
+  items.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+
+  // ── Context line for greeting ─────────────────────────────────────────
+  const highCount = items.filter((i) => i.priority === "high").length;
+  const totalLearners = ownedCourses.reduce((s, c) => s + c._count.enrollments, 0);
+  let contextLine: string;
+  if (highCount > 0) {
+    contextLine = `Có ${highCount} việc gấp cần xử lý hôm nay.`;
+  } else if (items.length > 0) {
+    contextLine = `Có ${items.length} việc cần xem qua khi rảnh.`;
+  } else {
+    contextLine = `Mọi thứ đang ổn. ${totalLearners} học viên trên ${ownedCourses.length} khoá của bạn.`;
+  }
+
+  // Activity feed deep links.
+  const courseSlugById = new Map(
+    ownedCourses.map((c) => [c.id, c.slug] as const),
+  );
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -116,266 +295,126 @@ export default async function InstructorDashboard() {
           Giảng viên
         </span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
-          Xin chào,{" "}
+          {greeting()},{" "}
           <span className="text-gradient">
             {session.user.name ?? session.user.email}
-          </span>{" "}
-                  </h1>
-        <p className="mt-2 text-muted">
-          Tổng quan {ownedCourses.length} khóa của bạn.
-        </p>
+          </span>
+        </h1>
+        <p className="mt-2 text-muted">{contextLine}</p>
       </header>
 
-      {/* Quick actions */}
-      <div className="mt-6 flex flex-wrap gap-2">
-        <Link
-          href="/instructor/exams"
-          className="btn-primary btn-sm"
-        >
-          🧪 Online Exam
-        </Link>
-        <Link
-          href="/instructor/teaching-tools"
-          className="btn-secondary btn-sm"
-        >
-          Công cụ Giảng dạy
-        </Link>
-        <Link
-          href="/instructor/feedback-generator"
-          className="btn-secondary btn-sm"
-        >
-          AI feedback gen
-        </Link>
-        <Link
-          href="/instructor/tournaments"
-          className="btn-secondary btn-sm"
-        >
-          Tournament
-        </Link>
-      </div>
-
-      {/* KPI cards */}
-      <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <Kpi label="Tổng học viên" value={totalStudents} icon="" tone="brand" />
-        <Kpi
-          label="Bài essay chờ chấm"
-          value={pendingEssays}
-          icon=""
-          tone={pendingEssays > 0 ? "accent" : "success"}
-        />
-        <Kpi
-          label="Assignment chờ chấm"
-          value={pendingSubmissions}
-          icon=""
-          tone={pendingSubmissions > 0 ? "accent" : "success"}
-        />
-        <Kpi
-          label="AI cost (7 ngày)"
-          value={`$${aiCostWeek.toFixed(4)}`}
-          sub={`${aiTokensWeek.toLocaleString()} tokens`}
-          icon=""
-          tone="brand"
-        />
-      </section>
-
-      <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        {/* Owned courses */}
-        <section className="card">
-          <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <Link
-              href="/instructor/courses"
-              className="text-base font-semibold transition-colors hover:text-brand-600"
-            >
-              Khóa của tôi
-            </Link>
-            <span className="text-xs text-faint">{ownedCourses.length}</span>
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        {/* Priority queue */}
+        <section className="lg:col-span-2">
+          <header className="flex items-baseline justify-between">
+            <h2 className="text-base font-semibold">
+              Cần xử lý gấp{" "}
+              <span className="text-xs font-normal text-faint">
+                ({items.length})
+              </span>
+            </h2>
+            <span className="text-xs text-faint">
+              Sắp theo độ ưu tiên
+            </span>
           </header>
-          <Link href="/instructor/courses/new" className="btn-primary btn-sm mt-4 block w-full text-center">
-            + Tạo khóa học
-          </Link>
-          <ul className="mt-4 space-y-3">
-            {ownedCourses.map((c) => (
-              <li
-                key={c.id}
-                className="rounded-xl border border-token p-3 transition-colors hover:border-brand-200"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <Link
-                    href={`/instructor/courses/${c.id}`}
-                    className="font-semibold transition-colors hover:text-brand-600"
-                  >
-                    {c.title}
-                  </Link>
-                  <span className={STATUS_TONE[c.status] ?? "chip"}>
-                    {STATUS_LABEL[c.status] ?? c.status}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-faint">
-                  {c._count.enrollments} học viên · {c._count.modules} modules
-                </p>
-                <div className="mt-3 flex flex-wrap gap-1">
-                  <a
-                    href={`/api/exports/instructor/courses/${c.id}/gradebook`}
-                    className="btn-ghost btn-sm"
-                  >
-                    Gradebook
-                  </a>
-                  <a
-                    href={`/api/exports/instructor/courses/${c.id}/submissions`}
-                    className="btn-ghost btn-sm"
-                  >
-                    Submissions
-                  </a>
-                  <Link
-                    href={`/instructor/courses/${c.id}/struggling-students`}
-                    className="btn-ghost btn-sm"
-                  >
-                    HV cần hỗ trợ
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+
+          {items.length === 0 ? (
+            <div className="mt-3 rounded-2xl border border-success-200 bg-success-50 p-8 text-center text-sm text-success-700">
+              🎉 Bạn không có việc gì gấp. Tận hưởng nhé.
+            </div>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {items.map((it) => {
+                const style = PRIORITY_STYLES[it.priority];
+                return (
+                  <li key={it.id}>
+                    <Link
+                      href={it.href}
+                      className="card-hover flex items-start gap-3 rounded-xl border border-token p-4 transition-colors hover:border-brand-200"
+                    >
+                      <span
+                        className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${style.dot}`}
+                        aria-hidden
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <p className="font-semibold">{it.title}</p>
+                          <span className={`${style.chip} text-[10px]`}>
+                            {it.priority === "high"
+                              ? "GẤP"
+                              : it.priority === "med"
+                                ? "MED"
+                                : "LOW"}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted">{it.detail}</p>
+                      </div>
+                      <span className="shrink-0 self-center text-sm text-faint">
+                        →
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
 
-        {/* Recent unresolved forum threads */}
-        <section className="card">
-          <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Forum chưa giải đáp</h2>
-            <span className="text-xs text-faint">{recentForumThreads.length}</span>
+        {/* Activity feed */}
+        <section className="lg:col-span-1">
+          <header className="flex items-baseline justify-between">
+            <h2 className="text-base font-semibold">Hoạt động gần đây</h2>
+            <span className="text-xs text-faint">{ACTIVITY_FEED_HOURS}h qua</span>
           </header>
-          {recentForumThreads.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">
-              Tất cả thread đã có người trả lời.
-            </p>
+
+          {recentActivityEvents.length === 0 ? (
+            <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center text-sm text-muted">
+              Chưa có hoạt động.
+            </div>
           ) : (
-            <ul className="mt-4 space-y-2">
-              {recentForumThreads.map((t) => (
-                <li
-                  key={t.id}
-                  className="rounded-lg border border-token p-3"
-                >
-                  <Link
-                    href={`/learn/${t.lesson.module.course.slug}/threads/${t.id}`}
-                    className="font-medium text-sm hover:text-brand-600"
+            <ul className="mt-3 space-y-2">
+              {recentActivityEvents.map((ev) => {
+                const label =
+                  EVENT_LABEL[ev.eventType]?.(
+                    ev.payload as Record<string, unknown>,
+                  ) ?? ev.eventType;
+                const slug = ev.courseId
+                  ? courseSlugById.get(ev.courseId)
+                  : undefined;
+                const href = slug ? `/learn/${slug}` : "/instructor/enrollments";
+                return (
+                  <li
+                    key={ev.id.toString()}
+                    className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-sm transition-colors hover:bg-[rgb(var(--surface-muted))]"
                   >
-                    {t.title}
-                  </Link>
-                  <p className="mt-1 text-xs text-faint">
-                    <span className="font-medium">{t.author.displayName}</span> ·
-                    bài &ldquo;{t.lesson.title}&rdquo; ·{" "}
-                    {new Date(t.createdAt).toLocaleDateString("vi-VN")}
-                  </p>
-                </li>
-              ))}
+                    <Link href={href} className="block">
+                      <p className="line-clamp-2">
+                        <span className="font-medium">
+                          {ev.user?.displayName ?? "—"}
+                        </span>{" "}
+                        <span className="text-muted">{label}</span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-faint">
+                        {formatAgo(ev.occurredAt)}
+                      </p>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
       </div>
-
-      {/* Feedback Quality Stats - Preview */}
-      {templateStats.length > 0 && (
-        <section className="mt-10">
-          <header className="flex items-baseline justify-between border-b border-token pb-3 mb-4">
-            <h2 className="text-base font-semibold">Chất lượng feedback templates</h2>
-            <Link
-              href="/instructor/feedback-templates"
-              className="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1"
-            >
-              Xem chi tiết <span className="text-lg">→</span>
-            </Link>
-          </header>
-
-          {/* Show only first 5 templates as preview */}
-          <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
-            <table className="w-full text-sm">
-              <thead className="bg-[rgb(var(--surface-muted))]">
-                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
-                  <th className="px-4 py-3">Scope</th>
-                  <th className="px-4 py-3">Body (snippet)</th>
-                  <th className="px-4 py-3 text-right">Đã gửi</th>
-                  <th className="px-4 py-3 text-right">Đã rate</th>
-                  <th className="px-4 py-3 text-right">👍</th>
-                  <th className="px-4 py-3 text-right">👎</th>
-                  <th className="px-4 py-3 text-right">Net</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-token">
-                {templateStats.slice(0, 5).map((s) => (
-                  <tr
-                    key={s.templateId}
-                    className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
-                  >
-                    <td className="px-4 py-3 align-top">
-                      <span className="chip">{s.scope}</span>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <p className="line-clamp-2 max-w-md text-sm">{s.body}</p>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums align-top">
-                      {s.totalDelivered}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-faint align-top">
-                      {s.totalRated}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-success-600 align-top">
-                      {s.thumbsUp}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-danger-600 align-top">
-                      {s.thumbsDown}
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-right tabular-nums font-semibold align-top ${
-                        s.netScore < 0
-                          ? "text-danger-600"
-                          : s.netScore > 0
-                            ? "text-success-600"
-                            : "text-faint"
-                      }`}
-                    >
-                      {s.netScore > 0 ? "+" : ""}
-                      {s.netScore}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
     </main>
   );
 }
 
-function Kpi({
-  label,
-  value,
-  sub,
-  icon,
-  tone,
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon: string;
-  tone: "brand" | "success" | "accent" | "danger";
-}) {
-  const toneClass = {
-    brand: "text-brand-600",
-    success: "text-success-600",
-    accent: "text-accent-600",
-    danger: "text-danger-600",
-  }[tone];
-  return (
-    <div className="card">
-      <div className="flex items-baseline justify-between">
-        <span className="text-xl">{icon}</span>
-        <span className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
-          {value}
-        </span>
-      </div>
-      <div className="mt-1 text-xs text-muted sm:text-sm">{label}</div>
-      {sub && <div className="mt-0.5 text-xs text-faint">{sub}</div>}
-    </div>
-  );
+function formatAgo(d: Date | string): string {
+  const ms = Date.now() - new Date(d).getTime();
+  const mins = ms / (1000 * 60);
+  if (mins < 1) return "vừa xong";
+  if (mins < 60) return `${Math.round(mins)}m trước`;
+  const hrs = mins / 60;
+  if (hrs < 24) return `${Math.round(hrs)}h trước`;
+  return `${Math.round(hrs / 24)}d trước`;
 }

@@ -1,10 +1,13 @@
-import { getPaymentEnabled } from "@/lib/site-settings";
+import { getPaymentEnabled, getFooterSettings } from "@/lib/site-settings";
 import SettingsClient from "./SettingsClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
-  const paymentEnabled = await getPaymentEnabled();
+  const [paymentEnabled, footer] = await Promise.all([
+    getPaymentEnabled(),
+    getFooterSettings(),
+  ]);
 
   return (
     <div>
@@ -14,7 +17,11 @@ export default async function AdminSettingsPage() {
         <p className="mt-1 text-sm text-muted">Cấu hình toàn cục — chỉ admin mới thấy trang này.</p>
       </div>
 
-      <SettingsClient initialPaymentEnabled={paymentEnabled} />
+      <SettingsClient
+        initialPaymentEnabled={paymentEnabled}
+        initialFooterText={footer.text}
+        initialFooterEnabled={footer.enabled}
+      />
     </div>
   );
 }

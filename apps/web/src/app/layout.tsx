@@ -5,6 +5,8 @@ import AppHeader from "@/components/AppHeader";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
 import Toaster from "@/components/Toaster";
 import { Providers } from "@/components/Providers";
+import Footer from "@/components/Footer";
+import FooterGate from "@/components/FooterGate";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -45,11 +47,14 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
-      <body className="min-h-screen">
+      <body className="flex min-h-screen flex-col">
         <Providers>
           <ImpersonationBanner />
           <AppHeader />
-          {children}
+          <div className="flex flex-1 flex-col">{children}</div>
+          <FooterGate>
+            <Footer />
+          </FooterGate>
           <Toaster />
         </Providers>
       </body>
