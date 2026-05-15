@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { BookOpen } from "lucide-react";
 
 type Bank = {
   id: string;
@@ -156,7 +157,7 @@ export default function BankListClient({
                 </div>
                 <div className="mt-1 text-xs text-faint">
                   {b.questionCount} câu hỏi
-                  {b.courseTitle ? ` · 📚 ${b.courseTitle}` : ""}
+                  {b.courseTitle ? <> · <BookOpen className="inline h-3 w-3 align-text-bottom text-slate-400" /> {b.courseTitle}</> : ""}
                 </div>
                 {b.description && (
                   <p className="mt-2 text-sm text-slate-600">{b.description}</p>
