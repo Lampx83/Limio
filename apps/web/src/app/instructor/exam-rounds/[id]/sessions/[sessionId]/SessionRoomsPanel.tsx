@@ -120,7 +120,7 @@ export default function SessionRoomsPanel({
         {canEdit && (
           <button
             onClick={() => setShowBulk(true)}
-            className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
           >
             + Thêm phòng thi
           </button>
@@ -504,7 +504,7 @@ function InlineProctorCell({
             type="button"
             onClick={submitInvite}
             disabled={busy || !inviteName.trim()}
-            className="rounded bg-amber-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             Gửi lời mời
           </button>
@@ -551,7 +551,7 @@ function InlineProctorCell({
           type="button"
           onClick={commit}
           disabled={busy || !email.trim()}
-          className="rounded bg-amber-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          className="rounded bg-brand-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           OK
         </button>
@@ -693,7 +693,7 @@ function BulkCreateDialog({
           <button
             onClick={submit}
             disabled={busy}
-            className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy ? "Đang tạo..." : `Tạo ${count} phòng`}
           </button>
@@ -791,7 +791,7 @@ function RoomDetailDialog({
           <button
             onClick={submit}
             disabled={busy}
-            className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy ? "Đang lưu..." : "Lưu"}
           </button>

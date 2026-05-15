@@ -193,7 +193,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
               <button
                 type="button"
                 onClick={close}
-                className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white"
+                className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white"
               >
                 Xong
               </button>
@@ -211,7 +211,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
                   type="button"
                   onClick={runConfirm}
                   disabled={loading || importableCount === 0}
-                  className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                 >
                   {loading ? "Đang import…" : `Import ${importableCount} câu`}
                 </button>
@@ -261,7 +261,7 @@ function Upload({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
-          className="rounded bg-amber-600 px-3 py-1.5 font-medium text-white disabled:opacity-50"
+          className="rounded bg-brand-600 px-3 py-1.5 font-medium text-white disabled:opacity-50"
         >
           {loading ? "Đang phân tích…" : <><UploadIcon className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Chọn file Excel</>}
         </button>

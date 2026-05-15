@@ -304,7 +304,7 @@ export default function CandidatesPanel({
           <button
             onClick={onOpenSendPreview}
             disabled={busy !== null || !rows || rows.length === 0}
-            className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy === "preview" ? "..." : <><Mail className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Gửi mã qua email</>}
           </button>
@@ -624,7 +624,7 @@ function EmailPreviewModal({
           <button
             onClick={onConfirm}
             disabled={busy}
-            className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy ? "Đang gửi..." : `Gửi cho ${data.recipients} thí sinh`}
           </button>
@@ -697,7 +697,7 @@ Trần Thị B,b@example.com,K65-002,K65-DSAI`}
         <button
           onClick={onImport}
           disabled={!text.trim()}
-          className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           Import
         </button>

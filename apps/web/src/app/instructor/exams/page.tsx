@@ -94,7 +94,7 @@ export default async function InstructorExamsHubPage() {
         </div>
         <Link
           href="/instructor/exams/new"
-          className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           + Tạo bài thi mới
         </Link>

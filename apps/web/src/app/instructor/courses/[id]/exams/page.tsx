@@ -73,7 +73,7 @@ export default async function InstructorExamsPage({
         </div>
         <Link
           href={`/instructor/courses/${course.id}/exams/new`}
-          className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white"
         >
           + Tạo bài thi
         </Link>

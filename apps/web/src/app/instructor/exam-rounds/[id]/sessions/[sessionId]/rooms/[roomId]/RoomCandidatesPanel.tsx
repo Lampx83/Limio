@@ -140,7 +140,7 @@ export default function RoomCandidatesPanel({
         {canEdit && (
           <button
             onClick={() => setShowAdd(true)}
-            className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
           >
             + Thêm thí sinh
           </button>
@@ -175,7 +175,7 @@ export default function RoomCandidatesPanel({
               <button
                 onClick={doMove}
                 disabled={busy || !moveTargetId}
-                className="rounded bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                className="rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 Chuyển
               </button>
@@ -769,7 +769,7 @@ function AddCandidatesDialog({
                   : submitCopy
             }
             disabled={busy}
-            className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy
               ? mode === "copy"

@@ -156,7 +156,7 @@ export default function AdminsPanel({
             <button
               onClick={onAdd}
               disabled={busy}
-              className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+              className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
               Thêm
             </button>

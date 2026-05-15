@@ -73,7 +73,7 @@ export default function SectionsPanel({ examId }: { examId: string }) {
         </div>
         <button
           onClick={() => setShowAdd((s) => !s)}
-          className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
         >
           {showAdd ? "Đóng" : "+ Thêm section"}
         </button>
@@ -294,7 +294,7 @@ function AddSectionForm({
         <button
           type="submit"
           disabled={busy || !title.trim()}
-          className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {busy ? "..." : "Tạo section"}
         </button>

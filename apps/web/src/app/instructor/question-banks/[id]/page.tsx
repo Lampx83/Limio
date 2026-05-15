@@ -33,7 +33,7 @@ export default async function QuestionBankWorkbenchPage({
   });
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-[1400px] px-6 py-10">
       <Link
         href="/instructor/question-banks"
         className="text-sm text-blue-600 hover:underline"

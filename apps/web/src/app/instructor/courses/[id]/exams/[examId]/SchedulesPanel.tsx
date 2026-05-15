@@ -66,7 +66,7 @@ export default function SchedulesPanel({
         </div>
         <button
           onClick={() => setShowAdd((s) => !s)}
-          className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
         >
           {showAdd ? "Đóng" : "+ Thêm lịch"}
         </button>
@@ -278,7 +278,7 @@ function AddScheduleForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {submitting ? "..." : "Tạo lịch"}
         </button>

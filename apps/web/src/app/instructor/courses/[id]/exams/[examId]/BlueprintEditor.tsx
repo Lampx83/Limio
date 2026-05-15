@@ -258,7 +258,7 @@ export default function BlueprintEditor({
           <button
             onClick={handleAssemble}
             disabled={assembling || totalCount === 0 || selectedLessons.size === 0}
-            className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {assembling ? "Đang tạo..." : "Tạo pool từ blueprint"}
           </button>
