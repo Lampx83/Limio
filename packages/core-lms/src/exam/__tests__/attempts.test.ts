@@ -352,4 +352,50 @@ describe("shuffle snapshot", () => {
     expect(snap1).toBeTruthy();
     expect(snap2).toBeTruthy();
   });
+
+  it("questions inside a passage are NEVER shuffled — always orderInPassage", async () => {
+    // Pedagogical guarantee: questions clustered under a reading passage
+    // follow the reading's structure. Shuffle only applies to standalone
+    // questions. (Option B — chosen 2026-05-16.)
+    const { ownerId, examId, passageId, q1Id, q2Id, learnerId } =
+      await publishedExamSetup("sh-passage-fixed");
+    // Force shuffleQuestions=true on the exam.
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { shuffleQuestions: true },
+    });
+    void ownerId;
+
+    // Multiple attempts → same in-passage order every time.
+    const orders: string[][] = [];
+    for (let i = 0; i < 5; i++) {
+      const stranger = await registerUser(
+        {
+          email: `sh-passage-fixed-${i}@e.com`,
+          password: "password1234",
+          displayName: `U${i}`,
+        },
+        BASE,
+      );
+      const course = await prisma.exam.findUniqueOrThrow({
+        where: { id: examId },
+        select: { courseId: true },
+      });
+      await enrollInCourse(stranger.userId, course.courseId);
+      const a = await startExamAttempt(stranger.userId, examId);
+      const attempt = await prisma.examAttempt.findUniqueOrThrow({
+        where: { id: a.attemptId },
+      });
+      const snap = attempt.shuffleSnapshot as {
+        questionOrderByPassage: Record<string, string[]>;
+      };
+      orders.push(snap.questionOrderByPassage[passageId]!);
+    }
+    // Every attempt must produce the same order: [q1, q2] (the creation order
+    // = orderInPassage order).
+    for (const order of orders) {
+      expect(order).toEqual([q1Id, q2Id]);
+    }
+    void learnerId;
+  });
 });

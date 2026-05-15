@@ -77,17 +77,23 @@ export async function buildShuffleSnapshot(
   }
   const questionOrderByPassage: Record<string, string[]> = {};
   for (const [key, list] of Object.entries(byPassage)) {
-    const sorted = list
-      .slice()
-      .sort((a, b) =>
-        key === "standalone"
-          ? 0
-          : (a.orderInPassage ?? 0) - (b.orderInPassage ?? 0),
-      );
-    const ids = sorted.map((q) => q.id);
-    questionOrderByPassage[key] = shuffleQuestions
-      ? seededShuffle(ids, `${attemptId}:passage:${key}`)
-      : ids;
+    // Questions inside a passage ALWAYS keep their pedagogical order
+    // (sorted by orderInPassage). Shuffle is only applied to standalone
+    // questions — passage questions are clustered with a reading and their
+    // order usually follows the reading itself, so randomising them would
+    // confuse learners. Passages themselves can still be reordered by the
+    // instructor via orderIndex; we don't shuffle passage order here.
+    if (key === "standalone") {
+      const ids = list.map((q) => q.id);
+      questionOrderByPassage[key] = shuffleQuestions
+        ? seededShuffle(ids, `${attemptId}:passage:standalone`)
+        : ids;
+    } else {
+      const sorted = list
+        .slice()
+        .sort((a, b) => (a.orderInPassage ?? 0) - (b.orderInPassage ?? 0));
+      questionOrderByPassage[key] = sorted.map((q) => q.id);
+    }
   }
 
   const optionOrderByQuestion: Record<string, string[]> = {};
