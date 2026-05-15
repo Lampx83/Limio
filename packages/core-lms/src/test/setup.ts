@@ -29,6 +29,10 @@ async function cleanDb() {
     prisma.examPassage.deleteMany(),
     prisma.examAsset.deleteMany(),
     prisma.exam.deleteMany(),
+    // A5.3 — ExamRound is cross-course and independent of Exam, so clean it
+    // here after Exam (which cascades ExamSchedule/Room/Candidate). Bridge
+    // tables (ExamRoundCourse, ExamRoundAdmin) cascade from ExamRound.delete.
+    prisma.examRound.deleteMany(),
     prisma.answerResponse.deleteMany(),
     prisma.quizAttempt.deleteMany(),
     prisma.questionOption.deleteMany(),

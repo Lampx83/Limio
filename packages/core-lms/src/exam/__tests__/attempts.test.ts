@@ -171,7 +171,7 @@ describe("getAttemptRuntime (A7.4.3)", () => {
   it("returns server clock, answers, snapshot", async () => {
     const { examId, learnerId } = await publishedExamSetup("g1");
     const { attemptId } = await startExamAttempt(learnerId, examId);
-    const r = await getAttemptRuntime(learnerId, attemptId);
+    const r = await getAttemptRuntime({ kind: "user", userId: learnerId }, attemptId);
     expect(r.status).toBe("in_progress");
     expect(typeof r.serverNow).toBe("string");
     expect(r.durationSec).toBe(60 * 60);
@@ -186,7 +186,7 @@ describe("getAttemptRuntime (A7.4.3)", () => {
       { email: "stranger-g2@e.com", password: "password1234", displayName: "X" },
       BASE,
     );
-    await expect(getAttemptRuntime(stranger.userId, attemptId)).rejects.toMatchObject({
+    await expect(getAttemptRuntime({ kind: "user", userId: stranger.userId }, attemptId)).rejects.toMatchObject({
       code: "attempt_belongs_to_other",
     });
   });
@@ -196,7 +196,7 @@ describe("saveAnswer (A7.4.4)", () => {
   it("upserts answer + emits two events first time", async () => {
     const { examId, learnerId, q1Id } = await publishedExamSetup("a1");
     const start = await startExamAttempt(learnerId, examId);
-    const r = await saveAnswer(learnerId, start.attemptId, q1Id, {
+    const r = await saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, {
       answerJson: { optionIds: ["a"] },
       sessionToken: start.sessionToken,
     });
@@ -221,8 +221,8 @@ describe("saveAnswer (A7.4.4)", () => {
       answerJson: { optionIds: ["a"] },
       sessionToken: start.sessionToken,
     };
-    const first = await saveAnswer(learnerId, start.attemptId, q1Id, payload);
-    const second = await saveAnswer(learnerId, start.attemptId, q1Id, payload);
+    const first = await saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, payload);
+    const second = await saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, payload);
     expect(first.persisted).toBe(true);
     expect(second.persisted).toBe(false);
     expect(second.answerHash).toBe(first.answerHash);
@@ -235,11 +235,11 @@ describe("saveAnswer (A7.4.4)", () => {
   it("changing answer creates new row state + new events", async () => {
     const { examId, learnerId, q1Id } = await publishedExamSetup("a3");
     const start = await startExamAttempt(learnerId, examId);
-    await saveAnswer(learnerId, start.attemptId, q1Id, {
+    await saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, {
       answerJson: { optionIds: ["a"] },
       sessionToken: start.sessionToken,
     });
-    await saveAnswer(learnerId, start.attemptId, q1Id, {
+    await saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, {
       answerJson: { optionIds: ["b"] },
       sessionToken: start.sessionToken,
     });
@@ -257,15 +257,15 @@ describe("saveAnswer (A7.4.4)", () => {
   it("A7.4.7 — rejects stale sessionToken", async () => {
     const { examId, learnerId, q1Id } = await publishedExamSetup("a4");
     const start = await startExamAttempt(learnerId, examId);
-    const claimed = await claimAttemptSession(learnerId, start.attemptId);
+    const claimed = await claimAttemptSession({ kind: "user", userId: learnerId }, start.attemptId);
     await expect(
-      saveAnswer(learnerId, start.attemptId, q1Id, {
+      saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, {
         answerJson: { optionIds: ["a"] },
         sessionToken: start.sessionToken, // stale
       }),
     ).rejects.toMatchObject({ code: "session_stale" });
     // New token works
-    const r = await saveAnswer(learnerId, start.attemptId, q1Id, {
+    const r = await saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, {
       answerJson: { optionIds: ["a"] },
       sessionToken: claimed.sessionToken,
     });
@@ -277,7 +277,7 @@ describe("saveAnswer (A7.4.4)", () => {
     const b = await publishedExamSetup("a5b");
     const start = await startExamAttempt(a.learnerId, a.examId);
     await expect(
-      saveAnswer(a.learnerId, start.attemptId, b.q1Id, {
+      saveAnswer({ kind: "user", userId: a.learnerId }, start.attemptId, b.q1Id, {
         answerJson: { optionIds: ["a"] },
         sessionToken: start.sessionToken,
       }),
@@ -293,7 +293,7 @@ describe("saveAnswer (A7.4.4)", () => {
       data: { startedAt: new Date(Date.now() - 2 * 60 * 60_000) },
     });
     await expect(
-      saveAnswer(learnerId, start.attemptId, q1Id, {
+      saveAnswer({ kind: "user", userId: learnerId }, start.attemptId, q1Id, {
         answerJson: { optionIds: ["a"] },
         sessionToken: start.sessionToken,
       }),
@@ -305,7 +305,7 @@ describe("claimAttemptSession (A7.4.7)", () => {
   it("rotates sessionToken on claim", async () => {
     const { examId, learnerId } = await publishedExamSetup("c1");
     const start = await startExamAttempt(learnerId, examId);
-    const claimed = await claimAttemptSession(learnerId, start.attemptId);
+    const claimed = await claimAttemptSession({ kind: "user", userId: learnerId }, start.attemptId);
     expect(claimed.sessionToken).not.toBe(start.sessionToken);
     const a = await prisma.examAttempt.findUniqueOrThrow({ where: { id: start.attemptId } });
     expect(a.sessionToken).toBe(claimed.sessionToken);
@@ -320,7 +320,7 @@ describe("claimAttemptSession (A7.4.7)", () => {
       BASE,
     );
     await expect(
-      claimAttemptSession(stranger.userId, start.attemptId),
+      claimAttemptSession({ kind: "user", userId: stranger.userId }, start.attemptId),
     ).rejects.toMatchObject({ code: "attempt_belongs_to_other" });
   });
 });

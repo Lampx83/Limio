@@ -71,15 +71,15 @@ async function setupWithEssay(slug: string) {
   );
   await enrollInCourse(learner.userId, course.courseId);
   const start = await startExamAttempt(learner.userId, examId);
-  await saveAnswer(learner.userId, start.attemptId, mcq.questionId, {
+  await saveAnswer({ kind: "user", userId: learner.userId }, start.attemptId, mcq.questionId, {
     answerJson: { optionIds: ["a"] },
     sessionToken: start.sessionToken,
   });
-  await saveAnswer(learner.userId, start.attemptId, essay.questionId, {
+  await saveAnswer({ kind: "user", userId: learner.userId }, start.attemptId, essay.questionId, {
     answerJson: { text: "An essay body" },
     sessionToken: start.sessionToken,
   });
-  await submitExamAttempt(learner.userId, start.attemptId);
+  await submitExamAttempt({ kind: "user", userId: learner.userId }, start.attemptId);
 
   const essayAnswer = await prisma.examAnswer.findUniqueOrThrow({
     where: {
@@ -108,7 +108,7 @@ describe("listPendingExamGrades (A7.6.1)", () => {
     expect(items).toHaveLength(1);
     expect(items[0]!.id).toBe(a.essayAnswerId);
     expect(items[0]!.question.type).toBe("essay");
-    expect(items[0]!.attempt.user.email).toBe("mg-l-l1@e.com");
+    expect(items[0]!.attempt.user!.email).toBe("mg-l-l1@e.com");
   });
 
   it("excludes answers already graded", async () => {

@@ -2,6 +2,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 import { gradeExamAnswer, type GradeResult } from "./grading";
+import { assertSubjectOwnsAttempt, type ExamSubject } from "./subject";
 import { ExamError } from "./types";
 
 interface QuestionWithAnswer {
@@ -118,17 +119,23 @@ async function applyAutoGrading(
   return { autoScore, allGraded };
 }
 
-interface SubmitResult {
+export interface ExamSubmitResult {
   autoScore: number;
   fullyGraded: boolean;
   status: "submitted" | "auto_submitted" | "graded";
 }
 
-async function finalizeSubmission(
+/**
+ * Shared finalisation path. `force_submitted` keeps semantics identical to
+ * `manual` (status=submitted, treated as deliberate end-of-attempt) and is used
+ * by A5.3.5 instructor force-submit action; the caller emits the distinct
+ * audit event.
+ */
+export async function finalizeSubmission(
   attemptId: string,
-  reason: "manual" | "timer_expired",
+  reason: "manual" | "timer_expired" | "force_submitted",
   db: PrismaClient,
-): Promise<SubmitResult> {
+): Promise<ExamSubmitResult> {
   const attempt = await loadAttemptForGrading(attemptId, db);
   if (attempt.status !== "in_progress") {
     // Idempotent: don't re-grade or re-emit. Return current state.
@@ -136,7 +143,7 @@ async function finalizeSubmission(
     return {
       autoScore: score,
       fullyGraded: attempt.status === "graded",
-      status: attempt.status as SubmitResult["status"],
+      status: attempt.status as ExamSubmitResult["status"],
     };
   }
   const questions = await loadQuestionsWithAnswers(attempt.examId, attemptId, db);
@@ -145,7 +152,11 @@ async function finalizeSubmission(
   const { autoScore, allGraded } = await applyAutoGrading(attemptId, questions, db);
 
   const now = new Date();
-  const nextStatus = allGraded ? "graded" : reason === "manual" ? "submitted" : "auto_submitted";
+  const nextStatus = allGraded
+    ? "graded"
+    : reason === "timer_expired"
+      ? "auto_submitted"
+      : "submitted";
   const scorePct = totalPoints > 0 ? (autoScore / totalPoints) * 100 : 0;
   const passed = allGraded ? scorePct >= attempt.exam.passScore : null;
 
@@ -177,6 +188,7 @@ async function finalizeSubmission(
     },
     {
       courseId: attempt.exam.courseId,
+      candidateId: attempt.candidateId ?? undefined,
       eventKey: `${eventType}:${attemptId}`,
     },
     db,
@@ -195,6 +207,7 @@ async function finalizeSubmission(
       },
       {
         courseId: attempt.exam.courseId,
+        candidateId: attempt.candidateId ?? undefined,
         eventKey: `exam.graded:${attemptId}`,
       },
       db,
@@ -204,18 +217,18 @@ async function finalizeSubmission(
   return { autoScore, fullyGraded: allGraded, status: nextStatus };
 }
 
-/** A7.5.1 — Manual submit by learner. */
+/** A7.5.1 — Manual submit by learner (User or candidate). */
 export async function submitExamAttempt(
-  userId: string,
+  subject: ExamSubject,
   attemptId: string,
   db: PrismaClient = prisma,
-): Promise<SubmitResult> {
+): Promise<ExamSubmitResult> {
   const attempt = await db.examAttempt.findUnique({
     where: { id: attemptId },
-    select: { id: true, userId: true, status: true },
+    select: { id: true, userId: true, candidateId: true, status: true },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
-  if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
+  assertSubjectOwnsAttempt(subject, attempt);
   return finalizeSubmission(attemptId, "manual", db);
 }
 
