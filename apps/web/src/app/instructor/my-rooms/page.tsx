@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BookOpen, CalendarDays, Eye, MapPin, Target } from "lucide-react";
 import { listMyProctorRooms } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 
@@ -39,7 +40,7 @@ export default async function MyRoomsPage() {
       </Link>
 
       <div className="mt-3">
-        <h1 className="text-2xl font-bold">👁️ Giám sát phòng thi</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-bold"><Eye className="h-6 w-6 shrink-0 text-slate-500" /> Giám sát phòng thi</h1>
         <p className="mt-1 text-sm text-faint">
           {rooms.length} phòng thi được phân công cho bạn. Click 1 phòng để
           điểm danh và monitor.
@@ -89,18 +90,18 @@ export default async function MyRoomsPage() {
                       )}
                     </div>
                     <div className="mt-1.5 text-xs text-faint">
-                      📘 {r.examTitle}{" "}
+                      <BookOpen className="inline h-3 w-3 align-text-bottom text-slate-400" /> {r.examTitle}{" "}
                       <span className="text-slate-400">({r.courseTitle})</span>
                     </div>
                     <div className="mt-0.5 text-xs text-faint">
-                      🎯 Đợt:{" "}
+                      <Target className="inline h-3 w-3 align-text-bottom text-slate-400" /> Đợt:{" "}
                       <Link
                         href={`/instructor/exam-rounds/${r.roundId}`}
                         className="hover:underline"
                       >
                         {r.roundTitle}
                       </Link>{" "}
-                      · 📅 {r.sessionTitle ?? "Ca thi"}
+                      · <CalendarDays className="inline h-3 w-3 align-text-bottom text-slate-400" /> {r.sessionTitle ?? "Ca thi"}
                     </div>
                     <div className="mt-0.5 text-xs text-faint">
                       ⏰ {formatDate(r.opensAt)} → {formatDate(r.closesAt)}
@@ -112,7 +113,7 @@ export default async function MyRoomsPage() {
                     </div>
                     {r.locationNote && (
                       <div className="mt-0.5 text-xs text-faint">
-                        📍 {r.locationNote}
+                        <MapPin className="inline h-3 w-3 align-text-bottom text-slate-400" /> {r.locationNote}
                       </div>
                     )}
                   </div>
