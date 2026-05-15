@@ -133,15 +133,16 @@ jobs:
             exit 0
           fi
 
-          # Build changelog body từ git log (kể từ tag trước hoặc 20 commit gần nhất)
+          # Build changelog body từ git log (kể từ tag trước hoặc commit trước nhất có thể đọc được).
+          # HEAD^..HEAD chỉ cần 1 parent → an toàn với shallow clone (fetch-depth: 1).
           LAST_TAG=$(git tag --sort=-creatordate | grep '^deploy-' | head -1 || true)
           if [ -n "$LAST_TAG" ]; then
             LOG_RANGE="${LAST_TAG}..HEAD"
           else
-            LOG_RANGE="HEAD~20..HEAD"
+            LOG_RANGE="HEAD^..HEAD"
           fi
 
-          CHANGES=$(git log $LOG_RANGE --pretty=format:"%s" --no-merges | awk '
+          CHANGES=$(git log $LOG_RANGE --pretty=format:"%s" --no-merges 2>/dev/null | awk '
             /^feat/     { print "- ✨ " $0 }
             /^fix/      { print "- 🐛 " $0 }
             /^perf/     { print "- ⚡ " $0 }
@@ -168,7 +169,12 @@ jobs:
           # Escape body thành JSON string
           BODY_JSON=$(echo "$BODY" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
 
-          curl -s -f -X POST "${APP_URL}/api/system/releases" \
+          # Dùng localhost thay APP_URL (external domain) vì runner chạy trên cùng server,
+          # hairpin NAT thường không hoạt động → curl sẽ timeout nếu dùng domain ngoài.
+          WEB_PORT=$(grep -E '^WEB_PORT=' "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' || echo "8004")
+          INTERNAL_URL="http://localhost:${WEB_PORT:-8004}"
+
+          curl -s -f --max-time 10 -X POST "${INTERNAL_URL}/api/system/releases" \
             -H "Content-Type: application/json" \
             -H "x-cron-secret: ${CRON_SEC}" \
             -d "{\"tag\":\"${TAG}\",\"sha\":\"${{ github.sha }}\",\"body\":${BODY_JSON},\"deployedAt\":\"${DEPLOYED_AT}\"}" \
