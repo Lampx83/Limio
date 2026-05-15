@@ -82,7 +82,7 @@ export default async function ExamRoundsHubPage({
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold"><CalendarCheck className="h-6 w-6 shrink-0 text-slate-500" /> Tổ chức thi</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold"><CalendarCheck className="h-6 w-6 shrink-0 text-amber-600" /> Tổ chức thi</h1>
           <p className="mt-1 text-sm text-faint">
             {rounds.length} đợt · {counts.draft} nháp · {counts.open} đang mở ·{" "}
             {counts.closed} đã đóng · {counts.archived} lưu trữ
@@ -105,7 +105,7 @@ export default async function ExamRoundsHubPage({
               href={href}
               className={`rounded-full border px-3 py-1 text-xs ${
                 active
-                  ? "border-blue-500 bg-blue-50 font-semibold text-blue-700"
+                  ? "border-amber-500 bg-amber-50 font-semibold text-amber-700"
                   : "border-default text-slate-700 hover:bg-slate-50"
               }`}
             >

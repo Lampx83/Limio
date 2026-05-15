@@ -27,7 +27,7 @@ export default async function QuestionBanksHubPage() {
       </Link>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold"><Library className="h-6 w-6 shrink-0 text-slate-500" /> Question Bank</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold"><Library className="h-6 w-6 shrink-0 text-amber-600" /> Question Bank</h1>
           <p className="mt-1 text-sm text-faint">
             {banks.length} bank · câu hỏi tái sử dụng cross-exam
           </p>

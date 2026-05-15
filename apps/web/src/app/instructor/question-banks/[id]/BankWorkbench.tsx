@@ -264,7 +264,7 @@ export default function BankWorkbench({
             </button>
             <button
               onClick={() => { setAdding((s) => !s); setImporting(false); }}
-              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
+              className="rounded bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"
             >
               {adding ? "Đóng" : "+ Thêm"}
             </button>
@@ -672,7 +672,7 @@ function EditTab({
       <button
         onClick={onSave}
         disabled={busy || !prompt.trim()}
-        className="w-full rounded bg-blue-600 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded bg-amber-600 py-2 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
       >
         {busy ? "Đang lưu..." : "Lưu thay đổi"}
       </button>
@@ -946,7 +946,7 @@ function QuestionForm({
         <button
           type="submit"
           disabled={busy || !prompt.trim()}
-          className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
         >
           {busy ? "..." : "Tạo (draft)"}
         </button>
@@ -1024,7 +1024,7 @@ mcq,1+1=?,1,1,2,3,4,5,A`}
         <button
           onClick={onImport}
           disabled={busy || !text.trim()}
-          className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
         >
           {busy ? "..." : "Import"}
         </button>

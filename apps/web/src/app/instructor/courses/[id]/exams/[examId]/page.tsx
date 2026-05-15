@@ -136,7 +136,7 @@ export default async function EditExamPage({
         <div className="flex items-start gap-2">
           <Link
             href={`/instructor/exam-rounds?examId=${exam.id}`}
-            className="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-1.5 rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
           >
             <CalendarCheck className="h-4 w-4 shrink-0" /> Tổ chức thi
           </Link>

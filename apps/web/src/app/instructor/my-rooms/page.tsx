@@ -40,7 +40,7 @@ export default async function MyRoomsPage() {
       </Link>
 
       <div className="mt-3">
-        <h1 className="flex items-center gap-2 text-2xl font-bold"><Eye className="h-6 w-6 shrink-0 text-slate-500" /> Giám sát phòng thi</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-bold"><Eye className="h-6 w-6 shrink-0 text-amber-600" /> Giám sát phòng thi</h1>
         <p className="mt-1 text-sm text-faint">
           {rooms.length} phòng thi được phân công cho bạn. Click 1 phòng để
           điểm danh và monitor.
