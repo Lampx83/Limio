@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, Megaphone, MessageSquare, RefreshCw } from "lucide-react";
 
 type AttemptStatus =
   | "in_progress"
@@ -371,7 +372,7 @@ export default function AttemptDetailLive({
                   className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800"
                   title={PATTERN_FLAG_LABEL[f] ?? f}
                 >
-                  ⚑ {PATTERN_FLAG_LABEL[f] ?? f}
+                  {PATTERN_FLAG_LABEL[f] ?? f}
                 </span>
               ))}
               {Object.entries(incidentCounts).map(([type, count]) => (
@@ -459,7 +460,7 @@ function TimelineRow({
   const delta = sinceStart >= 0 ? `+${fmtDur(sinceStart)}` : "";
   const meta = `${time} ${delta}`;
 
-  let icon = "•";
+  let icon: React.ReactNode = "•";
   let body = "";
   let tone = "text-slate-700";
 
@@ -482,7 +483,9 @@ function TimelineRow({
       tone = "text-red-700";
       break;
     case "message":
-      icon = t.mKind === "broadcast" ? "📢" : "💬";
+      icon = t.mKind === "broadcast"
+        ? <Megaphone className="h-4 w-4" />
+        : <MessageSquare className="h-4 w-4" />;
       body = `${t.mKind === "broadcast" ? "Broadcast" : "Message"}: ${t.body}`;
       tone = "text-amber-700";
       break;
@@ -497,7 +500,7 @@ function TimelineRow({
       tone = "text-indigo-700";
       break;
     case "session_reset":
-      icon = "🔄";
+      icon = <RefreshCw className="h-4 w-4" />;
       body = `Reset session (resume ×${t.resumeCount})`;
       tone = "text-slate-700";
       break;
@@ -553,8 +556,9 @@ function DetailActions({
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-default pt-3">
-      <span className="mr-2 text-[11px] text-faint">
-        {connState === "open" ? "🟢 Live" : connState === "connecting" ? "⏳" : "🔴"}
+      <span className="mr-2 inline-flex items-center gap-1.5 text-[11px] text-faint">
+        <span className={`h-2 w-2 rounded-full ${connState === "open" ? "animate-pulse bg-emerald-500" : connState === "connecting" ? "animate-pulse bg-amber-400" : "bg-red-500"}`} />
+        {connState === "open" ? "Live" : connState === "connecting" ? "Đang kết nối..." : "Mất kết nối"}
       </span>
       <Btn
         disabled={!inProgress || busy !== null}
@@ -605,7 +609,7 @@ function DetailActions({
           })
         }
       >
-        💬 Message
+        <span className="inline-flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5" /> Message</span>
       </Btn>
       <Btn
         disabled={!inProgress || busy !== null}
@@ -644,7 +648,7 @@ function DetailActions({
         Disqualify
       </Btn>
       {err && (
-        <span className="text-[11px] text-red-700">⚠ {err}</span>
+        <span className="inline-flex items-center gap-1 text-[11px] text-red-700"><AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {err}</span>
       )}
     </div>
   );

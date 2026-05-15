@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Layers } from "lucide-react";
 
 type Section = {
   id: string;
@@ -64,7 +65,7 @@ export default function SectionsPanel({ examId }: { examId: string }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold">🎲 Sections</h2>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold"><Layers className="h-4 w-4 shrink-0 text-slate-400" /> Sections</h2>
           <p className="text-sm text-faint">
             Chia bài thi thành phần. Phần &ldquo;random từ bank&rdquo; chọn N câu hỏi từ bank
             mỗi lần SV vào thi (mỗi SV 1 bộ đề khác — decision #3/4).

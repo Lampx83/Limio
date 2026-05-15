@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Download, Mail, MapPin, Trash2, Upload, Users } from "lucide-react";
 import * as XLSX from "xlsx";
 
 interface ExamClassRoom {
@@ -350,8 +351,8 @@ export default function CohortsPanel({
     <section className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold">
-            👥 Lớp học ({cohorts.length})
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <Users className="h-4 w-4 shrink-0 text-slate-400" /> Lớp học ({cohorts.length})
           </h2>
           <p className="mt-1 text-xs text-faint">
             Mỗi lớp gắn 1 GV phụ trách + mã lớp do trường định nghĩa. SV gõ mã
@@ -363,7 +364,7 @@ export default function CohortsPanel({
             onClick={() => setShowImport((v) => !v)}
             className="rounded border border-default bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
           >
-            {showImport ? "Đóng" : "📥 Import / Paste hàng loạt"}
+            {showImport ? "Đóng" : <><Upload className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Import / Paste hàng loạt</>}
           </button>
         )}
       </div>
@@ -441,8 +442,8 @@ K65B-T7S, K65B-T7S-P1, 50, CA-2, Nhà B2 P101, proc3@..., bob@...`}</pre>
             >
               Phân tích →
             </button>
-            <label className="cursor-pointer rounded border border-default bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50">
-              📂 Upload .xlsx / .csv
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded border border-default bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50">
+              <Upload className="h-3.5 w-3.5 shrink-0" /> Upload .xlsx / .csv
               <input
                 type="file"
                 accept=".xlsx,.xls,.csv"
@@ -580,7 +581,7 @@ K65B-T7S, K65B-T7S-P1, 50, CA-2, Nhà B2 P101, proc3@..., bob@...`}</pre>
                 </>
               )}
               {result.invited > 0 && (
-                <> · 📧 mời {result.invited} người qua email</>
+                <> · <Mail className="inline h-3 w-3 align-text-bottom" /> mời {result.invited} người qua email</>
               )}
               {result.skipped.length > 0 && (
                 <>
@@ -605,7 +606,7 @@ K65B-T7S, K65B-T7S-P1, 50, CA-2, Nhà B2 P101, proc3@..., bob@...`}</pre>
 
       {cohorts.length === 0 && !addingManual && (
         <div className="rounded-lg border border-dashed border-default p-8 text-center text-sm text-faint">
-          Chưa có lớp nào. Click &ldquo;+ Thêm lớp&rdquo; hoặc &ldquo;📥 Import / Paste hàng loạt&rdquo; để bắt đầu.
+          Chưa có lớp nào. Click &ldquo;+ Thêm lớp&rdquo; hoặc &ldquo;Import / Paste hàng loạt&rdquo; để bắt đầu.
         </div>
       )}
       {(cohorts.length > 0 || addingManual) && (
@@ -975,7 +976,7 @@ function FlatRow({
             className="w-32 rounded border border-default px-2 py-1 text-xs"
           />
         ) : location ? (
-          <>📍 {location}</>
+          <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0 text-slate-400" />{location}</span>
         ) : (
           <span className="text-faint">—</span>
         )}
@@ -988,7 +989,7 @@ function FlatRow({
                 : undefined
             }
           >
-            👥 {actual}
+            <Users className="inline h-3 w-3 align-text-bottom text-slate-400" /> {actual}
             {expected != null ? ` / ${expected}` : ""}
             {mismatch && " ⚠"}
           </div>
@@ -1100,7 +1101,7 @@ function FlatRow({
                   className="rounded border border-default bg-white px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
                   title="Xoá phòng thi"
                 >
-                  🗑
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </>
             )
@@ -1147,7 +1148,7 @@ function CohortRow({
         return false;
       }
       if (j?.invited) {
-        setFlash("📧 Đã gửi email mời GV");
+        setFlash("Đã gửi email mời GV");
         setTimeout(() => setFlash(null), 3000);
       }
       router.refresh();
@@ -1343,7 +1344,7 @@ function CohortRow({
             className="rounded border border-default bg-white px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
             title="Xoá lớp"
           >
-            🗑
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </td>
       )}
@@ -1366,7 +1367,7 @@ function ExamClassLocationsCell({ cohort }: { cohort: CohortData }) {
           <div key={ec.id} className="text-[11px] text-slate-700">
             <div>
               {ec.roomLocation ? (
-                <>📍 {ec.roomLocation}</>
+                <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0 text-slate-400" />{ec.roomLocation}</span>
               ) : (
                 <span className="text-faint">—</span>
               )}
@@ -1382,7 +1383,7 @@ function ExamClassLocationsCell({ cohort }: { cohort: CohortData }) {
                     : undefined
                 }
               >
-                👥 {actual}
+                <Users className="inline h-3 w-3 align-text-bottom text-slate-400" /> {actual}
                 {hasExpected ? ` / ${expected}` : ""}
                 {mismatch && " ⚠"}
               </div>

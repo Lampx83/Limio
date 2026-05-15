@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Calendar } from "lucide-react";
 
 type Schedule = {
   id: string;
@@ -58,7 +59,7 @@ export default function SchedulesPanel({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold">📅 Lịch thi (cohort)</h2>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold"><Calendar className="h-4 w-4 shrink-0 text-slate-400" /> Lịch thi (cohort)</h2>
           <p className="text-sm text-faint">
             Mở ca thi cho lớp cụ thể. Không có lịch → ai enroll đều thi được theo `Exam.openAt/closeAt`.
           </p>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
+import { Clock, Lock, AlertCircle, XCircle } from "lucide-react";
 import ClaimForm from "./ClaimForm";
 import SebBrowserPrompt from "@/components/exam/SebBrowserPrompt";
 import { detectSeb, requiresSeb } from "@/lib/seb";
@@ -240,7 +241,7 @@ function NotYet({ examTitle, opensAt }: { examTitle: string; opensAt: Date }) {
     <>
       <meta httpEquiv="refresh" content={`${refreshSec}`} />
       <main className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center px-6 py-10 text-center">
-        <div className="text-6xl">⏳</div>
+        <Clock className="mx-auto h-16 w-16 text-slate-300" />
         <h1 className="mt-4 text-2xl font-bold text-slate-900">
           Ca thi chưa bắt đầu
         </h1>
@@ -269,7 +270,7 @@ function Closed({
 }) {
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center px-6 py-10 text-center">
-      <div className="text-6xl">🔒</div>
+      <Lock className="mx-auto h-16 w-16 text-slate-400" />
       <h1 className="mt-4 text-2xl font-bold text-slate-900">
         Ca thi đã kết thúc
       </h1>
@@ -300,7 +301,7 @@ function NotReady({
         : "Đề thi chưa được publish, vui lòng chờ giảng viên xác nhận.";
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center px-6 py-10 text-center">
-      <div className="text-6xl">🚧</div>
+      <AlertCircle className="mx-auto h-16 w-16 text-amber-400" />
       <h1 className="mt-4 text-2xl font-bold text-slate-900">
         Chưa thể vào thi
       </h1>
@@ -318,7 +319,7 @@ function NotReady({
 function NotFoundCode({ code }: { code: string }) {
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center px-6 py-10 text-center">
-      <div className="text-6xl">❌</div>
+      <XCircle className="mx-auto h-16 w-16 text-red-400" />
       <h1 className="mt-4 text-2xl font-bold text-slate-900">
         Mã thi không đúng
       </h1>

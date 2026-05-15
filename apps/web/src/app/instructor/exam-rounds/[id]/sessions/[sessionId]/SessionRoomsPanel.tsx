@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Mail, Trash2, X } from "lucide-react";
 
 interface RoomRow {
   id: string;
@@ -478,7 +478,7 @@ function InlineProctorCell({
     return (
       <div className="flex flex-col gap-1 rounded border border-amber-300 bg-amber-50 p-1.5">
         <div className="text-[10px] text-amber-800">
-          📧 Email <strong>{email}</strong> chưa có tài khoản — gửi lời mời?
+          <Mail className="mr-1 inline h-3 w-3 align-text-bottom" /> Email <strong>{email}</strong> chưa có tài khoản — gửi lời mời?
         </div>
         <div className="flex items-center gap-1">
           <input

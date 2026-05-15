@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 
 /**
  * Surface a warning if the exam linked to a session/room isn't ready for
@@ -28,8 +29,8 @@ export default function ExamReadinessWarning({
 
   return (
     <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-      <div className="font-semibold">
-        ⚠️ Sinh viên chưa thể vào thi qua mã thi
+      <div className="flex items-center gap-1.5 font-semibold">
+        <AlertTriangle className="h-4 w-4 shrink-0" /> Sinh viên chưa thể vào thi qua mã thi
       </div>
       <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
         {wrongMode && (

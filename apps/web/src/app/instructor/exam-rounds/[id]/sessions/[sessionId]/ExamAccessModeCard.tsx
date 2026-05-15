@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle, Check, Copy, Globe, GraduationCap, RefreshCw, Settings2, Shuffle, Users } from "lucide-react";
 
 /**
  * "Chế độ thi" card on the session detail page. Drives Exam.accessMode +
@@ -107,21 +108,21 @@ export default function ExamAccessModeCard({
   if (accessMode === "authenticated") {
     return (
       <section className="rounded-lg border-2 border-amber-300 bg-amber-50 p-5">
-        <h2 className="text-base font-semibold text-amber-900">
-          🎯 Chọn cách tổ chức thi
+        <h2 className="flex items-center gap-2 text-base font-semibold text-amber-900">
+          <Settings2 className="h-4 w-4 shrink-0" /> Chọn cách tổ chức thi
         </h2>
         <p className="mt-1 text-xs text-amber-800">
           Đề thi chưa được setup chế độ. Chọn 1 trong 2:
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <ModeButton
-            title="📚 Theo phòng"
+            title={<span className="inline-flex items-center gap-1.5"><Users className="h-4 w-4 shrink-0" /> Theo phòng</span>}
             desc="Có danh sách thí sinh cụ thể, in mã riêng từng phòng (thi cuối kỳ, có roster)."
             onClick={() => switchMode("assigned_code")}
             disabled={!canEdit || busy}
           />
           <ModeButton
-            title="🎫 Tự do"
+            title={<span className="inline-flex items-center gap-1.5"><Globe className="h-4 w-4 shrink-0" /> Tự do</span>}
             desc="1 mã chung cho cả lớp, sinh viên tự nhập tên khi vào (quiz, practice, test trên lớp)."
             onClick={() => switchMode("open_code")}
             disabled={!canEdit || busy}
@@ -142,8 +143,8 @@ export default function ExamAccessModeCard({
       <section className="rounded-lg border border-default bg-white p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-semibold">
-              📚 Chế độ thi: <span className="text-blue-700">Theo phòng</span>
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+              <Users className="h-4 w-4 shrink-0 text-blue-600" /> Chế độ thi: <span className="text-blue-700">Theo phòng</span>
             </h2>
             <p className="mt-1 text-xs text-faint">
               Mỗi thí sinh có mã thi riêng được gán vào phòng cụ thể. Quản lý
@@ -159,20 +160,20 @@ export default function ExamAccessModeCard({
                   active={assignedCodeSource === "random"}
                   onClick={() => switchAssignedSource("random")}
                   disabled={!canEdit || busy}
-                  title="🎲 Ngẫu nhiên"
+                  title={<span className="inline-flex items-center gap-1"><Shuffle className="h-3.5 w-3.5" /> Ngẫu nhiên</span>}
                   desc="8 ký tự, hệ thống tự sinh"
                 />
                 <SourceButton
                   active={assignedCodeSource === "student_code"}
                   onClick={() => switchAssignedSource("student_code")}
                   disabled={!canEdit || busy}
-                  title="🎓 MSSV"
+                  title={<span className="inline-flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> MSSV</span>}
                   desc="Mã access = MSSV của SV"
                 />
               </div>
               {assignedCodeSource === "student_code" && (
-                <div className="mt-2 rounded border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
-                  ⚠ MSSV dễ đoán hơn mã ngẫu nhiên. Chỉ dùng khi ca thi có giám
+                <div className="mt-2 flex items-start gap-1.5 rounded border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> MSSV dễ đoán hơn mã ngẫu nhiên. Chỉ dùng khi ca thi có giám
                   thị vật lý kiểm tra thẻ.
                 </div>
               )}
@@ -209,8 +210,8 @@ export default function ExamAccessModeCard({
       <section className="rounded-lg border border-default bg-white p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-semibold">
-              🎫 Chế độ thi: <span className="text-emerald-700">Tự do</span>
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+              <Globe className="h-4 w-4 shrink-0 text-emerald-600" /> Chế độ thi: <span className="text-emerald-700">Tự do</span>
             </h2>
             <p className="mt-1 text-xs text-faint">
               1 mã chung cho cả lớp. Sinh viên gõ URL bên dưới + mã thi để vào
@@ -230,7 +231,7 @@ export default function ExamAccessModeCard({
                     onClick={copyCode}
                     className="rounded border border-default bg-white px-3 py-1.5 text-xs hover:bg-slate-50"
                   >
-                    {copied ? "✓ Đã copy" : "📋 Copy mã"}
+                    <span className="inline-flex items-center gap-1">{copied ? <><Check className="h-3.5 w-3.5" /> Đã copy</> : <><Copy className="h-3.5 w-3.5" /> Copy mã</>}</span>
                   </button>
                   {canEdit && (
                     <button
@@ -239,9 +240,9 @@ export default function ExamAccessModeCard({
                           rotateCode();
                       }}
                       disabled={busy}
-                      className="rounded border border-default bg-white px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded border border-default bg-white px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
                     >
-                      🔄 Sinh mã mới
+                      <RefreshCw className="h-3.5 w-3.5" /> Sinh mã mới
                     </button>
                   )}
                 </div>
@@ -304,7 +305,7 @@ function SourceButton({
   active: boolean;
   onClick: () => void;
   disabled: boolean;
-  title: string;
+  title: React.ReactNode;
   desc: string;
 }) {
   return (
@@ -329,7 +330,7 @@ function ModeButton({
   onClick,
   disabled,
 }: {
-  title: string;
+  title: React.ReactNode;
   desc: string;
   onClick: () => void;
   disabled: boolean;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle, Megaphone, MessageSquare, Timer, WifiOff } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageView from "./exam/PassageView";
 import ExamQuestion, { type AnswerValue } from "./exam/ExamQuestion";
@@ -564,10 +565,10 @@ export default function ExamPlayer(props: Props) {
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   {m.kind === "broadcast"
-                    ? "📢 Thông báo chung"
-                    : "💬 Tin nhắn từ giám thị"}
+                    ? <><Megaphone className="h-3.5 w-3.5 shrink-0" /> Thông báo chung</>
+                    : <><MessageSquare className="h-3.5 w-3.5 shrink-0" /> Tin nhắn từ giám thị</>}
                 </div>
                 <button
                   onClick={() => dismissMessage(m.id)}
@@ -588,17 +589,17 @@ export default function ExamPlayer(props: Props) {
       {isOffline && (
         <div
           role="alert"
-          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 shadow-lg"
+          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 flex items-center rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 shadow-lg"
         >
-          ⚠️ Mất kết nối — bài làm đang được lưu tạm trên máy, sẽ tự đồng bộ khi có mạng.
+          <WifiOff className="mr-2 h-4 w-4 shrink-0" /> Mất kết nối — bài làm đang được lưu tạm trên máy, sẽ tự đồng bộ khi có mạng.
         </div>
       )}
       {justReconnected && (
         <div
           role="status"
-          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900 shadow-lg"
+          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900 shadow-lg"
         >
-          ✓ Đã kết nối lại — đồng bộ bài làm xong.
+          <CheckCircle className="mr-2 h-4 w-4 shrink-0" /> Đã kết nối lại — đồng bộ bài làm xong.
         </div>
       )}
 
@@ -637,7 +638,7 @@ export default function ExamPlayer(props: Props) {
               aria-label="Thời gian còn lại"
               title="Thời gian còn lại"
             >
-              ⏱ {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+              <Timer className="mr-1 h-4 w-4 shrink-0" />{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
             </span>
             <button
               type="button"

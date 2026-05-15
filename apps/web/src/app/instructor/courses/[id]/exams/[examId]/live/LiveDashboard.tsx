@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, Megaphone, MessageSquare } from "lucide-react";
 
 type AttemptLive = {
   attemptId: string;
@@ -569,12 +570,12 @@ function ActionMenu({ a }: { a: AttemptLive }) {
             })
           }
         >
-          💬 Message
+          <MessageSquare className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Message
         </ActionBtn>
       </div>
       {err && (
-        <div className="mt-1 text-[11px] text-red-700" data-testid="action-error">
-          ⚠ {err}
+        <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-red-700" data-testid="action-error">
+          <AlertTriangle className="h-3 w-3 shrink-0" /> {err}
         </div>
       )}
     </div>
@@ -611,7 +612,7 @@ function BroadcastButton({ examId }: { examId: string }) {
         disabled={busy}
         className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-40"
       >
-        📢 Broadcast
+        <Megaphone className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Broadcast
       </button>
       {flash && (
         <span className="text-[11px] text-slate-600">{flash}</span>

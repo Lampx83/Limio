@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { BookOpen, Eye, MapPin, Monitor, Printer, Tag } from "lucide-react";
 import {
   ExamError,
   canEditExamRound,
@@ -78,15 +79,15 @@ export default async function ExamRoomDetailPage({
             <h1 className="text-2xl font-bold">{room.name}</h1>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-faint">
-            <span>📘 {room.examTitle}</span>
+            <span className="inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 shrink-0 text-slate-400" />{room.examTitle}</span>
             <span>·</span>
-            <span>🏷️ {room.courseTitle}</span>
+            <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 shrink-0 text-slate-400" />{room.courseTitle}</span>
             <span>·</span>
-            <span>👁️ Giám thị: {room.proctorName}</span>
+            <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5 shrink-0 text-slate-400" /> Giám thị: {room.proctorName}</span>
             {room.locationNote && (
               <>
                 <span>·</span>
-                <span>📍 {room.locationNote}</span>
+                <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />{room.locationNote}</span>
               </>
             )}
           </div>
@@ -98,14 +99,14 @@ export default async function ExamRoomDetailPage({
               target="_blank"
               className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm text-blue-800 hover:bg-blue-100"
             >
-              📽️ Chiếu mã thi
+              <Monitor className="h-4 w-4" /> Chiếu mã thi
             </Link>
             <Link
               href={`/instructor/exam-rounds/${room.roundId}/sessions/${room.sessionId}/rooms/${room.id}/print`}
               target="_blank"
               className="inline-flex items-center gap-1.5 rounded border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
             >
-              📋 In danh sách mã thi
+              <Printer className="h-4 w-4" /> In danh sách mã thi
             </Link>
           </div>
         )}

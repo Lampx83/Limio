@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Mail } from "lucide-react";
 
 type Row = {
   id: string;
@@ -305,7 +306,7 @@ export default function CandidatesPanel({
             disabled={busy !== null || !rows || rows.length === 0}
             className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {busy === "preview" ? "..." : "📧 Gửi mã qua email"}
+            {busy === "preview" ? "..." : <><Mail className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Gửi mã qua email</>}
           </button>
         </div>
       </div>

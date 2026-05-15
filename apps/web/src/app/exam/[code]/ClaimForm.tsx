@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { User } from "lucide-react";
 
 type Mode = "open" | "assigned";
 
@@ -121,8 +122,8 @@ export default function ClaimForm({
         </p>
         <div className="rounded border border-blue-200 bg-white p-4">
           <div className="text-base font-semibold">{stage.cohort.name}</div>
-          <div className="mt-1 text-sm text-slate-600">
-            👤 GV phụ trách:{" "}
+          <div className="mt-1 flex items-center gap-1.5 text-sm text-slate-600">
+            <User className="h-3.5 w-3.5 shrink-0 text-slate-400" /> GV phụ trách:{" "}
             {stage.cohort.instructorName ?? (
               <span className="text-faint">(chưa gán)</span>
             )}
