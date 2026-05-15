@@ -6,6 +6,10 @@ import { auth } from "@/lib/auth";
 import ExamMetaForm from "../ExamMetaForm";
 import PublishBar from "./PublishBar";
 import ContentManager from "./ContentManager";
+import SectionsPanel from "./SectionsPanel";
+import CloneButton from "./CloneButton";
+import AnalyticsPanel from "./AnalyticsPanel";
+import ExamTabs, { parseExamTab } from "./ExamTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +31,12 @@ function toLocalInput(d: Date): string {
 
 export default async function EditExamPage({
   params,
+  searchParams,
 }: {
   params: { id: string; examId: string };
+  searchParams: { tab?: string };
 }) {
+  const activeTab = parseExamTab(searchParams?.tab);
   const session = await auth();
   if (!session?.user?.id) {
     redirect(
@@ -121,19 +128,13 @@ export default async function EditExamPage({
         </div>
 
         <div className="flex items-start gap-2">
-          {(pendingCount > 0 || attemptCount > 0) && (
-            <Link
-              href={`/instructor/courses/${course.id}/exams/${exam.id}/grading`}
-              className="rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm text-blue-800 hover:bg-blue-100"
-            >
-              Chấm bài
-              {pendingCount > 0 && (
-                <span className="ml-2 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-medium text-white">
-                  {pendingCount}
-                </span>
-              )}
-            </Link>
-          )}
+          <Link
+            href={`/instructor/exam-rounds?examId=${exam.id}`}
+            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            🎯 Tổ chức thi
+          </Link>
+          <CloneButton examId={exam.id} />
           <PublishBar
             examId={exam.id}
             courseId={course.id}
@@ -145,75 +146,98 @@ export default async function EditExamPage({
 
       {isPublished && hasAttempts && (
         <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-          Đã có {attemptCount} lượt thi. Chỉ tiêu đề, mô tả và thời điểm đóng
-          còn chỉnh sửa được. Các trường khác đã khoá để giữ tính công bằng.
+          Đã có {attemptCount} lượt thi. Chỉ tiêu đề và mô tả còn chỉnh sửa
+          được. Các trường khác đã khoá để giữ tính công bằng.
         </div>
       )}
 
       <div className="mt-6">
-        <ExamMetaForm
-          mode="edit"
+        <ExamTabs
           courseId={course.id}
           examId={exam.id}
-          lockedFields={lockedFields}
-          initial={{
-            title: exam.title,
-            description: exam.description ?? "",
-            durationMin: exam.durationMin,
-            openAt: toLocalInput(exam.openAt),
-            closeAt: toLocalInput(exam.closeAt),
-            passScore: exam.passScore,
-            attemptPolicy: exam.attemptPolicy,
-            gradingMode: exam.gradingMode,
-            proctoringLevel: exam.proctoringLevel,
-            shuffleQuestions: exam.shuffleQuestions,
-            shuffleOptions: exam.shuffleOptions,
-            showResultsAfterSubmit: exam.showResultsAfterSubmit,
+          active={activeTab}
+          badges={{
+            content: exam.questions.filter((q) => q.skillTags.length === 0)
+              .length,
+            results: pendingCount,
           }}
         />
       </div>
 
-      <section className="mt-8 rounded border border-default bg-white p-5">
-        <h2 className="mb-1 text-base font-semibold">Nội dung bài thi</h2>
-        <p className="mb-4 text-sm text-faint">
-          {exam.status === "draft"
-            ? "Thêm đoạn bài đọc và câu hỏi. Mỗi câu hỏi cần ≥ 1 skill trước khi publish."
-            : "Bài thi đã publish; nội dung khoá nếu có lượt thi."}
-        </p>
-        <ContentManager
-          examId={exam.id}
-          editable={exam.status === "draft" || attemptCount === 0}
-          passages={exam.passages.map((p) => ({
-            id: p.id,
-            title: p.title,
-            contentJson: p.contentJson,
-            audioPolicy: p.audioPolicy,
-            maxAudioPlays: p.maxAudioPlays,
-            revealMode: p.revealMode,
-            orderIndex: p.orderIndex,
-            skills: p.skillTags.map((t) => ({
-              id: t.skill.id,
-              code: t.skill.code,
-              name: t.skill.name,
-            })),
-          }))}
-          questions={exam.questions.map((q) => ({
-            id: q.id,
-            type: q.type,
-            prompt: q.prompt,
-            points: q.points,
-            passageId: q.passageId,
-            config: q.config as Record<string, unknown>,
-            orderInExam: q.orderInExam,
-            orderInPassage: q.orderInPassage,
-            skills: q.skillTags.map((t) => ({
-              id: t.skill.id,
-              code: t.skill.code,
-              name: t.skill.name,
-            })),
-          }))}
-        />
-      </section>
+      {activeTab === "overview" && (
+        <div className="mt-6">
+          <ExamMetaForm
+            mode="edit"
+            courseId={course.id}
+            examId={exam.id}
+            lockedFields={lockedFields}
+            initial={{
+              title: exam.title,
+              description: exam.description ?? "",
+              durationMin: exam.durationMin,
+              openAt: toLocalInput(exam.openAt),
+              closeAt: toLocalInput(exam.closeAt),
+              passScore: exam.passScore,
+              attemptPolicy: exam.attemptPolicy,
+              gradingMode: exam.gradingMode,
+              proctoringLevel: exam.proctoringLevel,
+              shuffleQuestions: exam.shuffleQuestions,
+              shuffleOptions: exam.shuffleOptions,
+              showResultsAfterSubmit: exam.showResultsAfterSubmit,
+            }}
+          />
+        </div>
+      )}
+
+      {activeTab === "content" && (
+        <>
+          <SectionsPanel examId={exam.id} />
+
+          <section className="mt-8 rounded border border-default bg-white p-5">
+            <h2 className="mb-1 text-base font-semibold">Nội dung bài thi</h2>
+            <p className="mb-4 text-sm text-faint">
+              {exam.status === "draft"
+                ? "Thêm đoạn bài đọc và câu hỏi. Mỗi câu hỏi cần ≥ 1 skill trước khi publish."
+                : "Bài thi đã publish; nội dung khoá nếu có lượt thi."}
+            </p>
+            <ContentManager
+              examId={exam.id}
+              editable={exam.status === "draft" || attemptCount === 0}
+              passages={exam.passages.map((p) => ({
+                id: p.id,
+                title: p.title,
+                contentJson: p.contentJson,
+                audioPolicy: p.audioPolicy,
+                maxAudioPlays: p.maxAudioPlays,
+                revealMode: p.revealMode,
+                orderIndex: p.orderIndex,
+                skills: p.skillTags.map((t) => ({
+                  id: t.skill.id,
+                  code: t.skill.code,
+                  name: t.skill.name,
+                })),
+              }))}
+              questions={exam.questions.map((q) => ({
+                id: q.id,
+                type: q.type,
+                prompt: q.prompt,
+                points: q.points,
+                passageId: q.passageId,
+                config: q.config as Record<string, unknown>,
+                orderInExam: q.orderInExam,
+                orderInPassage: q.orderInPassage,
+                skills: q.skillTags.map((t) => ({
+                  id: t.skill.id,
+                  code: t.skill.code,
+                  name: t.skill.name,
+                })),
+              }))}
+            />
+          </section>
+        </>
+      )}
+
+      {activeTab === "results" && <AnalyticsPanel examId={exam.id} />}
     </main>
   );
 }

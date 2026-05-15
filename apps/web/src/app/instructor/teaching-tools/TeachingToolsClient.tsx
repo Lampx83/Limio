@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import CourseSelector from "./CourseSelector";
-import ManualStudentInput from "./ManualStudentInput";
 import TeachingToolsWrapper from "./TeachingToolsWrapper";
+import StudentListGate from "./StudentListGate";
+import QuickPoll from "../classroom/QuickPoll";
+import WordCloud from "../classroom/WordCloud";
+import CountdownTimer from "../classroom/CountdownTimer";
+import RandomPicker from "../classroom/RandomPicker";
+import GroupingTool from "../classroom/GroupingTool";
 import type { ToolType } from "./TeachingToolsWrapper";
-import { apiUrl } from "@/lib/apiUrl";
 
 export interface StudentItem {
   name: string;
-  id: string | null; // null for manual input
+  id: string | null;
 }
 
 interface Course {
@@ -25,185 +28,66 @@ interface TeachingToolsClientProps {
 
 const VALID_TOOLS: ToolType[] = ["poll", "wordcloud", "timer", "random-picker", "grouping"];
 
-export default function TeachingToolsClient({
-  courses,
-}: TeachingToolsClientProps) {
+export default function TeachingToolsClient({ courses }: TeachingToolsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const initialTool = (searchParams.get("tool") as ToolType | null);
-  const initialCourse = searchParams.get("course");
+  const initialTool = searchParams.get("tool") as ToolType | null;
 
   const [selectedTool, setSelectedToolState] = useState<ToolType>(
     initialTool && VALID_TOOLS.includes(initialTool) ? initialTool : null,
   );
-  const [selectedCourseId, setSelectedCourseIdState] = useState<string | null>(
-    initialCourse ?? null,
-  );
-  const [manualStudentText, setManualStudentText] = useState("");
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedCourseEnrollmentCount, setSelectedCourseEnrollmentCount] = useState(0);
 
-  const updateUrl = useCallback(
-    (tool: ToolType, courseId: string | null) => {
+  const setSelectedTool = useCallback(
+    (tool: ToolType) => {
+      setSelectedToolState(tool);
       const params = new URLSearchParams();
       if (tool) params.set("tool", tool);
-      if (courseId) params.set("course", courseId);
       const qs = params.toString();
       router.replace(qs ? `?${qs}` : "?", { scroll: false });
     },
     [router],
   );
 
-  const setSelectedTool = useCallback(
-    (tool: ToolType) => {
-      setSelectedToolState(tool);
-      updateUrl(tool, selectedCourseId);
-    },
-    [selectedCourseId, updateUrl],
-  );
-
-  const setSelectedCourseId = useCallback(
-    (courseId: string | null) => {
-      setSelectedCourseIdState(courseId);
-      updateUrl(selectedTool, courseId);
-    },
-    [selectedTool, updateUrl],
-  );
-
-  // Fetch enrollments when course selected
-  useEffect(() => {
-    if (!selectedCourseId) {
-      setEnrollments([]);
-      setSelectedCourseEnrollmentCount(0);
-      return;
-    }
-
-    // Get the selected course object to get its enrollment count
-    const selectedCourse = courses.find((c) => c.id === selectedCourseId);
-    if (selectedCourse) {
-      setSelectedCourseEnrollmentCount(selectedCourse._count.enrollments);
-    }
-
-    setIsLoading(true);
-    fetchEnrollments(selectedCourseId);
-  }, [selectedCourseId, courses]);
-
-  const fetchEnrollments = async (courseId: string) => {
-    try {
-      console.log("[TeachingTools] Fetching enrollments for courseId:", courseId);
-      const res = await fetch(apiUrl(`/api/courses/${courseId}/enrollments`), {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      console.log("[TeachingTools] API Response status:", res.status, res.statusText);
-
-      const data = await res.json();
-      console.log("[TeachingTools] API Response data:", data);
-
-      if (res.ok) {
-        console.log("[TeachingTools] SUCCESS - Got", data.length, "enrollments");
-        setEnrollments(data);
-      } else {
-        console.error("[TeachingTools] API returned error status", res.status);
-        console.error("[TeachingTools] Error details:", data);
-      }
-    } catch (err) {
-      console.error("[TeachingTools] Network error fetching enrollments:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const studentList = useMemo(() => {
-    if (selectedCourseId && enrollments.length > 0) {
-      // Course mode: use fetched enrollments
-      return enrollments.map((e: any) => ({
-        name: e.user.displayName || e.user.email,
-        id: e.userId,
-      }));
-    } else if (selectedCourseId && enrollments.length === 0 && selectedCourseEnrollmentCount > 0) {
-      // Fallback: course has students but API fetch failed - create placeholder list
-      console.warn(
-        `[TeachingTools] API returned 0 enrollments but course has ${selectedCourseEnrollmentCount} students. Creating placeholder list.`
-      );
-      return Array.from({ length: selectedCourseEnrollmentCount }, (_, i) => ({
-        name: `Sinh viên ${i + 1}`,
-        id: `placeholder-${i}`,
-      }));
-    } else if (!selectedCourseId && manualStudentText.trim()) {
-      // Manual mode: parse textarea
-      return manualStudentText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
-        .map((name, idx) => ({
-          name,
-          id: `manual-${idx}`,
-        }));
-    }
-    return [];
-  }, [selectedCourseId, enrollments, manualStudentText, selectedCourseEnrollmentCount]);
+  if (!selectedTool) {
+    return <TeachingToolsWrapper onSelectTool={setSelectedTool} />;
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Teaching Tools Section */}
-      <TeachingToolsWrapper
-        studentList={studentList}
-        selectedTool={selectedTool}
-        onSelectTool={setSelectedTool}
-      />
+    <div>
+      <button
+        onClick={() => setSelectedTool(null)}
+        className="mb-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+      >
+        ← Quay lại
+      </button>
 
-      {/* Course Selector Section - Only for Random Picker & Grouping Tool */}
-      <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card">
-        <h2 className="text-lg font-semibold mb-4">
-          Danh sách sinh viên (cho Chọn Ngẫu Nhiên & Phân Nhóm)
-        </h2>
-        <CourseSelector
+      {selectedTool === "poll" && <QuickPoll onExit={() => setSelectedTool(null)} />}
+      {selectedTool === "wordcloud" && <WordCloud onExit={() => setSelectedTool(null)} />}
+      {selectedTool === "timer" && <CountdownTimer onExit={() => setSelectedTool(null)} />}
+
+      {selectedTool === "random-picker" && (
+        <StudentListGate
           courses={courses}
-          selectedCourseId={selectedCourseId}
-          onSelectCourse={setSelectedCourseId}
-          enrollmentCount={enrollments.length}
-          isLoading={isLoading}
-        />
+          title="Chọn Ngẫu Nhiên — Chọn nguồn sinh viên"
+          description="Chọn danh sách sinh viên từ khóa học có sẵn hoặc nhập thủ công để bắt đầu."
+        >
+          {(list) => (
+            <RandomPicker studentList={list} onExit={() => setSelectedTool(null)} />
+          )}
+        </StudentListGate>
+      )}
 
-        {!selectedCourseId && (
-          <ManualStudentInput
-            value={manualStudentText}
-            onChange={setManualStudentText}
-            studentCount={
-              manualStudentText
-                .split("\n")
-                .filter((line) => line.trim().length > 0).length
-            }
-          />
-        )}
-
-        {studentList.length > 0 && (
-          <div className="mt-6 rounded-lg border border-token p-4 bg-[rgb(var(--surface-muted))]">
-            <p className="text-sm font-medium text-muted mb-2">
-              {studentList.length} sinh viên sẽ được sử dụng cho các công cụ cần danh sách
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {studentList.slice(0, 10).map((student, i) => (
-                <span
-                  key={i}
-                  className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700"
-                >
-                  {student.name}
-                </span>
-              ))}
-              {studentList.length > 10 && (
-                <span className="inline-block rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                  +{studentList.length - 10} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      {selectedTool === "grouping" && (
+        <StudentListGate
+          courses={courses}
+          title="Phân Nhóm — Chọn nguồn sinh viên"
+          description="Chọn danh sách sinh viên từ khóa học có sẵn hoặc nhập thủ công để bắt đầu chia nhóm."
+        >
+          {(list) => (
+            <GroupingTool studentList={list} onExit={() => setSelectedTool(null)} />
+          )}
+        </StudentListGate>
+      )}
     </div>
   );
 }

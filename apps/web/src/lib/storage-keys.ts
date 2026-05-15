@@ -54,7 +54,8 @@ type DateShardedKind =
   | "lesson-media/videos"
   | "lesson-media/pdfs"
   | "exam-assets"
-  | "submissions";
+  | "submissions"
+  | "proctor-snapshots";
 
 function dateSharded(
   layer: StorageLayer,
@@ -80,6 +81,10 @@ export function examAssetKey(date: Date, filename: string): StorageKey {
 }
 export function submissionKey(date: Date, filename: string): StorageKey {
   return dateSharded("private", "submissions", date, filename);
+}
+/** A7.7.5 — Proctor snapshots: private, date-sharded under proctor-snapshots/. */
+export function proctorSnapshotKey(date: Date, filename: string): StorageKey {
+  return dateSharded("private", "proctor-snapshots", date, filename);
 }
 
 /**
@@ -113,6 +118,9 @@ export function examAssetKeyFromFilename(filename: string): StorageKey | null {
 }
 export function submissionKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("private", "submissions", filename);
+}
+export function proctorSnapshotKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("private", "proctor-snapshots", filename);
 }
 
 /** Tmp staging for rich-text paste / multipart-upload flows. */

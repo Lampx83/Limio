@@ -1,0 +1,202 @@
+/**
+ * A5.3.5 — Instructor live actions on an in-progress exam attempt.
+ *
+ * Every action:
+ *   1. Loads the attempt + exam.courseId
+ *   2. Asserts the actor can edit the course
+ *   3. Mutates ExamAttempt state
+ *   4. Emits an audit LearningEvent in the same transaction
+ *
+ * Never mutates Module B (Feedback) or C (Gamification) state directly — those
+ * subscribe via LearningEvent (§5.2 CLAUDE.md).
+ */
+
+import { randomUUID } from "node:crypto";
+import { prisma, type PrismaClient } from "@feedbackme/db";
+import { LearningEventType } from "@feedbackme/shared-types";
+import { assertCanEditCourse } from "../courses/authz";
+import { emitEvent } from "../learning/events";
+import { finalizeSubmission, type ExamSubmitResult } from "./submission";
+import { ExamError } from "./types";
+
+const MAX_EXTENSION_MIN = 30;
+
+async function loadAttemptForAction(
+  attemptId: string,
+  db: PrismaClient,
+): Promise<{ id: string; examId: string; userId: string | null; status: string; courseId: string; durationSec: number; startedAt: Date }> {
+  const a = await db.examAttempt.findUnique({
+    where: { id: attemptId },
+    select: {
+      id: true,
+      examId: true,
+      userId: true,
+      status: true,
+      durationSec: true,
+      startedAt: true,
+      exam: { select: { courseId: true } },
+    },
+  });
+  if (!a) throw new ExamError("attempt_not_found");
+  return {
+    id: a.id,
+    examId: a.examId,
+    userId: a.userId,
+    status: a.status,
+    durationSec: a.durationSec,
+    startedAt: a.startedAt,
+    courseId: a.exam.courseId,
+  };
+}
+
+function requireReason(reason: unknown): string {
+  if (typeof reason !== "string" || reason.trim().length === 0) {
+    throw new ExamError("reason_required");
+  }
+  return reason.trim().slice(0, 500);
+}
+
+/** Extend an in-progress attempt's duration. Max +MAX_EXTENSION_MIN. */
+export async function extendAttempt(
+  actorUserId: string,
+  attemptId: string,
+  minutes: number,
+  db: PrismaClient = prisma,
+): Promise<{ newDurationSec: number; newDeadline: Date }> {
+  if (!Number.isInteger(minutes) || minutes <= 0 || minutes > MAX_EXTENSION_MIN) {
+    throw new ExamError("duration_extension_too_large", { max: MAX_EXTENSION_MIN });
+  }
+  const a = await loadAttemptForAction(attemptId, db);
+  await assertCanEditCourse(actorUserId, a.courseId, db);
+  if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
+
+  const newDurationSec = a.durationSec + minutes * 60;
+  await db.examAttempt.update({
+    where: { id: attemptId },
+    data: { durationSec: newDurationSec },
+  });
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamAttemptExtended,
+    {
+      examId: a.examId,
+      attemptId,
+      learnerUserId: a.userId,
+      addedMinutes: minutes,
+      newDurationSec,
+    },
+    {
+      courseId: a.courseId,
+      eventKey: `exam.attempt.extended:${attemptId}:${Date.now()}`,
+    },
+    db,
+  );
+  const newDeadline = new Date(a.startedAt.getTime() + newDurationSec * 1000);
+  return { newDurationSec, newDeadline };
+}
+
+/** Force-submit an in-progress attempt on the learner's behalf. */
+export async function forceSubmitAttempt(
+  actorUserId: string,
+  attemptId: string,
+  rawReason: unknown,
+  db: PrismaClient = prisma,
+): Promise<ExamSubmitResult> {
+  const reason = requireReason(rawReason);
+  const a = await loadAttemptForAction(attemptId, db);
+  await assertCanEditCourse(actorUserId, a.courseId, db);
+  if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
+
+  const result = await finalizeSubmission(attemptId, "force_submitted", db);
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamAttemptForceSubmitted,
+    {
+      examId: a.examId,
+      attemptId,
+      learnerUserId: a.userId,
+      reason,
+    },
+    {
+      courseId: a.courseId,
+      eventKey: `exam.attempt.force_submitted:${attemptId}`,
+    },
+    db,
+  );
+  return result;
+}
+
+/**
+ * Rotate the single-tab session lock. Useful when a learner is stuck in
+ * "session_stale" loop (left tab open on dead device).
+ */
+export async function resetAttemptSession(
+  actorUserId: string,
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<{ sessionToken: string; resumeCount: number }> {
+  const a = await loadAttemptForAction(attemptId, db);
+  await assertCanEditCourse(actorUserId, a.courseId, db);
+  if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
+
+  const newToken = randomUUID();
+  const updated = await db.examAttempt.update({
+    where: { id: attemptId },
+    data: { sessionToken: newToken, resumeCount: { increment: 1 } },
+    select: { sessionToken: true, resumeCount: true },
+  });
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamAttemptSessionReset,
+    {
+      examId: a.examId,
+      attemptId,
+      learnerUserId: a.userId,
+      resumeCount: updated.resumeCount,
+    },
+    {
+      courseId: a.courseId,
+      eventKey: `exam.attempt.session_reset:${attemptId}:${updated.resumeCount}`,
+    },
+    db,
+  );
+  return updated;
+}
+
+/**
+ * Flag an attempt (status=flagged). Does NOT auto-zero the score — instructor
+ * decides during grading whether to award partial credit (§spec).
+ */
+export async function disqualifyAttempt(
+  actorUserId: string,
+  attemptId: string,
+  rawReason: unknown,
+  db: PrismaClient = prisma,
+): Promise<{ status: "flagged" }> {
+  const reason = requireReason(rawReason);
+  const a = await loadAttemptForAction(attemptId, db);
+  await assertCanEditCourse(actorUserId, a.courseId, db);
+  if (a.status === "flagged") return { status: "flagged" };
+
+  await db.examAttempt.update({
+    where: { id: attemptId },
+    data: { status: "flagged" },
+  });
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamAttemptDisqualified,
+    {
+      examId: a.examId,
+      attemptId,
+      learnerUserId: a.userId,
+      reason,
+      priorStatus: a.status,
+    },
+    {
+      courseId: a.courseId,
+      eventKey: `exam.attempt.disqualified:${attemptId}`,
+    },
+    db,
+  );
+  return { status: "flagged" };
+}

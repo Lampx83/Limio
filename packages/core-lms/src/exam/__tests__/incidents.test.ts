@@ -72,7 +72,7 @@ async function setupInProgress(slug: string) {
 describe("logExamIncident (A7.7.3)", () => {
   it("appends row + emits exam.incident.flagged", async () => {
     const s = await setupInProgress("i1");
-    const r = await logExamIncident(s.learnerId, s.attemptId, { type: "tab_blur" });
+    const r = await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "tab_blur" });
     const rows = await prisma.examIncident.findMany({
       where: { attemptId: s.attemptId },
     });
@@ -88,7 +88,7 @@ describe("logExamIncident (A7.7.3)", () => {
 
   it("stores type-specific payload", async () => {
     const s = await setupInProgress("i2");
-    await logExamIncident(s.learnerId, s.attemptId, {
+    await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, {
       type: "paste",
       payload: { pastedLength: 124 },
     });
@@ -100,8 +100,8 @@ describe("logExamIncident (A7.7.3)", () => {
 
   it("allows multiple incidents of same type (no dedup)", async () => {
     const s = await setupInProgress("i3");
-    await logExamIncident(s.learnerId, s.attemptId, { type: "tab_blur" });
-    await logExamIncident(s.learnerId, s.attemptId, { type: "tab_blur" });
+    await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "tab_blur" });
+    await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "tab_blur" });
     const rows = await prisma.examIncident.findMany({
       where: { attemptId: s.attemptId },
     });
@@ -115,22 +115,22 @@ describe("logExamIncident (A7.7.3)", () => {
       BASE,
     );
     await expect(
-      logExamIncident(stranger.userId, s.attemptId, { type: "tab_blur" }),
+      logExamIncident({ kind: "user", userId: stranger.userId }, s.attemptId, { type: "tab_blur" }),
     ).rejects.toMatchObject({ code: "attempt_belongs_to_other" });
   });
 
   it("rejects after submission", async () => {
     const s = await setupInProgress("i5");
-    await submitExamAttempt(s.learnerId, s.attemptId);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, s.attemptId);
     await expect(
-      logExamIncident(s.learnerId, s.attemptId, { type: "tab_blur" }),
+      logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "tab_blur" }),
     ).rejects.toMatchObject({ code: "attempt_already_submitted" });
   });
 
   it("rejects unknown incident type", async () => {
     const s = await setupInProgress("i6");
     await expect(
-      logExamIncident(s.learnerId, s.attemptId, { type: "weird_type" }),
+      logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "weird_type" }),
     ).rejects.toBeInstanceOf(ExamError);
   });
 });
@@ -138,8 +138,8 @@ describe("logExamIncident (A7.7.3)", () => {
 describe("listAttemptIncidents", () => {
   it("returns incidents in chronological order", async () => {
     const s = await setupInProgress("l1");
-    const a = await logExamIncident(s.learnerId, s.attemptId, { type: "tab_blur" });
-    const b = await logExamIncident(s.learnerId, s.attemptId, { type: "paste" });
+    const a = await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "tab_blur" });
+    const b = await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "paste" });
     const list = await listAttemptIncidents(s.attemptId);
     expect(list.map((x) => x.id)).toEqual([a.incidentId, b.incidentId]);
   });

@@ -175,6 +175,7 @@ export default async function InstructorAnalyticsPage({
     const lessonId = (ev.payload as { lessonId?: string } | null)?.lessonId;
     if (!lessonId) continue;
     viewCountByLesson.set(lessonId, (viewCountByLesson.get(lessonId) ?? 0) + 1);
+    if (!ev.userId) continue;
     let set = viewsByLesson.get(lessonId);
     if (!set) {
       set = new Set();

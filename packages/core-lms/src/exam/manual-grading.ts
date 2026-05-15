@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditCourse, CourseAuthzError } from "../courses/authz";
 import { emitEvent } from "../learning/events";
+import { getRoomScope } from "./room-authz";
 import { ExamError } from "./types";
 
 export interface PendingGradeItem {
@@ -14,9 +15,11 @@ export interface PendingGradeItem {
   manualScore: number | null;
   updatedAt: Date;
   attempt: {
-    userId: string;
+    // A5.8 — null for candidate attempts (open_code / assigned_code).
+    userId: string | null;
     submittedAt: Date | null;
-    user: { id: string; displayName: string; email: string };
+    // null for candidate attempts. UI shows candidate.displayName instead.
+    user: { id: string; displayName: string; email: string } | null;
   };
   question: {
     id: string;
@@ -47,12 +50,32 @@ export async function listPendingExamGrades(
     select: { id: true, courseId: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+
+  // P1 — instructor sees all; room grader sees only essays of candidates in
+  // their graded rooms; nothing else.
+  const scope = await getRoomScope(actorUserId, examId, db);
+  if (!scope.isInstructor && scope.graderRoomIds.length === 0) {
+    throw new CourseAuthzError("forbidden");
+  }
+
+  // Restrict candidate scope for non-instructor graders.
+  let candidateIdFilter: { in: string[] } | undefined;
+  if (!scope.isInstructor) {
+    const cands = await db.examCandidate.findMany({
+      where: { examId, roomId: { in: scope.graderRoomIds } },
+      select: { id: true },
+    });
+    if (cands.length === 0) return [];
+    candidateIdFilter = { in: cands.map((c) => c.id) };
+  }
 
   return db.examAnswer.findMany({
     where: {
       needsGrading: true,
-      attempt: { examId },
+      attempt: {
+        examId,
+        ...(candidateIdFilter ? { candidateId: candidateIdFilter } : {}),
+      },
       question: { type: { in: ["essay", "short_answer"] } },
     },
     select: {
@@ -119,14 +142,29 @@ export async function gradeManualExamAnswer(
           id: true,
           examId: true,
           userId: true,
+          candidateId: true,
           status: true,
+          candidate: { select: { roomId: true } },
           exam: { select: { courseId: true, passScore: true } },
         },
       },
     },
   });
   if (!answer) throw new ExamError("answer_not_found");
-  await assertCanEditCourse(actorUserId, answer.attempt.exam.courseId, db);
+
+  // P1 — Instructor full; room grader scoped to candidates whose roomId is
+  // among the rooms they grade for this exam.
+  const scope = await getRoomScope(
+    actorUserId,
+    answer.attempt.examId,
+    db,
+  );
+  if (!scope.isInstructor) {
+    const roomId = answer.attempt.candidate?.roomId ?? null;
+    const allowed =
+      roomId !== null && scope.graderRoomIds.includes(roomId);
+    if (!allowed) throw new CourseAuthzError("forbidden");
+  }
 
   if (answer.question.type !== "essay" && answer.question.type !== "short_answer") {
     throw new ExamError("not_manual_gradable");

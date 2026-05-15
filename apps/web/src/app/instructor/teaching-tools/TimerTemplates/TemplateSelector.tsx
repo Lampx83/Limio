@@ -70,19 +70,19 @@ export default function TemplateSelector({
     <div className="space-y-3">
       <div>
         <label className="label mb-1 block text-sm font-medium">
-          Mẫu hẹn giờ
+          Nội dung hiển thị cạnh đồng hồ
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <select
             value={selectedTemplateId || ""}
             onChange={handleSelectChange}
             disabled={isLoading}
-            className="input flex-1"
+            className="input min-w-0 flex-1"
           >
             <option value="">Không dùng mẫu (thiết lập thủ công)</option>
             {templates.map((template) => (
               <option key={template.id} value={template.id}>
-                {template.name} ({Math.floor(template.durationSeconds / 60)}m{template.durationSeconds % 60}s)
+                {template.name}
               </option>
             ))}
           </select>
@@ -94,6 +94,22 @@ export default function TemplateSelector({
           >
             🔄
           </button>
+          {!showForm && (
+            <>
+              <button
+                onClick={() => setShowForm(true)}
+                className="btn btn-secondary btn-sm text-xs whitespace-nowrap"
+              >
+                + Tạo mẫu
+              </button>
+              <a
+                href="/instructor/teaching-tools/templates"
+                className="btn btn-secondary btn-sm text-xs whitespace-nowrap"
+              >
+                Quản lý mẫu →
+              </a>
+            </>
+          )}
         </div>
       </div>
 
@@ -102,23 +118,6 @@ export default function TemplateSelector({
           <p className="text-xs font-medium text-green-800">
             ✓ Đã chọn mẫu
           </p>
-        </div>
-      )}
-
-      {!showForm && (
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowForm(true)}
-            className="btn btn-secondary btn-sm text-xs"
-          >
-            + Tạo mẫu
-          </button>
-          <a
-            href="/instructor/teaching-tools/templates"
-            className="btn btn-secondary btn-sm text-xs"
-          >
-            Quản lý mẫu →
-          </a>
         </div>
       )}
 

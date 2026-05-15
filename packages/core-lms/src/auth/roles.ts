@@ -154,3 +154,74 @@ export async function isAdmin(userId: string, db: DbClient = prisma): Promise<bo
   });
   return count > 0;
 }
+
+// ============================================================================
+// PR2.17 — Multi-tenancy helpers
+// ============================================================================
+
+/**
+ * Lấy organizationId của user. Null nếu user chưa thuộc org nào (legacy
+ * data hoặc test fixture).
+ */
+export async function getUserOrgId(
+  userId: string,
+  db: DbClient = prisma,
+): Promise<string | null> {
+  const u = await db.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true },
+  });
+  return u?.organizationId ?? null;
+}
+
+/** True nếu user là OrgAdmin của bất kỳ org nào, hoặc Platform Admin. */
+export async function isAnyOrgAdmin(
+  userId: string,
+  db: DbClient = prisma,
+): Promise<boolean> {
+  if (await isAdmin(userId, db)) return true;
+  const count = await db.organizationAdmin.count({ where: { userId } });
+  return count > 0;
+}
+
+/** True nếu user là OrgAdmin của 1 org cụ thể, hoặc Platform Admin. */
+export async function isOrgAdminOf(
+  userId: string,
+  organizationId: string,
+  db: DbClient = prisma,
+): Promise<boolean> {
+  if (await isAdmin(userId, db)) return true;
+  const row = await db.organizationAdmin.findUnique({
+    where: { organizationId_userId: { organizationId, userId } },
+    select: { userId: true },
+  });
+  return row !== null;
+}
+
+/**
+ * Trả về danh sách orgId mà user có quyền truy cập:
+ * - Platform admin → null (= bypass, không scope)
+ * - Otherwise → user's own org + orgs họ là OrgAdmin
+ *
+ * Null nghĩa là caller skip mọi filter (super access).
+ */
+export async function accessibleOrgIds(
+  userId: string,
+  db: DbClient = prisma,
+): Promise<string[] | null> {
+  if (await isAdmin(userId, db)) return null;
+  const [user, admins] = await Promise.all([
+    db.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    }),
+    db.organizationAdmin.findMany({
+      where: { userId },
+      select: { organizationId: true },
+    }),
+  ]);
+  const ids = new Set<string>();
+  if (user?.organizationId) ids.add(user.organizationId);
+  for (const a of admins) ids.add(a.organizationId);
+  return Array.from(ids);
+}

@@ -2,6 +2,11 @@ import { z } from "zod";
 import { Prisma, prisma, type ExamIncidentType, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
+import {
+  assertSubjectOwnsAttempt,
+  emitArgsForSubject,
+  type ExamSubject,
+} from "./subject";
 import { ExamError } from "./types";
 
 const INCIDENT_TYPES = [
@@ -24,7 +29,7 @@ export const LogIncidentInput = z.object({
  * fired twice yields two rows (browsers misbehave; instructors review later).
  */
 export async function logExamIncident(
-  userId: string,
+  subject: ExamSubject,
   attemptId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
@@ -38,12 +43,13 @@ export async function logExamIncident(
     select: {
       id: true,
       userId: true,
+      candidateId: true,
       status: true,
       exam: { select: { id: true, courseId: true } },
     },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
-  if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
+  assertSubjectOwnsAttempt(subject, attempt);
   // Only meaningful during the active attempt window.
   if (attempt.status !== "in_progress") {
     throw new ExamError("attempt_already_submitted");
@@ -58,8 +64,9 @@ export async function logExamIncident(
     select: { id: true },
   });
 
+  const ev = emitArgsForSubject(subject);
   await emitEvent(
-    userId,
+    ev.userId,
     LearningEventType.ExamIncidentFlagged,
     {
       attemptId,
@@ -69,6 +76,7 @@ export async function logExamIncident(
     },
     {
       courseId: attempt.exam.courseId,
+      candidateId: ev.candidateId,
       eventKey: `exam.incident:${incident.id}`,
     },
     db,

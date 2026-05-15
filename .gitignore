@@ -34,3 +34,10 @@ apps/web/uploads/
 
 # Local changelog preview (pnpm changelog)
 CHANGELOG.md
+
+# R / RStudio history
+.Rhistory
+docs/.Rhistory
+
+# Ad-hoc DB inspection scripts
+packages/db/test-*.mjs

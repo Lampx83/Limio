@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   BookOpen,
+  Eye,
   FlaskConical,
   ClipboardList,
   Tag,
@@ -20,6 +21,10 @@ import {
   ChevronRight,
   Menu,
   X,
+  Library,
+  PenLine,
+  Radio,
+  LineChart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,25 +41,35 @@ type Group = {
   items: Item[];
 };
 
-const GROUPS: Group[] = [
-  {
-    id: "overview",
-    label: "Tổng quan",
-    items: [
-      { label: "Dashboard", href: "/instructor/dashboard", icon: LayoutDashboard },
-    ],
-  },
+const PROCTOR_ITEM: Item = {
+  label: "Giám sát phòng thi",
+  href: "/instructor/my-rooms",
+  icon: Eye,
+};
+
+const FULL_GROUPS: Group[] = [
   {
     id: "teaching",
     label: "Giảng dạy",
     items: [
       { label: "Khoá học của tôi", href: "/instructor/courses", icon: BookOpen },
-      { label: "Đề thi online", href: "/instructor/exams", icon: FlaskConical },
-      { label: "Chấm bài", href: "/instructor/assignments", icon: ClipboardList },
+      { label: "Đánh giá Assignment", href: "/instructor/assignments", icon: ClipboardList },
       { label: "Skill tagging", href: "/instructor/skill-tagging", icon: Tag },
       { label: "Tournament của tôi", href: "/instructor/tournaments", icon: Trophy },
       { label: "Công cụ giảng dạy", href: "/instructor/teaching-tools", icon: Wrench },
       { label: "Forum Q&A", href: "/instructor/forum", icon: MessageSquare },
+    ],
+  },
+  {
+    id: "exam",
+    label: "Kiểm tra đánh giá",
+    items: [
+      { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
+      { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
+      { label: "Tổ chức thi", href: "/instructor/exam-rounds", icon: Radio },
+      PROCTOR_ITEM,
+      { label: "Chấm tự luận", href: "/instructor/grade-essays", icon: PenLine },
+      { label: "Phân tích item", href: "/instructor/item-analytics", icon: LineChart },
     ],
   },
   {
@@ -76,10 +91,31 @@ const GROUPS: Group[] = [
   },
 ];
 
+// Slim menu for users who are ONLY proctors (no course-instructor binding).
+const PROCTOR_ONLY_GROUPS: Group[] = [
+  {
+    id: "proctor",
+    label: "Giám thị",
+    items: [PROCTOR_ITEM],
+  },
+];
+
 const LS_KEY = "fbm-instructor-menu-collapsed";
 
-export default function InstructorLeftMenu() {
+export default function InstructorLeftMenu({
+  isInstructor = true,
+  isProctor = false,
+}: {
+  isInstructor?: boolean;
+  isProctor?: boolean;
+}) {
   const pathname = usePathname();
+  // Slim menu only when the user has zero instructor binding but is proctor.
+  // Otherwise (instructor, instructor+proctor, or admin) we render the full
+  // menu — the "Giám sát phòng thi" item is always present in the full menu.
+  const GROUPS =
+    !isInstructor && isProctor ? PROCTOR_ONLY_GROUPS : FULL_GROUPS;
+  void isProctor; // visibility only matters for slim mode; full mode shows item always
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -106,15 +142,29 @@ export default function InstructorLeftMenu() {
 
   const isActive = (href?: string) => {
     if (!href) return false;
+    // Course-scoped exam editor lives at /instructor/courses/<id>/exams/<examId>
+    // but conceptually belongs to "Đề thi" — highlight that item instead of
+    // "Khoá học của tôi", which would otherwise win on prefix match.
+    if (/^\/instructor\/courses\/[^/]+\/exams(\/|$)/.test(pathname)) {
+      return href === "/instructor/exams";
+    }
     if (href === "/instructor/dashboard") return pathname === href;
     return pathname === href || pathname.startsWith(href + "/");
   };
 
   const nav = (
     <nav className="flex flex-col gap-1 py-5">
-      {/* Role badge header */}
+      {/* Workspace + Dashboard entry */}
       <div className="mb-3 px-4">
-        <div className="flex items-center gap-2.5 rounded-xl border border-amber-200/60 bg-gradient-to-br from-amber-50 to-amber-100/50 px-3 py-2.5 dark:border-amber-900/40 dark:from-amber-950/30 dark:to-amber-950/10">
+        <Link
+          href="/instructor/dashboard"
+          aria-current={isActive("/instructor/dashboard") ? "page" : undefined}
+          className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
+            isActive("/instructor/dashboard")
+              ? "border-amber-300 bg-gradient-to-br from-amber-100 to-amber-50 shadow-sm dark:border-amber-700/60 dark:from-amber-950/50 dark:to-amber-950/20"
+              : "border-amber-200/60 bg-gradient-to-br from-amber-50 to-amber-100/50 hover:from-amber-100 hover:to-amber-50 dark:border-amber-900/40 dark:from-amber-950/30 dark:to-amber-950/10 dark:hover:from-amber-950/50"
+          }`}
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm">
             <LayoutDashboard size={16} strokeWidth={2.5} />
           </div>
@@ -126,7 +176,7 @@ export default function InstructorLeftMenu() {
               Giảng viên
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {GROUPS.map((g, idx) => {
@@ -137,15 +187,14 @@ export default function InstructorLeftMenu() {
             <button
               type="button"
               onClick={() => toggle(g.id)}
-              className="group flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-left transition-colors hover:bg-[rgb(var(--surface-muted))]"
+              className="group flex w-full items-center gap-2 px-1 pt-3 pb-1.5 text-left"
             >
-              <span className="h-3.5 w-0.5 rounded-full bg-gradient-to-b from-amber-400 to-amber-600" />
-              <span className="flex-1 text-[11px] font-bold uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300">
+              <span className="flex-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-400">
                 {g.label}
               </span>
               <ChevronRight
-                size={14}
-                className={`text-faint transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+                size={12}
+                className={`text-brand-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
               />
             </button>
             {!isCollapsed && (

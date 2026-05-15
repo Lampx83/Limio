@@ -1,4 +1,5 @@
 export * from "./auth/index";
+export * from "./org/index";
 export * from "./courses/index";
 export * from "./learning/index";
 export * from "./quizzes/index";

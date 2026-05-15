@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse } from "@feedbackme/core-lms";
+import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 
@@ -23,20 +23,39 @@ export default async function GradingInboxPage({
     select: { id: true, title: true },
   });
   if (!course) notFound();
-  if (!(await canEditCourse(session.user.id, course.id))) {
-    redirect("/instructor/courses");
-  }
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
     select: { id: true, title: true, courseId: true },
   });
   if (!exam || exam.courseId !== course.id) notFound();
 
+  // P1 — instructor OR room grader. Graders see only their rooms.
+  const isInstructor = await canEditCourse(session.user.id, course.id);
+  const scope = isInstructor
+    ? null
+    : await getRoomScope(session.user.id, exam.id);
+  if (!isInstructor && (!scope || scope.graderRoomIds.length === 0)) {
+    redirect("/instructor/courses");
+  }
+
+  // Restrict to candidates of grader's rooms when not instructor.
+  let candidateIdFilter: { in: string[] } | undefined;
+  if (!isInstructor && scope) {
+    const cands = await prisma.examCandidate.findMany({
+      where: { examId: exam.id, roomId: { in: scope.graderRoomIds } },
+      select: { id: true },
+    });
+    candidateIdFilter = { in: cands.map((c) => c.id) };
+  }
+
   // Pending (essay/short awaiting manual grade).
   const pending = await prisma.examAnswer.findMany({
     where: {
       needsGrading: true,
-      attempt: { examId: exam.id },
+      attempt: {
+        examId: exam.id,
+        ...(candidateIdFilter ? { candidateId: candidateIdFilter } : {}),
+      },
       question: { type: { in: ["essay", "short_answer"] } },
     },
     orderBy: [{ attempt: { submittedAt: "asc" } }, { updatedAt: "asc" }],
@@ -48,7 +67,10 @@ export default async function GradingInboxPage({
     where: {
       needsGrading: false,
       manualScore: { not: null },
-      attempt: { examId: exam.id },
+      attempt: {
+        examId: exam.id,
+        ...(candidateIdFilter ? { candidateId: candidateIdFilter } : {}),
+      },
       question: { type: { in: ["essay", "short_answer"] } },
     },
     orderBy: { gradedAt: "desc" },
@@ -142,7 +164,8 @@ type AnswerItem = {
   gradedAt: Date | null;
   attempt: {
     submittedAt: Date | null;
-    user: { id: string; displayName: string; email: string };
+    // A5.8 — null for candidate attempts (open_code / assigned_code).
+    user: { id: string; displayName: string; email: string } | null;
   };
   question: { type: string; prompt: string; points: number };
 };
@@ -162,8 +185,10 @@ function AnswerCard({
     <div className="rounded-lg border border-default bg-white p-4">
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <span className="text-sm font-medium">{item.attempt.user.displayName}</span>
-          <span className="ml-2 text-xs text-faint">{item.attempt.user.email}</span>
+          <span className="text-sm font-medium">{item.attempt.user?.displayName ?? "Thí sinh"}</span>
+          {item.attempt.user?.email && (
+            <span className="ml-2 text-xs text-faint">{item.attempt.user.email}</span>
+          )}
         </div>
         <span className="text-xs text-faint">
           {item.question.type === "essay" ? "Tự luận" : "Trả lời ngắn"} ·{" "}

@@ -155,7 +155,6 @@ export default function TemplateList({ courseId }: TemplateListProps) {
             <thead className="bg-[rgb(var(--surface-muted))]">
               <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
                 <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Duration</th>
                 <th className="px-4 py-3">Music</th>
                 <th className="px-4 py-3">Public</th>
                 <th className="px-4 py-3 text-right">Actions</th>
@@ -176,12 +175,6 @@ export default function TemplateList({ courseId }: TemplateListProps) {
                         </p>
                       )}
                     </div>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-sm">
-                    {Math.floor(template.durationSeconds / 60)}:
-                    {(template.durationSeconds % 60)
-                      .toString()
-                      .padStart(2, "0")}
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {template.musicId ? (

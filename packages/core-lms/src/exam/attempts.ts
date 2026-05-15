@@ -8,8 +8,14 @@ import {
   type PrismaClient,
 } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { isUserEnrolled } from "../learning/enroll";
 import { emitEvent } from "../learning/events";
+import { assertEligibleForExam } from "./cohorts";
+import { materializeRandomSections } from "./sections";
+import {
+  assertSubjectOwnsAttempt,
+  emitArgsForSubject,
+  type ExamSubject,
+} from "./subject";
 import { ExamError } from "./types";
 
 /**
@@ -45,7 +51,7 @@ interface ShuffleSnapshot {
   optionOrderByQuestion: Record<string, string[]>;
 }
 
-async function buildShuffleSnapshot(
+export async function buildShuffleSnapshot(
   examId: string,
   attemptId: string,
   shuffleQuestions: boolean,
@@ -135,16 +141,16 @@ export async function startExamAttempt(
   durationSec: number;
 }> {
   const exam = await loadExamForRuntime(examId, db);
-  if (exam.status !== "published") throw new ExamError("exam_not_open");
-  const now = new Date();
-  if (now < exam.openAt) throw new ExamError("exam_not_open");
-  if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
+  // A5.2 — eligibility (status, schedule window, cohort, enrollment, duration)
+  // all live in assertEligibleForExam now. Legacy exam.openAt/closeAt is the
+  // fallback when no ExamSchedule rows exist.
+  const eligibility = await assertEligibleForExam(userId, examId, db);
 
-  const enrolled = await isUserEnrolled(userId, exam.courseId, db);
-  if (!enrolled) throw new ExamError("not_enrolled");
-
-  const existing = await db.examAttempt.findUnique({
-    where: { examId_userId: { examId, userId } },
+  // A5.8: composite unique was replaced with partial unique index in raw SQL;
+  // Prisma can't model partial unique, so we use findFirst here. Still hits the
+  // index because the where matches (examId, userId).
+  const existing = await db.examAttempt.findFirst({
+    where: { examId, userId },
     select: {
       id: true,
       status: true,
@@ -179,16 +185,28 @@ export async function startExamAttempt(
     throw new ExamError("attempt_already_submitted");
   }
 
-  const durationSec = exam.durationMin * 60;
+  const durationSec = eligibility.durationSec;
   const attemptId = randomUUID();
   const sessionToken = randomUUID();
-  const snapshot = await buildShuffleSnapshot(
+  const baseSnapshot = await buildShuffleSnapshot(
     examId,
     attemptId,
     exam.shuffleQuestions,
     exam.shuffleOptions,
     db,
   );
+  // A5.2.4 — run random pool samplers for sections with selectionMode=
+  // random_from_bank + per_attempt. Deterministic per (examId, userId, sectionId)
+  // so resume picks up the same questions.
+  const sectionMaterializations = await materializeRandomSections(
+    examId,
+    userId,
+    db,
+  ).catch(() => ({}));
+  const snapshot = {
+    ...baseSnapshot,
+    sectionMaterializations,
+  };
   await db.examAttempt.create({
     data: {
       id: attemptId,
@@ -217,7 +235,7 @@ export async function startExamAttempt(
  * compute remaining time and rehydrate UI state on resume.
  */
 export async function getAttemptRuntime(
-  userId: string,
+  subject: ExamSubject,
   attemptId: string,
   db: PrismaClient = prisma,
 ) {
@@ -246,7 +264,7 @@ export async function getAttemptRuntime(
     },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
-  if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
+  assertSubjectOwnsAttempt(subject, attempt);
   return {
     attemptId: attempt.id,
     examId: attempt.examId,
@@ -293,7 +311,7 @@ function hashAnswer(value: unknown): string {
  * tokens (issued before another tab claimed the attempt) are rejected 409.
  */
 export async function saveAnswer(
-  userId: string,
+  subject: ExamSubject,
   attemptId: string,
   questionId: string,
   rawInput: unknown,
@@ -308,6 +326,7 @@ export async function saveAnswer(
       id: true,
       examId: true,
       userId: true,
+      candidateId: true,
       status: true,
       sessionToken: true,
       startedAt: true,
@@ -316,7 +335,7 @@ export async function saveAnswer(
     },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
-  if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
+  assertSubjectOwnsAttempt(subject, attempt);
   if (attempt.status !== "in_progress") {
     throw new ExamError("attempt_already_submitted");
   }
@@ -374,11 +393,12 @@ export async function saveAnswer(
   });
 
   if (result.persisted) {
+    const ev = emitArgsForSubject(subject);
     // Emit per-question event (used by Feedback Engine for BKT) and the
     // generic autosave event. Idempotency key is (attemptId, questionId,
     // hash) — replays with same content won't double-emit.
     await emitEvent(
-      userId,
+      ev.userId,
       LearningEventType.ExamQuestionAnswered,
       {
         examId: attempt.examId,
@@ -391,16 +411,18 @@ export async function saveAnswer(
       },
       {
         courseId: attempt.exam.courseId,
+        candidateId: ev.candidateId,
         eventKey: `exam.question.answered:${attemptId}:${questionId}:${newHash}`,
       },
       db,
     );
     await emitEvent(
-      userId,
+      ev.userId,
       LearningEventType.ExamAutosaved,
       { attemptId, questionId, answerHash: newHash },
       {
         courseId: attempt.exam.courseId,
+        candidateId: ev.candidateId,
         eventKey: `exam.autosaved:${attemptId}:${questionId}:${newHash}`,
       },
       db,
@@ -417,16 +439,16 @@ export async function saveAnswer(
  * start returning session_stale.
  */
 export async function claimAttemptSession(
-  userId: string,
+  subject: ExamSubject,
   attemptId: string,
   db: PrismaClient = prisma,
 ): Promise<{ sessionToken: string }> {
   const attempt = await db.examAttempt.findUnique({
     where: { id: attemptId },
-    select: { id: true, userId: true, status: true },
+    select: { id: true, userId: true, candidateId: true, status: true },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
-  if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
+  assertSubjectOwnsAttempt(subject, attempt);
   if (attempt.status !== "in_progress") {
     throw new ExamError("attempt_already_submitted");
   }

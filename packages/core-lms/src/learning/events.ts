@@ -6,6 +6,12 @@ export interface EmitOptions {
   courseId?: string;
   /** Stable key for idempotent emit. If a row with this key exists, no new event is created. */
   eventKey?: string;
+  /**
+   * A5.8 — Candidate subject when the event belongs to an anonymous test-taker
+   * (open_code / assigned_code mode). Caller must pass `userId=null` in that
+   * case. CHECK constraint enforces ≥1 of (userId, candidateId) is set.
+   */
+  candidateId?: string;
 }
 
 export interface EmitResult {
@@ -19,16 +25,20 @@ export interface EmitResult {
  * Idempotent when `eventKey` is provided.
  */
 export async function emitEvent(
-  userId: string,
+  userId: string | null,
   eventType: LearningEventType,
   payload: Record<string, unknown>,
   options: EmitOptions = {},
   db: DbClient = prisma,
 ): Promise<EmitResult> {
+  if (!userId && !options.candidateId) {
+    throw new Error("emitEvent: userId or candidateId is required");
+  }
   try {
     const event = await db.learningEvent.create({
       data: {
         userId,
+        candidateId: options.candidateId,
         eventType,
         payload: payload as Prisma.InputJsonValue,
         courseId: options.courseId,

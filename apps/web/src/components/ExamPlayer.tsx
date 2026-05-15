@@ -8,6 +8,7 @@ import ExamQuestion, { type AnswerValue } from "./exam/ExamQuestion";
 import QuestionPalette from "./exam/QuestionPalette";
 import FullscreenGate from "./exam/FullscreenGate";
 import TabBlurWarning from "./exam/TabBlurWarning";
+import MultiTabDetector from "./exam/MultiTabDetector";
 import SubmitReviewModal from "./exam/SubmitReviewModal";
 
 function isAnswered(value: AnswerValue): boolean {
@@ -64,7 +65,9 @@ interface Props {
   questions: QuestionData[];
   shuffleSnapshot: ShuffleSnapshot;
   initialAnswers: InitialAnswer[];
-  courseSlug: string;
+  // Where to navigate after successful submit. Authenticated learner flow
+  // points at /learn/<slug>/...; candidate flow points at /exam-take/<id>/result.
+  resultUrl: string;
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error" | "stale";
@@ -180,7 +183,7 @@ export default function ExamPlayer(props: Props) {
           }
           if (j?.error === "attempt_already_submitted") {
             router.replace(
-              `/learn/${props.courseSlug}/exams/${props.exam.id}/${props.attemptId}/result`,
+              props.resultUrl,
             );
             return;
           }
@@ -196,7 +199,7 @@ export default function ExamPlayer(props: Props) {
         setSaveState("error");
       }
     },
-    [props.attemptId, props.courseSlug, props.exam.id, sessionToken, router],
+    [props.attemptId, sessionToken, router],
   );
 
   const onChange = useCallback(
@@ -260,6 +263,83 @@ export default function ExamPlayer(props: Props) {
     };
   }, [logIncident]);
 
+  // A5.3 — Heartbeat for the instructor live dashboard. Fire-and-forget, 10s.
+  useEffect(() => {
+    let cancelled = false;
+    const ping = () => {
+      fetch(apiUrl(`/api/exam-attempts/${props.attemptId}/heartbeat`), {
+        method: "POST",
+      }).catch(() => {});
+    };
+    ping();
+    const t = setInterval(() => {
+      if (!cancelled) ping();
+    }, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [props.attemptId]);
+
+  // A5.3.5 — Poll instructor messages every 5s. Toast on new + ack on dismiss.
+  const [messages, setMessages] = useState<
+    { id: string; kind: string; body: string; sentAt: number }[]
+  >([]);
+  const lastFetchAtRef = useRef<number>(0);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      const since = lastFetchAtRef.current;
+      const url = apiUrl(
+        `/api/exam-attempts/${props.attemptId}/messages${since ? `?since=${since}` : ""}`,
+      );
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const j = (await res.json()) as {
+          messages: {
+            id: string;
+            kind: string;
+            body: string;
+            sentAt: number;
+            readAt: number | null;
+          }[];
+        };
+        if (cancelled || j.messages.length === 0) return;
+        lastFetchAtRef.current = Math.max(
+          lastFetchAtRef.current,
+          ...j.messages.map((m) => m.sentAt),
+        );
+        setMessages((prev) => [
+          ...prev,
+          ...j.messages.filter((nm) => !prev.some((p) => p.id === nm.id)),
+        ]);
+      } catch {
+        /* network blip — heartbeat will recover */
+      }
+    };
+    poll();
+    const t = setInterval(poll, 5_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [props.attemptId]);
+
+  const dismissMessage = useCallback(
+    async (id: string) => {
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+      try {
+        await fetch(apiUrl(`/api/exam-messages/${id}/read`), {
+          method: "PATCH",
+        });
+      } catch {
+        /* ignore */
+      }
+    },
+    [],
+  );
+
   const submitAttempt = useCallback(
     async (auto = false) => {
       if (submitting) return;
@@ -284,9 +364,7 @@ export default function ExamPlayer(props: Props) {
         for (const p of props.passages) {
           localStorage.removeItem(`exam:${props.attemptId}:passage:${p.id}`);
         }
-        router.replace(
-          `/learn/${props.courseSlug}/exams/${props.exam.id}/${props.attemptId}/result`,
-        );
+        router.replace(props.resultUrl);
       } catch {
         setError("network_error");
         setSubmitting(false);
@@ -298,8 +376,7 @@ export default function ExamPlayer(props: Props) {
       answers,
       props.attemptId,
       props.passages,
-      props.courseSlug,
-      props.exam.id,
+      props.resultUrl,
       router,
     ],
   );
@@ -399,6 +476,48 @@ export default function ExamPlayer(props: Props) {
         required
       />
       <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
+      <MultiTabDetector
+        attemptId={props.attemptId}
+        onConflict={(peerTabId) => logIncident("multi_tab", { peerTabId })}
+      />
+
+      {messages.length > 0 && (
+        <div
+          data-testid="instructor-message-stack"
+          className="fixed right-4 top-4 z-50 flex w-80 flex-col gap-2"
+        >
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              role="alert"
+              className={`rounded-lg border-l-4 bg-white p-3 shadow-lg ${
+                m.kind === "broadcast"
+                  ? "border-amber-500"
+                  : "border-blue-500"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  {m.kind === "broadcast"
+                    ? "📢 Thông báo chung"
+                    : "💬 Tin nhắn từ giám thị"}
+                </div>
+                <button
+                  onClick={() => dismissMessage(m.id)}
+                  className="text-xs text-slate-400 hover:text-slate-700"
+                  aria-label="Đóng"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
+                {m.body}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <SubmitReviewModal
         open={reviewOpen}
         items={paletteItems}

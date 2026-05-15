@@ -100,7 +100,7 @@ async function answerWithToken(
   payload: unknown,
   sessionToken: string,
 ) {
-  return saveAnswer(learnerId, attemptId, qid, {
+  return saveAnswer({ kind: "user", userId: learnerId }, attemptId, qid, {
     answerJson: payload,
     sessionToken,
   });
@@ -112,7 +112,7 @@ describe("submitExamAttempt (A7.5.1)", () => {
     const start = await startExamAttempt(s.learnerId, s.examId);
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
     await answerWithToken(s.learnerId, start.attemptId, s.q2, { optionIds: ["b"] }, start.sessionToken);
-    const r = await submitExamAttempt(s.learnerId, start.attemptId);
+    const r = await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
     expect(r.fullyGraded).toBe(true);
     expect(r.status).toBe("graded");
     expect(r.autoScore).toBe(5); // q1 correct, q2 wrong → 5 of 10
@@ -132,7 +132,7 @@ describe("submitExamAttempt (A7.5.1)", () => {
     const start = await startExamAttempt(s.learnerId, s.examId);
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
     await answerWithToken(s.learnerId, start.attemptId, s.q3!, { text: "essay body" }, start.sessionToken);
-    const r = await submitExamAttempt(s.learnerId, start.attemptId);
+    const r = await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
     expect(r.fullyGraded).toBe(false);
     expect(r.status).toBe("submitted");
     expect(r.autoScore).toBe(5); // q1 correct only
@@ -151,7 +151,7 @@ describe("submitExamAttempt (A7.5.1)", () => {
     const s = await setup("m3");
     const start = await startExamAttempt(s.learnerId, s.examId);
     // Submit without answering anything.
-    const r = await submitExamAttempt(s.learnerId, start.attemptId);
+    const r = await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
     expect(r.fullyGraded).toBe(true);
     expect(r.autoScore).toBe(0);
     const rows = await prisma.examAnswer.findMany({ where: { attemptId: start.attemptId } });
@@ -163,8 +163,8 @@ describe("submitExamAttempt (A7.5.1)", () => {
     const s = await setup("m4");
     const start = await startExamAttempt(s.learnerId, s.examId);
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
-    const first = await submitExamAttempt(s.learnerId, start.attemptId);
-    const second = await submitExamAttempt(s.learnerId, start.attemptId);
+    const first = await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+    const second = await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
     expect(second.status).toBe(first.status);
     expect(second.autoScore).toBe(first.autoScore);
     const evs = await prisma.learningEvent.count({
@@ -183,7 +183,7 @@ describe("submitExamAttempt (A7.5.1)", () => {
       { email: "stranger-m5@e.com", password: "password1234", displayName: "X" },
       BASE,
     );
-    await expect(submitExamAttempt(other.userId, start.attemptId)).rejects.toMatchObject({
+    await expect(submitExamAttempt({ kind: "user", userId: other.userId }, start.attemptId)).rejects.toMatchObject({
       code: "attempt_belongs_to_other",
     });
   });
@@ -237,7 +237,7 @@ describe("getExamAttemptResult (A7.5.4)", () => {
     const s = await setup("r1");
     const start = await startExamAttempt(s.learnerId, s.examId);
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
-    await submitExamAttempt(s.learnerId, start.attemptId);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
     const r = await getExamAttemptResult(s.learnerId, start.attemptId);
     expect(r.status).toBe("graded");
     expect(r.score).toBe(5);
@@ -252,7 +252,7 @@ describe("getExamAttemptResult (A7.5.4)", () => {
     const start = await startExamAttempt(s.learnerId, s.examId);
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
     await answerWithToken(s.learnerId, start.attemptId, s.q3!, { text: "essay" }, start.sessionToken);
-    await submitExamAttempt(s.learnerId, start.attemptId);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
     const r = await getExamAttemptResult(s.learnerId, start.attemptId);
     expect(r.status).toBe("submitted");
     expect(r.score).toBeNull();
