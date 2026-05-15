@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Download, Upload as UploadIcon } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface Props {
@@ -133,7 +134,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
     >
       <div className="w-full max-w-4xl rounded-lg bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-default px-5 py-3">
-          <h2 className="text-base font-semibold">📤 Import câu hỏi từ Excel</h2>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold"><UploadIcon className="h-4 w-4 shrink-0 text-slate-400" /> Import câu hỏi từ Excel</h2>
           <button type="button" onClick={close} className="text-faint hover:text-red-600">
             ✕
           </button>
@@ -192,7 +193,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
               <button
                 type="button"
                 onClick={close}
-                className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white"
+                className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white"
               >
                 Xong
               </button>
@@ -210,7 +211,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
                   type="button"
                   onClick={runConfirm}
                   disabled={loading || importableCount === 0}
-                  className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                 >
                   {loading ? "Đang import…" : `Import ${importableCount} câu`}
                 </button>
@@ -254,15 +255,15 @@ function Upload({
           className="rounded border border-default px-3 py-1.5 hover:bg-slate-50"
           download
         >
-          📥 Tải template
+          <Download className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải template
         </a>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
-          className="rounded bg-blue-600 px-3 py-1.5 font-medium text-white disabled:opacity-50"
+          className="rounded bg-brand-600 px-3 py-1.5 font-medium text-white disabled:opacity-50"
         >
-          {loading ? "Đang phân tích…" : "📤 Chọn file Excel"}
+          {loading ? "Đang phân tích…" : <><UploadIcon className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Chọn file Excel</>}
         </button>
         <input
           ref={fileInputRef}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { BookOpen, Radio, Tag } from "lucide-react";
 import {
   ExamError,
   canEditExamRound,
@@ -152,9 +153,9 @@ export default async function ExamSessionDetailPage({
           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-faint">
             {detail.code && <span className="font-mono">{detail.code}</span>}
             {detail.code && <span>·</span>}
-            <span>📘 {detail.examTitle}</span>
+            <span className="inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 shrink-0 text-slate-400" />{detail.examTitle}</span>
             <span>·</span>
-            <span>🏷️ {detail.courseTitle}</span>
+            <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 shrink-0 text-slate-400" />{detail.courseTitle}</span>
             <span>·</span>
             <span>
               {formatDate(detail.opensAt)} → {formatDate(detail.closesAt)}
@@ -168,7 +169,7 @@ export default async function ExamSessionDetailPage({
             href={`/instructor/courses/${detail.courseId}/exams/${detail.examId}/live?sessionId=${detail.id}`}
             className="inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 hover:bg-emerald-100"
           >
-            🔴 Live monitor
+            <Radio className="h-4 w-4 text-red-500" /> Live monitor
           </Link>
         )}
       </div>

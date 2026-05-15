@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createExam, listExamsForCourse } from "@feedbackme/core-lms";
+import { createExam, createExamFromWizard, listExamsForCourse } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
@@ -42,7 +42,10 @@ export async function POST(
   if (!courseId) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const body = await readJson(req);
   try {
-    const result = await createExam(userId, courseId, body);
+    // A5.5 — wizard path when body contains wizardConfig
+    const result = (body as Record<string, unknown>).wizardConfig
+      ? await createExamFromWizard(userId, courseId, body)
+      : await createExam(userId, courseId, body);
     return NextResponse.json(result, { status: 201 });
   } catch (e) {
     const mapped = mapKnownError(e);

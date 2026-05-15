@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
-import NewExamForm from "./NewExamForm";
+import ExamWizard from "./ExamWizard";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +13,10 @@ export default async function NewExamHubPage({
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/exams/new");
+  const userId = session.user.id;
 
   const ownedCourses = await prisma.course.findMany({
-    where: { instructors: { some: { userId: session.user.id } } },
+    where: { instructors: { some: { userId } } },
     select: { id: true, title: true, slug: true },
     orderBy: { updatedAt: "desc" },
   });
@@ -23,9 +24,9 @@ export default async function NewExamHubPage({
   if (ownedCourses.length === 0) {
     return (
       <main className="mx-auto max-w-2xl px-6 py-12 text-center">
-        <h1 className="text-2xl font-bold">Tạo bài thi</h1>
+        <h1 className="text-2xl font-bold">Tạo đề thi</h1>
         <p className="mt-4 text-sm text-faint">
-          Bạn cần là instructor của một khóa học trước khi tạo bài thi.
+          Bạn cần là instructor của một khóa học trước khi tạo đề thi.
         </p>
         <Link
           href="/instructor/courses/new"
@@ -42,21 +43,66 @@ export default async function NewExamHubPage({
       ? searchParams.courseId
       : ownedCourses[0]!.id;
 
+  // Lesson tree for wizard Step 1. Each lesson gets its published bank question count
+  // so the UI can show "(N câu sẵn có)" and disable lessons with 0 questions.
+  const modules = await prisma.module.findMany({
+    where: { courseId: preselectedCourseId },
+    orderBy: { orderIndex: "asc" },
+    select: {
+      id: true,
+      title: true,
+      lessons: {
+        orderBy: { orderIndex: "asc" },
+        select: { id: true, title: true },
+      },
+    },
+  });
+
+  const lessonIds = modules.flatMap((m) => m.lessons.map((l) => l.id));
+  const bankCountsRaw = lessonIds.length > 0
+    ? await prisma.$queryRaw<{ lessonId: string; cnt: bigint }[]>`
+        SELECT csm."contentId" AS "lessonId", COUNT(DISTINCT bq.id) AS cnt
+        FROM "ContentSkillMapping" csm
+        JOIN "BankQuestionSkillTag" bqst ON bqst."skillId" = csm."skillId"
+        JOIN "BankQuestion" bq ON bq.id = bqst."bankQuestionId" AND bq.status = 'published'
+        WHERE csm."contentType" = 'lesson'
+          AND csm."contentId" = ANY(${lessonIds})
+        GROUP BY csm."contentId"
+      `
+    : [];
+  const bankCountMap = Object.fromEntries(
+    bankCountsRaw.map((r) => [r.lessonId, Number(r.cnt)]),
+  );
+
+  const lessonTree = modules.map((m) => ({
+    id: m.id,
+    title: m.title,
+    lessons: m.lessons.map((l) => ({
+      id: l.id,
+      title: l.title,
+      bankCount: bankCountMap[l.id] ?? 0,
+    })),
+  }));
+
+  const userMeta = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { examsCreatedCount: true, expertAssessmentMode: true },
+  });
+  const expertMode = userMeta?.expertAssessmentMode ?? false;
+  const showUpgradeBanner = (userMeta?.examsCreatedCount ?? 0) >= 3 && !expertMode;
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <Link href="/instructor/exams" className="text-sm text-blue-600 hover:underline">
-        ← Bài thi
+        ← Quản lý đề thi
       </Link>
-      <h1 className="mt-3 text-2xl font-bold">Tạo bài thi mới</h1>
-      <p className="mt-1 text-sm text-faint">
-        Chọn khoá học và thiết lập thông số. Sau khi tạo, bạn sẽ thêm đoạn bài
-        đọc và câu hỏi ở bước tiếp theo.
-      </p>
-
       <div className="mt-6">
-        <NewExamForm
+        <ExamWizard
           courses={ownedCourses}
           initialCourseId={preselectedCourseId}
+          lessonTree={lessonTree}
+          showUpgradeBanner={showUpgradeBanner}
+          initialExpertMode={expertMode}
         />
       </div>
     </main>

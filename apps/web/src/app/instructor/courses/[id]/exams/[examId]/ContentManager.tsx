@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BookOpen, Upload } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
@@ -303,7 +304,7 @@ export default function ContentManager({ examId, editable, passages, questions }
             onClick={() => setImportOpen(true)}
             className="rounded border border-default px-3 py-1 hover:bg-slate-50"
           >
-            📤 Import từ Excel
+            <Upload className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Import từ Excel
           </button>
         </div>
       )}
@@ -318,7 +319,7 @@ export default function ContentManager({ examId, editable, passages, questions }
             <button
               type="button"
               onClick={() => setEdit({ kind: "newPassage" })}
-              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white"
+              className="rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white"
             >
               + Thêm đoạn
             </button>
@@ -472,7 +473,7 @@ export default function ContentManager({ examId, editable, passages, questions }
                 onClick={() => setEdit({ kind: "fromBank", passageId: null })}
                 className="rounded border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100"
               >
-                📚 Từ bank
+                <BookOpen className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Từ bank
               </button>
             </div>
           )}

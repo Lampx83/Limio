@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@feedbackme/db";
+import { CheckCircle } from "lucide-react";
 import { requireExamSubject } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export default async function ExamSubmittedPage({
 
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-10 text-center">
-      <div className="text-5xl">✅</div>
+      <CheckCircle className="mx-auto h-16 w-16 text-emerald-500" />
       <h1 className="mt-4 text-2xl font-bold text-slate-900">
         Đã nộp bài thi
       </h1>

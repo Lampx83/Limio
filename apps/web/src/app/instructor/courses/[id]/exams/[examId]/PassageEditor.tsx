@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Image, Music } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillPicker from "./SkillPicker";
 import { plainTextToTiptap, tiptapToPlainText } from "./contentHelpers";
@@ -186,7 +187,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               disabled={uploading}
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
-              {uploading ? "Đang tải…" : "📷 Tải ảnh"}
+              {uploading ? "Đang tải…" : <><Image className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải ảnh</>}
             </button>
             <button
               type="button"
@@ -194,7 +195,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               disabled={uploading}
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
-              🎵 Tải audio
+              <Music className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải audio
             </button>
           </div>
           <input
@@ -295,7 +296,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
         <button
           type="submit"
           disabled={saving}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {saving ? "Đang lưu…" : mode === "create" ? "Thêm đoạn" : "Lưu"}
         </button>

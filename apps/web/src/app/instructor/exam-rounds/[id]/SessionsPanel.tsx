@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { AlertTriangle, Globe, GraduationCap, Tag, Users, X } from "lucide-react";
 
 type SessionStatus = "draft" | "open" | "closed" | "archived";
 
@@ -99,7 +99,7 @@ export default function SessionsPanel({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-faint">
-          {sessions.length} ca thi trong đợt · 🏷️ {course.courseTitle}.
+          {sessions.length} ca thi trong đợt · <Tag className="inline h-3.5 w-3.5 align-text-bottom text-slate-400" /> {course.courseTitle}.
           {canEdit &&
             " Click vào ô bất kỳ (mã / tên / đề / thời gian) để sửa nhanh."}
         </p>
@@ -112,7 +112,7 @@ export default function SessionsPanel({
                 ? "Khoá học chưa có đề thi nào"
                 : ""
             }
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             + Thêm ca thi
           </button>
@@ -511,9 +511,14 @@ function InlineDateTimeCell({
 // ============================================================================
 
 const MODE_LABEL: Record<string, string> = {
-  assigned_code: "📚 Theo phòng",
-  open_code: "🎫 Tự do",
-  authenticated: "⚠ Chưa chọn",
+  assigned_code: "Theo phòng",
+  open_code: "Tự do",
+  authenticated: "Chưa chọn",
+};
+const MODE_ICON: Record<string, React.ElementType> = {
+  assigned_code: Users,
+  open_code: Globe,
+  authenticated: AlertTriangle,
 };
 const MODE_TONE: Record<string, string> = {
   assigned_code: "bg-blue-100 text-blue-800 border-blue-300",
@@ -556,6 +561,7 @@ function AccessModeBadge({
   const [editing, setEditing] = useState(false);
   const tone = MODE_TONE[accessMode] ?? MODE_TONE.authenticated;
   const label = MODE_LABEL[accessMode] ?? accessMode;
+  const ModeIcon = MODE_ICON[accessMode] ?? AlertTriangle;
   void examId;
 
   if (editing) {
@@ -567,14 +573,14 @@ function AccessModeBadge({
             await onChange("assigned_code");
             setEditing(false);
           }}
-          className={`rounded border px-2 py-0.5 text-[11px] hover:opacity-80 ${
+          className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] hover:opacity-80 ${
             accessMode === "assigned_code"
               ? "border-blue-500 bg-blue-100 font-semibold text-blue-800"
               : "border-slate-300 bg-white text-slate-700"
           }`}
           title="Mỗi sinh viên 1 mã 8 ký tự, gán vào phòng"
         >
-          📚 Theo phòng
+          <Users className="h-3 w-3" /> Theo phòng
         </button>
         <button
           type="button"
@@ -582,14 +588,14 @@ function AccessModeBadge({
             await onChange("open_code");
             setEditing(false);
           }}
-          className={`rounded border px-2 py-0.5 text-[11px] hover:opacity-80 ${
+          className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] hover:opacity-80 ${
             accessMode === "open_code"
               ? "border-purple-500 bg-purple-100 font-semibold text-purple-800"
               : "border-slate-300 bg-white text-slate-700"
           }`}
           title="1 mã chung 6 ký tự, sinh viên tự nhập tên khi vào"
         >
-          🎫 Tự do
+          <Globe className="h-3 w-3" /> Tự do
         </button>
         <button
           type="button"
@@ -604,9 +610,9 @@ function AccessModeBadge({
   return (
     <div className="flex items-center gap-1">
       <span
-        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone}`}
+        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone}`}
       >
-        {label}
+        <ModeIcon className="h-3 w-3" />{label}
       </span>
       {canEdit && (
         <button
@@ -751,7 +757,7 @@ function BulkCreateSessionsDialog({
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
-                <div className="font-semibold text-sm">📚 Theo phòng</div>
+                <div className="flex items-center gap-1.5 font-semibold text-sm"><Users className="h-3.5 w-3.5 shrink-0" /> Theo phòng</div>
                 <div className="mt-0.5 text-[11px] text-faint">
                   Có danh sách thí sinh + mã cá nhân 8 ký tự cho từng người
                 </div>
@@ -765,7 +771,7 @@ function BulkCreateSessionsDialog({
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
-                <div className="font-semibold text-sm">🎫 Tự do</div>
+                <div className="flex items-center gap-1.5 font-semibold text-sm"><Globe className="h-3.5 w-3.5 shrink-0" /> Tự do</div>
                 <div className="mt-0.5 text-[11px] text-faint">
                   1 mã chung 6 ký tự cho cả lớp, sinh viên tự nhập tên
                 </div>
@@ -799,7 +805,7 @@ function BulkCreateSessionsDialog({
           <button
             onClick={submit}
             disabled={busy}
-            className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy ? "Đang tạo..." : `Tạo ${count} ca thi`}
           </button>

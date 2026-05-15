@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BookOpen } from "lucide-react";
 
 type Item = {
   id: string;
@@ -101,7 +102,7 @@ export default function FromBankModal({
         className="flex max-h-[80vh] w-full max-w-3xl flex-col rounded-lg bg-white shadow-xl"
       >
         <div className="flex items-center justify-between border-b border-default p-4">
-          <h3 className="text-base font-semibold">📚 Chọn câu hỏi từ bank</h3>
+          <h3 className="flex items-center gap-1.5 text-base font-semibold"><BookOpen className="h-4 w-4 shrink-0 text-slate-400" /> Chọn câu hỏi từ bank</h3>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-900">
             ✕
           </button>
@@ -168,14 +169,14 @@ export default function FromBankModal({
                     <span className="text-faint">
                       {it.points} điểm · ✦{it.difficulty}/5 · {it.skillIds.length} skill
                     </span>
-                    <span className="ml-auto text-faint">📚 {it.bankName}</span>
+                    <span className="ml-auto inline-flex items-center gap-1 text-faint"><BookOpen className="h-3 w-3 shrink-0" />{it.bankName}</span>
                   </div>
                   <p className="mt-1 line-clamp-2 text-sm">{it.prompt}</p>
                 </div>
                 <button
                   onClick={() => onPick(it.id)}
                   disabled={busy !== null}
-                  className="shrink-0 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="shrink-0 rounded bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
                 >
                   {busy === it.id ? "..." : "Copy"}
                 </button>

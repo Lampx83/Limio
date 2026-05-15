@@ -2,17 +2,18 @@ import Link from "next/link";
 import {
   BookOpen,
   ChartBar,
+  Grid3x3,
   Info,
   type LucideIcon,
 } from "lucide-react";
 
 // A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề:
-//   Tổng quan / Nội dung / Kết quả
+//   Tổng quan / Nội dung / Blueprint / Kết quả
 // Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
 // chuyển sang "Tổ chức thi" (/instructor/exam-rounds/...).
-export type ExamTab = "overview" | "content" | "results";
+export type ExamTab = "overview" | "content" | "blueprint" | "results";
 
-export const EXAM_TABS: ExamTab[] = ["overview", "content", "results"];
+export const EXAM_TABS: ExamTab[] = ["overview", "content", "blueprint", "results"];
 
 export function parseExamTab(raw: string | string[] | undefined): ExamTab {
   const v = Array.isArray(raw) ? raw[0] : raw;
@@ -22,6 +23,7 @@ export function parseExamTab(raw: string | string[] | undefined): ExamTab {
 const META: Array<{ key: ExamTab; label: string; Icon: LucideIcon }> = [
   { key: "overview", label: "Tổng quan", Icon: Info },
   { key: "content", label: "Nội dung", Icon: BookOpen },
+  { key: "blueprint", label: "Blueprint", Icon: Grid3x3 },
   { key: "results", label: "Kết quả", Icon: ChartBar },
 ];
 
@@ -54,7 +56,7 @@ export default function ExamTabs({
             scroll={false}
             className={`-mb-px inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               isActive
-                ? "border-brand-600 text-brand-700"
+                ? "border-amber-600 text-amber-700"
                 : "border-transparent text-muted hover:border-token hover:text-default"
             }`}
           >
@@ -64,7 +66,7 @@ export default function ExamTabs({
               <span
                 className={`ml-1 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                   isActive
-                    ? "bg-brand-100 text-brand-700"
+                    ? "bg-amber-100 text-amber-700"
                     : "bg-amber-100 text-amber-800"
                 }`}
               >

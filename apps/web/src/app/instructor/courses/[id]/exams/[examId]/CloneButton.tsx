@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle, Copy } from "lucide-react";
 
 export default function CloneButton({ examId }: { examId: string }) {
   const router = useRouter();
@@ -45,9 +46,9 @@ export default function CloneButton({ examId }: { examId: string }) {
         disabled={busy}
         className="rounded border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
       >
-        {busy ? "..." : "📋 Clone"}
+        {busy ? "..." : <span className="inline-flex items-center gap-1.5"><Copy className="h-3.5 w-3.5" /> Clone</span>}
       </button>
-      {err && <span className="text-xs text-red-700">⚠ {err}</span>}
+      {err && <span className="inline-flex items-center gap-1 text-xs text-red-700"><AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {err}</span>}
     </>
   );
 }

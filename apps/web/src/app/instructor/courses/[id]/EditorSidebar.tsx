@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FlaskConical } from "lucide-react";
 
 interface SidebarLesson {
   id: string;
@@ -56,7 +57,7 @@ export default function EditorSidebar({
         href={`${baseHref}/exams`}
         className="block rounded-lg px-3 py-2 text-sm hover:bg-[rgb(var(--surface-muted))]"
       >
-        🧪 Bài thi
+        <FlaskConical className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom text-slate-400" /> Bài thi
       </Link>
 
       <div className="mt-2 space-y-1">

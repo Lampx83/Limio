@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { BookOpen } from "lucide-react";
 
 type Bank = {
   id: string;
@@ -70,7 +71,7 @@ export default function BankListClient({
       <div className="flex justify-end">
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
         >
           {showForm ? "Đóng" : "+ Tạo bank mới"}
         </button>
@@ -119,7 +120,7 @@ export default function BankListClient({
             <button
               type="submit"
               disabled={busy || !name.trim()}
-              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
               {busy ? "..." : "Tạo"}
             </button>
@@ -156,7 +157,7 @@ export default function BankListClient({
                 </div>
                 <div className="mt-1 text-xs text-faint">
                   {b.questionCount} câu hỏi
-                  {b.courseTitle ? ` · 📚 ${b.courseTitle}` : ""}
+                  {b.courseTitle ? <> · <BookOpen className="inline h-3 w-3 align-text-bottom text-slate-400" /> {b.courseTitle}</> : ""}
                 </div>
                 {b.description && (
                   <p className="mt-2 text-sm text-slate-600">{b.description}</p>

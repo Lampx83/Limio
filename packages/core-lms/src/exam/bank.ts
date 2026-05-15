@@ -147,6 +147,8 @@ async function assertCanEditBank(
   throw new ExamError("bank_not_found"); // hide existence
 }
 
+const CognitiveLevelEnum = z.enum(["remember_understand", "apply", "analyze_plus"]);
+
 export const CreateBankQuestionInput = z.object({
   type: QuestionType,
   prompt: z.string().min(1).max(10_000),
@@ -154,6 +156,7 @@ export const CreateBankQuestionInput = z.object({
   points: z.number().int().min(1).max(100).optional(),
   difficulty: z.number().int().min(1).max(5).optional(),
   estimatedTimeSec: z.number().int().min(1).max(3600).optional(),
+  cognitiveLevel: CognitiveLevelEnum.optional(),
 });
 
 export async function createBankQuestion(
@@ -175,6 +178,7 @@ export async function createBankQuestion(
       config: d.config as Prisma.InputJsonValue,
       points: d.points ?? 1,
       difficulty: d.difficulty ?? 3,
+      cognitiveLevel: d.cognitiveLevel ?? "remember_understand",
       estimatedTimeSec: d.estimatedTimeSec ?? null,
       status: "draft",
     },
@@ -225,6 +229,7 @@ export const UpdateBankQuestionInput = z.object({
   points: z.number().int().min(1).max(100).optional(),
   difficulty: z.number().int().min(1).max(5).optional(),
   estimatedTimeSec: z.number().int().min(1).max(3600).optional(),
+  cognitiveLevel: CognitiveLevelEnum.optional(),
 });
 
 /**
@@ -255,6 +260,7 @@ export async function updateBankQuestion(
     points?: number;
     difficulty?: number;
     estimatedTimeSec?: number | null;
+    cognitiveLevel?: "remember_understand" | "apply" | "analyze_plus";
   } = {};
   if (d.prompt !== undefined) data.prompt = d.prompt;
   if (d.config !== undefined) data.config = d.config as Prisma.InputJsonValue;
@@ -262,6 +268,7 @@ export async function updateBankQuestion(
   if (d.difficulty !== undefined) data.difficulty = d.difficulty;
   if (d.estimatedTimeSec !== undefined)
     data.estimatedTimeSec = d.estimatedTimeSec;
+  if (d.cognitiveLevel !== undefined) data.cognitiveLevel = d.cognitiveLevel;
   if (Object.keys(data).length === 0) return { snapshottedAsVersion: null };
 
   return (db as typeof prisma).$transaction(async (tx) => {
@@ -359,6 +366,7 @@ export interface SearchFilters {
   bankIds?: string[];
   type?: string[];
   difficulty?: number[];
+  cognitiveLevel?: ("remember_understand" | "apply" | "analyze_plus")[];
   skillIds?: string[]; // ANY match
   status?: ("draft" | "published" | "archived")[];
   q?: string; // prompt contains
@@ -375,9 +383,13 @@ export interface SearchResult {
     prompt: string;
     points: number;
     difficulty: number;
+    cognitiveLevel: "remember_understand" | "apply" | "analyze_plus";
     status: "draft" | "published" | "archived";
     skillIds: string[];
     updatedAt: string;
+    stats: { pValueAvg: number; discriminationAvg: number; totalUses: number } | null;
+    exposureCount: number;
+    lastSampledAt: string | null;
   }[];
   nextCursor: string | null;
 }
@@ -430,6 +442,9 @@ export async function searchQuestions(
     ...(filters.difficulty && filters.difficulty.length > 0
       ? { difficulty: { in: filters.difficulty } }
       : {}),
+    ...(filters.cognitiveLevel && filters.cognitiveLevel.length > 0
+      ? { cognitiveLevel: { in: filters.cognitiveLevel as never } }
+      : {}),
     ...(filters.q && filters.q.trim().length > 0
       ? { prompt: { contains: filters.q.trim(), mode: "insensitive" } }
       : {}),
@@ -453,9 +468,13 @@ export async function searchQuestions(
       prompt: true,
       points: true,
       difficulty: true,
+      cognitiveLevel: true,
       status: true,
       updatedAt: true,
+      exposureCount: true,
+      lastSampledAt: true,
       skillTags: { select: { skillId: true } },
+      stats: { select: { pValueAvg: true, discriminationAvg: true, totalUses: true } },
     },
   });
   const hasNext = rows.length > limit;
@@ -467,9 +486,15 @@ export async function searchQuestions(
     prompt: r.prompt,
     points: r.points,
     difficulty: r.difficulty,
+    cognitiveLevel: r.cognitiveLevel as "remember_understand" | "apply" | "analyze_plus",
     status: r.status,
     skillIds: r.skillTags.map((t) => t.skillId),
     updatedAt: r.updatedAt.toISOString(),
+    stats: r.stats
+      ? { pValueAvg: r.stats.pValueAvg, discriminationAvg: r.stats.discriminationAvg, totalUses: r.stats.totalUses }
+      : null,
+    exposureCount: r.exposureCount,
+    lastSampledAt: r.lastSampledAt?.toISOString() ?? null,
   }));
   return {
     items,

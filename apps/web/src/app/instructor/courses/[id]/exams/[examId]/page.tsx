@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { CalendarCheck } from "lucide-react";
 import { canEditCourse } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ExamMetaForm from "../ExamMetaForm";
@@ -10,6 +11,8 @@ import SectionsPanel from "./SectionsPanel";
 import CloneButton from "./CloneButton";
 import AnalyticsPanel from "./AnalyticsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
+import CreatedBanner from "./CreatedBanner";
+import BlueprintEditor from "./BlueprintEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +37,11 @@ export default async function EditExamPage({
   searchParams,
 }: {
   params: { id: string; examId: string };
-  searchParams: { tab?: string };
+  searchParams: { tab?: string; created?: string; fallback?: string };
 }) {
   const activeTab = parseExamTab(searchParams?.tab);
+  const justCreated = searchParams?.created === "1";
+  const fallbackUsed = searchParams?.fallback === "1";
   const session = await auth();
   if (!session?.user?.id) {
     redirect(
@@ -111,6 +116,7 @@ export default async function EditExamPage({
         ← Bài thi
       </Link>
 
+      {justCreated && <div className="mt-4"><CreatedBanner fallback={fallbackUsed} /></div>}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -130,9 +136,9 @@ export default async function EditExamPage({
         <div className="flex items-start gap-2">
           <Link
             href={`/instructor/exam-rounds?examId=${exam.id}`}
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-1.5 rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
           >
-            🎯 Tổ chức thi
+            <CalendarCheck className="h-4 w-4 shrink-0" /> Tổ chức thi
           </Link>
           <CloneButton examId={exam.id} />
           <PublishBar
@@ -237,7 +243,81 @@ export default async function EditExamPage({
         </>
       )}
 
+      {activeTab === "blueprint" && (
+        <BlueprintEditorLoader examId={exam.id} courseId={course.id} />
+      )}
+
       {activeTab === "results" && <AnalyticsPanel examId={exam.id} />}
     </main>
+  );
+}
+
+async function BlueprintEditorLoader({
+  examId,
+  courseId,
+}: {
+  examId: string;
+  courseId: string;
+}) {
+  const [modules, blueprintRow] = await Promise.all([
+    prisma.module.findMany({
+      where: { courseId },
+      orderBy: { orderIndex: "asc" },
+      select: {
+        id: true,
+        title: true,
+        lessons: {
+          orderBy: { orderIndex: "asc" },
+          select: { id: true, title: true },
+        },
+      },
+    }),
+    prisma.examBlueprint.findUnique({ where: { examId } }),
+  ]);
+
+  const lessonIds = modules.flatMap((m) => m.lessons.map((l) => l.id));
+  const bankCountsRaw =
+    lessonIds.length > 0
+      ? await prisma.$queryRaw<{ lessonId: string; cnt: bigint }[]>`
+          SELECT csm."contentId" AS "lessonId", COUNT(DISTINCT bq.id) AS cnt
+          FROM "ContentSkillMapping" csm
+          JOIN "BankQuestionSkillTag" bqst ON bqst."skillId" = csm."skillId"
+          JOIN "BankQuestion" bq ON bq.id = bqst."bankQuestionId" AND bq.status = 'published'
+          WHERE csm."contentType" = 'lesson'
+            AND csm."contentId" = ANY(${lessonIds})
+          GROUP BY csm."contentId"
+        `
+      : [];
+
+  const bankCountMap = Object.fromEntries(
+    bankCountsRaw.map((r) => [r.lessonId, Number(r.cnt)]),
+  );
+
+  const lessonTree = modules.map((m) => ({
+    id: m.id,
+    title: m.title,
+    lessons: m.lessons.map((l) => ({
+      id: l.id,
+      title: l.title,
+      bankCount: bankCountMap[l.id] ?? 0,
+    })),
+  }));
+
+  return (
+    <div className="mt-6">
+      <BlueprintEditor
+        examId={examId}
+        lessonTree={lessonTree}
+        initialBlueprint={
+          blueprintRow
+            ? {
+                lessonIds: blueprintRow.lessonIds,
+                cells: blueprintRow.cells as { cognitiveLevel: "remember_understand" | "apply" | "analyze_plus"; difficulty: number; count: number }[],
+                totalCount: blueprintRow.totalCount,
+              }
+            : null
+        }
+      />
+    </div>
   );
 }

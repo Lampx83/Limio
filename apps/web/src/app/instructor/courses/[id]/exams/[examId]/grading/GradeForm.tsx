@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Bot } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface Props {
@@ -135,7 +136,7 @@ export default function GradeForm({
           disabled={suggesting}
           className="rounded border border-violet-300 bg-violet-50 px-3 py-1 text-xs text-violet-800 hover:bg-violet-100 disabled:opacity-50"
         >
-          {suggesting ? "Đang phân tích…" : "🤖 Gợi ý chấm"}
+          {suggesting ? "Đang phân tích…" : <><Bot className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Gợi ý chấm</>}
         </button>
       </div>
       {suggestion && (
@@ -182,7 +183,7 @@ export default function GradeForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {saving ? "Đang lưu…" : graded ? "Lưu điểm mới" : "Chấm điểm"}
         </button>

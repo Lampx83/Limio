@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { Radio } from "lucide-react";
 import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import LiveDashboard from "./LiveDashboard";
@@ -129,7 +130,7 @@ export default async function ExamLiveDashboardPage({
       </Link>
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">🔴 Live — {exam.title}</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold"><Radio className="h-5 w-5 shrink-0 text-red-500" /> Live — {exam.title}</h1>
           <p className="mt-1 text-sm text-faint">
             Theo dõi trạng thái sinh viên đang thi realtime (24h gần nhất)
           </p>

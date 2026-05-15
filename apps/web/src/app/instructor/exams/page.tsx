@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BookOpen, FlaskConical } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 
@@ -86,14 +87,14 @@ export default async function InstructorExamsHubPage() {
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">🧪 Bài thi trực tuyến</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold"><FlaskConical className="h-6 w-6 shrink-0 text-amber-600" /> Bài thi trực tuyến</h1>
           <p className="mt-1 text-sm text-faint">
             {exams.length} bài thi · {draftCount} nháp · {publishedCount} đã publish
           </p>
         </div>
         <Link
           href="/instructor/exams/new"
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           + Tạo bài thi mới
         </Link>
@@ -146,7 +147,7 @@ export default async function InstructorExamsHubPage() {
                       )}
                     </div>
                     <p className="mt-1 text-xs text-faint">
-                      📚 {course?.title ?? "(course unknown)"}
+                      <BookOpen className="inline h-3 w-3 align-text-bottom text-slate-400" /> {course?.title ?? "(course unknown)"}
                     </p>
                     <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-faint sm:grid-cols-4">
                       <Stat label="Thời lượng" value={`${e.durationMin}p`} />

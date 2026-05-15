@@ -315,3 +315,102 @@ export async function getExamAttemptResult(
     })),
   };
 }
+
+/**
+ * Full answer review — only available when exam.showResultsAfterSubmit=true
+ * and attempt.status="graded". Returns each question with the learner's
+ * submitted answer + correct answer data so the UI can highlight right/wrong.
+ */
+export interface ExamAttemptReviewQuestion {
+  id: string;
+  orderInExam: number;
+  type: string;
+  prompt: string;
+  points: number;
+  config: unknown;
+  explanation: string | null;
+  answer: {
+    answerJson: unknown;
+    score: number | null;
+    needsGrading: boolean;
+    comment: string | null;
+  } | null;
+}
+
+export async function getExamAttemptReview(
+  userId: string,
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<{ examTitle: string; questions: ExamAttemptReviewQuestion[] }> {
+  const attempt = await db.examAttempt.findUnique({
+    where: { id: attemptId },
+    select: {
+      id: true,
+      userId: true,
+      examId: true,
+      status: true,
+      exam: {
+        select: {
+          title: true,
+          showResultsAfterSubmit: true,
+          questions: {
+            orderBy: { orderInExam: "asc" },
+            select: {
+              id: true,
+              orderInExam: true,
+              type: true,
+              prompt: true,
+              points: true,
+              config: true,
+            },
+          },
+        },
+      },
+      answers: {
+        select: {
+          questionId: true,
+          answerJson: true,
+          autoScore: true,
+          manualScore: true,
+          needsGrading: true,
+          comment: true,
+        },
+      },
+    },
+  });
+
+  if (!attempt) throw new ExamError("attempt_not_found");
+  if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
+  if (attempt.status !== "graded") throw new ExamError("validation_failed", "not_graded_yet");
+  if (!attempt.exam.showResultsAfterSubmit) {
+    throw new ExamError("validation_failed", "results_hidden");
+  }
+
+  const answerMap = new Map(attempt.answers.map((a) => [a.questionId, a]));
+
+  return {
+    examTitle: attempt.exam.title,
+    questions: attempt.exam.questions.map((q) => {
+      const ans = answerMap.get(q.id) ?? null;
+      const awarded = ans ? (ans.manualScore ?? ans.autoScore) : null;
+      return {
+        id: q.id,
+        orderInExam: q.orderInExam,
+        type: q.type,
+        prompt: q.prompt,
+        points: q.points,
+        config: q.config,
+        // explanation may be stored inside config.explanation for some question types
+        explanation: (q.config as Record<string, unknown>).explanation as string | undefined ?? null,
+        answer: ans
+          ? {
+              answerJson: ans.answerJson,
+              score: awarded,
+              needsGrading: ans.needsGrading,
+              comment: ans.comment,
+            }
+          : null,
+      };
+    }),
+  };
+}

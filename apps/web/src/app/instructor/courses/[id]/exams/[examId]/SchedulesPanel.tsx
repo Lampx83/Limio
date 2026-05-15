@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Calendar } from "lucide-react";
 
 type Schedule = {
   id: string;
@@ -58,14 +59,14 @@ export default function SchedulesPanel({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold">📅 Lịch thi (cohort)</h2>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold"><Calendar className="h-4 w-4 shrink-0 text-slate-400" /> Lịch thi (cohort)</h2>
           <p className="text-sm text-faint">
             Mở ca thi cho lớp cụ thể. Không có lịch → ai enroll đều thi được theo `Exam.openAt/closeAt`.
           </p>
         </div>
         <button
           onClick={() => setShowAdd((s) => !s)}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
         >
           {showAdd ? "Đóng" : "+ Thêm lịch"}
         </button>
@@ -277,7 +278,7 @@ function AddScheduleForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {submitting ? "..." : "Tạo lịch"}
         </button>

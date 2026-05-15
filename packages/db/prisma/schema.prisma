@@ -22,22 +22,28 @@ datasource db {
 // =====================================================================
 
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  emailVerifiedAt   DateTime?
-  passwordHash      String?
-  displayName       String
-  avatarUrl         String?
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  emailVerifiedAt      DateTime?
+  passwordHash         String?
+  displayName          String
+  avatarUrl            String?
   // PR2.17 — Multi-tenancy: user thuộc về 1 Organization. Nullable trong
   // backfill phase; sẽ siết NOT NULL ở migration tiếp theo.
-  organizationId    String?
-  locale            String    @default("vi")
-  timezone          String    @default("Asia/Ho_Chi_Minh")
+  organizationId       String?
+  locale               String    @default("vi")
+  timezone             String    @default("Asia/Ho_Chi_Minh")
   // Phase 1 C5: when true, user's XP transactions are excluded from public
   // leaderboards. Per spec §5.5 "opt-out leaderboard hoàn toàn được".
-  leaderboardOptOut Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  leaderboardOptOut    Boolean   @default(false)
+  // A5.5 — Cơ bản/Nâng cao mode toggle. False = ẩn IRT/anchor/equating metrics,
+  // chỉ hiện badge ⭐ và mức tư duy 3 nhóm. True = mở khoá full psychometrics.
+  expertAssessmentMode Boolean   @default(false)
+  // A5.5 — Counter exam đã tạo. Tăng atomic khi exam publish. Dùng để trigger
+  // banner gợi ý "Bật chế độ Nâng cao?" khi >= 3 và expertAssessmentMode=false.
+  examsCreatedCount    Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   authProviders           AuthProvider[]
   userRoles               UserRole[]
@@ -92,13 +98,15 @@ model User {
   examRoundAdminGrants     ExamRoundAdmin[]         @relation("ExamRoundAdminGrantor")
   // A5.1 Question Bank
   questionBanksOwned       QuestionBank[]           @relation("QuestionBankOwner")
+  // A5.5 — Exam tạo bởi user này (set khi publish; nullable cho exam legacy).
+  examsCreated             Exam[]                   @relation("ExamCreator")
   // A5.2 Cohort
   cohortMemberships        CohortMember[]
   cohortsAsInstructor      Cohort[]                 @relation("CohortInstructor")
 
   // PR2.17 — Multi-tenancy
-  organization             Organization?            @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  orgAdminOf               OrganizationAdmin[]
+  organization Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  orgAdminOf   OrganizationAdmin[]
 
   // Classroom tools
   classroomRandomPicks ClassroomRandomPick[]
@@ -205,44 +213,44 @@ enum CourseStatus {
 }
 
 model Course {
-  id          String       @id @default(uuid())
+  id             String       @id @default(uuid())
   // PR2.17 — Multi-tenancy: course thuộc về 1 Organization. Nullable trong
   // backfill phase, sẽ siết NOT NULL sau.
   organizationId String?
-  slug        String       @unique
-  title       String
-  description String       @db.Text
-  language    String       @default("vi")
-  level       String       @default("beginner") // beginner | intermediate | advanced
-  category    String?
-  coverUrl    String?
-  status      CourseStatus @default(draft)
+  slug           String       @unique
+  title          String
+  description    String       @db.Text
+  language       String       @default("vi")
+  level          String       @default("beginner") // beginner | intermediate | advanced
+  category       String?
+  coverUrl       String?
+  status         CourseStatus @default(draft)
   // Course versioning (A2 acceptance: "học viên đang học bản cũ không bị break").
   // Bump this when publishing a breaking change; new enrollments take the new version.
-  version     Int          @default(1)
-  publishedAt DateTime?
+  version        Int          @default(1)
+  publishedAt    DateTime?
   // Pricing — null = free; positive = paid (cents of `currency`).
-  priceCents  Int?
-  currency    String       @default("USD")
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  priceCents     Int?
+  currency       String       @default("USD")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  modules        Module[]
-  enrollments    Enrollment[]
-  instructors    CourseInstructor[]
-  userRoles      UserRole[]
-  userProgress   UserCourseProgress[]
-  xpTransactions XpTransaction[]
-  streakRecords  StreakRecord[]
-  tournaments    Tournament[]
-  orders         Order[]
-  timerTemplates TimerTemplate[]
-  exams          Exam[]
-  questionBanks  QuestionBank[]
-  cohorts        Cohort[]
+  modules           Module[]
+  enrollments       Enrollment[]
+  instructors       CourseInstructor[]
+  userRoles         UserRole[]
+  userProgress      UserCourseProgress[]
+  xpTransactions    XpTransaction[]
+  streakRecords     StreakRecord[]
+  tournaments       Tournament[]
+  orders            Order[]
+  timerTemplates    TimerTemplate[]
+  exams             Exam[]
+  questionBanks     QuestionBank[]
+  cohorts           Cohort[]
   cohortExamClasses CohortExamClass[]
-  examRounds     ExamRound[]
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  examRounds        ExamRound[]
+  organization      Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@index([status, publishedAt])
   @@index([category, level])
@@ -1805,22 +1813,85 @@ model Exam {
   // chính là MSSV của SV. Random là mặc định an toàn; MSSV chỉ nên bật khi
   // ca thi có giám thị vật lý kiểm tra thẻ.
   assignedCodeSource     AssignedCodeSource  @default(random)
+  // A5.5 — User tạo đề này. Nullable cho exam legacy; backfill = primary
+  // instructor của course. Tăng User.examsCreatedCount khi publish exam mới.
+  createdById            String?
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 
-  course     Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  passages   ExamPassage[]
-  questions  ExamQuestion[]
-  attempts   ExamAttempt[]
-  assets     ExamAsset[]
-  messages   ExamMessage[]
-  candidates ExamCandidate[]
-  schedules  ExamSession[]
-  sections   ExamSection[]
-  rooms      ExamRoom[]
+  course       Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy    User?             @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  wizardConfig ExamWizardConfig?
+  blueprint    ExamBlueprint?
+  passages     ExamPassage[]
+  questions    ExamQuestion[]
+  attempts     ExamAttempt[]
+  assets       ExamAsset[]
+  messages     ExamMessage[]
+  candidates   ExamCandidate[]
+  schedules    ExamSession[]
+  sections     ExamSection[]
+  rooms        ExamRoom[]
 
   @@index([courseId, status])
   @@index([status, openAt, closeAt])
+  @@index([createdById])
+}
+
+// =====================================================================
+// A5.5 — Wizard "Tạo đề trong 3 bước" (Cơ bản mode)
+// 1:1 với Exam. Exam tạo bằng wizard có row này; tạo bằng Nâng cao mode
+// (full editor) thì không. Mở lại exam có wizardConfig → render wizard
+// pre-filled; không có → render full editor.
+// Đề đã publish: wizardConfig immutable (PATCH reject với 409).
+// =====================================================================
+model ExamWizardConfig {
+  examId            String   @id
+  // Bước 1 — scope nội dung: mảng Lesson.id đã tick. Pool derive qua
+  // ContentSkillMapping(lessonIds) → skillIds.
+  lessonIds         String[]
+  // Bước 2 — cấu hình
+  questionCount     Int
+  // { remember_understand: 60, apply: 30, analyze_plus: 10 } — tổng = 100.
+  bloomMix          Json
+  // "basic" | "balanced" | "challenge" | "adaptive_to_class"
+  // adaptive_to_class fallback về "balanced" khi cohort chưa có
+  // LearnerSkillState data.
+  difficultyProfile String
+  // Bước 3 — phát đề
+  // "single" | "shuffled_per_student" | "multi_session"
+  distributionMode  String
+  // multi_session only: số ca thi (2-8). Khi set, hệ thống tạo N ExamSession
+  // row tương ứng.
+  sessionCount      Int?
+  // Cờ "Tự cân bằng điểm giữa các ca" — default ON cho multi_session,
+  // ignored cho mode khác.
+  autoEquating      Boolean  @default(true)
+  // "basic" | "advanced" — để phân biệt exam tạo bằng wizard vs full editor.
+  createdMode       String   @default("basic")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+// =====================================================================
+// S4 — Blueprint Editor (Table of Specifications)
+// Instructor explicitly sets question-count per (cognitiveLevel × difficulty)
+// cell per lesson selection. assembleFromBlueprint() converts this into a
+// bucketed poolFilter on an ExamSection.
+// =====================================================================
+model ExamBlueprint {
+  examId     String   @id
+  // Lesson IDs in scope; mapped to skillIds via ContentSkillMapping.
+  lessonIds  String[]
+  // [{cognitiveLevel, difficulty, count}] — zero-count cells omitted.
+  cells      Json     @default("[]")
+  totalCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
 }
 
 model ExamPassage {
@@ -2215,24 +2286,24 @@ model ExamRoomGrader {
 // ExamSchedule = per-cohort open/close window + optional duration override.
 // =====================================================================
 model Cohort {
-  id          String   @id @default(uuid())
-  courseId    String
-  name        String
+  id           String   @id @default(uuid())
+  courseId     String
+  name         String
   // PR2.12 — Mã lớp học do nhà trường định nghĩa (6-8 ký tự). SV gõ mã này
   // ở form open-mode để route kết quả về đúng cohort. Unique trong course.
-  code        String?
+  code         String?
   // PR2.12 — GV phụ trách cohort (1 GV : N cohort). Null = chưa gán.
   instructorId String?
   // Optional human description (e.g. "Lớp K65A-DSAI-2025-2 thứ 7 chiều")
-  description String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  description  String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  course     Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  instructor User?             @relation("CohortInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
-  members    CohortMember[]
-  schedules  ExamSession[]
-  candidates ExamCandidate[]
+  course      Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor  User?             @relation("CohortInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
+  members     CohortMember[]
+  schedules   ExamSession[]
+  candidates  ExamCandidate[]
   examClasses CohortExamClass[]
 
   @@unique([courseId, name])
@@ -2244,15 +2315,15 @@ model Cohort {
 // PR2.15 — Mỗi cohort có 2-4 "mã lớp thi" (exam class) ứng với 1 phòng vật
 // lý. Code unique trong course (không phải cohort). Cascade delete theo cohort.
 model CohortExamClass {
-  id           String   @id @default(uuid())
-  cohortId     String
-  courseId     String
-  code         String
-  roomLocation String?
+  id                   String   @id @default(uuid())
+  cohortId             String
+  courseId             String
+  code                 String
+  roomLocation         String?
   // PR2.16 — Số SV dự kiến của lớp thi này, lấy từ Excel khi setup đợt.
   // Null = không khai. Dùng để audit (compare với số candidate thực tế).
   expectedStudentCount Int?
-  createdAt    DateTime @default(now())
+  createdAt            DateTime @default(now())
 
   cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -2470,6 +2541,17 @@ enum BankQuestionStatus {
   archived
 }
 
+// A5.5 — Mức tư duy Bloom gộp 3 nhóm cho Cơ bản mode. Nâng cao mode (sau)
+// có thể bổ sung enum 6-bậc song song nếu cần.
+//   remember_understand = Bloom 1+2 (Nhớ & Hiểu)
+//   apply               = Bloom 3   (Vận dụng)
+//   analyze_plus        = Bloom 4+5+6 (Phân tích / Đánh giá / Sáng tạo)
+enum CognitiveLevel {
+  remember_understand
+  apply
+  analyze_plus
+}
+
 model QuestionBank {
   id          String                 @id @default(uuid())
   ownerUserId String
@@ -2499,8 +2581,15 @@ model BankQuestion {
   points           Int                @default(1)
   // 1–5, app-validated. 1 = trivial, 3 = average, 5 = very hard.
   difficulty       Int                @default(3)
+  // A5.5 — Mức tư duy Bloom gộp. Backfill heuristic theo difficulty (1-2 →
+  // remember_understand, 3 → apply, 4-5 → analyze_plus). GV chỉnh tay sau.
+  cognitiveLevel   CognitiveLevel     @default(remember_understand)
   estimatedTimeSec Int?
   status           BankQuestionStatus @default(draft)
+  // A5.6 — Exposure tracking: incremented each time the question is sampled
+  // for a per_attempt random section. Helps instructors spot overused items.
+  exposureCount    Int                @default(0)
+  lastSampledAt    DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
@@ -2512,6 +2601,8 @@ model BankQuestion {
 
   @@index([bankId, status])
   @@index([difficulty])
+  // A5.5 — pool query của wizard assemble lọc theo (bank, mức tư duy, độ khó).
+  @@index([bankId, cognitiveLevel, difficulty])
 }
 
 model BankQuestionSkillTag {
@@ -2631,28 +2722,28 @@ model SystemRelease {
 // in practice, nhưng giữ flexibility).
 // =====================================================================
 model Organization {
-  id          String   @id @default(uuid())
+  id              String   @id @default(uuid())
   // Mã trường ngắn (vd "BKHN"), unique, dùng làm slug.
-  code        String   @unique
-  name        String
-  locale      String   @default("vi")
-  timezone    String   @default("Asia/Ho_Chi_Minh")
+  code            String   @unique
+  name            String
+  locale          String   @default("vi")
+  timezone        String   @default("Asia/Ho_Chi_Minh")
   brandingLogoUrl String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  users               User[]
-  courses             Course[]
-  admins              OrganizationAdmin[]
-  sessionTemplates    ExamSessionTemplate[]
+  users            User[]
+  courses          Course[]
+  admins           OrganizationAdmin[]
+  sessionTemplates ExamSessionTemplate[]
 
   @@index([code])
 }
 
 model OrganizationAdmin {
-  organizationId String
-  userId         String
-  grantedAt      DateTime @default(now())
+  organizationId  String
+  userId          String
+  grantedAt       DateTime @default(now())
   grantedByUserId String?
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -2669,11 +2760,11 @@ model OrganizationAdmin {
 model ExamSessionTemplate {
   id             String   @id @default(uuid())
   organizationId String
-  code           String   // "CA-1", "CA-2"...
-  name           String   // "Ca 1 — Sáng"
+  code           String // "CA-1", "CA-2"...
+  name           String // "Ca 1 — Sáng"
   // Local time of day in HH:MM format. Combined with round's date at apply time.
-  startTime      String   // "07:30"
-  endTime        String   // "09:30"
+  startTime      String // "07:30"
+  endTime        String // "09:30"
   // Display ordering trong picker.
   orderIndex     Int      @default(0)
   createdAt      DateTime @default(now())

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { Tag } from "lucide-react";
 import {
   ExamError,
   getExamRound,
@@ -168,7 +169,7 @@ export default async function ExamRoundDetailPage({
             <span>·</span>
             <span>{round.sessionCount} ca thi</span>
             <span>·</span>
-            <span>🏷️ {round.course.courseTitle}</span>
+            <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 shrink-0 text-slate-400" />{round.course.courseTitle}</span>
           </div>
         </div>
       </div>

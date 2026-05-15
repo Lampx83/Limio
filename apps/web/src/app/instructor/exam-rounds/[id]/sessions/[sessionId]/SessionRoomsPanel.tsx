@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Mail, Trash2, X } from "lucide-react";
 
 interface RoomRow {
   id: string;
@@ -120,7 +120,7 @@ export default function SessionRoomsPanel({
         {canEdit && (
           <button
             onClick={() => setShowBulk(true)}
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
           >
             + Thêm phòng thi
           </button>
@@ -478,7 +478,7 @@ function InlineProctorCell({
     return (
       <div className="flex flex-col gap-1 rounded border border-amber-300 bg-amber-50 p-1.5">
         <div className="text-[10px] text-amber-800">
-          📧 Email <strong>{email}</strong> chưa có tài khoản — gửi lời mời?
+          <Mail className="mr-1 inline h-3 w-3 align-text-bottom" /> Email <strong>{email}</strong> chưa có tài khoản — gửi lời mời?
         </div>
         <div className="flex items-center gap-1">
           <input
@@ -504,7 +504,7 @@ function InlineProctorCell({
             type="button"
             onClick={submitInvite}
             disabled={busy || !inviteName.trim()}
-            className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             Gửi lời mời
           </button>
@@ -551,7 +551,7 @@ function InlineProctorCell({
           type="button"
           onClick={commit}
           disabled={busy || !email.trim()}
-          className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-brand-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           OK
         </button>
@@ -693,7 +693,7 @@ function BulkCreateDialog({
           <button
             onClick={submit}
             disabled={busy}
-            className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy ? "Đang tạo..." : `Tạo ${count} phòng`}
           </button>
@@ -791,7 +791,7 @@ function RoomDetailDialog({
           <button
             onClick={submit}
             disabled={busy}
-            className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {busy ? "Đang lưu..." : "Lưu"}
           </button>

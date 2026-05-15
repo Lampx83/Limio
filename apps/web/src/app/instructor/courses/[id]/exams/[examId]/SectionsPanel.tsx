@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Layers } from "lucide-react";
 
 type Section = {
   id: string;
@@ -64,7 +65,7 @@ export default function SectionsPanel({ examId }: { examId: string }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold">🎲 Sections</h2>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold"><Layers className="h-4 w-4 shrink-0 text-slate-400" /> Sections</h2>
           <p className="text-sm text-faint">
             Chia bài thi thành phần. Phần &ldquo;random từ bank&rdquo; chọn N câu hỏi từ bank
             mỗi lần SV vào thi (mỗi SV 1 bộ đề khác — decision #3/4).
@@ -72,7 +73,7 @@ export default function SectionsPanel({ examId }: { examId: string }) {
         </div>
         <button
           onClick={() => setShowAdd((s) => !s)}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
         >
           {showAdd ? "Đóng" : "+ Thêm section"}
         </button>
@@ -293,7 +294,7 @@ function AddSectionForm({
         <button
           type="submit"
           disabled={busy || !title.trim()}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {busy ? "..." : "Tạo section"}
         </button>
