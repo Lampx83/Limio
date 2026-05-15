@@ -24,20 +24,53 @@ import { ExamError } from "./types";
 // Pool filter schema + sampler
 // ============================================================================
 
+/**
+ * A5.5 — Bucket descriptor for multi-cell sampling (wizard-driven exam).
+ * Each bucket samples its own quota independently from the same banks.
+ * `difficulty` is optional: omit to mean "any difficulty within this Bloom level".
+ */
+export const PoolBucket = z.object({
+  cognitiveLevel: z.enum(["remember_understand", "apply", "analyze_plus"]),
+  difficulty: z.number().int().min(1).max(5).optional(),
+  count: z.number().int().min(1).max(200),
+});
+export type PoolBucketT = z.infer<typeof PoolBucket>;
+
 export const PoolFilter = z.object({
   /** Bank IDs to sample from. Required — must list ≥1. */
   bankIds: z.array(z.string().uuid()).min(1),
-  /** Number of questions to draw. */
+  /** Number of questions to draw. When `buckets` is set, this MUST equal Σ buckets[].count. */
   count: z.number().int().min(1).max(200),
   /** Skill filter (OR within array). */
   skillIds: z.array(z.string().uuid()).optional(),
-  /** Difficulty filter (OR within array). 1-5. */
+  /** Difficulty filter (OR within array). 1-5. Ignored when `buckets` set. */
   difficulty: z.array(z.number().int().min(1).max(5)).optional(),
+  /**
+   * A5.5 — Cognitive level filter (OR). Ignored when `buckets` set.
+   * Use this for simple "filter by Bloom level"; use `buckets` for
+   * multi-cell quota sampling (wizard).
+   */
+  cognitiveLevel: z
+    .array(z.enum(["remember_understand", "apply", "analyze_plus"]))
+    .optional(),
+  /**
+   * A5.5 — Multi-bucket quota sampling. When present, sampler picks each
+   * bucket independently (Bloom × difficulty cell). Top-level `difficulty`
+   * and `cognitiveLevel` are ignored. Total must equal `count`.
+   */
+  buckets: z.array(PoolBucket).optional(),
   /** Question type filter. */
   type: z.array(z.string()).optional(),
   /** Per-item point override (else inherit from question). */
   pointsPerItem: z.number().int().min(1).max(100).optional(),
-});
+}).refine(
+  (f) => {
+    if (!f.buckets || f.buckets.length === 0) return true;
+    const sum = f.buckets.reduce((a, b) => a + b.count, 0);
+    return sum === f.count;
+  },
+  { message: "buckets count sum must equal top-level count" },
+);
 export type PoolFilterT = z.infer<typeof PoolFilter>;
 
 /**
@@ -87,6 +120,37 @@ export async function pickPoolQuestions(
       ? { skillTags: { some: { skillId: { in: filter.skillIds } } } }
       : {}),
   };
+
+  // A5.5 — Bucket path: explicit (cognitiveLevel × difficulty) cells.
+  // When a bucket runs short, we record the deficit and continue. The caller
+  // gets section_pool_underfilled at the end if total fell below count.
+  if (filter.buckets && filter.buckets.length > 0) {
+    const picked: string[] = [];
+    for (const [i, bucket] of filter.buckets.entries()) {
+      const where: Prisma.BankQuestionWhereInput = {
+        ...baseWhere,
+        cognitiveLevel: bucket.cognitiveLevel,
+        ...(bucket.difficulty !== undefined ? { difficulty: bucket.difficulty } : {}),
+      };
+      const ids = await db.bankQuestion.findMany({ where, select: { id: true } });
+      const rng = seededRng(`${seed}:b${i}:${bucket.cognitiveLevel}:${bucket.difficulty ?? "any"}`);
+      const shuffled = shuffle(ids.map((q) => q.id), rng);
+      picked.push(...shuffled.slice(0, bucket.count));
+    }
+    if (picked.length === 0) throw new ExamError("section_pool_empty");
+    if (picked.length < filter.count)
+      throw new ExamError("section_pool_underfilled", {
+        requested: filter.count,
+        got: picked.length,
+      });
+    return picked;
+  }
+
+  // A5.5 — Cognitive-level OR filter without buckets: combine with difficulty
+  // path below by narrowing baseWhere.
+  if (filter.cognitiveLevel && filter.cognitiveLevel.length > 0) {
+    baseWhere.cognitiveLevel = { in: filter.cognitiveLevel };
+  }
 
   // Stratified path: multiple difficulties → bucket per level.
   if (filter.difficulty && filter.difficulty.length > 1) {
@@ -321,7 +385,24 @@ export async function materializeRandomSections(
     const seed = createHash("sha256")
       .update(`${examId}:${subjectKey}:${s.id}`)
       .digest("hex");
-    out[s.id] = await pickPoolQuestions(filterParsed.data, seed, db);
+    const sampled = await pickPoolQuestions(filterParsed.data, seed, db);
+    out[s.id] = sampled;
+    // A5.6 — Record exposure: increment counters for each sampled question.
+    // Fire-and-forget; a failure here must not block the attempt start.
+    void recordExposure(sampled, db);
   }
   return out;
+}
+
+async function recordExposure(ids: string[], db: PrismaClient): Promise<void> {
+  if (ids.length === 0) return;
+  const now = new Date();
+  try {
+    await db.bankQuestion.updateMany({
+      where: { id: { in: ids } },
+      data: { exposureCount: { increment: 1 }, lastSampledAt: now },
+    });
+  } catch {
+    // Non-critical — swallow so attempt start is never blocked.
+  }
 }

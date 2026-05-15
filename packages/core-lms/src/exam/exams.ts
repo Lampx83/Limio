@@ -4,6 +4,7 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditCourse } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { ExamError } from "./types";
+import { WizardConfigShape, type WizardConfigT, assembleWizardPool } from "./wizard";
 
 const examAttemptPolicy = z.enum(["single", "multi"]);
 const examGradingMode = z.enum(["auto", "manual", "hybrid"]);
@@ -85,6 +86,107 @@ export async function createExam(
     db,
   );
   return { examId: exam.id };
+}
+
+/**
+ * A5.5 — Wizard input schema: exam metadata merged with wizard config.
+ * `wizardConfig` is the 3-step payload (lessonIds, bloomMix, …).
+ * Metadata fields have wizard-friendly defaults so the UI only needs to
+ * collect title + schedule; the rest can be overridden in the full editor.
+ */
+export const CreateExamFromWizardInput = z.object({
+  // Exam metadata (same shape as CreateExamInput)
+  title: z.string().min(1).max(200).trim(),
+  durationMin: z.number().int().positive().max(24 * 60),
+  openAt: z.coerce.date(),
+  closeAt: z.coerce.date(),
+  showResultsAfterSubmit: z.boolean().optional(),
+  // Wizard-specific fields (courseId comes from route param, not body)
+  wizardConfig: WizardConfigShape.omit({ courseId: true }),
+}).refine((d) => d.openAt < d.closeAt, {
+  message: "openAt must be before closeAt",
+  path: ["closeAt"],
+});
+
+/**
+ * A5.5 — Create exam from wizard in DRAFT status.
+ * Creates Exam + ExamWizardConfig + one ExamSection (random_from_bank,
+ * per_attempt) whose poolFilter is bucket-assembled from the wizard config.
+ * Also increments User.examsCreatedCount for the upgrade-banner counter.
+ */
+export async function createExamFromWizard(
+  actorUserId: string,
+  courseId: string,
+  rawInput: unknown,
+  db: PrismaClient = prisma,
+): Promise<{ examId: string; fallbackUsed: boolean }> {
+  await assertCanEditCourse(actorUserId, courseId, db);
+  const parsed = CreateExamFromWizardInput.safeParse(rawInput);
+  if (!parsed.success) {
+    throw new ExamError("validation_failed", parsed.error.flatten());
+  }
+  const { wizardConfig: wc, ...meta } = parsed.data;
+  const fullConfig: WizardConfigT = { ...wc, courseId };
+
+  const { poolFilter, fallbackUsed } = await assembleWizardPool(fullConfig, actorUserId, db);
+
+  const exam = await db.exam.create({
+    data: {
+      courseId,
+      createdById: actorUserId,
+      title: meta.title,
+      durationMin: meta.durationMin,
+      openAt: meta.openAt,
+      closeAt: meta.closeAt,
+      // Wizard defaults: auto-grade friendly, shuffle always on.
+      attemptPolicy: "single",
+      gradingMode: "auto",
+      proctoringLevel: "none",
+      passScore: 50,
+      shuffleQuestions: true,
+      shuffleOptions: true,
+      showResultsAfterSubmit: meta.showResultsAfterSubmit ?? true,
+      // 1:1 wizard config
+      wizardConfig: {
+        create: {
+          lessonIds: fullConfig.lessonIds,
+          questionCount: fullConfig.questionCount,
+          bloomMix: fullConfig.bloomMix,
+          difficultyProfile: fullConfig.difficultyProfile,
+          distributionMode: fullConfig.distributionMode,
+          sessionCount: fullConfig.sessionCount ?? null,
+          autoEquating: fullConfig.autoEquating,
+          createdMode: "basic",
+        },
+      },
+      // Single random section — one pool, per-attempt sampling.
+      sections: {
+        create: {
+          title: "Câu hỏi",
+          orderIndex: 0,
+          selectionMode: "random_from_bank",
+          resolutionMode: "per_attempt",
+          poolFilter: poolFilter as never,
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  // Increment counter for upgrade-banner (non-critical — ignore failure).
+  await db.user.update({
+    where: { id: actorUserId },
+    data: { examsCreatedCount: { increment: 1 } },
+  }).catch(() => undefined);
+
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamCreated,
+    { examId: exam.id, courseId, source: "wizard" },
+    { courseId, eventKey: `exam.created:${exam.id}` },
+    db,
+  );
+  return { examId: exam.id, fallbackUsed };
 }
 
 async function loadExam(examId: string, db: PrismaClient) {

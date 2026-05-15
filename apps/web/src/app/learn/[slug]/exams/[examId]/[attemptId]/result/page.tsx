@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getExamAttemptResult } from "@feedbackme/core-lms";
+import { getExamAttemptResult, getExamAttemptReview } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import AnswerReview from "./AnswerReview";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,10 @@ export default async function ExamResultPage({
   }
   const result = await getExamAttemptResult(session.user.id, params.attemptId).catch(() => null);
   if (!result || result.examId !== params.examId) notFound();
+
+  const review = result.showDetails
+    ? await getExamAttemptReview(session.user.id, params.attemptId).catch(() => null)
+    : null;
 
   const pending = result.status !== "graded";
   const pct = result.scorePct ?? null;
@@ -55,27 +60,7 @@ export default async function ExamResultPage({
         </div>
       )}
 
-      {result.showDetails && result.answers.length > 0 && (
-        <section className="mt-6">
-          <h2 className="mb-2 text-base font-semibold">Chi tiết từng câu</h2>
-          <ul className="space-y-1 text-sm">
-            {result.answers.map((a, i) => {
-              const effective = a.manualScore ?? a.autoScore;
-              return (
-                <li
-                  key={a.questionId}
-                  className="flex items-center justify-between border-b border-default py-1.5"
-                >
-                  <span>Câu {i + 1}</span>
-                  <span className="font-mono">
-                    {a.needsGrading ? "(chờ chấm)" : `${effective ?? 0} điểm`}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
+      {review && <AnswerReview questions={review.questions} />}
 
       <div className="mt-8">
         <Link
