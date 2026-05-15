@@ -185,6 +185,8 @@ export async function recomputeRanking(
   for (const e of events) {
     const p = e.payload as { tournamentId?: string; missionId?: string; points?: number } | null;
     if (!p?.missionId || !missionIds.includes(p.missionId)) continue;
+    // A5.8: skip candidate-emitted events — tournaments are User-only.
+    if (!e.userId) continue;
     const inc = typeof p.points === "number" ? p.points : 0;
     pointsByUser.set(e.userId, (pointsByUser.get(e.userId) ?? 0) + inc);
   }

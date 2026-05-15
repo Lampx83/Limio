@@ -36,6 +36,17 @@ export const LearningEventType = {
   ExamGraded: "exam.graded",
   ExamRegraded: "exam.regraded",
   ExamIncidentFlagged: "exam.incident.flagged",
+  // A5.3.5 — Instructor live actions
+  ExamAttemptExtended: "exam.attempt.extended",
+  ExamAttemptForceSubmitted: "exam.attempt.force_submitted",
+  ExamAttemptSessionReset: "exam.attempt.session_reset",
+  ExamAttemptDisqualified: "exam.attempt.disqualified",
+  ExamMessageSent: "exam.message.sent",
+  ExamMessageBroadcast: "exam.message.broadcast",
+  ExamAttemptHeartbeatLost: "exam.attempt.heartbeat_lost",
+  // A5.8 — Code-based access lifecycle
+  ExamCandidateCreated: "exam.candidate.created",
+  ExamCandidateCodeClaimed: "exam.candidate.code_claimed",
   // Audio runtime — P1 only
   ExamAudioPlayed: "exam.audio.played",
   ExamAudioCompleted: "exam.audio.completed",
@@ -74,6 +85,24 @@ export const LearningEventType = {
 
 export type LearningEventType =
   (typeof LearningEventType)[keyof typeof LearningEventType];
+
+/**
+ * A5.8 (Q7) — Discriminator for event consumers in Module B (Feedback Engine)
+ * and Module C (Gamification). Candidate-emitted events have `userId=null`
+ * because anonymous test-takers don't own a `User` row → no LearnerSkillState,
+ * no XP ledger, no badges. Consumers MUST filter these out before mutating
+ * learner-side state. Pattern at start of every handler:
+ *
+ *     if (!isLearnerEvent(event)) return;
+ *
+ * `LearningEvent` still records the row (with candidateId set) so item
+ * analytics (P2.5) can read it. Only learner-state mutation is gated.
+ */
+export function isLearnerEvent(event: {
+  userId: string | null;
+}): event is { userId: string } {
+  return event.userId !== null;
+}
 
 /** Payload shapes for Phase 0 events. Extend per phase. */
 export interface LessonViewedPayload {

@@ -15,6 +15,12 @@ import { recordQuestProgress } from "./quests";
  * Event handlers — called from `apps/web` orchestration layer AFTER
  * core-lms emits the corresponding learning event. Per CLAUDE.md §4.3,
  * core-gamification never imports core-lms; the wiring is in `apps/web`.
+ *
+ * A5.8 (Q7) — These handlers take `userId: string` non-null by contract.
+ * The caller (orchestration in apps/web) is responsible for filtering out
+ * candidate-emitted events: candidate routes auth via the exam_session
+ * cookie, never reach the User-only endpoints that trigger these handlers,
+ * and event-driven workers must call `isLearnerEvent(event)` first.
  */
 
 export interface LessonCompletedInput {
