@@ -5,3 +5,9 @@
 5 0 * * *    /usr/local/bin/run.sh leaderboard-close
 */5 * * * *  /usr/local/bin/run.sh tournament-tick
 *    * * * *  /usr/local/bin/run.sh exam-autosubmit
+# A5.3.6 — Heartbeat-lost detector. Cheap query on (status, lastHeartbeatAt)
+# index; in-memory dedups so re-runs don't spam dashboard with the same row.
+*/2  * * * *  /usr/local/bin/run.sh exam-heartbeat-watch
+# A5.4 — Nightly item-analytics rebuild. UPSERT per ExamQuestionStats /
+# BankQuestionStats row. Idempotent; target runtime ≤ 30s.
+0 2  * * *  /usr/local/bin/run.sh exam-analytics
