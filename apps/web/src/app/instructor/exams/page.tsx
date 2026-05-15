@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookOpen, ClipboardList } from "lucide-react";
+import { BookOpen, FlaskConical } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 
@@ -87,7 +87,7 @@ export default async function InstructorExamsHubPage() {
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold"><ClipboardList className="h-6 w-6 shrink-0 text-slate-500" /> Bài thi trực tuyến</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold"><FlaskConical className="h-6 w-6 shrink-0 text-slate-500" /> Bài thi trực tuyến</h1>
           <p className="mt-1 text-sm text-faint">
             {exams.length} bài thi · {draftCount} nháp · {publishedCount} đã publish
           </p>

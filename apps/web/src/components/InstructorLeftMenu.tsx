@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Eye,
-  FileQuestion,
+  FlaskConical,
   ClipboardList,
   Tag,
   Wrench,
@@ -65,7 +65,7 @@ const FULL_GROUPS: Group[] = [
     label: "Kiểm tra đánh giá",
     items: [
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
-      { label: "Đề thi", href: "/instructor/exams", icon: FileQuestion },
+      { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
       { label: "Tổ chức thi", href: "/instructor/exam-rounds", icon: Radio },
       PROCTOR_ITEM,
       { label: "Chấm tự luận", href: "/instructor/grade-essays", icon: PenLine },
