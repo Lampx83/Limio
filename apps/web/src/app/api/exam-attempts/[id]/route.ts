@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAttemptRuntime } from "@feedbackme/core-lms";
-import { requireUserId } from "@/lib/session";
+import { requireExamSubject } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
@@ -10,10 +10,10 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const subject = await requireExamSubject(params.id);
+  if (!subject) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const r = await getAttemptRuntime(userId, params.id);
+    const r = await getAttemptRuntime(subject, params.id);
     return NextResponse.json(r);
   } catch (e) {
     const mapped = mapKnownError(e);

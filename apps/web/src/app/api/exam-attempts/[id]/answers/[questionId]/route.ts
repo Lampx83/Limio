@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { saveAnswer } from "@feedbackme/core-lms";
-import { requireUserId } from "@/lib/session";
+import { requireExamSubject } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
+import { recordAnswered } from "@/lib/exam-live-bus";
 
 export const runtime = "nodejs";
 
@@ -10,11 +11,12 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string; questionId: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const subject = await requireExamSubject(params.id);
+  if (!subject) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await readJson(req);
   try {
-    const r = await saveAnswer(userId, params.id, params.questionId, body);
+    const r = await saveAnswer(subject, params.id, params.questionId, body);
+    if (r.persisted) recordAnswered(params.id, params.questionId);
     return NextResponse.json(r);
   } catch (e) {
     const mapped = mapKnownError(e);

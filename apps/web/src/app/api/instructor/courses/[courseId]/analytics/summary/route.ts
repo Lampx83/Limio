@@ -77,7 +77,7 @@ export async function GET(
     const lessonsByUser = new Map<string, Set<string>>();
     for (const ev of completedLessonEvents) {
       const lessonId = (ev.payload as { lessonId?: string } | null)?.lessonId;
-      if (!lessonId) continue;
+      if (!lessonId || !ev.userId) continue;
       let set = lessonsByUser.get(ev.userId);
       if (!set) {
         set = new Set();
