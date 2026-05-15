@@ -12,7 +12,7 @@ name: feedbackme
 
 x-web-env: &web-env
   NODE_ENV: production
-  DATABASE_URL: postgresql://feedbackme:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@postgres:5432/feedbackme?schema=public
+  DATABASE_URL: postgresql://feedbackme:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@postgres:5432/feedbackme?schema=public&connection_limit=25&pool_timeout=30
   REDIS_URL: redis://redis:6379
   NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
   # NextAuth v5 reads AUTH_SECRET (not NEXTAUTH_SECRET) in production.
