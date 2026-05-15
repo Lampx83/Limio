@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Clock } from "lucide-react";
+import { Clock, Play, Pause, RotateCcw, Maximize2, Minimize2, X, Music2, Minus, Plus } from "lucide-react";
 import type { TimerTemplate } from "@feedbackme/db";
 import NotesEditor from "./NotesEditor";
 import TemplateSelector from "../teaching-tools/TimerTemplates/TemplateSelector";
 
 const MUSIC_OPTIONS = [
   { id: "none", name: "Không có âm nhạc", src: "" },
-  { id: "upbeat", name: "🎵 Vui vẻ", src: "/music/upbeat.mp3" },
-  { id: "focus", name: "🧠 Tập trung", src: "/music/focus.mp3" },
-  { id: "ambient", name: "☁️ Thư giãn", src: "/music/ambient.mp3" },
+  { id: "upbeat", name: "Vui vẻ", src: "/music/upbeat.mp3" },
+  { id: "focus", name: "Tập trung", src: "/music/focus.mp3" },
+  { id: "ambient", name: "Thư giãn", src: "/music/ambient.mp3" },
 ];
 
 const TIMER_PRESETS = [
@@ -24,329 +24,385 @@ interface CountdownTimerProps {
   onExit?: () => void;
 }
 
+type TimerState = "ready" | "running" | "paused" | "finished";
+
+const STATE_STYLES: Record<TimerState, { ring: string; bg: string; text: string; label: string; pulse: boolean }> = {
+  ready: {
+    ring: "border-token",
+    bg: "bg-[rgb(var(--surface-muted))]",
+    text: "text-fg",
+    label: "Sẵn sàng",
+    pulse: false,
+  },
+  running: {
+    ring: "border-brand-400 dark:border-brand-500",
+    bg: "bg-brand-50 dark:bg-brand-900/20",
+    text: "text-brand-700 dark:text-brand-300",
+    label: "Đang chạy",
+    pulse: false,
+  },
+  paused: {
+    ring: "border-accent-400 dark:border-accent-500",
+    bg: "bg-accent-50 dark:bg-accent-900/20",
+    text: "text-accent-700 dark:text-accent-300",
+    label: "Tạm dừng",
+    pulse: false,
+  },
+  finished: {
+    ring: "border-pink-400 dark:border-pink-500",
+    bg: "bg-pink-50 dark:bg-pink-950/30",
+    text: "text-pink-700 dark:text-pink-300",
+    label: "Hết giờ",
+    pulse: true,
+  },
+};
+
 export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
-  const [minutes, setMinutes] = useState(5);
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(15);
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [notes, setNotes] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedMusic, setSelectedMusic] = useState("upbeat");
+  const [selectedMusic, setSelectedMusic] = useState("focus");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [hasFinished, setHasFinished] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (!audioRef.current) return;
-
     if (!isRunning) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
-    } else if (isRunning && selectedMusic !== "none") {
+    } else if (selectedMusic !== "none") {
       const musicFile = MUSIC_OPTIONS.find((m) => m.id === selectedMusic);
       if (musicFile?.src && audioRef.current.src !== musicFile.src) {
         audioRef.current.src = musicFile.src;
         audioRef.current.loop = true;
-        audioRef.current.play().catch((err) => {
-          console.log("Audio playback failed:", err);
-        });
+        audioRef.current.play().catch((err) => console.log("Audio playback failed:", err));
       }
     }
   }, [isRunning, selectedMusic]);
 
   useEffect(() => {
     if (!isRunning) return;
-
     const interval = setInterval(() => {
       setTotalSeconds((prev) => {
         if (prev <= 1) {
           setIsRunning(false);
+          setHasFinished(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(interval);
   }, [isRunning]);
 
-  useEffect(() => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    setMinutes(mins);
-    setSeconds(secs);
-  }, [totalSeconds]);
-
   const handleStart = () => {
-    const total = parseInt(minutes.toString()) * 60 + parseInt(seconds.toString());
+    const total = hours * 3600 + minutes * 60 + seconds;
     if (total > 0) {
+      setHasFinished(false);
       setTotalSeconds(total);
       setIsRunning(true);
-
       if (selectedMusic !== "none" && audioRef.current) {
         const musicFile = MUSIC_OPTIONS.find((m) => m.id === selectedMusic);
         if (musicFile?.src) {
           audioRef.current.src = musicFile.src;
           audioRef.current.loop = true;
-
-          // Load and play the audio
           audioRef.current.load();
-          const playPromise = audioRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((err) => {
-              console.log("Audio playback failed:", err);
-            });
-          }
+          audioRef.current.play().catch((err) => console.log("Audio playback failed:", err));
         }
       }
     }
   };
 
-  const handlePause = () => {
-    setIsRunning(false);
-  };
+  const handlePause = () => setIsRunning(false);
 
   const handleResume = () => {
     if (totalSeconds > 0) {
       setIsRunning(true);
-      if (selectedMusic !== "none" && audioRef.current && !audioRef.current.paused) {
-        // Audio is already playing, nothing to do
-        return;
-      }
-      if (selectedMusic !== "none" && audioRef.current) {
-        audioRef.current.play().catch((err) => {
-          console.log("Audio playback failed:", err);
-        });
+      if (selectedMusic !== "none" && audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch((err) => console.log("Audio playback failed:", err));
       }
     }
   };
 
   const handleReset = () => {
     setIsRunning(false);
+    setHasFinished(false);
     setTotalSeconds(0);
-    setMinutes(5);
+    setHours(0);
+    setMinutes(15);
     setSeconds(0);
   };
 
-  const handlePresetClick = (seconds: number) => {
+  const handlePresetClick = (s: number) => {
     if (isRunning || totalSeconds > 0) return;
-    setMinutes(Math.floor(seconds / 60));
-    setSeconds(seconds % 60);
+    setHours(Math.floor(s / 3600));
+    setMinutes(Math.floor((s % 3600) / 60));
+    setSeconds(s % 60);
   };
 
   const handleSelectTemplate = (template: TimerTemplate | null) => {
     if (!template) {
       setSelectedTemplateId(null);
+      setNotes("");
       return;
     }
-
-    // Load template data
     setSelectedTemplateId(template.id);
-    setMinutes(Math.floor(template.durationSeconds / 60));
-    setSeconds(template.durationSeconds % 60);
-    if (template.notes) {
-      setNotes(template.notes);
-    }
-    if (template.musicId) {
-      setSelectedMusic(template.musicId);
-    }
+    setNotes(template.notes ?? "");
+    if (template.musicId) setSelectedMusic(template.musicId);
   };
 
-  const getTimerState = () => {
-    if (totalSeconds === 0 && !isRunning) return 'ready';
-    if (isRunning) return 'running';
-    if (totalSeconds > 0) return 'paused';
-    return 'finished';
-  };
+  const timerState: TimerState = isRunning
+    ? "running"
+    : hasFinished
+    ? "finished"
+    : totalSeconds > 0
+    ? "paused"
+    : "ready";
+  const style = STATE_STYLES[timerState];
 
-  const timerState = getTimerState();
-  const stateClasses: Record<string, string> = {
-    ready: 'border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900',
-    running: 'border-green-400 bg-green-50 dark:border-green-500 dark:bg-green-950 animate-pulse',
-    paused: 'border-yellow-400 bg-yellow-50 dark:border-yellow-500 dark:bg-yellow-950',
-    finished: 'border-purple-500 bg-purple-100 dark:border-purple-400 dark:bg-purple-950 animate-pulse',
-  };
+  const handleFullscreen = () => {
+    const next = !isFullscreen;
+    setIsFullscreen(next);
 
-  const stateIcons: Record<string, React.ReactNode> = {
-    ready: <Clock size={20} className="text-orange-600" strokeWidth={1.5} />,
-    running: <Clock size={20} className="text-green-600" strokeWidth={1.5} />,
-    paused: <Clock size={20} className="text-yellow-600" strokeWidth={1.5} />,
-    finished: <Clock size={20} className="text-purple-600" strokeWidth={1.5} />,
-  };
-
-  const handleFullscreen = async () => {
-    if (!containerRef.current) return;
-
+    const el = containerRef.current as any;
+    const doc = document as any;
     try {
-      if (!isFullscreen) {
-        await containerRef.current.requestFullscreen?.();
-        setIsFullscreen(true);
+      if (next) {
+        const req =
+          el?.requestFullscreen ||
+          el?.webkitRequestFullscreen ||
+          el?.mozRequestFullScreen ||
+          el?.msRequestFullscreen;
+        const p = req?.call(el);
+        if (p && typeof p.catch === "function") p.catch(() => {});
       } else {
-        await document.exitFullscreen?.();
-        setIsFullscreen(false);
+        const exit =
+          doc.exitFullscreen ||
+          doc.webkitExitFullscreen ||
+          doc.mozCancelFullScreen ||
+          doc.msExitFullscreen;
+        const p = exit?.call(doc);
+        if (p && typeof p.catch === "function") p.catch(() => {});
       }
-    } catch (err) {
-      console.error("Fullscreen error:", err);
+    } catch {
+      // soft-fullscreen still works via state
     }
   };
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+    const sync = () => {
+      const doc = document as any;
+      const fsEl =
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.msFullscreenElement;
+      // Only react to native exit (e.g. user pressed Esc) — don't override soft-fullscreen.
+      if (!fsEl && !document.hasFocus()) return;
+      if (!fsEl) setIsFullscreen(false);
     };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+    };
   }, []);
 
-  const formatTime = (num: number) => String(num).padStart(2, "0");
-  const displayMinutes = totalSeconds > 0 ? Math.floor(totalSeconds / 60) : minutes;
-  const displaySeconds = totalSeconds > 0 ? totalSeconds % 60 : seconds;
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isFullscreen]);
 
+  const formatTime = (n: number) => String(n).padStart(2, "0");
+  const displayHours =
+    totalSeconds > 0 ? Math.floor(totalSeconds / 3600) : hasFinished ? 0 : hours;
+  const displayMinutes =
+    totalSeconds > 0
+      ? Math.floor((totalSeconds % 3600) / 60)
+      : hasFinished
+      ? 0
+      : minutes;
+  const displaySeconds =
+    totalSeconds > 0 ? totalSeconds % 60 : hasFinished ? 0 : seconds;
+  const showHours = displayHours > 0 || hours > 0;
+  const editingDisabled = isRunning || totalSeconds > 0;
+
+  const stepperBtn =
+    "flex h-10 w-10 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30";
+  const actionBtn =
+    "inline-flex items-center gap-1.5 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm font-medium text-fg transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-50";
+
+  // ── Reusable bits ─────────────────────────────────────────
+  const stepper = (
+    value: number,
+    onChange: (v: number) => void,
+    label: string,
+    max: number,
+  ) => (
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center rounded-lg border border-token bg-[rgb(var(--surface))] overflow-hidden">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 1))}
+          disabled={editingDisabled || value <= 0}
+          className="flex h-9 w-7 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+          aria-label={`Giảm ${label}`}
+        >
+          <Minus size={14} />
+        </button>
+        <input
+          type="number"
+          min="0"
+          max={max}
+          value={value}
+          onChange={(e) =>
+            onChange(Math.max(0, Math.min(max, parseInt(e.target.value) || 0)))
+          }
+          disabled={editingDisabled}
+          className="h-9 w-10 border-x border-token bg-transparent text-center text-sm font-semibold focus:outline-none disabled:opacity-60"
+          aria-label={label}
+        />
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={editingDisabled || value >= max}
+          className="flex h-9 w-7 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+          aria-label={`Tăng ${label}`}
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+      <span className="text-[10px] font-medium uppercase tracking-wider text-muted">
+        {label}
+      </span>
+    </div>
+  );
+
+  const presetChips = (
+    <div className="flex flex-wrap gap-2">
+      {TIMER_PRESETS.map((preset) => (
+        <button
+          key={preset.seconds}
+          onClick={() => handlePresetClick(preset.seconds)}
+          disabled={editingDisabled}
+          className="rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-fg transition hover:border-brand-400 hover:text-brand-700 disabled:opacity-50 disabled:hover:border-token disabled:hover:text-fg"
+        >
+          {preset.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const primaryAction = (() => {
+    if (isRunning)
+      return (
+        <button
+          onClick={handlePause}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent-300 bg-accent-50 px-5 py-2.5 text-sm font-semibold text-accent-700 transition hover:bg-accent-100 dark:bg-accent-900/30 dark:text-accent-300"
+        >
+          <Pause size={16} /> Tạm dừng
+        </button>
+      );
+    if (totalSeconds > 0)
+      return (
+        <button
+          onClick={handleResume}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-brand-glow"
+        >
+          <Play size={16} /> Tiếp tục
+        </button>
+      );
+    return (
+      <button
+        onClick={handleStart}
+        disabled={hours === 0 && minutes === 0 && seconds === 0}
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-brand-glow disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <Play size={16} /> Bắt đầu
+      </button>
+    );
+  })();
+
+  // ── Fullscreen view ────────────────────────────────────────
   if (isFullscreen) {
     return (
       <div
         ref={containerRef}
-        className="fixed inset-0 bg-[rgb(var(--surface))] flex flex-col p-6 z-50"
+        className="fixed inset-0 z-50 flex flex-col bg-[rgb(var(--bg))] p-6"
       >
-        {/* Fullscreen Header - Compact */}
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex gap-4 items-center flex-wrap">
-            {/* Quick Presets */}
-            <div className="flex gap-1 items-center">
-              <span className="text-xs font-medium text-muted mr-2">Nhanh</span>
-              {TIMER_PRESETS.map((preset) => (
-                <button
-                  key={preset.seconds}
-                  onClick={() => handlePresetClick(preset.seconds)}
-                  disabled={isRunning || totalSeconds > 0}
-                  className="btn-secondary text-xs px-2 py-1 hover:scale-105 transition-transform disabled:opacity-50"
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Divider */}
-            <div className="text-gray-300">│</div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted">🎵</span>
-              <select
-                value={selectedMusic}
-                onChange={(e) => setSelectedMusic(e.target.value)}
-                disabled={isRunning || totalSeconds > 0}
-                className="input text-sm"
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-token pb-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-xs font-medium text-muted">Nhanh</span>
+            {TIMER_PRESETS.map((preset) => (
+              <button
+                key={preset.seconds}
+                onClick={() => handlePresetClick(preset.seconds)}
+                disabled={editingDisabled}
+                className="rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1 text-xs font-medium text-fg transition hover:border-brand-400 disabled:opacity-50"
               >
-              {MUSIC_OPTIONS.map((music) => (
-                <option key={music.id} value={music.id}>
-                  {music.name}
-                </option>
-              ))}
-              </select>
+                {preset.label}
+              </button>
+            ))}
+            <span className="mx-2 h-5 w-px bg-token" />
+            <div className="flex items-center gap-2">
+              {stepper(displayHours, (v) => setHours(v), "Giờ", 23)}
+              <span className="text-base font-bold text-muted">:</span>
+              {stepper(displayMinutes, (v) => setMinutes(v), "Phút", 59)}
+              <span className="text-base font-bold text-muted">:</span>
+              {stepper(displaySeconds, (v) => setSeconds(v), "Giây", 59)}
             </div>
-
-            {/* Divider */}
-            <div className="text-gray-300">│</div>
-
-            {/* Input Fields - in header */}
-            <div className="flex gap-2">
-              <div className="w-24">
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={totalSeconds === 0 ? minutes : displayMinutes}
-                  onChange={(e) => {
-                    if (totalSeconds === 0) {
-                      setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
-                    }
-                  }}
-                  disabled={isRunning || totalSeconds > 0}
-                  className="input w-full text-center text-xs"
-                  placeholder="Phút"
-                />
-              </div>
-              <div className="w-24">
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  value={totalSeconds === 0 ? seconds : displaySeconds}
-                  onChange={(e) => {
-                    if (totalSeconds === 0) {
-                      setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
-                    }
-                  }}
-                  disabled={isRunning || totalSeconds > 0}
-                  className="input w-full text-center text-xs"
-                  placeholder="Giây"
-                />
-              </div>
-            </div>
-            {!isRunning && totalSeconds === 0 && (
-              <button onClick={handleStart} className="btn-primary text-xs px-3 hover:scale-105 active:scale-95 transition-all duration-200">
-                Bắt đầu
-              </button>
-            )}
-            {isRunning && (
-              <button onClick={handlePause} className="btn-secondary text-xs px-3 hover:scale-105 active:scale-95 transition-all duration-200">
-                Tạm dừng
-              </button>
-            )}
-            {!isRunning && totalSeconds > 0 && (
-              <button onClick={handleResume} className="btn-primary text-xs px-3 hover:scale-105 active:scale-95 transition-all duration-200">
-                Tiếp tục
-              </button>
-            )}
+            <span className="mx-2 h-5 w-px bg-token" />
+            {primaryAction}
             {totalSeconds > 0 && (
-              <button onClick={handleReset} className="btn-danger text-xs px-3 hover:scale-105 active:scale-95 transition-all duration-200">
-                Đặt lại
+              <button onClick={handleReset} className={actionBtn}>
+                <RotateCcw size={14} /> Đặt lại
               </button>
             )}
           </div>
-          <button
-            onClick={handleFullscreen}
-            className="btn-secondary text-sm"
-            title="Thoát toàn màn hình"
-          >
-            ⛶ Thoát
-          </button>
-          {onExit && (
-            <button
-              onClick={onExit}
-              className="btn-secondary text-sm"
-              title="Exit tool"
-            >
-              ✕ Exit
+          <div className="flex gap-2">
+            <button onClick={handleFullscreen} className={actionBtn}>
+              <Minimize2 size={14} /> Thoát
             </button>
-          )}
+            {onExit && (
+              <button onClick={onExit} className={actionBtn}>
+                <X size={14} /> Đóng
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Fullscreen Layout: Notes (flex-1) + Timer (fixed 20vh) */}
-        <div className="flex flex-col flex-1 min-h-0 gap-3">
-          {/* Notes/Mission Content */}
-          <div className="flex flex-col flex-1 min-h-0">
-            <label className="text-sm font-semibold mb-2">📋 Nhiệm vụ / Hướng dẫn cho sinh viên</label>
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          <div className="flex flex-1 min-h-0 flex-col">
+            <label className="mb-2 text-sm font-semibold">Nhiệm vụ / Hướng dẫn cho sinh viên</label>
             <NotesEditor
               value={notes}
               onChange={setNotes}
               placeholder="Nhập hướng dẫn cho sinh viên..."
-              className="input w-full h-full resize-none p-4 leading-relaxed overflow-hidden"
+              className="input h-full w-full resize-none overflow-hidden p-4 leading-relaxed"
               autoFit
             />
           </div>
 
-          {/* Timer Display - fixed 20vh */}
           <div
-            className={`flex items-center justify-center border-4 rounded-lg transition-all duration-300 ${stateClasses[timerState]}`}
-            style={{ height: "20vh" }}
+            className={`flex items-center justify-center rounded-2xl border-4 transition-all duration-300 ${style.ring} ${style.bg} ${style.pulse ? "animate-pulse" : ""}`}
+            style={{ height: "22vh" }}
           >
             <span
-              className="font-bold text-purple-700 font-mono leading-none whitespace-nowrap"
-              style={{ fontSize: "15vh" }}
+              className={`whitespace-nowrap font-mono font-bold leading-none ${style.text}`}
+              style={{ fontSize: "16vh" }}
             >
-              {formatTime(displayMinutes)}:{formatTime(displaySeconds)}
+              {showHours ? `${formatTime(displayHours)}:` : ""}{formatTime(displayMinutes)}:{formatTime(displaySeconds)}
             </span>
           </div>
         </div>
@@ -355,167 +411,114 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
     );
   }
 
+  // ── Normal view ────────────────────────────────────────────
   return (
-    <div
-      ref={containerRef}
-      className="rounded-2xl border-2 border-purple-200 bg-[rgb(var(--surface))] p-6 shadow-card transition-all duration-300"
-    >
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+    <div ref={containerRef} className="space-y-3">
+      {/* Compact toolbar: title + presets + steppers + music + actions */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2 shadow-card">
         <div className="flex items-center gap-2">
-          <Clock size={24} className="text-orange-600" strokeWidth={1.5} />
-          <h3 className="text-lg font-bold">Đồng Hồ Đếm Ngược</h3>
-        </div>
-        <div className="flex gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-muted">🎵 Nhạc</label>
-            <select
-              value={selectedMusic}
-              onChange={(e) => setSelectedMusic(e.target.value)}
-              disabled={isRunning || totalSeconds > 0}
-              className="input text-sm w-40"
-            >
-              {MUSIC_OPTIONS.map((music) => (
-                <option key={music.id} value={music.id}>
-                  {music.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-white">
+            <Clock size={16} strokeWidth={2.2} />
           </div>
-          <button
-            onClick={handleFullscreen}
-            className="btn-secondary text-sm"
-            title="Toàn màn hình"
+          <h3 className="text-sm font-bold">Đếm Ngược</h3>
+        </div>
+
+        <span className="h-6 w-px bg-token" />
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {TIMER_PRESETS.map((preset) => (
+            <button
+              key={preset.seconds}
+              onClick={() => handlePresetClick(preset.seconds)}
+              disabled={editingDisabled}
+              className="rounded-full border border-token bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-medium text-fg transition hover:border-brand-400 hover:text-brand-700 disabled:opacity-50"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        <span className="h-6 w-px bg-token" />
+
+        <div className="flex items-center gap-1.5">
+          {stepper(displayHours, (v) => setHours(v), "Giờ", 23)}
+          <span className="text-base font-bold text-muted">:</span>
+          {stepper(displayMinutes, (v) => setMinutes(v), "Phút", 59)}
+          <span className="text-base font-bold text-muted">:</span>
+          {stepper(displaySeconds, (v) => setSeconds(v), "Giây", 59)}
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <Music2 size={14} className="text-muted" />
+          <select
+            value={selectedMusic}
+            onChange={(e) => setSelectedMusic(e.target.value)}
+            disabled={editingDisabled}
+            className="input h-9 py-0 text-xs"
           >
-            ⛶ Toàn màn hình
+            {MUSIC_OPTIONS.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          {primaryAction}
+          {totalSeconds > 0 && (
+            <button onClick={handleReset} className={actionBtn}>
+              <RotateCcw size={14} /> Reset
+            </button>
+          )}
+          <button onClick={handleFullscreen} className={actionBtn} title="Toàn màn hình">
+            <Maximize2 size={14} />
           </button>
           {onExit && (
-            <button
-              onClick={onExit}
-              className="btn-secondary text-sm"
-              title="Exit"
-            >
-              ✕ Exit
+            <button onClick={onExit} className={actionBtn} title="Đóng">
+              <X size={14} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Timer Display & Controls */}
-        <div className="flex flex-col gap-3">
-          {/* Template Selector */}
-          <TemplateSelector
-            selectedTemplateId={selectedTemplateId}
-            onSelectTemplate={handleSelectTemplate}
-          />
+      {/* Big timer */}
+      <div
+        className={`flex flex-col items-center justify-center rounded-2xl border-4 px-6 py-8 transition-all duration-300 ${style.ring} ${style.bg} ${style.pulse ? "animate-pulse" : ""}`}
+      >
+        <span className={`mb-1 text-[11px] font-semibold uppercase tracking-wider ${style.text}`}>
+          {style.label}
+        </span>
+        <span className={`font-mono text-7xl font-bold leading-none sm:text-8xl ${style.text}`}>
+          {showHours ? `${formatTime(displayHours)}:` : ""}{formatTime(displayMinutes)}:{formatTime(displaySeconds)}
+        </span>
+      </div>
 
-          {/* Quick Presets */}
-          <div>
-            <label className="block text-xs font-medium text-muted mb-2">
-              Nhanh chóng
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              {TIMER_PRESETS.map((preset) => (
-                <button
-                  key={preset.seconds}
-                  onClick={() => handlePresetClick(preset.seconds)}
-                  disabled={isRunning || totalSeconds > 0}
-                  className="btn-secondary text-sm px-3 py-2 hover:scale-105 active:scale-95 transition-transform duration-200 disabled:opacity-50 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Input Fields & Start Button - Compact on top */}
-          <div className="flex gap-2">
-            <div className="w-20">
-              <label className="block text-xs font-medium text-muted mb-1">
-                Phút
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={totalSeconds === 0 ? minutes : displayMinutes}
-                onChange={(e) => {
-                  if (totalSeconds === 0) {
-                    setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
-                  }
-                }}
-                disabled={isRunning || totalSeconds > 0}
-                className="input w-full text-center text-sm"
-              />
-            </div>
-            <div className="w-20">
-              <label className="block text-xs font-medium text-muted mb-1">
-                Giây
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={totalSeconds === 0 ? seconds : displaySeconds}
-                onChange={(e) => {
-                  if (totalSeconds === 0) {
-                    setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
-                  }
-                }}
-                disabled={isRunning || totalSeconds > 0}
-                className="input w-full text-center text-sm"
-              />
-            </div>
-            {!isRunning && totalSeconds === 0 && (
-              <button onClick={handleStart} className="btn-primary flex-1 self-end hover:scale-105 active:scale-95 transition-all duration-200 focus:ring-2 focus:ring-purple-400 focus:outline-none">
-                Bắt đầu
-              </button>
+      {/* Template + Notes stacked in one section */}
+      <div className="space-y-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 shadow-card">
+        <TemplateSelector
+          selectedTemplateId={selectedTemplateId}
+          onSelectTemplate={handleSelectTemplate}
+        />
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-muted">
+            Ghi chú / Hướng dẫn
+            {selectedTemplateId && (
+              <span className="ml-2 font-normal text-brand-700 dark:text-brand-300">
+                (từ mẫu — có thể chỉnh sửa)
+              </span>
             )}
-            {isRunning && (
-              <button onClick={handlePause} className="btn-secondary flex-1 self-end hover:scale-105 active:scale-95 transition-all duration-200 focus:ring-2 focus:ring-purple-400 focus:outline-none">
-                Tạm dừng
-              </button>
-            )}
-            {!isRunning && totalSeconds > 0 && (
-              <button onClick={handleResume} className="btn-primary flex-1 self-end hover:scale-105 active:scale-95 transition-all duration-200 focus:ring-2 focus:ring-purple-400 focus:outline-none">
-                Tiếp tục
-              </button>
-            )}
-          </div>
-
-          {/* Reset Button if needed */}
-          {totalSeconds > 0 && (
-            <button onClick={handleReset} className="btn-danger w-full hover:scale-105 active:scale-95 transition-all duration-200 focus:ring-2 focus:ring-purple-400 focus:outline-none">
-              Đặt lại
-            </button>
-          )}
-
-          {/* Timer Display - Large below */}
-          <div className={`rounded-xl border-4 p-8 text-center flex-1 flex flex-col justify-center transition-all duration-300 ${stateClasses[timerState]}`}>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-2xl">{stateIcons[timerState]}</span>
-              <p className="text-sm text-muted">Thời gian còn lại</p>
-            </div>
-            <div className="text-6xl font-bold text-purple-700 font-mono">
-              {formatTime(displayMinutes)}:{formatTime(displaySeconds)}
-            </div>
-          </div>
-        </div>
-
-        {/* Notes Section */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-semibold mb-2">
-            📝 Ghi chú / Hướng dẫn
           </label>
           <NotesEditor
             value={notes}
             onChange={setNotes}
             placeholder="Nhập ghi chú cho sinh viên..."
-            className="input w-full overflow-auto p-3 text-sm"
-            rows={8}
+            className="input w-full overflow-auto p-2 text-sm"
+            rows={6}
           />
         </div>
       </div>
+
       <audio ref={audioRef} crossOrigin="anonymous" />
     </div>
   );

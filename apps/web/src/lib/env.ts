@@ -26,6 +26,11 @@ const Schema = z.object({
   LTI_PLATFORM_ISSUER: z.string().url().optional(),
   AI_TURNS_PER_HOUR: z.string().optional(),
   AI_TOKENS_PER_DAY: z.string().optional(),
+  // A5.8 Q3 — Email service for sending exam codes to assigned candidates.
+  // If RESEND_API_KEY is unset, lib/email.ts falls back to console.log so
+  // dev/test still flow without burning the Resend quota.
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().email().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 

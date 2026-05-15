@@ -6,6 +6,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
 import ImportQuestionsModal from "./ImportQuestionsModal";
+import FromBankModal from "./FromBankModal";
 
 interface Skill {
   id: string;
@@ -57,6 +58,7 @@ type EditState =
   | { kind: "newPassage" }
   | { kind: "editPassage"; passageId: string }
   | { kind: "newQuestion"; passageId: string | null }
+  | { kind: "fromBank"; passageId: string | null }
   | { kind: "editQuestion"; questionId: string };
 
 export default function ContentManager({ examId, editable, passages, questions }: Props) {
@@ -457,15 +459,32 @@ export default function ContentManager({ examId, editable, passages, questions }
             Câu hỏi độc lập ({standalone.length})
           </h3>
           {editable && edit.kind === "idle" && (
-            <button
-              type="button"
-              onClick={() => setEdit({ kind: "newQuestion", passageId: null })}
-              className="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white"
-            >
-              + Câu hỏi độc lập
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEdit({ kind: "newQuestion", passageId: null })}
+                className="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white"
+              >
+                + Câu hỏi độc lập
+              </button>
+              <button
+                type="button"
+                onClick={() => setEdit({ kind: "fromBank", passageId: null })}
+                className="rounded border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100"
+              >
+                📚 Từ bank
+              </button>
+            </div>
           )}
         </div>
+
+        {editable && edit.kind === "fromBank" && (
+          <FromBankModal
+            examId={examId}
+            passageId={edit.passageId}
+            onClose={() => setEdit({ kind: "idle" })}
+          />
+        )}
 
         {editable && edit.kind === "newQuestion" && edit.passageId === null && (
           <div className="mb-3">

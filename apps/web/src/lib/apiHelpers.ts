@@ -105,20 +105,51 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.code === "attempt_not_found" ||
       err.code === "passage_not_found" ||
       err.code === "asset_not_found" ||
-      err.code === "answer_not_found"
+      err.code === "answer_not_found" ||
+      err.code === "message_not_found" ||
+      err.code === "result_not_found" ||
+      err.code === "candidate_not_found" ||
+      err.code === "bank_not_found" ||
+      err.code === "bank_question_not_found" ||
+      err.code === "cohort_not_found" ||
+      err.code === "schedule_not_found" ||
+      err.code === "section_not_found" ||
+      err.code === "round_not_found"
         ? 404
-        : err.code === "attempt_belongs_to_other" || err.code === "not_enrolled"
+        : err.code === "attempt_belongs_to_other" ||
+            err.code === "not_enrolled" ||
+            err.code === "forbidden"
           ? 403
           : err.code === "exam_has_attempts" ||
               err.code === "exam_not_draft" ||
               err.code === "attempt_already_submitted" ||
               err.code === "session_stale" ||
               err.code === "exam_not_open" ||
-              err.code === "exam_window_closed"
+              err.code === "exam_window_closed" ||
+              err.code === "attempt_not_in_progress" ||
+              err.code === "open_max_attempts_reached" ||
+              err.code === "candidate_disabled" ||
+              err.code === "access_mode_mismatch" ||
+              err.code === "candidate_has_attempts" ||
+              err.code === "cohort_name_taken" ||
+              err.code === "cohort_required"
             ? 409
-            : err.code === "exam_not_publishable"
+            : err.code === "exam_not_publishable" ||
+                err.code === "duration_extension_too_large" ||
+                err.code === "bank_question_not_publishable" ||
+                err.code === "bank_question_already_archived" ||
+                err.code === "schedule_invalid_window" ||
+                err.code === "section_pool_underfilled" ||
+                err.code === "section_pool_empty" ||
+                err.code === "round_invalid_window" ||
+                err.code === "round_code_taken" ||
+                err.code === "round_requires_at_least_one_course" ||
+                err.code === "round_admin_already_exists" ||
+                err.code === "round_course_already_added"
               ? 422
-              : 400;
+              : err.code === "invalid_code"
+                ? 404
+                : 400;
     return NextResponse.json(
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },

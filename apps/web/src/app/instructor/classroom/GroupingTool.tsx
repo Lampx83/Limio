@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Users } from "lucide-react";
+import { Users, Shuffle, RotateCcw, Maximize2, Minimize2, X, Minus, Plus } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { GroupMemberCard } from "./GroupMemberCard";
 import { apiUrl } from "@/lib/apiUrl";
+
+const GROUP_STYLE = {
+  bg: "bg-brand-50 dark:bg-brand-900/20",
+  border: "border-brand-200 dark:border-brand-800",
+  chip: "bg-brand-gradient",
+  text: "text-brand-700 dark:text-brand-300",
+};
 
 interface GroupInfo {
   groupNum: number;
@@ -274,69 +281,119 @@ export default function GroupingTool({
     }
   };
 
+  const totalStudents = studentList?.length ?? 0;
+  const currentValue = mode === "groupSize" ? groupSize : numGroups;
+  const setCurrentValue = (v: number) => {
+    const safe = Math.max(1, v);
+    if (mode === "groupSize") setGroupSize(safe);
+    else setNumGroups(safe);
+  };
+
+  const previewStat =
+    mode === "groupSize"
+      ? totalStudents > 0
+        ? `≈ ${Math.ceil(totalStudents / groupSize)} nhóm`
+        : null
+      : totalStudents > 0
+      ? `≈ ${Math.ceil(totalStudents / numGroups)} người/nhóm`
+      : null;
+
   // Show form if no groups created yet
   if (!groups || !groupingId) {
     return (
-      <div className="rounded-lg border border-purple-200 bg-purple-50 p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Users size={24} className="text-teal-600" strokeWidth={1.5} />
-          <h3 className="text-lg font-bold text-purple-900">Chia nhóm</h3>
+      <div className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 sm:p-8 shadow-card">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-sm">
+            <Users size={22} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Chia nhóm</h3>
+            {totalStudents > 0 && (
+              <p className="text-sm text-muted">
+                Sẵn sàng chia <span className="font-medium">{totalStudents}</span> sinh viên
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-4">
-          {/* Mode toggle */}
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                value="groupSize"
-                checked={mode === "groupSize"}
-                onChange={(e) => setMode(e.target.value as GroupingMode)}
-                className="rounded"
-              />
-              <span className="text-sm font-medium">Số người/nhóm</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                value="numGroups"
-                checked={mode === "numGroups"}
-                onChange={(e) => setMode(e.target.value as GroupingMode)}
-                className="rounded"
-              />
-              <span className="text-sm font-medium">Tổng số nhóm</span>
-            </label>
-          </div>
+        <div className="space-y-5">
+          {/* Mode toggle + stepper on the same row */}
+          <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium text-muted">Cách chia</label>
+              <div className="inline-flex rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-1">
+                <button
+                  type="button"
+                  onClick={() => setMode("groupSize")}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    mode === "groupSize"
+                      ? "bg-[rgb(var(--surface))] text-brand-700 shadow-sm"
+                      : "text-muted hover:text-fg"
+                  }`}
+                >
+                  Số người / nhóm
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("numGroups")}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    mode === "numGroups"
+                      ? "bg-[rgb(var(--surface))] text-brand-700 shadow-sm"
+                      : "text-muted hover:text-fg"
+                  }`}
+                >
+                  Tổng số nhóm
+                </button>
+              </div>
+            </div>
 
-          {/* Input field */}
-          <div>
-            <label className="block text-sm font-medium text-purple-900">
-              {mode === "groupSize"
-                ? "Số người mỗi nhóm"
-                : "Tổng số nhóm"}
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={mode === "groupSize" ? groupSize : numGroups}
-              onChange={(e) => {
-                const val = parseInt(e.target.value) || 1;
-                if (mode === "groupSize") {
-                  setGroupSize(val);
-                } else {
-                  setNumGroups(val);
-                }
-              }}
-              className="input mt-1 w-full"
-            />
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium text-muted">
+                {mode === "groupSize" ? "Số người mỗi nhóm" : "Tổng số nhóm"}
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center rounded-xl border border-token bg-[rgb(var(--surface))] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentValue(currentValue - 1)}
+                    disabled={currentValue <= 1}
+                    className="flex h-11 w-11 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                    aria-label="Giảm"
+                  >
+                    <Minus size={18} />
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={currentValue}
+                    onChange={(e) => setCurrentValue(parseInt(e.target.value) || 1)}
+                    className="h-11 w-16 border-x border-token bg-transparent text-center text-lg font-semibold focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCurrentValue(currentValue + 1)}
+                    className="flex h-11 w-11 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))]"
+                    aria-label="Tăng"
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+                {previewStat && (
+                  <span className="rounded-full bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+                    {previewStat}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Create button */}
           <button
             onClick={handleCreateGroups}
             disabled={isLoading}
-            className="btn-primary w-full"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:shadow-brand-glow disabled:opacity-50"
           >
+            <Shuffle size={16} />
             {isLoading ? "Đang tạo..." : "Tạo nhóm"}
           </button>
         </div>
@@ -344,161 +401,85 @@ export default function GroupingTool({
     );
   }
 
-  // Show groups fullscreen
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 bg-[rgb(var(--surface))] flex flex-col p-6 z-50 overflow-y-auto">
-        {/* Fullscreen Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <Users size={32} className="text-teal-600" strokeWidth={1.5} />
-            <h3 className="text-2xl font-bold">{groups.length} nhóm</h3>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleRegenerateGroups}
-              disabled={isLoading}
-              className="btn-secondary text-sm"
-            >
-              {isLoading ? "Đang chia lại..." : "Chia lại"}
-            </button>
-            <button
-              onClick={handleReset}
-              disabled={isLoading}
-              className="btn-secondary text-sm"
-              title="Reset"
-            >
-              ↺ Reset
-            </button>
-            <button
-              onClick={() => setIsFullscreen(false)}
-              className="btn-secondary text-sm"
-              title="Exit fullscreen"
-            >
-              ⛶ Thoát
-            </button>
-            {onExit && (
-              <button
-                onClick={onExit}
-                className="btn-secondary text-sm"
-                title="Exit tool"
-              >
-                ✕ Exit
-              </button>
-            )}
-          </div>
-        </div>
+  const totalAssigned = groups.reduce((sum, g) => sum + g.members.length, 0);
 
-        {/* Groups grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {groups.map((group) => (
-            <div
-              key={group.groupNum}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDropOnGroup(group.groupNum)}
-              className="rounded-lg border-2 border-dashed border-purple-200 bg-purple-50 p-4 transition-colors hover:border-purple-400"
-            >
-              {/* Group header */}
-              <h4 className="mb-3 text-sm font-semibold text-purple-900">
-                Nhóm {group.groupNum} ({group.members.length})
-              </h4>
-
-              {/* Members */}
-              <div className="space-y-2">
-                {group.members.length === 0 ? (
-                  <p className="text-center text-xs text-purple-400">
-                    Kéo sinh viên vào đây
-                  </p>
-                ) : (
-                  group.members.map((member) => (
-                    <div
-                      key={member.userId}
-                      onDragStart={() => handleDragStart(member.userId)}
-                    >
-                      <GroupMemberCard
-                        userId={member.userId}
-                        name={member.name}
-                        skillScore={member.skillScore}
-                        draggable
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+  const headerStats = (
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-sm">
+        <Users size={22} strokeWidth={2} />
       </div>
-    );
-  }
-
-  // Show groups normal mode
-  return (
-    <div className="space-y-4">
-      {/* Header with controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users size={24} className="text-teal-600" strokeWidth={1.5} />
-          <h3 className="text-lg font-bold text-purple-900">
-            {groups.length} nhóm
-          </h3>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleRegenerateGroups}
-            disabled={isLoading}
-            className="btn-secondary text-sm"
-          >
-            {isLoading ? "Đang chia lại..." : "Chia lại"}
-          </button>
-          <button
-            onClick={handleReset}
-            disabled={isLoading}
-            className="btn-secondary text-sm"
-            title="Reset"
-          >
-            ↺ Reset
-          </button>
-          <button
-            onClick={() => setIsFullscreen(true)}
-            disabled={isLoading}
-            className="btn-secondary text-sm"
-            title="Fullscreen"
-          >
-            ⛶ Full
-          </button>
-          {onExit && (
-            <button
-              onClick={onExit}
-              className="btn-secondary text-sm"
-              title="Exit"
-            >
-              ✕ Exit
-            </button>
-          )}
-        </div>
+      <div>
+        <h3 className="text-xl font-bold leading-tight">{groups.length} nhóm</h3>
+        <p className="text-sm text-muted">{totalAssigned} sinh viên đã chia</p>
       </div>
+    </div>
+  );
 
-      {/* Groups grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {groups.map((group) => (
+  const actionBtn = "inline-flex items-center gap-1.5 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm font-medium text-fg transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-50";
+
+  const renderActions = (fullscreen: boolean) => (
+    <div className="flex flex-wrap gap-2">
+      <button onClick={handleRegenerateGroups} disabled={isLoading} className={actionBtn}>
+        <Shuffle size={14} /> {isLoading ? "Đang chia lại..." : "Chia lại"}
+      </button>
+      <button onClick={handleReset} disabled={isLoading} className={actionBtn}>
+        <RotateCcw size={14} /> Reset
+      </button>
+      <button
+        onClick={() => setIsFullscreen(!fullscreen)}
+        disabled={isLoading}
+        className={actionBtn}
+      >
+        {fullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+        {fullscreen ? "Thoát" : "Toàn màn hình"}
+      </button>
+      {onExit && (
+        <button onClick={onExit} className={actionBtn}>
+          <X size={14} /> Đóng
+        </button>
+      )}
+    </div>
+  );
+
+  const renderGroupGrid = (fullscreen: boolean) => (
+    <div
+      className={`grid gap-5 ${
+        fullscreen
+          ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          : "sm:grid-cols-2 lg:grid-cols-3"
+      }`}
+    >
+      {groups.map((group) => {
+        return (
           <div
             key={group.groupNum}
             onDragOver={handleDragOver}
             onDrop={() => handleDropOnGroup(group.groupNum)}
-            className="rounded-lg border-2 border-dashed border-purple-200 bg-purple-50 p-4 transition-colors hover:border-purple-400"
+            className={`rounded-2xl border ${GROUP_STYLE.border} ${GROUP_STYLE.bg} p-4 shadow-sm transition hover:shadow-md`}
           >
-            {/* Group header */}
-            <h4 className="mb-3 text-sm font-semibold text-purple-900">
-              Nhóm {group.groupNum} ({group.members.length})
-            </h4>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg ${GROUP_STYLE.chip} text-sm font-bold text-white shadow-sm`}
+                >
+                  {group.groupNum}
+                </div>
+                <div>
+                  <p className={`text-sm font-semibold ${GROUP_STYLE.text}`}>
+                    Nhóm {group.groupNum}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {group.members.length} thành viên
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            {/* Members */}
             <div className="space-y-2">
               {group.members.length === 0 ? (
-                <p className="text-center text-xs text-purple-400">
+                <div className="flex items-center justify-center rounded-lg border border-dashed border-token py-6 text-xs text-muted">
                   Kéo sinh viên vào đây
-                </p>
+                </div>
               ) : (
                 group.members.map((member) => (
                   <div
@@ -516,8 +497,30 @@ export default function GroupingTool({
               )}
             </div>
           </div>
-        ))}
+        );
+      })}
+    </div>
+  );
+
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-[rgb(var(--bg))] p-6">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-token pb-4">
+          {headerStats}
+          {renderActions(true)}
+        </div>
+        {renderGroupGrid(true)}
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
+        {headerStats}
+        {renderActions(false)}
+      </div>
+      {renderGroupGrid(false)}
     </div>
   );
 }

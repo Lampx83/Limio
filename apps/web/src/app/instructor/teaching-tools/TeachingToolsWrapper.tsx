@@ -1,18 +1,10 @@
 "use client";
 
 import { BarChart3, Cloud, Clock, Users, Shuffle } from "lucide-react";
-import QuickPoll from "../classroom/QuickPoll";
-import WordCloud from "../classroom/WordCloud";
-import CountdownTimer from "../classroom/CountdownTimer";
-import RandomPicker from "../classroom/RandomPicker";
-import GroupingTool from "../classroom/GroupingTool";
-import type { StudentItem } from "./TeachingToolsClient";
 
 export type ToolType = "poll" | "wordcloud" | "timer" | "random-picker" | "grouping" | null;
 
 interface TeachingToolsWrapperProps {
-  studentList: StudentItem[];
-  selectedTool: ToolType;
   onSelectTool: (tool: ToolType) => void;
 }
 
@@ -22,7 +14,6 @@ const TOOLS = [
     icon: BarChart3,
     label: "Quick Poll",
     description: "Tạo poll trắc nghiệm nhanh",
-    color: "text-blue-600",
     category: "standalone",
   },
   {
@@ -30,7 +21,6 @@ const TOOLS = [
     icon: Cloud,
     label: "Word Cloud",
     description: "Thu thập đáp án dạng từ",
-    color: "text-purple-600",
     category: "standalone",
   },
   {
@@ -38,7 +28,6 @@ const TOOLS = [
     icon: Clock,
     label: "Đếm Ngược",
     description: "Bộ đếm ngược thời gian",
-    color: "text-orange-600",
     category: "standalone",
   },
   {
@@ -46,7 +35,6 @@ const TOOLS = [
     icon: Shuffle,
     label: "Chọn Ngẫu Nhiên",
     description: "Chọn ngẫu nhiên sinh viên",
-    color: "text-green-600",
     category: "student-list",
   },
   {
@@ -54,143 +42,88 @@ const TOOLS = [
     icon: Users,
     label: "Phân Nhóm",
     description: "Chia lớp thành các nhóm",
-    color: "text-pink-600",
     category: "student-list",
   },
 ];
 
-export default function TeachingToolsWrapper({
-  studentList,
-  selectedTool,
-  onSelectTool,
-}: TeachingToolsWrapperProps) {
-  if (selectedTool) {
-    return (
-      <div>
-        <button
-          onClick={() => onSelectTool(null)}
-          className="mb-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
-        >
-          ← Quay lại
-        </button>
-
-        {selectedTool === "poll" && <QuickPoll onExit={() => onSelectTool(null)} />}
-        {selectedTool === "wordcloud" && <WordCloud onExit={() => onSelectTool(null)} />}
-        {selectedTool === "timer" && <CountdownTimer onExit={() => onSelectTool(null)} />}
-        {selectedTool === "random-picker" && (
-          studentList.length > 0 ? (
-            <RandomPicker studentList={studentList} onExit={() => onSelectTool(null)} />
-          ) : (
-            <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card text-center">
-              <p className="text-muted">Vui lòng chọn khóa học hoặc nhập danh sách sinh viên trước</p>
-            </div>
-          )
-        )}
-        {selectedTool === "grouping" && (
-          studentList.length > 0 ? (
-            <GroupingTool studentList={studentList} onExit={() => onSelectTool(null)} />
-          ) : (
-            <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card text-center">
-              <p className="text-muted">Vui lòng chọn khóa học hoặc nhập danh sách sinh viên trước</p>
-            </div>
-          )
-        )}
-      </div>
-    );
-  }
+export default function TeachingToolsWrapper({ onSelectTool }: TeachingToolsWrapperProps) {
+  const standalone = TOOLS.filter((t) => t.category === "standalone");
+  const studentTools = TOOLS.filter((t) => t.category === "student-list");
 
   return (
-    <>
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Công cụ không cần danh sách sinh viên</h2>
+    <div className="space-y-10">
+      <section>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="inline-flex h-6 items-center rounded-full bg-accent-100 px-2.5 text-xs font-semibold text-accent-700 dark:bg-accent-900/30 dark:text-accent-300">
+            Cả lớp tham gia
+          </span>
+          <h2 className="text-lg font-semibold">Tương tác nhanh với cả lớp</h2>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.filter((t) => t.category === "standalone").map((tool) => {
-            const IconComponent = tool.icon;
-
+          {standalone.map((tool) => {
+            const Icon = tool.icon;
             return (
               <button
                 key={tool.id}
                 onClick={() => onSelectTool(tool.id as ToolType)}
-                className="group relative overflow-hidden rounded-xl border-2 border-accent-200 bg-gradient-to-br from-accent-50 to-accent-100/50 p-6 transition-all duration-300 hover:border-accent-400 hover:shadow-lg dark:border-accent-800 dark:from-accent-900/20 dark:to-accent-800/10"
+                className="group relative overflow-hidden rounded-2xl border border-accent-200 bg-white p-6 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-lg dark:border-accent-900/40 dark:bg-[rgb(var(--surface))]"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-accent-200/0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
-
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent-400 to-accent-600" />
                 <div className="relative space-y-3 text-center">
-                  <div className={`flex justify-center ${tool.color}`}>
-                    <IconComponent size={56} strokeWidth={1.5} />
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-100 text-accent-700 transition-colors group-hover:bg-accent-200 dark:bg-accent-900/30 dark:text-accent-300">
+                    <Icon size={28} strokeWidth={2} />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    {tool.label}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {tool.description}
-                  </p>
+                  <h3 className="text-base font-bold">{tool.label}</h3>
+                  <p className="text-sm text-muted">{tool.description}</p>
                 </div>
-
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <div className="text-center">
-                    <div className="inline-block rounded-full bg-brand-600 px-4 py-2 text-white font-semibold text-sm">
-                      Mở
-                    </div>
+                  <div className="inline-block rounded-full bg-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+                    Mở
                   </div>
                 </div>
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Công cụ cần danh sách sinh viên</h2>
+      <section>
+        <div className="mb-1 flex items-center gap-3">
+          <span className="inline-flex h-6 items-center rounded-full bg-brand-100 px-2.5 text-xs font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+            Theo danh sách lớp
+          </span>
+          <h2 className="text-lg font-semibold">Làm việc với danh sách sinh viên</h2>
+        </div>
+        <p className="mb-4 text-sm text-muted">
+          Khi mở công cụ, bạn sẽ chọn nguồn sinh viên (khóa học hoặc nhập thủ công) riêng cho lần sử dụng đó.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.filter((t) => t.category === "student-list").map((tool) => {
-            const IconComponent = tool.icon;
-            const isDisabled = studentList.length === 0;
-
+          {studentTools.map((tool) => {
+            const Icon = tool.icon;
             return (
               <button
                 key={tool.id}
-                onClick={() => !isDisabled && onSelectTool(tool.id as ToolType)}
-                disabled={isDisabled}
-                className={`group relative overflow-hidden rounded-xl border-2 p-6 transition-all duration-300 ${
-                  isDisabled
-                    ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed dark:border-gray-800 dark:bg-gray-900/20"
-                    : "border-brand-200 bg-gradient-to-br from-brand-50 to-brand-100/50 hover:border-brand-400 hover:shadow-lg dark:border-brand-800 dark:from-brand-900/20 dark:to-brand-800/10"
-                }`}
+                onClick={() => onSelectTool(tool.id as ToolType)}
+                className="group relative overflow-hidden rounded-2xl border border-brand-200 bg-white p-6 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-lg dark:border-brand-900/40 dark:bg-[rgb(var(--surface))]"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-brand-200/0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
-
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-400 to-brand-600" />
                 <div className="relative space-y-3 text-center">
-                  <div className={`flex justify-center ${tool.color}`}>
-                    <IconComponent size={56} strokeWidth={1.5} />
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 transition-colors group-hover:bg-brand-200 dark:bg-brand-900/30 dark:text-brand-300">
+                    <Icon size={28} strokeWidth={2} />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    {tool.label}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {tool.description}
-                  </p>
-                  {isDisabled && (
-                    <p className="text-xs font-medium text-amber-600">
-                      Cần chọn khóa học hoặc nhập danh sách
-                    </p>
-                  )}
+                  <h3 className="text-base font-bold">{tool.label}</h3>
+                  <p className="text-sm text-muted">{tool.description}</p>
                 </div>
-
-                {!isDisabled && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <div className="text-center">
-                      <div className="inline-block rounded-full bg-brand-600 px-4 py-2 text-white font-semibold text-sm">
-                        Mở
-                      </div>
-                    </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <div className="inline-block rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+                    Mở
                   </div>
-                )}
+                </div>
               </button>
             );
           })}
         </div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

@@ -49,8 +49,8 @@ export default async function ExamLandingPage({
     if (e instanceof ExamError) {
       // Already submitted → jump to result. Other failures bubble up as UI.
       if (e.code === "attempt_already_submitted") {
-        const existing = await prisma.examAttempt.findUnique({
-          where: { examId_userId: { examId: exam.id, userId: session.user.id } },
+        const existing = await prisma.examAttempt.findFirst({
+          where: { examId: exam.id, userId: session.user.id },
           select: { id: true },
         });
         if (existing) {

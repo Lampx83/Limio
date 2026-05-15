@@ -148,20 +148,8 @@ export default function ExamMetaForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <DateTimeField
-          label="Mở thi từ"
-          value={v.openAt}
-          disabled={isLocked("openAt")}
-          onChange={(s) => setV({ ...v, openAt: s })}
-        />
-        <DateTimeField
-          label="Đóng thi lúc"
-          value={v.closeAt}
-          disabled={isLocked("closeAt")}
-          onChange={(s) => setV({ ...v, closeAt: s })}
-        />
-      </div>
+      {/* A5.3 PR2.10 — Thời gian mở/đóng đã chuyển sang Tổ chức thi (ca thi). */}
+      {/* Đề thi chỉ giữ nội dung; window logistics thuộc ca thi. */}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectField
@@ -265,31 +253,6 @@ function NumField({
         max={max}
         disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-1 w-full rounded border border-default px-3 py-2 text-sm disabled:bg-slate-50"
-      />
-    </label>
-  );
-}
-
-function DateTimeField({
-  label,
-  value,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  value: string;
-  onChange: (s: string) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="block text-sm font-medium">{label}</span>
-      <input
-        type="datetime-local"
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full rounded border border-default px-3 py-2 text-sm disabled:bg-slate-50"
       />
     </label>

@@ -46,7 +46,7 @@ export default async function TeachingToolsPage() {
         <h1 className="text-4xl font-bold">Công cụ Giảng dạy</h1>
         <p className="mt-2 text-muted">
           Sử dụng các công cụ để tương tác với lớp học. Học viên quét mã QR để tham gia.
-          Chọn khóa học hoặc nhập danh sách sinh viên thủ công cho các công cụ cần danh sách.
+          Mỗi công cụ là một chức năng độc lập — chọn nguồn sinh viên ngay sau khi mở công cụ.
         </p>
       </header>
 

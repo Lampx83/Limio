@@ -18,7 +18,10 @@ export default async function ExamRuntimePage({
     redirect(`/signin?callbackUrl=/learn/${params.slug}/exams/${params.examId}/${params.attemptId}`);
   }
 
-  const runtime = await getAttemptRuntime(session.user.id, params.attemptId).catch(() => null);
+  const runtime = await getAttemptRuntime(
+    { kind: "user", userId: session.user.id },
+    params.attemptId,
+  ).catch(() => null);
   if (!runtime || runtime.examId !== params.examId) notFound();
 
   if (runtime.status !== "in_progress") {
@@ -77,7 +80,7 @@ export default async function ExamRuntimePage({
       }))}
       shuffleSnapshot={runtime.shuffleSnapshot}
       initialAnswers={runtime.answers}
-      courseSlug={params.slug}
+      resultUrl={`/learn/${params.slug}/exams/${params.examId}/${params.attemptId}/result`}
     />
   );
 }

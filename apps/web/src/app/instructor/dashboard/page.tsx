@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getInstructorSkillCoverage } from "@feedbackme/core-lms";
+import {
+  getInstructorSkillCoverage,
+  userIsAnyProctor,
+} from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -55,6 +58,17 @@ export default async function InstructorDashboard() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/dashboard");
   const userId = session.user.id;
+
+  // Proctor-only users (no CourseInstructor binding) land here when they
+  // first log in; redirect them straight to their rooms to skip the empty
+  // instructor dashboard.
+  const isInstructor = await prisma.courseInstructor.findFirst({
+    where: { userId },
+    select: { id: true },
+  });
+  if (!isInstructor && (await userIsAnyProctor(userId))) {
+    redirect("/instructor/my-rooms");
+  }
 
   const ownedCourses = await prisma.course.findMany({
     where: { instructors: { some: { userId } } },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useLayoutEffect, useState } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import { Type, List, Palette } from "lucide-react";
 
 interface NotesEditorProps {
@@ -33,7 +33,6 @@ export default function NotesEditor({
   const outerRef = useRef<HTMLDivElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const fitRef = useRef<(() => void) | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useLayoutEffect(() => {
     if (!autoFit || !outerRef.current || !editorRef.current) return;
@@ -64,11 +63,14 @@ export default function NotesEditor({
   }, [autoFit]);
 
   useEffect(() => {
-    if (editorRef.current && !isInitialized) {
-      editorRef.current.innerHTML = value || "";
-      setIsInitialized(true);
+    const el = editorRef.current;
+    if (!el) return;
+    const next = value || "";
+    if (el.innerHTML !== next) {
+      el.innerHTML = next;
+      fitRef.current?.();
     }
-  }, [isInitialized, value]);
+  }, [value]);
 
   const insertHeading = (level: 1 | 2 | 3) => {
     const tag = `h${level}`;
