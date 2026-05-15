@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditCourse, CourseAuthzError } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { getRoomScope } from "./room-authz";
 import { ExamError } from "./types";
@@ -55,7 +55,7 @@ export async function listPendingExamGrades(
   // their graded rooms; nothing else.
   const scope = await getRoomScope(actorUserId, examId, db);
   if (!scope.isInstructor && scope.graderRoomIds.length === 0) {
-    throw new ExamError("forbidden");
+    throw new CourseAuthzError("forbidden");
   }
 
   // Restrict candidate scope for non-instructor graders.
@@ -163,7 +163,7 @@ export async function gradeManualExamAnswer(
     const roomId = answer.attempt.candidate?.roomId ?? null;
     const allowed =
       roomId !== null && scope.graderRoomIds.includes(roomId);
-    if (!allowed) throw new ExamError("forbidden");
+    if (!allowed) throw new CourseAuthzError("forbidden");
   }
 
   if (answer.question.type !== "essay" && answer.question.type !== "short_answer") {
