@@ -260,7 +260,7 @@ export default function ExamAccessModeCard({
                   <button
                     onClick={rotateCode}
                     disabled={busy}
-                    className="ml-2 rounded bg-blue-600 px-2 py-0.5 text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="ml-2 rounded bg-amber-600 px-2 py-0.5 text-white hover:bg-amber-700 disabled:opacity-50"
                   >
                     Sinh mã
                   </button>

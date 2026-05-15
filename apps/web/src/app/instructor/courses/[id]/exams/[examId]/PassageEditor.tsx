@@ -296,7 +296,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
         <button
           type="submit"
           disabled={saving}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {saving ? "Đang lưu…" : mode === "create" ? "Thêm đoạn" : "Lưu"}
         </button>

@@ -183,7 +183,7 @@ export default function GradeForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {saving ? "Đang lưu…" : graded ? "Lưu điểm mới" : "Chấm điểm"}
         </button>

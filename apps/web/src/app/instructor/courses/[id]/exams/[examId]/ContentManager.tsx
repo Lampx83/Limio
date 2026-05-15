@@ -319,7 +319,7 @@ export default function ContentManager({ examId, editable, passages, questions }
             <button
               type="button"
               onClick={() => setEdit({ kind: "newPassage" })}
-              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white"
+              className="rounded bg-amber-600 px-3 py-1 text-xs font-medium text-white"
             >
               + Thêm đoạn
             </button>

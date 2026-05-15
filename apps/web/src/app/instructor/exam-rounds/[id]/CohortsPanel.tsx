@@ -558,7 +558,7 @@ K65B-T7S, K65B-T7S-P1, 50, CA-2, Nhà B2 P101, proc3@..., bob@...`}</pre>
                 <button
                   onClick={submit}
                   disabled={busy}
-                  className="rounded bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded bg-amber-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
                 >
                   {busy ? "Đang xử lý..." : `Tạo / cập nhật ${parsed.rows.length} lớp`}
                 </button>
@@ -1081,7 +1081,7 @@ function FlatRow({
                 <button
                   onClick={save}
                   disabled={busy}
-                  className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded bg-amber-600 px-2 py-1 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
                 >
                   {busy ? "..." : "Lưu"}
                 </button>
@@ -1245,7 +1245,7 @@ function CohortRow({
           <button
             onClick={onSave}
             disabled={busy || !name.trim()}
-            className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
             {busy ? "..." : "Lưu"}
           </button>
@@ -1280,7 +1280,7 @@ function CohortRow({
             <button
               onClick={onSaveGv}
               disabled={busy || !gvEmail.trim()}
-              className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded bg-amber-600 px-2 py-1 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
             >
               {busy ? "..." : "OK"}
             </button>
@@ -1491,7 +1491,7 @@ function ExamClassCodesCell({
           <button
             onClick={submit}
             disabled={busy || !newCode.trim()}
-            className="rounded bg-blue-600 px-1.5 py-0.5 text-[11px] font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-amber-600 px-1.5 py-0.5 text-[11px] font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
             {busy ? "..." : "OK"}
           </button>

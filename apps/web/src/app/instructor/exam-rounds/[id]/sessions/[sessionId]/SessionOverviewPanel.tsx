@@ -358,7 +358,7 @@ function EditForm({
         <button
           onClick={submit}
           disabled={busy}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-amber-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
         >
           {busy ? "Đang lưu..." : "Lưu"}
         </button>
