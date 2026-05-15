@@ -15,6 +15,7 @@ import OverviewPanel from "./OverviewPanel";
 import SessionsPanel from "./SessionsPanel";
 import CohortsPanel from "./CohortsPanel";
 import AdminsPanel from "./AdminsPanel";
+import ResultsPanel, { type SessionSummary } from "./ResultsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -96,6 +97,49 @@ export default async function ExamRoundDetailPage({
     courseTitle: round.course.courseTitle,
   }));
 
+  // Results tab: per-session stats (candidate counts + attempt aggregates).
+  let sessionSummaries: SessionSummary[] = [];
+  if (activeTab === "results") {
+    sessionSummaries = await Promise.all(
+      sessions.map(async (s) => {
+        const exam = availableExams.find((e) => e.id === s.examId);
+        // Candidate count for this session (via rooms).
+        const totalCandidates = await prisma.examCandidate.count({
+          where: { room: { sessionId: s.id } },
+        });
+        // Attempt aggregates.
+        const attempts = await prisma.examAttempt.findMany({
+          where: {
+            examId: s.examId,
+            status: { in: ["submitted", "auto_submitted", "graded"] },
+            candidate: { room: { sessionId: s.id } },
+          },
+          select: { status: true, scorePct: true, passed: true },
+        });
+        const submitted = attempts.length;
+        const graded = attempts.filter((a) => a.status === "graded").length;
+        const passCount = attempts.filter((a) => a.passed === true).length;
+        const scorePcts = attempts.flatMap((a) => (a.scorePct !== null ? [a.scorePct] : []));
+        const avgScorePct =
+          scorePcts.length > 0
+            ? scorePcts.reduce((x, y) => x + y, 0) / scorePcts.length
+            : null;
+        return {
+          id: s.id,
+          code: s.code ?? "",
+          title: s.title ?? "(Chưa đặt tên)",
+          examId: s.examId,
+          examTitle: exam?.title ?? s.examId,
+          totalCandidates,
+          submitted,
+          graded,
+          avgScorePct,
+          passCount,
+        } satisfies SessionSummary;
+      }),
+    );
+  }
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <Link
@@ -166,6 +210,9 @@ export default async function ExamRoundDetailPage({
             canEdit={canEdit}
             currentUserId={userId}
           />
+        )}
+        {activeTab === "results" && (
+          <ResultsPanel roundId={round.id} sessions={sessionSummaries} />
         )}
       </div>
     </main>

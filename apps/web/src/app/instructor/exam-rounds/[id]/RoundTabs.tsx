@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, GraduationCap, Layers, Users } from "lucide-react";
+import { BarChart2, FileText, GraduationCap, Layers, Users } from "lucide-react";
 import type { RoundTab } from "./round-tabs-helpers";
 
 const TABS: Array<{ key: RoundTab; label: string; Icon: typeof FileText }> = [
@@ -9,6 +9,7 @@ const TABS: Array<{ key: RoundTab; label: string; Icon: typeof FileText }> = [
   { key: "sessions", label: "Ca thi", Icon: Layers },
   { key: "cohorts", label: "Phòng thi", Icon: GraduationCap },
   { key: "admins", label: "Trưởng đợt", Icon: Users },
+  { key: "results", label: "Kết quả", Icon: BarChart2 },
 ];
 
 export default function RoundTabs({

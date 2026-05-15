@@ -70,9 +70,10 @@ interface Props {
   resultUrl: string;
 }
 
-type SaveState = "idle" | "saving" | "saved" | "error" | "stale";
+type SaveState = "idle" | "saving" | "saved" | "error" | "stale" | "offline";
 
 const AUTOSAVE_DEBOUNCE_MS = 2_000;
+const draftKey = (attemptId: string) => `exam-draft-${attemptId}`;
 
 export default function ExamPlayer(props: Props) {
   const router = useRouter();
@@ -80,12 +81,32 @@ export default function ExamPlayer(props: Props) {
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>(() => {
     const m: Record<string, AnswerValue> = {};
     for (const a of props.initialAnswers) m[a.questionId] = a.answerJson as AnswerValue;
+    // Restore any draft saved during a prior offline period. Draft wins per-question
+    // because it was written more recently than the server snapshot.
+    try {
+      const raw = localStorage.getItem(draftKey(props.attemptId));
+      if (raw) {
+        const draft = JSON.parse(raw) as { answers: Record<string, unknown> };
+        for (const [qid, val] of Object.entries(draft.answers)) {
+          m[qid] = val as AnswerValue;
+        }
+      }
+    } catch { /* storage unavailable — ignore */ }
     return m;
   });
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [justReconnected, setJustReconnected] = useState(false);
+
+  // Ref mirror of answers — needed in async callbacks to avoid stale closures.
+  const answersRef = useRef(answers);
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+
+  // questionIds whose latest value is in localStorage but not yet confirmed by server.
+  const pendingSync = useRef<Set<string>>(new Set());
 
   // Server-authoritative remaining: clock skew = serverNow - clientNow at load.
   const clockSkewMs = useMemo(
@@ -182,9 +203,7 @@ export default function ExamPlayer(props: Props) {
             return;
           }
           if (j?.error === "attempt_already_submitted") {
-            router.replace(
-              props.resultUrl,
-            );
+            router.replace(props.resultUrl);
             return;
           }
         }
@@ -194,24 +213,46 @@ export default function ExamPlayer(props: Props) {
         }
         const r = (await res.json()) as { answerHash: string; persisted: boolean };
         inflightHash.current[questionId] = r.answerHash;
+        pendingSync.current.delete(questionId);
         setSaveState("saved");
       } catch {
-        setSaveState("error");
+        // Network failure — answer is already in localStorage (written by onChange).
+        pendingSync.current.add(questionId);
+        setSaveState(navigator.onLine ? "error" : "offline");
       }
     },
     [props.attemptId, sessionToken, router],
   );
 
+  // Write the current answer for one question into the localStorage draft.
+  const writeDraft = useCallback(
+    (questionId: string, value: AnswerValue) => {
+      try {
+        const raw = localStorage.getItem(draftKey(props.attemptId));
+        const draft: { answers: Record<string, unknown>; savedAt: number } = raw
+          ? JSON.parse(raw)
+          : { answers: {}, savedAt: 0 };
+        draft.answers[questionId] = value;
+        draft.savedAt = Date.now();
+        localStorage.setItem(draftKey(props.attemptId), JSON.stringify(draft));
+      } catch { /* storage full or unavailable — ignore */ }
+    },
+    [props.attemptId],
+  );
+
   const onChange = useCallback(
     (questionId: string, value: AnswerValue) => {
       setAnswers((prev) => ({ ...prev, [questionId]: value }));
+      // Always persist locally first — works even if network is down.
+      writeDraft(questionId, value);
+      pendingSync.current.add(questionId);
       const existing = pendingTimers.current[questionId];
       if (existing) clearTimeout(existing);
       pendingTimers.current[questionId] = setTimeout(() => {
         sendSave(questionId, value);
       }, AUTOSAVE_DEBOUNCE_MS);
     },
-    [sendSave],
+    [sendSave, writeDraft],
   );
 
   const claimSession = useCallback(async () => {
@@ -262,6 +303,31 @@ export default function ExamPlayer(props: Props) {
       document.removeEventListener("fullscreenchange", onFullscreenExit);
     };
   }, [logIncident]);
+
+  // Offline resilience — detect connectivity changes and flush pending answers.
+  useEffect(() => {
+    const onOffline = () => setIsOffline(true);
+    const onOnline = async () => {
+      setIsOffline(false);
+      const toSync = [...pendingSync.current];
+      if (toSync.length === 0) return;
+      // Flush in parallel; each sendSave removes itself from pendingSync on success.
+      await Promise.allSettled(
+        toSync.map((qid) => {
+          const val = answersRef.current[qid];
+          return val !== undefined ? sendSave(qid, val) : Promise.resolve();
+        }),
+      );
+      setJustReconnected(true);
+      setTimeout(() => setJustReconnected(false), 3_000);
+    };
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [sendSave]);
 
   // A5.3 — Heartbeat for the instructor live dashboard. Fire-and-forget, 10s.
   useEffect(() => {
@@ -319,7 +385,7 @@ export default function ExamPlayer(props: Props) {
       }
     };
     poll();
-    const t = setInterval(poll, 5_000);
+    const t = setInterval(poll, 30_000);
     return () => {
       cancelled = true;
       clearInterval(t);
@@ -361,6 +427,7 @@ export default function ExamPlayer(props: Props) {
           return;
         }
         // Clear localStorage for this attempt (A7.4.6).
+        localStorage.removeItem(draftKey(props.attemptId));
         for (const p of props.passages) {
           localStorage.removeItem(`exam:${props.attemptId}:passage:${p.id}`);
         }
@@ -515,6 +582,23 @@ export default function ExamPlayer(props: Props) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {isOffline && (
+        <div
+          role="alert"
+          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 shadow-lg"
+        >
+          ⚠️ Mất kết nối — bài làm đang được lưu tạm trên máy, sẽ tự đồng bộ khi có mạng.
+        </div>
+      )}
+      {justReconnected && (
+        <div
+          role="status"
+          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900 shadow-lg"
+        >
+          ✓ Đã kết nối lại — đồng bộ bài làm xong.
         </div>
       )}
 
@@ -692,6 +776,7 @@ function SaveBadge({ state }: { state: SaveState }) {
     saved: { text: "Đã lưu", cls: "text-emerald-700" },
     error: { text: "Lưu lỗi", cls: "text-red-700" },
     stale: { text: "Phiên đã được mở ở tab khác", cls: "text-red-700" },
+    offline: { text: "Lưu tạm — chờ kết nối", cls: "text-amber-700" },
   };
   const v = map[state];
   return <span className={v.cls}>{v.text}</span>;

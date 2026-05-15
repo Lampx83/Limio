@@ -74,7 +74,6 @@ export async function GET(
       user: { select: { displayName: true } },
       candidate: { select: { displayName: true, accessCode: true } },
       _count: { select: { incidents: true } },
-      answers: { select: { questionId: true } },
     },
     orderBy: { startedAt: "asc" },
   });
@@ -112,7 +111,7 @@ export async function GET(
       startedAt: r.startedAt.getTime(),
       expiresAt: r.startedAt.getTime() + r.durationSec * 1000,
       submittedAt: r.submittedAt?.getTime() ?? null,
-      answeredQuestionIds: r.answers.map((a) => a.questionId),
+      answeredQuestionIds: [],
       totalQuestions,
       incidentCount: r._count.incidents,
       // Prefer the persisted lastHeartbeatAt (survives Node restarts).

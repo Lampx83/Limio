@@ -7,12 +7,14 @@ import {
   getExamSession,
   listExamRoomsForSession,
 } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import SessionOverviewPanel from "./SessionOverviewPanel";
 import SessionRoomsPanel from "./SessionRoomsPanel";
 import SessionTabs from "./SessionTabs";
 import ExamReadinessWarning from "./ExamReadinessWarning";
 import ExamAccessModeCard from "./ExamAccessModeCard";
+import SessionResultsPanel, { type CandidateResult } from "./SessionResultsPanel";
 import { parseSessionTab } from "./session-tabs-helpers";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +78,55 @@ export default async function ExamSessionDetailPage({
 
   const canEdit = await canEditExamRound(userId, detail.roundId);
   const rooms = await listExamRoomsForSession(userId, params.sessionId);
+
+  // Results tab: per-candidate attempt data for all rooms in this session.
+  let candidateResults: CandidateResult[] = [];
+  if (activeTab === "results") {
+    const roomIds = rooms.map((r) => r.id);
+    if (roomIds.length > 0) {
+      const candidates = await prisma.examCandidate.findMany({
+        where: { roomId: { in: roomIds } },
+        orderBy: [{ room: { name: "asc" } }, { displayName: "asc" }],
+        select: {
+          id: true,
+          displayName: true,
+          accessCode: true,
+          roomId: true,
+          room: { select: { name: true } },
+          attempts: {
+            orderBy: [{ submittedAt: "desc" }, { startedAt: "desc" }],
+            take: 1,
+            select: {
+              status: true,
+              score: true,
+              scorePct: true,
+              passed: true,
+              submittedAt: true,
+            },
+          },
+        },
+      });
+      candidateResults = candidates.map((c) => {
+        const attempt = c.attempts[0] ?? null;
+        const status =
+          attempt === null
+            ? "none"
+            : (attempt.status as CandidateResult["attemptStatus"]);
+        return {
+          id: c.id,
+          displayName: c.displayName,
+          accessCode: c.accessCode ?? "",
+          roomId: c.roomId ?? "",
+          roomName: c.room?.name ?? "",
+          attemptStatus: status,
+          score: attempt?.score ?? null,
+          scorePct: attempt?.scorePct ?? null,
+          passed: attempt?.passed ?? null,
+          submittedAt: attempt?.submittedAt?.toISOString() ?? null,
+        } satisfies CandidateResult;
+      });
+    }
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -158,6 +209,13 @@ export default async function ExamSessionDetailPage({
             sessionId={detail.id}
             rooms={rooms}
             canEdit={canEdit}
+          />
+        )}
+        {activeTab === "results" && (
+          <SessionResultsPanel
+            roundId={detail.roundId}
+            sessionId={detail.id}
+            candidates={candidateResults}
           />
         )}
       </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { logExamIncident } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireExamSubject } from "@/lib/session";
-import { clientIp } from "@/lib/rate-limit";
+import { allow, clientIp } from "@/lib/rate-limit";
 import {
   checkAndUpdateFingerprint,
   getExamIdForAttempt,
@@ -31,6 +31,11 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } },
 ) {
+  // At most 1 heartbeat per 8s per attempt — silently accept extras so the
+  // client doesn't retry, but skip all processing to protect the DB.
+  const rl = allow("heartbeat", params.id, 1, 8_000);
+  if (!rl.ok) return NextResponse.json({ ok: true });
+
   const subject = await requireExamSubject(params.id);
   if (!subject)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });

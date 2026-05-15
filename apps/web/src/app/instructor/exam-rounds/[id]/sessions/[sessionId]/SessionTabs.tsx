@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { DoorOpen, FileText } from "lucide-react";
+import { BarChart2, DoorOpen, FileText } from "lucide-react";
 import type { SessionTab } from "./session-tabs-helpers";
 
 const TABS: Array<{ key: SessionTab; label: string; Icon: typeof FileText }> = [
   { key: "overview", label: "Tổng quan", Icon: FileText },
   { key: "rooms", label: "Phòng thi", Icon: DoorOpen },
+  { key: "results", label: "Kết quả", Icon: BarChart2 },
 ];
 
 export default function SessionTabs({
