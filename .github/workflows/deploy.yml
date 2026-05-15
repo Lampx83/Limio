@@ -31,6 +31,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.sha }}
+          # Full history + tags so the "Record release in app DB" step can
+          # build a rich changelog (group commits since previous deploy tag).
+          # Without this, shallow clone (depth=1) makes git log HEAD^..HEAD
+          # return only the most recent commit and the /admin/changelog page
+          # ends up showing a single-line body per release.
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Verify prerequisites on runner
         run: |
@@ -133,38 +140,88 @@ jobs:
             exit 0
           fi
 
-          # Build changelog body từ git log (kể từ tag trước hoặc commit trước nhất có thể đọc được).
-          # HEAD^..HEAD chỉ cần 1 parent → an toàn với shallow clone (fetch-depth: 1).
-          LAST_TAG=$(git tag --sort=-creatordate | grep '^deploy-' | head -1 || true)
-          if [ -n "$LAST_TAG" ]; then
-            LOG_RANGE="${LAST_TAG}..HEAD"
+          # Build changelog body từ git log với khoảng = (previous deploy → HEAD).
+          # Previous deploy được suy ra theo thứ tự ưu tiên:
+          #   1. Last SHA trong bảng SystemRelease (chính xác nhất — phản ánh
+          #      đúng những gì đã được ghi vào DB).
+          #   2. Last `deploy-*` tag (fallback nếu DB rỗng, vd. lần deploy đầu).
+          #   3. HEAD~20..HEAD (lần deploy đầu tiên hoặc DB chưa khởi tạo).
+          # Cần fetch-depth: 0 ở checkout step (đã set) để git có đủ history.
+          # Query SystemRelease for the most recent deployed SHA via docker
+          # compose exec (robust to actual container name). Falls back gracefully
+          # if postgres isn't up yet (first-ever deploy) or table doesn't exist.
+          PREV_SHA=$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" \
+            exec -T postgres psql -U feedbackme -d feedbackme -tA \
+            -c 'SELECT sha FROM "SystemRelease" ORDER BY "deployedAt" DESC LIMIT 1' \
+            2>/dev/null | tr -d '[:space:]' || true)
+          if [ -n "$PREV_SHA" ] && git cat-file -e "${PREV_SHA}^{commit}" 2>/dev/null; then
+            LOG_RANGE="${PREV_SHA}..HEAD"
           else
-            LOG_RANGE="HEAD^..HEAD"
+            LAST_TAG=$(git tag --sort=-creatordate 2>/dev/null | grep '^deploy-' | head -1 || true)
+            if [ -n "$LAST_TAG" ]; then
+              LOG_RANGE="${LAST_TAG}..HEAD"
+            else
+              LOG_RANGE="HEAD~20..HEAD"
+            fi
           fi
 
-          CHANGES=$(git log $LOG_RANGE --pretty=format:"%s" --no-merges 2>/dev/null | awk '
-            /^feat/     { print "- ✨ " $0 }
-            /^fix/      { print "- 🐛 " $0 }
-            /^perf/     { print "- ⚡ " $0 }
-            /^refactor/ { print "- ♻️  " $0 }
-            /^style/    { print "- 💄 " $0 }
-            /^test/     { print "- 🧪 " $0 }
-            /^docs/     { print "- 📚 " $0 }
-            /^chore/    { print "- 🔧 " $0 }
-            /^ci/       { print "- 🔄 " $0 }
-            /^build/    { print "- 🏗️  " $0 }
-            /^revert/   { print "- ⏪ " $0 }
-            !/^(feat|fix|perf|refactor|style|test|docs|chore|ci|build|revert|Merge)/ { print "- 📦 " $0 }
-          ' || echo "- Deploy $SHORT")
+          # Group commits by conventional-commit type — same format as the
+          # GitHub Release create-release job, so /admin/changelog and the
+          # GitHub Releases page stay in sync.
+          CHANGES=$(git log $LOG_RANGE --pretty=format:"%H|%s" --no-merges 2>/dev/null | python3 -c "$(cat <<'PY'
+          import re, sys
+          GROUPS = [
+              ('✨ Tính năng mới',   ['feat']),
+              ('🐛 Sửa lỗi',        ['fix', 'revert']),
+              ('⚡ Hiệu năng',       ['perf']),
+              ('♻️  Cải tiến code',  ['refactor']),
+              ('💄 Giao diện',       ['style']),
+              ('🧪 Kiểm thử',        ['test']),
+              ('📚 Tài liệu',        ['docs']),
+              ('🔧 Bảo trì',         ['chore', 'build']),
+              ('🔄 CI/CD',           ['ci']),
+          ]
+          OTHER = '📦 Thay đổi khác'
+          buckets = {title: [] for title, _ in GROUPS}
+          buckets[OTHER] = []
+          type_to_title = {t: title for title, types in GROUPS for t in types}
+          pat = re.compile(r'^(\w+)(?:\(([^)]+)\))?\!?:\s*(.+)$')
+          for line in sys.stdin:
+              line = line.rstrip('\n')
+              if not line:
+                  continue
+              sha, _, subject = line.partition('|')
+              short = sha[:7]
+              m = pat.match(subject)
+              if m:
+                  title = type_to_title.get(m.group(1), OTHER)
+                  scope = m.group(2)
+                  msg   = m.group(3)
+                  text  = f"**{scope}:** {msg}" if scope else msg
+              else:
+                  title, text = OTHER, subject
+              buckets[title].append(f"- {text} (`{short}`)")
+          out = []
+          for title, _ in GROUPS + [(OTHER, [])]:
+              if buckets[title]:
+                  out.append(f"### {title}")
+                  out.extend(buckets[title])
+                  out.append("")
+          print("\n".join(out).strip())
+          PY
+          )" || true)
 
-          # Ghép version header vào đầu body
+          # Header với version + commit info
           if [ -n "$VERSION" ]; then
-            VERSION_HEADER="## v${VERSION}"$'\n\n'"**Commit:** \`${SHORT}\`  **Tag:** \`${TAG}\`"$'\n\n'"---"$'\n\n'
+            HEADER="## 🚀 Deploy \`${TAG}\` · v${VERSION}"$'\n\n'"**Commit:** \`${SHORT}\`"$'\n\n'"---"$'\n\n'
           else
-            VERSION_HEADER=""
+            HEADER="## 🚀 Deploy \`${TAG}\`"$'\n\n'"**Commit:** \`${SHORT}\`"$'\n\n'"---"$'\n\n'
           fi
-          BODY="${VERSION_HEADER}${CHANGES}"
-          [ -z "$CHANGES" ] && BODY="${VERSION_HEADER}- Deploy ${SHORT}"
+          if [ -n "$CHANGES" ]; then
+            BODY="${HEADER}${CHANGES}"
+          else
+            BODY="${HEADER}_Không có commit mới._"
+          fi
 
           # Escape body thành JSON string
           BODY_JSON=$(echo "$BODY" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
