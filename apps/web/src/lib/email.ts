@@ -1,82 +1,15 @@
 /**
- * A5.8 Q3 — Email service wrapper.
+ * Backwards-compat shim. The real implementation lives in
+ * `@feedbackme/core-lms/email` (see packages/core-lms/src/email/).
  *
- * Provider: Resend (single transactional endpoint, simple API). Configured
- * via `RESEND_API_KEY` + `EMAIL_FROM`. When either is unset, falls back to
- * console.log so dev/test still exercises the wiring without burning quota.
- *
- * Only call from server contexts. Templates are VN.
+ * Kept so existing imports (`@/lib/email`) keep working. The exam code
+ * preview at /api/debug/email-preview still uses `renderExamCodeEmail`
+ * here to render a deterministic HTML preview without a DB lookup.
  */
 
-import { Resend } from "resend";
+export { sendEmail, type SendResult } from "@feedbackme/core-lms";
 
-export type SendResult = {
-  delivered: boolean;
-  providerId: string | null;
-  // True when the call was a no-op fallback (no Resend key configured).
-  loggedOnly: boolean;
-  error?: string;
-};
-
-let cachedClient: Resend | null = null;
-
-function getClient(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  if (!cachedClient) cachedClient = new Resend(key);
-  return cachedClient;
-}
-
-export async function sendEmail(input: {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
-}): Promise<SendResult> {
-  const from = process.env.EMAIL_FROM;
-  const client = getClient();
-
-  // Dev-friendly fallback: log instead of erroring when service isn't wired.
-  if (!client || !from) {
-    console.log(
-      `[email:dev-noop] to=${input.to} subject=${JSON.stringify(input.subject)} ` +
-        `${input.text ? "text=" + JSON.stringify(input.text.slice(0, 200)) : ""}`,
-    );
-    return { delivered: false, providerId: null, loggedOnly: true };
-  }
-
-  try {
-    const r = await client.emails.send({
-      from,
-      to: input.to,
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
-    });
-    if (r.error) {
-      return {
-        delivered: false,
-        providerId: null,
-        loggedOnly: false,
-        error: r.error.message,
-      };
-    }
-    return { delivered: true, providerId: r.data?.id ?? null, loggedOnly: false };
-  } catch (e) {
-    return {
-      delivered: false,
-      providerId: null,
-      loggedOnly: false,
-      error: (e as Error).message,
-    };
-  }
-}
-
-// ============================================================================
-// Templates
-// ============================================================================
-
-/** A5.8 — Email gửi mã dự thi cho candidate (assigned mode). */
+/** Deterministic HTML preview used by the email-preview debug route. */
 export function renderExamCodeEmail(input: {
   candidateName: string;
   examTitle: string;
@@ -84,7 +17,7 @@ export function renderExamCodeEmail(input: {
   examClosesAt: Date;
   examDurationMin: number;
   accessCode: string;
-  claimUrl: string; // Vd: https://app.example.com/exam/X65DMJZD
+  claimUrl: string;
 }): { subject: string; html: string; text: string } {
   const fmt = (d: Date) =>
     new Intl.DateTimeFormat("vi-VN", {
@@ -108,28 +41,17 @@ export function renderExamCodeEmail(input: {
           Xin chào ${escapeHtml(input.candidateName)}, dưới đây là mã dự thi của bạn cho kỳ thi
           <strong>${escapeHtml(input.examTitle)}</strong>.
         </p>
-
         <div style="background: #f1f5f9; border-radius: 6px; padding: 20px; text-align: center; margin: 24px 0;">
           <div style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Mã dự thi</div>
           <div style="font-family: ui-monospace, monospace; font-size: 32px; letter-spacing: 0.3em; color: #0f172a; margin-top: 8px;">${escapeHtml(input.accessCode)}</div>
         </div>
-
         <table cellpadding="6" cellspacing="0" style="width: 100%; font-size: 14px; margin: 16px 0;">
           <tr><td style="color: #64748b;">Thời gian mở:</td><td><strong>${fmt(input.examOpensAt)}</strong></td></tr>
           <tr><td style="color: #64748b;">Thời gian đóng:</td><td><strong>${fmt(input.examClosesAt)}</strong></td></tr>
           <tr><td style="color: #64748b;">Thời lượng:</td><td><strong>${input.examDurationMin} phút</strong></td></tr>
         </table>
-
         <p style="margin: 24px 0 8px;">Bấm nút bên dưới để bắt đầu thi:</p>
         <a href="${escapeHtml(input.claimUrl)}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">Vào thi</a>
-
-        <p style="margin: 24px 0 0; font-size: 12px; color: #94a3b8;">
-          Nếu nút không hoạt động, copy link sau: <br>
-          <code style="word-break: break-all;">${escapeHtml(input.claimUrl)}</code>
-        </p>
-        <p style="margin: 8px 0 0; font-size: 12px; color: #94a3b8;">
-          Mã dự thi là cá nhân — không chia sẻ. Mọi vấn đề liên hệ giám thị.
-        </p>
       </td></tr>
     </table>
   </body>
@@ -146,8 +68,6 @@ export function renderExamCodeEmail(input: {
     `Thời lượng: ${input.examDurationMin} phút`,
     ``,
     `Vào thi: ${input.claimUrl}`,
-    ``,
-    `Mã dự thi là cá nhân — không chia sẻ.`,
   ].join("\n");
 
   return { subject, html, text };

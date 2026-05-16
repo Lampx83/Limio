@@ -226,10 +226,20 @@ export async function updateExamRoom(
 ): Promise<void> {
   const room = await db.examRoom.findUnique({
     where: { id: roomId },
-    select: { id: true, examId: true, exam: { select: { courseId: true } } },
+    select: {
+      id: true,
+      examId: true,
+      exam: {
+        select: {
+          courseId: true,
+          course: { select: { organizationId: true } },
+        },
+      },
+    },
   });
   if (!room) throw new ExamError("validation_failed", { reason: "room_not_found" });
   await assertCanEditCourse(actorUserId, room.exam.courseId, db);
+  const organizationId = room.exam.course.organizationId ?? null;
 
   const parsed = UpdateExamRoomInput.safeParse(rawInput);
   if (!parsed.success)
@@ -243,12 +253,8 @@ export async function updateExamRoom(
       email: parsed.data.proctorEmail,
       displayName: parsed.data.proctorEmail.split("@")[0]!,
       baseUrl: "",
-      subject: "Bạn được mời làm giám thị trên FeedBackMe",
-      bodyTemplate: ({ name, resetUrl }) => `Xin chào ${name},
-
-Bạn được mời làm giám thị phòng thi trên FeedBackMe.
-Đặt mật khẩu: ${resetUrl}
-`,
+      templateKey: "exam.proctor_invite",
+      organizationId,
       db,
     });
     resolvedProctorId = inv.userId;

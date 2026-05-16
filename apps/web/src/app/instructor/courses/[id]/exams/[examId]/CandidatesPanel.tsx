@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 
 type Row = {
@@ -27,6 +28,7 @@ export default function CandidatesPanel({
   examId: string;
   examAccessMode: Mode;
 }) {
+  const router = useRouter();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -177,6 +179,29 @@ export default function CandidatesPanel({
     }
   };
 
+  // New flow: create a dispatch batch, then redirect to the review page
+  // where instructor reviews each recipient before approving the send.
+  const onPrepareBatch = async () => {
+    setBusy("prepare");
+    setErr(null);
+    try {
+      const r = await fetch(`/api/exams/${examId}/dispatch-batches`, {
+        method: "POST",
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        if (j.error === "no_recipients_with_email")
+          setErr("Không có thí sinh nào có email hợp lệ.");
+        else setErr(j.error ?? `HTTP ${r.status}`);
+        return;
+      }
+      const j = (await r.json()) as { batchId: string };
+      router.push(`/instructor/exams/${examId}/dispatch/${j.batchId}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const onOpenSendPreview = async () => {
     setBusy("preview");
     setErr(null);
@@ -301,12 +326,18 @@ export default function CandidatesPanel({
           >
             + Thêm thí sinh
           </button>
+          <a
+            href={`/instructor/exams/${examId}/dispatch`}
+            className="rounded border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+          >
+            Lịch sử gửi
+          </a>
           <button
-            onClick={onOpenSendPreview}
+            onClick={onPrepareBatch}
             disabled={busy !== null || !rows || rows.length === 0}
             className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
-            {busy === "preview" ? "..." : <><Mail className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Gửi mã qua email</>}
+            {busy === "prepare" ? "..." : <><Mail className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Chuẩn bị gửi mã</>}
           </button>
         </div>
       </div>

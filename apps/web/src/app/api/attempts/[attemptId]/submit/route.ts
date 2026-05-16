@@ -14,9 +14,17 @@ import {
 } from "@feedbackme/core-feedback";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
+import { dispatchPostQuizEmails } from "@/lib/gamificationEmails";
+
+function getBaseUrl(req: Request): string {
+  const h = req.headers;
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  return host ? `${proto}://${host}` : "";
+}
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: { attemptId: string } },
 ) {
   const userId = await requireUserId();
@@ -87,6 +95,29 @@ export async function POST(
         userId,
         courseId: result.courseId,
         skills: bkt.newlyMastered,
+      });
+    }
+
+    // Best-effort post-quiz emails (level-up + new badges). Never blocks
+    // the response — uses admin-editable templates.
+    if (result.courseId) {
+      const newBadges = [
+        ...(gamification?.badges.awarded ?? []),
+        ...(skillBadges?.awarded ?? []),
+      ];
+      const leveledUpTo =
+        gamification?.xp?.leveledUp && gamification.xp.amountGranted >= 0
+          ? {
+              level: gamification.xp.after.level,
+              totalXp: gamification.xp.after.xp,
+            }
+          : undefined;
+      void dispatchPostQuizEmails({
+        userId,
+        courseId: result.courseId,
+        leveledUpTo,
+        newBadges,
+        baseUrl: getBaseUrl(req),
       });
     }
 

@@ -2,11 +2,16 @@
  * Generic "find user by email, or create pending account + send invite email".
  * Extracted from inviteUserAsProctor (exam-rounds.ts) so other features
  * (cohort instructor, course co-teacher, …) can reuse the flow.
+ *
+ * Uses admin-editable email templates (see packages/core-lms/src/email).
+ * Caller passes a `templateKey` + optional `organizationId` so the
+ * org-specific override (if any) is picked up.
  */
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { issueToken } from "./tokens";
-import { sendDevEmail, buildResetUrl } from "./email";
+import { buildResetUrl } from "./email";
+import { sendTemplatedEmail, type TemplateKey } from "../email/templates";
 
 export interface InviteResult {
   userId: string;
@@ -18,8 +23,11 @@ export interface InviteOptions {
   email: string;
   displayName: string;
   baseUrl: string;
-  subject: string;
-  bodyTemplate: (params: { name: string; resetUrl: string }) => string;
+  templateKey: TemplateKey;
+  /** Used to pick per-org template override. null = global default. */
+  organizationId?: string | null;
+  /** Extra Handlebars variables on top of `{ name, resetUrl }`. */
+  extraVariables?: Record<string, string | number | null | undefined>;
   db?: PrismaClient;
 }
 
@@ -53,6 +61,9 @@ export async function findOrInviteUserByEmail(
       data: {
         email,
         displayName: name,
+        // Inherit organization from the inviting context so the invitee
+        // shows up under the right tenant immediately.
+        organizationId: opts.organizationId ?? null,
         locale: "vi",
         timezone: "Asia/Ho_Chi_Minh",
         emailVerifiedAt: new Date(),
@@ -69,10 +80,11 @@ export async function findOrInviteUserByEmail(
   });
 
   const resetUrl = buildResetUrl(opts.baseUrl, raw);
-  sendDevEmail({
+  await sendTemplatedEmail({
+    key: opts.templateKey,
     to: email,
-    subject: opts.subject,
-    body: opts.bodyTemplate({ name, resetUrl }),
+    organizationId: opts.organizationId ?? null,
+    variables: { name, resetUrl, ...(opts.extraVariables ?? {}) },
   });
 
   return { userId, invited: true, resetUrl };

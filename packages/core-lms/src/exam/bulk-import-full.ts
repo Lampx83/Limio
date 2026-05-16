@@ -48,8 +48,13 @@ export async function bulkImportRoundFull(
 
   const round = await db.examRound.findUniqueOrThrow({
     where: { id: roundId },
-    select: { courseId: true },
+    select: {
+      courseId: true,
+      // For per-org email template lookup on proctor/instructor invites.
+      course: { select: { organizationId: true } },
+    },
   });
+  const organizationId = round.course.organizationId ?? null;
 
   // Pre-load all sessions in this round so we can resolve session codes
   // case-insensitive without N+1 queries.
@@ -102,12 +107,8 @@ export async function bulkImportRoundFull(
             email: r.instructorEmail,
             displayName: r.instructorEmail.split("@")[0]!,
             baseUrl,
-            subject: "Bạn được mời làm GV phụ trách lớp trên FeedBackMe",
-            bodyTemplate: ({ name, resetUrl }) => `Xin chào ${name},
-
-Bạn được mời làm giáo viên phụ trách lớp học trên FeedBackMe.
-Đặt mật khẩu: ${resetUrl}
-`,
+            templateKey: "exam.instructor_invite_bulk",
+            organizationId,
             db,
           });
           instructorId = inv.userId;
@@ -193,12 +194,8 @@ Bạn được mời làm giáo viên phụ trách lớp học trên FeedBackMe.
             email: r.proctorEmail,
             displayName: r.proctorEmail.split("@")[0]!,
             baseUrl,
-            subject: "Bạn được mời làm giám thị trên FeedBackMe",
-            bodyTemplate: ({ name, resetUrl }) => `Xin chào ${name},
-
-Bạn được mời làm giám thị phòng thi trên FeedBackMe.
-Đặt mật khẩu: ${resetUrl}
-`,
+            templateKey: "exam.proctor_invite_bulk",
+            organizationId,
             db,
           });
           proctorUserId = inv.userId;

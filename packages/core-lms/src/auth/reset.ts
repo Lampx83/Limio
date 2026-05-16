@@ -8,7 +8,8 @@ import {
   issueToken,
   type DbClient,
 } from "./tokens";
-import { buildResetUrl, sendDevEmail } from "./email";
+import { buildResetUrl } from "./email";
+import { sendTemplatedEmail } from "../email/templates";
 
 export const ResetRequestInput = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -33,15 +34,19 @@ export async function requestPasswordReset(
   const parsed = ResetRequestInput.safeParse(rawInput);
   if (!parsed.success) return;
 
-  const user = await db.user.findUnique({ where: { email: parsed.data.email } });
+  const user = await db.user.findUnique({
+    where: { email: parsed.data.email },
+    select: { id: true, email: true, displayName: true, organizationId: true },
+  });
   if (!user) return;
 
   const issued = await issueToken(user.id, "password_reset", db);
   const url = buildResetUrl(baseUrl, issued.raw);
-  sendDevEmail({
+  await sendTemplatedEmail({
+    key: "auth.password_reset",
     to: user.email,
-    subject: "Yêu cầu đặt lại mật khẩu cho FeedBackMe",
-    body: `Xin chào ${user.displayName},\n\nNhấn link sau để đặt lại mật khẩu (TTL 1h):\n${url}\n\nNếu bạn không yêu cầu, hãy bỏ qua email này.`,
+    organizationId: user.organizationId,
+    variables: { displayName: user.displayName, resetUrl: url },
   });
 }
 
