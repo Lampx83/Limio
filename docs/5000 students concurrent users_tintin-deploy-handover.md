@@ -147,6 +147,35 @@ docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml \
   -c "SHOW CONFIG;" | grep -E "max_client_conn|default_pool_size|reserve_pool_size"
 ```
 
+#### Vì sao `MAX_CLIENT_CONN=3000` mà KHÔNG phải 5000 (= số SV)?
+
+`MAX_CLIENT_CONN` là **số kết nối từ ứng dụng vào PgBouncer**, không phải số SV. Sơ đồ:
+
+```
+5000 SV (HTTPS)
+      ↓
+   Caddy LB         ← terminate HTTPS
+      ↓
+3 web replica       ← chỉ giữ Prisma pool=10 conn/replica
+      ↓
+PgBouncer           ← ~50 client conn ở đây (cho mọi SV)
+      ↓
+PostgreSQL          ← 50 backend conn (DEFAULT_POOL_SIZE)
+```
+
+Browser–web là HTTP, **không xuyên xuống DB**. Mỗi web replica chỉ mở 10 kết nối đến PgBouncer (do `connection_limit=10` trong Prisma URL), bất kể đang phục vụ 1 hay 5000 SV. Tổng client conn thực tế:
+
+| Nguồn | Số conn |
+|---|---|
+| 3 web replica × Prisma pool 10 | 30 |
+| 1 worker × Prisma pool 10 | 10 |
+| migrate / admin psql | 2–5 |
+| **Tổng** | **~45** |
+
+→ 3000 đã có **60× headroom**. Cái cần theo dõi cho 5K SV là `DEFAULT_POOL_SIZE` (số kết nối backend đến Postgres) và `cl_waiting` trong `SHOW POOLS` — chứ không phải `MAX_CLIENT_CONN`.
+
+Nếu load test thấy `cl_waiting > 50` thường xuyên → bump `DEFAULT_POOL_SIZE` 50 → 80 (sửa `docker-compose.prod.yml` rồi `up -d pgbouncer`).
+
 ## 5. Nếu có sự cố — rollback
 
 ```bash
