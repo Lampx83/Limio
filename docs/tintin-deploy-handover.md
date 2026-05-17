@@ -169,12 +169,98 @@ docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml e
   redis-cli ZCARD bull:auto-grade:wait
 ```
 
-## 7. Liên hệ nếu kẹt
+## 7. Smoke load test sau deploy (BẮT BUỘC, chạy GIỜ VẮNG)
+
+Không có staging → test trên prod ở chế độ "fake mode": k6 bắn 5000 request giả vào endpoint thật. Web trả 401 (vì attemptId không tồn tại) NHƯNG vẫn đo được Caddy LB + 3 web replica + Redis rate-limit + PgBouncer có chịu nổi 5K kết nối đồng thời không. KHÔNG động vào DB, KHÔNG cần dọn data sau.
+
+### 7.1. Chuẩn bị máy chạy k6 (không chạy trên 224)
+
+Máy nào cũng được — laptop admin, hoặc 1 server khác trong cùng mạng (không phải 224, để có network thật).
+
+```bash
+# Mac
+brew install k6
+
+# Linux (Ubuntu/Debian)
+sudo apt update && sudo apt install -y gnupg
+sudo gpg -k && sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt update && sudo apt install -y k6
+
+# Docker (không cài gì)
+docker run --rm -i grafana/k6:latest run - < load-test/exam.k6.js
+```
+
+Sau đó clone repo về máy đó để có file `load-test/exam.k6.js`:
+```bash
+git clone https://github.com/Lampx83/FeedBackMe.git
+cd FeedBackMe
+```
+
+### 7.2. Chạy fake-mode test (10 phút, 5000 VU)
+
+**Chọn KHUNG GIỜ VẮNG nhất** (đề xuất 2h–4h sáng VN; chủ nhật càng tốt). Báo trước cho stakeholder.
+
+```bash
+# Thay <URL> bằng domain prod thật (vd https://fit.neu.edu.vn)
+k6 run \
+  -e TARGET=<URL> \
+  -e HEARTBEAT_VU=5000 \
+  -e ANSWER_VU=0 \
+  -e DASHBOARD_VU=0 \
+  -e DURATION=10m \
+  load-test/exam.k6.js
+```
+
+### 7.3. Tiêu chí PASS
+
+k6 in báo cáo cuối — kiểm 4 chỉ số:
+
+| Chỉ số | Ngưỡng PASS |
+|---|---|
+| `http_req_failed` rate | `< 0.01` (1%) |
+| `hb_latency_ms` p(95) | `< 200ms` |
+| `hb_latency_ms` p(99) | `< 500ms` |
+| HTTP 5xx | 0 |
+
+(401 không tính là fail — đó là expected vì attemptId giả.)
+
+### 7.4. Trong lúc k6 chạy — admin theo dõi song song trên 224
+
+Mở terminal khác trên 224:
+
+```bash
+# 1. RAM/CPU 3 web replica có vọt không
+watch -n 2 'docker stats --no-stream $(docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml ps -q web)'
+
+# 2. PgBouncer có queue khôg
+docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml exec pgbouncer \
+  psql -h 127.0.0.1 -p 6432 -U feedbackme pgbouncer -c "SHOW POOLS;"
+# → cl_waiting > 0 nhiều → pool nhỏ, cần bump tiếp
+
+# 3. Caddy LB có rớt request không
+docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml logs web-proxy --tail=50
+```
+
+### 7.5. Nếu FAIL
+
+- **p95 > 500ms** → bump `WEB_REPLICAS` từ 3 → 4 hoặc 5 (sửa `.env.prod`, restart).
+- **PgBouncer cl_waiting > 50** → tăng `DEFAULT_POOL_SIZE` trong docker-compose.prod.yml (50 → 80) rồi `docker compose up -d pgbouncer`.
+- **HTTP 5xx** → xem `docker compose logs web --tail=200`, gửi ngược cho người code.
+- **Caddy log "no healthy upstream"** → 1 trong 3 web replica chết, xem `docker compose ps`.
+
+### 7.6. Sau test
+
+Không cần dọn gì vì fake mode không động DB. Rate-limit Redis ZSET tự expire sau 1 giờ.
+
+---
+
+## 8. Liên hệ nếu kẹt
 
 Báo lại cho [TÊN NGƯỜI CHỊU TRÁCH NHIỆM CODE] kèm:
 1. Log container nào failing: `docker compose ... logs <service> --tail=200`
 2. Output của `docker compose ... ps`
-3. Bước nào ở mục 4 đang fail.
+3. Bước nào đang fail (mục 4 verify, hoặc mục 7 load test).
 
 ---
 
@@ -182,3 +268,4 @@ Báo lại cho [TÊN NGƯỜI CHỊU TRÁCH NHIỆM CODE] kèm:
 1. Thêm 2 dòng `WEB_REPLICAS=3` + `AUTO_GRADE_CONCURRENCY=10` vào `/etc/feedbackme/.env.prod`.
 2. Chờ workflow GitHub Actions chạy xong (sau khi PR merge).
 3. `docker compose ps` thấy 3 web + 1 web-proxy + 1 worker đều healthy = xong.
+4. Đêm vắng nào đó: chạy smoke load test mục 7 → đảm bảo 5K VU OK trước ngày thi thật.
