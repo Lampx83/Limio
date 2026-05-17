@@ -6,6 +6,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
+    "worker": "tsx src/worker/index.ts",
+    "worker:dev": "tsx watch src/worker/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
@@ -31,9 +33,11 @@
     "@types/dompurify": "^3.2.0",
     "adm-zip": "^0.5.17",
     "bcryptjs": "^2.4.3",
+    "bullmq": "^5.34.0",
     "docx": "^9.6.1",
     "dompurify": "^3.4.2",
     "h5p-standalone": "^3.8.2",
+    "ioredis": "^5.4.1",
     "lucide-react": "^1.14.0",
     "next": "14.2.18",
     "next-auth": "5.0.0-beta.25",
@@ -48,6 +52,7 @@
     "resend": "^4.8.0",
     "scorm-again": "^3.0.4",
     "stripe": "^22.1.0",
+    "tsx": "^4.19.2",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
