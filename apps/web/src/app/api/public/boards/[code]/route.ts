@@ -21,6 +21,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
           authorName: true,
           content: true,
           color: true,
+          attachmentUrl: true,
           createdAt: true,
         },
       },

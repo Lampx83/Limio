@@ -1685,9 +1685,10 @@ model BoardNote {
   author     User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
   authorName String  // Tên hiển thị (bắt buộc, học viên tự nhập khi join)
 
-  content String  // Note text (≤500 ký tự)
-  color   String? // Hex, optional (random pastel client-side)
-  hidden  Boolean @default(false) // Instructor moderate
+  content       String  // Note text (≤500 ký tự)
+  color         String? // Hex, optional (random pastel client-side)
+  attachmentUrl String? // URL ảnh / video / audio / YouTube / link bất kỳ (https only)
+  hidden        Boolean @default(false) // Instructor moderate
 
   createdAt DateTime @default(now())
 

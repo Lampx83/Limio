@@ -6,6 +6,7 @@ import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
 import { rotationForNote } from "./boardNoteStyle";
+import NoteAttachment from "./NoteAttachment";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -22,6 +23,7 @@ interface BoardNote {
   authorName: string;
   content: string;
   color: string | null;
+  attachmentUrl: string | null;
   hidden: boolean;
   createdAt: string;
 }
@@ -229,19 +231,20 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       );
     }
     return (
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 px-2 pb-4">
+      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 px-2 pb-4 [column-fill:_balance]">
         {visible.map((n) => {
           const rot = rotationForNote(n.id);
           return (
             <div
               key={n.id}
-              className={`group relative rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:z-10 hover:!rotate-0 animate-note-pop-in ${n.hidden ? "opacity-40" : ""}`}
+              className={`group relative rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:z-10 hover:!rotate-0 animate-note-pop-in mb-4 break-inside-avoid overflow-hidden ${n.hidden ? "opacity-40" : ""}`}
               style={{
                 backgroundColor: n.color || "#FEF3C7",
                 transform: `rotate(${rot})`,
                 ["--note-rot" as string]: rot,
               }}
             >
+              {n.attachmentUrl && <NoteAttachment url={n.attachmentUrl} />}
               <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words leading-relaxed">
                 {n.content}
               </p>

@@ -15,7 +15,69 @@ export function rotationForNote(id: string): string {
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
   }
-  // Map hash → -2..+2 deg
   const deg = ((Math.abs(hash) % 41) - 20) / 10;
   return `${deg.toFixed(1)}deg`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Media URL detection
+// ──────────────────────────────────────────────────────────────────────────
+
+export type MediaKind = "image" | "video" | "audio" | "youtube" | "vimeo" | "link";
+
+const IMAGE_EXT = /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?|#|$)/i;
+const VIDEO_EXT = /\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i;
+const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|aac|flac)(\?|#|$)/i;
+
+const YOUTUBE_RE = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+const VIMEO_RE = /vimeo\.com\/(\d+)/;
+
+// Hosts trả ảnh raw không cần đuôi file (Unsplash, Imgur, Cloudinary, etc.)
+const IMAGE_HOSTS = new Set([
+  "images.unsplash.com",
+  "i.imgur.com",
+  "imgur.com",
+  "res.cloudinary.com",
+  "i.redd.it",
+  "preview.redd.it",
+  "pbs.twimg.com",
+  "media.giphy.com",
+  "live.staticflickr.com",
+]);
+
+export function detectMediaKind(url: string): MediaKind {
+  if (YOUTUBE_RE.test(url)) return "youtube";
+  if (VIMEO_RE.test(url)) return "vimeo";
+  if (IMAGE_EXT.test(url)) return "image";
+  if (VIDEO_EXT.test(url)) return "video";
+  if (AUDIO_EXT.test(url)) return "audio";
+  // Hostname-based fallback cho image
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (IMAGE_HOSTS.has(host)) return "image";
+  } catch {
+    /* fallthrough */
+  }
+  return "link";
+}
+
+export function extractYouTubeId(url: string): string | null {
+  const m = url.match(YOUTUBE_RE);
+  return m?.[1] ?? null;
+}
+
+export function extractVimeoId(url: string): string | null {
+  const m = url.match(VIMEO_RE);
+  return m?.[1] ?? null;
+}
+
+// Validate URL: chỉ chấp nhận http/https, max 2000 ký tự.
+export function isValidAttachmentUrl(url: string): boolean {
+  if (url.length > 2000) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
 }

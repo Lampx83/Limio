@@ -45,6 +45,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
           authorName: true,
           content: true,
           color: true,
+          attachmentUrl: true,
           hidden: true,
           createdAt: true,
         },

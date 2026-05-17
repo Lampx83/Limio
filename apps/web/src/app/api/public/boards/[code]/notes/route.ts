@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { publish } from "@/lib/realtime/publisher";
 import { rateLimit } from "@/lib/realtime/rateLimit";
 import { channelForBoard } from "@/lib/board";
+import { isValidAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
 
 export const runtime = "nodejs";
 
@@ -38,7 +39,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     );
   }
 
-  let body: { authorName?: string; content?: string; color?: string };
+  let body: { authorName?: string; content?: string; color?: string; attachmentUrl?: string };
   try {
     body = await req.json();
   } catch {
@@ -52,10 +53,16 @@ export async function POST(req: Request, { params }: { params: { code: string } 
         authorName: z.string().min(1).max(40),
         content: z.string().min(1).max(500),
         color: z.string().optional(),
+        attachmentUrl: z.string().max(2000).optional(),
       })
       .parse(body);
   } catch {
     return Response.json({ error: "invalid_request" }, { status: 400 });
+  }
+
+  // Validate attachment URL nếu có (chỉ http/https).
+  if (parsed.attachmentUrl && !isValidAttachmentUrl(parsed.attachmentUrl)) {
+    return Response.json({ error: "invalid_attachment_url" }, { status: 400 });
   }
 
   const board = await prisma.interactiveBoard.findUnique({
@@ -84,8 +91,16 @@ export async function POST(req: Request, { params }: { params: { code: string } 
       authorName: parsed.authorName.trim(),
       content: parsed.content.trim(),
       color,
+      attachmentUrl: parsed.attachmentUrl?.trim() || null,
     },
-    select: { id: true, authorName: true, content: true, color: true, createdAt: true },
+    select: {
+      id: true,
+      authorName: true,
+      content: true,
+      color: true,
+      attachmentUrl: true,
+      createdAt: true,
+    },
   });
 
   // Broadcast tới host view + các tab public khác. Fire-and-forget.
