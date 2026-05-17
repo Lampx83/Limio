@@ -9,6 +9,7 @@ import WordCloud from "../classroom/WordCloud";
 import CountdownTimer from "../classroom/CountdownTimer";
 import RandomPicker from "../classroom/RandomPicker";
 import GroupingTool from "../classroom/GroupingTool";
+import InteractiveBoard from "../classroom/InteractiveBoard";
 import type { ToolType } from "./TeachingToolsWrapper";
 
 export interface StudentItem {
@@ -26,7 +27,7 @@ interface TeachingToolsClientProps {
   courses: Course[];
 }
 
-const VALID_TOOLS: ToolType[] = ["poll", "wordcloud", "timer", "random-picker", "grouping"];
+const VALID_TOOLS: ToolType[] = ["poll", "wordcloud", "timer", "random-picker", "grouping", "board"];
 
 export default function TeachingToolsClient({ courses }: TeachingToolsClientProps) {
   const router = useRouter();
@@ -64,6 +65,7 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
       {selectedTool === "poll" && <QuickPoll onExit={() => setSelectedTool(null)} />}
       {selectedTool === "wordcloud" && <WordCloud onExit={() => setSelectedTool(null)} />}
       {selectedTool === "timer" && <CountdownTimer onExit={() => setSelectedTool(null)} />}
+      {selectedTool === "board" && <InteractiveBoard onExit={() => setSelectedTool(null)} />}
 
       {selectedTool === "random-picker" && (
         <StudentListGate

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { publish } from "@/lib/realtime/publisher";
+import { rateLimit } from "@/lib/realtime/rateLimit";
+
+export const runtime = "nodejs";
 
 export async function POST(
   req: Request,
@@ -9,6 +13,16 @@ export async function POST(
   // Public endpoint — no login required (QR code voting from classroom)
   const session = await auth();
   const userId = session?.user?.id ?? null;
+
+  // Rate limit: 1 vote/5s/IP per poll. Chống spam click.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const rl = await rateLimit(`poll:${params.pollId}:${ip}`, 1, 5_000);
+  if (!rl.ok) {
+    return Response.json(
+      { error: "rate_limited", resetMs: rl.resetMs },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } },
+    );
+  }
 
   try {
     const body = await req.json();
@@ -49,6 +63,14 @@ export async function POST(
         userId,
         choice,
       },
+    });
+
+    // Broadcast realtime — fire-and-forget. /results vẫn là fallback nếu Redis down.
+    publish(`poll:${params.pollId}`, {
+      choice: vote.choice,
+      ts: vote.createdAt.getTime(),
+    }).catch((err) => {
+      console.error("[quick-poll/vote] publish failed (non-fatal):", err);
     });
 
     return Response.json({

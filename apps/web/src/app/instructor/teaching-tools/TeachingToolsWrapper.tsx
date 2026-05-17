@@ -1,8 +1,8 @@
 "use client";
 
-import { BarChart3, Cloud, Clock, Users, Shuffle } from "lucide-react";
+import { BarChart3, Cloud, Clock, Users, Shuffle, StickyNote } from "lucide-react";
 
-export type ToolType = "poll" | "wordcloud" | "timer" | "random-picker" | "grouping" | null;
+export type ToolType = "poll" | "wordcloud" | "timer" | "random-picker" | "grouping" | "board" | null;
 
 interface TeachingToolsWrapperProps {
   onSelectTool: (tool: ToolType) => void;
@@ -28,6 +28,13 @@ const TOOLS = [
     icon: Clock,
     label: "Đếm Ngược",
     description: "Bộ đếm ngược thời gian",
+    category: "standalone",
+  },
+  {
+    id: "board",
+    icon: StickyNote,
+    label: "Bảng Tương Tác",
+    description: "Padlet — sinh viên dán note realtime",
     category: "standalone",
   },
   {

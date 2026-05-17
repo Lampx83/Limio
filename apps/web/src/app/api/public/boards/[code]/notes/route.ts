@@ -1,0 +1,94 @@
+import { z } from "zod";
+import { prisma } from "@feedbackme/db";
+import { publish } from "@/lib/realtime/publisher";
+import { rateLimit } from "@/lib/realtime/rateLimit";
+import { channelForBoard } from "@/lib/board";
+
+export const runtime = "nodejs";
+
+// Pastel colors — random ở server để mọi client thấy cùng màu.
+const COLORS = [
+  "#FEF3C7", // amber
+  "#DBEAFE", // blue
+  "#D1FAE5", // green
+  "#FCE7F3", // pink
+  "#E9D5FF", // purple
+  "#FED7AA", // orange
+];
+
+// POST — public: học viên post note (không cần login)
+export async function POST(req: Request, { params }: { params: { code: string } }) {
+  const code = params.code.toUpperCase();
+
+  // Rate limit: 1 note/5s/IP/board + 100 notes/phút/board (chống cả 2 chiều).
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const rlIp = await rateLimit(`board:${code}:ip:${ip}`, 1, 5_000);
+  if (!rlIp.ok) {
+    return Response.json(
+      { error: "rate_limited", resetMs: rlIp.resetMs },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rlIp.resetMs / 1000)) } },
+    );
+  }
+  const rlBoard = await rateLimit(`board:${code}:board`, 100, 60_000);
+  if (!rlBoard.ok) {
+    return Response.json(
+      { error: "board_throttled", resetMs: rlBoard.resetMs },
+      { status: 429 },
+    );
+  }
+
+  let body: { authorName?: string; content?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  let parsed;
+  try {
+    parsed = z
+      .object({
+        authorName: z.string().min(1).max(40),
+        content: z.string().min(1).max(500),
+      })
+      .parse(body);
+  } catch {
+    return Response.json({ error: "invalid_request" }, { status: 400 });
+  }
+
+  const board = await prisma.interactiveBoard.findUnique({
+    where: { code },
+    select: { id: true, status: true },
+  });
+  if (!board) return Response.json({ error: "not_found" }, { status: 404 });
+  if (board.status !== "open") {
+    return Response.json({ error: "board_closed" }, { status: 403 });
+  }
+
+  // Hard cap 2000 note/board để tránh DB phình.
+  const count = await prisma.boardNote.count({ where: { boardId: board.id } });
+  if (count >= 2000) {
+    return Response.json({ error: "board_full" }, { status: 403 });
+  }
+
+  const color = COLORS[Math.floor(Math.random() * COLORS.length)]!;
+  const note = await prisma.boardNote.create({
+    data: {
+      boardId: board.id,
+      authorName: parsed.authorName.trim(),
+      content: parsed.content.trim(),
+      color,
+    },
+    select: { id: true, authorName: true, content: true, color: true, createdAt: true },
+  });
+
+  // Broadcast tới host view + các tab public khác. Fire-and-forget.
+  publish(channelForBoard(board.id), {
+    type: "note.created",
+    note,
+  }).catch((err) => {
+    console.error("[boards/public/notes] publish failed:", err);
+  });
+
+  return Response.json(note, { status: 201 });
+}

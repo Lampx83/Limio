@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
@@ -132,20 +132,48 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
     }
   };
 
+  // Snapshot fetch — gọi 1 lần khi mở poll. Live update qua SSE useEffect dưới.
   const fetchResults = async (pollId: string) => {
     try {
       const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/results`));
       if (!res.ok) return;
-
-      const data = await res.json();
-      setResults(data);
-
-      // Poll again after 1 second
-      setTimeout(() => fetchResults(pollId), 1000);
+      setResults(await res.json());
     } catch (err) {
       console.error("[QuickPoll fetchResults]", err);
     }
   };
+
+  // SSE: nhận từng vote mới, cộng dồn votesByOption local.
+  const esRef = useRef<EventSource | null>(null);
+  useEffect(() => {
+    if (!currentPoll) return;
+    const pollId = currentPoll.id;
+    const es = new EventSource(apiUrl(`/api/classroom/quick-poll/${pollId}/stream`));
+    esRef.current = es;
+    es.onmessage = (e) => {
+      try {
+        const ev = JSON.parse(e.data) as { choice?: string };
+        if (!ev.choice) return;
+        setResults((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            totalVotes: prev.totalVotes + 1,
+            votesByOption: {
+              ...prev.votesByOption,
+              [ev.choice!]: (prev.votesByOption[ev.choice!] || 0) + 1,
+            },
+          };
+        });
+      } catch {
+        /* ignore */
+      }
+    };
+    return () => {
+      es.close();
+      esRef.current = null;
+    };
+  }, [currentPoll?.id]);
 
   const handleRefresh = async () => {
     if (!currentPoll) return;

@@ -114,6 +114,8 @@ model User {
   createdPolls         ClassroomPoll[]       @relation("PollCreator")
   createdWordClouds    WordCloud[]           @relation("WordCloudCreator")
   wordCloudSubmissions WordCloudSubmission[]
+  ownedBoards          InteractiveBoard[]    @relation("BoardOwner")
+  boardNotes           BoardNote[]
   groupMemberships     GroupMembership[]
   timerTemplates       TimerTemplate[]
 
@@ -1550,6 +1552,7 @@ model ClassroomSession {
   polls       ClassroomPoll[]
   wordClouds  WordCloud[]
   groupings   GroupingSession[]
+  boards      InteractiveBoard[]
 
   createdAt DateTime @default(now())
 
@@ -1642,6 +1645,55 @@ model WordCloudSubmission {
 
   @@index([cloudId])
   @@index([userId])
+}
+
+// Interactive Board (Padlet-like)
+// Standalone teaching tool — instructor tạo board từ /instructor/teaching-tools,
+// sinh viên join qua code 6 chữ + post note text. Realtime broadcast qua SSE.
+model InteractiveBoard {
+  id    String @id @default(cuid())
+  code  String @unique // 6-char join code (uppercase alphanumeric)
+
+  // Optional gắn vào ClassroomSession nếu instructor mở từ classroom flow.
+  sessionId String?
+  session   ClassroomSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  ownerId String
+  owner   User   @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title  String
+  prompt String? // Tùy chọn (vd. "Bạn học được gì hôm nay?")
+  status String  @default("open") // "open" | "closed"
+
+  notes BoardNote[]
+
+  createdAt DateTime  @default(now())
+  closedAt  DateTime?
+
+  @@index([ownerId, createdAt])
+  @@index([sessionId])
+  @@index([status, createdAt])
+}
+
+model BoardNote {
+  id      String           @id @default(cuid())
+  boardId String
+  board   InteractiveBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  // Optional — sinh viên không cần login để post (join bằng code).
+  authorId   String?
+  author     User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String  // Tên hiển thị (bắt buộc, học viên tự nhập khi join)
+
+  content String  // Note text (≤500 ký tự)
+  color   String? // Hex, optional (random pastel client-side)
+  hidden  Boolean @default(false) // Instructor moderate
+
+  createdAt DateTime @default(now())
+
+  @@index([boardId, createdAt])
+  @@index([boardId, hidden, createdAt])
+  @@index([authorId])
 }
 
 // Quick Grouping
