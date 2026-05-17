@@ -602,74 +602,107 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     );
   }
 
-  // ── Create form ──────────────────────────────────────────────────────────
+  // ── Create form — đồng bộ design với board view ──────────────────────────
   return (
-    <div className="rounded-2xl border-2 border-amber-200 bg-[rgb(var(--surface))] p-6 shadow-card">
-      <div className="flex items-center gap-2">
-        <StickyNote size={24} className="text-amber-600" strokeWidth={1.5} />
-        <h3 className="text-lg font-bold">Tạo Bảng Tương Tác</h3>
-      </div>
-
-      <div className="mt-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-2">Tiêu đề</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Vd. Phản hồi buổi học hôm nay"
-            maxLength={120}
-            className="input w-full"
-          />
+    <div className="rounded-2xl overflow-hidden border border-amber-200/60 bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 shadow-card">
+      {/* Gradient banner — giống board view */}
+      <header className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 text-white px-6 py-6">
+        <div className="absolute inset-0 opacity-30 mix-blend-overlay"
+          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+        <div className="relative flex items-center gap-3">
+          <div className="bg-white/30 backdrop-blur rounded-xl p-2.5">
+            <StickyNote size={28} strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90">Bảng tương tác</p>
+            <h2 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm">Tạo bảng mới</h2>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Câu hỏi gợi ý (tùy chọn)</label>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Vd. Điều bạn nhớ nhất từ buổi học?"
-            maxLength={500}
-            rows={3}
-            className="input w-full"
-          />
-        </div>
-        <button onClick={handleCreate} disabled={isCreating} className="btn-primary w-full">
-          {isCreating ? "Đang tạo..." : "Tạo Bảng"}
-        </button>
-      </div>
+      </header>
 
-      <div className="mt-6 border-t border-token pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-muted">Board đã tạo</p>
+      {/* Body — pastel + inputs trên nền sticky-note màu kem */}
+      <div className="p-5 sm:p-6 space-y-5">
+        <div className="rounded-2xl bg-[#FEF3C7] p-5 shadow-md ring-1 ring-amber-200/60 space-y-4"
+          style={{ transform: "rotate(-0.3deg)" }}
+        >
+          <div>
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+              Tiêu đề
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Vd. Phản hồi buổi học hôm nay"
+              maxLength={120}
+              className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+              Câu hỏi gợi ý <span className="text-gray-600 font-medium normal-case tracking-normal">(tùy chọn)</span>
+            </label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Vd. Điều bạn nhớ nhất từ buổi học?"
+              maxLength={500}
+              rows={3}
+              className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+            />
+          </div>
           <button
-            onClick={loadHistory}
-            disabled={isLoadingHistory}
-            className="btn-secondary btn-sm text-xs flex items-center gap-1"
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="w-full bg-gray-900 hover:bg-black text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all flex items-center justify-center gap-2"
           >
-            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
-            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
+            {isCreating ? "Đang tạo..." : (<><StickyNote size={16} strokeWidth={2.4} /> Tạo Bảng</>)}
           </button>
         </div>
-        {history.length === 0 && !isLoadingHistory && (
-          <p className="text-xs text-muted text-center py-2">Bấm "Tải lịch sử" để xem board cũ</p>
-        )}
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {history.map((item) => (
+
+        {/* History section */}
+        <div className="pt-1">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-bold text-gray-800 dark:text-gray-200">📋 Board đã tạo</p>
             <button
-              key={item.id}
-              onClick={() => handleLoadBoard(item)}
-              className="w-full text-left rounded-lg border border-token p-3 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-colors"
+              onClick={loadHistory}
+              disabled={isLoadingHistory}
+              className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-amber-100/50 dark:hover:bg-amber-900/20 transition-colors"
             >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium truncate">{item.title}</p>
-                <span className="text-xs font-mono text-muted">{item.code}</span>
-              </div>
-              <p className="text-xs text-muted mt-0.5">
-                {item._count.notes} note · {new Date(item.createdAt).toLocaleString("vi-VN")}
-                {item.status === "closed" && " · Đã đóng"}
-              </p>
+              <RefreshCw size={12} className={isLoadingHistory ? "animate-spin" : ""} />
+              {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
             </button>
-          ))}
+          </div>
+          {history.length === 0 && !isLoadingHistory && (
+            <div className="text-center py-6 rounded-xl bg-white/40 dark:bg-black/10 border border-dashed border-amber-200/60">
+              <p className="text-xs text-muted">Bấm "Tải lịch sử" để xem board cũ</p>
+            </div>
+          )}
+          <div className="grid gap-2.5 sm:grid-cols-2 max-h-72 overflow-y-auto pr-1">
+            {history.map((item, idx) => {
+              const bgColors = ["#FEF3C7", "#DBEAFE", "#D1FAE5", "#FCE7F3", "#E9D5FF", "#FED7AA"];
+              const bg = bgColors[idx % bgColors.length];
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleLoadBoard(item)}
+                  className="text-left rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] ring-1 ring-black/5"
+                  style={{ backgroundColor: bg }}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-sm font-bold text-gray-900 truncate">{item.title}</p>
+                    <span className="text-[11px] font-mono font-bold text-gray-800 bg-white/60 px-2 py-0.5 rounded-md shrink-0">
+                      {item.code}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-700 font-medium">
+                    {item._count.notes} note · {new Date(item.createdAt).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    {item.status === "closed" && " · 🔒 Đã đóng"}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
