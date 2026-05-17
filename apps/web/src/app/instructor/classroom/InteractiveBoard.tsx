@@ -1,11 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { StickyNote, RefreshCw, EyeOff, Eye, Trash2 } from "lucide-react";
+import {
+  StickyNote, RefreshCw, EyeOff, Eye, Trash2,
+  Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
+} from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
-import { rotationForNote } from "./boardNoteStyle";
+import {
+  BOARD_NOTE_COLORS,
+  rotationForNote,
+  detectMediaKind,
+  isValidAttachmentUrl,
+} from "./boardNoteStyle";
 import NoteAttachment from "./NoteAttachment";
 
 const QRCode = dynamic(
@@ -54,11 +62,32 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [current, setCurrent] = useState<Board | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
   const [history, setHistory] = useState<BoardHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   const esRef = useRef<EventSource | null>(null);
+
+  // Modal post-note state (instructor cũng có thể post để demo / seed)
+  const [modalOpen, setModalOpen] = useState(false);
+  const [instructorName, setInstructorName] = useState("Giảng viên");
+  const [noteContent, setNoteContent] = useState("");
+  const [noteColor, setNoteColor] = useState<string | null>(null);
+  const [noteAttachmentUrl, setNoteAttachmentUrl] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [postInfo, setPostInfo] = useState<string | null>(null);
+
+  // Fetch instructor's display name 1 lần
+  useEffect(() => {
+    fetch(apiUrl("/api/me"))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.name) setInstructorName(d.name);
+        else if (d?.email) setInstructorName(d.email.split("@")[0]);
+      })
+      .catch(() => {});
+  }, []);
 
   // Helper apply 1 event vào current state
   const applyEvent = (data: unknown) => {
@@ -138,6 +167,63 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       toast.error("Lỗi mạng");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  // Đóng modal khi Escape
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setModalOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modalOpen]);
+
+  const handlePostNote = async () => {
+    if (!current) return;
+    if (!instructorName.trim()) {
+      setPostInfo("Vui lòng nhập tên hiển thị");
+      return;
+    }
+    if (!noteContent.trim() && !noteAttachmentUrl.trim()) {
+      setPostInfo("Nhập nội dung hoặc đính kèm link");
+      return;
+    }
+    if (noteAttachmentUrl.trim() && !isValidAttachmentUrl(noteAttachmentUrl.trim())) {
+      setPostInfo("URL không hợp lệ (chỉ http/https)");
+      return;
+    }
+    setPosting(true);
+    setPostInfo(null);
+    try {
+      const res = await fetch(apiUrl(`/api/public/boards/${current.code}/notes`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          authorName: instructorName.trim(),
+          content: noteContent.trim() || "",
+          ...(noteColor ? { color: noteColor } : {}),
+          ...(noteAttachmentUrl.trim() ? { attachmentUrl: noteAttachmentUrl.trim() } : {}),
+        }),
+      });
+      if (res.status === 429) {
+        setPostInfo("Gửi quá nhanh — chờ vài giây.");
+        return;
+      }
+      if (!res.ok) {
+        setPostInfo("Lỗi gửi note");
+        return;
+      }
+      setNoteContent("");
+      setNoteAttachmentUrl("");
+      setNoteColor(null);
+      setModalOpen(false);
+      // SSE sẽ broadcast → applyEvent thêm vào state
+    } catch {
+      setPostInfo("Lỗi mạng");
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -272,45 +358,55 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     );
   };
 
-  // ── Active board view ────────────────────────────────────────────────────
+  // ── Active board view — same layout as student /join page + moderation ──
   if (current) {
     const visibleCount = current.notes.filter((n) => !n.hidden).length;
     const wrapper = isFullscreen
-      ? "fixed inset-0 bg-[rgb(var(--surface-muted))] flex flex-col z-50 overflow-y-auto"
-      : "rounded-2xl overflow-hidden border border-amber-200/60 bg-[rgb(var(--surface-muted))] shadow-card";
+      ? "fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900"
+      : "relative rounded-2xl overflow-hidden border border-amber-200/60 bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 shadow-card pb-24";
+    const previewKind = noteAttachmentUrl.trim() && isValidAttachmentUrl(noteAttachmentUrl.trim())
+      ? detectMediaKind(noteAttachmentUrl.trim())
+      : null;
     return (
       <div className={wrapper}>
-        {/* Header gradient banner — cảm hứng Padlet */}
-        <div className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 px-6 py-5 text-white">
+        {/* Compact gradient banner — giống student /join page */}
+        <header className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 text-white px-4 py-5">
           <div className="absolute inset-0 opacity-30 mix-blend-overlay"
             style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
-          <div className="relative flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <StickyNote size={22} strokeWidth={2.2} />
-                <span className="text-xs uppercase tracking-widest font-semibold opacity-90">Bảng tương tác</span>
-                {current.status === "closed" && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/30 backdrop-blur font-semibold">Đã đóng</span>
-                )}
-              </div>
-              <h2 className="text-2xl md:text-3xl font-extrabold drop-shadow-sm break-words">
+          <div className="relative max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90 mb-0.5">
+                Bảng tương tác · GIẢNG VIÊN
+              </p>
+              <h1 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm break-words leading-tight">
                 {current.title}
-              </h2>
+                {current.status === "closed" && (
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-white/30 backdrop-blur font-semibold align-middle">Đã đóng</span>
+                )}
+              </h1>
               {current.prompt && (
-                <p className="mt-2 text-sm md:text-base opacity-95 italic max-w-2xl">{current.prompt}</p>
+                <p className="mt-1 text-sm italic opacity-95 max-w-2xl">{current.prompt}</p>
               )}
             </div>
-            <div className="flex flex-wrap gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowQrModal(true)}
+                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                title="Hiện QR / mã"
+              >
+                <QrCode size={14} />
+                {current.code}
+              </button>
               <button
                 onClick={() => setIsFullscreen((v) => !v)}
-                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 text-xs font-semibold transition-colors"
+                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
               >
                 {isFullscreen ? "⛶ Thoát" : "⛶ Full"}
               </button>
               {current.status === "open" && (
                 <button
                   onClick={handleCloseBoard}
-                  className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 text-xs font-semibold transition-colors"
+                  className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
                 >
                   Đóng board
                 </button>
@@ -318,46 +414,168 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
               {onExit && (
                 <button
                   onClick={onExit}
-                  className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 text-xs font-semibold transition-colors"
+                  className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
                 >
                   ✕ Exit
                 </button>
               )}
             </div>
           </div>
+        </header>
+
+        {/* Note count info bar */}
+        <div className="max-w-6xl mx-auto px-4 pt-3 text-xs text-muted">
+          {visibleCount} note hiển thị · {current.notes.length} tổng (gồm note ẩn)
         </div>
 
-        {joinUrl && (
-          <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-center border-b border-amber-200/40 bg-white/40 dark:bg-black/10 backdrop-blur">
-            <div className="flex items-center gap-4">
-              <div className="bg-white p-3 rounded-xl shadow-md ring-1 ring-amber-200">
-                <QRCode value={joinUrl} size={120} level="H" includeMargin />
+        {/* Masonry — đúng layout student */}
+        <main className="max-w-6xl mx-auto p-4">
+          <NotesGrid notes={current.notes} />
+        </main>
+
+        {/* FAB add note — instructor cũng dùng được để demo */}
+        {current.status === "open" && (
+          <button
+            onClick={() => {
+              setModalOpen(true);
+              setPostInfo(null);
+            }}
+            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-2xl hover:shadow-amber-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
+            title="Thêm note"
+            aria-label="Thêm note"
+          >
+            <Plus size={32} strokeWidth={3} />
+          </button>
+        )}
+
+        {/* QR Modal — bấm vào code/QR button thì hiện QR to để học viên scan */}
+        {showQrModal && joinUrl && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in-up p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowQrModal(false); }}
+          >
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl max-w-md text-center">
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="absolute top-3 right-3 p-2 rounded-lg hover:bg-gray-100"
+                aria-label="Đóng"
+              >
+                <X size={20} />
+              </button>
+              <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-2">Quét để tham gia</p>
+              <div className="inline-block bg-white p-4 rounded-xl ring-2 ring-amber-200">
+                <QRCode value={joinUrl} size={280} level="H" includeMargin />
               </div>
-              <div>
-                <p className="text-xs text-muted uppercase tracking-wider font-semibold">Mã tham gia</p>
-                <p className="text-3xl font-extrabold font-mono tracking-[0.3em] text-amber-700">{current.code}</p>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(joinUrl);
-                    toast.success("Đã copy link");
-                  }}
-                  className="mt-1 text-xs text-brand-600 hover:text-brand-700 font-medium underline"
-                >
-                  Copy link
-                </button>
-              </div>
-            </div>
-            <div className="text-sm text-muted md:text-right">
-              <p className="font-semibold text-base text-foreground">{visibleCount} note hiển thị</p>
-              <p className="mt-0.5">{current.notes.length} tổng cộng (gồm cả note ẩn)</p>
-              <p className="mt-1 text-xs">Sinh viên: <code className="font-mono px-1.5 py-0.5 bg-accent-100 dark:bg-accent-900/30 rounded">/join/{current.code}</code> hoặc quét QR</p>
+              <p className="mt-4 text-4xl font-extrabold font-mono tracking-[0.3em] text-amber-700">{current.code}</p>
+              <p className="mt-2 text-sm text-gray-600">
+                Hoặc truy cập: <code className="font-mono px-1.5 py-0.5 bg-amber-50 rounded">/join/{current.code}</code>
+              </p>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(joinUrl);
+                  toast.success("Đã copy link");
+                }}
+                className="mt-3 text-sm text-amber-600 hover:text-amber-700 font-medium underline"
+              >
+                Copy link tham gia
+              </button>
             </div>
           </div>
         )}
 
-        <div className="p-4">
-          <NotesGrid notes={current.notes} />
-        </div>
+        {/* Modal post note */}
+        {modalOpen && current.status === "open" && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in-up"
+            onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}
+          >
+            <div
+              className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto"
+              style={{ backgroundColor: noteColor || "#FEF3C7" }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">📌 Thêm note</h2>
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-white/40"
+                  aria-label="Đóng"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={instructorName}
+                  onChange={(e) => setInstructorName(e.target.value)}
+                  placeholder="Tên hiển thị"
+                  maxLength={40}
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+                <textarea
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  placeholder="Viết note (có thể bỏ trống nếu chỉ đính link)"
+                  maxLength={500}
+                  rows={3}
+                  autoFocus
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                />
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={noteAttachmentUrl}
+                    onChange={(e) => setNoteAttachmentUrl(e.target.value)}
+                    placeholder="Đính kèm URL: ảnh / video / audio / YouTube / link"
+                    maxLength={2000}
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  />
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
+                    {previewKind === "image" ? <ImageIcon size={16} /> :
+                     previewKind === "video" || previewKind === "youtube" || previewKind === "vimeo" ? <Video size={16} /> :
+                     previewKind === "audio" ? <Music size={16} /> :
+                     <LinkIcon size={16} />}
+                  </span>
+                  {previewKind && (
+                    <p className="text-[11px] text-gray-700 mt-1 ml-1">
+                      Sẽ hiển thị dạng: <span className="font-semibold">{previewKind === "youtube" ? "YouTube embed" : previewKind === "vimeo" ? "Vimeo embed" : previewKind === "image" ? "Ảnh" : previewKind === "video" ? "Video player" : previewKind === "audio" ? "Audio player" : "Link"}</span>
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-gray-700 font-medium mr-1">Màu:</span>
+                  {BOARD_NOTE_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setNoteColor(c)}
+                      className={`w-7 h-7 rounded-full border-2 transition-transform ${noteColor === c ? "border-gray-900 scale-110" : "border-white"} shadow`}
+                      style={{ backgroundColor: c }}
+                      aria-label={`Chọn màu ${c}`}
+                    />
+                  ))}
+                  {noteColor && (
+                    <button type="button" onClick={() => setNoteColor(null)} className="text-xs text-gray-700 underline ml-1">
+                      Random
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <p className="text-xs text-gray-700">{noteContent.length}/500</p>
+                  <button
+                    onClick={handlePostNote}
+                    disabled={posting}
+                    className="bg-gray-900 hover:bg-black text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                  >
+                    {posting ? "Đang gửi..." : "📌 Dán note"}
+                  </button>
+                </div>
+                {postInfo && <p className="text-sm text-gray-800 font-medium">{postInfo}</p>}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
