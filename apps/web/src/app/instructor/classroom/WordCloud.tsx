@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Cloud, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
@@ -97,16 +97,64 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
     }
   };
 
+  // Snapshot fetch — gọi 1 lần khi mở cloud để có frequency có sẵn.
+  // Live update từ đây trở đi đi qua SSE (useEffect dưới).
   const fetchResults = async (cloudId: string) => {
     try {
       const res = await fetch(apiUrl(`/api/classroom/word-cloud/${cloudId}/results`));
       if (!res.ok) return;
       setResults(await res.json());
-      setTimeout(() => fetchResults(cloudId), 1000);
     } catch {
       // silent
     }
   };
+
+  // Normalize giống server's countPhrases để client-side accumulation khớp shape.
+  const normalizePhrase = (text: string): string =>
+    text
+      .toLowerCase()
+      .normalize("NFC")
+      .replace(/\s+/g, " ")
+      .replace(/^[\s\p{P}]+|[\s\p{P}]+$/gu, "")
+      .trim();
+
+  // SSE: nhận từng submission mới, cộng dồn vào wordFrequency local.
+  // Chỉ mở khi có currentCloud thật (không phải stateless mode — id "local-*").
+  const esRef = useRef<EventSource | null>(null);
+  useEffect(() => {
+    if (!currentCloud || currentCloud.id.startsWith("local-")) return;
+    const cloudId = currentCloud.id;
+    const es = new EventSource(apiUrl(`/api/classroom/word-cloud/${cloudId}/stream`));
+    esRef.current = es;
+    es.onmessage = (e) => {
+      try {
+        const evt = JSON.parse(e.data) as { text?: string };
+        if (!evt.text) return;
+        const phrase = normalizePhrase(evt.text);
+        if (!phrase) return;
+        setResults((prev) => {
+          const base = prev ?? { cloudId, totalSubmissions: 0, wordFrequency: {} };
+          return {
+            cloudId,
+            totalSubmissions: base.totalSubmissions + 1,
+            wordFrequency: {
+              ...base.wordFrequency,
+              [phrase]: (base.wordFrequency[phrase] || 0) + 1,
+            },
+          };
+        });
+      } catch {
+        // ignore malformed event
+      }
+    };
+    es.onerror = () => {
+      // EventSource tự reconnect; chỉ log nhẹ
+    };
+    return () => {
+      es.close();
+      esRef.current = null;
+    };
+  }, [currentCloud]);
 
   const handleRefresh = async () => {
     if (!currentCloud) return;
