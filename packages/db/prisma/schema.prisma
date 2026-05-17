@@ -119,6 +119,13 @@ model User {
 
   leaderboardEntries LeaderboardEntry[]
 
+  // Admin email templates — last editor + revision history
+  emailTemplatesUpdated  EmailTemplate[]         @relation("EmailTemplateEditor")
+  emailTemplateRevisions EmailTemplateRevision[] @relation("EmailTemplateReviser")
+  // Email dispatch batches this user created / approved
+  emailBatchesCreated  EmailDispatchBatch[] @relation("EmailBatchCreator")
+  emailBatchesApproved EmailDispatchBatch[] @relation("EmailBatchApprover")
+
   @@index([createdAt])
 }
 
@@ -2736,6 +2743,8 @@ model Organization {
   courses          Course[]
   admins           OrganizationAdmin[]
   sessionTemplates ExamSessionTemplate[]
+  emailTemplates   EmailTemplate[]
+  emailBatches     EmailDispatchBatch[]
 
   @@index([code])
 }
@@ -2751,6 +2760,53 @@ model OrganizationAdmin {
 
   @@id([organizationId, userId])
   @@index([userId])
+}
+
+// =====================================================================
+// Email Templates — admin-editable transactional email templates.
+// Loaded by sendTemplatedEmail() at runtime; falls back to hard-coded
+// defaults if a key is missing or `enabled=false`. Revisions table keeps
+// edit history for rollback.
+// =====================================================================
+model EmailTemplate {
+  id              String   @id @default(uuid())
+  // Multi-tenancy: null = global default; non-null = per-org override.
+  organizationId  String?
+  key             String
+  name            String
+  description     String?  @db.Text
+  category        String
+  subject         String   @db.Text
+  bodyHtml        String   @db.Text
+  bodyText        String?  @db.Text
+  variables       Json
+  enabled         Boolean  @default(true)
+  updatedByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization?           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedBy    User?                   @relation("EmailTemplateEditor", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  revisions    EmailTemplateRevision[]
+
+  @@unique([organizationId, key])
+  @@index([category])
+  @@index([key])
+}
+
+model EmailTemplateRevision {
+  id             String   @id @default(uuid())
+  templateId     String
+  subject        String   @db.Text
+  bodyHtml       String   @db.Text
+  bodyText       String?  @db.Text
+  editedByUserId String
+  editedAt       DateTime @default(now())
+
+  template EmailTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  editedBy User          @relation("EmailTemplateReviser", fields: [editedByUserId], references: [id])
+
+  @@index([templateId, editedAt])
 }
 
 // PR2.17 — Catalog ca thi cho mỗi trường. Org admin maintain.
@@ -2774,4 +2830,120 @@ model ExamSessionTemplate {
 
   @@unique([organizationId, code])
   @@index([organizationId, orderIndex])
+}
+
+// =====================================================================
+// Email Dispatch — review-before-send queue for bulk emails.
+//
+// Instead of fire-and-forget, the responsible user (instructor, round
+// admin) creates a Batch, reviews each Item (recipient + variables),
+// can untick people who shouldn't receive, then approves the batch to
+// trigger actual sending. Each Item is sent once and records its
+// outcome for resend-on-failure.
+//
+// First use case: exam.access_code (gửi mã dự thi). Generic enough to
+// later cover proctor-bulk-invite, grade-published, deadline-reminder.
+// =====================================================================
+
+enum EmailDispatchStatus {
+  // Pending review. Items selected/deselected; not yet sent.
+  draft
+  // User clicked "Send"; items being processed.
+  sending
+  // All items processed (sent or failed). Resend allowed for failed.
+  completed
+  // User cancelled before sending.
+  cancelled
+}
+
+enum EmailDispatchItemStatus {
+  pending
+  // Successfully sent (provider accepted).
+  sent
+  // Provider returned an error or threw.
+  failed
+  // User unticked this row before approving — never attempted.
+  skipped
+}
+
+model EmailDispatchBatch {
+  id   String @id @default(uuid())
+  // Owning org — drives per-tenant template lookup at send time and
+  // limits visibility (org admins only see their own batches).
+  organizationId String?
+  // Stable template key (e.g. "exam.access_code"). Renders use the
+  // normal org→global→fallback lookup.
+  templateKey String
+  // Polymorphic link to the "thing" this batch is about. e.g.
+  // targetType="exam", targetId=<examId>. Lets the review UI link
+  // back without a hard FK to every possible owner table.
+  targetType String
+  targetId   String
+  // Human-readable title shown in history list, e.g.
+  // "Gửi mã dự thi — Kỳ thi cuối kỳ K65".
+  title       String
+  // Free-form notes the creator adds for context.
+  description String?             @db.Text
+  status      EmailDispatchStatus @default(draft)
+  totalItems  Int                 @default(0)
+  sentCount   Int                 @default(0)
+  failedCount Int                 @default(0)
+  skippedCount Int                @default(0)
+
+  createdByUserId  String
+  // Who clicked the "Approve & send" button. May equal createdByUserId
+  // when single-eye approval, or differ when two-eye flow added later.
+  approvedByUserId String?
+  approvedAt       DateTime?
+  // Set when status flips to "completed" (all items processed).
+  completedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdBy    User                  @relation("EmailBatchCreator", fields: [createdByUserId], references: [id])
+  approvedBy   User?                 @relation("EmailBatchApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  items        EmailDispatchItem[]
+
+  @@index([organizationId, createdAt])
+  @@index([targetType, targetId])
+  @@index([createdByUserId, createdAt])
+  @@index([status])
+}
+
+model EmailDispatchItem {
+  id      String @id @default(uuid())
+  batchId String
+  // Recipient address — required, must be valid by the time batch is approved.
+  recipientEmail String
+  recipientName  String
+  // Resolved Handlebars variables for THIS recipient. Frozen at batch
+  // creation so reviewers see exactly what will be sent.
+  variables Json
+  // Polymorphic back-link to the originating row (e.g. examCandidateId).
+  // Lets the UI mark the source as "đã gửi" after send.
+  sourceType String?
+  sourceId   String?
+
+  // User toggles this in the review UI. Unticked rows are marked
+  // skipped (not pending) when batch is approved.
+  selected Boolean @default(true)
+
+  status       EmailDispatchItemStatus @default(pending)
+  errorMessage String?
+  // Resend hooks: bumped each time we attempt this item.
+  attemptCount Int       @default(0)
+  lastAttemptAt DateTime?
+  sentAt       DateTime?
+  // Provider message ID (Resend returns this) for traceability.
+  providerId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  batch EmailDispatchBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId, status])
+  @@index([sourceType, sourceId])
 }

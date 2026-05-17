@@ -264,6 +264,8 @@ export interface SendCodesParams {
     examClosesAt: Date;
     examDurationMin: number;
     to: string;
+    /** Org of the owning course; null = use global template. */
+    organizationId: string | null;
   }) => Promise<{ delivered: boolean; loggedOnly: boolean; error?: string }>;
 }
 
@@ -386,10 +388,13 @@ export async function sendCodesToCandidates(
       openAt: true,
       closeAt: true,
       durationMin: true,
+      // For per-org email template lookup.
+      course: { select: { organizationId: true } },
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
   await assertCanEditCourse(actorUserId, exam.courseId, db);
+  const organizationId = exam.course.organizationId ?? null;
 
   const rows = await db.examCandidate.findMany({
     where: { examId: exam.id, disabledAt: null, accessCode: { not: null } },
@@ -413,6 +418,7 @@ export async function sendCodesToCandidates(
         examOpensAt: exam.openAt,
         examClosesAt: exam.closeAt,
         examDurationMin: exam.durationMin,
+        organizationId,
       });
       if (r.delivered || r.loggedOnly) {
         if (r.delivered) result.delivered++;

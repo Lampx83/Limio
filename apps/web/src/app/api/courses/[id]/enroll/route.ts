@@ -6,8 +6,15 @@ import { getPaymentEnabled } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 
+function getBaseUrl(req: Request): string {
+  const h = req.headers;
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  return host ? `${proto}://${host}` : "";
+}
+
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
@@ -25,6 +32,7 @@ export async function POST(
   try {
     const result = await enrollInCourse(userId, course.id, undefined, {
       skipPaymentCheck: !paymentEnabled,
+      baseUrl: getBaseUrl(req),
     });
     return NextResponse.json({ ok: true, created: result.created });
   } catch (err) {

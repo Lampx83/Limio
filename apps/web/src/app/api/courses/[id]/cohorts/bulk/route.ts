@@ -43,6 +43,13 @@ export async function POST(
 
   const baseUrl = getBaseUrl();
 
+  // Resolve course → organization once (all rows share the same course).
+  const course = await prisma.course.findUnique({
+    where: { id: params.id },
+    select: { organizationId: true },
+  });
+  const organizationId = course?.organizationId ?? null;
+
   let created = 0;
   let updated = 0;
   let invited = 0;
@@ -65,16 +72,8 @@ export async function POST(
           // bulk hiện chưa có field tên GV (r.name là tên lớp học).
           displayName: email.split("@")[0]!,
           baseUrl,
-          subject: "Bạn được mời làm GV phụ trách lớp trên FeedBackMe",
-          bodyTemplate: ({ name, resetUrl }) => `Xin chào ${name},
-
-Bạn được mời làm giáo viên phụ trách 1 lớp học trên hệ thống FeedBackMe (Limio).
-
-Nhấn link sau để đặt mật khẩu (TTL 1h):
-${resetUrl}
-
-Sau khi đặt mật khẩu, đăng nhập tại Limio để xem các lớp bạn được phân công.
-`,
+          templateKey: "cohort.instructor_invite",
+          organizationId,
         });
         instructorId = result.userId;
         if (result.invited) invited++;

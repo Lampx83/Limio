@@ -1183,11 +1183,20 @@ export async function inviteUserAsProctor(
 }> {
   const room = await db.examRoom.findUnique({
     where: { id: roomId },
-    select: { session: { select: { roundId: true } } },
+    select: {
+      session: {
+        select: {
+          roundId: true,
+          // For per-org email template lookup.
+          round: { select: { course: { select: { organizationId: true } } } },
+        },
+      },
+    },
   });
   if (!room)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
   await assertCanEdit(actorUserId, room.session.roundId, db);
+  const organizationId = room.session.round.course.organizationId ?? null;
 
   const normEmail = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normEmail))
@@ -1213,7 +1222,8 @@ export async function inviteUserAsProctor(
   // Create pending user + password-reset token + assign + send email.
   // Lazy-import auth helpers to keep this file dep-free at module-init time.
   const { issueToken } = await import("../auth/tokens");
-  const { sendDevEmail, buildResetUrl } = await import("../auth/email");
+  const { buildResetUrl } = await import("../auth/email");
+  const { sendTemplatedEmail } = await import("../email/templates");
   const { RoleName } = await import("@feedbackme/shared-types");
 
   const learnerRole = await db.role.findUniqueOrThrow({
@@ -1226,6 +1236,8 @@ export async function inviteUserAsProctor(
         email: normEmail,
         // passwordHash null — will be set when they accept the invite.
         displayName: name,
+        // Inherit org from the inviting exam so invitee lands in the right tenant.
+        organizationId,
         locale: "vi",
         timezone: "Asia/Ho_Chi_Minh",
         // Implicit email verification: they were invited by an authenticated
@@ -1252,19 +1264,11 @@ export async function inviteUserAsProctor(
   });
 
   const resetUrl = buildResetUrl(baseUrl, raw);
-  sendDevEmail({
+  await sendTemplatedEmail({
+    key: "exam.proctor_invite",
     to: normEmail,
-    subject: "Bạn được mời làm giám thị trên FeedBackMe",
-    body: `Xin chào ${name},
-
-Bạn được mời làm giám thị phòng thi trên hệ thống FeedBackMe (Limio).
-
-Nhấn link sau để đặt mật khẩu (TTL 1h):
-${resetUrl}
-
-Sau khi đặt mật khẩu, đăng nhập tại Limio và bấm "Giám sát phòng thi" trong
-menu trái để xem danh sách phòng bạn được phân công.
-`,
+    organizationId,
+    variables: { name, resetUrl },
   });
 
   return { invited: true, userId, resetUrl };

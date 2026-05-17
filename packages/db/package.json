@@ -19,6 +19,7 @@
     "seed:feedback-templates": "node --env-file=.env --import tsx src/seed-feedback-templates.ts",
     "seed:quests": "node --env-file=.env --import tsx src/seed-quests.ts",
     "seed:mission-templates": "node --env-file=.env --import tsx src/seed-mission-templates.ts",
+    "seed:email-templates": "node --env-file=.env --import tsx src/seed-email-templates.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },

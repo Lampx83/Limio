@@ -3,7 +3,8 @@ import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { issueToken } from "./tokens";
-import { buildVerificationUrl, sendDevEmail } from "./email";
+import { buildVerificationUrl } from "./email";
+import { sendTemplatedEmail } from "../email/templates";
 
 export const RegisterInput = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -77,10 +78,12 @@ export async function registerUser(
   });
 
   const verificationUrl = buildVerificationUrl(baseUrl, raw);
-  sendDevEmail({
+  // Self-registration: user not tied to an org yet → use global template.
+  await sendTemplatedEmail({
+    key: "auth.verify_email",
     to: input.email,
-    subject: "Xác thực email cho FeedBackMe",
-    body: `Xin chào ${input.displayName},\n\nNhấn link sau để xác thực email (TTL 24h):\n${verificationUrl}\n`,
+    organizationId: null,
+    variables: { displayName: input.displayName, verificationUrl },
   });
 
   return {

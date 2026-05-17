@@ -5,6 +5,7 @@ import {
   findOrInviteUserByEmail,
   updateCohort,
 } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -36,20 +37,17 @@ export async function PATCH(
       resolvedInstructorId = null;
     } else {
       try {
+        // Resolve cohort → course → organization for per-org template lookup.
+        const cohort = await prisma.cohort.findUnique({
+          where: { id: params.id },
+          select: { course: { select: { organizationId: true } } },
+        });
         const result = await findOrInviteUserByEmail({
           email,
           displayName: email.split("@")[0]!,
           baseUrl: getBaseUrl(),
-          subject: "Bạn được mời làm GV phụ trách lớp trên FeedBackMe",
-          bodyTemplate: ({ name, resetUrl }) => `Xin chào ${name},
-
-Bạn được mời làm giáo viên phụ trách 1 lớp học trên hệ thống FeedBackMe (Limio).
-
-Nhấn link sau để đặt mật khẩu (TTL 1h):
-${resetUrl}
-
-Sau khi đặt mật khẩu, đăng nhập tại Limio để xem các lớp bạn được phân công.
-`,
+          templateKey: "cohort.instructor_invite",
+          organizationId: cohort?.course.organizationId ?? null,
         });
         resolvedInstructorId = result.userId;
         invited = result.invited;
