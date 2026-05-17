@@ -118,15 +118,34 @@ Phải thấy 2 dòng:
 
 ### 4.5. PgBouncer pool đã bump
 
+Image pgbouncer (Alpine) không có `psql` — đọc env trực tiếp:
+
 ```bash
-docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml exec pgbouncer \
-  psql -h 127.0.0.1 -p 6432 -U feedbackme pgbouncer -c "SHOW CONFIG;" 2>/dev/null | \
-  grep -E "max_client_conn|default_pool_size|reserve_pool_size"
+docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml \
+  exec pgbouncer env | grep -E "POOL|CLIENT_CONN"
 ```
 
-Phải thấy `max_client_conn = 3000`, `default_pool_size = 50`, `reserve_pool_size = 10`.
+Phải thấy đúng 3 dòng:
+```
+MAX_CLIENT_CONN=3000
+DEFAULT_POOL_SIZE=50
+RESERVE_POOL_SIZE=10
+```
 
-(Nếu lệnh `psql` hỏi password thì dùng `POSTGRES_PASSWORD` từ `.env.prod`.)
+Nếu thấy `MAX_CLIENT_CONN=1000` / `DEFAULT_POOL_SIZE=25` (giá trị cũ) → image cũ chưa rebuild. Chạy lại:
+```bash
+docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml \
+  up -d --force-recreate pgbouncer
+```
+
+**(Tùy chọn)** Verify qua `SHOW CONFIG` thật (chạy psql từ container postgres):
+
+```bash
+source /etc/feedbackme/.env.prod
+docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml \
+  exec postgres psql "postgresql://feedbackme:${POSTGRES_PASSWORD}@pgbouncer:6432/pgbouncer" \
+  -c "SHOW CONFIG;" | grep -E "max_client_conn|default_pool_size|reserve_pool_size"
+```
 
 ## 5. Nếu có sự cố — rollback
 
@@ -155,9 +174,11 @@ docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml s
 # RAM/CPU mọi container
 docker stats $(docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml ps -q)
 
-# PgBouncer xem có nghẽn không
-docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml exec pgbouncer \
-  psql -h 127.0.0.1 -p 6432 -U feedbackme pgbouncer -c "SHOW POOLS;"
+# PgBouncer xem có nghẽn không (psql chạy qua container postgres, vì image
+# pgbouncer Alpine không có psql).
+source /etc/feedbackme/.env.prod
+docker compose --env-file /etc/feedbackme/.env.prod -f docker-compose.prod.yml exec postgres \
+  psql "postgresql://feedbackme:${POSTGRES_PASSWORD}@pgbouncer:6432/pgbouncer" -c "SHOW POOLS;"
 # → cột cl_waiting nên = 0 hầu hết thời gian
 
 # Redis xem có nóng không
