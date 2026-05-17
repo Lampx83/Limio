@@ -28,6 +28,7 @@ export class ExamError extends Error {
       | "duration_extension_too_large"
       | "reason_required"
       | "attempt_not_in_progress"
+      | "attempt_not_submitted"
       | "message_body_required"
       | "message_too_long"
       | "message_not_found"

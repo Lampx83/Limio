@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   }
   const r = await detectHeartbeatLost();
   for (const d of r.detected) {
-    recordHeartbeatLost(d.attemptId, d.lostForMs);
+    await recordHeartbeatLost(d.attemptId, d.lostForMs);
   }
   return NextResponse.json({ ok: true, ...r });
 }

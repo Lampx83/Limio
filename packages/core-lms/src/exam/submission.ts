@@ -217,6 +217,185 @@ export async function finalizeSubmission(
   return { autoScore, fullyGraded: allGraded, status: nextStatus };
 }
 
+export interface MarkAttemptResult {
+  status: "submitted" | "auto_submitted" | "graded" | "flagged" | "in_progress";
+  alreadyFinalized: boolean;
+}
+
+/**
+ * Tintin — Mark an in-progress attempt as submitted WITHOUT applying auto-grading.
+ * Caller is expected to enqueue auto-grading via BullMQ (handled in the API
+ * route, which sees the worker queue). Idempotent: re-calling on a non-
+ * in_progress attempt returns alreadyFinalized=true without re-emitting.
+ *
+ * Used by `submitAttemptMarkOnly` / `forceSubmitAttemptMarkOnly` /
+ * `autoSubmitExpiredAttemptsMarkOnly`. Tests + cron-style sync flows still
+ * call the legacy `finalizeSubmission` which does mark + grade inline.
+ */
+export async function markAttemptSubmitted(
+  attemptId: string,
+  reason: "manual" | "timer_expired" | "force_submitted",
+  db: PrismaClient = prisma,
+): Promise<MarkAttemptResult> {
+  const attempt = await loadAttemptForGrading(attemptId, db);
+  if (attempt.status !== "in_progress") {
+    return {
+      status: attempt.status as MarkAttemptResult["status"],
+      alreadyFinalized: true,
+    };
+  }
+  const now = new Date();
+  const nextStatus: "submitted" | "auto_submitted" =
+    reason === "timer_expired" ? "auto_submitted" : "submitted";
+  await db.examAttempt.update({
+    where: { id: attemptId },
+    data: { status: nextStatus, submittedAt: now },
+  });
+  const eventType =
+    reason === "manual"
+      ? LearningEventType.ExamSubmitted
+      : LearningEventType.ExamAutoSubmitted;
+  await emitEvent(
+    attempt.userId,
+    eventType,
+    {
+      examId: attempt.examId,
+      attemptId,
+      // autoScore/fullyGraded filled in by the ExamGraded event after worker runs.
+      ...(reason === "timer_expired" ? { reason: "timer_expired" as const } : {}),
+    },
+    {
+      courseId: attempt.exam.courseId,
+      candidateId: attempt.candidateId ?? undefined,
+      eventKey: `${eventType}:${attemptId}`,
+    },
+    db,
+  );
+  return { status: nextStatus, alreadyFinalized: false };
+}
+
+/**
+ * Tintin — Apply auto-grading to an already-marked attempt. Idempotent: if the
+ * attempt is already `graded`, returns the existing score without re-running.
+ * Throws ExamError("attempt_not_submitted") if the attempt is still
+ * in_progress (caller must mark first).
+ *
+ * Designed to run inside a BullMQ worker so the heavy per-question grading
+ * transaction doesn't block the submit HTTP request.
+ */
+export async function applyAutoGradingForAttempt(
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<ExamSubmitResult> {
+  const attempt = await loadAttemptForGrading(attemptId, db);
+  if (attempt.status === "graded") {
+    return {
+      autoScore: attempt.score ?? 0,
+      fullyGraded: true,
+      status: "graded",
+    };
+  }
+  if (attempt.status === "in_progress") {
+    throw new ExamError("attempt_not_submitted");
+  }
+  const questions = await loadQuestionsWithAnswers(attempt.examId, attemptId, db);
+  const totalPoints = questions.reduce((s, q) => s + q.points, 0);
+  const { autoScore, allGraded } = await applyAutoGrading(attemptId, questions, db);
+
+  const now = new Date();
+  const scorePct = totalPoints > 0 ? (autoScore / totalPoints) * 100 : 0;
+  const passed = allGraded ? scorePct >= attempt.exam.passScore : null;
+
+  await db.examAttempt.update({
+    where: { id: attemptId },
+    data: {
+      ...(allGraded ? { status: "graded" as const } : {}),
+      gradedAt: allGraded ? now : null,
+      score: autoScore,
+      scorePct: allGraded ? scorePct : null,
+      passed,
+    },
+  });
+
+  if (allGraded) {
+    await emitEvent(
+      attempt.userId,
+      LearningEventType.ExamGraded,
+      {
+        examId: attempt.examId,
+        attemptId,
+        score: autoScore,
+        scorePct,
+        passed: passed ?? false,
+      },
+      {
+        courseId: attempt.exam.courseId,
+        candidateId: attempt.candidateId ?? undefined,
+        eventKey: `exam.graded:${attemptId}`,
+      },
+      db,
+    );
+  }
+
+  return {
+    autoScore,
+    fullyGraded: allGraded,
+    status: allGraded ? "graded" : (attempt.status as ExamSubmitResult["status"]),
+  };
+}
+
+/**
+ * Tintin — Mark-only variant of A7.5.1 manual submit. The API route calls this
+ * and then enqueues a BullMQ auto-grade job. Tests still use the legacy
+ * `submitExamAttempt` (sync grading).
+ */
+export async function submitAttemptMarkOnly(
+  subject: ExamSubject,
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<MarkAttemptResult> {
+  const attempt = await db.examAttempt.findUnique({
+    where: { id: attemptId },
+    select: { id: true, userId: true, candidateId: true, status: true },
+  });
+  if (!attempt) throw new ExamError("attempt_not_found");
+  assertSubjectOwnsAttempt(subject, attempt);
+  return markAttemptSubmitted(attemptId, "manual", db);
+}
+
+/**
+ * Tintin — Mark-only variant of A7.5.2 cron auto-submit. Returns the list of
+ * attempt ids that were freshly marked so the caller (API cron route) can
+ * enqueue grading jobs for them.
+ */
+export async function autoSubmitExpiredAttemptsMarkOnly(
+  db: PrismaClient = prisma,
+): Promise<{ processed: number; errors: number; attemptIds: string[] }> {
+  const now = new Date();
+  const candidates = await db.examAttempt.findMany({
+    where: { status: "in_progress" },
+    select: { id: true, startedAt: true, durationSec: true },
+    take: 500,
+  });
+  let processed = 0;
+  let errors = 0;
+  const attemptIds: string[] = [];
+  for (const a of candidates) {
+    const deadline = a.startedAt.getTime() + a.durationSec * 1000;
+    if (deadline > now.getTime()) continue;
+    try {
+      const r = await markAttemptSubmitted(a.id, "timer_expired", db);
+      if (!r.alreadyFinalized) {
+        attemptIds.push(a.id);
+        processed++;
+      }
+    } catch {
+      errors++;
+    }
+  }
+  return { processed, errors, attemptIds };
+}
+
 /** A7.5.1 — Manual submit by learner (User or candidate). */
 export async function submitExamAttempt(
   subject: ExamSubject,

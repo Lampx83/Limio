@@ -18,7 +18,7 @@ export async function POST(
   const minutes = Number((body as { minutes?: unknown })?.minutes);
   try {
     const r = await extendAttempt(actorUserId, params.id, minutes);
-    recordExtended(params.id, r.newDurationSec, r.newDeadline.getTime());
+    await recordExtended(params.id, r.newDurationSec, r.newDeadline.getTime());
     return NextResponse.json(r);
   } catch (e) {
     const mapped = mapKnownError(e);

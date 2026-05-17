@@ -6,7 +6,6 @@ import { allow, clientIp } from "@/lib/rate-limit";
 import {
   checkAndUpdateFingerprint,
   getExamIdForAttempt,
-  markHeartbeatDbWritten,
   recordHeartbeat,
   recordIncident,
   registerAttempt,
@@ -33,7 +32,7 @@ export async function POST(
 ) {
   // At most 1 heartbeat per 8s per attempt — silently accept extras so the
   // client doesn't retry, but skip all processing to protect the DB.
-  const rl = allow("heartbeat", params.id, 1, 8_000);
+  const rl = await allow("heartbeat", params.id, 1, 8_000);
   if (!rl.ok) return NextResponse.json({ ok: true });
 
   const subject = await requireExamSubject(params.id);
@@ -42,7 +41,7 @@ export async function POST(
 
   // Resolve examId from cache first; fall back to DB lookup if the dashboard
   // hasn't seeded the cache yet for this attempt.
-  let examId = getExamIdForAttempt(params.id);
+  let examId = await getExamIdForAttempt(params.id);
   if (!examId) {
     const a = await prisma.examAttempt.findUnique({
       where: { id: params.id },
@@ -61,17 +60,17 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
     examId = a.examId;
-    registerAttempt(params.id, examId);
+    await registerAttempt(params.id, examId);
   }
 
-  recordHeartbeat(params.id);
+  await recordHeartbeat(params.id);
 
   // A5.8.D4 — cookie-share detector. Compare device fingerprint vs the prior
   // heartbeat. If they diverge inside a short window, the exam_session cookie
   // is in use on 2 devices at the same time → log multi_tab incident.
   const ip = clientIp(req);
   const ua = req.headers.get("user-agent") ?? "unknown";
-  const fp = checkAndUpdateFingerprint(params.id, ip, ua);
+  const fp = await checkAndUpdateFingerprint(params.id, ip, ua);
   if (fp) {
     try {
       await logExamIncident(subject, params.id, {
@@ -82,13 +81,13 @@ export async function POST(
           curr: { ip, ua: ua.slice(0, 80) },
         },
       });
-      recordIncident(params.id, "multi_tab");
+      await recordIncident(params.id, "multi_tab");
     } catch {
       // Best-effort — heartbeat must not fail because incident write failed.
     }
   }
 
-  if (shouldFlushHeartbeatToDb(params.id)) {
+  if (await shouldFlushHeartbeatToDb(params.id)) {
     // Guard with subject id so a stolen attemptId can't bump someone else's row.
     const where =
       subject.kind === "user"
@@ -98,11 +97,12 @@ export async function POST(
             candidateId: subject.candidateId,
             status: "in_progress" as const,
           };
-    const r = await prisma.examAttempt.updateMany({
+    await prisma.examAttempt.updateMany({
       where,
       data: { lastHeartbeatAt: new Date() },
     });
-    if (r.count > 0) markHeartbeatDbWritten(params.id);
+    // shouldFlushHeartbeatToDb is now a SET NX EX atomic claim — no separate
+    // mark step needed; the key auto-expires after 30s.
   }
 
   return NextResponse.json({ ok: true });

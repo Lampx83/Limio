@@ -17,7 +17,7 @@ export async function POST(
   try {
     const r = await logExamIncident(subject, params.id, body);
     if (body && typeof body === "object" && typeof (body as { type?: unknown }).type === "string") {
-      recordIncident(params.id, (body as { type: string }).type);
+      await recordIncident(params.id, (body as { type: string }).type);
     }
     return NextResponse.json(r, { status: 201 });
   } catch (e) {

@@ -18,7 +18,7 @@ export async function POST(
   const text = (body as { body?: unknown })?.body;
   try {
     const r = await broadcastMessageToExam(actorUserId, params.id, text);
-    recordMessageBroadcast(params.id, r.id, typeof text === "string" ? text : "");
+    await recordMessageBroadcast(params.id, r.id, typeof text === "string" ? text : "");
     return NextResponse.json(r, { status: 201 });
   } catch (e) {
     const mapped = mapKnownError(e);

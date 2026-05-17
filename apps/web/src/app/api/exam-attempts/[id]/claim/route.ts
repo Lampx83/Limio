@@ -20,7 +20,7 @@ export async function POST(
       where: { id: params.id },
       select: { resumeCount: true },
     });
-    if (a) recordClaim(params.id, a.resumeCount);
+    if (a) await recordClaim(params.id, a.resumeCount);
     return NextResponse.json(r);
   } catch (e) {
     const mapped = mapKnownError(e);

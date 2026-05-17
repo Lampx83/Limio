@@ -78,25 +78,46 @@ jobs:
       - name: Roll out services
         run: |
           set -euo pipefail
+          # Tintin — scale web tới WEB_REPLICAS (default 3) cho exam concurrency.
+          # Caddy web-proxy LB round-robin giữa các replica; sticky session
+          # không cần (NextAuth JWT + Redis-backed exam-live-bus).
+          WEB_REPLICAS="${WEB_REPLICAS:-3}"
           docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d \
             --remove-orphans \
             --no-build \
-            postgres redis pgbouncer web worker cron
+            --scale "web=${WEB_REPLICAS}" \
+            postgres redis pgbouncer web web-proxy worker cron
 
-      - name: Wait for web to become healthy
+      - name: Wait for web replicas to become healthy
         run: |
           set -euo pipefail
+          # Mỗi replica có healthcheck riêng — đợi TẤT CẢ thành healthy
+          # trước khi tuyên bố deploy xong. Nếu 1 cái unhealthy → fail sớm.
           for i in $(seq 1 60); do
-            status=$(docker inspect --format '{{.State.Health.Status}}' \
-              "$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps -q web)" 2>/dev/null || echo starting)
-            echo "[$i] web health: $status"
-            case "$status" in
-              healthy) exit 0 ;;
-              unhealthy) docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=200 web; exit 1 ;;
-            esac
+            ids=$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps -q web)
+            if [ -z "$ids" ]; then
+              echo "[$i] no web containers yet"
+              sleep 5
+              continue
+            fi
+            all_healthy=1
+            any_unhealthy=0
+            for id in $ids; do
+              s=$(docker inspect --format '{{.State.Health.Status}}' "$id" 2>/dev/null || echo starting)
+              echo "[$i] web $id: $s"
+              [ "$s" = "healthy" ] || all_healthy=0
+              [ "$s" = "unhealthy" ] && any_unhealthy=1
+            done
+            if [ "$any_unhealthy" = "1" ]; then
+              docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=200 web
+              exit 1
+            fi
+            if [ "$all_healthy" = "1" ]; then
+              exit 0
+            fi
             sleep 5
           done
-          echo "::error::web did not become healthy in time"
+          echo "::error::web replicas did not all become healthy in time"
           docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=200 web
           exit 1
 

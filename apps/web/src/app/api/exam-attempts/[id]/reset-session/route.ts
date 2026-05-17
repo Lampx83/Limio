@@ -16,7 +16,7 @@ export async function POST(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
     const r = await resetAttemptSession(actorUserId, params.id);
-    recordClaim(params.id, r.resumeCount);
+    await recordClaim(params.id, r.resumeCount);
     return NextResponse.json({ ok: true, resumeCount: r.resumeCount });
   } catch (e) {
     const mapped = mapKnownError(e);

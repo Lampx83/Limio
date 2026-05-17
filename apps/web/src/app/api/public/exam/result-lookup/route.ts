@@ -12,7 +12,7 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const ip = clientIp(req);
-  const burst = allow("result:burst", ip, 10, 60_000);
+  const burst = await allow("result:burst", ip, 10, 60_000);
   if (!burst.ok) {
     return NextResponse.json(
       { error: "rate_limited", retryAfter: burst.retryAfterSec },

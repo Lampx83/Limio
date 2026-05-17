@@ -18,7 +18,7 @@ export async function POST(
   const reason = (body as { reason?: unknown })?.reason;
   try {
     const r = await disqualifyAttempt(actorUserId, params.id, reason);
-    recordStatus(params.id, r.status);
+    await recordStatus(params.id, r.status);
     return NextResponse.json(r);
   } catch (e) {
     const mapped = mapKnownError(e);

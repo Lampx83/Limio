@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const ip = clientIp(req);
 
   // Burst guard first — same for both modes. Cheap.
-  const burst = allow("claim:burst", ip, 10, 60_000);
+  const burst = await allow("claim:burst", ip, 10, 60_000);
   if (!burst.ok) {
     return NextResponse.json(
       { error: "rate_limited", retryAfter: burst.retryAfterSec },
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
   try {
     if (code.length === 6) {
       // Wider rate limit only on open-mode attempts (Q2: 50/h).
-      const hourly = allow("claim:open", ip, 50, 60 * 60_000);
+      const hourly = await allow("claim:open", ip, 50, 60 * 60_000);
       if (!hourly.ok) {
         return NextResponse.json(
           { error: "rate_limited", retryAfter: hourly.retryAfterSec },
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
       where: { examId: result.examId },
     });
     const subjectType: "open" | "assigned" = code.length === 6 ? "open" : "assigned";
-    upsertOnStart(result.examId, {
+    await upsertOnStart(result.examId, {
       attemptId: result.attemptId,
       userId: null,
       userName: result.displayName,

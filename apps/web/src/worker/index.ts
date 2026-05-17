@@ -15,6 +15,11 @@ import {
   type RealtimePublishJobData,
   type RealtimePublishJobResult,
 } from "../lib/queue/realtimePublishJob";
+import {
+  processAutoGradeJob,
+  type AutoGradeJobData,
+  type AutoGradeJobResult,
+} from "../lib/queue/autoGradeJob";
 
 const concurrency = Number(process.env.WORKER_CONCURRENCY ?? "50");
 
@@ -37,6 +42,32 @@ realtimeWorker.on("failed", (job, err) => {
 });
 
 workers.push(realtimeWorker);
+
+// Tintin — Auto-grade worker. Concurrency intentionally lower than realtime
+// publish because each grade job runs an N-question $transaction; running
+// 50 in parallel could exhaust PgBouncer pool. Use AUTO_GRADE_CONCURRENCY
+// env (default 10) to tune.
+const autoGradeConcurrency = Number(process.env.AUTO_GRADE_CONCURRENCY ?? "10");
+const autoGradeWorker = new Worker<AutoGradeJobData, AutoGradeJobResult>(
+  QUEUE_NAMES.autoGrade,
+  processAutoGradeJob,
+  {
+    connection: getBullmqConnection(),
+    concurrency: autoGradeConcurrency,
+  },
+);
+autoGradeWorker.on("ready", () => {
+  console.log(
+    `[worker:${QUEUE_NAMES.autoGrade}] ready (concurrency=${autoGradeConcurrency})`,
+  );
+});
+autoGradeWorker.on("failed", (job, err) => {
+  console.error(
+    `[worker:${QUEUE_NAMES.autoGrade}] job ${job?.id} failed:`,
+    err.message,
+  );
+});
+workers.push(autoGradeWorker);
 
 async function shutdown(signal: string) {
   console.log(`[worker] received ${signal}, shutting down...`);

@@ -16,7 +16,7 @@ export async function PATCH(
   const body = await readJson(req);
   try {
     const r = await saveAnswer(subject, params.id, params.questionId, body);
-    if (r.persisted) recordAnswered(params.id, params.questionId);
+    if (r.persisted) await recordAnswered(params.id, params.questionId);
     return NextResponse.json(r);
   } catch (e) {
     const mapped = mapKnownError(e);

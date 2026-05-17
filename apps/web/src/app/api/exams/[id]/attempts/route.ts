@@ -35,7 +35,7 @@ export async function POST(
       where: { examId: params.id },
     });
     if (a) {
-      upsertOnStart(params.id, {
+      await upsertOnStart(params.id, {
         attemptId: a.id,
         userId: a.userId,
         userName: a.user?.displayName ?? null,

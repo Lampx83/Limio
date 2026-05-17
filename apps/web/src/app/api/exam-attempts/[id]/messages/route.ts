@@ -45,7 +45,7 @@ export async function POST(
   const text = (body as { body?: unknown })?.body;
   try {
     const r = await sendMessageToAttempt(actorUserId, params.id, text);
-    recordMessageSent(params.id, r.id, typeof text === "string" ? text : "");
+    await recordMessageSent(params.id, r.id, typeof text === "string" ? text : "");
     return NextResponse.json(r, { status: 201 });
   } catch (e) {
     const mapped = mapKnownError(e);

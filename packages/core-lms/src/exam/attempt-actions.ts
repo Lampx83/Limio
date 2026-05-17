@@ -16,7 +16,12 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditCourse } from "../courses/authz";
 import { emitEvent } from "../learning/events";
-import { finalizeSubmission, type ExamSubmitResult } from "./submission";
+import {
+  finalizeSubmission,
+  markAttemptSubmitted,
+  type ExamSubmitResult,
+  type MarkAttemptResult,
+} from "./submission";
 import { ExamError } from "./types";
 
 const MAX_EXTENSION_MIN = 30;
@@ -108,6 +113,41 @@ export async function forceSubmitAttempt(
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const result = await finalizeSubmission(attemptId, "force_submitted", db);
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamAttemptForceSubmitted,
+    {
+      examId: a.examId,
+      attemptId,
+      learnerUserId: a.userId,
+      reason,
+    },
+    {
+      courseId: a.courseId,
+      eventKey: `exam.attempt.force_submitted:${attemptId}`,
+    },
+    db,
+  );
+  return result;
+}
+
+/**
+ * Tintin — Mark-only variant of force-submit. Marks the attempt as submitted
+ * (status="submitted") and emits ExamSubmitted + ExamAttemptForceSubmitted
+ * events, but defers auto-grading to a BullMQ job enqueued by the API route.
+ */
+export async function forceSubmitAttemptMarkOnly(
+  actorUserId: string,
+  attemptId: string,
+  rawReason: unknown,
+  db: PrismaClient = prisma,
+): Promise<MarkAttemptResult> {
+  const reason = requireReason(rawReason);
+  const a = await loadAttemptForAction(attemptId, db);
+  await assertCanEditCourse(actorUserId, a.courseId, db);
+  if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
+
+  const result = await markAttemptSubmitted(attemptId, "force_submitted", db);
   await emitEvent(
     actorUserId,
     LearningEventType.ExamAttemptForceSubmitted,

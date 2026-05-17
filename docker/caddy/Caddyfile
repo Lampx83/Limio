@@ -1,0 +1,36 @@
+# Tintin — internal LB cho web replicas. Docker DNS resolve `web` thành
+# danh sách IP của tất cả replica → Caddy round-robin giữa chúng.
+# Sticky session KHÔNG cần (NextAuth JWT stateless + exam-live-bus đã Redis-backed
+# sau Tintin #1) nên policy round_robin OK cho mọi request.
+
+{
+	# Caddy admin API (chỉ trong container — không expose host)
+	admin off
+	# Không tự lấy TLS — TLS termination do reverse proxy ngoài host xử lý.
+	auto_https off
+}
+
+:80 {
+	encode gzip
+
+	# Health endpoint — external proxy/healthcheck dùng để biết LB đang sống
+	# (không cần touch web).
+	respond /caddy-healthz 200
+
+	reverse_proxy web:3000 {
+		lb_policy round_robin
+		# DNS re-resolve mỗi 10s để khi replicas thêm/giảm Caddy biết ngay.
+		# Caddy 2 dùng dynamic upstream qua plugin; với DNS A-record nhiều IP
+		# trên Docker network, round_robin sẽ auto rotate.
+		fail_duration 10s
+		max_fails 2
+		# SSE / long-poll: tắt buffering response (Caddy mặc định stream OK,
+		# nhưng để chắc).
+		flush_interval -1
+		# Truyền X-Forwarded-* để Next.js NextAuth/rate-limit thấy IP gốc.
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-Host {host}
+	}
+}

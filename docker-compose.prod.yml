@@ -14,7 +14,9 @@ x-web-env: &web-env
   NODE_ENV: production
   # Web đi qua PgBouncer (transaction mode) — pgbouncer=true tắt prepared statement của Prisma.
   # Interactive $transaction(async) vẫn chạy được nhưng không có prepared statement cache (chấp nhận: chỉ 5 call site lạnh).
-  DATABASE_URL: postgresql://feedbackme:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@pgbouncer:6432/feedbackme?schema=public&pgbouncer=true&connection_limit=1&pool_timeout=30
+  # Tintin: connection_limit=10 cho phép Node chạy ~10 query song song trên 1 replica
+  # (1 quá chật, mọi async query xếp hàng). pool_timeout=10 fail-fast khi PgBouncer nghẽn.
+  DATABASE_URL: postgresql://feedbackme:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@pgbouncer:6432/feedbackme?schema=public&pgbouncer=true&connection_limit=10&pool_timeout=10
   REDIS_URL: redis://redis:6379
   NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
   # NextAuth v5 reads AUTH_SECRET (not NEXTAUTH_SECRET) in production.
@@ -80,9 +82,13 @@ services:
       # ta đang gọi pgbouncer:6432 — set rõ để khớp và tránh nhầm với postgres.
       LISTEN_PORT: "6432"
       POOL_MODE: transaction
-      MAX_CLIENT_CONN: "1000"
-      DEFAULT_POOL_SIZE: "25"
-      RESERVE_POOL_SIZE: "5"
+      # Tintin: bump pool cho 5K SV thi đồng thời.
+      # Math: 3 web replicas × Prisma connection_limit 10 = 30 client conn vào PgBouncer.
+      # MAX_CLIENT_CONN 3000 có dư cho dashboard SSE + cron. DEFAULT_POOL_SIZE 50 backend
+      # conn đến Postgres (max_connections mặc định 100 còn dư).
+      MAX_CLIENT_CONN: "3000"
+      DEFAULT_POOL_SIZE: "50"
+      RESERVE_POOL_SIZE: "10"
       AUTH_TYPE: scram-sha-256
       # Prisma gửi prepared statement; PgBouncer transaction mode không hỗ trợ → cần ignore.
       IGNORE_STARTUP_PARAMETERS: extra_float_digits,search_path
@@ -125,8 +131,11 @@ services:
     image: feedbackme/web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment: *web-env
-    ports:
-      - "${WEB_PORT:-8004}:3000"
+    # Tintin: ports bị bỏ — web replicas không expose ra host. Caddy LB
+    # (web-proxy service) đứng trước và bind host:${WEB_PORT}. Scale qua
+    # `docker compose up -d --scale web=${WEB_REPLICAS:-3}` (xem deploy.yml).
+    expose:
+      - "3000"
     volumes:
       - web-uploads:/app/apps/web/uploads
     depends_on:
@@ -139,6 +148,25 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  # Tintin — internal LB đứng trước web replicas. Reverse proxy ngoài host
+  # (Caddy/Nginx trên server 224) trỏ vào port này thay vì web:3000.
+  web-proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8004}:80"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      web:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/caddy-healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
   worker:
     build:
       context: .
@@ -149,6 +177,9 @@ services:
     environment:
       <<: *web-env
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-50}
+      # Tintin — auto-grade job concurrency. Mỗi job chạy 1 $transaction
+      # N-question; quá cao sẽ ăn hết PgBouncer pool 50.
+      AUTO_GRADE_CONCURRENCY: ${AUTO_GRADE_CONCURRENCY:-10}
     depends_on:
       redis:
         condition: service_healthy
