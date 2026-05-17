@@ -76,6 +76,9 @@ services:
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_NAME: feedbackme
+      # PgBouncer listen port. Image mặc định = 5432, nhưng web DATABASE_URL của
+      # ta đang gọi pgbouncer:6432 — set rõ để khớp và tránh nhầm với postgres.
+      LISTEN_PORT: "6432"
       POOL_MODE: transaction
       MAX_CLIENT_CONN: "1000"
       DEFAULT_POOL_SIZE: "25"
@@ -87,10 +90,15 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432 -U feedbackme || exit 1"]
+      # edoburu/pgbouncer (Alpine) không có pg_isready (tool của Postgres, không có
+      # trong image pgbouncer). Dùng /dev/tcp của bash để kiểm port 6432 còn LISTEN
+      # — đây là cách duy nhất chạy được mà không cài thêm gì.
+      # Image có /bin/sh là dash/ash → không hỗ trợ /dev/tcp. Dùng busybox nc thay.
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 6432 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 5s
 
   migrate:
     build:

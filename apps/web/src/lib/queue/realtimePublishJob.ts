@@ -1,6 +1,6 @@
 import type { Job } from "bullmq";
 import { publish as streamPublish } from "../realtime/stream";
-import { realtimePublishQueue, QUEUE_NAMES } from "./index";
+import { getRealtimePublishQueue, QUEUE_NAMES } from "./index";
 
 // Job: publish 1 event vào Redis Streams.
 // Sau này sẽ mở rộng để insert DB row trước khi XADD (Board note, WordCloud submission).
@@ -16,7 +16,7 @@ export type RealtimePublishJobResult = {
 export async function enqueueRealtimePublish(
   data: RealtimePublishJobData,
 ): Promise<string> {
-  const job = await realtimePublishQueue.add("publish", data, {
+  const job = await getRealtimePublishQueue().add("publish", data, {
     // Job ID undefined → BullMQ tự sinh; idempotency dựa vào caller nếu cần.
   });
   return job.id ?? "";

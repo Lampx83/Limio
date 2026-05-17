@@ -9,7 +9,7 @@
  * Graceful shutdown: SIGTERM/SIGINT → close worker → flush in-flight jobs.
  */
 import { Worker } from "bullmq";
-import { bullmqConnection, QUEUE_NAMES } from "../lib/queue";
+import { getBullmqConnection, QUEUE_NAMES } from "../lib/queue";
 import {
   processRealtimePublishJob,
   type RealtimePublishJobData,
@@ -24,7 +24,7 @@ const realtimeWorker = new Worker<RealtimePublishJobData, RealtimePublishJobResu
   QUEUE_NAMES.realtimePublish,
   processRealtimePublishJob,
   {
-    connection: bullmqConnection,
+    connection: getBullmqConnection(),
     concurrency,
   },
 );
@@ -41,7 +41,7 @@ workers.push(realtimeWorker);
 async function shutdown(signal: string) {
   console.log(`[worker] received ${signal}, shutting down...`);
   await Promise.allSettled(workers.map((w) => w.close()));
-  await bullmqConnection.quit().catch(() => {});
+  await getBullmqConnection().quit().catch(() => {});
   process.exit(0);
 }
 

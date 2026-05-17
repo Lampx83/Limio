@@ -4,34 +4,36 @@ import type { Redis } from "ioredis";
 
 // BullMQ cần connection riêng (không share với app vì blocking commands).
 // `maxRetriesPerRequest: null` là BẮT BUỘC cho BullMQ.
-const url = process.env.REDIS_URL ?? "redis://localhost:6379";
+//
+// LAZY INIT: Connection + Queue được tạo lần đầu khi có người gọi getter.
+// Không tạo ở module-eval time vì Next.js prerender import module để extract
+// metadata route → tại build-time chưa có Redis, sẽ spam ECONNREFUSED.
+const url = () => process.env.REDIS_URL ?? "redis://localhost:6379";
 
 const globalForQueue = globalThis as unknown as {
   bullmqConnection: Redis | undefined;
+  realtimePublishQueue: Queue | undefined;
 };
 
-export const bullmqConnection: Redis =
-  globalForQueue.bullmqConnection ??
-  new IORedis(url, { maxRetriesPerRequest: null, enableReadyCheck: true });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForQueue.bullmqConnection = bullmqConnection;
+export function getBullmqConnection(): Redis {
+  if (globalForQueue.bullmqConnection) return globalForQueue.bullmqConnection;
+  const conn = new IORedis(url(), {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+    lazyConnect: true, // không connect ngay khi `new` — chỉ khi có command đầu tiên
+  });
+  globalForQueue.bullmqConnection = conn;
+  return conn;
 }
 
 export const QUEUE_NAMES = {
   realtimePublish: "realtime-publish",
 } as const;
 
-// Singleton queue instances. Workers KHÔNG dùng các instance này (worker tự tạo
-// trong worker/index.ts) — chúng chỉ để producer enqueue từ web routes.
-const globalForQueues = globalThis as unknown as {
-  realtimePublishQueue: Queue | undefined;
-};
-
-export const realtimePublishQueue: Queue =
-  globalForQueues.realtimePublishQueue ??
-  new Queue(QUEUE_NAMES.realtimePublish, {
-    connection: bullmqConnection,
+export function getRealtimePublishQueue(): Queue {
+  if (globalForQueue.realtimePublishQueue) return globalForQueue.realtimePublishQueue;
+  const q = new Queue(QUEUE_NAMES.realtimePublish, {
+    connection: getBullmqConnection(),
     defaultJobOptions: {
       removeOnComplete: { count: 1000, age: 3600 },
       removeOnFail: { count: 5000, age: 24 * 3600 },
@@ -39,7 +41,6 @@ export const realtimePublishQueue: Queue =
       backoff: { type: "exponential", delay: 200 },
     },
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForQueues.realtimePublishQueue = realtimePublishQueue;
+  globalForQueue.realtimePublishQueue = q;
+  return q;
 }

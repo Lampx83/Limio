@@ -1,4 +1,4 @@
-import { redis, redisSubscriber } from "../redis";
+import { getRedis, getRedisSubscriber } from "../redis";
 
 // Wrapper mỏng quanh Redis Streams. Mỗi channel = 1 stream key `rt:{channel}`.
 // MAXLEN ~ N giữ stream gọn (xấp xỉ, không exact — `~` nhanh hơn nhiều).
@@ -26,7 +26,7 @@ export async function publish(
   const maxlen = opts.maxlen ?? DEFAULT_MAXLEN;
   const payload = JSON.stringify(data);
   // XADD rt:{ch} MAXLEN ~ 10000 * data <json>
-  const id = await redis.xadd(key(channel), "MAXLEN", "~", maxlen, "*", "data", payload);
+  const id = await getRedis().xadd(key(channel), "MAXLEN", "~", maxlen, "*", "data", payload);
   if (!id) throw new Error("XADD returned null");
   return id;
 }
@@ -37,13 +37,13 @@ export async function readSince(
   sinceId: string,
   count = 100,
 ): Promise<StreamEvent[]> {
-  const res = await redis.xrange(key(channel), `(${sinceId}`, "+", "COUNT", count);
+  const res = await getRedis().xrange(key(channel), `(${sinceId}`, "+", "COUNT", count);
   return parseEntries(channel, res);
 }
 
 // Snapshot toàn bộ event hiện có trong stream (giới hạn count).
 export async function snapshot(channel: string, count = 1000): Promise<StreamEvent[]> {
-  const res = await redis.xrange(key(channel), "-", "+", "COUNT", count);
+  const res = await getRedis().xrange(key(channel), "-", "+", "COUNT", count);
   return parseEntries(channel, res);
 }
 
@@ -61,7 +61,7 @@ export async function* subscribe(
       // XREAD BLOCK 25000 COUNT 50 STREAMS rt:{ch} <cursor>
       // ioredis typing cho overload xread phức tạp — cast args qua any cho gọn,
       // shape return value vẫn đúng theo Redis protocol.
-      res = (await (redisSubscriber.xread as unknown as (
+      res = (await (getRedisSubscriber().xread as unknown as (
         ...args: unknown[]
       ) => Promise<[string, [string, string[]][]][] | null>)(
         "BLOCK",

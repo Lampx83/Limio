@@ -1,4 +1,4 @@
-import { redis } from "../redis";
+import { getRedis } from "../redis";
 
 // Sliding-window rate limit dùng Redis ZSET.
 // Đơn giản, đủ chính xác cho realtime POST (chống burst).
@@ -21,6 +21,7 @@ export async function rateLimit(
 
   // Pipeline: dọn cũ → đếm → thêm mới → expire
   const member = `${now}-${Math.random().toString(36).slice(2, 8)}`;
+  const redis = getRedis();
   const pipe = redis.multi();
   pipe.zremrangebyscore(key, 0, windowStart);
   pipe.zcard(key);
