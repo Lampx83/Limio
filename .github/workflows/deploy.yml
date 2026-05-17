@@ -81,7 +81,7 @@ jobs:
           docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d \
             --remove-orphans \
             --no-build \
-            postgres redis pgbouncer web worker cron
+            postgres redis web cron
 
       - name: Wait for web to become healthy
         run: |
