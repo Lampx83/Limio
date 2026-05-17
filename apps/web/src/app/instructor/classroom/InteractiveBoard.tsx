@@ -5,6 +5,7 @@ import { StickyNote, RefreshCw, EyeOff, Eye, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { rotationForNote } from "./boardNoteStyle";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -219,41 +220,51 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     const visible = notes; // host thấy hết, kể cả hidden
     if (visible.length === 0) {
       return (
-        <p className="text-muted text-center py-12 text-sm">
-          Chưa có note nào. Sinh viên truy cập <code className="font-mono">/join/{current?.code}</code> để post.
-        </p>
+        <div className="text-center py-16">
+          <StickyNote size={56} className="mx-auto text-amber-300 mb-3" strokeWidth={1.5} />
+          <p className="text-muted text-sm">
+            Chưa có note nào. Sinh viên truy cập <code className="font-mono px-1.5 py-0.5 bg-accent-100 rounded">/join/{current?.code}</code> để post.
+          </p>
+        </div>
       );
     }
     return (
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {visible.map((n) => (
-          <div
-            key={n.id}
-            className={`relative rounded-xl p-4 shadow-sm border ${n.hidden ? "opacity-40 border-dashed" : "border-transparent"}`}
-            style={{ backgroundColor: n.color || "#FEF3C7" }}
-          >
-            <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words">
-              {n.content}
-            </p>
-            <p className="text-xs text-gray-600 mt-2 font-medium">— {n.authorName}</p>
-            <div className="absolute top-1 right-1 flex gap-1 opacity-0 hover:opacity-100 transition-opacity bg-white/70 rounded">
-              <button
-                onClick={() => handleToggleHidden(n)}
-                className="p-1 hover:bg-white rounded"
-                title={n.hidden ? "Hiện" : "Ẩn"}
-              >
-                {n.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
-              </button>
-              <button
-                onClick={() => handleDeleteNote(n)}
-                className="p-1 hover:bg-white rounded text-red-600"
-                title="Xóa"
-              >
-                <Trash2 size={14} />
-              </button>
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 px-2 pb-4">
+        {visible.map((n) => {
+          const rot = rotationForNote(n.id);
+          return (
+            <div
+              key={n.id}
+              className={`group relative rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:z-10 hover:!rotate-0 animate-note-pop-in ${n.hidden ? "opacity-40" : ""}`}
+              style={{
+                backgroundColor: n.color || "#FEF3C7",
+                transform: `rotate(${rot})`,
+                ["--note-rot" as string]: rot,
+              }}
+            >
+              <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words leading-relaxed">
+                {n.content}
+              </p>
+              <p className="text-xs text-gray-700 mt-3 font-semibold tracking-wide">— {n.authorName}</p>
+              <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur rounded-md shadow-sm">
+                <button
+                  onClick={() => handleToggleHidden(n)}
+                  className="p-1.5 hover:bg-white rounded-md"
+                  title={n.hidden ? "Hiện" : "Ẩn"}
+                >
+                  {n.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+                </button>
+                <button
+                  onClick={() => handleDeleteNote(n)}
+                  className="p-1.5 hover:bg-white rounded-md text-red-600"
+                  title="Xóa"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -262,69 +273,88 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   if (current) {
     const visibleCount = current.notes.filter((n) => !n.hidden).length;
     const wrapper = isFullscreen
-      ? "fixed inset-0 bg-[rgb(var(--surface))] flex flex-col p-6 z-50 overflow-y-auto"
-      : "rounded-2xl border-2 border-amber-200 bg-[rgb(var(--surface))] p-6 shadow-card";
+      ? "fixed inset-0 bg-[rgb(var(--surface-muted))] flex flex-col z-50 overflow-y-auto"
+      : "rounded-2xl overflow-hidden border border-amber-200/60 bg-[rgb(var(--surface-muted))] shadow-card";
     return (
       <div className={wrapper}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <StickyNote size={24} className="text-amber-600" strokeWidth={1.5} />
-            <h3 className="text-lg font-bold">{current.title}</h3>
-            {current.status === "closed" && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-700">Đã đóng</span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setIsFullscreen((v) => !v)} className="btn-secondary btn-sm text-xs">
-              {isFullscreen ? "⛶ Thoát" : "⛶ Full"}
-            </button>
-            {current.status === "open" && (
-              <button onClick={handleCloseBoard} className="btn-secondary btn-sm text-xs">
-                Đóng board
+        {/* Header gradient banner — cảm hứng Padlet */}
+        <div className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 px-6 py-5 text-white">
+          <div className="absolute inset-0 opacity-30 mix-blend-overlay"
+            style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+          <div className="relative flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <StickyNote size={22} strokeWidth={2.2} />
+                <span className="text-xs uppercase tracking-widest font-semibold opacity-90">Bảng tương tác</span>
+                {current.status === "closed" && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/30 backdrop-blur font-semibold">Đã đóng</span>
+                )}
+              </div>
+              <h2 className="text-2xl md:text-3xl font-extrabold drop-shadow-sm break-words">
+                {current.title}
+              </h2>
+              {current.prompt && (
+                <p className="mt-2 text-sm md:text-base opacity-95 italic max-w-2xl">{current.prompt}</p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <button
+                onClick={() => setIsFullscreen((v) => !v)}
+                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 text-xs font-semibold transition-colors"
+              >
+                {isFullscreen ? "⛶ Thoát" : "⛶ Full"}
               </button>
-            )}
-            {onExit && (
-              <button onClick={onExit} className="btn-secondary btn-sm text-xs">
-                ✕ Exit
-              </button>
-            )}
+              {current.status === "open" && (
+                <button
+                  onClick={handleCloseBoard}
+                  className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 text-xs font-semibold transition-colors"
+                >
+                  Đóng board
+                </button>
+              )}
+              {onExit && (
+                <button
+                  onClick={onExit}
+                  className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 text-xs font-semibold transition-colors"
+                >
+                  ✕ Exit
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {current.prompt && (
-          <p className="text-base text-muted mb-4 italic">{current.prompt}</p>
-        )}
-
         {joinUrl && (
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            <div className="flex flex-col items-center gap-2 md:col-span-1">
-              <div className="bg-white p-3 rounded-lg border border-token">
-                <QRCode value={joinUrl} size={150} level="H" includeMargin />
+          <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-center border-b border-amber-200/40 bg-white/40 dark:bg-black/10 backdrop-blur">
+            <div className="flex items-center gap-4">
+              <div className="bg-white p-3 rounded-xl shadow-md ring-1 ring-amber-200">
+                <QRCode value={joinUrl} size={120} level="H" includeMargin />
               </div>
-              <div className="text-center">
-                <p className="text-xs text-muted">Code</p>
-                <p className="text-2xl font-bold font-mono tracking-widest">{current.code}</p>
+              <div>
+                <p className="text-xs text-muted uppercase tracking-wider font-semibold">Mã tham gia</p>
+                <p className="text-3xl font-extrabold font-mono tracking-[0.3em] text-amber-700">{current.code}</p>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(joinUrl);
+                    toast.success("Đã copy link");
+                  }}
+                  className="mt-1 text-xs text-brand-600 hover:text-brand-700 font-medium underline"
+                >
+                  Copy link
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(joinUrl);
-                  toast.success("Đã copy link");
-                }}
-                className="text-xs text-brand-600 hover:text-brand-700 underline"
-              >
-                Copy link
-              </button>
             </div>
-            <div className="md:col-span-2 text-sm text-muted">
-              <p className="mb-1">
-                Sinh viên truy cập <code className="font-mono">/join/{current.code}</code> hoặc quét QR.
-              </p>
-              <p>{visibleCount} note hiển thị · {current.notes.length} tổng (gồm cả ẩn).</p>
+            <div className="text-sm text-muted md:text-right">
+              <p className="font-semibold text-base text-foreground">{visibleCount} note hiển thị</p>
+              <p className="mt-0.5">{current.notes.length} tổng cộng (gồm cả note ẩn)</p>
+              <p className="mt-1 text-xs">Sinh viên: <code className="font-mono px-1.5 py-0.5 bg-accent-100 dark:bg-accent-900/30 rounded">/join/{current.code}</code> hoặc quét QR</p>
             </div>
           </div>
         )}
 
-        <NotesGrid notes={current.notes} />
+        <div className="p-4">
+          <NotesGrid notes={current.notes} />
+        </div>
       </div>
     );
   }

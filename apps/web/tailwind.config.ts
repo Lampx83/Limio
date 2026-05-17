@@ -97,9 +97,15 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "note-pop-in": {
+          "0%": { opacity: "0", transform: "scale(0.7) rotate(var(--note-rot, 0deg))" },
+          "60%": { opacity: "1", transform: "scale(1.05) rotate(var(--note-rot, 0deg))" },
+          "100%": { opacity: "1", transform: "scale(1) rotate(var(--note-rot, 0deg))" },
+        },
       },
       animation: {
         "fade-in-up": "fade-in-up 0.4s ease-out both",
+        "note-pop-in": "note-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both",
       },
     },
   },

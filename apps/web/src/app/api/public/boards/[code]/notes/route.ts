@@ -6,7 +6,7 @@ import { channelForBoard } from "@/lib/board";
 
 export const runtime = "nodejs";
 
-// Pastel colors — random ở server để mọi client thấy cùng màu.
+// Pastel palette — học viên chọn 1 hoặc bỏ trống để server random.
 const COLORS = [
   "#FEF3C7", // amber
   "#DBEAFE", // blue
@@ -15,6 +15,7 @@ const COLORS = [
   "#E9D5FF", // purple
   "#FED7AA", // orange
 ];
+const COLOR_SET = new Set(COLORS);
 
 // POST — public: học viên post note (không cần login)
 export async function POST(req: Request, { params }: { params: { code: string } }) {
@@ -37,7 +38,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     );
   }
 
-  let body: { authorName?: string; content?: string };
+  let body: { authorName?: string; content?: string; color?: string };
   try {
     body = await req.json();
   } catch {
@@ -50,6 +51,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
       .object({
         authorName: z.string().min(1).max(40),
         content: z.string().min(1).max(500),
+        color: z.string().optional(),
       })
       .parse(body);
   } catch {
@@ -71,7 +73,11 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     return Response.json({ error: "board_full" }, { status: 403 });
   }
 
-  const color = COLORS[Math.floor(Math.random() * COLORS.length)]!;
+  // Học viên chọn 1 màu trong palette (validate strict); nếu không chọn → random.
+  const color =
+    parsed.color && COLOR_SET.has(parsed.color)
+      ? parsed.color
+      : COLORS[Math.floor(Math.random() * COLORS.length)]!;
   const note = await prisma.boardNote.create({
     data: {
       boardId: board.id,
