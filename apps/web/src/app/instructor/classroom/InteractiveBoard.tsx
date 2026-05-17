@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   StickyNote, RefreshCw, EyeOff, Eye, Trash2,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
+  PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
@@ -69,6 +70,10 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [prompt, setPrompt] = useState("");
   const esRef = useRef<EventSource | null>(null);
 
+  // Immersive: ẩn left sidebar của instructor layout khi board mở,
+  // toggle qua body class (CSS rule trong globals.css).
+  const [menuHidden, setMenuHidden] = useState(true);
+
   // Modal post-note state (instructor cũng có thể post để demo / seed)
   const [modalOpen, setModalOpen] = useState(false);
   const [instructorName, setInstructorName] = useState("Giảng viên");
@@ -77,6 +82,16 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [noteAttachmentUrl, setNoteAttachmentUrl] = useState("");
   const [posting, setPosting] = useState(false);
   const [postInfo, setPostInfo] = useState<string | null>(null);
+
+  // Toggle body class để CSS ẩn left sidebar (xem globals.css)
+  useEffect(() => {
+    if (!current) return;
+    if (menuHidden) document.body.classList.add("board-immersive");
+    else document.body.classList.remove("board-immersive");
+    return () => {
+      document.body.classList.remove("board-immersive");
+    };
+  }, [current, menuHidden]);
 
   // Fetch instructor's display name 1 lần
   useEffect(() => {
@@ -368,7 +383,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       ? detectMediaKind(noteAttachmentUrl.trim())
       : null;
     return (
-      <div className={wrapper}>
+      <div className={wrapper} data-board="container">
         {/* Compact gradient banner — giống student /join page */}
         <header className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 text-white px-4 py-5">
           <div className="absolute inset-0 opacity-30 mix-blend-overlay"
@@ -389,6 +404,13 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setMenuHidden((v) => !v)}
+                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur p-2 text-xs font-semibold transition-colors hidden lg:flex"
+                title={menuHidden ? "Hiện menu trái" : "Ẩn menu trái (tối ưu không gian)"}
+              >
+                {menuHidden ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
+              </button>
               <button
                 onClick={() => setShowQrModal(true)}
                 className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5"

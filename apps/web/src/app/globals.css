@@ -206,3 +206,22 @@
   margin-left: 0 !important;
 }
 
+/* Padlet Board immersive mode — ẩn instructor left sidebar khi giảng viên
+   đang mở 1 board, để toàn bộ width dành cho notes. InteractiveBoard set
+   body.board-immersive khi mount + remove khi unmount.
+   Cũng nới max-width của teaching-tools page container để board chiếm
+   full width (mặc định max-w-6xl = 1152px). */
+body.board-immersive aside.sticky.top-16 {
+  display: none !important;
+}
+body.board-immersive main.mx-auto {
+  max-width: 100% !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+/* Board internal containers (banner + masonry main) cũng nới ra để 4-col
+   masonry phủ hết chiều rộng màn hình. */
+body.board-immersive [data-board="container"] .max-w-6xl {
+  max-width: 100% !important;
+}
+
