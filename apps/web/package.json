@@ -6,6 +6,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
+    "worker": "tsx src/worker/index.ts",
+    "worker:dev": "tsx watch src/worker/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
@@ -50,6 +52,7 @@
     "resend": "^4.8.0",
     "scorm-again": "^3.0.4",
     "stripe": "^22.1.0",
+    "tsx": "^4.19.2",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },

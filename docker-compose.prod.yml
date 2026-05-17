@@ -131,6 +131,24 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: feedbackme/worker:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      <<: *web-env
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-50}
+    depends_on:
+      redis:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
   cron:
     build:
       context: ./docker/cron

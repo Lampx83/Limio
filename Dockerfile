@@ -3,6 +3,7 @@
 # Targets:
 #   - runner   : production web server (default)
 #   - migrator : Prisma CLI + schema for `prisma migrate deploy`
+#   - worker   : BullMQ background worker (realtime publish, future: badge/email jobs)
 
 ARG NODE_VERSION=20-alpine
 
@@ -159,3 +160,48 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD curl -fsS "http://127.0.0.1:3000${NEXT_PUBLIC_BASE_PATH}/" >/dev/null || exit 1
 
 CMD ["node", "apps/web/server.js"]
+
+# ---------- worker (BullMQ background processes, runs `tsx src/worker/index.ts`) ----------
+# Worker dùng tsx để chạy TypeScript thẳng — không cần next build.
+# Khác với `runner` (Next standalone tối giản), worker cần full node_modules để
+# resolve bullmq, ioredis, tsx và (sau này) Prisma client khi job ghi DB.
+FROM base AS worker
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Full node_modules từ deps stage — không tree-shake vì tsx import động.
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
+COPY --from=deps /app/packages/core-lms/node_modules ./packages/core-lms/node_modules
+COPY --from=deps /app/packages/core-feedback/node_modules ./packages/core-feedback/node_modules
+COPY --from=deps /app/packages/core-gamification/node_modules ./packages/core-gamification/node_modules
+COPY --from=deps /app/packages/shared-types/node_modules ./packages/shared-types/node_modules
+
+# Source files. Copy nguyên repo cho gọn — image vẫn nhỏ vì không có .next build.
+# Nếu sau này muốn tối ưu, chỉ copy: apps/web/{src,tsconfig.json,package.json},
+# packages/{db,shared-types,...} cần để workspace symlink resolve được.
+COPY package.json pnpm-workspace.yaml ./
+COPY apps/web ./apps/web
+COPY packages ./packages
+
+# Prisma generate phòng khi worker job sau này import @feedbackme/db.
+# Bỏ qua lỗi nếu schema chưa cần — chỉ là tiền đề cho Phase tiếp.
+RUN set -eux; \
+    PRISMA=$( \
+      find /app/packages/db/node_modules/.bin /app/node_modules/.bin \
+           -name prisma -type f 2>/dev/null | head -1 \
+    ); \
+    if [ -n "$PRISMA" ] && [ -f /app/packages/db/prisma/schema.prisma ]; then \
+      "$PRISMA" generate --schema=/app/packages/db/prisma/schema.prisma; \
+    fi
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 worker && \
+    chown -R worker:nodejs /app
+USER worker
+
+WORKDIR /app/apps/web
+# Healthcheck: worker không expose HTTP. Dùng node script kiểm Redis ping nếu cần,
+# hoặc dựa vào compose restart policy. Giữ tối giản cho Phase 1.3.
+CMD ["pnpm", "exec", "tsx", "src/worker/index.ts"]
