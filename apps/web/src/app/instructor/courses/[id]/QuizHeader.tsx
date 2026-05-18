@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
+import { BarChart2, Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface Quiz {
@@ -25,6 +26,8 @@ export function QuizActionButtons({
   onEdit: () => void;
 }) {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const courseId = params?.id;
   const [busy, setBusy] = useState(false);
   const [isHidden, setIsHidden] = useState(quiz.isHidden);
 
@@ -59,6 +62,17 @@ export function QuizActionButtons({
 
   return (
     <div className="inline-flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
+      {courseId && (
+        <Link
+          href={`/instructor/courses/${courseId}/quizzes/${quiz.id}/results`}
+          onClick={(e) => e.stopPropagation()}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
+          title="Xem kết quả SV làm quiz"
+          aria-label="Xem kết quả"
+        >
+          <BarChart2 className="h-4 w-4" />
+        </Link>
+      )}
       <button
         type="button"
         onClick={toggleHidden}

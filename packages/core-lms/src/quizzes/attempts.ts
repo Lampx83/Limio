@@ -408,6 +408,89 @@ export async function getAttemptResult(
 }
 
 /**
+ * Instructor-side variant of getAttemptResult. Skips the SV ownership check
+ * because the caller is the course instructor (caller must verify
+ * `assertCanEditCourse` first — typically the API route does this). Returns
+ * the same shape as `getAttemptResult` plus the SV's identity for the UI.
+ */
+export async function getAttemptResultAsInstructor(
+  attemptId: string,
+  db: PrismaClient = prisma,
+) {
+  const attempt = await db.quizAttempt.findUnique({
+    where: { id: attemptId },
+    include: { user: { select: { id: true, displayName: true, email: true } } },
+  });
+  if (!attempt) throw new QuizError("attempt_not_found");
+  if (attempt.status !== "submitted") {
+    throw new QuizError("validation_failed", "attempt_not_submitted");
+  }
+  const [questions, responses] = await Promise.all([
+    db.quizQuestion.findMany({
+      where: { quizId: attempt.quizId },
+      orderBy: { orderIndex: "asc" },
+      include: {
+        options: { include: { misconception: { select: { code: true } } } },
+      },
+    }),
+    db.answerResponse.findMany({ where: { attemptId } }),
+  ]);
+  const responseMap = new Map(responses.map((r) => [r.questionId, r]));
+  const items = questions.map((q) => {
+    const r = responseMap.get(q.id);
+    const correctOptionIds = q.options
+      .filter((o) => o.isCorrect)
+      .map((o) => o.id);
+    let misconceptionCode: string | undefined;
+    if (r && !r.isCorrect) {
+      const selected = Array.isArray(r.response) ? (r.response as string[]) : [];
+      const wrongPicked = q.options.find(
+        (o) =>
+          selected.includes(o.id) && !o.isCorrect && o.misconception?.code,
+      );
+      if (wrongPicked?.misconception?.code) {
+        misconceptionCode = wrongPicked.misconception.code;
+      }
+    }
+    return {
+      questionId: q.id,
+      prompt: q.prompt,
+      type: q.type,
+      explanation: q.explanation,
+      points: q.points,
+      yourResponse: r?.response ?? null,
+      isCorrect: r?.isCorrect ?? false,
+      confidence: r?.confidence ?? null,
+      correctOptionIds,
+      // Expose all options so instructor UI can show labels for both picked
+      // and correct ones. SV-side `getAttemptResult` doesn't return option
+      // labels because the SV component fetches the quiz separately.
+      options: q.options.map((o) => ({
+        id: o.id,
+        label: o.label,
+        isCorrect: o.isCorrect,
+      })),
+      misconceptionCode,
+      // Instructor needs to know if essay/short-answer still needs grading.
+      needsGrading: r?.needsGrading ?? false,
+      manualScore: r?.manualScore ?? null,
+    };
+  });
+  return {
+    attempt: {
+      id: attempt.id,
+      status: attempt.status,
+      startedAt: attempt.startedAt,
+      submittedAt: attempt.submittedAt,
+      scorePct: attempt.scorePct,
+      passed: attempt.passed,
+      user: attempt.user,
+    },
+    items,
+  };
+}
+
+/**
  * Manually grade an essay/short_answer response. Instructor enters a score
  * (capped at the question's `points`); flips `needsGrading=false`,
  * `isCorrect = manualScore > 0`. Idempotent — re-grading overwrites.
