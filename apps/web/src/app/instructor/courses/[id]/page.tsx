@@ -136,12 +136,7 @@ export default async function InstructorCourseEditPage({
   }));
 
   const useWideLayout = tab === "content";
-  // Ẩn left sidebar khi GV đang trong chế độ Sửa 1 bài học cụ thể để có
-  // không gian rộng (đỡ "loạn"). Sidebar vẫn hiện khi:
-  //   - Chưa chọn bài học (cần list để chọn)
-  //   - Đang xem trước (lessonView=preview, sidebar giúp điều hướng giữa các bài)
-  const useSidebarLayout =
-    tab === "content" && !(selectedLessonId && lessonView === "edit");
+  const useSidebarLayout = tab === "content";
 
   return (
     <main
