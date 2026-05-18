@@ -27,6 +27,21 @@
 		# SSE / long-poll: tắt buffering response (Caddy mặc định stream OK,
 		# nhưng để chắc).
 		flush_interval -1
+
+		# Tintin: pool keepalive cho 5K SV đồng thời.
+		# Mặc định Caddy giữ ~32 idle/host → nghẽn khi 5K heartbeat đập vào 3 web replicas.
+		# 2000 total / 500 per-host cho phép tái dùng kết nối TCP tới upstream,
+		# tránh phải bắt tay TCP+HTTP cho mỗi request trong burst.
+		transport http {
+			keepalive 5m
+			keepalive_idle_conns 2000
+			keepalive_idle_conns_per_host 500
+			dial_timeout 5s
+			# SSE dashboard có thể giữ tới ~60s không có header reply mới;
+			# nâng lên 5m để không cắt nhầm long-poll/SSE upstream chậm.
+			response_header_timeout 5m
+		}
+
 		# Truyền X-Forwarded-* để Next.js NextAuth/rate-limit thấy IP gốc.
 		header_up X-Real-IP {remote_host}
 		header_up X-Forwarded-For {remote_host}
