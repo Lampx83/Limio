@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { logExamIncident } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireExamSubject } from "@/lib/session";
-import { allow, clientIp } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/rate-limit";
+import { allowInMemory } from "@/lib/in-memory-rate-limit";
 import {
   checkAndUpdateFingerprint,
   getExamIdForAttempt,
@@ -32,8 +33,12 @@ export async function POST(
 ) {
   // At most 1 heartbeat per 8s per attempt — silently accept extras so the
   // client doesn't retry, but skip all processing to protect the DB.
-  const rl = await allow("heartbeat", params.id, 1, 8_000);
-  if (!rl.ok) return NextResponse.json({ ok: true });
+  // Per-process in-memory limiter (not Redis): saves 1 round-trip on hot path.
+  // Acceptable over-count: 3 replicas × 1/8s = worst-case 3/8s/attempt, still
+  // far below DB/Redis budget. See lib/in-memory-rate-limit.ts.
+  if (!allowInMemory(`heartbeat:${params.id}`, 8_000)) {
+    return NextResponse.json({ ok: true });
+  }
 
   const subject = await requireExamSubject(params.id);
   if (!subject)
