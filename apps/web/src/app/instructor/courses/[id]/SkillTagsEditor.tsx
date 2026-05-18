@@ -126,7 +126,17 @@ export default function SkillTagsEditor({
     });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "create_failed");
+      // Show specific field error if backend returned Zod details so user knows
+      // exactly what's wrong (vd: "code phải ≥2 ký tự" thay vì "validation_failed").
+      const fieldErrs = d?.details?.fieldErrors as
+        | Record<string, string[]>
+        | undefined;
+      const firstFieldErr =
+        fieldErrs &&
+        Object.entries(fieldErrs)
+          .flatMap(([k, vs]) => vs.map((v) => `${k}: ${v}`))
+          .join("; ");
+      setError(firstFieldErr || d.error || "create_failed");
       setBusy(false);
       return;
     }
@@ -266,14 +276,19 @@ export default function SkillTagsEditor({
             value={newCode}
             onChange={(e) => setNewCode(e.target.value)}
             required
-            pattern="[a-z][a-z0-9._-]*"
-            placeholder="code (e.g. math.algebra.linear)"
+            minLength={2}
+            maxLength={80}
+            pattern="[a-z][a-z0-9._\-]*"
+            placeholder="code (vd math.algebra.linear, ≥2 ký tự)"
+            title="Bắt đầu bằng chữ thường, chỉ chứa a-z 0-9 . _ - và ít nhất 2 ký tự"
             className="input"
           />
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             required
+            minLength={1}
+            maxLength={200}
             placeholder="Tên hiển thị"
             className="input"
           />

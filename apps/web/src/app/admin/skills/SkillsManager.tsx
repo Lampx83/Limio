@@ -201,7 +201,7 @@ function CreateForm({
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="vd: linear_regression.basics"
-            pattern="[a-z][a-z0-9._-]*"
+            pattern="[a-z][a-z0-9._\-]*"
             required
             minLength={2}
             maxLength={80}
