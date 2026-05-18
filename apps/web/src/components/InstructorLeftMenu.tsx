@@ -256,22 +256,33 @@ export default function InstructorLeftMenu({
     </nav>
   );
 
+  // Trang course editor `/instructor/courses/{id}` đã có nhiều layer
+  // navigation (tab, EditorSidebar, breadcrumb) → ẩn workspace menu để đỡ
+  // loạn. Khoá-mức `/new` và sub-pages khác KHÔNG match. User vẫn có thể
+  // mở menu qua nút floating (luôn hiện trên route này, không chỉ mobile).
+  const isCourseEditor = /^\/instructor\/courses\/[^/]+(?:\?|$)/.test(
+    pathname,
+  ) && !/^\/instructor\/courses\/new(?:\?|$)/.test(pathname);
+
   return (
     <>
-      {/* Mobile toggle */}
+      {/* Floating menu toggle — mobile mặc định; trên course editor cũng
+          hiện để GV có cách mở lại workspace menu. */}
       <button
         type="button"
         onClick={() => setMobileOpen((v) => !v)}
         aria-label="Mở menu giảng viên"
-        className="fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg transition-transform hover:scale-105 lg:hidden"
+        className={`fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg transition-transform hover:scale-105 ${
+          isCourseEditor ? "" : "lg:hidden"
+        }`}
       >
         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
       </button>
 
-      {/* Mobile drawer */}
+      {/* Drawer — show via mobileOpen on mobile, also reused on course editor desktop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm ${isCourseEditor ? "" : "lg:hidden"}`}
           onClick={() => setMobileOpen(false)}
         >
           <aside
@@ -283,10 +294,12 @@ export default function InstructorLeftMenu({
         </div>
       )}
 
-      {/* Desktop sidebar */}
-      <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] lg:block">
-        {nav}
-      </aside>
+      {/* Desktop sidebar — hidden on course editor */}
+      {!isCourseEditor && (
+        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] lg:block">
+          {nav}
+        </aside>
+      )}
     </>
   );
 }
