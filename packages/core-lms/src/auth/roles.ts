@@ -155,6 +155,24 @@ export async function isAdmin(userId: string, db: DbClient = prisma): Promise<bo
   return count > 0;
 }
 
+/**
+ * True nếu user có vai trò Instructor (platform-wide hoặc trên ÍT NHẤT 1 course).
+ * Dùng cho các action liên quan đến content authoring (vd tạo Skill toàn cục
+ * khi tag câu hỏi/quiz/lesson). Admin cũng coi là instructor cho mục đích này.
+ */
+export async function isInstructor(
+  userId: string,
+  db: DbClient = prisma,
+): Promise<boolean> {
+  const count = await db.userRole.count({
+    where: {
+      userId,
+      role: { name: { in: [RoleName.Instructor, RoleName.Admin] } },
+    },
+  });
+  return count > 0;
+}
+
 // ============================================================================
 // PR2.17 — Multi-tenancy helpers
 // ============================================================================

@@ -3,6 +3,7 @@ import { auth } from "./auth";
 import {
   isAdmin,
   isAnyOrgAdmin,
+  isInstructor,
   isOrgAdminOf,
   getUserOrgId,
 } from "@feedbackme/core-lms";
@@ -17,6 +18,13 @@ export async function requireAdmin(): Promise<string | null> {
   const userId = await requireUserId();
   if (!userId) return null;
   const ok = await isAdmin(userId);
+  return ok ? userId : null;
+}
+
+export async function requireInstructor(): Promise<string | null> {
+  const userId = await requireUserId();
+  if (!userId) return null;
+  const ok = await isInstructor(userId);
   return ok ? userId : null;
 }
 
