@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface Summary {
@@ -169,6 +170,8 @@ export default function AnalyticsDashboard({
         </ul>
       </section>
 
+      <QuizResultsSection courseId={courseId} />
+
       <section>
         <h2 className="mb-3 text-base font-semibold">Khác</h2>
         <Link
@@ -181,6 +184,131 @@ export default function AnalyticsDashboard({
           </p>
         </Link>
       </section>
+    </div>
+  );
+}
+
+interface QuizListItem {
+  id: string;
+  title: string;
+  passThresholdPct: number;
+  moduleTitle: string | null;
+  lessonTitle: string | null;
+  attemptCount: number;
+  questionCount: number;
+}
+
+function QuizResultsSection({ courseId }: { courseId: string }) {
+  const router = useRouter();
+  const [quizzes, setQuizzes] = useState<QuizListItem[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          apiUrl(`/api/instructor/courses/${courseId}/quizzes`),
+        );
+        if (!res.ok) throw new Error(`http_${res.status}`);
+        const data = await res.json();
+        if (!cancelled) setQuizzes(data.quizzes ?? []);
+      } catch (e) {
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "load_failed");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId]);
+
+  const selected = quizzes?.find((q) => q.id === selectedId);
+
+  return (
+    <section>
+      <h2 className="mb-3 text-base font-semibold">Kết quả từng quiz</h2>
+      <p className="mb-3 text-xs text-muted">
+        Chọn 1 quiz để xem danh sách SV đã làm, điểm từng người, và chi tiết
+        đáp án của từng lượt làm.
+      </p>
+      {error ? (
+        <p className="rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-sm text-danger-700">
+          Lỗi tải danh sách quiz: {error}
+        </p>
+      ) : quizzes === null ? (
+        <p className="rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.5] px-4 py-3 text-sm text-muted">
+          Đang tải…
+        </p>
+      ) : quizzes.length === 0 ? (
+        <p className="rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.5] px-4 py-3 text-sm text-muted">
+          Khóa này chưa có quiz nào. Tạo quiz ở tab Nội dung trước.
+        </p>
+      ) : (
+        <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex-1 min-w-[280px]">
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-faint">
+                Chọn quiz
+              </span>
+              <select
+                value={selectedId}
+                onChange={(e) => setSelectedId(e.target.value)}
+                className="input w-full"
+              >
+                <option value="">— Chọn quiz —</option>
+                {quizzes.map((q) => {
+                  const prefix =
+                    q.moduleTitle && q.lessonTitle
+                      ? `${q.moduleTitle} › ${q.lessonTitle} › `
+                      : q.lessonTitle
+                        ? `${q.lessonTitle} › `
+                        : "";
+                  return (
+                    <option key={q.id} value={q.id}>
+                      {prefix}
+                      {q.title} ({q.attemptCount} lượt)
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+            <button
+              type="button"
+              disabled={!selectedId}
+              onClick={() =>
+                router.push(
+                  `/instructor/courses/${courseId}/quizzes/${selectedId}/results`,
+                )
+              }
+              className="btn-primary btn-sm disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Xem kết quả →
+            </button>
+          </div>
+          {selected && (
+            <div className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+              <Meta label="Số câu" value={selected.questionCount} />
+              <Meta label="Ngưỡng đạt" value={`${selected.passThresholdPct}%`} />
+              <Meta label="Tổng lượt làm" value={selected.attemptCount} />
+              <Meta
+                label="Trạng thái"
+                value={selected.attemptCount > 0 ? "Có dữ liệu" : "Chưa có lượt"}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Meta({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wide text-faint">{label}</div>
+      <div className="mt-0.5 text-sm font-semibold">{value}</div>
     </div>
   );
 }
