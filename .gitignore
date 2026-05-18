@@ -41,3 +41,6 @@ docs/.Rhistory
 
 # Ad-hoc DB inspection scripts
 packages/db/test-*.mjs
+
+# Word/Office temp lock files
+~$*
