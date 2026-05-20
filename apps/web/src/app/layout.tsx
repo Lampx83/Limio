@@ -14,6 +14,10 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+// Root layout chứa Footer (gọi getSiteSettings → Prisma). Force-dynamic để
+// tránh Next thử SSG mọi page và đập vào DB trong lúc build.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Limio — Learn your way",
   description:

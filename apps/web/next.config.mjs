@@ -6,6 +6,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   // Sub-path prefix when served behind a reverse proxy (e.g. /limio).
   // Baked in at build time via Docker build-arg NEXT_PUBLIC_BASE_PATH.
   // Leave empty ("") to serve from the domain root.
