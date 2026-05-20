@@ -5,7 +5,7 @@ import { isUserEnrolled } from "../learning/enroll";
 import { emitEvent } from "../learning/events";
 import { gradeAnswer } from "./grading";
 import { QuizError } from "./types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditCourse, canEditCourse } from "../courses/authz";
 
 // Response shapes per question type:
 //   mcq/true_false/ordering: string[] (option IDs)
@@ -62,7 +62,10 @@ export async function startAttempt(
   const quiz = await loadQuiz(quizId, db);
   if (!quiz.courseId) throw new QuizError("quiz_not_found");
   if (!(await isUserEnrolled(userId, quiz.courseId, db))) {
-    throw new QuizError("not_enrolled");
+    // Allow course instructors/admins to start an attempt for preview purposes.
+    if (!(await canEditCourse(userId, quiz.courseId, db))) {
+      throw new QuizError("not_enrolled");
+    }
   }
 
   // Reuse existing in_progress attempt.

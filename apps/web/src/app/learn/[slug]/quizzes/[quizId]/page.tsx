@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { isUserEnrolled, startAttempt, QuizError } from "@feedbackme/core-lms";
+import {
+  canEditCourse,
+  isUserEnrolled,
+  startAttempt,
+  QuizError,
+} from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import QuizPlayer from "@/components/QuizPlayer";
 
@@ -34,7 +39,11 @@ export default async function QuizPage({
   });
   if (!course || course.slug !== params.slug) notFound();
 
-  if (!(await isUserEnrolled(userId, quiz.courseId))) {
+  const enrolled = await isUserEnrolled(userId, quiz.courseId);
+  const instructorPreview = !enrolled
+    ? await canEditCourse(userId, quiz.courseId)
+    : false;
+  if (!enrolled && !instructorPreview) {
     redirect(`/catalog/${params.slug}`);
   }
 
@@ -76,6 +85,16 @@ export default async function QuizPage({
       >
         ← Quay lại khóa học
       </Link>
+      {instructorPreview && (
+        <div className="mt-4 rounded-2xl border border-brand-200 bg-brand-soft px-5 py-3">
+          <p className="text-sm font-semibold text-brand-700">
+            Chế độ xem trước (instructor)
+          </p>
+          <p className="text-xs text-brand-600">
+            Bạn đang làm thử quiz với tư cách giảng viên. Attempt sẽ được lưu dưới tài khoản của bạn.
+          </p>
+        </div>
+      )}
       <div className="mt-6">
         <QuizPlayer attemptId={attemptId} courseSlug={params.slug} />
       </div>
