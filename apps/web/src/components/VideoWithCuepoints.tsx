@@ -372,6 +372,7 @@ function CuepointOverlay({
         <div className="flex justify-end gap-2 border-t border-token px-5 py-3">
           <button
             type="button"
+            data-view-keep
             disabled={grading}
             onClick={onSubmit}
             className="btn-primary btn-sm"
