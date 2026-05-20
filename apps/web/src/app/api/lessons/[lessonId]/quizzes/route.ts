@@ -19,7 +19,9 @@ export async function GET(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const quizzes = await prisma.quiz.findMany({
-    where: { lessonId: params.lessonId },
+    // Hide cuepoint-only quizzes — they back a single in-video cuepoint and
+    // shouldn't appear in the "pick existing quiz" dropdown.
+    where: { lessonId: params.lessonId, cuepointOnly: false },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,

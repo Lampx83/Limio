@@ -5,3 +5,4 @@ export * from "./grading";
 export * from "./attempts";
 export * from "./misconceptions";
 export * from "./inline";
+export * from "./cuepoint";

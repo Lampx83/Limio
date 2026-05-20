@@ -42,12 +42,31 @@ interface LessonQuizRow {
   questionCount: number;
 }
 
-interface CuepointDraft {
-  /** Local key for React list rendering. Not sent to server. */
+interface SkillRow {
+  id: string;
+  code: string;
+  name: string;
+}
+
+interface CuepointInlineDraft {
   uid: string;
+  mode: "inline";
+  atSec: number;
+  prompt: string;
+  options: { label: string; isCorrect: boolean }[];
+  skillIds: string[];
+  points: number;
+  explanation: string;
+}
+
+interface CuepointExistingDraft {
+  uid: string;
+  mode: "existing";
   atSec: number;
   quizId: string;
 }
+
+type CuepointDraft = CuepointInlineDraft | CuepointExistingDraft;
 
 type ContentType =
   | "video"
@@ -114,6 +133,7 @@ export default function AddContentItemForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   // In-video cuepoint editor state — only used when type === "video".
   const [lessonQuizzes, setLessonQuizzes] = useState<LessonQuizRow[]>([]);
+  const [skills, setSkills] = useState<SkillRow[]>([]);
   const [cuepoints, setCuepoints] = useState<CuepointDraft[]>([]);
 
   useEffect(() => {
@@ -140,6 +160,10 @@ export default function AddContentItemForm({
       fetch(apiUrl(`/api/lessons/${lessonId}/quizzes`))
         .then((r) => r.json())
         .then((d) => setLessonQuizzes(d.quizzes ?? []))
+        .catch(() => {});
+      fetch(apiUrl("/api/skills"))
+        .then((r) => r.json())
+        .then((d) => setSkills(d.items ?? []))
         .catch(() => {});
     }
   }, [type, open, lessonId]);
@@ -203,16 +227,80 @@ export default function AddContentItemForm({
     let payload: Record<string, unknown>;
     switch (type) {
       case "video": {
-        // Validate cuepoints client-side: every row must have a quiz selected
-        // and atSec >= 0. Server re-validates against the full schema.
-        const validCuepoints = cuepoints
-          .filter((c) => c.quizId && c.atSec >= 0)
-          .map((c) => ({ atSec: c.atSec, quizId: c.quizId }))
-          .sort((a, b) => a.atSec - b.atSec);
-        payload =
-          validCuepoints.length > 0
-            ? { url, cuepoints: validCuepoints }
-            : { url };
+        // Resolve inline cuepoints into quizIds by creating cuepoint quizzes
+        // first. If any inline creation fails, roll back the ones already
+        // created and abort the whole submit.
+        const createdQuizIds: string[] = [];
+        const resolved: { atSec: number; quizId: string }[] = [];
+        let failed = false;
+        for (const c of cuepoints) {
+          if (c.atSec < 0) continue;
+          if (c.mode === "existing") {
+            if (c.quizId) resolved.push({ atSec: c.atSec, quizId: c.quizId });
+            continue;
+          }
+          // mode === "inline": validate locally before round-tripping.
+          if (!c.prompt.trim()) {
+            setError(`Cuepoint @ ${c.atSec}s: thiếu prompt`);
+            failed = true;
+            break;
+          }
+          if (c.skillIds.length === 0) {
+            setError(`Cuepoint @ ${c.atSec}s: chọn ít nhất 1 skill`);
+            failed = true;
+            break;
+          }
+          const cleanOpts = c.options.filter((o) => o.label.trim());
+          if (cleanOpts.length < 2 || !cleanOpts.some((o) => o.isCorrect)) {
+            setError(`Cuepoint @ ${c.atSec}s: cần ≥2 đáp án và 1 đáp án đúng`);
+            failed = true;
+            break;
+          }
+          const res = await fetch(
+            apiUrl(`/api/lessons/${lessonId}/cuepoint-quiz`),
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                atSec: c.atSec,
+                question: {
+                  type: "mcq",
+                  prompt: c.prompt.trim(),
+                  points: c.points,
+                  explanation: c.explanation.trim() || undefined,
+                  options: cleanOpts.map((o) => ({
+                    label: o.label.trim(),
+                    isCorrect: o.isCorrect,
+                  })),
+                  skillIds: c.skillIds,
+                },
+              }),
+            },
+          );
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            setError(`cuepoint_quiz_failed: ${d.error ?? res.status}`);
+            failed = true;
+            break;
+          }
+          const data = (await res.json()) as { quizId: string };
+          createdQuizIds.push(data.quizId);
+          resolved.push({ atSec: c.atSec, quizId: data.quizId });
+        }
+        if (failed) {
+          // Roll back any cuepoint quizzes we already created.
+          await Promise.all(
+            createdQuizIds.map((id) =>
+              fetch(apiUrl(`/api/cuepoint-quiz/${id}`), {
+                method: "DELETE",
+              }).catch(() => {}),
+            ),
+          );
+          setBusy(false);
+          return;
+        }
+        resolved.sort((a, b) => a.atSec - b.atSec);
+        payload = resolved.length > 0 ? { url, cuepoints: resolved } : { url };
         break;
       }
       case "markdown":
@@ -399,6 +487,7 @@ export default function AddContentItemForm({
               cuepoints={cuepoints}
               setCuepoints={setCuepoints}
               quizzes={lessonQuizzes}
+              skills={skills}
             />
           )}
         </div>
@@ -594,31 +683,58 @@ export default function AddContentItemForm({
  * Only meaningful for native <video> playback (uploaded files / direct
  * URL); provider iframes (YouTube/Vimeo/...) ignore cuepoints.
  */
+function makeInlineDraft(atSec = 0): CuepointInlineDraft {
+  return {
+    uid: Math.random().toString(36).slice(2, 10),
+    mode: "inline",
+    atSec,
+    prompt: "",
+    options: [
+      { label: "", isCorrect: true },
+      { label: "", isCorrect: false },
+      { label: "", isCorrect: false },
+      { label: "", isCorrect: false },
+    ],
+    skillIds: [],
+    points: 1,
+    explanation: "",
+  };
+}
+
 function CuepointEditor({
   cuepoints,
   setCuepoints,
   quizzes,
+  skills,
 }: {
   cuepoints: CuepointDraft[];
   setCuepoints: (next: CuepointDraft[]) => void;
   quizzes: LessonQuizRow[];
+  skills: SkillRow[];
 }) {
   function add() {
     if (cuepoints.length >= 20) return;
-    setCuepoints([
-      ...cuepoints,
-      {
-        uid: Math.random().toString(36).slice(2, 10),
-        atSec: 0,
-        quizId: quizzes[0]?.id ?? "",
-      },
-    ]);
+    setCuepoints([...cuepoints, makeInlineDraft()]);
   }
   function remove(uid: string) {
     setCuepoints(cuepoints.filter((c) => c.uid !== uid));
   }
-  function update(uid: string, patch: Partial<CuepointDraft>) {
-    setCuepoints(cuepoints.map((c) => (c.uid === uid ? { ...c, ...patch } : c)));
+  function replace(uid: string, next: CuepointDraft) {
+    setCuepoints(cuepoints.map((c) => (c.uid === uid ? next : c)));
+  }
+  function switchMode(uid: string, mode: "inline" | "existing") {
+    const cur = cuepoints.find((c) => c.uid === uid);
+    if (!cur || cur.mode === mode) return;
+    if (mode === "inline") {
+      replace(uid, makeInlineDraft(cur.atSec));
+    } else {
+      replace(uid, {
+        uid: cur.uid,
+        mode: "existing",
+        atSec: cur.atSec,
+        quizId: quizzes[0]?.id ?? "",
+      });
+    }
   }
 
   return (
@@ -630,57 +746,225 @@ function CuepointEditor({
         <button
           type="button"
           onClick={add}
-          disabled={quizzes.length === 0 || cuepoints.length >= 20}
+          disabled={cuepoints.length >= 20}
           className="btn-secondary btn-sm"
         >
           + Thêm cuepoint
         </button>
       </div>
-      {quizzes.length === 0 ? (
-        <p className="mt-2 text-xs text-muted">
-          Chưa có quiz nào trong lesson — tạo quiz trước rồi gài vào timestamp ở đây.
-        </p>
-      ) : (
-        <p className="mt-1 text-[11px] text-muted">
-          Player sẽ pause tại mỗi timestamp, học viên phải trả lời đúng quiz được chọn
-          mới được xem tiếp. Chỉ áp dụng cho video upload / file trực tiếp (.mp4/.webm) —
-          YouTube/Vimeo không intercept được.
-        </p>
-      )}
+      <p className="mt-1 text-[11px] text-muted">
+        Player sẽ pause tại mỗi timestamp, học viên phải trả lời đúng mới được xem tiếp.
+        Chỉ áp dụng cho video upload / file trực tiếp (.mp4/.webm) — YouTube/Vimeo không
+        intercept được. Soạn câu hỏi tại chỗ, hoặc chọn quiz có sẵn.
+      </p>
       {cuepoints.length > 0 && (
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-2 space-y-3">
           {cuepoints.map((c) => (
             <li
               key={c.uid}
-              className="flex flex-wrap items-center gap-2 rounded-md border border-token bg-[rgb(var(--surface-muted))/0.5] p-2"
+              className="space-y-2 rounded-md border border-token bg-[rgb(var(--surface-muted))/0.5] p-2"
             >
-              <CuepointTimeInput
-                value={c.atSec}
-                onChange={(v) => update(c.uid, { atSec: v })}
-              />
-              <select
-                value={c.quizId}
-                onChange={(e) => update(c.uid, { quizId: e.target.value })}
-                className="select min-w-[200px] flex-1"
-              >
-                {quizzes.map((q) => (
-                  <option key={q.id} value={q.id}>
-                    {q.title} ({q.questionCount} câu)
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => remove(c.uid)}
-                className="btn-secondary btn-sm"
-                aria-label="Xoá cuepoint"
-              >
-                Xoá
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <CuepointTimeInput
+                  value={c.atSec}
+                  onChange={(v) => replace(c.uid, { ...c, atSec: v })}
+                />
+                <div className="flex items-center gap-1 rounded-md border border-token p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => switchMode(c.uid, "inline")}
+                    className={`rounded px-2 py-1 ${
+                      c.mode === "inline"
+                        ? "bg-brand-soft text-brand-700 font-semibold"
+                        : "text-muted hover:text-fg"
+                    }`}
+                  >
+                    Soạn mới
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode(c.uid, "existing")}
+                    disabled={quizzes.length === 0}
+                    className={`rounded px-2 py-1 ${
+                      c.mode === "existing"
+                        ? "bg-brand-soft text-brand-700 font-semibold"
+                        : "text-muted hover:text-fg disabled:opacity-40"
+                    }`}
+                    title={quizzes.length === 0 ? "Chưa có quiz nào trên lesson" : ""}
+                  >
+                    Chọn có sẵn
+                  </button>
+                </div>
+                <div className="flex-1" />
+                <button
+                  type="button"
+                  onClick={() => remove(c.uid)}
+                  className="btn-secondary btn-sm"
+                  aria-label="Xoá cuepoint"
+                >
+                  Xoá
+                </button>
+              </div>
+
+              {c.mode === "existing" ? (
+                <select
+                  value={c.quizId}
+                  onChange={(e) =>
+                    replace(c.uid, { ...c, quizId: e.target.value })
+                  }
+                  className="select w-full"
+                >
+                  {quizzes.length === 0 && (
+                    <option value="">— chưa có quiz nào —</option>
+                  )}
+                  {quizzes.map((q) => (
+                    <option key={q.id} value={q.id}>
+                      {q.title} ({q.questionCount} câu)
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <InlineCuepointQuestion
+                  draft={c}
+                  skills={skills}
+                  onChange={(next) => replace(c.uid, next)}
+                />
+              )}
             </li>
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function InlineCuepointQuestion({
+  draft,
+  skills,
+  onChange,
+}: {
+  draft: CuepointInlineDraft;
+  skills: SkillRow[];
+  onChange: (next: CuepointInlineDraft) => void;
+}) {
+  return (
+    <div className="space-y-2 rounded-md border border-dashed border-token bg-[rgb(var(--surface))] p-2">
+      <textarea
+        value={draft.prompt}
+        onChange={(e) => onChange({ ...draft, prompt: e.target.value })}
+        rows={2}
+        placeholder="Câu hỏi (prompt)..."
+        className="textarea w-full"
+      />
+      <ul className="space-y-1">
+        {draft.options.map((o, i) => (
+          <li key={i} className="flex items-center gap-2">
+            <input
+              type="radio"
+              name={`correct-${draft.uid}`}
+              checked={o.isCorrect}
+              onChange={() =>
+                onChange({
+                  ...draft,
+                  options: draft.options.map((opt, j) => ({
+                    ...opt,
+                    isCorrect: i === j,
+                  })),
+                })
+              }
+              aria-label="Đáp án đúng"
+            />
+            <input
+              type="text"
+              value={o.label}
+              onChange={(e) =>
+                onChange({
+                  ...draft,
+                  options: draft.options.map((opt, j) =>
+                    i === j ? { ...opt, label: e.target.value } : opt,
+                  ),
+                })
+              }
+              placeholder={`Đáp án ${String.fromCharCode(65 + i)}`}
+              className="input flex-1"
+            />
+            {draft.options.length > 2 && (
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({
+                    ...draft,
+                    options: draft.options.filter((_, j) => i !== j),
+                  })
+                }
+                className="text-xs text-muted hover:text-danger-600"
+                aria-label="Xoá đáp án"
+              >
+                ✕
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {draft.options.length < 6 && (
+        <button
+          type="button"
+          onClick={() =>
+            onChange({
+              ...draft,
+              options: [...draft.options, { label: "", isCorrect: false }],
+            })
+          }
+          className="text-xs text-brand-700 hover:underline"
+        >
+          + Thêm đáp án
+        </button>
+      )}
+      <div>
+        <label className="block text-[11px] font-semibold uppercase tracking-wide text-faint">
+          Skill (bắt buộc ≥1)
+        </label>
+        {skills.length === 0 ? (
+          <p className="mt-1 text-xs text-accent-700">
+            Chưa có skill nào trong course — tạo skill ở tab Skills trước.
+          </p>
+        ) : (
+          <div className="mt-1 flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+            {skills.map((s) => {
+              const picked = draft.skillIds.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      ...draft,
+                      skillIds: picked
+                        ? draft.skillIds.filter((x) => x !== s.id)
+                        : [...draft.skillIds, s.id],
+                    })
+                  }
+                  className={`rounded-full border px-2 py-0.5 text-xs ${
+                    picked
+                      ? "border-brand-300 bg-brand-soft text-brand-700"
+                      : "border-token text-muted hover:border-brand-300"
+                  }`}
+                  title={s.code}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <input
+        type="text"
+        value={draft.explanation}
+        onChange={(e) => onChange({ ...draft, explanation: e.target.value })}
+        placeholder="Giải thích (optional)"
+        className="input w-full text-xs"
+      />
     </div>
   );
 }

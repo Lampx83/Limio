@@ -438,6 +438,10 @@ model Quiz {
   requireConfidence Boolean  @default(true)
   // Instructor-controlled visibility (false = hidden from all learners)
   isHidden          Boolean  @default(false)
+  // True when this quiz was auto-created as a 1-question in-video cuepoint.
+  // Filtered out of learner lesson-quiz lists; rendered with a badge in
+  // instructor Question Bank. See docs/SPEC §6.1 cuepoint flow.
+  cuepointOnly      Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
