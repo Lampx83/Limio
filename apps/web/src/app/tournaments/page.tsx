@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@feedbackme/db";
+import { prisma, Prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import {
   EmptyState,
@@ -39,7 +39,7 @@ export default async function TournamentsPage({
     : [];
   const myIdSet = new Set(myRegistrations.map((r) => r.tournamentId));
 
-  const where =
+  const where: Prisma.TournamentWhereInput =
     tab === "mine"
       ? { id: { in: Array.from(myIdSet) } }
       : { status: { in: ["published", "active"] } };
