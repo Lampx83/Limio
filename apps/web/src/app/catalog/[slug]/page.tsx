@@ -46,7 +46,7 @@ export default async function CourseDetailPage({
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-7xl px-6 py-10">
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
         ← Catalog
       </Link>
@@ -104,51 +104,33 @@ export default async function CourseDetailPage({
             </p>
           )}
 
-          {/* Stats + price */}
+          {/* Stats — price + enroll moved to sticky sidebar below */}
           <div className="mt-6 flex flex-wrap gap-3">
             <HeroStat label="Modules" value={course.modules.length} />
             <HeroStat label="Bài học" value={totalLessons} />
-            {paymentEnabled && !isFree(course.priceCents) && (
-              <div className="rounded-xl bg-accent-500/80 px-4 py-2 backdrop-blur">
-                <div className="text-xs uppercase tracking-wide opacity-80">Học phí</div>
-                <div className="text-lg font-bold tabular-nums">
-                  {formatPrice(course.priceCents!, course.currency)}
-                </div>
-              </div>
-            )}
           </div>
 
-          {course.status === "published" && (
-            <div className="mt-7">
-              <EnrollButton
-                slug={params.slug}
-                alreadyEnrolled={enrolled}
-                priceCents={course.priceCents}
-                currency={course.currency}
-                paymentEnabled={paymentEnabled}
-              />
-            </div>
-          )}
         </div>
       </header>
 
-      {/* Curriculum */}
-      <section className="mt-10">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">Nội dung khóa học</h2>
-          <span className="text-xs text-faint">
-            {course.modules.length} modules · {totalLessons} bài
-          </span>
-        </div>
-
-        {course.modules.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center text-sm text-muted">
-            Chưa có nội dung.
+      <div className="mt-10 grid gap-8 lg:grid-cols-3">
+        {/* Curriculum — main column */}
+        <section className="lg:col-span-2">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-xl font-semibold">Nội dung khóa học</h2>
+            <span className="text-xs text-faint">
+              {course.modules.length} modules · {totalLessons} bài
+            </span>
           </div>
-        ) : (
-          <ol className="mt-4 space-y-4">
-            {course.modules.map((m, mi) => (
-              <li key={m.id} className="card">
+
+          {course.modules.length === 0 ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center text-sm text-muted">
+              Chưa có nội dung.
+            </div>
+          ) : (
+            <ol className="mt-4 space-y-4">
+              {course.modules.map((m, mi) => (
+                <li key={m.id} id={`module-${m.id}`} className="card">
                 <header className="flex items-baseline justify-between gap-3 border-b border-token pb-3">
                   <h3 className="text-base font-semibold">
                     <span className="mr-2 text-faint">Module {mi + 1}</span>
@@ -201,11 +183,62 @@ export default async function CourseDetailPage({
                     </li>
                   ))}
                 </ol>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+
+        {/* Sidebar TOC */}
+        <aside className="lg:col-span-1">
+          <div className="sticky top-20 space-y-4">
+            <div className="card">
+              <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+                Tổng quan
+              </p>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                {course.modules.map((m, mi) => (
+                  <li key={m.id}>
+                    <a
+                      href={`#module-${m.id}`}
+                      className="flex items-baseline justify-between gap-2 rounded px-2 py-1 hover:bg-brand-soft hover:text-brand-700"
+                    >
+                      <span className="min-w-0 truncate">
+                        <span className="mr-1 text-faint">{mi + 1}.</span>
+                        {m.title}
+                      </span>
+                      <span className="shrink-0 text-[11px] text-faint">
+                        {m.lessons.length} bài
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {course.status === "published" && (
+              <div className="card">
+                {paymentEnabled && !isFree(course.priceCents) && (
+                  <div className="mb-3">
+                    <div className="text-xs uppercase tracking-wide text-faint">
+                      Học phí
+                    </div>
+                    <div className="text-2xl font-bold tabular-nums">
+                      {formatPrice(course.priceCents!, course.currency)}
+                    </div>
+                  </div>
+                )}
+                <EnrollButton
+                  slug={params.slug}
+                  alreadyEnrolled={enrolled}
+                  priceCents={course.priceCents}
+                  currency={course.currency}
+                  paymentEnabled={paymentEnabled}
+                />
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
     </main>
   );
 }
