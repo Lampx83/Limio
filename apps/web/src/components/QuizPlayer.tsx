@@ -1,6 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { apiUrl } from "@/lib/apiUrl";
 
 type QType =
@@ -433,38 +452,108 @@ function OrderingInput({
     setTimeout(onBlur, 0);
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = ids.indexOf(String(active.id));
+    const newIdx = ids.indexOf(String(over.id));
+    if (oldIdx < 0 || newIdx < 0) return;
+    onChange(arrayMove(ids, oldIdx, newIdx));
+    setTimeout(onBlur, 0);
+  }
+
   return (
-    <ol className="space-y-2">
-      {ids.map((id, i) => (
-        <li
-          key={id}
-          className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700 tabular-nums">
-            {i + 1}
-          </span>
-          <span className="flex-1 text-sm">{optById.get(id)?.label}</span>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              disabled={i === 0}
-              onClick={() => move(i, -1)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-xs transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              disabled={i === ids.length - 1}
-              onClick={() => move(i, +1)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-xs transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
-            >
-              ↓
-            </button>
-          </div>
-        </li>
-      ))}
-    </ol>
+    <>
+      {/* Mobile: button ↑↓ (tap-select fallback) */}
+      <ol className="space-y-2 md:hidden">
+        {ids.map((id, i) => (
+          <li
+            key={id}
+            className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700 tabular-nums">
+              {i + 1}
+            </span>
+            <span className="flex-1 text-sm">{optById.get(id)?.label}</span>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                disabled={i === 0}
+                onClick={() => move(i, -1)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-xs transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Move up"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                disabled={i === ids.length - 1}
+                onClick={() => move(i, +1)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-xs transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Move down"
+              >
+                ↓
+              </button>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      {/* Desktop: horizontal drag-and-drop */}
+      <div className="hidden md:block">
+        <p className="mb-2 text-xs text-faint">Kéo thả các thẻ theo thứ tự đúng (trái → phải)</p>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={ids} strategy={horizontalListSortingStrategy}>
+            <ol className="flex flex-wrap items-stretch gap-2">
+              {ids.map((id, i) => (
+                <SortableOrderingItem
+                  key={id}
+                  id={id}
+                  index={i}
+                  label={optById.get(id)?.label ?? ""}
+                />
+              ))}
+            </ol>
+          </SortableContext>
+        </DndContext>
+      </div>
+    </>
+  );
+}
+
+function SortableOrderingItem({
+  id,
+  index,
+  label,
+}: {
+  id: string;
+  index: number;
+  label: string;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="flex min-w-[120px] cursor-grab touch-none items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 shadow-sm transition-shadow hover:shadow active:cursor-grabbing"
+    >
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700 tabular-nums">
+        {index + 1}
+      </span>
+      <span className="text-sm">{label}</span>
+    </li>
   );
 }
 
@@ -481,45 +570,219 @@ function MatchingInput({
 }) {
   const lefts = question.options.filter((o) => o.extra?.side === "left");
   const rights = question.options.filter((o) => o.extra?.side === "right");
+  const rightById = new Map(rights.map((r) => [r.id, r]));
 
   const pairs = Array.isArray(answer?.response)
     ? (answer!.response as Array<{ leftId: string; rightId: string }>)
     : [];
   const byLeft = new Map(pairs.map((p) => [p.leftId, p.rightId]));
+  const usedRights = new Set(byLeft.values());
+  const poolRights = rights.filter((r) => !usedRights.has(r.id));
 
-  function pick(leftId: string, rightId: string) {
-    const next: Array<{ leftId: string; rightId: string }> = [];
+  function commit(next: Map<string, string>) {
+    const out: Array<{ leftId: string; rightId: string }> = [];
     for (const left of lefts) {
-      const r = left.id === leftId ? rightId : byLeft.get(left.id);
-      if (r) next.push({ leftId: left.id, rightId: r });
+      const r = next.get(left.id);
+      if (r) out.push({ leftId: left.id, rightId: r });
     }
-    onChange(next);
+    onChange(out);
     setTimeout(onBlur, 0);
   }
 
+  function pick(leftId: string, rightId: string) {
+    const next = new Map(byLeft);
+    // If rightId already on another left, remove that mapping first.
+    for (const [l, r] of next) {
+      if (r === rightId && l !== leftId) next.delete(l);
+    }
+    next.set(leftId, rightId);
+    commit(next);
+  }
+
+  function clear(leftId: string) {
+    const next = new Map(byLeft);
+    next.delete(leftId);
+    commit(next);
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor),
+  );
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over) return;
+    const rightId = String(active.id).replace(/^right:/, "");
+    const overId = String(over.id);
+    if (overId === "matching:pool") {
+      // Drop back to pool → unassign from whatever left it was on.
+      for (const [l, r] of byLeft) {
+        if (r === rightId) {
+          clear(l);
+          return;
+        }
+      }
+      return;
+    }
+    if (overId.startsWith("left:")) {
+      const leftId = overId.slice("left:".length);
+      pick(leftId, rightId);
+    }
+  }
+
   return (
-    <ul className="space-y-2">
-      {lefts.map((l) => (
-        <li
-          key={l.id}
-          className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
-        >
-          <span className="flex-1 text-sm font-medium">{l.label}</span>
-          <span className="text-faint">→</span>
-          <select
-            value={byLeft.get(l.id) ?? ""}
-            onChange={(e) => pick(l.id, e.target.value)}
-            className="select max-w-[220px]"
+    <>
+      {/* Mobile: dropdown fallback */}
+      <ul className="space-y-2 md:hidden">
+        {lefts.map((l) => (
+          <li
+            key={l.id}
+            className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
           >
-            <option value="">— chọn —</option>
-            {rights.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </li>
-      ))}
-    </ul>
+            <span className="flex-1 text-sm font-medium">{l.label}</span>
+            <span className="text-faint">→</span>
+            <select
+              value={byLeft.get(l.id) ?? ""}
+              onChange={(e) => pick(l.id, e.target.value)}
+              className="select max-w-[220px]"
+            >
+              <option value="">— chọn —</option>
+              {rights.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: drag from right pool to left slots */}
+      <div className="hidden md:block">
+        <p className="mb-2 text-xs text-faint">
+          Kéo các thẻ bên phải thả vào ô trống tương ứng bên trái
+        </p>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-2 gap-4">
+            <ul className="space-y-2">
+              {lefts.map((l) => (
+                <MatchingLeftSlot
+                  key={l.id}
+                  leftId={l.id}
+                  leftLabel={l.label}
+                  assignedRight={
+                    byLeft.has(l.id)
+                      ? { id: byLeft.get(l.id)!, label: rightById.get(byLeft.get(l.id)!)?.label ?? "" }
+                      : null
+                  }
+                  onClear={() => clear(l.id)}
+                />
+              ))}
+            </ul>
+            <MatchingPool poolRights={poolRights} />
+          </div>
+        </DndContext>
+      </div>
+    </>
+  );
+}
+
+function MatchingLeftSlot({
+  leftId,
+  leftLabel,
+  assignedRight,
+  onClear,
+}: {
+  leftId: string;
+  leftLabel: string;
+  assignedRight: { id: string; label: string } | null;
+  onClear: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `left:${leftId}` });
+  return (
+    <li className="flex items-center gap-3">
+      <span className="flex-1 text-sm font-medium">{leftLabel}</span>
+      <span className="text-faint">→</span>
+      <div
+        ref={setNodeRef}
+        className={`flex min-h-[44px] min-w-[180px] items-center justify-between gap-2 rounded-xl border-2 border-dashed p-2 transition-colors ${
+          isOver
+            ? "border-brand-500 bg-brand-soft"
+            : assignedRight
+              ? "border-brand-300 bg-[rgb(var(--surface))]"
+              : "border-token bg-[rgb(var(--surface-muted))]"
+        }`}
+      >
+        {assignedRight ? (
+          <>
+            <MatchingDraggable id={assignedRight.id} label={assignedRight.label} compact />
+            <button
+              type="button"
+              onClick={onClear}
+              className="text-xs text-faint hover:text-brand-700"
+              aria-label="Bỏ chọn"
+            >
+              ✕
+            </button>
+          </>
+        ) : (
+          <span className="text-xs text-faint">— thả vào đây —</span>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function MatchingPool({
+  poolRights,
+}: {
+  poolRights: Array<{ id: string; label: string }>;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: "matching:pool" });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex flex-wrap content-start gap-2 rounded-xl border-2 border-dashed p-3 transition-colors ${
+        isOver ? "border-brand-500 bg-brand-soft" : "border-token bg-[rgb(var(--surface-muted))]"
+      }`}
+    >
+      {poolRights.length === 0 ? (
+        <span className="text-xs text-faint">Đã ghép hết — kéo thẻ về đây để bỏ chọn</span>
+      ) : (
+        poolRights.map((r) => <MatchingDraggable key={r.id} id={r.id} label={r.label} />)
+      )}
+    </div>
+  );
+}
+
+function MatchingDraggable({
+  id,
+  label,
+  compact = false,
+}: {
+  id: string;
+  label: string;
+  compact?: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `right:${id}`,
+  });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <span
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`inline-flex cursor-grab touch-none items-center rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-sm shadow-sm transition-shadow hover:shadow active:cursor-grabbing ${
+        compact ? "" : ""
+      }`}
+    >
+      {label}
+    </span>
   );
 }
