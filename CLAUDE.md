@@ -82,7 +82,30 @@ Mọi `Lesson`, `Quiz`, `QuizQuestion` **phải tag ít nhất 1 skill** trướ
 
 Mọi thay đổi schema đi qua `prisma migrate` — không chỉnh DB tay. Index phải được khai báo trong `schema.prisma` (xem §4.6 dưới đây cho danh sách index nóng). `LearningEvent` là **append-only** — không bao giờ UPDATE/DELETE, kể cả trong test cleanup (dùng schema riêng cho test).
 
-### 4.6. Index nóng (xem spec §7.3)
+### 4.6. UI/UX conventions
+
+**Breakpoints** (Tailwind defaults):
+
+| Bí danh | Phạm vi | Dùng cho |
+|---|---|---|
+| (default) | `< 640px` | Mobile — 1 cột, sticky CTA, drawer thay sidebar |
+| `sm:` | `≥ 640px` | Mobile lớn — bắt đầu 2-col grid |
+| `md:` | `≥ 768px` | Tablet — show inline filters, multi-col forms |
+| `lg:` | `≥ 1024px` | Desktop — bật sidebar, 3-col grid, sticky TOC |
+| `xl:` | `≥ 1280px` | Desktop rộng — 4-col grid catalog |
+
+**Quy ước:**
+- Sidebar luôn collapse thành drawer ở `< lg`. Không dùng `md:`-only sidebar.
+- Grid card: 1 col mặc định → `sm:grid-cols-2` → `lg:grid-cols-3` (catalog) hoặc `xl:grid-cols-4`.
+- Sticky CTA mobile fixed-bottom dưới `lg`. Từ `lg:` thì CTA nằm trong sidebar.
+
+**Typography**: dùng `.text-display / .text-h1..h4 / .text-body / .text-meta / .text-caption` (xem `globals.css`). Không dùng `text-{size}` ad-hoc cho heading.
+
+**Semantic banner**: `.banner-success/warning/info/danger` thay `bg-yellow-50` raw.
+
+**Shared UI primitives** (trong `apps/web/src/components/ui/`): `<EmptyState>`, `<UserAvatar>`, `<StatusBadge>`, `<DateTime>`, `<StickyMobileCTA>` + `<Skeleton*>` ở `components/Skeleton.tsx`. Đừng tự reimplement trong từng page.
+
+### 4.7. Index nóng (xem spec §7.3)
 
 | Bảng | Index |
 |---|---|

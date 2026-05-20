@@ -13,6 +13,7 @@ import {
 } from "@feedbackme/core-gamification";
 import { getAdaptiveNextLesson } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
+import { StickyMobileCTA } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -56,8 +57,11 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
 
   const isComplete = progress.courseCompletionPct >= 100;
 
+  const continueLessonId = enrollment.lastLessonId || adaptiveNext?.lessonId;
+  const continueLabel = enrollment.lastLessonId ? "Tiếp tục" : adaptiveNext ? "Đề xuất" : null;
+
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-5xl px-6 py-10 pb-28 lg:pb-10">
       {/* Breadcrumb */}
       <Link
         href={`/catalog/${params.slug}`}
@@ -130,11 +134,13 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
               <Link
                 href={`/learn/${params.slug}/lessons/${adaptiveNext.lessonId}`}
                 className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur transition-all hover:bg-white/20"
-                title={`Skill yếu nhất: ${adaptiveNext.weakestSkillName} (${Math.round(
+                title={`Đề xuất: ${adaptiveNext.lessonTitle} (skill yếu: ${adaptiveNext.weakestSkillName} ${Math.round(
                   adaptiveNext.masteryProbability * 100,
                 )}%)`}
               >
-                Đề xuất: {adaptiveNext.lessonTitle}
+                <span aria-hidden>✨</span>
+                <span className="hidden sm:inline">Đề xuất: {adaptiveNext.lessonTitle}</span>
+                <span className="sm:hidden">Đề xuất</span>
               </Link>
             )}
             {isComplete && (
@@ -180,16 +186,41 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                     completedSet.has(l.id)
                   ).length;
 
+                  const pct =
+                    visibleLessons.length > 0
+                      ? Math.round((done / visibleLessons.length) * 100)
+                      : 0;
                   return (
                     <li key={m.id} className="card">
-                    <header className="flex items-baseline justify-between gap-3 border-b border-token pb-3">
-                      <h3 className="font-semibold">
-                        <span className="mr-2 text-faint">Module {mi + 1}</span>
-                        {m.title}
-                      </h3>
-                      <span className="text-xs text-faint tabular-nums">
-                        {done}/{visibleLessons.length}
-                      </span>
+                    <header className="border-b border-token pb-3">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h3 className="font-semibold">
+                          <span className="mr-2 text-faint">Module {mi + 1}</span>
+                          {m.title}
+                        </h3>
+                        <span className="text-xs text-faint tabular-nums">
+                          {done}/{visibleLessons.length} ·{" "}
+                          <span className={pct === 100 ? "text-success-600 font-semibold" : ""}>
+                            {pct}%
+                          </span>
+                        </span>
+                      </div>
+                      <div
+                        className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            pct === 100
+                              ? "bg-success-500"
+                              : "bg-gradient-to-r from-brand-500 to-brand-600"
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
                     </header>
                     <ol className="mt-3 space-y-1.5">
                       {m.lessons.map((l, li) => {
@@ -423,6 +454,21 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
           </section>
         </aside>
       </div>
+
+      {continueLessonId && continueLabel && (
+        <StickyMobileCTA
+          primary={`${continueLabel} bài học`}
+          secondary={`${progress.courseCompletionPct}% hoàn thành · ${xp.xp} XP`}
+          action={
+            <Link
+              href={`/learn/${params.slug}/lessons/${continueLessonId}`}
+              className="btn-primary"
+            >
+              Vào học →
+            </Link>
+          }
+        />
+      )}
     </main>
   );
 }

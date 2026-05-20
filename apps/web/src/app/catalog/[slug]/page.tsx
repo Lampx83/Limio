@@ -8,6 +8,7 @@ import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
+import { StickyMobileCTA } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +46,13 @@ export default async function CourseDetailPage({
 
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
 
+  const priceLabel =
+    paymentEnabled && !isFree(course.priceCents)
+      ? formatPrice(course.priceCents!, course.currency)
+      : "Miễn phí";
+
   return (
-    <main className="mx-auto max-w-7xl px-6 py-10">
+    <main className="mx-auto max-w-7xl px-6 py-10 pb-28 lg:pb-10">
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
         ← Catalog
       </Link>
@@ -108,10 +114,37 @@ export default async function CourseDetailPage({
           <div className="mt-6 flex flex-wrap gap-3">
             <HeroStat label="Modules" value={course.modules.length} />
             <HeroStat label="Bài học" value={totalLessons} />
+            {paymentEnabled && (
+              <div className="rounded-xl bg-white/15 px-4 py-2 backdrop-blur">
+                <div className="text-xs uppercase tracking-wide opacity-70">Học phí</div>
+                <div className="text-lg font-bold tabular-nums">{priceLabel}</div>
+              </div>
+            )}
           </div>
 
         </div>
       </header>
+
+      {/* Sticky mobile CTA — desktop dùng sidebar */}
+      {course.status === "published" && (
+        <StickyMobileCTA
+          primary={paymentEnabled ? priceLabel : course.title}
+          secondary={
+            enrolled
+              ? "Bạn đã đăng ký"
+              : `${course.modules.length} modules · ${totalLessons} bài`
+          }
+          action={
+            <EnrollButton
+              slug={params.slug}
+              alreadyEnrolled={enrolled}
+              priceCents={course.priceCents}
+              currency={course.currency}
+              paymentEnabled={paymentEnabled}
+            />
+          }
+        />
+      )}
 
       <div className="mt-10 grid gap-8 lg:grid-cols-3">
         {/* Curriculum — main column */}

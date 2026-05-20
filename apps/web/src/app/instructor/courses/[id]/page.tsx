@@ -199,16 +199,28 @@ export default async function InstructorCourseEditPage({
       {tab === "overview" && (
         <div className="mt-8 space-y-8">
           {untaggedLessonIds.length > 0 && (
-            <div className="rounded-2xl border border-accent-200 bg-accent-50 p-4">
-              <p className="text-sm font-semibold text-accent-700">
-                {untaggedLessonIds.length} bài chưa tag skill
-              </p>
-              <p className="mt-1 text-xs text-accent-700/80">
-                Khóa không thể publish khi còn bài chưa được tag —
-                personalization sẽ không hoạt động cho những bài này.
-                Sang tab <span className="font-semibold">Nội dung</span> để
-                tag.
-              </p>
+            <div className="banner-warning">
+              <span className="text-xl shrink-0" aria-hidden>⚠️</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold">
+                  {untaggedLessonIds.length} bài chưa tag skill
+                </p>
+                <p className="mt-1 text-xs opacity-90">
+                  Khoá không thể publish khi còn bài chưa được tag —
+                  personalization sẽ không hoạt động cho những bài này.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <a
+                    href={`?tab=content&lesson=${untaggedLessonIds[0]!.id}`}
+                    className="btn-primary btn-sm"
+                  >
+                    Tag ngay bài đầu tiên →
+                  </a>
+                  <a href="?tab=content" className="btn-ghost btn-sm">
+                    Xem tất cả bài chưa tag
+                  </a>
+                </div>
+              </div>
             </div>
           )}
 

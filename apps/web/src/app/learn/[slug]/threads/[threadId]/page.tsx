@@ -5,6 +5,7 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import ThreadReplyForm from "./ThreadReplyForm";
 import MarkResolvedButton from "./MarkResolvedButton";
+import { EmptyState, UserAvatar, DateTime, StatusBadge } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function ThreadPage({
   const isResolvedThread = !!thread.resolvedPostId;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-3xl px-6 py-10 pb-32">
       <Link
         href={`/learn/${params.slug}/lessons/${thread.lesson.id}`}
         className="link inline-flex items-center gap-1 text-sm"
@@ -53,20 +54,20 @@ export default async function ThreadPage({
       {/* OP article */}
       <article className="mt-6 card">
         <header className="flex items-start gap-3 border-b border-token pb-4">
-          <Avatar name={thread.author.displayName} />
-          <div className="flex-1">
+          <UserAvatar name={thread.author.displayName} size="md" />
+          <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="h-display text-2xl font-bold">{thread.title}</h1>
+              <h1 className="h-display text-h3">{thread.title}</h1>
               {isResolvedThread && (
-                <span className="chip-success">✓ Đã giải quyết</span>
+                <StatusBadge tone="success">Đã giải quyết</StatusBadge>
               )}
             </div>
-            <p className="mt-1 text-xs text-faint">
+            <p className="mt-1 text-caption">
               <span className="font-medium text-muted">
                 {thread.author.displayName}
               </span>
-              <span className="mx-1.5">·</span>
-              {new Date(thread.createdAt).toLocaleString("vi-VN")}
+              <span className="mx-1.5" aria-hidden>·</span>
+              <DateTime value={thread.createdAt} format="datetime" />
             </p>
           </div>
         </header>
@@ -84,36 +85,40 @@ export default async function ThreadPage({
           </span>
         </h2>
         {thread.posts.length === 0 ? (
-          <p className="mt-3 rounded-2xl border border-dashed border-token p-8 text-center text-sm text-faint">
-            Chưa có ai trả lời. Bạn có thể là người đầu tiên!
-          </p>
+          <div className="mt-3">
+            <EmptyState
+              icon="💬"
+              title="Chưa có ai trả lời"
+              description="Hãy là người đầu tiên giúp đỡ — kéo xuống dưới hoặc dùng form ở dưới cùng để trả lời."
+            />
+          </div>
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ol className="mt-4 space-y-3">
             {thread.posts.map((p) => {
               const isResolved = thread.resolvedPostId === p.id;
               return (
                 <li
                   key={p.id}
                   className={`overflow-hidden rounded-2xl border bg-[rgb(var(--surface))] shadow-card ${
-                    isResolved ? "border-success-200" : "border-token"
+                    isResolved ? "border-success-300" : "border-token"
                   }`}
                 >
                   {isResolved && (
                     <div className="flex items-center gap-1.5 bg-success-50 px-4 py-1.5 text-xs font-semibold text-success-700">
-                      <span>✓</span>
+                      <span aria-hidden>✓</span>
                       Câu trả lời được chấp nhận
                     </div>
                   )}
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <Avatar name={p.author.displayName} sm />
-                        <div>
-                          <p className="text-sm font-medium leading-tight">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <UserAvatar name={p.author.displayName} size="sm" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium leading-tight">
                             {p.author.displayName}
                           </p>
-                          <p className="mt-0.5 text-xs text-faint">
-                            {new Date(p.createdAt).toLocaleString("vi-VN")}
+                          <p className="mt-0.5 text-caption">
+                            <DateTime value={p.createdAt} format="relative" />
                           </p>
                         </div>
                       </div>
@@ -128,25 +133,19 @@ export default async function ThreadPage({
                 </li>
               );
             })}
-          </ul>
+          </ol>
         )}
       </section>
 
-      <div className="mt-8">
+      {/* Reply form — sticky bottom on mobile */}
+      <div
+        id="reply"
+        className="mt-8 lg:static lg:rounded-2xl lg:border lg:border-token lg:bg-[rgb(var(--surface))] lg:p-5 lg:shadow-card
+          fixed bottom-0 left-0 right-0 z-30 border-t border-token bg-[rgb(var(--surface))] p-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)" }}
+      >
         <ThreadReplyForm threadId={thread.id} />
       </div>
     </main>
-  );
-}
-
-function Avatar({ name, sm }: { name: string; sm?: boolean }) {
-  const initial = (name || "?").trim().charAt(0).toUpperCase();
-  const size = sm ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm";
-  return (
-    <span
-      className={`flex shrink-0 items-center justify-center rounded-full bg-brand-gradient font-semibold text-white shadow-sm ${size}`}
-    >
-      {initial}
-    </span>
   );
 }

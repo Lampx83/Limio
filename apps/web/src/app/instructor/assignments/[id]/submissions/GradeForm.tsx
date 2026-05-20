@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { toast } from "@/lib/toast";
 
 export default function GradeForm({
   submissionId,
@@ -23,12 +24,27 @@ export default function GradeForm({
   );
   const [feedback, setFeedback] = useState(initialFeedback ?? "");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [scoreError, setScoreError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  function validateScore(value: string): string | null {
+    if (value.trim() === "") return "Hãy nhập điểm";
+    const n = Number(value);
+    if (Number.isNaN(n)) return "Điểm phải là số";
+    if (n < 0) return "Điểm không thể âm";
+    if (n > maxScore) return `Điểm tối đa là ${maxScore}`;
+    return null;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const err = validateScore(score);
+    if (err) {
+      setScoreError(err);
+      return;
+    }
     setBusy(true);
-    setError(null);
+    setServerError(null);
     const res = await fetch(apiUrl(`/api/submissions/${submissionId}/grade`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,32 +54,56 @@ export default function GradeForm({
       }),
     });
     setBusy(false);
-    if (res.ok) router.refresh();
-    else {
+    if (res.ok) {
+      toast.success(isGraded ? "Đã cập nhật điểm" : "Đã chấm xong");
+      router.refresh();
+    } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "grade_failed");
+      const msg = d.error ?? "Không lưu được điểm";
+      setServerError(msg);
+      toast.error(msg);
     }
   }
 
+  const scoreInputId = `grade-score-${submissionId}`;
+  const scoreHelpId = `grade-score-help-${submissionId}`;
+
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
-      <div className="flex items-center gap-3">
-        <label className="label" htmlFor={`grade-score-${submissionId}`}>
-          Điểm
-        </label>
-        <input
-          id={`grade-score-${submissionId}`}
-          type="number"
-          min={0}
-          max={maxScore}
-          value={score}
-          onChange={(e) => setScore(e.target.value)}
-          required
-          className="input w-24"
-        />
-        <span className="text-xs text-faint">
-          / <span className="font-semibold">{maxScore}</span>
-        </span>
+    <form onSubmit={onSubmit} className="space-y-3" noValidate>
+      <div>
+        <div className="flex items-center gap-3">
+          <label className="label" htmlFor={scoreInputId}>
+            Điểm
+          </label>
+          <input
+            id={scoreInputId}
+            type="number"
+            min={0}
+            max={maxScore}
+            step="0.1"
+            value={score}
+            onChange={(e) => {
+              setScore(e.target.value);
+              if (scoreError) setScoreError(validateScore(e.target.value));
+            }}
+            onBlur={() => setScoreError(validateScore(score))}
+            required
+            aria-invalid={!!scoreError}
+            aria-describedby={scoreHelpId}
+            className={`input w-24 ${
+              scoreError ? "border-danger-500 focus:border-danger-500" : ""
+            }`}
+          />
+          <span className="text-xs text-faint">
+            / <span className="font-semibold">{maxScore}</span>
+          </span>
+        </div>
+        <p
+          id={scoreHelpId}
+          className={`help ${scoreError ? "text-danger-600" : ""}`}
+        >
+          {scoreError ?? `Nhập số từ 0 đến ${maxScore}.`}
+        </p>
       </div>
       <div>
         <label className="label" htmlFor={`grade-fb-${submissionId}`}>
@@ -79,11 +119,17 @@ export default function GradeForm({
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <button type="submit" disabled={busy} className="btn-primary btn-sm">
-          {busy ? "..." : isGraded ? "Cập nhật điểm" : "✓ Chấm điểm"}
+        <button
+          type="submit"
+          disabled={busy || !!scoreError}
+          className="btn-primary btn-sm"
+        >
+          {busy ? "Đang lưu..." : isGraded ? "Cập nhật điểm" : "✓ Chấm điểm"}
         </button>
-        {error && (
-          <span className="text-xs text-danger-600">Lỗi: {error}</span>
+        {serverError && (
+          <span className="text-xs text-danger-600" role="alert">
+            {serverError}
+          </span>
         )}
       </div>
     </form>

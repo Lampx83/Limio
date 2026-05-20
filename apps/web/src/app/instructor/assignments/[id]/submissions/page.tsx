@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { canEditCourse, listSubmissionsForInstructor } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
+import { EmptyState, UserAvatar, StatusBadge, DateTime } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -91,10 +92,15 @@ export default async function SubmissionsPage({
           </span>
         </h2>
         {submissions.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-                          </div>
-            <p className="mt-4 text-muted">Chưa có học viên nào nộp bài.</p>
+          <div className="mt-4">
+            <EmptyState
+              icon="📥"
+              title="Chưa có học viên nào nộp bài"
+              description="Khi học viên nộp bài, danh sách sẽ hiện ở đây để bạn chấm."
+              actions={[
+                { label: "Xem khoá học", href: `/instructor/courses/${courseId}`, variant: "secondary" },
+              ]}
+            />
           </div>
         ) : (
           <ul className="mt-4 space-y-4">
@@ -108,32 +114,31 @@ export default async function SubmissionsPage({
                   }`}
                 >
                   <header
-                    className={`flex flex-wrap items-center justify-between gap-2 px-5 py-3 ${
+                    className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3 ${
                       isGraded
                         ? "bg-success-50 text-success-700"
                         : "bg-accent-50 text-accent-700"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-gradient text-xs font-semibold text-white">
-                        {s.user.displayName.charAt(0).toUpperCase()}
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold leading-tight">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <UserAvatar name={s.user.displayName} size="sm" />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold leading-tight">
                           {s.user.displayName}
                         </p>
-                        <p className="mt-0.5 text-xs opacity-80">
+                        <p className="mt-0.5 truncate text-xs opacity-80">
                           {s.user.email}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right text-xs">
-                      <p className="font-medium">
-                        {isGraded ? "✓ Đã chấm" : "Chờ chấm"}
-                      </p>
-                      <p className="opacity-70">
-                        {new Date(s.submittedAt).toLocaleString("vi-VN")}
-                      </p>
+                    <div className="flex flex-col items-end gap-1 text-xs">
+                      <StatusBadge
+                        tone={isGraded ? "success" : "warning"}
+                        pulse={!isGraded}
+                      >
+                        {isGraded ? "Đã chấm" : "Chờ chấm"}
+                      </StatusBadge>
+                      <DateTime value={s.submittedAt} format="datetime" className="opacity-70" />
                     </div>
                   </header>
                   <div className="p-5">
@@ -145,17 +150,14 @@ export default async function SubmissionsPage({
                         {s.body}
                       </p>
                       {s.attachmentUrl && (
-                        <p className="mt-2 text-xs">
-                          {" "}
-                          <a
-                            href={s.attachmentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="link"
-                          >
-                            {s.attachmentUrl}
-                          </a>
-                        </p>
+                        <a
+                          href={s.attachmentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary btn-sm mt-3 inline-flex"
+                        >
+                          📎 Tải file đính kèm
+                        </a>
                       )}
                     </details>
                     <div className="mt-4 border-t border-token pt-4">
