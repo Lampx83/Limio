@@ -847,8 +847,140 @@ function InlineCuepointQuestion({
   skills: SkillRow[];
   onChange: (next: CuepointInlineDraft) => void;
 }) {
+  // Local-only preview state: instructor picks an answer and clicks "Kiểm tra"
+  // to verify the question works as intended before saving. Pure client-side —
+  // matches against the draft's isCorrect flags, no API call.
+  const [previewing, setPreviewing] = useState(false);
+  const [previewPick, setPreviewPick] = useState<number | null>(null);
+  const [previewResult, setPreviewResult] = useState<"correct" | "wrong" | null>(null);
+
+  if (previewing) {
+    const cleanOpts = draft.options
+      .map((o, i) => ({ ...o, idx: i }))
+      .filter((o) => o.label.trim());
+    const promptEmpty = !draft.prompt.trim();
+    const noCorrect = !draft.options.some((o) => o.isCorrect);
+    return (
+      <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3 dark:bg-amber-950/40">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+            Thử như học viên (chưa save)
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setPreviewing(false);
+              setPreviewPick(null);
+              setPreviewResult(null);
+            }}
+            className="text-xs text-muted hover:text-fg"
+          >
+            ← Quay lại soạn
+          </button>
+        </div>
+        {promptEmpty || cleanOpts.length < 2 || noCorrect ? (
+          <p className="text-xs text-danger-600">
+            Chưa đủ dữ liệu để thử: cần prompt, ≥2 đáp án và 1 đáp án đúng.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-medium">{draft.prompt}</p>
+            <ul className="space-y-1">
+              {cleanOpts.map((o) => (
+                <li key={o.idx}>
+                  <label
+                    className={`flex cursor-pointer items-center gap-2 rounded border px-3 py-1.5 text-sm ${
+                      previewResult && previewPick === o.idx
+                        ? o.isCorrect
+                          ? "border-success-500 bg-success-50"
+                          : "border-danger-500 bg-danger-50"
+                        : previewResult && o.isCorrect
+                          ? "border-success-500 bg-success-50/40"
+                          : "border-token bg-[rgb(var(--surface))]"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={`preview-${draft.uid}`}
+                      checked={previewPick === o.idx}
+                      onChange={() => {
+                        setPreviewPick(o.idx);
+                        setPreviewResult(null);
+                      }}
+                      disabled={previewResult !== null}
+                    />
+                    <span>{o.label}</span>
+                    {previewResult && o.isCorrect && (
+                      <span className="ml-auto text-xs font-semibold text-success-700">
+                        đáp án đúng
+                      </span>
+                    )}
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center gap-2 pt-1">
+              {previewResult === null ? (
+                <button
+                  type="button"
+                  disabled={previewPick === null}
+                  onClick={() => {
+                    if (previewPick === null) return;
+                    setPreviewResult(
+                      draft.options[previewPick]?.isCorrect ? "correct" : "wrong",
+                    );
+                  }}
+                  className="btn-primary btn-sm"
+                >
+                  Kiểm tra
+                </button>
+              ) : (
+                <>
+                  <span
+                    className={`text-sm font-semibold ${
+                      previewResult === "correct"
+                        ? "text-success-700"
+                        : "text-danger-700"
+                    }`}
+                  >
+                    {previewResult === "correct" ? "✓ Đúng" : "✗ Sai"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewPick(null);
+                      setPreviewResult(null);
+                    }}
+                    className="btn-secondary btn-sm"
+                  >
+                    Thử lại
+                  </button>
+                </>
+              )}
+            </div>
+            {previewResult && draft.explanation.trim() && (
+              <p className="text-xs text-muted">
+                <span className="font-semibold">Giải thích:</span> {draft.explanation}
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2 rounded-md border border-dashed border-token bg-[rgb(var(--surface))] p-2">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setPreviewing(true)}
+          className="text-xs text-brand-700 hover:underline"
+          title="Thử câu hỏi như học viên (không gửi server)"
+        >
+          ▶ Thử câu hỏi
+        </button>
+      </div>
       <textarea
         value={draft.prompt}
         onChange={(e) => onChange({ ...draft, prompt: e.target.value })}
