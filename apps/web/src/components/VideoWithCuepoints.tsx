@@ -302,22 +302,24 @@ function CuepointOverlay({
 
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-black/70 p-4 backdrop-blur-sm">
-      <div className="max-h-full w-full max-w-2xl overflow-y-auto rounded-xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card-hover">
-        <header className="flex items-baseline justify-between gap-2">
-          <h3 className="text-lg font-semibold">{quiz.title}</h3>
-          <span className="font-mono text-xs text-muted">@ {mm}:{ss}</span>
-        </header>
-        {quiz.description && (
-          <p className="mt-1 text-sm text-muted">{quiz.description}</p>
-        )}
-        <p className="mt-2 text-xs text-muted">
-          Trả lời đúng tất cả để xem tiếp video.
-          {attemptCount > 0 && (
-            <span> Lần thử: {attemptCount}.</span>
+      <div className="flex max-h-full w-full max-w-2xl flex-col rounded-xl border border-token bg-[rgb(var(--surface))] shadow-card-hover">
+        <div className="border-b border-token px-5 pb-3 pt-5">
+          <header className="flex items-baseline justify-between gap-2">
+            <h3 className="text-lg font-semibold">{quiz.title}</h3>
+            <span className="font-mono text-xs text-muted">@ {mm}:{ss}</span>
+          </header>
+          {quiz.description && (
+            <p className="mt-1 text-sm text-muted">{quiz.description}</p>
           )}
-        </p>
+          <p className="mt-2 text-xs text-muted">
+            Trả lời đúng tất cả để xem tiếp video.
+            {attemptCount > 0 && (
+              <span> Lần thử: {attemptCount}.</span>
+            )}
+          </p>
+        </div>
 
-        <ul className="mt-4 space-y-4">
+        <ul className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           {quiz.questions.map((q, idx) => {
             const supported = q.type === "mcq" || q.type === "true_false";
             const single = q.type === "true_false";
@@ -367,7 +369,7 @@ function CuepointOverlay({
           })}
         </ul>
 
-        <div className="mt-5 flex justify-end gap-2 border-t border-token pt-4">
+        <div className="flex justify-end gap-2 border-t border-token px-5 py-3">
           <button
             type="button"
             disabled={grading}
