@@ -243,6 +243,7 @@ export default function VideoWithCuepoints({
       setActive(null);
       v?.play().catch(() => {});
     } else {
+      toast.error("Chưa đúng — chọn lại và thử đến khi đúng để xem tiếp.");
       // Bump attempt count; learner can re-submit.
       setActive({ ...active, attemptCount: nextAttemptCount });
     }
@@ -369,7 +370,12 @@ function CuepointOverlay({
           })}
         </ul>
 
-        <div className="flex justify-end gap-2 border-t border-token px-5 py-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-token px-5 py-3">
+          {feedback && Object.values(feedback).some((f) => f === "wrong") && (
+            <p className="mr-auto text-sm font-medium text-danger-700">
+              Chưa đúng — chọn lại và thử đến khi đúng để xem tiếp.
+            </p>
+          )}
           <button
             type="button"
             data-view-keep
@@ -377,7 +383,7 @@ function CuepointOverlay({
             onClick={onSubmit}
             className="btn-primary btn-sm"
           >
-            {grading ? "Đang chấm..." : "Trả lời"}
+            {grading ? "Đang chấm..." : feedback ? "Thử lại" : "Trả lời"}
           </button>
         </div>
       </div>
