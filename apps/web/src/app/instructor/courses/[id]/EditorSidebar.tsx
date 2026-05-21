@@ -1,5 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { FlaskConical } from "lucide-react";
+import { FlaskConical, X, ListTree } from "lucide-react";
 
 interface SidebarLesson {
   id: string;
@@ -40,9 +44,32 @@ export default function EditorSidebar({
       : `${baseHref}?tab=content&lesson=${lessonId}`;
 
   const isOverviewActive = !activeLessonId;
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  return (
-    <aside className="sticky top-4 self-start max-h-[calc(100vh-2rem)] w-64 flex-shrink-0 overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 text-sm">
+  // Auto-close drawer when navigation happens (e.g. user picks a lesson).
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname, searchParams]);
+
+  // Lock body scroll while drawer open (mobile only).
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [drawerOpen]);
+
+  const activeLesson = activeLessonId
+    ? modules.flatMap((m) => m.lessons).find((l) => l.id === activeLessonId)
+    : null;
+  const triggerLabel = activeLesson?.title ?? "Tổng quan khoá";
+
+  const tree = (
+    <>
       <Link
         href={overviewHref}
         className={`block rounded-lg px-3 py-2 font-semibold transition-colors ${
@@ -62,12 +89,12 @@ export default function EditorSidebar({
 
       <div className="mt-2 space-y-1">
         {modules.length === 0 && (
-          <p className="px-3 py-4 text-xs text-faint">
-            Chưa có module nào.
-          </p>
+          <p className="px-3 py-4 text-xs text-faint">Chưa có module nào.</p>
         )}
         {modules.map((m, mi) => {
-          const moduleHasActive = m.lessons.some((l) => l.id === activeLessonId);
+          const moduleHasActive = m.lessons.some(
+            (l) => l.id === activeLessonId,
+          );
           return (
             <details key={m.id} open={moduleHasActive || mi < 3} className="group">
               <summary className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted hover:bg-[rgb(var(--surface-muted))]">
@@ -78,7 +105,10 @@ export default function EditorSidebar({
                   {mi + 1}. {m.title}
                 </span>
                 {m.isHidden && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-danger-500" title="Module ẩn" />
+                  <span
+                    className="ml-auto h-1.5 w-1.5 rounded-full bg-danger-500"
+                    title="Module ẩn"
+                  />
                 )}
               </summary>
               <ul className="mt-0.5 space-y-0.5 pl-4">
@@ -122,6 +152,59 @@ export default function EditorSidebar({
           );
         })}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop: inline sticky sidebar */}
+      <aside className="sticky top-4 hidden max-h-[calc(100vh-2rem)] w-64 flex-shrink-0 self-start overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 text-sm lg:block">
+        {tree}
+      </aside>
+
+      {/* Mobile: trigger button (sticky top, inline-flow) */}
+      <button
+        type="button"
+        onClick={() => setDrawerOpen(true)}
+        className="sticky top-4 z-10 mb-3 inline-flex w-full items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2.5 text-sm shadow-card transition-colors hover:border-brand-200 hover:bg-brand-soft lg:hidden"
+      >
+        <ListTree className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+        <span className="text-faint">Nội dung:</span>
+        <span className="min-w-0 flex-1 truncate text-left font-medium">
+          {triggerLabel}
+        </span>
+        <span className="text-xs text-faint">Mở menu</span>
+      </button>
+
+      {/* Mobile: drawer overlay */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-40 flex lg:hidden" role="dialog" aria-modal="true">
+          {/* Backdrop */}
+          <button
+            type="button"
+            aria-label="Đóng menu nội dung"
+            onClick={() => setDrawerOpen(false)}
+            className="absolute inset-0 bg-black/50"
+          />
+          {/* Panel */}
+          <aside className="relative ml-0 flex h-full w-[85%] max-w-xs flex-col bg-[rgb(var(--surface))] shadow-2xl">
+            <header className="flex items-center justify-between gap-2 border-b border-token px-3 py-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+                Nội dung khoá
+              </span>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                className="rounded-md p-1 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-default"
+                aria-label="Đóng"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </header>
+            <div className="flex-1 overflow-y-auto p-3 text-sm">{tree}</div>
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

@@ -270,7 +270,7 @@ export default async function InstructorCourseEditPage({
 
       {/* TAB: Nội dung */}
       {tab === "content" && (
-        <div className={useSidebarLayout ? "mt-6 flex gap-6" : "mt-6"}>
+        <div className={useSidebarLayout ? "mt-6 lg:flex lg:gap-6" : "mt-6"}>
           {useSidebarLayout && (
             <EditorSidebar
               courseId={course.id}

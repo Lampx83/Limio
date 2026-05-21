@@ -5,6 +5,7 @@ import { TournamentStatus } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import TournamentFilter from "./TournamentFilter";
+import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,7 @@ export default async function InstructorTournamentsPage({
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <span className="chip-accent">Tournament</span>
-          <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          <h1 className="mt-3 h-display text-h1">
             Tournaments của tôi
           </h1>
           <p className="mt-2 text-muted">
@@ -94,20 +95,13 @@ export default async function InstructorTournamentsPage({
 
       {/* List */}
       {tournaments.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-token p-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-            🏆
-          </div>
-          <p className="mt-4 text-muted">
-            Chưa có tournament nào. Tạo tournament đầu tiên để bắt đầu.
-          </p>
-          <Link
-            href="/instructor/tournaments/new"
-            className="btn-primary mt-5 inline-flex"
-          >
-            + Tạo tournament mới
-          </Link>
-        </div>
+        <EmptyState
+          className="mt-10"
+          icon="🏆"
+          title={validStatus ? `Không có tournament ở trạng thái "${STATUS_LABEL[validStatus]}"` : "Chưa có tournament nào"}
+          description={validStatus ? "Đổi filter trạng thái hoặc tạo tournament mới." : "Tạo tournament đầu tiên để học viên tham gia missions, leaderboard, prize."}
+          actions={[{ label: "+ Tạo tournament mới", href: "/instructor/tournaments/new" }]}
+        />
       ) : (
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {tournaments.map((t) => (

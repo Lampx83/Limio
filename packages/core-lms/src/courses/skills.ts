@@ -303,6 +303,7 @@ export interface SkillCoverageSummary {
     courseId: string;
     courseTitle: string;
     courseStatus: string;
+    personalizationEnabled: boolean;
     totalLessons: number;
     taggedLessons: number;
     totalQuestions: number;
@@ -344,7 +345,7 @@ export async function getInstructorSkillCoverage(
 ): Promise<SkillCoverageSummary> {
   const courses = await db.course.findMany({
     where: { instructors: { some: { userId } } },
-    select: { id: true, title: true, status: true },
+    select: { id: true, title: true, status: true, personalizationEnabled: true },
     orderBy: { title: "asc" },
   });
   if (courses.length === 0) {
@@ -433,6 +434,7 @@ export async function getInstructorSkillCoverage(
       courseId: c.id,
       courseTitle: c.title,
       courseStatus: c.status,
+      personalizationEnabled: c.personalizationEnabled,
       totalLessons: courseLessons.length,
       taggedLessons,
       totalQuestions: courseQuestions.length,
@@ -484,7 +486,11 @@ export async function getInstructorSkillCoverage(
 
 export async function listUntaggedLessons(
   userId: string,
-  opts: { courseId?: string; limit?: number } = {},
+  opts: {
+    courseId?: string;
+    limit?: number;
+    personalizationEnabledOnly?: boolean;
+  } = {},
   db: DbClient = prisma,
 ): Promise<UntaggedLessonRow[]> {
   const limit = Math.min(opts.limit ?? 100, 500);
@@ -494,6 +500,9 @@ export async function listUntaggedLessons(
         course: {
           instructors: { some: { userId } },
           ...(opts.courseId ? { id: opts.courseId } : {}),
+          ...(opts.personalizationEnabledOnly
+            ? { personalizationEnabled: true }
+            : {}),
         },
       },
       skillTags: { none: {} },
@@ -543,7 +552,11 @@ export async function listUntaggedLessons(
 
 export async function listUntaggedQuestions(
   userId: string,
-  opts: { courseId?: string; limit?: number } = {},
+  opts: {
+    courseId?: string;
+    limit?: number;
+    personalizationEnabledOnly?: boolean;
+  } = {},
   db: DbClient = prisma,
 ): Promise<UntaggedQuestionRow[]> {
   const limit = Math.min(opts.limit ?? 100, 500);
@@ -553,6 +566,9 @@ export async function listUntaggedQuestions(
     where: {
       instructors: { some: { userId } },
       ...(opts.courseId ? { id: opts.courseId } : {}),
+      ...(opts.personalizationEnabledOnly
+        ? { personalizationEnabled: true }
+        : {}),
     },
     select: { id: true, title: true, status: true },
   });

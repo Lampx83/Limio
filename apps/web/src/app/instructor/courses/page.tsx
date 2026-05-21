@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function InstructorCoursesPage() {
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <span className="chip-brand">Instructor</span>
-          <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+          <h1 className="mt-3 h-display text-h1">
             Khóa học của tôi
           </h1>
           <p className="mt-2 text-muted">
@@ -76,16 +77,13 @@ export default async function InstructorCoursesPage() {
 
       {/* Courses list */}
       {courses.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-token p-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
-                      </div>
-          <p className="mt-4 text-muted">
-            Chưa có khóa học nào. Tạo khóa đầu tiên để bắt đầu.
-          </p>
-          <Link href="/instructor/courses/new" className="btn-primary mt-5 inline-flex">
-            + Tạo khóa học
-          </Link>
-        </div>
+        <EmptyState
+          className="mt-10"
+          icon="📚"
+          title="Chưa có khóa học nào"
+          description="Tạo khóa đầu tiên để bắt đầu xây dựng module, lesson và quiz."
+          actions={[{ label: "+ Tạo khóa học", href: "/instructor/courses/new" }]}
+        />
       ) : (
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {courses.map((c) => (

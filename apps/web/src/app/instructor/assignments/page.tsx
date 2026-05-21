@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { EmptyState, KpiCard } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +28,14 @@ export default async function InstructorAssignmentsPage({
   if (ownedCourses.length === 0) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="h-display text-3xl font-bold">Chấm bài</h1>
-        <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5 text-sm">
-          Bạn chưa là instructor của khóa nào.
-          <Link href="/instructor/courses/new" className="btn-primary btn-sm ml-3">
-            + Tạo khóa
-          </Link>
-        </div>
+        <h1 className="h-display text-h1">Chấm bài</h1>
+        <EmptyState
+          className="mt-6"
+          icon="📝"
+          title="Bạn chưa là instructor của khoá nào"
+          description="Tạo khoá đầu tiên để có assignment cần chấm."
+          actions={[{ label: "+ Tạo khoá", href: "/instructor/courses/new" }]}
+        />
       </main>
     );
   }
@@ -48,8 +50,14 @@ export default async function InstructorAssignmentsPage({
 
   const scopedCourseIds = selectedCourseId ? [selectedCourseId] : courseIds;
 
-  // Always compute pending count so the tab badge shows.
-  const [pendingSubmissionsCount, pendingEssaysCount] = await Promise.all([
+  // KPI metrics: pending grading + totals + overdue.
+  const [
+    pendingSubmissionsCount,
+    pendingEssaysCount,
+    totalAssignments,
+    gradedSubmissionsCount,
+    overdueAssignments,
+  ] = await Promise.all([
     prisma.assignmentSubmission.count({
       where: {
         status: "submitted",
@@ -61,6 +69,22 @@ export default async function InstructorAssignmentsPage({
         needsGrading: true,
         manualScore: null,
         attempt: { quiz: { courseId: { in: scopedCourseIds } } },
+      },
+    }),
+    prisma.assignment.count({
+      where: { lesson: { module: { courseId: { in: scopedCourseIds } } } },
+    }),
+    prisma.assignmentSubmission.count({
+      where: {
+        status: "graded",
+        assignment: { lesson: { module: { courseId: { in: scopedCourseIds } } } },
+      },
+    }),
+    prisma.assignment.count({
+      where: {
+        dueAt: { lt: new Date() },
+        lesson: { module: { courseId: { in: scopedCourseIds } } },
+        submissions: { some: { status: "submitted" } },
       },
     }),
   ]);
@@ -80,21 +104,58 @@ export default async function InstructorAssignmentsPage({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <header>
-        <h1 className="h-display text-3xl font-bold sm:text-4xl">Chấm bài</h1>
+      {/* Back link */}
+      <Link
+        href="/instructor/dashboard"
+        className="link inline-flex items-center gap-1 text-sm"
+      >
+        ← Dashboard
+      </Link>
+
+      {/* Header */}
+      <header className="mt-4">
+        <span className="chip-brand">Instructor</span>
+        <h1 className="mt-3 h-display text-h1">Chấm bài</h1>
         <p className="mt-2 text-muted">
-          Quản lý assignment + chấm tập trung mọi submission đang chờ.
+          Quản lý assignment + chấm tập trung mọi submission đang chờ trong{" "}
+          {ownedCourses.length} khoá bạn phụ trách.
         </p>
       </header>
 
+      {/* KPI cards */}
+      <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <KpiCard label="Tổng assignment" value={totalAssignments} tone="brand" />
+        <KpiCard
+          label="Đang chờ chấm"
+          value={totalPending}
+          sub={
+            totalPending > 0
+              ? `${pendingSubmissionsCount} bài nộp · ${pendingEssaysCount} tự luận`
+              : "Sạch hết"
+          }
+          tone={totalPending > 0 ? "accent" : "success"}
+        />
+        <KpiCard
+          label="Đã chấm"
+          value={gradedSubmissionsCount}
+          tone="success"
+        />
+        <KpiCard
+          label="Assignment quá hạn"
+          value={overdueAssignments}
+          sub={overdueAssignments > 0 ? "Còn bài chưa chấm" : undefined}
+          tone={overdueAssignments > 0 ? "danger" : "success"}
+        />
+      </section>
+
       {/* Tabs */}
-      <div className="mt-6 flex gap-1 border-b border-token">
+      <div className="mt-8 flex gap-1 border-b border-token">
         <Link
           href={buildHref({ view: "list" })}
           className={
             "border-b-2 px-4 py-2 text-sm transition-colors " +
             (view === "list"
-              ? "border-amber-500 font-semibold text-amber-700 dark:text-amber-300"
+              ? "border-brand-500 font-semibold text-brand-700 dark:text-brand-300"
               : "border-transparent text-muted hover:text-[rgb(var(--text))]")
           }
         >
@@ -105,7 +166,7 @@ export default async function InstructorAssignmentsPage({
           className={
             "inline-flex items-center gap-1.5 border-b-2 px-4 py-2 text-sm transition-colors " +
             (view === "pending"
-              ? "border-amber-500 font-semibold text-amber-700 dark:text-amber-300"
+              ? "border-brand-500 font-semibold text-brand-700 dark:text-brand-300"
               : "border-transparent text-muted hover:text-[rgb(var(--text))]")
           }
         >
@@ -119,7 +180,7 @@ export default async function InstructorAssignmentsPage({
       </div>
 
       {/* Common: course filter */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-faint">
           Khoá:
         </span>
@@ -127,7 +188,7 @@ export default async function InstructorAssignmentsPage({
           href={buildHref({ course: null })}
           className={selectedCourseId === null ? "chip-brand" : "chip"}
         >
-          Tất cả
+          Tất cả ({ownedCourses.length})
         </Link>
         {ownedCourses.map((c) => (
           <Link
@@ -143,7 +204,6 @@ export default async function InstructorAssignmentsPage({
       {view === "list" ? (
         <AssignmentListView
           courseIds={scopedCourseIds}
-          ownedCoursesCount={ownedCourses.length}
           filter={filter}
           buildHref={buildHref}
         />
@@ -156,12 +216,10 @@ export default async function InstructorAssignmentsPage({
 
 async function AssignmentListView({
   courseIds,
-  ownedCoursesCount,
   filter,
   buildHref,
 }: {
   courseIds: string[];
-  ownedCoursesCount: number;
   filter: string;
   buildHref: (n: { filter?: string; view?: View }) => string;
 }) {
@@ -218,18 +276,9 @@ async function AssignmentListView({
     if (filter === "hidden") return a.isHidden;
     return true;
   });
-  const totalPending = enriched.reduce((s, a) => s + a.counts.pending, 0);
-
   return (
     <>
-      <div className="mt-3 text-sm text-muted">
-        {enriched.length} bài tập trong {ownedCoursesCount} khoá ·{" "}
-        <span className={totalPending > 0 ? "font-semibold text-accent-700" : ""}>
-          {totalPending} submission chờ chấm
-        </span>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-faint">
           Trạng thái:
         </span>
@@ -252,87 +301,132 @@ async function AssignmentListView({
 
       <section className="mt-8">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-10 text-center text-sm text-muted">
-            Không có bài tập nào khớp bộ lọc.
-          </div>
+          <EmptyState
+            icon="🔍"
+            title="Không có bài tập khớp bộ lọc"
+            description="Đổi khoá hoặc bộ lọc trạng thái để xem thêm."
+          />
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
-            <table className="w-full text-sm">
-              <thead className="bg-[rgb(var(--surface-muted))]">
-                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
-                  <th className="px-4 py-3">Tiêu đề</th>
-                  <th className="px-4 py-3">Khoá / Bài học</th>
-                  <th className="px-4 py-3">Hạn nộp</th>
-                  <th className="px-4 py-3 text-right">Chờ chấm</th>
-                  <th className="px-4 py-3 text-right">Đã chấm</th>
-                  <th className="px-4 py-3 text-right">Tổng</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-token">
-                {filtered.map((a) => {
-                  const due = a.dueAt ? new Date(a.dueAt) : null;
-                  const overdue = due && due < new Date();
-                  return (
-                    <tr
-                      key={a.id}
-                      className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
-                    >
-                      <td className="px-4 py-3 align-top">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{a.title}</span>
-                          {a.isHidden && (
-                            <span className="chip text-[10px]">Đang ẩn</span>
+          <>
+            {/* Desktop table */}
+            <div className="hidden overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card lg:block">
+              <table className="w-full text-sm">
+                <thead className="bg-[rgb(var(--surface-muted))]">
+                  <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
+                    <th className="px-4 py-3">Tiêu đề</th>
+                    <th className="px-4 py-3">Khoá / Bài học</th>
+                    <th className="px-4 py-3">Hạn nộp</th>
+                    <th className="px-4 py-3 text-right">Chờ chấm</th>
+                    <th className="px-4 py-3 text-right">Đã chấm</th>
+                    <th className="px-4 py-3 text-right">Tổng</th>
+                    <th className="px-4 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-token">
+                  {filtered.map((a) => {
+                    const due = a.dueAt ? new Date(a.dueAt) : null;
+                    const overdue = due && due < new Date();
+                    return (
+                      <tr
+                        key={a.id}
+                        className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                      >
+                        <td className="px-4 py-3 align-top">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{a.title}</span>
+                            {a.isHidden && (
+                              <span className="chip text-[10px]">Đang ẩn</span>
+                            )}
+                          </div>
+                          <p className="mt-0.5 text-xs text-faint">
+                            Tối đa {a.maxScore} điểm
+                          </p>
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <p className="text-xs text-muted">
+                            {a.lesson.module.course.title}
+                          </p>
+                          <p className="mt-0.5 text-xs text-faint">
+                            {a.lesson.title}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3 align-top text-xs">
+                          {due ? (
+                            <span className={overdue ? "text-danger-600" : ""}>
+                              {due.toLocaleDateString("vi-VN")}
+                            </span>
+                          ) : (
+                            <span className="text-faint">—</span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-right align-top tabular-nums">
+                          {a.counts.pending > 0 ? (
+                            <span className="chip-accent">{a.counts.pending}</span>
+                          ) : (
+                            <span className="text-faint">0</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right align-top tabular-nums text-success-600">
+                          {a.counts.graded}
+                        </td>
+                        <td className="px-4 py-3 text-right align-top tabular-nums">
+                          {a.counts.total}
+                        </td>
+                        <td className="px-4 py-3 text-right align-top">
+                          <Link
+                            href={`/instructor/assignments/${a.id}/submissions`}
+                            className="btn-secondary btn-sm"
+                          >
+                            Chấm bài
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile card stack */}
+            <ul className="space-y-3 lg:hidden">
+              {filtered.map((a) => {
+                const due = a.dueAt ? new Date(a.dueAt) : null;
+                const overdue = due && due < new Date();
+                return (
+                  <li key={a.id} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="line-clamp-1 font-medium">{a.title}</span>
+                          {a.isHidden && <span className="chip text-[10px] shrink-0">Ẩn</span>}
                         </div>
-                        <p className="mt-0.5 text-xs text-faint">
-                          Tối đa {a.maxScore} điểm
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <p className="text-xs text-muted">
-                          {a.lesson.module.course.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-faint">
-                          {a.lesson.title}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 align-top text-xs">
+                        <p className="mt-0.5 text-xs text-muted">{a.lesson.module.course.title}</p>
+                        <p className="text-xs text-faint">{a.lesson.title}</p>
+                      </div>
+                      {a.counts.pending > 0 && (
+                        <span className="chip-accent shrink-0">{a.counts.pending} chờ</span>
+                      )}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-token pt-3 text-xs">
+                      <span className="text-faint">
                         {due ? (
                           <span className={overdue ? "text-danger-600" : ""}>
-                            {due.toLocaleDateString("vi-VN")}
+                            Hạn: {due.toLocaleDateString("vi-VN")}
                           </span>
-                        ) : (
-                          <span className="text-faint">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right align-top tabular-nums">
-                        {a.counts.pending > 0 ? (
-                          <span className="chip-accent">{a.counts.pending}</span>
-                        ) : (
-                          <span className="text-faint">0</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right align-top tabular-nums text-success-600">
-                        {a.counts.graded}
-                      </td>
-                      <td className="px-4 py-3 text-right align-top tabular-nums">
-                        {a.counts.total}
-                      </td>
-                      <td className="px-4 py-3 text-right align-top">
-                        <Link
-                          href={`/instructor/assignments/${a.id}/submissions`}
-                          className="btn-secondary btn-sm"
-                        >
-                          Chấm bài
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        ) : "Không hạn"} · {a.counts.graded}/{a.counts.total} chấm
+                      </span>
+                      <Link
+                        href={`/instructor/assignments/${a.id}/submissions`}
+                        className="btn-secondary btn-sm"
+                      >
+                        Chấm
+                      </Link>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </section>
     </>
@@ -452,9 +546,11 @@ async function PendingStreamView({ courseIds }: { courseIds: string[] }) {
       </div>
       <section className="mt-8">
         {items.length === 0 ? (
-          <div className="rounded-2xl border border-success-200 bg-success-50 p-10 text-center text-sm text-success-700">
-            🎉 Không còn bài nào chờ chấm.
-          </div>
+          <EmptyState
+            icon="🎉"
+            title="Không còn bài nào chờ chấm"
+            description="Tất cả submission đã được chấm xong. Kiểm tra lại lần sau."
+          />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
             <table className="w-full text-sm">

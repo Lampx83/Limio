@@ -7,13 +7,14 @@ import {
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import BulkTagger from "./BulkTagger";
+import { EmptyState, KpiCard } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function SkillTaggingHubPage({
   searchParams,
 }: {
-  searchParams?: { course?: string };
+  searchParams?: { course?: string; personalization?: string };
 }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -25,10 +26,14 @@ export default async function SkillTaggingHubPage({
   if (coverage.courses.length === 0) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="h-display text-3xl font-bold">Skill Tagging</h1>
-        <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5 text-sm">
-          Bạn chưa là instructor của khóa nào.
-        </div>
+        <h1 className="h-display text-h1">Skill Tagging</h1>
+        <EmptyState
+          className="mt-6"
+          icon="🏷️"
+          title="Bạn chưa là instructor của khoá nào"
+          description="Tạo khoá học để bắt đầu tag skill cho lesson và quiz."
+          actions={[{ label: "+ Tạo khoá", href: "/instructor/courses/new" }]}
+        />
       </main>
     );
   }
@@ -38,10 +43,25 @@ export default async function SkillTaggingHubPage({
     coverage.courses.some((c) => c.courseId === searchParams.course)
       ? searchParams.course
       : undefined;
+  // "on" = chỉ hiện course có personalization bật (course standard-LMS không
+  // cần tag skill nên không gây nhiễu instructor).
+  const onlyPersonalization = searchParams?.personalization === "on";
+  const visibleCourses = onlyPersonalization
+    ? coverage.courses.filter((c) => c.personalizationEnabled)
+    : coverage.courses;
+  const personalizationOffCount = coverage.courses.length - coverage.courses.filter((c) => c.personalizationEnabled).length;
 
   const [untaggedLessons, untaggedQuestions] = await Promise.all([
-    listUntaggedLessons(userId, { courseId: courseFilter, limit: 200 }),
-    listUntaggedQuestions(userId, { courseId: courseFilter, limit: 200 }),
+    listUntaggedLessons(userId, {
+      courseId: courseFilter,
+      limit: 200,
+      personalizationEnabledOnly: onlyPersonalization,
+    }),
+    listUntaggedQuestions(userId, {
+      courseId: courseFilter,
+      limit: 200,
+      personalizationEnabledOnly: onlyPersonalization,
+    }),
   ]);
 
   const { totals } = coverage;
@@ -54,15 +74,22 @@ export default async function SkillTaggingHubPage({
       ? Math.round((totals.taggedQuestions / totals.totalQuestions) * 100)
       : 100;
 
-  const filterHref = (cid?: string) =>
-    cid
-      ? `/instructor/skill-tagging?course=${cid}`
-      : "/instructor/skill-tagging";
+  const filterHref = (next: { course?: string; personalization?: "on" | null }) => {
+    const params = new URLSearchParams();
+    const c = "course" in next ? next.course : courseFilter;
+    const p = "personalization" in next
+      ? next.personalization
+      : (onlyPersonalization ? "on" : null);
+    if (c) params.set("course", c);
+    if (p === "on") params.set("personalization", "on");
+    const qs = params.toString();
+    return qs ? `/instructor/skill-tagging?${qs}` : "/instructor/skill-tagging";
+  };
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <header>
-        <h1 className="h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="h-display text-h1">
           Skill Tagging
         </h1>
         <p className="mt-2 text-muted">
@@ -78,15 +105,15 @@ export default async function SkillTaggingHubPage({
           Khoá:
         </span>
         <Link
-          href={filterHref(undefined)}
+          href={filterHref({ course: undefined })}
           className={!courseFilter ? "chip-brand" : "chip"}
         >
-          Tất cả
+          Tất cả ({visibleCourses.length})
         </Link>
-        {coverage.courses.map((c) => (
+        {visibleCourses.map((c) => (
           <Link
             key={c.courseId}
-            href={filterHref(c.courseId)}
+            href={filterHref({ course: c.courseId })}
             className={courseFilter === c.courseId ? "chip-brand" : "chip"}
           >
             {c.courseTitle}
@@ -94,15 +121,40 @@ export default async function SkillTaggingHubPage({
         ))}
       </div>
 
+      {/* Filter by personalization */}
+      {personalizationOffCount > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+            Phạm vi:
+          </span>
+          <Link
+            href={filterHref({ personalization: null })}
+            className={!onlyPersonalization ? "chip-brand" : "chip"}
+          >
+            Mọi khoá
+          </Link>
+          <Link
+            href={filterHref({ personalization: "on" })}
+            className={onlyPersonalization ? "chip-brand" : "chip"}
+            title="Chỉ hiện khoá có bật personalization — khoá Standard LMS không cần tag skill"
+          >
+            🤖 Chỉ khoá AI Feedback
+          </Link>
+          <span className="text-xs text-faint">
+            ({personalizationOffCount} khoá Standard LMS không yêu cầu tag skill)
+          </span>
+        </div>
+      )}
+
       {/* KPI cards */}
       <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
-        <Kpi
+        <KpiCard
           label="Lesson đã tag"
           value={`${totals.taggedLessons}/${totals.totalLessons}`}
           sub={`${lessonPct}% coverage`}
           tone={lessonPct === 100 ? "success" : lessonPct >= 70 ? "brand" : "accent"}
         />
-        <Kpi
+        <KpiCard
           label="Question đã tag"
           value={`${totals.taggedQuestions}/${totals.totalQuestions}`}
           sub={`${questionPct}% coverage`}
@@ -110,13 +162,13 @@ export default async function SkillTaggingHubPage({
             questionPct === 100 ? "success" : questionPct >= 70 ? "brand" : "accent"
           }
         />
-        <Kpi
+        <KpiCard
           label="Lesson live chưa tag"
           value={totals.untaggedLiveLessons}
           sub="Đang published + visible"
           tone={totals.untaggedLiveLessons > 0 ? "danger" : "success"}
         />
-        <Kpi
+        <KpiCard
           label="Question live chưa tag"
           value={totals.untaggedLiveQuestions}
           sub="Trong khoá đã publish"
@@ -127,7 +179,9 @@ export default async function SkillTaggingHubPage({
       {/* Per-course coverage */}
       <section className="mt-10">
         <h2 className="text-base font-semibold">Coverage theo khoá</h2>
-        <div className="mt-3 overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
+
+        {/* Desktop table */}
+        <div className="mt-3 hidden overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card lg:block">
           <table className="w-full text-sm">
             <thead className="bg-[rgb(var(--surface-muted))]">
               <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
@@ -139,7 +193,7 @@ export default async function SkillTaggingHubPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-token">
-              {coverage.courses.map((c) => {
+              {visibleCourses.map((c) => {
                 const lp =
                   c.totalLessons > 0
                     ? Math.round((c.taggedLessons / c.totalLessons) * 100)
@@ -193,6 +247,49 @@ export default async function SkillTaggingHubPage({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile card stack */}
+        <ul className="mt-3 space-y-3 lg:hidden">
+          {visibleCourses.map((c) => {
+            const lp = c.totalLessons > 0 ? Math.round((c.taggedLessons / c.totalLessons) * 100) : 100;
+            const qp = c.totalQuestions > 0 ? Math.round((c.taggedQuestions / c.totalQuestions) * 100) : 100;
+            return (
+              <li key={c.courseId} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="flex-1 font-medium">{c.courseTitle}</p>
+                  <span className={c.courseStatus === "published" ? "chip-success shrink-0" : "chip shrink-0"}>
+                    {c.courseStatus}
+                  </span>
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <dt className="text-faint">Lesson</dt>
+                    <dd className="mt-0.5 tabular-nums">
+                      <span className={lp < 100 ? "text-accent-700 font-medium" : "font-medium"}>
+                        {c.taggedLessons}/{c.totalLessons}
+                      </span>
+                      <span className="ml-1 text-faint">({lp}%)</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-faint">Question</dt>
+                    <dd className="mt-0.5 tabular-nums">
+                      <span className={qp < 100 ? "text-accent-700 font-medium" : "font-medium"}>
+                        {c.taggedQuestions}/{c.totalQuestions}
+                      </span>
+                      <span className="ml-1 text-faint">({qp}%)</span>
+                    </dd>
+                  </div>
+                </dl>
+                <div className="mt-3 border-t border-token pt-3 text-right">
+                  <Link href={`/instructor/courses/${c.courseId}`} className="btn-ghost btn-sm">
+                    Mở khoá →
+                  </Link>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       {/* Untagged lessons */}
@@ -210,9 +307,12 @@ export default async function SkillTaggingHubPage({
           </p>
         </header>
         {untaggedLessons.length === 0 ? (
-          <div className="mt-3 rounded-2xl border border-success-200 bg-success-50 p-6 text-center text-sm text-success-700">
-            Toàn bộ lesson đã được tag.
-          </div>
+          <EmptyState
+            className="mt-3"
+            icon="✅"
+            title="Toàn bộ lesson đã được tag"
+            description="Coverage 100% trong scope hiện tại."
+          />
         ) : (
           <BulkTagger lessons={untaggedLessons} />
         )}
@@ -233,74 +333,71 @@ export default async function SkillTaggingHubPage({
           </p>
         </header>
         {untaggedQuestions.length === 0 ? (
-          <div className="mt-3 rounded-2xl border border-success-200 bg-success-50 p-6 text-center text-sm text-success-700">
-            Toàn bộ question đã được tag.
-          </div>
+          <EmptyState
+            className="mt-3"
+            icon="✅"
+            title="Toàn bộ question đã được tag"
+            description="Mọi quiz question đều feed được vào BKT."
+          />
         ) : (
-          <div className="mt-3 overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
-            <table className="w-full text-sm">
-              <thead className="bg-[rgb(var(--surface-muted))]">
-                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
-                  <th className="px-4 py-3">Prompt</th>
-                  <th className="px-4 py-3">Khoá / Quiz</th>
-                  <th className="px-4 py-3">Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-token">
-                {untaggedQuestions.map((q) => (
-                  <tr
-                    key={q.questionId}
-                    className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
-                  >
-                    <td className="px-4 py-3 align-top">
-                      <p className="line-clamp-2 max-w-md">{q.prompt}</p>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <p className="text-xs text-muted">{q.courseTitle}</p>
-                      <p className="mt-0.5 text-xs text-faint">{q.quizTitle}</p>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      {q.courseStatus === "published" ? (
-                        <span className="chip-danger">Live · chưa tag</span>
-                      ) : (
-                        <span className="chip">Draft</span>
-                      )}
-                    </td>
+          <>
+            {/* Desktop table */}
+            <div className="mt-3 hidden overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card lg:block">
+              <table className="w-full text-sm">
+                <thead className="bg-[rgb(var(--surface-muted))]">
+                  <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
+                    <th className="px-4 py-3">Prompt</th>
+                    <th className="px-4 py-3">Khoá / Quiz</th>
+                    <th className="px-4 py-3">Trạng thái</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-token">
+                  {untaggedQuestions.map((q) => (
+                    <tr
+                      key={q.questionId}
+                      className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                    >
+                      <td className="px-4 py-3 align-top">
+                        <p className="line-clamp-2 max-w-md">{q.prompt}</p>
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <p className="text-xs text-muted">{q.courseTitle}</p>
+                        <p className="mt-0.5 text-xs text-faint">{q.quizTitle}</p>
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        {q.courseStatus === "published" ? (
+                          <span className="chip-danger">Live · chưa tag</span>
+                        ) : (
+                          <span className="chip">Draft</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile card stack */}
+            <ul className="mt-3 space-y-3 lg:hidden">
+              {untaggedQuestions.map((q) => (
+                <li key={q.questionId} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="line-clamp-3 flex-1 text-sm">{q.prompt}</p>
+                    {q.courseStatus === "published" ? (
+                      <span className="chip-danger shrink-0">Live</span>
+                    ) : (
+                      <span className="chip shrink-0">Draft</span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-muted">{q.courseTitle}</p>
+                  <p className="text-xs text-faint">{q.quizTitle}</p>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </main>
   );
 }
 
-function Kpi({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  tone: "brand" | "success" | "accent" | "danger";
-}) {
-  const toneClass = {
-    brand: "text-brand-600",
-    success: "text-success-600",
-    accent: "text-accent-600",
-    danger: "text-danger-600",
-  }[tone];
-  return (
-    <div className="card">
-      <div className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
-        {value}
-      </div>
-      <div className="mt-1 text-xs text-muted sm:text-sm">{label}</div>
-      {sub && <div className="mt-0.5 text-xs text-faint">{sub}</div>}
-    </div>
-  );
-}
