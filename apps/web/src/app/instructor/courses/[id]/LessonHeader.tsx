@@ -38,6 +38,7 @@ export default function LessonHeader({
   moduleId,
   siblingLessonIds,
   modules,
+  hideUntaggedWarning = false,
 }: {
   lessonId: string;
   title: string;
@@ -52,6 +53,7 @@ export default function LessonHeader({
   moduleId?: string;
   siblingLessonIds?: string[];
   modules?: ModuleRef[];
+  hideUntaggedWarning?: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -184,6 +186,7 @@ export default function LessonHeader({
           moduleId={moduleId}
           siblingLessonIds={siblingLessonIds}
           modules={modules}
+          hideUntaggedWarning={hideUntaggedWarning}
         />
         {description && (
           <SafeHtml
@@ -229,7 +232,9 @@ export default function LessonHeader({
               : "Chỉ học viên đã mua/đăng ký mới có thể xem — bấm để mở preview"
           }
         />
-        {noSkill && <span className="chip-accent text-xs">chưa tag skill</span>}
+        {noSkill && !hideUntaggedWarning && (
+          <span className="chip-accent text-xs">chưa tag skill</span>
+        )}
         <div className="ml-auto flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
           <button
             type="button"

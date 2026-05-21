@@ -119,7 +119,9 @@ export default async function InstructorCourseEditPage({
     }
   }
 
-  // Sidebar tree shape — only the data we need
+  // Sidebar tree shape — only the data we need.
+  // When personalization is off, force noSkill=false so the "chưa tag skill"
+  // chip stops appearing in sidebar + module overview.
   const sidebarModules = course.modules.map((m) => ({
     id: m.id,
     title: m.title,
@@ -128,7 +130,7 @@ export default async function InstructorCourseEditPage({
       id: l.id,
       title: l.title,
       isHidden: l.isHidden,
-      noSkill: l.skillTags.length === 0,
+      noSkill: course.personalizationEnabled && l.skillTags.length === 0,
       contentCount: l.contentItems.length,
       quizCount: l.quizzes.length,
       assignmentCount: l.assignments.length,
@@ -317,6 +319,7 @@ export default async function InstructorCourseEditPage({
                       id: m.id,
                       title: m.title,
                     }))}
+                    hideUntaggedWarning={!course.personalizationEnabled}
                   />
                 </div>
               </article>

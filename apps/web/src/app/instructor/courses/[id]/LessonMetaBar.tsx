@@ -29,6 +29,7 @@ export default function LessonMetaBar({
   moduleId,
   siblingLessonIds,
   modules,
+  hideUntaggedWarning = false,
 }: {
   lessonId: string;
   order?: number;
@@ -40,6 +41,7 @@ export default function LessonMetaBar({
   moduleId?: string;
   siblingLessonIds?: string[];
   modules?: ModuleRef[];
+  hideUntaggedWarning?: boolean;
 }) {
   const router = useRouter();
   const [isHidden, setIsHidden] = useState(initialIsHidden);
@@ -87,6 +89,7 @@ export default function LessonMetaBar({
   }
 
   const noSkill = tags.length === 0;
+  const showSkillsCluster = !(noSkill && hideUntaggedWarning);
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
@@ -114,9 +117,10 @@ export default function LessonMetaBar({
         </>
       )}
 
-      <Sep />
+      {showSkillsCluster && <Sep />}
 
-      {/* Skills cluster */}
+      {/* Skills cluster — hidden when course personalization is off and no tags */}
+      {showSkillsCluster && (
       <div ref={popoverRef} className="relative inline-flex items-center gap-1">
         <button
           type="button"
@@ -156,6 +160,7 @@ export default function LessonMetaBar({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

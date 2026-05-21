@@ -87,6 +87,7 @@ export default function LessonSection({
   moduleId,
   siblingLessonIds,
   modules,
+  hideUntaggedWarning = false,
 }: {
   lesson: Lesson;
   order: number;
@@ -95,6 +96,7 @@ export default function LessonSection({
   moduleId?: string;
   siblingLessonIds?: string[];
   modules?: Array<{ id: string; title: string }>;
+  hideUntaggedWarning?: boolean;
 }) {
   const noSkill = lesson.skillTags.length === 0;
   const hiddenContent = lesson.contentItems.filter(c => c.isHidden).length;
@@ -122,9 +124,10 @@ export default function LessonSection({
           moduleId={moduleId}
           siblingLessonIds={siblingLessonIds}
           modules={modules}
+          hideUntaggedWarning={hideUntaggedWarning}
         />
 
-        {!flat && (
+        {!flat && !(hideUntaggedWarning && noSkill) && (
           <SubSection label="Skills">
             <SkillTagsEditor
               lessonId={lesson.id}
