@@ -8,10 +8,12 @@ export default function PublishControls({
   courseId,
   status,
   untaggedLessons,
+  personalizationEnabled,
 }: {
   courseId: string;
   status: string;
   untaggedLessons: Array<{ id: string; title: string }>;
+  personalizationEnabled: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -54,7 +56,7 @@ export default function PublishControls({
     );
   }
 
-  const blocked = untaggedLessons.length > 0;
+  const blocked = personalizationEnabled && untaggedLessons.length > 0;
   return (
     <div className="flex items-center gap-2">
       {blocked && (

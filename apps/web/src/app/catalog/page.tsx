@@ -231,7 +231,25 @@ export default async function CatalogPage({
                 </h2>
                 <p className="mt-2 line-clamp-3 text-sm text-muted">{c.description}</p>
 
-                <div className="mt-4 flex items-center justify-between border-t border-token pt-3 text-xs">
+                <div className="mt-3 flex items-center gap-1.5">
+                  {c.personalizationEnabled ? (
+                    <span
+                      className="rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700"
+                      title="AI feedback theo skill"
+                    >
+                      🤖 AI Feedback
+                    </span>
+                  ) : (
+                    <span
+                      className="rounded-md bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 text-[10px] font-semibold text-muted"
+                      title="LMS truyền thống"
+                    >
+                      📚 Standard LMS
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
                   {paymentEnabled && !isFree(c.priceCents) ? (
                     <span className="font-semibold text-accent-600">
                       {formatPrice(c.priceCents!, c.currency)}

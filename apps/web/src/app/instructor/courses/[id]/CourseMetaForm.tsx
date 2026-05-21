@@ -19,6 +19,7 @@ interface Initial {
   category: string;
   priceCents: number | null;
   currency: string;
+  personalizationEnabled: boolean;
 }
 
 export default function CourseMetaForm({
@@ -41,6 +42,9 @@ export default function CourseMetaForm({
       : "",
   );
   const [currency, setCurrency] = useState(initial.currency || "VND");
+  const [personalizationEnabled, setPersonalizationEnabled] = useState(
+    initial.personalizationEnabled,
+  );
   const [busy, setBusy] = useState(false);
 
   const LEVEL_LABEL: Record<string, string> = {
@@ -110,6 +114,7 @@ export default function CourseMetaForm({
         category: category.trim() || null,
         priceCents: parsedPrice,
         currency,
+        personalizationEnabled,
       }),
     });
     setBusy(false);
@@ -211,6 +216,25 @@ export default function CourseMetaForm({
               : "Nhập số cents. Ví dụ: 999 = $9.99"}
           </p>
         </div>
+      </div>
+      <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={personalizationEnabled}
+            onChange={(e) => setPersonalizationEnabled(e.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0"
+          />
+          <div className="min-w-0">
+            <span className="font-medium">Cá nhân hoá học tập (AI feedback theo skill)</span>
+            <p className="mt-1 text-xs text-muted">
+              Bật → mỗi bài cần tag ≥1 skill mới publish được; learner nhận
+              diagnostic feedback, adaptive path và skill badge.
+              Tắt → course chạy như LMS truyền thống, publish bỏ qua kiểm tra
+              skill. Đổi flag chỉ áp dụng ở lần publish kế tiếp.
+            </p>
+          </div>
+        </label>
       </div>
       <div className="flex justify-end gap-2 border-t border-token pt-4">
         <button

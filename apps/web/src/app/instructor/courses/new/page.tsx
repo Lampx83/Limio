@@ -15,6 +15,7 @@ export default function NewCoursePage() {
   const [language, setLanguage] = useState("vi");
   const [level, setLevel] = useState("beginner");
   const [category, setCategory] = useState("");
+  const [personalizationEnabled, setPersonalizationEnabled] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +26,14 @@ export default function NewCoursePage() {
     const res = await fetch(apiUrl("/api/courses"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, language, level, category: category || undefined }),
+      body: JSON.stringify({
+        title,
+        description,
+        language,
+        level,
+        category: category || undefined,
+        personalizationEnabled,
+      }),
     });
     if (res.status === 401) {
       window.location.href = "/signin?callbackUrl=/instructor/courses/new";
@@ -119,6 +127,25 @@ export default function NewCoursePage() {
               className="input mt-1.5"
             />
           </div>
+        </div>
+        <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={personalizationEnabled}
+              onChange={(e) => setPersonalizationEnabled(e.target.checked)}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <div className="min-w-0">
+              <span className="font-medium">Bật cá nhân hoá học tập (AI feedback theo skill)</span>
+              <p className="mt-1 text-xs text-muted">
+                Khi bật: mỗi bài học cần tag ít nhất 1 skill mới publish được;
+                learner nhận diagnostic feedback, adaptive path và skill badge.
+                Khi tắt (mặc định): course chạy như LMS truyền thống, publish không cần tag skill.
+                Có thể đổi sau trong cài đặt course.
+              </p>
+            </div>
+          </label>
         </div>
         {error && (
           <div className="rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">

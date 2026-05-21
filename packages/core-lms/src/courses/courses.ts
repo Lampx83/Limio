@@ -18,6 +18,7 @@ export const CreateCourseInput = z.object({
   level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
   category: z.string().max(80).optional(),
   coverUrl: z.string().url().max(500).optional(),
+  personalizationEnabled: z.boolean().optional(),
 });
 
 export const UpdateCourseInput = z.object({
@@ -29,6 +30,7 @@ export const UpdateCourseInput = z.object({
   coverUrl: z.string().url().max(500).optional().nullable(),
   priceCents: z.number().int().min(0).optional().nullable(),
   currency: z.enum(["VND", "USD"]).optional(),
+  personalizationEnabled: z.boolean().optional(),
 });
 
 export class CourseError extends Error {
@@ -74,6 +76,7 @@ export async function createCourse(
         level: parsed.data.level ?? "beginner",
         category: parsed.data.category ?? null,
         coverUrl: parsed.data.coverUrl ?? null,
+        personalizationEnabled: parsed.data.personalizationEnabled ?? false,
         status: "draft",
         version: 1,
       },
@@ -132,7 +135,32 @@ export async function updateCourse(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined),
   );
   if (Object.keys(data).length === 0) return;
+  let previousPersonalization: boolean | null = null;
+  if ("personalizationEnabled" in data) {
+    const cur = await db.course.findUniqueOrThrow({
+      where: { id: courseId },
+      select: { personalizationEnabled: true },
+    });
+    previousPersonalization = cur.personalizationEnabled;
+  }
   await db.course.update({ where: { id: courseId }, data });
+  if (
+    previousPersonalization !== null &&
+    previousPersonalization !== data.personalizationEnabled
+  ) {
+    await logAudit(
+      {
+        action: "course.personalization.toggled",
+        actorUserId,
+        payload: {
+          courseId,
+          from: previousPersonalization,
+          to: data.personalizationEnabled,
+        },
+      },
+      db,
+    );
+  }
 }
 
 /**
@@ -231,7 +259,11 @@ export async function bumpCourseVersion(
   return { version: updated.version };
 }
 
-/** Publish gate: every lesson must have ≥1 skill tag. */
+/**
+ * Publish gate: every lesson must have ≥1 skill tag — but only when the course
+ * has personalization enabled. Courses with personalizationEnabled=false run as
+ * standard LMS and skip the skill-tag check entirely (see project_personalization_toggle).
+ */
 export async function publishCourse(
   actorUserId: string,
   courseId: string,
@@ -243,19 +275,20 @@ export async function publishCourse(
     throw new CourseError("invalid_status_transition", "cannot publish archived course");
   }
 
-  // Find lessons under this course that have zero skill tags.
-  const untagged = await db.$queryRaw<Array<{ id: string; title: string }>>`
-    SELECT l.id, l.title
-    FROM "Lesson" l
-    JOIN "Module" m ON m.id = l."moduleId"
-    LEFT JOIN "ContentSkillMapping" csm
-      ON csm."contentId" = l.id AND csm."contentType" = 'lesson'
-    WHERE m."courseId" = ${courseId}
-    GROUP BY l.id, l.title
-    HAVING COUNT(csm.id) = 0
-  `;
-  if (untagged.length > 0) {
-    throw new CourseError("lessons_missing_skills", { lessons: untagged });
+  if (course.personalizationEnabled) {
+    const untagged = await db.$queryRaw<Array<{ id: string; title: string }>>`
+      SELECT l.id, l.title
+      FROM "Lesson" l
+      JOIN "Module" m ON m.id = l."moduleId"
+      LEFT JOIN "ContentSkillMapping" csm
+        ON csm."contentId" = l.id AND csm."contentType" = 'lesson'
+      WHERE m."courseId" = ${courseId}
+      GROUP BY l.id, l.title
+      HAVING COUNT(csm.id) = 0
+    `;
+    if (untagged.length > 0) {
+      throw new CourseError("lessons_missing_skills", { lessons: untagged });
+    }
   }
 
   await db.course.update({
@@ -325,6 +358,7 @@ export async function listPublishedCourses(
       publishedAt: true,
       priceCents: true,
       currency: true,
+      personalizationEnabled: true,
     },
   });
 

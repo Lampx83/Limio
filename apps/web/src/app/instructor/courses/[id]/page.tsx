@@ -163,10 +163,26 @@ export default async function InstructorCourseEditPage({
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {course.personalizationEnabled ? (
+              <span
+                className="chip-brand text-xs"
+                title="Course có AI feedback theo skill: BKT, diagnostic, adaptive path, skill badge"
+              >
+                🤖 AI Feedback
+              </span>
+            ) : (
+              <span
+                className="chip text-xs"
+                title="Course chạy như LMS truyền thống — không AI feedback. Có thể bật ở tab Tổng quan."
+              >
+                📚 Standard LMS
+              </span>
+            )}
             <PublishControls
               courseId={course.id}
               status={course.status}
               untaggedLessons={untaggedLessonIds}
+              personalizationEnabled={course.personalizationEnabled}
             />
           </div>
         </div>
@@ -198,7 +214,7 @@ export default async function InstructorCourseEditPage({
       {/* TAB: Tổng quan */}
       {tab === "overview" && (
         <div className="mt-8 space-y-8">
-          {untaggedLessonIds.length > 0 && (
+          {course.personalizationEnabled && untaggedLessonIds.length > 0 && (
             <div className="banner-warning">
               <span className="text-xl shrink-0" aria-hidden>⚠️</span>
               <div className="flex-1">
@@ -235,6 +251,7 @@ export default async function InstructorCourseEditPage({
                 category: course.category ?? "",
                 priceCents: course.priceCents,
                 currency: course.currency ?? "VND",
+                personalizationEnabled: course.personalizationEnabled,
               }}
             />
           </section>

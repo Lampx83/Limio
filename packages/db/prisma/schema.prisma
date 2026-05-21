@@ -238,6 +238,11 @@ model Course {
   // Bump this when publishing a breaking change; new enrollments take the new version.
   version        Int          @default(1)
   publishedAt    DateTime?
+  // Personalization toggle: when true, course uses Feedback Engine (BKT, diagnostic,
+  // adaptive path, skill badge) and publish requires every lesson to have ≥1 skill tag.
+  // When false, course runs as standard LMS (no AI feedback) and publish skips the skill-tag gate.
+  // Default false — see project_personalization_toggle memory.
+  personalizationEnabled Boolean @default(false)
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents     Int?
   currency       String       @default("USD")

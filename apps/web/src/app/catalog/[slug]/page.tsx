@@ -93,6 +93,21 @@ export default async function CourseDetailPage({
                 {course.status}
               </span>
             )}
+            {course.personalizationEnabled ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700"
+                title="Course có AI feedback theo skill: BKT, diagnostic, adaptive path, skill badge"
+              >
+                🤖 AI Feedback
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur"
+                title="LMS truyền thống — không AI feedback"
+              >
+                📚 Standard LMS
+              </span>
+            )}
           </div>
           <h1 className="mt-4 h-display text-3xl font-bold leading-tight sm:text-5xl">
             {course.title}
