@@ -9,9 +9,9 @@ const NAV: Array<{ href: string; label: string; icon: string }> = [
   { href: "/admin/skills",     label: "Skill taxonomy", icon: "" },
   { href: "/admin/integrations", label: "Integrations", icon: "" },
   { href: "/admin/lti-tools",  label: "LTI tools",    icon: "" },
-  { href: "/admin/emails",     label: "Email templates", icon: "✉️" },
+  { href: "/admin/emails",     label: "Email templates", icon: "" },
   { href: "/admin/settings",   label: "Cài đặt",      icon: "" },
-  { href: "/admin/changelog",  label: "Changelog",    icon: "📋" },
+  { href: "/admin/changelog",  label: "Changelog",    icon: "" },
 ];
 
 export default function AdminSidebar() {
