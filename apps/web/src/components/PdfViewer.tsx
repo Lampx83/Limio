@@ -17,11 +17,24 @@ export default function PdfViewer({
   title?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [pdfDoc, setPdfDoc] = useState<PdfDoc>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Track container width to scale pages responsively (fit-to-width).
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setContainerWidth(el.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [loading, error]);
 
   // Load pdfjs and the PDF document whenever url changes.
   useEffect(() => {
@@ -66,9 +79,15 @@ export default function PdfViewer({
       .getPage(page)
       .then((pdfPage: PdfDoc) => {
         if (cancelled || !canvas) return;
-        const viewport = pdfPage.getViewport({ scale: 1.5 });
-        canvas.height = viewport.height;
+        const baseViewport = pdfPage.getViewport({ scale: 1 });
+        const targetWidth = containerWidth > 0 ? containerWidth : baseViewport.width;
+        const cssScale = targetWidth / baseViewport.width;
+        const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+        const viewport = pdfPage.getViewport({ scale: cssScale * dpr });
         canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${targetWidth}px`;
+        canvas.style.height = `${baseViewport.height * cssScale}px`;
         const ctx = canvas.getContext("2d")!;
         return pdfPage.render({ canvasContext: ctx, viewport }).promise;
       })
@@ -81,7 +100,7 @@ export default function PdfViewer({
     return () => {
       cancelled = true;
     };
-  }, [pdfDoc, page]);
+  }, [pdfDoc, page, containerWidth]);
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -135,10 +154,13 @@ export default function PdfViewer({
             </div>
           )}
 
-          <div className="w-full overflow-auto rounded-xl border border-token shadow-card">
+          <div
+            ref={containerRef}
+            className="w-full overflow-hidden rounded-xl border border-token shadow-card"
+          >
             <canvas
               ref={canvasRef}
-              className="mx-auto block"
+              className="mx-auto block max-w-full"
               aria-label={title ?? "PDF"}
             />
           </div>
