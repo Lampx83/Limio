@@ -230,6 +230,22 @@ export default function AddContentItemForm({
         // Resolve inline cuepoints into quizIds by creating cuepoint quizzes
         // first. If any inline creation fails, roll back the ones already
         // created and abort the whole submit.
+        // Block duplicate quizIds across "existing" cuepoints — same quizId
+        // means the player would show the same questions at every cuepoint
+        // (the cache is keyed by quizId).
+        const existingQuizIds = cuepoints
+          .filter((c): c is CuepointExistingDraft => c.mode === "existing" && !!c.quizId)
+          .map((c) => c.quizId);
+        const dupQuizId = existingQuizIds.find(
+          (id, i) => existingQuizIds.indexOf(id) !== i,
+        );
+        if (dupQuizId) {
+          setError(
+            "duplicate_cuepoint_quiz: 2+ cuepoint đang chọn cùng 1 quiz. Mỗi cuepoint phải dùng quiz khác nhau.",
+          );
+          setBusy(false);
+          return;
+        }
         const createdQuizIds: string[] = [];
         const resolved: { atSec: number; quizId: string }[] = [];
         let failed = false;
@@ -722,6 +738,23 @@ function CuepointEditor({
   function replace(uid: string, next: CuepointDraft) {
     setCuepoints(cuepoints.map((c) => (c.uid === uid ? next : c)));
   }
+  // QuizIds already picked by other cuepoints — drives default selection
+  // and disabled options to prevent picking the same quiz twice (which made
+  // all cuepoints show the same quiz at playback).
+  function usedQuizIdsBy(excludeUid: string): Set<string> {
+    const used = new Set<string>();
+    for (const c of cuepoints) {
+      if (c.uid === excludeUid) continue;
+      if (c.mode === "existing" && c.quizId) used.add(c.quizId);
+    }
+    return used;
+  }
+  function firstUnusedQuizId(excludeUid: string): string {
+    const used = usedQuizIdsBy(excludeUid);
+    const free = quizzes.find((q) => !used.has(q.id));
+    return free?.id ?? "";
+  }
+
   function switchMode(uid: string, mode: "inline" | "existing") {
     const cur = cuepoints.find((c) => c.uid === uid);
     if (!cur || cur.mode === mode) return;
@@ -732,7 +765,7 @@ function CuepointEditor({
         uid: cur.uid,
         mode: "existing",
         atSec: cur.atSec,
-        quizId: quizzes[0]?.id ?? "",
+        quizId: firstUnusedQuizId(uid),
       });
     }
   }
@@ -807,22 +840,46 @@ function CuepointEditor({
               </div>
 
               {c.mode === "existing" ? (
-                <select
-                  value={c.quizId}
-                  onChange={(e) =>
-                    replace(c.uid, { ...c, quizId: e.target.value })
-                  }
-                  className="select w-full"
-                >
-                  {quizzes.length === 0 && (
-                    <option value="">— chưa có quiz nào —</option>
-                  )}
-                  {quizzes.map((q) => (
-                    <option key={q.id} value={q.id}>
-                      {q.title} ({q.questionCount} câu)
-                    </option>
-                  ))}
-                </select>
+                (() => {
+                  const used = usedQuizIdsBy(c.uid);
+                  const isDuplicate = c.quizId !== "" && used.has(c.quizId);
+                  const allUsed = quizzes.length > 0 && quizzes.every((q) => used.has(q.id));
+                  return (
+                    <div className="space-y-1">
+                      <select
+                        value={c.quizId}
+                        onChange={(e) =>
+                          replace(c.uid, { ...c, quizId: e.target.value })
+                        }
+                        className={`select w-full ${
+                          isDuplicate ? "border-danger-400 bg-danger-50" : ""
+                        }`}
+                      >
+                        {quizzes.length === 0 && (
+                          <option value="">— chưa có quiz nào —</option>
+                        )}
+                        {allUsed && (
+                          <option value="">— hết quiz để dùng —</option>
+                        )}
+                        {quizzes.map((q) => {
+                          const usedByOther = used.has(q.id);
+                          return (
+                            <option key={q.id} value={q.id} disabled={usedByOther}>
+                              {q.title} ({q.questionCount} câu)
+                              {usedByOther ? " — đã dùng" : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      {isDuplicate && (
+                        <p className="text-[11px] font-medium text-danger-700">
+                          ⚠ Quiz này đã được cuepoint khác chọn — đổi sang quiz khác,
+                          nếu không tất cả cuepoint sẽ hiện cùng câu hỏi.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()
               ) : (
                 <InlineCuepointQuestion
                   draft={c}
