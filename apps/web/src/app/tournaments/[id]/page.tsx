@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
+import TournamentTeamPanel from "./TournamentTeamPanel";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 
@@ -64,7 +65,8 @@ export default async function TournamentDetailPage({
   if (!tournament) notFound();
   if (tournament.status === "draft") redirect("/tournaments");
 
-  // Check if current user is registered
+  // Check if current user is registered. For team tournaments we also pull
+  // team + roster so the right-rail panel can render team UI.
   const registration =
     session?.user?.id
       ? await prisma.tournamentRegistration.findUnique({
@@ -72,6 +74,18 @@ export default async function TournamentDetailPage({
             tournamentId_userId: {
               tournamentId: params.id,
               userId: session.user.id,
+            },
+          },
+          include: {
+            team: {
+              include: {
+                registrations: {
+                  orderBy: { registeredAt: "asc" },
+                  include: {
+                    user: { select: { id: true, displayName: true } },
+                  },
+                },
+              },
             },
           },
         })
@@ -414,14 +428,41 @@ export default async function TournamentDetailPage({
 
         {/* Right sidebar */}
         <aside className="space-y-5">
-          {/* Register panel */}
-          <TournamentRegisterButton
-            tournamentId={params.id}
-            isLoggedIn={!!session?.user?.id}
-            isRegistered={isRegistered}
-            isEnded={isEnded}
-            isOpen={isOpen}
-          />
+          {/* Register / Team panel */}
+          {tournament.teamSize > 1 ? (
+            <TournamentTeamPanel
+              tournamentId={params.id}
+              teamSize={tournament.teamSize}
+              isLoggedIn={!!session?.user?.id}
+              isEnded={isEnded}
+              isOpen={isOpen}
+              isLocked={tournament.status === "active"}
+              currentUserId={session?.user?.id ?? null}
+              myTeam={
+                registration?.team
+                  ? {
+                      id: registration.team.id,
+                      name: registration.team.name,
+                      captainId: registration.team.captainId,
+                      joinCode: registration.team.joinCode,
+                      members: registration.team.registrations.map((r) => ({
+                        id: r.id,
+                        registeredAt: r.registeredAt.toISOString(),
+                        user: r.user,
+                      })),
+                    }
+                  : null
+              }
+            />
+          ) : (
+            <TournamentRegisterButton
+              tournamentId={params.id}
+              isLoggedIn={!!session?.user?.id}
+              isRegistered={isRegistered}
+              isEnded={isEnded}
+              isOpen={isOpen}
+            />
+          )}
 
           {/* Quick stats */}
           <div className="rounded-2xl border border-orange-200/60 bg-white p-5 shadow-md dark:border-orange-900/40 dark:bg-slate-800">

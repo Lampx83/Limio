@@ -72,6 +72,7 @@ model User {
   questProgress           UserQuestProgress[]
   tournamentRegistrations TournamentRegistration[]
   tournamentCreated       Tournament[]             @relation("TournamentCreator")
+  tournamentTeamsCaptained TournamentTeam[]        @relation("TeamCaptain")
   missionSubmissions      MissionSubmission[]
   missionReviews          MissionReviewAssignment[]
   scormAttempts           ScormAttempt[]
@@ -1098,6 +1099,7 @@ model Tournament {
   registrations TournamentRegistration[]
   missions      TournamentMission[]
   rankings      TournamentRanking[]
+  teams         TournamentTeam[]
 
   @@index([status, startsAt])
   @@index([courseId, status])
@@ -1107,16 +1109,38 @@ model TournamentRegistration {
   id             String    @id @default(uuid())
   tournamentId   String
   userId         String
-  // Team identifier — null when teamSize=1 (solo).
+  // FK → TournamentTeam.id when registered as part of a team; null = solo
+  // (only valid when tournament.teamSize == 1, or team was deleted).
   teamId         String?
   registeredAt   DateTime  @default(now())
   disqualifiedAt DateTime?
 
-  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tournament Tournament       @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team       TournamentTeam?  @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@unique([tournamentId, userId])
   @@index([tournamentId, teamId])
+}
+
+// Team formed for a team-based tournament (teamSize > 1). Captain creates
+// the team and gets a joinCode to share; teammates join with that code.
+model TournamentTeam {
+  id           String   @id @default(uuid())
+  tournamentId String
+  name         String
+  captainId    String
+  // 6-8 char alphanumeric shared by captain. Unique across all tournaments
+  // so a code never collides; rotated when captain decides.
+  joinCode     String   @unique
+  createdAt    DateTime @default(now())
+
+  tournament    Tournament               @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  captain       User                     @relation("TeamCaptain", fields: [captainId], references: [id])
+  registrations TournamentRegistration[]
+
+  @@unique([tournamentId, name])
+  @@index([tournamentId])
 }
 
 // =====================================================================

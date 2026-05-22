@@ -23,7 +23,14 @@ export class TournamentError extends Error {
       | "mission_not_found"
       | "prereq_not_completed"
       | "condition_not_met"
-      | "validation_failed",
+      | "validation_failed"
+      | "team_not_found"
+      | "team_full"
+      | "team_solo_only"
+      | "team_join_code_invalid"
+      | "team_name_taken"
+      | "team_not_captain"
+      | "team_locked_after_start",
     /** Optional progress detail returned to the caller for UI display. */
     public readonly detail?: { current: number; required: number },
   ) {
@@ -40,6 +47,9 @@ export async function registerForTournament(
   if (!t) throw new TournamentError("tournament_not_found");
   if (t.status === "draft") throw new TournamentError("not_published");
   if (t.status === "ended") throw new TournamentError("ended");
+  // Solo path only valid for solo tournaments — team-based must go through
+  // createTeam/joinTeamByCode so registration is tied to a TournamentTeam.
+  if (t.teamSize > 1) throw new TournamentError("team_solo_only");
 
   const existing = await db.tournamentRegistration.findUnique({
     where: { tournamentId_userId: { tournamentId, userId } },
@@ -57,6 +67,229 @@ export async function registerForTournament(
       courseId: t.courseId ?? null,
     },
   });
+}
+
+// ─── Team registration ───────────────────────────────────────────────────
+
+/**
+ * Generate a 6-char alphanumeric code (uppercase, no ambiguous chars).
+ * Collision-safe via retry inside createTeam.
+ */
+function makeJoinCode(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
+  let s = "";
+  for (let i = 0; i < 6; i++) {
+    s += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return s;
+}
+
+function assertTournamentJoinable(t: { status: string; teamSize: number }) {
+  if (t.status === "draft") throw new TournamentError("not_published");
+  if (t.status === "ended") throw new TournamentError("ended");
+  // Lock team changes once tournament goes live (status === "active").
+  if (t.status === "active") throw new TournamentError("team_locked_after_start");
+}
+
+export async function createTeam(
+  userId: string,
+  tournamentId: string,
+  name: string,
+  db: PrismaClient = prisma,
+): Promise<{ teamId: string; joinCode: string }> {
+  const t = await db.tournament.findUnique({ where: { id: tournamentId } });
+  if (!t) throw new TournamentError("tournament_not_found");
+  if (t.teamSize <= 1) throw new TournamentError("team_solo_only");
+  assertTournamentJoinable(t);
+
+  const trimmed = name.trim();
+  if (trimmed.length === 0 || trimmed.length > 80) {
+    throw new TournamentError("validation_failed");
+  }
+
+  const existingReg = await db.tournamentRegistration.findUnique({
+    where: { tournamentId_userId: { tournamentId, userId } },
+  });
+  if (existingReg) throw new TournamentError("already_registered");
+
+  const nameTaken = await db.tournamentTeam.findUnique({
+    where: { tournamentId_name: { tournamentId, name: trimmed } },
+  });
+  if (nameTaken) throw new TournamentError("team_name_taken");
+
+  // Retry on rare joinCode collision (unique index).
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = makeJoinCode();
+    try {
+      const team = await db.$transaction(async (tx) => {
+        const created = await tx.tournamentTeam.create({
+          data: {
+            tournamentId,
+            name: trimmed,
+            captainId: userId,
+            joinCode: code,
+          },
+        });
+        await tx.tournamentRegistration.create({
+          data: { tournamentId, userId, teamId: created.id },
+        });
+        await tx.learningEvent.create({
+          data: {
+            userId,
+            eventType: LearningEventType.TournamentRegistered,
+            payload: { tournamentId, teamId: created.id, role: "captain" } as Prisma.InputJsonValue,
+            courseId: t.courseId ?? null,
+          },
+        });
+        return created;
+      });
+      return { teamId: team.id, joinCode: team.joinCode };
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code === "P2002") continue; // joinCode dup, retry
+      throw e;
+    }
+  }
+  throw new TournamentError("validation_failed");
+}
+
+export async function joinTeamByCode(
+  userId: string,
+  tournamentId: string,
+  joinCode: string,
+  db: PrismaClient = prisma,
+): Promise<{ teamId: string }> {
+  const t = await db.tournament.findUnique({ where: { id: tournamentId } });
+  if (!t) throw new TournamentError("tournament_not_found");
+  if (t.teamSize <= 1) throw new TournamentError("team_solo_only");
+  assertTournamentJoinable(t);
+
+  const team = await db.tournamentTeam.findUnique({
+    where: { joinCode: joinCode.trim().toUpperCase() },
+    include: { _count: { select: { registrations: true } } },
+  });
+  if (!team || team.tournamentId !== tournamentId) {
+    throw new TournamentError("team_join_code_invalid");
+  }
+  if (team._count.registrations >= t.teamSize) {
+    throw new TournamentError("team_full");
+  }
+
+  const existingReg = await db.tournamentRegistration.findUnique({
+    where: { tournamentId_userId: { tournamentId, userId } },
+  });
+  if (existingReg) throw new TournamentError("already_registered");
+
+  await db.$transaction(async (tx) => {
+    await tx.tournamentRegistration.create({
+      data: { tournamentId, userId, teamId: team.id },
+    });
+    await tx.learningEvent.create({
+      data: {
+        userId,
+        eventType: LearningEventType.TournamentRegistered,
+        payload: { tournamentId, teamId: team.id, role: "member" } as Prisma.InputJsonValue,
+        courseId: t.courseId ?? null,
+      },
+    });
+  });
+  return { teamId: team.id };
+}
+
+/**
+ * Leave the team (or solo registration). If captain leaves a team with other
+ * members, captaincy transfers to the earliest remaining member. If the team
+ * empties, it is deleted.
+ */
+export async function leaveTournament(
+  userId: string,
+  tournamentId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const t = await db.tournament.findUnique({ where: { id: tournamentId } });
+  if (!t) throw new TournamentError("tournament_not_found");
+  assertTournamentJoinable(t);
+
+  const reg = await db.tournamentRegistration.findUnique({
+    where: { tournamentId_userId: { tournamentId, userId } },
+    include: { team: true },
+  });
+  if (!reg) throw new TournamentError("not_registered");
+
+  await db.$transaction(async (tx) => {
+    await tx.tournamentRegistration.delete({ where: { id: reg.id } });
+
+    if (reg.teamId && reg.team) {
+      const remaining = await tx.tournamentRegistration.findMany({
+        where: { teamId: reg.teamId },
+        orderBy: { registeredAt: "asc" },
+        select: { id: true, userId: true },
+      });
+      if (remaining.length === 0) {
+        await tx.tournamentTeam.delete({ where: { id: reg.teamId } });
+      } else if (reg.team.captainId === userId) {
+        await tx.tournamentTeam.update({
+          where: { id: reg.teamId },
+          data: { captainId: remaining[0]!.userId },
+        });
+      }
+    }
+  });
+}
+
+export async function kickFromTeam(
+  captainUserId: string,
+  tournamentId: string,
+  targetUserId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  if (captainUserId === targetUserId) {
+    // Captain "kicking" themselves is just leaving — different semantic.
+    throw new TournamentError("validation_failed");
+  }
+  const t = await db.tournament.findUnique({ where: { id: tournamentId } });
+  if (!t) throw new TournamentError("tournament_not_found");
+  assertTournamentJoinable(t);
+
+  const targetReg = await db.tournamentRegistration.findUnique({
+    where: { tournamentId_userId: { tournamentId, userId: targetUserId } },
+    include: { team: true },
+  });
+  if (!targetReg || !targetReg.team) throw new TournamentError("team_not_found");
+  if (targetReg.team.captainId !== captainUserId) {
+    throw new TournamentError("team_not_captain");
+  }
+
+  await db.tournamentRegistration.delete({ where: { id: targetReg.id } });
+}
+
+export async function regenerateJoinCode(
+  captainUserId: string,
+  tournamentId: string,
+  teamId: string,
+  db: PrismaClient = prisma,
+): Promise<{ joinCode: string }> {
+  const team = await db.tournamentTeam.findUnique({ where: { id: teamId } });
+  if (!team || team.tournamentId !== tournamentId) {
+    throw new TournamentError("team_not_found");
+  }
+  if (team.captainId !== captainUserId) {
+    throw new TournamentError("team_not_captain");
+  }
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = makeJoinCode();
+    try {
+      const updated = await db.tournamentTeam.update({
+        where: { id: teamId },
+        data: { joinCode: code },
+      });
+      return { joinCode: updated.joinCode };
+    } catch (e) {
+      if ((e as { code?: string }).code === "P2002") continue;
+      throw e;
+    }
+  }
+  throw new TournamentError("validation_failed");
 }
 
 /**
