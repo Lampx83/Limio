@@ -179,9 +179,12 @@ export default function MissionSubmitForm({
             type="url"
             value={slidesUrl}
             onChange={(e) => setSlidesUrl(e.target.value)}
-            placeholder="https://docs.google.com/presentation/..."
+            placeholder="Canva / Google Slides / Figma / Notion..."
             className="input mt-1 text-sm"
           />
+          <p className="mt-0.5 text-[11px] text-faint">
+            Bất kỳ URL nào: Canva, Google Slides, Figma, Notion, OneDrive...
+          </p>
         </div>
         <div>
           <label className="label text-xs">🎥 Demo video</label>
