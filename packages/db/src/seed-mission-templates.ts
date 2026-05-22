@@ -162,10 +162,12 @@ const TEMPLATES = [
   },
 ] as const;
 
-async function main() {
+export async function seedMissionTemplates(
+  client: PrismaClient = prisma,
+): Promise<{ upserted: number }> {
   let upserted = 0;
   for (const t of TEMPLATES) {
-    await prisma.missionTemplate.upsert({
+    await client.missionTemplate.upsert({
       where: { code: t.code },
       update: {
         name: t.name,
@@ -192,11 +194,15 @@ async function main() {
     upserted++;
   }
   console.log(`✅ Seeded ${upserted} mission templates.`);
+  return { upserted };
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+// Allow running as a standalone script: `pnpm exec tsx src/seed-mission-templates.ts`
+if (require.main === module) {
+  seedMissionTemplates()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
+}

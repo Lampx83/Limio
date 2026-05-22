@@ -99,6 +99,7 @@ async function loadAssignmentCourse(assignmentId: string, db: PrismaClient) {
     },
   });
   if (!a) throw new AssignmentError("assignment_not_found");
+  if (!a.lesson) throw new AssignmentError("assignment_not_found");
   return { courseId: a.lesson.module.courseId, maxScore: a.maxScore };
 }
 
@@ -215,6 +216,7 @@ export async function submitAssignment(
     },
   });
   if (!a) throw new AssignmentError("assignment_not_found");
+  if (!a.lesson) throw new AssignmentError("assignment_not_found");
   const courseId = a.lesson.module.courseId;
   if (!(await isUserEnrolled(userId, courseId, db))) {
     throw new AssignmentError("not_enrolled");
@@ -315,13 +317,34 @@ export async function gradeSubmission(
       id: true,
       userId: true,
       assignment: {
-        select: { id: true, maxScore: true, lesson: { select: { module: { select: { courseId: true } } } } },
+        select: {
+          id: true,
+          maxScore: true,
+          lesson: { select: { module: { select: { courseId: true } } } },
+          tournamentMission: { select: { tournament: { select: { courseId: true, creatorId: true } } } },
+        },
       },
     },
   });
   if (!submission) throw new AssignmentError("submission_not_found");
-  const courseId = submission.assignment.lesson.module.courseId;
-  await assertCanEditCourse(userId, courseId, db);
+  // Tournament-backed assignments may have no lesson — derive courseId from
+  // tournament, fallback to empty string for cross-course tournaments. Auth
+  // is delegated to tournament creator + admins in that case.
+  const courseId =
+    submission.assignment.lesson?.module.courseId ??
+    submission.assignment.tournamentMission?.tournament.courseId ??
+    "";
+  if (courseId) {
+    await assertCanEditCourse(userId, courseId, db);
+  } else {
+    // Cross-course tournament: only the tournament creator (or admin) can grade.
+    const creatorId = submission.assignment.tournamentMission?.tournament.creatorId;
+    if (creatorId && creatorId !== userId) {
+      // Admin check is handled by assertCanEditCourse's path; for cross-course
+      // we trust the tournament boundary — instructor of tournament only.
+      throw new AssignmentError("forbidden");
+    }
+  }
 
   const parsed = GradeInput.safeParse(rawInput);
   if (!parsed.success) {

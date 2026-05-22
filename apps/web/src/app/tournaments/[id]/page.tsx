@@ -242,6 +242,34 @@ export default async function TournamentDetailPage({
                             🔒 Yêu cầu hoàn thành mission trước
                           </p>
                         )}
+                        {mission.missionType && mission.missionType !== "COURSE_LINKED" && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="chip text-xs">
+                              {mission.missionType === "CUSTOM" ? "Tự thiết kế" : "Liên kết ngoài"}
+                            </span>
+                            {mission.verifyMode && (
+                              <span className="chip text-xs">
+                                {{
+                                  AUTO_GRADE:    "Tự chấm",
+                                  AUTO_CHECK:    "Tự kiểm tra",
+                                  PEER_REVIEW:   "Bạn học chấm",
+                                  MANUAL_REVIEW: "GV chấm",
+                                }[mission.verifyMode]}
+                              </span>
+                            )}
+                            {mission.submissionDeadline && (
+                              <span className="text-xs text-faint">
+                                Hạn: {new Date(mission.submissionDeadline).toLocaleString("vi-VN")}
+                              </span>
+                            )}
+                            <Link
+                              href={`/tournaments/${tournament.id}/missions/${mission.id}`}
+                              className="btn-secondary btn-xs ml-auto"
+                            >
+                              Làm bài →
+                            </Link>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </li>

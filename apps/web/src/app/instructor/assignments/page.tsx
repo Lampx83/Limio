@@ -344,10 +344,10 @@ async function AssignmentListView({
                         </td>
                         <td className="px-4 py-3 align-top">
                           <p className="text-xs text-muted">
-                            {a.lesson.module.course.title}
+                            {a.lesson?.module.course.title ?? ""}
                           </p>
                           <p className="mt-0.5 text-xs text-faint">
-                            {a.lesson.title}
+                            {a.lesson?.title ?? ""}
                           </p>
                         </td>
                         <td className="px-4 py-3 align-top text-xs">
@@ -400,8 +400,8 @@ async function AssignmentListView({
                           <span className="line-clamp-1 font-medium">{a.title}</span>
                           {a.isHidden && <span className="chip text-[10px] shrink-0">Ẩn</span>}
                         </div>
-                        <p className="mt-0.5 text-xs text-muted">{a.lesson.module.course.title}</p>
-                        <p className="text-xs text-faint">{a.lesson.title}</p>
+                        <p className="mt-0.5 text-xs text-muted">{a.lesson?.module.course.title ?? ""}</p>
+                        <p className="text-xs text-faint">{a.lesson?.title ?? ""}</p>
                       </div>
                       {a.counts.pending > 0 && (
                         <span className="chip-accent shrink-0">{a.counts.pending} chờ</span>
@@ -516,9 +516,9 @@ async function PendingStreamView({ courseIds }: { courseIds: string[] }) {
       submittedAt: s.submittedAt,
       learnerName: s.user.displayName,
       learnerEmail: s.user.email,
-      courseTitle: s.assignment.lesson.module.course.title,
+      courseTitle: s.assignment.lesson?.module.course.title ?? "",
       title: s.assignment.title,
-      subTitle: s.assignment.lesson.title,
+      subTitle: s.assignment.lesson?.title ?? "",
       href: `/instructor/assignments/${s.assignment.id}/submissions`,
     })),
     ...essayResps.map<StreamItem>((r) => {

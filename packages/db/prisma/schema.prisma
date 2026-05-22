@@ -67,6 +67,8 @@ model User {
   questProgress           UserQuestProgress[]
   tournamentRegistrations TournamentRegistration[]
   tournamentCreated       Tournament[]             @relation("TournamentCreator")
+  missionSubmissions      MissionSubmission[]
+  missionReviews          MissionReviewAssignment[]
   scormAttempts           ScormAttempt[]
   scormPackagesUploaded   ScormPackage[]           @relation("ScormUploader")
   ltiToolsRegistered      LtiTool[]                @relation("LtiToolRegistrar")
@@ -447,12 +449,16 @@ model Quiz {
   // Filtered out of learner lesson-quiz lists; rendered with a badge in
   // instructor Question Bank. See docs/SPEC §6.1 cuepoint flow.
   cuepointOnly      Boolean  @default(false)
+  // Set when this quiz backs a TournamentMission with verifyMode=AUTO_GRADE.
+  // Filtered out of all course/lesson listings; reachable only in tournament UI.
+  tournamentMissionId String? @unique
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  lesson    Lesson?        @relation(fields: [lessonId], references: [id])
-  questions QuizQuestion[]
-  attempts  QuizAttempt[]
+  lesson            Lesson?            @relation(fields: [lessonId], references: [id])
+  questions         QuizQuestion[]
+  attempts          QuizAttempt[]
+  tournamentMission TournamentMission? @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
 
   @@index([lessonId])
   @@index([courseId])
@@ -901,7 +907,11 @@ enum ResponseFormat {
 
 model Assignment {
   id          String    @id @default(uuid())
-  lessonId    String
+  // Nullable so an assignment can stand alone (e.g. backing a
+  // TournamentMission with verifyMode=MANUAL_REVIEW in a cross-course
+  // tournament). DB CHECK enforces lessonId OR tournamentMissionId is set.
+  lessonId    String?
+  tournamentMissionId String? @unique
   title       String
   description String    @db.Text
   // Optional deadline shown to learners; not enforced server-side in MVP.
@@ -922,10 +932,12 @@ model Assignment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  lesson      Lesson                 @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  submissions AssignmentSubmission[]
+  lesson            Lesson?                @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  tournamentMission TournamentMission?     @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
+  submissions       AssignmentSubmission[]
 
   @@index([lessonId])
+  @@index([tournamentMissionId])
   // `/me/dashboard` filters Assignment by dueAt >= now (or null) and orders by
   // dueAt asc to surface upcoming work. Without this index Postgres falls back
   // to a seq scan + sort once a course accumulates a few thousand assignments.
@@ -1128,6 +1140,19 @@ model MissionTemplate {
   missions TournamentMission[]
 }
 
+enum MissionType {
+  COURSE_LINKED // behavior-based on existing course content (uses conditionType)
+  CUSTOM        // content authored inline (markdown/embedded quiz/instructions)
+  EXTERNAL      // content lives outside platform (URL/3rd-party tool)
+}
+
+enum VerifyMode {
+  AUTO_GRADE    // inline quiz; reuses Quiz + QuizAttempt
+  AUTO_CHECK    // rule-based: URL pattern, webhook callback, file format
+  PEER_REVIEW   // N reviewers score by rubric, median scoring
+  MANUAL_REVIEW // reuses Assignment + instructor grading flow
+}
+
 model TournamentMission {
   id             String   @id @default(uuid())
   tournamentId   String
@@ -1141,29 +1166,114 @@ model TournamentMission {
   prerequisiteId String?
   createdAt      DateTime @default(now())
 
-  // ── Condition fields (C5) ───────────────────────────────────────────
-  // Null templateId = fully custom (developer-created). Non-null = derived
-  // from a MissionTemplate; conditionType must match template.conditionType.
+  // ── Condition fields (C5) — used only when missionType=COURSE_LINKED ─
   templateId         String?
-  // Core condition — which metric to check and minimum count/days required.
   conditionType      String?
   conditionValue     Int?
-  // "course" (default) = scoped to tournament.courseId; "global" = platform-wide.
   conditionScope     String? @default("course")
-  // Minimum score % required (quiz, assignment). Only meaningful when
-  // conditionType is quiz_passed_min_score or assignment_graded_min_score.
   conditionMinScore  Int?
-  // Skill group prefix filter for skill_mastered_in_group.
-  // e.g. "zh_tech.vocab" matches all skills whose code starts with that string.
   conditionSkillCode String?
+
+  // ── Custom missions (C5.x) ─────────────────────────────────────────
+  // Default COURSE_LINKED keeps existing missions backwards-compatible.
+  missionType        MissionType @default(COURSE_LINKED)
+  // Null for COURSE_LINKED (behavior auto-checked). Required for the others.
+  verifyMode         VerifyMode?
+
+  // Submission window — required when verifyMode is set; null means
+  // "completion derived from behavior" (COURSE_LINKED).
+  submissionDeadline DateTime?
+
+  // CUSTOM/EXTERNAL content payload.
+  // Shape varies by missionType:
+  //   CUSTOM:   { markdown?, instructions?, attachments? }
+  //   EXTERNAL: { url, instructions }
+  contentPayload     Json?
+
+  // AUTO_CHECK rule: { type: "url_pattern" | "webhook" | "file_format", config: {...} }
+  autoCheckRule      Json?
+
+  // PEER_REVIEW config.
+  // rubric: [{ id, label, scale: "1-5"|"pass_fail", weight }]
+  rubric             Json?
+  peerReviewerCount  Int?       @default(3)
+  reviewWindowEndAt  DateTime?
+  // 0..1 — instructor sets per mission; required for PEER_REVIEW and
+  // MANUAL_REVIEW to decide PASSED vs FAILED.
+  passThreshold      Float?
+  // How many times reviewWindowEndAt was auto-extended due to too few reviews
+  // (max 2; after that, submissions fall back to manual review). AC-4.10.
+  reviewExtendCount  Int        @default(0)
 
   tournament   Tournament          @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   prerequisite TournamentMission?  @relation("MissionPrereq", fields: [prerequisiteId], references: [id])
   unlocks      TournamentMission[] @relation("MissionPrereq")
   template     MissionTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  submissions  MissionSubmission[]
+  quiz         Quiz?
+  assignment   Assignment?
 
   @@unique([tournamentId, orderIndex])
   @@index([templateId])
+  @@index([missionType, verifyMode])
+}
+
+enum MissionSubmissionStatus {
+  pending      // waiting for verify (peer window, manual grading, webhook)
+  passed
+  failed
+  disqualified // anti-cheat (speed-run, collusion, etc.)
+}
+
+model MissionSubmission {
+  id          String                  @id @default(uuid())
+  missionId   String
+  userId      String
+  submittedAt DateTime                @default(now())
+  // Shape varies by verifyMode:
+  //   AUTO_GRADE:    { quizAttemptId }
+  //   AUTO_CHECK:    { url? | fileUrl? | proof? }
+  //   PEER_REVIEW:   { artifactMarkdown? | fileUrl? | url? }
+  //   MANUAL_REVIEW: { assignmentSubmissionId }
+  payload     Json
+  status      MissionSubmissionStatus @default(pending)
+  // 0..1; set after verify.
+  finalScore  Float?
+  verifiedAt  DateTime?
+
+  mission          TournamentMission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewAssignments MissionReviewAssignment[]
+
+  @@unique([missionId, userId])
+  @@index([userId, submittedAt])
+  @@index([missionId, status])
+}
+
+model MissionReviewAssignment {
+  id              String    @id @default(uuid())
+  submissionId    String
+  reviewerId      String
+  assignedAt      DateTime  @default(now())
+  dueAt           DateTime
+  completedAt     DateTime?
+  // [{ criterionId, score }] — score domain depends on rubric scale.
+  scores          Json?
+  comment         String?   @db.Text
+
+  // Filled by close-review-window job.
+  aggregateScore  Float?
+  deltaFromMedian Float?
+  xpAwarded       Int?
+  flagged         Boolean   @default(false)
+  flagReason      String?
+
+  submission MissionSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewer   User              @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, reviewerId])
+  @@index([reviewerId, completedAt])
+  @@index([submissionId, completedAt])
 }
 
 model TournamentRanking {

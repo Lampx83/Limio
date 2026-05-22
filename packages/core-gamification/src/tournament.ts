@@ -314,9 +314,11 @@ export async function distributePrizes(
  *  - Auto-flip status from `published` → `active` when startsAt has passed
  *  - Auto-flip `active` → `ended` when endsAt has passed; runs distributePrizes
  */
+import { assignPeerReviewers, closeReviewWindow } from "./customMissionsRuntime";
+
 export async function tournamentTick(
   db: PrismaClient = prisma,
-): Promise<{ activated: number; ended: number; prizesAwarded: number }> {
+): Promise<{ activated: number; ended: number; prizesAwarded: number; peerReviewsAssigned: number; reviewWindowsClosed: number }> {
   const now = new Date();
   const activated = await db.tournament.updateMany({
     where: { status: "published", startsAt: { lte: now } },
@@ -348,5 +350,50 @@ export async function tournamentTick(
       },
     });
   }
-  return { activated: activated.count, ended: endedCount, prizesAwarded };
+  // C5.x — process peer-review missions:
+  //   1) Submission deadline reached → randomly assign reviewers.
+  //   2) Review window end reached → compute median + award XP + finalize.
+  let peerReviewsAssigned = 0;
+  let reviewWindowsClosed = 0;
+
+  const missionsDueForAssignment = await db.tournamentMission.findMany({
+    where: {
+      verifyMode: "PEER_REVIEW",
+      submissionDeadline: { lte: now },
+      reviewWindowEndAt: { gt: now },
+    },
+    select: { id: true },
+  });
+  for (const m of missionsDueForAssignment) {
+    try {
+      const r = await assignPeerReviewers(m.id, db);
+      peerReviewsAssigned += r.assignedCount;
+    } catch {
+      // best-effort — bad config on one mission shouldn't break the tick
+    }
+  }
+
+  const missionsDueForClose = await db.tournamentMission.findMany({
+    where: {
+      verifyMode: "PEER_REVIEW",
+      reviewWindowEndAt: { lte: now },
+    },
+    select: { id: true },
+  });
+  for (const m of missionsDueForClose) {
+    try {
+      const r = await closeReviewWindow(m.id, db);
+      reviewWindowsClosed += r.closed;
+    } catch {
+      // best-effort
+    }
+  }
+
+  return {
+    activated: activated.count,
+    ended: endedCount,
+    prizesAwarded,
+    peerReviewsAssigned,
+    reviewWindowsClosed,
+  };
 }

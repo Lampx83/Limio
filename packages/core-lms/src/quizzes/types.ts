@@ -9,7 +9,8 @@ export class QuizError extends Error {
       | "max_attempts_exceeded"
       | "attempt_already_submitted"
       | "attempt_belongs_to_other"
-      | "no_questions",
+      | "no_questions"
+      | "forbidden",
     public readonly details?: unknown,
   ) {
     super(code);

@@ -30,6 +30,17 @@ export async function GET(
       points: true,
       orderIndex: true,
       prerequisiteId: true,
+      conditionType: true,
+      conditionValue: true,
+      conditionScope: true,
+      conditionMinScore: true,
+      conditionSkillCode: true,
+      missionType: true,
+      verifyMode: true,
+      submissionDeadline: true,
+      passThreshold: true,
+      peerReviewerCount: true,
+      reviewWindowEndAt: true,
     },
   });
 
@@ -48,12 +59,32 @@ const ConditionInput = z.object({
   conditionSkillCode: z.string().trim().min(1).max(200).nullable().optional(),
 });
 
+// C5.x — custom mission fields. Required when missionType ≠ COURSE_LINKED.
+const RubricCriterionSchema = z.object({
+  id: z.string().min(1).max(50),
+  label: z.string().min(1).max(200),
+  scale: z.enum(["1-5", "pass_fail"]),
+  weight: z.number().min(0.01).max(100),
+});
+
+const CustomMissionInput = z.object({
+  missionType: z.enum(["COURSE_LINKED", "CUSTOM", "EXTERNAL"]).default("COURSE_LINKED"),
+  verifyMode: z.enum(["AUTO_GRADE", "AUTO_CHECK", "PEER_REVIEW", "MANUAL_REVIEW"]).nullable().optional(),
+  submissionDeadline: z.string().datetime().nullable().optional(),
+  contentPayload: z.unknown().nullable().optional(),
+  autoCheckRule: z.unknown().nullable().optional(),
+  rubric: z.array(RubricCriterionSchema).nullable().optional(),
+  peerReviewerCount: z.number().int().min(1).max(10).nullable().optional(),
+  reviewWindowEndAt: z.string().datetime().nullable().optional(),
+  passThreshold: z.number().min(0).max(1).nullable().optional(),
+});
+
 const PostInput = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(1).max(20_000),
   points: z.number().int().min(0).default(100),
   prerequisiteId: z.string().uuid().nullable().optional(),
-}).merge(ConditionInput);
+}).merge(ConditionInput).merge(CustomMissionInput);
 
 export async function POST(
   req: Request,
@@ -140,22 +171,119 @@ export async function POST(
     );
   }
 
-  const mission = await prisma.tournamentMission.create({
-    data: {
-      tournamentId:       params.id,
-      title:              parsed.data.title,
-      description:        parsed.data.description,
-      points:             parsed.data.points,
-      prerequisiteId:     parsed.data.prerequisiteId ?? null,
-      orderIndex:         nextIndex,
-      templateId:         parsed.data.templateId         ?? null,
-      conditionType:      resolvedConditionType,
-      conditionValue:     resolvedConditionValue,
-      conditionScope:     parsed.data.conditionScope,
-      conditionMinScore:  resolvedMinScore,
-      conditionSkillCode: parsed.data.conditionSkillCode ?? null,
-    },
-    select: { id: true },
+  // C5.x — custom mission validations.
+  const { missionType, verifyMode } = parsed.data;
+  if (missionType !== "COURSE_LINKED") {
+    if (!verifyMode) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "verifyMode_required_when_not_course_linked" },
+        { status: 400 },
+      );
+    }
+    if (!parsed.data.submissionDeadline) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "submissionDeadline_required" },
+        { status: 400 },
+      );
+    }
+  }
+  if (missionType === "EXTERNAL" && verifyMode && !["AUTO_CHECK", "MANUAL_REVIEW"].includes(verifyMode)) {
+    return NextResponse.json(
+      { error: "validation_failed", details: "external_requires_auto_check_or_manual" },
+      { status: 400 },
+    );
+  }
+  if (verifyMode === "PEER_REVIEW") {
+    if (!parsed.data.rubric || parsed.data.rubric.length === 0) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "rubric_required_for_peer_review" },
+        { status: 400 },
+      );
+    }
+    if (parsed.data.passThreshold === null || parsed.data.passThreshold === undefined) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "passThreshold_required_for_peer_review" },
+        { status: 400 },
+      );
+    }
+    if (!parsed.data.reviewWindowEndAt) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "reviewWindowEndAt_required_for_peer_review" },
+        { status: 400 },
+      );
+    }
+  }
+  if (verifyMode === "AUTO_CHECK" && !parsed.data.autoCheckRule) {
+    return NextResponse.json(
+      { error: "validation_failed", details: "autoCheckRule_required" },
+      { status: 400 },
+    );
+  }
+  if (verifyMode === "MANUAL_REVIEW" && (parsed.data.passThreshold === null || parsed.data.passThreshold === undefined)) {
+    return NextResponse.json(
+      { error: "validation_failed", details: "passThreshold_required_for_manual_review" },
+      { status: 400 },
+    );
+  }
+
+  // Create mission + backing entities (Quiz for AUTO_GRADE, Assignment for
+  // MANUAL_REVIEW) in a single transaction.
+  const mission = await prisma.$transaction(async (tx) => {
+    const m = await tx.tournamentMission.create({
+      data: {
+        tournamentId:       params.id,
+        title:              parsed.data.title,
+        description:        parsed.data.description,
+        points:             parsed.data.points,
+        prerequisiteId:     parsed.data.prerequisiteId ?? null,
+        orderIndex:         nextIndex,
+        templateId:         parsed.data.templateId         ?? null,
+        conditionType:      resolvedConditionType,
+        conditionValue:     resolvedConditionValue,
+        conditionScope:     parsed.data.conditionScope,
+        conditionMinScore:  resolvedMinScore,
+        conditionSkillCode: parsed.data.conditionSkillCode ?? null,
+        missionType,
+        verifyMode:         verifyMode ?? null,
+        submissionDeadline: parsed.data.submissionDeadline ? new Date(parsed.data.submissionDeadline) : null,
+        contentPayload:     (parsed.data.contentPayload ?? null) as never,
+        autoCheckRule:      (parsed.data.autoCheckRule ?? null) as never,
+        rubric:             (parsed.data.rubric ?? null) as never,
+        peerReviewerCount:  parsed.data.peerReviewerCount ?? (verifyMode === "PEER_REVIEW" ? 3 : null),
+        reviewWindowEndAt:  parsed.data.reviewWindowEndAt ? new Date(parsed.data.reviewWindowEndAt) : null,
+        passThreshold:      parsed.data.passThreshold ?? null,
+      },
+      select: { id: true },
+    });
+
+    // AUTO_GRADE — create hidden Quiz linked to this mission. Instructor adds
+    // questions afterwards via the standard Quiz editor (filtered to show only
+    // this quiz in mission context).
+    if (verifyMode === "AUTO_GRADE") {
+      await tx.quiz.create({
+        data: {
+          title: parsed.data.title,
+          description: "Tournament mission quiz",
+          isHidden: true,
+          tournamentMissionId: m.id,
+          passThresholdPct: Math.round((parsed.data.passThreshold ?? 0.7) * 100),
+        },
+      });
+    }
+    // MANUAL_REVIEW — create hidden Assignment linked to this mission. Reuses
+    // the instructor grading UI (filtered by tournamentMissionId).
+    if (verifyMode === "MANUAL_REVIEW") {
+      await tx.assignment.create({
+        data: {
+          title: parsed.data.title,
+          description: parsed.data.description,
+          isHidden: true,
+          tournamentMissionId: m.id,
+          dueAt: parsed.data.submissionDeadline ? new Date(parsed.data.submissionDeadline) : null,
+        },
+      });
+    }
+    return m;
   });
 
   return NextResponse.json({ missionId: mission.id }, { status: 201 });

@@ -42,7 +42,7 @@ export async function GET(
   const rows = subs.map((s) => ({
     "Họ tên học viên": s.user.displayName ?? "",
     "Email học viên": s.user.email,
-    "Bài học": s.assignment.lesson.title,
+    "Bài học": s.assignment.lesson?.title ?? "",
     "Bài tập": s.assignment.title,
     "Trạng thái": SUBMISSION_STATUS[s.status] ?? s.status,
     "Điểm": s.score !== null ? `${s.score}/${s.assignment.maxScore}` : "Chưa chấm",

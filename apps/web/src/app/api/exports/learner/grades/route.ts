@@ -79,7 +79,7 @@ export async function GET() {
   for (const s of submissions) {
     rows.push({
       type: "assignment",
-      courseTitle: s.assignment.lesson.module.course.title,
+      courseTitle: s.assignment.lesson?.module.course.title ?? "",
       itemTitle: s.assignment.title,
       scorePct:
         s.score !== null

@@ -308,7 +308,7 @@ export default async function LearnerDashboard() {
                       <span className={status.chip}>{status.label}</span>
                     </div>
                     <p className="mt-1 text-xs text-faint">
-                      {a.lesson.module.course.title}
+                      {a.lesson?.module.course.title ?? ""}
                       {a.dueAt && (
                         <>
                           {" · hạn "}

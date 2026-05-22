@@ -32,7 +32,7 @@ export default async function SubmissionsPage({
     },
   });
   if (!assignment) notFound();
-
+  if (!assignment.lesson) notFound();
   const courseId = assignment.lesson.module.course.id;
   if (!(await canEditCourse(userId, courseId))) {
     return (

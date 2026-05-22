@@ -168,15 +168,59 @@ async function getCourseIdForQuestion(
   return q?.quiz.courseId ?? null;
 }
 
+/**
+ * Dual auth for quiz operations.
+ * - Course-linked quiz → standard `assertCanEditCourse` path.
+ * - Tournament-backed quiz (courseId null, tournamentMissionId set) → only the
+ *   tournament creator can edit. Admins always pass via `assertCanEditCourse`
+ *   on a real courseId, so we don't re-check them here.
+ *
+ * Returns the courseId used for downstream operations ("" for cross-course
+ * tournaments — callers that need a real courseId must guard on it).
+ */
+async function assertQuizEditAuth(
+  actorUserId: string,
+  quizId: string,
+  db: PrismaClient,
+): Promise<string> {
+  const q = await db.quiz.findUnique({
+    where: { id: quizId },
+    select: {
+      courseId: true,
+      tournamentMission: {
+        select: { tournament: { select: { courseId: true, creatorId: true } } },
+      },
+    },
+  });
+  if (!q) throw new QuizError("quiz_not_found");
+
+  if (q.courseId) {
+    await assertCanEditCourse(actorUserId, q.courseId, db);
+    return q.courseId;
+  }
+  if (q.tournamentMission) {
+    const t = q.tournamentMission.tournament;
+    if (t.courseId) {
+      await assertCanEditCourse(actorUserId, t.courseId, db);
+      return t.courseId;
+    }
+    // Cross-course tournament: only creator can edit.
+    if (t.creatorId !== actorUserId) {
+      throw new QuizError("forbidden");
+    }
+    return "";
+  }
+  throw new QuizError("quiz_not_found");
+}
+
 export async function createQuestion(
   actorUserId: string,
   quizId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<{ questionId: string }> {
-  const courseId = await getCourseIdForQuiz(quizId, db);
-  if (!courseId) throw new QuizError("quiz_not_found");
-  await assertCanEditCourse(actorUserId, courseId, db);
+  // Dual auth: course-linked OR tournament-backed quiz.
+  await assertQuizEditAuth(actorUserId, quizId, db);
 
   const parsed = CreateQuestionInput.safeParse(rawInput);
   if (!parsed.success) throw new QuizError("validation_failed", parsed.error.flatten());
@@ -217,15 +261,26 @@ export async function createQuestion(
   });
 }
 
+async function assertQuestionEditAuth(
+  actorUserId: string,
+  questionId: string,
+  db: PrismaClient,
+): Promise<void> {
+  const q = await db.quizQuestion.findUnique({
+    where: { id: questionId },
+    select: { quizId: true },
+  });
+  if (!q) throw new QuizError("question_not_found");
+  await assertQuizEditAuth(actorUserId, q.quizId, db);
+}
+
 export async function updateQuestion(
   actorUserId: string,
   questionId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<void> {
-  const courseId = await getCourseIdForQuestion(questionId, db);
-  if (!courseId) throw new QuizError("question_not_found");
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertQuestionEditAuth(actorUserId, questionId, db);
   const parsed = UpdateQuestionInput.safeParse(rawInput);
   if (!parsed.success) throw new QuizError("validation_failed", parsed.error.flatten());
   const { options, skillIds, extra, ...scalarFields } = parsed.data;
@@ -287,9 +342,7 @@ export async function deleteQuestion(
   questionId: string,
   db: PrismaClient = prisma,
 ): Promise<void> {
-  const courseId = await getCourseIdForQuestion(questionId, db);
-  if (!courseId) throw new QuizError("question_not_found");
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertQuestionEditAuth(actorUserId, questionId, db);
   await db.quizQuestion.delete({ where: { id: questionId } });
 }
 
@@ -300,9 +353,7 @@ export async function tagQuestionSkill(
   skillId: string,
   db: PrismaClient = prisma,
 ): Promise<{ created: boolean }> {
-  const courseId = await getCourseIdForQuestion(questionId, db);
-  if (!courseId) throw new QuizError("question_not_found");
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertQuestionEditAuth(actorUserId, questionId, db);
   const skill = await db.skill.findUnique({ where: { id: skillId }, select: { id: true } });
   if (!skill) throw new QuizError("validation_failed", "skill_not_found");
   const existing = await db.questionSkillTag.findUnique({
@@ -319,8 +370,6 @@ export async function untagQuestionSkill(
   skillId: string,
   db: PrismaClient = prisma,
 ): Promise<void> {
-  const courseId = await getCourseIdForQuestion(questionId, db);
-  if (!courseId) throw new QuizError("question_not_found");
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertQuestionEditAuth(actorUserId, questionId, db);
   await db.questionSkillTag.deleteMany({ where: { questionId, skillId } });
 }

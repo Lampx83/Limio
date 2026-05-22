@@ -21,6 +21,8 @@ export type AwardReason =
   | "quest.completed"
   | "h5p.completed"
   | "tournament.prize"
+  | "tournament.mission.completed"
+  | "tournament.mission.review.awarded"
   | "assignment.deep_reflection";
 
 export interface AwardInput {

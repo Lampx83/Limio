@@ -81,6 +81,17 @@ export const LearningEventType = {
   TournamentRankingUpdated: "tournament.ranking.updated",
   TournamentDisqualified: "tournament.disqualified",
   TournamentPrizeDistributed: "tournament.prize.distributed",
+
+  // C5.x — Custom missions
+  TournamentMissionSubmitted: "tournament.mission.submitted",
+  TournamentMissionVerified: "tournament.mission.verified",
+  TournamentMissionReviewAssigned: "tournament.mission.review.assigned",
+  TournamentMissionReviewed: "tournament.mission.reviewed",
+  TournamentMissionReviewAwarded: "tournament.mission.review.awarded",
+  TournamentMissionReviewFlagged: "tournament.mission.review.flagged",
+  TournamentMissionReviewWindowExtended: "tournament.mission.review.window_extended",
+  TournamentMissionReviewFallbackManual: "tournament.mission.review.fallback_manual",
+  TournamentMissionSpeedRunBlocked: "tournament.mission.speed_run_blocked",
 } as const;
 
 export type LearningEventType =

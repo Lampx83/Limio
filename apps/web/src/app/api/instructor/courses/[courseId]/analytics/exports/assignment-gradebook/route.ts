@@ -72,8 +72,8 @@ export async function GET(
     return {
       Email: s.user.email,
       "Họ tên": s.user.displayName ?? "",
-      Module: s.assignment.lesson.module.title,
-      "Bài học": s.assignment.lesson.title,
+      Module: s.assignment.lesson?.module.title ?? "",
+      "Bài học": s.assignment.lesson?.title ?? "",
       Assignment: s.assignment.title,
       "Trạng thái": STATUS_LABEL[s.status] ?? s.status,
       Điểm: s.score ?? "",
