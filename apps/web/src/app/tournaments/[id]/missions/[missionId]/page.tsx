@@ -66,7 +66,19 @@ export default async function MissionDetailPage({
         )}
       </div>
 
-      {/* Description */}
+      {/* External URL appears first (the action point) */}
+      {content?.url && (
+        <a
+          href={content.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-brand-300 bg-brand-soft px-4 py-2 text-sm font-medium text-brand-800 hover:bg-brand-100"
+        >
+          🔗 Mở liên kết: {content.url}
+        </a>
+      )}
+
+      {/* Description / nội dung — rich-text HTML */}
       {mission.description && (
         <div
           className="prose prose-sm mt-4 max-w-none dark:prose-invert"
@@ -74,18 +86,11 @@ export default async function MissionDetailPage({
         />
       )}
 
-      {/* Custom content */}
-      {content?.markdown && (
+      {/* Legacy: pre-2026-05-22 missions had markdown in contentPayload */}
+      {content?.markdown && !mission.description && (
         <pre className="mt-4 whitespace-pre-wrap rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-sm">
           {content.markdown}
         </pre>
-      )}
-      {content?.url && (
-        <p className="mt-3">
-          <a href={content.url} target="_blank" rel="noopener noreferrer" className="link">
-            🔗 Mở liên kết: {content.url}
-          </a>
-        </p>
       )}
 
       {/* Status / Submit */}

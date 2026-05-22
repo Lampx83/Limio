@@ -330,7 +330,6 @@ function AddMissionForm({
 
   // Custom mission fields
   const [submissionDeadline, setSubmissionDeadline] = useState("");
-  const [contentMarkdown, setContentMarkdown] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
   const [autoCheckType, setAutoCheckType] = useState<"url_pattern" | "file_format" | "webhook">("url_pattern");
   const [autoCheckRegex, setAutoCheckRegex] = useState("");
@@ -395,10 +394,10 @@ function AddMissionForm({
       payload.submissionDeadline = submissionDeadline
         ? new Date(submissionDeadline).toISOString()
         : null;
-      if (missionType === "CUSTOM") {
-        payload.contentPayload = { markdown: contentMarkdown };
-      } else if (missionType === "EXTERNAL") {
-        payload.contentPayload = { url: externalUrl, instructions: contentMarkdown };
+      // For CUSTOM: description field (rich-text HTML) IS the content; no
+      // separate contentPayload.markdown. EXTERNAL only stores the URL.
+      if (missionType === "EXTERNAL") {
+        payload.contentPayload = { url: externalUrl };
       }
       if (verifyMode === "AUTO_CHECK") {
         payload.autoCheckRule = {
@@ -517,38 +516,68 @@ function AddMissionForm({
         </div>
       )}
 
-      {/* ── Custom content payload ── */}
+      {/* ── Basic info: title + URL (if external) + description ── */}
+      <div>
+        <label className="label text-xs" htmlFor="nm-title">Tiêu đề nhiệm vụ</label>
+        <input
+          id="nm-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          maxLength={200}
+          placeholder={
+            missionType === "COURSE_LINKED"
+              ? "Ví dụ: Hoàn thành 5 quiz"
+              : missionType === "EXTERNAL"
+                ? "Ví dụ: Solve LeetCode #1"
+                : "Ví dụ: Viết bài về AI ethics"
+          }
+          className="input mt-1 text-sm"
+        />
+      </div>
+
+      {missionType === "EXTERNAL" && (
+        <div>
+          <label className="label text-xs" htmlFor="nm-url">URL ngoài</label>
+          <input
+            id="nm-url"
+            type="url"
+            value={externalUrl}
+            onChange={(e) => setExternalUrl(e.target.value)}
+            required
+            placeholder="https://leetcode.com/problems/..."
+            className="input mt-1 text-sm"
+          />
+        </div>
+      )}
+
+      <div>
+        <label className="label text-xs" htmlFor="nm-desc">
+          {missionType === "CUSTOM"
+            ? "Nội dung / đề bài"
+            : missionType === "EXTERNAL"
+              ? "Hướng dẫn"
+              : "Mô tả"}
+        </label>
+        <div className="mt-1">
+          <RichTextEditor
+            value={desc}
+            onChange={setDesc}
+            placeholder={
+              missionType === "CUSTOM"
+                ? "Đề bài chi tiết, hướng dẫn, attachment..."
+                : missionType === "EXTERNAL"
+                  ? "Hướng dẫn học viên làm gì ở link bên ngoài..."
+                  : "Hướng dẫn cho học viên..."
+            }
+            minHeight={missionType !== "COURSE_LINKED" ? 140 : 80}
+          />
+        </div>
+      </div>
+
+      {/* ── Verify-mode-specific config (deadline + rule/rubric/threshold) ── */}
       {missionType !== "COURSE_LINKED" && (
         <div className="space-y-3 rounded-xl bg-[rgb(var(--surface-muted))] p-3">
-          {missionType === "EXTERNAL" && (
-            <div>
-              <label className="label text-xs">URL ngoài</label>
-              <input
-                type="url"
-                value={externalUrl}
-                onChange={(e) => setExternalUrl(e.target.value)}
-                required
-                placeholder="https://leetcode.com/problems/..."
-                className="input mt-1 text-sm"
-              />
-            </div>
-          )}
-          <div>
-            <label className="label text-xs">
-              {missionType === "EXTERNAL" ? "Hướng dẫn" : "Nội dung nhiệm vụ"}
-            </label>
-            <textarea
-              value={contentMarkdown}
-              onChange={(e) => setContentMarkdown(e.target.value)}
-              rows={4}
-              placeholder={
-                missionType === "EXTERNAL"
-                  ? "Hướng dẫn học viên làm gì ở link bên ngoài..."
-                  : "Markdown — đề bài, instructions, attachments..."
-              }
-              className="input mt-1 text-sm"
-            />
-          </div>
           <div>
             <label className="label text-xs">Hạn nộp</label>
             <input
@@ -606,10 +635,10 @@ function AddMissionForm({
 
           {/* PEER_REVIEW config */}
           {verifyMode === "PEER_REVIEW" && (
-            <div className="space-y-2 rounded-lg bg-[rgb(var(--surface))] p-2">
+            <div className="space-y-3 rounded-lg bg-[rgb(var(--surface))] p-3">
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="label text-xs">Số reviewer</label>
+                  <label className="label text-xs">Số reviewer / bài</label>
                   <input
                     type="number"
                     min={1}
@@ -620,7 +649,7 @@ function AddMissionForm({
                   />
                 </div>
                 <div>
-                  <label className="label text-xs">Pass threshold (0–1)</label>
+                  <label className="label text-xs">Ngưỡng đạt</label>
                   <input
                     type="number"
                     min={0}
@@ -629,11 +658,12 @@ function AddMissionForm({
                     value={passThreshold}
                     onChange={(e) => setPassThreshold(e.target.value)}
                     required
+                    placeholder="0.6"
                     className="input mt-1 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="label text-xs">Đóng review lúc</label>
+                  <label className="label text-xs">Đóng vòng chấm</label>
                   <input
                     type="datetime-local"
                     value={reviewWindowEndAt}
@@ -650,7 +680,7 @@ function AddMissionForm({
           {/* MANUAL_REVIEW config */}
           {verifyMode === "MANUAL_REVIEW" && (
             <div>
-              <label className="label text-xs">Pass threshold (0–1)</label>
+              <label className="label text-xs">Ngưỡng đạt</label>
               <input
                 type="number"
                 min={0}
@@ -659,6 +689,7 @@ function AddMissionForm({
                 value={passThreshold}
                 onChange={(e) => setPassThreshold(e.target.value)}
                 required
+                placeholder="0.6"
                 className="input mt-1 text-sm"
               />
               <p className="mt-1 text-xs text-faint">
@@ -669,7 +700,7 @@ function AddMissionForm({
 
           {verifyMode === "AUTO_GRADE" && (
             <p className="rounded bg-warning-50 px-2 py-1.5 text-xs text-warning-700">
-              Sau khi tạo mission, mở Quiz được tạo tự động để thêm câu hỏi.
+              Sau khi tạo mission, bạn sẽ được chuyển sang trang soạn câu hỏi quiz.
             </p>
           )}
         </div>
@@ -792,32 +823,6 @@ function AddMissionForm({
         </div>
       )}
 
-      {/* ── Basic info ── */}
-      <div>
-        <label className="label text-xs" htmlFor="nm-title">Tiêu đề nhiệm vụ</label>
-        <input
-          id="nm-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          maxLength={200}
-          placeholder="Ví dụ: Hoàn thành 5 quiz"
-          className="input mt-1 text-sm"
-        />
-      </div>
-
-      <div>
-        <label className="label text-xs" htmlFor="nm-desc">Mô tả</label>
-        <div className="mt-1">
-          <RichTextEditor
-            value={desc}
-            onChange={setDesc}
-            placeholder="Hướng dẫn cho học viên..."
-            minHeight={80}
-          />
-        </div>
-      </div>
-
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label text-xs" htmlFor="nm-pts">Điểm thưởng</label>
@@ -895,13 +900,19 @@ function RubricBuilder({
           + Tiêu chí
         </button>
       </div>
+      <div className="mt-1 grid grid-cols-[1fr_110px_90px_28px] gap-1.5 text-[10px] uppercase tracking-wide text-faint">
+        <span>Tiêu chí</span>
+        <span>Thang điểm</span>
+        <span>Trọng số</span>
+        <span></span>
+      </div>
       <ul className="mt-1 space-y-1.5">
         {rubric.map((c, i) => (
-          <li key={c.id} className="grid grid-cols-[1fr_90px_70px_28px] gap-1.5">
+          <li key={c.id} className="grid grid-cols-[1fr_110px_90px_28px] items-center gap-1.5">
             <input
               value={c.label}
               onChange={(e) => update(i, { label: e.target.value })}
-              placeholder="Tiêu chí..."
+              placeholder="vd: Độ rõ ràng"
               required
               className="input text-sm"
             />
@@ -910,8 +921,8 @@ function RubricBuilder({
               onChange={(e) => update(i, { scale: e.target.value as RubricCriterion["scale"] })}
               className="select text-sm"
             >
-              <option value="1-5">1–5</option>
-              <option value="pass_fail">Pass/Fail</option>
+              <option value="1-5">1–5 điểm</option>
+              <option value="pass_fail">Pass / Fail</option>
             </select>
             <input
               type="number"
@@ -919,21 +930,24 @@ function RubricBuilder({
               step={0.1}
               value={c.weight}
               onChange={(e) => update(i, { weight: parseFloat(e.target.value) || 1 })}
+              aria-label="Trọng số"
               className="input text-sm"
-              title="Trọng số"
             />
             <button
               type="button"
               onClick={() => remove(i)}
               disabled={rubric.length === 1}
+              aria-label="Xoá tiêu chí"
               className="text-danger-600 disabled:opacity-30"
-              title="Xoá"
             >
               ×
             </button>
           </li>
         ))}
       </ul>
+      <p className="mt-1.5 text-xs text-faint">
+        Trọng số là số tương đối — không cần cộng bằng 1, hệ thống tự chuẩn hoá.
+      </p>
     </div>
   );
 }
