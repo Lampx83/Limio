@@ -73,7 +73,7 @@ export default async function TournamentsPage({
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="max-w-2xl text-white drop-shadow-md">
               <p className="inline-flex items-center gap-2 rounded-full bg-white/25 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white backdrop-blur">
-                <span>⚔️</span> Arena
+                <span>🏁</span> Arena
               </p>
               <h1 className="mt-4 text-5xl font-black leading-none sm:text-6xl">
                 Đấu trường
@@ -94,7 +94,7 @@ export default async function TournamentsPage({
                 )}
                 {upcomingCount > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-200 px-3 py-1.5 text-amber-900 ring-2 ring-amber-100/60">
-                    ⏳ {upcomingCount} sắp khởi tranh
+                    ⏳ {upcomingCount} sắp bắt đầu
                   </span>
                 )}
                 {tab === "mine" && myIdSet.size > 0 && (
@@ -271,8 +271,8 @@ function TournamentCard({
 
         {/* Stats row */}
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <Stat icon="👥" value={t._count.registrations} label="đấu sĩ" />
-          <Stat icon="⚔️" value={t._count.missions} label="missions" />
+          <Stat icon="👥" value={t._count.registrations} label="người chơi" />
+          <Stat icon="🎯" value={t._count.missions} label="missions" />
           <Stat
             icon="💎"
             value={t.prizeXp > 0 ? `${t.prizeXp}` : "—"}
@@ -289,7 +289,7 @@ function TournamentCard({
 
         {/* CTA */}
         <p className="mt-2 text-right text-sm font-bold text-rose-600 group-hover:text-rose-700 dark:text-orange-400 dark:group-hover:text-orange-300">
-          {isEnded ? "Xem kết quả →" : isRegistered ? "Vào đấu →" : "Tham chiến →"}
+          {isEnded ? "Xem kết quả →" : isRegistered ? "Tiếp tục →" : "Tham gia →"}
         </p>
       </Link>
     </li>
@@ -339,10 +339,10 @@ function Stat({
 function EmptyArena({ tab }: { tab: string }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border-2 border-dashed border-orange-300 bg-gradient-to-br from-white via-amber-50 to-rose-50 p-12 text-center dark:border-orange-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
-      <div className="text-7xl">{tab === "mine" ? "🛡️" : "🏟️"}</div>
+      <div className="text-7xl">{tab === "mine" ? "🎟️" : "🏟️"}</div>
       <h2 className="mt-4 text-2xl font-black text-slate-900 dark:text-white">
         {tab === "mine"
-          ? "Bạn chưa tham chiến tournament nào"
+          ? "Bạn chưa tham gia tournament nào"
           : "Đấu trường đang im ắng"}
       </h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 dark:text-slate-400">

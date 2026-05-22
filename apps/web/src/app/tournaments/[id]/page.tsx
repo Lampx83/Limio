@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const STATUS_LABEL: Record<string, string> = {
-  published: "Sắp khởi tranh",
+  published: "Sắp bắt đầu",
   active: "Đang diễn ra",
   ended: "Đã kết thúc",
 };
@@ -155,7 +155,7 @@ export default async function TournamentDetailPage({
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-amber-900">
-                  ⏳ Sắp khởi tranh
+                  ⏳ Sắp bắt đầu
                 </span>
               )}
 
@@ -180,14 +180,14 @@ export default async function TournamentDetailPage({
 
             {/* Floating trophy */}
             <div className="hidden text-7xl drop-shadow-2xl sm:block sm:text-8xl" aria-hidden>
-              {isActive ? "⚔️" : isEnded ? "🏆" : "🛡️"}
+              {isActive ? "🏁" : isEnded ? "🏆" : "🎟️"}
             </div>
           </div>
 
           {/* Stat strip */}
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <HeroStat icon="👥" value={tournament._count.registrations} label="Đấu sĩ" />
-            <HeroStat icon="⚔️" value={tournament.missions.length} label="Missions" />
+            <HeroStat icon="👥" value={tournament._count.registrations} label="Người chơi" />
+            <HeroStat icon="🎯" value={tournament.missions.length} label="Missions" />
             <HeroStat icon="⏱" value={timeLabel} label="Thời gian" small />
             <HeroStat
               icon="💎"
@@ -241,7 +241,7 @@ export default async function TournamentDetailPage({
           {tournament.missions.length > 0 && (
             <section>
               <h2 className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white">
-                ⚔️ Nhiệm vụ chiến đấu
+                🎯 Danh sách nhiệm vụ
                 <span className="rounded-full bg-rose-600 px-2 py-0.5 text-xs font-bold text-white">
                   {tournament.missions.length}
                 </span>
@@ -304,7 +304,7 @@ export default async function TournamentDetailPage({
                               href={`/tournaments/${tournament.id}/missions/${mission.id}`}
                               className="ml-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:scale-105"
                             >
-                              Tham chiến →
+                              Làm bài →
                             </Link>
                           </div>
                         )}
@@ -330,7 +330,7 @@ export default async function TournamentDetailPage({
                 <div className="mt-4 rounded-2xl border-2 border-dashed border-orange-300 bg-white p-8 text-center text-sm text-slate-600 dark:border-orange-700 dark:bg-slate-800 dark:text-slate-400">
                   <p className="text-3xl">🏟️</p>
                   <p className="mt-2 font-semibold">
-                    Đấu trường đang chờ chiến binh đầu tiên!
+                    Đấu trường đang chờ người chơi đầu tiên!
                   </p>
                 </div>
               ) : (
@@ -354,7 +354,7 @@ export default async function TournamentDetailPage({
                               Hạng
                             </th>
                             <th className="px-4 py-3 text-left font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                              Đấu sĩ
+                              Người chơi
                             </th>
                             <th className="px-4 py-3 text-right font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                               Điểm
@@ -433,8 +433,8 @@ export default async function TournamentDetailPage({
                 <dt className="text-slate-500 dark:text-slate-400">Hình thức</dt>
                 <dd className="font-bold text-slate-900 dark:text-white">
                   {tournament.teamSize > 1
-                    ? `🛡️ Đội (${tournament.teamSize})`
-                    : "⚔️ Cá nhân"}
+                    ? `👥 Đội (${tournament.teamSize})`
+                    : "🏃 Cá nhân"}
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
@@ -444,7 +444,7 @@ export default async function TournamentDetailPage({
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-slate-500 dark:text-slate-400">Đấu sĩ</dt>
+                <dt className="text-slate-500 dark:text-slate-400">Người chơi</dt>
                 <dd className="font-bold tabular-nums text-slate-900 dark:text-white">
                   {tournament._count.registrations}
                 </dd>
