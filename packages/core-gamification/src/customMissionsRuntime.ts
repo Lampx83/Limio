@@ -541,18 +541,32 @@ export async function assignPeerReviewers(
   }
   const N = mission.peerReviewerCount ?? 3;
 
+  // Hackathon judges: if tournament has judges configured AND this mission is
+  // COLLECTIVE (isTeamSubmission), use judges instead of random peer assignment.
+  const judges = mission.isTeamSubmission
+    ? await db.tournamentJudge.findMany({
+        where: { tournamentId: mission.tournamentId },
+        select: { userId: true },
+      })
+    : [];
+  const useJudges = judges.length > 0;
+
   const submissions = await db.missionSubmission.findMany({
     where: { missionId },
     select: { id: true, userId: true },
   });
-  if (submissions.length < 2) return { assignedCount: 0 };
+  if (submissions.length === 0) return { assignedCount: 0 };
+  if (!useJudges && submissions.length < 2) return { assignedCount: 0 };
 
   const submitterIds = submissions.map((s) => s.userId);
   let assignedCount = 0;
 
   for (const submission of submissions) {
-    // Pool = other submitters (peer review = participants review each other).
-    const pool = submitterIds.filter((id) => id !== submission.userId);
+    // Hackathon: every judge reviews every submission (no random sampling).
+    // Standard peer: pool = other submitters; randomly pick N.
+    const pool = useJudges
+      ? judges.map((j) => j.userId).filter((id) => id !== submission.userId)
+      : submitterIds.filter((id) => id !== submission.userId);
     if (pool.length === 0) continue;
 
     // Skip if already assigned (job is idempotent).
@@ -560,11 +574,13 @@ export async function assignPeerReviewers(
       where: { submissionId: submission.id },
       select: { reviewerId: true },
     });
-    if (existing.length >= N) continue;
+    const targetCount = useJudges ? pool.length : N; // all judges, or N peers
+    if (existing.length >= targetCount) continue;
     const alreadyAssigned = new Set(existing.map((e) => e.reviewerId));
     const remaining = pool.filter((id) => !alreadyAssigned.has(id));
-    const needed = N - existing.length;
-    const picks = pickRandom(remaining, needed);
+    const needed = targetCount - existing.length;
+    // Judges: assign all remaining (deterministic). Peers: random sample.
+    const picks = useJudges ? remaining.slice(0, needed) : pickRandom(remaining, needed);
 
     for (const reviewerId of picks) {
       await db.missionReviewAssignment.create({

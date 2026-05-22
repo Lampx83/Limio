@@ -74,6 +74,7 @@ model User {
   tournamentCreated       Tournament[]             @relation("TournamentCreator")
   tournamentTeamsCaptained TournamentTeam[]        @relation("TeamCaptain")
   hackathonVotes           HackathonVote[]         @relation("HackathonVoter")
+  tournamentJudgeOf        TournamentJudge[]       @relation("TournamentJudge")
   missionSubmissions      MissionSubmission[]
   missionReviews          MissionReviewAssignment[]
   scormAttempts           ScormAttempt[]
@@ -1101,6 +1102,7 @@ model Tournament {
   missions      TournamentMission[]
   rankings      TournamentRanking[]
   teams         TournamentTeam[]
+  judges        TournamentJudge[]
 
   @@index([status, startsAt])
   @@index([courseId, status])
@@ -1122,6 +1124,22 @@ model TournamentRegistration {
 
   @@unique([tournamentId, userId])
   @@index([tournamentId, teamId])
+}
+
+// Judges cho hackathon — instructor chỉ định N user chấm thay peer random.
+// Khi mission PEER_REVIEW + isTeamSubmission + tournament có judges:
+// hệ thống assign judges cho mỗi submission (thay vì peer chia ngẫu nhiên).
+model TournamentJudge {
+  id           String   @id @default(uuid())
+  tournamentId String
+  userId       String
+  addedAt      DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User       @relation("TournamentJudge", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId])
 }
 
 // Popular vote cho hackathon showcase. Mỗi voter chọn 1 project yêu thích

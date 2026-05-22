@@ -4,6 +4,7 @@ import { useState } from "react";
 import TournamentMetaForm from "./TournamentMetaForm";
 import TournamentMissionManager from "./TournamentMissionManager";
 import RegistrationsList, { type Registration } from "./RegistrationsList";
+import JudgesPanel from "./JudgesPanel";
 
 interface Tab {
   id: string;
@@ -15,6 +16,7 @@ const TABS: Tab[] = [
   { id: "basic", label: "Thông tin cơ bản" },
   { id: "missions", label: "Missions" },
   { id: "registrations", label: "Đăng ký" },
+  { id: "judges", label: "Giám khảo" },
   { id: "prize", label: "Giải thưởng" },
   { id: "leaderboard", label: "Bảng xếp hạng" },
 ];
@@ -113,6 +115,11 @@ export default function InstructorTournamentTabs({
             teamSize={teamSize}
             tournamentTitle={tournamentTitle}
           />
+        )}
+
+        {/* Judges Tab */}
+        {activeTab === "judges" && (
+          <JudgesPanel tournamentId={tournamentId} />
         )}
 
         {/* Prize Tab */}
