@@ -60,6 +60,7 @@ const PatchInput = z
     endsAt: z.string().datetime().optional(),
     teamSize: z.number().int().positive().optional(),
     prizeXp: z.number().int().min(0).optional(),
+    allowLateRegistration: z.boolean().optional(),
     prizeDistribution: z.record(z.unknown()).nullable().optional(),
     status: z.enum(["published"]).optional(), // only draft→published allowed here
   })
@@ -121,6 +122,9 @@ export async function PATCH(
       ...(data.endsAt !== undefined && { endsAt: new Date(data.endsAt) }),
       ...(data.teamSize !== undefined && { teamSize: data.teamSize }),
       ...(data.prizeXp !== undefined && { prizeXp: data.prizeXp }),
+      ...(data.allowLateRegistration !== undefined && {
+        allowLateRegistration: data.allowLateRegistration,
+      }),
       ...(data.prizeDistribution !== undefined && {
         prizeDistribution:
           data.prizeDistribution === null

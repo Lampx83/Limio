@@ -39,6 +39,7 @@ export class TournamentError extends Error {
       | "tournament_not_found"
       | "not_published"
       | "ended"
+      | "registration_closed"
       | "already_registered"
       | "not_registered"
       | "mission_not_found"
@@ -68,6 +69,9 @@ export async function registerForTournament(
   if (!t) throw new TournamentError("tournament_not_found");
   if (t.status === "draft") throw new TournamentError("not_published");
   if (t.status === "ended") throw new TournamentError("ended");
+  if (t.status === "active" && !t.allowLateRegistration) {
+    throw new TournamentError("registration_closed");
+  }
   // Solo path only valid for solo tournaments — team-based must go through
   // createTeam/joinTeamByCode so registration is tied to a TournamentTeam.
   if (t.teamSize > 1) throw new TournamentError("team_solo_only");
@@ -105,11 +109,18 @@ function makeJoinCode(): string {
   return s;
 }
 
-function assertTournamentJoinable(t: { status: string; teamSize: number }) {
+function assertTournamentJoinable(t: {
+  status: string;
+  teamSize: number;
+  allowLateRegistration: boolean;
+}) {
   if (t.status === "draft") throw new TournamentError("not_published");
   if (t.status === "ended") throw new TournamentError("ended");
-  // Lock team changes once tournament goes live (status === "active").
-  if (t.status === "active") throw new TournamentError("team_locked_after_start");
+  // Lock team changes once tournament goes live unless the organizer
+  // explicitly opted in to late registration.
+  if (t.status === "active" && !t.allowLateRegistration) {
+    throw new TournamentError("team_locked_after_start");
+  }
 }
 
 export async function createTeam(

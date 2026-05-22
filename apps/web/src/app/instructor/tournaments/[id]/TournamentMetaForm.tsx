@@ -16,6 +16,7 @@ interface Initial {
   startsAt: string; // ISO
   endsAt: string;   // ISO
   prizeXp: number;
+  allowLateRegistration: boolean;
 }
 
 function toDatetimeLocal(iso: string) {
@@ -37,6 +38,9 @@ export default function TournamentMetaForm({
   const [startsAt, setStartsAt] = useState(toDatetimeLocal(initial.startsAt));
   const [endsAt, setEndsAt] = useState(toDatetimeLocal(initial.endsAt));
   const [prizeXp, setPrizeXp] = useState(String(initial.prizeXp));
+  const [allowLateRegistration, setAllowLateRegistration] = useState(
+    initial.allowLateRegistration,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,6 +65,7 @@ export default function TournamentMetaForm({
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         prizeXp: parseInt(prizeXp, 10) || 0,
+        allowLateRegistration,
       }),
     });
     setBusy(false);
@@ -146,6 +151,26 @@ export default function TournamentMetaForm({
         <p className="mt-1 text-xs text-faint">
           Tổng XP phân phối cho top finishers.
         </p>
+      </div>
+
+      <div>
+        <label className="flex items-start gap-2.5 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-3 hover:border-brand-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={allowLateRegistration}
+            onChange={(e) => setAllowLateRegistration(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-brand-600"
+          />
+          <div className="text-sm">
+            <span className="font-medium">
+              Cho phép đăng ký khi tournament đang diễn ra
+            </span>
+            <p className="mt-0.5 text-xs text-muted">
+              Bật → người chơi vẫn có thể tham gia sau startsAt. Tắt → khóa
+              danh sách tại thời điểm bắt đầu.
+            </p>
+          </div>
+        </label>
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-token pt-4">

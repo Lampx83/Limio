@@ -202,6 +202,7 @@ export default async function TournamentDetailPage({
           startsAt: tournament.startsAt.toISOString(),
           endsAt: tournament.endsAt.toISOString(),
           prizeXp: tournament.prizeXp,
+          allowLateRegistration: tournament.allowLateRegistration,
         }}
         missions={tournament.missions}
         courseId={tournament.courseId}

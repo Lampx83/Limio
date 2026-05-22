@@ -13,6 +13,7 @@ const Input = z.object({
   endsAt: z.string().datetime(),
   teamSize: z.number().int().positive().default(1),
   prizeXp: z.number().int().min(0).default(0),
+  allowLateRegistration: z.boolean().default(true),
 });
 
 export async function POST(req: Request) {
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
       endsAt: new Date(parsed.data.endsAt),
       teamSize: parsed.data.teamSize,
       prizeXp: parsed.data.prizeXp,
+      allowLateRegistration: parsed.data.allowLateRegistration,
     },
   });
   return NextResponse.json({ tournamentId: t.id }, { status: 201 });

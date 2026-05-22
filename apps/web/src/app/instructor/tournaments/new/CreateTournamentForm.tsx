@@ -24,6 +24,7 @@ export default function CreateTournamentForm({
   const [endsAt, setEndsAt] = useState("");
   const [teamSize, setTeamSize] = useState("1");
   const [prizeXp, setPrizeXp] = useState("0");
+  const [allowLateRegistration, setAllowLateRegistration] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +39,7 @@ export default function CreateTournamentForm({
       endsAt: new Date(endsAt).toISOString(),
       teamSize: Number(teamSize) || 1,
       prizeXp: Number(prizeXp) || 0,
+      allowLateRegistration,
     };
     if (courseId && courseId !== "PLATFORM") payload.courseId = courseId;
 
@@ -146,6 +148,27 @@ export default function CreateTournamentForm({
           />
         </div>
       </div>
+      <div>
+        <label className="flex items-start gap-2.5 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-3 hover:border-brand-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={allowLateRegistration}
+            onChange={(e) => setAllowLateRegistration(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-brand-600"
+          />
+          <div className="text-sm">
+            <span className="font-medium">
+              Cho phép đăng ký khi tournament đang diễn ra
+            </span>
+            <p className="mt-0.5 text-xs text-muted">
+              Bật → người chơi có thể tham gia bất cứ lúc nào trước khi kết
+              thúc. Tắt → khóa danh sách tại thời điểm bắt đầu (team không
+              thể đổi thành viên sau start).
+            </p>
+          </div>
+        </label>
+      </div>
+
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-token pt-4">
         {error && (
           <span className="mr-auto text-sm text-danger-600">Lỗi: {error}</span>

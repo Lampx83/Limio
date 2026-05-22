@@ -1093,6 +1093,11 @@ model Tournament {
   // Total prize XP — distributed to top finishers per `prizeDistribution`.
   prizeXp           Int              @default(0)
   prizeDistribution Json? // e.g. { "1": 50, "2": 30, "3": 20 } percentages
+  // Cho phép đăng ký tham dự khi tournament đã chuyển sang `active`. Mặc định
+  // true để giữ behavior cũ của solo; instructor có thể tắt để chốt danh sách
+  // tại thời điểm startsAt (đặc biệt hữu ích cho team-based khi muốn lock
+  // composition sau khi bắt đầu).
+  allowLateRegistration Boolean      @default(true)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
