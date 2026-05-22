@@ -82,6 +82,16 @@ export default async function TournamentDetailPage({
           teamId: true,
         },
       },
+      registrations: {
+        orderBy: { registeredAt: "asc" },
+        select: {
+          id: true,
+          registeredAt: true,
+          disqualifiedAt: true,
+          teamId: true,
+          user: { select: { id: true, displayName: true, email: true } },
+        },
+      },
       _count: { select: { registrations: true } },
     },
   });
@@ -196,6 +206,15 @@ export default async function TournamentDetailPage({
         courseId={tournament.courseId}
         prizeDistribution={tournament.prizeDistribution}
         prizeXp={tournament.prizeXp}
+        teamSize={tournament.teamSize}
+        tournamentTitle={tournament.title}
+        registrations={tournament.registrations.map((r) => ({
+          id: r.id,
+          registeredAt: r.registeredAt.toISOString(),
+          disqualifiedAt: r.disqualifiedAt?.toISOString() ?? null,
+          teamId: r.teamId,
+          user: r.user,
+        }))}
         leaderboardSection={
           (tournament.status === "active" || tournament.status === "ended") &&
           rankings.length > 0 ? (

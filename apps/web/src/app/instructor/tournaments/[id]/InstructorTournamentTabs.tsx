@@ -3,6 +3,7 @@
 import { useState } from "react";
 import TournamentMetaForm from "./TournamentMetaForm";
 import TournamentMissionManager from "./TournamentMissionManager";
+import RegistrationsList, { type Registration } from "./RegistrationsList";
 
 interface Tab {
   id: string;
@@ -13,6 +14,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: "basic", label: "Thông tin cơ bản" },
   { id: "missions", label: "Missions" },
+  { id: "registrations", label: "Đăng ký" },
   { id: "prize", label: "Giải thưởng" },
   { id: "leaderboard", label: "Bảng xếp hạng" },
 ];
@@ -27,6 +29,9 @@ export default function InstructorTournamentTabs({
   leaderboardSection,
   prizeDistribution,
   prizeXp,
+  registrations,
+  teamSize,
+  tournamentTitle,
 }: {
   tournamentId: string;
   status: string;
@@ -37,6 +42,9 @@ export default function InstructorTournamentTabs({
   leaderboardSection: React.ReactNode;
   prizeDistribution: any;
   prizeXp: number;
+  registrations: Registration[];
+  teamSize: number;
+  tournamentTitle: string;
 }) {
   const [activeTab, setActiveTab] = useState("basic");
 
@@ -95,6 +103,15 @@ export default function InstructorTournamentTabs({
               courseId={courseId}
             />
           </div>
+        )}
+
+        {/* Registrations Tab */}
+        {activeTab === "registrations" && (
+          <RegistrationsList
+            registrations={registrations}
+            teamSize={teamSize}
+            tournamentTitle={tournamentTitle}
+          />
         )}
 
         {/* Prize Tab */}
