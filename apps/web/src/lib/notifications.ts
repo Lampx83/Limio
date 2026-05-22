@@ -492,7 +492,7 @@ async function getInstructorNotifications(
       type: "instructor.mission.review_needed",
       title: `${m.user.displayName} nộp mission`,
       body: m.mission.title,
-      link: `/instructor/tournaments/${m.mission.tournamentId}`,
+      link: `/instructor/tournaments/${m.mission.tournamentId}/missions/${m.mission.id}/submissions`,
       iconKey: "mission_review",
       createdAt: m.submittedAt,
     });
