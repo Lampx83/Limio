@@ -304,7 +304,7 @@ export default async function TournamentDetailPage({
                               href={`/tournaments/${tournament.id}/missions/${mission.id}`}
                               className="ml-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:scale-105"
                             >
-                              Làm bài →
+                              Sẵn sàng nhận nhiệm vụ →
                             </Link>
                           </div>
                         )}
