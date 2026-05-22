@@ -17,68 +17,21 @@ type NavItem = {
   href: string;
   label: string;
   Icon: typeof LayoutDashboard;
-  iconBg: string;
-  iconFg: string;
 };
 
 const NAV: NavItem[] = [
-  {
-    href: "/admin/dashboard",
-    label: "Dashboard",
-    Icon: LayoutDashboard,
-    iconBg: "bg-indigo-100",
-    iconFg: "text-indigo-600",
-  },
-  {
-    href: "/admin/users",
-    label: "Người dùng",
-    Icon: Users,
-    iconBg: "bg-pink-100",
-    iconFg: "text-pink-600",
-  },
-  {
-    href: "/admin/skills",
-    label: "Skill taxonomy",
-    Icon: Network,
-    iconBg: "bg-emerald-100",
-    iconFg: "text-emerald-600",
-  },
-  {
-    href: "/admin/integrations",
-    label: "Integrations",
-    Icon: Plug,
-    iconBg: "bg-purple-100",
-    iconFg: "text-purple-600",
-  },
-  {
-    href: "/admin/lti-tools",
-    label: "LTI tools",
-    Icon: Wrench,
-    iconBg: "bg-sky-100",
-    iconFg: "text-sky-600",
-  },
-  {
-    href: "/admin/emails",
-    label: "Email templates",
-    Icon: Mail,
-    iconBg: "bg-orange-100",
-    iconFg: "text-orange-600",
-  },
-  {
-    href: "/admin/settings",
-    label: "Cài đặt",
-    Icon: Settings,
-    iconBg: "bg-blue-100",
-    iconFg: "text-blue-600",
-  },
-  {
-    href: "/admin/changelog",
-    label: "Changelog",
-    Icon: History,
-    iconBg: "bg-amber-100",
-    iconFg: "text-amber-700",
-  },
+  { href: "/admin/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/admin/users", label: "Người dùng", Icon: Users },
+  { href: "/admin/skills", label: "Skill taxonomy", Icon: Network },
+  { href: "/admin/integrations", label: "Integrations", Icon: Plug },
+  { href: "/admin/lti-tools", label: "LTI tools", Icon: Wrench },
+  { href: "/admin/emails", label: "Email templates", Icon: Mail },
+  { href: "/admin/settings", label: "Cài đặt", Icon: Settings },
+  { href: "/admin/changelog", label: "Changelog", Icon: History },
 ];
+
+const ICON_BG = "bg-brand-soft";
+const ICON_FG = "text-brand-700";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -90,7 +43,7 @@ export default function AdminSidebar() {
           <span className="text-muted">trị hệ thống</span>
         </h2>
         <nav className="flex flex-col gap-1">
-          {NAV.map(({ href, label, Icon, iconBg, iconFg }) => {
+          {NAV.map(({ href, label, Icon }) => {
             const active =
               pathname === href || pathname.startsWith(href + "/");
             return (
@@ -107,10 +60,10 @@ export default function AdminSidebar() {
                 <span
                   className={
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full " +
-                    iconBg
+                    ICON_BG
                   }
                 >
-                  <Icon className={"h-4.5 w-4.5 " + iconFg} size={18} />
+                  <Icon className={ICON_FG} size={18} />
                 </span>
                 <span className="truncate">{label}</span>
               </Link>
