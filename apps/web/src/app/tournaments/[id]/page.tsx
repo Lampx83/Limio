@@ -9,14 +9,8 @@ import { plainToRichHtml } from "@/lib/richText";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const STATUS_TONE: Record<string, string> = {
-  published: "chip-accent",
-  active: "chip-success",
-  ended: "chip",
-};
-
 const STATUS_LABEL: Record<string, string> = {
-  published: "Sắp diễn ra",
+  published: "Sắp khởi tranh",
   active: "Đang diễn ra",
   ended: "Đã kết thúc",
 };
@@ -113,160 +107,204 @@ export default async function TournamentDetailPage({
     timeLabel = `Kết thúc sau ${formatRelativeTime(tournament.endsAt, now)}`;
   }
 
+  const heroGradient = isActive
+    ? "from-rose-700 via-red-600 to-orange-500"
+    : isEnded
+      ? "from-slate-700 via-slate-600 to-slate-500"
+      : "from-amber-600 via-orange-500 to-rose-500";
+
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      {/* Back link */}
-      <Link
-        href="/tournaments"
-        className="link inline-flex items-center gap-1 text-sm"
-      >
-        ← Tournaments
-      </Link>
+    <main className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      {/* ── HERO BANNER ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-to-br ${heroGradient}`} />
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 30%, rgba(255,255,255,0.5) 0%, transparent 50%), radial-gradient(circle at 85% 70%, rgba(255,200,80,0.5) 0%, transparent 50%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(255,255,255,0.5) 12px, rgba(255,255,255,0.5) 14px)",
+          }}
+        />
 
-      {/* Header */}
-      <header className="mt-4">
-        <div className="flex flex-wrap items-start gap-3">
-          <h1 className="h-display flex-1 text-3xl font-bold sm:text-4xl">
-            {tournament.title}
-          </h1>
-          <span className={STATUS_TONE[tournament.status] ?? "chip"}>
-            {STATUS_LABEL[tournament.status] ?? tournament.status}
-          </span>
-        </div>
+        <div className="relative mx-auto max-w-5xl px-6 py-10 sm:py-14">
+          <Link
+            href="/tournaments"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-white/90 hover:text-white"
+          >
+            ← Arena
+          </Link>
 
-        {/* Course tag */}
-        {tournament.course ? (
-          <p className="mt-2 text-sm text-muted">
-            Khóa học:{" "}
-            <Link
-              href={`/catalog/${tournament.course.slug}`}
-              className="link font-medium"
-            >
-              {tournament.course.title}
-            </Link>
-          </p>
-        ) : (
-          <p className="mt-2 text-sm text-muted">Platform-wide</p>
-        )}
-      </header>
+          <div className="mt-6 flex flex-wrap items-start gap-4">
+            <div className="flex-1 min-w-0 text-white drop-shadow-md">
+              {/* Status pill */}
+              {isActive ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-700 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white ring-2 ring-white/40">
+                  <span className="flex h-2 w-2 animate-ping rounded-full bg-white" />
+                  Đang diễn ra
+                </span>
+              ) : isEnded ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-700">
+                  ✓ Đã kết thúc
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-200 px-3 py-1 text-xs font-bold uppercase tracking-widest text-amber-900">
+                  ⏳ Sắp khởi tranh
+                </span>
+              )}
 
-      {/* Info bar */}
-      <div className="mt-6 flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5">
-          <span className="text-base">👥</span>
-          <span className="text-sm font-medium">
-            {tournament._count.registrations} người tham gia
-          </span>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5">
-          <span className="text-base">🎯</span>
-          <span className="text-sm font-medium">
-            {tournament.missions.length} missions
-          </span>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5">
-          <span className="text-base">🕐</span>
-          <span className="text-sm font-medium">{timeLabel}</span>
-        </div>
-        {tournament.prizeXp > 0 && (
-          <div className="flex items-center gap-2 rounded-xl border border-accent-200 bg-accent-50 px-4 py-2.5">
-            <span className="text-base">🏆</span>
-            <span className="text-sm font-medium text-accent-700">
-              {tournament.prizeXp} XP giải thưởng
-            </span>
+              <h1 className="mt-4 text-4xl font-black leading-tight sm:text-5xl">
+                {tournament.title}
+              </h1>
+
+              {tournament.course ? (
+                <p className="mt-2 text-sm font-semibold text-white/85">
+                  📚{" "}
+                  <Link
+                    href={`/catalog/${tournament.course.slug}`}
+                    className="underline-offset-2 hover:underline"
+                  >
+                    {tournament.course.title}
+                  </Link>
+                </p>
+              ) : (
+                <p className="mt-2 text-sm font-semibold text-white/85">🌐 Toàn nền tảng</p>
+              )}
+            </div>
+
+            {/* Floating trophy */}
+            <div className="hidden text-7xl drop-shadow-2xl sm:block sm:text-8xl" aria-hidden>
+              {isActive ? "⚔️" : isEnded ? "🏆" : "🛡️"}
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Content grid */}
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_280px]">
+          {/* Stat strip */}
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <HeroStat icon="👥" value={tournament._count.registrations} label="Đấu sĩ" />
+            <HeroStat icon="⚔️" value={tournament.missions.length} label="Missions" />
+            <HeroStat icon="⏱" value={timeLabel} label="Thời gian" small />
+            <HeroStat
+              icon="💎"
+              value={tournament.prizeXp > 0 ? `${tournament.prizeXp}` : "—"}
+              label="XP thưởng"
+              highlight={tournament.prizeXp > 0}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── CONTENT GRID ───────────────────────────────────────────── */}
+      <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
         {/* Left column */}
         <div className="space-y-8">
           {/* Description */}
           {tournament.description && (
-            <section className="card">
-              <h2 className="text-lg font-semibold">Mô tả</h2>
+            <section className="rounded-2xl border border-orange-200/60 bg-white p-6 shadow-md dark:border-orange-900/40 dark:bg-slate-800">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+                📜 Mô tả
+              </h2>
               <SafeHtml
                 html={plainToRichHtml(tournament.description)}
-                className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+                className="prose prose-sm mt-3 max-w-none text-slate-600 dark:prose-invert dark:text-slate-300"
               />
             </section>
           )}
 
           {/* Date range */}
-          <section className="card">
-            <h2 className="text-lg font-semibold">Thời gian</h2>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <div className="rounded-lg bg-[rgb(var(--surface-muted))] px-4 py-3">
-                <p className="text-xs text-faint">Bắt đầu</p>
-                <p className="mt-0.5 text-sm font-medium">
-                  {formatDate(tournament.startsAt)}
-                </p>
-              </div>
-              <div className="rounded-lg bg-[rgb(var(--surface-muted))] px-4 py-3">
-                <p className="text-xs text-faint">Kết thúc</p>
-                <p className="mt-0.5 text-sm font-medium">
-                  {formatDate(tournament.endsAt)}
-                </p>
-              </div>
+          <section className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5 dark:border-emerald-800/50 dark:from-emerald-950/30 dark:to-slate-800">
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                🟢 Bắt đầu
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                {formatDate(tournament.startsAt)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-white p-5 dark:border-rose-800/50 dark:from-rose-950/30 dark:to-slate-800">
+              <p className="text-xs font-bold uppercase tracking-widest text-rose-700 dark:text-rose-400">
+                🔴 Kết thúc
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                {formatDate(tournament.endsAt)}
+              </p>
             </div>
           </section>
 
           {/* Missions */}
           {tournament.missions.length > 0 && (
             <section>
-              <h2 className="text-lg font-semibold">Missions</h2>
+              <h2 className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white">
+                ⚔️ Nhiệm vụ chiến đấu
+                <span className="rounded-full bg-rose-600 px-2 py-0.5 text-xs font-bold text-white">
+                  {tournament.missions.length}
+                </span>
+              </h2>
               <ol className="mt-4 space-y-3">
                 {tournament.missions.map((mission, idx) => (
-                  <li key={mission.id} className="card">
-                    <div className="flex items-start gap-4">
+                  <li
+                    key={mission.id}
+                    className="group relative overflow-hidden rounded-2xl border border-orange-200/60 bg-white shadow-md transition-all hover:shadow-xl dark:border-orange-900/40 dark:bg-slate-800"
+                  >
+                    {/* Accent bar */}
+                    <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-rose-600 to-orange-500" />
+
+                    <div className="flex items-start gap-4 p-5 pl-7">
                       {/* Order badge */}
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-bold text-brand-700">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-600 to-orange-500 text-lg font-black text-white shadow-md">
                         {idx + 1}
-                      </span>
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <h3 className="font-semibold">{mission.title}</h3>
-                          <span className="chip-accent shrink-0">
-                            {mission.points} điểm
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                            {mission.title}
+                          </h3>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-2.5 py-1 text-xs font-black text-amber-900 ring-1 ring-amber-500/40">
+                            💎 {mission.points}
                           </span>
                         </div>
                         {mission.description && (
                           <SafeHtml
                             html={plainToRichHtml(mission.description)}
-                            className="prose prose-sm mt-1 max-w-none text-muted dark:prose-invert"
+                            className="prose prose-sm mt-2 max-w-none text-slate-600 dark:prose-invert dark:text-slate-300"
                           />
                         )}
                         {mission.prerequisiteId && (
-                          <p className="mt-1.5 text-xs text-faint">
+                          <p className="mt-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
                             🔒 Yêu cầu hoàn thành mission trước
                           </p>
                         )}
                         {mission.missionType && mission.missionType !== "COURSE_LINKED" && (
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <span className="chip text-xs">
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                               {mission.missionType === "CUSTOM" ? "Tự thiết kế" : "Liên kết ngoài"}
                             </span>
                             {mission.verifyMode && (
-                              <span className="chip text-xs">
+                              <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase text-orange-800 dark:bg-orange-950/50 dark:text-orange-300">
                                 {{
-                                  AUTO_GRADE:    "Tự chấm",
+                                  AUTO_GRADE:    "Quiz",
                                   AUTO_CHECK:    "Tự kiểm tra",
-                                  PEER_REVIEW:   "Bạn học chấm",
+                                  PEER_REVIEW:   "Peer review",
                                   MANUAL_REVIEW: "GV chấm",
                                 }[mission.verifyMode]}
                               </span>
                             )}
                             {mission.submissionDeadline && (
-                              <span className="text-xs text-faint">
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
                                 Hạn: {new Date(mission.submissionDeadline).toLocaleString("vi-VN")}
                               </span>
                             )}
                             <Link
                               href={`/tournaments/${tournament.id}/missions/${mission.id}`}
-                              className="btn-secondary btn-xs ml-auto"
+                              className="ml-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:scale-105"
                             >
-                              Làm bài →
+                              Tham chiến →
                             </Link>
                           </div>
                         )}
@@ -281,86 +319,94 @@ export default async function TournamentDetailPage({
           {/* Leaderboard */}
           {showLeaderboard && (
             <section>
-              <h2 className="text-lg font-semibold">
-                Bảng xếp hạng{" "}
-                <span className="text-sm font-normal text-faint">
+              <h2 className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white">
+                🏆 Bảng xếp hạng
+                <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
                   (Top 20)
                 </span>
               </h2>
 
               {tournament.rankings.length === 0 ? (
-                <div className="card mt-4 text-center text-sm text-muted py-8">
-                  Chưa có người hoàn thành mission nào.
+                <div className="mt-4 rounded-2xl border-2 border-dashed border-orange-300 bg-white p-8 text-center text-sm text-slate-600 dark:border-orange-700 dark:bg-slate-800 dark:text-slate-400">
+                  <p className="text-3xl">🏟️</p>
+                  <p className="mt-2 font-semibold">
+                    Đấu trường đang chờ chiến binh đầu tiên!
+                  </p>
                 </div>
               ) : (
-                <div className="card mt-4 overflow-hidden p-0">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-token bg-[rgb(var(--surface-muted))]">
-                        <th className="px-4 py-3 text-left font-semibold text-faint">
-                          #
-                        </th>
-                        <th className="px-4 py-3 text-left font-semibold text-faint">
-                          Người tham gia
-                        </th>
-                        <th className="px-4 py-3 text-right font-semibold text-faint">
-                          Điểm
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-token">
-                      {tournament.rankings.map((entry) => {
-                        const user = entry.userId
-                          ? userMap.get(entry.userId)
-                          : null;
-                        const displayName =
-                          user?.displayName ?? entry.teamId ?? "—";
-                        const isTop3 = entry.rank <= 3;
-                        const isMe =
-                          entry.userId != null &&
-                          entry.userId === session?.user?.id;
+                <>
+                  {/* Podium for top 3 */}
+                  {tournament.rankings.length >= 1 && (
+                    <Podium
+                      rankings={tournament.rankings.slice(0, 3)}
+                      userMap={userMap}
+                      currentUserId={session?.user?.id}
+                    />
+                  )}
 
-                        return (
-                          <tr
-                            key={entry.id}
-                            className={
-                              isMe
-                                ? "bg-brand-soft"
-                                : isTop3
-                                  ? "bg-accent-50/60"
-                                  : ""
-                            }
-                          >
-                            <td className="w-12 px-4 py-3 tabular-nums font-medium">
-                              {RANK_MEDALS[entry.rank] ?? `#${entry.rank}`}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span
+                  {/* Rest of leaderboard (rank 4+) */}
+                  {tournament.rankings.length > 3 && (
+                    <div className="mt-5 overflow-hidden rounded-2xl border border-orange-200/60 bg-white shadow-md dark:border-orange-900/40 dark:bg-slate-800">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50">
+                            <th className="px-4 py-3 text-left font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                              Hạng
+                            </th>
+                            <th className="px-4 py-3 text-left font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                              Đấu sĩ
+                            </th>
+                            <th className="px-4 py-3 text-right font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                              Điểm
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                          {tournament.rankings.slice(3).map((entry) => {
+                            const user = entry.userId ? userMap.get(entry.userId) : null;
+                            const displayName = user?.displayName ?? entry.teamId ?? "—";
+                            const isMe =
+                              entry.userId != null && entry.userId === session?.user?.id;
+
+                            return (
+                              <tr
+                                key={entry.id}
                                 className={
                                   isMe
-                                    ? "font-semibold text-brand-700"
-                                    : isTop3
-                                      ? "font-semibold"
-                                      : ""
+                                    ? "bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30"
+                                    : ""
                                 }
                               >
-                                {displayName}
-                                {isMe && (
-                                  <span className="ml-1.5 text-xs text-faint">
-                                    (bạn)
+                                <td className="w-16 px-4 py-3 font-black tabular-nums text-slate-700 dark:text-slate-300">
+                                  #{entry.rank}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={
+                                      isMe
+                                        ? "font-bold text-rose-700 dark:text-rose-400"
+                                        : "font-medium text-slate-800 dark:text-slate-200"
+                                    }
+                                  >
+                                    {displayName}
+                                    {isMe && (
+                                      <span className="ml-1.5 text-xs font-medium text-slate-500">
+                                        (bạn)
+                                      </span>
+                                    )}
                                   </span>
-                                )}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-right tabular-nums font-medium">
-                              {entry.totalPoints}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                                </td>
+                                <td className="px-4 py-3 text-right font-bold tabular-nums text-slate-800 dark:text-slate-200">
+                                  {entry.totalPoints}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
               )}
             </section>
           )}
@@ -378,37 +424,37 @@ export default async function TournamentDetailPage({
           />
 
           {/* Quick stats */}
-          <div className="card space-y-3">
-            <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">
-              Thông tin tournament
+          <div className="rounded-2xl border border-orange-200/60 bg-white p-5 shadow-md dark:border-orange-900/40 dark:bg-slate-800">
+            <h2 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-rose-700 dark:text-orange-400">
+              ⚙️ Quy chế
             </h2>
-            <dl className="space-y-2 text-sm">
+            <dl className="mt-3 space-y-3 text-sm">
               <div className="flex justify-between gap-2">
-                <dt className="text-faint">Trạng thái</dt>
-                <dd>
-                  <span className={STATUS_TONE[tournament.status] ?? "chip"}>
-                    {STATUS_LABEL[tournament.status] ?? tournament.status}
-                  </span>
-                </dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-faint">Hình thức</dt>
-                <dd className="font-medium">
+                <dt className="text-slate-500 dark:text-slate-400">Hình thức</dt>
+                <dd className="font-bold text-slate-900 dark:text-white">
                   {tournament.teamSize > 1
-                    ? `Đội nhóm (${tournament.teamSize} người)`
-                    : "Cá nhân"}
+                    ? `🛡️ Đội (${tournament.teamSize})`
+                    : "⚔️ Cá nhân"}
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-faint">Số missions</dt>
-                <dd className="font-medium tabular-nums">
+                <dt className="text-slate-500 dark:text-slate-400">Missions</dt>
+                <dd className="font-bold tabular-nums text-slate-900 dark:text-white">
                   {tournament.missions.length}
                 </dd>
               </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-slate-500 dark:text-slate-400">Đấu sĩ</dt>
+                <dd className="font-bold tabular-nums text-slate-900 dark:text-white">
+                  {tournament._count.registrations}
+                </dd>
+              </div>
               {tournament.prizeXp > 0 && (
-                <div className="flex justify-between gap-2">
-                  <dt className="text-faint">Giải thưởng</dt>
-                  <dd className="font-medium text-accent-600 tabular-nums">
+                <div className="flex justify-between gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+                  <dt className="font-semibold text-amber-700 dark:text-amber-400">
+                    💎 Tổng giải
+                  </dt>
+                  <dd className="font-black tabular-nums text-amber-700 dark:text-amber-400">
                     {tournament.prizeXp} XP
                   </dd>
                 </div>
@@ -420,42 +466,201 @@ export default async function TournamentDetailPage({
           {tournament.prizeXp > 0 &&
             tournament.prizeDistribution != null &&
             typeof tournament.prizeDistribution === "object" && (
-              <div className="card space-y-3">
-                <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">
-                  Phân phối giải thưởng
+              <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-md dark:border-amber-700 dark:from-amber-950/40 dark:to-orange-950/40">
+                <h2 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                  🏅 Phân phối giải
                 </h2>
-                <dl className="space-y-2 text-sm">
+                <ul className="mt-3 space-y-2">
                   {Object.entries(
                     tournament.prizeDistribution as Record<string, number>,
                   )
                     .sort(([a], [b]) => Number(a) - Number(b))
                     .map(([place, pct]) => {
-                      const xp = Math.round(
-                        (pct / 100) * tournament.prizeXp,
-                      );
+                      const xp = Math.round((pct / 100) * tournament.prizeXp);
+                      const placeNum = Number(place);
                       return (
-                        <div
+                        <li
                           key={place}
-                          className="flex items-center justify-between gap-2"
+                          className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 text-sm dark:bg-slate-800/50"
                         >
-                          <dt className="text-faint">
-                            {RANK_MEDALS[Number(place)] ??
-                              `Hạng ${place}`}
-                          </dt>
-                          <dd className="font-medium tabular-nums">
-                            {xp} XP{" "}
-                            <span className="text-xs text-faint">
+                          <span className="font-bold text-slate-700 dark:text-slate-200">
+                            {RANK_MEDALS[placeNum] ?? `#${place}`}{" "}
+                            <span className="text-xs text-slate-500">
+                              hạng {place}
+                            </span>
+                          </span>
+                          <span className="font-black tabular-nums text-amber-700 dark:text-amber-400">
+                            {xp}{" "}
+                            <span className="text-xs font-medium text-slate-500">
                               ({pct}%)
                             </span>
-                          </dd>
-                        </div>
+                          </span>
+                        </li>
                       );
                     })}
-                </dl>
+                </ul>
               </div>
             )}
         </aside>
       </div>
+      </div>
     </main>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Hero stat tile — used in the dramatic banner.
+// ─────────────────────────────────────────────────────────────────────
+function HeroStat({
+  icon,
+  value,
+  label,
+  highlight,
+  small,
+}: {
+  icon: string;
+  value: string | number;
+  label: string;
+  highlight?: boolean;
+  small?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-white/20 backdrop-blur-md ${
+        highlight
+          ? "bg-gradient-to-br from-amber-300/90 to-yellow-200/90 text-amber-900 ring-2 ring-white/40"
+          : "bg-white/15 text-white"
+      } px-3 py-2.5`}
+    >
+      <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide opacity-90">
+        <span className="text-base">{icon}</span>
+        {label}
+      </p>
+      <p
+        className={`mt-0.5 font-black leading-none ${
+          small ? "text-sm" : "text-2xl"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Podium — top 3 with elevated 1st spot (Olympic-style).
+// ─────────────────────────────────────────────────────────────────────
+function Podium({
+  rankings,
+  userMap,
+  currentUserId,
+}: {
+  rankings: Array<{
+    id: string;
+    rank: number;
+    userId: string | null;
+    teamId: string | null;
+    totalPoints: number;
+  }>;
+  userMap: Map<string, { displayName: string }>;
+  currentUserId?: string;
+}) {
+  // Arrange visually: 2nd left, 1st center (elevated), 3rd right
+  const byRank: Record<number, (typeof rankings)[number] | undefined> = {
+    1: rankings.find((r) => r.rank === 1),
+    2: rankings.find((r) => r.rank === 2),
+    3: rankings.find((r) => r.rank === 3),
+  };
+
+  return (
+    <div className="mt-4 grid grid-cols-3 items-end gap-3">
+      <PodiumSlot
+        entry={byRank[2]}
+        userMap={userMap}
+        currentUserId={currentUserId}
+        rank={2}
+        height="h-32 sm:h-36"
+        gradient="from-slate-300 to-slate-400"
+        medal="🥈"
+      />
+      <PodiumSlot
+        entry={byRank[1]}
+        userMap={userMap}
+        currentUserId={currentUserId}
+        rank={1}
+        height="h-40 sm:h-48"
+        gradient="from-yellow-400 to-amber-500"
+        medal="🥇"
+        crown
+      />
+      <PodiumSlot
+        entry={byRank[3]}
+        userMap={userMap}
+        currentUserId={currentUserId}
+        rank={3}
+        height="h-28 sm:h-32"
+        gradient="from-orange-400 to-amber-600"
+        medal="🥉"
+      />
+    </div>
+  );
+}
+
+function PodiumSlot({
+  entry,
+  userMap,
+  currentUserId,
+  rank,
+  height,
+  gradient,
+  medal,
+  crown,
+}: {
+  entry?: { id: string; userId: string | null; teamId: string | null; totalPoints: number };
+  userMap: Map<string, { displayName: string }>;
+  currentUserId?: string;
+  rank: number;
+  height: string;
+  gradient: string;
+  medal: string;
+  crown?: boolean;
+}) {
+  if (!entry) {
+    return (
+      <div
+        className={`flex ${height} flex-col items-center justify-end rounded-t-xl bg-slate-100 px-2 py-3 text-center dark:bg-slate-800`}
+      >
+        <span className="text-2xl opacity-30">{medal}</span>
+        <span className="mt-1 text-xs font-bold text-slate-400">Hạng {rank}</span>
+      </div>
+    );
+  }
+  const user = entry.userId ? userMap.get(entry.userId) : null;
+  const displayName = user?.displayName ?? entry.teamId ?? "—";
+  const isMe = entry.userId != null && entry.userId === currentUserId;
+
+  return (
+    <div
+      className={`relative flex ${height} flex-col items-center justify-end rounded-t-xl bg-gradient-to-b ${gradient} px-2 py-3 text-center shadow-lg ${
+        isMe ? "ring-4 ring-rose-500/60 ring-offset-2 ring-offset-amber-50 dark:ring-offset-slate-900" : ""
+      }`}
+    >
+      {crown && (
+        <span
+          aria-hidden
+          className="absolute -top-7 left-1/2 -translate-x-1/2 text-3xl drop-shadow-lg"
+        >
+          👑
+        </span>
+      )}
+      <span className="text-3xl drop-shadow-md">{medal}</span>
+      <p className="mt-1 line-clamp-2 text-xs font-bold text-slate-900 sm:text-sm">
+        {displayName}
+        {isMe && <span className="ml-1 opacity-80">(bạn)</span>}
+      </p>
+      <p className="mt-0.5 rounded-full bg-white/70 px-2 py-0.5 text-xs font-black tabular-nums text-slate-900">
+        {entry.totalPoints} pts
+      </p>
+    </div>
   );
 }
