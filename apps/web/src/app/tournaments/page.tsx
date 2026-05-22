@@ -192,6 +192,7 @@ function TournamentCard({
     startsAt: Date;
     endsAt: Date;
     prizeXp: number;
+    teamSize: number;
     course: { title: string; slug: string } | null;
     _count: { registrations: number; missions: number };
   };
@@ -200,12 +201,18 @@ function TournamentCard({
   const isActive = t.status === "active";
   const isUpcoming = t.status === "published";
   const isEnded = t.status === "ended";
+  const isTeam = t.teamSize > 1;
 
-  const accent = isActive
-    ? "from-rose-600 to-orange-500"
-    : isUpcoming
-      ? "from-amber-500 to-yellow-400"
-      : "from-slate-500 to-slate-400";
+  // Solo = fiery (rose/orange). Team = cool (indigo/sky) to distinguish at a glance.
+  const accent = isEnded
+    ? "from-slate-500 to-slate-400"
+    : isTeam
+      ? isActive
+        ? "from-indigo-600 to-sky-500"
+        : "from-indigo-500 to-blue-400"
+      : isActive
+        ? "from-rose-600 to-orange-500"
+        : "from-amber-500 to-yellow-400";
 
   return (
     <li className="group relative">
@@ -235,11 +242,22 @@ function TournamentCard({
             </span>
           )}
 
-          {isRegistered && (
-            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-300">
-              ✓ Đã ghi danh
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {isTeam ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-indigo-700 ring-1 ring-indigo-300 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-700">
+                👥 Đội ({t.teamSize})
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-rose-700 ring-1 ring-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:ring-rose-700">
+                🧍 Cá nhân
+              </span>
+            )}
+            {isRegistered && (
+              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-300">
+                ✓ Đã ghi danh
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Title */}
