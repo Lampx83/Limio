@@ -88,7 +88,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                 className="flex items-center gap-2 rounded-xl bg-accent-500/95 px-3 py-2 text-sm font-semibold shadow-sm"
                 title={`Kỷ lục dài nhất: ${streak.longestStreak} ngày`}
               >
-                <span className="text-lg"></span>
+                <span aria-hidden className="text-lg leading-none">🔥</span>
                 <span>
                   {streak.currentStreak} ngày
                   {streak.isActiveToday && (
