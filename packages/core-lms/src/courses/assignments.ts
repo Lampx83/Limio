@@ -96,11 +96,38 @@ async function loadAssignmentCourse(assignmentId: string, db: PrismaClient) {
       id: true,
       maxScore: true,
       lesson: { select: { module: { select: { courseId: true } } } },
+      tournamentMission: {
+        select: {
+          tournament: { select: { courseId: true, creatorId: true } },
+        },
+      },
     },
   });
   if (!a) throw new AssignmentError("assignment_not_found");
-  if (!a.lesson) throw new AssignmentError("assignment_not_found");
-  return { courseId: a.lesson.module.courseId, maxScore: a.maxScore };
+  // Lesson-backed → courseId from module. Tournament-backed → courseId from
+  // tournament (null if cross-course tournament). Throw only if neither.
+  const courseId =
+    a.lesson?.module.courseId ?? a.tournamentMission?.tournament.courseId ?? null;
+  const tournamentCreatorId =
+    a.lesson ? null : a.tournamentMission?.tournament.creatorId ?? null;
+  if (!courseId && !tournamentCreatorId) {
+    throw new AssignmentError("assignment_not_found");
+  }
+  return { courseId, maxScore: a.maxScore, tournamentCreatorId };
+}
+
+async function assertCanGradeAssignment(
+  userId: string,
+  scope: { courseId: string | null; tournamentCreatorId: string | null },
+  db: PrismaClient,
+) {
+  if (scope.courseId) {
+    await assertCanEditCourse(userId, scope.courseId, db);
+    return;
+  }
+  if (scope.tournamentCreatorId && scope.tournamentCreatorId !== userId) {
+    throw new AssignmentError("forbidden");
+  }
 }
 
 export async function createAssignment(
@@ -152,8 +179,8 @@ export async function updateAssignment(
   rawInput: unknown,
   db: PrismaClient = prisma,
 ) {
-  const { courseId } = await loadAssignmentCourse(assignmentId, db);
-  await assertCanEditCourse(userId, courseId, db);
+  const scope = await loadAssignmentCourse(assignmentId, db);
+  await assertCanGradeAssignment(userId, scope, db);
 
   const parsed = UpdateInput.safeParse(rawInput);
   if (!parsed.success) {
@@ -194,8 +221,8 @@ export async function deleteAssignment(
   assignmentId: string,
   db: PrismaClient = prisma,
 ) {
-  const { courseId } = await loadAssignmentCourse(assignmentId, db);
-  await assertCanEditCourse(userId, courseId, db);
+  const scope = await loadAssignmentCourse(assignmentId, db);
+  await assertCanGradeAssignment(userId, scope, db);
   await db.assignment.delete({ where: { id: assignmentId } });
 }
 
@@ -429,6 +456,7 @@ export async function getAssignmentForLearner(
   submission: Prisma.AssignmentSubmissionGetPayload<true> | null;
 }> {
   const { courseId } = await loadAssignmentCourse(assignmentId, db);
+  if (!courseId) throw new AssignmentError("assignment_not_found");
   if (!(await isUserEnrolled(userId, courseId, db))) {
     throw new AssignmentError("not_enrolled");
   }
@@ -457,8 +485,8 @@ export async function listSubmissionsForInstructor(
     }>
   >
 > {
-  const { courseId } = await loadAssignmentCourse(assignmentId, db);
-  await assertCanEditCourse(userId, courseId, db);
+  const scope = await loadAssignmentCourse(assignmentId, db);
+  await assertCanGradeAssignment(userId, scope, db);
   return db.assignmentSubmission.findMany({
     where: { assignmentId },
     orderBy: [{ status: "asc" }, { submittedAt: "desc" }],

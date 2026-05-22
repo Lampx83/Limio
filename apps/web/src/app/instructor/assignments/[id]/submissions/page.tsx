@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, listSubmissionsForInstructor } from "@feedbackme/core-lms";
+import { canEditCourse, isAdmin, listSubmissionsForInstructor } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 import { EmptyState, UserAvatar, StatusBadge, DateTime } from "@/components/ui";
@@ -29,19 +29,63 @@ export default async function SubmissionsPage({
           module: { include: { course: { select: { id: true, title: true } } } },
         },
       },
+      tournamentMission: {
+        include: {
+          tournament: {
+            select: { id: true, title: true, creatorId: true },
+          },
+        },
+      },
     },
   });
   if (!assignment) notFound();
-  if (!assignment.lesson) notFound();
-  const courseId = assignment.lesson.module.course.id;
-  if (!(await canEditCourse(userId, courseId))) {
-    return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          Bạn không có quyền xem trang này.
-        </div>
-      </main>
-    );
+
+  // Resolve context: lesson-backed (course) or tournament-mission-backed.
+  type Ctx =
+    | { kind: "lesson"; courseId: string; courseTitle: string; lessonTitle: string; backHref: string; backLabel: string }
+    | { kind: "tournament"; tournamentId: string; missionId: string; missionTitle: string; backHref: string; backLabel: string };
+  let ctx: Ctx;
+  if (assignment.lesson) {
+    const courseId = assignment.lesson.module.course.id;
+    if (!(await canEditCourse(userId, courseId))) {
+      return (
+        <main className="mx-auto max-w-3xl px-6 py-12">
+          <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
+            Bạn không có quyền xem trang này.
+          </div>
+        </main>
+      );
+    }
+    ctx = {
+      kind: "lesson",
+      courseId,
+      courseTitle: assignment.lesson.module.course.title,
+      lessonTitle: assignment.lesson.title,
+      backHref: `/instructor/courses/${courseId}`,
+      backLabel: assignment.lesson.module.course.title,
+    };
+  } else if (assignment.tournamentMission) {
+    const tm = assignment.tournamentMission;
+    const allowed = tm.tournament.creatorId === userId || (await isAdmin(userId));
+    if (!allowed) {
+      return (
+        <main className="mx-auto max-w-3xl px-6 py-12">
+          <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
+            Bạn không có quyền xem trang này.
+          </div>
+        </main>
+      );
+    }
+    ctx = {
+      kind: "tournament",
+      tournamentId: tm.tournament.id,
+      missionId: tm.id,
+      missionTitle: tm.title,
+      backHref: `/instructor/tournaments/${tm.tournament.id}/missions/${tm.id}/submissions`,
+      backLabel: `${tm.tournament.title} · ${tm.title}`,
+    };
+  } else {
+    notFound();
   }
 
   const submissions = await listSubmissionsForInstructor(userId, params.id);
@@ -51,24 +95,35 @@ export default async function SubmissionsPage({
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <Link
-        href={`/instructor/courses/${courseId}`}
+        href={ctx.backHref}
         className="link inline-flex items-center gap-1 text-sm"
       >
-        ← {assignment.lesson.module.course.title}
+        ← {ctx.backLabel}
       </Link>
 
       {/* Header */}
       <div className="mt-4">
-        <span className="chip-brand">Bài tập</span>
+        <span className="chip-brand">
+          {ctx.kind === "tournament" ? "Mission" : "Bài tập"}
+        </span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
           {assignment.title}
         </h1>
         <p className="mt-2 text-muted">
-          Lesson:{" "}
-          <span className="font-medium text-[rgb(var(--text))]">
-            {assignment.lesson.title}
-          </span>{" "}
-          · Max <span className="font-semibold">{assignment.maxScore}</span> điểm
+          {ctx.kind === "lesson" ? (
+            <>
+              Lesson:{" "}
+              <span className="font-medium text-[rgb(var(--text))]">
+                {ctx.lessonTitle}
+              </span>{" "}
+              ·{" "}
+            </>
+          ) : (
+            <>
+              Tournament mission ·{" "}
+            </>
+          )}
+          Max <span className="font-semibold">{assignment.maxScore}</span> điểm
         </p>
       </div>
 
@@ -98,7 +153,7 @@ export default async function SubmissionsPage({
               title="Chưa có học viên nào nộp bài"
               description="Khi học viên nộp bài, danh sách sẽ hiện ở đây để bạn chấm."
               actions={[
-                { label: "Xem khoá học", href: `/instructor/courses/${courseId}`, variant: "secondary" },
+                { label: ctx.kind === "tournament" ? "Quay lại mission" : "Xem khoá học", href: ctx.backHref, variant: "secondary" },
               ]}
             />
           </div>
