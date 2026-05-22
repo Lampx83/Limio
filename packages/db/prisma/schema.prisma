@@ -42,6 +42,8 @@ model User {
   // A5.5 — Counter exam đã tạo. Tăng atomic khi exam publish. Dùng để trigger
   // banner gợi ý "Bật chế độ Nâng cao?" khi >= 3 và expertAssessmentMode=false.
   examsCreatedCount    Int       @default(0)
+  // Last time user opened the notification bell — drives unread-count.
+  notificationsLastSeenAt DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

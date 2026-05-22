@@ -4,7 +4,8 @@ import { prisma } from "@feedbackme/db";
 import UserMenu from "./UserMenu";
 import ThemeToggle from "./ThemeToggle";
 import StudentMenuTrigger from "./StudentMenuTrigger";
-import ReviewQueueChip from "./ReviewQueueChip";
+import NotificationBell from "./NotificationBell";
+import { getUnreadCount } from "@/lib/notifications";
 import { getActiveRole } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 
@@ -24,21 +25,23 @@ export default async function AppHeader() {
         .catch(() => null)
     : null;
 
-  // Peer-review pending count — shown as a header chip so learners notice
-  // assigned reviews from any page (lesson, catalog, …), not just /me/*.
-  const now = new Date();
-  const [reviewPending, reviewOverdue] = user?.id
-    ? await Promise.all([
-        prisma.missionReviewAssignment
-          .count({ where: { reviewerId: user.id, completedAt: null } })
-          .catch(() => 0),
-        prisma.missionReviewAssignment
-          .count({
-            where: { reviewerId: user.id, completedAt: null, dueAt: { lt: now } },
-          })
-          .catch(() => 0),
-      ])
-    : [0, 0];
+  // Pre-fetch unread count + last-seen timestamp so the bell can render the
+  // badge immediately without a client roundtrip.
+  let notiUnread = 0;
+  let notiLastSeen: string | null = null;
+  if (user?.id) {
+    try {
+      const [c, u] = await Promise.all([
+        getUnreadCount(user.id),
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { notificationsLastSeenAt: true },
+        }),
+      ]);
+      notiUnread = c;
+      notiLastSeen = u?.notificationsLastSeenAt?.toISOString() ?? null;
+    } catch {}
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-token bg-[rgb(var(--surface)/0.85)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.7)]">
@@ -70,8 +73,11 @@ export default async function AppHeader() {
             🏆 Đấu trường
           </Link>
 
-          {user && reviewPending > 0 && (
-            <ReviewQueueChip count={reviewPending} hasOverdue={reviewOverdue > 0} />
+          {user && (
+            <NotificationBell
+              initialUnread={notiUnread}
+              initialLastSeen={notiLastSeen}
+            />
           )}
           <ThemeToggle />
           {user ? (
