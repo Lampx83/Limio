@@ -347,6 +347,7 @@ function AddMissionForm({
   const [peerReviewerCount, setPeerReviewerCount] = useState("3");
   const [reviewWindowEndAt, setReviewWindowEndAt] = useState("");
   const [passThreshold, setPassThreshold] = useState("0.6");
+  const [isTeamSubmission, setIsTeamSubmission] = useState(false);
 
   const [busy, setBusy] = useState(false);
 
@@ -426,6 +427,15 @@ function AddMissionForm({
       }
       if (verifyMode === "MANUAL_REVIEW") {
         payload.passThreshold = parseFloat(passThreshold);
+      }
+      // COLLECTIVE team submission — only sent when team-based + non-quiz.
+      if (
+        teamSize > 1 &&
+        verifyMode &&
+        verifyMode !== "AUTO_GRADE" &&
+        isTeamSubmission
+      ) {
+        payload.isTeamSubmission = true;
       }
     }
 
@@ -717,6 +727,25 @@ function AddMissionForm({
                 Học viên nộp qua flow Assignment ẩn; bạn chấm trong queue Assignment có sẵn.
               </p>
             </div>
+          )}
+
+          {/* COLLECTIVE submission toggle — chỉ hiện cho team tournament + non-quiz */}
+          {teamSize > 1 && verifyMode && verifyMode !== "AUTO_GRADE" && (
+            <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
+              <input
+                type="checkbox"
+                checked={isTeamSubmission}
+                onChange={(e) => setIsTeamSubmission(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600"
+              />
+              <div className="min-w-0 text-xs">
+                <p className="font-semibold">Nộp theo nhóm (chỉ captain nộp 1 lần)</p>
+                <p className="mt-0.5 text-faint">
+                  Khi bật, cả đội cùng được tính hoàn thành từ 1 submission của captain. Phù hợp project, presentation, báo cáo chung.
+                  Khi tắt (mặc định), mỗi thành viên nộp riêng và SUM điểm.
+                </p>
+              </div>
+            </label>
           )}
 
           {verifyMode === "AUTO_GRADE" && (

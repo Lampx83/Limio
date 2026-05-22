@@ -38,7 +38,8 @@ export class CustomMissionError extends Error {
       | "self_review_forbidden"
       | "already_reviewed"
       | "review_not_assigned"
-      | "validation_failed",
+      | "validation_failed"
+      | "team_submission_captain_only",
     public readonly detail?: Record<string, unknown>,
   ) {
     super(code);
@@ -84,6 +85,23 @@ export async function submitMission(
     },
   });
   if (!reg) throw new CustomMissionError("not_registered");
+
+  // Team COLLECTIVE submission: only captain can submit. Stored under
+  // captain.userId so member view derives status from captain's submission.
+  if (mission.isTeamSubmission && mission.tournament.teamSize > 1) {
+    if (!reg.teamId) {
+      throw new CustomMissionError("team_submission_captain_only", {
+        reason: "user has no team",
+      });
+    }
+    const team = await db.tournamentTeam.findUnique({
+      where: { id: reg.teamId },
+      select: { captainId: true },
+    });
+    if (!team || team.captainId !== input.userId) {
+      throw new CustomMissionError("team_submission_captain_only");
+    }
+  }
 
   const now = new Date();
   const deadline = mission.submissionDeadline;

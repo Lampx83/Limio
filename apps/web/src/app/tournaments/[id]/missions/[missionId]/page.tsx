@@ -18,7 +18,7 @@ export default async function MissionDetailPage({
   const mission = await prisma.tournamentMission.findFirst({
     where: { id: params.missionId, tournamentId: params.id },
     include: {
-      tournament: { select: { id: true, title: true, status: true } },
+      tournament: { select: { id: true, title: true, status: true, teamSize: true } },
       quiz: { select: { id: true } },
       assignment: { select: { id: true } },
     },
@@ -27,10 +27,26 @@ export default async function MissionDetailPage({
 
   const registered = await prisma.tournamentRegistration.findUnique({
     where: { tournamentId_userId: { tournamentId: params.id, userId } },
+    include: {
+      team: { select: { id: true, captainId: true, name: true } },
+    },
   });
 
+  // COLLECTIVE submission: status comes from captain's submission (single
+  // source of truth for the team). Members see it as theirs but cannot edit.
+  const isCollective =
+    mission.isTeamSubmission && mission.tournament.teamSize > 1;
+  const isCaptain =
+    isCollective && registered?.team?.captainId === userId;
+  const submissionLookupUserId =
+    isCollective && registered?.team
+      ? registered.team.captainId
+      : userId;
+
   const submission = await prisma.missionSubmission.findUnique({
-    where: { missionId_userId: { missionId: params.missionId, userId } },
+    where: {
+      missionId_userId: { missionId: params.missionId, userId: submissionLookupUserId },
+    },
     include: {
       reviewAssignments: { select: { id: true, completedAt: true } },
     },
@@ -93,6 +109,20 @@ export default async function MissionDetailPage({
         </pre>
       )}
 
+      {/* Team-collective hint */}
+      {isCollective && registered?.team && (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs dark:border-emerald-800 dark:bg-emerald-950/30">
+          <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+            🤝 Mission nộp theo nhóm — đội {registered.team.name}
+          </p>
+          <p className="mt-0.5 text-emerald-700/80 dark:text-emerald-300/80">
+            {isCaptain
+              ? "Bạn là captain — chỉ bạn nộp 1 lần đại diện cả đội. Kết quả sẽ tính cho mọi thành viên."
+              : "Chỉ captain mới được nộp bài. Bạn sẽ tự động được tính hoàn thành khi captain nộp."}
+          </p>
+        </div>
+      )}
+
       {/* Status / Submit */}
       <section className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5">
         {!registered ? (
@@ -110,6 +140,10 @@ export default async function MissionDetailPage({
             peerReviewerCount={mission.peerReviewerCount}
             submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
           />
+        ) : isCollective && !isCaptain ? (
+          <p className="text-sm text-muted">
+            Captain của đội chưa nộp bài. Quay lại sau khi captain nộp xong.
+          </p>
         ) : mission.verifyMode ? (
           <MissionSubmitForm
             missionId={mission.id}

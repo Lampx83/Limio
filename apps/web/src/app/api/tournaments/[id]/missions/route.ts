@@ -78,6 +78,7 @@ const CustomMissionInput = z.object({
   peerReviewerCount: z.number().int().min(1).max(10).nullable().optional(),
   reviewWindowEndAt: z.string().datetime().nullable().optional(),
   passThreshold: z.number().min(0).max(1).nullable().optional(),
+  isTeamSubmission: z.boolean().optional().default(false),
 });
 
 const PostInput = z.object({
@@ -180,6 +181,22 @@ export async function POST(
     );
   }
 
+  // COLLECTIVE submission only valid for team + non-AUTO_GRADE custom missions.
+  if (parsed.data.isTeamSubmission) {
+    if (!tournament || tournament.teamSize <= 1) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "team_submission_requires_team_tournament" },
+        { status: 400 },
+      );
+    }
+    if (verifyMode === "AUTO_GRADE" || !verifyMode) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "team_submission_incompatible_verify_mode" },
+        { status: 400 },
+      );
+    }
+  }
+
   // skill_mastered_in_group requires conditionSkillCode.
   if (resolvedConditionType === "skill_mastered_in_group" && !parsed.data.conditionSkillCode) {
     return NextResponse.json(
@@ -269,6 +286,7 @@ export async function POST(
         peerReviewerCount:  parsed.data.peerReviewerCount ?? (verifyMode === "PEER_REVIEW" ? 3 : null),
         reviewWindowEndAt:  parsed.data.reviewWindowEndAt ? new Date(parsed.data.reviewWindowEndAt) : null,
         passThreshold:      parsed.data.passThreshold ?? null,
+        isTeamSubmission:   parsed.data.isTeamSubmission,
       },
       select: { id: true },
     });

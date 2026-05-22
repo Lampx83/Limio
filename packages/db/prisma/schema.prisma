@@ -1233,6 +1233,10 @@ model TournamentMission {
   // How many times reviewWindowEndAt was auto-extended due to too few reviews
   // (max 2; after that, submissions fall back to manual review). AC-4.10.
   reviewExtendCount  Int        @default(0)
+  // Team mode only: true = COLLECTIVE submission (1 captain nộp 1 lần,
+  // tính cho cả đội). False = INDIVIDUAL (mỗi member nộp riêng, SUM).
+  // Chỉ hợp lệ khi tournament.teamSize > 1 và verifyMode != AUTO_GRADE.
+  isTeamSubmission   Boolean    @default(false)
 
   tournament   Tournament          @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   prerequisite TournamentMission?  @relation("MissionPrereq", fields: [prerequisiteId], references: [id])

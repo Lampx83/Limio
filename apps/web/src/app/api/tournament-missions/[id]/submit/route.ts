@@ -40,7 +40,7 @@ export async function POST(
       const status =
         e.code === "mission_not_found" || e.code === "submission_not_found"
           ? 404
-          : e.code === "not_registered"
+          : e.code === "not_registered" || e.code === "team_submission_captain_only"
             ? 403
             : e.code === "past_deadline" || e.code === "resubmit_blocked"
               ? 409
