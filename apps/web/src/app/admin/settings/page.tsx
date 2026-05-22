@@ -1,7 +1,7 @@
 import { getPaymentEnabled, getFooterSettings } from "@/lib/site-settings";
 import SettingsClient from "./SettingsClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function AdminSettingsPage() {
   const [paymentEnabled, footer] = await Promise.all([

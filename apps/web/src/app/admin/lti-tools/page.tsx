@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import RegisterLtiToolForm from "./RegisterLtiToolForm";
 import LtiToolRow from "./LtiToolRow";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function LtiToolsAdminPage() {
   const session = await auth();

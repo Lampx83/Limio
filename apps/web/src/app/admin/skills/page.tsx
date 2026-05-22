@@ -1,7 +1,7 @@
 import { listSkillsWithStats } from "@feedbackme/core-lms";
 import SkillsManager from "./SkillsManager";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function AdminSkillsPage() {
   const skills = await listSkillsWithStats();

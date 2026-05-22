@@ -4,7 +4,7 @@ import { isAdmin, listIntegrationStatuses } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import IntegrationsManager from "./IntegrationsManager";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function IntegrationsAdminPage() {
   const session = await auth();

@@ -3,7 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 export const metadata = { title: "Changelog hệ thống" };
 
 // ── Minimal markdown → HTML (không dùng heavy library) ──────────────────

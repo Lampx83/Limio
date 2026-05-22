@@ -1,10 +1,21 @@
+import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import AdminSidebar from "./_components/AdminSidebar";
 import ExitImpersonationButton from "@/components/ExitImpersonationButton";
 
-export const dynamic = "force-dynamic";
+// Không set `dynamic = "force-dynamic"` ở layout này để mỗi page con tự
+// chọn chiến lược cache (vd. trang config có thể ISR 30s). Layout vẫn
+// chạy động vì gọi auth() — đọc cookie là dynamic source.
+
+// Admin role rất hiếm khi đổi → cache 60s per userId để mọi navigation
+// trong khu vực admin không phải chạy lại isAdmin().
+const getIsAdminCached = unstable_cache(
+  async (userId: string) => isAdmin(userId),
+  ["admin-layout-is-admin"],
+  { revalidate: 60, tags: ["user-roles"] },
+);
 
 export default async function AdminLayout({
   children,
@@ -37,7 +48,7 @@ export default async function AdminLayout({
     );
   }
 
-  if (!(await isAdmin(session.user.id))) {
+  if (!(await getIsAdminCached(session.user.id))) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
