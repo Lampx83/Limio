@@ -12,11 +12,14 @@ import { auth } from "@/lib/auth";
 import LessonContent from "@/components/LessonContent";
 import LessonActions, { LessonNotes } from "@/components/LessonActions";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
-import AssignmentSubmitForm from "@/components/AssignmentSubmitForm";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
+import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
+import LessonTasksTab, {
+  type TaskItem,
+} from "@/components/lesson/LessonTasksTab";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +39,15 @@ export default async function LessonPage({
     include: {
       module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true } } } },
       contentItems: { orderBy: { orderIndex: "asc" } },
-      quizzes: { select: { id: true, title: true, isHidden: true } },
+      quizzes: {
+        select: {
+          id: true,
+          title: true,
+          isHidden: true,
+          createdAt: true,
+          cuepointOnly: true,
+        },
+      },
       assignments: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -46,6 +57,7 @@ export default async function LessonPage({
           dueAt: true,
           maxScore: true,
           isHidden: true,
+          createdAt: true,
           pedagogicalIntent: true,
           responseFormat: true,
           requireSelfRating: true,
@@ -159,6 +171,94 @@ export default async function LessonPage({
     ? null
     : await shouldSkipLesson(userId, lesson.id);
 
+  // Visible tasks: quizzes (excluding hidden + cuepoint-only) + assignments,
+  // merged & sorted by createdAt so the order matches what the instructor
+  // authored. Quiz "status" comes from the user's best attempt.
+  const visibleQuizzes = lesson.quizzes.filter(
+    (q) => !q.isHidden && !q.cuepointOnly,
+  );
+  const visibleAssignments = lesson.assignments.filter((a) => !a.isHidden);
+
+  const quizAttempts = visibleQuizzes.length
+    ? await prisma.quizAttempt.findMany({
+        where: { userId, quizId: { in: visibleQuizzes.map((q) => q.id) } },
+        select: { quizId: true, status: true, scorePct: true, passed: true },
+        orderBy: { startedAt: "desc" },
+      })
+    : [];
+  const bestAttemptByQuiz = new Map<
+    string,
+    { passed: boolean | null; scorePct: number | null; attempted: boolean }
+  >();
+  for (const att of quizAttempts) {
+    const cur = bestAttemptByQuiz.get(att.quizId);
+    const score = att.scorePct ?? null;
+    if (!cur) {
+      bestAttemptByQuiz.set(att.quizId, {
+        attempted: true,
+        passed: att.passed ?? null,
+        scorePct: score,
+      });
+    } else {
+      // Keep "passed" sticky; otherwise prefer the higher score.
+      const passed = cur.passed || (att.passed ?? false) ? true : cur.passed;
+      const bestScore =
+        score !== null && (cur.scorePct === null || score > cur.scorePct)
+          ? score
+          : cur.scorePct;
+      bestAttemptByQuiz.set(att.quizId, {
+        attempted: true,
+        passed,
+        scorePct: bestScore,
+      });
+    }
+  }
+
+  const tasks: TaskItem[] = [
+    ...visibleQuizzes.map<TaskItem>((q) => {
+      const best = bestAttemptByQuiz.get(q.id);
+      return {
+        kind: "quiz",
+        id: q.id,
+        title: q.title,
+        attempted: best?.attempted ?? false,
+        passed: best?.passed ?? null,
+        scorePct: best?.scorePct ?? null,
+        _sort: q.createdAt.getTime(),
+      } as TaskItem & { _sort: number };
+    }),
+    ...visibleAssignments.map<TaskItem>((a) => ({
+      kind: "assignment",
+      id: a.id,
+      title: a.title,
+      description: a.description,
+      dueAt: a.dueAt,
+      maxScore: a.maxScore,
+      pedagogicalIntent: a.pedagogicalIntent,
+      responseFormat: a.responseFormat,
+      requireSelfRating: a.requireSelfRating,
+      requireReflection: a.requireReflection,
+      submission: a.submissions[0]
+        ? {
+            status: a.submissions[0].status,
+            submittedAt: a.submissions[0].submittedAt,
+            score: a.submissions[0].score,
+            feedback: a.submissions[0].feedback,
+          }
+        : null,
+      _sort: a.createdAt.getTime(),
+    }) as TaskItem & { _sort: number }),
+  ]
+    .sort((a, b) => (a as any)._sort - (b as any)._sort)
+    .map(({ _sort, ...rest }: any) => rest);
+
+  const tasksUndone =
+    tasks.filter((t) =>
+      t.kind === "quiz" ? !t.passed : t.submission?.status !== "graded",
+    ).length;
+
+  const defaultTab: TabKey = tasksUndone > 0 ? "tasks" : "forum";
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       {/* Breadcrumb + lesson meta */}
@@ -227,86 +327,34 @@ export default async function LessonPage({
         />
       </div>
 
-      {/* Quizzes */}
-      {lesson.quizzes.filter((q) => !q.isHidden).length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold">Bài kiểm tra</h2>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {lesson.quizzes.filter((q) => !q.isHidden).map((q) => (
-              <li key={q.id}>
-                <Link
-                  href={`/learn/${params.slug}/quizzes/${q.id}`}
-                  className="card-hover group flex items-center justify-between gap-3"
-                >
-                  <span className="font-medium transition-colors group-hover:text-brand-600">
-                    {q.title}
-                  </span>
-                  <span className="text-brand-600">→</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* Assignments */}
-      {lesson.assignments.filter((a) => !a.isHidden).length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold">Bài tập</h2>
-          <ul className="mt-4 space-y-4">
-            {lesson.assignments.filter((a) => !a.isHidden).map((a) => {
-              const sub = a.submissions[0] ?? null;
-              return (
-                <li key={a.id} className="card">
-                  <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-token pb-3">
-                    <p className="font-semibold">{a.title}</p>
-                    <span className="text-xs text-faint">
-                      max <span className="font-semibold">{a.maxScore}</span>đ
-                      {a.dueAt && (
-                        <>
-                          {" · hạn "}
-                          {new Date(a.dueAt).toLocaleString("vi-VN")}
-                        </>
-                      )}
-                    </span>
-                  </header>
-                  <SafeHtml
-                    html={plainToRichHtml(a.description)}
-                    className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
-                  />
-                  {sub?.status === "graded" && (
-                    <div className="mt-4 rounded-lg border border-success-100 bg-success-50 p-3">
-                      <p className="text-sm font-semibold text-success-700">
-                        ✓ Đã chấm: {sub.score} / {a.maxScore} điểm
-                      </p>
-                      {sub.feedback && (
-                        <p className="mt-1 whitespace-pre-wrap text-sm text-success-700/90">
-                          {sub.feedback}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {sub?.status === "submitted" && (
-                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent-50 px-3 py-1.5 text-sm font-medium text-accent-700">
-                      Đã nộp lúc{" "}
-                      {new Date(sub.submittedAt).toLocaleString("vi-VN")} · chờ chấm
-                    </p>
-                  )}
-                  <div className="mt-4">
-                    <AssignmentSubmitForm
-                      assignmentId={a.id}
-                      pedagogicalIntent={a.pedagogicalIntent}
-                      responseFormat={a.responseFormat}
-                      requireSelfRating={a.requireSelfRating}
-                      requireReflection={a.requireReflection}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
+      <LessonTabs
+        defaultTab={defaultTab}
+        tabs={[
+          { key: "tasks", label: "Bài tập", icon: "📝", count: tasksUndone },
+          { key: "forum", label: "Hỏi đáp", icon: "💬", count: threads.length },
+        ]}
+      >
+        {{
+          tasks: (
+            <LessonTasksTab items={tasks} courseSlug={params.slug} />
+          ),
+          forum: (
+            <LessonForumSection
+              lessonId={lesson.id}
+              courseSlug={params.slug}
+              threads={threads.map((t) => ({
+                id: t.id,
+                title: t.title,
+                body: t.body,
+                resolvedPostId: t.resolvedPostId,
+                createdAt: t.createdAt,
+                author: { displayName: t.author.displayName },
+                _count: { posts: t._count.posts },
+              }))}
+            />
+          ),
+        }}
+      </LessonTabs>
 
       <div className="mt-10">
         <LessonActions
@@ -322,22 +370,6 @@ export default async function LessonPage({
 
       <div className="mt-8">
         <LessonNotes lessonId={lesson.id} />
-      </div>
-
-      <div className="mt-8">
-        <LessonForumSection
-          lessonId={lesson.id}
-          courseSlug={params.slug}
-          threads={threads.map((t) => ({
-            id: t.id,
-            title: t.title,
-            body: t.body,
-            resolvedPostId: t.resolvedPostId,
-            createdAt: t.createdAt,
-            author: { displayName: t.author.displayName },
-            _count: { posts: t._count.posts },
-          }))}
-        />
       </div>
 
       {/* Prev / Next nav */}
