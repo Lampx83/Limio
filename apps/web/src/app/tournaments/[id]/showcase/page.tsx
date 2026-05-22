@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Github, Presentation, Video, Crown, Trophy, Play } from "lucide-react";
+import { Code2, Presentation, Video, Crown, Trophy, Play } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import VoteButton from "./VoteButton";
@@ -350,7 +350,7 @@ export default async function ShowcasePage({
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
                       >
-                        <Github size={12} />
+                        <Code2 size={12} />
                         Repo
                       </a>
                     )}

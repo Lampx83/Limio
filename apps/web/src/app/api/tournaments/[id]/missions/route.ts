@@ -97,7 +97,7 @@ export async function POST(
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: params.id },
-    select: { id: true, creatorId: true, status: true },
+    select: { id: true, creatorId: true, status: true, teamSize: true },
   });
   if (!tournament) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -167,14 +167,7 @@ export async function POST(
 
   // Team tournaments cannot use individual-state condition types (streak,
   // misconception, skill mastery) — SUM rule would produce meaningless totals.
-  const tournament = await prisma.tournament.findUnique({
-    where: { id: params.id },
-    select: { teamSize: true },
-  });
-  if (
-    tournament &&
-    !isMissionTeamCompatible(resolvedConditionType, tournament.teamSize)
-  ) {
+  if (!isMissionTeamCompatible(resolvedConditionType, tournament.teamSize)) {
     return NextResponse.json(
       { error: "mission_not_team_compatible", details: resolvedConditionType },
       { status: 400 },
@@ -183,13 +176,14 @@ export async function POST(
 
   // COLLECTIVE submission only valid for team + non-AUTO_GRADE custom missions.
   if (parsed.data.isTeamSubmission) {
-    if (!tournament || tournament.teamSize <= 1) {
+    if (tournament.teamSize <= 1) {
       return NextResponse.json(
         { error: "validation_failed", details: "team_submission_requires_team_tournament" },
         { status: 400 },
       );
     }
-    if (verifyMode === "AUTO_GRADE" || !verifyMode) {
+    const vm = parsed.data.verifyMode;
+    if (vm === "AUTO_GRADE" || !vm) {
       return NextResponse.json(
         { error: "validation_failed", details: "team_submission_incompatible_verify_mode" },
         { status: 400 },
