@@ -51,6 +51,7 @@
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
     scroll-padding-top: 80px; /* clear sticky header khi click hash link */
+    scrollbar-gutter: stable; /* tránh layout nhảy khi page có/không có scrollbar */
   }
   body {
     background-color: rgb(var(--bg));
