@@ -10,7 +10,7 @@ import { shouldSkipLesson } from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import LessonContent from "@/components/LessonContent";
-import LessonActions, { LessonNotes } from "@/components/LessonActions";
+import { LessonNotes } from "@/components/LessonActions";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
@@ -20,6 +20,7 @@ import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
 import LessonTasksTab, {
   type TaskItem,
 } from "@/components/lesson/LessonTasksTab";
+import LessonStickyActions from "@/components/lesson/LessonStickyActions";
 
 export const dynamic = "force-dynamic";
 
@@ -356,53 +357,24 @@ export default async function LessonPage({
         }}
       </LessonTabs>
 
-      <div className="mt-10">
-        <LessonActions
-          lessonId={lesson.id}
-          courseSlug={params.slug}
-          initiallyCompleted={completedEvent !== null}
-          initialResumeSec={
-            enrollment.lastLessonId === lesson.id ? enrollment.lastPositionSec ?? 0 : 0
-          }
-          nextLessonId={next?.id ?? null}
-        />
-      </div>
-
       <div className="mt-8">
         <LessonNotes lessonId={lesson.id} />
       </div>
 
-      {/* Prev / Next nav */}
-      <nav className="mt-10 flex items-center justify-between gap-4 border-t border-token pt-5">
-        {prev ? (
-          <Link
-            href={`/learn/${params.slug}/lessons/${prev.id}`}
-            className="group flex flex-1 items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 transition-all hover:border-brand-200 hover:shadow-card"
-          >
-            <span className="text-faint group-hover:text-brand-600">←</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-faint">Bài trước</p>
-              <p className="truncate text-sm font-medium">{prev.title}</p>
-            </div>
-          </Link>
-        ) : (
-          <span className="flex-1" />
-        )}
-        {next ? (
-          <Link
-            href={`/learn/${params.slug}/lessons/${next.id}`}
-            className="group flex flex-1 items-center justify-end gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-right transition-all hover:border-brand-200 hover:shadow-card"
-          >
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-faint">Bài tiếp</p>
-              <p className="truncate text-sm font-medium">{next.title}</p>
-            </div>
-            <span className="text-faint group-hover:text-brand-600">→</span>
-          </Link>
-        ) : (
-          <span className="flex-1" />
-        )}
-      </nav>
+      <LessonStickyActions
+        lessonId={lesson.id}
+        courseSlug={params.slug}
+        initiallyCompleted={completedEvent !== null}
+        initialResumeSec={
+          enrollment.lastLessonId === lesson.id
+            ? enrollment.lastPositionSec ?? 0
+            : 0
+        }
+        prevLessonId={prev?.id ?? null}
+        prevTitle={prev?.title ?? null}
+        nextLessonId={next?.id ?? null}
+        nextTitle={next?.title ?? null}
+      />
 
       <AiTutorPanel lessonId={lesson.id} />
     </main>
