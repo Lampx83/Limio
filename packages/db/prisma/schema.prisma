@@ -73,6 +73,7 @@ model User {
   tournamentRegistrations TournamentRegistration[]
   tournamentCreated       Tournament[]             @relation("TournamentCreator")
   tournamentTeamsCaptained TournamentTeam[]        @relation("TeamCaptain")
+  hackathonVotes           HackathonVote[]         @relation("HackathonVoter")
   missionSubmissions      MissionSubmission[]
   missionReviews          MissionReviewAssignment[]
   scormAttempts           ScormAttempt[]
@@ -1123,6 +1124,23 @@ model TournamentRegistration {
   @@index([tournamentId, teamId])
 }
 
+// Popular vote cho hackathon showcase. Mỗi voter chọn 1 project yêu thích
+// per mission COLLECTIVE — kết quả là 1 leaderboard phụ ngoài ranking điểm.
+model HackathonVote {
+  id           String   @id @default(uuid())
+  missionId    String
+  voterUserId  String
+  submissionId String
+  createdAt    DateTime @default(now())
+
+  mission    TournamentMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  voter      User              @relation("HackathonVoter", fields: [voterUserId], references: [id], onDelete: Cascade)
+  submission MissionSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([missionId, voterUserId])
+  @@index([submissionId])
+}
+
 // Team formed for a team-based tournament (teamSize > 1). Captain creates
 // the team and gets a joinCode to share; teammates join with that code.
 model TournamentTeam {
@@ -1245,6 +1263,7 @@ model TournamentMission {
   submissions  MissionSubmission[]
   quiz         Quiz?
   assignment   Assignment?
+  hackathonVotes HackathonVote[]
 
   @@unique([tournamentId, orderIndex])
   @@index([templateId])
@@ -1277,6 +1296,7 @@ model MissionSubmission {
   mission          TournamentMission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
   user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   reviewAssignments MissionReviewAssignment[]
+  hackathonVotes   HackathonVote[]
 
   @@unique([missionId, userId])
   @@index([userId, submittedAt])

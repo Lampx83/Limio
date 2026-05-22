@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Github, Presentation, Video, FileText, Crown } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import VoteButton from "./VoteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,37 @@ export default async function ShowcasePage({
       },
     },
   });
+
+  // Pull votes for all submissions in these missions to render heart counts +
+  // current voter's choice.
+  const allSubmissionIds = missions.flatMap((m) => m.submissions.map((s) => s.id));
+  const allMissionIds = missions.map((m) => m.id);
+  const [voteCounts, myVotes] = await Promise.all([
+    allSubmissionIds.length
+      ? prisma.hackathonVote.groupBy({
+          by: ["submissionId"],
+          where: { submissionId: { in: allSubmissionIds } },
+          _count: { submissionId: true },
+        })
+      : [],
+    allMissionIds.length
+      ? prisma.hackathonVote.findMany({
+          where: { voterUserId: userId, missionId: { in: allMissionIds } },
+          select: { missionId: true, submissionId: true },
+        })
+      : [],
+  ]);
+  const voteCountBySubmission = new Map(
+    voteCounts.map((v) => [v.submissionId, v._count.submissionId]),
+  );
+  const myVoteByMission = new Map(myVotes.map((v) => [v.missionId, v.submissionId]));
+
+  // Current user's team (captain) — to disable vote on own team's submission.
+  const myReg = await prisma.tournamentRegistration.findUnique({
+    where: { tournamentId_userId: { tournamentId: params.id, userId } },
+    include: { team: { select: { captainId: true } } },
+  });
+  const myTeamCaptainId = myReg?.team?.captainId ?? null;
 
   // For each submission, find the team via the captain's registration.
   const captainIds = missions.flatMap((m) => m.submissions.map((s) => s.userId));
@@ -199,21 +231,32 @@ export default async function ShowcasePage({
                 </div>
 
                 <footer className="flex items-center justify-between gap-2 border-t border-token bg-[rgb(var(--surface-muted))/0.5] px-4 py-2 text-[11px]">
-                  <span
-                    className={`rounded-full px-2 py-0.5 font-semibold ${
-                      f.status === "passed"
-                        ? "bg-success-50 text-success-700"
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 font-semibold ${
+                        f.status === "passed"
+                          ? "bg-success-50 text-success-700"
+                          : f.status === "failed"
+                            ? "bg-danger-50 text-danger-700"
+                            : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      {f.status === "passed"
+                        ? "✓ Đã chấm đạt"
                         : f.status === "failed"
-                          ? "bg-danger-50 text-danger-700"
-                          : "bg-amber-50 text-amber-700"
-                    }`}
-                  >
-                    {f.status === "passed"
-                      ? "✓ Đã chấm đạt"
-                      : f.status === "failed"
-                        ? "Chưa đạt"
-                        : "Chờ chấm"}
-                  </span>
+                          ? "Chưa đạt"
+                          : "Chờ chấm"}
+                    </span>
+                    <VoteButton
+                      tournamentId={params.id}
+                      missionId={f.missionId}
+                      submissionId={f.submissionId}
+                      initialVoted={myVoteByMission.get(f.missionId) === f.submissionId}
+                      initialCount={voteCountBySubmission.get(f.submissionId) ?? 0}
+                      disabled={myTeamCaptainId === f.captain.id}
+                      disabledReason="Không thể vote cho đội của bạn"
+                    />
+                  </div>
                   <span className="text-faint">
                     {new Date(f.submittedAt).toLocaleDateString("vi-VN")}
                   </span>
