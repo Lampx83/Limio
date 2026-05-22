@@ -12,6 +12,10 @@ import {
   Award,
   TrendingUp,
   ArrowUpRight,
+  Inbox,
+  PenLine,
+  Eye,
+  HelpCircle,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
@@ -34,6 +38,10 @@ const ICON: Record<string, { Icon: typeof Bell; cls: string }> = {
   badge:        { Icon: Award,        cls: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300" },
   level_up:     { Icon: ArrowUpRight, cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
   rank:         { Icon: TrendingUp,   cls: "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300" },
+  inbox:           { Icon: Inbox,      cls: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" },
+  essay:           { Icon: PenLine,    cls: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300" },
+  mission_review:  { Icon: Eye,        cls: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" },
+  question:        { Icon: HelpCircle, cls: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
 };
 
 function relative(iso: string): string {
@@ -50,10 +58,15 @@ function relative(iso: string): string {
 export default function NotificationBell({
   initialUnread,
   initialLastSeen,
+  role = "learner",
 }: {
   initialUnread: number;
   initialLastSeen: string | null;
+  role?: "learner" | "instructor" | "admin" | "mentor";
 }) {
+  const qs = `?role=${role}`;
+  const allHref =
+    role === "instructor" ? "/instructor/notifications" : "/me/notifications";
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Noti[] | null>(null);
   const [unread, setUnread] = useState(initialUnread);
@@ -81,7 +94,7 @@ export default function NotificationBell({
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch(apiUrl("/api/notifications"));
+      const res = await fetch(apiUrl(`/api/notifications${qs}`));
       if (res.ok) {
         const data = await res.json();
         setItems(data.items);
@@ -94,7 +107,7 @@ export default function NotificationBell({
   }
 
   async function markSeen() {
-    await fetch(apiUrl("/api/notifications/seen"), { method: "POST" });
+    await fetch(apiUrl(`/api/notifications/seen${qs}`), { method: "POST" });
     setUnread(0);
     setLastSeen(new Date().toISOString());
   }
@@ -132,7 +145,7 @@ export default function NotificationBell({
           <header className="flex items-center justify-between border-b border-token px-4 py-3">
             <p className="text-sm font-semibold">Thông báo</p>
             <Link
-              href="/me/notifications"
+              href={allHref}
               onClick={() => setOpen(false)}
               className="text-xs text-brand-700 hover:underline dark:text-brand-300"
             >

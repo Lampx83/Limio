@@ -10,28 +10,38 @@ import {
   Award,
   TrendingUp,
   ArrowUpRight,
+  Inbox,
+  PenLine,
+  Eye,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { getActiveRole } from "@/lib/active-role";
 import {
   getUserNotifications,
   markNotificationsSeen,
+  getLastSeenIso,
   NOTIFICATION_TYPE_LABELS,
   type NotificationType,
+  type Role,
 } from "@/lib/notifications";
-import { prisma } from "@feedbackme/db";
 
 export const dynamic = "force-dynamic";
 
 const ICON: Record<string, { Icon: LucideIcon; cls: string }> = {
-  review:       { Icon: Star,         cls: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" },
-  graded:       { Icon: CheckCircle2, cls: "bg-success-50 text-success-700 dark:bg-success-950/40 dark:text-success-300" },
-  reply:        { Icon: MessageSquare,cls: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
-  mission_ok:   { Icon: Trophy,       cls: "bg-success-50 text-success-700 dark:bg-success-950/40 dark:text-success-300" },
-  mission_fail: { Icon: XCircle,      cls: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" },
-  badge:        { Icon: Award,        cls: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300" },
-  level_up:     { Icon: ArrowUpRight, cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
-  rank:         { Icon: TrendingUp,   cls: "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300" },
+  review:          { Icon: Star,         cls: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" },
+  graded:          { Icon: CheckCircle2, cls: "bg-success-50 text-success-700 dark:bg-success-950/40 dark:text-success-300" },
+  reply:           { Icon: MessageSquare,cls: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
+  mission_ok:      { Icon: Trophy,       cls: "bg-success-50 text-success-700 dark:bg-success-950/40 dark:text-success-300" },
+  mission_fail:    { Icon: XCircle,      cls: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" },
+  badge:           { Icon: Award,        cls: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300" },
+  level_up:        { Icon: ArrowUpRight, cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
+  rank:            { Icon: TrendingUp,   cls: "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300" },
+  inbox:           { Icon: Inbox,        cls: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" },
+  essay:           { Icon: PenLine,      cls: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300" },
+  mission_review:  { Icon: Eye,          cls: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" },
+  question:        { Icon: HelpCircle,   cls: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
 };
 
 function relative(d: Date): string {
@@ -45,44 +55,63 @@ function relative(d: Date): string {
   return d.toLocaleDateString("vi-VN");
 }
 
+const LEARNER_TYPES: NotificationType[] = [
+  "peer_review.assigned",
+  "assignment.graded",
+  "forum.reply",
+  "mission.passed",
+  "badge.earned",
+  "level.up",
+  "leaderboard.rank",
+];
+
+const INSTRUCTOR_TYPES: NotificationType[] = [
+  "instructor.assignment.submitted",
+  "instructor.essay.pending",
+  "instructor.mission.review_needed",
+  "instructor.forum.new_thread",
+];
+
 export default async function NotificationsPage({
   searchParams,
+  forceRole,
 }: {
-  searchParams: { type?: string };
+  searchParams: { type?: string; role?: string };
+  forceRole?: Role;
 }) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) redirect("/signin?callbackUrl=/me/notifications");
+  const roles = (session?.user?.roles ?? []) as string[];
 
-  // Read user.lastSeenAt BEFORE marking — so we know which items were "new"
-  // for visual highlight on this page render.
-  const prev = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { notificationsLastSeenAt: true },
-  });
-  const prevSeenMs = prev?.notificationsLastSeenAt?.getTime() ?? 0;
+  // forceRole (when imported from /instructor/notifications) wins; else
+  // ?role= query (rare); else the cookie-driven active role.
+  const requestedRole = (forceRole ?? searchParams.role ?? getActiveRole(roles)) as string;
+  const role: Role =
+    requestedRole === "instructor" || requestedRole === "admin" || requestedRole === "mentor"
+      ? requestedRole
+      : "learner";
 
-  const all = await getUserNotifications(userId, 200);
-  await markNotificationsSeen(userId);
+  const prevIso = await getLastSeenIso(userId, role);
+  const prevSeenMs = prevIso ? new Date(prevIso).getTime() : 0;
+
+  const all = await getUserNotifications(userId, role, 200);
+  await markNotificationsSeen(userId, role);
 
   const activeType = (searchParams.type ?? "all") as NotificationType | "all";
   const filtered =
     activeType === "all" ? all : all.filter((n) => n.type === activeType);
 
-  // Count per type for filter chip badges
   const counts: Record<string, number> = { all: all.length };
   for (const n of all) counts[n.type] = (counts[n.type] ?? 0) + 1;
 
   const typeOrder: (NotificationType | "all")[] = [
     "all",
-    "peer_review.assigned",
-    "assignment.graded",
-    "forum.reply",
-    "mission.passed",
-    "badge.earned",
-    "level.up",
-    "leaderboard.rank",
+    ...(role === "instructor" ? INSTRUCTOR_TYPES : LEARNER_TYPES),
   ];
+
+  const basePath = role === "instructor" ? "/instructor/notifications" : "/me/notifications";
+  const roleLabel = role === "instructor" ? "Giảng viên" : "Học viên";
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -90,16 +119,21 @@ export default async function NotificationsPage({
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
           <Bell size={18} strokeWidth={2.5} />
         </span>
-        <div>
-          <h1 className="h-display text-2xl font-bold">Thông báo</h1>
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <h1 className="h-display text-2xl font-bold">Thông báo</h1>
+            <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
+              {roleLabel}
+            </span>
+          </div>
           <p className="text-sm text-muted">
-            Tất cả sự kiện cần bạn chú ý — bài chấm, kết quả, trả lời forum,
-            xếp hạng, huy hiệu.
+            {role === "instructor"
+              ? "Việc cần xử lý trong khoá bạn dạy — chấm bài, review, câu hỏi mới."
+              : "Cập nhật học tập — bài chấm, phản hồi forum, mission, huy hiệu."}
           </p>
         </div>
       </header>
 
-      {/* Filter chips */}
       <div className="mt-6 flex flex-wrap gap-2">
         {typeOrder.map((t) => {
           const label =
@@ -107,7 +141,7 @@ export default async function NotificationsPage({
           const cnt = counts[t] ?? 0;
           const isActive = activeType === t;
           if (t !== "all" && cnt === 0) return null;
-          const href = t === "all" ? "/me/notifications" : `/me/notifications?type=${t}`;
+          const href = t === "all" ? basePath : `${basePath}?type=${t}`;
           return (
             <Link
               key={t}

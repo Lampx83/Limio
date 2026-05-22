@@ -1,24 +1,27 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
-import { getUserNotifications, getUnreadCount } from "@/lib/notifications";
-import { prisma } from "@feedbackme/db";
+import {
+  getUserNotifications,
+  getUnreadCount,
+  getLastSeenIso,
+  type Role,
+} from "@/lib/notifications";
 
-export async function GET() {
+function parseRole(raw: string | null): Role {
+  if (raw === "instructor" || raw === "admin" || raw === "mentor") return raw;
+  return "learner";
+}
+
+export async function GET(req: NextRequest) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const [items, unread, user] = await Promise.all([
-    getUserNotifications(userId, 20),
-    getUnreadCount(userId),
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: { notificationsLastSeenAt: true },
-    }),
+  const role = parseRole(req.nextUrl.searchParams.get("role"));
+  const [items, unread, lastSeenAt] = await Promise.all([
+    getUserNotifications(userId, role, 20),
+    getUnreadCount(userId, role),
+    getLastSeenIso(userId, role),
   ]);
-  return NextResponse.json({
-    items,
-    unread,
-    lastSeenAt: user?.notificationsLastSeenAt ?? null,
-  });
+  return NextResponse.json({ items, unread, lastSeenAt, role });
 }

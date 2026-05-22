@@ -5,7 +5,7 @@ import UserMenu from "./UserMenu";
 import ThemeToggle from "./ThemeToggle";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
-import { getUnreadCount } from "@/lib/notifications";
+import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 
@@ -25,21 +25,22 @@ export default async function AppHeader() {
         .catch(() => null)
     : null;
 
-  // Pre-fetch unread count + last-seen timestamp so the bell can render the
-  // badge immediately without a client roundtrip.
+  // Pre-fetch unread + last-seen for the *active role* so the bell renders
+  // the right badge immediately and switching roles re-fetches via Next nav.
+  const bellRole: Role =
+    activeRole === "instructor" || activeRole === "admin" || activeRole === "mentor"
+      ? activeRole
+      : "learner";
   let notiUnread = 0;
   let notiLastSeen: string | null = null;
   if (user?.id) {
     try {
-      const [c, u] = await Promise.all([
-        getUnreadCount(user.id),
-        prisma.user.findUnique({
-          where: { id: user.id },
-          select: { notificationsLastSeenAt: true },
-        }),
+      const [c, iso] = await Promise.all([
+        getUnreadCount(user.id, bellRole),
+        getLastSeenIso(user.id, bellRole),
       ]);
       notiUnread = c;
-      notiLastSeen = u?.notificationsLastSeenAt?.toISOString() ?? null;
+      notiLastSeen = iso;
     } catch {}
   }
 
@@ -77,6 +78,7 @@ export default async function AppHeader() {
             <NotificationBell
               initialUnread={notiUnread}
               initialLastSeen={notiLastSeen}
+              role={bellRole}
             />
           )}
           <ThemeToggle />

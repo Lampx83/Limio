@@ -43,7 +43,10 @@ model User {
   // banner gợi ý "Bật chế độ Nâng cao?" khi >= 3 và expertAssessmentMode=false.
   examsCreatedCount    Int       @default(0)
   // Last time user opened the notification bell — drives unread-count.
-  notificationsLastSeenAt DateTime?
+  // notificationsLastSeenAt: legacy global value; new code uses the JSON map
+  // below so each role tracks its own seen-state independently.
+  notificationsLastSeenAt    DateTime?
+  notificationsLastSeenByRole Json?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
