@@ -10,7 +10,6 @@ import { shouldSkipLesson } from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import LessonContent from "@/components/LessonContent";
-import { LessonNotes } from "@/components/LessonActions";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
@@ -21,6 +20,7 @@ import LessonTasksTab, {
   type TaskItem,
 } from "@/components/lesson/LessonTasksTab";
 import LessonStickyActions from "@/components/lesson/LessonStickyActions";
+import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 
 export const dynamic = "force-dynamic";
 
@@ -357,9 +357,7 @@ export default async function LessonPage({
         }}
       </LessonTabs>
 
-      <div className="mt-8">
-        <LessonNotes lessonId={lesson.id} />
-      </div>
+      <LessonNotesDrawer lessonId={lesson.id} />
 
       <LessonStickyActions
         lessonId={lesson.id}

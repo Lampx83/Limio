@@ -133,7 +133,13 @@ export default function LessonActions({
   );
 }
 
-export function LessonNotes({ lessonId }: { lessonId: string }) {
+export function LessonNotes({
+  lessonId,
+  hideHeading = false,
+}: {
+  lessonId: string;
+  hideHeading?: boolean;
+}) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [body, setBody] = useState("");
   const [timestamp, setTimestamp] = useState<string>("");
@@ -177,7 +183,9 @@ export function LessonNotes({ lessonId }: { lessonId: string }) {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold">Ghi chú của tôi</h2>
+      {!hideHeading && (
+        <h2 className="text-xl font-semibold">Ghi chú của tôi</h2>
+      )}
       <form
         onSubmit={onSubmit}
         className="mt-4 space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
