@@ -26,6 +26,8 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export interface Cuepoint {
   atSec: number;
@@ -336,10 +338,13 @@ function CuepointOverlay({
                       : "border-token"
                 }`}
               >
-                <p className="text-sm font-medium">
-                  <span className="mr-1 text-faint">{idx + 1}.</span>
-                  {q.prompt}
-                </p>
+                <div className="flex gap-1 text-sm font-medium">
+                  <span className="text-faint">{idx + 1}.</span>
+                  <SafeHtml
+                    html={plainToRichHtml(q.prompt)}
+                    className="prose prose-sm flex-1 max-w-none dark:prose-invert"
+                  />
+                </div>
                 {supported ? (
                   <div className="mt-2 space-y-1.5">
                     {q.options.map((o) => {

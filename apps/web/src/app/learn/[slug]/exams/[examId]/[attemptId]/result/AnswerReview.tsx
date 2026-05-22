@@ -1,6 +1,8 @@
 "use client";
 
 import type { ExamAttemptReviewQuestion as QuestionReview } from "@feedbackme/core-lms";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 interface Props {
   questions: QuestionReview[];
@@ -35,10 +37,13 @@ function QuestionCard({ q, idx }: { q: QuestionReview; idx: number }) {
     <div className="rounded border border-default bg-white p-4">
       {/* Header */}
       <div className="mb-2 flex items-start justify-between gap-3">
-        <p className="text-sm font-medium leading-snug">
-          <span className="mr-1 text-faint">Câu {idx + 1}.</span>
-          {q.prompt}
-        </p>
+        <div className="flex gap-1 text-sm font-medium leading-snug">
+          <span className="text-faint">Câu {idx + 1}.</span>
+          <SafeHtml
+            html={plainToRichHtml(q.prompt)}
+            className="prose prose-sm flex-1 max-w-none dark:prose-invert"
+          />
+        </div>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${badge.cls}`}
         >

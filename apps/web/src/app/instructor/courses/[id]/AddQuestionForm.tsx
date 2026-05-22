@@ -268,14 +268,17 @@ export default function AddQuestionForm({
         </label>
       </div>
 
-      <textarea
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        required
-        rows={2}
-        placeholder="Câu hỏi..."
-        className="textarea"
-      />
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+          Câu hỏi
+        </span>
+        <RichTextEditor
+          value={prompt}
+          onChange={setPrompt}
+          placeholder="Câu hỏi... (có thể chèn ảnh qua nút 🖼️ trên toolbar)"
+          minHeight={80}
+        />
+      </div>
 
       {type === "essay" && (
         <p className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-xs text-accent-700">

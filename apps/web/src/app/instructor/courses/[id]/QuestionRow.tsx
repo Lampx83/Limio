@@ -69,7 +69,10 @@ export default function QuestionRow({
             <span className="chip">{question.type}</span>
             <span className="text-xs text-faint">{question.points} điểm</span>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm">{question.prompt}</p>
+          <SafeHtml
+            html={plainToRichHtml(question.prompt)}
+            className="prose prose-sm mt-2 max-w-none dark:prose-invert"
+          />
           <ul className="mt-2 space-y-0.5 pl-1 text-xs">
             {question.options.map((o) => (
               <li key={o.id} className="flex items-center gap-1.5">

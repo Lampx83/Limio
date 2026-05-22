@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export type AnswerValue =
   | { optionIds: string[] }
@@ -25,7 +27,12 @@ interface Props {
 }
 
 export default function ExamQuestion({ question, value, onChange, optionOrder }: Props) {
-  const prompt = <p className="mb-2 whitespace-pre-wrap text-sm">{question.prompt}</p>;
+  const prompt = (
+    <SafeHtml
+      html={plainToRichHtml(question.prompt)}
+      className="prose prose-sm mb-2 max-w-none dark:prose-invert"
+    />
+  );
   const inner = useMemo(() => {
     switch (question.type) {
       case "mcq":

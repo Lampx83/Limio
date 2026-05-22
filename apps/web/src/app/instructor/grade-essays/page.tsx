@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import EssayGradeForm from "./EssayGradeForm";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
 
@@ -161,7 +163,10 @@ export default async function GradeEssaysPage({
                     <p className="text-xs font-semibold uppercase tracking-wide text-faint">
                       Đề bài
                     </p>
-                    <p className="mt-1 text-sm">{r.question.prompt}</p>
+                    <SafeHtml
+                      html={plainToRichHtml(r.question.prompt)}
+                      className="prose prose-sm mt-1 max-w-none dark:prose-invert"
+                    />
                   </div>
 
                   <div className="mt-4">

@@ -21,6 +21,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { apiUrl } from "@/lib/apiUrl";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 type QType =
   | "mcq"
@@ -237,9 +239,10 @@ export default function QuizPlayer({
                 {q.points} điểm
               </span>
             </div>
-            <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed">
-              {q.prompt}
-            </p>
+            <SafeHtml
+              html={plainToRichHtml(q.prompt)}
+              className="prose prose-base mt-3 max-w-none leading-relaxed dark:prose-invert"
+            />
 
             <div className="mt-4">
               <QuestionInput
