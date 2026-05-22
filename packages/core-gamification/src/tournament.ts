@@ -526,8 +526,29 @@ export async function distributePrizes(
         db,
       );
       awarded += xp;
+    } else if (r.teamId) {
+      // Team rank → award full prize XP to each active member. Solidarity
+      // model: cả đội cùng chia sẻ chiến thắng nguyên giá (đỡ tranh cãi
+      // hơn chia đôi/chia 3). sourceId chứa userId để idempotent per-user.
+      const members = await db.tournamentRegistration.findMany({
+        where: { teamId: r.teamId, disqualifiedAt: null },
+        select: { userId: true },
+      });
+      for (const m of members) {
+        await awardXp(
+          {
+            userId: m.userId,
+            courseId: t.courseId,
+            amount: xp,
+            reason: "tournament.prize",
+            sourceId: `tournament:${tournamentId}:rank-${r.rank}:team-${r.teamId}:user-${m.userId}`,
+            extraEventPayload: { tournamentId, rank: r.rank, teamId: r.teamId },
+          },
+          db,
+        );
+        awarded += xp;
+      }
     }
-    // Team prizes: caller must distribute to team members manually for now.
   }
 
   await db.learningEvent.create({

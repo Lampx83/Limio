@@ -89,6 +89,7 @@ export default async function TournamentDetailPage({
           registeredAt: true,
           disqualifiedAt: true,
           teamId: true,
+          team: { select: { name: true, captainId: true } },
           user: { select: { id: true, displayName: true, email: true } },
         },
       },
@@ -213,6 +214,8 @@ export default async function TournamentDetailPage({
           registeredAt: r.registeredAt.toISOString(),
           disqualifiedAt: r.disqualifiedAt?.toISOString() ?? null,
           teamId: r.teamId,
+          teamName: r.team?.name ?? null,
+          isCaptain: r.team?.captainId === r.user.id,
           user: r.user,
         }))}
         leaderboardSection={

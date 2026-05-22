@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { Download, Users } from "lucide-react";
+import { Download, Users, Crown } from "lucide-react";
 
 export type Registration = {
   id: string;
   registeredAt: string;
   disqualifiedAt: string | null;
   teamId: string | null;
+  teamName?: string | null;
+  isCaptain?: boolean;
   user: {
     id: string;
     displayName: string;
@@ -67,13 +69,16 @@ export default function RegistrationsList({
       const status = r.disqualifiedAt
         ? `Bị loại (${formatDate(r.disqualifiedAt)})`
         : "Active";
+      const nameWithRole = r.isCaptain
+        ? `${r.user.displayName} (Captain)`
+        : r.user.displayName;
       const base = [
-        r.user.displayName,
+        nameWithRole,
         r.user.email,
         formatDate(r.registeredAt),
         status,
       ];
-      return isTeamBased ? [r.teamId ?? "Solo", ...base] : base;
+      return isTeamBased ? [r.teamName ?? "Solo", ...base] : base;
     });
     const csv = [headers, ...rows]
       .map((row) => row.map((c) => csvEscape(String(c))).join(","))
@@ -134,13 +139,18 @@ export default function RegistrationsList({
         {groups.map((g) => (
           <div key={g.teamId ?? "_solo"}>
             {isTeamBased && (
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <h3 className="mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold">
                 <span className="rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
-                  {g.teamId ? `Đội ${g.teamId}` : "Chưa phân đội"}
+                  {g.items[0]?.teamName ?? (g.teamId ? `Đội ${g.teamId.slice(0,6)}` : "Chưa phân đội")}
                 </span>
                 <span className="text-xs font-normal text-faint">
-                  {g.items.length} người
+                  {g.items.length}/{teamSize} người
                 </span>
+                {g.teamId && g.items.length < teamSize && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                    Còn thiếu {teamSize - g.items.length}
+                  </span>
+                )}
               </h3>
             )}
             <div className="overflow-hidden rounded-xl border border-token">
@@ -168,7 +178,14 @@ export default function RegistrationsList({
                             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-white">
                               {initial}
                             </span>
-                            <span className="font-medium">
+                            <span className="flex items-center gap-1 font-medium">
+                              {r.isCaptain && (
+                                <Crown
+                                  size={12}
+                                  className="shrink-0 text-amber-500"
+                                  aria-label="Captain"
+                                />
+                              )}
                               {r.user.displayName}
                             </span>
                           </div>
