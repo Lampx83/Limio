@@ -459,14 +459,25 @@ function AddMissionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="card mt-2 space-y-4 border-brand-200"
+      className="mt-3 overflow-hidden rounded-2xl border-2 border-brand-200 bg-[rgb(var(--surface))] shadow-md"
     >
-      <h3 className="text-sm font-semibold">Thêm nhiệm vụ mới</h3>
+      {/* Form header */}
+      <div className="flex items-center justify-between border-b border-token bg-brand-soft/40 px-5 py-3">
+        <h3 className="text-sm font-bold text-brand-800">Thêm nhiệm vụ mới</h3>
+        <button
+          type="button"
+          onClick={onCancel}
+          aria-label="Đóng"
+          className="text-faint hover:text-[rgb(var(--text))]"
+        >
+          ✕
+        </button>
+      </div>
 
-      {/* ── Mission type picker ── */}
-      <div>
-        <label className="label text-xs">Loại nhiệm vụ</label>
-        <div className="mt-1 grid grid-cols-3 gap-2">
+      <div className="space-y-6 p-5">
+      {/* ═══ Step 1 — Type ═══════════════════════════════════════════ */}
+      <FormSection step={1} title="Loại nhiệm vụ">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {([
             { v: "COURSE_LINKED", t: "Hành vi học tập", d: "Auto theo nội dung khoá" },
             { v: "CUSTOM",        t: "Tự thiết kế",     d: "Soạn nội dung riêng" },
@@ -476,47 +487,49 @@ function AddMissionForm({
               key={opt.v}
               type="button"
               onClick={() => switchType(opt.v)}
-              className={`rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
+              className={`rounded-xl border-2 px-3 py-2.5 text-left text-xs transition-all ${
                 missionType === opt.v
-                  ? "border-brand-400 bg-brand-soft text-brand-800"
+                  ? "border-brand-500 bg-brand-soft text-brand-800 shadow-sm"
                   : "border-token bg-[rgb(var(--surface))] hover:border-brand-300"
               }`}
             >
-              <p className="font-medium">{opt.t}</p>
+              <p className="font-semibold">{opt.t}</p>
               <p className="mt-0.5 text-faint">{opt.d}</p>
             </button>
           ))}
         </div>
-      </div>
 
-      {/* ── Verify mode (only for non-COURSE_LINKED) ── */}
-      {missionType !== "COURSE_LINKED" && (
-        <div>
-          <label className="label text-xs">Cách xác minh hoàn thành</label>
-          <div className="mt-1 grid grid-cols-2 gap-2">
-            {(missionType === "EXTERNAL"
-              ? (["AUTO_CHECK", "MANUAL_REVIEW"] as const)
-              : (["AUTO_GRADE", "AUTO_CHECK", "PEER_REVIEW", "MANUAL_REVIEW"] as const)
-            ).map((vm) => (
-              <button
-                key={vm}
-                type="button"
-                onClick={() => setVerifyMode(vm)}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
-                  verifyMode === vm
-                    ? "border-accent-400 bg-accent-soft text-accent-800"
-                    : "border-token bg-[rgb(var(--surface))] hover:border-accent-300"
-                }`}
-              >
-                <p className="font-medium">{verifyModeLabel(vm)}</p>
-                <p className="mt-0.5 text-faint">{verifyModeDescription(vm)}</p>
-              </button>
-            ))}
+        {missionType !== "COURSE_LINKED" && (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold text-muted">
+              Cách xác minh hoàn thành
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {(missionType === "EXTERNAL"
+                ? (["AUTO_CHECK", "MANUAL_REVIEW"] as const)
+                : (["AUTO_GRADE", "AUTO_CHECK", "PEER_REVIEW", "MANUAL_REVIEW"] as const)
+              ).map((vm) => (
+                <button
+                  key={vm}
+                  type="button"
+                  onClick={() => setVerifyMode(vm)}
+                  className={`rounded-lg border-2 px-3 py-2 text-left text-xs transition-all ${
+                    verifyMode === vm
+                      ? "border-accent-500 bg-accent-soft text-accent-800 shadow-sm"
+                      : "border-token bg-[rgb(var(--surface))] hover:border-accent-300"
+                  }`}
+                >
+                  <p className="font-semibold">{verifyModeLabel(vm)}</p>
+                  <p className="mt-0.5 text-faint">{verifyModeDescription(vm)}</p>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </FormSection>
 
-      {/* ── Basic info: title + URL (if external) + description ── */}
+      {/* ═══ Step 2 — Basic info ═══════════════════════════════════ */}
+      <FormSection step={2} title="Thông tin">
       <div>
         <label className="label text-xs" htmlFor="nm-title">Tiêu đề nhiệm vụ</label>
         <input
@@ -574,10 +587,12 @@ function AddMissionForm({
           />
         </div>
       </div>
+      </FormSection>
 
-      {/* ── Verify-mode-specific config (deadline + rule/rubric/threshold) ── */}
+      {/* ═══ Step 3 — Verify config (only when non-COURSE_LINKED) ═══════ */}
       {missionType !== "COURSE_LINKED" && (
-        <div className="space-y-3 rounded-xl bg-[rgb(var(--surface-muted))] p-3">
+        <FormSection step={3} title="Cấu hình chấm điểm">
+        <div className="space-y-3">
           <div>
             <label className="label text-xs">Hạn nộp</label>
             <input
@@ -699,29 +714,30 @@ function AddMissionForm({
           )}
 
           {verifyMode === "AUTO_GRADE" && (
-            <p className="rounded bg-warning-50 px-2 py-1.5 text-xs text-warning-700">
-              Sau khi tạo mission, bạn sẽ được chuyển sang trang soạn câu hỏi quiz.
+            <p className="rounded-lg bg-warning-50 px-3 py-2 text-xs text-warning-700">
+              💡 Sau khi tạo mission, bạn sẽ được chuyển sang trang soạn câu hỏi quiz.
             </p>
           )}
         </div>
+        </FormSection>
       )}
 
-      {/* ── Step 1: Pick template (only COURSE_LINKED) ── */}
+      {/* ═══ Step 3 (COURSE_LINKED) — Điều kiện hoàn thành ═══════════ */}
       {missionType === "COURSE_LINKED" && templates.length > 0 && (
+        <FormSection step={3} title="Điều kiện hoàn thành">
         <div>
-          <label className="label text-xs">
-            Loại điều kiện
-            <span className="ml-1 text-faint">(chọn để tự điền ngưỡng mặc định)</span>
-          </label>
-          <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <p className="mb-2 text-xs text-muted">
+            Chọn loại điều kiện để tự điền ngưỡng mặc định:
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {templates.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => handleTemplateChange(t.id === selectedTemplateId ? "" : t.id)}
-                className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
+                className={`flex items-start gap-2 rounded-xl border-2 px-3 py-2 text-left text-xs transition-all ${
                   selectedTemplateId === t.id
-                    ? "border-brand-400 bg-brand-soft text-brand-800"
+                    ? "border-brand-500 bg-brand-soft text-brand-800 shadow-sm"
                     : "border-token bg-[rgb(var(--surface))] hover:border-brand-300"
                 }`}
               >
@@ -731,14 +747,16 @@ function AddMissionForm({
             ))}
           </div>
           {selectedTemplate && (
-            <p className="mt-1.5 text-xs text-muted">{selectedTemplate.description}</p>
+            <p className="mt-2 text-xs text-muted">{selectedTemplate.description}</p>
           )}
         </div>
+      </FormSection>
       )}
 
-      {/* ── Condition params ── */}
+      {/* ── Condition params (separate sub-section) ── */}
       {missionType === "COURSE_LINKED" && selectedTemplate && (
-        <div className="grid grid-cols-2 gap-3 rounded-xl bg-[rgb(var(--surface-muted))] p-3">
+        <FormSection step={4} title="Ngưỡng đạt">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {/* conditionValue */}
           <div>
             <label className="label text-xs">
@@ -821,39 +839,49 @@ function AddMissionForm({
             </select>
           </div>
         </div>
+        </FormSection>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label text-xs" htmlFor="nm-pts">Điểm thưởng</label>
-          <input
-            id="nm-pts"
-            type="number"
-            min={0}
-            value={points}
-            onChange={(e) => setPoints(e.target.value)}
-            className="input mt-1 text-sm"
-          />
+      {/* ═══ Step cuối — Tuỳ chọn nâng cao ══════════════════════════ */}
+      <FormSection
+        step={missionType === "COURSE_LINKED" ? (selectedTemplate ? 5 : 4) : 4}
+        title="Tuỳ chọn nâng cao"
+        optional
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label text-xs" htmlFor="nm-pts">Điểm thưởng</label>
+            <input
+              id="nm-pts"
+              type="number"
+              min={0}
+              value={points}
+              onChange={(e) => setPoints(e.target.value)}
+              className="input mt-1 text-sm"
+            />
+          </div>
+          <div>
+            <label className="label text-xs" htmlFor="nm-prereq">Cần hoàn thành trước</label>
+            <select
+              id="nm-prereq"
+              value={prereqId}
+              onChange={(e) => setPrereqId(e.target.value)}
+              className="select mt-1 text-sm"
+            >
+              <option value="">— Không có —</option>
+              {missions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.orderIndex}. {m.title}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="label text-xs" htmlFor="nm-prereq">Cần hoàn thành trước</label>
-          <select
-            id="nm-prereq"
-            value={prereqId}
-            onChange={(e) => setPrereqId(e.target.value)}
-            className="select mt-1 text-sm"
-          >
-            <option value="">— Không có —</option>
-            {missions.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.orderIndex}. {m.title}
-              </option>
-            ))}
-          </select>
-        </div>
+      </FormSection>
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t border-token pt-3">
+      {/* Sticky action bar */}
+      <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-token bg-[rgb(var(--surface))] px-5 py-3">
         <button type="button" onClick={onCancel} className="btn-ghost btn-sm">
           Hủy
         </button>
@@ -862,6 +890,34 @@ function AddMissionForm({
         </button>
       </div>
     </form>
+  );
+}
+
+// ── FormSection ──────────────────────────────────────────────────────
+function FormSection({
+  step,
+  title,
+  optional,
+  children,
+}: {
+  step: number;
+  title: string;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-b border-token pb-5 last:border-b-0 last:pb-0">
+      <header className="mb-3 flex items-center gap-2">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700">
+          {step}
+        </span>
+        <h4 className="text-sm font-bold text-[rgb(var(--text))]">{title}</h4>
+        {optional && (
+          <span className="text-xs text-faint">(không bắt buộc)</span>
+        )}
+      </header>
+      {children}
+    </section>
   );
 }
 
