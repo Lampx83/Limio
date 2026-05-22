@@ -84,7 +84,7 @@ export default async function AdminDashboard() {
     integrations.find((i) => i.key === "vnpay.secret")?.hasValue ?? false;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       {/* Greeting */}
       <header>
         <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700">

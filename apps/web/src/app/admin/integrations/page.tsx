@@ -22,7 +22,7 @@ export default async function IntegrationsAdminPage() {
   const statuses = await listIntegrationStatuses();
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main>
       <Link href="/" className="link inline-flex items-center gap-1 text-sm">
         ← Trang chủ
       </Link>

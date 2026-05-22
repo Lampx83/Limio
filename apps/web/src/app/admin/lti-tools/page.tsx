@@ -24,7 +24,7 @@ export default async function LtiToolsAdminPage() {
   const issuer = process.env.LTI_PLATFORM_ISSUER ?? "http://localhost:3000";
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main>
       <Link href="/" className="link inline-flex items-center gap-1 text-sm">
         ← Trang chủ
       </Link>
