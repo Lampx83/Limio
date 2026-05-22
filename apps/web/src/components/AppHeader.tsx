@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@feedbackme/db";
 import UserMenu from "./UserMenu";
 import ThemeToggle from "./ThemeToggle";
+import StudentMenuTrigger from "./StudentMenuTrigger";
 import { getActiveRole } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 
@@ -25,6 +26,8 @@ export default async function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-token bg-[rgb(var(--surface)/0.85)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.7)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+        <div className="flex items-center gap-2 shrink-0">
+        <StudentMenuTrigger variant="header" />
         <Link href="/" className="group flex items-baseline gap-2.5 shrink-0">
           <LimeSliceIcon className="h-9 w-9 shrink-0 self-center transition-transform group-hover:scale-105 group-hover:rotate-12" />
           <span className="text-lg font-bold tracking-tight">
@@ -34,6 +37,7 @@ export default async function AppHeader() {
             — Learn your way
           </span>
         </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           {/* Tournament CTA — always visible in header */}
