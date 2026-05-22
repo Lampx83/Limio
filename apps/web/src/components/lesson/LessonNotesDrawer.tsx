@@ -22,7 +22,7 @@ export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Mở ghi chú của tôi"
+        aria-label="Mở ghi chú bài học này"
         className="fixed bottom-24 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-transform hover:scale-105"
       >
         <Pencil size={18} />
@@ -35,12 +35,12 @@ export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
         >
           <aside
             role="dialog"
-            aria-label="Ghi chú của tôi"
+            aria-label="Ghi chú bài học này"
             className="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto border-l border-token bg-[rgb(var(--surface))] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="sticky top-0 z-10 flex items-center justify-between border-b border-token bg-[rgb(var(--surface)/0.95)] px-5 py-3 backdrop-blur">
-              <h2 className="text-base font-semibold">Ghi chú của tôi</h2>
+              <h2 className="text-base font-semibold">Ghi chú bài học này</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}

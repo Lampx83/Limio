@@ -59,6 +59,47 @@ export async function createNote(
   return { noteId: note.id };
 }
 
+/**
+ * List ALL of the user's notes across courses, newest first. Optional filters:
+ * - courseId: only notes from lessons in this course
+ * - q: case-insensitive substring match on note body
+ * Returns enough relation context (lesson title + course slug/title) so the
+ * UI can render a clickable card without extra round-trips.
+ */
+export async function listAllUserNotes(
+  userId: string,
+  options: { courseId?: string; q?: string; take?: number } = {},
+  db: PrismaClient = prisma,
+) {
+  const take = Math.min(Math.max(options.take ?? 100, 1), 500);
+  return db.note.findMany({
+    where: {
+      userId,
+      ...(options.q
+        ? { body: { contains: options.q, mode: "insensitive" } }
+        : {}),
+      ...(options.courseId
+        ? { lesson: { module: { courseId: options.courseId } } }
+        : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take,
+    include: {
+      lesson: {
+        select: {
+          id: true,
+          title: true,
+          module: {
+            select: {
+              course: { select: { id: true, slug: true, title: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 /** List the current user's notes for a lesson. Notes are private. */
 export async function listLessonNotes(
   userId: string,

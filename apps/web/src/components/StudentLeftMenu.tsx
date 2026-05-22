@@ -10,6 +10,7 @@ import {
   Award,
   Star,
   Settings,
+  Pencil,
   Compass,
   Trophy,
   BarChart3,
@@ -38,6 +39,7 @@ const GROUPS: Group[] = [
     label: "Học tập",
     items: [
       { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen },
+      { label: "Ghi chú", href: "/me/notes", icon: Pencil },
       { label: "Kỹ năng", href: "/me/skills", icon: Brain },
       { label: "Huy hiệu", href: "/me/badges", icon: Award },
     ],
