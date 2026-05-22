@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@feedbackme/core-lms";
 import AddQuestionForm from "@/app/instructor/courses/[id]/AddQuestionForm";
 import QuestionRow from "@/app/instructor/courses/[id]/QuestionRow";
+import BulkImportQuestions from "@/app/instructor/courses/[id]/BulkImportQuestions";
 
 export const dynamic = "force-dynamic";
 
@@ -120,9 +121,10 @@ export default async function TournamentMissionQuizEditorPage({
         </ol>
       )}
 
-      {/* Add question */}
-      <div className="mt-6">
+      {/* Add question + bulk import */}
+      <div className="mt-6 space-y-3">
         <AddQuestionForm quizId={mission.quiz.id} nextOrderIndex={nextOrderIndex} />
+        <BulkImportQuestions quizId={mission.quiz.id} />
       </div>
     </main>
   );
