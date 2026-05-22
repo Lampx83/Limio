@@ -151,6 +151,7 @@ export default async function MissionDetailPage({
             quizId={mission.quiz?.id ?? null}
             assignmentId={mission.assignment?.id ?? null}
             submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
+            hackathonMode={isCollective}
           />
         ) : (
           <p className="text-sm text-muted">Mission COURSE_LINKED — auto-tracked theo hành vi học.</p>

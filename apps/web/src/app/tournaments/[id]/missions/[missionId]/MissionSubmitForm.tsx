@@ -12,12 +12,14 @@ export default function MissionSubmitForm({
   quizId,
   assignmentId,
   submissionDeadlineIso,
+  hackathonMode = false,
 }: {
   missionId: string;
   verifyMode: VerifyMode;
   quizId: string | null;
   assignmentId: string | null;
   submissionDeadlineIso: string | null;
+  hackathonMode?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -28,6 +30,11 @@ export default function MissionSubmitForm({
   const [fileMime, setFileMime] = useState("");
   // PEER_REVIEW payload.
   const [artifact, setArtifact] = useState("");
+  // Hackathon multi-artifact payload (for PEER_REVIEW/MANUAL_REVIEW collective).
+  const [repoUrl, setRepoUrl] = useState("");
+  const [slidesUrl, setSlidesUrl] = useState("");
+  const [demoVideoUrl, setDemoVideoUrl] = useState("");
+  const [writeup, setWriteup] = useState("");
 
   const pastDeadline = submissionDeadlineIso
     ? new Date() >= new Date(submissionDeadlineIso)
@@ -121,6 +128,80 @@ export default function MissionSubmitForm({
         {error && <p className="text-sm text-danger-600">Lỗi: {error}</p>}
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "Đang nộp..." : "Nộp"}
+        </button>
+      </form>
+    );
+  }
+
+  // Hackathon mode: multi-artifact form for any review-based verify mode.
+  if (hackathonMode && (verifyMode === "PEER_REVIEW" || verifyMode === "MANUAL_REVIEW")) {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit({
+            hackathon: true,
+            repoUrl: repoUrl.trim() || undefined,
+            slidesUrl: slidesUrl.trim() || undefined,
+            demoVideoUrl: demoVideoUrl.trim() || undefined,
+            writeup: writeup.trim() || undefined,
+            // Keep legacy artifact field populated with a summary so existing
+            // PEER_REVIEW review UI still has something to render.
+            artifactMarkdown:
+              `**Repo:** ${repoUrl || "—"}\n` +
+              `**Slides:** ${slidesUrl || "—"}\n` +
+              `**Demo:** ${demoVideoUrl || "—"}\n\n` +
+              (writeup || ""),
+          });
+        }}
+        className="space-y-3"
+      >
+        <p className="rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
+          🎤 Hackathon mode — nộp 4 artifact của đội. Tất cả đều optional, càng đầy đủ càng dễ chấm.
+        </p>
+        <div>
+          <label className="label text-xs">🔗 Repo code</label>
+          <input
+            type="url"
+            value={repoUrl}
+            onChange={(e) => setRepoUrl(e.target.value)}
+            placeholder="https://github.com/team/project"
+            className="input mt-1 text-sm"
+          />
+        </div>
+        <div>
+          <label className="label text-xs">🎞️ Slides / Deck</label>
+          <input
+            type="url"
+            value={slidesUrl}
+            onChange={(e) => setSlidesUrl(e.target.value)}
+            placeholder="https://docs.google.com/presentation/..."
+            className="input mt-1 text-sm"
+          />
+        </div>
+        <div>
+          <label className="label text-xs">🎥 Demo video</label>
+          <input
+            type="url"
+            value={demoVideoUrl}
+            onChange={(e) => setDemoVideoUrl(e.target.value)}
+            placeholder="https://youtube.com/watch?v=..."
+            className="input mt-1 text-sm"
+          />
+        </div>
+        <div>
+          <label className="label text-xs">📝 Mô tả ngắn (writeup)</label>
+          <textarea
+            value={writeup}
+            onChange={(e) => setWriteup(e.target.value)}
+            rows={5}
+            placeholder="Vấn đề giải quyết · cách tiếp cận · điểm độc đáo · roadmap..."
+            className="input mt-1 text-sm"
+          />
+        </div>
+        {error && <p className="text-sm text-danger-600">Lỗi: {error}</p>}
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
+          {busy ? "Đang nộp..." : "Nộp project"}
         </button>
       </form>
     );

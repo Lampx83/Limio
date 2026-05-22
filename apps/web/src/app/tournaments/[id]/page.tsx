@@ -471,6 +471,16 @@ export default async function TournamentDetailPage({
             />
           )}
 
+          {/* Showcase link — chỉ hiện khi có mission COLLECTIVE */}
+          {tournament.missions.some((m) => m.isTeamSubmission) && (
+            <Link
+              href={`/tournaments/${params.id}/showcase`}
+              className="block rounded-2xl border-2 border-violet-300 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-rose-50 p-4 text-center font-bold text-violet-800 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-violet-700 dark:from-violet-950/40 dark:via-fuchsia-950/40 dark:to-rose-950/40 dark:text-violet-200"
+            >
+              🎤 Xem showcase project →
+            </Link>
+          )}
+
           {/* Quick stats */}
           <div className="rounded-2xl border border-orange-200/60 bg-white p-5 shadow-md dark:border-orange-900/40 dark:bg-slate-800">
             <h2 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-rose-700 dark:text-orange-400">
