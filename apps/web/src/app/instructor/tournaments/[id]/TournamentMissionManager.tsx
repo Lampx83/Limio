@@ -6,6 +6,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
+import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -116,11 +117,13 @@ export default function TournamentMissionManager({
   courseId,
   status,
   missions: initialMissions,
+  teamSize = 1,
 }: {
   tournamentId: string;
   courseId: string | null;
   status: string;
   missions: Mission[];
+  teamSize?: number;
 }) {
   const router = useRouter();
   const [missions, setMissions] = useState<Mission[]>(initialMissions);
@@ -285,6 +288,7 @@ export default function TournamentMissionManager({
               onAdded={onMissionAdded}
               onCancel={() => { setShowForm(false); setError(null); }}
               setError={setError}
+              teamSize={teamSize}
             />
           )}
         </div>
@@ -303,6 +307,7 @@ function AddMissionForm({
   onAdded,
   onCancel,
   setError,
+  teamSize,
 }: {
   tournamentId: string;
   missions: Mission[];
@@ -310,6 +315,7 @@ function AddMissionForm({
   skillGroups: SkillGroup[];
   onAdded: (m: Mission) => void;
   onCancel: () => void;
+  teamSize: number;
   setError: (e: string | null) => void;
 }) {
   // ── Form state ────────────────────────────────────────────────────────
@@ -728,9 +734,16 @@ function AddMissionForm({
         <div>
           <p className="mb-2 text-xs text-muted">
             Chọn loại điều kiện để tự điền ngưỡng mặc định:
+            {teamSize > 1 && (
+              <span className="ml-1 text-[11px] text-amber-700 dark:text-amber-400">
+                · Tournament team-based — đã ẩn các loại không phù hợp cho nhóm.
+              </span>
+            )}
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {templates.map((t) => (
+            {templates
+              .filter((t) => isMissionTeamCompatible(t.conditionType, teamSize))
+              .map((t) => (
               <button
                 key={t.id}
                 type="button"

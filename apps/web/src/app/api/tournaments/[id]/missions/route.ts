@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
+import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
 
@@ -161,6 +162,22 @@ export async function POST(
     resolvedConditionType  = resolvedConditionType  ?? tmpl.conditionType;
     resolvedConditionValue = resolvedConditionValue ?? tmpl.defaultValue;
     resolvedMinScore       = resolvedMinScore       ?? tmpl.defaultMinScore ?? null;
+  }
+
+  // Team tournaments cannot use individual-state condition types (streak,
+  // misconception, skill mastery) — SUM rule would produce meaningless totals.
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: params.id },
+    select: { teamSize: true },
+  });
+  if (
+    tournament &&
+    !isMissionTeamCompatible(resolvedConditionType, tournament.teamSize)
+  ) {
+    return NextResponse.json(
+      { error: "mission_not_team_compatible", details: resolvedConditionType },
+      { status: 400 },
+    );
   }
 
   // skill_mastered_in_group requires conditionSkillCode.

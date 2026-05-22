@@ -101,6 +101,7 @@ export default function InstructorTournamentTabs({
               status={status}
               missions={missions}
               courseId={courseId}
+              teamSize={teamSize}
             />
           </div>
         )}

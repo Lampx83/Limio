@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
 import TournamentTeamPanel from "./TournamentTeamPanel";
@@ -110,6 +111,12 @@ export default async function TournamentDetailPage({
     tournament.status === "published" || tournament.status === "active";
   const isActive = tournament.status === "active";
   const showLeaderboard = isActive || isEnded;
+
+  // Hide individual-only missions from learner view in team tournaments —
+  // any legacy mission of that type would never contribute to team score.
+  tournament.missions = tournament.missions.filter((m) =>
+    isMissionTeamCompatible(m.conditionType, tournament.teamSize),
+  );
 
   // Time label for info bar
   let timeLabel: string;

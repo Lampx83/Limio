@@ -4,6 +4,27 @@ import { awardXp } from "./xp";
 import { checkMissionCondition } from "./missionCondition";
 
 /**
+ * conditionType nào KHÔNG hợp lệ khi tournament là team-based (teamSize > 1).
+ * Lý do: các loại này đo trạng thái nhận thức/thói quen cá nhân → cộng dồn
+ * theo SUM rule không có ý nghĩa nghiệp vụ.
+ */
+export const TEAM_INCOMPATIBLE_CONDITION_TYPES: ReadonlySet<string> = new Set([
+  "streak_days",
+  "misconception_resolved_count",
+  "skill_mastered_count",
+  "skill_mastered_in_group",
+]);
+
+export function isMissionTeamCompatible(
+  conditionType: string | null | undefined,
+  teamSize: number,
+): boolean {
+  if (teamSize <= 1) return true;
+  if (!conditionType) return true; // custom missions (verifyMode-based) ok
+  return !TEAM_INCOMPATIBLE_CONDITION_TYPES.has(conditionType);
+}
+
+/**
  * Tournament runtime — Phase 3.
  * - registerForTournament: idempotent learner self-registration
  * - completeMission: marks a mission completed for a user, increments points,
