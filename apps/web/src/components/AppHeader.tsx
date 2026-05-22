@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import UserMenu from "./UserMenu";
 import ThemeToggle from "./ThemeToggle";
 import StudentMenuTrigger from "./StudentMenuTrigger";
+import ReviewQueueChip from "./ReviewQueueChip";
 import { getActiveRole } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 
@@ -22,6 +23,22 @@ export default async function AppHeader() {
         .then((r) => r?.avatarUrl ?? null)
         .catch(() => null)
     : null;
+
+  // Peer-review pending count — shown as a header chip so learners notice
+  // assigned reviews from any page (lesson, catalog, …), not just /me/*.
+  const now = new Date();
+  const [reviewPending, reviewOverdue] = user?.id
+    ? await Promise.all([
+        prisma.missionReviewAssignment
+          .count({ where: { reviewerId: user.id, completedAt: null } })
+          .catch(() => 0),
+        prisma.missionReviewAssignment
+          .count({
+            where: { reviewerId: user.id, completedAt: null, dueAt: { lt: now } },
+          })
+          .catch(() => 0),
+      ])
+    : [0, 0];
 
   return (
     <header className="sticky top-0 z-30 border-b border-token bg-[rgb(var(--surface)/0.85)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.7)]">
@@ -53,6 +70,9 @@ export default async function AppHeader() {
             🏆 Đấu trường
           </Link>
 
+          {user && reviewPending > 0 && (
+            <ReviewQueueChip count={reviewPending} hasOverdue={reviewOverdue > 0} />
+          )}
           <ThemeToggle />
           {user ? (
             <UserMenu

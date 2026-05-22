@@ -193,6 +193,25 @@ function SubmissionStatusBlock({
       {canResubmit && (
         <p className="text-xs text-muted">Bạn có thể nộp lại trước hạn nộp.</p>
       )}
+      {verifyMode === "PEER_REVIEW" && submission.status === "pending" && (
+        <a
+          href="/me/reviews"
+          className="group flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-soft/60 px-4 py-3 transition-colors hover:border-brand-300 hover:bg-brand-soft dark:border-brand-800/60"
+        >
+          <span aria-hidden className="text-xl">🤝</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-brand-700 dark:text-brand-300">
+              Đến lượt bạn chấm bài bạn khác
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              Sau khi window đóng, hệ thống cũng phân công bạn chấm ngẫu nhiên các bài cùng đợt. Vào hàng đợi để chấm khi có →
+            </p>
+          </div>
+          <span aria-hidden className="text-brand-600 transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
+        </a>
+      )}
     </div>
   );
 }

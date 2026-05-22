@@ -46,7 +46,7 @@ const GROUPS: Group[] = [
     id: "feedback",
     label: "Phản hồi",
     items: [
-      { label: "Đánh giá của tôi", href: "/me/reviews", icon: Star },
+      { label: "Chấm bài bạn học", href: "/me/reviews", icon: Star },
     ],
   },
   {
@@ -71,8 +71,10 @@ const LS_KEY = "fbm-student-menu-collapsed";
 
 export default function StudentLeftMenu({
   desktopSidebar = true,
+  badges = {},
 }: {
   desktopSidebar?: boolean;
+  badges?: Record<string, { count: number; tone?: "warn" | "danger" }>;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -178,6 +180,20 @@ export default function StudentLeftMenu({
                           strokeWidth={active ? 2.5 : 2}
                         />
                         <span className="flex-1 truncate">{it.label}</span>
+                        {badges[it.href] && badges[it.href]!.count > 0 && (
+                          <span
+                            className={`inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white ${
+                              badges[it.href]!.tone === "danger"
+                                ? "bg-danger-600"
+                                : badges[it.href]!.tone === "warn"
+                                  ? "bg-amber-500"
+                                  : "bg-brand-600"
+                            }`}
+                            aria-label={`${badges[it.href]!.count} mục cần xử lý`}
+                          >
+                            {badges[it.href]!.count}
+                          </span>
+                        )}
                       </Link>
                     </li>
                   );
