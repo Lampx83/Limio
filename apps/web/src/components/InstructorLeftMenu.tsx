@@ -39,6 +39,9 @@ type Group = {
   id: string;
   label: string;
   items: Item[];
+  /** Tailwind classes for icon circle bg + fg. Áp dụng cho mọi item trong nhóm để menu không bị "rainbow". */
+  iconBg: string;
+  iconFg: string;
 };
 
 const PROCTOR_ITEM: Item = {
@@ -51,6 +54,8 @@ const FULL_GROUPS: Group[] = [
   {
     id: "teaching",
     label: "Giảng dạy",
+    iconBg: "bg-amber-100 dark:bg-amber-950/40",
+    iconFg: "text-amber-600 dark:text-amber-300",
     items: [
       { label: "Khoá học của tôi", href: "/instructor/courses", icon: BookOpen },
       { label: "Đánh giá Assignment", href: "/instructor/assignments", icon: ClipboardList },
@@ -63,6 +68,8 @@ const FULL_GROUPS: Group[] = [
   {
     id: "exam",
     label: "Kiểm tra đánh giá",
+    iconBg: "bg-sky-100 dark:bg-sky-950/40",
+    iconFg: "text-sky-600 dark:text-sky-300",
     items: [
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
@@ -75,6 +82,8 @@ const FULL_GROUPS: Group[] = [
   {
     id: "learners",
     label: "Học viên",
+    iconBg: "bg-emerald-100 dark:bg-emerald-950/40",
+    iconFg: "text-emerald-600 dark:text-emerald-300",
     items: [
       { label: "Enrollments", href: "/instructor/enrollments", icon: Users },
       { label: "Learner Insights (BKT)", href: "/instructor/learner-insights", icon: Brain },
@@ -83,6 +92,8 @@ const FULL_GROUPS: Group[] = [
   {
     id: "ai",
     label: "AI & Phân tích",
+    iconBg: "bg-purple-100 dark:bg-purple-950/40",
+    iconFg: "text-purple-600 dark:text-purple-300",
     items: [
       { label: "AI Feedback Generator", href: "/instructor/feedback-generator", icon: Sparkles },
       { label: "Feedback Templates", href: "/instructor/feedback-templates", icon: FileText },
@@ -96,6 +107,8 @@ const PROCTOR_ONLY_GROUPS: Group[] = [
   {
     id: "proctor",
     label: "Giám thị",
+    iconBg: "bg-sky-100 dark:bg-sky-950/40",
+    iconFg: "text-sky-600 dark:text-sky-300",
     items: [PROCTOR_ITEM],
   },
 ];
@@ -203,7 +216,8 @@ export default function InstructorLeftMenu({
                   const active = isActive(it.href);
                   const Icon = it.icon;
                   const baseRow =
-                    "group/item relative flex items-center gap-2.5 rounded-lg pl-3 pr-2 py-2 text-sm transition-colors";
+                    "group/item flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1 text-sm transition-colors";
+                  const iconCircle = `flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${g.iconBg}`;
 
                   if (!it.href) {
                     return (
@@ -213,10 +227,12 @@ export default function InstructorLeftMenu({
                           title={it.note ?? "Đang phát triển"}
                           aria-disabled
                         >
-                          <Icon size={16} className="shrink-0 opacity-60" />
+                          <span className={iconCircle + " opacity-50"}>
+                            <Icon size={14} className={g.iconFg} />
+                          </span>
                           <span className="flex-1 truncate">{it.label}</span>
                           <span
-                            className="shrink-0 rounded-sm bg-amber-100/70 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                            className="shrink-0 rounded-full bg-amber-100/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
                             title={it.note ?? "Đang phát triển"}
                           >
                             Soon
@@ -231,18 +247,17 @@ export default function InstructorLeftMenu({
                         href={it.href}
                         className={`${baseRow} ${
                           active
-                            ? "bg-amber-50 font-semibold text-amber-700 shadow-sm dark:bg-amber-950/40 dark:text-amber-200"
+                            ? "bg-white font-semibold text-[rgb(var(--text))] shadow-sm ring-1 ring-base-200 dark:bg-[rgb(var(--surface-muted))] dark:ring-white/10"
                             : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                         }`}
                       >
-                        {active && (
-                          <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-amber-500" />
-                        )}
-                        <Icon
-                          size={16}
-                          className={`shrink-0 ${active ? "text-amber-600 dark:text-amber-300" : ""}`}
-                          strokeWidth={active ? 2.5 : 2}
-                        />
+                        <span className={iconCircle}>
+                          <Icon
+                            size={14}
+                            className={g.iconFg}
+                            strokeWidth={active ? 2.5 : 2}
+                          />
+                        </span>
                         <span className="flex-1 truncate">{it.label}</span>
                       </Link>
                     </li>
