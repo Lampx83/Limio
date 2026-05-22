@@ -107,8 +107,8 @@ export default function LessonForumSection({
   };
 
   const composerCard = (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 via-fuchsia-500 to-amber-500 p-[2px] shadow-card">
-      <div className="rounded-[14px] bg-[rgb(var(--surface))] p-5">
+    <div className="relative overflow-hidden rounded-2xl border-2 border-brand-300 bg-[rgb(var(--surface))] p-5 shadow-card dark:border-brand-700">
+      <div>
         {!open ? (
           <div>
             <p className="text-base font-bold">💬 Đặt câu hỏi cho bài này</p>
@@ -119,7 +119,7 @@ export default function LessonForumSection({
             <button
               type="button"
               onClick={() => openComposer()}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-700 hover:shadow-md hover:-translate-y-0.5"
             >
               + Viết câu hỏi
             </button>
