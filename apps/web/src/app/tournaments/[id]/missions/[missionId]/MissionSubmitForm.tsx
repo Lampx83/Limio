@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
+import AssignmentSubmitForm from "@/components/AssignmentSubmitForm";
 
 type VerifyMode = "AUTO_GRADE" | "AUTO_CHECK" | "PEER_REVIEW" | "MANUAL_REVIEW";
 
@@ -61,17 +62,20 @@ export default function MissionSubmitForm({
     );
   }
 
-  if (verifyMode === "MANUAL_REVIEW") {
+  if (verifyMode === "MANUAL_REVIEW" && !hackathonMode) {
+    if (!assignmentId) {
+      return (
+        <p className="text-sm text-warning-700">
+          Giảng viên chưa cấu hình Assignment cho mission này.
+        </p>
+      );
+    }
     return (
-      <div className="text-sm text-muted">
-        Mission này do giảng viên chấm tay.{" "}
-        {assignmentId ? (
-          <a href={`/assignments/${assignmentId}`} className="link">
-            Mở form nộp bài →
-          </a>
-        ) : (
-          <span className="text-warning-700">Giảng viên chưa cấu hình Assignment.</span>
-        )}
+      <div>
+        <p className="mb-3 text-xs text-muted">
+          Mission này do giảng viên chấm tay. Nộp bài qua form bên dưới:
+        </p>
+        <AssignmentSubmitForm assignmentId={assignmentId} />
       </div>
     );
   }
