@@ -68,8 +68,8 @@ const FULL_GROUPS: Group[] = [
   {
     id: "exam",
     label: "Kiểm tra đánh giá",
-    iconBg: "bg-sky-100 dark:bg-sky-950/40",
-    iconFg: "text-sky-600 dark:text-sky-300",
+    iconBg: "bg-amber-100 dark:bg-amber-950/40",
+    iconFg: "text-amber-600 dark:text-amber-300",
     items: [
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
@@ -82,8 +82,8 @@ const FULL_GROUPS: Group[] = [
   {
     id: "learners",
     label: "Học viên",
-    iconBg: "bg-emerald-100 dark:bg-emerald-950/40",
-    iconFg: "text-emerald-600 dark:text-emerald-300",
+    iconBg: "bg-amber-100 dark:bg-amber-950/40",
+    iconFg: "text-amber-600 dark:text-amber-300",
     items: [
       { label: "Enrollments", href: "/instructor/enrollments", icon: Users },
       { label: "Learner Insights (BKT)", href: "/instructor/learner-insights", icon: Brain },
@@ -92,8 +92,8 @@ const FULL_GROUPS: Group[] = [
   {
     id: "ai",
     label: "AI & Phân tích",
-    iconBg: "bg-purple-100 dark:bg-purple-950/40",
-    iconFg: "text-purple-600 dark:text-purple-300",
+    iconBg: "bg-amber-100 dark:bg-amber-950/40",
+    iconFg: "text-amber-600 dark:text-amber-300",
     items: [
       { label: "AI Feedback Generator", href: "/instructor/feedback-generator", icon: Sparkles },
       { label: "Feedback Templates", href: "/instructor/feedback-templates", icon: FileText },
@@ -107,8 +107,8 @@ const PROCTOR_ONLY_GROUPS: Group[] = [
   {
     id: "proctor",
     label: "Giám thị",
-    iconBg: "bg-sky-100 dark:bg-sky-950/40",
-    iconFg: "text-sky-600 dark:text-sky-300",
+    iconBg: "bg-amber-100 dark:bg-amber-950/40",
+    iconFg: "text-amber-600 dark:text-amber-300",
     items: [PROCTOR_ITEM],
   },
 ];
@@ -216,7 +216,7 @@ export default function InstructorLeftMenu({
                   const active = isActive(it.href);
                   const Icon = it.icon;
                   const baseRow =
-                    "group/item flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1 text-sm transition-colors";
+                    "group/item relative flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1 text-sm transition-colors";
                   const iconCircle = `flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${g.iconBg}`;
 
                   if (!it.href) {
@@ -247,10 +247,13 @@ export default function InstructorLeftMenu({
                         href={it.href}
                         className={`${baseRow} ${
                           active
-                            ? "bg-white font-semibold text-[rgb(var(--text))] shadow-sm ring-1 ring-base-200 dark:bg-[rgb(var(--surface-muted))] dark:ring-white/10"
+                            ? "bg-amber-50 font-semibold text-amber-700 shadow-sm dark:bg-amber-950/40 dark:text-amber-200"
                             : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                         }`}
                       >
+                        {active && (
+                          <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-amber-500" />
+                        )}
                         <span className={iconCircle}>
                           <Icon
                             size={14}
