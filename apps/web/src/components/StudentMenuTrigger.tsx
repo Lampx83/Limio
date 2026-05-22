@@ -29,7 +29,7 @@ export default function StudentMenuTrigger({
         type="button"
         onClick={dispatch}
         aria-label="Mở menu học viên"
-        className="fixed bottom-4 left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition-transform hover:scale-105"
+        className="fixed bottom-24 left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition-transform hover:scale-105"
       >
         <Menu size={18} />
       </button>
