@@ -1,4 +1,5 @@
 import { prisma } from "@feedbackme/db";
+import { LearningEventType } from "@feedbackme/shared-types";
 
 export type NotificationType =
   | "peer_review.assigned"
@@ -6,7 +7,27 @@ export type NotificationType =
   | "forum.reply"
   | "mission.passed"
   | "mission.failed"
-  | "badge.earned";
+  | "badge.earned"
+  | "level.up"
+  | "leaderboard.rank";
+
+export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
+  "peer_review.assigned": "Chấm bài",
+  "assignment.graded": "Bài tập",
+  "forum.reply": "Trả lời forum",
+  "mission.passed": "Mission",
+  "mission.failed": "Mission",
+  "badge.earned": "Huy hiệu",
+  "level.up": "Lên level",
+  "leaderboard.rank": "Xếp hạng",
+};
+
+const PERIOD_LABEL: Record<string, string> = {
+  daily: "hôm nay",
+  weekly: "tuần này",
+  monthly: "tháng này",
+  all_time: "tổng",
+};
 
 export type Notification = {
   id: string;
@@ -30,6 +51,7 @@ export async function getUserNotifications(
     forumReplies,
     missionResults,
     badges,
+    gamificationEvents,
   ] = await Promise.all([
     prisma.missionReviewAssignment.findMany({
       where: { reviewerId: userId, completedAt: null },
@@ -96,6 +118,28 @@ export async function getUserNotifications(
       orderBy: { earnedAt: "desc" },
       take: FETCH_LIMIT_PER_TYPE,
       include: { badge: { select: { name: true, code: true } } },
+    }),
+    // Gamification: level.up + leaderboard.updated emitted into LearningEvent
+    // by core-gamification — read directly (single-table query).
+    prisma.learningEvent.findMany({
+      where: {
+        userId,
+        eventType: {
+          in: [
+            LearningEventType.LevelUp,
+            LearningEventType.LeaderboardUpdated,
+          ],
+        },
+      },
+      orderBy: { occurredAt: "desc" },
+      take: FETCH_LIMIT_PER_TYPE * 2,
+      select: {
+        id: true,
+        eventType: true,
+        payload: true,
+        courseId: true,
+        occurredAt: true,
+      },
     }),
   ]);
 
@@ -168,6 +212,35 @@ export async function getUserNotifications(
     });
   }
 
+  for (const ev of gamificationEvents) {
+    const p = (ev.payload ?? {}) as Record<string, unknown>;
+    if (ev.eventType === LearningEventType.LevelUp) {
+      items.push({
+        id: `lv:${ev.id}`,
+        type: "level.up",
+        title: `Lên level ${p.toLevel ?? ""}`.trim(),
+        body: typeof p.levelName === "string" ? p.levelName : undefined,
+        link: ev.courseId ? `/learn?course=${ev.courseId}` : "/me/dashboard",
+        iconKey: "level_up",
+        createdAt: ev.occurredAt,
+      });
+    } else if (ev.eventType === LearningEventType.LeaderboardUpdated) {
+      const period = typeof p.period === "string" ? p.period : "";
+      const periodLabel = PERIOD_LABEL[period] ?? period;
+      const rank = typeof p.rank === "number" ? p.rank : null;
+      if (rank === null) continue;
+      items.push({
+        id: `lb:${ev.id}`,
+        type: "leaderboard.rank",
+        title: `Bạn xếp #${rank}${periodLabel ? ` ${periodLabel}` : ""}`,
+        body: p.scope === "course" ? "trong khoá học" : "bảng xếp hạng toàn cục",
+        link: "/leaderboard",
+        iconKey: "rank",
+        createdAt: ev.occurredAt,
+      });
+    }
+  }
+
   items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return items.slice(0, limit);
 }
@@ -181,7 +254,7 @@ export async function getUnreadCount(userId: string): Promise<number> {
 
   // We count source rows newer than lastSeen across types in parallel.
   // Bounded queries — index-friendly, returns small ints.
-  const [a, b, c, d, e] = await Promise.all([
+  const [a, b, c, d, e, f] = await Promise.all([
     prisma.missionReviewAssignment.count({
       where: { reviewerId: userId, completedAt: null, assignedAt: { gt: since } },
     }),
@@ -205,9 +278,21 @@ export async function getUnreadCount(userId: string): Promise<number> {
     prisma.userBadge.count({
       where: { userId, earnedAt: { gt: since } },
     }),
+    prisma.learningEvent.count({
+      where: {
+        userId,
+        eventType: {
+          in: [
+            LearningEventType.LevelUp,
+            LearningEventType.LeaderboardUpdated,
+          ],
+        },
+        occurredAt: { gt: since },
+      },
+    }),
   ]);
 
-  return a + b + c + d + e;
+  return a + b + c + d + e + f;
 }
 
 export async function markNotificationsSeen(userId: string): Promise<void> {

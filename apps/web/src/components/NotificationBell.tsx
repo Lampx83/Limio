@@ -10,6 +10,8 @@ import {
   Trophy,
   XCircle,
   Award,
+  TrendingUp,
+  ArrowUpRight,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
@@ -30,6 +32,8 @@ const ICON: Record<string, { Icon: typeof Bell; cls: string }> = {
   mission_ok:   { Icon: Trophy,       cls: "bg-success-50 text-success-700 dark:bg-success-950/40 dark:text-success-300" },
   mission_fail: { Icon: XCircle,      cls: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" },
   badge:        { Icon: Award,        cls: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300" },
+  level_up:     { Icon: ArrowUpRight, cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
+  rank:         { Icon: TrendingUp,   cls: "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300" },
 };
 
 function relative(iso: string): string {
