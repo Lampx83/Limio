@@ -34,6 +34,7 @@ export default function ClaimForm({
   const [email, setEmail] = useState("");
   const [studentCode, setStudentCode] = useState("");
   const [cohortCode, setCohortCode] = useState("");
+  const [roomCode, setRoomCode] = useState("");
   const [_hp, setHp] = useState("");
 
   const submitClaim = async (cohortId: string | null) => {
@@ -47,6 +48,7 @@ export default function ClaimForm({
         body.email = email.trim();
         if (studentCode.trim()) body.studentCode = studentCode.trim();
         if (cohortId) body.cohortId = cohortId;
+        if (roomCode.trim()) body.roomCode = roomCode.trim().toUpperCase();
       }
       const res = await fetch("/api/public/exam/claim-code", {
         method: "POST",
@@ -247,6 +249,15 @@ export default function ClaimForm({
             hint="Mã lớp do nhà trường cấp đầu kỳ. Để trống nếu không thuộc lớp nào."
             mono
           />
+          <Field
+            label="Mã phòng thi"
+            value={roomCode}
+            onChange={(v) => setRoomCode(v.toUpperCase())}
+            placeholder="A3K7"
+            maxLength={4}
+            hint="Mã 4 ký tự do giám thị công bố. Để trống nếu giám thị không thông báo."
+            mono
+          />
         </>
       )}
 
@@ -327,6 +338,7 @@ function humanizeError(code: string): string {
     attempt_already_submitted: "Bài thi đã được nộp trước đó.",
     rate_limited: "Quá nhiều lần thử. Vui lòng chờ vài phút rồi thử lại.",
     cohort_not_found: "Mã lớp không tồn tại. Kiểm tra lại với GV.",
+    invalid_room_code: "Mã phòng thi không đúng. Kiểm tra lại với giám thị.",
   };
   return map[code] ?? `Lỗi: ${code}`;
 }

@@ -927,6 +927,7 @@ export interface ExamRoomDetail {
   examTitle: string;
   examAccessMode: string;
   examStatus: string;
+  accessCode: string | null;
 }
 
 export async function getExamRoom(
@@ -944,6 +945,7 @@ export async function getExamRoom(
       proctorUserId: true,
       sessionId: true,
       examId: true,
+      accessCode: true,
       proctor: { select: { displayName: true } },
       session: {
         select: {
@@ -987,6 +989,7 @@ export async function getExamRoom(
     examTitle: r.exam.title,
     examAccessMode: r.session.accessMode,
     examStatus: r.exam.status,
+    accessCode: r.accessCode,
   };
 }
 

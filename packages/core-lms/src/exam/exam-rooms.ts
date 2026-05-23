@@ -15,6 +15,43 @@ import { assertCanEditCourse } from "../courses/authz";
 import { ExamError } from "./types";
 
 // ============================================================================
+// Room access code (cho thí sinh tự nhập khi join exam open_code)
+// ============================================================================
+
+// Cùng alphabet với openCode — bỏ 0/O/1/I/l để tránh nhầm.
+const ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+export function generateRoomCode(): string {
+  const buf = new Uint8Array(4);
+  crypto.getRandomValues(buf);
+  let s = "";
+  for (const b of buf) s += ROOM_CODE_ALPHABET[b % ROOM_CODE_ALPHABET.length];
+  return s;
+}
+
+/**
+ * Sinh mã phòng unique trong 1 sessionId. Retry tối đa 8 lần.
+ * 31^4 ≈ 920k combo nên collision cực hiếm; nếu vẫn cạn thì throw.
+ */
+export async function generateUniqueRoomCode(
+  sessionId: string,
+  db: PrismaClient,
+): Promise<string> {
+  for (let i = 0; i < 8; i++) {
+    const code = generateRoomCode();
+    const clash = await db.examRoom.findFirst({
+      where: { sessionId, accessCode: code },
+      select: { id: true },
+    });
+    if (!clash) return code;
+  }
+  throw new ExamError(
+    "validation_failed",
+    "room_code_generation_failed",
+  );
+}
+
+// ============================================================================
 // Schemas
 // ============================================================================
 
@@ -190,6 +227,7 @@ export async function createExamRoom(
   // routes (PR2+), tham số sẽ đổi thành sessionId trực tiếp.
   const sessionId = await ensureDefaultSession(examId, db);
   const orderIndex = await nextRoomOrderIndex(sessionId, db);
+  const accessCode = await generateUniqueRoomCode(sessionId, db);
 
   try {
     const room = await db.examRoom.create({
@@ -200,6 +238,7 @@ export async function createExamRoom(
         name: parsed.data.name,
         proctorUserId: parsed.data.proctorUserId,
         locationNote: parsed.data.locationNote ?? null,
+        accessCode,
         graders: {
           create: parsed.data.graderUserIds.map((userId) => ({ userId })),
         },
@@ -541,6 +580,7 @@ export async function bulkCreateExamRooms(
   let nextNum = 1;
   for (let i = 0; i < count; i++) {
     while (taken.has(`${prefix} ${nextNum}`)) nextNum++;
+    const accessCode = await generateUniqueRoomCode(sessionId, db);
     const room = await db.examRoom.create({
       data: {
         examId: session.examId,
@@ -549,6 +589,7 @@ export async function bulkCreateExamRooms(
         name: `${prefix} ${nextNum}`,
         proctorUserId: actorUserId,
         locationNote: null,
+        accessCode,
       },
       select: { id: true },
     });

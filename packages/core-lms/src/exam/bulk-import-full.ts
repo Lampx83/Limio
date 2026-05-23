@@ -12,6 +12,7 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { findOrInviteUserByEmail } from "../auth/invite";
 import { canEditExamRound } from "./exam-rounds";
+import { generateUniqueRoomCode } from "./exam-rooms";
 import { ExamError } from "./types";
 
 export interface FullImportRow {
@@ -222,6 +223,7 @@ export async function bulkImportRoundFull(
           where: { sessionId: session.id },
           _max: { orderIndex: true },
         });
+        const accessCode = await generateUniqueRoomCode(session.id, db);
         await db.examRoom.create({
           data: {
             sessionId: session.id,
@@ -231,6 +233,7 @@ export async function bulkImportRoundFull(
             proctorUserId,
             orderIndex: (maxOrder._max.orderIndex ?? 0) + 1,
             sourceRowNum: r.stt ?? null,
+            accessCode,
           },
         });
         result.roomsCreated++;

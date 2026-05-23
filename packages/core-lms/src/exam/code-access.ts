@@ -64,6 +64,10 @@ interface OpenClaimInput {
   class?: string;
   // PR2.12 — Resolved cohortId từ preview step (frontend đã verify mã lớp).
   cohortId?: string;
+  // Mã phòng thi 4 ký tự (tuỳ chọn). Nếu nhập đúng → candidate được tự gán
+  // vào phòng đó; sai mã → throw invalid_room_code; bỏ trống → roomId=null
+  // và instructor sẽ assign sau.
+  roomCode?: string;
 }
 
 function normaliseName(raw: unknown): string {
@@ -195,6 +199,18 @@ export async function claimByOpenCode(
   const sessionId =
     resolvedSessionId ?? (await ensureDefaultSession(exam.id, db));
 
+  // Resolve room từ mã phòng (nếu thí sinh nhập). Sai mã → reject hẳn để
+  // tránh ai đó gõ bừa rồi bị xếp vào phòng không đúng.
+  let resolvedRoomId: string | null = null;
+  if (input.roomCode) {
+    const room = await db.examRoom.findFirst({
+      where: { sessionId, accessCode: input.roomCode },
+      select: { id: true },
+    });
+    if (!room) throw new ExamError("invalid_code", "invalid_room_code");
+    resolvedRoomId = room.id;
+  }
+
   const { candidateId, attemptId, sessionToken } = await (db as typeof prisma).$transaction(
     async (tx) => {
       const c = await tx.examCandidate.create({
@@ -202,6 +218,7 @@ export async function claimByOpenCode(
           examId: exam.id,
           sessionId,
           cohortId: resolvedCohortId,
+          roomId: resolvedRoomId,
           displayName: input.displayName,
           metadata: {
             phone: input.phone,
@@ -291,6 +308,10 @@ function parseOpenInput(raw: unknown): OpenClaimInput {
     cohortId:
       typeof r.cohortId === "string" && r.cohortId.trim().length > 0
         ? r.cohortId.trim()
+        : undefined,
+    roomCode:
+      typeof r.roomCode === "string" && r.roomCode.trim().length > 0
+        ? r.roomCode.trim().toUpperCase()
         : undefined,
   };
 }

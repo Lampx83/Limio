@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BookOpen, Eye, MapPin, Monitor, Printer, Tag } from "lucide-react";
+import { BookOpen, Eye, KeyRound, MapPin, Monitor, Printer, Tag } from "lucide-react";
 import {
   ExamError,
   canEditExamRound,
@@ -91,6 +91,14 @@ export default async function ExamRoomDetailPage({
               </>
             )}
           </div>
+          {room.accessCode && room.examAccessMode === "open_code" && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm">
+              <KeyRound className="h-4 w-4 shrink-0 text-blue-700" />
+              <span className="text-blue-900">Mã phòng cho thí sinh:</span>
+              <code className="rounded bg-white px-2 py-0.5 font-mono text-base font-bold tracking-widest text-blue-900">{room.accessCode}</code>
+              <span className="text-xs text-blue-700">Thí sinh nhập mã này khi join để được tự gán vào phòng</span>
+            </div>
+          )}
         </div>
         {candidates.length > 0 && (
           <div className="flex flex-wrap gap-2">

@@ -2506,6 +2506,10 @@ model ExamRoom {
   sourceRowNum  Int?
   // Future: per-room IP allowlist. Empty = inherit exam-level rule.
   ipAllowlist   String[] @default([])
+  // Mã phòng thi 4 ký tự cho thí sinh tự nhập khi join (mode open_code).
+  // Sinh tự động khi tạo phòng. Nullable để rooms tạo trước feature này
+  // không vỡ. Unique trong cùng 1 ExamSession.
+  accessCode    String?  @db.VarChar(4)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -2516,6 +2520,7 @@ model ExamRoom {
   candidates ExamCandidate[]
 
   @@unique([examId, name])
+  @@unique([sessionId, accessCode])
   @@index([examId])
   @@index([sessionId])
   @@index([proctorUserId])
