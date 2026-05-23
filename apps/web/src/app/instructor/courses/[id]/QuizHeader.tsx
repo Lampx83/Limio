@@ -110,14 +110,25 @@ export function QuizEditForm({
   const [difficulty, setDifficulty] = useState(quiz.difficulty ?? 1);
   const [passThresholdPct, setPassThresholdPct] = useState(quiz.passThresholdPct);
   const [requireConfidence, setRequireConfidence] = useState(quiz.requireConfidence);
+  const [timeLimitEnabled, setTimeLimitEnabled] = useState(quiz.timeLimitSec !== null);
+  const [timeLimitMin, setTimeLimitMin] = useState(
+    quiz.timeLimitSec !== null ? Math.max(1, Math.round(quiz.timeLimitSec / 60)) : 15,
+  );
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    const timeLimitSec = timeLimitEnabled ? Math.max(1, timeLimitMin) * 60 : null;
     const res = await fetch(apiUrl(`/api/quizzes/${quiz.id}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, difficulty, passThresholdPct, requireConfidence }),
+      body: JSON.stringify({
+        title,
+        difficulty,
+        passThresholdPct,
+        requireConfidence,
+        timeLimitSec,
+      }),
     });
     setBusy(false);
     if (res.ok) {
@@ -166,6 +177,28 @@ export function QuizEditForm({
           />
           <span>Yêu cầu đánh giá độ tự tin</span>
         </label>
+        <label className="flex items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={timeLimitEnabled}
+            onChange={(e) => setTimeLimitEnabled(e.target.checked)}
+            className="h-4 w-4 rounded border-token accent-brand-600"
+          />
+          <span>Giới hạn thời gian</span>
+        </label>
+        {timeLimitEnabled && (
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="number"
+              min={1}
+              max={1440}
+              value={timeLimitMin}
+              onChange={(e) => setTimeLimitMin(Number(e.target.value))}
+              className="input w-16"
+            />
+            <span className="text-muted">phút</span>
+          </label>
+        )}
       </div>
       <div className="flex gap-2">
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
