@@ -95,8 +95,26 @@ export default function SessionsPanel({
     return null;
   };
 
+  const noExams = availableExams.length === 0;
+
   return (
     <div className="space-y-5">
+      {canEdit && noExams && (
+        <div className="banner-warning flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <span>
+              Khoá <strong>{course.courseTitle}</strong> chưa có đề thi nào. Cần tạo ít nhất 1 đề trước khi thêm ca thi.
+            </span>
+          </div>
+          <Link
+            href={`/instructor/exams/new?courseId=${course.courseId}`}
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            Tạo đề thi →
+          </Link>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-faint">
           {sessions.length} ca thi trong đợt · <Tag className="inline h-3.5 w-3.5 align-text-bottom text-slate-400" /> {course.courseTitle}.
