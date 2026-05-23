@@ -214,47 +214,219 @@ export default function QuizPlayer({
   }
 
   return (
-    <div>
-      {/* Sticky header strip — title + timer + submit + question palette */}
-      <div className="sticky top-0 z-30 -mx-4 mb-4 border-b border-token bg-[rgb(var(--surface))/0.95] px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface))/0.8]">
-        <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="truncate text-lg font-semibold leading-tight">
-              {quiz.title}
-            </h1>
-            <p className="text-xs text-faint">
-              Đã trả lời{" "}
-              <span className="font-semibold text-[rgb(var(--text))]">
-                {answeredCount}/{quiz.questions.length}
-              </span>
-            </p>
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
+      {/* LEFT — question content */}
+      <div className="min-w-0">
+        {/* Title (mobile only — desktop puts it in right panel) */}
+        <header className="mb-4 lg:hidden">
+          <h1 className="text-xl font-semibold leading-tight">{quiz.title}</h1>
+          <p className="mt-1 text-xs text-faint">
+            Đã trả lời{" "}
+            <span className="font-semibold text-[rgb(var(--text))]">
+              {answeredCount}/{quiz.questions.length}
+            </span>
+          </p>
+        </header>
+
+        {error && (
+          <div className="mb-3 rounded border border-danger-200 bg-danger-50 p-3 text-sm text-danger-700">
+            Lỗi: {error}
           </div>
-          <div className="flex items-center gap-3">
-            {remainingSec !== null && (
-              <span
-                className={`rounded px-3 py-1 font-mono text-lg tabular-nums ${
-                  timerDanger
-                    ? "bg-danger-100 text-danger-700 ring-2 ring-danger-300"
-                    : "bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))]"
-                }`}
-                aria-label="Thời gian còn lại"
-              >
-                {String(minutes).padStart(2, "0")}:
-                {String(seconds).padStart(2, "0")}
+        )}
+
+        {/* Current question */}
+        {currentQ && (
+          <section className="card">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700">
+                  {currentStepIndex + 1}
+                </span>
+                <span className="chip">
+                  {TYPE_LABEL[currentQ.type] ?? currentQ.type}
+                </span>
+              </div>
+              <span className="text-xs font-medium text-faint">
+                {currentQ.points} điểm
               </span>
+            </div>
+            <SafeHtml
+              html={plainToRichHtml(currentQ.prompt)}
+              className="prose prose-base mt-3 max-w-none leading-relaxed dark:prose-invert"
+            />
+            <div className="mt-4">
+              <QuestionInput
+                question={currentQ}
+                answer={answers[currentQ.id]}
+                onChange={(r) => setResponse(currentQ.id, r)}
+                onBlur={() => saveAnswer(currentQ)}
+              />
+            </div>
+            {quiz.requireConfidence && (
+              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-token pt-4">
+                <span className="text-xs font-medium text-muted">
+                  Độ tự tin:
+                </span>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => {
+                        setConfidence(currentQ.id, n);
+                        setTimeout(() => saveAnswer(currentQ), 0);
+                      }}
+                      className={`h-8 w-8 rounded-lg text-xs font-semibold transition-all ${
+                        answers[currentQ.id]?.confidence === n
+                          ? "bg-brand-600 text-white shadow-sm"
+                          : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-brand-soft hover:text-brand-700"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs text-faint">
+                  1 = đoán · 5 = chắc chắn
+                </span>
+              </div>
             )}
+          </section>
+        )}
+
+        {/* Bottom step nav */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-3">
+          <button
+            type="button"
+            onClick={() => jumpTo(currentStepIndex - 1)}
+            disabled={isFirst}
+            className="btn-ghost btn-sm disabled:opacity-40"
+          >
+            ← Câu trước
+          </button>
+          <span className="text-sm text-muted tabular-nums">
+            Câu {currentStepIndex + 1}/{quiz.questions.length}
+          </span>
+          {isLast ? (
             <button
               type="button"
               onClick={onSubmit}
               disabled={submitting}
               className="btn-primary btn-sm"
             >
-              {submitting ? "Đang nộp…" : "Nộp bài"}
+              {submitting ? "Đang nộp…" : "Nộp bài →"}
             </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => jumpTo(currentStepIndex + 1)}
+              className="btn-primary btn-sm"
+            >
+              Câu sau →
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* RIGHT — sticky info panel (desktop only) */}
+      <aside className="hidden lg:block">
+        <div className="sticky top-20 space-y-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm">
+          <div>
+            <h1 className="text-base font-semibold leading-snug">
+              {quiz.title}
+            </h1>
+            <p className="mt-1 text-xs text-faint">
+              {quiz.questions.length} câu ·{" "}
+              <span className="font-semibold text-[rgb(var(--text))]">
+                {answeredCount} đã trả lời
+              </span>
+            </p>
           </div>
-        </header>
-        {/* Question palette */}
-        <div className="flex flex-wrap gap-1.5">
+
+          {remainingSec !== null && (
+            <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                Thời gian còn lại
+              </p>
+              <p
+                className={`mt-1 font-mono text-2xl font-bold tabular-nums ${
+                  timerDanger ? "text-danger-600" : "text-[rgb(var(--text))]"
+                }`}
+              >
+                {String(minutes).padStart(2, "0")}:
+                {String(seconds).padStart(2, "0")}
+              </p>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-faint">
+              Bản đồ câu hỏi
+            </p>
+            <div className="grid grid-cols-6 gap-1.5">
+              {quiz.questions.map((q, idx) => {
+                const answered = !isResponseEmpty(
+                  q,
+                  answers[q.id]?.response ?? null,
+                );
+                const isCurrent = idx === currentStepIndex;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => jumpTo(idx)}
+                    className={`flex h-9 items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors ${
+                      isCurrent
+                        ? "bg-brand-600 text-white ring-2 ring-brand-300"
+                        : answered
+                          ? "bg-brand-soft text-brand-700 hover:bg-brand-100"
+                          : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-base-100"
+                    }`}
+                    aria-label={`Câu ${idx + 1}${answered ? " (đã trả lời)" : ""}`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting}
+            className="btn-primary w-full"
+          >
+            {submitting ? "Đang nộp…" : "Nộp bài"}
+          </button>
+        </div>
+      </aside>
+
+      {/* MOBILE — sticky bottom strip with timer + palette + submit */}
+      <div className="sticky bottom-0 left-0 right-0 z-30 -mx-4 mt-4 border-t border-token bg-[rgb(var(--surface))/0.95] px-4 py-3 backdrop-blur lg:hidden">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          {remainingSec !== null && (
+            <span
+              className={`rounded px-2 py-1 font-mono text-sm tabular-nums ${
+                timerDanger
+                  ? "bg-danger-100 text-danger-700"
+                  : "bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))]"
+              }`}
+            >
+              {String(minutes).padStart(2, "0")}:
+              {String(seconds).padStart(2, "0")}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting}
+            className="btn-primary btn-sm ml-auto"
+          >
+            {submitting ? "Đang nộp…" : "Nộp bài"}
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-1">
           {quiz.questions.map((q, idx) => {
             const answered = !isResponseEmpty(
               q,
@@ -266,115 +438,19 @@ export default function QuizPlayer({
                 key={q.id}
                 type="button"
                 onClick={() => jumpTo(idx)}
-                className={`flex h-8 w-8 items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors ${
+                className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold tabular-nums ${
                   isCurrent
-                    ? "bg-brand-600 text-white ring-2 ring-brand-300"
+                    ? "bg-brand-600 text-white"
                     : answered
-                      ? "bg-brand-soft text-brand-700 hover:bg-brand-100"
-                      : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-base-100"
+                      ? "bg-brand-soft text-brand-700"
+                      : "bg-[rgb(var(--surface-muted))] text-muted"
                 }`}
-                aria-label={`Câu ${idx + 1}${answered ? " (đã trả lời)" : ""}`}
               >
                 {idx + 1}
               </button>
             );
           })}
         </div>
-      </div>
-
-      {error && (
-        <div className="mb-3 rounded border border-danger-200 bg-danger-50 p-3 text-sm text-danger-700">
-          Lỗi: {error}
-        </div>
-      )}
-
-      {/* Current question */}
-      {currentQ && (
-        <section className="card">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700">
-                {currentStepIndex + 1}
-              </span>
-              <span className="chip">
-                {TYPE_LABEL[currentQ.type] ?? currentQ.type}
-              </span>
-            </div>
-            <span className="text-xs font-medium text-faint">
-              {currentQ.points} điểm
-            </span>
-          </div>
-          <SafeHtml
-            html={plainToRichHtml(currentQ.prompt)}
-            className="prose prose-base mt-3 max-w-none leading-relaxed dark:prose-invert"
-          />
-          <div className="mt-4">
-            <QuestionInput
-              question={currentQ}
-              answer={answers[currentQ.id]}
-              onChange={(r) => setResponse(currentQ.id, r)}
-              onBlur={() => saveAnswer(currentQ)}
-            />
-          </div>
-          {quiz.requireConfidence && (
-            <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-token pt-4">
-              <span className="text-xs font-medium text-muted">Độ tự tin:</span>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => {
-                      setConfidence(currentQ.id, n);
-                      setTimeout(() => saveAnswer(currentQ), 0);
-                    }}
-                    className={`h-8 w-8 rounded-lg text-xs font-semibold transition-all ${
-                      answers[currentQ.id]?.confidence === n
-                        ? "bg-brand-600 text-white shadow-sm"
-                        : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-brand-soft hover:text-brand-700"
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-              <span className="text-xs text-faint">1 = đoán · 5 = chắc chắn</span>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Bottom step nav */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-3">
-        <button
-          type="button"
-          onClick={() => jumpTo(currentStepIndex - 1)}
-          disabled={isFirst}
-          className="btn-ghost btn-sm disabled:opacity-40"
-        >
-          ← Câu trước
-        </button>
-        <span className="text-sm text-muted tabular-nums">
-          Câu {currentStepIndex + 1}/{quiz.questions.length}
-        </span>
-        {isLast ? (
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={submitting}
-            className="btn-primary btn-sm"
-          >
-            {submitting ? "Đang nộp…" : "Nộp bài →"}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => jumpTo(currentStepIndex + 1)}
-            className="btn-primary btn-sm"
-          >
-            Câu sau →
-          </button>
-        )}
       </div>
     </div>
   );

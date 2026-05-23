@@ -78,7 +78,7 @@ export default async function QuizPage({
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6">
+    <main className="mx-auto max-w-[1500px] px-4 py-6 lg:px-8">
       <Link
         href={`/learn/${params.slug}`}
         className="link inline-flex items-center gap-1 text-sm"
