@@ -109,7 +109,7 @@ describe("publishExam (A7.1.2)", () => {
     });
   });
 
-  it("rejects when question has no skill tag", async () => {
+  it("publishes when question has no skill tag (skill-tag requirement removed)", async () => {
     const { ownerId, courseId } = await newOwner("p2");
     const { examId } = await createExam(ownerId, courseId, validExamInput());
     await prisma.examQuestion.create({
@@ -122,9 +122,9 @@ describe("publishExam (A7.1.2)", () => {
         orderInExam: 0,
       },
     });
-    await expect(publishExam(ownerId, examId)).rejects.toMatchObject({
-      code: "exam_not_publishable",
-    });
+    await publishExam(ownerId, examId);
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(exam.status).toBe("published");
   });
 
   it("publishes when validation passes; emits exam.published", async () => {

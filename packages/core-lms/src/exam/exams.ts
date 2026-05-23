@@ -278,7 +278,6 @@ export async function publishExam(
         select: {
           id: true,
           points: true,
-          _count: { select: { skillTags: true } },
         },
       },
     },
@@ -291,11 +290,6 @@ export async function publishExam(
   for (const p of full.passages) {
     if (p._count.questions === 0) {
       errors.push(`passage ${p.id} has no questions`);
-    }
-  }
-  for (const q of full.questions) {
-    if (q._count.skillTags === 0) {
-      errors.push(`question ${q.id} has no skill tags`);
     }
   }
   if (full.openAt >= full.closeAt) errors.push("openAt must be before closeAt");

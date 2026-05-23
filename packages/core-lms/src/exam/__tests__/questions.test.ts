@@ -189,7 +189,7 @@ describe("createExamQuestion (A7.3.1)", () => {
     expect(q.orderInPassage).toBeNull();
   });
 
-  it("A7.3.3 — saves without skillTags but publishExam rejects", async () => {
+  it("A7.3.3 — saves without skillTags and publishExam succeeds (skill-tag requirement removed)", async () => {
     const { ownerId, courseId } = await newOwner("c9");
     const { examId } = await createExam(ownerId, courseId, validExam());
     await createExamQuestion(ownerId, examId, {
@@ -197,9 +197,9 @@ describe("createExamQuestion (A7.3.1)", () => {
       prompt: "No skill",
       config: mcqConfig(),
     });
-    await expect(publishExam(ownerId, examId)).rejects.toMatchObject({
-      code: "exam_not_publishable",
-    });
+    await publishExam(ownerId, examId);
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(exam.status).toBe("published");
   });
 
   it("rejects matching_heading in P0", async () => {
