@@ -37,6 +37,26 @@ export default async function PrintRoundRoomCodesPage({
   if (!round) notFound();
   if (!(await canViewExamRound(userId, round.id))) notFound();
 
+  // Mã lớp thi & mã lớp học: liên kết theo CohortExamClass.code = Room.name
+  // (theo workflow bulk-import-full hiện tại). Lookup 1 lần cho cả round.
+  const examClasses = await prisma.cohortExamClass.findMany({
+    where: { courseId: round.course.id },
+    select: {
+      code: true,
+      cohort: { select: { name: true, code: true } },
+    },
+  });
+  const examClassByCode = new Map(
+    examClasses.map((ec) => [
+      ec.code,
+      {
+        examClassCode: ec.code,
+        cohortName: ec.cohort.name,
+        cohortCode: ec.cohort.code,
+      },
+    ]),
+  );
+
   const sessions = await prisma.examSession.findMany({
     where: { roundId: round.id },
     orderBy: [{ opensAt: "asc" }, { createdAt: "asc" }],
@@ -88,6 +108,10 @@ export default async function PrintRoundRoomCodesPage({
         locationNote: r.locationNote,
         proctorName: r.proctor.displayName,
         candidateCount: r._count.candidates,
+        // Mã lớp thi = Room.name nếu match CohortExamClass; mã lớp học = cohort.code
+        examClassCode: examClassByCode.get(r.name)?.examClassCode ?? null,
+        cohortName: examClassByCode.get(r.name)?.cohortName ?? null,
+        cohortCode: examClassByCode.get(r.name)?.cohortCode ?? null,
       },
     })),
   );
@@ -203,33 +227,66 @@ export default async function PrintRoundRoomCodesPage({
                     {formatDate(s.opensAt)} → {formatDate(s.closesAt)}
                   </Row>
                   <Row label="Giám thị">{r.proctorName}</Row>
-                  {r.locationNote && (
-                    <Row label="Địa điểm">{r.locationNote}</Row>
-                  )}
+                  <Row label="Địa điểm">
+                    {r.locationNote ?? <span className="text-slate-400">—</span>}
+                  </Row>
+                  <Row label="Thời gian thi">
+                    {formatDate(s.opensAt)} → {formatDate(s.closesAt)}
+                  </Row>
+                  <Row label="Mã lớp thi">
+                    {r.examClassCode ? (
+                      <span className="font-mono">{r.examClassCode}</span>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </Row>
+                  <Row label="Mã lớp học">
+                    {r.cohortCode ? (
+                      <>
+                        <span className="font-mono">{r.cohortCode}</span>
+                        {r.cohortName && (
+                          <span className="ml-1 text-slate-500">({r.cohortName})</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </Row>
                   <Row label="Số TS dự kiến">
                     {r.candidateCount > 0 ? `${r.candidateCount} thí sinh` : "—"}
                   </Row>
                 </tbody>
               </table>
 
-              {/* Hướng dẫn ngắn cho giám thị đọc cho thí sinh */}
+              {/* Hướng dẫn 5 bước cho giám thị tiến hành buổi thi */}
               <div className="mt-3 rounded border border-slate-300 bg-slate-50 p-2 text-[10px] leading-relaxed text-slate-700">
                 <div className="mb-1 font-semibold text-slate-900">
-                  Hướng dẫn đọc cho thí sinh:
+                  Hướng dẫn giám thị tiến hành thi:
                 </div>
                 <ol className="list-decimal space-y-0.5 pl-4">
                   <li>
-                    Mở trình duyệt, truy cập:{" "}
-                    <span className="font-mono">limio.vn/exam/{s.openCode ?? "<mã-ca-thi>"}</span>
+                    Giám thị mở{" "}
+                    <span className="font-mono font-semibold">limio.vn/thi</span>
+                    {" "}trên máy chiếu / máy giám thị.
                   </li>
-                  <li>Nhập họ tên, mã sinh viên, email, số điện thoại.</li>
+                  <li>Gọi thí sinh vào phòng theo danh sách, ổn định chỗ ngồi.</li>
                   <li>
-                    Tại ô <em>"Mã phòng thi"</em> nhập:{" "}
+                    Đến giờ thi, yêu cầu thí sinh tự nhập{" "}
+                    <strong>Mã dự thi</strong> ghi trên phiếu này (mã ca thi:{" "}
+                    <span className="font-mono font-bold">{s.openCode ?? "—"}</span>).
+                  </li>
+                  <li>
+                    Thí sinh nhập đầy đủ thông tin cá nhân, bao gồm{" "}
+                    <strong>Mã phòng thi</strong>:{" "}
                     <span className="font-mono font-bold">
                       {r.accessCode ?? "(không có — bỏ trống)"}
-                    </span>
+                    </span>.
                   </li>
-                  <li>Bấm "Bắt đầu thi" và làm bài.</li>
+                  <li>
+                    Bấm "Bắt đầu thi" và làm bài.{" "}
+                    <strong>Nhắc thí sinh KHÔNG chuyển tab, KHÔNG tắt trình duyệt</strong>{" "}
+                    — hệ thống ghi nhận toàn bộ hành vi và sẽ cảnh báo / đánh dấu vi phạm.
+                  </li>
                 </ol>
               </div>
 
