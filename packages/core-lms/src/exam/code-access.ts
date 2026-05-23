@@ -199,8 +199,10 @@ export async function claimByOpenCode(
   const sessionId =
     resolvedSessionId ?? (await ensureDefaultSession(exam.id, db));
 
-  // Resolve room từ mã phòng (nếu thí sinh nhập). Sai mã → reject hẳn để
-  // tránh ai đó gõ bừa rồi bị xếp vào phòng không đúng.
+  // Resolve room:
+  //   - Nhập mã phòng → lookup theo (sessionId, accessCode). Sai → reject.
+  //   - Bỏ trống → fallback sang phòng default của ca thi (nếu có).
+  //   - Ca thi chưa có phòng → roomId=null, instructor assign sau.
   let resolvedRoomId: string | null = null;
   if (input.roomCode) {
     const room = await db.examRoom.findFirst({
@@ -209,6 +211,12 @@ export async function claimByOpenCode(
     });
     if (!room) throw new ExamError("invalid_code", "invalid_room_code");
     resolvedRoomId = room.id;
+  } else {
+    const defaultRoom = await db.examRoom.findFirst({
+      where: { sessionId, isDefault: true },
+      select: { id: true },
+    });
+    resolvedRoomId = defaultRoom?.id ?? null;
   }
 
   const { candidateId, attemptId, sessionToken } = await (db as typeof prisma).$transaction(

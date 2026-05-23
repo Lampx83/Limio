@@ -228,6 +228,13 @@ export async function createExamRoom(
   const sessionId = await ensureDefaultSession(examId, db);
   const orderIndex = await nextRoomOrderIndex(sessionId, db);
   const accessCode = await generateUniqueRoomCode(sessionId, db);
+  // Phòng đầu tiên trong session tự động làm default — thí sinh không nhập
+  // mã phòng sẽ rơi vào đây.
+  const existingDefault = await db.examRoom.findFirst({
+    where: { sessionId, isDefault: true },
+    select: { id: true },
+  });
+  const isDefault = !existingDefault;
 
   try {
     const room = await db.examRoom.create({
@@ -239,6 +246,7 @@ export async function createExamRoom(
         proctorUserId: parsed.data.proctorUserId,
         locationNote: parsed.data.locationNote ?? null,
         accessCode,
+        isDefault,
         graders: {
           create: parsed.data.graderUserIds.map((userId) => ({ userId })),
         },
@@ -380,6 +388,40 @@ export async function deleteExamRoom(
   await assertCanEditCourse(actorUserId, room.exam.courseId, db);
   // FK on candidate.roomId is SET NULL — candidates survive, just unassigned.
   await db.examRoom.delete({ where: { id: roomId } });
+}
+
+/**
+ * Đặt 1 phòng làm phòng mặc định của ca thi nó thuộc. Atomically clear cờ
+ * isDefault ở các phòng anh em trong cùng session trước, rồi set cho phòng
+ * này — partial unique index sẽ chặn race. Idempotent: gọi lại trên phòng
+ * đã default trả nguyên trạng.
+ */
+export async function setRoomAsDefault(
+  actorUserId: string,
+  roomId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const room = await db.examRoom.findUnique({
+    where: { id: roomId },
+    select: {
+      sessionId: true,
+      isDefault: true,
+      exam: { select: { courseId: true } },
+    },
+  });
+  if (!room) throw new ExamError("validation_failed", { reason: "room_not_found" });
+  await assertCanEditCourse(actorUserId, room.exam.courseId, db);
+  if (room.isDefault) return;
+  await (db as typeof prisma).$transaction([
+    db.examRoom.updateMany({
+      where: { sessionId: room.sessionId, isDefault: true },
+      data: { isDefault: false },
+    }),
+    db.examRoom.update({
+      where: { id: roomId },
+      data: { isDefault: true },
+    }),
+  ]);
 }
 
 // ============================================================================
@@ -574,6 +616,14 @@ export async function bulkCreateExamRooms(
   });
   const taken = new Set(existing.map((r) => r.name));
 
+  // Check once: session đã có default chưa? Nếu chưa, phòng đầu tiên trong
+  // bulk này sẽ làm default.
+  const hasDefault = await db.examRoom.findFirst({
+    where: { sessionId, isDefault: true },
+    select: { id: true },
+  });
+  let needsDefault = !hasDefault;
+
   // Generate names skipping taken ones, e.g. if "Phòng 1" exists go straight
   // to "Phòng 2". This makes re-runs idempotent-feeling.
   const created: string[] = [];
@@ -590,9 +640,11 @@ export async function bulkCreateExamRooms(
         proctorUserId: actorUserId,
         locationNote: null,
         accessCode,
+        isDefault: needsDefault,
       },
       select: { id: true },
     });
+    if (needsDefault) needsDefault = false;
     created.push(room.id);
     taken.add(`${prefix} ${nextNum}`);
     nextNum++;

@@ -224,6 +224,10 @@ export async function bulkImportRoundFull(
           _max: { orderIndex: true },
         });
         const accessCode = await generateUniqueRoomCode(session.id, db);
+        const hasDefault = await db.examRoom.findFirst({
+          where: { sessionId: session.id, isDefault: true },
+          select: { id: true },
+        });
         await db.examRoom.create({
           data: {
             sessionId: session.id,
@@ -234,6 +238,7 @@ export async function bulkImportRoundFull(
             orderIndex: (maxOrder._max.orderIndex ?? 0) + 1,
             sourceRowNum: r.stt ?? null,
             accessCode,
+            isDefault: !hasDefault,
           },
         });
         result.roomsCreated++;

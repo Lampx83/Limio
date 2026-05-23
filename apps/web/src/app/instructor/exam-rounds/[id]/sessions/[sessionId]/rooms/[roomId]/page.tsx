@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BookOpen, Eye, KeyRound, MapPin, Monitor, Printer, Tag } from "lucide-react";
+import { BookOpen, Eye, KeyRound, MapPin, Monitor, Printer, Star, Tag } from "lucide-react";
+import SetDefaultRoomButton from "./SetDefaultRoomButton";
 import {
   ExamError,
   canEditExamRound,
@@ -77,6 +78,11 @@ export default async function ExamRoomDetailPage({
               STT {room.orderIndex}
             </span>
             <h1 className="text-2xl font-bold">{room.name}</h1>
+            {room.isDefault && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800" title="Thí sinh không nhập mã phòng sẽ tự gán vào đây">
+                <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> Phòng mặc định
+              </span>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-faint">
             <span className="inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 shrink-0 text-slate-400" />{room.examTitle}</span>
@@ -97,6 +103,11 @@ export default async function ExamRoomDetailPage({
               <span className="text-blue-900">Mã phòng cho thí sinh:</span>
               <code className="rounded bg-white px-2 py-0.5 font-mono text-base font-bold tracking-widest text-blue-900">{room.accessCode}</code>
               <span className="text-xs text-blue-700">Thí sinh nhập mã này khi join để được tự gán vào phòng</span>
+            </div>
+          )}
+          {canEdit && !room.isDefault && (
+            <div className="mt-2">
+              <SetDefaultRoomButton roomId={room.id} />
             </div>
           )}
         </div>

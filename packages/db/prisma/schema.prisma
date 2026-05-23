@@ -2510,6 +2510,9 @@ model ExamRoom {
   // Sinh tự động khi tạo phòng. Nullable để rooms tạo trước feature này
   // không vỡ. Unique trong cùng 1 ExamSession.
   accessCode    String?  @db.VarChar(4)
+  // Phòng mặc định cho ca thi — thí sinh không nhập mã phòng sẽ auto-assign
+  // vào đây. Partial unique index (chỉ 1 default/session) tạo trong migration.
+  isDefault     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
