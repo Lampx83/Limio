@@ -187,7 +187,7 @@ export default async function ShowcasePage({
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <Link
         href={`/tournaments/${params.id}`}
         className="link inline-flex items-center gap-1 text-sm"

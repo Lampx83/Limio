@@ -32,7 +32,7 @@ export default async function ReviewDetailPage({
   if (!ra) notFound();
   if (ra.reviewerId !== userId) {
     return (
-      <main className="mx-auto max-w-2xl px-6 py-12 text-sm text-muted">
+      <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 text-sm text-muted">
         Bạn không có quyền xem review này.
       </main>
     );
@@ -42,7 +42,7 @@ export default async function ReviewDetailPage({
   const payload = ra.submission.payload as { artifactMarkdown?: string; url?: string } | null;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <Link href="/me/reviews" className="link text-sm">← Hàng đợi review</Link>
       <h1 className="mt-3 h-display text-2xl font-bold">
         {ra.submission.mission.title}

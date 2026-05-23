@@ -29,7 +29,7 @@ export default async function PeerReviewQueuePage() {
   });
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <h1 className="h-display text-2xl font-bold sm:text-3xl">Hàng đợi review</h1>
       <p className="mt-1 text-sm text-muted">
         Bài bạn được phân công chấm. XP reviewer được award sau khi window đóng.

@@ -61,7 +61,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
   const continueLabel = enrollment.lastLessonId ? "Tiếp tục" : adaptiveNext ? "Đề xuất" : null;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 pb-28 lg:pb-10">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
       {/* Breadcrumb */}
       <Link
         href={`/catalog/${params.slug}`}

@@ -43,7 +43,7 @@ export default async function ThreadPage({
   const isResolvedThread = !!thread.resolvedPostId;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 pb-32">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-32">
       <Link
         href={`/learn/${params.slug}/lessons/${thread.lesson.id}`}
         className="link inline-flex items-center gap-1 text-sm"

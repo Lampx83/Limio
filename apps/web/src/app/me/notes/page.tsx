@@ -42,7 +42,7 @@ export default async function MyNotesPage({
   ]);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <header className="flex items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
           <Pencil size={18} strokeWidth={2.5} />

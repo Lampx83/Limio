@@ -169,7 +169,7 @@ export default async function TournamentDetailPage({
       : "from-amber-600 via-orange-500 to-rose-500";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* ── HERO BANNER ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className={`absolute inset-0 bg-gradient-to-br ${heroGradient}`} />

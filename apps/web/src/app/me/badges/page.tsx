@@ -23,7 +23,7 @@ export default async function BadgesPage() {
     totalAvailable === 0 ? 0 : Math.round((earned.length / totalAvailable) * 100);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <div>
         <span className="chip-accent">Gamification</span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">

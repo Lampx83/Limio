@@ -68,7 +68,7 @@ export default async function CatalogPage({
     activeChips.push({ label: searchParams.category, clearHref: baseParams("category") });
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12 pb-24 lg:pb-12">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-24 lg:pb-12">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

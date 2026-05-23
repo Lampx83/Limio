@@ -78,7 +78,7 @@ export default async function LearnerDashboard() {
   const completedLessons = progressByCourse.reduce((s, p) => s + p.completedLessons, 0);
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       {/* Greeting */}
       <header>
         <span className="chip-brand">Học viên</span>

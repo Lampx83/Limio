@@ -28,7 +28,7 @@ export default async function ExamResultPage({
   const pct = result.scorePct ?? null;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <h1 className="mb-2 text-2xl font-semibold">{result.examTitle}</h1>
       <p className="mb-6 text-sm text-faint">
         Trạng thái:{" "}

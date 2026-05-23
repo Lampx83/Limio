@@ -24,7 +24,7 @@ export default async function SettingsPage() {
   const hasPassword = me.authProviders.some((p) => p.provider === "password");
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <div>
         <span className="chip-brand">Tài khoản</span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">Cài đặt</h1>

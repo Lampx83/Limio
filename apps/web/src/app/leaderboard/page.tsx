@@ -68,7 +68,7 @@ export default async function LeaderboardPage({
   const podium = [top3[1], top3[0], top3[2]];
 
   return (
-    <main className="relative mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 relative">
       {/* Decorative gradient blobs */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
         <div className="mx-auto h-64 max-w-3xl rounded-full bg-gradient-to-r from-amber-200/40 via-brand-200/40 to-accent-200/40 blur-3xl" />

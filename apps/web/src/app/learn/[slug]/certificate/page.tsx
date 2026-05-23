@@ -30,7 +30,7 @@ export default async function CertificatePage({
   const progress = await getCourseProgress(userId, course.id);
   if (progress.courseCompletionPct < 100) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
         <Link
           href={`/learn/${params.slug}`}
           className="link inline-flex items-center gap-1 text-sm"
@@ -82,7 +82,7 @@ export default async function CertificatePage({
   const certNumber = `FBM-${course.id.slice(0, 8).toUpperCase()}-${userId.slice(0, 8).toUpperCase()}`;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 print:py-0">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 print:">
       <Link
         href={`/learn/${params.slug}`}
         className="link inline-flex items-center gap-1 text-sm print:hidden"

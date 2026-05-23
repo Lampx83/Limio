@@ -60,7 +60,7 @@ export default async function ExamLandingPage({
         }
       }
       return (
-        <main className="mx-auto max-w-2xl px-6 py-16 text-center">
+        <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 text-center">
           <h1 className="mb-4 text-2xl font-semibold">Không thể bắt đầu bài thi</h1>
           <p className="text-faint">{describeExamError(e.code)}</p>
         </main>

@@ -109,7 +109,7 @@ export default async function LessonPage({
     const course = lesson.module.course;
     const paid = course.priceCents !== null && course.priceCents > 0;
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
         <Link href={`/catalog/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
           ← {course.title}
         </Link>
@@ -261,7 +261,7 @@ export default async function LessonPage({
   const defaultTab: TabKey = tasksUndone > 0 ? "tasks" : "forum";
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       {/* Breadcrumb + lesson meta */}
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <Link

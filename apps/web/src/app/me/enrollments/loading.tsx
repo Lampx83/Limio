@@ -2,7 +2,7 @@ import { Skeleton, SkeletonHeader } from "@/components/Skeleton";
 
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <SkeletonHeader />
       <div className="mt-6 grid grid-cols-3 gap-3 sm:gap-4">
         {Array.from({ length: 3 }).map((_, i) => (

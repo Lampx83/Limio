@@ -48,7 +48,7 @@ export default async function TournamentsPage({
   const upcomingCount = tournaments.filter((t) => t.status === "published").length;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* ── HERO BANNER ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-orange-200/40 dark:border-orange-900/40">
         {/* Decorative gradient + radial */}
