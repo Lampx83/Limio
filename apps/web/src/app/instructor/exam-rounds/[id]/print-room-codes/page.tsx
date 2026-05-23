@@ -117,21 +117,27 @@ export default async function PrintRoundRoomCodesPage({
   );
 
   const totalRooms = pages.length;
+  // Ghép từng cặp 2 phòng vào 1 tờ A4 landscape (2 phiếu A5 portrait cạnh nhau,
+  // in xong cắt đôi). Nếu lẻ thì phiếu cuối đứng 1 mình, ô bên kia để trống.
+  const sheets: Array<{ left: typeof pages[number]; right: typeof pages[number] | null }> = [];
+  for (let i = 0; i < pages.length; i += 2) {
+    sheets.push({ left: pages[i]!, right: pages[i + 1] ?? null });
+  }
 
   return (
     <>
       <PrintAutoFire />
-      {/* A5 portrait, 1 phòng / trang */}
+      {/* A4 landscape, 2 phiếu A5 / tờ — cắt đôi sau khi in */}
       <style>{`
-        @page { size: A5 portrait; margin: 10mm; }
+        @page { size: A4 landscape; margin: 8mm; }
         @media print {
-          .room-page { page-break-after: always; }
-          .room-page:last-child { page-break-after: auto; }
+          .a4-sheet { page-break-after: always; }
+          .a4-sheet:last-child { page-break-after: auto; }
           body { background: white; }
         }
       `}</style>
 
-      <main className="mx-auto max-w-[148mm] text-slate-900">
+      <main className="mx-auto max-w-[281mm] text-slate-900">
         <div className="mb-4 flex items-center justify-between print:hidden">
           <Link
             href={`/instructor/exam-rounds/${round.id}`}
@@ -142,7 +148,7 @@ export default async function PrintRoundRoomCodesPage({
           <PrintButton />
         </div>
         <p className="mb-4 text-xs text-slate-500 print:hidden">
-          {totalRooms} phòng thi · 1 phòng / trang A5. Mở dialog in (Ctrl+P) → chọn khổ giấy A5.
+          {totalRooms} phòng thi · 2 phiếu A5 / tờ A4 (cắt đôi sau khi in). Mở dialog in (Ctrl+P) → chọn khổ A4 landscape.
         </p>
 
         {pages.length === 0 ? (
@@ -150,10 +156,28 @@ export default async function PrintRoundRoomCodesPage({
             Đợt thi này chưa có phòng thi nào.
           </div>
         ) : (
-          pages.map(({ session: s, room: r }, idx) => (
+          sheets.map(({ left, right }, sheetIdx) => (
+            <div
+              key={`sheet-${sheetIdx}`}
+              className="a4-sheet mb-8 grid grid-cols-2 gap-3 print:mb-0 print:gap-2"
+            >
+              {[left, right].map((slot, slotIdx) => {
+                if (!slot) {
+                  return (
+                    <div
+                      key={`empty-${sheetIdx}-${slotIdx}`}
+                      className="border-l border-dashed border-slate-300 print:border-slate-400"
+                    />
+                  );
+                }
+                const { session: s, room: r } = slot;
+                const idx = sheetIdx * 2 + slotIdx;
+                return (
             <section
               key={`${s.id}:${r.id}`}
-              className="room-page mb-8 border border-slate-300 bg-white p-5 print:mb-0 print:border-0 print:p-0"
+              className={`border border-slate-300 bg-white p-4 print:border-0 print:p-2 ${
+                slotIdx === 1 ? "print:border-l print:border-dashed print:border-slate-400" : ""
+              }`}
             >
               {/* Header */}
               <header className="border-b-2 border-slate-300 pb-2">
@@ -294,6 +318,9 @@ export default async function PrintRoundRoomCodesPage({
                 In ngày {new Date().toLocaleString("vi-VN")} · Mã đợt {round.code}
               </footer>
             </section>
+                );
+              })}
+            </div>
           ))
         )}
       </main>
