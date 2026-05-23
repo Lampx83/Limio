@@ -79,7 +79,7 @@ export default async function GradingInboxPage({
   });
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main>
       <Link
         href={`/instructor/courses/${course.id}/exams/${exam.id}`}
         className="text-sm text-blue-600 hover:underline"

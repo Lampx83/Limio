@@ -25,7 +25,7 @@ export default async function SkillTaggingHubPage({
   const coverage = await getInstructorSkillCoverage(userId);
   if (coverage.courses.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <h1 className="h-display text-h1">Skill Tagging</h1>
         <EmptyState
           className="mt-6"
@@ -87,7 +87,7 @@ export default async function SkillTaggingHubPage({
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <header>
         <h1 className="h-display text-h1">
           Skill Tagging

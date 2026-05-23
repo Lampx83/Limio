@@ -39,7 +39,7 @@ export default async function CohortsPage({
   }));
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main>
       <Link
         href={`/instructor/courses/${course.id}`}
         className="text-sm text-blue-600 hover:underline"

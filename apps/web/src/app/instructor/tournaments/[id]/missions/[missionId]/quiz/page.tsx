@@ -45,7 +45,7 @@ export default async function TournamentMissionQuizEditorPage({
     // Course-linked tournament — could still be a co-instructor; defer to
     // server actions to enforce. For now block obvious non-creators.
     return (
-      <main className="mx-auto max-w-2xl px-6 py-12 text-sm text-muted">
+      <main className="text-sm text-muted">
         Bạn không có quyền sửa quiz của mission này.
       </main>
     );
@@ -53,7 +53,7 @@ export default async function TournamentMissionQuizEditorPage({
 
   if (mission.verifyMode !== "AUTO_GRADE" || !mission.quiz) {
     return (
-      <main className="mx-auto max-w-2xl px-6 py-12 text-sm text-muted">
+      <main className="text-sm text-muted">
         Mission này không dùng Quiz tự chấm.
       </main>
     );
@@ -65,7 +65,7 @@ export default async function TournamentMissionQuizEditorPage({
       : 0;
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <main>
       <Link
         href={`/instructor/tournaments/${params.id}`}
         className="link text-sm"

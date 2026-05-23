@@ -28,7 +28,7 @@ export default async function FeedbackTemplatesPage({
   ]);
   if (!admin && !anyCourse) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
           Chỉ instructor hoặc admin mới xem được trang này.
         </div>
@@ -49,7 +49,7 @@ export default async function FeedbackTemplatesPage({
   });
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <Link
         href="/instructor/dashboard"
         className="link inline-flex items-center gap-1 text-sm"

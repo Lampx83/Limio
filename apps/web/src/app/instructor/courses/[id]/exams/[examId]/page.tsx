@@ -108,7 +108,7 @@ export default async function EditExamPage({
       : [];
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main>
       <Link
         href={`/instructor/courses/${course.id}/exams`}
         className="text-sm text-blue-600 hover:underline"

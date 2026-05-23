@@ -38,7 +38,7 @@ export default async function InstructorEnrollmentsPage({
   });
   if (ownedCourses.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <h1 className="h-display text-3xl font-bold">Enrollments</h1>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5 text-sm">
           Bạn chưa là instructor của khoá nào.
@@ -175,7 +175,7 @@ export default async function InstructorEnrollmentsPage({
       : enrollments;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <header>
         <h1 className="h-display text-3xl font-bold sm:text-4xl">Enrollments</h1>
         <p className="mt-2 text-muted">

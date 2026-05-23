@@ -31,7 +31,7 @@ export default async function StrugglingStudentsPage({
   const ok = await canEditCourse(userId, course.id);
   if (!ok) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <Forbidden />
       </main>
     );
@@ -72,7 +72,7 @@ export default async function StrugglingStudentsPage({
 
   if (enrollments.length === 0) {
     return (
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main>
         <Header courseId={course.id} courseTitle={course.title} />
         <div className="mt-6 rounded-2xl border border-dashed border-token p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
@@ -156,7 +156,7 @@ export default async function StrugglingStudentsPage({
   ).length;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main>
       <Header courseId={course.id} courseTitle={course.title} />
       <p className="mt-2 text-muted">
         Học viên được sắp xếp theo số lỗi tư duy chưa khắc phục, sau đó số kỹ năng yếu.

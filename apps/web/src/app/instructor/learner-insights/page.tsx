@@ -26,7 +26,7 @@ export default async function LearnerInsightsPage({
   });
   if (ownedCourses.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <h1 className="h-display text-3xl font-bold">Learner Insights</h1>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5 text-sm">
           Bạn chưa là instructor của khoá nào.
@@ -154,7 +154,7 @@ export default async function LearnerInsightsPage({
     .sort((a, b) => a.avg - b.avg);
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <header>
         <h1 className="h-display text-3xl font-bold sm:text-4xl">
           Learner Insights

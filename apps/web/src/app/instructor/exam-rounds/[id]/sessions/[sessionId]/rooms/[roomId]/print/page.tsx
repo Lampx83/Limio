@@ -37,7 +37,7 @@ export default async function RoomCandidatesPrintPage({
   return (
     <>
       <PrintAutoFire />
-      <main className="mx-auto max-w-3xl px-8 py-8 text-slate-900 print:py-4">
+      <main className="text-slate-900 print:">
         <Link
           href={`/instructor/exam-rounds/${params.id}/sessions/${params.sessionId}/rooms/${params.roomId}`}
           className="mb-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline print:hidden"

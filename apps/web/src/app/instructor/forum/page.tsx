@@ -26,7 +26,7 @@ export default async function InstructorForumHubPage({
   });
   if (ownedCourses.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <h1 className="h-display text-h1">Forum Q&amp;A</h1>
         <EmptyState
           className="mt-6"
@@ -126,7 +126,7 @@ export default async function InstructorForumHubPage({
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <header>
         <h1 className="h-display text-h1">Forum Q&amp;A</h1>
         <p className="mt-2 text-muted">

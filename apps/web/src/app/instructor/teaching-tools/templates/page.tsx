@@ -15,7 +15,7 @@ export default async function TimerTemplatesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl space-y-8 px-6 py-10">
+    <main className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-token pb-6">
         <div>

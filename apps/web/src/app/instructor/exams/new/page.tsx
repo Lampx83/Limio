@@ -23,7 +23,7 @@ export default async function NewExamHubPage({
 
   if (ownedCourses.length === 0) {
     return (
-      <main className="mx-auto max-w-2xl px-6 py-12 text-center">
+      <main className="text-center">
         <h1 className="text-2xl font-bold">Tạo đề thi</h1>
         <p className="mt-4 text-sm text-faint">
           Bạn cần là instructor của một khóa học trước khi tạo đề thi.
@@ -92,7 +92,7 @@ export default async function NewExamHubPage({
   const showUpgradeBanner = (userMeta?.examsCreatedCount ?? 0) >= 3 && !expertMode;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main>
       <Link href="/instructor/exams" className="text-sm text-blue-600 hover:underline">
         ← Quản lý đề thi
       </Link>

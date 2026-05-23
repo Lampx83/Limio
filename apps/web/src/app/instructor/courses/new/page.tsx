@@ -49,7 +49,7 @@ export default function NewCoursePage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12">
+    <main>
       <Link
         href="/instructor/courses"
         className="link inline-flex items-center gap-1 text-sm"

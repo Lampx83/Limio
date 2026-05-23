@@ -130,7 +130,7 @@ export default async function ExamSessionsPage() {
 
   if (rows.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <h1 className="h-display text-3xl font-bold">Ca thi trực tiếp</h1>
         <p className="mt-2 text-muted">
           Hub theo dõi các phòng thi bạn được phân công làm giám thị hoặc người chấm.
@@ -152,7 +152,7 @@ export default async function ExamSessionsPage() {
     }).format(d);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main>
       <h1 className="h-display text-3xl font-bold sm:text-4xl">
         Ca thi trực tiếp
       </h1>

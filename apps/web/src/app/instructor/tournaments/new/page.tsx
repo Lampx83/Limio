@@ -23,7 +23,7 @@ export default async function NewTournamentPage() {
 
   if (!admin && myCourses.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
           Bạn không phải instructor của khóa nào. Chỉ instructor hoặc admin
           mới tạo được tournament.
@@ -33,7 +33,7 @@ export default async function NewTournamentPage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-10">
+    <main>
       <Link
         href="/instructor/courses"
         className="link inline-flex items-center gap-1 text-sm"

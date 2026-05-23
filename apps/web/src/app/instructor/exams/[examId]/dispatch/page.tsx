@@ -38,7 +38,7 @@ export default async function ExamDispatchHistoryPage({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6">
+    <main>
       <div className="mb-4">
         <Link
           href={`/instructor/courses/${exam.courseId}/exams/${params.examId}#candidates`}

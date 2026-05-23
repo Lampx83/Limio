@@ -34,7 +34,7 @@ export default async function NewExamPage({
   const inWeek = new Date(now.getTime() + 7 * 24 * 60 * 60_000);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main>
       <Link
         href={`/instructor/courses/${course.id}/exams`}
         className="text-sm text-blue-600 hover:underline"

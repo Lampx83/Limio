@@ -55,7 +55,7 @@ export default async function ExamRoundDetailPage({
     if (e instanceof ExamError && e.code === "round_not_found") notFound();
     if (e instanceof ExamError && e.code === "forbidden")
       return (
-        <main className="mx-auto max-w-3xl px-6 py-10">
+        <main>
           <h1 className="text-xl font-semibold">Không có quyền</h1>
           <p className="mt-2 text-sm text-faint">
             Bạn không có quyền xem đợt thi này.
@@ -142,7 +142,7 @@ export default async function ExamRoundDetailPage({
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <Link
         href="/instructor/exam-rounds"
         className="text-sm text-blue-600 hover:underline"

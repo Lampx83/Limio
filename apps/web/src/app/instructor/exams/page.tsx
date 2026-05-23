@@ -80,7 +80,7 @@ export default async function InstructorExamsHubPage() {
   const publishedCount = exams.filter((e) => e.status === "published").length;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main>
       <Link href="/instructor/dashboard" className="text-sm text-blue-600 hover:underline">
         ← Dashboard
       </Link>

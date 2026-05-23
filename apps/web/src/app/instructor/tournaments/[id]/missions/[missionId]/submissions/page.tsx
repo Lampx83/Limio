@@ -90,7 +90,7 @@ export default async function MissionSubmissionsPage({
   const isCollective = mission.isTeamSubmission;
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <main>
       <Link
         href={`/instructor/tournaments/${params.id}`}
         className="link inline-flex items-center gap-1 text-sm"

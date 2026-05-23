@@ -36,7 +36,7 @@ export default async function ExamDispatchReviewPage({
     : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
+    <main>
       <div className="mb-4">
         <Link
           href={`/instructor/courses/${"-"}/exams/${params.examId}#candidates`}

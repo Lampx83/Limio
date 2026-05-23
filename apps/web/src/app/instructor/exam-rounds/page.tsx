@@ -72,7 +72,7 @@ export default async function ExamRoundsHubPage({
   for (const r of rounds) counts[r.status]++;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <Link
         href="/instructor/dashboard"
         className="text-sm text-blue-600 hover:underline"

@@ -41,7 +41,7 @@ export default async function TeachingToolsPage() {
   }) as Course[];
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <header className="mb-8">
         <h1 className="h-display text-display">Công cụ Giảng dạy</h1>
         <p className="mt-2 text-muted">

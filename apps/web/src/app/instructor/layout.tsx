@@ -41,7 +41,11 @@ export default async function InstructorLayout({
   return (
     <div className="flex w-full">
       <InstructorLeftMenu isInstructor={isInstructor} isProctor={isProctor} />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1">
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

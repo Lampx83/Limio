@@ -21,7 +21,7 @@ export default async function QuestionBanksHubPage() {
   });
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main>
       <Link href="/instructor/dashboard" className="text-sm text-blue-600 hover:underline">
         ← Dashboard
       </Link>

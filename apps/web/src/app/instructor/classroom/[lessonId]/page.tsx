@@ -47,7 +47,7 @@ export default async function ClassroomToolsPage({
 
   return (
     <>
-      <main className="mx-auto max-w-4xl px-6 py-10">
+      <main>
         <Link
           href={`/instructor/courses/${lesson.module.course.id}`}
           className="link inline-flex items-center gap-1 text-sm"

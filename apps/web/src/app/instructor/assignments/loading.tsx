@@ -2,7 +2,7 @@ import { SkeletonHeader, SkeletonTable, SkeletonChip } from "@/components/Skelet
 
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <SkeletonHeader />
       <div className="mt-6 flex flex-wrap gap-2">
         {Array.from({ length: 4 }).map((_, i) => (

@@ -121,7 +121,7 @@ export default async function ExamLiveDashboardPage({
   // server-render select above (just used for derivation, no extra query).
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8">
+    <main>
       <Link
         href={`/instructor/courses/${exam.courseId}/exams/${exam.id}`}
         className="text-sm text-blue-600 hover:underline"

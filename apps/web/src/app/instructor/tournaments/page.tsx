@@ -63,7 +63,7 @@ export default async function InstructorTournamentsPage({
   });
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main>
       {/* Back link */}
       <Link
         href="/instructor/dashboard"

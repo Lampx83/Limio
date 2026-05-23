@@ -84,7 +84,7 @@ export default async function InstructorDashboard() {
 
   if (ownedCourses.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main>
         <h1 className="h-display text-3xl font-bold">{greeting()}</h1>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
           <p className="text-sm font-semibold text-accent-700">
@@ -302,7 +302,7 @@ export default async function InstructorDashboard() {
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       {/* Greeting */}
       <header>
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">

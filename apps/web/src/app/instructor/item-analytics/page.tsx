@@ -59,7 +59,7 @@ export default async function ItemAnalyticsPage({
   });
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main>
       <header>
         <h1 className="h-display text-3xl font-bold sm:text-4xl">
           Phân tích item

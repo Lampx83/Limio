@@ -33,7 +33,7 @@ export default async function ExamRoomDetailPage({
     if (e instanceof ExamError && e.code === "validation_failed") notFound();
     if (e instanceof ExamError && e.code === "forbidden")
       return (
-        <main className="mx-auto max-w-3xl px-6 py-10">
+        <main>
           <h1 className="text-xl font-semibold">Không có quyền</h1>
           <p className="mt-2 text-sm text-faint">
             Bạn không có quyền xem phòng thi này.
@@ -62,7 +62,7 @@ export default async function ExamRoomDetailPage({
   const canEdit = await canEditExamRound(userId, room.roundId);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main>
       <Link
         href={`/instructor/exam-rounds/${room.roundId}/sessions/${room.sessionId}?tab=rooms`}
         className="text-sm text-blue-600 hover:underline"

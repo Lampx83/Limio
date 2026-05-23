@@ -49,7 +49,7 @@ export default async function SubmissionsPage({
     const courseId = assignment.lesson.module.course.id;
     if (!(await canEditCourse(userId, courseId))) {
       return (
-        <main className="mx-auto max-w-3xl px-6 py-12">
+        <main>
           <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
             Bạn không có quyền xem trang này.
           </div>
@@ -69,7 +69,7 @@ export default async function SubmissionsPage({
     const allowed = tm.tournament.creatorId === userId || (await isAdmin(userId));
     if (!allowed) {
       return (
-        <main className="mx-auto max-w-3xl px-6 py-12">
+        <main>
           <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
             Bạn không có quyền xem trang này.
           </div>
@@ -93,7 +93,7 @@ export default async function SubmissionsPage({
   const pendingCount = submissions.length - gradedCount;
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main>
       <Link
         href={ctx.backHref}
         className="link inline-flex items-center gap-1 text-sm"
