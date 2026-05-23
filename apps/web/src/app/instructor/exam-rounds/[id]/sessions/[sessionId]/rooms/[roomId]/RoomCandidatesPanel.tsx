@@ -28,12 +28,18 @@ export default function RoomCandidatesPanel({
   candidates,
   canEdit,
   otherRooms,
+  examAccessMode,
 }: {
   roomId: string;
   candidates: CandidateRow[];
   canEdit: boolean;
   otherRooms: OtherRoom[];
+  examAccessMode: string;
 }) {
+  // Mã thi 8 ký tự ở ExamCandidate.accessCode chỉ có nghĩa với chế độ
+  // assigned_code (thí sinh dùng để claim qua /exam/<mã>). Với open_code
+  // (thí sinh dùng mã ca thi + form khai báo) mã này là dead data → ẩn cột.
+  const showAccessCodeColumn = examAccessMode === "assigned_code";
   const router = useRouter();
   const [showAdd, setShowAdd] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -208,7 +214,9 @@ export default function RoomCandidatesPanel({
                   <th className="px-4 py-2.5">Họ tên</th>
                   <th className="px-4 py-2.5">MSSV</th>
                   <th className="px-4 py-2.5">Email</th>
-                  <th className="px-4 py-2.5">Mã thi</th>
+                  {showAccessCodeColumn && (
+                    <th className="px-4 py-2.5">Mã thi</th>
+                  )}
                   <th className="px-4 py-2.5">Có mặt</th>
                   <th className="px-4 py-2.5">Tài khoản</th>
                   <th className="w-16 px-4 py-2.5"></th>
@@ -238,9 +246,11 @@ export default function RoomCandidatesPanel({
                   <td className="px-4 py-2.5 text-xs">
                     {c.email || <span className="text-slate-300">—</span>}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-xs">
-                    {c.accessCode || <span className="text-slate-300">—</span>}
-                  </td>
+                  {showAccessCodeColumn && (
+                    <td className="px-4 py-2.5 font-mono text-xs">
+                      {c.accessCode || <span className="text-slate-300">—</span>}
+                    </td>
+                  )}
                   <td className="px-4 py-2.5">
                     <button
                       type="button"

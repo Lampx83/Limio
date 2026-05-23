@@ -113,20 +113,24 @@ export default async function ExamRoomDetailPage({
         </div>
         {candidates.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            <Link
-              href={`/proctor/rooms/${room.id}/projection`}
-              target="_blank"
-              className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm text-blue-800 hover:bg-blue-100"
-            >
-              <Monitor className="h-4 w-4" /> Chiếu mã thi
-            </Link>
-            <Link
-              href={`/instructor/exam-rounds/${room.roundId}/sessions/${room.sessionId}/rooms/${room.id}/print`}
-              target="_blank"
-              className="inline-flex items-center gap-1.5 rounded border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
-            >
-              <Printer className="h-4 w-4" /> In danh sách mã thi
-            </Link>
+            {room.examAccessMode === "assigned_code" && (
+              <>
+                <Link
+                  href={`/proctor/rooms/${room.id}/projection`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm text-blue-800 hover:bg-blue-100"
+                >
+                  <Monitor className="h-4 w-4" /> Chiếu mã thi
+                </Link>
+                <Link
+                  href={`/instructor/exam-rounds/${room.roundId}/sessions/${room.sessionId}/rooms/${room.id}/print`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 rounded border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+                >
+                  <Printer className="h-4 w-4" /> In danh sách mã thi
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -143,6 +147,7 @@ export default async function ExamRoomDetailPage({
           candidates={candidates}
           canEdit={canEdit}
           otherRooms={otherRooms}
+          examAccessMode={room.examAccessMode}
         />
       </div>
     </main>
