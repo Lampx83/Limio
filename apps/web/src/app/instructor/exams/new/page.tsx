@@ -88,7 +88,12 @@ export default async function NewExamHubPage({
     where: { id: userId },
     select: { examsCreatedCount: true, expertAssessmentMode: true },
   });
-  const expertMode = userMeta?.expertAssessmentMode ?? false;
+  const totalBank = Object.values(bankCountMap).reduce((s, n) => s + n, 0);
+  const emptyBank = totalBank === 0;
+  // If the course has zero bank questions, the Cơ bản wizard (sample-by-lesson)
+  // can't produce anything — force Nâng cao mode so user can create an empty
+  // exam shell and add questions manually.
+  const expertMode = emptyBank ? true : (userMeta?.expertAssessmentMode ?? false);
   const showUpgradeBanner = (userMeta?.examsCreatedCount ?? 0) >= 3 && !expertMode;
 
   return (
@@ -97,6 +102,13 @@ export default async function NewExamHubPage({
         ← Quản lý đề thi
       </Link>
       <div className="mt-6">
+        {emptyBank && (
+          <div className="banner-info mb-4 rounded-lg border px-4 py-3 text-sm">
+            Khoá học chưa có ngân hàng câu hỏi. Hệ thống đã chuyển sang
+            <strong> chế độ Nâng cao</strong> — anh/chị có thể tạo đề thi rỗng
+            rồi thêm câu hỏi thủ công, hoặc nhập câu hỏi vào ngân hàng trước.
+          </div>
+        )}
         <ExamWizard
           courses={ownedCourses}
           initialCourseId={preselectedCourseId}
