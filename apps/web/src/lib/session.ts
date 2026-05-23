@@ -105,6 +105,22 @@ export async function requireExamSubject(
     };
   }
 
+  // Prefer candidate cookie when it matches the requested attempt — its scope
+  // is per-attempt, so it identifies the correct subject even if a NextAuth
+  // session (e.g. instructor account in the same browser) is also present.
+  // Without this, an instructor who joined as a test candidate would be
+  // resolved as their NextAuth user and fail ownership check on submit
+  // (attempt_belongs_to_other).
+  if (cookieOk && requireAttemptId) {
+    return {
+      kind: "candidate",
+      candidateId: payload.candidateId,
+      attemptId: payload.attemptId,
+      examId: payload.examId,
+      sessionToken: payload.sessionToken,
+    };
+  }
+
   const userId = await requireUserId();
   if (userId) return { kind: "user", userId };
   if (!cookieOk) return null;
