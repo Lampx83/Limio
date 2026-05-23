@@ -172,6 +172,13 @@ export default async function ExamRoundDetailPage({
             <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 shrink-0 text-slate-400" />{round.course.courseTitle}</span>
           </div>
         </div>
+        <Link
+          href={`/instructor/exam-rounds/${round.id}/print-room-codes`}
+          target="_blank"
+          className="inline-flex items-center gap-1.5 rounded border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+        >
+          🖨 In mã ca thi & phòng thi (A5)
+        </Link>
       </div>
 
       <div className="mt-6">

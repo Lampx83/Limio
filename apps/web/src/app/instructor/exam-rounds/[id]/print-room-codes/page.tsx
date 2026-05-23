@@ -1,0 +1,264 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { prisma } from "@feedbackme/db";
+import { canViewExamRound } from "@feedbackme/core-lms";
+import { auth } from "@/lib/auth";
+import PrintAutoFire, { PrintButton } from "../sessions/[sessionId]/rooms/[roomId]/print/PrintAutoFire";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * In tất cả mã ca thi + mã phòng thi của 1 đợt thi, mỗi phòng 1 trang A5 để
+ * phát cho giám thị đọc cho thí sinh.
+ */
+export default async function PrintRoundRoomCodesPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const session = await auth();
+  if (!session?.user?.id)
+    redirect(
+      `/signin?callbackUrl=/instructor/exam-rounds/${params.id}/print-room-codes`,
+    );
+  const userId = session.user.id;
+
+  const round = await prisma.examRound.findUnique({
+    where: { id: params.id },
+    select: {
+      id: true,
+      title: true,
+      code: true,
+      opensAt: true,
+      closesAt: true,
+      course: { select: { id: true, title: true, slug: true } },
+    },
+  });
+  if (!round) notFound();
+  if (!(await canViewExamRound(userId, round.id))) notFound();
+
+  const sessions = await prisma.examSession.findMany({
+    where: { roundId: round.id },
+    orderBy: [{ opensAt: "asc" }, { createdAt: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      code: true,
+      openCode: true,
+      accessMode: true,
+      opensAt: true,
+      closesAt: true,
+      exam: { select: { title: true, openCode: true, accessMode: true } },
+      rooms: {
+        orderBy: [{ orderIndex: "asc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          orderIndex: true,
+          locationNote: true,
+          accessCode: true,
+          isDefault: true,
+          proctor: { select: { displayName: true } },
+          _count: { select: { candidates: true } },
+        },
+      },
+    },
+  });
+
+  // Flatten thành 1 list (1 entry = 1 trang in).
+  const pages = sessions.flatMap((s) =>
+    s.rooms.map((r) => ({
+      session: {
+        id: s.id,
+        title: s.title,
+        code: s.code,
+        // Mã ca thi cho thí sinh: ưu tiên openCode của session (PR2.12), fallback openCode của exam (legacy).
+        openCode: s.accessMode === "open_code" ? (s.openCode ?? s.exam.openCode) : null,
+        accessMode: s.accessMode,
+        opensAt: s.opensAt.toISOString(),
+        closesAt: s.closesAt.toISOString(),
+        examTitle: s.exam.title,
+      },
+      room: {
+        id: r.id,
+        name: r.name,
+        orderIndex: r.orderIndex,
+        accessCode: r.accessCode,
+        isDefault: r.isDefault,
+        locationNote: r.locationNote,
+        proctorName: r.proctor.displayName,
+        candidateCount: r._count.candidates,
+      },
+    })),
+  );
+
+  const totalRooms = pages.length;
+
+  return (
+    <>
+      <PrintAutoFire />
+      {/* A5 portrait, 1 phòng / trang */}
+      <style>{`
+        @page { size: A5 portrait; margin: 10mm; }
+        @media print {
+          .room-page { page-break-after: always; }
+          .room-page:last-child { page-break-after: auto; }
+          body { background: white; }
+        }
+      `}</style>
+
+      <main className="mx-auto max-w-[148mm] text-slate-900">
+        <div className="mb-4 flex items-center justify-between print:hidden">
+          <Link
+            href={`/instructor/exam-rounds/${round.id}`}
+            className="text-sm text-blue-600 hover:underline"
+          >
+            ← Quay lại đợt thi
+          </Link>
+          <PrintButton />
+        </div>
+        <p className="mb-4 text-xs text-slate-500 print:hidden">
+          {totalRooms} phòng thi · 1 phòng / trang A5. Mở dialog in (Ctrl+P) → chọn khổ giấy A5.
+        </p>
+
+        {pages.length === 0 ? (
+          <div className="rounded border border-default bg-white p-8 text-center text-sm text-faint print:hidden">
+            Đợt thi này chưa có phòng thi nào.
+          </div>
+        ) : (
+          pages.map(({ session: s, room: r }, idx) => (
+            <section
+              key={`${s.id}:${r.id}`}
+              className="room-page mb-8 border border-slate-300 bg-white p-5 print:mb-0 print:border-0 print:p-0"
+            >
+              {/* Header */}
+              <header className="border-b-2 border-slate-300 pb-2">
+                <div className="text-[10px] uppercase tracking-wide text-slate-500">
+                  {round.course.title}
+                </div>
+                <h1 className="mt-0.5 text-lg font-bold leading-tight">
+                  {round.title}
+                </h1>
+                <div className="mt-1 text-[10px] text-slate-600">
+                  Mã đợt: <span className="font-mono">{round.code}</span> ·{" "}
+                  Phiếu {idx + 1}/{totalRooms}
+                </div>
+              </header>
+
+              {/* Mã ca thi + Mã phòng — phần quan trọng nhất */}
+              <div className="my-3 grid grid-cols-2 gap-3">
+                <div className="rounded-lg border-2 border-blue-300 bg-blue-50 p-3 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-blue-900">
+                    Mã ca thi
+                  </div>
+                  <div className="mt-1 font-mono text-3xl font-bold tracking-[0.2em] text-blue-900">
+                    {s.openCode ?? "—"}
+                  </div>
+                  <div className="mt-0.5 text-[9px] text-blue-800">
+                    {s.openCode ? "Thí sinh dùng để vào /exam/<mã>" : "Ca thi không dùng mã"}
+                  </div>
+                </div>
+                <div
+                  className={`rounded-lg border-2 p-3 text-center ${
+                    r.accessCode
+                      ? "border-amber-300 bg-amber-50"
+                      : "border-slate-200 bg-slate-50"
+                  }`}
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-amber-900">
+                    Mã phòng thi
+                  </div>
+                  <div className="mt-1 font-mono text-3xl font-bold tracking-[0.2em] text-amber-900">
+                    {r.accessCode ?? "—"}
+                  </div>
+                  <div className="mt-0.5 text-[9px] text-amber-800">
+                    {r.isDefault
+                      ? "Phòng mặc định — TS không nhập mã sẽ vào phòng này"
+                      : "Thí sinh bắt buộc nhập để vào đúng phòng"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Thông tin phòng */}
+              <table className="w-full border-collapse text-xs">
+                <tbody>
+                  <Row label="Phòng thi">
+                    <span className="font-semibold">
+                      {r.name}{" "}
+                      <span className="font-normal text-slate-500">
+                        (STT {r.orderIndex})
+                      </span>
+                    </span>
+                    {r.isDefault && (
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-medium text-amber-800">
+                        ★ Mặc định
+                      </span>
+                    )}
+                  </Row>
+                  <Row label="Ca thi">
+                    {s.title ?? s.code ?? "Ca thi"}
+                  </Row>
+                  <Row label="Đề thi">{s.examTitle}</Row>
+                  <Row label="Thời gian">
+                    {formatDate(s.opensAt)} → {formatDate(s.closesAt)}
+                  </Row>
+                  <Row label="Giám thị">{r.proctorName}</Row>
+                  {r.locationNote && (
+                    <Row label="Địa điểm">{r.locationNote}</Row>
+                  )}
+                  <Row label="Số TS dự kiến">
+                    {r.candidateCount > 0 ? `${r.candidateCount} thí sinh` : "—"}
+                  </Row>
+                </tbody>
+              </table>
+
+              {/* Hướng dẫn ngắn cho giám thị đọc cho thí sinh */}
+              <div className="mt-3 rounded border border-slate-300 bg-slate-50 p-2 text-[10px] leading-relaxed text-slate-700">
+                <div className="mb-1 font-semibold text-slate-900">
+                  Hướng dẫn đọc cho thí sinh:
+                </div>
+                <ol className="list-decimal space-y-0.5 pl-4">
+                  <li>
+                    Mở trình duyệt, truy cập:{" "}
+                    <span className="font-mono">limio.vn/exam/{s.openCode ?? "<mã-ca-thi>"}</span>
+                  </li>
+                  <li>Nhập họ tên, mã sinh viên, email, số điện thoại.</li>
+                  <li>
+                    Tại ô <em>"Mã phòng thi"</em> nhập:{" "}
+                    <span className="font-mono font-bold">
+                      {r.accessCode ?? "(không có — bỏ trống)"}
+                    </span>
+                  </li>
+                  <li>Bấm "Bắt đầu thi" và làm bài.</li>
+                </ol>
+              </div>
+
+              <footer className="mt-3 border-t border-slate-200 pt-2 text-[9px] text-slate-500">
+                In ngày {new Date().toLocaleString("vi-VN")} · Mã đợt {round.code}
+              </footer>
+            </section>
+          ))
+        )}
+      </main>
+    </>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <tr className="border-b border-slate-200">
+      <td className="w-24 py-1 pr-2 align-top text-slate-500">{label}</td>
+      <td className="py-1">{children}</td>
+    </tr>
+  );
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
