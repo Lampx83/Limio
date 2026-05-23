@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image, Music } from "lucide-react";
+import { Image, Music, Video } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillPicker from "./SkillPicker";
 import { plainTextToTiptap, tiptapToPlainText } from "./contentHelpers";
@@ -66,6 +66,49 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
+
+  function onInsertVideo() {
+    const url = window.prompt(
+      "Dán URL video. Hỗ trợ: YouTube, Vimeo, Google Drive (link chia sẻ), OneDrive (link Embed), hoặc file .mp4/.webm trực tiếp.\n\nLưu ý: Google Drive cần đặt quyền 'Anyone with the link'. OneDrive nên dùng link Embed (Share → Embed).",
+      "",
+    );
+    if (url === null) return;
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) {
+      window.alert("URL không được để trống.");
+      return;
+    }
+    try {
+      const u = new URL(trimmedUrl);
+      if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error();
+    } catch {
+      window.alert("URL không hợp lệ (chỉ chấp nhận http/https).");
+      return;
+    }
+    const alt = window.prompt(
+      "Mô tả video (alt text) — bắt buộc cho accessibility:",
+      "",
+    );
+    if (alt === null) return;
+    const trimmed = alt.trim();
+    if (!trimmed) {
+      window.alert("Alt text không được để trống.");
+      return;
+    }
+    const md = `[[video:${trimmedUrl}|${trimmed}]]`;
+    const ta = contentRef.current;
+    const before = v.content;
+    const start = ta?.selectionStart ?? before.length;
+    const end = ta?.selectionEnd ?? before.length;
+    const sep = before.length === 0 ? "" : "\n\n";
+    const inserted =
+      before.slice(0, start) +
+      (start === 0 ? "" : sep) +
+      md +
+      (end < before.length ? sep : "") +
+      before.slice(end);
+    setV({ ...v, content: inserted });
+  }
 
   async function onUploadFile(file: File, kind: "image" | "audio") {
     const promptLabel =
@@ -177,8 +220,9 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
       <div>
         <div className="flex items-center justify-between">
           <label className="block text-sm font-medium">
-            Nội dung (mỗi dòng trống = đoạn mới; ảnh dùng cú pháp{" "}
-            <code className="text-xs">![alt](url)</code>)
+            Nội dung (mỗi dòng trống = đoạn mới; ảnh{" "}
+            <code className="text-xs">![alt](url)</code>; video{" "}
+            <code className="text-xs">[[video:url|alt]]</code>)
           </label>
           <div className="flex gap-1">
             <button
@@ -196,6 +240,14 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
               <Music className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải audio
+            </button>
+            <button
+              type="button"
+              onClick={onInsertVideo}
+              disabled={uploading}
+              className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
+            >
+              <Video className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Chèn video
             </button>
           </div>
           <input

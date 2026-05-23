@@ -16,6 +16,8 @@ interface TiptapNode {
 const IMG_RE = /^!\[([^\]]*)\]\(([^)]+)\)$/;
 /** Audio token standalone on its own line:  `[[audio:url|alt]]` */
 const AUDIO_RE = /^\[\[audio:([^|\]]+)\|([^\]]*)\]\]$/;
+/** Video token standalone on its own line:  `[[video:url|alt]]` */
+const VIDEO_RE = /^\[\[video:([^|\]]+)\|([^\]]*)\]\]$/;
 
 export function plainTextToTiptap(text: string): TiptapDoc {
   const blocks = text
@@ -36,6 +38,13 @@ export function plainTextToTiptap(text: string): TiptapDoc {
       return {
         type: "audio",
         attrs: { src: audio[1] ?? "", alt: audio[2] ?? "" },
+      };
+    }
+    const video = block.match(VIDEO_RE);
+    if (video) {
+      return {
+        type: "video",
+        attrs: { src: video[1] ?? "", alt: video[2] ?? "" },
       };
     }
     return {
@@ -61,6 +70,11 @@ export function tiptapToPlainText(doc: unknown): string {
         const alt = (node.attrs?.alt as string) ?? "";
         const src = (node.attrs?.src as string) ?? "";
         return `[[audio:${src}|${alt}]]`;
+      }
+      if (node.type === "video") {
+        const alt = (node.attrs?.alt as string) ?? "";
+        const src = (node.attrs?.src as string) ?? "";
+        return `[[video:${src}|${alt}]]`;
       }
       if (node.type !== "paragraph") return "";
       const inline = node.content as TiptapNode[] | undefined;

@@ -162,6 +162,40 @@ function RenderNode({ node }: { node: ElementNode }) {
         </div>
       );
     }
+    case "video": {
+      const src = node.attrs?.src as string | undefined;
+      const alt = node.attrs?.alt as string | undefined;
+      if (!src) return null;
+      const embed = resolveVideoEmbed(src);
+      return (
+        <div className="my-3 rounded border border-default bg-slate-50 p-3">
+          {embed.kind === "iframe" ? (
+            <div className="relative aspect-video w-full overflow-hidden rounded">
+              <iframe
+                src={embed.url}
+                title={alt ?? "Video"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                className="absolute inset-0 h-full w-full"
+              />
+            </div>
+          ) : embed.kind === "file" ? (
+            <video src={embed.url} controls preload="metadata" className="w-full rounded">
+              <track kind="captions" />
+            </video>
+          ) : (
+            <a href={src} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline">
+              {alt || src}
+            </a>
+          )}
+          {alt && (
+            <p className="mt-1 text-xs text-faint" aria-label="Video description">
+              🎬 {alt}
+            </p>
+          )}
+        </div>
+      );
+    }
     case "hardBreak":
       return <br />;
     case "text":
@@ -169,6 +203,57 @@ function RenderNode({ node }: { node: ElementNode }) {
     default:
       return null;
   }
+}
+
+type VideoEmbed =
+  | { kind: "iframe"; url: string }
+  | { kind: "file"; url: string }
+  | { kind: "link"; url: string };
+
+function resolveVideoEmbed(src: string): VideoEmbed {
+  // YouTube
+  const yt = src.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
+  )?.[1];
+  if (yt) return { kind: "iframe", url: `https://www.youtube.com/embed/${yt}` };
+
+  // Vimeo
+  const vimeo = src.match(/vimeo\.com\/(\d+)/)?.[1];
+  if (vimeo) return { kind: "iframe", url: `https://player.vimeo.com/video/${vimeo}` };
+
+  // Google Drive — chấp nhận:
+  //   drive.google.com/file/d/{ID}/view|preview|edit
+  //   drive.google.com/open?id={ID}
+  //   docs.google.com/uc?id={ID}
+  const gdriveId =
+    src.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/)?.[1] ||
+    src.match(/[?&]id=([A-Za-z0-9_-]+)/)?.[1];
+  if (gdriveId && /drive\.google\.com|docs\.google\.com/.test(src)) {
+    return { kind: "iframe", url: `https://drive.google.com/file/d/${gdriveId}/preview` };
+  }
+
+  // OneDrive / SharePoint embed — nếu user đã dán URL dạng /embed thì dùng thẳng.
+  // Với share link thường (1drv.ms hoặc onedrive.live.com/?...) ta thử ép sang /embed
+  // bằng cách thay path; với SharePoint thì cần URL embed sẵn (Share → Embed).
+  if (/onedrive\.live\.com\/embed/i.test(src) || /sharepoint\.com\/.+embed/i.test(src)) {
+    return { kind: "iframe", url: src };
+  }
+  if (/onedrive\.live\.com\//i.test(src)) {
+    try {
+      const u = new URL(src);
+      u.pathname = "/embed";
+      return { kind: "iframe", url: u.toString() };
+    } catch {
+      /* fallthrough */
+    }
+  }
+
+  // Direct file
+  if (/\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(src)) {
+    return { kind: "file", url: src };
+  }
+
+  return { kind: "link", url: src };
 }
 
 function RenderInline({ node }: { node: ElementNode | TextNode }) {
