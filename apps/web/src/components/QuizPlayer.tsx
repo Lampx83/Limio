@@ -383,8 +383,14 @@ function QuestionInput({
         setTimeout(onBlur, 0);
       }
       const isRadio = question.type === "true_false";
+      // True/False luôn 1 cột (chỉ có 2 lựa chọn). MCQ ≥ tablet hiển thị
+      // 2 cột để tận dụng không gian ngang trên laptop, tránh cảm giác
+      // "mobile single-column".
+      const listClass = isRadio
+        ? "space-y-2"
+        : "grid grid-cols-1 gap-2 sm:grid-cols-2";
       return (
-        <ul className="space-y-2">
+        <ul className={listClass}>
           {question.options.map((opt) => {
             const isSelected = selected.includes(opt.id);
             return (
