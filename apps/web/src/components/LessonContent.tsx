@@ -280,7 +280,7 @@ function ContentBlock({
  * to <video src=...>; recognized providers (YouTube/Vimeo/...) render
  * an <iframe> instead.
  */
-function isNativeVideoUrl(url: string): boolean {
+export function isNativeVideoUrl(url: string): boolean {
   const trimmed = url.trim();
   if (!trimmed) return false;
   if (trimmed.startsWith("/")) return true; // same-origin path (uploaded file)

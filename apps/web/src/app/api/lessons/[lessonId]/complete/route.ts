@@ -10,7 +10,15 @@ import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
 const Body = z.object({
-  reason: z.enum(["marked_complete", "watched_threshold", "skipped"]).optional(),
+  reason: z
+    .enum([
+      "marked_complete",
+      "watched_threshold",
+      "all_activities_completed",
+      "scrolled_to_end",
+      "skipped",
+    ])
+    .optional(),
 });
 
 export async function POST(

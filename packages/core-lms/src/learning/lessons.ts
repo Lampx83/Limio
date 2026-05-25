@@ -91,6 +91,8 @@ export interface CompleteResult {
 export type LessonCompleteReason =
   | "marked_complete"
   | "watched_threshold"
+  | "all_activities_completed" // every quiz passed + every assignment submitted
+  | "scrolled_to_end" // text/embed-only lesson — learner reached the bottom
   | "skipped"; // B4 — learner accepted the "you can skip this" suggestion
 
 export async function completeLesson(

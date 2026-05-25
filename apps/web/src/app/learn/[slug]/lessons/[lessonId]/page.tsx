@@ -20,7 +20,9 @@ import LessonTasksTab, {
   type TaskItem,
 } from "@/components/lesson/LessonTasksTab";
 import LessonStickyActions from "@/components/lesson/LessonStickyActions";
+import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
+import { isNativeVideoUrl } from "@/components/LessonContent";
 
 export const dynamic = "force-dynamic";
 
@@ -260,6 +262,44 @@ export default async function LessonPage({
 
   const defaultTab: TabKey = tasksUndone > 0 ? "tasks" : "forum";
 
+  // Auto-complete criteria. Computed server-side because we already know all
+  // the inputs here (content shape + per-user activity status). Client-side
+  // tracker (LessonStickyActions) only handles the live signals we can't
+  // determine from the server: ongoing video watch %, and scroll-to-end.
+  //
+  // Rules:
+  //   - Video required iff the lesson has at least one native (<video>-playable)
+  //     video ContentItem. Provider iframes (YouTube/Vimeo) can't be tracked.
+  //   - Activities required iff the lesson has any visible quiz or assignment.
+  //   - Scroll-to-end ONLY when neither video nor activities apply (text/PDF/
+  //     embed lessons). Avoids forcing a scroll on lessons where the video or
+  //     quiz already verifies engagement.
+  const hasNativeVideo = lesson.contentItems.some(
+    (c) =>
+      c.type === "video" &&
+      !c.isHidden &&
+      isNativeVideoUrl(
+        ((c.payload as { url?: string } | null)?.url ?? "") as string,
+      ),
+  );
+  const hasAnyActivity =
+    visibleQuizzes.length > 0 || visibleAssignments.length > 0;
+  // Pending = quizzes not yet passed + assignments without any submission.
+  const pendingActivityCount =
+    visibleQuizzes.filter((q) => !(bestAttemptByQuiz.get(q.id)?.passed === true))
+      .length +
+    visibleAssignments.filter((a) => a.submissions.length === 0).length;
+  const totalActivityCount = visibleQuizzes.length + visibleAssignments.length;
+  const autoCompleteConfig = {
+    requireVideoWatch: hasNativeVideo,
+    videoThresholdPct: lesson.completionThresholdPct ?? 80,
+    requireAllActivities: hasAnyActivity,
+    pendingActivityCount,
+    totalActivityCount,
+    // Scroll fallback only when there's no other engagement signal to verify.
+    requireScrollToEnd: !hasNativeVideo && !hasAnyActivity,
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       {/* Breadcrumb + lesson meta */}
@@ -312,6 +352,20 @@ export default async function LessonPage({
         </div>
       )}
 
+      {/*
+        Completion prompt + auto-tracker. Mounted high so the learner sees what's
+        still pending before scrolling into content. Self-hides once the lesson
+        is already completed (server-rendered state via completedEvent).
+      */}
+      <div className="mt-6">
+        <LessonCompletionPrompt
+          lessonId={lesson.id}
+          courseSlug={params.slug}
+          initiallyCompleted={completedEvent !== null}
+          autoComplete={autoCompleteConfig}
+        />
+      </div>
+
       {/* Lesson content */}
       <div className="mt-8">
         <LessonContent
@@ -332,7 +386,7 @@ export default async function LessonPage({
         defaultTab={defaultTab}
         tabs={[
           { key: "tasks", label: "Bài tập", icon: "📝", count: tasksUndone },
-          { key: "forum", label: "Hỏi đáp", icon: "💬", count: threads.length },
+          { key: "forum", label: "Thảo luận", icon: "💬", count: threads.length },
         ]}
       >
         {{
@@ -359,10 +413,13 @@ export default async function LessonPage({
 
       <LessonNotesDrawer lessonId={lesson.id} />
 
+      {/* Sentinel for scroll-to-end auto-complete tracker (text-only lessons). */}
+      <div id="lesson-end-sentinel" aria-hidden className="h-px w-full" />
+
       <LessonStickyActions
         lessonId={lesson.id}
         courseSlug={params.slug}
-        initiallyCompleted={completedEvent !== null}
+        completed={completedEvent !== null}
         initialResumeSec={
           enrollment.lastLessonId === lesson.id
             ? enrollment.lastPositionSec ?? 0

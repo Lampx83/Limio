@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Check, CheckCircle2 } from "lucide-react";
+import { useEffect } from "react";
+import { Check } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
+/**
+ * Bottom navigation bar for the lesson page. Show prev/next buttons + a
+ * "completed" badge. The actual auto-completion tracking lives in
+ * LessonCompletionPrompt (at the top of the page) so the trackers + the API
+ * call have a single owner.
+ *
+ * Still owns the lesson-view heartbeat — fired once on mount so the server
+ * records lastLessonId / lastPositionSec for "continue where you left off."
+ */
 export default function LessonStickyActions({
   lessonId,
   courseSlug,
-  initiallyCompleted,
+  completed,
   initialResumeSec,
   prevLessonId,
   prevTitle,
@@ -17,17 +25,16 @@ export default function LessonStickyActions({
 }: {
   lessonId: string;
   courseSlug: string;
-  initiallyCompleted: boolean;
+  /** Server-rendered completion state. The auto-completion happens in the
+   * companion LessonCompletionPrompt component, which triggers a router.refresh
+   * after firing — so this prop becomes `true` after the next render. */
+  completed: boolean;
   initialResumeSec: number;
   prevLessonId: string | null;
   prevTitle: string | null;
   nextLessonId: string | null;
   nextTitle: string | null;
 }) {
-  const router = useRouter();
-  const [completed, setCompleted] = useState(initiallyCompleted);
-  const [busy, setBusy] = useState(false);
-
   useEffect(() => {
     fetch(apiUrl(`/api/lessons/${lessonId}/view`), {
       method: "POST",
@@ -36,26 +43,6 @@ export default function LessonStickyActions({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
-
-  async function onComplete() {
-    setBusy(true);
-    try {
-      const res = await fetch(apiUrl(`/api/lessons/${lessonId}/complete`), {
-        method: "POST",
-      });
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setCompleted(true);
-        if (data?.courseCompleted) {
-          window.location.href = `/learn/${courseSlug}`;
-        } else {
-          router.refresh();
-        }
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <>
@@ -79,21 +66,11 @@ export default function LessonStickyActions({
           )}
 
           <div className="flex flex-1 justify-center">
-            {completed ? (
+            {completed && (
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-success-50 px-3 py-2 text-sm font-semibold text-success-700">
                 <Check size={16} strokeWidth={2.5} />
                 <span>Đã hoàn thành</span>
               </span>
-            ) : (
-              <button
-                type="button"
-                onClick={onComplete}
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-lg bg-success-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-success-700 hover:shadow-md disabled:opacity-50"
-              >
-                <CheckCircle2 size={16} strokeWidth={2.5} />
-                {busy ? "Đang lưu..." : "Đánh dấu hoàn thành"}
-              </button>
             )}
           </div>
 
