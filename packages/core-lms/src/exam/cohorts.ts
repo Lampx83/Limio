@@ -13,7 +13,7 @@ import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
-import { ensureDefaultRound } from "./exam-rooms";
+import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
 import { ExamError } from "./types";
 
 // ============================================================================
@@ -461,6 +461,10 @@ export async function createExamSession(
     },
     select: { id: true },
   });
+  // Always seed a default room so open_code candidates without a room code
+  // get assigned somewhere — otherwise they end up with roomId=NULL and
+  // fall out of the session results query.
+  await ensureDefaultRoomForSession(actorUserId, s.id, db);
   return s;
 }
 

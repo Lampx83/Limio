@@ -80,53 +80,56 @@ export default async function ExamSessionDetailPage({
   const canEdit = await canEditExamRound(userId, detail.roundId);
   const rooms = await listExamRoomsForSession(userId, params.sessionId);
 
-  // Results tab: per-candidate attempt data for all rooms in this session.
+  // Results tab: per-candidate attempt data for this session.
+  // FIX: previously filtered by `roomId IN [rooms of session]` which dropped
+  // candidates with NULL roomId — common in open_code (free) sessions where
+  // the candidate claims a code without picking/having a room (see
+  // code-access.ts: "Ca thi chưa có phòng → roomId=null"). sessionId is the
+  // canonical link from candidate to session (always set), so query by that
+  // and treat roomId as a display-only column with a "— chưa gán —" fallback.
   let candidateResults: CandidateResult[] = [];
   if (activeTab === "results") {
-    const roomIds = rooms.map((r) => r.id);
-    if (roomIds.length > 0) {
-      const candidates = await prisma.examCandidate.findMany({
-        where: { roomId: { in: roomIds } },
-        orderBy: [{ room: { name: "asc" } }, { displayName: "asc" }],
-        select: {
-          id: true,
-          displayName: true,
-          accessCode: true,
-          roomId: true,
-          room: { select: { name: true } },
-          attempts: {
-            orderBy: [{ submittedAt: "desc" }, { startedAt: "desc" }],
-            take: 1,
-            select: {
-              status: true,
-              score: true,
-              scorePct: true,
-              passed: true,
-              submittedAt: true,
-            },
+    const candidates = await prisma.examCandidate.findMany({
+      where: { sessionId: params.sessionId },
+      orderBy: [{ room: { name: "asc" } }, { displayName: "asc" }],
+      select: {
+        id: true,
+        displayName: true,
+        accessCode: true,
+        roomId: true,
+        room: { select: { name: true } },
+        attempts: {
+          orderBy: [{ submittedAt: "desc" }, { startedAt: "desc" }],
+          take: 1,
+          select: {
+            status: true,
+            score: true,
+            scorePct: true,
+            passed: true,
+            submittedAt: true,
           },
         },
-      });
-      candidateResults = candidates.map((c) => {
-        const attempt = c.attempts[0] ?? null;
-        const status =
-          attempt === null
-            ? "none"
-            : (attempt.status as CandidateResult["attemptStatus"]);
-        return {
-          id: c.id,
-          displayName: c.displayName,
-          accessCode: c.accessCode ?? "",
-          roomId: c.roomId ?? "",
-          roomName: c.room?.name ?? "",
-          attemptStatus: status,
-          score: attempt?.score ?? null,
-          scorePct: attempt?.scorePct ?? null,
-          passed: attempt?.passed ?? null,
-          submittedAt: attempt?.submittedAt?.toISOString() ?? null,
-        } satisfies CandidateResult;
-      });
-    }
+      },
+    });
+    candidateResults = candidates.map((c) => {
+      const attempt = c.attempts[0] ?? null;
+      const status =
+        attempt === null
+          ? "none"
+          : (attempt.status as CandidateResult["attemptStatus"]);
+      return {
+        id: c.id,
+        displayName: c.displayName,
+        accessCode: c.accessCode ?? "",
+        roomId: c.roomId ?? "",
+        roomName: c.room?.name ?? "— chưa gán phòng —",
+        attemptStatus: status,
+        score: attempt?.score ?? null,
+        scorePct: attempt?.scorePct ?? null,
+        passed: attempt?.passed ?? null,
+        submittedAt: attempt?.submittedAt?.toISOString() ?? null,
+      } satisfies CandidateResult;
+    });
   }
 
   return (

@@ -572,6 +572,57 @@ async function nextRoomOrderIndex(
   return (top?.orderIndex ?? 0) + 1;
 }
 
+/**
+ * Idempotently ensure the session has at least one room, marked as default.
+ * Called right after `createExamSession*` so an open_code (free) session
+ * always has a fallback room for candidates who don't enter a room code —
+ * without this, the candidate's ExamCandidate row gets roomId=NULL and the
+ * session results query (filters by roomId or by sessionId-with-room-join)
+ * loses them.
+ *
+ * No-op if any room already exists in the session. Uses the session's exam
+ * to find the right examId and assigns the actor as initial proctor (same
+ * pattern as `bulkCreateExamRooms`). Instructor can rename / reassign later.
+ *
+ * Authorization NOT re-checked — caller is the one creating the session and
+ * has already passed assertCanEditCourse / assertCanEdit(round).
+ */
+export async function ensureDefaultRoomForSession(
+  actorUserId: string,
+  sessionId: string,
+  db: PrismaClient = prisma,
+): Promise<{ created: boolean; roomId: string }> {
+  // Fast-path: any room exists → nothing to do.
+  const existing = await db.examRoom.findFirst({
+    where: { sessionId },
+    select: { id: true },
+    orderBy: { orderIndex: "asc" },
+  });
+  if (existing) return { created: false, roomId: existing.id };
+
+  const session = await db.examSession.findUnique({
+    where: { id: sessionId },
+    select: { examId: true },
+  });
+  if (!session) throw new ExamError("schedule_not_found");
+
+  const accessCode = await generateUniqueRoomCode(sessionId, db);
+  const room = await db.examRoom.create({
+    data: {
+      examId: session.examId,
+      sessionId,
+      orderIndex: 1,
+      name: "Phòng mặc định",
+      proctorUserId: actorUserId,
+      locationNote: null,
+      accessCode,
+      isDefault: true,
+    },
+    select: { id: true },
+  });
+  return { created: true, roomId: room.id };
+}
+
 // A5.3 PR2.6 — Bulk-create N rooms in a session with placeholder names
 // "Phòng 1", "Phòng 2"... so the instructor can quickly scaffold a session
 // and fill in proctor / location per row afterwards. The actor is set as the

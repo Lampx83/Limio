@@ -18,6 +18,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { isAdmin } from "../auth/roles";
 import { canEditCourse } from "../courses/authz";
+import { ensureDefaultRoomForSession } from "./exam-rooms";
 import { ExamError } from "./types";
 
 // ============================================================================
@@ -531,6 +532,8 @@ export async function createExamSessionInRound(
       },
       select: { id: true },
     });
+    // Seed a default room (see ensureDefaultRoomForSession docstring for why).
+    await ensureDefaultRoomForSession(actorUserId, s.id, db);
     return s;
   } catch (e) {
     // No DB-level unique on (roundId, code) yet — P2002 only fires from
@@ -668,6 +671,10 @@ export async function bulkCreateExamSessionsInRound(
       },
       select: { id: true },
     });
+    // Seed a default room so open_code candidates without a room code get
+    // assigned somewhere — otherwise results disappear from the session
+    // results tab. See ensureDefaultRoomForSession docstring.
+    await ensureDefaultRoomForSession(actorUserId, s.id, db);
     created.push(s.id);
     taken.add(`${prefix} ${nextNum}`);
     nextNum++;
