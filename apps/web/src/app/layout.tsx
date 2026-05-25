@@ -30,13 +30,16 @@ export const metadata: Metadata = {
   },
 };
 
-// Runs before React hydration to set the dark class — prevents flash of wrong theme.
+// Dark mode disabled — clear any legacy `dark` class + stored preference left
+// over from users who had dark/system theme enabled before. Runs pre-hydration
+// so the page never flashes dark for returning users. Keep the script (instead
+// of deleting outright) until next release cycle so it cleans up persisted
+// localStorage state for all visitors at least once.
 const NO_FLASH_SCRIPT = `
 (function() {
   try {
-    var t = localStorage.getItem('fbm-theme') || 'system';
-    var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (dark) document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem('fbm-theme');
   } catch (e) {}
 })();
 `.trim();

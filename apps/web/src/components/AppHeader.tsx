@@ -2,7 +2,6 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@feedbackme/db";
 import UserMenu from "./UserMenu";
-import ThemeToggle from "./ThemeToggle";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
@@ -81,7 +80,6 @@ export default async function AppHeader() {
               role={bellRole}
             />
           )}
-          <ThemeToggle />
           {user ? (
             <UserMenu
               name={user.name ?? "User"}
