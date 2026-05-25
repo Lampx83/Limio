@@ -396,6 +396,56 @@ export async function autoSubmitExpiredAttemptsMarkOnly(
   return { processed, errors, attemptIds };
 }
 
+/**
+ * Recovery scanner: find ExamAttempts in `submitted`/`auto_submitted` state
+ * with score=null that haven't been graded — typically because the BullMQ
+ * worker was down / Redis dropped at submit time, so the auto-grade job
+ * never ran. Re-grades them inline (synchronous, doesn't need worker).
+ *
+ * Cron-friendly: cap at `batchSize` per tick + 1-minute grace window before
+ * picking up a fresh submission (give the worker a chance first).
+ *
+ * Idempotent — re-running picks up nothing because `applyAutoGradingForAttempt`
+ * skips attempts already in `graded` status.
+ */
+export async function gradeStuckSubmittedAttempts(
+  db: PrismaClient = prisma,
+  opts: { batchSize?: number; graceMs?: number } = {},
+): Promise<{ processed: number; errors: number; attemptIds: string[] }> {
+  const batchSize = opts.batchSize ?? 100;
+  const graceMs = opts.graceMs ?? 60_000;
+  const cutoff = new Date(Date.now() - graceMs);
+
+  const stuck = await db.examAttempt.findMany({
+    where: {
+      status: { in: ["submitted", "auto_submitted"] },
+      score: null,
+      submittedAt: { lt: cutoff, not: null },
+    },
+    select: { id: true },
+    take: batchSize,
+    orderBy: { submittedAt: "asc" },
+  });
+
+  let processed = 0;
+  let errors = 0;
+  const attemptIds: string[] = [];
+  for (const a of stuck) {
+    try {
+      const r = await applyAutoGradingForAttempt(a.id, db);
+      if (r.fullyGraded) {
+        attemptIds.push(a.id);
+        processed++;
+      }
+    } catch (e) {
+      errors++;
+      // Don't throw — keep batch processing the rest.
+      console.error(`[gradeStuckSubmittedAttempts] ${a.id} failed:`, e);
+    }
+  }
+  return { processed, errors, attemptIds };
+}
+
 /** A7.5.1 — Manual submit by learner (User or candidate). */
 export async function submitExamAttempt(
   subject: ExamSubject,

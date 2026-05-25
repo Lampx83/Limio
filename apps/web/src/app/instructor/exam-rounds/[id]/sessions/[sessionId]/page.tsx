@@ -102,6 +102,7 @@ export default async function ExamSessionDetailPage({
           orderBy: [{ submittedAt: "desc" }, { startedAt: "desc" }],
           take: 1,
           select: {
+            id: true,
             status: true,
             score: true,
             scorePct: true,
@@ -119,6 +120,7 @@ export default async function ExamSessionDetailPage({
           : (attempt.status as CandidateResult["attemptStatus"]);
       return {
         id: c.id,
+        attemptId: attempt?.id ?? null,
         displayName: c.displayName,
         accessCode: c.accessCode ?? "",
         roomId: c.roomId ?? "",

@@ -5,6 +5,10 @@
 5 0 * * *    /usr/local/bin/run.sh leaderboard-close
 */5 * * * *  /usr/local/bin/run.sh tournament-tick
 *    * * * *  /usr/local/bin/run.sh exam-autosubmit
+# Recovery: re-grade ExamAttempts kẹt ở submitted/auto_submitted với score=NULL
+# (do BullMQ worker chết hoặc Redis đứt lúc submit nên auto-grade job không
+# chạy được). Grace 1 phút trước khi pick up — cho worker cơ hội xử lý trước.
+*    * * * *  /usr/local/bin/run.sh exam-stuck-grade
 # A5.3.6 — Heartbeat-lost detector. Cheap query on (status, lastHeartbeatAt)
 # index; in-memory dedups so re-runs don't spam dashboard with the same row.
 */2  * * * *  /usr/local/bin/run.sh exam-heartbeat-watch

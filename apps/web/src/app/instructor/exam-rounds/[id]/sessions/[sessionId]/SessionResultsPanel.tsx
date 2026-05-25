@@ -1,9 +1,14 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Download, RefreshCw } from "lucide-react";
+import { apiUrl } from "@/lib/apiUrl";
 
 export interface CandidateResult {
   id: string;
+  /** Latest attempt id (null if candidate hasn't started). Needed for re-grade. */
+  attemptId: string | null;
   displayName: string;
   accessCode: string;
   roomId: string;
@@ -38,6 +43,34 @@ const STATUS_TONE: Record<CandidateResult["attemptStatus"], string> = {
 };
 
 export default function SessionResultsPanel({ roundId, sessionId, candidates }: Props) {
+  const router = useRouter();
+  // Per-row "đang chấm lại" busy state, keyed by attemptId.
+  const [regrading, setRegrading] = useState<Set<string>>(new Set());
+
+  async function regrade(attemptId: string) {
+    setRegrading((prev) => new Set(prev).add(attemptId));
+    try {
+      const res = await fetch(
+        apiUrl(`/api/exam-attempts/${attemptId}/regrade`),
+        { method: "POST" },
+      );
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const body = (await res.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        alert(`Chấm lại thất bại: ${body?.error ?? res.statusText}`);
+      }
+    } finally {
+      setRegrading((prev) => {
+        const next = new Set(prev);
+        next.delete(attemptId);
+        return next;
+      });
+    }
+  }
+
   if (candidates.length === 0) {
     return (
       <div className="rounded border border-dashed border-default px-4 py-10 text-center text-sm text-faint">
@@ -101,36 +134,82 @@ export default function SessionResultsPanel({ roundId, sessionId, candidates }: 
               <th className="px-3 py-2 font-medium text-right">Trạng thái</th>
               <th className="px-3 py-2 font-medium text-right">Điểm %</th>
               <th className="px-3 py-2 font-medium text-right">Kết quả</th>
+              <th className="px-3 py-2 font-medium text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-default bg-white">
-            {candidates.map((c) => (
-              <tr key={c.id} className="hover:bg-slate-50">
-                <td className="px-3 py-2 font-medium">{c.displayName}</td>
-                <td className="px-3 py-2 text-faint">{c.roomName}</td>
-                <td className="px-3 py-2 font-mono text-faint">{c.accessCode}</td>
-                <td className="px-3 py-2 text-right">
-                  <span className={`rounded px-1.5 py-0.5 font-medium ${STATUS_TONE[c.attemptStatus]}`}>
-                    {STATUS_LABEL[c.attemptStatus]}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">
-                  {c.scorePct !== null ? `${c.scorePct.toFixed(1)}%` : "—"}
-                </td>
-                <td className="px-3 py-2 text-right">
-                  {c.passed === null ? (
-                    <span className="text-faint">—</span>
-                  ) : c.passed ? (
-                    <span className="font-medium text-emerald-700">Đạt</span>
-                  ) : (
-                    <span className="font-medium text-red-700">Chưa đạt</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {candidates.map((c) => {
+              // Stuck attempts: học viên đã nộp (hoặc hết giờ) nhưng score vẫn
+              // null — auto-grade worker chưa chạy. Cho phép instructor bấm
+              // "Chấm lại" để chấm đồng bộ ngay tại request, không qua queue.
+              const isStuck =
+                c.attemptId !== null &&
+                (c.attemptStatus === "submitted" ||
+                  c.attemptStatus === "auto_submitted") &&
+                c.score === null;
+              const isBusy = c.attemptId !== null && regrading.has(c.attemptId);
+              return (
+                <tr key={c.id} className="hover:bg-slate-50">
+                  <td className="px-3 py-2 font-medium">{c.displayName}</td>
+                  <td className="px-3 py-2 text-faint">{c.roomName}</td>
+                  <td className="px-3 py-2 font-mono text-faint">{c.accessCode}</td>
+                  <td className="px-3 py-2 text-right">
+                    <span className={`rounded px-1.5 py-0.5 font-medium ${STATUS_TONE[c.attemptStatus]}`}>
+                      {STATUS_LABEL[c.attemptStatus]}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {c.scorePct !== null ? `${c.scorePct.toFixed(1)}%` : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {c.passed === null ? (
+                      <span className="text-faint">—</span>
+                    ) : c.passed ? (
+                      <span className="font-medium text-emerald-700">Đạt</span>
+                    ) : (
+                      <span className="font-medium text-red-700">Chưa đạt</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {isStuck && c.attemptId ? (
+                      <button
+                        type="button"
+                        onClick={() => regrade(c.attemptId!)}
+                        disabled={isBusy}
+                        title="Bài đã nộp nhưng chưa được chấm — bấm để chấm ngay"
+                        className="inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                      >
+                        <RefreshCw size={11} className={isBusy ? "animate-spin" : ""} />
+                        {isBusy ? "Đang chấm…" : "Chấm lại"}
+                      </button>
+                    ) : (
+                      <span className="text-faint">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/*
+        Trailer note — giải thích cho instructor khi nào nút "Chấm lại" xuất
+        hiện, để cô không bối rối khi thấy bài có dấu chấm than màu cam.
+      */}
+      {candidates.some(
+        (c) =>
+          c.attemptId !== null &&
+          (c.attemptStatus === "submitted" ||
+            c.attemptStatus === "auto_submitted") &&
+          c.score === null,
+      ) && (
+        <p className="text-[11px] text-amber-700">
+          ⚠️ Có bài đã nộp nhưng hệ thống chưa chấm tự động được. Bấm{" "}
+          <strong>Chấm lại</strong> ở từng dòng để chấm ngay, hoặc đợi tối đa{" "}
+          1 phút để hệ thống tự chạy lại.
+        </p>
+      )}
     </div>
   );
 }
