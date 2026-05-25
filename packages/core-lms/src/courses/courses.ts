@@ -4,6 +4,7 @@ import { RoleName } from "@feedbackme/shared-types";
 import { logAudit } from "../auth/audit";
 import { uniqueCourseSlug } from "./slug";
 import { assertCanEditCourse, CourseAuthzError } from "./authz";
+import { attachLessonActivity } from "./lessonActivity";
 
 export const CreateCourseInput = z.object({
   title: z.string().min(1).max(200).trim(),
@@ -482,6 +483,14 @@ export async function duplicateCourse(
         level: src.level,
         category: src.category,
         coverUrl: src.coverUrl,
+        // Copy characteristic fields so the duplicate behaves identically
+        // to source once published. Previously these were dropped to defaults,
+        // causing the copy to lose personalization / pricing / org scope and
+        // appear "hidden" or misconfigured to learners after publish.
+        personalizationEnabled: src.personalizationEnabled,
+        priceCents: src.priceCents,
+        currency: src.currency,
+        organizationId: src.organizationId,
         status: "draft",
         version: 1,
       },
@@ -510,7 +519,7 @@ export async function duplicateCourse(
           },
         });
         for (const c of l.contentItems) {
-          await tx.contentItem.create({
+          const newContent = await tx.contentItem.create({
             data: {
               lessonId: newLesson.id,
               type: c.type,
@@ -518,6 +527,7 @@ export async function duplicateCourse(
               orderIndex: c.orderIndex,
             },
           });
+          await attachLessonActivity(tx, newLesson.id, "content", newContent.id);
         }
         for (const t of l.skillTags) {
           await tx.contentSkillMapping.create({
@@ -530,7 +540,7 @@ export async function duplicateCourse(
           });
         }
         for (const a of l.assignments) {
-          await tx.assignment.create({
+          const newAssignment = await tx.assignment.create({
             data: {
               lessonId: newLesson.id,
               title: a.title,
@@ -539,6 +549,7 @@ export async function duplicateCourse(
               maxScore: a.maxScore,
             },
           });
+          await attachLessonActivity(tx, newLesson.id, "assignment", newAssignment.id);
         }
         for (const q of l.quizzes) {
           const newQuiz = await tx.quiz.create({
@@ -553,8 +564,13 @@ export async function duplicateCourse(
               maxAttempts: q.maxAttempts,
               randomizeOrder: q.randomizeOrder,
               requireConfidence: q.requireConfidence,
+              // cuepointOnly + tournamentMissionId default false/null on copy,
+              // so the clone goes into the lesson timeline (not as cuepoint).
             },
           });
+          // Only regular quizzes (not cuepoint, not tournament-bound) get a
+          // LessonActivity row. Duplicate doesn't carry tournament bindings.
+          await attachLessonActivity(tx, newLesson.id, "quiz", newQuiz.id);
           for (const qq of q.questions) {
             const newQuestion = await tx.quizQuestion.create({
               data: {

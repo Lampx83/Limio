@@ -45,6 +45,17 @@ interface Lesson {
     requireReflection?: boolean;
     countsTowardGrade?: boolean;
   }>;
+  // Unified ordered activity list — drives cross-type drag-drop. Each entry is
+  // a thin pointer; ActivitySection joins by id back to contentItems / quizzes /
+  // assignments arrays loaded alongside.
+  activities?: Array<{
+    id: string;
+    kind: "content" | "quiz" | "assignment";
+    orderIndex: number;
+    contentItemId: string | null;
+    quizId: string | null;
+    assignmentId: string | null;
+  }>;
   quizzes: Array<{
     id: string;
     title: string;
@@ -146,6 +157,7 @@ export default function LessonSection({
             contentItems={lesson.contentItems}
             quizzes={lesson.quizzes}
             assignments={lesson.assignments}
+            activities={lesson.activities ?? []}
           />
         </div>
 

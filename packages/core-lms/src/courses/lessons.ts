@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import type { DbClient } from "../auth/tokens";
 import { assertCanEditCourse, CourseAuthzError } from "./authz";
 import { CourseError } from "./courses";
+import { attachLessonActivity } from "./lessonActivity";
 
 export const CreateLessonInput = z.object({
   title: z.string().min(1).max(200).trim(),
@@ -173,7 +174,7 @@ export async function duplicateLesson(
 
     // Content items
     for (const ci of src.contentItems) {
-      await tx.contentItem.create({
+      const ciDup = await tx.contentItem.create({
         data: {
           lessonId: dup.id,
           type: ci.type,
@@ -182,11 +183,12 @@ export async function duplicateLesson(
           isHidden: ci.isHidden,
         },
       });
+      await attachLessonActivity(tx, dup.id, "content", ciDup.id);
     }
 
     // Assignments
     for (const a of src.assignments) {
-      await tx.assignment.create({
+      const aDup = await tx.assignment.create({
         data: {
           lessonId: dup.id,
           title: a.title,
@@ -196,6 +198,7 @@ export async function duplicateLesson(
           isHidden: a.isHidden,
         },
       });
+      await attachLessonActivity(tx, dup.id, "assignment", aDup.id);
     }
 
     // Quizzes (deep: questions + options + question skill tags)
@@ -213,6 +216,7 @@ export async function duplicateLesson(
           isHidden: q.isHidden,
         },
       });
+      await attachLessonActivity(tx, dup.id, "quiz", quizDup.id);
       for (const qq of q.questions) {
         const questionDup = await tx.quizQuestion.create({
           data: {

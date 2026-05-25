@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditCourse } from "./authz";
+import { attachLessonActivity } from "./lessonActivity";
 import { isUserEnrolled } from "../learning/enroll";
 import { emitEvent } from "../learning/events";
 
@@ -143,34 +144,40 @@ export async function createAssignment(
   if (!parsed.success) {
     throw new AssignmentError("validation_failed", parsed.error.flatten());
   }
-  const created = await db.assignment.create({
-    data: {
-      lessonId,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      dueAt: parsed.data.dueAt,
-      maxScore: parsed.data.maxScore,
-      ...(parsed.data.pedagogicalIntent !== undefined && {
-        pedagogicalIntent: parsed.data.pedagogicalIntent,
-      }),
-      ...(parsed.data.responseFormat !== undefined && {
-        responseFormat: parsed.data.responseFormat,
-      }),
-      ...(parsed.data.assessmentModes !== undefined && {
-        assessmentModes: parsed.data.assessmentModes,
-      }),
-      ...(parsed.data.requireSelfRating !== undefined && {
-        requireSelfRating: parsed.data.requireSelfRating,
-      }),
-      ...(parsed.data.requireReflection !== undefined && {
-        requireReflection: parsed.data.requireReflection,
-      }),
-      ...(parsed.data.countsTowardGrade !== undefined && {
-        countsTowardGrade: parsed.data.countsTowardGrade,
-      }),
-    },
+  // Wrap entity create + LessonActivity attach in one transaction so the
+  // ordering layer stays consistent with the entity table.
+  const createdId = await db.$transaction(async (tx) => {
+    const created = await tx.assignment.create({
+      data: {
+        lessonId,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        dueAt: parsed.data.dueAt,
+        maxScore: parsed.data.maxScore,
+        ...(parsed.data.pedagogicalIntent !== undefined && {
+          pedagogicalIntent: parsed.data.pedagogicalIntent,
+        }),
+        ...(parsed.data.responseFormat !== undefined && {
+          responseFormat: parsed.data.responseFormat,
+        }),
+        ...(parsed.data.assessmentModes !== undefined && {
+          assessmentModes: parsed.data.assessmentModes,
+        }),
+        ...(parsed.data.requireSelfRating !== undefined && {
+          requireSelfRating: parsed.data.requireSelfRating,
+        }),
+        ...(parsed.data.requireReflection !== undefined && {
+          requireReflection: parsed.data.requireReflection,
+        }),
+        ...(parsed.data.countsTowardGrade !== undefined && {
+          countsTowardGrade: parsed.data.countsTowardGrade,
+        }),
+      },
+    });
+    await attachLessonActivity(tx, lessonId, "assignment", created.id);
+    return created.id;
   });
-  return { assignmentId: created.id };
+  return { assignmentId: createdId };
 }
 
 export async function updateAssignment(

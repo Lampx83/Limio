@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -966,7 +968,10 @@ function InlineCuepointQuestion({
                       }}
                       disabled={previewResult !== null}
                     />
-                    <span>{o.label}</span>
+                    <SafeHtml
+                      html={plainToRichHtml(o.label)}
+                      className="prose prose-sm max-w-none flex-1 dark:prose-invert"
+                    />
                     {previewResult && o.isCorrect && (
                       <span className="ml-auto text-xs font-semibold text-success-700">
                         đáp án đúng
@@ -1038,60 +1043,65 @@ function InlineCuepointQuestion({
           ▶ Thử câu hỏi
         </button>
       </div>
-      <textarea
+      <RichTextEditor
         value={draft.prompt}
-        onChange={(e) => onChange({ ...draft, prompt: e.target.value })}
-        rows={2}
-        placeholder="Câu hỏi (prompt)..."
-        className="textarea w-full"
+        onChange={(html) => onChange({ ...draft, prompt: html })}
+        placeholder="Câu hỏi... (có thể chèn ảnh qua nút 🖼️)"
+        minHeight={64}
       />
-      <ul className="space-y-1">
+      <ul className="space-y-2">
         {draft.options.map((o, i) => (
-          <li key={i} className="flex items-center gap-2">
-            <input
-              type="radio"
-              name={`correct-${draft.uid}`}
-              checked={o.isCorrect}
-              onChange={() =>
-                onChange({
-                  ...draft,
-                  options: draft.options.map((opt, j) => ({
-                    ...opt,
-                    isCorrect: i === j,
-                  })),
-                })
-              }
-              aria-label="Đáp án đúng"
-            />
-            <input
-              type="text"
-              value={o.label}
-              onChange={(e) =>
-                onChange({
-                  ...draft,
-                  options: draft.options.map((opt, j) =>
-                    i === j ? { ...opt, label: e.target.value } : opt,
-                  ),
-                })
-              }
-              placeholder={`Đáp án ${String.fromCharCode(65 + i)}`}
-              className="input flex-1"
-            />
-            {draft.options.length > 2 && (
-              <button
-                type="button"
-                onClick={() =>
+          <li key={i} className="rounded-lg border border-token bg-[rgb(var(--surface))] p-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                name={`correct-${draft.uid}`}
+                checked={o.isCorrect}
+                onChange={() =>
                   onChange({
                     ...draft,
-                    options: draft.options.filter((_, j) => i !== j),
+                    options: draft.options.map((opt, j) => ({
+                      ...opt,
+                      isCorrect: i === j,
+                    })),
                   })
                 }
-                className="text-xs text-muted hover:text-danger-600"
-                aria-label="Xoá đáp án"
-              >
-                ✕
-              </button>
-            )}
+                aria-label="Đáp án đúng"
+              />
+              <span className="flex-1 text-xs text-faint">
+                Đáp án {String.fromCharCode(65 + i)}
+              </span>
+              {draft.options.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      ...draft,
+                      options: draft.options.filter((_, j) => i !== j),
+                    })
+                  }
+                  className="text-xs text-muted hover:text-danger-600"
+                  aria-label="Xoá đáp án"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <div className="mt-1.5">
+              <RichTextEditor
+                value={o.label}
+                onChange={(html) =>
+                  onChange({
+                    ...draft,
+                    options: draft.options.map((opt, j) =>
+                      i === j ? { ...opt, label: html } : opt,
+                    ),
+                  })
+                }
+                placeholder={`Đáp án ${String.fromCharCode(65 + i)}... (có thể chèn ảnh 🖼️)`}
+                minHeight={48}
+              />
+            </div>
           </li>
         ))}
       </ul>

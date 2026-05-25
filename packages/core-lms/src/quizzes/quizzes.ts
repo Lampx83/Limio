@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse, CourseAuthzError } from "../courses/authz";
+import { attachLessonActivity } from "../courses/lessonActivity";
 import { QuizError } from "./types";
 
 export const CreateQuizInput = z.object({
@@ -40,21 +41,32 @@ export async function createQuiz(
     }
   }
 
-  const quiz = await db.quiz.create({
-    data: {
-      courseId: scope.courseId,
-      lessonId: scope.lessonId ?? null,
-      title: parsed.data.title,
-      description: parsed.data.description ?? null,
-      difficulty: parsed.data.difficulty ?? null,
-      passThresholdPct: parsed.data.passThresholdPct ?? 70,
-      timeLimitSec: parsed.data.timeLimitSec ?? null,
-      maxAttempts: parsed.data.maxAttempts ?? null,
-      randomizeOrder: parsed.data.randomizeOrder ?? false,
-      requireConfidence: parsed.data.requireConfidence ?? true,
-    },
+  // Wrap entity create + LessonActivity attach in one transaction. Lesson-scoped
+  // regular quizzes get a LessonActivity row so they appear in the unified
+  // ordered activity list. Course-scoped (no lessonId) quizzes are skipped.
+  // Cuepoint quizzes never reach this code path (they go through
+  // createCuepointQuiz which sets cuepointOnly=true and is excluded by design).
+  const quizId = await db.$transaction(async (tx) => {
+    const quiz = await tx.quiz.create({
+      data: {
+        courseId: scope.courseId,
+        lessonId: scope.lessonId ?? null,
+        title: parsed.data.title,
+        description: parsed.data.description ?? null,
+        difficulty: parsed.data.difficulty ?? null,
+        passThresholdPct: parsed.data.passThresholdPct ?? 70,
+        timeLimitSec: parsed.data.timeLimitSec ?? null,
+        maxAttempts: parsed.data.maxAttempts ?? null,
+        randomizeOrder: parsed.data.randomizeOrder ?? false,
+        requireConfidence: parsed.data.requireConfidence ?? true,
+      },
+    });
+    if (scope.lessonId) {
+      await attachLessonActivity(tx, scope.lessonId, "quiz", quiz.id);
+    }
+    return quiz.id;
   });
-  return { quizId: quiz.id };
+  return { quizId };
 }
 
 async function getCourseIdForQuiz(quizId: string, db: PrismaClient): Promise<string> {
@@ -81,11 +93,24 @@ export async function updateQuiz(
 export async function deleteQuiz(
   actorUserId: string,
   quizId: string,
+  opts: { force?: boolean } = {},
   db: PrismaClient = prisma,
 ): Promise<void> {
   const courseId = await getCourseIdForQuiz(quizId, db);
   await assertCanEditCourse(actorUserId, courseId, db);
-  await db.quiz.delete({ where: { id: quizId } });
+
+  const attemptCount = await db.quizAttempt.count({ where: { quizId } });
+  if (attemptCount > 0 && !opts.force) {
+    throw new QuizError("quiz_has_attempts", { attemptCount });
+  }
+
+  // Schema có cascade Quiz → QuizQuestion → QuestionOption / QuestionSkillTag,
+  // và QuizAttempt → AnswerResponse. Nhưng QuizAttempt → Quiz và
+  // AnswerResponse → QuizQuestion KHÔNG cascade, nên phải xoá attempts trước.
+  await db.$transaction([
+    db.quizAttempt.deleteMany({ where: { quizId } }),
+    db.quiz.delete({ where: { id: quizId } }),
+  ]);
 }
 
 export { CourseAuthzError };

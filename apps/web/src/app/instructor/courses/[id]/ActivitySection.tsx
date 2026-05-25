@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import ContentItemRow from "./ContentItemRow";
 import QuizSection from "./QuizSection";
 import AssignmentSection from "./AssignmentSection";
 import ActivityPicker from "./ActivityPicker";
 import EmptyState from "./EmptyState";
+import SortableModulesWrapper from "./SortableModulesWrapper";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface ContentItem {
   id: string;
@@ -67,19 +69,93 @@ interface Assignment {
   countsTowardGrade?: boolean;
 }
 
+interface LessonActivityRow {
+  id: string;
+  kind: "content" | "quiz" | "assignment";
+  orderIndex: number;
+  contentItemId: string | null;
+  quizId: string | null;
+  assignmentId: string | null;
+}
+
 export default function ActivitySection({
   lessonId,
   contentItems,
   quizzes,
   assignments,
+  activities,
 }: {
   lessonId: string;
   contentItems: ContentItem[];
   quizzes: Quiz[];
   assignments: Assignment[];
+  // Unified ordered list. If empty (legacy data not yet backfilled),
+  // fall back to the old fixed grouping: content → quiz → assignment.
+  activities: LessonActivityRow[];
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const total = contentItems.length + quizzes.length + assignments.length;
+
+  // Build a stable lookup so we can resolve each LessonActivity row to its
+  // entity payload without re-fetching.
+  const contentById = useMemo(
+    () => new Map(contentItems.map((c) => [c.id, c])),
+    [contentItems],
+  );
+  const quizById = useMemo(
+    () => new Map(quizzes.map((q) => [q.id, q])),
+    [quizzes],
+  );
+  const assignmentById = useMemo(
+    () => new Map(assignments.map((a) => [a.id, a])),
+    [assignments],
+  );
+
+  // Resolve the ordered render list. Drop any LessonActivity row whose
+  // underlying entity vanished (defensive — cascade should prevent this).
+  const ordered = useMemo(() => {
+    if (activities.length === 0) {
+      // Fallback: emulate the old display order so a lesson without backfill
+      // still renders in a predictable sequence.
+      return [
+        ...contentItems.map((c) => ({ key: `c-${c.id}`, kind: "content" as const, content: c })),
+        ...quizzes.map((q) => ({ key: `q-${q.id}`, kind: "quiz" as const, quiz: q })),
+        ...assignments.map((a) => ({ key: `a-${a.id}`, kind: "assignment" as const, assignment: a })),
+      ];
+    }
+    return activities
+      .map((a) => {
+        if (a.kind === "content" && a.contentItemId) {
+          const c = contentById.get(a.contentItemId);
+          if (!c) return null;
+          return { key: a.id, kind: "content" as const, content: c };
+        }
+        if (a.kind === "quiz" && a.quizId) {
+          const q = quizById.get(a.quizId);
+          if (!q) return null;
+          return { key: a.id, kind: "quiz" as const, quiz: q };
+        }
+        if (a.kind === "assignment" && a.assignmentId) {
+          const ass = assignmentById.get(a.assignmentId);
+          if (!ass) return null;
+          return { key: a.id, kind: "assignment" as const, assignment: ass };
+        }
+        return null;
+      })
+      .filter(
+        (
+          row,
+        ): row is
+          | { key: string; kind: "content"; content: ContentItem }
+          | { key: string; kind: "quiz"; quiz: Quiz }
+          | { key: string; kind: "assignment"; assignment: Assignment } =>
+          row !== null,
+      );
+  }, [activities, contentById, quizById, assignmentById, contentItems, quizzes, assignments]);
+
+  const total = ordered.length;
+  // Drag-drop only works when we have a real LessonActivity row per item.
+  // In fallback mode (activities.length === 0) we render without drag handles.
+  const dragEnabled = activities.length > 0;
 
   return (
     <section>
@@ -97,35 +173,50 @@ export default function ActivitySection({
             onClick: () => setPickerOpen(true),
           }}
         />
+      ) : dragEnabled ? (
+        // Unified cross-type drag-drop. Each row's id = LessonActivity.id, which
+        // is what the reorder endpoint expects.
+        <SortableModulesWrapper
+          items={ordered.map((row, i) => ({
+            id: row.key,
+            node: (
+              <div className="flex items-start gap-2">
+                <span className="w-6 flex-shrink-0 pt-2 text-right text-xs font-medium text-faint">
+                  {i + 1}.
+                </span>
+                <div className="min-w-0 flex-1">
+                  {row.kind === "content" && <ContentItemRow item={row.content} />}
+                  {row.kind === "quiz" && (
+                    <QuizSection quiz={row.quiz} lessonId={lessonId} />
+                  )}
+                  {row.kind === "assignment" && (
+                    <AssignmentSection assignment={row.assignment} />
+                  )}
+                </div>
+              </div>
+            ),
+          }))}
+          reorderEndpoint={apiUrl(`/api/lessons/${lessonId}/activities/reorder`)}
+          payloadKey="orderedActivityIds"
+        />
       ) : (
+        // Legacy fallback — no LessonActivity rows yet. Renders the same items
+        // in the old fixed-group order without drag handles. Should be rare
+        // post-backfill; here only for resilience.
         <ol className="space-y-1.5">
-          {contentItems.map((item, i) => (
-            <li key={`c-${item.id}`} className="flex items-start gap-2">
+          {ordered.map((row, i) => (
+            <li key={row.key} className="flex items-start gap-2">
               <span className="w-6 flex-shrink-0 pt-2 text-right text-xs font-medium text-faint">
                 {i + 1}.
               </span>
               <div className="min-w-0 flex-1">
-                <ContentItemRow item={item} />
-              </div>
-            </li>
-          ))}
-          {quizzes.map((q, i) => (
-            <li key={`q-${q.id}`} className="flex items-start gap-2">
-              <span className="w-6 flex-shrink-0 pt-2 text-right text-xs font-medium text-faint">
-                {contentItems.length + i + 1}.
-              </span>
-              <div className="min-w-0 flex-1">
-                <QuizSection quiz={q} lessonId={lessonId} />
-              </div>
-            </li>
-          ))}
-          {assignments.map((a, i) => (
-            <li key={`a-${a.id}`} className="flex items-start gap-2">
-              <span className="w-6 flex-shrink-0 pt-2 text-right text-xs font-medium text-faint">
-                {contentItems.length + quizzes.length + i + 1}.
-              </span>
-              <div className="min-w-0 flex-1">
-                <AssignmentSection assignment={a} />
+                {row.kind === "content" && <ContentItemRow item={row.content} />}
+                {row.kind === "quiz" && (
+                  <QuizSection quiz={row.quiz} lessonId={lessonId} />
+                )}
+                {row.kind === "assignment" && (
+                  <AssignmentSection assignment={row.assignment} />
+                )}
               </div>
             </li>
           ))}

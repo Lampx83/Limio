@@ -80,6 +80,21 @@ export default async function InstructorCourseEditPage({
                   },
                 },
               },
+              // Unified ordering layer — drives ActivitySection's cross-type
+              // drag-drop. Each row references one of contentItem/quiz/assignment;
+              // we don't re-include the nested entity data (already loaded above)
+              // — ActivitySection joins by id on the client.
+              activities: {
+                orderBy: { orderIndex: "asc" },
+                select: {
+                  id: true,
+                  kind: true,
+                  orderIndex: true,
+                  contentItemId: true,
+                  quizId: true,
+                  assignmentId: true,
+                },
+              },
             },
           },
         },

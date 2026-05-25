@@ -4,6 +4,7 @@ import type { DbClient } from "../auth/tokens";
 import { assertCanEditCourse, CourseAuthzError } from "./authz";
 import { CourseError } from "./courses";
 import { validateContentPayload, type ContentTypeKey } from "./contentSchemas";
+import { attachLessonActivity } from "./lessonActivity";
 
 const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p"]);
 
@@ -71,15 +72,21 @@ export async function createContentItem(
     );
   }
 
-  const item = await db.contentItem.create({
-    data: {
-      lessonId,
-      type: parsed.data.type,
-      payload: validatedPayload as Prisma.InputJsonValue,
-      orderIndex: parsed.data.orderIndex,
-    },
+  // Wrap entity create + LessonActivity attach in one transaction so a failure
+  // attaching to the ordering layer rolls back the entity create.
+  const itemId = await (db as typeof prisma).$transaction(async (tx) => {
+    const item = await tx.contentItem.create({
+      data: {
+        lessonId,
+        type: parsed.data.type,
+        payload: validatedPayload as Prisma.InputJsonValue,
+        orderIndex: parsed.data.orderIndex,
+      },
+    });
+    await attachLessonActivity(tx, lessonId, "content", item.id);
+    return item.id;
   });
-  return { contentItemId: item.id };
+  return { contentItemId: itemId };
 }
 
 export async function updateContentItem(
@@ -111,6 +118,51 @@ export async function updateContentItem(
   if (parsed.data.isHidden !== undefined) data.isHidden = parsed.data.isHidden;
   if (Object.keys(data).length === 0) return;
   await db.contentItem.update({ where: { id: contentId }, data });
+}
+
+/**
+ * Reorder ContentItems within a lesson. Caller must provide the full set of
+ * IDs currently attached to the lesson — partial reorder is rejected to keep
+ * the orderIndex sequence dense and predictable. Two-pass update so future
+ * (lessonId, orderIndex) unique indexes won't deadlock if added later.
+ */
+export async function reorderContentItems(
+  actorUserId: string,
+  lessonId: string,
+  orderedContentItemIds: string[],
+  db: DbClient = prisma,
+): Promise<void> {
+  const courseId = await getCourseIdForLesson(lessonId, db);
+  await assertCanEditCourse(actorUserId, courseId, db);
+
+  const existing = await db.contentItem.findMany({
+    where: { lessonId },
+    select: { id: true },
+  });
+  const existingIds = new Set(existing.map((c) => c.id));
+  for (const id of orderedContentItemIds) {
+    if (!existingIds.has(id)) {
+      throw new CourseError("validation_failed", `unknown_content_item:${id}`);
+    }
+  }
+  if (orderedContentItemIds.length !== existingIds.size) {
+    throw new CourseError("validation_failed", "must_include_all_content_items");
+  }
+
+  await (db as typeof prisma).$transaction(async (tx) => {
+    for (let i = 0; i < orderedContentItemIds.length; i++) {
+      await tx.contentItem.update({
+        where: { id: orderedContentItemIds[i]! },
+        data: { orderIndex: -1 - i },
+      });
+    }
+    for (let i = 0; i < orderedContentItemIds.length; i++) {
+      await tx.contentItem.update({
+        where: { id: orderedContentItemIds[i]! },
+        data: { orderIndex: i },
+      });
+    }
+  });
 }
 
 export async function deleteContentItem(

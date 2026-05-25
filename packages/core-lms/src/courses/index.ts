@@ -5,5 +5,6 @@ export * from "./courses";
 export * from "./modules";
 export * from "./lessons";
 export * from "./contents";
+export * from "./lessonActivity";
 export * from "./skills";
 export * from "./assignments";

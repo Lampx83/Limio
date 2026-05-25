@@ -330,6 +330,9 @@ model Lesson {
   contentItems      ContentItem[]
   quizzes           Quiz[]
   assignments       Assignment[]
+  // Unified, ordered view across contentItems + quizzes + assignments.
+  // Use this when rendering the lesson's activity list (instructor + learner).
+  activities        LessonActivity[]
   forumThreads      ForumThread[]
   aiConversations   AiConversation[]
   notes             Note[]
@@ -359,15 +362,54 @@ model ContentItem {
   type       ContentType
   // type-specific payload: { url, transcriptUrl, durationSec } for video, etc.
   payload    Json
+  // DEPRECATED — use LessonActivity.orderIndex. Kept for backwards-compat of any
+  // legacy code path that hasn't migrated. Source of truth for display ordering
+  // is now LessonActivity (cross-type ordering with Quiz + Assignment).
   orderIndex Int
   // Instructor-controlled visibility (false = hidden from all learners)
   isHidden   Boolean     @default(false)
   createdAt  DateTime    @default(now())
 
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  notes  Note[]
+  lesson         Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  notes          Note[]
+  lessonActivity LessonActivity?
 
   @@index([lessonId])
+}
+
+// Unified ordering layer for lesson-attached activities (ContentItem + Quiz +
+// Assignment). Each row points to exactly one of the three via discriminator
+// `kind` + a per-kind nullable FK. Instructor drag-drop reorder updates this
+// table only — underlying entity tables are untouched.
+//
+// Cuepoint-only quizzes (Quiz.cuepointOnly = true) and tournament-bound quizzes
+// / assignments (tournamentMissionId != null) DO NOT get a LessonActivity row —
+// they live outside the learner's lesson timeline.
+enum LessonActivityKind {
+  content
+  quiz
+  assignment
+}
+
+model LessonActivity {
+  id            String             @id @default(uuid())
+  lessonId      String
+  kind          LessonActivityKind
+  // Exactly one of these is non-null, matching `kind`. Enforced application-side;
+  // a Postgres CHECK constraint could be added later if needed.
+  contentItemId String?            @unique
+  quizId        String?            @unique
+  assignmentId  String?            @unique
+  orderIndex    Int
+  createdAt     DateTime           @default(now())
+
+  lesson      Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  contentItem ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  quiz        Quiz?        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  assignment  Assignment?  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, orderIndex])
+  @@index([lessonId, orderIndex])
 }
 
 // =====================================================================
@@ -467,6 +509,7 @@ model Quiz {
   questions         QuizQuestion[]
   attempts          QuizAttempt[]
   tournamentMission TournamentMission? @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
+  lessonActivity    LessonActivity?
 
   @@index([lessonId])
   @@index([courseId])
@@ -943,6 +986,7 @@ model Assignment {
   lesson            Lesson?                @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   tournamentMission TournamentMission?     @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
   submissions       AssignmentSubmission[]
+  lessonActivity    LessonActivity?
 
   @@index([lessonId])
   @@index([tournamentMissionId])
