@@ -44,11 +44,32 @@ export function QuizActionButtons({
   async function remove(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(`Xóa quiz "${quiz.title}"? Cascade questions, options, attempts.`)) return;
+    if (!confirm(`Xoá quiz "${quiz.title}"? Cascade câu hỏi & options.`)) return;
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/quizzes/${quiz.id}`), { method: "DELETE" });
+    let res = await fetch(apiUrl(`/api/quizzes/${quiz.id}`), { method: "DELETE" });
+    if (res.status === 409) {
+      const body = (await res.json().catch(() => null)) as
+        | { error?: string; details?: { attemptCount?: number } }
+        | null;
+      if (body?.error === "quiz_has_attempts") {
+        const n = body.details?.attemptCount ?? "một số";
+        const ok = confirm(
+          `Quiz này đã có ${n} lượt làm bài. Xoá sẽ mất toàn bộ lịch sử làm bài (QuizAttempt + AnswerResponse). Vẫn tiếp tục?`,
+        );
+        if (!ok) {
+          setBusy(false);
+          return;
+        }
+        res = await fetch(apiUrl(`/api/quizzes/${quiz.id}?force=true`), { method: "DELETE" });
+      }
+    }
     setBusy(false);
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      router.refresh();
+    } else {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      alert(`Xoá thất bại: ${body?.error ?? res.statusText}`);
+    }
   }
 
   function handleEdit(e: React.MouseEvent) {

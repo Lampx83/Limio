@@ -21,13 +21,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: { quizId: string } },
 ) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const force = new URL(req.url).searchParams.get("force") === "true";
   try {
-    await deleteQuiz(userId, params.quizId);
+    await deleteQuiz(userId, params.quizId, { force });
     return NextResponse.json({ ok: true });
   } catch (e) {
     const mapped = mapKnownError(e);

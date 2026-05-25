@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listPublishedCourses } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { isFree, formatPrice } from "@/lib/formatPrice";
+import { htmlToPlainText } from "@/lib/richText";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { EmptyState } from "@/components/ui";
 
@@ -229,7 +230,7 @@ export default async function CatalogPage({
                 <h2 className="text-base font-semibold leading-snug transition-colors group-hover:text-brand-600">
                   {c.title}
                 </h2>
-                <p className="mt-2 line-clamp-3 text-sm text-muted">{c.description}</p>
+                <p className="mt-2 line-clamp-3 text-sm text-muted">{htmlToPlainText(c.description)}</p>
 
                 <div className="mt-3 flex items-center gap-1.5">
                   {c.personalizationEnabled ? (

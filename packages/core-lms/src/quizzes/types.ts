@@ -10,6 +10,7 @@ export class QuizError extends Error {
       | "attempt_already_submitted"
       | "attempt_belongs_to_other"
       | "no_questions"
+      | "quiz_has_attempts"
       | "forbidden",
     public readonly details?: unknown,
   ) {

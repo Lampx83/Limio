@@ -38,3 +38,30 @@ export function plainToRichHtml(value: string | null | undefined): string {
     .map((para) => `<p>${escapeHtml(para).replace(/\n/g, "<br>")}</p>`)
     .join("");
 }
+
+/**
+ * Strip HTML markup from a (possibly Tiptap-authored) string to produce a
+ * plain-text preview suitable for `line-clamp`/meta UI (catalog cards, list
+ * snippets, search results). Plain-text inputs are returned unchanged.
+ *
+ * Not a sanitizer — never feed the output back into `dangerouslySetInnerHTML`.
+ * For rendering rich content, use `<SafeHtml>` instead.
+ */
+export function htmlToPlainText(value: string | null | undefined): string {
+  if (!value) return "";
+  if (!looksLikeHtml(value)) return value;
+  return value
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<\/(p|div|li|h[1-6]|tr|br)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}

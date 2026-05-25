@@ -287,7 +287,10 @@ export default async function ResultPage({
               </header>
 
               <div className="p-5">
-                <p className="whitespace-pre-wrap font-medium">{item.prompt}</p>
+                <SafeHtml
+                  html={plainToRichHtml(item.prompt)}
+                  className="prose prose-sm max-w-none font-medium dark:prose-invert"
+                />
 
                 {!isCorrect && fb && (
                   <div className="mt-4 rounded-xl bg-danger-50 p-4">

@@ -4,6 +4,8 @@ import { prisma } from "@feedbackme/db";
 import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
 
@@ -198,9 +200,10 @@ function AnswerCard({
         </span>
       </div>
       <p className="mb-1 text-sm font-medium">Đề:</p>
-      <p className="mb-3 whitespace-pre-wrap rounded bg-slate-50 px-3 py-2 text-sm">
-        {item.question.prompt}
-      </p>
+      <SafeHtml
+        html={plainToRichHtml(item.question.prompt)}
+        className="prose prose-sm mb-3 max-w-none rounded bg-slate-50 px-3 py-2 dark:prose-invert"
+      />
       <p className="mb-1 text-sm font-medium">Bài làm:</p>
       <p className="mb-3 whitespace-pre-wrap rounded border border-default px-3 py-2 text-sm">
         {text || <em className="text-faint">(học viên không trả lời)</em>}
