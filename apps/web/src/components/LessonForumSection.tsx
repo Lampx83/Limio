@@ -111,10 +111,10 @@ export default function LessonForumSection({
       <div>
         {!open ? (
           <div>
-            <p className="text-base font-bold">💬 Đặt câu hỏi cho bài này</p>
+            <p className="text-base font-bold">💬 Cùng thảo luận về bài này</p>
             <p className="mt-1 text-sm text-muted">
-              Không có câu hỏi ngu đâu — biết đâu bạn hỏi giúp cả lớp hiểu rõ
-              hơn ✨
+              Có chỗ chưa rõ hay muốn chia sẻ góc nhìn? Đặt câu hỏi để cả lớp
+              cùng trao đổi nhé ✨
             </p>
             <button
               type="button"

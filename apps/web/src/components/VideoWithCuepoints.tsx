@@ -77,6 +77,12 @@ export default function VideoWithCuepoints({
   lessonId,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Remembered mute state from before the cuepoint fired. While the overlay is
+  // active we force the element muted as a belt-and-suspenders against audio
+  // leaking past the pause (browser timeupdate is coarse ~250ms, and on some
+  // engines pause() doesn't flush the audio buffer instantly). Restored when
+  // the learner clears the cuepoint and we resume playback.
+  const wasMutedRef = useRef<boolean>(false);
   // Sorted cuepoints (defensive — instructor UI sorts on save, but the
   // payload is plain JSON so we can't trust ordering at read time).
   const sortedCuepoints = [...cuepoints].sort((a, b) => a.atSec - b.atSec);
@@ -120,12 +126,27 @@ export default function VideoWithCuepoints({
   async function triggerCuepoint(cp: Cuepoint) {
     const v = videoRef.current;
     if (!v) return;
+    // Stop playback. Three layers because a bare pause() has proven leaky in
+    // production:
+    //   1. pause() — the official stop.
+    //   2. snap currentTime back to cp.atSec — timeupdate fires every ~250ms so
+    //      the element may have drifted ~0.1–0.3s past the cuepoint by the time
+    //      we handle it; without snapping, any decoded-but-unplayed audio
+    //      buffered ahead keeps coming out of the speakers.
+    //   3. force-mute (remember prior state so we can restore it on resume).
+    //      Defensive: some engines retain the audio output for a tick after
+    //      pause() returns, especially under hardware-accelerated playback.
     v.pause();
+    v.currentTime = cp.atSec;
+    wasMutedRef.current = v.muted;
+    v.muted = true;
     const quiz = await loadQuiz(cp.quizId);
     if (!quiz) {
       toast.error("Không tải được quiz cho cuepoint này — bỏ qua.");
       // Mark passed so we don't re-trigger this cuepoint forever.
       setPassed((p) => new Set(p).add(cp.atSec));
+      // Restore mute before resuming so we don't leave the player silent.
+      v.muted = wasMutedRef.current;
       v.play().catch(() => {});
       return;
     }
@@ -161,12 +182,25 @@ export default function VideoWithCuepoints({
         if (!active) void triggerCuepoint(blocking);
       }
     }
+    // Belt-and-suspenders for the audio-leak bug: if anything tries to start
+    // playback while the cuepoint overlay is up (fullscreen native controls,
+    // PiP toggle, Safari restoring playback after a route change), slam the
+    // brakes back on immediately and re-mute.
+    function onPlay() {
+      if (!v) return;
+      if (active) {
+        v.pause();
+        v.muted = true;
+      }
+    }
 
     v.addEventListener("timeupdate", onTimeUpdate);
     v.addEventListener("seeking", onSeeking);
+    v.addEventListener("play", onPlay);
     return () => {
       v.removeEventListener("timeupdate", onTimeUpdate);
       v.removeEventListener("seeking", onSeeking);
+      v.removeEventListener("play", onPlay);
     };
     // We deliberately depend on `passed` so re-binding picks up the latest
     // set; `active` so we don't re-trigger while overlay open.
@@ -199,7 +233,11 @@ export default function VideoWithCuepoints({
       setGrading(false);
       setPassed((p) => new Set(p).add(active.cuepoint.atSec));
       setActive(null);
-      v?.play().catch(() => {});
+      if (v) {
+        // Restore the learner's original mute preference before resuming.
+        v.muted = wasMutedRef.current;
+        v.play().catch(() => {});
+      }
       return;
     }
     const nextAttemptCount = active.attemptCount + 1;
@@ -243,7 +281,11 @@ export default function VideoWithCuepoints({
       toast.success("Đúng rồi — xem tiếp nào");
       setPassed((p) => new Set(p).add(active.cuepoint.atSec));
       setActive(null);
-      v?.play().catch(() => {});
+      if (v) {
+        // Restore the learner's original mute preference before resuming.
+        v.muted = wasMutedRef.current;
+        v.play().catch(() => {});
+      }
     } else {
       toast.error("Chưa đúng — chọn lại và thử đến khi đúng để xem tiếp.");
       // Bump attempt count; learner can re-submit.
@@ -257,6 +299,12 @@ export default function VideoWithCuepoints({
         ref={videoRef}
         src={url}
         controls
+        // While the overlay is up, lock the native controls out completely so
+        // the learner can't tap Play through the backdrop or hit Space-bar
+        // shortcuts to resume playback (which would also unmute the audio
+        // we force-muted in triggerCuepoint).
+        tabIndex={active ? -1 : 0}
+        style={active ? { pointerEvents: "none" } : undefined}
         className="aspect-video w-full rounded-xl bg-black shadow-card"
         preload="metadata"
       />
@@ -360,7 +408,10 @@ function CuepointOverlay({
                             checked={checked}
                             onChange={() => onToggle(q.id, o.id, single)}
                           />
-                          <span>{o.label}</span>
+                          <SafeHtml
+                            html={plainToRichHtml(o.label)}
+                            className="prose prose-sm max-w-none dark:prose-invert"
+                          />
                         </label>
                       );
                     })}
