@@ -11,6 +11,8 @@ import {
   Clock,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { plainToRichHtml } from "@/lib/richText";
+import SafeHtml from "@/components/SafeHtml";
 
 type AttemptRow = {
   id: string;
@@ -632,7 +634,10 @@ function QuestionItem({ item, order }: { item: DetailItem; order: number }) {
         </div>
       </div>
 
-      <p className="text-sm text-default whitespace-pre-wrap">{item.prompt}</p>
+      <SafeHtml
+        html={plainToRichHtml(item.prompt)}
+        className="prose prose-sm max-w-none text-default dark:prose-invert"
+      />
 
       {isMultiChoice && item.options.length > 0 && (
         <ul className="mt-3 space-y-1.5">
@@ -652,7 +657,10 @@ function QuestionItem({ item, order }: { item: DetailItem; order: number }) {
                 <span className="text-xs font-medium text-faint">
                   {picked ? "▣" : "▢"}
                 </span>
-                <span className="flex-1">{opt.label}</span>
+                <SafeHtml
+                  html={plainToRichHtml(opt.label)}
+                  className="prose prose-sm max-w-none flex-1 dark:prose-invert"
+                />
                 {correct && (
                   <span className="text-xs font-medium text-emerald-700">
                     Đáp án đúng

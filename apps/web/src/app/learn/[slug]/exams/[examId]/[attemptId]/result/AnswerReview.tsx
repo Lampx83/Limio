@@ -111,7 +111,10 @@ function McqAnswer({ q }: { q: QuestionReview }) {
             className={`flex items-start gap-2 rounded border px-3 py-1.5 text-sm ${cls}`}
           >
             <span className="w-4 shrink-0 font-bold">{icon}</span>
-            <span>{opt.label ?? opt.text ?? opt.id}</span>
+            <SafeHtml
+              html={plainToRichHtml(opt.label ?? opt.text ?? opt.id)}
+              className="prose prose-sm max-w-none dark:prose-invert"
+            />
             {picked && !isCorrect && (
               <span className="ml-auto shrink-0 text-xs text-red-600">Bạn chọn</span>
             )}

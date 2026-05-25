@@ -22,7 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
-import { plainToRichHtml } from "@/lib/richText";
+import { plainToRichHtml, htmlToPlainText } from "@/lib/richText";
 
 type QType =
   | "mcq"
@@ -572,7 +572,10 @@ function QuestionInput({
                     onChange={() => toggle(opt.id)}
                     className="sr-only"
                   />
-                  <span className="text-sm">{opt.label}</span>
+                  <SafeHtml
+                    html={plainToRichHtml(opt.label)}
+                    className="prose prose-sm max-w-none text-sm dark:prose-invert"
+                  />
                 </label>
               </li>
             );
@@ -638,7 +641,10 @@ function OrderingInput({
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700 tabular-nums">
               {i + 1}
             </span>
-            <span className="flex-1 text-sm">{optById.get(id)?.label}</span>
+            <SafeHtml
+              html={plainToRichHtml(optById.get(id)?.label ?? "")}
+              className="prose prose-sm max-w-none flex-1 text-sm dark:prose-invert"
+            />
             <div className="flex gap-1">
               <button
                 type="button"
@@ -711,7 +717,10 @@ function SortableOrderingItem({
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700 tabular-nums">
         {index + 1}
       </span>
-      <span className="text-sm">{label}</span>
+      <SafeHtml
+        html={plainToRichHtml(label)}
+        className="prose prose-sm max-w-none text-sm dark:prose-invert"
+      />
     </li>
   );
 }
@@ -799,7 +808,10 @@ function MatchingInput({
             key={l.id}
             className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
           >
-            <span className="flex-1 text-sm font-medium">{l.label}</span>
+            <SafeHtml
+              html={plainToRichHtml(l.label)}
+              className="prose prose-sm max-w-none flex-1 text-sm font-medium dark:prose-invert"
+            />
             <span className="text-faint">→</span>
             <select
               value={byLeft.get(l.id) ?? ""}
@@ -809,7 +821,7 @@ function MatchingInput({
               <option value="">— chọn —</option>
               {rights.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.label}
+                  {htmlToPlainText(r.label)}
                 </option>
               ))}
             </select>
@@ -861,7 +873,10 @@ function MatchingLeftSlot({
   const { setNodeRef, isOver } = useDroppable({ id: `left:${leftId}` });
   return (
     <li className="flex items-center gap-3">
-      <span className="flex-1 text-sm font-medium">{leftLabel}</span>
+      <SafeHtml
+        html={plainToRichHtml(leftLabel)}
+        className="prose prose-sm max-w-none flex-1 text-sm font-medium dark:prose-invert"
+      />
       <span className="text-faint">→</span>
       <div
         ref={setNodeRef}
@@ -941,7 +956,10 @@ function MatchingDraggable({
         compact ? "" : ""
       }`}
     >
-      {label}
+      <SafeHtml
+        html={plainToRichHtml(label)}
+        className="prose prose-sm max-w-none text-sm dark:prose-invert"
+      />
     </span>
   );
 }

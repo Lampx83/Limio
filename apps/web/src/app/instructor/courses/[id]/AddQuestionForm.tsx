@@ -337,95 +337,122 @@ export default function AddQuestionForm({
             {type === "matching" && "Mỗi pairKey phải có 1 left + 1 right"}
           </p>
           <ul className="mt-2 space-y-2">
-            {options.map((o, i) => (
-              <li
-                key={i}
-                className="flex items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] p-2"
-              >
-                {(type === "mcq" || type === "true_false") && (
-                  <input
-                    type={type === "true_false" ? "radio" : "checkbox"}
-                    name={type === "true_false" ? "tf-correct" : undefined}
-                    checked={o.isCorrect}
-                    onChange={(e) => {
-                      if (type === "true_false") setSingleCorrect(i);
-                      else setOption(i, { isCorrect: e.target.checked });
-                    }}
-                    className="h-4 w-4 accent-success-600"
-                  />
-                )}
-                {type === "matching" && (
-                  <>
-                    <select
-                      value={o.extra?.side ?? "left"}
-                      onChange={(e) =>
-                        setOption(i, {
-                          extra: {
-                            side: e.target.value as "left" | "right",
-                            pairKey: o.extra?.pairKey ?? "p1",
-                          },
-                        })
-                      }
-                      className="select w-14 px-1.5 text-xs"
-                    >
-                      <option value="left">L</option>
-                      <option value="right">R</option>
-                    </select>
-                    <input
-                      value={o.extra?.pairKey ?? ""}
-                      onChange={(e) =>
-                        setOption(i, {
-                          extra: {
-                            side: o.extra?.side ?? "left",
-                            pairKey: e.target.value,
-                          },
-                        })
-                      }
-                      placeholder="pairKey"
-                      className="input w-20 text-xs"
-                    />
-                  </>
-                )}
-                <input
-                  value={o.label}
-                  onChange={(e) => setOption(i, { label: e.target.value })}
-                  required
-                  placeholder={
-                    type === "fill_in" || type === "short_answer"
-                      ? "Đáp án chấp nhận được"
-                      : `Option ${i + 1}`
-                  }
-                  className="input flex-1"
-                />
-                {(type === "mcq" || type === "true_false") && !o.isCorrect && (
-                  <select
-                    value={o.misconceptionId ?? ""}
-                    onChange={(e) =>
-                      setOption(i, { misconceptionId: e.target.value || null })
-                    }
-                    className="select max-w-[160px] text-xs"
-                    title="Misconception"
-                  >
-                    <option value="">no misconception</option>
-                    {misconceptions.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.code}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {type !== "true_false" && options.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeOption(i)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-danger-100 text-xs text-danger-600 hover:bg-danger-50"
-                    aria-label="Xóa option"
-                  >
-                    ×
-                  </button>
-                )}
-              </li>
-            ))}
+            {options.map((o, i) => {
+              // Rich text labels (with image support) only make sense for
+              // option-based answer types. Fill-in / short-answer compare the
+              // label string against the learner response, so they must stay
+              // plain. True/false labels are fixed semantic markers.
+              const useRichLabel =
+                type === "mcq" || type === "matching" || type === "ordering";
+              return (
+                <li
+                  key={i}
+                  className="rounded-lg border border-token bg-[rgb(var(--surface))] p-2"
+                >
+                  <div className="flex items-center gap-2">
+                    {(type === "mcq" || type === "true_false") && (
+                      <input
+                        type={type === "true_false" ? "radio" : "checkbox"}
+                        name={type === "true_false" ? "tf-correct" : undefined}
+                        checked={o.isCorrect}
+                        onChange={(e) => {
+                          if (type === "true_false") setSingleCorrect(i);
+                          else setOption(i, { isCorrect: e.target.checked });
+                        }}
+                        className="h-4 w-4 accent-success-600"
+                      />
+                    )}
+                    {type === "matching" && (
+                      <>
+                        <select
+                          value={o.extra?.side ?? "left"}
+                          onChange={(e) =>
+                            setOption(i, {
+                              extra: {
+                                side: e.target.value as "left" | "right",
+                                pairKey: o.extra?.pairKey ?? "p1",
+                              },
+                            })
+                          }
+                          className="select w-14 px-1.5 text-xs"
+                        >
+                          <option value="left">L</option>
+                          <option value="right">R</option>
+                        </select>
+                        <input
+                          value={o.extra?.pairKey ?? ""}
+                          onChange={(e) =>
+                            setOption(i, {
+                              extra: {
+                                side: o.extra?.side ?? "left",
+                                pairKey: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="pairKey"
+                          className="input w-20 text-xs"
+                        />
+                      </>
+                    )}
+                    {!useRichLabel && (
+                      <input
+                        value={o.label}
+                        onChange={(e) => setOption(i, { label: e.target.value })}
+                        required
+                        placeholder={
+                          type === "fill_in" || type === "short_answer"
+                            ? "Đáp án chấp nhận được"
+                            : `Option ${i + 1}`
+                        }
+                        className="input flex-1"
+                      />
+                    )}
+                    {useRichLabel && (
+                      <span className="flex-1 text-xs text-faint">
+                        Đáp án {i + 1}
+                      </span>
+                    )}
+                    {(type === "mcq" || type === "true_false") && !o.isCorrect && (
+                      <select
+                        value={o.misconceptionId ?? ""}
+                        onChange={(e) =>
+                          setOption(i, { misconceptionId: e.target.value || null })
+                        }
+                        className="select max-w-[160px] text-xs"
+                        title="Misconception"
+                      >
+                        <option value="">no misconception</option>
+                        {misconceptions.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.code}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {type !== "true_false" && options.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeOption(i)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-danger-100 text-xs text-danger-600 hover:bg-danger-50"
+                        aria-label="Xóa option"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  {useRichLabel && (
+                    <div className="mt-2">
+                      <RichTextEditor
+                        value={o.label}
+                        onChange={(html) => setOption(i, { label: html })}
+                        placeholder={`Đáp án ${i + 1}... (có thể chèn ảnh qua nút 🖼️)`}
+                        minHeight={48}
+                      />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
             {type !== "true_false" && (

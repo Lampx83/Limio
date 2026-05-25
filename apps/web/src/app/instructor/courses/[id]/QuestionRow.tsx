@@ -81,7 +81,11 @@ export default function QuestionRow({
                     o.isCorrect ? "font-semibold text-success-700" : "text-muted"
                   }
                 >
-                  {o.isCorrect ? "✓" : "·"} {o.label}
+                  {o.isCorrect ? "✓ " : "· "}
+                  <SafeHtml
+                    html={plainToRichHtml(o.label)}
+                    className="prose prose-sm inline max-w-none dark:prose-invert"
+                  />
                 </span>
                 {o.misconception && (
                   <span className="chip-accent">{o.misconception.code}</span>
