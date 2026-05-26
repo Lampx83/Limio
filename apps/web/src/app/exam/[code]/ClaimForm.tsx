@@ -49,6 +49,12 @@ export default function ClaimForm({
         if (studentCode.trim()) body.studentCode = studentCode.trim();
         if (cohortId) body.cohortId = cohortId;
         if (roomCode.trim()) body.roomCode = roomCode.trim().toUpperCase();
+        // Always persist the raw cohortCode the candidate typed as metadata.class.
+        // Even when cohortId resolves (linked cohort), or doesn't (free-text
+        // class label from outside the system), instructor sees what the
+        // candidate entered in gradebook. Avoids "field optional but rejected"
+        // dead-end if instructor didn't pre-register the cohort code in DB.
+        if (cohortCode.trim()) body.class = cohortCode.trim().toUpperCase();
       }
       const res = await fetch("/api/public/exam/claim-code", {
         method: "POST",
@@ -98,6 +104,15 @@ export default function ClaimForm({
       });
       if (!res.ok) {
         const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        // Lenient fallback for "cohort_not_found": instructor often hasn't
+        // pre-registered every class code from the school. Allow the candidate
+        // to proceed anyway — the typed code is saved as metadata.class so
+        // gradebook still records it, just without a linked Cohort row. Other
+        // errors (invalid_code, rate_limited, ...) still block.
+        if (j?.error === "cohort_not_found") {
+          await submitClaim(null);
+          return;
+        }
         setErr(humanizeError(j?.error ?? `HTTP ${res.status}`));
         return;
       }
@@ -246,7 +261,7 @@ export default function ClaimForm({
             onChange={(v) => setCohortCode(v.toUpperCase())}
             placeholder="K65A-T7C"
             maxLength={16}
-            hint="Mã lớp do nhà trường cấp đầu kỳ. Để trống nếu không thuộc lớp nào."
+            hint="Mã lớp do nhà trường cấp đầu kỳ. Có thể để trống nếu không nhớ."
             mono
           />
           <Field
