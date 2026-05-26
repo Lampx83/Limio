@@ -194,9 +194,17 @@ export default async function ExamSessionDetailPage({
           openCode={detail.examOpenCode}
           assignedCodeSource={detail.examAssignedCodeSource}
           baseUrl={(() => {
+            // Prefer NEXTAUTH_URL (deploy-time config — always the canonical
+            // public origin with the right scheme). Fall back to derived from
+            // request headers, defaulting proto to "https" because production
+            // always terminates TLS at the reverse proxy — the old "http"
+            // default printed http://limio.vn/thi for instructors when the
+            // proxy didn't forward x-forwarded-proto.
+            const envUrl = process.env.NEXTAUTH_URL;
+            if (envUrl) return envUrl.replace(/\/$/, "");
             const h = headers();
             const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-            const proto = h.get("x-forwarded-proto") ?? "http";
+            const proto = h.get("x-forwarded-proto") ?? "https";
             return host ? `${proto}://${host}` : "";
           })()}
           canEdit={canEdit}

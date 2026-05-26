@@ -30,10 +30,15 @@ export default async function RoomProjectionPage({
 
   const candidates = await listExamCandidatesInRoom(userId, params.roomId);
 
+  // Prefer NEXTAUTH_URL (canonical public origin from deploy env) so the
+  // projector shows https://... even if the reverse proxy doesn't forward
+  // x-forwarded-proto. Default proto in the header fallback is "https" —
+  // production always terminates TLS at the proxy.
+  const envUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "");
   const h = headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const baseUrl = `${proto}://${host}/exam/`;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const baseUrl = envUrl ? `${envUrl}/exam/` : `${proto}://${host}/exam/`;
 
   return (
     <div className="min-h-screen bg-white px-8 py-6 text-slate-900">
