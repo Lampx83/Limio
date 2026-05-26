@@ -177,14 +177,24 @@ export function computeStatsForQuestion(
       counts[id] = { chosenBy: 0, isCorrect: optionMeta.get(id) ?? false };
     }
     for (const s of samples) {
+      // ExamAnswer.answerJson shape for MCQ/MULTI is `{ optionIds: string[] }`
+      // — that's what gradeMcq/gradeMulti in grading.ts reads. The earlier
+      // code looked at `selectedOptionId`/`selectedOptionIds` which never
+      // existed → distractor counts always rendered as 0%. Tolerate the legacy
+      // names too in case any historical row used them.
       const a = s.answerJson as
-        | { selectedOptionId?: string; selectedOptionIds?: string[] }
+        | {
+            optionIds?: string[];
+            selectedOptionId?: string;
+            selectedOptionIds?: string[];
+          }
         | null;
       const chosen =
-        a?.selectedOptionId !== undefined
-          ? [a.selectedOptionId]
-          : a?.selectedOptionIds ?? [];
+        a?.optionIds ??
+        a?.selectedOptionIds ??
+        (a?.selectedOptionId !== undefined ? [a.selectedOptionId] : []);
       for (const id of chosen) {
+        if (typeof id !== "string") continue;
         if (!counts[id]) counts[id] = { chosenBy: 0, isCorrect: optionMeta.get(id) ?? false };
         counts[id].chosenBy++;
       }
