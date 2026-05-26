@@ -621,12 +621,22 @@ function OrderingInput({
   onChange: (r: Response) => void;
   onBlur: () => void;
 }) {
-  const initial = Array.isArray(answer?.response)
-    ? (answer!.response as string[])
-    : question.options.map((o) => o.id);
-  const ids = initial.every((id) => question.options.find((o) => o.id === id))
-    ? initial
-    : question.options.map((o) => o.id);
+  // Build the working list of option IDs:
+  //   1) Start from saved response if it's a string[] (resume case).
+  //   2) Filter out IDs no longer in question.options (option deleted server-side).
+  //   3) APPEND any new question.options not present in the saved response —
+  //      previously the player just discarded the saved response and reset to
+  //      canonical order if ANY id was missing, but the more common case is
+  //      "instructor added option N+1 after attempt started" → saved response
+  //      had N ids, new option Nth+1 silently disappeared from UI.
+  const validIds = new Set(question.options.map((o) => o.id));
+  const saved = Array.isArray(answer?.response)
+    ? (answer!.response as string[]).filter((id) => validIds.has(id))
+    : [];
+  const missing = question.options
+    .map((o) => o.id)
+    .filter((id) => !saved.includes(id));
+  const ids = saved.length > 0 ? [...saved, ...missing] : question.options.map((o) => o.id);
   const optById = new Map(question.options.map((o) => [o.id, o]));
 
   function move(idx: number, delta: number) {

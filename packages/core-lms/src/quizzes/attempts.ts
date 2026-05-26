@@ -7,6 +7,37 @@ import { gradeAnswer } from "./grading";
 import { QuizError } from "./types";
 import { assertCanEditCourse, canEditCourse } from "../courses/authz";
 
+/**
+ * Deterministic Fisher-Yates shuffle for ordering question options. Uses a
+ * tiny string-seeded PRNG (mulberry32-style) so the same (attemptId, questionId)
+ * pair always yields the same permutation — learner reload doesn't see
+ * options jump around. New attempt = new attemptId = new shuffle.
+ *
+ * NOT a CSPRNG. Sufficient for "scramble visible order so the correct answer
+ * isn't given away" — instructor's UI still grades against the canonical
+ * orderIndex sequence (stored option.orderIndex doesn't change).
+ */
+function seededShuffleOrdering<T>(arr: readonly T[], seed: string): T[] {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const next = () => {
+    h |= 0;
+    h = (h + 0x6d2b79f5) | 0;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(next() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
 // Response shapes per question type:
 //   mcq/true_false/ordering: string[] (option IDs)
 //   fill_in/short_answer/essay: string
@@ -346,6 +377,13 @@ export async function getAttemptForLearner(
       // Strip acceptedRegexes (would leak answer pattern).
       const { acceptedRegexes: _r, ...rest } = q.extra as Record<string, unknown>;
       q.extra = Object.keys(rest).length > 0 ? (rest as typeof q.extra) : null;
+    }
+    // Ordering: options.orderBy(orderIndex) = thứ tự đúng → trả về như vậy
+    // sẽ leak đáp án (learner chỉ cần Submit không sửa). Shuffle với seed
+    // deterministic (attemptId + questionId) để khi reload giữ nguyên thứ
+    // tự — không bị nhảy options gây confusion.
+    if (q.type === "ordering" && q.options.length > 1) {
+      q.options = seededShuffleOrdering(q.options, `${attemptId}:${q.id}`);
     }
   }
   const responses = await db.answerResponse.findMany({
