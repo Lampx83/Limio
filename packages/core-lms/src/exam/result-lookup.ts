@@ -152,3 +152,72 @@ export async function lookupCandidateResult(
     details,
   };
 }
+
+/**
+ * Variant: lookup by attemptId. Used by the post-submit confirmation page
+ * (/exam-take/[attemptId]/submitted) where the candidate cookie is still
+ * valid so we already know the attempt — no need to re-enter code/email.
+ *
+ * Caller MUST authorize the subject (requireExamSubject) before calling.
+ * This function does no additional access check beyond loading the row.
+ *
+ * Mirrors lookupCandidateResult's return shape so the same UI can render both.
+ */
+export async function getCandidateResultByAttemptId(
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<CandidateResult> {
+  const attempt = await db.examAttempt.findUnique({
+    where: { id: attemptId },
+    select: {
+      status: true,
+      submittedAt: true,
+      score: true,
+      scorePct: true,
+      passed: true,
+      candidateDisplayName: true,
+      candidate: { select: { displayName: true } },
+      exam: { select: { title: true, showResultsAfterSubmit: true } },
+      answers: {
+        select: {
+          questionId: true,
+          autoScore: true,
+          manualScore: true,
+          needsGrading: true,
+          question: { select: { prompt: true, points: true } },
+        },
+      },
+    },
+  });
+  if (!attempt) throw new ExamError("result_not_found");
+  if (attempt.status === "in_progress")
+    throw new ExamError("result_not_yet_graded");
+
+  const fullyGraded = attempt.status === "graded";
+  const showDetail = attempt.exam.showResultsAfterSubmit && fullyGraded;
+  const details = showDetail
+    ? attempt.answers.map((a) => {
+        const awarded = a.manualScore ?? a.autoScore;
+        return {
+          prompt: a.question.prompt.slice(0, 200),
+          points: a.question.points,
+          awarded,
+          correct: awarded === null ? null : awarded >= a.question.points,
+        };
+      })
+    : undefined;
+
+  return {
+    examTitle: attempt.exam.title,
+    candidateName:
+      attempt.candidate?.displayName ?? attempt.candidateDisplayName ?? "Thí sinh",
+    status: attempt.status as CandidateResult["status"],
+    submittedAt: attempt.submittedAt?.toISOString() ?? null,
+    score: attempt.score,
+    scorePct: attempt.scorePct,
+    passed: attempt.passed,
+    fullyGraded,
+    showDetail,
+    details,
+  };
+}
