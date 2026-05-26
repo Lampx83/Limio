@@ -12,12 +12,16 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const ip = clientIp(req);
-  const burst = await allow("result:burst", ip, 10, 60_000);
-  if (!burst.ok) {
-    return NextResponse.json(
-      { error: "rate_limited", retryAfter: burst.retryAfterSec },
-      { status: 429, headers: { "retry-after": String(burst.retryAfterSec) } },
-    );
+  // ip="unknown" means XFF/X-Real-IP carried no public address — skip rather
+  // than bucket every internal hop under one shared key (see rate-limit.ts).
+  if (ip !== "unknown") {
+    const burst = await allow("result:burst", ip, 10, 60_000);
+    if (!burst.ok) {
+      return NextResponse.json(
+        { error: "rate_limited", retryAfter: burst.retryAfterSec },
+        { status: 429, headers: { "retry-after": String(burst.retryAfterSec) } },
+      );
+    }
   }
   const body = (await readJson(req)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ error: "validation_failed" }, { status: 400 });

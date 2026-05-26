@@ -34,14 +34,21 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const ip = clientIp(req);
+  // "unknown" = no trustworthy public IP in XFF/X-Real-IP. Skip throttling
+  // rather than bucket every internal/gateway hop into one shared key, which
+  // would lock out an entire classroom behind a misconfigured proxy. Honeypot
+  // + code-validity still protect this endpoint.
+  const throttle = ip !== "unknown";
 
   // Burst guard first — same for both modes. Cheap.
-  const burst = await allow("claim:burst", ip, 10, 60_000);
-  if (!burst.ok) {
-    return NextResponse.json(
-      { error: "rate_limited", retryAfter: burst.retryAfterSec },
-      { status: 429, headers: { "retry-after": String(burst.retryAfterSec) } },
-    );
+  if (throttle) {
+    const burst = await allow("claim:burst", ip, 10, 60_000);
+    if (!burst.ok) {
+      return NextResponse.json(
+        { error: "rate_limited", retryAfter: burst.retryAfterSec },
+        { status: 429, headers: { "retry-after": String(burst.retryAfterSec) } },
+      );
+    }
   }
 
   const body = (await readJson(req)) as Record<string, unknown> | null;
@@ -68,15 +75,17 @@ export async function POST(req: Request) {
   try {
     if (code.length === 6) {
       // Wider rate limit only on open-mode attempts (Q2: 50/h).
-      const hourly = await allow("claim:open", ip, 50, 60 * 60_000);
-      if (!hourly.ok) {
-        return NextResponse.json(
-          { error: "rate_limited", retryAfter: hourly.retryAfterSec },
-          {
-            status: 429,
-            headers: { "retry-after": String(hourly.retryAfterSec) },
-          },
-        );
+      if (throttle) {
+        const hourly = await allow("claim:open", ip, 50, 60 * 60_000);
+        if (!hourly.ok) {
+          return NextResponse.json(
+            { error: "rate_limited", retryAfter: hourly.retryAfterSec },
+            {
+              status: 429,
+              headers: { "retry-after": String(hourly.retryAfterSec) },
+            },
+          );
+        }
       }
       result = await claimByOpenCode(code, body);
     } else if (code.length === 8) {
