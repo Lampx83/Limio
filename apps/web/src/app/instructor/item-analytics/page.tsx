@@ -8,6 +8,7 @@ import {
   type ItemAnalyticsRow,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import RecomputeButton from "./RecomputeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -160,6 +161,10 @@ async function ExamTab({
             Xem
           </button>
         </form>
+        {/* On-demand recompute — skip the wait for the nightly 02:00 cron. */}
+        <div className="ml-auto">
+          <RecomputeButton examId={selectedId} />
+        </div>
       </div>
 
       {err && (
