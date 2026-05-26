@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { CheckCircle, XCircle, Check } from "lucide-react";
+import { CheckCircle, Clock, XCircle, Check } from "lucide-react";
 import {
   ExamError,
   getCandidateResultByAttemptId,
 } from "@feedbackme/core-lms";
 import { requireExamSubject } from "@/lib/session";
-import PendingPage from "./PendingPage";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +43,6 @@ export default async function ExamSubmittedPage({
     result = await getCandidateResultByAttemptId(params.attemptId);
   } catch (e) {
     if (e instanceof ExamError && e.code === "result_not_yet_graded") {
-      // status === "in_progress" — shouldn't happen post-submit but guard.
       pending = true;
     } else {
       // Unknown error → fall back to generic confirmation; don't crash.
@@ -52,20 +50,35 @@ export default async function ExamSubmittedPage({
     }
   }
 
-  // Status A — bài đang được chấm. Hai trường hợp gộp chung:
-  //   1) status="in_progress" (rare guard, getResult threw)
-  //   2) status="submitted"/"auto_submitted" — đã nộp xong, BullMQ auto-grade
-  //      worker chưa fill score (typically < 5s, có thể vài giây sau recovery
-  //      cron sweep nếu worker down). KEY FIX: trước đây nhánh này rơi sang
-  //      Generic page → thí sinh thấy "Đã nộp" không bao giờ chuyển. Giờ hiển
-  //      thị màn "đang chấm" với client-side auto-refresh.
-  if (pending || (result && !result.fullyGraded)) {
-    return <PendingPage examTitle={result?.examTitle} />;
+  // Status A — still grading. Auto-refresh every 5s so the page updates as
+  // soon as the worker / recovery cron finalises the score.
+  if (pending) {
+    return (
+      <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-10 text-center">
+        <meta httpEquiv="refresh" content="5" />
+        <Clock className="mx-auto h-16 w-16 text-amber-500" />
+        <h1 className="mt-4 text-2xl font-bold text-slate-900">
+          Đã nộp bài — đang chấm
+        </h1>
+        <p className="mt-3 text-sm text-slate-600">
+          Hệ thống đang chấm bài. Trang sẽ tự làm mới sau vài giây để hiển thị
+          kết quả.
+        </p>
+        <Link
+          href="/"
+          className="mt-6 inline-block rounded bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200"
+        >
+          Về trang chủ
+        </Link>
+      </main>
+    );
   }
 
-  // Tới đây result chắc chắn fullyGraded === true.
-  // Status B — graded NHƯNG instructor tắt showResultsAfterSubmit:
-  // chỉ confirm "đã chấm xong, GV sẽ thông báo".
+  // Status B — graded but instructor disabled detailed view. Just confirm
+  // receipt; tell the candidate to ask the teacher for the score.
+  if (result && !result.showDetail && !result.fullyGraded) {
+    return <Generic examTitle={result.examTitle} />;
+  }
   if (result && !result.showDetail) {
     return (
       <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-10 text-center">
