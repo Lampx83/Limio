@@ -377,6 +377,34 @@ export async function archiveBankQuestion(
 }
 
 /**
+ * Liệt kê các giá trị topic distinct trong 1 bank — dùng cho UI filter.
+ * Topic được lưu trong BankQuestion.config.topic (set bởi MCQ import).
+ * Trả về sorted alphabetically (vi-VN locale) để dropdown ổn định.
+ *
+ * Authz: actor phải thấy được bank (owner OR course instructor).
+ */
+export async function listTopicsInBank(
+  actorUserId: string,
+  bankId: string,
+  db: PrismaClient = prisma,
+): Promise<string[]> {
+  const visibleIds = await visibleBankIds(actorUserId, db);
+  if (!visibleIds.includes(bankId)) return [];
+  // Raw query: extract config->>'topic' distinct. Postgres-only.
+  const rows = await db.$queryRaw<Array<{ topic: string | null }>>`
+    SELECT DISTINCT (config->>'topic') AS topic
+    FROM "BankQuestion"
+    WHERE "bankId" = ${bankId}
+      AND config ? 'topic'
+      AND config->>'topic' <> ''
+  `;
+  const topics = rows
+    .map((r) => r.topic)
+    .filter((t): t is string => !!t && t.trim() !== "");
+  return topics.sort((a, b) => a.localeCompare(b, "vi-VN"));
+}
+
+/**
  * Hard-delete a single BankQuestion. Cascade aware (giống deleteBank):
  *   - BankQuestionVersion / BankQuestionSkillTag / BankQuestionStats cascade
  *     khi xoá row chính.
@@ -459,6 +487,12 @@ export interface SearchFilters {
   skillIds?: string[]; // ANY match
   status?: ("draft" | "published" | "archived")[];
   q?: string; // prompt contains
+  /**
+   * Topic / chủ đề — exact match per topic string. ANY of list matches.
+   * Topic được lưu trong `BankQuestion.config.topic` (set bởi MCQ import).
+   * Postgres JSON path filter để match.
+   */
+  topics?: string[];
   limit?: number;
   cursor?: string;
 }
@@ -540,6 +574,16 @@ export async function searchQuestions(
       : {}),
     ...(filters.skillIds && filters.skillIds.length > 0
       ? { skillTags: { some: { skillId: { in: filters.skillIds } } } }
+      : {}),
+    // Topic filter — match BankQuestion.config.topic against any of the
+    // provided strings. Postgres JSON path: config -> 'topic' = ANY(...).
+    // Prisma's OR list keeps the queryable per topic value.
+    ...(filters.topics && filters.topics.length > 0
+      ? {
+          OR: filters.topics.map((t) => ({
+            config: { path: ["topic"], equals: t },
+          })),
+        }
       : {}),
   };
 

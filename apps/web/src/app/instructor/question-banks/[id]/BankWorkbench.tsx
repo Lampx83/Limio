@@ -42,6 +42,7 @@ interface ActiveFilters {
   status: Status[];
   cognitiveLevel: CognitiveLevel[];
   difficulty: number[];
+  topics: string[];
 }
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -123,9 +124,28 @@ export default function BankWorkbench({
     status: [],
     cognitiveLevel: [],
     difficulty: [],
+    topics: [],
   });
+  // Danh sách topic distinct trong bank, load 1 lần để populate filter.
+  // Refetch sau khi import vì có thể có topic mới.
+  const [availableTopics, setAvailableTopics] = useState<string[]>([]);
 
   const qTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchTopics = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/question-banks/${bankId}/topics`);
+      if (!r.ok) return;
+      const j = (await r.json()) as { topics: string[] };
+      setAvailableTopics(j.topics);
+    } catch {
+      // non-blocking
+    }
+  }, [bankId]);
+
+  useEffect(() => {
+    void fetchTopics();
+  }, [fetchTopics]);
 
   const fetchItems = useCallback(
     async (f: ActiveFilters, append = false, cur?: string) => {
@@ -135,6 +155,7 @@ export default function BankWorkbench({
       f.status.forEach((s) => params.append("status", s));
       f.cognitiveLevel.forEach((c) => params.append("cognitiveLevel", c));
       f.difficulty.forEach((d) => params.append("difficulty", String(d)));
+      f.topics.forEach((t) => params.append("topic", t));
       if (f.q.trim()) params.set("q", f.q.trim());
       if (cur) params.set("cursor", cur);
       try {
@@ -239,13 +260,42 @@ export default function BankWorkbench({
           </div>
         </FilterGroup>
 
+        {/* Topic filter — chỉ hiện khi bank đã có ≥1 topic.
+            Chip wrap multi-select OR; rỗng (rất nhiều topic) thì max-height
+            + scroll để không chiếm hết panel. */}
+        {availableTopics.length > 0 && (
+          <FilterGroup title={`Chủ đề (${availableTopics.length})`}>
+            <div className="flex max-h-44 flex-wrap gap-1 overflow-y-auto">
+              {availableTopics.map((t) => {
+                const active = filters.topics.includes(t);
+                return (
+                  <button
+                    key={t}
+                    onClick={() => toggleFilter("topics", t)}
+                    className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                      active
+                        ? "border-blue-400 bg-blue-100 text-blue-800"
+                        : "border-default bg-white text-slate-600 hover:bg-slate-100"
+                    }`}
+                    title={t}
+                  >
+                    {active ? "✓ " : ""}
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </FilterGroup>
+        )}
+
         {(filters.status.length > 0 ||
           filters.cognitiveLevel.length > 0 ||
           filters.difficulty.length > 0 ||
+          filters.topics.length > 0 ||
           filters.q) && (
           <button
             onClick={() =>
-              setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [] })
+              setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [], topics: [] })
             }
             className="text-left text-xs text-blue-600 hover:underline"
           >
@@ -285,7 +335,11 @@ export default function BankWorkbench({
         <ImportMcqModal
           open={mcqImportOpen}
           onClose={() => setMcqImportOpen(false)}
-          onCommitted={() => void refreshAndKeepSelection()}
+          onCommitted={() => {
+            void refreshAndKeepSelection();
+            // Import có thể tạo topic mới → refresh filter chips.
+            void fetchTopics();
+          }}
           previewEndpoint={`/api/question-banks/${bankId}/questions/mcq-import-preview`}
           commitEndpoint={`/api/question-banks/${bankId}/questions/mcq-import-commit`}
           destinationLabel="ngân hàng câu hỏi"

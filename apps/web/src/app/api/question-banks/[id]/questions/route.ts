@@ -17,6 +17,7 @@ export async function GET(
   const status = url.searchParams.getAll("status") as ("draft" | "published" | "archived")[];
   const cognitiveLevel = url.searchParams.getAll("cognitiveLevel") as ("remember_understand" | "apply" | "analyze_plus")[];
   const difficulty = url.searchParams.getAll("difficulty").map(Number).filter((n) => n >= 1 && n <= 5);
+  const topics = url.searchParams.getAll("topic").filter((t) => t.trim() !== "");
   const q = url.searchParams.get("q") ?? undefined;
   const cursor = url.searchParams.get("cursor") ?? undefined;
   try {
@@ -25,6 +26,7 @@ export async function GET(
       status: status.length > 0 ? status : undefined,
       cognitiveLevel: cognitiveLevel.length > 0 ? cognitiveLevel : undefined,
       difficulty: difficulty.length > 0 ? difficulty : undefined,
+      topics: topics.length > 0 ? topics : undefined,
       q,
       cursor,
       limit: 50,
