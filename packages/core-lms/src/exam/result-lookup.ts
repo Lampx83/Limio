@@ -122,7 +122,15 @@ export async function lookupCandidateResult(
     },
   });
   if (!attempt) throw new ExamError("result_not_found");
-  if (attempt.status === "in_progress")
+  // Any non-terminal status (in_progress, submitted, auto_submitted) means the
+  // worker hasn't produced a score yet — surface as pending so the candidate
+  // page shows the auto-refresh view rather than collapsing into the generic
+  // "instructor disabled details" branch.
+  if (
+    attempt.status === "in_progress" ||
+    attempt.status === "submitted" ||
+    attempt.status === "auto_submitted"
+  )
     throw new ExamError("result_not_yet_graded");
 
   const fullyGraded = attempt.status === "graded";
