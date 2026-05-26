@@ -207,131 +207,136 @@ export default function BankWorkbench({
 
   const selectedItem = items.find((i) => i.id === selectedId) ?? null;
 
+  const hasActiveFilter =
+    filters.status.length > 0 ||
+    filters.cognitiveLevel.length > 0 ||
+    filters.difficulty.length > 0 ||
+    filters.topics.length > 0 ||
+    filters.q.trim().length > 0;
+
   return (
-    <div className="mt-6 flex h-[calc(100vh-200px)] min-h-[500px] gap-0 overflow-hidden rounded-lg border border-default">
-      {/* ── Left: Filter panel ──────────────────────────────────────────── */}
-      <aside className="flex w-52 shrink-0 flex-col gap-4 overflow-y-auto border-r border-default bg-slate-50 p-3">
-        <div>
-          <input
-            type="search"
-            placeholder="Tìm câu hỏi..."
-            value={filters.q}
-            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
-            className="w-full rounded border border-default bg-white px-2 py-1.5 text-xs"
-          />
-        </div>
-
-        <FilterGroup title="Trạng thái">
-          {(["draft", "published", "archived"] as Status[]).map((s) => (
-            <FilterCheck
-              key={s}
-              label={STATUS_LABEL[s]}
-              checked={filters.status.includes(s)}
-              onChange={() => toggleFilter("status", s)}
-            />
-          ))}
-        </FilterGroup>
-
-        <FilterGroup title="Mức tư duy">
-          {(["remember_understand", "apply", "analyze_plus"] as CognitiveLevel[]).map((c) => (
-            <FilterCheck
-              key={c}
-              label={COGNITIVE_LABEL[c]}
-              checked={filters.cognitiveLevel.includes(c)}
-              onChange={() => toggleFilter("cognitiveLevel", c)}
-            />
-          ))}
-        </FilterGroup>
-
-        <FilterGroup title="Độ khó">
-          <div className="flex flex-wrap gap-1">
-            {[1, 2, 3, 4, 5].map((d) => (
-              <button
-                key={d}
-                onClick={() => toggleFilter("difficulty", d)}
-                className={`rounded border px-2 py-0.5 text-xs ${
-                  filters.difficulty.includes(d)
-                    ? "border-blue-400 bg-blue-100 text-blue-800"
-                    : "border-default bg-white text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-        </FilterGroup>
-
-        {/* Topic filter — chỉ hiện khi bank đã có ≥1 topic.
-            Chip wrap multi-select OR; rỗng (rất nhiều topic) thì max-height
-            + scroll để không chiếm hết panel. */}
-        {availableTopics.length > 0 && (
-          <FilterGroup title={`Chủ đề (${availableTopics.length})`}>
-            <div className="flex max-h-44 flex-wrap gap-1 overflow-y-auto">
-              {availableTopics.map((t) => {
-                const active = filters.topics.includes(t);
-                return (
-                  <button
-                    key={t}
-                    onClick={() => toggleFilter("topics", t)}
-                    className={`rounded-full border px-2 py-0.5 text-[11px] ${
-                      active
-                        ? "border-blue-400 bg-blue-100 text-blue-800"
-                        : "border-default bg-white text-slate-600 hover:bg-slate-100"
-                    }`}
-                    title={t}
-                  >
-                    {active ? "✓ " : ""}
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
-          </FilterGroup>
-        )}
-
-        {(filters.status.length > 0 ||
-          filters.cognitiveLevel.length > 0 ||
-          filters.difficulty.length > 0 ||
-          filters.topics.length > 0 ||
-          filters.q) && (
-          <button
-            onClick={() =>
-              setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [], topics: [] })
-            }
-            className="text-left text-xs text-blue-600 hover:underline"
-          >
-            Bỏ bộ lọc
-          </button>
-        )}
-      </aside>
-
-      {/* ── Middle: Item list ──────────────────────────────────────────── */}
+    <div className="mt-6 flex h-[calc(100vh-220px)] min-h-[520px] gap-0 overflow-hidden rounded-xl border border-default bg-white shadow-sm">
+      {/* ── Main: Item list + horizontal filter header ──────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Toolbar */}
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-default bg-white px-4 py-2">
-          <span className="text-xs text-faint">
-            {loading ? "Đang tải..." : `${items.length} câu hỏi`}
-          </span>
-          <div className="flex gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-default bg-white px-5 py-3">
+          <div className="text-sm text-slate-600">
+            {loading ? (
+              <span className="text-faint">Đang tải…</span>
+            ) : hasActiveFilter ? (
+              <span>
+                Hiển thị{" "}
+                <span className="font-semibold tabular-nums text-slate-900">
+                  {items.length}
+                </span>{" "}
+                câu phù hợp bộ lọc
+              </span>
+            ) : (
+              <span className="text-faint">Tất cả câu hỏi trong ngân hàng</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setMcqImportOpen(true)}
-              className="rounded border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+              title="Import nhiều câu hỏi từ file Excel (.xlsx)"
+              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-300 bg-emerald-50 px-3.5 py-1.5 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100"
             >
-              ⬆ Import .xlsx
+              <span aria-hidden>⬆</span> Import Excel
             </button>
             <button
               onClick={() => { setImporting((s) => !s); setAdding(false); }}
-              className="rounded border border-default bg-white px-3 py-1 text-xs hover:bg-slate-50"
+              title="Import từ CSV (định dạng cũ)"
+              className="rounded-md border border-default bg-white px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-50"
             >
-              {importing ? "Đóng" : "Import CSV"}
+              {importing ? "Đóng" : "CSV"}
             </button>
+            <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden />
             <button
               onClick={() => { setAdding((s) => !s); setImporting(false); }}
-              className="rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white hover:bg-brand-700"
+              className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
             >
-              {adding ? "Đóng" : "+ Thêm"}
+              {adding ? "Đóng" : (<><span aria-hidden>+</span> Thêm câu hỏi</>)}
             </button>
           </div>
+        </div>
+
+        {/* Filter header (horizontal) */}
+        <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-default bg-slate-50/60 px-5 py-3">
+          <input
+            type="search"
+            placeholder="Tìm câu hỏi…"
+            value={filters.q}
+            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
+            className="w-56 rounded-md border border-default bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
+          />
+
+          <FilterChipGroup label="Trạng thái">
+            {(["draft", "published", "archived"] as Status[]).map((s) => (
+              <FilterChip
+                key={s}
+                label={STATUS_LABEL[s]}
+                active={filters.status.includes(s)}
+                onClick={() => toggleFilter("status", s)}
+              />
+            ))}
+          </FilterChipGroup>
+
+          <FilterChipGroup label="Tư duy">
+            {(["remember_understand", "apply", "analyze_plus"] as CognitiveLevel[]).map((c) => (
+              <FilterChip
+                key={c}
+                label={COGNITIVE_LABEL[c]}
+                active={filters.cognitiveLevel.includes(c)}
+                onClick={() => toggleFilter("cognitiveLevel", c)}
+              />
+            ))}
+          </FilterChipGroup>
+
+          <FilterChipGroup label="Độ khó">
+            {[1, 2, 3, 4, 5].map((d) => (
+              <FilterChip
+                key={d}
+                label={String(d)}
+                active={filters.difficulty.includes(d)}
+                onClick={() => toggleFilter("difficulty", d)}
+                compact
+              />
+            ))}
+          </FilterChipGroup>
+
+          <FilterChipGroup label="Chủ đề">
+            {availableTopics.length > 0 ? (
+              <div className="flex max-w-md flex-wrap gap-1">
+                {availableTopics.map((t) => (
+                  <FilterChip
+                    key={t}
+                    label={t}
+                    active={filters.topics.includes(t)}
+                    onClick={() => toggleFilter("topics", t)}
+                    rounded
+                  />
+                ))}
+              </div>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-0.5 text-xs text-slate-500"
+                title="Chọn 1 câu hỏi ở danh sách, mở panel chi tiết bên phải để gán chủ đề"
+              >
+                <span aria-hidden>+</span> Thêm chủ đề cho câu hỏi
+              </span>
+            )}
+          </FilterChipGroup>
+
+          {hasActiveFilter && (
+            <button
+              onClick={() =>
+                setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [], topics: [] })
+              }
+              className="ml-auto text-xs font-medium text-blue-600 hover:underline"
+            >
+              Bỏ bộ lọc
+            </button>
+          )}
         </div>
         <ImportMcqModal
           open={mcqImportOpen}
@@ -504,31 +509,50 @@ export default function BankWorkbench({
 
 // ─── Filter helpers ────────────────────────────────────────────────────────
 
-function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
+function FilterChipGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div>
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-        {title}
-      </div>
-      <div className="space-y-1">{children}</div>
+    <div className="flex items-center gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-1">{children}</div>
     </div>
   );
 }
 
-function FilterCheck({
+function FilterChip({
   label,
-  checked,
-  onChange,
+  active,
+  onClick,
+  compact,
+  rounded,
 }: {
   label: string;
-  checked: boolean;
-  onChange: () => void;
+  active: boolean;
+  onClick: () => void;
+  compact?: boolean;
+  rounded?: boolean;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-700">
-      <input type="checkbox" checked={checked} onChange={onChange} className="h-3 w-3" />
+    <button
+      onClick={onClick}
+      title={label}
+      className={`border text-xs transition ${
+        compact ? "px-2 py-0.5" : "px-2.5 py-0.5"
+      } ${rounded ? "rounded-full" : "rounded-md"} ${
+        active
+          ? "border-brand-400 bg-brand-50 font-medium text-brand-800"
+          : "border-default bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+      }`}
+    >
       {label}
-    </label>
+    </button>
   );
 }
 
