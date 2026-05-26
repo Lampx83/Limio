@@ -39,6 +39,12 @@ export interface ParsedMcqRow {
     difficulty: 1 | 2 | 3 | 4 | 5;
     cognitiveLevel: "remember_understand" | "apply" | "analyze_plus";
     explanation: string | null;
+    /**
+     * Free-text topic / chủ đề. Stored in question's metadata so instructor
+     * có thể filter/group sau. Không validate giá trị — bất kỳ string nào
+     * cũng accept (vd "Địa lý", "Toán học", "Chương 3").
+     */
+    topic: string | null;
   };
 }
 
@@ -61,12 +67,15 @@ const HEADER_ALIASES: Record<string, string> = {
   difficulty: "Difficulty",
   explanation: "Explanation",
   cognitivelevel: "CognitiveLevel",
+  topic: "Topic",
   // Common variants instructors type:
   "câu hỏi": "Prompt",
   "đáp án": "Correct",
   "điểm": "Points",
   "độ khó": "Difficulty",
   "giải thích": "Explanation",
+  "chủ đề": "Topic",
+  "chu de": "Topic",
 };
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
@@ -215,6 +224,7 @@ function parseOneRow(raw: Record<string, string>, rowNumber: number): ParsedMcqR
   }
 
   const explanation = raw.Explanation || null;
+  const topic = raw.Topic || null;
 
   const status: McqRowStatus =
     errors.length > 0 ? "error" : warnings.length > 0 ? "warning" : "ok";
@@ -235,6 +245,7 @@ function parseOneRow(raw: Record<string, string>, rowNumber: number): ParsedMcqR
             difficulty: (difficulty ?? 3) as 1 | 2 | 3 | 4 | 5,
             cognitiveLevel,
             explanation,
+            topic,
           },
   };
 }
@@ -258,6 +269,7 @@ function parsePositiveInt(
  */
 export function generateMcqTemplateXlsx(): Buffer {
   const headers = [
+    "Topic",
     "Prompt",
     "Type",
     "OptionA",
@@ -275,6 +287,7 @@ export function generateMcqTemplateXlsx(): Buffer {
   const sample: (string | number)[][] = [
     headers,
     [
+      "Địa lý",
       "Thủ đô của Việt Nam là gì?",
       "mcq",
       "Hà Nội",
@@ -290,6 +303,7 @@ export function generateMcqTemplateXlsx(): Buffer {
       "Hà Nội là thủ đô từ 1945.",
     ],
     [
+      "Toán học",
       "Chọn các số chia hết cho 3 (chọn nhiều):",
       "mcq",
       "9",
@@ -305,6 +319,7 @@ export function generateMcqTemplateXlsx(): Buffer {
       "Một số chia hết cho 3 khi tổng các chữ số chia hết cho 3.",
     ],
     [
+      "Khoa học tự nhiên",
       "Trái đất quay quanh Mặt trời.",
       "true_false",
       "",
@@ -321,8 +336,9 @@ export function generateMcqTemplateXlsx(): Buffer {
     ],
   ];
   const ws = XLSX.utils.aoa_to_sheet(sample);
-  // Column widths — wide for Prompt/Explanation, narrow for Letter/numeric.
+  // Column widths — wide for Prompt/Explanation, narrow for letter/numeric.
   ws["!cols"] = [
+    { wch: 18 }, // Topic
     { wch: 40 }, // Prompt
     { wch: 10 }, // Type
     { wch: 16 },

@@ -54,6 +54,9 @@ export async function commitMcqRowsToBank(
           })),
         };
       }
+      // Topic stored in config.topic — BankQuestion không có dedicated topic
+      // field. Free-text, không validate. UI filter có thể đọc config.topic.
+      if (p.topic) config.topic = p.topic;
 
       await createBankQuestion(
         actorUserId,

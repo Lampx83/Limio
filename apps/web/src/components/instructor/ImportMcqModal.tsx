@@ -30,6 +30,7 @@ interface ParsedMcqRow {
     difficulty: number;
     cognitiveLevel: string;
     explanation: string | null;
+    topic: string | null;
   };
 }
 
@@ -276,6 +277,7 @@ function PreviewStage({
           <thead className="sticky top-0 bg-slate-100 text-left">
             <tr>
               <th className="px-2 py-1.5">#</th>
+              <th className="px-2 py-1.5">Chủ đề</th>
               <th className="px-2 py-1.5">Câu hỏi</th>
               <th className="px-2 py-1.5">Loại</th>
               <th className="px-2 py-1.5">Đáp án</th>
@@ -296,6 +298,15 @@ function PreviewStage({
                 }`}
               >
                 <td className="px-2 py-1.5 align-top text-faint">{row.rowNumber}</td>
+                <td className="px-2 py-1.5 align-top">
+                  {row.parsed?.topic ? (
+                    <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] text-blue-800">
+                      {row.parsed.topic}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-faint">—</span>
+                  )}
+                </td>
                 <td className="px-2 py-1.5 align-top">
                   <div className="line-clamp-2 text-slate-800">
                     {row.parsed?.prompt ?? "(thiếu)"}

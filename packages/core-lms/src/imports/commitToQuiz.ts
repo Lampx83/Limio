@@ -53,6 +53,11 @@ export async function commitMcqRowsToQuiz(
             isCorrect: o.isCorrect,
           })),
           skillIds: [],
+          // Topic / chủ đề lưu vào QuizQuestion.extra để instructor có thể
+          // filter/group sau. extra cũng giữ các field type-specific khác
+          // (numerical: expected/tolerance, short_answer: acceptedRegexes),
+          // chúng không xung đột với topic.
+          extra: p.topic ? { topic: p.topic } : undefined,
         },
         db,
       );
