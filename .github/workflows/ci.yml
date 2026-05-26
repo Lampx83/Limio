@@ -1,10 +1,14 @@
 name: CI
 
+# Disabled auto-trigger to save GitHub Actions minutes — billing quota hit.
+# Run manually from the Actions tab ("Run workflow") when needed, or re-enable
+# the push/pull_request triggers below once quota refreshes.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
