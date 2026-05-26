@@ -32,13 +32,18 @@ type QType =
   | "matching"
   | "numerical"
   | "essay"
-  | "short_answer";
+  | "short_answer"
+  | "drag_drop_fill";
 
 interface Option {
   id: string;
   label: string;
   orderIndex: number;
-  extra?: { side?: "left" | "right"; pairKey?: string } | null;
+  extra?: {
+    side?: "left" | "right";
+    pairKey?: string;
+    blankIndex?: number | null;
+  } | null;
 }
 interface Question {
   id: string;
@@ -66,7 +71,9 @@ type Response =
   | string[]
   | string
   | number
-  | Array<{ leftId: string; rightId: string }>;
+  | Array<{ leftId: string; rightId: string }>
+  // drag_drop_fill: map blank index (as string key) → option id placed.
+  | { tokens: Record<string, string> };
 
 interface AnswerState {
   response: Response | null;
@@ -82,6 +89,7 @@ const TYPE_LABEL: Record<QType, string> = {
   numerical: "Số",
   essay: "Tự luận",
   short_answer: "Trả lời ngắn",
+  drag_drop_fill: "Kéo thả",
 };
 
 export default function QuizPlayer({
@@ -154,6 +162,15 @@ export default function QuizPlayer({
         return typeof response !== "number" || !Number.isFinite(response);
       case "matching":
         return !Array.isArray(response) || response.length === 0;
+      case "drag_drop_fill": {
+        // Considered "empty" until at least one blank has a token placed.
+        const r = response as { tokens?: Record<string, string> } | unknown;
+        const tokens =
+          typeof r === "object" && r !== null && "tokens" in r
+            ? (r as { tokens: Record<string, string> }).tokens
+            : {};
+        return Object.values(tokens).filter((v) => !!v).length === 0;
+      }
       default:
         return !Array.isArray(response) || response.length === 0;
     }
@@ -250,10 +267,14 @@ export default function QuizPlayer({
                 {currentQ.points} điểm
               </span>
             </div>
-            <SafeHtml
-              html={plainToRichHtml(currentQ.prompt)}
-              className="prose prose-base mt-3 max-w-none leading-relaxed dark:prose-invert"
-            />
+            {/* drag_drop_fill renders the prompt itself with drop zones in
+                place of [[N]] placeholders, so skip the standard SafeHtml. */}
+            {currentQ.type !== "drag_drop_fill" && (
+              <SafeHtml
+                html={plainToRichHtml(currentQ.prompt)}
+                className="prose prose-base mt-3 max-w-none leading-relaxed dark:prose-invert"
+              />
+            )}
             <div className="mt-4">
               <QuestionInput
                 question={currentQ}
@@ -514,6 +535,9 @@ function QuestionInput({
 
     case "matching":
       return <MatchingInput question={question} answer={answer} onChange={onChange} onBlur={onBlur} />;
+
+    case "drag_drop_fill":
+      return <DragDropFillInput question={question} answer={answer} onChange={onChange} onBlur={onBlur} />;
 
     case "mcq":
     case "true_false":
@@ -958,6 +982,246 @@ function MatchingDraggable({
     >
       <SafeHtml
         html={plainToRichHtml(label)}
+        className="prose prose-sm max-w-none text-sm dark:prose-invert"
+      />
+    </span>
+  );
+}
+
+// ─── DRAG-DROP FILL ─────────────────────────────────────────────────────────
+//
+// Renders the prompt with [[N]] placeholders replaced by drop zones. A pool of
+// draggable tokens (correct + distractors) sits below. Learner drags each
+// token into a blank; only one token per blank. Response shape:
+//   { tokens: { [blankIndex: number]: optionId } }
+//
+// Backed by @dnd-kit (already used for matching). Mobile fallback: tap a
+// blank, then tap a token to assign (same pattern as MatchingInput mobile).
+
+function DragDropFillInput({
+  question,
+  answer,
+  onChange,
+  onBlur,
+}: {
+  question: Question;
+  answer: AnswerState | undefined;
+  onChange: (r: Response) => void;
+  onBlur: () => void;
+}) {
+  // Parse prompt into segments split by [[N]] placeholders. Each placeholder
+  // becomes a drop-zone slot with blankIndex = N. Plain text segments stay
+  // text. Backend strips HTML for grading, so we treat prompt as plain text
+  // (the instructor enters it via plain RichTextEditor but we render as text
+  // here so the drop zones can be inline-flow-aware).
+  const segments = parsePromptBlanks(question.prompt);
+  // Distinct blanks discovered in the prompt — what UI actually offers.
+  const blanksInPrompt = Array.from(
+    new Set(
+      segments
+        .filter((s): s is { kind: "blank"; index: number } => s.kind === "blank")
+        .map((s) => s.index),
+    ),
+  ).sort((a, b) => a - b);
+
+  // Current placements: blankIndex (as string key) → optionId. Pulled from
+  // saved answer if any.
+  const raw = answer?.response as { tokens?: Record<string, string> } | unknown;
+  const placed: Record<string, string> =
+    typeof raw === "object" && raw !== null && "tokens" in raw
+      ? { ...(raw as { tokens: Record<string, string> }).tokens }
+      : {};
+
+  const tokens = question.options;
+  const placedOptionIds = new Set(Object.values(placed));
+  const poolTokens = tokens.filter((t) => !placedOptionIds.has(t.id));
+
+  function commit(next: Record<string, string>) {
+    onChange({ tokens: next });
+    setTimeout(onBlur, 0);
+  }
+  function place(blankIdx: number, optionId: string) {
+    const next = { ...placed };
+    // If this option is already placed in another blank, remove it there.
+    for (const [k, v] of Object.entries(next)) {
+      if (v === optionId && Number(k) !== blankIdx) delete next[k];
+    }
+    next[String(blankIdx)] = optionId;
+    commit(next);
+  }
+  function clear(blankIdx: number) {
+    const next = { ...placed };
+    delete next[String(blankIdx)];
+    commit(next);
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor),
+  );
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over) return;
+    const optionId = String(active.id).replace(/^token:/, "");
+    const overId = String(over.id);
+    if (overId === "ddf:pool") {
+      // Drop back to pool → unassign wherever this option was.
+      for (const [k, v] of Object.entries(placed)) {
+        if (v === optionId) {
+          clear(Number(k));
+          return;
+        }
+      }
+      return;
+    }
+    if (overId.startsWith("blank:")) {
+      const idx = Number(overId.slice("blank:".length));
+      if (Number.isFinite(idx)) place(idx, optionId);
+    }
+  }
+
+  // No blanks parsed (instructor forgot [[N]] markers) — degrade to plain
+  // prompt + token list with manual click-to-place so question still works.
+  if (blanksInPrompt.length === 0) {
+    return (
+      <div className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-sm text-accent-800">
+        Câu hỏi này thiếu ký hiệu ô <code>[[1]]</code>… trong nội dung. Liên hệ
+        giảng viên.
+      </div>
+    );
+  }
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+        <div className="flex flex-wrap items-center gap-2 leading-loose text-base">
+          {segments.map((seg, i) => {
+            if (seg.kind === "text") {
+              return (
+                <span key={i} className="whitespace-pre-wrap">
+                  {seg.text}
+                </span>
+              );
+            }
+            const placedId = placed[String(seg.index)];
+            const placedOpt = placedId
+              ? tokens.find((t) => t.id === placedId)
+              : null;
+            return (
+              <DragDropBlank
+                key={i}
+                blankIndex={seg.index}
+                placed={placedOpt ?? null}
+                onClear={() => clear(seg.index)}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="mt-3 text-xs text-faint">Kéo các từ bên dưới thả vào ô tương ứng:</p>
+      <DragDropTokenPool tokens={poolTokens} />
+    </DndContext>
+  );
+}
+
+function parsePromptBlanks(
+  prompt: string,
+): Array<{ kind: "text"; text: string } | { kind: "blank"; index: number }> {
+  const out: Array<{ kind: "text"; text: string } | { kind: "blank"; index: number }> = [];
+  const re = /\[\[(\d+)\]\]/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(prompt)) !== null) {
+    if (m.index > last) out.push({ kind: "text", text: prompt.slice(last, m.index) });
+    out.push({ kind: "blank", index: Number(m[1]) });
+    last = m.index + m[0].length;
+  }
+  if (last < prompt.length) out.push({ kind: "text", text: prompt.slice(last) });
+  return out;
+}
+
+function DragDropBlank({
+  blankIndex,
+  placed,
+  onClear,
+}: {
+  blankIndex: number;
+  placed: Option | null;
+  onClear: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `blank:${blankIndex}` });
+  return (
+    <span
+      ref={setNodeRef}
+      className={`inline-flex min-h-[34px] min-w-[110px] items-center justify-between gap-2 rounded-md border-2 border-dashed px-2 py-0.5 align-middle text-sm transition-colors ${
+        isOver
+          ? "border-brand-500 bg-brand-soft"
+          : placed
+            ? "border-brand-300 bg-[rgb(var(--surface))]"
+            : "border-token bg-[rgb(var(--surface-muted))]"
+      }`}
+    >
+      {placed ? (
+        <>
+          <DragDropToken option={placed} compact />
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-xs text-faint hover:text-danger-600"
+            aria-label="Bỏ chọn token này"
+            title="Bỏ"
+          >
+            ×
+          </button>
+        </>
+      ) : (
+        <span className="text-xs text-faint">Ô {blankIndex}</span>
+      )}
+    </span>
+  );
+}
+
+function DragDropTokenPool({ tokens }: { tokens: Option[] }) {
+  const { setNodeRef, isOver } = useDroppable({ id: "ddf:pool" });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`mt-2 flex flex-wrap gap-2 rounded-xl border-2 border-dashed p-3 transition-colors ${
+        isOver
+          ? "border-brand-500 bg-brand-soft"
+          : "border-token bg-[rgb(var(--surface-muted))]"
+      }`}
+    >
+      {tokens.length === 0 ? (
+        <span className="text-xs text-faint">Đã đặt hết token. Kéo lại vào đây để bỏ.</span>
+      ) : (
+        tokens.map((t) => <DragDropToken key={t.id} option={t} />)
+      )}
+    </div>
+  );
+}
+
+function DragDropToken({ option, compact = false }: { option: Option; compact?: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `token:${option.id}`,
+  });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <span
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`inline-flex cursor-grab touch-none items-center rounded-lg border border-token bg-[rgb(var(--surface))] ${
+        compact ? "px-2 py-0.5" : "px-3 py-1.5"
+      } text-sm shadow-sm transition-shadow hover:shadow active:cursor-grabbing`}
+    >
+      <SafeHtml
+        html={plainToRichHtml(option.label)}
         className="prose prose-sm max-w-none text-sm dark:prose-invert"
       />
     </span>

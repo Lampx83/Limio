@@ -22,7 +22,8 @@ export type QuestionType =
   | "matching"
   | "numerical"
   | "essay"
-  | "short_answer";
+  | "short_answer"
+  | "drag_drop_fill";
 
 interface TypeCard {
   type: QuestionType;
@@ -190,6 +191,31 @@ const TYPE_CARDS: TypeCard[] = [
         <div className="text-faint">Nội dung câu hỏi…</div>
         <div className="mt-1.5 h-14 rounded border border-dashed border-token bg-slate-50" />
         <div className="mt-1 text-[10px] text-faint">Giảng viên chấm tay</div>
+      </PreviewBox>
+    ),
+  },
+  {
+    type: "drag_drop_fill",
+    title: "Kéo thả từ/câu",
+    preview: (
+      <PreviewBox>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span>Một đội bóng có</span>
+          <span className="inline-flex h-5 min-w-[40px] items-center justify-center rounded border border-dashed border-brand-400 bg-brand-soft px-1 text-[10px] text-brand-700">
+            11
+          </span>
+          <span>cầu thủ</span>
+        </div>
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {["11", "12", "10"].map((t) => (
+            <span
+              key={t}
+              className="rounded border border-token bg-white px-1.5 py-0.5 text-[10px] shadow-sm"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
       </PreviewBox>
     ),
   },

@@ -60,6 +60,7 @@ const TYPE_LABEL: Record<string, string> = {
   numerical: "Số",
   essay: "Tự luận",
   short_answer: "Trả lời ngắn",
+  drag_drop_fill: "Kéo thả từ/câu",
 };
 
 export default function EditQuestionForm({

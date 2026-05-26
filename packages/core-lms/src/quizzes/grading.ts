@@ -163,6 +163,29 @@ export function gradeAnswer(
       return { isCorrect: false, needsGrading: true };
     }
 
+    case "drag_drop_fill": {
+      // Response: { tokens: { [blankIndex: number]: optionId | null } }
+      // Each option has extra.blankIndex (1-based) for its correct slot, or
+      // null/missing for distractor tokens. All-or-nothing grading: every
+      // blank must contain its expected token; no partial credit.
+      const r = response as { tokens?: Record<string, unknown> } | null;
+      const placed = r?.tokens && typeof r.tokens === "object" ? r.tokens : {};
+      // Build expected map: blankIndex → option.id of the correct token.
+      const expected = new Map<number, string>();
+      for (const o of question.options) {
+        const idx = (o.extra as { blankIndex?: unknown } | null)?.blankIndex;
+        if (typeof idx === "number" && idx >= 1) expected.set(idx, o.id);
+      }
+      if (expected.size === 0) return { isCorrect: false };
+      for (const [blankIdx, expectedOptId] of expected) {
+        const actual = placed[String(blankIdx)];
+        if (typeof actual !== "string" || actual !== expectedOptId) {
+          return { isCorrect: false };
+        }
+      }
+      return { isCorrect: true };
+    }
+
     default:
       return { isCorrect: false };
   }

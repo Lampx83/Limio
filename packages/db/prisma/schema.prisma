@@ -476,6 +476,11 @@ enum QuestionType {
   numerical
   essay
   short_answer
+  // Học viên kéo các token (chữ/cụm từ) từ pool thả vào các ô [[N]] trong
+  // prompt. Mỗi option = 1 token; option.extra.blankIndex (số nguyên ≥ 1) là
+  // chỉ số ô mà token này thuộc về. blankIndex null/undefined → distractor
+  // (token nằm trong pool nhưng không thuộc ô nào).
+  drag_drop_fill
 }
 
 model Quiz {

@@ -18,13 +18,19 @@ type QuestionType =
   | "matching"
   | "numerical"
   | "essay"
-  | "short_answer";
+  | "short_answer"
+  | "drag_drop_fill";
 
 interface OptionDraft {
   label: string;
   isCorrect: boolean;
   misconceptionId: string | null;
-  extra: { side?: "left" | "right"; pairKey?: string } | null;
+  // matching: { side, pairKey }; drag_drop_fill: { blankIndex }; else null.
+  extra: {
+    side?: "left" | "right";
+    pairKey?: string;
+    blankIndex?: number | null;
+  } | null;
 }
 
 interface Skill {
@@ -64,6 +70,13 @@ const DEFAULTS: Record<QuestionType, OptionDraft[]> = {
   ],
   numerical: [],
   essay: [],
+  // 2 ô [[1]] [[2]] + 1 distractor. blankIndex bắt đầu từ 1 (không phải 0)
+  // để khớp syntax prompt: [[1]], [[2]], ...
+  drag_drop_fill: [
+    blank({ extra: { blankIndex: 1 } }),
+    blank({ extra: { blankIndex: 2 } }),
+    blank({ extra: { blankIndex: null } }),
+  ],
 };
 
 // Friendly Vietnamese labels — kept short to fit the badge in the form
@@ -77,6 +90,7 @@ const TYPE_LABEL: Record<QuestionType, string> = {
   numerical: "Đáp án dạng số",
   essay: "Tự luận",
   short_answer: "Trả lời ngắn",
+  drag_drop_fill: "Kéo thả từ/câu",
 };
 
 export default function AddQuestionForm({
@@ -339,15 +353,27 @@ export default function AddQuestionForm({
         </div>
       )}
 
+      {type === "drag_drop_fill" && (
+        <div className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-xs text-accent-700">
+          <strong>Cách dùng:</strong> Trong nội dung câu hỏi, viết{" "}
+          <code className="rounded bg-white px-1 py-0.5">[[1]]</code>,{" "}
+          <code className="rounded bg-white px-1 py-0.5">[[2]]</code>… ở chỗ
+          muốn tạo ô kéo thả. Bên dưới, mỗi token đặt "Vào ô số" = chỉ số ô
+          tương ứng. Token có "Vào ô số" = 0 → distractor (xuất hiện trong pool
+          nhưng không thuộc ô nào).
+        </div>
+      )}
+
       {(type === "mcq" ||
         type === "true_false" ||
         type === "fill_in" ||
         type === "short_answer" ||
         type === "ordering" ||
-        type === "matching") && (
+        type === "matching" ||
+        type === "drag_drop_fill") && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Options ({options.length})
+            {type === "drag_drop_fill" ? `Token (${options.length})` : `Options (${options.length})`}
           </p>
           <p className="mt-0.5 text-xs text-faint">
             {type === "mcq" && "Đánh dấu nhiều câu đúng nếu cần"}
@@ -356,6 +382,7 @@ export default function AddQuestionForm({
             {type === "short_answer" && "Labels = exact match (case-insensitive)"}
             {type === "ordering" && "Thứ tự đúng = thứ tự bạn nhập"}
             {type === "matching" && "Mỗi pairKey phải có 1 left + 1 right"}
+            {type === "drag_drop_fill" && "Token có 'Vào ô số' = N sẽ là đáp án đúng cho ô [[N]]"}
           </p>
           <ul className="mt-2 space-y-2">
             {options.map((o, i) => {
@@ -364,7 +391,10 @@ export default function AddQuestionForm({
               // label string against the learner response, so they must stay
               // plain. True/false labels are fixed semantic markers.
               const useRichLabel =
-                type === "mcq" || type === "matching" || type === "ordering";
+                type === "mcq" ||
+                type === "matching" ||
+                type === "ordering" ||
+                type === "drag_drop_fill";
               return (
                 <li
                   key={i}
@@ -414,6 +444,28 @@ export default function AddQuestionForm({
                           className="input w-20 text-xs"
                         />
                       </>
+                    )}
+                    {type === "drag_drop_fill" && (
+                      <label className="flex items-center gap-1 text-xs text-faint">
+                        Vào ô số
+                        <input
+                          type="number"
+                          min={0}
+                          max={20}
+                          value={o.extra?.blankIndex ?? 0}
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            setOption(i, {
+                              extra: {
+                                blankIndex:
+                                  Number.isFinite(v) && v >= 1 ? v : null,
+                              },
+                            });
+                          }}
+                          className="input w-14 text-xs"
+                          title="N = đáp án đúng cho ô [[N]]; 0 = distractor"
+                        />
+                      </label>
                     )}
                     {!useRichLabel && (
                       <input
