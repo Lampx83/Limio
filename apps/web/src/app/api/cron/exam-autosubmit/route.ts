@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { autoSubmitExpiredAttemptsMarkOnly } from "@feedbackme/core-lms";
 import { enqueueAutoGrade } from "@/lib/queue/autoGradeJob";
+import { recordStatus } from "@/lib/exam-live-bus";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,19 @@ export async function GET(req: Request) {
   let queued = 0;
   let queueErrors = 0;
   for (const attemptId of r.attemptIds) {
+    // Sync Redis Hash so the live monitor reflects the new status. Without
+    // this, the attempt stays "in_progress" in Redis even though DB has
+    // "auto_submitted" — instructor sees stale "đang thi" rows on the live
+    // dashboard. Manual submit endpoint already syncs; cron path was missing
+    // it. Best-effort: Redis downtime shouldn't block the grading enqueue.
+    try {
+      await recordStatus(attemptId, "auto_submitted");
+    } catch (err) {
+      console.error(
+        `[cron exam-autosubmit] recordStatus failed for ${attemptId}:`,
+        err,
+      );
+    }
     try {
       await enqueueAutoGrade(attemptId);
       queued++;

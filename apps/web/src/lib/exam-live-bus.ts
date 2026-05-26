@@ -201,11 +201,14 @@ export async function seedAttemptsBulk(
 ): Promise<void> {
   if (attempts.length === 0) return;
   const r = getRedis();
-  const existing = new Set(await r.smembers(kAttemptIds(examId)));
-  const toSeed = attempts.filter((a) => !existing.has(a.attemptId));
-  if (toSeed.length === 0) return;
+  // Always overwrite the Hash on reload. The previous "skip if already in
+  // Redis" optimisation caused stale-status bugs: e.g. cron auto-submit
+  // updates DB status but a Redis Hash that was seeded earlier kept showing
+  // "in_progress" forever. The DB row is the source of truth and the live
+  // route hands us the latest snapshot from a fresh query — trust it.
+  // Per-attempt HSET is cheap relative to the existing pipeline cost.
   const pipe = r.pipeline();
-  for (const a of toSeed) {
+  for (const a of attempts) {
     pipe.hset(kState(a.attemptId), serializeState(a));
     pipe.expire(kState(a.attemptId), TTL_SEC);
     if (a.answeredQuestionIds.length > 0) {
