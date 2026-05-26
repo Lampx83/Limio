@@ -22,11 +22,13 @@ export async function enqueueAutoGrade(
   attemptId: string,
 ): Promise<string> {
   // jobId per-attempt — duplicate enqueues for the same attempt coalesce so
-  // a flaky retry from the cron tick can't double-grade.
+  // a flaky retry from the cron tick can't double-grade. BullMQ reserves `:`
+  // as its internal key separator and rejects it in custom jobIds, so we use
+  // `-` here; the dedup property is unchanged.
   const job = await getAutoGradeQueue().add(
     "grade",
     { attemptId },
-    { jobId: `grade:${attemptId}` },
+    { jobId: `grade-${attemptId}` },
   );
   return job.id ?? "";
 }
