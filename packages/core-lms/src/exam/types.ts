@@ -47,6 +47,7 @@ export class ExamError extends Error {
       | "bank_not_found"
       | "bank_has_used_questions"
       | "bank_question_not_found"
+      | "bank_question_in_use"
       | "bank_question_not_publishable"
       | "bank_question_already_archived"
       | "cohort_not_found"

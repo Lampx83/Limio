@@ -405,6 +405,14 @@ export default function BankWorkbench({
               await refreshAndKeepSelection();
               if (updated) flashOk("Đã lưu");
             }}
+            onDeleted={async () => {
+              // Optimistic: drop selection + remove from local list before
+              // refetching so the UI feels immediate.
+              setSelectedId(null);
+              setItems((curr) => curr.filter((x) => x.id !== selectedItem.id));
+              flashOk("Đã xoá câu hỏi");
+              await refreshAndKeepSelection();
+            }}
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-faint">
@@ -454,11 +462,13 @@ function DetailPanel({
   suggestedSkills,
   onClose,
   onUpdated,
+  onDeleted,
 }: {
   q: Item;
   suggestedSkills: Skill[];
   onClose: () => void;
   onUpdated: (updated: boolean) => Promise<void>;
+  onDeleted: () => Promise<void>;
 }) {
   const [tab, setTab] = useState<"edit" | "quality">("edit");
 
@@ -479,13 +489,17 @@ function DetailPanel({
             </button>
           ))}
         </div>
-        <button
-          onClick={onClose}
-          className="text-faint hover:text-slate-700"
-          aria-label="Đóng"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-1">
+          <DeleteQuestionButton questionId={q.id} promptHint={q.prompt} onDeleted={onDeleted} />
+          <button
+            onClick={onClose}
+            className="text-faint hover:text-slate-700"
+            aria-label="Đóng"
+            title="Đóng"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -601,10 +615,16 @@ function EditTab({
         />
       </label>
 
-      {/* Read-only answer preview — instructor sees the correct answer
-          per question type at a glance. Bank workbench is instructor-only,
-          so revealing answer keys here is fine. */}
-      <AnswerPreview type={q.type} config={q.config} />
+      {/* Answer editor — editable for MCQ/multi/T-F-NG; read-only preview
+          fallback for other types (gap_fill, short_answer, essay,
+          matching_heading) where the config shape is more complex.
+          onChange persists via PATCH /api/bank-questions/[id] with `config`. */}
+      <AnswerEditor
+        type={q.type}
+        config={q.config}
+        questionId={q.id}
+        onSaved={() => void onUpdated(true)}
+      />
 
       {/* Cognitive level */}
       <label className="block">
@@ -1290,5 +1310,396 @@ function AnswerEmpty({ hint }: { hint: string }) {
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
       ⚠ {hint}
     </div>
+  );
+}
+
+// ─── Answer editor ──────────────────────────────────────────────────────────
+//
+// Editable version of AnswerPreview for the types we can express with a
+// simple form (mcq/multi/true_false_notgiven). Other types fall back to the
+// read-only preview — editing gap_fill / matching_heading / etc. needs a
+// dedicated builder; deferred to a future PR.
+//
+// Save policy: explicit "Lưu đáp án" button (separate from the main "Lưu
+// thay đổi" so instructor can apply prompt edits + answer edits independently).
+// Calls PATCH /api/bank-questions/[id] with `{ config }`. Server snapshots a
+// new BankQuestionVersion if status=published.
+
+function AnswerEditor({
+  type,
+  config,
+  questionId,
+  onSaved,
+}: {
+  type: string;
+  config: Record<string, unknown> | null;
+  questionId: string;
+  onSaved: () => void;
+}) {
+  if (type === "mcq" || type === "multi") {
+    return (
+      <McqAnswerEditor
+        type={type as "mcq" | "multi"}
+        config={config}
+        questionId={questionId}
+        onSaved={onSaved}
+      />
+    );
+  }
+  if (type === "true_false_notgiven") {
+    return (
+      <TfngAnswerEditor config={config} questionId={questionId} onSaved={onSaved} />
+    );
+  }
+  // Fallback for types without a dedicated editor — keep the existing
+  // read-only preview so instructor at least sees the answer.
+  return (
+    <div className="space-y-2">
+      <AnswerPreview type={type} config={config} />
+      <p className="text-[10px] text-faint">
+        Loại này chưa hỗ trợ sửa đáp án inline trong bank. Xoá + tạo lại nếu
+        cần đổi đáp án.
+      </p>
+    </div>
+  );
+}
+
+function McqAnswerEditor({
+  type,
+  config,
+  questionId,
+  onSaved,
+}: {
+  type: "mcq" | "multi";
+  config: Record<string, unknown> | null;
+  questionId: string;
+  onSaved: () => void;
+}) {
+  const initial = ((config?.options as Array<{
+    id?: string;
+    label?: string;
+    isCorrect?: boolean;
+  }>) ?? []).map((o, i) => ({
+    id: o.id ?? `opt-${i}-${Math.random().toString(36).slice(2, 8)}`,
+    label: o.label ?? "",
+    isCorrect: !!o.isCorrect,
+  }));
+  const [options, setOptions] = useState(
+    initial.length > 0
+      ? initial
+      : [
+          { id: cryptoIdLocal(), label: "", isCorrect: true },
+          { id: cryptoIdLocal(), label: "", isCorrect: false },
+        ],
+  );
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const correctCount = options.filter((o) => o.isCorrect).length;
+  const dirty = !sameOptions(initial, options);
+  const validMcq = type === "mcq" ? correctCount === 1 : correctCount >= 1;
+  const validLabels = options.every((o) => o.label.trim() !== "");
+
+  function toggleCorrect(idx: number) {
+    setOptions((curr) =>
+      curr.map((o, i) => {
+        if (type === "mcq") return { ...o, isCorrect: i === idx };
+        return i === idx ? { ...o, isCorrect: !o.isCorrect } : o;
+      }),
+    );
+  }
+  function setLabel(idx: number, v: string) {
+    setOptions((curr) => curr.map((o, i) => (i === idx ? { ...o, label: v } : o)));
+  }
+  function addOption() {
+    setOptions((curr) => [...curr, { id: cryptoIdLocal(), label: "", isCorrect: false }]);
+  }
+  function removeOption(idx: number) {
+    setOptions((curr) => curr.filter((_, i) => i !== idx));
+  }
+
+  async function save() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const newConfig = {
+        ...(config ?? {}),
+        options: options.map((o) => ({
+          id: o.id,
+          label: o.label.trim(),
+          isCorrect: o.isCorrect,
+        })),
+      };
+      const r = await fetch(`/api/bank-questions/${questionId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ config: newConfig }),
+      });
+      if (!r.ok) {
+        const j = (await r.json().catch(() => null)) as { error?: string } | null;
+        setErr(j?.error ?? `HTTP ${r.status}`);
+        return;
+      }
+      onSaved();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-emerald-100 bg-emerald-50/30 p-2.5">
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+          Đáp án ({type === "mcq" ? "1 đúng" : "≥1 đúng"})
+        </div>
+        {dirty && (
+          <span className="text-[10px] text-amber-700">Chưa lưu</span>
+        )}
+      </div>
+      <ul className="space-y-1">
+        {options.map((o, i) => (
+          <li
+            key={o.id}
+            className={`flex items-center gap-1.5 rounded px-2 py-1 ${
+              o.isCorrect ? "bg-emerald-100" : "bg-white"
+            }`}
+          >
+            <input
+              type={type === "mcq" ? "radio" : "checkbox"}
+              name={`correct-${questionId}`}
+              checked={o.isCorrect}
+              onChange={() => toggleCorrect(i)}
+              className="h-3.5 w-3.5 accent-emerald-600"
+              aria-label={o.isCorrect ? "Đáp án đúng" : "Đáp án sai"}
+            />
+            <input
+              type="text"
+              value={o.label}
+              onChange={(e) => setLabel(i, e.target.value)}
+              placeholder={`Phương án ${String.fromCharCode(65 + i)}`}
+              className="flex-1 rounded border border-default bg-white px-1.5 py-0.5 text-xs"
+            />
+            {options.length > 2 && (
+              <button
+                type="button"
+                onClick={() => removeOption(i)}
+                aria-label="Xoá option"
+                className="text-xs text-faint hover:text-danger-600"
+              >
+                ×
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={addOption}
+          className="text-[11px] text-blue-600 hover:underline"
+        >
+          + Thêm phương án
+        </button>
+        <div className="flex items-center gap-2">
+          {!validMcq && (
+            <span className="text-[10px] text-amber-700">
+              {type === "mcq" ? "Cần đúng 1 đáp án đúng" : "Cần ≥1 đáp án đúng"}
+            </span>
+          )}
+          {!validLabels && (
+            <span className="text-[10px] text-amber-700">Còn nhãn trống</span>
+          )}
+          <button
+            type="button"
+            disabled={busy || !dirty || !validMcq || !validLabels}
+            onClick={save}
+            className="rounded border border-emerald-300 bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-800 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {busy ? "Đang lưu..." : "Lưu đáp án"}
+          </button>
+        </div>
+      </div>
+      {err && (
+        <div className="mt-1.5 rounded border border-red-200 bg-red-50 px-2 py-1 text-[11px] text-red-800">
+          ⚠ {err}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TfngAnswerEditor({
+  config,
+  questionId,
+  onSaved,
+}: {
+  config: Record<string, unknown> | null;
+  questionId: string;
+  onSaved: () => void;
+}) {
+  const initial = typeof config?.correct === "string" ? (config.correct as string) : "true";
+  const [correct, setCorrect] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const dirty = correct !== initial;
+  const LABEL: Record<string, string> = {
+    true: "Đúng",
+    false: "Sai",
+    not_given: "Không đề cập",
+  };
+
+  async function save() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const r = await fetch(`/api/bank-questions/${questionId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ config: { ...(config ?? {}), correct } }),
+      });
+      if (!r.ok) {
+        const j = (await r.json().catch(() => null)) as { error?: string } | null;
+        setErr(j?.error ?? `HTTP ${r.status}`);
+        return;
+      }
+      onSaved();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-emerald-100 bg-emerald-50/30 p-2.5">
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+          Đáp án đúng
+        </div>
+        {dirty && <span className="text-[10px] text-amber-700">Chưa lưu</span>}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {(["true", "false", "not_given"] as const).map((v) => (
+          <label
+            key={v}
+            className={`flex cursor-pointer items-center gap-1.5 rounded border px-2 py-1 text-xs ${
+              correct === v
+                ? "border-emerald-500 bg-emerald-100 font-semibold text-emerald-800"
+                : "border-default bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            <input
+              type="radio"
+              name={`tfng-${questionId}`}
+              checked={correct === v}
+              onChange={() => setCorrect(v)}
+              className="h-3 w-3 accent-emerald-600"
+            />
+            {LABEL[v]}
+          </label>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-end">
+        <button
+          type="button"
+          disabled={busy || !dirty}
+          onClick={save}
+          className="rounded border border-emerald-300 bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-800 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {busy ? "Đang lưu..." : "Lưu đáp án"}
+        </button>
+      </div>
+      {err && (
+        <div className="mt-1.5 rounded border border-red-200 bg-red-50 px-2 py-1 text-[11px] text-red-800">
+          ⚠ {err}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function sameOptions(
+  a: Array<{ id: string; label: string; isCorrect: boolean }>,
+  b: Array<{ id: string; label: string; isCorrect: boolean }>,
+): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i]!;
+    const y = b[i]!;
+    if (x.id !== y.id || x.label !== y.label || x.isCorrect !== y.isCorrect) return false;
+  }
+  return true;
+}
+
+function cryptoIdLocal(): string {
+  // Stable enough for client-side option keys; server normalises on save.
+  return `opt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+// ─── Delete question button ─────────────────────────────────────────────────
+//
+// Trash icon in DetailPanel header. 2-step confirm: warn before delete; if
+// server returns 409 bank_question_in_use, ask for force confirm and retry
+// with ?force=true. Same pattern as DeleteBankButton in BankListClient.
+
+function DeleteQuestionButton({
+  questionId,
+  promptHint,
+  onDeleted,
+}: {
+  questionId: string;
+  promptHint: string;
+  onDeleted: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  async function run() {
+    const preview = promptHint.length > 60 ? promptHint.slice(0, 60) + "…" : promptHint;
+    if (
+      !confirm(
+        `Xoá câu hỏi này khỏi ngân hàng?\n\n"${preview}"\n\nMọi version + skill tag + stats trong bank sẽ bị xoá theo. Không thể khôi phục.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    try {
+      let r = await fetch(`/api/bank-questions/${questionId}`, { method: "DELETE" });
+      if (r.status === 409) {
+        const body = (await r.json().catch(() => null)) as
+          | { error?: string; details?: { usedCount?: number } }
+          | null;
+        const used = body?.details?.usedCount ?? "một số";
+        const ok = confirm(
+          `Câu hỏi này đã được copy vào ${used} đề thi. Xoá sẽ mất link giữa đề và bank (đề vẫn giữ bản sao câu hỏi). Vẫn xoá?`,
+        );
+        if (!ok) {
+          setBusy(false);
+          return;
+        }
+        r = await fetch(`/api/bank-questions/${questionId}?force=true`, {
+          method: "DELETE",
+        });
+      }
+      if (!r.ok) {
+        const body = (await r.json().catch(() => null)) as { error?: string } | null;
+        alert(`Xoá thất bại: ${body?.error ?? r.statusText}`);
+        setBusy(false);
+        return;
+      }
+      await onDeleted();
+    } catch {
+      alert("Lỗi mạng — thử lại");
+      setBusy(false);
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={run}
+      disabled={busy}
+      aria-label="Xoá câu hỏi"
+      title="Xoá câu hỏi khỏi ngân hàng"
+      className="flex h-7 w-7 items-center justify-center rounded text-faint hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+    >
+      🗑
+    </button>
   );
 }

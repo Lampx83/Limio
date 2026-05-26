@@ -376,6 +376,47 @@ export async function archiveBankQuestion(
   });
 }
 
+/**
+ * Hard-delete a single BankQuestion. Cascade aware (giống deleteBank):
+ *   - BankQuestionVersion / BankQuestionSkillTag / BankQuestionStats cascade
+ *     khi xoá row chính.
+ *   - ExamQuestionFromBank.bankQuestion KHÔNG cascade (default NoAction) →
+ *     nếu câu đã được copy vào đề thi nào thì Postgres reject.
+ *
+ * `force=false` (default) + đã dùng → throw `bank_question_in_use` với usedCount.
+ * `force=true` → wipe ExamQuestionFromBank cho câu này rồi xoá. ExamQuestion
+ *   bản sao trong đề không bị xoá (chỉ mất back-link về bank).
+ *
+ * Authz: same as edit (owner OR course instructor).
+ */
+export async function deleteBankQuestion(
+  actorUserId: string,
+  questionId: string,
+  opts: { force?: boolean } = {},
+  db: PrismaClient = prisma,
+): Promise<{ deleted: true; unlinkedFromExams: number }> {
+  const q = await loadBankQuestion(questionId, db);
+  await assertCanEditBank(actorUserId, q.bankId, db);
+
+  const usedCount = await db.examQuestionFromBank.count({
+    where: { bankQuestionId: questionId },
+  });
+  if (usedCount > 0 && !opts.force) {
+    throw new ExamError("bank_question_in_use", { usedCount });
+  }
+
+  await db.$transaction(async (tx) => {
+    if (usedCount > 0) {
+      await tx.examQuestionFromBank.deleteMany({
+        where: { bankQuestionId: questionId },
+      });
+    }
+    await tx.bankQuestion.delete({ where: { id: questionId } });
+  });
+
+  return { deleted: true, unlinkedFromExams: usedCount };
+}
+
 /** Skill-tag CRUD. */
 export async function tagBankQuestion(
   actorUserId: string,
