@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import QuestionTypePicker from "./QuestionTypePicker";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -65,15 +66,17 @@ const DEFAULTS: Record<QuestionType, OptionDraft[]> = {
   essay: [],
 };
 
+// Friendly Vietnamese labels — kept short to fit the badge in the form
+// header. The picker card titles use the same labels for consistency.
 const TYPE_LABEL: Record<QuestionType, string> = {
-  mcq: "MCQ — Chọn nhiều",
+  mcq: "Trắc nghiệm",
   true_false: "Đúng / Sai",
-  fill_in: "Điền từ",
-  ordering: "Sắp xếp",
+  fill_in: "Điền khuyết",
+  ordering: "Sắp xếp thứ tự",
   matching: "Ghép cặp",
-  numerical: "Số",
-  essay: "Tự luận (chấm tay)",
-  short_answer: "Trả lời ngắn (regex)",
+  numerical: "Đáp án dạng số",
+  essay: "Tự luận",
+  short_answer: "Trả lời ngắn",
 };
 
 export default function AddQuestionForm({
@@ -84,7 +87,11 @@ export default function AddQuestionForm({
   nextOrderIndex: number;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  // Three-stage flow:
+  //   "closed"  → "+ Thêm câu hỏi" button only
+  //   "picking" → visual type cards
+  //   "editing" → full form with chosen type
+  const [stage, setStage] = useState<"closed" | "picking" | "editing">("closed");
   const [type, setType] = useState<QuestionType>("mcq");
   const [prompt, setPrompt] = useState("");
   const [points, setPoints] = useState(1);
@@ -100,7 +107,7 @@ export default function AddQuestionForm({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (stage === "closed") return;
     fetch(apiUrl("/api/skills"))
       .then((r) => r.json())
       .then((d) => setSkills(d.items ?? []))
@@ -109,7 +116,7 @@ export default function AddQuestionForm({
       .then((r) => r.json())
       .then((d) => setMisconceptions(d.items ?? []))
       .catch(() => {});
-  }, [open]);
+  }, [stage]);
 
   function reset() {
     setPrompt("");
@@ -211,7 +218,7 @@ export default function AddQuestionForm({
     setBusy(false);
     if (res.ok) {
       reset();
-      setOpen(false);
+      setStage("closed");
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
@@ -219,14 +226,26 @@ export default function AddQuestionForm({
     }
   }
 
-  if (!open) {
+  if (stage === "closed") {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => setStage("picking")}
         className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
       >
         + Thêm câu hỏi
       </button>
+    );
+  }
+
+  if (stage === "picking") {
+    return (
+      <QuestionTypePicker
+        onPick={(t) => {
+          changeType(t);
+          setStage("editing");
+        }}
+        onCancel={() => setStage("closed")}
+      />
     );
   }
 
@@ -235,24 +254,26 @@ export default function AddQuestionForm({
       onSubmit={onSubmit}
       className="space-y-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4"
     >
-      {/* Type + points */}
+      {/* Type badge + back link + points. Type can still be changed by
+          going back to the picker — keeps the visual flow consistent. */}
       <div className="flex flex-wrap items-end gap-3">
-        <label className="block flex-1 min-w-[200px]">
-          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Loại câu hỏi
-          </span>
-          <select
-            value={type}
-            onChange={(e) => changeType(e.target.value as QuestionType)}
-            className="select mt-1"
+        <div className="flex flex-1 min-w-[200px] items-end gap-2">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+              Loại câu hỏi
+            </span>
+            <div className="mt-1 inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 text-sm font-semibold text-brand-700">
+              {TYPE_LABEL[type]}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStage("picking")}
+            className="rounded border border-token bg-white px-2 py-1 text-xs text-muted hover:bg-slate-50"
           >
-            {(Object.keys(TYPE_LABEL) as QuestionType[]).map((t) => (
-              <option key={t} value={t}>
-                {TYPE_LABEL[t]}
-              </option>
-            ))}
-          </select>
-        </label>
+            Đổi loại
+          </button>
+        </div>
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-wide text-faint">
             Điểm
@@ -528,7 +549,7 @@ export default function AddQuestionForm({
           type="button"
           onClick={() => {
             reset();
-            setOpen(false);
+            setStage("closed");
           }}
           className="btn-secondary btn-sm"
         >
