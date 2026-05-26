@@ -44,3 +44,6 @@ packages/db/test-*.mjs
 
 # Word/Office temp lock files
 ~$*
+
+# exam monitor output
+logs/
