@@ -127,19 +127,26 @@ const TYPE_CARDS: TypeCard[] = [
   {
     type: "ordering",
     title: "Sắp xếp thứ tự",
+    // Horizontal layout — khớp với UI desktop học viên (kéo-thả theo phương
+    // ngang trái → phải). Trước đây stack dọc gây hiểu nhầm là sắp xếp theo
+    // cột list, thực tế player render flex-wrap horizontal.
     preview: (
       <PreviewBox>
-        <div className="text-faint">Sắp xếp các bước theo đúng thứ tự:</div>
-        <div className="mt-1.5 space-y-0.5">
+        <div className="text-faint">Sắp xếp theo thứ tự đúng:</div>
+        <div className="mt-1.5 flex items-center gap-1">
           {[1, 2, 3].map((n) => (
-            <div
-              key={n}
-              className="flex items-center gap-1.5 rounded border border-token px-2 py-0.5"
-            >
-              <span className="font-mono text-[10px] font-bold text-success-700">
-                {n}.
-              </span>
-              <span className="text-slate-600">Bước {n}</span>
+            <div key={n} className="flex items-center gap-1">
+              <div className="flex flex-1 items-center gap-1 rounded border border-token bg-white px-1.5 py-0.5">
+                <span className="font-mono text-[9px] font-bold text-success-700">
+                  {n}.
+                </span>
+                <span className="text-[10px] text-slate-600">Bước {n}</span>
+              </div>
+              {n < 3 && (
+                <span className="text-[10px] text-faint" aria-hidden>
+                  →
+                </span>
+              )}
             </div>
           ))}
         </div>
