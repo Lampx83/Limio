@@ -147,6 +147,54 @@ async function assertCanEditBank(
   throw new ExamError("bank_not_found"); // hide existence
 }
 
+/**
+ * Hard-delete a QuestionBank. Cascade-aware:
+ *   - BankQuestion / BankQuestionVersion / BankQuestionSkillTag / BankQuestionStats
+ *     all have ON DELETE CASCADE — drop automatically when the parent goes.
+ *   - ExamQuestionFromBank.bankQuestion does NOT cascade (default NoAction),
+ *     so Postgres would reject the delete if any bank question has been copied
+ *     into an exam. Pre-count and:
+ *       - `force=false` (default) → throw `bank_has_used_questions` with the
+ *          count, let the UI ask for confirmation.
+ *       - `force=true` → wipe ExamQuestionFromBank rows for this bank's
+ *          questions inside the same transaction, then delete. The exam
+ *          retains its frozen ExamQuestion copies (not affected) — just loses
+ *          the back-link to the source bank entry. Item analytics keeps
+ *          working from the exam side.
+ *
+ * Authz: actor must own the bank OR be an instructor of the bank's course.
+ * (Same rule as assertCanEditBank above.)
+ */
+export async function deleteBank(
+  actorUserId: string,
+  bankId: string,
+  opts: { force?: boolean } = {},
+  db: PrismaClient = prisma,
+): Promise<{ deleted: true; unlinkedFromExams: number }> {
+  await assertCanEditBank(actorUserId, bankId, db);
+
+  // Count back-links from exams. Joined via BankQuestion → bank.
+  const usedCount = await db.examQuestionFromBank.count({
+    where: { bankQuestion: { bankId } },
+  });
+  if (usedCount > 0 && !opts.force) {
+    throw new ExamError("bank_has_used_questions", { usedCount });
+  }
+
+  await db.$transaction(async (tx) => {
+    if (usedCount > 0) {
+      // Force path: drop the back-links first, then the bank cascades the
+      // rest. ExamQuestion copies in the exam side are untouched.
+      await tx.examQuestionFromBank.deleteMany({
+        where: { bankQuestion: { bankId } },
+      });
+    }
+    await tx.questionBank.delete({ where: { id: bankId } });
+  });
+
+  return { deleted: true, unlinkedFromExams: usedCount };
+}
+
 const CognitiveLevelEnum = z.enum(["remember_understand", "apply", "analyze_plus"]);
 
 export const CreateBankQuestionInput = z.object({

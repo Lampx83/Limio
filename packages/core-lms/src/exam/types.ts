@@ -45,6 +45,7 @@ export class ExamError extends Error {
       | "candidate_has_attempts"
       | "candidate_code_collision"
       | "bank_not_found"
+      | "bank_has_used_questions"
       | "bank_question_not_found"
       | "bank_question_not_publishable"
       | "bank_question_already_archived"

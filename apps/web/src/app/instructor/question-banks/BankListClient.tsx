@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Trash2 } from "lucide-react";
 
 type Bank = {
   id: string;
@@ -137,10 +137,10 @@ export default function BankListClient({
       {banks.length > 0 && (
         <ul data-testid="bank-list" className="mt-6 space-y-2">
           {banks.map((b) => (
-            <li key={b.id}>
+            <li key={b.id} className="relative">
               <Link
                 href={`/instructor/question-banks/${b.id}`}
-                className="block rounded border border-default bg-white p-4 hover:bg-slate-50"
+                className="block rounded border border-default bg-white p-4 pr-12 hover:bg-slate-50"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-base font-semibold">{b.name}</h2>
@@ -163,10 +163,88 @@ export default function BankListClient({
                   <p className="mt-2 text-sm text-slate-600">{b.description}</p>
                 )}
               </Link>
+              {/* Delete button — only owner sees it. Positioned absolute to
+                  avoid being part of the <Link> click area. */}
+              {b.isOwner && (
+                <DeleteBankButton
+                  bankId={b.id}
+                  bankName={b.name}
+                  onDeleted={() =>
+                    setBanks((curr) => curr.filter((x) => x.id !== b.id))
+                  }
+                />
+              )}
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+function DeleteBankButton({
+  bankId,
+  bankName,
+  onDeleted,
+}: {
+  bankId: string;
+  bankName: string;
+  onDeleted: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function run() {
+    if (
+      !confirm(
+        `Xoá ngân hàng "${bankName}"?\n\nMọi câu hỏi + version + skill tag + stats trong bank sẽ bị xoá theo. Không thể khôi phục.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    try {
+      // First try without force — server tells us if any question has been
+      // copied into an exam and how many.
+      let r = await fetch(`/api/question-banks/${bankId}`, { method: "DELETE" });
+      if (r.status === 409) {
+        const body = (await r.json().catch(() => null)) as
+          | { error?: string; details?: { usedCount?: number } }
+          | null;
+        const used = body?.details?.usedCount ?? "một số";
+        const ok = confirm(
+          `Ngân hàng này có ${used} câu hỏi đã được copy vào đề thi. Xoá sẽ mất link giữa đề và ngân hàng (đề vẫn giữ bản sao câu hỏi, chỉ mất khả năng tra về nguồn).\n\nVẫn xoá?`,
+        );
+        if (!ok) {
+          setBusy(false);
+          return;
+        }
+        r = await fetch(`/api/question-banks/${bankId}?force=true`, {
+          method: "DELETE",
+        });
+      }
+      if (!r.ok) {
+        const body = (await r.json().catch(() => null)) as { error?: string } | null;
+        alert(`Xoá thất bại: ${body?.error ?? r.statusText}`);
+        setBusy(false);
+        return;
+      }
+      onDeleted();
+    } catch {
+      alert("Lỗi mạng — thử lại");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={run}
+      disabled={busy}
+      aria-label={`Xoá ${bankName}`}
+      title="Xoá ngân hàng"
+      className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded text-faint hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+    >
+      <Trash2 className="h-4 w-4" />
+    </button>
   );
 }
