@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
+import TopicCombobox from "@/components/instructor/TopicCombobox";
 
 type Status = "draft" | "published" | "archived";
 type CognitiveLevel = "remember_understand" | "apply" | "analyze_plus";
@@ -362,9 +363,12 @@ export default function BankWorkbench({
               <QuestionForm
                 bankId={bankId}
                 suggestedSkills={suggestedSkills}
+                availableTopics={availableTopics}
                 onDone={async () => {
                   setAdding(false);
                   await refreshAndKeepSelection();
+                  // Topic mới (nếu user tạo) → refresh filter list.
+                  void fetchTopics();
                   flashOk("Đã tạo câu hỏi");
                 }}
               />
@@ -470,9 +474,12 @@ export default function BankWorkbench({
             key={selectedItem.id}
             q={selectedItem}
             suggestedSkills={suggestedSkills}
+            availableTopics={availableTopics}
             onClose={() => setSelectedId(null)}
             onUpdated={async (updated) => {
               await refreshAndKeepSelection();
+              // Edit topic có thể tạo topic mới → refresh filter.
+              if (updated) void fetchTopics();
               if (updated) flashOk("Đã lưu");
             }}
             onDeleted={async () => {
@@ -533,12 +540,14 @@ function DetailPanel({
   onClose,
   onUpdated,
   onDeleted,
+  availableTopics,
 }: {
   q: Item;
   suggestedSkills: Skill[];
   onClose: () => void;
   onUpdated: (updated: boolean) => Promise<void>;
   onDeleted: () => Promise<void>;
+  availableTopics: string[];
 }) {
   const [tab, setTab] = useState<"edit" | "quality">("edit");
 
@@ -574,7 +583,12 @@ function DetailPanel({
 
       <div className="flex-1 overflow-y-auto p-4">
         {tab === "edit" ? (
-          <EditTab q={q} suggestedSkills={suggestedSkills} onUpdated={onUpdated} />
+          <EditTab
+            q={q}
+            suggestedSkills={suggestedSkills}
+            availableTopics={availableTopics}
+            onUpdated={onUpdated}
+          />
         ) : (
           <QualityTab q={q} />
         )}
@@ -586,13 +600,18 @@ function DetailPanel({
 function EditTab({
   q,
   suggestedSkills,
+  availableTopics,
   onUpdated,
 }: {
   q: Item;
   suggestedSkills: Skill[];
+  availableTopics: string[];
   onUpdated: (updated: boolean) => Promise<void>;
 }) {
   const [prompt, setPrompt] = useState(q.prompt);
+  const [topic, setTopic] = useState(
+    typeof q.config?.topic === "string" ? (q.config.topic as string) : "",
+  );
   const [difficulty, setDifficulty] = useState(q.difficulty);
   const [points, setPoints] = useState(q.points);
   const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(q.cognitiveLevel);
@@ -605,10 +624,21 @@ function EditTab({
     setBusy(true);
     setErr(null);
     try {
+      // Merge topic vào config (giữ nguyên các field khác như options, correct).
+      // Trống topic → xoá field khỏi config (instructor có thể clear topic).
+      const newConfig = { ...(q.config ?? {}) } as Record<string, unknown>;
+      if (topic.trim()) newConfig.topic = topic.trim();
+      else delete newConfig.topic;
       const r = await fetch(`/api/bank-questions/${q.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt, difficulty, points, cognitiveLevel }),
+        body: JSON.stringify({
+          prompt,
+          difficulty,
+          points,
+          cognitiveLevel,
+          config: newConfig,
+        }),
       });
       if (!r.ok) { setErr(`HTTP ${r.status}`); return; }
       await onUpdated(true);
@@ -673,6 +703,23 @@ function EditTab({
           )}
         </div>
       </div>
+
+      {/* Topic combobox — chọn topic có sẵn hoặc gõ tạo mới. Lưu vào
+          config.topic khi bấm "Lưu thay đổi". */}
+      <label className="block">
+        <span className="block text-xs font-medium text-slate-600">
+          Chủ đề
+          <span className="ml-1 font-normal text-faint">(tuỳ chọn)</span>
+        </span>
+        <div className="mt-1">
+          <TopicCombobox
+            value={topic}
+            onChange={setTopic}
+            availableTopics={availableTopics}
+            placeholder="Chọn chủ đề có sẵn hoặc gõ tạo mới..."
+          />
+        </div>
+      </label>
 
       {/* Prompt */}
       <label className="block">
@@ -878,14 +925,17 @@ function StatRow({
 function QuestionForm({
   bankId,
   suggestedSkills,
+  availableTopics,
   onDone,
 }: {
   bankId: string;
   suggestedSkills: Skill[];
+  availableTopics: string[];
   onDone: () => Promise<void>;
 }) {
   const [type, setType] = useState<QuestionType>("mcq");
   const [prompt, setPrompt] = useState("");
+  const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState(3);
   const [points, setPoints] = useState(1);
   const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>("apply");
@@ -921,6 +971,8 @@ function QuestionForm({
           : type === "essay"
           ? { rubric: "" }
           : {};
+      // Topic stored vào config.topic — đồng nhất với MCQ import flow.
+      if (topic.trim()) config.topic = topic.trim();
       const r = await fetch(`/api/question-banks/${bankId}/questions`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -986,6 +1038,21 @@ function QuestionForm({
           />
         </label>
       </div>
+
+      <label className="block">
+        <span className="block text-xs font-medium text-slate-600">
+          Chủ đề
+          <span className="ml-1 font-normal text-faint">(tuỳ chọn)</span>
+        </span>
+        <div className="mt-1">
+          <TopicCombobox
+            value={topic}
+            onChange={setTopic}
+            availableTopics={availableTopics}
+            placeholder="Chọn chủ đề có sẵn hoặc gõ tạo mới..."
+          />
+        </div>
+      </label>
 
       <label className="block">
         <span className="block text-xs font-medium text-slate-600">Nội dung câu hỏi</span>
