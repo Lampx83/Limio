@@ -429,6 +429,7 @@ export interface SearchResult {
     bankName: string;
     type: string;
     prompt: string;
+    config: Record<string, unknown> | null;
     points: number;
     difficulty: number;
     cognitiveLevel: "remember_understand" | "apply" | "analyze_plus";
@@ -514,6 +515,11 @@ export async function searchQuestions(
       bank: { select: { name: true } },
       type: true,
       prompt: true,
+      // Include config so the bank workbench can show the correct answer per
+      // question (which option is the right one for MCQ, the correct value
+      // for true_false_notgiven, the accepted answers for gap_fill etc).
+      // Workbench is instructor-only, so leaking answer keys is fine.
+      config: true,
       points: true,
       difficulty: true,
       cognitiveLevel: true,
@@ -532,6 +538,7 @@ export async function searchQuestions(
     bankName: r.bank.name,
     type: r.type,
     prompt: r.prompt,
+    config: r.config as Record<string, unknown> | null,
     points: r.points,
     difficulty: r.difficulty,
     cognitiveLevel: r.cognitiveLevel as "remember_understand" | "apply" | "analyze_plus",

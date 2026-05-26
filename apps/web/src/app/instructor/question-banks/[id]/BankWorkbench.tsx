@@ -19,6 +19,10 @@ type Item = {
   bankName: string;
   type: string;
   prompt: string;
+  // ExamQuestion config payload — shape varies by type. Used by AnswerPanel
+  // to render the correct answer per question. Server returns this for
+  // instructor-only views (bank is private/course-shared, never learner-facing).
+  config: Record<string, unknown> | null;
   points: number;
   difficulty: number;
   cognitiveLevel: CognitiveLevel;
@@ -597,6 +601,11 @@ function EditTab({
         />
       </label>
 
+      {/* Read-only answer preview — instructor sees the correct answer
+          per question type at a glance. Bank workbench is instructor-only,
+          so revealing answer keys here is fine. */}
+      <AnswerPreview type={q.type} config={q.config} />
+
       {/* Cognitive level */}
       <label className="block">
         <span className="block text-xs font-medium text-slate-600">Mức tư duy</span>
@@ -1089,4 +1098,197 @@ function parseCsv(raw: string): Array<{
     });
   }
   return out;
+}
+
+// ─── Answer preview (read-only) ─────────────────────────────────────────────
+//
+// Renders the correct answer per question type from BankQuestion.config.
+// Bank workbench is instructor-only — fine to reveal answer keys here.
+// Different ExamQuestionType has different config shapes:
+//   - mcq / multi:           config.options[] each { id, label, isCorrect }
+//   - true_false_notgiven:   config.correct = "true" | "false" | "not_given"
+//   - gap_fill:              config.blanks[] each { acceptable: string[] }
+//   - short_answer:          config.acceptable: string[]
+//   - matching_heading:      config.headings + config.paragraphs (P1)
+//   - essay:                 no objective answer — show "chấm tay"
+function AnswerPreview({
+  type,
+  config,
+}: {
+  type: string;
+  config: Record<string, unknown> | null;
+}) {
+  const cfg = (config ?? {}) as Record<string, unknown>;
+
+  // MCQ / multi → list of options with check icon on correct ones.
+  if (type === "mcq" || type === "multi") {
+    const options = (cfg.options as Array<{ id?: string; label?: string; isCorrect?: boolean }> | undefined) ?? [];
+    if (options.length === 0) {
+      return <AnswerEmpty hint="Chưa có option" />;
+    }
+    return (
+      <AnswerBox label="Đáp án">
+        <ul className="space-y-1">
+          {options.map((o, i) => (
+            <li
+              key={o.id ?? i}
+              className={`flex items-start gap-1.5 rounded px-2 py-1 text-xs ${
+                o.isCorrect ? "bg-emerald-50 text-emerald-900" : "text-slate-600"
+              }`}
+            >
+              <span
+                className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                  o.isCorrect ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"
+                }`}
+              >
+                {o.isCorrect ? "✓" : String.fromCharCode(65 + i)}
+              </span>
+              <span className="flex-1">{o.label ?? "(không có nhãn)"}</span>
+            </li>
+          ))}
+        </ul>
+      </AnswerBox>
+    );
+  }
+
+  // True/False/Not Given → highlight the correct value.
+  if (type === "true_false_notgiven") {
+    const correct = typeof cfg.correct === "string" ? cfg.correct : null;
+    const LABEL: Record<string, string> = {
+      true: "Đúng",
+      false: "Sai",
+      not_given: "Không đề cập",
+    };
+    if (!correct) return <AnswerEmpty hint="Chưa chọn đáp án đúng" />;
+    return (
+      <AnswerBox label="Đáp án đúng">
+        <span className="inline-flex items-center gap-1.5 rounded bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
+          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
+            ✓
+          </span>
+          {LABEL[correct] ?? correct}
+        </span>
+      </AnswerBox>
+    );
+  }
+
+  // Gap fill → list of blanks with their acceptable answers.
+  if (type === "gap_fill") {
+    const blanks =
+      (cfg.blanks as Array<{ acceptable?: string[] }> | undefined) ?? [];
+    if (blanks.length === 0) return <AnswerEmpty hint="Chưa có ô trống" />;
+    return (
+      <AnswerBox label="Đáp án các ô trống">
+        <ol className="space-y-1">
+          {blanks.map((b, i) => (
+            <li key={i} className="flex items-start gap-1.5 text-xs">
+              <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
+                {i + 1}
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {(b.acceptable ?? []).length === 0 ? (
+                  <span className="text-faint italic">(trống)</span>
+                ) : (
+                  (b.acceptable ?? []).map((a, j) => (
+                    <span
+                      key={j}
+                      className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-medium text-emerald-800"
+                    >
+                      {a}
+                    </span>
+                  ))
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </AnswerBox>
+    );
+  }
+
+  // Short answer → list of acceptable strings.
+  if (type === "short_answer") {
+    const acceptable = (cfg.acceptable as string[] | undefined) ?? [];
+    if (acceptable.length === 0) return <AnswerEmpty hint="Chưa có đáp án" />;
+    return (
+      <AnswerBox label="Đáp án chấp nhận">
+        <div className="flex flex-wrap gap-1">
+          {acceptable.map((a, i) => (
+            <span
+              key={i}
+              className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-800"
+            >
+              {a}
+            </span>
+          ))}
+        </div>
+      </AnswerBox>
+    );
+  }
+
+  // Essay → no objective answer.
+  if (type === "essay") {
+    return (
+      <AnswerBox label="Đáp án">
+        <span className="text-xs italic text-amber-700">
+          Loại tự luận — giảng viên chấm tay theo rubric.
+        </span>
+      </AnswerBox>
+    );
+  }
+
+  // Matching headings (P1) — show pairs if config present.
+  if (type === "matching_heading") {
+    const pairs = (cfg.pairs as Array<{ heading?: string; paragraph?: string }> | undefined) ?? [];
+    if (pairs.length === 0) return <AnswerEmpty hint="Chưa ghép cặp" />;
+    return (
+      <AnswerBox label="Cặp ghép đúng">
+        <ul className="space-y-1 text-xs">
+          {pairs.map((p, i) => (
+            <li key={i} className="flex items-center gap-1.5">
+              <span className="rounded bg-emerald-50 px-1.5 py-0.5 font-medium text-emerald-800">
+                {p.heading ?? "?"}
+              </span>
+              <span className="text-faint">→</span>
+              <span className="text-slate-700">{p.paragraph ?? "?"}</span>
+            </li>
+          ))}
+        </ul>
+      </AnswerBox>
+    );
+  }
+
+  // Unknown type — show raw config as fallback.
+  return (
+    <AnswerBox label="Đáp án (raw)">
+      <pre className="overflow-x-auto rounded bg-slate-50 p-2 text-[10px] text-slate-700">
+        {JSON.stringify(config, null, 2)}
+      </pre>
+    </AnswerBox>
+  );
+}
+
+function AnswerBox({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-emerald-100 bg-emerald-50/30 p-2.5">
+      <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function AnswerEmpty({ hint }: { hint: string }) {
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+      ⚠ {hint}
+    </div>
+  );
 }
