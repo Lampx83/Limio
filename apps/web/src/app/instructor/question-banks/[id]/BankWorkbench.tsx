@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 
 type Status = "draft" | "published" | "archived";
 type CognitiveLevel = "remember_understand" | "apply" | "analyze_plus";
@@ -113,6 +114,7 @@ export default function BankWorkbench({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [mcqImportOpen, setMcqImportOpen] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -261,6 +263,12 @@ export default function BankWorkbench({
           </span>
           <div className="flex gap-2">
             <button
+              onClick={() => setMcqImportOpen(true)}
+              className="rounded border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+            >
+              ⬆ Import .xlsx
+            </button>
+            <button
               onClick={() => { setImporting((s) => !s); setAdding(false); }}
               className="rounded border border-default bg-white px-3 py-1 text-xs hover:bg-slate-50"
             >
@@ -274,6 +282,14 @@ export default function BankWorkbench({
             </button>
           </div>
         </div>
+        <ImportMcqModal
+          open={mcqImportOpen}
+          onClose={() => setMcqImportOpen(false)}
+          onCommitted={() => void refreshAndKeepSelection()}
+          previewEndpoint={`/api/question-banks/${bankId}/questions/mcq-import-preview`}
+          commitEndpoint={`/api/question-banks/${bankId}/questions/mcq-import-commit`}
+          destinationLabel="ngân hàng câu hỏi"
+        />
 
         {/* Overlay panels */}
         {(importing || adding) && (

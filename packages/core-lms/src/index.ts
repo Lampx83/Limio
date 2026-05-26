@@ -11,3 +11,4 @@ export * from "./h5p/index";
 export * from "./integrations/index";
 export * from "./grouping";
 export * from "./teaching-tools/timer-templates";
+export * from "./imports/index";

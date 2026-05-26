@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
 import QuestionTypePicker from "./QuestionTypePicker";
+import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -106,6 +107,7 @@ export default function AddQuestionForm({
   //   "picking" → visual type cards
   //   "editing" → full form with chosen type
   const [stage, setStage] = useState<"closed" | "picking" | "editing">("closed");
+  const [importOpen, setImportOpen] = useState(false);
   const [type, setType] = useState<QuestionType>("mcq");
   const [prompt, setPrompt] = useState("");
   const [points, setPoints] = useState(1);
@@ -242,12 +244,32 @@ export default function AddQuestionForm({
 
   if (stage === "closed") {
     return (
-      <button
-        onClick={() => setStage("picking")}
-        className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
-      >
-        + Thêm câu hỏi
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setStage("picking")}
+          className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+        >
+          + Thêm câu hỏi
+        </button>
+        <button
+          onClick={() => setImportOpen(true)}
+          className="rounded-lg border border-token bg-white px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+        >
+          ⬆ Import .xlsx
+        </button>
+        <ImportMcqModal
+          open={importOpen}
+          onClose={() => setImportOpen(false)}
+          onCommitted={() => router.refresh()}
+          previewEndpoint={apiUrl(
+            `/api/quizzes/${quizId}/questions/mcq-import-preview`,
+          )}
+          commitEndpoint={apiUrl(
+            `/api/quizzes/${quizId}/questions/mcq-import-commit`,
+          )}
+          destinationLabel="quiz"
+        />
+      </div>
     );
   }
 
