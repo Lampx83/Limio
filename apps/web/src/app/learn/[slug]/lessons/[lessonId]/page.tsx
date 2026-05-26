@@ -22,7 +22,7 @@ import LessonTasksTab, {
 import LessonStickyActions from "@/components/lesson/LessonStickyActions";
 import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
-import { isNativeVideoUrl } from "@/components/LessonContent";
+import { isNativeVideoUrl } from "@/lib/videoUrl";
 
 export const dynamic = "force-dynamic";
 

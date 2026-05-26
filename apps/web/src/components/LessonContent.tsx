@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { parseVideoUrl } from "@/lib/videoUrl";
+import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import SafeHtml from "./SafeHtml";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
@@ -280,13 +280,9 @@ function ContentBlock({
  * to <video src=...>; recognized providers (YouTube/Vimeo/...) render
  * an <iframe> instead.
  */
-export function isNativeVideoUrl(url: string): boolean {
-  const trimmed = url.trim();
-  if (!trimmed) return false;
-  if (trimmed.startsWith("/")) return true; // same-origin path (uploaded file)
-  const v = parseVideoUrl(trimmed);
-  return v === null || v.kind === "file";
-}
+// isNativeVideoUrl moved to @/lib/videoUrl (server-safe). Re-exported here
+// so existing imports don't break.
+export { isNativeVideoUrl };
 
 function VideoEmbed({ url }: { url: string }) {
   const v = parseVideoUrl(url);

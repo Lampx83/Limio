@@ -214,3 +214,18 @@ function makeYoutube(id: string, tParam?: string | null): ParsedVideo {
     providerName: PROVIDER_LABELS.youtube,
   };
 }
+
+/**
+ * True if URL should be rendered as a native <video> element (uploaded file or
+ * direct .mp4/.webm path), false for provider iframes (YouTube/Vimeo/...).
+ *
+ * Server-safe (no DOM access) so both server components (lesson page
+ * autoComplete config) and client components (LessonContent player) can call.
+ */
+export function isNativeVideoUrl(url: string): boolean {
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  if (trimmed.startsWith("/")) return true; // same-origin path (uploaded file)
+  const v = parseVideoUrl(trimmed);
+  return v === null || v.kind === "file";
+}
