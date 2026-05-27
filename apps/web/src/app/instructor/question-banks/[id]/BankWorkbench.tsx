@@ -184,8 +184,56 @@ export default function BankWorkbench({
   const [bulkBusy, setBulkBusy] = useState(false);
 
   // ── Panel resize ───────────────────────────────────────────────────────
-  // Wide mode: panel ~60% width, ẩn list để focus vào edit.
+  // Wide mode: panel ~80% width, ẩn list để focus vào edit.
   const [panelWide, setPanelWide] = useState(false);
+  // Drag-resize: panel width in px. Default 384 (w-96). Persisted localStorage.
+  const RESIZE_KEY = "fbm-bank-panel-px";
+  const [panelPx, setPanelPx] = useState<number>(384);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RESIZE_KEY);
+      if (raw) {
+        const n = parseInt(raw, 10);
+        if (Number.isFinite(n) && n >= 320 && n <= 1400) setPanelPx(n);
+      }
+    } catch {}
+  }, []);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const onResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startWidth: panelPx };
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current || !containerRef.current) return;
+      const containerW = containerRef.current.getBoundingClientRect().width;
+      const delta = dragRef.current.startX - ev.clientX; // kéo trái → panel rộng hơn
+      const next = Math.min(
+        Math.max(320, dragRef.current.startWidth + delta),
+        Math.max(360, containerW - 320), // chừa ≥320px cho list
+      );
+      setPanelPx(next);
+    };
+    const onUp = () => {
+      try {
+        if (dragRef.current) localStorage.setItem(RESIZE_KEY, String(panelPx));
+      } catch {}
+      dragRef.current = null;
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
+  // Persist khi panelPx settle.
+  useEffect(() => {
+    try {
+      localStorage.setItem(RESIZE_KEY, String(panelPx));
+    } catch {}
+  }, [panelPx]);
 
   // ── Count metadata ─────────────────────────────────────────────────────
   // totalMatching = số câu khớp filter (server count). totalInBank = tổng bank.
@@ -375,7 +423,10 @@ export default function BankWorkbench({
   };
 
   return (
-    <div className="mt-6 flex h-[calc(100vh-220px)] min-h-[520px] gap-0 overflow-hidden rounded-xl border border-default bg-white shadow-sm">
+    <div
+      ref={containerRef}
+      className="mt-6 flex h-[calc(100vh-220px)] min-h-[520px] gap-0 overflow-hidden rounded-xl border border-default bg-white shadow-sm"
+    >
       {/* ── Main: Item list + horizontal filter header ──────────────────── */}
       <div
         className={`flex flex-col overflow-hidden ${panelWide && selectedItem ? "hidden lg:hidden" : "flex-1"}`}
@@ -772,10 +823,34 @@ export default function BankWorkbench({
         )}
       </div>
 
+      {/* ── Resize handle ───────────────────────────────────────────────── */}
+      {selectedItem && !panelWide && (
+        <div
+          onMouseDown={onResizeStart}
+          onDoubleClick={() => setPanelPx(384)}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Kéo để đổi rộng panel chi tiết · double-click để reset"
+          title="Kéo để đổi rộng · double-click để reset"
+          className="group hidden w-1 shrink-0 cursor-col-resize bg-default transition-colors hover:bg-brand-400 lg:flex"
+        >
+          {/* visual grip — 3 dots ở giữa khi hover */}
+          <span className="m-auto h-8 w-0.5 rounded-full bg-slate-300 opacity-0 transition-opacity group-hover:opacity-100" />
+        </div>
+      )}
+
       {/* ── Right: Detail panel ──────────────────────────────────────────── */}
       <aside
-        className={`flex shrink-0 flex-col overflow-hidden border-l border-default bg-white transition-all ${
-          panelWide && selectedItem ? "w-full lg:w-[60%]" : "w-96"
+        style={
+          // Trên desktop dùng width drag-able; mobile / wide-mode override bằng class.
+          panelWide || !selectedItem ? undefined : { width: `${panelPx}px` }
+        }
+        className={`flex shrink-0 flex-col overflow-hidden border-l border-default bg-white ${
+          panelWide && selectedItem
+            ? "w-full lg:w-[80%]"
+            : selectedItem
+            ? ""
+            : "w-96"
         }`}
       >
         {selectedItem ? (
