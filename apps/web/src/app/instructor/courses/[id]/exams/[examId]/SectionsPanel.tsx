@@ -150,6 +150,10 @@ export default function SectionsPanel({ examId }: { examId: string }) {
           examId={examId}
           sectionId={previewingSectionId}
           onClose={() => setPreviewingSectionId(null)}
+          onImported={async () => {
+            setPreviewingSectionId(null);
+            await refresh();
+          }}
         />
       )}
     </section>
@@ -183,10 +187,12 @@ function PreviewPoolModal({
   examId,
   sectionId,
   onClose,
+  onImported,
 }: {
   examId: string;
   sectionId: string;
   onClose: () => void;
+  onImported: () => Promise<void>;
 }) {
   const [data, setData] = useState<{
     totalRequested: number;
@@ -196,6 +202,45 @@ function PreviewPoolModal({
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [reshuffleSeed, setReshuffleSeed] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+
+  const handleImport = async () => {
+    if (!data) return;
+    const ok = window.confirm(
+      `Chốt cứng ${data.totalSampled} câu này vào đề thi?\n\n` +
+        "• Section sẽ chuyển từ 'random từ bank' sang 'fixed' — mọi học viên thấy CÙNG bộ câu (không còn rút khác nhau theo người).\n" +
+        "• Câu hỏi sẽ xuất hiện ở tab 'Nội dung' để sửa/reorder/xoá từng câu.\n" +
+        "• Thao tác không thể tự động hoàn tác — phải xoá section và tạo lại nếu muốn quay về random.",
+    );
+    if (!ok) return;
+    setImporting(true);
+    setErr(null);
+    try {
+      const body = reshuffleSeed ? { reshuffleSeed } : {};
+      const r = await fetch(
+        `/api/exams/${examId}/sections/${sectionId}/import-preview`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!r.ok) {
+        const j = (await r.json().catch(() => null)) as { error?: string } | null;
+        setErr(j?.error ?? `HTTP ${r.status}`);
+        return;
+      }
+      const j = (await r.json()) as { imported: number; skipped: { reason: string }[] };
+      const skipMsg =
+        j.skipped.length > 0
+          ? ` (${j.skipped.length} bị skip: ${j.skipped[0]?.reason ?? "?"}…)`
+          : "";
+      alert(`Đã import ${j.imported} câu vào đề thi${skipMsg}.`);
+      await onImported();
+    } finally {
+      setImporting(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -368,13 +413,28 @@ function PreviewPoolModal({
           )}
         </div>
 
-        <div className="shrink-0 border-t border-default bg-slate-50 px-4 py-2 text-right">
-          <button
-            onClick={onClose}
-            className="rounded-md border border-default bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
-          >
-            Đóng
-          </button>
+        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-default bg-slate-50 px-4 py-2">
+          <p className="text-[11px] text-faint">
+            Import = chốt cứng bộ câu hiện tại vào đề (mất randomization per-attempt).
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-md border border-default bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+            >
+              Đóng
+            </button>
+            <button
+              onClick={() => void handleImport()}
+              disabled={importing || !data || data.totalSampled === 0}
+              className="rounded-md bg-brand-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Chuyển section thành fixed + copy mỗi câu thành ExamQuestion"
+            >
+              {importing
+                ? "Đang import…"
+                : `Import ${data?.totalSampled ?? 0} câu vào đề thi`}
+            </button>
+          </div>
         </div>
       </div>
     </div>

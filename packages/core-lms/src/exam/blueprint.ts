@@ -15,7 +15,7 @@
 
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { prisma, type PrismaClient } from "@feedbackme/db";
+import { prisma, Prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse } from "../courses/authz";
 import { ExamError } from "./types";
 import { resolveSkillScope, resolveBankScope } from "./wizard";
@@ -609,5 +609,182 @@ export async function previewSectionPool(
     totalSampled: questions.length,
     questions,
     seed: seedInput,
+  };
+}
+
+// ============================================================================
+// Import preview pool → fixed section (mỗi câu thành 1 ExamQuestion)
+// ============================================================================
+
+export interface ImportPreviewResult {
+  sectionId: string;
+  imported: number;
+  skipped: { id: string; reason: string }[];
+}
+
+/**
+ * Convert section random_from_bank thành fixed: sample IDs theo seed, copy
+ * mỗi BankQuestion thành ExamQuestion (+ ExamQuestionFromBank link + skill
+ * tag copy + version snapshot), link qua ExamSectionItem theo thứ tự sample.
+ * Section đổi `selectionMode` từ `random_from_bank` sang `fixed`, xoá poolFilter.
+ *
+ * Sau import, mọi học viên đều thấy **cùng** N câu (không còn per-attempt
+ * randomization). Instructor có thể sửa/reorder từng câu trong tab Nội dung.
+ *
+ * Idempotent: gọi lại trên section đã fixed → throw `validation_failed`.
+ * Authz: edit-course + exam phải draft (chưa có attempt).
+ */
+export async function importPreviewToExam(
+  actorUserId: string,
+  examId: string,
+  sectionId: string,
+  opts: { reshuffleSeed?: string } = {},
+  db: PrismaClient = prisma,
+): Promise<ImportPreviewResult> {
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { id: true, courseId: true, status: true },
+  });
+  if (!exam) throw new ExamError("exam_not_found");
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  if (exam.status !== "draft") throw new ExamError("exam_not_draft");
+
+  const section = await db.examSection.findFirst({
+    where: { id: sectionId, examId },
+    select: { id: true, selectionMode: true, poolFilter: true },
+  });
+  if (!section) throw new ExamError("section_not_found");
+  if (section.selectionMode !== "random_from_bank")
+    throw new ExamError(
+      "validation_failed",
+      "Section đã ở mode fixed — không cần import",
+    );
+
+  const filterParsed = PoolFilter.safeParse(section.poolFilter);
+  if (!filterParsed.success)
+    throw new ExamError("validation_failed", "poolFilter không hợp lệ");
+
+  // Sample IDs với seed như preview-pool route, để instructor nhận đúng bộ
+  // câu họ vừa thấy trên UI.
+  const seedInput = opts.reshuffleSeed ?? `preview:${sectionId}`;
+  const seed = createHash("sha256").update(seedInput).digest("hex");
+  const ids = await pickPoolQuestions(filterParsed.data, seed, db, {
+    tolerant: true,
+  });
+  if (ids.length === 0) throw new ExamError("section_pool_empty");
+
+  // Load chi tiết bank questions để snapshot version + copy config.
+  const banks = await db.bankQuestion.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      bankId: true,
+      type: true,
+      prompt: true,
+      config: true,
+      points: true,
+      status: true,
+      skillTags: { select: { skillId: true, weight: true } },
+    },
+  });
+  const byId = new Map(banks.map((b) => [b.id, b]));
+
+  // Lấy orderInExam start để câu mới append sau câu đã có (nếu có).
+  const maxOrder =
+    (await db.examQuestion.aggregate({
+      where: { examId },
+      _max: { orderInExam: true },
+    }))._max.orderInExam ?? -1;
+
+  const skipped: { id: string; reason: string }[] = [];
+
+  await (db as typeof prisma).$transaction(async (tx) => {
+    // Đổi section thành fixed trước (defensive — nếu tx fail, schema vẫn nhất quán).
+    await tx.examSection.update({
+      where: { id: sectionId },
+      data: {
+        selectionMode: "fixed",
+        poolFilter: Prisma.JsonNull,
+        title: "Câu hỏi (đã chốt từ Blueprint)",
+      },
+    });
+
+    let orderCursor = maxOrder + 1;
+    let sectionOrder = 0;
+
+    for (const id of ids) {
+      const q = byId.get(id);
+      if (!q) {
+        skipped.push({ id, reason: "Không tìm thấy" });
+        continue;
+      }
+      if (q.status !== "published") {
+        skipped.push({ id, reason: `Không published (${q.status})` });
+        continue;
+      }
+
+      // Version snapshot trước copy (giống copyBankQuestionToExam).
+      const latestVer = await tx.bankQuestionVersion.findFirst({
+        where: { bankQuestionId: q.id },
+        orderBy: { versionNumber: "desc" },
+        select: { versionNumber: true },
+      });
+      const versionNumber = (latestVer?.versionNumber ?? 0) + 1;
+      const version = await tx.bankQuestionVersion.create({
+        data: {
+          bankQuestionId: q.id,
+          versionNumber,
+          prompt: q.prompt,
+          config: q.config as Prisma.InputJsonValue,
+          points: q.points,
+        },
+        select: { id: true },
+      });
+
+      const eq = await tx.examQuestion.create({
+        data: {
+          examId,
+          type: q.type,
+          prompt: q.prompt,
+          config: q.config as Prisma.InputJsonValue,
+          points: q.points,
+          orderInExam: orderCursor++,
+        },
+        select: { id: true },
+      });
+
+      if (q.skillTags.length > 0) {
+        await tx.examQuestionSkillTag.createMany({
+          data: q.skillTags.map((t) => ({
+            questionId: eq.id,
+            skillId: t.skillId,
+            weight: t.weight,
+          })),
+        });
+      }
+
+      await tx.examQuestionFromBank.create({
+        data: {
+          examQuestionId: eq.id,
+          bankQuestionId: q.id,
+          bankQuestionVersionId: version.id,
+        },
+      });
+
+      await tx.examSectionItem.create({
+        data: {
+          sectionId,
+          examQuestionId: eq.id,
+          orderInSection: sectionOrder++,
+          points: q.points,
+        },
+      });
+    }
+  });
+
+  return {
+    sectionId,
+    imported: ids.length - skipped.length,
+    skipped,
   };
 }
