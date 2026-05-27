@@ -315,7 +315,7 @@ export async function listTopicsInExamScope(
   actorUserId: string,
   examId: string,
   db: PrismaClient = prisma,
-): Promise<{ topic: string; count: number }[]> {
+): Promise<{ topic: string; count: number; publishedCount: number }[]> {
   const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
   if (!exam) throw new ExamError("exam_not_found");
   await assertCanEditCourse(actorUserId, exam.courseId, db);
@@ -323,25 +323,30 @@ export async function listTopicsInExamScope(
   const bankIds = await resolveBankScope(exam.courseId, actorUserId, db);
   if (bankIds.length === 0) return [];
 
-  // Raw query — Prisma can't groupBy on JSON path. Pull rows + bucket in JS.
-  // OK for typical scales (≤ low-thousands published questions per course).
+  // Discovery query: include cả draft + published để instructor thấy đủ chủ đề
+  // và planning trước. Pool sample (pickPoolQuestions) vẫn published-only nên
+  // UI cần show publishedCount tách biệt — instructor biết phải publish bao
+  // nhiêu trước khi assemble.
   const rows = await db.bankQuestion.findMany({
     where: {
       bankId: { in: bankIds },
-      status: "published",
+      status: { not: "archived" },
       type: { in: ALLOWED_TYPES as never },
     },
-    select: { config: true },
+    select: { config: true, status: true },
   });
-  const tally = new Map<string, number>();
+  const tally = new Map<string, { count: number; publishedCount: number }>();
   for (const r of rows) {
     const cfg = r.config as { topic?: unknown } | null;
     const t = typeof cfg?.topic === "string" ? cfg.topic.trim() : "";
     if (!t) continue;
-    tally.set(t, (tally.get(t) ?? 0) + 1);
+    const cur = tally.get(t) ?? { count: 0, publishedCount: 0 };
+    cur.count += 1;
+    if (r.status === "published") cur.publishedCount += 1;
+    tally.set(t, cur);
   }
   return [...tally.entries()]
-    .map(([topic, count]) => ({ topic, count }))
+    .map(([topic, v]) => ({ topic, count: v.count, publishedCount: v.publishedCount }))
     .sort((a, b) => a.topic.localeCompare(b.topic, "vi"));
 }
 

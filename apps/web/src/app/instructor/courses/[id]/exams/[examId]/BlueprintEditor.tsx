@@ -51,6 +51,9 @@ interface PreviewResult {
 interface TopicEntry {
   topic: string;
   count: number;
+  // Số câu published (≤ count). Pool sample chỉ rút câu published nên đây mới
+  // là số "khả dụng" thực sự. Khi 0 → cảnh báo instructor.
+  publishedCount?: number;
 }
 
 const COGNITIVE_LEVELS: CognitiveLevel[] = [
@@ -569,6 +572,8 @@ export default function BlueprintEditor({
               <div className="flex flex-wrap gap-1.5">
                 {availableTopics.map((t) => {
                   const used = usedTopicSet.has(t.topic);
+                  const pub = t.publishedCount ?? t.count;
+                  const noPub = pub === 0;
                   return (
                     <button
                       key={t.topic}
@@ -577,17 +582,34 @@ export default function BlueprintEditor({
                       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition ${
                         used
                           ? "cursor-not-allowed border-slate-200 bg-white text-slate-400"
+                          : noPub
+                          ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
                           : "border-default bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50"
                       }`}
-                      title={used ? "Đã thêm" : `Có ${t.count} câu hỏi`}
+                      title={
+                        used
+                          ? "Đã thêm"
+                          : noPub
+                          ? `${t.count} câu nhưng 0 đã publish — sẽ không rút được khi tạo pool`
+                          : `${pub}/${t.count} câu đã publish`
+                      }
                     >
-                      {used ? "✓ " : "+ "}
+                      {used ? "✓ " : noPub ? "⚠ " : "+ "}
                       {t.topic}
-                      <span className="text-[10px] text-faint">({t.count})</span>
+                      <span className="text-[10px] text-faint">
+                        ({pub}
+                        {pub !== t.count ? `/${t.count}` : ""})
+                      </span>
                     </button>
                   );
                 })}
               </div>
+              {availableTopics.some((t) => (t.publishedCount ?? t.count) === 0) && (
+                <p className="mt-2 text-[11px] text-amber-700">
+                  ⚠ Chủ đề màu vàng có câu nhưng chưa publish. Pool chỉ rút câu đã publish — hãy{" "}
+                  <strong>publish câu hỏi ở ngân hàng</strong> trước khi assemble đề.
+                </p>
+              )}
             </div>
           )}
 
