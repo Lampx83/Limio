@@ -425,7 +425,7 @@ export default function BankWorkbench({
   return (
     <div
       ref={containerRef}
-      className="mt-6 flex h-[calc(100vh-220px)] min-h-[520px] gap-0 overflow-hidden rounded-xl border border-default bg-white shadow-sm"
+      className="mt-3 flex h-[calc(100vh-160px)] min-h-[520px] gap-0 overflow-hidden rounded-xl border border-default bg-white shadow-sm"
     >
       {/* ── Main: Item list + horizontal filter header ──────────────────── */}
       <div

@@ -67,84 +67,72 @@ export default async function QuestionBankWorkbenchPage({
 
   return (
     <main>
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-slate-500">
+      {/* Header gộp 1 dòng: breadcrumb + title + visibility + meta inline */}
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <Link
           href="/instructor/question-banks"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+          className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+          title="Về danh sách ngân hàng"
         >
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
           <Library className="h-3.5 w-3.5" aria-hidden />
-          <span>Ngân hàng câu hỏi</span>
         </Link>
-        <span className="text-slate-300" aria-hidden>
-          /
+        <BookOpen className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+        <h1
+          className="min-w-0 truncate text-base font-semibold text-slate-900 sm:text-lg"
+          title={bank.description ?? bank.name}
+        >
+          {bank.name}
+        </h1>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${visMeta.tone}`}
+          title={visMeta.label}
+        >
+          <VisIcon className="h-3 w-3" aria-hidden />
+          {visMeta.label}
         </span>
-        <span className="truncate text-slate-700">{bank.name}</span>
-      </nav>
-
-      {/* Header card */}
-      <header className="mt-4 overflow-hidden rounded-xl border border-default bg-white shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-5 p-5 sm:p-6">
-          {/* Left: icon + title + description */}
-          <div className="flex min-w-0 flex-1 items-start gap-4">
-            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-50 to-emerald-50 text-brand-700 ring-1 ring-brand-100 sm:flex">
-              <BookOpen className="h-6 w-6" aria-hidden />
-            </div>
-            <div className="min-w-0 space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                  {bank.name}
-                </h1>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${visMeta.tone}`}
-                >
-                  <VisIcon className="h-3 w-3" aria-hidden />
-                  {visMeta.label}
-                </span>
-              </div>
-              {bank.description && (
-                <p className="line-clamp-2 max-w-2xl text-sm text-slate-600">
-                  {bank.description}
-                </p>
-              )}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs text-slate-500">
-                <span className="inline-flex items-center gap-1">
-                  <HelpCircle className="h-3.5 w-3.5" aria-hidden />
-                  <span className="font-semibold tabular-nums text-slate-700">
-                    {bank.questionCount}
-                  </span>
-                  câu hỏi
-                </span>
-                {bank.courseTitle && (
-                  <Link
-                    href={`/instructor/courses`}
-                    className="inline-flex items-center gap-1 hover:text-slate-700 hover:underline"
-                  >
-                    <BookOpen className="h-3.5 w-3.5" aria-hidden />
-                    {bank.courseTitle}
-                  </Link>
-                )}
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" aria-hidden />
-                  Cập nhật {updatedLabel}
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1 ${
-                    bank.isOwner ? "text-emerald-700" : "text-blue-700"
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      bank.isOwner ? "bg-emerald-500" : "bg-blue-500"
-                    }`}
-                    aria-hidden
-                  />
-                  {bank.isOwner ? "Bạn là chủ sở hữu" : "Được chia sẻ"}
-                </span>
-              </div>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500">
+          <span
+            className="inline-flex items-center gap-1"
+            title={`${bank.questionCount} câu hỏi`}
+          >
+            <HelpCircle className="h-3 w-3" aria-hidden />
+            <span className="font-semibold tabular-nums text-slate-700">
+              {bank.questionCount}
+            </span>
+            câu
+          </span>
+          {bank.courseTitle && (
+            <Link
+              href={`/instructor/courses`}
+              className="inline-flex items-center gap-1 hover:text-slate-700 hover:underline"
+              title={bank.courseTitle}
+            >
+              <BookOpen className="h-3 w-3" aria-hidden />
+              <span className="max-w-[140px] truncate">{bank.courseTitle}</span>
+            </Link>
+          )}
+          <span
+            className="inline-flex items-center gap-1"
+            title={`Cập nhật ${updatedLabel}`}
+          >
+            <Calendar className="h-3 w-3" aria-hidden />
+            {updatedLabel}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 ${
+              bank.isOwner ? "text-emerald-700" : "text-blue-700"
+            }`}
+            title={bank.isOwner ? "Bạn là chủ sở hữu" : "Được chia sẻ"}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                bank.isOwner ? "bg-emerald-500" : "bg-blue-500"
+              }`}
+              aria-hidden
+            />
+            {bank.isOwner ? "Chủ sở hữu" : "Chia sẻ"}
+          </span>
         </div>
       </header>
 
