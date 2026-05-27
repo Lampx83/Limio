@@ -34,6 +34,12 @@ export default async function QuestionBankWorkbenchPage({
 
   const initial = await searchQuestions(userId, { bankIds: [params.id], limit: 50 });
 
+  // Load codePrefix tách riêng vì listBanks chưa expose (giữ payload list nhẹ).
+  const bankFull = await prisma.questionBank.findUnique({
+    where: { id: params.id },
+    select: { codePrefix: true },
+  });
+
   // Skill list for quick-pick — only return ones used in the bank for hint;
   // SkillPicker still queries /api/skills?q=...
   const skillsInBank = await prisma.bankQuestionSkillTag.findMany({
@@ -144,6 +150,7 @@ export default async function QuestionBankWorkbenchPage({
 
       <BankWorkbench
         bankId={params.id}
+        initialCodePrefix={bankFull?.codePrefix ?? null}
         initialItems={initial.items}
         initialCursor={initial.nextCursor}
         suggestedSkills={skillsInBank.map((s) => s.skill)}

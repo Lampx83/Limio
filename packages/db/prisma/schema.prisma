@@ -108,6 +108,7 @@ model User {
   examRoundAdminGrants     ExamRoundAdmin[]         @relation("ExamRoundAdminGrantor")
   // A5.1 Question Bank
   questionBanksOwned       QuestionBank[]           @relation("QuestionBankOwner")
+  bankQuestionsReviewed    BankQuestion[]           @relation("BankQuestionReviewedBy")
   // A5.5 — Exam tạo bởi user này (set khi publish; nullable cho exam legacy).
   examsCreated             Exam[]                   @relation("ExamCreator")
   // A5.2 Cohort
@@ -2880,6 +2881,11 @@ model QuestionBank {
   name        String
   description String?                @db.Text
   visibility  QuestionBankVisibility @default(private)
+  // Prefix để auto-sinh BankQuestion.code (vd "KNM" → KNM-0001). Null = không
+  // auto-sinh, instructor có thể tự nhập code tay.
+  codePrefix  String?
+  // Sequence next dùng cho auto-sinh code. Atomic increment trong transaction.
+  codeNextSeq Int                    @default(1)
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
 
@@ -2894,6 +2900,10 @@ model QuestionBank {
 model BankQuestion {
   id               String             @id @default(uuid())
   bankId           String
+  // Mã human-readable (vd "KNM-0001"). Unique per bank khi không null.
+  // Auto-sinh từ QuestionBank.codePrefix + codeNextSeq khi tạo mới (nếu bank
+  // có codePrefix). Instructor có thể đổi tay qua UI.
+  code             String?
   type             ExamQuestionType
   prompt           String             @db.Text
   // Same shape as ExamQuestion.config — see ExamQuestion comment.
@@ -2910,16 +2920,34 @@ model BankQuestion {
   // for a per_attempt random section. Helps instructors spot overused items.
   exposureCount    Int                @default(0)
   lastSampledAt    DateTime?
+  // ── Siêu dữ liệu quản lý ngân hàng (instructor metadata) ────────────────
+  // CĐR (chuẩn đầu ra) — free-text, độc lập với skillTags. Có thể nhập kiểu
+  // "Sinh viên giải thích được khái niệm vòng tròn ảnh hưởng".
+  learningOutcome  String?            @db.Text
+  // Tác giả ghi tự do. Default = tên creator khi tạo mới câu hỏi (xem
+  // createBankQuestion). Cho phép tên GV ngoài hệ (vd "Cô Lan").
+  authorName       String?
+  // Trạng thái thẩm định nội dung: pending | approved | needs_revision.
+  // Khác với `status` (draft/published/archived) là vòng đời xuất bản — câu
+  // có thể `published` nhưng vẫn `pending` thẩm định nếu workflow tách 2 vai.
+  reviewStatus     String             @default("pending")
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  // Ghi chú sửa: free-text changelog. UI bank workbench hiển thị ở EditTab.
+  editNote         String?            @db.Text
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
-  bank      QuestionBank           @relation(fields: [bankId], references: [id], onDelete: Cascade)
-  skillTags BankQuestionSkillTag[]
-  versions  BankQuestionVersion[]
-  copiedTo  ExamQuestionFromBank[]
-  stats     BankQuestionStats?
+  bank       QuestionBank           @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  reviewedBy User?                  @relation("BankQuestionReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  skillTags  BankQuestionSkillTag[]
+  versions   BankQuestionVersion[]
+  copiedTo   ExamQuestionFromBank[]
+  stats      BankQuestionStats?
 
+  @@unique([bankId, code], map: "BankQuestion_bankId_code_key")
   @@index([bankId, status])
+  @@index([bankId, reviewStatus])
   @@index([difficulty])
   // A5.5 — pool query của wizard assemble lọc theo (bank, mức tư duy, độ khó).
   @@index([bankId, cognitiveLevel, difficulty])

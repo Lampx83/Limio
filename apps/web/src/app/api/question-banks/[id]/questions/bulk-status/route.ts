@@ -29,6 +29,9 @@ const BodySchema = z.union([
       cognitiveLevel: z
         .array(z.enum(["remember_understand", "apply", "analyze_plus"]))
         .optional(),
+      reviewStatus: z
+        .array(z.enum(["pending", "approved", "needs_revision"]))
+        .optional(),
       difficulty: z.array(z.number().int().min(1).max(5)).optional(),
       topics: z.array(z.string()).optional(),
       q: z.string().optional(),

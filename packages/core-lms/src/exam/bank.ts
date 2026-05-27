@@ -165,6 +165,48 @@ async function assertCanEditBank(
  * Authz: actor must own the bank OR be an instructor of the bank's course.
  * (Same rule as assertCanEditBank above.)
  */
+export const UpdateBankInput = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  codePrefix: z.string().trim().max(20).nullable().optional(),
+});
+
+/**
+ * Update bank metadata (name/description/codePrefix). Authz: edit-bank.
+ */
+export async function updateBank(
+  actorUserId: string,
+  bankId: string,
+  rawInput: unknown,
+  db: PrismaClient = prisma,
+): Promise<{ id: string; codePrefix: string | null }> {
+  await assertCanEditBank(actorUserId, bankId, db);
+  const parsed = UpdateBankInput.safeParse(rawInput);
+  if (!parsed.success)
+    throw new ExamError("validation_failed", parsed.error.flatten());
+  const d = parsed.data;
+  const data: { name?: string; description?: string | null; codePrefix?: string | null } = {};
+  if (d.name !== undefined) data.name = d.name;
+  if (d.description !== undefined) data.description = d.description;
+  if (d.codePrefix !== undefined) {
+    // Empty string → null để clear; preserve uppercase/underscores cho gọn.
+    data.codePrefix = d.codePrefix == null || d.codePrefix === "" ? null : d.codePrefix;
+  }
+  if (Object.keys(data).length === 0) {
+    const b = await db.questionBank.findUnique({
+      where: { id: bankId },
+      select: { id: true, codePrefix: true },
+    });
+    return { id: bankId, codePrefix: b?.codePrefix ?? null };
+  }
+  const updated = await db.questionBank.update({
+    where: { id: bankId },
+    data,
+    select: { id: true, codePrefix: true },
+  });
+  return updated;
+}
+
 export async function deleteBank(
   actorUserId: string,
   bankId: string,
@@ -196,6 +238,17 @@ export async function deleteBank(
 }
 
 const CognitiveLevelEnum = z.enum(["remember_understand", "apply", "analyze_plus"]);
+const ReviewStatusEnum = z.enum(["pending", "approved", "needs_revision"]);
+export type ReviewStatus = z.infer<typeof ReviewStatusEnum>;
+
+/** Field metadata được hỗ trợ bởi cả create + update (xem schema BankQuestion). */
+const MetadataFields = z.object({
+  code: z.string().trim().min(1).max(60).optional(),
+  learningOutcome: z.string().max(2000).optional(),
+  authorName: z.string().max(120).optional(),
+  reviewStatus: ReviewStatusEnum.optional(),
+  editNote: z.string().max(2000).optional(),
+});
 
 export const CreateBankQuestionInput = z.object({
   type: QuestionType,
@@ -205,34 +258,97 @@ export const CreateBankQuestionInput = z.object({
   difficulty: z.number().int().min(1).max(5).optional(),
   estimatedTimeSec: z.number().int().min(1).max(3600).optional(),
   cognitiveLevel: CognitiveLevelEnum.optional(),
+  // Metadata fields (xem MetadataFields). Tất cả optional khi tạo.
+  code: MetadataFields.shape.code,
+  learningOutcome: MetadataFields.shape.learningOutcome,
+  authorName: MetadataFields.shape.authorName,
+  reviewStatus: MetadataFields.shape.reviewStatus,
+  editNote: MetadataFields.shape.editNote,
 });
+
+/**
+ * Sinh code tiếp theo cho bank (bank.codePrefix + zero-padded seq).
+ * Increment QuestionBank.codeNextSeq atomically. Trả null nếu bank không có
+ * codePrefix (instructor không bật auto-sinh).
+ *
+ * Race-safe: dùng `update {increment}` để Postgres tự tăng. Khi 2 request đồng
+ * thời cùng tạo câu, mỗi request lấy seq khác nhau.
+ */
+async function nextAutoCode(
+  bankId: string,
+  tx: Prisma.TransactionClient | PrismaClient,
+): Promise<string | null> {
+  const updated = await tx.questionBank.update({
+    where: { id: bankId },
+    data: { codeNextSeq: { increment: 1 } },
+    select: { codePrefix: true, codeNextSeq: true },
+  });
+  if (!updated.codePrefix) {
+    // Bank không bật auto-sinh — rollback seq (best-effort) và trả null.
+    // Decrement bằng update đảo ngược; nếu lỗi (rất hiếm) skip vì seq chỉ
+    // tăng monotonically, lỡ skip 1 số cũng không phá vỡ uniqueness.
+    await tx.questionBank
+      .update({
+        where: { id: bankId },
+        data: { codeNextSeq: { decrement: 1 } },
+      })
+      .catch(() => {});
+    return null;
+  }
+  // Seq vừa increment là next; cái cần dùng là (next - 1) = giá trị trước đó.
+  const seq = updated.codeNextSeq - 1;
+  return `${updated.codePrefix}-${String(seq).padStart(4, "0")}`;
+}
 
 export async function createBankQuestion(
   actorUserId: string,
   bankId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
-): Promise<{ id: string }> {
+): Promise<{ id: string; code: string | null }> {
   await assertCanEditBank(actorUserId, bankId, db);
   const parsed = CreateBankQuestionInput.safeParse(rawInput);
   if (!parsed.success)
     throw new ExamError("validation_failed", parsed.error.flatten());
   const d = parsed.data;
-  const q = await db.bankQuestion.create({
-    data: {
-      bankId,
-      type: d.type,
-      prompt: d.prompt,
-      config: d.config as Prisma.InputJsonValue,
-      points: d.points ?? 1,
-      difficulty: d.difficulty ?? 3,
-      cognitiveLevel: d.cognitiveLevel ?? "remember_understand",
-      estimatedTimeSec: d.estimatedTimeSec ?? null,
-      status: "draft",
-    },
-    select: { id: true },
+
+  // Default author = tên hoặc email creator (chỉ khi user không nhập tay).
+  let authorName = d.authorName;
+  if (!authorName) {
+    const u = await db.user.findUnique({
+      where: { id: actorUserId },
+      select: { displayName: true, email: true },
+    });
+    authorName = u?.displayName ?? u?.email ?? undefined;
+  }
+
+  return (db as typeof prisma).$transaction(async (tx) => {
+    // Code: instructor cung cấp tay → dùng nguyên; ngược lại auto-sinh nếu
+    // bank có codePrefix.
+    let code: string | null = d.code ?? null;
+    if (!code) code = await nextAutoCode(bankId, tx);
+
+    const q = await tx.bankQuestion.create({
+      data: {
+        bankId,
+        code,
+        type: d.type,
+        prompt: d.prompt,
+        config: d.config as Prisma.InputJsonValue,
+        points: d.points ?? 1,
+        difficulty: d.difficulty ?? 3,
+        cognitiveLevel: d.cognitiveLevel ?? "remember_understand",
+        estimatedTimeSec: d.estimatedTimeSec ?? null,
+        status: "draft",
+        learningOutcome: d.learningOutcome ?? null,
+        authorName: authorName ?? null,
+        reviewStatus: d.reviewStatus ?? "pending",
+        editNote: d.editNote ?? null,
+      },
+      select: { id: true, code: true },
+    });
+    return { id: q.id, code: q.code };
   });
-  return { id: q.id };
 }
 
 async function loadBankQuestion(
@@ -278,6 +394,13 @@ export const UpdateBankQuestionInput = z.object({
   difficulty: z.number().int().min(1).max(5).optional(),
   estimatedTimeSec: z.number().int().min(1).max(3600).optional(),
   cognitiveLevel: CognitiveLevelEnum.optional(),
+  // Metadata fields. `code` có thể null (clear); empty string từ UI sẽ
+  // coerce thành null để khỏi vi phạm unique constraint.
+  code: z.string().trim().max(60).nullable().optional(),
+  learningOutcome: z.string().max(2000).nullable().optional(),
+  authorName: z.string().max(120).nullable().optional(),
+  reviewStatus: ReviewStatusEnum.optional(),
+  editNote: z.string().max(2000).nullable().optional(),
 });
 
 /**
@@ -309,6 +432,13 @@ export async function updateBankQuestion(
     difficulty?: number;
     estimatedTimeSec?: number | null;
     cognitiveLevel?: "remember_understand" | "apply" | "analyze_plus";
+    code?: string | null;
+    learningOutcome?: string | null;
+    authorName?: string | null;
+    reviewStatus?: ReviewStatus;
+    reviewedAt?: Date | null;
+    reviewedByUserId?: string | null;
+    editNote?: string | null;
   } = {};
   if (d.prompt !== undefined) data.prompt = d.prompt;
   if (d.config !== undefined) data.config = d.config as Prisma.InputJsonValue;
@@ -317,6 +447,24 @@ export async function updateBankQuestion(
   if (d.estimatedTimeSec !== undefined)
     data.estimatedTimeSec = d.estimatedTimeSec;
   if (d.cognitiveLevel !== undefined) data.cognitiveLevel = d.cognitiveLevel;
+  // Metadata: empty string từ UI coerce thành null để cho phép clear.
+  const norm = (v: string | null | undefined) =>
+    v == null || v.trim() === "" ? null : v.trim();
+  if (d.code !== undefined) data.code = norm(d.code);
+  if (d.learningOutcome !== undefined) data.learningOutcome = norm(d.learningOutcome);
+  if (d.authorName !== undefined) data.authorName = norm(d.authorName);
+  if (d.editNote !== undefined) data.editNote = norm(d.editNote);
+  if (d.reviewStatus !== undefined) {
+    data.reviewStatus = d.reviewStatus;
+    // Stamp reviewer khi chuyển trạng thái khỏi pending.
+    if (d.reviewStatus === "approved" || d.reviewStatus === "needs_revision") {
+      data.reviewedAt = new Date();
+      data.reviewedByUserId = actorUserId;
+    } else if (d.reviewStatus === "pending") {
+      data.reviewedAt = null;
+      data.reviewedByUserId = null;
+    }
+  }
   if (Object.keys(data).length === 0) return { snapshottedAsVersion: null };
 
   return (db as typeof prisma).$transaction(async (tx) => {
@@ -486,6 +634,8 @@ export interface SearchFilters {
   cognitiveLevel?: ("remember_understand" | "apply" | "analyze_plus")[];
   skillIds?: string[]; // ANY match
   status?: ("draft" | "published" | "archived")[];
+  /** Trạng thái thẩm định — ANY match. */
+  reviewStatus?: ("pending" | "approved" | "needs_revision")[];
   q?: string; // prompt contains
   /**
    * Topic / chủ đề — exact match per topic string. ANY of list matches.
@@ -502,6 +652,7 @@ export interface SearchResult {
     id: string;
     bankId: string;
     bankName: string;
+    code: string | null;
     type: string;
     prompt: string;
     config: Record<string, unknown> | null;
@@ -509,7 +660,14 @@ export interface SearchResult {
     difficulty: number;
     cognitiveLevel: "remember_understand" | "apply" | "analyze_plus";
     status: "draft" | "published" | "archived";
+    learningOutcome: string | null;
+    authorName: string | null;
+    reviewStatus: ReviewStatus;
+    reviewedAt: string | null;
+    reviewedByName: string | null;
+    editNote: string | null;
     skillIds: string[];
+    createdAt: string;
     updatedAt: string;
     stats: { pValueAvg: number; discriminationAvg: number; totalUses: number } | null;
     exposureCount: number;
@@ -574,8 +732,17 @@ export async function searchQuestions(
     ...(filters.cognitiveLevel && filters.cognitiveLevel.length > 0
       ? { cognitiveLevel: { in: filters.cognitiveLevel as never } }
       : {}),
+    ...(filters.reviewStatus && filters.reviewStatus.length > 0
+      ? { reviewStatus: { in: filters.reviewStatus } }
+      : {}),
     ...(filters.q && filters.q.trim().length > 0
-      ? { prompt: { contains: filters.q.trim(), mode: "insensitive" } }
+      ? {
+          // Search trên prompt + code (vd nhập "KNM-0042" tìm câu nhanh).
+          OR: [
+            { prompt: { contains: filters.q.trim(), mode: "insensitive" as const } },
+            { code: { contains: filters.q.trim(), mode: "insensitive" as const } },
+          ],
+        }
       : {}),
     ...(filters.skillIds && filters.skillIds.length > 0
       ? { skillTags: { some: { skillId: { in: filters.skillIds } } } }
@@ -607,6 +774,7 @@ export async function searchQuestions(
         id: true,
         bankId: true,
         bank: { select: { name: true } },
+        code: true,
         type: true,
         prompt: true,
         // Include config so the bank workbench can show the correct answer per
@@ -618,6 +786,13 @@ export async function searchQuestions(
         difficulty: true,
         cognitiveLevel: true,
         status: true,
+        learningOutcome: true,
+        authorName: true,
+        reviewStatus: true,
+        reviewedAt: true,
+        reviewedBy: { select: { displayName: true, email: true } },
+        editNote: true,
+        createdAt: true,
         updatedAt: true,
         exposureCount: true,
         lastSampledAt: true,
@@ -637,6 +812,7 @@ export async function searchQuestions(
     id: r.id,
     bankId: r.bankId,
     bankName: r.bank.name,
+    code: r.code,
     type: r.type,
     prompt: r.prompt,
     config: r.config as Record<string, unknown> | null,
@@ -644,7 +820,14 @@ export async function searchQuestions(
     difficulty: r.difficulty,
     cognitiveLevel: r.cognitiveLevel as "remember_understand" | "apply" | "analyze_plus",
     status: r.status,
+    learningOutcome: r.learningOutcome,
+    authorName: r.authorName,
+    reviewStatus: (r.reviewStatus as ReviewStatus) ?? "pending",
+    reviewedAt: r.reviewedAt?.toISOString() ?? null,
+    reviewedByName: r.reviewedBy?.displayName ?? r.reviewedBy?.email ?? null,
+    editNote: r.editNote,
     skillIds: r.skillTags.map((t) => t.skillId),
+    createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
     stats: r.stats
       ? { pValueAvg: r.stats.pValueAvg, discriminationAvg: r.stats.discriminationAvg, totalUses: r.stats.totalUses }
@@ -690,8 +873,16 @@ export async function listMatchingQuestionIds(
     ...(filters.cognitiveLevel && filters.cognitiveLevel.length > 0
       ? { cognitiveLevel: { in: filters.cognitiveLevel as never } }
       : {}),
+    ...(filters.reviewStatus && filters.reviewStatus.length > 0
+      ? { reviewStatus: { in: filters.reviewStatus } }
+      : {}),
     ...(filters.q && filters.q.trim().length > 0
-      ? { prompt: { contains: filters.q.trim(), mode: "insensitive" } }
+      ? {
+          OR: [
+            { prompt: { contains: filters.q.trim(), mode: "insensitive" as const } },
+            { code: { contains: filters.q.trim(), mode: "insensitive" as const } },
+          ],
+        }
       : {}),
     ...(filters.skillIds && filters.skillIds.length > 0
       ? { skillTags: { some: { skillId: { in: filters.skillIds } } } }

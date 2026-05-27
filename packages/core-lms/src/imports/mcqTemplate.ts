@@ -45,6 +45,15 @@ export interface ParsedMcqRow {
      * cũng accept (vd "Địa lý", "Toán học", "Chương 3").
      */
     topic: string | null;
+    /**
+     * Metadata mở rộng — tất cả optional. Committer sẽ map vào field cùng
+     * tên trên BankQuestion (xem packages/db/schema.prisma).
+     */
+    code: string | null;
+    learningOutcome: string | null;
+    authorName: string | null;
+    reviewStatus: "pending" | "approved" | "needs_revision" | null;
+    editNote: string | null;
   };
 }
 
@@ -68,7 +77,27 @@ const HEADER_ALIASES: Record<string, string> = {
   explanation: "Explanation",
   cognitivelevel: "CognitiveLevel",
   topic: "Topic",
+  // Metadata mở rộng — siêu dữ liệu cho ngân hàng:
+  code: "Code",
+  learningoutcome: "LearningOutcome",
+  cdr: "LearningOutcome",
+  "chuẩn đầu ra": "LearningOutcome",
+  "chuan dau ra": "LearningOutcome",
+  author: "AuthorName",
+  authorname: "AuthorName",
+  "tác giả": "AuthorName",
+  "tac gia": "AuthorName",
+  reviewstatus: "ReviewStatus",
+  "trạng thái thẩm định": "ReviewStatus",
+  "trang thai tham dinh": "ReviewStatus",
+  editnote: "EditNote",
+  "ghi chú sửa": "EditNote",
+  "ghi chu sua": "EditNote",
   // Common variants instructors type:
+  "mã": "Code",
+  "ma": "Code",
+  "mã câu hỏi": "Code",
+  "ma cau hoi": "Code",
   "câu hỏi": "Prompt",
   "đáp án": "Correct",
   "điểm": "Points",
@@ -226,6 +255,43 @@ function parseOneRow(raw: Record<string, string>, rowNumber: number): ParsedMcqR
   const explanation = raw.Explanation || null;
   const topic = raw.Topic || null;
 
+  // Metadata mở rộng — tất cả optional.
+  const code = (raw.Code ?? "").trim() || null;
+  const learningOutcome = (raw.LearningOutcome ?? "").trim() || null;
+  const authorName = (raw.AuthorName ?? "").trim() || null;
+  const editNote = (raw.EditNote ?? "").trim() || null;
+  let reviewStatus: "pending" | "approved" | "needs_revision" | null = null;
+  const rawReview = (raw.ReviewStatus ?? "").trim().toLowerCase();
+  if (rawReview) {
+    if (
+      rawReview === "approved" ||
+      rawReview === "đã duyệt" ||
+      rawReview === "da duyet" ||
+      rawReview === "đã thẩm định"
+    ) {
+      reviewStatus = "approved";
+    } else if (
+      rawReview === "needs_revision" ||
+      rawReview === "cần sửa" ||
+      rawReview === "can sua" ||
+      rawReview === "rớt" ||
+      rawReview === "rot"
+    ) {
+      reviewStatus = "needs_revision";
+    } else if (
+      rawReview === "pending" ||
+      rawReview === "chưa thẩm định" ||
+      rawReview === "chua tham dinh" ||
+      rawReview === "chưa duyệt"
+    ) {
+      reviewStatus = "pending";
+    } else {
+      warnings.push(
+        `ReviewStatus="${rawReview}" không hợp lệ (pending/approved/needs_revision), giữ trống`,
+      );
+    }
+  }
+
   const status: McqRowStatus =
     errors.length > 0 ? "error" : warnings.length > 0 ? "warning" : "ok";
 
@@ -246,6 +312,11 @@ function parseOneRow(raw: Record<string, string>, rowNumber: number): ParsedMcqR
             cognitiveLevel,
             explanation,
             topic,
+            code,
+            learningOutcome,
+            authorName,
+            reviewStatus,
+            editNote,
           },
   };
 }
@@ -269,7 +340,9 @@ function parsePositiveInt(
  */
 export function generateMcqTemplateXlsx(): Buffer {
   const headers = [
+    "Code",
     "Topic",
+    "LearningOutcome",
     "Prompt",
     "Type",
     "OptionA",
@@ -283,11 +356,16 @@ export function generateMcqTemplateXlsx(): Buffer {
     "Difficulty",
     "CognitiveLevel",
     "Explanation",
+    "AuthorName",
+    "ReviewStatus",
+    "EditNote",
   ];
   const sample: (string | number)[][] = [
     headers,
     [
+      "VN-0001",
       "Địa lý",
+      "Học viên nhớ được thủ đô Việt Nam",
       "Thủ đô của Việt Nam là gì?",
       "mcq",
       "Hà Nội",
@@ -301,9 +379,14 @@ export function generateMcqTemplateXlsx(): Buffer {
       2,
       "remember_understand",
       "Hà Nội là thủ đô từ 1945.",
+      "Cô Lan",
+      "approved",
+      "",
     ],
     [
+      "TOAN-0001",
       "Toán học",
+      "Vận dụng quy tắc chia hết cho 3",
       "Chọn các số chia hết cho 3 (chọn nhiều):",
       "mcq",
       "9",
@@ -317,9 +400,14 @@ export function generateMcqTemplateXlsx(): Buffer {
       3,
       "apply",
       "Một số chia hết cho 3 khi tổng các chữ số chia hết cho 3.",
+      "Thầy Minh",
+      "pending",
+      "Đã sửa typo 2026-05-20",
     ],
     [
+      "",
       "Khoa học tự nhiên",
+      "",
       "Trái đất quay quanh Mặt trời.",
       "true_false",
       "",
@@ -333,12 +421,17 @@ export function generateMcqTemplateXlsx(): Buffer {
       1,
       "remember_understand",
       "Sự thật cơ bản trong thiên văn học.",
+      "",
+      "",
+      "",
     ],
   ];
   const ws = XLSX.utils.aoa_to_sheet(sample);
-  // Column widths — wide for Prompt/Explanation, narrow for letter/numeric.
+  // Column widths — wide for text, narrow for code/letter/numeric.
   ws["!cols"] = [
+    { wch: 12 }, // Code
     { wch: 18 }, // Topic
+    { wch: 35 }, // LearningOutcome
     { wch: 40 }, // Prompt
     { wch: 10 }, // Type
     { wch: 16 },
@@ -352,6 +445,9 @@ export function generateMcqTemplateXlsx(): Buffer {
     { wch: 10 }, // Difficulty
     { wch: 20 }, // CognitiveLevel
     { wch: 40 }, // Explanation
+    { wch: 15 }, // AuthorName
+    { wch: 14 }, // ReviewStatus
+    { wch: 30 }, // EditNote
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Questions");

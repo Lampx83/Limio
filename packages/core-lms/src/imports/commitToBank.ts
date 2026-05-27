@@ -46,9 +46,11 @@ export async function commitMcqRowsToBank(
         config = { correct: correctLetter === "A" ? "true" : "false" };
       } else {
         bankType = correctCount > 1 ? "multi" : "mcq";
+        // Option id = lowercase letter (a/b/c/d/e/f) — match với letter cột
+        // OptionA-F để answer-preview ở UI workbench dễ map về "B", "A,C"…
         config = {
-          options: p.options.map((o, i) => ({
-            id: `opt-${i}-${Math.random().toString(36).slice(2, 8)}`,
+          options: p.options.map((o) => ({
+            id: o.letter.toLowerCase(),
             label: o.label,
             isCorrect: o.isCorrect,
           })),
@@ -68,6 +70,12 @@ export async function commitMcqRowsToBank(
           points: p.points,
           difficulty: p.difficulty,
           cognitiveLevel: p.cognitiveLevel,
+          // Metadata mở rộng — chỉ truyền nếu file có giá trị.
+          ...(p.code ? { code: p.code } : {}),
+          ...(p.learningOutcome ? { learningOutcome: p.learningOutcome } : {}),
+          ...(p.authorName ? { authorName: p.authorName } : {}),
+          ...(p.reviewStatus ? { reviewStatus: p.reviewStatus } : {}),
+          ...(p.editNote ? { editNote: p.editNote } : {}),
         },
         db,
       );

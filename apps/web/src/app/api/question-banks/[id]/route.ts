@@ -1,9 +1,28 @@
 import { NextResponse } from "next/server";
-import { deleteBank, ExamError } from "@feedbackme/core-lms";
+import { deleteBank, updateBank, ExamError } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
-import { mapKnownError } from "@/lib/apiHelpers";
+import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
+
+/** Update bank metadata (name, description, codePrefix). */
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  const userId = await requireUserId();
+  if (!userId)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const body = await readJson(req);
+  try {
+    const r = await updateBank(userId, params.id, body);
+    return NextResponse.json(r);
+  } catch (e) {
+    const mapped = mapKnownError(e);
+    if (mapped) return mapped;
+    throw e;
+  }
+}
 
 /**
  * Hard-delete a QuestionBank. ?force=true to also wipe ExamQuestionFromBank

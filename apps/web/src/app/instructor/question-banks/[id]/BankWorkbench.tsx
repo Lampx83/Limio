@@ -15,10 +15,13 @@ type QuestionType =
   | "essay"
   | "matching_heading";
 
+type ReviewStatus = "pending" | "approved" | "needs_revision";
+
 type Item = {
   id: string;
   bankId: string;
   bankName: string;
+  code: string | null;
   type: string;
   prompt: string;
   // ExamQuestion config payload — shape varies by type. Used by AnswerPanel
@@ -29,11 +32,30 @@ type Item = {
   difficulty: number;
   cognitiveLevel: CognitiveLevel;
   status: Status;
+  // Metadata mở rộng (xem schema.prisma BankQuestion).
+  learningOutcome: string | null;
+  authorName: string | null;
+  reviewStatus: ReviewStatus;
+  reviewedAt: string | null;
+  reviewedByName: string | null;
+  editNote: string | null;
   skillIds: string[];
+  createdAt: string;
   updatedAt: string;
   stats: { pValueAvg: number; discriminationAvg: number; totalUses: number } | null;
   exposureCount: number;
   lastSampledAt: string | null;
+};
+
+const REVIEW_LABEL: Record<ReviewStatus, string> = {
+  pending: "Chưa thẩm định",
+  approved: "Đã duyệt",
+  needs_revision: "Cần sửa",
+};
+const REVIEW_TONE: Record<ReviewStatus, string> = {
+  pending: "bg-slate-100 text-slate-600",
+  approved: "bg-emerald-100 text-emerald-700",
+  needs_revision: "bg-rose-100 text-rose-700",
 };
 
 type Skill = { id: string; code: string; name: string };
@@ -44,6 +66,7 @@ interface ActiveFilters {
   cognitiveLevel: CognitiveLevel[];
   difficulty: number[];
   topics: string[];
+  reviewStatus: ReviewStatus[];
 }
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -133,15 +156,18 @@ function qualityInfo(
 
 export default function BankWorkbench({
   bankId,
+  initialCodePrefix,
   initialItems,
   initialCursor,
   suggestedSkills,
 }: {
   bankId: string;
+  initialCodePrefix: string | null;
   initialItems: Item[];
   initialCursor: string | null;
   suggestedSkills: Skill[];
 }) {
+  const [codePrefix, setCodePrefix] = useState<string | null>(initialCodePrefix);
   const [items, setItems] = useState<Item[]>(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loading, setLoading] = useState(false);
@@ -172,6 +198,7 @@ export default function BankWorkbench({
     cognitiveLevel: [],
     difficulty: [],
     topics: [],
+    reviewStatus: [],
   });
   // Danh sách topic distinct trong bank, load 1 lần để populate filter.
   // Refetch sau khi import vì có thể có topic mới.
@@ -203,6 +230,7 @@ export default function BankWorkbench({
       f.cognitiveLevel.forEach((c) => params.append("cognitiveLevel", c));
       f.difficulty.forEach((d) => params.append("difficulty", String(d)));
       f.topics.forEach((t) => params.append("topic", t));
+      f.reviewStatus.forEach((rs) => params.append("reviewStatus", rs));
       if (f.q.trim()) params.set("q", f.q.trim());
       if (cur) params.set("cursor", cur);
       try {
@@ -270,6 +298,7 @@ export default function BankWorkbench({
     filters.cognitiveLevel.length > 0 ||
     filters.difficulty.length > 0 ||
     filters.topics.length > 0 ||
+    filters.reviewStatus.length > 0 ||
     filters.q.trim().length > 0;
 
   // ── Bulk select helpers ───────────────────────────────────────────────
@@ -307,6 +336,8 @@ export default function BankWorkbench({
               status: filters.status.length > 0 ? filters.status : undefined,
               cognitiveLevel:
                 filters.cognitiveLevel.length > 0 ? filters.cognitiveLevel : undefined,
+              reviewStatus:
+                filters.reviewStatus.length > 0 ? filters.reviewStatus : undefined,
               difficulty: filters.difficulty.length > 0 ? filters.difficulty : undefined,
               topics: filters.topics.length > 0 ? filters.topics : undefined,
               q: filters.q.trim() || undefined,
@@ -374,7 +405,7 @@ export default function BankWorkbench({
             {hasActiveFilter && (
               <button
                 onClick={() =>
-                  setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [], topics: [] })
+                  setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [], topics: [], reviewStatus: [] })
                 }
                 className="text-xs text-blue-600 hover:underline"
               >
@@ -393,6 +424,11 @@ export default function BankWorkbench({
             )}
           </div>
           <div className="flex items-center gap-2">
+            <CodePrefixEditor
+              bankId={bankId}
+              value={codePrefix}
+              onChange={setCodePrefix}
+            />
             <button
               onClick={() => setMcqImportOpen(true)}
               title="Import nhiều câu hỏi từ file Excel (.xlsx)"
@@ -434,6 +470,17 @@ export default function BankWorkbench({
                 label={STATUS_LABEL[s]}
                 active={filters.status.includes(s)}
                 onClick={() => toggleFilter("status", s)}
+              />
+            ))}
+          </FilterChipGroup>
+
+          <FilterChipGroup label="Thẩm định">
+            {(["pending", "approved", "needs_revision"] as ReviewStatus[]).map((r) => (
+              <FilterChip
+                key={r}
+                label={REVIEW_LABEL[r]}
+                active={filters.reviewStatus.includes(r)}
+                onClick={() => toggleFilter("reviewStatus", r)}
               />
             ))}
           </FilterChipGroup>
@@ -599,8 +646,26 @@ export default function BankWorkbench({
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1">
+                      {q.code && (
+                        <span
+                          className="rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-indigo-700"
+                          title="Mã câu hỏi"
+                        >
+                          {q.code}
+                        </span>
+                      )}
                       <span className={`rounded px-1.5 py-0.5 text-[10px] ${STATUS_TONE[q.status]}`}>
                         {STATUS_LABEL[q.status]}
+                      </span>
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] ${REVIEW_TONE[q.reviewStatus]}`}
+                        title={
+                          q.reviewedAt
+                            ? `${REVIEW_LABEL[q.reviewStatus]} bởi ${q.reviewedByName ?? "?"} · ${new Date(q.reviewedAt).toLocaleDateString("vi-VN")}`
+                            : REVIEW_LABEL[q.reviewStatus]
+                        }
+                      >
+                        {REVIEW_LABEL[q.reviewStatus]}
                       </span>
                       <span className={`rounded px-1.5 py-0.5 text-[10px] ${COGNITIVE_TONE[q.cognitiveLevel]}`}>
                         {COGNITIVE_LABEL[q.cognitiveLevel]}
@@ -627,8 +692,10 @@ export default function BankWorkbench({
                       )}
                     </div>
                     <p className="mt-1 line-clamp-2 text-xs text-slate-800">{q.prompt}</p>
-                    {(q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && (
+                    {(q.authorName || q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && (
                       <p className="mt-0.5 text-[10px] text-faint">
+                        {q.authorName && `✍ ${q.authorName}`}
+                        {q.authorName && (q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && " · "}
                         {q.skillIds.length > 0 && `${q.skillIds.length} skill`}
                         {q.skillIds.length > 0 && q.stats && q.stats.totalUses > 0 && " · "}
                         {q.stats && q.stats.totalUses > 0 && `đã dùng ${q.stats.totalUses} lần`}
@@ -899,6 +966,101 @@ function TopicMultiselect({
   );
 }
 
+/**
+ * Inline editor cho QuestionBank.codePrefix. Bật/sửa prefix → câu hỏi mới tự
+ * sinh code dạng `{prefix}-{NNNN}`. Để trống = tắt auto-sinh.
+ */
+function CodePrefixEditor({
+  bankId,
+  value,
+  onChange,
+}: {
+  bankId: string;
+  value: string | null;
+  onChange: (next: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const [busy, setBusy] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+  useEffect(() => setDraft(value ?? ""), [value]);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      const next = draft.trim() || null;
+      const r = await fetch(`/api/question-banks/${bankId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ codePrefix: next }),
+      });
+      if (r.ok) {
+        const j = (await r.json()) as { codePrefix: string | null };
+        onChange(j.codePrefix);
+        setOpen(false);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        title="Tiền tố mã câu hỏi auto-sinh"
+        className="inline-flex items-center gap-1 rounded-md border border-default bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+      >
+        <span className="font-mono text-slate-500">#</span>
+        {value ? (
+          <span className="font-mono font-semibold text-slate-800">{value}</span>
+        ) : (
+          <span className="text-faint">tự sinh mã…</span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-72 rounded-lg border border-default bg-white p-3 shadow-lg">
+          <p className="text-xs font-medium text-slate-700">Tiền tố mã câu hỏi</p>
+          <p className="mt-1 text-[11px] text-faint">
+            Câu hỏi mới sẽ tự nhận mã dạng <code className="font-mono">{draft || "PREFIX"}-0001</code>.
+            Để trống → không auto-sinh.
+          </p>
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.toUpperCase().slice(0, 20))}
+            placeholder="VD: KNM"
+            className="mt-2 w-full rounded border border-default px-2 py-1.5 font-mono text-xs uppercase"
+          />
+          <div className="mt-2 flex justify-end gap-2">
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded px-2 py-1 text-xs text-faint hover:bg-slate-100"
+            >
+              Huỷ
+            </button>
+            <button
+              onClick={() => void save()}
+              disabled={busy}
+              className="rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+            >
+              {busy ? "Đang lưu…" : "Lưu"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Detail panel ──────────────────────────────────────────────────────────
 
 function DetailPanel({
@@ -995,6 +1157,12 @@ function EditTab({
   const [points, setPoints] = useState(q.points);
   const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(q.cognitiveLevel);
   const [skillIds, setSkillIds] = useState(q.skillIds);
+  // Metadata mở rộng (xem CLAUDE.md / schema BankQuestion).
+  const [code, setCode] = useState(q.code ?? "");
+  const [learningOutcome, setLearningOutcome] = useState(q.learningOutcome ?? "");
+  const [authorName, setAuthorName] = useState(q.authorName ?? "");
+  const [reviewStatus, setReviewStatus] = useState<ReviewStatus>(q.reviewStatus);
+  const [editNote, setEditNote] = useState(q.editNote ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
@@ -1017,9 +1185,19 @@ function EditTab({
           points,
           cognitiveLevel,
           config: newConfig,
+          // Metadata — null/empty được normalize ở server (xem updateBankQuestion).
+          code: code.trim() || null,
+          learningOutcome: learningOutcome.trim() || null,
+          authorName: authorName.trim() || null,
+          reviewStatus,
+          editNote: editNote.trim() || null,
         }),
       });
-      if (!r.ok) { setErr(`HTTP ${r.status}`); return; }
+      if (!r.ok) {
+        const j = (await r.json().catch(() => null)) as { error?: string } | null;
+        setErr(j?.error ?? `HTTP ${r.status}`);
+        return;
+      }
       await onUpdated(true);
     } finally {
       setBusy(false);
@@ -1157,6 +1335,85 @@ function EditTab({
           />
         </label>
       </div>
+
+      {/* ── Siêu dữ liệu (metadata) — Mã / CĐR / Tác giả / Thẩm định / Ghi chú ── */}
+      <details className="rounded-md border border-default bg-slate-50/40 px-3 py-2" open>
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Siêu dữ liệu
+        </summary>
+        <div className="mt-3 space-y-3">
+          <div className="flex gap-2">
+            <label className="block flex-1">
+              <span className="block text-xs font-medium text-slate-600">Mã câu hỏi</span>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="vd KNM-0001 (tự sinh nếu bank có prefix)"
+                className="mt-1 w-full rounded border border-default px-2 py-1.5 font-mono text-xs"
+              />
+            </label>
+            <label className="block flex-1">
+              <span className="block text-xs font-medium text-slate-600">Tác giả</span>
+              <input
+                type="text"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                placeholder="Tên người soạn"
+                className="mt-1 w-full rounded border border-default px-2 py-1.5 text-xs"
+              />
+            </label>
+          </div>
+          <label className="block">
+            <span className="block text-xs font-medium text-slate-600">
+              CĐR (Chuẩn đầu ra)
+            </span>
+            <textarea
+              value={learningOutcome}
+              onChange={(e) => setLearningOutcome(e.target.value)}
+              rows={2}
+              placeholder='vd "Sinh viên giải thích được khái niệm vòng tròn ảnh hưởng"'
+              className="mt-1 w-full rounded border border-default px-2 py-1.5 text-xs"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-xs font-medium text-slate-600">Trạng thái thẩm định</span>
+            <select
+              value={reviewStatus}
+              onChange={(e) => setReviewStatus(e.target.value as ReviewStatus)}
+              className="mt-1 w-full rounded border border-default bg-white px-2 py-1.5 text-xs"
+            >
+              <option value="pending">Chưa thẩm định</option>
+              <option value="approved">Đã duyệt</option>
+              <option value="needs_revision">Cần sửa</option>
+            </select>
+            {q.reviewedAt && q.reviewedByName && q.reviewStatus !== "pending" && (
+              <p className="mt-1 text-[10px] text-faint">
+                {REVIEW_LABEL[q.reviewStatus]} bởi <strong>{q.reviewedByName}</strong> ·{" "}
+                {new Date(q.reviewedAt).toLocaleString("vi-VN")}
+              </p>
+            )}
+          </label>
+          <label className="block">
+            <span className="block text-xs font-medium text-slate-600">Ghi chú sửa</span>
+            <textarea
+              value={editNote}
+              onChange={(e) => setEditNote(e.target.value)}
+              rows={2}
+              placeholder="vd Sửa typo đáp án B, 2026-05-20"
+              className="mt-1 w-full rounded border border-default px-2 py-1.5 text-xs"
+            />
+          </label>
+          <div className="text-[10px] text-faint">
+            Tạo: {new Date(q.createdAt).toLocaleString("vi-VN")}
+            {" · "}
+            Cập nhật: {new Date(q.updatedAt).toLocaleString("vi-VN")}
+            {q.stats && q.stats.totalUses > 0 && (
+              <> · Lần sử dụng: <strong>{q.stats.totalUses}</strong></>
+            )}
+          </div>
+        </div>
+      </details>
 
       {/* Skill tags */}
       {suggestedSkills.length > 0 && (
