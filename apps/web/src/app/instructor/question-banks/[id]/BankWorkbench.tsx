@@ -647,6 +647,49 @@ export default function BankWorkbench({
           </div>
         )}
 
+        {/* List header — master checkbox để chọn nhanh tất cả câu đang hiển thị */}
+        {items.length > 0 && (
+          <div className="flex shrink-0 items-center gap-2 border-b border-default bg-slate-50/60 px-4 py-1.5 text-xs text-slate-600">
+            <input
+              ref={(el) => {
+                // indeterminate state: 1 phần được chọn → checkbox lai
+                if (el) {
+                  const someSelected = items.some((it) => selectedIds.has(it.id));
+                  el.indeterminate = someSelected && !visibleAllSelected;
+                }
+              }}
+              type="checkbox"
+              checked={visibleAllSelected}
+              onChange={() =>
+                visibleAllSelected ? clearSelection() : selectAllVisible()
+              }
+              title={
+                visibleAllSelected
+                  ? "Bỏ chọn tất cả"
+                  : `Chọn tất cả ${items.length} câu đang hiện`
+              }
+              className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-1 focus:ring-brand-400"
+            />
+            <button
+              onClick={() =>
+                visibleAllSelected ? clearSelection() : selectAllVisible()
+              }
+              className="font-medium hover:text-slate-900 hover:underline"
+            >
+              {visibleAllSelected
+                ? `Bỏ chọn (${selectedIds.size})`
+                : selectedIds.size > 0
+                ? `Đã chọn ${selectedIds.size} · chọn hết ${items.length} đang hiện`
+                : `Chọn tất cả ${items.length}`}
+            </button>
+            {totalMatching !== null && totalMatching > items.length && (
+              <span className="text-faint">
+                · còn {totalMatching - items.length} câu chưa tải
+              </span>
+            )}
+          </div>
+        )}
+
         {/* List */}
         <ul
           data-testid="question-list"
