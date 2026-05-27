@@ -71,8 +71,21 @@ function stripLetterPrefix(s) {
 const wb = XLSX.readFile(SRC);
 const src = XLSX.utils.sheet_to_json(wb.Sheets["Kho 282_OK"], { defval: "", raw: false });
 
+// Stats sheet có cột "GV phụ trách trên video LMS" → map topic → tác giả mặc định.
+const statsRows = XLSX.utils.sheet_to_json(wb.Sheets["Thống kê 282 (mới + cũ)"], {
+  defval: "",
+  raw: false,
+});
+const AUTHOR_BY_TOPIC = Object.fromEntries(
+  statsRows
+    .filter((r) => r["Kỹ năng"] && r["GV phụ trách trên video LMS"])
+    .map((r) => [r["Kỹ năng"].trim(), r["GV phụ trách trên video LMS"].trim()]),
+);
+
 const HEADER = [
+  "Code",
   "Topic",
+  "LearningOutcome",
   "Prompt",
   "Type",
   "OptionA",
@@ -86,10 +99,24 @@ const HEADER = [
   "Difficulty",
   "CognitiveLevel",
   "Explanation",
+  "AuthorName",
+  "ReviewStatus",
+  "EditNote",
 ];
 
 const outRows = [HEADER];
 const issues = [];
+let seq = 0;
+
+// "Câu hỏi cũ" vs "Câu hỏi mới" trong nguồn → review status:
+//   "Câu hỏi cũ"  = đã dùng/được rà soát → approved
+//   "Câu hỏi mới" = chưa rà soát → pending
+function mapReview(raw) {
+  const s = (raw ?? "").toString().trim().toLowerCase();
+  if (s === "câu hỏi cũ" || s === "cau hoi cu") return "approved";
+  if (s === "câu hỏi mới" || s === "cau hoi moi") return "pending";
+  return "";
+}
 
 for (const r of src) {
   const prompt = (r["Nội dung"] ?? "").toString().trim();
@@ -106,8 +133,15 @@ for (const r of src) {
     issues.push({ tt, prompt: prompt.slice(0, 60), reason: `Correct="${r["Đáp án đúng"]}" không suy ra được letter` });
   }
 
+  seq += 1;
+  const code = `KNM-${String(seq).padStart(4, "0")}`;
+  const author = AUTHOR_BY_TOPIC[topic] ?? "";
+  const review = mapReview(r["Type"]);
+
   outRows.push([
+    code,                               // Code
     topic,                              // Topic
+    "",                                 // LearningOutcome (để trống — GV nhập sau)
     prompt,                             // Prompt
     "mcq",                              // Type
     (opts.A ?? "").toString().trim(),   // OptionA
@@ -121,12 +155,17 @@ for (const r of src) {
     map.difficulty,                     // Difficulty
     map.cognitive,                      // CognitiveLevel
     "",                                 // Explanation (để trống)
+    author,                             // AuthorName (từ stats sheet)
+    review,                             // ReviewStatus (từ cột "Type" nguồn)
+    "",                                 // EditNote
   ]);
 }
 
 const ws = XLSX.utils.aoa_to_sheet(outRows);
 ws["!cols"] = [
+  { wch: 10 },  // Code
   { wch: 28 },  // Topic
+  { wch: 30 },  // LearningOutcome
   { wch: 60 },  // Prompt
   { wch: 8 },   // Type
   { wch: 30 },  // A
@@ -140,6 +179,9 @@ ws["!cols"] = [
   { wch: 10 },  // Difficulty
   { wch: 22 },  // CognitiveLevel
   { wch: 40 },  // Explanation
+  { wch: 14 },  // AuthorName
+  { wch: 14 },  // ReviewStatus
+  { wch: 30 },  // EditNote
 ];
 
 const outWb = XLSX.utils.book_new();
