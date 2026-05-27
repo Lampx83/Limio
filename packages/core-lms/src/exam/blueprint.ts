@@ -13,11 +13,13 @@
  * Authz: actor must be able to edit the exam's course.
  */
 
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse } from "../courses/authz";
 import { ExamError } from "./types";
 import { resolveSkillScope, resolveBankScope } from "./wizard";
+import { pickPoolQuestions, PoolFilter } from "./sections";
 
 // ============================================================================
 // Types
@@ -449,4 +451,161 @@ export async function assembleExamFromBlueprint(
   }
 
   return { sectionId, replaced, totalCount: bp.totalCount };
+}
+
+// ============================================================================
+// Preview pool — sample N câu để instructor xem trước khi học viên làm
+// ============================================================================
+
+export interface SectionPoolPreviewQuestion {
+  id: string;
+  code: string | null;
+  prompt: string;
+  type: string;
+  difficulty: number;
+  cognitiveLevel: "remember_understand" | "apply" | "analyze_plus";
+  topic: string | null;
+  /** Letter(s) đáp án đúng cho MCQ ("B" hoặc "A,C") hoặc "Đúng"/"Sai" cho TF. */
+  correctPreview: string | null;
+  /** Bucket cell (topic / cog / diff) bucket nào sample ra câu này (debug). */
+  bucketIndex: number | null;
+}
+
+export interface SectionPoolPreviewResult {
+  sectionId: string;
+  totalRequested: number;
+  totalSampled: number;
+  questions: SectionPoolPreviewQuestion[];
+  seed: string;
+}
+
+function extractCorrectPreview(
+  type: string,
+  config: unknown,
+): string | null {
+  if (!config || typeof config !== "object") return null;
+  const c = config as Record<string, unknown>;
+  if (type === "mcq" || type === "multi") {
+    const opts = c.options as
+      | Array<{ id?: string; isCorrect?: boolean }>
+      | undefined;
+    if (!Array.isArray(opts)) return null;
+    const letters = opts
+      .filter((o) => o.isCorrect)
+      .map((o) => (typeof o.id === "string" ? o.id.toUpperCase() : ""))
+      .filter(Boolean);
+    return letters.length > 0 ? letters.join(",") : null;
+  }
+  if (type === "true_false_notgiven") {
+    const v = (c.correct ?? c.correctValue) as unknown;
+    if (v === "true" || v === true) return "Đúng";
+    if (v === "false" || v === false) return "Sai";
+    if (v === "not_given" || v === "notgiven") return "N/G";
+  }
+  return null;
+}
+
+/**
+ * Sample N câu cụ thể cho 1 ExamSection random_from_bank để instructor xem
+ * danh sách trước khi học viên làm. Seed mặc định = "preview:{sectionId}" để
+ * 2 lần gọi liên tiếp trả về cùng list (deterministic) — instructor truyền
+ * `reshuffle=true` để dùng seed ngẫu nhiên 1 lần (xem ví dụ khác).
+ *
+ * Authz: edit-course.
+ */
+export async function previewSectionPool(
+  actorUserId: string,
+  examId: string,
+  sectionId: string,
+  opts: { reshuffleSeed?: string } = {},
+  db: PrismaClient = prisma,
+): Promise<SectionPoolPreviewResult> {
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { courseId: true },
+  });
+  if (!exam) throw new ExamError("exam_not_found");
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+
+  const section = await db.examSection.findFirst({
+    where: { id: sectionId, examId },
+    select: { id: true, selectionMode: true, poolFilter: true },
+  });
+  if (!section) throw new ExamError("section_not_found");
+  if (section.selectionMode !== "random_from_bank")
+    throw new ExamError("validation_failed", "Section không phải random_from_bank");
+
+  const filterParsed = PoolFilter.safeParse(section.poolFilter);
+  if (!filterParsed.success)
+    throw new ExamError("validation_failed", "poolFilter không hợp lệ");
+
+  const seedInput = opts.reshuffleSeed ?? `preview:${sectionId}`;
+  const seed = createHash("sha256").update(seedInput).digest("hex");
+  const ids = await pickPoolQuestions(filterParsed.data, seed, db);
+
+  // Load chi tiết theo thứ tự pickPoolQuestions trả về.
+  const rows = await db.bankQuestion.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      code: true,
+      prompt: true,
+      type: true,
+      config: true,
+      difficulty: true,
+      cognitiveLevel: true,
+    },
+  });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+
+  // Map bucket index (vị trí cell trong filter.buckets) cho từng id — debug
+  // giúp instructor verify phân bổ M-level đúng intent.
+  const bucketByPos: number[] = [];
+  if (filterParsed.data.buckets && filterParsed.data.buckets.length > 0) {
+    let pos = 0;
+    for (const [i, b] of filterParsed.data.buckets.entries()) {
+      const take = Math.min(b.count, ids.length - pos);
+      for (let k = 0; k < take; k++) bucketByPos[pos + k] = i;
+      pos += b.count;
+    }
+  }
+
+  const questions: SectionPoolPreviewQuestion[] = ids.map((id, pos) => {
+    const r = byId.get(id);
+    if (!r) {
+      return {
+        id,
+        code: null,
+        prompt: "(không tìm thấy câu hỏi)",
+        type: "unknown",
+        difficulty: 0,
+        cognitiveLevel: "apply" as const,
+        topic: null,
+        correctPreview: null,
+        bucketIndex: bucketByPos[pos] ?? null,
+      };
+    }
+    const cfg = r.config as Record<string, unknown> | null;
+    const topic =
+      cfg && typeof cfg.topic === "string" ? (cfg.topic as string) : null;
+    return {
+      id: r.id,
+      code: r.code,
+      prompt: r.prompt,
+      type: r.type,
+      difficulty: r.difficulty,
+      cognitiveLevel: r.cognitiveLevel as "remember_understand" | "apply" | "analyze_plus",
+      topic,
+      correctPreview: extractCorrectPreview(r.type, r.config),
+      bucketIndex: bucketByPos[pos] ?? null,
+    };
+  });
+
+  return {
+    sectionId,
+    totalRequested: filterParsed.data.count,
+    totalSampled: questions.length,
+    questions,
+    seed: seedInput,
+  };
 }

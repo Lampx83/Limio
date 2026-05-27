@@ -34,6 +34,7 @@ export default function SectionsPanel({ examId }: { examId: string }) {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [previewingSectionId, setPreviewingSectionId] = useState<string | null>(null);
 
   const refresh = async () => {
     setErr(null);
@@ -124,6 +125,15 @@ export default function SectionsPanel({ examId }: { examId: string }) {
                     : `${s.itemCount} câu`}
                 </div>
               </div>
+              {s.selectionMode === "random_from_bank" && (
+                <button
+                  onClick={() => setPreviewingSectionId(s.id)}
+                  className="rounded border border-blue-300 bg-blue-50 px-2 py-0.5 text-xs text-blue-800 hover:bg-blue-100"
+                  title="Xem danh sách câu hỏi sẽ được rút (preview)"
+                >
+                  Xem {s.poolFilter?.count ?? "?"} câu
+                </button>
+              )}
               <button
                 onClick={() => onDelete(s.id)}
                 className="rounded border border-red-300 bg-red-50 px-2 py-0.5 text-xs text-red-800 hover:bg-red-100"
@@ -134,7 +144,240 @@ export default function SectionsPanel({ examId }: { examId: string }) {
           </li>
         ))}
       </ul>
+
+      {previewingSectionId && (
+        <PreviewPoolModal
+          examId={examId}
+          sectionId={previewingSectionId}
+          onClose={() => setPreviewingSectionId(null)}
+        />
+      )}
     </section>
+  );
+}
+
+interface PreviewQuestion {
+  id: string;
+  code: string | null;
+  prompt: string;
+  type: string;
+  difficulty: number;
+  cognitiveLevel: "remember_understand" | "apply" | "analyze_plus";
+  topic: string | null;
+  correctPreview: string | null;
+  bucketIndex: number | null;
+}
+
+const COG_LABEL: Record<string, string> = {
+  remember_understand: "Nhớ & Hiểu",
+  apply: "Vận dụng",
+  analyze_plus: "Phân tích+",
+};
+
+/**
+ * Modal hiện danh sách N câu sẽ được rút cho section random_from_bank.
+ * Default seed = "preview:{sectionId}" → deterministic; click "Xem ví dụ khác"
+ * để re-sample với seed ngẫu nhiên (instructor verify pool đa dạng).
+ */
+function PreviewPoolModal({
+  examId,
+  sectionId,
+  onClose,
+}: {
+  examId: string;
+  sectionId: string;
+  onClose: () => void;
+}) {
+  const [data, setData] = useState<{
+    totalRequested: number;
+    totalSampled: number;
+    questions: PreviewQuestion[];
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [reshuffleSeed, setReshuffleSeed] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    const url = reshuffleSeed
+      ? `/api/exams/${examId}/sections/${sectionId}/preview-pool?reshuffle=${encodeURIComponent(reshuffleSeed)}`
+      : `/api/exams/${examId}/sections/${sectionId}/preview-pool`;
+    fetch(url)
+      .then(async (r) => {
+        if (!r.ok) {
+          setErr(`HTTP ${r.status}`);
+          return null;
+        }
+        return r.json();
+      })
+      .then((j) => {
+        if (!cancelled && j) setData(j);
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [examId, sectionId, reshuffleSeed]);
+
+  // Group by bucketIndex để show phân bổ M-level.
+  const byBucket = new Map<number | null, PreviewQuestion[]>();
+  for (const q of data?.questions ?? []) {
+    const arr = byBucket.get(q.bucketIndex) ?? [];
+    arr.push(q);
+    byBucket.set(q.bucketIndex, arr);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-default px-4 py-3">
+          <div>
+            <h3 className="text-base font-semibold">Danh sách câu hỏi sẽ rút</h3>
+            <p className="mt-0.5 text-xs text-faint">
+              Đây là ví dụ deterministic cho seed{" "}
+              <code className="font-mono">preview:{sectionId.slice(0, 8)}</code>.
+              Mỗi học viên thực tế sẽ thấy bộ khác (per-attempt seed).
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-faint hover:text-slate-700"
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-3">
+          {loading && <p className="text-center text-sm text-faint">Đang sample…</p>}
+          {err && <p className="text-center text-sm text-red-700">⚠ {err}</p>}
+          {data && (
+            <>
+              <div className="mb-3 flex items-center justify-between text-xs">
+                <span className="text-slate-600">
+                  Đã sample{" "}
+                  <strong className="tabular-nums text-slate-900">
+                    {data.totalSampled}
+                  </strong>{" "}
+                  / {data.totalRequested} câu
+                  {data.totalSampled < data.totalRequested && (
+                    <span className="ml-2 text-amber-700">
+                      ⚠ thiếu {data.totalRequested - data.totalSampled} — pool
+                      chưa đủ câu published
+                    </span>
+                  )}
+                </span>
+                <button
+                  onClick={() => setReshuffleSeed(`${Math.random()}`)}
+                  className="rounded border border-default px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-50"
+                >
+                  🎲 Xem ví dụ khác
+                </button>
+              </div>
+
+              <table className="w-full border-collapse text-xs">
+                <thead className="sticky top-0 bg-slate-50">
+                  <tr>
+                    <th className="border-b border-default px-2 py-1.5 text-left font-medium text-slate-500 w-10">
+                      #
+                    </th>
+                    <th className="border-b border-default px-2 py-1.5 text-left font-medium text-slate-500 w-24">
+                      Mã
+                    </th>
+                    <th className="border-b border-default px-2 py-1.5 text-left font-medium text-slate-500 w-28">
+                      Chủ đề
+                    </th>
+                    <th className="border-b border-default px-2 py-1.5 text-left font-medium text-slate-500 w-28">
+                      Mức · ĐK
+                    </th>
+                    <th className="border-b border-default px-2 py-1.5 text-left font-medium text-slate-500">
+                      Nội dung
+                    </th>
+                    <th className="border-b border-default px-2 py-1.5 text-center font-medium text-slate-500 w-16">
+                      Đáp án
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.questions.map((q, idx) => (
+                    <tr key={q.id} className="border-b border-default last:border-b-0">
+                      <td className="px-2 py-1.5 text-faint tabular-nums">
+                        {idx + 1}
+                      </td>
+                      <td className="px-2 py-1.5 font-mono text-[11px] text-indigo-700">
+                        {q.code ?? "—"}
+                      </td>
+                      <td className="px-2 py-1.5 text-slate-600">
+                        {q.topic ?? <span className="text-faint">—</span>}
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <div className="flex flex-col">
+                          <span className="text-slate-700">
+                            {COG_LABEL[q.cognitiveLevel] ?? q.cognitiveLevel}
+                          </span>
+                          <span className="text-[10px] text-faint">
+                            ĐK {q.difficulty}/5
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-2 py-1.5 text-slate-800">
+                        <span className="line-clamp-2">{q.prompt}</span>
+                      </td>
+                      <td className="px-2 py-1.5 text-center">
+                        {q.correctPreview ? (
+                          <span className="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">
+                            ✓ {q.correctPreview}
+                          </span>
+                        ) : (
+                          <span className="text-faint">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Phân bổ M-level (bucket) — instructor verify pool đúng intent */}
+              {byBucket.size > 1 && (
+                <div className="mt-4 rounded-md border border-default bg-slate-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Phân bổ theo bucket
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-2 text-xs">
+                    {[...byBucket.entries()].map(([idx, qs]) => (
+                      <span
+                        key={idx ?? "x"}
+                        className="rounded border border-default bg-white px-2 py-0.5"
+                      >
+                        Bucket {idx === null ? "?" : idx + 1}: <strong>{qs.length}</strong>{" "}
+                        câu
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="shrink-0 border-t border-default bg-slate-50 px-4 py-2 text-right">
+          <button
+            onClick={onClose}
+            className="rounded-md border border-default bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
