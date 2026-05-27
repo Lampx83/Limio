@@ -77,16 +77,42 @@ function cellKey(cl: CognitiveLevel, d: number) {
   return `${cl}::${d}`;
 }
 
+/**
+ * Topic-mode matrix row: 1 row = 1 chủ đề, 3 ô số câu cho M1/M2/M3.
+ *
+ * M-level → (cognitiveLevel × difficulty) mapping — đồng nhất với converter
+ * convert-knm-to-template.js (M1=remember,diff2 · M2=understand,diff3 · M3=apply,diff4).
+ */
+type MLevel = "M1" | "M2" | "M3";
+const M_LEVELS: MLevel[] = ["M1", "M2", "M3"];
+const M_MAP: Record<MLevel, { cognitiveLevel: CognitiveLevel; difficulty: number; label: string }> = {
+  M1: { cognitiveLevel: "remember_understand", difficulty: 2, label: "M1 — Nhận biết" },
+  M2: { cognitiveLevel: "remember_understand", difficulty: 3, label: "M2 — Thông hiểu" },
+  M3: { cognitiveLevel: "apply", difficulty: 4, label: "M3 — Vận dụng" },
+};
+
 interface TopicRow {
   id: string;
   topic: string;
-  cognitiveLevel: CognitiveLevel | "";
-  difficulty: number | "";
-  count: number;
+  m1: number;
+  m2: number;
+  m3: number;
 }
 
 let topicRowCounter = 0;
 const nextTopicRowId = () => `row-${++topicRowCounter}`;
+
+/** Tìm M-level từ (cogLevel, difficulty) — dùng khi reverse-map initialBlueprint cells. */
+function cellToMLevel(
+  cog: CognitiveLevel | undefined,
+  diff: number | undefined,
+): MLevel | null {
+  for (const m of M_LEVELS) {
+    const def = M_MAP[m];
+    if (def.cognitiveLevel === cog && def.difficulty === diff) return m;
+  }
+  return null;
+}
 
 export default function BlueprintEditor({
   examId,
@@ -130,18 +156,26 @@ export default function BlueprintEditor({
     return map;
   });
 
-  // ── topic_only state ───────────────────────────────────────────────────
+  // ── topic_only state — matrix Topic × M1/M2/M3 ────────────────────────
   const [topicRows, setTopicRows] = useState<TopicRow[]>(() => {
     if (initialBlueprint?.mode === "topic_only") {
-      return initialBlueprint.cells
-        .filter((c) => c.topic)
-        .map((c) => ({
+      // Reverse-map: gộp nhiều cells cùng topic vào 1 row, mỗi cell tương ứng 1 M-level.
+      const byTopic = new Map<string, TopicRow>();
+      for (const c of initialBlueprint.cells) {
+        if (!c.topic) continue;
+        const m = cellToMLevel(c.cognitiveLevel, c.difficulty);
+        if (!m) continue; // cells không khớp M-mapping bị bỏ qua (legacy)
+        const row = byTopic.get(c.topic) ?? {
           id: nextTopicRowId(),
-          topic: c.topic!,
-          cognitiveLevel: c.cognitiveLevel ?? "",
-          difficulty: c.difficulty ?? "",
-          count: c.count,
-        }));
+          topic: c.topic,
+          m1: 0,
+          m2: 0,
+          m3: 0,
+        };
+        row[m.toLowerCase() as "m1" | "m2" | "m3"] = c.count;
+        byTopic.set(c.topic, row);
+      }
+      return [...byTopic.values()];
     }
     return [];
   });
@@ -179,7 +213,10 @@ export default function BlueprintEditor({
     if (mode === "skill_matrix") {
       return Object.values(grid).reduce((s, v) => s + (v || 0), 0);
     }
-    return topicRows.reduce((s, r) => s + (r.count || 0), 0);
+    return topicRows.reduce(
+      (s, r) => s + (r.m1 || 0) + (r.m2 || 0) + (r.m3 || 0),
+      0,
+    );
   }, [mode, grid, topicRows]);
 
   // Build cells payload from current state (used by preview + save).
@@ -194,14 +231,29 @@ export default function BlueprintEditor({
       }
       return cells;
     }
-    return topicRows
-      .filter((r) => r.topic.trim() !== "" && r.count > 0)
-      .map((r) => ({
-        topic: r.topic.trim(),
-        ...(r.cognitiveLevel ? { cognitiveLevel: r.cognitiveLevel } : {}),
-        ...(typeof r.difficulty === "number" ? { difficulty: r.difficulty } : {}),
-        count: r.count,
-      }));
+    // topic_only: mỗi row → up to 3 cells (M1/M2/M3), bỏ ô = 0.
+    const cells: Array<{
+      topic: string;
+      cognitiveLevel: CognitiveLevel;
+      difficulty: number;
+      count: number;
+    }> = [];
+    for (const r of topicRows) {
+      const t = r.topic.trim();
+      if (!t) continue;
+      for (const m of M_LEVELS) {
+        const count = r[m.toLowerCase() as "m1" | "m2" | "m3"];
+        if (!count || count <= 0) continue;
+        const def = M_MAP[m];
+        cells.push({
+          topic: t,
+          cognitiveLevel: def.cognitiveLevel,
+          difficulty: def.difficulty,
+          count,
+        });
+      }
+    }
+    return cells;
   }, [mode, grid, topicRows]);
 
   // ── Preview fetch (debounced) ─────────────────────────────────────────
@@ -270,10 +322,14 @@ export default function BlueprintEditor({
 
   // ── Topic row editing ─────────────────────────────────────────────────
   const addTopicRow = (topic = "") => {
-    setTopicRows((rows) => [
-      ...rows,
-      { id: nextTopicRowId(), topic, cognitiveLevel: "", difficulty: "", count: 0 },
-    ]);
+    setTopicRows((rows) => {
+      // Tránh duplicate topic — quick-add chip click 2 lần cùng chủ đề.
+      if (topic && rows.some((r) => r.topic === topic)) return rows;
+      return [
+        ...rows,
+        { id: nextTopicRowId(), topic, m1: 0, m2: 0, m3: 0 },
+      ];
+    });
   };
   const updateTopicRow = (id: string, patch: Partial<TopicRow>) => {
     setTopicRows((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -376,16 +432,21 @@ export default function BlueprintEditor({
       .map((c) => [cellKey(c.cognitiveLevel!, c.difficulty!), c]),
   );
 
-  // For topic mode: match by (topic, cognitiveLevel?, difficulty?).
-  const topicRowAvailability = (row: TopicRow): AvailabilityCell | undefined => {
+  /**
+   * For topic mode matrix: tra availability per (topic, M-level).
+   * Trả về AvailabilityCell tương ứng cell preview (đã có sẵn topic+cog+diff).
+   */
+  const topicCellAvailability = (
+    topic: string,
+    m: MLevel,
+  ): AvailabilityCell | undefined => {
     if (!preview) return undefined;
-    const rowCl = row.cognitiveLevel === "" ? undefined : row.cognitiveLevel;
-    const rowDiff = row.difficulty === "" ? undefined : row.difficulty;
+    const def = M_MAP[m];
     return preview.cells.find(
       (c) =>
-        c.topic === row.topic.trim() &&
-        c.cognitiveLevel === rowCl &&
-        c.difficulty === rowDiff,
+        c.topic === topic.trim() &&
+        c.cognitiveLevel === def.cognitiveLevel &&
+        c.difficulty === def.difficulty,
     );
   };
 
@@ -623,25 +684,28 @@ export default function BlueprintEditor({
             </p>
           )}
 
-          {/* Topic rows table */}
+          {/* Topic × M-level matrix */}
           <div className="overflow-x-auto rounded border border-default">
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50">
-                  <th className="border-b border-default px-3 py-2 text-left font-medium text-slate-500">
+                  <th className="border-b border-r border-default px-3 py-2 text-left font-medium text-slate-500">
                     Chủ đề
                   </th>
-                  <th className="border-b border-default px-3 py-2 text-left font-medium text-slate-500">
-                    Mức tư duy <span className="text-faint">(tuỳ chọn)</span>
-                  </th>
-                  <th className="border-b border-default px-3 py-2 text-left font-medium text-slate-500">
-                    Độ khó <span className="text-faint">(tuỳ chọn)</span>
-                  </th>
-                  <th className="border-b border-default px-3 py-2 text-center font-medium text-slate-500">
-                    Số câu
-                  </th>
-                  <th className="border-b border-default px-3 py-2 text-left font-medium text-slate-500">
-                    Khả dụng
+                  {M_LEVELS.map((m) => (
+                    <th
+                      key={m}
+                      className="border-b border-default px-3 py-2 text-center font-medium text-slate-600"
+                      title={M_MAP[m].label}
+                    >
+                      {m}
+                      <div className="text-[10px] font-normal text-faint">
+                        {M_MAP[m].label.split("—")[1]?.trim()}
+                      </div>
+                    </th>
+                  ))}
+                  <th className="border-b border-l border-default px-3 py-2 text-center font-medium text-slate-500">
+                    Tổng
                   </th>
                   <th className="border-b border-default px-2 py-2" />
                 </tr>
@@ -649,18 +713,17 @@ export default function BlueprintEditor({
               <tbody>
                 {topicRows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-xs text-faint">
+                    <td colSpan={M_LEVELS.length + 3} className="px-3 py-6 text-center text-xs text-faint">
                       Chưa có dòng nào. Click chip chủ đề ở trên hoặc bấm{" "}
                       <strong>+ Thêm dòng</strong> ở dưới.
                     </td>
                   </tr>
                 )}
                 {topicRows.map((row) => {
-                  const avail = topicRowAvailability(row);
-                  const hasDeficit = avail && avail.deficit > 0 && row.count > 0;
+                  const rowTotal = (row.m1 || 0) + (row.m2 || 0) + (row.m3 || 0);
                   return (
                     <tr key={row.id} className="border-b border-default last:border-b-0">
-                      <td className={`px-2 py-1 ${hasDeficit ? "bg-amber-50" : ""}`}>
+                      <td className="border-r border-default px-2 py-1">
                         <select
                           value={row.topic}
                           onChange={(e) => updateTopicRow(row.id, { topic: e.target.value })}
@@ -669,7 +732,7 @@ export default function BlueprintEditor({
                           <option value="">— chọn chủ đề —</option>
                           {availableTopics.map((t) => (
                             <option key={t.topic} value={t.topic}>
-                              {t.topic} ({t.count})
+                              {t.topic} ({t.publishedCount ?? t.count})
                             </option>
                           ))}
                           {row.topic && !availableTopics.some((t) => t.topic === row.topic) && (
@@ -677,73 +740,48 @@ export default function BlueprintEditor({
                           )}
                         </select>
                       </td>
-                      <td className="px-2 py-1">
-                        <select
-                          value={row.cognitiveLevel}
-                          onChange={(e) =>
-                            updateTopicRow(row.id, {
-                              cognitiveLevel: e.target.value as CognitiveLevel | "",
-                            })
-                          }
-                          className="w-full rounded border border-default bg-white px-2 py-1 text-xs"
-                        >
-                          <option value="">Bất kỳ</option>
-                          {COGNITIVE_LEVELS.map((cl) => (
-                            <option key={cl} value={cl}>
-                              {COGNITIVE_LABEL[cl]}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1">
-                        <select
-                          value={row.difficulty === "" ? "" : String(row.difficulty)}
-                          onChange={(e) =>
-                            updateTopicRow(row.id, {
-                              difficulty: e.target.value === "" ? "" : parseInt(e.target.value, 10),
-                            })
-                          }
-                          className="w-full rounded border border-default bg-white px-2 py-1 text-xs"
-                        >
-                          <option value="">Bất kỳ</option>
-                          {[1, 2, 3, 4, 5].map((d) => (
-                            <option key={d} value={d}>
-                              {d} — {DIFFICULTY_LABEL[d]}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1 text-center">
-                        <input
-                          type="number"
-                          min={0}
-                          max={999}
-                          value={row.count || ""}
-                          placeholder="0"
-                          onChange={(e) =>
-                            updateTopicRow(row.id, {
-                              count: Math.max(0, parseInt(e.target.value, 10) || 0),
-                            })
-                          }
-                          className={`w-16 rounded border px-1.5 py-1 text-center text-xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-none focus:ring-1 focus:ring-blue-400 ${
-                            hasDeficit
-                              ? "border-amber-300 bg-amber-50"
-                              : "border-default bg-white"
-                          }`}
-                        />
-                      </td>
-                      <td className="px-2 py-1">
-                        {avail && row.count > 0 ? (
-                          avail.deficit > 0 ? (
-                            <span className="text-amber-700">
-                              ⚠ {avail.available}/{row.count} · thiếu {avail.deficit}
-                            </span>
-                          ) : (
-                            <span className="text-emerald-700">✓ {avail.available} có sẵn</span>
-                          )
-                        ) : (
-                          <span className="text-faint">—</span>
-                        )}
+                      {M_LEVELS.map((m) => {
+                        const key = m.toLowerCase() as "m1" | "m2" | "m3";
+                        const count = row[key] ?? 0;
+                        const avail = topicCellAvailability(row.topic, m);
+                        const hasDeficit = avail && avail.deficit > 0 && count > 0;
+                        return (
+                          <td
+                            key={m}
+                            className={`px-1 py-1 text-center [&+td]:border-l border-default ${hasDeficit ? "bg-amber-50" : ""}`}
+                          >
+                            <input
+                              type="number"
+                              min={0}
+                              max={999}
+                              value={count || ""}
+                              placeholder="0"
+                              onChange={(e) =>
+                                updateTopicRow(row.id, {
+                                  [key]: Math.max(0, parseInt(e.target.value, 10) || 0),
+                                })
+                              }
+                              className={`w-14 rounded border px-1.5 py-1 text-center text-xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-none focus:ring-1 focus:ring-blue-400 ${
+                                hasDeficit
+                                  ? "border-amber-300 bg-amber-50"
+                                  : "border-default bg-white"
+                              }`}
+                            />
+                            {avail && count > 0 && (
+                              <div
+                                className={`mt-0.5 text-[10px] ${
+                                  avail.deficit > 0 ? "text-amber-600" : "text-emerald-600"
+                                }`}
+                                title={`Khả dụng: ${avail.available}/${count}`}
+                              >
+                                {avail.deficit > 0 ? `⚠ −${avail.deficit}` : `✓ ${avail.available}`}
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="border-l border-default px-3 py-2 text-center font-medium text-slate-700">
+                        {rowTotal || "–"}
                       </td>
                       <td className="px-2 py-1 text-right">
                         <button
@@ -758,12 +796,27 @@ export default function BlueprintEditor({
                     </tr>
                   );
                 })}
+                {/* Footer: column totals per M-level + grand total */}
                 <tr className="bg-slate-50 font-medium">
-                  <td colSpan={3} className="px-3 py-2 text-slate-500">
+                  <td className="border-r border-t border-default px-3 py-2 text-slate-500">
                     Tổng
                   </td>
-                  <td className="px-3 py-2 text-center text-blue-700">{totalCount}</td>
-                  <td colSpan={2} />
+                  {M_LEVELS.map((m) => {
+                    const key = m.toLowerCase() as "m1" | "m2" | "m3";
+                    const colTotal = topicRows.reduce((s, r) => s + (r[key] || 0), 0);
+                    return (
+                      <td
+                        key={m}
+                        className="border-t border-default px-3 py-2 text-center text-slate-700"
+                      >
+                        {colTotal || "–"}
+                      </td>
+                    );
+                  })}
+                  <td className="border-l border-t border-default px-3 py-2 text-center text-blue-700">
+                    {totalCount}
+                  </td>
+                  <td className="border-t border-default" />
                 </tr>
               </tbody>
             </table>
@@ -779,8 +832,9 @@ export default function BlueprintEditor({
           <PreviewSummary preview={preview} previewLoading={previewLoading} totalCount={totalCount} />
 
           <p className="text-[11px] text-faint">
-            Mỗi dòng = 1 ràng buộc. Chỉ điền số câu → rút ngẫu nhiên trong chủ đề đó. Thêm BLT/độ
-            khó để siết phạm vi. Scope: toàn bộ ngân hàng bạn có quyền trong khoá.
+            Mỗi ô = số câu rút ngẫu nhiên cho (chủ đề × M-level). M1 = Nhận biết · M2 = Thông hiểu
+            · M3 = Vận dụng. Scope: toàn bộ ngân hàng bạn có quyền trong khoá. Pool chỉ rút câu đã
+            publish.
           </p>
         </div>
       )}
