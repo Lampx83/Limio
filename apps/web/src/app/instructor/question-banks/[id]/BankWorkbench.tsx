@@ -86,6 +86,38 @@ function DifficultyDots({ level }: { level: number }) {
   return <>{Array.from({ length: count }).map((_, i) => <span key={i} className={`inline-block h-2 w-2 rounded-full ${color}`} />)}</>;
 }
 
+/**
+ * Extract correct-answer preview cho card. Trả compact string như "B" hoặc
+ * "A, C" cho MCQ; "Đúng/Sai" cho true_false; null nếu không suy ra được.
+ * Dùng config.options[i].id (lowercase a..f) mapped sang A..F.
+ */
+function correctAnswerPreview(
+  type: string,
+  config: Record<string, unknown> | null,
+): string | null {
+  if (!config) return null;
+  if (type === "mcq" || type === "multi") {
+    const opts = (config as { options?: Array<{ id?: string; isCorrect?: boolean }> })
+      .options;
+    if (!Array.isArray(opts)) return null;
+    const letters = opts
+      .filter((o) => o.isCorrect)
+      .map((o) => (typeof o.id === "string" ? o.id.toUpperCase() : ""))
+      .filter(Boolean);
+    return letters.length > 0 ? letters.join(", ") : null;
+  }
+  if (type === "true_false_notgiven") {
+    const v =
+      (config as { correct?: unknown; correctValue?: unknown }).correct ??
+      (config as { correctValue?: unknown }).correctValue;
+    if (v === "true" || v === true) return "Đúng";
+    if (v === "false" || v === false) return "Sai";
+    if (v === "not_given" || v === "notgiven") return "N/G";
+    return null;
+  }
+  return null;
+}
+
 // Quality badge derived from BankQuestionStats
 function qualityInfo(
   stats: Item["stats"],
@@ -119,6 +151,20 @@ export default function BankWorkbench({
   const [mcqImportOpen, setMcqImportOpen] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  // ── Bulk selection ─────────────────────────────────────────────────────
+  // Set lưu id câu đã tick. Reset khi đổi filter.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  // ── Panel resize ───────────────────────────────────────────────────────
+  // Wide mode: panel ~60% width, ẩn list để focus vào edit.
+  const [panelWide, setPanelWide] = useState(false);
+
+  // ── Count metadata ─────────────────────────────────────────────────────
+  // totalMatching = số câu khớp filter (server count). totalInBank = tổng bank.
+  const [totalMatching, setTotalMatching] = useState<number | null>(null);
+  const [totalInBank, setTotalInBank] = useState<number | null>(null);
 
   const [filters, setFilters] = useState<ActiveFilters>({
     q: "",
@@ -164,9 +210,21 @@ export default function BankWorkbench({
           `/api/question-banks/${bankId}/questions?${params}`,
         );
         if (!r.ok) { setErr(`HTTP ${r.status}`); return; }
-        const j = (await r.json()) as { items: Item[]; nextCursor: string | null };
+        const j = (await r.json()) as {
+          items: Item[];
+          nextCursor: string | null;
+          totalMatching?: number;
+          totalInBank?: number | null;
+        };
         setItems((prev) => append ? [...prev, ...j.items] : j.items);
         setCursor(j.nextCursor);
+        if (typeof j.totalMatching === "number") setTotalMatching(j.totalMatching);
+        if (j.totalInBank !== undefined) setTotalInBank(j.totalInBank);
+        if (!append) {
+          // Đổi filter / refetch full → reset bulk selection để không lẫn ID
+          // không còn nằm trong filter.
+          setSelectedIds(new Set());
+        }
       } finally {
         setLoading(false);
       }
@@ -214,25 +272,124 @@ export default function BankWorkbench({
     filters.topics.length > 0 ||
     filters.q.trim().length > 0;
 
+  // ── Bulk select helpers ───────────────────────────────────────────────
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const selectAllVisible = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const it of items) next.add(it.id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const visibleAllSelected =
+    items.length > 0 && items.every((it) => selectedIds.has(it.id));
+
+  // Áp bulk action lên `selectedIds` HOẶC toàn bộ câu khớp filter (server tự
+  // fetch ID). `applyToAllMatching=true` chỉ dùng cho action "Áp tất cả đang lọc".
+  const bulkAction = async (
+    action: "publish" | "archive" | "draft",
+    applyToAllMatching = false,
+  ) => {
+    setBulkBusy(true);
+    try {
+      const body = applyToAllMatching
+        ? {
+            action,
+            applyToFilter: {
+              status: filters.status.length > 0 ? filters.status : undefined,
+              cognitiveLevel:
+                filters.cognitiveLevel.length > 0 ? filters.cognitiveLevel : undefined,
+              difficulty: filters.difficulty.length > 0 ? filters.difficulty : undefined,
+              topics: filters.topics.length > 0 ? filters.topics : undefined,
+              q: filters.q.trim() || undefined,
+            },
+          }
+        : { action, ids: [...selectedIds] };
+      const r = await fetch(
+        `/api/question-banks/${bankId}/questions/bulk-status`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!r.ok) {
+        setErr(`Bulk thất bại (HTTP ${r.status})`);
+        return;
+      }
+      const j = (await r.json()) as {
+        ok: string[];
+        skipped: { id: string; reason: string }[];
+      };
+      const actionVerb =
+        action === "publish" ? "publish" : action === "archive" ? "lưu trữ" : "chuyển nháp";
+      const msg =
+        j.skipped.length > 0
+          ? `Đã ${actionVerb} ${j.ok.length} câu · bỏ qua ${j.skipped.length} câu (${j.skipped[0]?.reason ?? "không hợp lệ"}…)`
+          : `Đã ${actionVerb} ${j.ok.length} câu`;
+      flashOk(msg);
+      clearSelection();
+      await refreshAndKeepSelection();
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   return (
     <div className="mt-6 flex h-[calc(100vh-220px)] min-h-[520px] gap-0 overflow-hidden rounded-xl border border-default bg-white shadow-sm">
       {/* ── Main: Item list + horizontal filter header ──────────────────── */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div
+        className={`flex flex-col overflow-hidden ${panelWide && selectedItem ? "hidden lg:hidden" : "flex-1"}`}
+      >
         {/* Toolbar */}
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-default bg-white px-5 py-3">
-          <div className="text-sm text-slate-600">
+          <div className="flex items-center gap-3 text-sm text-slate-600">
             {loading ? (
               <span className="text-faint">Đang tải…</span>
-            ) : hasActiveFilter ? (
-              <span>
-                Hiển thị{" "}
-                <span className="font-semibold tabular-nums text-slate-900">
-                  {items.length}
-                </span>{" "}
-                câu phù hợp bộ lọc
-              </span>
             ) : (
-              <span className="text-faint">Tất cả câu hỏi trong ngân hàng</span>
+              <span className="tabular-nums">
+                {hasActiveFilter && totalMatching !== null ? (
+                  <>
+                    <span className="font-semibold text-slate-900">{totalMatching}</span>
+                    <span className="text-faint"> / {totalInBank ?? "?"}</span> câu khớp
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold text-slate-900">
+                      {totalInBank ?? items.length}
+                    </span>{" "}
+                    câu trong ngân hàng
+                  </>
+                )}
+              </span>
+            )}
+            {hasActiveFilter && (
+              <button
+                onClick={() =>
+                  setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [], topics: [] })
+                }
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Bỏ lọc
+              </button>
+            )}
+            {hasActiveFilter && totalMatching !== null && totalMatching > 0 && (
+              <button
+                onClick={() => void bulkAction("publish", true)}
+                disabled={bulkBusy}
+                className="rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                title={`Publish toàn bộ ${totalMatching} câu khớp filter (skip câu chưa tag skill)`}
+              >
+                ▶ Publish {totalMatching} câu đang lọc
+              </button>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -305,8 +462,16 @@ export default function BankWorkbench({
           </FilterChipGroup>
 
           <FilterChipGroup label="Chủ đề">
-            {availableTopics.length > 0 ? (
-              <div className="flex max-w-md flex-wrap gap-1">
+            {availableTopics.length === 0 ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-0.5 text-xs text-slate-500"
+                title="Chọn 1 câu hỏi ở danh sách, mở panel chi tiết bên phải để gán chủ đề"
+              >
+                <span aria-hidden>+</span> Thêm chủ đề cho câu hỏi
+              </span>
+            ) : availableTopics.length <= 4 ? (
+              // Ít topic → render inline chip cho nhanh
+              <div className="flex flex-wrap gap-1">
                 {availableTopics.map((t) => (
                   <FilterChip
                     key={t}
@@ -318,25 +483,16 @@ export default function BankWorkbench({
                 ))}
               </div>
             ) : (
-              <span
-                className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-0.5 text-xs text-slate-500"
-                title="Chọn 1 câu hỏi ở danh sách, mở panel chi tiết bên phải để gán chủ đề"
-              >
-                <span aria-hidden>+</span> Thêm chủ đề cho câu hỏi
-              </span>
+              // ≥5 topic → popover dropdown để tránh tràn 3-4 dòng filter row
+              <TopicMultiselect
+                topics={availableTopics}
+                selected={filters.topics}
+                onToggle={(t) => toggleFilter("topics", t)}
+                onClear={() => setFilters((f) => ({ ...f, topics: [] }))}
+              />
             )}
           </FilterChipGroup>
 
-          {hasActiveFilter && (
-            <button
-              onClick={() =>
-                setFilters({ q: "", status: [], cognitiveLevel: [], difficulty: [], topics: [] })
-              }
-              className="ml-auto text-xs font-medium text-blue-600 hover:underline"
-            >
-              Bỏ bộ lọc
-            </button>
-          )}
         </div>
         <ImportMcqModal
           open={mcqImportOpen}
@@ -406,16 +562,32 @@ export default function BankWorkbench({
           {items.map((q) => {
             const qi = qualityInfo(q.stats);
             const isSelected = q.id === selectedId;
+            const isChecked = selectedIds.has(q.id);
+            const correctPreview = correctAnswerPreview(q.type, q.config);
             return (
               <li
                 key={q.id}
                 data-testid={`question-row-${q.id}`}
                 onClick={() => setSelectedId(isSelected ? null : q.id)}
-                className={`cursor-pointer px-4 py-3 transition-colors hover:bg-slate-50 ${isSelected ? "bg-blue-50 hover:bg-blue-50" : "bg-white"}`}
+                className={`cursor-pointer px-4 py-3 transition-colors hover:bg-slate-50 ${isSelected ? "bg-blue-50 hover:bg-blue-50" : isChecked ? "bg-emerald-50/40" : "bg-white"}`}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
+                  {/* Checkbox bulk select */}
+                  <label
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-0.5 flex shrink-0 cursor-pointer items-center"
+                    title="Chọn để bulk action"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleSelect(q.id)}
+                      className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-1 focus:ring-brand-400"
+                    />
+                  </label>
+
                   {/* Quality dot */}
-                  <div className="mt-0.5 shrink-0">
+                  <div className="mt-1.5 shrink-0">
                     {qi === null ? (
                       <span className="block h-2 w-2 rounded-full bg-slate-200" title="Chưa có dữ liệu" />
                     ) : qi.ok ? (
@@ -433,12 +605,21 @@ export default function BankWorkbench({
                       <span className={`rounded px-1.5 py-0.5 text-[10px] ${COGNITIVE_TONE[q.cognitiveLevel]}`}>
                         {COGNITIVE_LABEL[q.cognitiveLevel]}
                       </span>
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase text-slate-600">
-                        {TYPE_LABEL[q.type] ?? q.type}
+                      <span
+                        className="inline-flex items-center gap-0.5 rounded bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-500"
+                        title={`Độ khó ${q.difficulty}/5 · ${q.points} điểm · ${TYPE_LABEL[q.type] ?? q.type}`}
+                      >
+                        <DifficultyDots level={q.difficulty} />
+                        <span className="ml-1 uppercase">{TYPE_LABEL[q.type] ?? q.type}</span>
                       </span>
-                      <span className="text-[10px] text-faint">
-                        <span className="inline-flex items-center gap-0.5"><DifficultyDots level={q.difficulty} /></span> · {q.points}đ
-                      </span>
+                      {correctPreview && (
+                        <span
+                          className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700"
+                          title="Đáp án đúng"
+                        >
+                          ✓ {correctPreview}
+                        </span>
+                      )}
                       {qi && !qi.ok && (
                         <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">
                           ⚠ {qi.warnings.join(" · ")}
@@ -446,12 +627,13 @@ export default function BankWorkbench({
                       )}
                     </div>
                     <p className="mt-1 line-clamp-2 text-xs text-slate-800">{q.prompt}</p>
-                    <p className="mt-0.5 text-[10px] text-faint">
-                      {q.skillIds.length} skill
-                      {q.stats && q.stats.totalUses > 0
-                        ? ` · đã dùng ${q.stats.totalUses} lần`
-                        : ""}
-                    </p>
+                    {(q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && (
+                      <p className="mt-0.5 text-[10px] text-faint">
+                        {q.skillIds.length > 0 && `${q.skillIds.length} skill`}
+                        {q.skillIds.length > 0 && q.stats && q.stats.totalUses > 0 && " · "}
+                        {q.stats && q.stats.totalUses > 0 && `đã dùng ${q.stats.totalUses} lần`}
+                      </p>
+                    )}
                   </div>
                 </div>
               </li>
@@ -470,17 +652,77 @@ export default function BankWorkbench({
             </button>
           </div>
         )}
+
+        {/* Bulk action floating bar — chỉ hiện khi có ≥1 câu được tick */}
+        {selectedIds.size > 0 && (
+          <div className="shrink-0 border-t-2 border-brand-200 bg-brand-50 px-4 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-semibold text-brand-800 tabular-nums">
+                  {selectedIds.size}
+                </span>
+                <span className="text-slate-700">câu đã chọn</span>
+                <button
+                  onClick={clearSelection}
+                  className="text-xs text-slate-500 hover:text-slate-700 hover:underline"
+                >
+                  bỏ chọn
+                </button>
+                {!visibleAllSelected && items.length > 0 && (
+                  <button
+                    onClick={selectAllVisible}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    chọn hết {items.length} đang hiện
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => void bulkAction("publish")}
+                  disabled={bulkBusy}
+                  className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  Publish
+                </button>
+                <button
+                  onClick={() => void bulkAction("draft")}
+                  disabled={bulkBusy}
+                  className="rounded-md border border-default bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Về nháp
+                </button>
+                <button
+                  onClick={() => void bulkAction("archive")}
+                  disabled={bulkBusy}
+                  className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1 text-xs text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                >
+                  Lưu trữ
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Right: Detail panel ──────────────────────────────────────────── */}
-      <aside className="flex w-80 shrink-0 flex-col overflow-hidden border-l border-default bg-white">
+      <aside
+        className={`flex shrink-0 flex-col overflow-hidden border-l border-default bg-white transition-all ${
+          panelWide && selectedItem ? "w-full lg:w-[60%]" : "w-96"
+        }`}
+      >
         {selectedItem ? (
           <DetailPanel
             key={selectedItem.id}
             q={selectedItem}
             suggestedSkills={suggestedSkills}
             availableTopics={availableTopics}
-            onClose={() => setSelectedId(null)}
+            wide={panelWide}
+            onToggleWide={() => setPanelWide((v) => !v)}
+            onClose={() => {
+              setSelectedId(null);
+              setPanelWide(false);
+            }}
             onUpdated={async (updated) => {
               await refreshAndKeepSelection();
               // Edit topic có thể tạo topic mới → refresh filter.
@@ -556,6 +798,107 @@ function FilterChip({
   );
 }
 
+/**
+ * Topic filter dropdown — dùng khi bank có ≥5 topic để khỏi tràn nhiều dòng.
+ * Click-outside để đóng. Chip count hiển thị khi có topic active.
+ */
+function TopicMultiselect({
+  topics,
+  selected,
+  onToggle,
+  onClear,
+}: {
+  topics: string[];
+  selected: string[];
+  onToggle: (topic: string) => void;
+  onClear: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+  const filtered = q
+    ? topics.filter((t) => t.toLowerCase().includes(q.toLowerCase()))
+    : topics;
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs transition ${
+          selected.length > 0
+            ? "border-brand-400 bg-brand-50 font-medium text-brand-800"
+            : "border-default bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+        }`}
+      >
+        {selected.length > 0 ? (
+          <>
+            <span className="font-semibold tabular-nums">{selected.length}</span> chủ đề
+          </>
+        ) : (
+          <>Chọn chủ đề ({topics.length})</>
+        )}
+        <span aria-hidden className="text-slate-400">▾</span>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-1 w-72 rounded-lg border border-default bg-white shadow-lg">
+          <div className="border-b border-default p-2">
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Lọc chủ đề…"
+              className="w-full rounded-md border border-default px-2 py-1 text-xs focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
+            />
+          </div>
+          <div className="max-h-64 overflow-y-auto p-1">
+            {filtered.length === 0 ? (
+              <p className="px-3 py-4 text-center text-xs text-faint">Không khớp</p>
+            ) : (
+              filtered.map((t) => {
+                const checked = selected.includes(t);
+                return (
+                  <label
+                    key={t}
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-slate-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => onToggle(t)}
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-brand-600 focus:ring-1 focus:ring-brand-400"
+                    />
+                    <span className="flex-1 truncate text-slate-700">{t}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+          {selected.length > 0 && (
+            <div className="border-t border-default p-1.5 text-right">
+              <button
+                onClick={() => {
+                  onClear();
+                  setOpen(false);
+                }}
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Bỏ chọn tất cả
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Detail panel ──────────────────────────────────────────────────────────
 
 function DetailPanel({
@@ -565,6 +908,8 @@ function DetailPanel({
   onUpdated,
   onDeleted,
   availableTopics,
+  wide,
+  onToggleWide,
 }: {
   q: Item;
   suggestedSkills: Skill[];
@@ -572,6 +917,8 @@ function DetailPanel({
   onUpdated: (updated: boolean) => Promise<void>;
   onDeleted: () => Promise<void>;
   availableTopics: string[];
+  wide: boolean;
+  onToggleWide: () => void;
 }) {
   const [tab, setTab] = useState<"edit" | "quality">("edit");
 
@@ -593,6 +940,14 @@ function DetailPanel({
           ))}
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={onToggleWide}
+            className="hidden rounded p-1 text-faint transition hover:bg-slate-100 hover:text-slate-700 lg:inline-flex"
+            title={wide ? "Thu hẹp panel" : "Mở rộng panel (ẩn danh sách)"}
+            aria-label={wide ? "Thu hẹp" : "Mở rộng"}
+          >
+            {wide ? "⇥" : "⇤"}
+          </button>
           <DeleteQuestionButton questionId={q.id} promptHint={q.prompt} onDeleted={onDeleted} />
           <button
             onClick={onClose}

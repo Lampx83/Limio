@@ -516,6 +516,10 @@ export interface SearchResult {
     lastSampledAt: string | null;
   }[];
   nextCursor: string | null;
+  /** Total số câu khớp filter (toàn bộ, không bị giới hạn `limit`). */
+  totalMatching: number;
+  /** Total số câu (non-archived) trong scope bank — null khi multi-bank. */
+  totalInBank: number | null;
 }
 
 /** Return visible bank IDs the actor can read (= same scope as listBanks). */
@@ -552,7 +556,8 @@ export async function searchQuestions(
     filters.bankIds && filters.bankIds.length > 0
       ? filters.bankIds.filter((id) => visibleIds.includes(id))
       : visibleIds;
-  if (bankIds.length === 0) return { items: [], nextCursor: null };
+  if (bankIds.length === 0)
+    return { items: [], nextCursor: null, totalMatching: 0, totalInBank: null };
 
   const limit = Math.min(filters.limit ?? 30, 100);
   const where: Prisma.BankQuestionWhereInput = {
@@ -587,35 +592,46 @@ export async function searchQuestions(
       : {}),
   };
 
-  const rows = await db.bankQuestion.findMany({
-    where,
-    take: limit + 1,
-    ...(filters.cursor
-      ? { skip: 1, cursor: { id: filters.cursor } }
-      : {}),
-    orderBy: { updatedAt: "desc" },
-    select: {
-      id: true,
-      bankId: true,
-      bank: { select: { name: true } },
-      type: true,
-      prompt: true,
-      // Include config so the bank workbench can show the correct answer per
-      // question (which option is the right one for MCQ, the correct value
-      // for true_false_notgiven, the accepted answers for gap_fill etc).
-      // Workbench is instructor-only, so leaking answer keys is fine.
-      config: true,
-      points: true,
-      difficulty: true,
-      cognitiveLevel: true,
-      status: true,
-      updatedAt: true,
-      exposureCount: true,
-      lastSampledAt: true,
-      skillTags: { select: { skillId: true } },
-      stats: { select: { pValueAvg: true, discriminationAvg: true, totalUses: true } },
-    },
-  });
+  // Đếm song song findMany để UI hiển thị "X câu khớp" + chọn "Tất cả X".
+  // Cũng count tổng câu trong bank (cho header "281 câu") khi single-bank scope.
+  const singleBankId = bankIds.length === 1 ? bankIds[0] : null;
+  const [rows, totalMatching, totalInBank] = await Promise.all([
+    db.bankQuestion.findMany({
+      where,
+      take: limit + 1,
+      ...(filters.cursor
+        ? { skip: 1, cursor: { id: filters.cursor } }
+        : {}),
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        bankId: true,
+        bank: { select: { name: true } },
+        type: true,
+        prompt: true,
+        // Include config so the bank workbench can show the correct answer per
+        // question (which option is the right one for MCQ, the correct value
+        // for true_false_notgiven, the accepted answers for gap_fill etc).
+        // Workbench is instructor-only, so leaking answer keys is fine.
+        config: true,
+        points: true,
+        difficulty: true,
+        cognitiveLevel: true,
+        status: true,
+        updatedAt: true,
+        exposureCount: true,
+        lastSampledAt: true,
+        skillTags: { select: { skillId: true } },
+        stats: { select: { pValueAvg: true, discriminationAvg: true, totalUses: true } },
+      },
+    }),
+    db.bankQuestion.count({ where }),
+    singleBankId
+      ? db.bankQuestion.count({
+          where: { bankId: singleBankId, status: { not: "archived" } },
+        })
+      : Promise.resolve(null),
+  ]);
   const hasNext = rows.length > limit;
   const items = (hasNext ? rows.slice(0, limit) : rows).map((r) => ({
     id: r.id,
@@ -639,7 +655,158 @@ export async function searchQuestions(
   return {
     items,
     nextCursor: hasNext ? items[items.length - 1]!.id : null,
+    totalMatching,
+    totalInBank,
   };
+}
+
+/**
+ * Trả về ID của tất cả câu hỏi khớp filter (không phân trang).
+ * Dùng cho "Chọn tất cả X câu đang lọc" trong bulk action.
+ * Giới hạn 5000 để tránh OOM.
+ */
+export async function listMatchingQuestionIds(
+  actorUserId: string,
+  filters: Omit<SearchFilters, "cursor" | "limit">,
+  db: PrismaClient = prisma,
+): Promise<string[]> {
+  const visibleIds = await visibleBankIds(actorUserId, db);
+  const bankIds =
+    filters.bankIds && filters.bankIds.length > 0
+      ? filters.bankIds.filter((id) => visibleIds.includes(id))
+      : visibleIds;
+  if (bankIds.length === 0) return [];
+  const where: Prisma.BankQuestionWhereInput = {
+    bankId: { in: bankIds },
+    ...(filters.status && filters.status.length > 0
+      ? { status: { in: filters.status } }
+      : { status: { not: "archived" } }),
+    ...(filters.type && filters.type.length > 0
+      ? { type: { in: filters.type as never } }
+      : {}),
+    ...(filters.difficulty && filters.difficulty.length > 0
+      ? { difficulty: { in: filters.difficulty } }
+      : {}),
+    ...(filters.cognitiveLevel && filters.cognitiveLevel.length > 0
+      ? { cognitiveLevel: { in: filters.cognitiveLevel as never } }
+      : {}),
+    ...(filters.q && filters.q.trim().length > 0
+      ? { prompt: { contains: filters.q.trim(), mode: "insensitive" } }
+      : {}),
+    ...(filters.skillIds && filters.skillIds.length > 0
+      ? { skillTags: { some: { skillId: { in: filters.skillIds } } } }
+      : {}),
+    ...(filters.topics && filters.topics.length > 0
+      ? {
+          OR: filters.topics.map((t) => ({
+            config: { path: ["topic"], equals: t },
+          })),
+        }
+      : {}),
+  };
+  const rows = await db.bankQuestion.findMany({
+    where,
+    take: 5000,
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}
+
+/**
+ * Bulk update status cho nhiều câu hỏi cùng lúc. Authz: tất cả câu phải thuộc
+ * bank actor có quyền edit. Publish skip những câu chưa tag skill (return trong
+ * `skipped` thay vì throw — để UI hiển thị warning per-row).
+ */
+export async function bulkUpdateBankQuestionStatus(
+  actorUserId: string,
+  questionIds: string[],
+  action: "publish" | "archive" | "draft",
+  db: PrismaClient = prisma,
+): Promise<{
+  ok: string[];
+  skipped: { id: string; reason: string }[];
+}> {
+  if (questionIds.length === 0) return { ok: [], skipped: [] };
+  if (questionIds.length > 1000)
+    throw new ExamError("validation_failed", "Tối đa 1000 câu mỗi bulk");
+
+  // Load tất cả câu + bank ownership trong 1 query.
+  const rows = await db.bankQuestion.findMany({
+    where: { id: { in: questionIds } },
+    select: {
+      id: true,
+      bankId: true,
+      status: true,
+      _count: { select: { skillTags: true } },
+    },
+  });
+  const foundIds = new Set(rows.map((r) => r.id));
+  const ok: string[] = [];
+  const skipped: { id: string; reason: string }[] = [];
+
+  // Authz check 1 lần per bank (cache).
+  const bankAuthCache = new Map<string, boolean>();
+  const isBankEditable = async (bankId: string) => {
+    if (bankAuthCache.has(bankId)) return bankAuthCache.get(bankId)!;
+    try {
+      await assertCanEditBank(actorUserId, bankId, db);
+      bankAuthCache.set(bankId, true);
+      return true;
+    } catch {
+      bankAuthCache.set(bankId, false);
+      return false;
+    }
+  };
+
+  for (const id of questionIds) {
+    if (!foundIds.has(id)) {
+      skipped.push({ id, reason: "Không tìm thấy" });
+      continue;
+    }
+    const r = rows.find((x) => x.id === id)!;
+    if (!(await isBankEditable(r.bankId))) {
+      skipped.push({ id, reason: "Không có quyền edit bank" });
+      continue;
+    }
+    if (action === "publish") {
+      if (r.status === "published") {
+        ok.push(id); // idempotent
+        continue;
+      }
+      if (r.status === "archived") {
+        skipped.push({ id, reason: "Câu đã lưu trữ — phải khôi phục về draft trước" });
+        continue;
+      }
+      if (r._count.skillTags === 0) {
+        skipped.push({ id, reason: "Chưa tag skill — không publish được" });
+        continue;
+      }
+      ok.push(id);
+    } else if (action === "archive") {
+      if (r.status === "archived") {
+        ok.push(id);
+        continue;
+      }
+      ok.push(id);
+    } else if (action === "draft") {
+      if (r.status === "draft") {
+        ok.push(id);
+        continue;
+      }
+      ok.push(id);
+    }
+  }
+
+  if (ok.length > 0) {
+    const newStatus =
+      action === "publish" ? "published" : action === "archive" ? "archived" : "draft";
+    await db.bankQuestion.updateMany({
+      where: { id: { in: ok } },
+      data: { status: newStatus },
+    });
+  }
+
+  return { ok, skipped };
 }
 
 // ============================================================================
