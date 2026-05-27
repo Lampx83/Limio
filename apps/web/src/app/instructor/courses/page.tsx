@@ -1,21 +1,42 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  BookOpen,
+  Users,
+  FlaskConical,
+  CalendarClock,
+  Eye,
+  PencilLine,
+  ChevronRight,
+} from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_TONE: Record<string, string> = {
-  draft: "chip-accent",
-  published: "chip-success",
-  archived: "chip",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  draft: "Nháp",
-  published: "Đã publish",
-  archived: "Lưu trữ",
+const STATUS_META: Record<
+  string,
+  { label: string; chip: string; rail: string; dot: string }
+> = {
+  draft: {
+    label: "Nháp",
+    chip: "bg-amber-100 text-amber-800",
+    rail: "bg-amber-300",
+    dot: "bg-amber-500",
+  },
+  published: {
+    label: "Đã publish",
+    chip: "bg-emerald-100 text-emerald-800",
+    rail: "bg-gradient-to-b from-emerald-400 to-emerald-600",
+    dot: "bg-emerald-500",
+  },
+  archived: {
+    label: "Lưu trữ",
+    chip: "bg-slate-100 text-slate-700",
+    rail: "bg-slate-300",
+    dot: "bg-slate-400",
+  },
 };
 
 export default async function InstructorCoursesPage() {
@@ -34,6 +55,7 @@ export default async function InstructorCoursesPage() {
       status: true,
       version: true,
       updatedAt: true,
+      _count: { select: { enrollments: true, modules: true, exams: true } },
     },
   });
 
@@ -86,48 +108,158 @@ export default async function InstructorCoursesPage() {
         />
       ) : (
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-          {courses.map((c) => (
-            <li key={c.id}>
-              <div className="card-hover group h-full">
-                <div className="flex items-start justify-between gap-3">
-                  <Link
-                    href={`/instructor/courses/${c.id}`}
-                    className="text-base font-semibold transition-colors group-hover:text-brand-600"
-                  >
-                    {c.title}
-                  </Link>
-                  <span className={STATUS_TONE[c.status] ?? "chip"}>
-                    {STATUS_LABEL[c.status] ?? c.status}
-                  </span>
+          {courses.map((c) => {
+            const status = STATUS_META[c.status] ?? STATUS_META.draft!;
+            return (
+              <li key={c.id}>
+                <div className="group relative overflow-hidden rounded-2xl border border-default bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                  {/* Left rail status */}
+                  <span
+                    className={`absolute inset-y-0 left-0 w-1 ${status.rail}`}
+                    aria-hidden
+                  />
+                  <div className="p-5 pl-6">
+                    {/* Header */}
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <Link
+                        href={`/instructor/courses/${c.id}`}
+                        className="min-w-0 break-words text-base font-semibold text-slate-900 transition group-hover:text-brand-700"
+                      >
+                        {c.title}
+                      </Link>
+                      <span
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${status.chip}`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${status.dot}`}
+                          aria-hidden
+                        />
+                        {status.label}
+                      </span>
+                    </div>
+                    {/* Slug + version + updated */}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-faint">
+                      <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-600">
+                        /{c.slug}
+                      </code>
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-600">
+                        v{c.version}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-slate-500">
+                        <CalendarClock className="h-3 w-3" aria-hidden />
+                        {new Date(c.updatedAt).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+
+                    {/* Stats — 3 chip có icon */}
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      <StatChip
+                        icon={BookOpen}
+                        tone="sky"
+                        label="Module"
+                        value={String(c._count.modules)}
+                      />
+                      <StatChip
+                        icon={Users}
+                        tone="emerald"
+                        label="Học viên"
+                        value={String(c._count.enrollments)}
+                      />
+                      <StatChip
+                        icon={FlaskConical}
+                        tone="violet"
+                        label="Bài thi"
+                        value={String(c._count.exams)}
+                      />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-4 flex items-center justify-end gap-2">
+                      <Link
+                        href={`/catalog/${c.slug}`}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-default bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                        title="Xem dưới góc nhìn học viên"
+                      >
+                        <Eye className="h-3.5 w-3.5" aria-hidden />
+                        Learner view
+                      </Link>
+                      <Link
+                        href={`/instructor/courses/${c.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-default bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                      >
+                        <PencilLine className="h-3.5 w-3.5" aria-hidden />
+                        Sửa
+                      </Link>
+                      <Link
+                        href={`/instructor/courses/${c.id}`}
+                        className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
+                      >
+                        Mở
+                        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-faint">
-                  <code className="rounded bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono">
-                    /{c.slug}
-                  </code>
-                  <span>·</span>
-                  <span>v{c.version}</span>
-                  <span>·</span>
-                  <span>cập nhật {new Date(c.updatedAt).toLocaleDateString("vi-VN")}</span>
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-token pt-3">
-                  <Link
-                    href={`/catalog/${c.slug}`}
-                    className="link text-xs"
-                  >
-                    Xem (learner view)
-                  </Link>
-                  <Link
-                    href={`/instructor/courses/${c.id}`}
-                    className="text-sm font-medium text-brand-600 hover:text-brand-700"
-                  >
-                    Sửa →
-                  </Link>
-                </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </main>
+  );
+}
+
+const STAT_TONE: Record<
+  string,
+  { bg: string; iconBg: string; iconFg: string; valueFg: string }
+> = {
+  sky: {
+    bg: "bg-sky-50/60",
+    iconBg: "bg-sky-100",
+    iconFg: "text-sky-700",
+    valueFg: "text-sky-900",
+  },
+  violet: {
+    bg: "bg-violet-50/60",
+    iconBg: "bg-violet-100",
+    iconFg: "text-violet-700",
+    valueFg: "text-violet-900",
+  },
+  emerald: {
+    bg: "bg-emerald-50/60",
+    iconBg: "bg-emerald-100",
+    iconFg: "text-emerald-700",
+    valueFg: "text-emerald-900",
+  },
+};
+
+function StatChip({
+  icon: Icon,
+  tone,
+  label,
+  value,
+}: {
+  icon: typeof BookOpen;
+  tone: keyof typeof STAT_TONE;
+  label: string;
+  value: string;
+}) {
+  const t = STAT_TONE[tone] ?? STAT_TONE.sky!;
+  return (
+    <div className={`flex items-center gap-2 rounded-lg ${t.bg} px-2.5 py-1.5`}>
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${t.iconBg}`}
+      >
+        <Icon className={`h-3.5 w-3.5 ${t.iconFg}`} aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <div className="text-[10px] uppercase tracking-wide text-faint">
+          {label}
+        </div>
+        <div className={`truncate text-sm font-semibold ${t.valueFg}`}>
+          {value}
+        </div>
+      </div>
+    </div>
   );
 }
