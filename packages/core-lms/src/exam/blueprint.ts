@@ -541,7 +541,9 @@ export async function previewSectionPool(
 
   const seedInput = opts.reshuffleSeed ?? `preview:${sectionId}`;
   const seed = createHash("sha256").update(seedInput).digest("hex");
-  const ids = await pickPoolQuestions(filterParsed.data, seed, db);
+  // Tolerant: instructor xem preview, pool thiếu thì show partial + cảnh báo —
+  // không phải fail giống attempt runtime (học viên không được nhận đề thiếu).
+  const ids = await pickPoolQuestions(filterParsed.data, seed, db, { tolerant: true });
 
   // Load chi tiết theo thứ tự pickPoolQuestions trả về.
   const rows = await db.bankQuestion.findMany({

@@ -121,7 +121,15 @@ export async function pickPoolQuestions(
   filter: PoolFilterT,
   seed: string,
   db: PrismaClient = prisma,
+  /**
+   * `tolerant=true` (preview path): return partial IDs khi pool thiếu (instructor
+   * cần thấy đang khả dụng bao nhiêu để fix). Default false (attempt runtime):
+   * throw `section_pool_empty` / `section_pool_underfilled` để học viên không
+   * nhận đề thiếu câu.
+   */
+  opts: { tolerant?: boolean } = {},
 ): Promise<string[]> {
+  const tolerant = opts.tolerant ?? false;
   const baseWhere: Prisma.BankQuestionWhereInput = {
     bankId: { in: filter.bankIds },
     status: "published",
@@ -156,6 +164,7 @@ export async function pickPoolQuestions(
       const shuffled = shuffle(ids.map((q) => q.id), rng);
       picked.push(...shuffled.slice(0, bucket.count));
     }
+    if (tolerant) return picked;
     if (picked.length === 0) throw new ExamError("section_pool_empty");
     if (picked.length < filter.count)
       throw new ExamError("section_pool_underfilled", {
@@ -192,6 +201,7 @@ export async function pickPoolQuestions(
       );
       picked.push(...shuffled.slice(0, quota));
     }
+    if (tolerant) return picked;
     if (picked.length === 0) throw new ExamError("section_pool_empty");
     if (picked.length < filter.count)
       throw new ExamError("section_pool_underfilled", {
@@ -210,6 +220,10 @@ export async function pickPoolQuestions(
     where,
     select: { id: true },
   });
+  if (tolerant) {
+    const rng = seededRng(seed);
+    return shuffle(ids.map((q) => q.id), rng).slice(0, filter.count);
+  }
   if (ids.length === 0) throw new ExamError("section_pool_empty");
   if (ids.length < filter.count)
     throw new ExamError("section_pool_underfilled", {
