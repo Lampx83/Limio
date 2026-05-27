@@ -489,7 +489,13 @@ export async function updateBankQuestion(
   });
 }
 
-/** A5.1 — Publish requires ≥1 skill tag (CLAUDE.md §4.4). */
+/**
+ * Publish câu hỏi trong bank. Không còn require ≥1 skill tag — bank có thể
+ * dùng cho exam mode `topic-only` blueprint hoặc course không bật
+ * personalization (xem memory project_personalization_toggle). Personalization
+ * vẫn cần skill tag để hoạt động, nhưng đó là điều kiện ở phía
+ * Feedback Engine / wizard skill_matrix mode, không phải gate publish bank.
+ */
 export async function publishBankQuestion(
   actorUserId: string,
   questionId: string,
@@ -500,10 +506,6 @@ export async function publishBankQuestion(
   if (q.status === "published") return;
   if (q.status === "archived")
     throw new ExamError("bank_question_already_archived");
-  const tagCount = await db.bankQuestionSkillTag.count({
-    where: { bankQuestionId: questionId },
-  });
-  if (tagCount === 0) throw new ExamError("bank_question_not_publishable");
   await db.bankQuestion.update({
     where: { id: questionId },
     data: { status: "published" },
@@ -968,10 +970,7 @@ export async function bulkUpdateBankQuestionStatus(
         skipped.push({ id, reason: "Câu đã lưu trữ — phải khôi phục về draft trước" });
         continue;
       }
-      if (r._count.skillTags === 0) {
-        skipped.push({ id, reason: "Chưa tag skill — không publish được" });
-        continue;
-      }
+      // Skill tag không còn required để publish (xem publishBankQuestion).
       ok.push(id);
     } else if (action === "archive") {
       if (r.status === "archived") {

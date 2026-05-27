@@ -1360,8 +1360,7 @@ function EditTab({
           {q.status === "draft" && (
             <button
               onClick={() => callStatus("publish")}
-              disabled={statusBusy || skillIds.length === 0}
-              title={skillIds.length === 0 ? "Cần ≥1 skill" : ""}
+              disabled={statusBusy}
               className="rounded border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Publish
@@ -1556,8 +1555,9 @@ function EditTab({
             })}
           </div>
           {skillIds.length === 0 && (
-            <p className="mt-1 text-[10px] text-amber-600">
-              ⚠ Cần ≥1 skill để publish.
+            <p className="mt-1 text-[10px] text-faint">
+              Tag skill là tuỳ chọn — cần nếu muốn câu hỏi tham gia adaptive
+              path / blueprint theo skill.
             </p>
           )}
         </div>
@@ -1862,7 +1862,7 @@ function QuestionForm({
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-[10px] text-faint">Sau khi tạo, gán ≥1 skill để publish.</p>
+        <p className="text-[10px] text-faint">Tag skill là tuỳ chọn (cần cho adaptive path).</p>
         <button
           type="submit"
           disabled={busy || !prompt.trim()}
