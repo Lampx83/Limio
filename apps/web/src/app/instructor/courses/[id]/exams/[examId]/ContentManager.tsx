@@ -36,6 +36,8 @@ interface QuestionData {
   skills: Skill[];
   orderInExam: number;
   orderInPassage: number | null;
+  /** Mã từ bank gốc (vd "KNM-0042") nếu câu được copy/import từ ngân hàng. */
+  bankCode?: string | null;
 }
 
 interface Props {
@@ -239,6 +241,14 @@ export default function ContentManager({ examId, editable, passages, questions }
         <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
           {TYPE_LABEL[q.type] ?? q.type}
         </span>
+        {q.bankCode && (
+          <span
+            className="rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-indigo-700"
+            title="Mã câu hỏi gốc từ ngân hàng"
+          >
+            {q.bankCode}
+          </span>
+        )}
         <span className="flex-1 truncate">{q.prompt || <em className="text-faint">(chưa có đề)</em>}</span>
         <span className="text-xs text-faint">{q.points} điểm</span>
         {q.skills.length === 0 && (

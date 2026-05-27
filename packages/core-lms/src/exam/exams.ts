@@ -368,7 +368,17 @@ export async function getExam(
       },
       questions: {
         orderBy: [{ orderInExam: "asc" }],
-        include: { skillTags: true },
+        include: {
+          skillTags: true,
+          // Join về bank để hiển thị `code` gốc (vd KNM-0042) ở tab Nội dung.
+          // 1:1 FK trên unique index → cost ~negligible. Null nếu câu được tạo
+          // tay (không phải copy từ bank).
+          fromBank: {
+            select: {
+              bankQuestion: { select: { code: true, bankId: true } },
+            },
+          },
+        },
       },
     },
   });
@@ -383,6 +393,9 @@ type ExamWithRelations = Awaited<ReturnType<PrismaClient["exam"]["findUniqueOrTh
   questions: Array<
     Awaited<ReturnType<PrismaClient["examQuestion"]["findUniqueOrThrow"]>> & {
       skillTags: Awaited<ReturnType<PrismaClient["examQuestionSkillTag"]["findMany"]>>;
+      fromBank: {
+        bankQuestion: { code: string | null; bankId: string };
+      } | null;
     }
   >;
 };

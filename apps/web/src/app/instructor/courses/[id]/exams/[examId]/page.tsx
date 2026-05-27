@@ -81,7 +81,14 @@ export default async function EditExamPage({
       },
       questions: {
         orderBy: [{ orderInExam: "asc" }],
-        include: { skillTags: { include: { skill: true } } },
+        include: {
+          skillTags: { include: { skill: true } },
+          // Join về BankQuestion để hiển thị mã gốc (vd KNM-0042) khi câu hỏi
+          // copy/import từ ngân hàng. 1:1 unique FK → cost negligible.
+          fromBank: {
+            select: { bankQuestion: { select: { code: true } } },
+          },
+        },
       },
     },
   });
@@ -232,6 +239,7 @@ export default async function EditExamPage({
                 config: q.config as Record<string, unknown>,
                 orderInExam: q.orderInExam,
                 orderInPassage: q.orderInPassage,
+                bankCode: q.fromBank?.bankQuestion.code ?? null,
                 skills: q.skillTags.map((t) => ({
                   id: t.skill.id,
                   code: t.skill.code,
