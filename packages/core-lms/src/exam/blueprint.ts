@@ -1,13 +1,14 @@
 /**
  * S4 — Blueprint Editor (Table of Specifications)
  *
- * A blueprint is an explicit mapping from (cognitiveLevel × difficulty) cells
- * to question counts, scoped to a selected set of lessons.
+ * Two modes:
+ *   skill_matrix  — explicit (cognitiveLevel × difficulty) cells scoped to a set
+ *                   of lessons (mapped to skillIds via ContentSkillMapping).
+ *   topic_only    — per-topic cells with optional Bloom/difficulty narrowing,
+ *                   auto-scoped to all banks the actor can edit in the course.
  *
- * Unlike the wizard (which derives bucket weights from a BloomMix +
- * DifficultyProfile), a blueprint lets the instructor specify cell counts
- * directly. assembleFromBlueprint() converts this into a bucketed poolFilter
- * on a single ExamSection (random_from_bank, per_attempt).
+ * assembleExamFromBlueprint() converts the saved blueprint into a bucketed
+ * poolFilter on a single ExamSection (random_from_bank, per_attempt).
  *
  * Authz: actor must be able to edit the exam's course.
  */
@@ -22,29 +23,62 @@ import { resolveSkillScope, resolveBankScope } from "./wizard";
 // Types
 // ============================================================================
 
-export const BlueprintCellSchema = z.object({
+export const BlueprintModeSchema = z.enum(["skill_matrix", "topic_only"]);
+export type BlueprintMode = z.infer<typeof BlueprintModeSchema>;
+
+/** skill_matrix cell: BLT × độ khó (existing shape). */
+export const SkillMatrixCellSchema = z.object({
   cognitiveLevel: z.enum(["remember_understand", "apply", "analyze_plus"]),
   difficulty: z.number().int().min(1).max(5),
   count: z.number().int().min(1).max(500),
 });
-export type BlueprintCell = z.infer<typeof BlueprintCellSchema>;
+export type SkillMatrixCell = z.infer<typeof SkillMatrixCellSchema>;
 
-export const UpsertBlueprintInput = z.object({
-  lessonIds: z.array(z.string().uuid()).min(1, "Chọn ít nhất 1 bài học"),
-  cells: z.array(BlueprintCellSchema),
+/** topic_only cell: topic bắt buộc; BLT/độ khó tùy chọn để ràng buộc thêm. */
+export const TopicCellSchema = z.object({
+  topic: z.string().min(1).max(120),
+  cognitiveLevel: z
+    .enum(["remember_understand", "apply", "analyze_plus"])
+    .optional(),
+  difficulty: z.number().int().min(1).max(5).optional(),
+  count: z.number().int().min(1).max(500),
 });
+export type TopicCell = z.infer<typeof TopicCellSchema>;
+
+/** Legacy alias kept for callers that imported `BlueprintCell`. */
+export type BlueprintCell = SkillMatrixCell;
+
+export const UpsertBlueprintInput = z.discriminatedUnion("mode", [
+  z.object({
+    mode: z.literal("skill_matrix"),
+    lessonIds: z.array(z.string().uuid()).min(1, "Chọn ít nhất 1 bài học"),
+    cells: z.array(SkillMatrixCellSchema),
+  }),
+  z.object({
+    mode: z.literal("topic_only"),
+    // Reserved for future explicit bank-pick; auto-resolved when empty.
+    bankIds: z.array(z.string().uuid()).optional().default([]),
+    cells: z.array(TopicCellSchema),
+  }),
+]);
 export type UpsertBlueprintT = z.infer<typeof UpsertBlueprintInput>;
 
 export interface BlueprintData {
   examId: string;
+  mode: BlueprintMode;
   lessonIds: string[];
-  cells: BlueprintCell[];
+  bankIds: string[];
+  cells: SkillMatrixCell[] | TopicCell[];
   totalCount: number;
 }
 
 // ============================================================================
 // CRUD
 // ============================================================================
+
+function readMode(raw: unknown): BlueprintMode {
+  return raw === "topic_only" ? "topic_only" : "skill_matrix";
+}
 
 export async function getBlueprint(
   actorUserId: string,
@@ -58,8 +92,10 @@ export async function getBlueprint(
   if (!bp) return null;
   return {
     examId: bp.examId,
+    mode: readMode((bp as { mode?: unknown }).mode),
     lessonIds: bp.lessonIds,
-    cells: bp.cells as BlueprintCell[],
+    bankIds: (bp as { bankIds?: string[] }).bankIds ?? [],
+    cells: bp.cells as SkillMatrixCell[] | TopicCell[],
     totalCount: bp.totalCount,
   };
 }
@@ -77,20 +113,26 @@ export async function upsertBlueprint(
   const parsed = UpsertBlueprintInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
 
-  const { lessonIds, cells } = parsed.data;
-  const activeCells = cells.filter((c) => c.count > 0);
+  const data = parsed.data;
+  const activeCells = data.cells.filter((c) => c.count > 0);
   const totalCount = activeCells.reduce((s, c) => s + c.count, 0);
+  const lessonIds = data.mode === "skill_matrix" ? data.lessonIds : [];
+  const bankIds = data.mode === "topic_only" ? (data.bankIds ?? []) : [];
 
   const bp = await db.examBlueprint.upsert({
     where: { examId },
     create: {
       examId,
+      mode: data.mode,
       lessonIds,
+      bankIds,
       cells: activeCells as never,
       totalCount,
     },
     update: {
+      mode: data.mode,
       lessonIds,
+      bankIds,
       cells: activeCells as never,
       totalCount,
     },
@@ -98,8 +140,10 @@ export async function upsertBlueprint(
 
   return {
     examId: bp.examId,
+    mode: readMode((bp as { mode?: unknown }).mode),
     lessonIds: bp.lessonIds,
-    cells: bp.cells as BlueprintCell[],
+    bankIds: (bp as { bankIds?: string[] }).bankIds ?? [],
+    cells: bp.cells as SkillMatrixCell[] | TopicCell[],
     totalCount: bp.totalCount,
   };
 }
@@ -108,7 +152,11 @@ export async function upsertBlueprint(
 // Preview availability per cell
 // ============================================================================
 
-export interface BlueprintCellAvailability extends BlueprintCell {
+export interface SkillMatrixCellAvailability extends SkillMatrixCell {
+  available: number;
+  deficit: number;
+}
+export interface TopicCellAvailability extends TopicCell {
   available: number;
   deficit: number;
 }
@@ -118,16 +166,28 @@ export interface BlueprintPreviewResult {
   totalAvailable: number;
   bankIds: string[];
   skillIds: string[];
-  cells: BlueprintCellAvailability[];
-  deficits: BlueprintCellAvailability[];
+  cells: (SkillMatrixCellAvailability | TopicCellAvailability)[];
+  deficits: (SkillMatrixCellAvailability | TopicCellAvailability)[];
   emptyScope: boolean;
 }
 
+const ALLOWED_TYPES = [
+  "mcq",
+  "multi",
+  "true_false_notgiven",
+  "gap_fill",
+  "short_answer",
+] as const;
+
+/**
+ * Preview entry-point for `skill_matrix` mode. Kept for backwards compat —
+ * callers in topic mode should use `previewBlueprintTopicOnly()` instead.
+ */
 export async function previewBlueprint(
   actorUserId: string,
   examId: string,
   lessonIds: string[],
-  cells: BlueprintCell[],
+  cells: SkillMatrixCell[],
   db: PrismaClient = prisma,
 ): Promise<BlueprintPreviewResult> {
   const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
@@ -163,14 +223,14 @@ export async function previewBlueprint(
           status: "published",
           cognitiveLevel: cell.cognitiveLevel as never,
           difficulty: cell.difficulty,
-          type: { in: ["mcq", "multi", "true_false_notgiven", "gap_fill", "short_answer"] },
+          type: { in: ALLOWED_TYPES as never },
           skillTags: { some: { skillId: { in: skillIds } } },
         },
       }),
     ),
   );
 
-  const richCells: BlueprintCellAvailability[] = activeCells.map((c, i) => {
+  const richCells: SkillMatrixCellAvailability[] = activeCells.map((c, i) => {
     const available = counts[i] ?? 0;
     return { ...c, available, deficit: Math.max(0, c.count - available) };
   });
@@ -184,6 +244,105 @@ export async function previewBlueprint(
     deficits: richCells.filter((c) => c.deficit > 0),
     emptyScope: false,
   };
+}
+
+/** Preview for `topic_only` mode: count per (topic [× BLT × difficulty]) cell. */
+export async function previewBlueprintTopicOnly(
+  actorUserId: string,
+  examId: string,
+  cells: TopicCell[],
+  db: PrismaClient = prisma,
+): Promise<BlueprintPreviewResult> {
+  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  if (!exam) throw new ExamError("exam_not_found");
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+
+  const activeCells = cells.filter((c) => c.count > 0);
+  const totalRequested = activeCells.reduce((s, c) => s + c.count, 0);
+
+  const bankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+
+  if (bankIds.length === 0) {
+    return {
+      totalRequested,
+      totalAvailable: 0,
+      bankIds,
+      skillIds: [],
+      cells: activeCells.map((c) => ({ ...c, available: 0, deficit: c.count })),
+      deficits: activeCells.map((c) => ({ ...c, available: 0, deficit: c.count })),
+      emptyScope: true,
+    };
+  }
+
+  const counts = await Promise.all(
+    activeCells.map((cell) =>
+      db.bankQuestion.count({
+        where: {
+          bankId: { in: bankIds },
+          status: "published",
+          type: { in: ALLOWED_TYPES as never },
+          config: { path: ["topic"], equals: cell.topic },
+          ...(cell.cognitiveLevel !== undefined
+            ? { cognitiveLevel: cell.cognitiveLevel as never }
+            : {}),
+          ...(cell.difficulty !== undefined ? { difficulty: cell.difficulty } : {}),
+        },
+      }),
+    ),
+  );
+
+  const richCells: TopicCellAvailability[] = activeCells.map((c, i) => {
+    const available = counts[i] ?? 0;
+    return { ...c, available, deficit: Math.max(0, c.count - available) };
+  });
+
+  return {
+    totalRequested,
+    totalAvailable: richCells.reduce((s, c) => s + Math.min(c.count, c.available), 0),
+    bankIds,
+    skillIds: [],
+    cells: richCells,
+    deficits: richCells.filter((c) => c.deficit > 0),
+    emptyScope: false,
+  };
+}
+
+// ============================================================================
+// Topic discovery — list distinct topics in actor's bank scope for an exam
+// ============================================================================
+
+export async function listTopicsInExamScope(
+  actorUserId: string,
+  examId: string,
+  db: PrismaClient = prisma,
+): Promise<{ topic: string; count: number }[]> {
+  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  if (!exam) throw new ExamError("exam_not_found");
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+
+  const bankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+  if (bankIds.length === 0) return [];
+
+  // Raw query — Prisma can't groupBy on JSON path. Pull rows + bucket in JS.
+  // OK for typical scales (≤ low-thousands published questions per course).
+  const rows = await db.bankQuestion.findMany({
+    where: {
+      bankId: { in: bankIds },
+      status: "published",
+      type: { in: ALLOWED_TYPES as never },
+    },
+    select: { config: true },
+  });
+  const tally = new Map<string, number>();
+  for (const r of rows) {
+    const cfg = r.config as { topic?: unknown } | null;
+    const t = typeof cfg?.topic === "string" ? cfg.topic.trim() : "";
+    if (!t) continue;
+    tally.set(t, (tally.get(t) ?? 0) + 1);
+  }
+  return [...tally.entries()]
+    .map(([topic, count]) => ({ topic, count }))
+    .sort((a, b) => a.topic.localeCompare(b.topic, "vi"));
 }
 
 // ============================================================================
@@ -218,23 +377,36 @@ export async function assembleExamFromBlueprint(
   const bp = await db.examBlueprint.findUnique({ where: { examId } });
   if (!bp) throw new ExamError("exam_not_found"); // blueprint must exist first
 
-  const cells = bp.cells as BlueprintCell[];
+  const mode = readMode((bp as { mode?: unknown }).mode);
+  const cells = bp.cells as Array<Record<string, unknown> & { count: number }>;
   const activeCells = cells.filter((c) => c.count > 0);
   if (activeCells.length === 0) {
     throw new ExamError("validation_failed", "Blueprint has no cells with count > 0");
   }
 
-  const [skillIds, bankIds] = await Promise.all([
-    resolveSkillScope(bp.lessonIds, db),
-    resolveBankScope(exam.courseId, actorUserId, db),
-  ]);
+  const bankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+
+  // skillIds only relevant for skill_matrix mode. In topic mode we filter by
+  // config.topic at the bucket level, so we don't constrain skillIds.
+  let skillIds: string[] = [];
+  if (mode === "skill_matrix") {
+    skillIds = await resolveSkillScope(bp.lessonIds, db);
+  }
+
+  const buckets = activeCells.map((c) => {
+    const out: Record<string, unknown> = { count: c.count };
+    if (typeof c.cognitiveLevel === "string") out.cognitiveLevel = c.cognitiveLevel;
+    if (typeof c.difficulty === "number") out.difficulty = c.difficulty;
+    if (typeof c.topic === "string") out.topic = c.topic;
+    return out;
+  });
 
   const poolFilter = {
     bankIds,
     count: bp.totalCount,
     skillIds: skillIds.length > 0 ? skillIds : undefined,
-    buckets: activeCells,
-    type: ["mcq", "multi", "true_false_notgiven", "gap_fill", "short_answer"],
+    buckets,
+    type: ALLOWED_TYPES,
   };
 
   // Find existing random_from_bank section to replace, or create new.

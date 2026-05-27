@@ -311,8 +311,17 @@ async function BlueprintEditorLoader({
         initialBlueprint={
           blueprintRow
             ? {
+                mode:
+                  (blueprintRow as { mode?: string }).mode === "topic_only"
+                    ? "topic_only"
+                    : "skill_matrix",
                 lessonIds: blueprintRow.lessonIds,
-                cells: blueprintRow.cells as { cognitiveLevel: "remember_understand" | "apply" | "analyze_plus"; difficulty: number; count: number }[],
+                cells: blueprintRow.cells as unknown as Array<{
+                  cognitiveLevel?: "remember_understand" | "apply" | "analyze_plus";
+                  difficulty?: number;
+                  topic?: string;
+                  count: number;
+                }>,
                 totalCount: blueprintRow.totalCount,
               }
             : null

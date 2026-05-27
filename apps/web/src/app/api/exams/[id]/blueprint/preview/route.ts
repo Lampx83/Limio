@@ -1,15 +1,27 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { previewBlueprint, BlueprintCellSchema } from "@feedbackme/core-lms";
+import {
+  previewBlueprint,
+  previewBlueprintTopicOnly,
+  SkillMatrixCellSchema,
+  TopicCellSchema,
+} from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
 
-const Body = z.object({
-  lessonIds: z.array(z.string().uuid()).min(1),
-  cells: z.array(BlueprintCellSchema),
-});
+const Body = z.discriminatedUnion("mode", [
+  z.object({
+    mode: z.literal("skill_matrix"),
+    lessonIds: z.array(z.string().uuid()).min(1),
+    cells: z.array(SkillMatrixCellSchema),
+  }),
+  z.object({
+    mode: z.literal("topic_only"),
+    cells: z.array(TopicCellSchema),
+  }),
+]);
 
 export async function POST(
   req: Request,
@@ -22,12 +34,15 @@ export async function POST(
   if (!parsed.success)
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   try {
-    const result = await previewBlueprint(
-      userId,
-      params.id,
-      parsed.data.lessonIds,
-      parsed.data.cells,
-    );
+    const result =
+      parsed.data.mode === "skill_matrix"
+        ? await previewBlueprint(
+            userId,
+            params.id,
+            parsed.data.lessonIds,
+            parsed.data.cells,
+          )
+        : await previewBlueprintTopicOnly(userId, params.id, parsed.data.cells);
     return NextResponse.json(result);
   } catch (e) {
     const mapped = mapKnownError(e);

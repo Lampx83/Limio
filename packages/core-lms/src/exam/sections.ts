@@ -29,11 +29,23 @@ import { ExamError } from "./types";
  * Each bucket samples its own quota independently from the same banks.
  * `difficulty` is optional: omit to mean "any difficulty within this Bloom level".
  */
-export const PoolBucket = z.object({
-  cognitiveLevel: z.enum(["remember_understand", "apply", "analyze_plus"]),
-  difficulty: z.number().int().min(1).max(5).optional(),
-  count: z.number().int().min(1).max(200),
-});
+export const PoolBucket = z
+  .object({
+    cognitiveLevel: z
+      .enum(["remember_understand", "apply", "analyze_plus"])
+      .optional(),
+    difficulty: z.number().int().min(1).max(5).optional(),
+    // Filter on BankQuestion.config.topic (string match).
+    topic: z.string().min(1).max(120).optional(),
+    count: z.number().int().min(1).max(200),
+  })
+  .refine(
+    (b) =>
+      b.cognitiveLevel !== undefined ||
+      b.topic !== undefined ||
+      b.difficulty !== undefined,
+    { message: "bucket must restrict on at least one of cognitiveLevel/topic/difficulty" },
+  );
 export type PoolBucketT = z.infer<typeof PoolBucket>;
 
 export const PoolFilter = z.object({
@@ -121,7 +133,7 @@ export async function pickPoolQuestions(
       : {}),
   };
 
-  // A5.5 — Bucket path: explicit (cognitiveLevel × difficulty) cells.
+  // A5.5 — Bucket path: explicit (cognitiveLevel × difficulty × topic) cells.
   // When a bucket runs short, we record the deficit and continue. The caller
   // gets section_pool_underfilled at the end if total fell below count.
   if (filter.buckets && filter.buckets.length > 0) {
@@ -129,11 +141,18 @@ export async function pickPoolQuestions(
     for (const [i, bucket] of filter.buckets.entries()) {
       const where: Prisma.BankQuestionWhereInput = {
         ...baseWhere,
-        cognitiveLevel: bucket.cognitiveLevel,
+        ...(bucket.cognitiveLevel !== undefined
+          ? { cognitiveLevel: bucket.cognitiveLevel }
+          : {}),
         ...(bucket.difficulty !== undefined ? { difficulty: bucket.difficulty } : {}),
+        ...(bucket.topic !== undefined
+          ? { config: { path: ["topic"], equals: bucket.topic } }
+          : {}),
       };
       const ids = await db.bankQuestion.findMany({ where, select: { id: true } });
-      const rng = seededRng(`${seed}:b${i}:${bucket.cognitiveLevel}:${bucket.difficulty ?? "any"}`);
+      const rng = seededRng(
+        `${seed}:b${i}:${bucket.cognitiveLevel ?? "any"}:${bucket.difficulty ?? "any"}:${bucket.topic ?? "any"}`,
+      );
       const shuffled = shuffle(ids.map((q) => q.id), rng);
       picked.push(...shuffled.slice(0, bucket.count));
     }

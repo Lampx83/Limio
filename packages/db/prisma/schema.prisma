@@ -2186,10 +2186,18 @@ model ExamWizardConfig {
 // bucketed poolFilter on an ExamSection.
 // =====================================================================
 model ExamBlueprint {
-  examId     String   @id
-  // Lesson IDs in scope; mapped to skillIds via ContentSkillMapping.
-  lessonIds  String[]
-  // [{cognitiveLevel, difficulty, count}] — zero-count cells omitted.
+  examId String @id
+  // "skill_matrix" (Bloom × difficulty cells, scope=lessonIds → skills)
+  // | "topic_only" (per-topic cells with optional Bloom/difficulty narrowing,
+  //   scope=all course banks instructor can edit).
+  mode   String @default("skill_matrix")
+  // Lesson IDs in scope (skill_matrix mode); mapped to skillIds via ContentSkillMapping.
+  // Empty in topic_only mode.
+  lessonIds String[] @default([])
+  // Reserved for future explicit-pick UX in topic_only mode. Empty = auto-resolve from course.
+  bankIds   String[] @default([])
+  // skill_matrix: [{cognitiveLevel, difficulty, count}]
+  // topic_only:  [{topic, cognitiveLevel?, difficulty?, count}]
   cells      Json     @default("[]")
   totalCount Int      @default(0)
   createdAt  DateTime @default(now())
