@@ -182,37 +182,70 @@ export default async function LearnerDashboard() {
               {enrollments.slice(0, 5).map((e, i) => {
                 const p = progressByCourse[i]!;
                 const xp = xpMap.get(e.course.id);
-                const done = p.courseCompletionPct >= 100;
+                const pct = p.courseCompletionPct;
+                const done = pct >= 100;
+                const notStarted = pct <= 0;
+                const inProgress = !done && !notStarted;
+
+                const rail = done
+                  ? "bg-success-500"
+                  : inProgress
+                    ? "bg-gradient-to-b from-brand-500 to-brand-700"
+                    : "bg-[rgb(var(--surface-muted))]";
+                const headerBg = done
+                  ? "bg-success-50"
+                  : inProgress
+                    ? "bg-brand-50"
+                    : "bg-[rgb(var(--surface-muted))]";
+                const titleColor = done
+                  ? "text-success-700"
+                  : inProgress
+                    ? "text-brand-700"
+                    : "text-token";
+
                 return (
                   <li key={e.id}>
                     <Link
                       href={`/learn/${e.course.slug}`}
-                      className="group block rounded-xl border border-token p-3 transition-colors hover:border-brand-200"
+                      className="group relative block overflow-hidden rounded-xl border border-token transition-colors hover:border-brand-300"
                     >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="font-medium transition-colors group-hover:text-brand-600">
+                      <span className={`absolute inset-y-0 left-0 w-1 ${rail}`} aria-hidden />
+                      <div className={`flex items-center justify-between gap-2 pl-4 pr-3 py-2 ${headerBg}`}>
+                        <p className={`font-medium transition-colors ${titleColor}`}>
                           {e.course.title}
                         </p>
-                        {done && <span className="chip-success">✓</span>}
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-2 text-xs text-faint">
-                        <span>{p.courseCompletionPct}% hoàn thành</span>
-                        {xp && (
-                          <>
-                            <span>·</span>
-                            <span>L{xp.level} · {xp.xp} XP</span>
-                          </>
+                        {done ? (
+                          <span className="chip-success shrink-0">✓ Hoàn thành</span>
+                        ) : inProgress ? (
+                          <span className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+                            Đang học
+                          </span>
+                        ) : (
+                          <span className="shrink-0 text-[11px] font-medium text-faint">
+                            Chưa bắt đầu
+                          </span>
                         )}
                       </div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
-                        <div
-                          className={`h-1.5 rounded-full transition-all ${
-                            done
-                              ? "bg-success-500"
-                              : "bg-gradient-to-r from-brand-500 to-brand-700"
-                          }`}
-                          style={{ width: `${p.courseCompletionPct}%` }}
-                        />
+                      <div className="pl-4 pr-3 py-3">
+                        <div className="flex items-center gap-2 text-xs text-faint">
+                          <span>{pct}% hoàn thành</span>
+                          {xp && (
+                            <>
+                              <span>·</span>
+                              <span>L{xp.level} · {xp.xp} XP</span>
+                            </>
+                          )}
+                        </div>
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+                          <div
+                            className={`h-1.5 rounded-full transition-all ${
+                              done
+                                ? "bg-success-500"
+                                : "bg-gradient-to-r from-brand-500 to-brand-700"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
                       </div>
                     </Link>
                   </li>

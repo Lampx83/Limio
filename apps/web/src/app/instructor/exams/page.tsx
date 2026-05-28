@@ -18,25 +18,31 @@ export const dynamic = "force-dynamic";
 
 const STATUS_META: Record<
   string,
-  { label: string; chip: string; rail: string; dot: string }
+  { label: string; chip: string; rail: string; dot: string; header: string; title: string }
 > = {
   draft: {
     label: "Nháp",
     chip: "bg-slate-100 text-slate-700",
     rail: "bg-slate-300",
     dot: "bg-slate-400",
+    header: "bg-slate-50 border-b border-slate-200",
+    title: "text-slate-900",
   },
   published: {
     label: "Đã publish",
     chip: "bg-emerald-100 text-emerald-800",
     rail: "bg-gradient-to-b from-emerald-400 to-emerald-600",
     dot: "bg-emerald-500",
+    header: "bg-emerald-50 border-b border-emerald-100",
+    title: "text-emerald-900",
   },
   archived: {
     label: "Lưu trữ",
     chip: "bg-amber-100 text-amber-800",
     rail: "bg-amber-300",
     dot: "bg-amber-500",
+    header: "bg-amber-50 border-b border-amber-100",
+    title: "text-amber-900",
   },
 };
 
@@ -167,12 +173,12 @@ export default async function InstructorExamsHubPage() {
                   </Link>
                 )}
 
-                <div className="p-4 pl-5 sm:p-5 sm:pl-6">
-                  {/* Header: title + status pill */}
+                {/* Header band — tinted theo status */}
+                <div className={`px-4 pl-5 sm:px-5 sm:pl-6 py-3 ${status.header}`}>
                   <div className="flex flex-wrap items-start gap-2 pr-24">
                     <Link
                       href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
-                      className="min-w-0 break-words text-base font-semibold text-slate-900 transition group-hover:text-brand-700"
+                      className={`min-w-0 break-words text-base font-semibold transition group-hover:text-brand-700 ${status.title}`}
                     >
                       {e.title}
                     </Link>
@@ -190,16 +196,18 @@ export default async function InstructorExamsHubPage() {
                   {/* Course chip */}
                   <Link
                     href={`/instructor/courses/${e.courseId}`}
-                    className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 transition hover:bg-slate-200 hover:text-slate-800"
+                    className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600 transition hover:bg-white hover:text-slate-800"
                   >
                     <BookOpen className="h-3 w-3" aria-hidden />
                     <span className="max-w-[200px] truncate">
                       {course?.title ?? "(course unknown)"}
                     </span>
                   </Link>
+                </div>
 
+                <div className="p-4 pl-5 sm:p-5 sm:pl-6">
                   {/* Stats grid — 4 cột với icon + tinted background */}
-                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <StatChip
                       icon={Clock}
                       tone="sky"

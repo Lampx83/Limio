@@ -17,25 +17,31 @@ export const dynamic = "force-dynamic";
 
 const STATUS_META: Record<
   string,
-  { label: string; chip: string; rail: string; dot: string }
+  { label: string; chip: string; rail: string; dot: string; header: string; title: string }
 > = {
   draft: {
     label: "Nháp",
     chip: "bg-amber-100 text-amber-800",
     rail: "bg-amber-300",
     dot: "bg-amber-500",
+    header: "bg-amber-50 border-b border-amber-100",
+    title: "text-amber-900",
   },
   published: {
     label: "Đã publish",
     chip: "bg-emerald-100 text-emerald-800",
     rail: "bg-gradient-to-b from-emerald-400 to-emerald-600",
     dot: "bg-emerald-500",
+    header: "bg-emerald-50 border-b border-emerald-100",
+    title: "text-emerald-900",
   },
   archived: {
     label: "Lưu trữ",
     chip: "bg-slate-100 text-slate-700",
     rail: "bg-slate-300",
     dot: "bg-slate-400",
+    header: "bg-slate-50 border-b border-slate-200",
+    title: "text-slate-900",
   },
 };
 
@@ -118,12 +124,12 @@ export default async function InstructorCoursesPage() {
                     className={`absolute inset-y-0 left-0 w-1 ${status.rail}`}
                     aria-hidden
                   />
-                  <div className="p-5 pl-6">
-                    {/* Header */}
+                  {/* Header band — tinted theo status */}
+                  <div className={`px-5 pl-6 py-3 ${status.header}`}>
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <Link
                         href={`/instructor/courses/${c.id}`}
-                        className="min-w-0 break-words text-base font-semibold text-slate-900 transition group-hover:text-brand-700"
+                        className={`min-w-0 break-words text-base font-semibold transition group-hover:text-brand-700 ${status.title}`}
                       >
                         {c.title}
                       </Link>
@@ -139,10 +145,10 @@ export default async function InstructorCoursesPage() {
                     </div>
                     {/* Slug + version + updated */}
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-faint">
-                      <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-600">
+                      <code className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-slate-600">
                         /{c.slug}
                       </code>
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-600">
+                      <span className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-slate-600">
                         v{c.version}
                       </span>
                       <span className="inline-flex items-center gap-1 text-slate-500">
@@ -150,9 +156,10 @@ export default async function InstructorCoursesPage() {
                         {new Date(c.updatedAt).toLocaleDateString("vi-VN")}
                       </span>
                     </div>
-
+                  </div>
+                  <div className="p-5 pl-6">
                     {/* Stats — 3 chip có icon */}
-                    <div className="mt-4 grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <StatChip
                         icon={BookOpen}
                         tone="sky"

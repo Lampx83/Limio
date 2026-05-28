@@ -8,7 +8,8 @@ import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
-import { StickyMobileCTA } from "@/components/ui";
+import { StickyMobileCTA, UserAvatar } from "@/components/ui";
+import { Trophy, Crown } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,50 @@ export default async function CourseDetailPage({
   }
 
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
+
+  // Top learners (sidebar) — ưu tiên LeaderboardEntry snapshot all_time của course;
+  // fallback live: tổng XP từ XpTransaction (course-scoped).
+  type TopLearner = { userId: string; xp: number; rank: number; name: string; image: string | null };
+  let topLearners: TopLearner[] = [];
+  {
+    const snapshot = await prisma.leaderboardEntry.findMany({
+      where: { scope: "course", courseId: course.id, period: "all_time" },
+      orderBy: { rank: "asc" },
+      take: 7,
+      include: { user: { select: { displayName: true, avatarUrl: true } } },
+    });
+    if (snapshot.length > 0) {
+      topLearners = snapshot.map((s) => ({
+        userId: s.userId,
+        xp: s.xp,
+        rank: s.rank,
+        name: s.user.displayName ?? "Học viên",
+        image: s.user.avatarUrl,
+      }));
+    } else {
+      const rows = await prisma.xpTransaction.groupBy({
+        by: ["userId"],
+        where: { courseId: course.id },
+        _sum: { amount: true },
+        orderBy: { _sum: { amount: "desc" } },
+        take: 7,
+      });
+      if (rows.length > 0) {
+        const users = await prisma.user.findMany({
+          where: { id: { in: rows.map((r) => r.userId) } },
+          select: { id: true, displayName: true, avatarUrl: true },
+        });
+        const uMap = new Map(users.map((u) => [u.id, u]));
+        topLearners = rows.map((r, i) => ({
+          userId: r.userId,
+          xp: r._sum.amount ?? 0,
+          rank: i + 1,
+          name: uMap.get(r.userId)?.displayName ?? "Học viên",
+          image: uMap.get(r.userId)?.avatarUrl ?? null,
+        }));
+      }
+    }
+  }
 
   const priceLabel =
     paymentEnabled && !isFree(course.priceCents)
@@ -112,12 +157,8 @@ export default async function CourseDetailPage({
           <h1 className="mt-4 h-display text-3xl font-bold leading-tight sm:text-5xl">
             {course.title}
           </h1>
-          <SafeHtml
-            html={plainToRichHtml(course.description)}
-            className="prose prose-invert mt-4 max-w-2xl text-base text-white/90 sm:text-lg"
-          />
           {course.instructors.length > 0 && (
-            <p className="mt-3 text-sm text-white/80">
+            <p className="mt-3 text-sm text-white/85">
               <span className="opacity-70">Giảng dạy bởi</span>{" "}
               <span className="font-medium">
                 {course.instructors.map((i) => i.user.displayName).join(", ")}
@@ -139,6 +180,20 @@ export default async function CourseDetailPage({
 
         </div>
       </header>
+
+      {/* Mô tả khóa học — tách khỏi hero gradient cho dễ đọc */}
+      {course.description?.trim() && (
+        <section className="card mt-6">
+          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-faint">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden />
+            Về khóa học
+          </div>
+          <SafeHtml
+            html={plainToRichHtml(course.description)}
+            className="prose max-w-none text-base leading-relaxed text-token"
+          />
+        </section>
+      )}
 
       {/* Sticky mobile CTA — desktop dùng sidebar */}
       {course.status === "published" && (
@@ -241,27 +296,94 @@ export default async function CourseDetailPage({
         <aside className="lg:col-span-1">
           <div className="sticky top-20 space-y-4">
             <div className="card">
-              <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-                Tổng quan
-              </p>
-              <ul className="mt-3 space-y-1.5 text-sm">
-                {course.modules.map((m, mi) => (
-                  <li key={m.id}>
-                    <a
-                      href={`#module-${m.id}`}
-                      className="flex items-baseline justify-between gap-2 rounded px-2 py-1 hover:bg-brand-soft hover:text-brand-700"
-                    >
-                      <span className="min-w-0 truncate">
-                        <span className="mr-1 text-faint">{mi + 1}.</span>
-                        {m.title}
-                      </span>
-                      <span className="shrink-0 text-[11px] text-faint">
-                        {m.lessons.length} bài
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex items-center justify-between gap-2">
+                <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-faint">
+                  <Trophy className="h-3.5 w-3.5 text-amber-500" aria-hidden />
+                  Bảng xếp hạng
+                </p>
+                <Link
+                  href={`/leaderboard?course=${course.id}`}
+                  className="link text-[11px]"
+                >
+                  Tất cả →
+                </Link>
+              </div>
+              {topLearners.length === 0 ? (
+                <p className="mt-3 rounded-lg border border-dashed border-token px-3 py-4 text-center text-xs text-faint">
+                  Chưa có học viên nào tích lũy XP.
+                </p>
+              ) : (
+                <ol className="mt-3 space-y-1.5 text-sm">
+                  {topLearners.map((l) => {
+                    const crown =
+                      l.rank === 1
+                        ? {
+                            wrap: "h-11 w-11 bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-600 ring-4 ring-amber-200/70 shadow-[0_0_18px_-2px_rgba(245,158,11,0.7)] animate-pulse",
+                            icon: "h-6 w-6 text-white drop-shadow-md",
+                            badge: "h-4 w-4 text-[10px] bg-amber-600 text-white ring-2 ring-white",
+                          }
+                        : l.rank === 2
+                          ? {
+                              wrap: "h-9 w-9 bg-gradient-to-br from-slate-200 to-slate-400 ring-2 ring-slate-200 shadow-sm",
+                              icon: "h-5 w-5 text-white drop-shadow-sm",
+                              badge: "h-3.5 w-3.5 text-[9px] bg-white text-slate-700 ring-1 ring-slate-200",
+                            }
+                          : l.rank === 3
+                            ? {
+                                wrap: "h-7 w-7 bg-gradient-to-br from-orange-300 to-amber-700 ring-2 ring-orange-200 shadow-sm",
+                                icon: "h-3.5 w-3.5 text-white drop-shadow-sm",
+                                badge: "h-3 w-3 text-[8px] bg-white text-orange-800 ring-1 ring-orange-200",
+                              }
+                            : null;
+                    return (
+                      <li
+                        key={l.userId}
+                        className={`flex items-center gap-2 rounded px-1.5 ${
+                          l.rank === 1 ? "py-2" : "py-1"
+                        }`}
+                      >
+                        {/* Fixed-width rank slot — căn thẳng cột tên bất kể size vương miện */}
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+                          {crown ? (
+                            <span
+                              className={`relative flex items-center justify-center rounded-full ${crown.wrap}`}
+                              title={`Hạng ${l.rank}`}
+                            >
+                              <Crown
+                                className={crown.icon}
+                                fill="currentColor"
+                                aria-hidden
+                              />
+                              <span
+                                className={`absolute -bottom-1 -right-1 flex items-center justify-center rounded-full font-bold tabular-nums ${crown.badge}`}
+                              >
+                                {l.rank}
+                              </span>
+                            </span>
+                          ) : (
+                            <span
+                              className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-[11px] font-bold tabular-nums text-faint"
+                            >
+                              {l.rank}
+                            </span>
+                          )}
+                        </span>
+                        <UserAvatar
+                          name={l.name}
+                          imageUrl={l.image}
+                          size="sm"
+                        />
+                        <span className="min-w-0 flex-1 truncate text-sm">
+                          {l.name}
+                        </span>
+                        <span className="shrink-0 text-[11px] font-semibold tabular-nums text-brand-700">
+                          {l.xp.toLocaleString("vi-VN")} XP
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
             </div>
             {course.status === "published" && (
               <div className="card">
