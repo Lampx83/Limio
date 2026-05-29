@@ -6,6 +6,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDateTime } from "@/lib/datetime";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 
@@ -141,7 +142,7 @@ export default function AssignmentSection({
               <div className="font-semibold text-base">{assignment.maxScore}đ</div>
               {assignment.dueAt && (
                 <div className="text-xs text-faint mt-1">
-                  {new Date(assignment.dueAt).toLocaleString("vi-VN")}
+                  {formatDateTime(assignment.dueAt)}
                 </div>
               )}
             </span>

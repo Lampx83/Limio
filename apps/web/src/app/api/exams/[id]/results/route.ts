@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
+import { formatDateTime } from "@/lib/datetime";
 import { assertCanEditCourse } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
@@ -84,9 +85,7 @@ export async function GET(
       att.candidateDisplayName ??
       "(ẩn danh)";
     const email = att.user?.email ?? "";
-    const submittedAt = att.submittedAt
-      ? att.submittedAt.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
-      : "";
+    const submittedAt = att.submittedAt ? formatDateTime(att.submittedAt) : "";
     const score = att.score != null ? String(att.score) : "";
     const pct = att.scorePct != null ? `${att.scorePct.toFixed(1)}%` : "";
     const result =

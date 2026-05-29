@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -196,7 +197,7 @@ function AnswerCard({
           {item.question.type === "essay" ? "Tự luận" : "Trả lời ngắn"} ·{" "}
           {item.question.points} điểm
           {item.attempt.submittedAt &&
-            ` · Nộp ${item.attempt.submittedAt.toLocaleString("vi-VN")}`}
+            ` · Nộp ${formatDateTime(item.attempt.submittedAt)}`}
         </span>
       </div>
       <p className="mb-1 text-sm font-medium">Đề:</p>

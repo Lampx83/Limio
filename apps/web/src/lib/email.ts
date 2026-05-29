@@ -7,6 +7,8 @@
  * here to render a deterministic HTML preview without a DB lookup.
  */
 
+import { formatDateTime } from "./datetime";
+
 export { sendEmail, type SendResult } from "@feedbackme/core-lms";
 
 /** Deterministic HTML preview used by the email-preview debug route. */
@@ -19,15 +21,7 @@ export function renderExamCodeEmail(input: {
   accessCode: string;
   claimUrl: string;
 }): { subject: string; html: string; text: string } {
-  const fmt = (d: Date) =>
-    new Intl.DateTimeFormat("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(d);
+  const fmt = (d: Date) => formatDateTime(d);
 
   const subject = `[${input.examTitle}] Mã dự thi của bạn`;
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDate } from "@/lib/datetime";
 
 interface Thread {
   id: string;
@@ -49,7 +50,7 @@ function relativeTime(d: Date): string {
   if (h < 24) return `${h} giờ trước`;
   const day = Math.floor(h / 24);
   if (day < 7) return `${day} ngày trước`;
-  return new Date(d).toLocaleDateString("vi-VN");
+  return formatDate(d);
 }
 
 const PROMPT_SUGGESTIONS = [

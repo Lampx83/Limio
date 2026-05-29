@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -354,5 +355,5 @@ function formatRel(d: Date): string {
   if (h < 24) return `${h} giờ trước`;
   const day = Math.floor(h / 24);
   if (day < 7) return `${day} ngày trước`;
-  return d.toLocaleDateString("vi-VN");
+  return formatDate(d);
 }

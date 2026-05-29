@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { canViewExamRound } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import PrintAutoFire, { PrintButton } from "../sessions/[sessionId]/rooms/[roomId]/print/PrintAutoFire";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -315,7 +316,7 @@ export default async function PrintRoundRoomCodesPage({
               </div>
 
               <footer className="mt-3 border-t border-slate-200 pt-2 text-[9px] text-slate-500">
-                In ngày {new Date().toLocaleString("vi-VN")} · Mã đợt {round.code}
+                In ngày {formatDateTime(new Date())} · Mã đợt {round.code}
               </footer>
             </section>
                 );
@@ -338,11 +339,5 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }

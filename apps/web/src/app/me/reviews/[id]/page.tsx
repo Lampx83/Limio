@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import ReviewForm from "./ReviewForm";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +50,7 @@ export default async function ReviewDetailPage({
       </h1>
       <p className="mt-1 text-xs text-faint">
         {ra.submission.mission.tournament.title} · Hạn:{" "}
-        {new Date(ra.dueAt).toLocaleString("vi-VN")}
+        {formatDateTime(ra.dueAt)}
       </p>
 
       {/* Anonymized submission */}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AlertTriangle, BarChart2, Check } from "lucide-react";
+import { formatDateTime } from "@/lib/datetime";
 
 type Item = {
   id: string;
@@ -92,7 +93,7 @@ export default function AnalyticsPanel({ examId }: { examId: string }) {
             <h2 className="flex items-center gap-1.5 text-base font-semibold"><BarChart2 className="h-5 w-5 shrink-0" /> Phân tích đề thi</h2>
             <p className="mt-0.5 text-xs text-faint">
               {latestComputedAt
-                ? `Cập nhật lúc ${new Date(latestComputedAt).toLocaleString("vi-VN")}`
+                ? `Cập nhật lúc ${formatDateTime(latestComputedAt)}`
                 : "Chưa có dữ liệu (cần ≥ 5 lượt thi đã nộp)."}
             </p>
           </div>

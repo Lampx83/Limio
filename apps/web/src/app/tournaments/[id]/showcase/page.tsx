@@ -4,6 +4,7 @@ import { Code2, Presentation, Video, Crown, Trophy, Play } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import VoteButton from "./VoteButton";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -407,7 +408,7 @@ export default async function ShowcasePage({
                     />
                   </div>
                   <span className="text-faint">
-                    {new Date(f.submittedAt).toLocaleDateString("vi-VN")}
+                    {formatDate(f.submittedAt)}
                   </span>
                 </footer>
               </article>

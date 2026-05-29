@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BookOpen, CalendarDays, Eye, MapPin, Target } from "lucide-react";
 import { listMyProctorRooms } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -151,13 +152,7 @@ export default async function MyRoomsPage() {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }
 
 function formatRel(ms: number): string {

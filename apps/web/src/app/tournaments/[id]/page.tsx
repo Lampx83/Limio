@@ -31,6 +31,7 @@ import TournamentRegisterButton from "./TournamentRegisterButton";
 import TournamentTeamPanel from "./TournamentTeamPanel";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
+import { formatVN, formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -42,12 +43,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function formatDate(d: Date) {
-  return new Date(d).toLocaleDateString("vi-VN", {
+  return formatVN(d, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 
@@ -411,7 +410,7 @@ export default async function TournamentDetailPage({
                             )}
                             {mission.submissionDeadline && (
                               <span className="text-xs text-slate-500 dark:text-slate-400">
-                                Hạn: {new Date(mission.submissionDeadline).toLocaleString("vi-VN")}
+                                Hạn: {formatDateTime(mission.submissionDeadline)}
                               </span>
                             )}
                             <Link

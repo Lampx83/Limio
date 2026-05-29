@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
+import { formatDateTime } from "@/lib/datetime";
 import { canEditExamRound } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
@@ -94,15 +95,6 @@ export async function GET(
     flagged: "Đang xem xét",
   };
 
-  const viFmt = new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Ho_Chi_Minh",
-  });
-
   const headers = [
     "Ca thi",
     "Phòng",
@@ -146,7 +138,7 @@ export async function GET(
         attempt?.score != null ? attempt.score.toString() : "",
         attempt?.scorePct != null ? attempt.scorePct.toFixed(2) : "",
         attempt?.passed === true ? "Đạt" : attempt?.passed === false ? "Chưa đạt" : "",
-        attempt?.submittedAt ? viFmt.format(attempt.submittedAt) : "",
+        attempt?.submittedAt ? formatDateTime(attempt.submittedAt) : "",
       ].join(","),
     );
   }

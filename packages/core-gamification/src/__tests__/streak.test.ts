@@ -120,6 +120,19 @@ describe("recordActivity", () => {
     expect(tomorrow.isActiveToday).toBe(false);
   });
 
+  it("AC-C4.8: day boundary is VN-local, not UTC — two instants on the same VN day but different UTC days = no change", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    // 2026-05-10T18:00Z = 2026-05-11 01:00 VN
+    const a = new Date(Date.UTC(2026, 4, 10, 18, 0, 0));
+    // 2026-05-11T02:00Z = 2026-05-11 09:00 VN — SAME VN day, NEXT UTC day
+    const b = new Date(Date.UTC(2026, 4, 11, 2, 0, 0));
+    await recordActivity(userId, courseId, prisma, a);
+    const r = await recordActivity(userId, courseId, prisma, b);
+    // Under the old UTC logic this would bump to 2; under VN-local it stays 1.
+    expect(r.currentStreak).toBe(1);
+    expect(r.extended).toBe(false);
+  });
+
   it("getStreak returns zeros for users with no record", async () => {
     const { userId, courseId } = await makeUserCourse();
     const s = await getStreak(userId, courseId);

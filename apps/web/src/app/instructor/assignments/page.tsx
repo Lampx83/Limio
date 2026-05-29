@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { EmptyState, KpiCard } from "@/components/ui";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -353,7 +354,7 @@ async function AssignmentListView({
                         <td className="px-4 py-3 align-top text-xs">
                           {due ? (
                             <span className={overdue ? "text-danger-600" : ""}>
-                              {due.toLocaleDateString("vi-VN")}
+                              {formatDate(due)}
                             </span>
                           ) : (
                             <span className="text-faint">—</span>
@@ -411,7 +412,7 @@ async function AssignmentListView({
                       <span className="text-faint">
                         {due ? (
                           <span className={overdue ? "text-danger-600" : ""}>
-                            Hạn: {due.toLocaleDateString("vi-VN")}
+                            Hạn: {formatDate(due)}
                           </span>
                         ) : "Không hạn"} · {a.counts.graded}/{a.counts.total} chấm
                       </span>

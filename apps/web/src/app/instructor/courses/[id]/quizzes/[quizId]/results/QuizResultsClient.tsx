@@ -13,6 +13,7 @@ import {
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
+import { formatDateTime } from "@/lib/datetime";
 
 type AttemptRow = {
   id: string;
@@ -73,14 +74,7 @@ function formatDuration(ms: number | null): string {
 
 function formatDate(s: string | null): string {
   if (!s) return "—";
-  const d = new Date(s);
-  return d.toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(s);
 }
 
 export default function QuizResultsClient({

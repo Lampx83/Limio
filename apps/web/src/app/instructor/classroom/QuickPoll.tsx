@@ -5,6 +5,7 @@ import { BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDateTime } from "@/lib/datetime";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -619,7 +620,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
             >
               <p className="text-sm font-medium truncate">{item.question}</p>
               <p className="text-xs text-muted mt-0.5">
-                {item._count.votes} phiếu · {new Date(item.createdAt).toLocaleString("vi-VN")}
+                {item._count.votes} phiếu · {formatDateTime(item.createdAt)}
               </p>
             </button>
           ))}
