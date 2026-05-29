@@ -147,8 +147,14 @@ const pendingShape = {
   attempt: {
     select: {
       submittedAt: true,
+      // A5.8 — candidate attempts (open_code / assigned_code) carry the
+      // submitter's details in candidate.metadata, not a User row.
+      candidateDisplayName: true,
       user: {
         select: { id: true, displayName: true, email: true },
+      },
+      candidate: {
+        select: { displayName: true, metadata: true },
       },
     },
   },
@@ -168,10 +174,22 @@ type AnswerItem = {
   attempt: {
     submittedAt: Date | null;
     // A5.8 — null for candidate attempts (open_code / assigned_code).
+    candidateDisplayName: string | null;
     user: { id: string; displayName: string; email: string } | null;
+    candidate: { displayName: string; metadata: unknown } | null;
   };
   question: { type: string; prompt: string; points: number };
 };
+
+/** Pull a string field out of the candidate's free-form metadata JSON. */
+function metaStr(metadata: unknown, key: string): string {
+  if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+    const v = (metadata as Record<string, unknown>)[key];
+    if (typeof v === "string") return v.trim();
+    if (typeof v === "number") return String(v);
+  }
+  return "";
+}
 
 function AnswerCard({
   item,
@@ -184,13 +202,31 @@ function AnswerCard({
     typeof item.answerJson === "object" && item.answerJson !== null && "text" in item.answerJson
       ? String((item.answerJson as { text: unknown }).text ?? "")
       : "";
+  const meta = item.attempt.candidate?.metadata;
+  const name =
+    item.attempt.user?.displayName ??
+    item.attempt.candidate?.displayName ??
+    item.attempt.candidateDisplayName ??
+    "Thí sinh";
+  const email = item.attempt.user?.email || metaStr(meta, "email");
+  const studentCode = metaStr(meta, "studentCode");
+  const phone = metaStr(meta, "phone");
+  const klass = metaStr(meta, "class");
+  const details: Array<[string, string]> = [
+    ["MSSV", studentCode],
+    ["Lớp", klass],
+    ["SĐT", phone],
+    ["Email", email],
+  ].filter(([, v]) => v !== "") as Array<[string, string]>;
   return (
     <div className="rounded-lg border border-default bg-white p-4">
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <span className="text-sm font-medium">{item.attempt.user?.displayName ?? "Thí sinh"}</span>
-          {item.attempt.user?.email && (
-            <span className="ml-2 text-xs text-faint">{item.attempt.user.email}</span>
+          <span className="text-sm font-medium">{name}</span>
+          {details.length > 0 && (
+            <span className="ml-2 text-xs text-faint">
+              {details.map(([k, v]) => `${k}: ${v}`).join(" · ")}
+            </span>
           )}
         </div>
         <span className="text-xs text-faint">

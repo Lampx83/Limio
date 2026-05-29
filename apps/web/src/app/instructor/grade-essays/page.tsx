@@ -41,6 +41,42 @@ export default async function GradeEssaysPage({
       : null;
   const courseIds = courseFilter ? [courseFilter] : ownedCourses.map((c) => c.id);
 
+  // Exam essays live in a SEPARATE table (ExamAnswer) from quiz essays
+  // (AnswerResponse). Surface them here too — grouped by exam — so code-based
+  // exam submissions don't get stranded in the per-exam grading page only.
+  const examAnswers = await prisma.examAnswer.findMany({
+    where: {
+      needsGrading: true,
+      attempt: { exam: { courseId: { in: courseIds } } },
+      question: { type: { in: ["essay", "short_answer"] } },
+    },
+    select: {
+      id: true,
+      attempt: {
+        select: {
+          exam: { select: { id: true, title: true, courseId: true } },
+        },
+      },
+    },
+  });
+  const examGroupsMap = new Map<
+    string,
+    { examId: string; courseId: string; title: string; count: number }
+  >();
+  for (const a of examAnswers) {
+    const ex = a.attempt.exam;
+    const cur = examGroupsMap.get(ex.id);
+    if (cur) cur.count += 1;
+    else
+      examGroupsMap.set(ex.id, {
+        examId: ex.id,
+        courseId: ex.courseId,
+        title: ex.title,
+        count: 1,
+      });
+  }
+  const examGroups = [...examGroupsMap.values()].sort((a, b) => b.count - a.count);
+
   const responses = await prisma.answerResponse.findMany({
     where: {
       needsGrading: true,
@@ -90,10 +126,10 @@ export default async function GradeEssaysPage({
     <main>
       <header>
         <h1 className="h-display text-3xl font-bold sm:text-4xl">
-          Chấm essay quiz
+          Chấm tự luận
         </h1>
         <p className="mt-2 text-muted">
-          Essay response cần chấm tay, sắp xếp theo nộp sớm nhất.
+          Bài tự luận cần chấm tay — đề thi và quiz, sắp xếp theo nộp sớm nhất.
         </p>
       </header>
 
@@ -119,11 +155,42 @@ export default async function GradeEssaysPage({
         ))}
       </div>
 
-      {/* List */}
+      {/* Exam essays — grouped per exam, graded in the dedicated per-exam page
+          (AI gợi ý + chấm lại). */}
+      {examGroups.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-faint">
+            Tự luận đề thi
+          </h2>
+          <div className="mt-3 space-y-3">
+            {examGroups.map((g) => (
+              <Link
+                key={g.examId}
+                href={`/instructor/courses/${g.courseId}/exams/${g.examId}/grading`}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card transition hover:border-brand-300"
+              >
+                <div>
+                  <p className="font-medium">{g.title}</p>
+                  <p className="mt-0.5 text-xs text-faint">
+                    {g.count} bài tự luận chờ chấm
+                  </p>
+                </div>
+                <span className="chip-brand text-xs">Chấm bài →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Quiz essays — graded inline below. */}
       <section className="mt-8">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-faint">
+          Tự luận quiz
+        </h2>
+        <div className="mt-3">
         {responses.length === 0 ? (
           <div className="rounded-2xl border border-success-200 bg-success-50 p-10 text-center text-sm text-success-700">
-            🎉 Không còn essay nào chờ chấm.
+            🎉 Không còn essay quiz nào chờ chấm.
           </div>
         ) : (
           <div className="space-y-4">
@@ -203,6 +270,7 @@ export default async function GradeEssaysPage({
             })}
           </div>
         )}
+        </div>
       </section>
     </main>
   );
