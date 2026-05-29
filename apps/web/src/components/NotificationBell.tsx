@@ -18,6 +18,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDate } from "@/lib/datetime";
 
 type Noti = {
   id: string;
@@ -52,7 +53,7 @@ function relative(iso: string): string {
   if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}n`;
-  return new Date(iso).toLocaleDateString("vi-VN");
+  return formatDate(iso);
 }
 
 export default function NotificationBell({

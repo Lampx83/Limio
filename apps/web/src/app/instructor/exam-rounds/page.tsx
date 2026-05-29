@@ -5,6 +5,7 @@ import { CalendarCheck } from "lucide-react";
 import { listExamRounds } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import CreateRoundButton from "./CreateRoundButton";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -185,12 +186,5 @@ export default async function ExamRoundsHubPage({
 }
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }

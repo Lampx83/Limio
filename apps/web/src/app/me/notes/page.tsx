@@ -4,6 +4,7 @@ import { Search, Pencil } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { listAllUserNotes } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ function relative(d: Date): string {
   if (h < 24) return `${h} giờ trước`;
   const day = Math.floor(h / 24);
   if (day < 7) return `${day} ngày trước`;
-  return d.toLocaleDateString("vi-VN");
+  return formatDate(d);
 }
 
 export default async function MyNotesPage({

@@ -17,6 +17,7 @@ import ExamReadinessWarning from "./ExamReadinessWarning";
 import ExamAccessModeCard from "./ExamAccessModeCard";
 import SessionResultsPanel, { type CandidateResult } from "./SessionResultsPanel";
 import { parseSessionTab } from "./session-tabs-helpers";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -238,11 +239,5 @@ export default async function ExamSessionDetailPage({
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }

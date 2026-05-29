@@ -6,6 +6,7 @@ import { getLearnerSkillStates } from "@feedbackme/core-feedback";
 import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -345,7 +346,7 @@ export default async function LearnerDashboard() {
                       {a.dueAt && (
                         <>
                           {" · hạn "}
-                          {new Date(a.dueAt).toLocaleDateString("vi-VN")}
+                          {formatDate(a.dueAt)}
                         </>
                       )}
                     </p>
@@ -442,7 +443,7 @@ export default async function LearnerDashboard() {
                       {p.misconceptionCode ?? "—"}
                     </span>
                     <span className="text-xs text-success-700/70">
-                      {new Date(e.occurredAt).toLocaleDateString("vi-VN")}
+                      {formatDate(e.occurredAt)}
                     </span>
                   </li>
                 );

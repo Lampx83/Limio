@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDate } from "@/lib/datetime";
 
 interface Enrollment {
   id: string;
@@ -229,7 +230,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 hidden sm:table-cell text-xs text-muted">
-                    {new Date(e.enrolledAt).toLocaleDateString("vi-VN")}
+                    {formatDate(e.enrolledAt)}
                   </td>
                   <td className="px-4 py-2.5 hidden lg:table-cell text-xs text-faint">
                     v{e.courseVersion}

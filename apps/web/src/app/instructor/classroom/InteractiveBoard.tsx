@@ -9,6 +9,7 @@ import {
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatVN } from "@/lib/datetime";
 import {
   BOARD_NOTE_COLORS,
   rotationForNote,
@@ -696,7 +697,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-700 font-medium">
-                    {item._count.notes} note · {new Date(item.createdAt).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    {item._count.notes} note · {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
                     {item.status === "closed" && " · 🔒 Đã đóng"}
                   </p>
                 </button>

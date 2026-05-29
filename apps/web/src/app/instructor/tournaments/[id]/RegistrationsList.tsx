@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Download, Users, Crown } from "lucide-react";
+import { formatDateTime } from "@/lib/datetime";
 
 export type Registration = {
   id: string;
@@ -18,7 +19,7 @@ export type Registration = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("vi-VN");
+  return formatDateTime(iso);
 }
 
 function csvEscape(s: string): string {

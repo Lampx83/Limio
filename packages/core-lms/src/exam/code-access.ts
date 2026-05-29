@@ -23,6 +23,27 @@ import { buildShuffleSnapshot } from "./attempts";
 import { ensureDefaultSession } from "./exam-rooms";
 import { ExamError } from "./types";
 
+/**
+ * Per-candidate countdown duration. The ca thi (ExamSession) may set a
+ * `durationOverrideMin`; when present it wins over `Exam.durationMin` — same
+ * precedence as the enrolled-user path (cohorts.ts `assertEligibleForExam`).
+ * Falls back to the exam duration when no session or no override.
+ */
+async function resolveDurationSec(
+  examDurationMin: number,
+  sessionId: string | null,
+  db: PrismaClient,
+): Promise<number> {
+  if (sessionId) {
+    const session = await db.examSession.findUnique({
+      where: { id: sessionId },
+      select: { durationOverrideMin: true },
+    });
+    if (session?.durationOverrideMin) return session.durationOverrideMin * 60;
+  }
+  return examDurationMin * 60;
+}
+
 // Alphabet without ambiguous 0/O, 1/I/l. Easier to read off a slide.
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
@@ -199,6 +220,8 @@ export async function claimByOpenCode(
   const sessionId =
     resolvedSessionId ?? (await ensureDefaultSession(exam.id, db));
 
+  const durationSec = await resolveDurationSec(exam.durationMin, sessionId, db);
+
   // Resolve room:
   //   - Nhập mã phòng → lookup theo (sessionId, accessCode). Sai → reject.
   //   - Bỏ trống → fallback sang phòng default của ca thi (nếu có).
@@ -242,7 +265,7 @@ export async function claimByOpenCode(
           examId: exam.id,
           candidateId: c.id,
           candidateDisplayName: input.displayName,
-          durationSec: exam.durationMin * 60,
+          durationSec,
           status: "in_progress",
           lastHeartbeatAt: now,
         },
@@ -336,6 +359,7 @@ export async function claimByAssignedCode(
     select: {
       id: true,
       examId: true,
+      sessionId: true,
       displayName: true,
       disabledAt: true,
       exam: {
@@ -390,12 +414,17 @@ export async function claimByAssignedCode(
     sessionToken = newToken;
     resumed = true;
   } else {
+    const durationSec = await resolveDurationSec(
+      exam.durationMin,
+      candidate.sessionId,
+      db,
+    );
     const a = await db.examAttempt.create({
       data: {
         examId: exam.id,
         candidateId: candidate.id,
         candidateDisplayName: candidate.displayName,
-        durationSec: exam.durationMin * 60,
+        durationSec,
         status: "in_progress",
         lastHeartbeatAt: now,
       },

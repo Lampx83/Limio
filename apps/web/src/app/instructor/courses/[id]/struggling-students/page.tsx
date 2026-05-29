@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { canEditCourse } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -236,7 +237,7 @@ export default async function StrugglingStudentsPage({
                 </td>
                 <td className="px-4 py-3 text-xs text-muted">
                   {r.lastActivity
-                    ? new Date(r.lastActivity).toLocaleString("vi-VN")
+                    ? formatDateTime(r.lastActivity)
                     : "Chưa có"}
                 </td>
               </tr>

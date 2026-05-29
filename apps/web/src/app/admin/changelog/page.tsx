@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { formatDateTime } from "@/lib/datetime";
 
 export const revalidate = 30;
 export const metadata = { title: "Changelog hệ thống" };
@@ -49,14 +50,7 @@ export default async function AdminChangelogPage() {
 
   // Format ngày theo locale VN
   function formatDate(d: Date) {
-    return new Intl.DateTimeFormat("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(new Date(d));
+    return formatDateTime(d);
   }
 
   return (

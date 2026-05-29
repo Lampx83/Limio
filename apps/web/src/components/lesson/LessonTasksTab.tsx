@@ -6,6 +6,7 @@ import type {
   GenerativeActivityType,
   ResponseFormat,
 } from "@/lib/generativeActivity";
+import { formatDateTime } from "@/lib/datetime";
 
 export type QuizItem = {
   kind: "quiz";
@@ -129,7 +130,7 @@ function AssignmentCard({ item }: { item: AssignmentItem }) {
             <p className="text-xs text-faint">
               Assignment · max {item.maxScore}đ
               {item.dueAt && (
-                <> · hạn {new Date(item.dueAt).toLocaleString("vi-VN")}</>
+                <> · hạn {formatDateTime(item.dueAt)}</>
               )}
             </p>
           </div>

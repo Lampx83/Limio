@@ -12,6 +12,7 @@ import {
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -168,7 +169,7 @@ export default async function MissionSubmissionsPage({
                       ) : (
                         <>{s.user.email} · </>
                       )}
-                      Nộp lúc {new Date(s.submittedAt).toLocaleString("vi-VN")}
+                      Nộp lúc {formatDateTime(s.submittedAt)}
                     </p>
                   </div>
                   <span

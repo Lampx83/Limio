@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getActiveRole } from "@/lib/active-role";
+import { formatDate } from "@/lib/datetime";
 import {
   getUserNotifications,
   markNotificationsSeen,
@@ -52,7 +53,7 @@ function relative(d: Date): string {
   if (h < 24) return `${h} giờ trước`;
   const day = Math.floor(h / 24);
   if (day < 7) return `${day} ngày trước`;
-  return d.toLocaleDateString("vi-VN");
+  return formatDate(d);
 }
 
 const LEARNER_TYPES: NotificationType[] = [

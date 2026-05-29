@@ -12,6 +12,7 @@ import {
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { EmptyState } from "@/components/ui";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -153,7 +154,7 @@ export default async function InstructorCoursesPage() {
                       </span>
                       <span className="inline-flex items-center gap-1 text-slate-500">
                         <CalendarClock className="h-3 w-3" aria-hidden />
-                        {new Date(c.updatedAt).toLocaleDateString("vi-VN")}
+                        {formatDate(c.updatedAt)}
                       </span>
                     </div>
                   </div>

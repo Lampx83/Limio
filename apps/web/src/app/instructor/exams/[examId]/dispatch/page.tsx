@@ -3,6 +3,7 @@ import Link from "next/link";
 import { listBatchesForExam, DispatchError } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -84,9 +85,7 @@ export default async function ExamDispatchHistoryPage({
                     </div>
                     <div className="mt-1 text-xs text-muted">
                       Tạo bởi <strong>{b.createdBy.displayName}</strong> lúc{" "}
-                      {new Date(b.createdAt).toLocaleString("vi-VN", {
-                        timeZone: "Asia/Ho_Chi_Minh",
-                      })}
+                      {formatDateTime(b.createdAt)}
                       {b.approvedBy && (
                         <>
                           {" · "}duyệt bởi{" "}

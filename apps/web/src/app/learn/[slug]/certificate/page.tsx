@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { getCourseProgress, isUserEnrolled } from "@feedbackme/core-lms";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
+import { formatVN } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +146,7 @@ export default async function CertificatePage({
                 Hoàn thành ngày
               </p>
               <p className="mt-1 font-semibold">
-                {new Date(completedAt).toLocaleDateString("vi-VN", {
+                {formatVN(completedAt, {
                   year: "numeric",
                   month: "long",
                   day: "numeric",

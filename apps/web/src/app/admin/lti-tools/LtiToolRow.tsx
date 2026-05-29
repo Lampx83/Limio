@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDate } from "@/lib/datetime";
 
 interface Tool {
   id: string;
@@ -33,7 +34,7 @@ export default function LtiToolRow({ tool }: { tool: Tool }) {
         <div>
           <p className="text-base font-semibold">{tool.name}</p>
           <p className="mt-1 text-xs text-faint">
-            Đăng ký {new Date(tool.createdAt).toLocaleDateString("vi-VN")}
+            Đăng ký {formatDate(tool.createdAt)}
           </p>
         </div>
         <button

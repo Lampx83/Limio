@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import MissionSubmitForm from "./MissionSubmitForm";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +78,7 @@ export default async function MissionDetailPage({
         )}
         {mission.submissionDeadline && (
           <span className="text-faint">
-            Hạn nộp: {new Date(mission.submissionDeadline).toLocaleString("vi-VN")}
+            Hạn nộp: {formatDateTime(mission.submissionDeadline)}
           </span>
         )}
       </div>
@@ -223,7 +224,7 @@ function SubmissionStatusBlock({
         )}
       </div>
       <p className="text-xs text-faint">
-        Nộp lúc: {submission.submittedAt.toLocaleString("vi-VN")}
+        Nộp lúc: {formatDateTime(submission.submittedAt)}
       </p>
       {canResubmit && (
         <p className="text-xs text-muted">Bạn có thể nộp lại trước hạn nộp.</p>
