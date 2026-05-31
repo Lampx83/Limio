@@ -12,6 +12,7 @@ import {
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import ReviewerManager from "./ReviewerManager";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,12 @@ export default async function MissionSubmissionsPage({
         include: {
           user: { select: { id: true, displayName: true, email: true } },
           reviewAssignments: {
-            select: { id: true, completedAt: true },
+            select: {
+              id: true,
+              completedAt: true,
+              reviewerId: true,
+              reviewer: { select: { displayName: true } },
+            },
           },
         },
       },
@@ -89,6 +95,18 @@ export default async function MissionSubmissionsPage({
 
   const isCollective = mission.isTeamSubmission;
 
+  // Pool for manual reviewer assignment: any active (non-disqualified)
+  // participant of the tournament. Author exclusion happens per-submission.
+  const reviewerPool =
+    mission.verifyMode === "PEER_REVIEW"
+      ? (
+          await prisma.tournamentRegistration.findMany({
+            where: { tournamentId: params.id, disqualifiedAt: null },
+            select: { userId: true, user: { select: { displayName: true } } },
+          })
+        ).map((r) => ({ userId: r.userId, name: r.user.displayName }))
+      : [];
+
   return (
     <main>
       <Link
@@ -122,10 +140,6 @@ export default async function MissionSubmissionsPage({
           {mission.submissions.map((s) => {
             const team = teamByUser.get(s.userId);
             const payload = (s.payload ?? {}) as HackathonPayload;
-            const completedReviews = s.reviewAssignments.filter(
-              (r) => r.completedAt,
-            ).length;
-            const totalReviews = s.reviewAssignments.length;
 
             const StatusIcon =
               s.status === "passed"
@@ -256,9 +270,20 @@ export default async function MissionSubmissionsPage({
                       Chấm bài →
                     </Link>
                   ) : mission.verifyMode === "PEER_REVIEW" ? (
-                    <span className="text-muted">
-                      Review: {completedReviews}/{totalReviews} hoàn thành
-                    </span>
+                    <ReviewerManager
+                      tournamentId={params.id}
+                      submissionId={s.id}
+                      assignments={s.reviewAssignments.map((r) => ({
+                        id: r.id,
+                        reviewerId: r.reviewerId,
+                        name: r.reviewer.displayName,
+                        completedAt: r.completedAt
+                          ? r.completedAt.toISOString()
+                          : null,
+                      }))}
+                      pool={reviewerPool.filter((p) => p.userId !== s.userId)}
+                      targetCount={mission.peerReviewerCount ?? 3}
+                    />
                   ) : (
                     <span className="text-faint">Auto-graded</span>
                   )}
