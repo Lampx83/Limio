@@ -5,6 +5,7 @@ import { Clock, Lock, AlertCircle, XCircle } from "lucide-react";
 import ClaimForm from "./ClaimForm";
 import SebBrowserPrompt from "@/components/exam/SebBrowserPrompt";
 import { detectSeb, requiresSeb } from "@/lib/seb";
+import { formatVN } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -347,7 +348,7 @@ function BackToLanding() {
 }
 
 function formatFull(d: Date): string {
-  return d.toLocaleString("vi-VN", {
+  return formatVN(d, {
     weekday: "long",
     day: "2-digit",
     month: "2-digit",

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdmin, listIntegrationStatuses } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -188,7 +189,7 @@ export default async function AdminDashboard() {
                       {a.target?.displayName ?? "—"}
                     </span>
                     {" · "}
-                    {new Date(a.occurredAt).toLocaleString("vi-VN")}
+                    {formatDateTime(a.occurredAt)}
                   </p>
                 </li>
               ))}

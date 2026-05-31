@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
+import { formatDateTime } from "@/lib/datetime";
 import { assertCanEditCourse } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
@@ -124,16 +125,7 @@ export async function GET(
       status,
       score: attempt?.score != null ? attempt.score.toString() : "",
       scorePct: attempt?.scorePct != null ? attempt.scorePct.toFixed(2) : "",
-      submittedAt: attempt?.submittedAt
-        ? new Intl.DateTimeFormat("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Asia/Ho_Chi_Minh",
-          }).format(attempt.submittedAt)
-        : "",
+      submittedAt: attempt?.submittedAt ? formatDateTime(attempt.submittedAt) : "",
     });
   }
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, X } from "lucide-react";
+import { formatTime } from "@/lib/datetime";
 
 interface CandidateRow {
   id: string;
@@ -257,7 +258,7 @@ export default function RoomCandidatesPanel({
                       onClick={() => onToggleAttendance(c)}
                       title={
                         c.arrivedAt
-                          ? `Có mặt lúc ${new Date(c.arrivedAt).toLocaleTimeString("vi-VN")} — bấm để huỷ`
+                          ? `Có mặt lúc ${formatTime(c.arrivedAt)} — bấm để huỷ`
                           : "Bấm để đánh dấu có mặt"
                       }
                       className={`inline-flex items-center justify-center rounded-full border h-6 w-6 text-sm transition-colors ${

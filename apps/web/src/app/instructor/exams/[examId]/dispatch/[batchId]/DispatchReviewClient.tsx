@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { formatDateTime } from "@/lib/datetime";
 
 type ItemStatus = "pending" | "sent" | "failed" | "skipped";
 type BatchStatus = "draft" | "sending" | "completed" | "cancelled";
@@ -178,7 +179,7 @@ export default function DispatchReviewClient({
             {batch.approvedByName && (
               <>
                 {" · "}Duyệt bởi <strong>{batch.approvedByName}</strong> lúc{" "}
-                {new Date(batch.approvedAt!).toLocaleString("vi-VN")}
+                {formatDateTime(batch.approvedAt!)}
               </>
             )}
           </p>

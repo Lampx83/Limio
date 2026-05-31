@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,7 @@ export default async function PeerReviewQueuePage() {
                     </p>
                     <p className="mt-0.5 font-medium">{ra.submission.mission.title}</p>
                     <p className={`mt-1 text-xs ${overdue ? "text-danger-600" : "text-muted"}`}>
-                      Hạn chấm: {due.toLocaleString("vi-VN")}
+                      Hạn chấm: {formatDateTime(due)}
                     </p>
                   </div>
                   <Link href={`/me/reviews/${ra.id}`} className="btn-primary btn-sm shrink-0">

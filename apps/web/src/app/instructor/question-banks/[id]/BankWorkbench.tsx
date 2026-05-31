@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 import TopicCombobox from "@/components/instructor/TopicCombobox";
+import { formatDate, formatDateTime } from "@/lib/datetime";
 
 type Status = "draft" | "published" | "archived";
 type CognitiveLevel = "remember_understand" | "apply" | "analyze_plus";
@@ -755,7 +756,7 @@ export default function BankWorkbench({
                         className={`rounded px-1.5 py-0.5 text-[10px] ${REVIEW_TONE[q.reviewStatus]}`}
                         title={
                           q.reviewedAt
-                            ? `${REVIEW_LABEL[q.reviewStatus]} bởi ${q.reviewedByName ?? "?"} · ${new Date(q.reviewedAt).toLocaleDateString("vi-VN")}`
+                            ? `${REVIEW_LABEL[q.reviewStatus]} bởi ${q.reviewedByName ?? "?"} · ${formatDate(q.reviewedAt)}`
                             : REVIEW_LABEL[q.reviewStatus]
                         }
                       >
@@ -1507,7 +1508,7 @@ function EditTab({
             {q.reviewedAt && q.reviewedByName && q.reviewStatus !== "pending" && (
               <p className="mt-1 text-[10px] text-faint">
                 {REVIEW_LABEL[q.reviewStatus]} bởi <strong>{q.reviewedByName}</strong> ·{" "}
-                {new Date(q.reviewedAt).toLocaleString("vi-VN")}
+                {formatDateTime(q.reviewedAt)}
               </p>
             )}
           </label>
@@ -1522,9 +1523,9 @@ function EditTab({
             />
           </label>
           <div className="text-[10px] text-faint">
-            Tạo: {new Date(q.createdAt).toLocaleString("vi-VN")}
+            Tạo: {formatDateTime(q.createdAt)}
             {" · "}
-            Cập nhật: {new Date(q.updatedAt).toLocaleString("vi-VN")}
+            Cập nhật: {formatDateTime(q.updatedAt)}
             {q.stats && q.stats.totalUses > 0 && (
               <> · Lần sử dụng: <strong>{q.stats.totalUses}</strong></>
             )}
@@ -1644,7 +1645,7 @@ function QualityTab({ q }: { q: Item }) {
             {q.lastSampledAt && (
               <StatRow
                 label="Lần cuối được rút"
-                value={new Date(q.lastSampledAt).toLocaleDateString("vi-VN")}
+                value={formatDate(q.lastSampledAt)}
               />
             )}
           </tbody>

@@ -6,6 +6,7 @@ import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import TournamentFilter from "./TournamentFilter";
 import { EmptyState } from "@/components/ui";
+import { formatDate as formatDateVN } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +27,7 @@ const STATUS_LABEL: Record<string, string> = {
 const VALID_STATUSES: TournamentStatus[] = ["draft", "published", "active", "ended"];
 
 function formatDate(d: Date) {
-  return new Date(d).toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  return formatDateVN(d);
 }
 
 export default async function InstructorTournamentsPage({

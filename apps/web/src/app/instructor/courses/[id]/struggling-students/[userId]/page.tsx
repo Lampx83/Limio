@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { canEditCourse } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -141,7 +142,7 @@ export default async function StudentMisconceptionsPage({
                     <p className="font-semibold">{f.misconception.name}</p>
                     <span className="text-xs text-faint">
                       {f.count} lần · gần nhất{" "}
-                      {new Date(f.lastDetectedAt).toLocaleString("vi-VN")}
+                      {formatDateTime(f.lastDetectedAt)}
                     </span>
                   </div>
                   {f.misconception.description && (
@@ -202,7 +203,7 @@ export default async function StudentMisconceptionsPage({
                   </p>
                   {f.resolvedAt && (
                     <p className="mt-0.5 text-xs text-success-700/70">
-                      Khắc phục {new Date(f.resolvedAt).toLocaleString("vi-VN")}
+                      Khắc phục {formatDateTime(f.resolvedAt)}
                     </p>
                   )}
                 </div>

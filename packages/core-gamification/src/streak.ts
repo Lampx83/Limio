@@ -11,28 +11,39 @@ export interface StreakResult {
   previousStreak: number;
 }
 
-/** UTC midnight for the given date. */
-function utcDayStart(d: Date = new Date()): Date {
-  const out = new Date(d);
-  out.setUTCHours(0, 0, 0, 0);
-  return out;
+// Streaks roll over at national-local midnight, NOT UTC midnight — otherwise a
+// learner active at 23:00 VN (16:00 UTC) and again at 06:00 VN next day would
+// look like the same UTC day and lose a day, or the streak would break at 07:00
+// local. VN is UTC+7 with no DST, so a fixed offset is exact. Mirrors the
+// VN-aware boundary used by the leaderboard cron (leaderboard/closeAll.ts).
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+/**
+ * Midnight of the VN-local calendar day containing `d`, returned as a Date whose
+ * digits ARE the VN date at 00:00 UTC — so it round-trips through a `@db.Date`
+ * column as the VN calendar date.
+ */
+function vnDayStart(d: Date = new Date()): Date {
+  const shifted = new Date(d.getTime() + VN_OFFSET_MS);
+  shifted.setUTCHours(0, 0, 0, 0);
+  return shifted;
 }
 
-/** Returns the difference in whole UTC days between two `@db.Date` values. */
+/** Returns the difference in whole VN-local days between two `@db.Date` values. */
 function dayDiff(a: Date, b: Date): number {
-  const ms = utcDayStart(b).getTime() - utcDayStart(a).getTime();
+  const ms = vnDayStart(b).getTime() - vnDayStart(a).getTime();
   return Math.round(ms / 86_400_000);
 }
 
 /**
  * Record a qualifying activity for (user, course). Streak math:
  *   - first activity ever → current=1
- *   - same UTC day → no change
+ *   - same VN day → no change
  *   - exactly 1 day after lastActiveDate → current+=1
  *   - ≥2 days after → emit `streak.broken {previousStreak}`, reset to 1
  * Always emits `streak.extended {newStreak}` when current goes up.
  *
- * Idempotent on same UTC day: calling twice on day N returns the same numbers.
+ * Idempotent on same VN day: calling twice on day N returns the same numbers.
  */
 export async function recordActivity(
   userId: string,
@@ -40,7 +51,7 @@ export async function recordActivity(
   db: PrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<StreakResult> {
-  const today = utcDayStart(now);
+  const today = vnDayStart(now);
 
   return db.$transaction(async (tx) => {
     const existing = await tx.streakRecord.findUnique({
@@ -184,7 +195,7 @@ export async function getStreak(
   const row = await db.streakRecord.findUnique({
     where: { userId_courseId: { userId, courseId } },
   });
-  const today = utcDayStart(now);
+  const today = vnDayStart(now);
   const isActiveToday =
     row?.lastActiveDate ? dayDiff(row.lastActiveDate, today) === 0 : false;
   return {
@@ -210,7 +221,7 @@ export async function getGlobalStreak(
   if (rows.length === 0) {
     return { currentStreak: 0, longestStreak: 0, lastActiveDate: null, isActiveToday: false };
   }
-  const today = utcDayStart(now);
+  const today = vnDayStart(now);
   const currentStreak = Math.max(...rows.map((r) => r.currentStreak));
   const longestStreak = Math.max(...rows.map((r) => r.longestStreak));
   const lastActiveDate = rows.reduce<Date | null>((acc, r) => {

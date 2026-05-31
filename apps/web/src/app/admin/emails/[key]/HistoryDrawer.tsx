@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDateTime } from "@/lib/datetime";
 
 interface Revision {
   id: string;
@@ -103,9 +104,7 @@ export default function HistoryDrawer({
                   className="rounded-lg border border-base-200 p-3"
                 >
                   <div className="text-xs text-muted">
-                    {new Date(r.editedAt).toLocaleString("vi-VN", {
-                      timeZone: "Asia/Ho_Chi_Minh",
-                    })}{" "}
+                    {formatDateTime(r.editedAt)}{" "}
                     · bởi <strong>{r.editedByName ?? r.editedByUserId.slice(0, 8)}</strong>
                   </div>
                   <p className="mt-1 truncate text-sm font-medium">

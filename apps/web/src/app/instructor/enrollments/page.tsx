@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -287,7 +288,7 @@ export default async function InstructorEnrollmentsPage({
                         </Link>
                       </td>
                       <td className="px-4 py-3 align-top text-xs">
-                        {new Date(e.enrolledAt).toLocaleDateString("vi-VN")}
+                        {formatDate(e.enrolledAt)}
                       </td>
                       <td className="px-4 py-3 align-top text-xs">
                         {lastActivity ? (

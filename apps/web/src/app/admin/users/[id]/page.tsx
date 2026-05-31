@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import UserRoleManager from "./UserRoleManager";
 import ImpersonateButton from "./ImpersonateButton";
+import { formatDate, formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export default async function AdminUserDetailPage({
           <p className="text-sm text-muted">{user.email}</p>
           <p className="mt-1 text-xs text-faint">
             ID: <code className="font-mono">{user.id}</code> · Tham gia{" "}
-            {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+            {formatDate(user.createdAt)}
             {user.emailVerifiedAt ? (
               <span className="ml-2 chip-success">✓ Email verified</span>
             ) : (
@@ -117,7 +118,7 @@ export default async function AdminUserDetailPage({
                     </p>
                   </div>
                   <span className="text-xs text-faint">
-                    {new Date(p.createdAt).toLocaleDateString("vi-VN")}
+                    {formatDate(p.createdAt)}
                   </span>
                 </li>
               ))}
@@ -149,7 +150,7 @@ export default async function AdminUserDetailPage({
                       {a.target?.displayName ?? "—"}
                     </span>
                     {" · "}
-                    {new Date(a.occurredAt).toLocaleString("vi-VN")}
+                    {formatDateTime(a.occurredAt)}
                   </p>
                 </li>
               ))}

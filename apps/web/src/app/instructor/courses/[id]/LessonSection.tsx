@@ -5,6 +5,7 @@ import LessonContent from "@/components/LessonContent";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import ActivitySection from "./ActivitySection";
+import { formatDateTime } from "@/lib/datetime";
 
 interface Lesson {
   id: string;
@@ -231,7 +232,7 @@ export default function LessonSection({
                         {a.dueAt && (
                           <>
                             {" · hạn "}
-                            {new Date(a.dueAt).toLocaleString("vi-VN")}
+                            {formatDateTime(a.dueAt)}
                           </>
                         )}
                       </span>

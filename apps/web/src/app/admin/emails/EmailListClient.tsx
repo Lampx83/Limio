@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { formatDate } from "@/lib/datetime";
 
 interface TemplateItem {
   key: string;
@@ -121,7 +122,7 @@ export default function EmailListClient({
                     </p>
                   </div>
                   <div className="shrink-0 text-xs text-muted">
-                    {new Date(it.updatedAt).toLocaleDateString("vi-VN")}
+                    {formatDate(it.updatedAt)}
                   </div>
                 </Link>
               ))}

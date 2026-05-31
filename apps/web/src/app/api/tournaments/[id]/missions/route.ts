@@ -42,6 +42,10 @@ export async function GET(
       passThreshold: true,
       peerReviewerCount: true,
       reviewWindowEndAt: true,
+      rubric: true,
+      contentPayload: true,
+      autoCheckRule: true,
+      isTeamSubmission: true,
     },
   });
 

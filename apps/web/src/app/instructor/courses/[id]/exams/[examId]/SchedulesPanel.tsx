@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Calendar } from "lucide-react";
+import { formatVN } from "@/lib/datetime";
 
 type Schedule = {
   id: string;
@@ -288,11 +289,10 @@ function AddScheduleForm({
 }
 
 function fmt(iso: string): string {
-  const d = new Date(iso);
-  return new Intl.DateTimeFormat("vi-VN", {
+  return formatVN(iso, {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(d);
+  });
 }

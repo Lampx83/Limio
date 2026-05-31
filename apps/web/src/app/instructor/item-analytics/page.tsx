@@ -9,6 +9,7 @@ import {
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import RecomputeButton from "./RecomputeButton";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -308,7 +309,7 @@ function ExamAnalyticsTable({
       <p className="mt-3 text-xs text-faint">
         Cập nhật gần nhất:{" "}
         {result.rows[0]?.computedAt
-          ? new Date(result.rows[0].computedAt).toLocaleString("vi-VN")
+          ? formatDateTime(result.rows[0].computedAt)
           : "—"}
         . Job nightly tự chạy 02:00.
       </p>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDate } from "@/lib/datetime";
 
 interface UserRow {
   id: string;
@@ -330,7 +331,7 @@ export default function UsersBrowser() {
                   {u.providers.length === 0 ? "—" : u.providers.join(", ")}
                 </td>
                 <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
-                  {new Date(u.createdAt).toLocaleDateString("vi-VN")}
+                  {formatDate(u.createdAt)}
                 </td>
                 <td className="px-4 py-2.5 text-right">
                   <div className="inline-flex gap-1">

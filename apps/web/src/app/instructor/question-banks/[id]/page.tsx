@@ -4,6 +4,7 @@ import { listBanks, searchQuestions } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import BankWorkbench from "./BankWorkbench";
+import { formatDate } from "@/lib/datetime";
 import {
   ChevronLeft,
   Library,
@@ -56,12 +57,7 @@ export default async function QuestionBankWorkbenchPage({
       ? { icon: Globe, label: "Công khai", tone: "text-amber-700 bg-amber-50" }
       : { icon: Lock, label: "Riêng tư", tone: "text-slate-700 bg-slate-100" };
 
-  const updatedAt = new Date(bank.updatedAt);
-  const updatedLabel = updatedAt.toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const updatedLabel = formatDate(bank.updatedAt);
 
   const VisIcon = visMeta.icon;
 

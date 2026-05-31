@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, Globe, GraduationCap, Tag, Users, X } from "lucide-react";
+import { formatDateTime } from "@/lib/datetime";
 
 type SessionStatus = "draft" | "open" | "closed" | "archived";
 
@@ -315,13 +316,7 @@ export default function SessionsPanel({
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }
 
 function toLocalInput(iso: string): string {

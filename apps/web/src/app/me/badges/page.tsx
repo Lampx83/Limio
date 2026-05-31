@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { listBadgeCatalog, listUserBadges } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
+import { formatDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +86,7 @@ export default async function BadgesPage() {
                   {u.badge.name}
                 </div>
                 <div className="relative mt-1 text-[11px] text-faint">
-                  Đạt {new Date(u.earnedAt).toLocaleDateString("vi-VN")}
+                  Đạt {formatDate(u.earnedAt)}
                 </div>
               </li>
             ))}

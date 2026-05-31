@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDateTime } from "@/lib/datetime";
 
 interface Status {
   key: string;
@@ -247,7 +248,7 @@ function IntegrationRow({
 
       {status.updatedAt && (
         <p className="mt-3 text-xs text-faint">
-          Cập nhật: {new Date(status.updatedAt).toLocaleString("vi-VN")}
+          Cập nhật: {formatDateTime(status.updatedAt)}
         </p>
       )}
     </section>

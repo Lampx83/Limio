@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendCodesToCandidates, sendTemplatedEmail } from "@feedbackme/core-lms";
+import { formatDateTime } from "@/lib/datetime";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
@@ -24,15 +25,7 @@ export async function POST(
   const proto = h.get("x-forwarded-proto") ?? "http";
   const baseUrl = host ? `${proto}://${host}` : "";
 
-  const fmtDateTime = (d: Date) =>
-    new Intl.DateTimeFormat("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(d);
+  const fmtDateTime = (d: Date) => formatDateTime(d);
 
   try {
     const r = await sendCodesToCandidates(userId, {

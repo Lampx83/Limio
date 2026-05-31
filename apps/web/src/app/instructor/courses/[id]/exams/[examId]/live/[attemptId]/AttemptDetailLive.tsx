@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Megaphone, MessageSquare, RefreshCw } from "lucide-react";
+import { formatVN } from "@/lib/datetime";
 
 type AttemptStatus =
   | "in_progress"
@@ -456,7 +457,7 @@ function TimelineRow({
   startedAt: number;
 }) {
   const sinceStart = t.at - startedAt;
-  const time = new Date(t.at).toLocaleTimeString("vi-VN");
+  const time = formatVN(t.at, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const delta = sinceStart >= 0 ? `+${fmtDur(sinceStart)}` : "";
   const meta = `${time} ${delta}`;
 
@@ -496,7 +497,7 @@ function TimelineRow({
       break;
     case "extended":
       icon = "⏱";
-      body = `Gia hạn → ${new Date(t.newExpiresAt).toLocaleTimeString("vi-VN")}`;
+      body = `Gia hạn → ${formatVN(t.newExpiresAt, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
       tone = "text-indigo-700";
       break;
     case "session_reset":

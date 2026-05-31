@@ -5,6 +5,7 @@ import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import TournamentPublishBar from "./TournamentPublishBar";
 import InstructorTournamentTabs from "./InstructorTournamentTabs";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +25,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 function formatDate(d: Date | null) {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(d);
 }
 
 function timeRelative(tournament: {

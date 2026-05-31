@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { Calendar, Clock, DoorOpen, Users } from "lucide-react";
+import { formatVN } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -143,13 +144,12 @@ export default async function ExamSessionsPage() {
   }
 
   const fmt = (d: Date) =>
-    new Intl.DateTimeFormat("vi-VN", {
+    formatVN(d, {
       day: "2-digit",
       month: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(d);
+    });
 
   return (
     <main>

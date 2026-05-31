@@ -37,10 +37,14 @@ interface Mission {
   conditionSkillCode: string | null;
   missionType?: MissionType;
   verifyMode?: VerifyMode | null;
-  submissionDeadline?: string | null;
+  submissionDeadline?: string | Date | null;
   passThreshold?: number | null;
   peerReviewerCount?: number | null;
-  reviewWindowEndAt?: string | null;
+  reviewWindowEndAt?: string | Date | null;
+  rubric?: RubricCriterion[] | null;
+  contentPayload?: { url?: string; instructions?: string; markdown?: string } | null;
+  autoCheckRule?: { type?: string; config?: Record<string, unknown> } | null;
+  isTeamSubmission?: boolean;
 }
 
 interface MissionTemplate {
@@ -130,6 +134,7 @@ export default function TournamentMissionManager({
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Template catalog + skill groups loaded once on mount.
   const [templates, setTemplates] = useState<MissionTemplate[]>([]);
@@ -179,6 +184,14 @@ export default function TournamentMissionManager({
     router.refresh();
   }
 
+  function onMissionUpdated(m: Mission) {
+    setMissions((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
+    setEditingId(null);
+    router.refresh();
+  }
+
+  const canEdit = status !== "ended";
+
   return (
     <div>
       {/* Header */}
@@ -203,6 +216,21 @@ export default function TournamentMissionManager({
               ? missions.find((x) => x.id === m.prerequisiteId)
               : null;
             const summary = conditionSummary(m);
+            if (editingId === m.id) {
+              return (
+                <li key={m.id}>
+                  <EditMissionForm
+                    tournamentId={tournamentId}
+                    mission={m}
+                    missions={missions}
+                    teamSize={teamSize}
+                    onUpdated={onMissionUpdated}
+                    onCancel={() => { setEditingId(null); setError(null); }}
+                    setError={setError}
+                  />
+                </li>
+              );
+            }
             return (
               <li
                 key={m.id}
@@ -251,20 +279,33 @@ export default function TournamentMissionManager({
                       Sửa câu hỏi →
                     </Link>
                   )}
-                  {m.verifyMode === "MANUAL_REVIEW" && (
-                    <span className="text-xs text-faint">
-                      Chấm trong tab Assignment
-                    </span>
-                  )}
-                  {isDraft && (
-                    <button
-                      onClick={() => removeMission(m.id)}
-                      disabled={deleting === m.id}
-                      className="text-xs text-danger-600 hover:text-danger-700 disabled:opacity-50"
+                  {m.verifyMode && (
+                    <Link
+                      href={`/instructor/tournaments/${tournamentId}/missions/${m.id}/submissions`}
+                      className="text-xs text-brand-700 hover:underline"
                     >
-                      {deleting === m.id ? "..." : "Xoá"}
-                    </button>
+                      Xem bài nộp →
+                    </Link>
                   )}
+                  <div className="flex items-center gap-2">
+                    {canEdit && (
+                      <button
+                        onClick={() => { setEditingId(m.id); setError(null); }}
+                        className="text-xs text-brand-700 hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    )}
+                    {isDraft && (
+                      <button
+                        onClick={() => removeMission(m.id)}
+                        disabled={deleting === m.id}
+                        className="text-xs text-danger-600 hover:text-danger-700 disabled:opacity-50"
+                      >
+                        {deleting === m.id ? "..." : "Xoá"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </li>
             );
@@ -929,6 +970,315 @@ function AddMissionForm({
         </button>
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "Đang thêm..." : "Thêm nhiệm vụ"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ── EditMissionForm ─────────────────────────────────────────────────────────
+
+/** Format a Date | ISO string to the value a <input type="datetime-local"> expects. */
+function toLocalInput(d: string | Date | null | undefined): string {
+  if (!d) return "";
+  const dt = typeof d === "string" ? new Date(d) : d;
+  if (isNaN(dt.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+
+function EditMissionForm({
+  tournamentId,
+  mission,
+  missions,
+  teamSize,
+  onUpdated,
+  onCancel,
+  setError,
+}: {
+  tournamentId: string;
+  mission: Mission;
+  missions: Mission[];
+  teamSize: number;
+  onUpdated: (m: Mission) => void;
+  onCancel: () => void;
+  setError: (e: string | null) => void;
+}) {
+  const mt = mission.missionType ?? "COURSE_LINKED";
+  const vm = mission.verifyMode ?? null;
+  const isCustom = mt !== "COURSE_LINKED";
+
+  const [title, setTitle] = useState(mission.title);
+  const [desc, setDesc] = useState(mission.description ?? "");
+  const [points, setPoints] = useState(String(mission.points));
+  const [prereqId, setPrereqId] = useState(mission.prerequisiteId ?? "");
+  const [submissionDeadline, setSubmissionDeadline] = useState(toLocalInput(mission.submissionDeadline));
+  const [externalUrl, setExternalUrl] = useState(mission.contentPayload?.url ?? "");
+  const [rubric, setRubric] = useState<RubricCriterion[]>(
+    mission.rubric && mission.rubric.length > 0
+      ? mission.rubric
+      : [{ id: "clarity", label: "Mức độ rõ ràng", scale: "1-5", weight: 1 }],
+  );
+  const [peerReviewerCount, setPeerReviewerCount] = useState(String(mission.peerReviewerCount ?? 3));
+  const [reviewWindowEndAt, setReviewWindowEndAt] = useState(toLocalInput(mission.reviewWindowEndAt));
+  const [passThreshold, setPassThreshold] = useState(String(mission.passThreshold ?? 0.6));
+  const [isTeamSubmission, setIsTeamSubmission] = useState(Boolean(mission.isTeamSubmission));
+
+  // AUTO_CHECK rule prefill
+  const ruleType = (mission.autoCheckRule?.type as "url_pattern" | "file_format" | "webhook") ?? "url_pattern";
+  const ruleCfg = (mission.autoCheckRule?.config ?? {}) as Record<string, unknown>;
+  const [autoCheckType, setAutoCheckType] = useState<"url_pattern" | "file_format" | "webhook">(ruleType);
+  const [autoCheckRegex, setAutoCheckRegex] = useState(String(ruleCfg.regex ?? ""));
+  const [autoCheckMime, setAutoCheckMime] = useState(
+    Array.isArray(ruleCfg.mime) ? (ruleCfg.mime as string[]).join(", ") : "",
+  );
+  const [autoCheckWebhook, setAutoCheckWebhook] = useState(String(ruleCfg.endpoint ?? ""));
+
+  const [busy, setBusy] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+
+    const payload: Record<string, unknown> = {
+      title,
+      description: desc,
+      points: parseInt(points, 10) || 0,
+      prerequisiteId: prereqId || null,
+    };
+
+    if (isCustom) {
+      payload.submissionDeadline = submissionDeadline
+        ? new Date(submissionDeadline).toISOString()
+        : null;
+      if (mt === "EXTERNAL") {
+        payload.contentPayload = { ...(mission.contentPayload ?? {}), url: externalUrl };
+      }
+      if (vm === "AUTO_CHECK") {
+        payload.autoCheckRule = {
+          type: autoCheckType,
+          config:
+            autoCheckType === "url_pattern"
+              ? { regex: autoCheckRegex }
+              : autoCheckType === "file_format"
+                ? { mime: autoCheckMime.split(",").map((s) => s.trim()).filter(Boolean) }
+                : { endpoint: autoCheckWebhook },
+        };
+      }
+      if (vm === "PEER_REVIEW") {
+        payload.rubric = rubric;
+        payload.peerReviewerCount = parseInt(peerReviewerCount, 10) || 3;
+        payload.reviewWindowEndAt = reviewWindowEndAt
+          ? new Date(reviewWindowEndAt).toISOString()
+          : null;
+        payload.passThreshold = parseFloat(passThreshold);
+      }
+      if (vm === "MANUAL_REVIEW") {
+        payload.passThreshold = parseFloat(passThreshold);
+      }
+      if (teamSize > 1 && vm && vm !== "AUTO_GRADE") {
+        payload.isTeamSubmission = isTeamSubmission;
+      }
+    }
+
+    const res = await fetch(apiUrl(`/api/tournament-missions/${mission.id}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    setBusy(false);
+
+    if (res.ok) {
+      const { mission: updated } = await res.json();
+      onUpdated(updated as Mission);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      const details = d.details
+        ? typeof d.details === "string" ? d.details : JSON.stringify(d.details)
+        : d.error ?? "update_failed";
+      setError(details);
+    }
+  }
+
+  const prereqOptions = missions.filter((m) => m.id !== mission.id);
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="overflow-hidden rounded-2xl border-2 border-brand-300 bg-[rgb(var(--surface))] shadow-md"
+    >
+      <div className="flex items-center justify-between border-b border-token bg-brand-soft/40 px-5 py-3">
+        <h3 className="text-sm font-bold text-brand-800">
+          Sửa nhiệm vụ #{mission.orderIndex}
+        </h3>
+        <button type="button" onClick={onCancel} aria-label="Đóng" className="text-faint hover:text-[rgb(var(--text))]">
+          ✕
+        </button>
+      </div>
+
+      <div className="space-y-6 p-5">
+        {/* Loại + cách chấm — read-only (không đổi sau khi tạo) */}
+        <div className="flex flex-wrap gap-1.5">
+          <span className="rounded bg-accent-soft px-2 py-0.5 text-xs text-accent-700">
+            {mt === "COURSE_LINKED" ? "Hành vi học tập" : mt === "CUSTOM" ? "Tự thiết kế" : "Liên kết ngoài"}
+            {vm && ` · ${verifyModeLabel(vm)}`}
+          </span>
+          <span className="text-xs text-faint">Loại & cách chấm không thể đổi sau khi tạo</span>
+        </div>
+
+        {/* Thông tin cơ bản */}
+        <FormSection step={1} title="Thông tin">
+          <div>
+            <label className="label text-xs" htmlFor={`e-title-${mission.id}`}>Tiêu đề nhiệm vụ</label>
+            <input
+              id={`e-title-${mission.id}`}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              maxLength={200}
+              className="input mt-1 text-sm"
+            />
+          </div>
+
+          {mt === "EXTERNAL" && (
+            <div className="mt-3">
+              <label className="label text-xs" htmlFor={`e-url-${mission.id}`}>URL ngoài</label>
+              <input
+                id={`e-url-${mission.id}`}
+                type="url"
+                value={externalUrl}
+                onChange={(e) => setExternalUrl(e.target.value)}
+                required
+                className="input mt-1 text-sm"
+              />
+            </div>
+          )}
+
+          <div className="mt-3">
+            <label className="label text-xs">
+              {mt === "CUSTOM" ? "Nội dung / đề bài" : mt === "EXTERNAL" ? "Hướng dẫn" : "Mô tả"}
+            </label>
+            <div className="mt-1">
+              <RichTextEditor
+                value={desc}
+                onChange={setDesc}
+                minHeight={isCustom ? 140 : 80}
+              />
+            </div>
+          </div>
+        </FormSection>
+
+        {/* Cấu hình chấm điểm — cho custom missions */}
+        {isCustom && (
+          <FormSection step={2} title="Cấu hình chấm điểm">
+            <div className="space-y-3">
+              <div>
+                <label className="label text-xs">Hạn nộp</label>
+                <input
+                  type="datetime-local"
+                  value={submissionDeadline}
+                  onChange={(e) => setSubmissionDeadline(e.target.value)}
+                  required
+                  className="input mt-1 text-sm"
+                />
+              </div>
+
+              {vm === "AUTO_CHECK" && (
+                <div className="space-y-2 rounded-lg bg-[rgb(var(--surface))] p-2">
+                  <label className="label text-xs">Quy tắc kiểm tra</label>
+                  <select
+                    value={autoCheckType}
+                    onChange={(e) => setAutoCheckType(e.target.value as typeof autoCheckType)}
+                    className="select text-sm"
+                  >
+                    <option value="url_pattern">URL khớp regex</option>
+                    <option value="file_format">File đúng định dạng</option>
+                    <option value="webhook">Webhook 3rd-party</option>
+                  </select>
+                  {autoCheckType === "url_pattern" && (
+                    <input value={autoCheckRegex} onChange={(e) => setAutoCheckRegex(e.target.value)} required className="input text-sm font-mono" />
+                  )}
+                  {autoCheckType === "file_format" && (
+                    <input value={autoCheckMime} onChange={(e) => setAutoCheckMime(e.target.value)} required placeholder="application/pdf, image/png" className="input text-sm" />
+                  )}
+                  {autoCheckType === "webhook" && (
+                    <input type="url" value={autoCheckWebhook} onChange={(e) => setAutoCheckWebhook(e.target.value)} required className="input text-sm" />
+                  )}
+                </div>
+              )}
+
+              {vm === "PEER_REVIEW" && (
+                <div className="space-y-3 rounded-lg bg-[rgb(var(--surface))] p-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="label text-xs">Số reviewer / bài</label>
+                      <input type="number" min={1} max={10} value={peerReviewerCount} onChange={(e) => setPeerReviewerCount(e.target.value)} className="input mt-1 text-sm" />
+                    </div>
+                    <div>
+                      <label className="label text-xs">Ngưỡng đạt</label>
+                      <input type="number" min={0} max={1} step={0.05} value={passThreshold} onChange={(e) => setPassThreshold(e.target.value)} required className="input mt-1 text-sm" />
+                    </div>
+                    <div>
+                      <label className="label text-xs">Đóng vòng chấm</label>
+                      <input type="datetime-local" value={reviewWindowEndAt} onChange={(e) => setReviewWindowEndAt(e.target.value)} required className="input mt-1 text-sm" />
+                    </div>
+                  </div>
+                  <RubricBuilder rubric={rubric} setRubric={setRubric} />
+                </div>
+              )}
+
+              {vm === "MANUAL_REVIEW" && (
+                <div>
+                  <label className="label text-xs">Ngưỡng đạt</label>
+                  <input type="number" min={0} max={1} step={0.05} value={passThreshold} onChange={(e) => setPassThreshold(e.target.value)} required className="input mt-1 text-sm" />
+                  <p className="mt-1 text-xs text-faint">Học viên nộp qua flow Assignment ẩn; bạn chấm trong queue Assignment có sẵn.</p>
+                </div>
+              )}
+
+              {teamSize > 1 && vm && vm !== "AUTO_GRADE" && (
+                <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
+                  <input type="checkbox" checked={isTeamSubmission} onChange={(e) => setIsTeamSubmission(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600" />
+                  <div className="min-w-0 text-xs">
+                    <p className="font-semibold">Nộp theo nhóm (chỉ captain nộp 1 lần)</p>
+                    <p className="mt-0.5 text-faint">Khi bật, cả đội cùng được tính hoàn thành từ 1 submission của captain.</p>
+                  </div>
+                </label>
+              )}
+
+              {vm === "AUTO_GRADE" && (
+                <p className="rounded-lg bg-warning-50 px-3 py-2 text-xs text-warning-700">
+                  💡 Câu hỏi quiz được sửa ở trang “Sửa câu hỏi →”.
+                </p>
+              )}
+            </div>
+          </FormSection>
+        )}
+
+        {/* Tuỳ chọn */}
+        <FormSection step={isCustom ? 3 : 2} title="Tuỳ chọn">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className="label text-xs" htmlFor={`e-pts-${mission.id}`}>Điểm thưởng</label>
+              <input id={`e-pts-${mission.id}`} type="number" min={0} value={points} onChange={(e) => setPoints(e.target.value)} className="input mt-1 text-sm" />
+            </div>
+            <div>
+              <label className="label text-xs" htmlFor={`e-prereq-${mission.id}`}>Cần hoàn thành trước</label>
+              <select id={`e-prereq-${mission.id}`} value={prereqId} onChange={(e) => setPrereqId(e.target.value)} className="select mt-1 text-sm">
+                <option value="">— Không có —</option>
+                {prereqOptions.map((m) => (
+                  <option key={m.id} value={m.id}>{m.orderIndex}. {m.title}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </FormSection>
+      </div>
+
+      <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-token bg-[rgb(var(--surface))] px-5 py-3">
+        <button type="button" onClick={onCancel} className="btn-ghost btn-sm">Hủy</button>
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
+          {busy ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
       </div>
     </form>
