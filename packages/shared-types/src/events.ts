@@ -86,6 +86,7 @@ export const LearningEventType = {
   TournamentMissionSubmitted: "tournament.mission.submitted",
   TournamentMissionVerified: "tournament.mission.verified",
   TournamentMissionReviewAssigned: "tournament.mission.review.assigned",
+  TournamentMissionReviewUnassigned: "tournament.mission.review.unassigned",
   TournamentMissionReviewed: "tournament.mission.reviewed",
   TournamentMissionReviewAwarded: "tournament.mission.review.awarded",
   TournamentMissionReviewFlagged: "tournament.mission.review.flagged",

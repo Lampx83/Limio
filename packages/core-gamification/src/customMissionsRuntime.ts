@@ -38,6 +38,9 @@ export class CustomMissionError extends Error {
       | "self_review_forbidden"
       | "already_reviewed"
       | "review_not_assigned"
+      | "reviewer_is_author"
+      | "review_already_assigned"
+      | "review_assignment_not_found"
       | "validation_failed"
       | "team_submission_captain_only",
     public readonly detail?: Record<string, unknown>,
@@ -615,6 +618,93 @@ function pickRandom<T>(arr: T[], n: number): T[] {
     a[j] = tmp;
   }
   return a.slice(0, n);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PEER_REVIEW — manual reviewer override (instructor UI).
+// Auto-assign (assignPeerReviewers) still runs; these let the instructor patch
+// the roster by hand — e.g. a reviewer dropped out, or a submission is short.
+// Both emit a LearningEvent so the roster change is auditable (§5.1).
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function assignReviewerManually(
+  input: { submissionId: string; reviewerId: string },
+  db: PrismaClient = prisma,
+): Promise<{ id: string }> {
+  const submission = await db.missionSubmission.findUnique({
+    where: { id: input.submissionId },
+    include: {
+      mission: { select: { verifyMode: true, reviewWindowEndAt: true } },
+    },
+  });
+  if (!submission) throw new CustomMissionError("submission_not_found");
+  if (submission.mission.verifyMode !== "PEER_REVIEW") {
+    throw new CustomMissionError("verify_mode_mismatch");
+  }
+  if (!submission.mission.reviewWindowEndAt) {
+    throw new CustomMissionError("validation_failed", {
+      reason: "PEER_REVIEW mission missing reviewWindowEndAt",
+    });
+  }
+  if (submission.userId === input.reviewerId) {
+    throw new CustomMissionError("reviewer_is_author");
+  }
+  const existing = await db.missionReviewAssignment.findUnique({
+    where: {
+      submissionId_reviewerId: {
+        submissionId: input.submissionId,
+        reviewerId: input.reviewerId,
+      },
+    },
+    select: { id: true },
+  });
+  if (existing) throw new CustomMissionError("review_already_assigned");
+
+  const created = await db.missionReviewAssignment.create({
+    data: {
+      submissionId: input.submissionId,
+      reviewerId: input.reviewerId,
+      dueAt: submission.mission.reviewWindowEndAt,
+    },
+    select: { id: true },
+  });
+  await emitEvent(db, {
+    userId: input.reviewerId,
+    eventType: LearningEventType.TournamentMissionReviewAssigned,
+    payload: {
+      submissionId: input.submissionId,
+      reviewerId: input.reviewerId,
+      dueAt: submission.mission.reviewWindowEndAt.toISOString(),
+      manual: true,
+    },
+    courseId: null,
+  });
+  return created;
+}
+
+export async function removeReviewerAssignment(
+  input: { assignmentId: string },
+  db: PrismaClient = prisma,
+): Promise<{ wasCompleted: boolean }> {
+  const ra = await db.missionReviewAssignment.findUnique({
+    where: { id: input.assignmentId },
+    select: { id: true, submissionId: true, reviewerId: true, completedAt: true },
+  });
+  if (!ra) throw new CustomMissionError("review_assignment_not_found");
+
+  await db.missionReviewAssignment.delete({ where: { id: ra.id } });
+  await emitEvent(db, {
+    userId: ra.reviewerId,
+    eventType: LearningEventType.TournamentMissionReviewUnassigned,
+    payload: {
+      submissionId: ra.submissionId,
+      reviewerId: ra.reviewerId,
+      wasCompleted: ra.completedAt !== null,
+      manual: true,
+    },
+    courseId: null,
+  });
+  return { wasCompleted: ra.completedAt !== null };
 }
 
 // ─────────────────────────────────────────────────────────────────────────

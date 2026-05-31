@@ -221,7 +221,7 @@ export async function getGlobalStreak(
   if (rows.length === 0) {
     return { currentStreak: 0, longestStreak: 0, lastActiveDate: null, isActiveToday: false };
   }
-  const today = utcDayStart(now);
+  const today = vnDayStart(now);
   const currentStreak = Math.max(...rows.map((r) => r.currentStreak));
   const longestStreak = Math.max(...rows.map((r) => r.longestStreak));
   const lastActiveDate = rows.reduce<Date | null>((acc, r) => {
