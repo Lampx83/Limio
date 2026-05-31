@@ -21,8 +21,13 @@ import {
   Medal,
   Award,
   Settings,
-  Mic,
+  Sparkles,
   ArrowRight,
+  Eye,
+  XCircle,
+  Circle,
+  Ban,
+  LogIn,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
@@ -151,6 +156,52 @@ export default async function TournamentDetailPage({
     isMissionTeamCompatible(m.conditionType, tournament.teamSize),
   );
 
+  // ── Viewer state (single source of truth for banner + mission gating) ──
+  const uid = session?.user?.id ?? null;
+  const isLoggedIn = !!uid;
+
+  // Registration window closes at start unless late registration is allowed.
+  const regDeadline = tournament.allowLateRegistration
+    ? tournament.endsAt
+    : tournament.startsAt;
+  const regOpen = !isEnded && now < regDeadline;
+  const canRegister = isLoggedIn && !isRegistered && isOpen && regOpen;
+  // Logged-in, not registered, window shut, not ended → view-only spectator.
+  const isSpectator = isLoggedIn && !isRegistered && !isEnded && !regOpen;
+
+  // Per-mission submission status for the viewer. COLLECTIVE missions read the
+  // captain's row (team's single source of truth).
+  const missionIds = tournament.missions.map((m) => m.id);
+  const captainId = registration?.team?.captainId ?? null;
+  const lookupIds = [uid, captainId].filter((x): x is string => !!x);
+  const subRows =
+    isRegistered && missionIds.length > 0
+      ? await prisma.missionSubmission.findMany({
+          where: { missionId: { in: missionIds }, userId: { in: lookupIds } },
+          select: { missionId: true, userId: true, status: true },
+        })
+      : [];
+  const subKeyFor = (m: (typeof tournament.missions)[number]) =>
+    m.isTeamSubmission && captainId ? captainId : uid;
+  const statusFor = (m: (typeof tournament.missions)[number]) =>
+    subRows.find((s) => s.missionId === m.id && s.userId === subKeyFor(m))?.status ?? null;
+  const passedMissionIds = new Set(
+    subRows.filter((s) => s.status === "passed").map((s) => s.missionId),
+  );
+  const lockedFor = (m: (typeof tournament.missions)[number]) =>
+    !!m.prerequisiteId && !passedMissionIds.has(m.prerequisiteId);
+
+  // Viewer's own standing (solo → userId, team → teamId).
+  const myRanking = isRegistered
+    ? await prisma.tournamentRanking.findFirst({
+        where:
+          tournament.teamSize > 1 && registration?.team
+            ? { tournamentId: params.id, teamId: registration.team.id }
+            : { tournamentId: params.id, userId: uid! },
+        select: { rank: true, totalPoints: true },
+      })
+    : null;
+
   // Time label for info bar
   let timeLabel: string;
   if (isEnded) {
@@ -273,6 +324,19 @@ export default async function TournamentDetailPage({
 
       {/* ── CONTENT GRID ───────────────────────────────────────────── */}
       <div className="mx-auto max-w-5xl px-6 py-10">
+      <StatusBanner
+        tournamentId={params.id}
+        isLoggedIn={isLoggedIn}
+        isRegistered={isRegistered}
+        isEnded={isEnded}
+        canRegister={canRegister}
+        isSpectator={isSpectator}
+        teamSize={tournament.teamSize}
+        teamName={registration?.team?.name ?? null}
+        teamCount={registration?.team?.registrations.length ?? null}
+        myRank={myRanking?.rank ?? null}
+        myPoints={myRanking?.totalPoints ?? null}
+      />
       <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
         {/* Left column */}
         <div className="space-y-8">
@@ -354,7 +418,12 @@ export default async function TournamentDetailPage({
                 </span>
               </h2>
               <ol className="mt-4 space-y-3">
-                {tournament.missions.map((mission, idx) => (
+                {tournament.missions.map((mission, idx) => {
+                  const mStatus = isRegistered ? statusFor(mission) : null;
+                  const mLocked = isRegistered && lockedFor(mission);
+                  const actionable =
+                    !!mission.missionType && mission.missionType !== "COURSE_LINKED";
+                  return (
                   <li
                     key={mission.id}
                     className="group relative overflow-hidden rounded-2xl border border-orange-200/60 bg-white shadow-md transition-all hover:shadow-xl dark:border-orange-900/40 dark:bg-slate-800"
@@ -372,15 +441,20 @@ export default async function TournamentDetailPage({
                           <h3 className="text-base font-bold text-slate-900 dark:text-white">
                             {mission.title}
                           </h3>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-2.5 py-1 text-xs font-black text-amber-900 ring-1 ring-amber-500/40">
-                            <Gem
-                              className="h-3.5 w-3.5 text-sky-500 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
-                              fill="currentColor"
-                              strokeWidth={1.5}
-                              stroke="white"
-                            />
-                            {mission.points}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {isRegistered && (
+                              <MissionStatusChip status={mStatus} locked={mLocked} />
+                            )}
+                            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-2.5 py-1 text-xs font-black text-amber-900 ring-1 ring-amber-500/40">
+                              <Gem
+                                className="h-3.5 w-3.5 text-sky-500 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
+                                fill="currentColor"
+                                strokeWidth={1.5}
+                                stroke="white"
+                              />
+                              {mission.points}
+                            </span>
+                          </div>
                         </div>
                         {mission.description && (
                           <SafeHtml
@@ -393,38 +467,78 @@ export default async function TournamentDetailPage({
                             <Lock className="h-3 w-3" /> Yêu cầu hoàn thành mission trước
                           </p>
                         )}
-                        {mission.missionType && mission.missionType !== "COURSE_LINKED" && (
-                          <div className="mt-3 flex flex-wrap items-center gap-2">
-                            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-                              {mission.missionType === "CUSTOM" ? "Tự thiết kế" : "Liên kết ngoài"}
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {actionable ? (
+                            <>
+                              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                {mission.missionType === "CUSTOM" ? "Tự thiết kế" : "Liên kết ngoài"}
+                              </span>
+                              {mission.verifyMode && (
+                                <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase text-orange-800 dark:bg-orange-950/50 dark:text-orange-300">
+                                  {{
+                                    AUTO_GRADE:    "Quiz",
+                                    AUTO_CHECK:    "Tự kiểm tra",
+                                    PEER_REVIEW:   "Peer review",
+                                    MANUAL_REVIEW: "GV chấm",
+                                  }[mission.verifyMode]}
+                                </span>
+                              )}
+                              {mission.submissionDeadline && (
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                  Hạn: {formatDateTime(mission.submissionDeadline)}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-[11px] font-bold uppercase text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
+                              Tự động tính theo học tập
                             </span>
-                            {mission.verifyMode && (
-                              <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase text-orange-800 dark:bg-orange-950/50 dark:text-orange-300">
-                                {{
-                                  AUTO_GRADE:    "Quiz",
-                                  AUTO_CHECK:    "Tự kiểm tra",
-                                  PEER_REVIEW:   "Peer review",
-                                  MANUAL_REVIEW: "GV chấm",
-                                }[mission.verifyMode]}
+                          )}
+
+                          {/* CTA — adapts to viewer state */}
+                          {actionable && (
+                            isEnded ? (
+                              <Link
+                                href={`/tournaments/${tournament.id}/missions/${mission.id}`}
+                                className="ml-auto inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                              >
+                                Xem nhiệm vụ <ArrowRight className="h-3.5 w-3.5" />
+                              </Link>
+                            ) : !isRegistered ? (
+                              canRegister || !isLoggedIn ? (
+                                <a
+                                  href="#register-panel"
+                                  className="ml-auto inline-flex items-center gap-1 rounded-lg border-2 border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                                >
+                                  <Lock className="h-3.5 w-3.5" /> Đăng ký để mở
+                                </a>
+                              ) : (
+                                <span className="ml-auto inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-400 dark:bg-slate-700 dark:text-slate-500">
+                                  <Eye className="h-3.5 w-3.5" /> Chỉ xem
+                                </span>
+                              )
+                            ) : mLocked ? (
+                              <span
+                                className="ml-auto inline-flex cursor-not-allowed items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-400 dark:bg-slate-700 dark:text-slate-500"
+                                title="Cần hoàn thành mission trước"
+                              >
+                                <Lock className="h-3.5 w-3.5" /> Khoá
                               </span>
-                            )}
-                            {mission.submissionDeadline && (
-                              <span className="text-xs text-slate-500 dark:text-slate-400">
-                                Hạn: {formatDateTime(mission.submissionDeadline)}
-                              </span>
-                            )}
-                            <Link
-                              href={`/tournaments/${tournament.id}/missions/${mission.id}`}
-                              className="ml-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:scale-105"
-                            >
-                              Sẵn sàng nhận nhiệm vụ <ArrowRight className="h-3.5 w-3.5" />
-                            </Link>
-                          </div>
-                        )}
+                            ) : (
+                              <Link
+                                href={`/tournaments/${tournament.id}/missions/${mission.id}`}
+                                className="ml-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:scale-105"
+                              >
+                                {mStatus ? "Xem nhiệm vụ" : "Làm nhiệm vụ"} <ArrowRight className="h-3.5 w-3.5" />
+                              </Link>
+                            )
+                          )}
+                        </div>
                       </div>
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ol>
             </section>
           )}
@@ -529,6 +643,7 @@ export default async function TournamentDetailPage({
         {/* Right sidebar */}
         <aside className="space-y-5">
           {/* Register / Team panel */}
+          <div id="register-panel" className="scroll-mt-20">
           {tournament.teamSize > 1 ? (
             <TournamentTeamPanel
               tournamentId={params.id}
@@ -561,8 +676,10 @@ export default async function TournamentDetailPage({
               isRegistered={isRegistered}
               isEnded={isEnded}
               isOpen={isOpen}
+              regOpen={regOpen}
             />
           )}
+          </div>
 
           {/* Showcase link — chỉ hiện khi có mission COLLECTIVE */}
           {tournament.missions.some((m) => m.isTeamSubmission) && (
@@ -570,7 +687,7 @@ export default async function TournamentDetailPage({
               href={`/tournaments/${params.id}/showcase`}
               className="flex items-center justify-center gap-2 rounded-2xl border-2 border-violet-300 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-rose-50 p-4 text-center font-bold text-violet-800 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-violet-700 dark:from-violet-950/40 dark:via-fuchsia-950/40 dark:to-rose-950/40 dark:text-violet-200"
             >
-              <Mic className="h-4 w-4" /> Xem showcase project <ArrowRight className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" /> Xem showcase project <ArrowRight className="h-4 w-4" />
             </Link>
           )}
 
@@ -663,6 +780,182 @@ export default async function TournamentDetailPage({
       </div>
     </main>
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Status banner — single source of truth for "what can I do here?".
+// Sits above the content grid so registration state is unmissable.
+// ─────────────────────────────────────────────────────────────────────
+function StatusBanner({
+  tournamentId,
+  isLoggedIn,
+  isRegistered,
+  isEnded,
+  canRegister,
+  isSpectator,
+  teamSize,
+  teamName,
+  teamCount,
+  myRank,
+  myPoints,
+}: {
+  tournamentId: string;
+  isLoggedIn: boolean;
+  isRegistered: boolean;
+  isEnded: boolean;
+  canRegister: boolean;
+  isSpectator: boolean;
+  teamSize: number;
+  teamName: string | null;
+  teamCount: number | null;
+  myRank: number | null;
+  myPoints: number | null;
+}) {
+  const base =
+    "mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 p-4 shadow-sm";
+
+  // Standing summary shown when registered + has a ranking row.
+  const standing =
+    myRank != null ? (
+      <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-sm font-bold text-slate-800 dark:bg-black/20 dark:text-slate-100">
+        <Trophy className="h-4 w-4 text-amber-500" /> Hạng #{myRank}
+        <span className="text-slate-400">·</span> {myPoints ?? 0} điểm
+      </span>
+    ) : null;
+
+  if (!isLoggedIn) {
+    return (
+      <div className={`${base} border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 dark:border-amber-700 dark:from-amber-950/30 dark:to-orange-950/20`}>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          🎟️ Đăng nhập để đăng ký và nhận nhiệm vụ.
+        </p>
+        <a
+          href={`/signin?callbackUrl=/tournaments/${tournamentId}`}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:scale-105"
+        >
+          <LogIn className="h-4 w-4" /> Đăng nhập
+        </a>
+      </div>
+    );
+  }
+
+  if (isRegistered) {
+    return (
+      <div className={`${base} border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50 dark:border-emerald-700 dark:from-emerald-950/30 dark:to-teal-950/20`}>
+        <div className="min-w-0">
+          <p className="inline-flex items-center gap-1.5 text-sm font-black text-emerald-700 dark:text-emerald-400">
+            <CheckCircle2 className="h-4 w-4" />
+            {isEnded ? "Tournament đã kết thúc" : "Bạn đã ghi danh"}
+          </p>
+          {teamSize > 1 && teamName ? (
+            <p className="mt-0.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+              Đội <span className="font-bold">{teamName}</span> · {teamCount ?? 0}/{teamSize} thành viên
+              {teamCount != null && teamCount < teamSize && (
+                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                  Còn thiếu {teamSize - teamCount}
+                </span>
+              )}
+            </p>
+          ) : (
+            <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
+              {isEnded ? "Xem kết quả chung cuộc bên dưới." : "Hoàn thành nhiệm vụ để leo bảng xếp hạng!"}
+            </p>
+          )}
+        </div>
+        {standing}
+      </div>
+    );
+  }
+
+  if (canRegister) {
+    return (
+      <div className={`${base} border-rose-300 bg-gradient-to-r from-rose-50 via-orange-50 to-amber-50 dark:border-rose-700 dark:from-rose-950/30 dark:via-orange-950/20 dark:to-amber-950/20`}>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          🔥 Bạn <span className="font-black text-rose-700 dark:text-rose-400">chưa đăng ký</span> — đăng ký để mở khoá nhiệm vụ.
+        </p>
+        <a
+          href="#register-panel"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:scale-105"
+        >
+          Đăng ký ngay <ArrowRight className="h-4 w-4" />
+        </a>
+      </div>
+    );
+  }
+
+  if (isSpectator) {
+    return (
+      <div className={`${base} border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800`}>
+        <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
+          <Eye className="h-4 w-4" /> Tournament đã bắt đầu — bạn đang ở chế độ xem, không nộp bài được.
+        </p>
+      </div>
+    );
+  }
+
+  if (isEnded) {
+    return (
+      <div className={`${base} border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800`}>
+        <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
+          🏁 Tournament đã kết thúc — xem kết quả bên dưới.
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Per-mission status chip (only shown to registered viewers).
+// ─────────────────────────────────────────────────────────────────────
+function MissionStatusChip({
+  status,
+  locked,
+}: {
+  status: "pending" | "passed" | "failed" | "disqualified" | null;
+  locked: boolean;
+}) {
+  const cls = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold";
+  if (locked) {
+    return (
+      <span className={`${cls} bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400`}>
+        <Lock className="h-3 w-3" /> Khoá
+      </span>
+    );
+  }
+  switch (status) {
+    case "passed":
+      return (
+        <span className={`${cls} bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300`}>
+          <CheckCircle2 className="h-3 w-3" /> Đạt
+        </span>
+      );
+    case "failed":
+      return (
+        <span className={`${cls} bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300`}>
+          <XCircle className="h-3 w-3" /> Chưa đạt
+        </span>
+      );
+    case "pending":
+      return (
+        <span className={`${cls} bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300`}>
+          <Clock className="h-3 w-3" /> Đã nộp
+        </span>
+      );
+    case "disqualified":
+      return (
+        <span className={`${cls} bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300`}>
+          <Ban className="h-3 w-3" /> Bị loại
+        </span>
+      );
+    default:
+      return (
+        <span className={`${cls} bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400`}>
+          <Circle className="h-3 w-3" /> Chưa làm
+        </span>
+      );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────

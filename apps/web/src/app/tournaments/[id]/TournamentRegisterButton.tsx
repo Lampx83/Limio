@@ -10,6 +10,7 @@ type Props = {
   isRegistered: boolean;
   isEnded: boolean;
   isOpen: boolean; // published or active
+  regOpen?: boolean; // registration window still open (respects late-registration)
 };
 
 export default function TournamentRegisterButton({
@@ -18,6 +19,7 @@ export default function TournamentRegisterButton({
   isRegistered,
   isEnded,
   isOpen,
+  regOpen = true,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -69,6 +71,16 @@ export default function TournamentRegisterButton({
       <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
           ⏳ Tournament chưa mở đăng ký
+        </p>
+      </div>
+    );
+  }
+
+  if (!regOpen) {
+    return (
+      <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          🔒 Tournament đã bắt đầu — không thể đăng ký mới
         </p>
       </div>
     );
