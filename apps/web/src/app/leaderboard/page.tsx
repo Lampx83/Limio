@@ -8,6 +8,7 @@ import {
   type Scope,
 } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
+import LeaderboardOptOutToggle from "./LeaderboardOptOutToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -95,13 +96,7 @@ export default async function LeaderboardPage({
               </Link>
             </>
           ) : (
-            <>
-              Top học viên theo XP đạt được. Bạn có thể{" "}
-              <Link href="/me/settings" className="link">
-                ẩn mình khỏi bảng xếp hạng
-              </Link>{" "}
-              trong Cài đặt.
-            </>
+            <>Top học viên theo XP đạt được.</>
           )}
         </p>
       </div>
@@ -135,13 +130,11 @@ export default async function LeaderboardPage({
         <span className="font-semibold text-brand-700">{board.totalParticipants}</span> người tham gia
       </p>
 
+      {/* Opt-out toggle (inline, replaces trip to Settings) */}
+      <LeaderboardOptOutToggle initialOptedOut={board.selfOptedOut} />
+
       {/* Self-rank banner when outside top */}
-      {board.selfOptedOut ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-token bg-[rgb(var(--surface-muted))] p-4 text-sm text-muted">
-          Bạn đang ẩn khỏi bảng xếp hạng. Bật lại trong{" "}
-          <Link href="/me/settings" className="link">Cài đặt</Link>.
-        </div>
-      ) : board.me && !meInTop ? (
+      {board.selfOptedOut ? null : board.me && !meInTop ? (
         <div className="mt-6 rounded-2xl border-2 border-brand-300 bg-gradient-to-r from-brand-50 to-amber-50 p-4 shadow-card">
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm font-semibold text-brand-700">🎯 Vị trí của bạn</span>

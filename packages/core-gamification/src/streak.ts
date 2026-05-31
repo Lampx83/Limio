@@ -205,3 +205,31 @@ export async function getStreak(
     isActiveToday,
   };
 }
+
+/**
+ * Cross-course streak for the global header. Streaks live per (user, course)
+ * in `streakRecord`; we surface the learner's best ongoing streak — the MAX
+ * currentStreak across their courses — plus the most recent activity date.
+ * Mirrors getStreak's read-only semantics (no recompute on stale rows).
+ */
+export async function getGlobalStreak(
+  userId: string,
+  db: PrismaClient = prisma,
+  now: Date = new Date(),
+): Promise<StreakInfo> {
+  const rows = await db.streakRecord.findMany({ where: { userId } });
+  if (rows.length === 0) {
+    return { currentStreak: 0, longestStreak: 0, lastActiveDate: null, isActiveToday: false };
+  }
+  const today = utcDayStart(now);
+  const currentStreak = Math.max(...rows.map((r) => r.currentStreak));
+  const longestStreak = Math.max(...rows.map((r) => r.longestStreak));
+  const lastActiveDate = rows.reduce<Date | null>((acc, r) => {
+    if (!r.lastActiveDate) return acc;
+    return !acc || r.lastActiveDate > acc ? r.lastActiveDate : acc;
+  }, null);
+  const isActiveToday = rows.some(
+    (r) => r.lastActiveDate != null && dayDiff(r.lastActiveDate, today) === 0,
+  );
+  return { currentStreak, longestStreak, lastActiveDate, isActiveToday };
+}

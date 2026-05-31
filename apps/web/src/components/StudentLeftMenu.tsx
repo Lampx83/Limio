@@ -15,6 +15,7 @@ import {
   Trophy,
   BarChart3,
   ChevronRight,
+  PlayCircle,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -74,9 +75,11 @@ const LS_KEY = "fbm-student-menu-collapsed";
 export default function StudentLeftMenu({
   desktopSidebar = true,
   badges = {},
+  continueTo,
 }: {
   desktopSidebar?: boolean;
   badges?: Record<string, { count: number; tone?: "warn" | "danger" }>;
+  continueTo?: { href: string; title: string } | null;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -139,6 +142,21 @@ export default function StudentLeftMenu({
           </div>
         </Link>
       </div>
+
+      {continueTo && (
+        <div className="mb-1 px-4">
+          <Link
+            href={continueTo.href}
+            className="group/continue flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-emerald-500 px-3 py-2.5 text-white shadow-sm transition-transform hover:scale-[1.02]"
+          >
+            <PlayCircle size={18} strokeWidth={2.5} className="shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-semibold leading-tight">Tiếp tục học</div>
+              <div className="truncate text-[11px] text-white/80">{continueTo.title}</div>
+            </div>
+          </Link>
+        </div>
+      )}
 
       {GROUPS.map((g, idx) => {
         const isCollapsed = !!collapsed[g.id];

@@ -6,6 +6,7 @@ import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole } from "@/lib/active-role";
+import { getGlobalStreak } from "@feedbackme/core-gamification";
 import { LimeSliceIcon } from "./BrandIcons";
 
 export default async function AppHeader() {
@@ -32,14 +33,19 @@ export default async function AppHeader() {
       : "learner";
   let notiUnread = 0;
   let notiLastSeen: string | null = null;
+  let streakDays = 0;
+  let longestStreak = 0;
   if (user?.id) {
     try {
-      const [c, iso] = await Promise.all([
+      const [c, iso, streak] = await Promise.all([
         getUnreadCount(user.id, bellRole),
         getLastSeenIso(user.id, bellRole),
+        getGlobalStreak(user.id),
       ]);
       notiUnread = c;
       notiLastSeen = iso;
+      streakDays = streak.currentStreak;
+      longestStreak = streak.longestStreak;
     } catch {}
   }
 
@@ -73,6 +79,16 @@ export default async function AppHeader() {
             🏆 Đấu trường
           </Link>
 
+          {user && streakDays > 0 && (
+            <Link
+              href="/me/dashboard"
+              title={`Chuỗi học hiện tại: ${streakDays} ngày · Dài nhất: ${longestStreak} ngày`}
+              className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-sm font-bold text-orange-600 ring-1 ring-orange-200 transition-colors hover:bg-orange-100 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-900/50"
+              aria-label={`Chuỗi học ${streakDays} ngày`}
+            >
+              🔥 {streakDays}
+            </Link>
+          )}
           {user && (
             <NotificationBell
               initialUnread={notiUnread}
