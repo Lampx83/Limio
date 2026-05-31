@@ -22,6 +22,7 @@ import LessonTasksTab, {
 import LessonStickyActions from "@/components/lesson/LessonStickyActions";
 import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
+import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
 
 export const dynamic = "force-dynamic";
@@ -310,9 +311,16 @@ export default async function LessonPage({
         >
           ← {lesson.module.course.title}
         </Link>
-        <span className="text-xs text-faint">
-          Bài {idx + 1} / {allLessons.length} · {progress.courseCompletionPct}% hoàn thành
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-faint">
+            Bài {idx + 1} / {allLessons.length} · {progress.courseCompletionPct}% hoàn thành
+          </span>
+          <LessonTocDrawer
+            slug={params.slug}
+            currentLessonId={lesson.id}
+            modules={progress.modules}
+          />
+        </div>
       </div>
 
       {/* Header */}

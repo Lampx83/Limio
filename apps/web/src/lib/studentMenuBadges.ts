@@ -37,3 +37,32 @@ export async function getStudentMenuBadges(
   if (!userId) return {};
   return _getStudentMenuBadgesCached(userId);
 }
+
+export type MenuContinue = { href: string; title: string };
+
+// "Tiếp tục học" target cho sidemenu: enrollment đang học (status=active) gần
+// nhất có lastLessonId. Dùng index [userId, status] + take 1 → rẻ. Cache 20s
+// vì lastLessonId thay đổi khi học viên di chuyển giữa các bài (giống badges).
+const _getStudentMenuContinueCached = unstable_cache(
+  async (userId: string): Promise<MenuContinue | null> => {
+    const e = await prisma.enrollment.findFirst({
+      where: { userId, status: "active", lastLessonId: { not: null } },
+      orderBy: { enrolledAt: "desc" },
+      select: { lastLessonId: true, course: { select: { slug: true, title: true } } },
+    });
+    if (!e?.lastLessonId) return null;
+    return {
+      href: `/learn/${e.course.slug}/lessons/${e.lastLessonId}`,
+      title: e.course.title,
+    };
+  },
+  ["student-menu-continue"],
+  { revalidate: 20, tags: ["student-menu-continue"] },
+);
+
+export async function getStudentMenuContinue(
+  userId: string | undefined,
+): Promise<MenuContinue | null> {
+  if (!userId) return null;
+  return _getStudentMenuContinueCached(userId);
+}
