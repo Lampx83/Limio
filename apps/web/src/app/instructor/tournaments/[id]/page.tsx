@@ -110,11 +110,27 @@ export default async function TournamentDetailPage({
 
   const userNameMap = new Map(rankingUsers.map((u) => [u.id, u.displayName]));
 
+  // Team tournaments rank by teamId — resolve names so the board shows team
+  // names instead of raw UUIDs.
+  const rankingTeamIds = tournament.rankings
+    .map((r) => r.teamId)
+    .filter((id): id is string => id !== null);
+  const rankingTeams =
+    rankingTeamIds.length > 0
+      ? await prisma.tournamentTeam.findMany({
+          where: { id: { in: rankingTeamIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+  const teamNameMap = new Map(rankingTeams.map((t) => [t.id, t.name]));
+
   const rankings = tournament.rankings.map((r) => ({
     ...r,
     displayName: r.userId
       ? (userNameMap.get(r.userId) ?? "Ẩn danh")
-      : (r.teamId ?? "—"),
+      : r.teamId
+        ? (teamNameMap.get(r.teamId) ?? "Đội ẩn")
+        : "—",
   }));
 
   const admin = await isAdmin(userId);
