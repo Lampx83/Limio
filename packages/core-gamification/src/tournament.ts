@@ -43,6 +43,8 @@ export class TournamentError extends Error {
       | "already_registered"
       | "not_registered"
       | "mission_not_found"
+      | "submission_not_found"
+      | "verify_mode_mismatch"
       | "prereq_not_completed"
       | "condition_not_met"
       | "validation_failed"
@@ -412,6 +414,100 @@ export async function completeMission(
   await recomputeRanking(t.id, db);
 
   return { alreadyCompleted: false, points: mission.points };
+}
+
+/**
+ * Instructor manually grades a MANUAL_REVIEW mission submission (e.g. a
+ * hackathon/team writeup submitted via the tournament-mission flow, which has
+ * no backing AssignmentSubmission to grade through the normal assignment UI).
+ *
+ * Unlike completeMission(), this bypasses the learner-side guards (ended /
+ * prerequisite / condition) on purpose: grading legitimately happens after the
+ * window closes or the tournament ends. Idempotent: the completion event is
+ * keyed per (user, mission); XP dedupes on sourceId; ranking is recomputed.
+ *
+ * For COLLECTIVE missions the submission.userId is the captain — crediting the
+ * captain is correct because recomputeRanking aggregates points by team.
+ * Authorization (creator/admin) is enforced at the API layer.
+ */
+export async function gradeMissionSubmission(
+  submissionId: string,
+  input: { passed: boolean; score?: number | null },
+  db: PrismaClient = prisma,
+): Promise<{ status: "passed" | "failed"; finalScore: number }> {
+  const submission = await db.missionSubmission.findUnique({
+    where: { id: submissionId },
+    include: { mission: { include: { tournament: true } } },
+  });
+  if (!submission) throw new TournamentError("submission_not_found");
+  const mission = submission.mission;
+  if (mission.verifyMode !== "MANUAL_REVIEW") {
+    throw new TournamentError("verify_mode_mismatch");
+  }
+  const t = mission.tournament;
+
+  const status: "passed" | "failed" = input.passed ? "passed" : "failed";
+  const finalScore =
+    typeof input.score === "number"
+      ? Math.max(0, Math.min(1, input.score))
+      : input.passed
+        ? 1
+        : 0;
+
+  await db.missionSubmission.update({
+    where: { id: submission.id },
+    data: { status, finalScore, verifiedAt: new Date() },
+  });
+
+  await db.learningEvent.create({
+    data: {
+      userId: submission.userId,
+      eventType: LearningEventType.TournamentMissionVerified,
+      payload: {
+        submissionId: submission.id,
+        status,
+        finalScore,
+        manual: true,
+      } as Prisma.InputJsonValue,
+      courseId: t.courseId ?? null,
+    },
+  });
+
+  if (input.passed) {
+    // Credit completion for ranking (idempotent via eventKey).
+    const eventKey = `tournament.mission.completed:${submission.userId}:${mission.id}`;
+    const existing = await db.learningEvent.findUnique({ where: { eventKey } });
+    if (!existing) {
+      await db.learningEvent.create({
+        data: {
+          userId: submission.userId,
+          eventType: LearningEventType.TournamentMissionCompleted,
+          eventKey,
+          payload: {
+            tournamentId: t.id,
+            missionId: mission.id,
+            points: mission.points,
+          } as Prisma.InputJsonValue,
+          courseId: t.courseId ?? null,
+        },
+      });
+    }
+    if (mission.points > 0 && t.courseId) {
+      await awardXp(
+        {
+          userId: submission.userId,
+          courseId: t.courseId,
+          amount: mission.points,
+          reason: "tournament.mission.completed",
+          sourceId: `mission-passed:${submission.id}`,
+        },
+        db,
+      );
+    }
+  }
+
+  await recomputeRanking(t.id, db);
+  return { status, finalScore };
 }
 
 /**

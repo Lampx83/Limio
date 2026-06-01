@@ -30,6 +30,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
+import { LearningEventType } from "@feedbackme/shared-types";
 import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
@@ -185,11 +186,33 @@ export default async function TournamentDetailPage({
     m.isTeamSubmission && captainId ? captainId : uid;
   const statusFor = (m: (typeof tournament.missions)[number]) =>
     subRows.find((s) => s.missionId === m.id && s.userId === subKeyFor(m))?.status ?? null;
-  const passedMissionIds = new Set(
-    subRows.filter((s) => s.status === "passed").map((s) => s.missionId),
+  // Prerequisite unlock — a prereq counts as "done" once the learner has either
+  // SUBMITTED it (any status: GV-graded missions sit at `pending` until the
+  // instructor grades — we must NOT block the next mission while they wait) OR
+  // COMPLETED it (auto / course-linked / graded-pass → tournament.mission.completed
+  // event; course-linked missions have no MissionSubmission row at all).
+  const submittedMissionIds = new Set(subRows.map((s) => s.missionId));
+  const completedEvents =
+    isRegistered && missionIds.length > 0
+      ? await prisma.learningEvent.findMany({
+          where: {
+            userId: { in: lookupIds },
+            eventType: LearningEventType.TournamentMissionCompleted,
+          },
+          select: { eventKey: true },
+        })
+      : [];
+  const completedMissionIds = new Set(
+    completedEvents.flatMap((e) => {
+      // eventKey = "tournament.mission.completed:{userId}:{missionId}"
+      const id = e.eventKey?.split(":").pop();
+      return id ? [id] : [];
+    }),
   );
   const lockedFor = (m: (typeof tournament.missions)[number]) =>
-    !!m.prerequisiteId && !passedMissionIds.has(m.prerequisiteId);
+    !!m.prerequisiteId &&
+    !submittedMissionIds.has(m.prerequisiteId) &&
+    !completedMissionIds.has(m.prerequisiteId);
 
   // Viewer's own standing (solo → userId, team → teamId).
   const myRanking = isRegistered
