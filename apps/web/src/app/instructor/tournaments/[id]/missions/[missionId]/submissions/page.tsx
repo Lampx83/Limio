@@ -14,6 +14,7 @@ import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 import ReviewerManager from "./ReviewerManager";
+import MissionGradeForm from "./MissionGradeForm";
 
 export const dynamic = "force-dynamic";
 
@@ -263,13 +264,12 @@ export default async function MissionSubmissionsPage({
 
                 {/* Action footer */}
                 <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-token pt-3 text-xs">
-                  {mission.verifyMode === "MANUAL_REVIEW" && mission.assignment ? (
-                    <Link
-                      href={`/instructor/assignments/${mission.assignment.id}/submissions`}
-                      className="btn-primary btn-sm"
-                    >
-                      Chấm bài →
-                    </Link>
+                  {mission.verifyMode === "MANUAL_REVIEW" ? (
+                    <MissionGradeForm
+                      tournamentId={params.id}
+                      submissionId={s.id}
+                      status={s.status}
+                    />
                   ) : mission.verifyMode === "PEER_REVIEW" ? (
                     <ReviewerManager
                       tournamentId={params.id}
