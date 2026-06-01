@@ -124,6 +124,18 @@ export default async function TournamentDetailPage({
   const canEdit =
     tournament.status === "draft" || tournament.status === "published";
 
+  // Số bài đang chờ chấm theo từng mission (status=pending) → badge ở tab Missions.
+  const missionIds = tournament.missions.map((m) => m.id);
+  const pendingGroups = missionIds.length
+    ? await prisma.missionSubmission.groupBy({
+        by: ["missionId"],
+        where: { missionId: { in: missionIds }, status: "pending" },
+        _count: { _all: true },
+      })
+    : [];
+  const pendingCounts: Record<string, number> = {};
+  for (const g of pendingGroups) pendingCounts[g.missionId] = g._count._all;
+
   return (
     <main>
       {/* Back link */}
@@ -205,6 +217,7 @@ export default async function TournamentDetailPage({
         prizeXp={tournament.prizeXp}
         teamSize={tournament.teamSize}
         tournamentTitle={tournament.title}
+        pendingCounts={pendingCounts}
         registrations={tournament.registrations.map((r) => ({
           id: r.id,
           registeredAt: r.registeredAt.toISOString(),

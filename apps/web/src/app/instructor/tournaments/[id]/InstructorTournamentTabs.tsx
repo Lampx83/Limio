@@ -34,6 +34,7 @@ export default function InstructorTournamentTabs({
   registrations,
   teamSize,
   tournamentTitle,
+  pendingCounts,
 }: {
   tournamentId: string;
   status: string;
@@ -47,6 +48,7 @@ export default function InstructorTournamentTabs({
   registrations: Registration[];
   teamSize: number;
   tournamentTitle: string;
+  pendingCounts: Record<string, number>;
 }) {
   const [activeTab, setActiveTab] = useState("basic");
 
@@ -104,6 +106,7 @@ export default function InstructorTournamentTabs({
               missions={missions}
               courseId={courseId}
               teamSize={teamSize}
+              pendingCounts={pendingCounts}
             />
           </div>
         )}
