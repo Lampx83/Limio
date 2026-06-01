@@ -145,6 +145,24 @@ export default async function TournamentDetailPage({
       : [];
   const userMap = new Map(rankingUsers.map((u) => [u.id, u]));
 
+  // Team tournaments rank by teamId — resolve names so the board shows team
+  // names instead of raw UUIDs.
+  const rankingTeamIds = tournament.rankings
+    .filter((r) => r.teamId != null)
+    .map((r) => r.teamId!);
+  const rankingTeams =
+    rankingTeamIds.length > 0
+      ? await prisma.tournamentTeam.findMany({
+          where: { id: { in: rankingTeamIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+  const teamMap = new Map(rankingTeams.map((t) => [t.id, t.name]));
+  const rankName = (entry: { userId: string | null; teamId: string | null }) =>
+    (entry.userId ? userMap.get(entry.userId)?.displayName : null) ??
+    (entry.teamId ? teamMap.get(entry.teamId) : null) ??
+    "—";
+
   const isEnded = tournament.status === "ended";
   const isOpen =
     tournament.status === "published" || tournament.status === "active";
@@ -591,6 +609,7 @@ export default async function TournamentDetailPage({
                     <Podium
                       rankings={tournament.rankings.slice(0, 3)}
                       userMap={userMap}
+                      teamMap={teamMap}
                       currentUserId={session?.user?.id}
                     />
                   )}
@@ -614,8 +633,7 @@ export default async function TournamentDetailPage({
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                           {tournament.rankings.slice(3).map((entry) => {
-                            const user = entry.userId ? userMap.get(entry.userId) : null;
-                            const displayName = user?.displayName ?? entry.teamId ?? "—";
+                            const displayName = rankName(entry);
                             const isMe =
                               entry.userId != null && entry.userId === session?.user?.id;
 
@@ -1026,6 +1044,7 @@ function HeroStat({
 function Podium({
   rankings,
   userMap,
+  teamMap,
   currentUserId,
 }: {
   rankings: Array<{
@@ -1036,6 +1055,7 @@ function Podium({
     totalPoints: number;
   }>;
   userMap: Map<string, { displayName: string }>;
+  teamMap: Map<string, string>;
   currentUserId?: string;
 }) {
   // Arrange visually: 2nd left, 1st center (elevated), 3rd right
@@ -1050,6 +1070,7 @@ function Podium({
       <PodiumSlot
         entry={byRank[2]}
         userMap={userMap}
+        teamMap={teamMap}
         currentUserId={currentUserId}
         rank={2}
         height="h-32 sm:h-36"
@@ -1058,6 +1079,7 @@ function Podium({
       <PodiumSlot
         entry={byRank[1]}
         userMap={userMap}
+        teamMap={teamMap}
         currentUserId={currentUserId}
         rank={1}
         height="h-40 sm:h-48"
@@ -1067,6 +1089,7 @@ function Podium({
       <PodiumSlot
         entry={byRank[3]}
         userMap={userMap}
+        teamMap={teamMap}
         currentUserId={currentUserId}
         rank={3}
         height="h-28 sm:h-32"
@@ -1079,6 +1102,7 @@ function Podium({
 function PodiumSlot({
   entry,
   userMap,
+  teamMap,
   currentUserId,
   rank,
   height,
@@ -1087,6 +1111,7 @@ function PodiumSlot({
 }: {
   entry?: { id: string; userId: string | null; teamId: string | null; totalPoints: number };
   userMap: Map<string, { displayName: string }>;
+  teamMap: Map<string, string>;
   currentUserId?: string;
   rank: number;
   height: string;
@@ -1103,8 +1128,10 @@ function PodiumSlot({
       </div>
     );
   }
-  const user = entry.userId ? userMap.get(entry.userId) : null;
-  const displayName = user?.displayName ?? entry.teamId ?? "—";
+  const displayName =
+    (entry.userId ? userMap.get(entry.userId)?.displayName : null) ??
+    (entry.teamId ? teamMap.get(entry.teamId) : null) ??
+    "—";
   const isMe = entry.userId != null && entry.userId === currentUserId;
 
   return (
