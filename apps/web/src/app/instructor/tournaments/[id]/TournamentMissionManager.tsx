@@ -122,12 +122,15 @@ export default function TournamentMissionManager({
   status,
   missions: initialMissions,
   teamSize = 1,
+  pendingCounts = {},
 }: {
   tournamentId: string;
   courseId: string | null;
   status: string;
   missions: Mission[];
   teamSize?: number;
+  /** missionId → số bài đang chờ chấm (status=pending). */
+  pendingCounts?: Record<string, number>;
 }) {
   const router = useRouter();
   const [missions, setMissions] = useState<Mission[]>(initialMissions);
@@ -279,14 +282,36 @@ export default function TournamentMissionManager({
                       Sửa câu hỏi →
                     </Link>
                   )}
-                  {m.verifyMode && (
-                    <Link
-                      href={`/instructor/tournaments/${tournamentId}/missions/${m.id}/submissions`}
-                      className="text-xs text-brand-700 hover:underline"
-                    >
-                      Xem bài nộp →
-                    </Link>
-                  )}
+                  {m.verifyMode && (() => {
+                    const needsGrading =
+                      m.verifyMode === "MANUAL_REVIEW" ||
+                      m.verifyMode === "PEER_REVIEW";
+                    const pending = pendingCounts[m.id] ?? 0;
+                    const label =
+                      m.verifyMode === "MANUAL_REVIEW"
+                        ? "Chấm bài"
+                        : m.verifyMode === "PEER_REVIEW"
+                          ? "Quản lý chấm chéo"
+                          : "Xem bài nộp";
+                    return (
+                      <Link
+                        href={`/instructor/tournaments/${tournamentId}/missions/${m.id}/submissions`}
+                        className={
+                          needsGrading
+                            ? "inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-brand-700"
+                            : "text-xs text-brand-700 hover:underline"
+                        }
+                      >
+                        {label}
+                        {needsGrading && pending > 0 && (
+                          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-brand-700">
+                            {pending}
+                          </span>
+                        )}
+                        <span aria-hidden>→</span>
+                      </Link>
+                    );
+                  })()}
                   <div className="flex items-center gap-2">
                     {canEdit && (
                       <button
