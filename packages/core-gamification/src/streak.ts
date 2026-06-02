@@ -206,30 +206,71 @@ export async function getStreak(
   };
 }
 
+/** Number of whole VN-local days since the epoch (a stable day index). */
+function vnDayNumber(d: Date): number {
+  return Math.floor(vnDayStart(d).getTime() / 86_400_000);
+}
+
 /**
- * Cross-course streak for the global header. Streaks live per (user, course)
- * in `streakRecord`; we surface the learner's best ongoing streak — the MAX
- * currentStreak across their courses — plus the most recent activity date.
- * Mirrors getStreak's read-only semantics (no recompute on stale rows).
+ * Cross-course "learning streak" for the global header.
+ *
+ * Per-course StreakRecord can't answer "how many days in a row did the learner
+ * study (in ANY course)?" — a learner who touches a different course each day
+ * has currentStreak=1 in every course. So we count consecutive VN-local days on
+ * which the learner had ANY qualifying activity, using `streak.extended` events
+ * (emitted once per course per active day) as the day source.
+ *
+ * currentStreak = length of the consecutive run ending today (or yesterday — a
+ * streak isn't "broken" until a full day is missed). Bounded to the last ~400
+ * days so the header query stays cheap.
  */
 export async function getGlobalStreak(
   userId: string,
   db: PrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<StreakInfo> {
-  const rows = await db.streakRecord.findMany({ where: { userId } });
-  if (rows.length === 0) {
+  const since = new Date(now.getTime() - 400 * 86_400_000);
+  const events = await db.learningEvent.findMany({
+    where: {
+      userId,
+      eventType: LearningEventType.StreakExtended,
+      occurredAt: { gte: since },
+    },
+    select: { occurredAt: true },
+    orderBy: { occurredAt: "desc" },
+  });
+  if (events.length === 0) {
     return { currentStreak: 0, longestStreak: 0, lastActiveDate: null, isActiveToday: false };
   }
-  const today = vnDayStart(now);
-  const currentStreak = Math.max(...rows.map((r) => r.currentStreak));
-  const longestStreak = Math.max(...rows.map((r) => r.longestStreak));
-  const lastActiveDate = rows.reduce<Date | null>((acc, r) => {
-    if (!r.lastActiveDate) return acc;
-    return !acc || r.lastActiveDate > acc ? r.lastActiveDate : acc;
-  }, null);
-  const isActiveToday = rows.some(
-    (r) => r.lastActiveDate != null && dayDiff(r.lastActiveDate, today) === 0,
+
+  // Distinct active VN-day numbers, descending.
+  const days = [...new Set(events.map((e) => vnDayNumber(e.occurredAt)))].sort(
+    (a, b) => b - a,
   );
-  return { currentStreak, longestStreak, lastActiveDate, isActiveToday };
+  const todayNum = vnDayNumber(now);
+  const isActiveToday = days[0] === todayNum;
+
+  // Current streak: consecutive run ending today or yesterday.
+  let currentStreak = 0;
+  if (days[0] === todayNum || days[0] === todayNum - 1) {
+    currentStreak = 1;
+    for (let i = 1; i < days.length && days[i] === days[i - 1]! - 1; i++) {
+      currentStreak++;
+    }
+  }
+
+  // Longest run within the window.
+  let longestStreak = 1;
+  let run = 1;
+  for (let i = 1; i < days.length; i++) {
+    run = days[i] === days[i - 1]! - 1 ? run + 1 : 1;
+    if (run > longestStreak) longestStreak = run;
+  }
+
+  return {
+    currentStreak,
+    longestStreak: Math.max(longestStreak, currentStreak),
+    lastActiveDate: new Date(days[0]! * 86_400_000),
+    isActiveToday,
+  };
 }

@@ -692,7 +692,9 @@ export default async function TournamentDetailPage({
               isLoggedIn={!!session?.user?.id}
               isEnded={isEnded}
               isOpen={isOpen}
-              isLocked={tournament.status === "active"}
+              isLocked={
+                tournament.status === "active" && !tournament.allowLateRegistration
+              }
               currentUserId={session?.user?.id ?? null}
               myTeam={
                 registration?.team
