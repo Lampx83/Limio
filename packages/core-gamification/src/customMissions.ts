@@ -124,16 +124,10 @@ export function canResubmit(params: {
   hasCompletedReview?: boolean;
   isAssignmentGraded?: boolean;
 }): boolean {
-  if (params.now >= params.submissionDeadline) return false;
-  switch (params.verifyMode) {
-    case "AUTO_GRADE":
-    case "AUTO_CHECK":
-      return true;
-    case "PEER_REVIEW":
-      return !params.hasCompletedReview;
-    case "MANUAL_REVIEW":
-      return !params.isAssignmentGraded;
-  }
+  // Resubmission is allowed freely until the deadline — only the deadline locks
+  // it. (Product decision: supersedes the earlier per-mode locks that froze
+  // resubmit once a peer review landed / a manual grade was given.)
+  return params.now < params.submissionDeadline;
 }
 
 /**

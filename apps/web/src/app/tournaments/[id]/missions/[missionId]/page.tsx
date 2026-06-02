@@ -133,29 +133,64 @@ export default async function MissionDetailPage({
               Đăng ký →
             </Link>
           </div>
-        ) : submission ? (
-          <SubmissionStatusBlock
-            submission={submission}
-            verifyMode={mission.verifyMode}
-            passThreshold={mission.passThreshold}
-            peerReviewerCount={mission.peerReviewerCount}
-            submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
-          />
-        ) : isCollective && !isCaptain ? (
-          <p className="text-sm text-muted">
-            Captain của đội chưa nộp bài. Quay lại sau khi captain nộp xong.
-          </p>
-        ) : mission.verifyMode ? (
-          <MissionSubmitForm
-            missionId={mission.id}
-            verifyMode={mission.verifyMode}
-            quizId={mission.quiz?.id ?? null}
-            assignmentId={mission.assignment?.id ?? null}
-            submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
-            hackathonMode={isCollective}
-          />
-        ) : (
+        ) : !mission.verifyMode ? (
           <p className="text-sm text-muted">Mission COURSE_LINKED — auto-tracked theo hành vi học.</p>
+        ) : isCollective && !isCaptain ? (
+          submission ? (
+            <SubmissionStatusBlock
+              submission={submission}
+              verifyMode={mission.verifyMode}
+              passThreshold={mission.passThreshold}
+              peerReviewerCount={mission.peerReviewerCount}
+              submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
+            />
+          ) : (
+            <p className="text-sm text-muted">
+              Captain của đội chưa nộp bài. Quay lại sau khi captain nộp xong.
+            </p>
+          )
+        ) : (
+          // Solo learner or team captain — can submit / resubmit until deadline.
+          <div className="space-y-5">
+            {submission && (
+              <SubmissionStatusBlock
+                submission={submission}
+                verifyMode={mission.verifyMode}
+                passThreshold={mission.passThreshold}
+                peerReviewerCount={mission.peerReviewerCount}
+                submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
+              />
+            )}
+            {(() => {
+              const beforeDeadline =
+                !mission.submissionDeadline || new Date() < mission.submissionDeadline;
+              if (!beforeDeadline) {
+                return submission ? null : (
+                  <p className="text-sm text-muted">⏰ Đã hết hạn nộp bài.</p>
+                );
+              }
+              return (
+                <div className="space-y-2">
+                  {submission && (
+                    <p className="text-sm font-semibold text-strong">
+                      ✏️ Nộp lại bài
+                      <span className="ml-1 font-normal text-muted">
+                        — bài mới sẽ thay bài cũ; được nộp lại đến hết hạn.
+                      </span>
+                    </p>
+                  )}
+                  <MissionSubmitForm
+                    missionId={mission.id}
+                    verifyMode={mission.verifyMode}
+                    quizId={mission.quiz?.id ?? null}
+                    assignmentId={mission.assignment?.id ?? null}
+                    submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
+                    hackathonMode={isCollective}
+                  />
+                </div>
+              );
+            })()}
+          </div>
         )}
       </section>
     </main>
@@ -195,16 +230,6 @@ function SubmissionStatusBlock({
 
   const completed = submission.reviewAssignments.filter((r) => r.completedAt).length;
   const total = submission.reviewAssignments.length;
-  const beforeDeadline = submissionDeadlineIso
-    ? new Date() < new Date(submissionDeadlineIso)
-    : false;
-  const canResubmit =
-    submission.status === "pending" &&
-    beforeDeadline &&
-    (verifyMode === "AUTO_GRADE" ||
-      verifyMode === "AUTO_CHECK" ||
-      (verifyMode === "PEER_REVIEW" && completed === 0) ||
-      verifyMode === "MANUAL_REVIEW");
 
   return (
     <div className="space-y-3">
@@ -226,9 +251,6 @@ function SubmissionStatusBlock({
       <p className="text-xs text-faint">
         Nộp lúc: {formatDateTime(submission.submittedAt)}
       </p>
-      {canResubmit && (
-        <p className="text-xs text-muted">Bạn có thể nộp lại trước hạn nộp.</p>
-      )}
       {verifyMode === "PEER_REVIEW" && submission.status === "pending" && (
         <a
           href="/me/reviews"
