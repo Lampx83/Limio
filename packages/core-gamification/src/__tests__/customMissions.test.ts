@@ -160,7 +160,8 @@ describe("canResubmit", () => {
     ).toBe(true);
   });
 
-  it("AC-4.4: PEER_REVIEW with completed review → false", () => {
+  it("before deadline → true regardless of completed peer review", () => {
+    // Deadline-only policy: resubmit stays open even after a review lands.
     expect(
       canResubmit({
         verifyMode: "PEER_REVIEW",
@@ -168,10 +169,7 @@ describe("canResubmit", () => {
         submissionDeadline: deadline,
         hasCompletedReview: true,
       }),
-    ).toBe(false);
-  });
-
-  it("AC-4.4: PEER_REVIEW without any completed review → true", () => {
+    ).toBe(true);
     expect(
       canResubmit({
         verifyMode: "PEER_REVIEW",
@@ -182,7 +180,8 @@ describe("canResubmit", () => {
     ).toBe(true);
   });
 
-  it("AC-5.5: MANUAL_REVIEW graded → false", () => {
+  it("before deadline → true regardless of manual grade", () => {
+    // Deadline-only policy: resubmit stays open even after a manual grade.
     expect(
       canResubmit({
         verifyMode: "MANUAL_REVIEW",
@@ -190,10 +189,7 @@ describe("canResubmit", () => {
         submissionDeadline: deadline,
         isAssignmentGraded: true,
       }),
-    ).toBe(false);
-  });
-
-  it("AC-5.5: MANUAL_REVIEW not graded → true", () => {
+    ).toBe(true);
     expect(
       canResubmit({
         verifyMode: "MANUAL_REVIEW",
