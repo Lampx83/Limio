@@ -176,3 +176,33 @@ export function isMutualHighScoreCollusion(params: {
     params.bOnA - params.peerMedianOnA > threshold
   );
 }
+
+export type AutoAssignReviewersGate =
+  | { allowed: true }
+  | {
+      allowed: false;
+      reason: "verify_mode_mismatch" | "submission_deadline_not_reached";
+    };
+
+/**
+ * Gate cho việc instructor bấm-tay "Tự động phân reviewer". Pure (không DB) để
+ * test được + tái dùng ở route layer. Quy tắc khớp với điều kiện cron
+ * `tournamentTick`: chỉ phân khi đúng mode PEER_REVIEW và đã qua hạn nộp
+ * (pool reviewer = người đã nộp bài).
+ */
+export function gateAutoAssignReviewers(input: {
+  verifyMode: string | null;
+  submissionDeadline: Date | null;
+  now: Date;
+}): AutoAssignReviewersGate {
+  if (input.verifyMode !== "PEER_REVIEW") {
+    return { allowed: false, reason: "verify_mode_mismatch" };
+  }
+  if (
+    !input.submissionDeadline ||
+    input.submissionDeadline.getTime() > input.now.getTime()
+  ) {
+    return { allowed: false, reason: "submission_deadline_not_reached" };
+  }
+  return { allowed: true };
+}

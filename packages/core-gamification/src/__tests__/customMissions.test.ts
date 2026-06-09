@@ -5,6 +5,7 @@ import {
   calcReviewerXp,
   canResubmit,
   decideWindowAction,
+  gateAutoAssignReviewers,
   isMutualHighScoreCollusion,
   isOutlier,
   isSpeedRunSubmission,
@@ -285,5 +286,61 @@ describe("isMutualHighScoreCollusion", () => {
         peerMedianOnA: 0.5,
       }),
     ).toBe(false);
+  });
+});
+
+describe("gateAutoAssignReviewers", () => {
+  const past = new Date("2026-06-01T00:00:00Z");
+  const future = new Date("2026-06-30T00:00:00Z");
+  const now = new Date("2026-06-09T00:00:00Z");
+
+  it("PEER_REVIEW + đã qua hạn nộp → allowed", () => {
+    expect(
+      gateAutoAssignReviewers({
+        verifyMode: "PEER_REVIEW",
+        submissionDeadline: past,
+        now,
+      }),
+    ).toEqual({ allowed: true });
+  });
+
+  it("không phải PEER_REVIEW → chặn verify_mode_mismatch (ưu tiên hơn hạn nộp)", () => {
+    expect(
+      gateAutoAssignReviewers({
+        verifyMode: "MANUAL_REVIEW",
+        submissionDeadline: past,
+        now,
+      }),
+    ).toEqual({ allowed: false, reason: "verify_mode_mismatch" });
+  });
+
+  it("chưa tới hạn nộp → chặn submission_deadline_not_reached", () => {
+    expect(
+      gateAutoAssignReviewers({
+        verifyMode: "PEER_REVIEW",
+        submissionDeadline: future,
+        now,
+      }),
+    ).toEqual({ allowed: false, reason: "submission_deadline_not_reached" });
+  });
+
+  it("chưa đặt hạn nộp (null) → chặn submission_deadline_not_reached", () => {
+    expect(
+      gateAutoAssignReviewers({
+        verifyMode: "PEER_REVIEW",
+        submissionDeadline: null,
+        now,
+      }),
+    ).toEqual({ allowed: false, reason: "submission_deadline_not_reached" });
+  });
+
+  it("đúng thời khắc hạn nộp (deadline === now) → allowed", () => {
+    expect(
+      gateAutoAssignReviewers({
+        verifyMode: "PEER_REVIEW",
+        submissionDeadline: now,
+        now,
+      }),
+    ).toEqual({ allowed: true });
   });
 });
