@@ -252,6 +252,41 @@ export interface PlannedReviewerAssignment {
   reviewerId: string;
 }
 
+/**
+ * Gợi ý số reviewer/bài (peerReviewerCount) để MỖI reviewer chấm ~K bài.
+ *
+ * Quan hệ tổng lượt chấm: số_bài × reviewer_mỗi_bài = pool × bài_mỗi_reviewer.
+ *   ⇒ reviewer_mỗi_bài = ceil( K × pool / số_bài )
+ *
+ * K=1 ⇒ "phủ hết tối thiểu" (mọi người trong pool chấm ≥1 bài).
+ * Trả 0 khi không đủ dữ liệu (số_bài ≤ 0).
+ */
+export function suggestPeerReviewerCount(input: {
+  poolSize: number;
+  submissionCount: number;
+  reviewsPerReviewer: number;
+}): number {
+  if (input.submissionCount <= 0 || input.reviewsPerReviewer <= 0) return 0;
+  return Math.ceil(
+    (input.reviewsPerReviewer * input.poolSize) / input.submissionCount,
+  );
+}
+
+/**
+ * Số người trong pool sẽ thực sự được phân ≥1 bài khi đặt N reviewer/bài.
+ * = min(số_bài × N, pool) — vì tổng suất là số_bài×N, không vượt quá pool.
+ */
+export function reviewerCoverage(input: {
+  poolSize: number;
+  submissionCount: number;
+  reviewersPerSubmission: number;
+}): number {
+  return Math.min(
+    input.submissionCount * input.reviewersPerSubmission,
+    input.poolSize,
+  );
+}
+
 function isEligibleReviewer(
   reviewer: ReviewerPlanReviewer,
   submission: ReviewerPlanSubmission,

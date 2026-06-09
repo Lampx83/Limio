@@ -10,6 +10,8 @@ import {
   isOutlier,
   isSpeedRunSubmission,
   planBalancedReviewerAssignments,
+  reviewerCoverage,
+  suggestPeerReviewerCount,
   type ReviewerPlanInput,
   type RubricCriterion,
 } from "../customMissions";
@@ -344,6 +346,55 @@ describe("gateAutoAssignReviewers", () => {
         now,
       }),
     ).toEqual({ allowed: true });
+  });
+});
+
+describe("suggestPeerReviewerCount", () => {
+  it("K=1 phủ hết: ceil(pool/số_bài) — vd 123 người, 15 bài → 9", () => {
+    expect(
+      suggestPeerReviewerCount({
+        poolSize: 123,
+        submissionCount: 15,
+        reviewsPerReviewer: 1,
+      }),
+    ).toBe(9);
+  });
+
+  it("K=2 → ceil(2×123/15)=17; K=3 → 25", () => {
+    expect(
+      suggestPeerReviewerCount({ poolSize: 123, submissionCount: 15, reviewsPerReviewer: 2 }),
+    ).toBe(17);
+    expect(
+      suggestPeerReviewerCount({ poolSize: 123, submissionCount: 15, reviewsPerReviewer: 3 }),
+    ).toBe(25);
+  });
+
+  it("chia hết: 30 người, 15 bài, K=1 → đúng 2", () => {
+    expect(
+      suggestPeerReviewerCount({ poolSize: 30, submissionCount: 15, reviewsPerReviewer: 1 }),
+    ).toBe(2);
+  });
+
+  it("thiếu dữ liệu (0 bài hoặc K=0) → 0", () => {
+    expect(
+      suggestPeerReviewerCount({ poolSize: 100, submissionCount: 0, reviewsPerReviewer: 1 }),
+    ).toBe(0);
+    expect(
+      suggestPeerReviewerCount({ poolSize: 100, submissionCount: 10, reviewsPerReviewer: 0 }),
+    ).toBe(0);
+  });
+});
+
+describe("reviewerCoverage", () => {
+  it("N đủ phủ hết: 15 bài × 9 = 135 ≥ 123 → 123", () => {
+    expect(
+      reviewerCoverage({ poolSize: 123, submissionCount: 15, reviewersPerSubmission: 9 }),
+    ).toBe(123);
+  });
+  it("N nhỏ chưa phủ: 15 bài × 3 = 45 < 123 → 45", () => {
+    expect(
+      reviewerCoverage({ poolSize: 123, submissionCount: 15, reviewersPerSubmission: 3 }),
+    ).toBe(45);
   });
 });
 

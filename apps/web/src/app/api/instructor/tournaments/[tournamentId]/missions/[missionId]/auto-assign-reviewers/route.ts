@@ -42,12 +42,24 @@ export async function POST(
   if (!userId)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // Optional body: { rebalance?: boolean }. rebalance = xóa phân chưa chấm rồi
-  // chia đều lại; mặc định topup = chỉ bù cho đủ.
-  const body = (await req
-    .json()
-    .catch(() => ({}))) as { rebalance?: boolean };
+  // Optional body:
+  //   rebalance?: boolean        — xóa phân chưa chấm rồi chia đều lại (default topup)
+  //   peerReviewerCount?: number — đặt N trước khi phân (planner "mỗi reviewer K bài")
+  const body = (await req.json().catch(() => ({}))) as {
+    rebalance?: boolean;
+    peerReviewerCount?: number;
+  };
   const mode = body?.rebalance === true ? "rebalance" : "topup";
+  const newN =
+    typeof body?.peerReviewerCount === "number"
+      ? Math.round(body.peerReviewerCount)
+      : null;
+  if (newN !== null && (newN < 1 || newN > 50)) {
+    return NextResponse.json(
+      { error: "validation_failed", detail: "peerReviewerCount 1..50" },
+      { status: 400 },
+    );
+  }
 
   // Mission phải thuộc tournament này; lấy luôn creatorId + field cần guard.
   const mission = await prisma.tournamentMission.findFirst({
@@ -79,6 +91,14 @@ export async function POST(
       { error: gate.reason },
       { status: gate.reason === "verify_mode_mismatch" ? 400 : 409 },
     );
+  }
+
+  // Đặt N trước khi phân (planner). Cùng transaction-of-intent với phân lại.
+  if (newN !== null) {
+    await prisma.tournamentMission.update({
+      where: { id: params.missionId },
+      data: { peerReviewerCount: newN },
+    });
   }
 
   try {

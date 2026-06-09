@@ -16,6 +16,7 @@ import { formatDateTime } from "@/lib/datetime";
 import ReviewerManager from "./ReviewerManager";
 import MissionGradeForm from "./MissionGradeForm";
 import AutoAssignReviewersButton from "./AutoAssignReviewersButton";
+import ReviewerLoadPlanner from "./ReviewerLoadPlanner";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,24 @@ export default async function MissionSubmissionsPage({
         ).map((r) => ({ userId: r.userId, name: r.user.displayName }))
       : [];
 
+  // Pool reviewer thực tế của mission (để planner gợi ý N):
+  //   team + mọi-thành-viên  → số participant active có team
+  //   team + chỉ-captain, hoặc solo → số người đã nộp (= submitters)
+  const teamMemberCount =
+    mission.verifyMode === "PEER_REVIEW" && mission.isTeamSubmission
+      ? await prisma.tournamentRegistration.count({
+          where: {
+            tournamentId: params.id,
+            disqualifiedAt: null,
+            teamId: { not: null },
+          },
+        })
+      : 0;
+  const plannerPoolSize =
+    mission.isTeamSubmission && !mission.peerReviewCaptainsOnly
+      ? teamMemberCount
+      : mission.submissions.length;
+
   return (
     <main>
       <Link
@@ -149,6 +168,27 @@ export default async function MissionSubmissionsPage({
           />
         )}
       </header>
+
+      {mission.verifyMode === "PEER_REVIEW" &&
+        mission.submissions.length > 0 && (
+          <ReviewerLoadPlanner
+            tournamentId={params.id}
+            missionId={mission.id}
+            submissionCount={mission.submissions.length}
+            poolSize={plannerPoolSize}
+            currentN={mission.peerReviewerCount ?? 3}
+            captainsOnly={Boolean(mission.peerReviewCaptainsOnly)}
+            canAssign={
+              mission.submissionDeadline !== null &&
+              mission.submissionDeadline.getTime() <= Date.now()
+            }
+            deadlineLabel={
+              mission.submissionDeadline
+                ? formatDateTime(mission.submissionDeadline)
+                : null
+            }
+          />
+        )}
 
       {mission.submissions.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-token py-16 text-center">

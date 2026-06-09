@@ -36,7 +36,7 @@ const PatchInput = z
     contentPayload:     z.unknown().nullable().optional(),
     autoCheckRule:      z.unknown().nullable().optional(),
     rubric:             z.array(RubricCriterionSchema).nullable().optional(),
-    peerReviewerCount:  z.number().int().min(1).max(10).nullable().optional(),
+    peerReviewerCount:  z.number().int().min(1).max(50).nullable().optional(),
     peerReviewCaptainsOnly: z.boolean().optional(),
     reviewWindowEndAt:  z.string().datetime().nullable().optional(),
     passThreshold:      z.number().min(0).max(1).nullable().optional(),

@@ -743,7 +743,7 @@ function AddMissionForm({
                   <input
                     type="number"
                     min={1}
-                    max={10}
+                    max={50}
                     value={peerReviewerCount}
                     onChange={(e) => setPeerReviewerCount(e.target.value)}
                     className="input mt-1 text-sm"
@@ -774,6 +774,12 @@ function AddMissionForm({
                   />
                 </div>
               </div>
+              <p className="text-[11px] text-faint">
+                💡 “Số reviewer / bài” quyết định mỗi học viên chấm khoảng bao nhiêu
+                bài (số người chấm ÷ số bài). Sau hạn nộp, vào trang <strong>Bài
+                nộp</strong> dùng công cụ “Tính số reviewer theo tải” để hệ thống gợi
+                ý số này theo số người & số bài thực tế, rồi đặt + phân lại 1 nút.
+              </p>
               {teamSize > 1 && isTeamSubmission && (
                 <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2.5">
                   <input
@@ -1264,7 +1270,7 @@ function EditMissionForm({
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="label text-xs">Số reviewer / bài</label>
-                      <input type="number" min={1} max={10} value={peerReviewerCount} onChange={(e) => setPeerReviewerCount(e.target.value)} className="input mt-1 text-sm" />
+                      <input type="number" min={1} max={50} value={peerReviewerCount} onChange={(e) => setPeerReviewerCount(e.target.value)} className="input mt-1 text-sm" />
                     </div>
                     <div>
                       <label className="label text-xs">Ngưỡng đạt</label>
@@ -1275,6 +1281,11 @@ function EditMissionForm({
                       <input type="datetime-local" value={reviewWindowEndAt} onChange={(e) => setReviewWindowEndAt(e.target.value)} required className="input mt-1 text-sm" />
                     </div>
                   </div>
+                  <p className="text-[11px] text-faint">
+                    💡 Số reviewer/bài ≈ mỗi học viên chấm bao nhiêu bài (số người ÷
+                    số bài). Trang <strong>Bài nộp</strong> có công cụ “Tính số
+                    reviewer theo tải” gợi ý số này theo dữ liệu thực tế.
+                  </p>
                   {teamSize > 1 && isTeamSubmission && (
                     <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2.5">
                       <input
