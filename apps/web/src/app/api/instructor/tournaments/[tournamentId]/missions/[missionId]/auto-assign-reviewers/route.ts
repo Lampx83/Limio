@@ -35,12 +35,19 @@ function errorStatus(code: CustomMissionError["code"]): number {
  * điều kiện cron `tournamentTick` (pool reviewer = người đã nộp bài).
  */
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: { tournamentId: string; missionId: string } },
 ) {
   const userId = await requireUserId();
   if (!userId)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  // Optional body: { rebalance?: boolean }. rebalance = xóa phân chưa chấm rồi
+  // chia đều lại; mặc định topup = chỉ bù cho đủ.
+  const body = (await req
+    .json()
+    .catch(() => ({}))) as { rebalance?: boolean };
+  const mode = body?.rebalance === true ? "rebalance" : "topup";
 
   // Mission phải thuộc tournament này; lấy luôn creatorId + field cần guard.
   const mission = await prisma.tournamentMission.findFirst({
@@ -75,8 +82,12 @@ export async function POST(
   }
 
   try {
-    const { assignedCount } = await assignPeerReviewers(params.missionId);
-    return NextResponse.json({ ok: true, assignedCount });
+    const { assignedCount, unassignedCount } = await assignPeerReviewers(
+      params.missionId,
+      undefined,
+      { mode },
+    );
+    return NextResponse.json({ ok: true, assignedCount, unassignedCount });
   } catch (e) {
     if (e instanceof CustomMissionError) {
       return NextResponse.json(

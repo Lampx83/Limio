@@ -206,3 +206,118 @@ export function gateAutoAssignReviewers(input: {
   }
   return { allowed: true };
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// PEER_REVIEW — phân reviewer CÂN BẰNG TẢI (deterministic, không random).
+//
+// Vấn đề của random thuần (pickRandom per-submission): chỉ cap "mỗi bài N
+// reviewer", không cap "mỗi người gánh bao nhiêu bài" → phương sai dồn tải lên
+// vài người (vd 1 SV bị phân 7 bài, người khác 2). Hàm này thay bằng greedy
+// least-loaded: mỗi suất luôn rơi vào reviewer hợp lệ đang gánh ÍT nhất → tải
+// phân đều gần tuyệt đối, và reproducible (test được).
+//
+// Ràng buộc:
+//   - reviewer ≠ tác giả submission
+//   - nếu bài thuộc nhóm (groupKey != null): reviewer phải KHÁC nhóm tác giả
+//     (và bản thân reviewer phải thuộc một nhóm — groupKey != null)
+//   - không phân trùng (1 reviewer / 1 submission)
+//   - `existing` (đã phân, kể cả đã chấm) được tính vào tải + tránh trùng →
+//     dùng được cho cả lần phân mới lẫn top-up.
+// ─────────────────────────────────────────────────────────────────────────
+
+export interface ReviewerPlanSubmission {
+  id: string;
+  authorId: string;
+  /** teamId cho mission nộp-nhóm; null cho mission solo. */
+  groupKey: string | null;
+}
+
+export interface ReviewerPlanReviewer {
+  userId: string;
+  /** teamId nếu reviewer thuộc nhóm; null cho solo. */
+  groupKey: string | null;
+}
+
+export interface ReviewerPlanInput {
+  submissions: ReviewerPlanSubmission[];
+  reviewers: ReviewerPlanReviewer[];
+  /** Số reviewer mong muốn mỗi submission (peerReviewerCount). */
+  perSubmission: number;
+  /** Assignment đã tồn tại (completed hoặc pending) — tính tải + tránh trùng. */
+  existing: Array<{ submissionId: string; reviewerId: string }>;
+}
+
+export interface PlannedReviewerAssignment {
+  submissionId: string;
+  reviewerId: string;
+}
+
+function isEligibleReviewer(
+  reviewer: ReviewerPlanReviewer,
+  submission: ReviewerPlanSubmission,
+): boolean {
+  if (reviewer.userId === submission.authorId) return false;
+  if (submission.groupKey !== null) {
+    // Bài nộp-nhóm: reviewer phải thuộc một nhóm KHÁC nhóm tác giả.
+    if (reviewer.groupKey === null) return false;
+    if (reviewer.groupKey === submission.groupKey) return false;
+  }
+  return true;
+}
+
+export function planBalancedReviewerAssignments(
+  input: ReviewerPlanInput,
+): PlannedReviewerAssignment[] {
+  const N = Math.max(0, Math.floor(input.perSubmission));
+  const load = new Map<string, number>();
+  for (const r of input.reviewers) load.set(r.userId, 0);
+
+  // Tải hiện có + tập đã-phân để tránh trùng.
+  const assigned = new Set<string>(); // `${submissionId}|${reviewerId}`
+  const existingPerSubmission = new Map<string, number>();
+  for (const e of input.existing) {
+    assigned.add(`${e.submissionId}|${e.reviewerId}`);
+    existingPerSubmission.set(
+      e.submissionId,
+      (existingPerSubmission.get(e.submissionId) ?? 0) + 1,
+    );
+    if (load.has(e.reviewerId)) {
+      load.set(e.reviewerId, (load.get(e.reviewerId) ?? 0) + 1);
+    }
+  }
+
+  const result: PlannedReviewerAssignment[] = [];
+  // Thứ tự ổn định theo submission.id để deterministic.
+  const submissions = [...input.submissions].sort((a, b) =>
+    a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+  );
+
+  for (const sub of submissions) {
+    const already = existingPerSubmission.get(sub.id) ?? 0;
+    let need = N - already;
+    if (need <= 0) continue;
+
+    while (need > 0) {
+      // Candidate = hợp lệ, chưa phân cho bài này, sắp theo (tải tăng, userId tăng).
+      const candidates = input.reviewers
+        .filter(
+          (r) =>
+            isEligibleReviewer(r, sub) &&
+            !assigned.has(`${sub.id}|${r.userId}`),
+        )
+        .sort((a, b) => {
+          const la = load.get(a.userId) ?? 0;
+          const lb = load.get(b.userId) ?? 0;
+          if (la !== lb) return la - lb;
+          return a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0;
+        });
+      const pick = candidates[0];
+      if (!pick) break; // hết người hợp lệ → best effort, dừng bài này
+      result.push({ submissionId: sub.id, reviewerId: pick.userId });
+      assigned.add(`${sub.id}|${pick.userId}`);
+      load.set(pick.userId, (load.get(pick.userId) ?? 0) + 1);
+      need--;
+    }
+  }
+  return result;
+}

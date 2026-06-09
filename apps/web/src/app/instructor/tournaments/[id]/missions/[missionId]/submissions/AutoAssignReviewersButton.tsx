@@ -34,16 +34,29 @@ export default function AutoAssignReviewersButton({
     null,
   );
 
-  async function onClick() {
+  async function run(rebalance: boolean) {
+    if (
+      rebalance &&
+      !window.confirm(
+        "Phân lại cân bằng sẽ XÓA các lượt review CHƯA chấm rồi chia đều lại cho mọi thành viên (giữ nguyên lượt đã chấm). Tiếp tục?",
+      )
+    ) {
+      return;
+    }
     setBusy(true);
     setMsg(null);
     try {
       const res = await fetch(
         `/api/instructor/tournaments/${tournamentId}/missions/${missionId}/auto-assign-reviewers`,
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ rebalance }),
+        },
       );
       const data = (await res.json().catch(() => ({}))) as {
         assignedCount?: number;
+        unassignedCount?: number;
         error?: string;
       };
       if (!res.ok) {
@@ -54,10 +67,12 @@ export default function AutoAssignReviewersButton({
         return;
       }
       const n = data.assignedCount ?? 0;
+      const u = data.unassignedCount ?? 0;
       setMsg({
         kind: "ok",
-        text:
-          n > 0
+        text: rebalance
+          ? `Đã chia đều lại: gỡ ${u}, phân ${n} lượt review.`
+          : n > 0
             ? `Đã phân thêm ${n} lượt review.`
             : "Tất cả bài đã đủ reviewer.",
       });
@@ -77,20 +92,34 @@ export default function AutoAssignReviewersButton({
 
   return (
     <div className="flex flex-col items-start gap-1.5 sm:items-end">
-      <button
-        type="button"
-        disabled={busy || !canAssign}
-        onClick={onClick}
-        title={disabledTip}
-        className="btn-secondary btn-sm inline-flex items-center gap-1.5 disabled:opacity-40"
-      >
-        {busy ? (
-          <Loader2 size={14} className="animate-spin" />
-        ) : (
-          <Shuffle size={14} />
-        )}
-        Tự động phân reviewer
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={busy || !canAssign}
+          onClick={() => run(false)}
+          title={disabledTip}
+          className="btn-secondary btn-sm inline-flex items-center gap-1.5 disabled:opacity-40"
+        >
+          {busy ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Shuffle size={14} />
+          )}
+          Tự động phân reviewer
+        </button>
+        <button
+          type="button"
+          disabled={busy || !canAssign}
+          onClick={() => run(true)}
+          title={
+            disabledTip ??
+            "Xóa các lượt chưa chấm và chia đều lại cho mọi thành viên"
+          }
+          className="btn-ghost btn-sm text-xs underline-offset-2 hover:underline disabled:opacity-40"
+        >
+          Phân lại cân bằng
+        </button>
+      </div>
       {disabledTip && !msg && (
         <p className="text-[11px] text-faint">{disabledTip}</p>
       )}
