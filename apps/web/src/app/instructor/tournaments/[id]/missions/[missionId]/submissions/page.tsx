@@ -15,6 +15,7 @@ import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 import ReviewerManager from "./ReviewerManager";
 import MissionGradeForm from "./MissionGradeForm";
+import AutoAssignReviewersButton from "./AutoAssignReviewersButton";
 
 export const dynamic = "force-dynamic";
 
@@ -118,18 +119,35 @@ export default async function MissionSubmissionsPage({
         ← {mission.tournament.title}
       </Link>
 
-      <header className="mt-4">
-        <p className="text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">
-          {mission.verifyMode}
-          {isCollective && " · Nộp theo nhóm"}
-        </p>
-        <h1 className="mt-1 h-display text-2xl font-bold sm:text-3xl">
-          {mission.title}
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          {mission.submissions.length} submission
-          {mission.submissions.length !== 1 ? "s" : ""}
-        </p>
+      <header className="mt-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">
+            {mission.verifyMode}
+            {isCollective && " · Nộp theo nhóm"}
+          </p>
+          <h1 className="mt-1 h-display text-2xl font-bold sm:text-3xl">
+            {mission.title}
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            {mission.submissions.length} submission
+            {mission.submissions.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        {mission.verifyMode === "PEER_REVIEW" && (
+          <AutoAssignReviewersButton
+            tournamentId={params.id}
+            missionId={mission.id}
+            canAssign={
+              mission.submissionDeadline !== null &&
+              mission.submissionDeadline.getTime() <= Date.now()
+            }
+            deadlineLabel={
+              mission.submissionDeadline
+                ? formatDateTime(mission.submissionDeadline)
+                : null
+            }
+          />
+        )}
       </header>
 
       {mission.submissions.length === 0 ? (

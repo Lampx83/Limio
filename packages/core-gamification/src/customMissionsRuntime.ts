@@ -19,6 +19,9 @@ import {
   decideWindowAction,
   isOutlier,
   isSpeedRunSubmission,
+  planBalancedReviewerAssignments,
+  type ReviewerPlanReviewer,
+  type ReviewerPlanSubmission,
   type RubricCriterion,
   type ReviewerScoreEntry,
 } from "./customMissions";
@@ -523,14 +526,30 @@ function validateScoresAgainstRubric(
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// PEER_REVIEW — random-assign reviewers when submission deadline closes.
-// Called by background job.
+// PEER_REVIEW — phân reviewer khi qua hạn nộp (background job + nút instructor).
+//
+// 2 nhánh:
+//   - Judges (hackathon): tournament có TournamentJudge + mission nộp-nhóm →
+//     mỗi giám khảo review mọi bài (deterministic).
+//   - Peer: phân CÂN BẰNG TẢI (planBalancedReviewerAssignments, deterministic).
+//     Pool mở rộng:
+//       · mission nộp-nhóm  → MỌI thành viên đang active (loại người cùng nhóm
+//         với tác giả), groupKey = teamId.
+//       · mission solo      → những người đã nộp (loại chính tác giả).
+//
+// `mode`:
+//   - "topup" (default): chỉ bù cho đủ peerReviewerCount, giữ nguyên assignment
+//     cũ (kể cả phân tay). Idempotent — cron/nút gọi lại an toàn.
+//   - "rebalance": xóa các assignment CHƯA chấm (giữ assignment đã chấm), rồi
+//     phân lại cân bằng. Dùng khi roster bị lệch và cần chia đều lại.
 // ─────────────────────────────────────────────────────────────────────────
 
 export async function assignPeerReviewers(
   missionId: string,
   db: PrismaClient = prisma,
-): Promise<{ assignedCount: number }> {
+  opts: { mode?: "topup" | "rebalance" } = {},
+): Promise<{ assignedCount: number; unassignedCount: number }> {
+  const mode = opts.mode ?? "topup";
   const mission = await db.tournamentMission.findUnique({
     where: { id: missionId },
   });
@@ -543,55 +562,146 @@ export async function assignPeerReviewers(
     });
   }
   const N = mission.peerReviewerCount ?? 3;
+  const dueAt = mission.reviewWindowEndAt;
 
-  // Hackathon judges: if tournament has judges configured AND this mission is
-  // COLLECTIVE (isTeamSubmission), use judges instead of random peer assignment.
+  const submissions = await db.missionSubmission.findMany({
+    where: { missionId },
+    select: { id: true, userId: true },
+  });
+  if (submissions.length === 0)
+    return { assignedCount: 0, unassignedCount: 0 };
+
+  // ── Nhánh judges (hackathon) — giữ nguyên hành vi: mọi judge chấm mọi bài.
   const judges = mission.isTeamSubmission
     ? await db.tournamentJudge.findMany({
         where: { tournamentId: mission.tournamentId },
         select: { userId: true },
       })
     : [];
-  const useJudges = judges.length > 0;
+  if (judges.length > 0) {
+    return assignJudges(db, submissions, judges, dueAt);
+  }
 
-  const submissions = await db.missionSubmission.findMany({
-    where: { missionId },
-    select: { id: true, userId: true },
+  // ── Nhánh peer — pool mở rộng + cân bằng tải.
+  if (submissions.length < 2) return { assignedCount: 0, unassignedCount: 0 };
+
+  // Map userId → teamId cho toàn bộ participant active (để loại cùng nhóm).
+  const regs = await db.tournamentRegistration.findMany({
+    where: { tournamentId: mission.tournamentId, disqualifiedAt: null },
+    select: { userId: true, teamId: true },
   });
-  if (submissions.length === 0) return { assignedCount: 0 };
-  if (!useJudges && submissions.length < 2) return { assignedCount: 0 };
+  const teamOf = new Map(regs.map((r) => [r.userId, r.teamId]));
 
-  const submitterIds = submissions.map((s) => s.userId);
+  let reviewers: ReviewerPlanReviewer[];
+  let planSubmissions: ReviewerPlanSubmission[];
+  if (mission.isTeamSubmission) {
+    // Mở cho mọi thành viên thuộc một nhóm; loại cùng nhóm với tác giả.
+    reviewers = regs
+      .filter((r) => r.teamId !== null)
+      .map((r) => ({ userId: r.userId, groupKey: r.teamId }));
+    planSubmissions = submissions.map((s) => ({
+      id: s.id,
+      authorId: s.userId,
+      groupKey: teamOf.get(s.userId) ?? null,
+    }));
+  } else {
+    // Solo: pool = những người đã nộp; loại chính tác giả.
+    reviewers = submissions.map((s) => ({
+      userId: s.userId,
+      groupKey: null,
+    }));
+    planSubmissions = submissions.map((s) => ({
+      id: s.id,
+      authorId: s.userId,
+      groupKey: null,
+    }));
+  }
+
+  // Rebalance: gỡ các assignment CHƯA chấm trước khi phân lại.
+  let unassignedCount = 0;
+  if (mode === "rebalance") {
+    const pending = await db.missionReviewAssignment.findMany({
+      where: {
+        submission: { missionId },
+        completedAt: null,
+      },
+      select: { id: true, submissionId: true, reviewerId: true },
+    });
+    for (const ra of pending) {
+      await db.missionReviewAssignment.delete({ where: { id: ra.id } });
+      await emitEvent(db, {
+        userId: ra.reviewerId,
+        eventType: LearningEventType.TournamentMissionReviewUnassigned,
+        payload: {
+          submissionId: ra.submissionId,
+          reviewerId: ra.reviewerId,
+          wasCompleted: false,
+          rebalance: true,
+        },
+        courseId: null,
+      });
+      unassignedCount++;
+    }
+  }
+
+  // Assignment còn lại (đã chấm khi rebalance; tất cả khi topup) = ràng buộc tải.
+  const existing = await db.missionReviewAssignment.findMany({
+    where: { submission: { missionId } },
+    select: { submissionId: true, reviewerId: true },
+  });
+
+  const plan = planBalancedReviewerAssignments({
+    submissions: planSubmissions,
+    reviewers,
+    perSubmission: N,
+    existing,
+  });
+
   let assignedCount = 0;
+  for (const a of plan) {
+    await db.missionReviewAssignment.create({
+      data: {
+        submissionId: a.submissionId,
+        reviewerId: a.reviewerId,
+        dueAt,
+      },
+    });
+    await emitEvent(db, {
+      userId: a.reviewerId,
+      eventType: LearningEventType.TournamentMissionReviewAssigned,
+      payload: {
+        submissionId: a.submissionId,
+        reviewerId: a.reviewerId,
+        dueAt: dueAt.toISOString(),
+        ...(mode === "rebalance" ? { rebalance: true } : {}),
+      },
+      courseId: null,
+    });
+    assignedCount++;
+  }
+  return { assignedCount, unassignedCount };
+}
 
+/** Judge mode: mọi giám khảo review mọi bài (trừ bài của chính họ). Idempotent. */
+async function assignJudges(
+  db: PrismaClient,
+  submissions: Array<{ id: string; userId: string }>,
+  judges: Array<{ userId: string }>,
+  dueAt: Date,
+): Promise<{ assignedCount: number; unassignedCount: number }> {
+  let assignedCount = 0;
   for (const submission of submissions) {
-    // Hackathon: every judge reviews every submission (no random sampling).
-    // Standard peer: pool = other submitters; randomly pick N.
-    const pool = useJudges
-      ? judges.map((j) => j.userId).filter((id) => id !== submission.userId)
-      : submitterIds.filter((id) => id !== submission.userId);
-    if (pool.length === 0) continue;
-
-    // Skip if already assigned (job is idempotent).
     const existing = await db.missionReviewAssignment.findMany({
       where: { submissionId: submission.id },
       select: { reviewerId: true },
     });
-    const targetCount = useJudges ? pool.length : N; // all judges, or N peers
-    if (existing.length >= targetCount) continue;
-    const alreadyAssigned = new Set(existing.map((e) => e.reviewerId));
-    const remaining = pool.filter((id) => !alreadyAssigned.has(id));
-    const needed = targetCount - existing.length;
-    // Judges: assign all remaining (deterministic). Peers: random sample.
-    const picks = useJudges ? remaining.slice(0, needed) : pickRandom(remaining, needed);
-
+    const already = new Set(existing.map((e) => e.reviewerId));
+    const picks = judges
+      .map((j) => j.userId)
+      .filter((id) => id !== submission.userId && !already.has(id));
     for (const reviewerId of picks) {
       await db.missionReviewAssignment.create({
-        data: {
-          submissionId: submission.id,
-          reviewerId,
-          dueAt: mission.reviewWindowEndAt,
-        },
+        data: { submissionId: submission.id, reviewerId, dueAt },
       });
       await emitEvent(db, {
         userId: reviewerId,
@@ -599,25 +709,14 @@ export async function assignPeerReviewers(
         payload: {
           submissionId: submission.id,
           reviewerId,
-          dueAt: mission.reviewWindowEndAt.toISOString(),
+          dueAt: dueAt.toISOString(),
         },
         courseId: null,
       });
       assignedCount++;
     }
   }
-  return { assignedCount };
-}
-
-function pickRandom<T>(arr: T[], n: number): T[] {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = a[i] as T;
-    a[i] = a[j] as T;
-    a[j] = tmp;
-  }
-  return a.slice(0, n);
+  return { assignedCount, unassignedCount: 0 };
 }
 
 // ─────────────────────────────────────────────────────────────────────────
