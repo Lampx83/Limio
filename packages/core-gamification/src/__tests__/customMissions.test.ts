@@ -419,6 +419,34 @@ describe("planBalancedReviewerAssignments", () => {
     expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
   });
 
+  it("captains-only: pool 1 captain/nhóm → mỗi captain chấm đủ N nhóm khác, không cùng nhóm", () => {
+    // 4 nhóm, pool = 4 captain (mỗi nhóm 1), mỗi captain nộp 1 bài.
+    const teams = ["A", "B", "C", "D"];
+    const reviewers = teams.map((t) => ({ userId: `cap${t}`, groupKey: t }));
+    const subs = teams.map((t) => ({
+      id: `sub${t}`,
+      authorId: `cap${t}`,
+      groupKey: t,
+    }));
+    const plan = planBalancedReviewerAssignments({
+      submissions: subs,
+      reviewers,
+      perSubmission: 2,
+      existing: [],
+    });
+    // 4 bài × 2 = 8 suất; tải chia gần đều giữa 4 captain (chênh ≤2 ở pool nhỏ).
+    expect(plan).toHaveLength(8);
+    const load = loadOf(plan);
+    const counts = reviewers.map((r) => load.get(r.userId) ?? 0);
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(2);
+    // Không captain nào chấm bài nhóm mình.
+    for (const a of plan) {
+      const sub = subs.find((s) => s.id === a.submissionId)!;
+      const rev = reviewers.find((r) => r.userId === a.reviewerId)!;
+      expect(rev.groupKey).not.toBe(sub.groupKey);
+    }
+  });
+
   it("top-up: tôn trọng existing (tính tải + không phân trùng)", () => {
     const subs = Array.from({ length: 4 }, (_, i) => ({
       id: `s${i}`,

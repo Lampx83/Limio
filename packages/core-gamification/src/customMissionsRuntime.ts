@@ -595,10 +595,18 @@ export async function assignPeerReviewers(
   let reviewers: ReviewerPlanReviewer[];
   let planSubmissions: ReviewerPlanSubmission[];
   if (mission.isTeamSubmission) {
-    // Mở cho mọi thành viên thuộc một nhóm; loại cùng nhóm với tác giả.
-    reviewers = regs
-      .filter((r) => r.teamId !== null)
-      .map((r) => ({ userId: r.userId, groupKey: r.teamId }));
+    if (mission.peerReviewCaptainsOnly) {
+      // Chỉ captain (người nộp) chấm chéo; groupKey = team của captain.
+      reviewers = submissions.map((s) => ({
+        userId: s.userId,
+        groupKey: teamOf.get(s.userId) ?? null,
+      }));
+    } else {
+      // Mở cho mọi thành viên thuộc một nhóm; loại cùng nhóm với tác giả.
+      reviewers = regs
+        .filter((r) => r.teamId !== null)
+        .map((r) => ({ userId: r.userId, groupKey: r.teamId }));
+    }
     planSubmissions = submissions.map((s) => ({
       id: s.id,
       authorId: s.userId,

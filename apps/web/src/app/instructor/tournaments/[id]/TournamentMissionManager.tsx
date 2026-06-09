@@ -40,6 +40,7 @@ interface Mission {
   submissionDeadline?: string | Date | null;
   passThreshold?: number | null;
   peerReviewerCount?: number | null;
+  peerReviewCaptainsOnly?: boolean;
   reviewWindowEndAt?: string | Date | null;
   rubric?: RubricCriterion[] | null;
   contentPayload?: { url?: string; instructions?: string; markdown?: string } | null;
@@ -414,6 +415,7 @@ function AddMissionForm({
   const [reviewWindowEndAt, setReviewWindowEndAt] = useState("");
   const [passThreshold, setPassThreshold] = useState("0.6");
   const [isTeamSubmission, setIsTeamSubmission] = useState(false);
+  const [peerReviewCaptainsOnly, setPeerReviewCaptainsOnly] = useState(false);
 
   const [busy, setBusy] = useState(false);
 
@@ -490,6 +492,8 @@ function AddMissionForm({
           ? new Date(reviewWindowEndAt).toISOString()
           : null;
         payload.passThreshold = parseFloat(passThreshold);
+        // Chỉ có ý nghĩa khi nộp-nhóm; gửi kèm để cron/nút biết pool reviewer.
+        payload.peerReviewCaptainsOnly = peerReviewCaptainsOnly;
       }
       if (verifyMode === "MANUAL_REVIEW") {
         payload.passThreshold = parseFloat(passThreshold);
@@ -770,6 +774,24 @@ function AddMissionForm({
                   />
                 </div>
               </div>
+              {teamSize > 1 && isTeamSubmission && (
+                <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2.5">
+                  <input
+                    type="checkbox"
+                    checked={peerReviewCaptainsOnly}
+                    onChange={(e) => setPeerReviewCaptainsOnly(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600"
+                  />
+                  <div className="min-w-0 text-xs">
+                    <p className="font-semibold">Chỉ captain chấm chéo</p>
+                    <p className="mt-0.5 text-faint">
+                      Khi bật, chỉ captain (người nộp) được phân chấm bài nhóm khác —
+                      mỗi captain gánh nhiều bài hơn. Khi tắt (mặc định), mở cho mọi
+                      thành viên, tải chia mỏng đều.
+                    </p>
+                  </div>
+                </label>
+              )}
               <RubricBuilder rubric={rubric} setRubric={setRubric} />
             </div>
           )}
@@ -1048,6 +1070,9 @@ function EditMissionForm({
   const [reviewWindowEndAt, setReviewWindowEndAt] = useState(toLocalInput(mission.reviewWindowEndAt));
   const [passThreshold, setPassThreshold] = useState(String(mission.passThreshold ?? 0.6));
   const [isTeamSubmission, setIsTeamSubmission] = useState(Boolean(mission.isTeamSubmission));
+  const [peerReviewCaptainsOnly, setPeerReviewCaptainsOnly] = useState(
+    Boolean(mission.peerReviewCaptainsOnly),
+  );
 
   // AUTO_CHECK rule prefill
   const ruleType = (mission.autoCheckRule?.type as "url_pattern" | "file_format" | "webhook") ?? "url_pattern";
@@ -1098,6 +1123,7 @@ function EditMissionForm({
           ? new Date(reviewWindowEndAt).toISOString()
           : null;
         payload.passThreshold = parseFloat(passThreshold);
+        payload.peerReviewCaptainsOnly = peerReviewCaptainsOnly;
       }
       if (vm === "MANUAL_REVIEW") {
         payload.passThreshold = parseFloat(passThreshold);
@@ -1249,6 +1275,24 @@ function EditMissionForm({
                       <input type="datetime-local" value={reviewWindowEndAt} onChange={(e) => setReviewWindowEndAt(e.target.value)} required className="input mt-1 text-sm" />
                     </div>
                   </div>
+                  {teamSize > 1 && isTeamSubmission && (
+                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2.5">
+                      <input
+                        type="checkbox"
+                        checked={peerReviewCaptainsOnly}
+                        onChange={(e) => setPeerReviewCaptainsOnly(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600"
+                      />
+                      <div className="min-w-0 text-xs">
+                        <p className="font-semibold">Chỉ captain chấm chéo</p>
+                        <p className="mt-0.5 text-faint">
+                          Bật: chỉ captain được phân chấm bài nhóm khác (mỗi captain
+                          gánh nhiều hơn). Tắt (mặc định): mở cho mọi thành viên, tải
+                          chia mỏng đều.
+                        </p>
+                      </div>
+                    </label>
+                  )}
                   <RubricBuilder rubric={rubric} setRubric={setRubric} />
                 </div>
               )}

@@ -1317,6 +1317,10 @@ model TournamentMission {
   // rubric: [{ id, label, scale: "1-5"|"pass_fail", weight }]
   rubric             Json?
   peerReviewerCount  Int?       @default(3)
+  // Team peer-review only: true = chỉ captain (người nộp) được phân chấm chéo;
+  // false (default) = mở cho mọi thành viên đang active của giải. Bỏ qua khi
+  // mission không phải nộp-nhóm (solo luôn dùng pool người-đã-nộp).
+  peerReviewCaptainsOnly Boolean @default(false)
   reviewWindowEndAt  DateTime?
   // 0..1 — instructor sets per mission; required for PEER_REVIEW and
   // MANUAL_REVIEW to decide PASSED vs FAILED.
