@@ -524,6 +524,34 @@ describe("planBalancedReviewerAssignments", () => {
     expect(plan).toHaveLength(7);
   });
 
+  it("đợt-2: chỉ phân bài MỚI (planSubmissions là pending), né reviewer đang gánh nặng", () => {
+    // 3 reviewer; u0,u1 đã gánh nhiều (existing trên bài cũ đã chốt, không nằm
+    // trong planSubmissions). Bài mới sNew cần 2 reviewer → phải chọn u2 (ít tải).
+    const reviewers = [
+      { userId: "u0", groupKey: null },
+      { userId: "u1", groupKey: null },
+      { userId: "u2", groupKey: null },
+    ];
+    const existing = [
+      // tải cũ: u0=3, u1=3, u2=0 (trên các bài KHÔNG có trong planSubmissions)
+      { submissionId: "old1", reviewerId: "u0" },
+      { submissionId: "old2", reviewerId: "u0" },
+      { submissionId: "old3", reviewerId: "u0" },
+      { submissionId: "old1", reviewerId: "u1" },
+      { submissionId: "old2", reviewerId: "u1" },
+      { submissionId: "old3", reviewerId: "u1" },
+    ];
+    const plan = planBalancedReviewerAssignments({
+      submissions: [{ id: "sNew", authorId: "uX", groupKey: null }],
+      reviewers,
+      perSubmission: 2,
+      existing,
+    });
+    expect(plan).toHaveLength(2);
+    // u2 (ít tải nhất) chắc chắn được chọn cho bài mới.
+    expect(plan.some((a) => a.reviewerId === "u2")).toBe(true);
+  });
+
   it("không đủ người hợp lệ → best effort, không ném lỗi", () => {
     // 2 thành viên cùng 1 nhóm, 1 bài của nhóm đó → không ai hợp lệ.
     const plan = planBalancedReviewerAssignments({

@@ -1281,10 +1281,22 @@ function EditMissionForm({
                       <input type="datetime-local" value={reviewWindowEndAt} onChange={(e) => setReviewWindowEndAt(e.target.value)} required className="input mt-1 text-sm" />
                     </div>
                   </div>
+                  {reviewWindowEndAt &&
+                    submissionDeadline &&
+                    new Date(reviewWindowEndAt) <= new Date(submissionDeadline) && (
+                      <p className="rounded-lg bg-warning-50 px-3 py-2 text-[11px] text-warning-700 dark:bg-warning-950/30 dark:text-warning-300">
+                        ⚠ “Đóng vòng chấm” đang ≤ “Hạn nộp”. Bài nộp sẽ không kịp
+                        được phân/chấm. Khi mở lại nhận thêm bài, nhớ đẩy <strong>cả
+                        hai</strong> mốc ra tương lai (đóng vòng chấm phải sau hạn
+                        nộp).
+                      </p>
+                    )}
                   <p className="text-[11px] text-faint">
                     💡 Số reviewer/bài ≈ mỗi học viên chấm bao nhiêu bài (số người ÷
                     số bài). Trang <strong>Bài nộp</strong> có công cụ “Tính số
-                    reviewer theo tải” gợi ý số này theo dữ liệu thực tế.
+                    reviewer theo tải” gợi ý số này theo dữ liệu thực tế. Mở lại 2
+                    mốc thời gian để nhận thêm bài → sau hạn mới, bấm “Tự động phân
+                    reviewer” để phân bài mới (bài cũ giữ nguyên).
                   </p>
                   {teamSize > 1 && isTeamSubmission && (
                     <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2.5">

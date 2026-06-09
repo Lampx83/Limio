@@ -566,10 +566,15 @@ export async function assignPeerReviewers(
 
   const submissions = await db.missionSubmission.findMany({
     where: { missionId },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, status: true },
   });
   if (submissions.length === 0)
     return { assignedCount: 0, unassignedCount: 0 };
+
+  // Chỉ phân cho bài CHƯA chốt (pending). Bài đã passed/failed (vd đợt trước đã
+  // đóng window) không bao giờ bị đụng — hỗ trợ "mở lại nhận thêm bài": bài mới
+  // được phân, bài cũ giữ nguyên. Pool + tải vẫn tính từ TẤT CẢ bài/assignment.
+  const pendingSubmissions = submissions.filter((s) => s.status === "pending");
 
   // ── Nhánh judges (hackathon) — giữ nguyên hành vi: mọi judge chấm mọi bài.
   const judges = mission.isTeamSubmission
@@ -579,11 +584,13 @@ export async function assignPeerReviewers(
       })
     : [];
   if (judges.length > 0) {
-    return assignJudges(db, submissions, judges, dueAt);
+    return assignJudges(db, pendingSubmissions, judges, dueAt);
   }
 
   // ── Nhánh peer — pool mở rộng + cân bằng tải.
   if (submissions.length < 2) return { assignedCount: 0, unassignedCount: 0 };
+  if (pendingSubmissions.length === 0)
+    return { assignedCount: 0, unassignedCount: 0 };
 
   // Map userId → teamId cho toàn bộ participant active (để loại cùng nhóm).
   const regs = await db.tournamentRegistration.findMany({
@@ -607,7 +614,8 @@ export async function assignPeerReviewers(
         .filter((r) => r.teamId !== null)
         .map((r) => ({ userId: r.userId, groupKey: r.teamId }));
     }
-    planSubmissions = submissions.map((s) => ({
+    // Chỉ bài pending là mục tiêu phân; bài đã chốt giữ nguyên.
+    planSubmissions = pendingSubmissions.map((s) => ({
       id: s.id,
       authorId: s.userId,
       groupKey: teamOf.get(s.userId) ?? null,
@@ -618,19 +626,20 @@ export async function assignPeerReviewers(
       userId: s.userId,
       groupKey: null,
     }));
-    planSubmissions = submissions.map((s) => ({
+    planSubmissions = pendingSubmissions.map((s) => ({
       id: s.id,
       authorId: s.userId,
       groupKey: null,
     }));
   }
 
-  // Rebalance: gỡ các assignment CHƯA chấm trước khi phân lại.
+  // Rebalance: gỡ các assignment CHƯA chấm của bài CHƯA chốt trước khi phân lại.
+  // (Bài đã chốt: không đụng — kể cả lượt pending sót lại của nó.)
   let unassignedCount = 0;
   if (mode === "rebalance") {
     const pending = await db.missionReviewAssignment.findMany({
       where: {
-        submission: { missionId },
+        submission: { missionId, status: "pending" },
         completedAt: null,
       },
       select: { id: true, submissionId: true, reviewerId: true },

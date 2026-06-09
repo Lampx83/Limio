@@ -60,6 +60,7 @@ export async function PATCH(
       conditionSkillCode: true,
       missionType: true,
       verifyMode: true,
+      reviewWindowEndAt: true,
       tournament: { select: { creatorId: true, status: true, teamSize: true } },
       assignment: { select: { id: true } },
     },
@@ -192,6 +193,14 @@ export async function PATCH(
     }
   }
 
+  // Mở lại vòng chấm: reviewWindowEndAt cũ đã ở quá khứ, nay đặt sang tương lai.
+  const nowMs = Date.now();
+  const reopeningWindow =
+    data.reviewWindowEndAt != null &&
+    new Date(data.reviewWindowEndAt).getTime() > nowMs &&
+    mission.reviewWindowEndAt != null &&
+    mission.reviewWindowEndAt.getTime() <= nowMs;
+
   const updated = await prisma.$transaction(async (tx) => {
     const m = await tx.tournamentMission.update({
       where: { id: params.id },
@@ -213,6 +222,9 @@ export async function PATCH(
         ...(data.peerReviewerCount  !== undefined && { peerReviewerCount:  data.peerReviewerCount }),
         ...(data.peerReviewCaptainsOnly !== undefined && { peerReviewCaptainsOnly: data.peerReviewCaptainsOnly }),
         ...(data.reviewWindowEndAt  !== undefined && { reviewWindowEndAt:  data.reviewWindowEndAt ? new Date(data.reviewWindowEndAt) : null }),
+        // Mở lại window đã đóng (đẩy reviewWindowEndAt từ quá khứ ra tương lai)
+        // → reset budget auto-gia-hạn để đợt bài mới không rơi thẳng fallback.
+        ...(reopeningWindow && { reviewExtendCount: 0 }),
         ...(data.passThreshold      !== undefined && { passThreshold:      data.passThreshold }),
         ...(data.isTeamSubmission   !== undefined && { isTeamSubmission:   data.isTeamSubmission }),
       },
