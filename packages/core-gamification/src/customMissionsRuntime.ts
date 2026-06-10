@@ -832,10 +832,13 @@ export async function removeReviewerAssignment(
 export async function closeReviewWindow(
   missionId: string,
   db: PrismaClient = prisma,
+  opts: { force?: boolean } = {},
 ): Promise<{
   closed: number;
   extended: number;
   fallbackManual: number;
+  /** force mode: số bài chưa đạt quorum nên bị bỏ qua (vẫn pending). */
+  skippedUnderQuorum: number;
 }> {
   const mission = await db.tournamentMission.findUnique({
     where: { id: missionId },
@@ -867,9 +870,21 @@ export async function closeReviewWindow(
   let closed = 0;
   let extended = 0;
   let fallbackManual = 0;
+  let skippedUnderQuorum = 0;
 
   for (const submission of submissions) {
     const completed = submission.reviewAssignments.filter((r) => r.completedAt);
+
+    // force = "chốt điểm ngay" (GV bấm tay trước hạn): đóng bài đạt quorum, BỎ
+    // QUA bài chưa đủ (không gia hạn, không fallback). Cron tự động vẫn dùng
+    // decideWindowAction như cũ.
+    if (opts.force) {
+      if (completed.length < required) {
+        skippedUnderQuorum++;
+        continue;
+      }
+      // đạt quorum → rơi xuống nhánh "close" bên dưới.
+    } else {
     const decision = decideWindowAction({
       completedReviewCount: completed.length,
       requiredReviewerCount: required,
@@ -926,8 +941,9 @@ export async function closeReviewWindow(
       // passed/failed (out of scope for this function).
       continue;
     }
+    } // end non-force branch
 
-    // decision.action === "close" — aggregate per-reviewer + finalize.
+    // close — aggregate per-reviewer + finalize (force-quorum-met hoặc decision=close).
     const aggregates: { ra: typeof completed[number]; score: number }[] = [];
     for (const ra of completed) {
       const score = calcAggregateScore(
@@ -1021,7 +1037,7 @@ export async function closeReviewWindow(
     closed++;
   }
 
-  return { closed, extended, fallbackManual };
+  return { closed, extended, fallbackManual, skippedUnderQuorum };
 }
 
 // ─────────────────────────────────────────────────────────────────────────

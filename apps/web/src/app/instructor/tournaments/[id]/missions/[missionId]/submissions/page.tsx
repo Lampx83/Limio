@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
+import {
+  calcAggregateScore,
+  calcMedian,
+  resolveReviewQuorum,
+} from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 import ReviewerManager from "./ReviewerManager";
@@ -18,6 +23,7 @@ import MissionGradeForm from "./MissionGradeForm";
 import AutoAssignReviewersButton from "./AutoAssignReviewersButton";
 import ReviewerLoadPlanner from "./ReviewerLoadPlanner";
 import ReviewDetailsPanel from "./ReviewDetailsPanel";
+import CloseReviewsButton from "./CloseReviewsButton";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +66,7 @@ export default async function MissionSubmissionsPage({
               id: true,
               completedAt: true,
               reviewerId: true,
+              scores: true,
               reviewer: { select: { displayName: true } },
             },
           },
@@ -130,6 +137,38 @@ export default async function MissionSubmissionsPage({
       ? teamMemberCount
       : mission.submissions.length;
 
+  // Xếp hạng mission: điểm = finalScore (đã chốt) hoặc median TẠM TÍNH từ các
+  // review đã hoàn thành. Sắp giảm dần; bài chưa có review xuống cuối.
+  const rubricForRank =
+    (mission.rubric as
+      | { id: string; label: string; scale: "1-5" | "pass_fail"; weight: number }[]
+      | null) ?? [];
+  const quorum = resolveReviewQuorum(
+    mission.reviewQuorum,
+    mission.peerReviewerCount,
+  );
+  const ranking = mission.submissions
+    .map((s) => {
+      const aggs = s.reviewAssignments
+        .filter((r) => r.completedAt && r.scores)
+        .map((r) =>
+          calcAggregateScore(
+            (r.scores as { criterionId: string; score: number }[]) ?? [],
+            rubricForRank,
+          ),
+        );
+      const provisional = aggs.length ? calcMedian(aggs) : null;
+      return {
+        id: s.id,
+        name: teamByUser.get(s.userId)?.name ?? s.user.displayName,
+        score: s.finalScore ?? provisional,
+        isFinal: s.finalScore !== null,
+        reviews: aggs.length,
+        status: s.status,
+      };
+    })
+    .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+
   return (
     <main>
       <Link
@@ -154,19 +193,26 @@ export default async function MissionSubmissionsPage({
           </p>
         </div>
         {mission.verifyMode === "PEER_REVIEW" && (
-          <AutoAssignReviewersButton
-            tournamentId={params.id}
-            missionId={mission.id}
-            canAssign={
-              mission.submissionDeadline !== null &&
-              mission.submissionDeadline.getTime() <= Date.now()
-            }
-            deadlineLabel={
-              mission.submissionDeadline
-                ? formatDateTime(mission.submissionDeadline)
-                : null
-            }
-          />
+          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+            <AutoAssignReviewersButton
+              tournamentId={params.id}
+              missionId={mission.id}
+              canAssign={
+                mission.submissionDeadline !== null &&
+                mission.submissionDeadline.getTime() <= Date.now()
+              }
+              deadlineLabel={
+                mission.submissionDeadline
+                  ? formatDateTime(mission.submissionDeadline)
+                  : null
+              }
+            />
+            <CloseReviewsButton
+              tournamentId={params.id}
+              missionId={mission.id}
+              quorum={quorum}
+            />
+          </div>
         )}
       </header>
 
@@ -189,6 +235,63 @@ export default async function MissionSubmissionsPage({
                 : null
             }
           />
+        )}
+
+      {mission.verifyMode === "PEER_REVIEW" &&
+        mission.submissions.length > 0 && (
+          <section className="mt-4 overflow-hidden rounded-xl border border-token">
+            <div className="flex items-center justify-between bg-[rgb(var(--surface-muted))] px-3 py-2">
+              <h2 className="text-sm font-semibold">🏆 Xếp hạng mission</h2>
+              <span className="text-[11px] text-faint">
+                Điểm chưa chốt là <em>tạm tính</em> theo review đã hoàn thành
+              </span>
+            </div>
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-faint">
+                <tr className="border-b border-token">
+                  <th className="px-3 py-1.5 font-medium">#</th>
+                  <th className="px-3 py-1.5 font-medium">Nhóm / Học viên</th>
+                  <th className="px-3 py-1.5 font-medium">Điểm</th>
+                  <th className="px-3 py-1.5 font-medium">Review</th>
+                  <th className="px-3 py-1.5 font-medium">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranking.map((r, i) => (
+                  <tr key={r.id} className="border-b border-token last:border-0">
+                    <td className="px-3 py-1.5 tabular-nums text-muted">{i + 1}</td>
+                    <td className="px-3 py-1.5 font-medium">{r.name}</td>
+                    <td className="px-3 py-1.5 tabular-nums">
+                      {r.score === null ? (
+                        <span className="text-faint">—</span>
+                      ) : (
+                        <>
+                          {Math.round(r.score * 100)}%
+                          {!r.isFinal && (
+                            <span className="ml-1 text-[10px] text-amber-600">
+                              tạm tính
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </td>
+                    <td className="px-3 py-1.5 tabular-nums text-muted">
+                      {r.reviews}/{mission.peerReviewerCount ?? 3}
+                    </td>
+                    <td className="px-3 py-1.5">
+                      {r.status === "passed" ? (
+                        <span className="text-success-600">Đạt</span>
+                      ) : r.status === "failed" ? (
+                        <span className="text-danger-600">Chưa đạt</span>
+                      ) : (
+                        <span className="text-amber-600">Chờ chốt</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
         )}
 
       {mission.submissions.length === 0 ? (
