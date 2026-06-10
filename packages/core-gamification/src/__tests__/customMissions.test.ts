@@ -10,6 +10,7 @@ import {
   isOutlier,
   isSpeedRunSubmission,
   planBalancedReviewerAssignments,
+  resolveReviewQuorum,
   reviewerCoverage,
   suggestPeerReviewerCount,
   type ReviewerPlanInput,
@@ -382,6 +383,25 @@ describe("suggestPeerReviewerCount", () => {
     expect(
       suggestPeerReviewerCount({ poolSize: 100, submissionCount: 10, reviewsPerReviewer: 0 }),
     ).toBe(0);
+  });
+});
+
+describe("resolveReviewQuorum", () => {
+  it("quorum null → dùng peerReviewerCount (hành vi cũ)", () => {
+    expect(resolveReviewQuorum(null, 25)).toBe(25);
+    expect(resolveReviewQuorum(undefined, 9)).toBe(9);
+  });
+  it("quorum đặt < N → dùng quorum (vd phân 25, chốt khi 8)", () => {
+    expect(resolveReviewQuorum(8, 25)).toBe(8);
+  });
+  it("quorum > N → kẹp về N (không thể cần nhiều hơn số phân)", () => {
+    expect(resolveReviewQuorum(30, 9)).toBe(9);
+  });
+  it("quorum ≤ 0 → tối thiểu 1", () => {
+    expect(resolveReviewQuorum(0, 9)).toBe(1);
+  });
+  it("cả hai null → mặc định 3", () => {
+    expect(resolveReviewQuorum(null, null)).toBe(3);
   });
 });
 

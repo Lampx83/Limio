@@ -273,6 +273,21 @@ export function suggestPeerReviewerCount(input: {
 }
 
 /**
+ * Quorum thực dùng để quyết định CHỐT điểm 1 bài: số review hoàn thành tối thiểu.
+ *   - reviewQuorum null/undefined → dùng peerReviewerCount (hành vi cũ).
+ *   - Luôn kẹp trong [1, peerReviewerCount] — không thể yêu cầu nhiều review hơn
+ *     số reviewer được phân (nếu không bài sẽ không bao giờ chốt).
+ */
+export function resolveReviewQuorum(
+  reviewQuorum: number | null | undefined,
+  peerReviewerCount: number | null | undefined,
+): number {
+  const n = peerReviewerCount ?? 3;
+  const q = reviewQuorum ?? n;
+  return Math.max(1, Math.min(q, n));
+}
+
+/**
  * Số người trong pool sẽ thực sự được phân ≥1 bài khi đặt N reviewer/bài.
  * = min(số_bài × N, pool) — vì tổng suất là số_bài×N, không vượt quá pool.
  */

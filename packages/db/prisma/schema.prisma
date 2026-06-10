@@ -1317,6 +1317,11 @@ model TournamentMission {
   // rubric: [{ id, label, scale: "1-5"|"pass_fail", weight }]
   rubric             Json?
   peerReviewerCount  Int?       @default(3)
+  // Số review HOÀN THÀNH tối thiểu để tự chốt điểm 1 bài (quorum), TÁCH khỏi
+  // peerReviewerCount (số reviewer được phân). Null = dùng peerReviewerCount
+  // (hành vi cũ). Cho phép phân nhiều reviewer cho coverage mà vẫn chốt khi đủ
+  // quorum. Luôn bị kẹp ≤ peerReviewerCount khi tính.
+  reviewQuorum       Int?
   // Team peer-review only: true = chỉ captain (người nộp) được phân chấm chéo;
   // false (default) = mở cho mọi thành viên đang active của giải. Bỏ qua khi
   // mission không phải nộp-nhóm (solo luôn dùng pool người-đã-nộp).

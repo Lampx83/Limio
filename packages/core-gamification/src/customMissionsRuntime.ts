@@ -20,6 +20,7 @@ import {
   isOutlier,
   isSpeedRunSubmission,
   planBalancedReviewerAssignments,
+  resolveReviewQuorum,
   type ReviewerPlanReviewer,
   type ReviewerPlanSubmission,
   type RubricCriterion,
@@ -852,7 +853,11 @@ export async function closeReviewWindow(
       reason: "PEER_REVIEW mission missing passThreshold",
     });
   }
-  const required = mission.peerReviewerCount ?? 3;
+  // Quorum chốt = reviewQuorum (kẹp ≤ peerReviewerCount); null → dùng N (cũ).
+  const required = resolveReviewQuorum(
+    mission.reviewQuorum,
+    mission.peerReviewerCount,
+  );
 
   const submissions = await db.missionSubmission.findMany({
     where: { missionId, status: "pending" },

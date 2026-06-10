@@ -37,6 +37,7 @@ const PatchInput = z
     autoCheckRule:      z.unknown().nullable().optional(),
     rubric:             z.array(RubricCriterionSchema).nullable().optional(),
     peerReviewerCount:  z.number().int().min(1).max(50).nullable().optional(),
+    reviewQuorum:       z.number().int().min(1).max(50).nullable().optional(),
     peerReviewCaptainsOnly: z.boolean().optional(),
     reviewWindowEndAt:  z.string().datetime().nullable().optional(),
     passThreshold:      z.number().min(0).max(1).nullable().optional(),
@@ -220,6 +221,7 @@ export async function PATCH(
         ...(data.autoCheckRule      !== undefined && { autoCheckRule:      (data.autoCheckRule ?? null) as never }),
         ...(data.rubric             !== undefined && { rubric:             (data.rubric ?? null) as never }),
         ...(data.peerReviewerCount  !== undefined && { peerReviewerCount:  data.peerReviewerCount }),
+        ...(data.reviewQuorum       !== undefined && { reviewQuorum:       data.reviewQuorum }),
         ...(data.peerReviewCaptainsOnly !== undefined && { peerReviewCaptainsOnly: data.peerReviewCaptainsOnly }),
         ...(data.reviewWindowEndAt  !== undefined && { reviewWindowEndAt:  data.reviewWindowEndAt ? new Date(data.reviewWindowEndAt) : null }),
         // Mở lại window đã đóng (đẩy reviewWindowEndAt từ quá khứ ra tương lai)
@@ -245,6 +247,7 @@ export async function PATCH(
         submissionDeadline: true,
         passThreshold: true,
         peerReviewerCount: true,
+        reviewQuorum: true,
         peerReviewCaptainsOnly: true,
         reviewWindowEndAt: true,
         rubric: true,

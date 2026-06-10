@@ -40,6 +40,7 @@ interface Mission {
   submissionDeadline?: string | Date | null;
   passThreshold?: number | null;
   peerReviewerCount?: number | null;
+  reviewQuorum?: number | null;
   peerReviewCaptainsOnly?: boolean;
   reviewWindowEndAt?: string | Date | null;
   rubric?: RubricCriterion[] | null;
@@ -412,6 +413,7 @@ function AddMissionForm({
     { id: "clarity", label: "Mức độ rõ ràng", scale: "1-5", weight: 1 },
   ]);
   const [peerReviewerCount, setPeerReviewerCount] = useState("3");
+  const [reviewQuorum, setReviewQuorum] = useState("");
   const [reviewWindowEndAt, setReviewWindowEndAt] = useState("");
   const [passThreshold, setPassThreshold] = useState("0.6");
   const [isTeamSubmission, setIsTeamSubmission] = useState(false);
@@ -488,6 +490,9 @@ function AddMissionForm({
       if (verifyMode === "PEER_REVIEW") {
         payload.rubric = rubric;
         payload.peerReviewerCount = parseInt(peerReviewerCount, 10) || 3;
+        payload.reviewQuorum = reviewQuorum
+          ? parseInt(reviewQuorum, 10)
+          : null;
         payload.reviewWindowEndAt = reviewWindowEndAt
           ? new Date(reviewWindowEndAt).toISOString()
           : null;
@@ -750,6 +755,18 @@ function AddMissionForm({
                   />
                 </div>
                 <div>
+                  <label className="label text-xs">Review tối thiểu để chốt</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={reviewQuorum}
+                    onChange={(e) => setReviewQuorum(e.target.value)}
+                    placeholder="= số reviewer"
+                    className="input mt-1 text-sm"
+                  />
+                </div>
+                <div>
                   <label className="label text-xs">Ngưỡng đạt</label>
                   <input
                     type="number"
@@ -775,10 +792,13 @@ function AddMissionForm({
                 </div>
               </div>
               <p className="text-[11px] text-faint">
-                💡 “Số reviewer / bài” quyết định mỗi học viên chấm khoảng bao nhiêu
-                bài (số người chấm ÷ số bài). Sau hạn nộp, vào trang <strong>Bài
-                nộp</strong> dùng công cụ “Tính số reviewer theo tải” để hệ thống gợi
-                ý số này theo số người & số bài thực tế, rồi đặt + phân lại 1 nút.
+                💡 “Số reviewer / bài” = số người được phân chấm mỗi bài (cao →
+                nhiều người tham gia). “Review tối thiểu để chốt” = số review hoàn
+                thành cần có để bài tự ra điểm — để trống thì bằng số reviewer. <strong>
+                Nếu phân nhiều reviewer</strong> (vd 25) nhưng thực tế chỉ ~8 người
+                chấm xong, hãy đặt quorum ~8 để bài tự chốt thay vì kẹt chờ đủ 25.
+                Sau hạn nộp, trang <strong>Bài nộp</strong> có công cụ “Tính số
+                reviewer theo tải”.
               </p>
               {teamSize > 1 && isTeamSubmission && (
                 <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2.5">
@@ -1073,6 +1093,9 @@ function EditMissionForm({
       : [{ id: "clarity", label: "Mức độ rõ ràng", scale: "1-5", weight: 1 }],
   );
   const [peerReviewerCount, setPeerReviewerCount] = useState(String(mission.peerReviewerCount ?? 3));
+  const [reviewQuorum, setReviewQuorum] = useState(
+    mission.reviewQuorum != null ? String(mission.reviewQuorum) : "",
+  );
   const [reviewWindowEndAt, setReviewWindowEndAt] = useState(toLocalInput(mission.reviewWindowEndAt));
   const [passThreshold, setPassThreshold] = useState(String(mission.passThreshold ?? 0.6));
   const [isTeamSubmission, setIsTeamSubmission] = useState(Boolean(mission.isTeamSubmission));
@@ -1125,6 +1148,9 @@ function EditMissionForm({
       if (vm === "PEER_REVIEW") {
         payload.rubric = rubric;
         payload.peerReviewerCount = parseInt(peerReviewerCount, 10) || 3;
+        payload.reviewQuorum = reviewQuorum
+          ? parseInt(reviewQuorum, 10)
+          : null;
         payload.reviewWindowEndAt = reviewWindowEndAt
           ? new Date(reviewWindowEndAt).toISOString()
           : null;
@@ -1273,6 +1299,10 @@ function EditMissionForm({
                       <input type="number" min={1} max={50} value={peerReviewerCount} onChange={(e) => setPeerReviewerCount(e.target.value)} className="input mt-1 text-sm" />
                     </div>
                     <div>
+                      <label className="label text-xs">Review tối thiểu để chốt</label>
+                      <input type="number" min={1} max={50} value={reviewQuorum} onChange={(e) => setReviewQuorum(e.target.value)} placeholder="= số reviewer" className="input mt-1 text-sm" />
+                    </div>
+                    <div>
                       <label className="label text-xs">Ngưỡng đạt</label>
                       <input type="number" min={0} max={1} step={0.05} value={passThreshold} onChange={(e) => setPassThreshold(e.target.value)} required className="input mt-1 text-sm" />
                     </div>
@@ -1292,11 +1322,11 @@ function EditMissionForm({
                       </p>
                     )}
                   <p className="text-[11px] text-faint">
-                    💡 Số reviewer/bài ≈ mỗi học viên chấm bao nhiêu bài (số người ÷
-                    số bài). Trang <strong>Bài nộp</strong> có công cụ “Tính số
-                    reviewer theo tải” gợi ý số này theo dữ liệu thực tế. Mở lại 2
-                    mốc thời gian để nhận thêm bài → sau hạn mới, bấm “Tự động phân
-                    reviewer” để phân bài mới (bài cũ giữ nguyên).
+                    💡 “Review tối thiểu để chốt” (quorum) = số review hoàn thành cần
+                    để bài tự ra điểm; để trống = bằng số reviewer/bài. Phân nhiều
+                    reviewer mà chỉ ~N người chấm xong → đặt quorum ~N để bài tự chốt.
+                    Mở lại 2 mốc thời gian để nhận thêm bài → sau hạn mới bấm “Tự động
+                    phân reviewer” (bài cũ giữ nguyên).
                   </p>
                   {teamSize > 1 && isTeamSubmission && (
                     <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2.5">
