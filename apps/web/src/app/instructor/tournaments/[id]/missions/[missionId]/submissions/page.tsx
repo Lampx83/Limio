@@ -17,6 +17,7 @@ import ReviewerManager from "./ReviewerManager";
 import MissionGradeForm from "./MissionGradeForm";
 import AutoAssignReviewersButton from "./AutoAssignReviewersButton";
 import ReviewerLoadPlanner from "./ReviewerLoadPlanner";
+import ReviewDetailsPanel from "./ReviewDetailsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -347,6 +348,13 @@ export default async function MissionSubmissionsPage({
                     <span className="text-faint">Auto-graded</span>
                   )}
                 </footer>
+
+                {mission.verifyMode === "PEER_REVIEW" && (
+                  <ReviewDetailsPanel
+                    tournamentId={params.id}
+                    submissionId={s.id}
+                  />
+                )}
               </li>
             );
           })}
