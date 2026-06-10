@@ -49,9 +49,36 @@ export default async function MissionDetailPage({
       missionId_userId: { missionId: params.missionId, userId: submissionLookupUserId },
     },
     include: {
-      reviewAssignments: { select: { id: true, completedAt: true } },
+      reviewAssignments: {
+        // Ẩn danh: KHÔNG select tên reviewer. Chỉ điểm + nhận xét.
+        orderBy: { completedAt: "asc" },
+        select: {
+          id: true,
+          completedAt: true,
+          scores: true,
+          comment: true,
+          aggregateScore: true,
+        },
+      },
     },
   });
+
+  // Feedback chỉ mở cho SV SAU KHI bài đã chốt (status != pending), ẩn danh.
+  const rubricCriteria =
+    (mission.rubric as
+      | { id: string; label: string; scale: "1-5" | "pass_fail" }[]
+      | null) ?? [];
+  const receivedFeedback =
+    submission && submission.status !== "pending"
+      ? submission.reviewAssignments
+          .filter((r) => r.completedAt)
+          .map((r) => ({
+            scores:
+              (r.scores as { criterionId: string; score: number }[]) ?? [],
+            comment: r.comment,
+            aggregateScore: r.aggregateScore,
+          }))
+      : [];
 
   const content = mission.contentPayload as
     | { markdown?: string; url?: string; instructions?: string }
@@ -143,6 +170,8 @@ export default async function MissionDetailPage({
               passThreshold={mission.passThreshold}
               peerReviewerCount={mission.peerReviewerCount}
               submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
+              feedback={receivedFeedback}
+              rubric={rubricCriteria}
             />
           ) : (
             <p className="text-sm text-muted">
@@ -203,6 +232,8 @@ function SubmissionStatusBlock({
   passThreshold,
   peerReviewerCount,
   submissionDeadlineIso,
+  feedback = [],
+  rubric = [],
 }: {
   submission: {
     status: string;
@@ -214,6 +245,13 @@ function SubmissionStatusBlock({
   passThreshold: number | null;
   peerReviewerCount: number | null;
   submissionDeadlineIso: string | null;
+  /** Feedback đã chốt, ẩn danh reviewer. */
+  feedback?: {
+    scores: { criterionId: string; score: number }[];
+    comment: string | null;
+    aggregateScore: number | null;
+  }[];
+  rubric?: { id: string; label: string; scale: "1-5" | "pass_fail" }[];
 }) {
   const statusLabel = {
     pending:      "Đang chờ xác minh",
@@ -270,6 +308,70 @@ function SubmissionStatusBlock({
           </span>
         </a>
       )}
+
+      {verifyMode === "PEER_REVIEW" &&
+        submission.status !== "pending" &&
+        feedback.length > 0 && (
+          <div className="rounded-xl border border-token">
+            <div className="border-b border-token bg-[rgb(var(--surface-muted))] px-3 py-2">
+              <p className="text-sm font-semibold">
+                💬 Nhận xét bạn nhận được ({feedback.length} reviewer)
+              </p>
+              <p className="text-[11px] text-faint">
+                Ẩn danh người chấm. Điểm cuối là trung vị các đánh giá.
+              </p>
+            </div>
+            <ul className="divide-y divide-[rgb(var(--border))]">
+              {feedback.map((f, i) => (
+                <li key={i} className="px-3 py-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-muted">
+                      Reviewer {i + 1}
+                    </span>
+                    {f.aggregateScore !== null && (
+                      <span className="text-xs tabular-nums text-muted">
+                        {Math.round(f.aggregateScore * 100)}%
+                      </span>
+                    )}
+                  </div>
+                  {rubric.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {rubric.map((c) => {
+                        const s = f.scores.find((x) => x.criterionId === c.id);
+                        return (
+                          <span
+                            key={c.id}
+                            className="inline-flex items-center gap-1 rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-[11px]"
+                          >
+                            <span className="text-faint">{c.label}:</span>
+                            <span className="font-medium">
+                              {s
+                                ? c.scale === "pass_fail"
+                                  ? s.score === 1
+                                    ? "Đạt"
+                                    : "Chưa"
+                                  : s.score
+                                : "—"}
+                            </span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {f.comment ? (
+                    <p className="mt-1.5 whitespace-pre-wrap text-sm">
+                      {f.comment}
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-xs text-faint">
+                      (Không có nhận xét chữ)
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
     </div>
   );
 }
