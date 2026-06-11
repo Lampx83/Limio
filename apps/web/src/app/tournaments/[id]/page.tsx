@@ -411,6 +411,16 @@ export default async function TournamentDetailPage({
                   <Globe className="h-4 w-4" /> Toàn nền tảng
                 </p>
               )}
+
+              {showLeaderboard && (
+                <a
+                  href="#leaderboard"
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-2.5 text-sm font-black text-amber-950 shadow-lg ring-2 ring-white/50 transition hover:scale-105 hover:bg-amber-300"
+                >
+                  <Trophy className="h-4 w-4" fill="currentColor" />
+                  Xem bảng xếp hạng
+                </a>
+              )}
             </div>
 
             {/* Floating hero icon */}
@@ -673,7 +683,7 @@ export default async function TournamentDetailPage({
 
           {/* Leaderboard */}
           {showLeaderboard && (
-            <section>
+            <section id="leaderboard" className="scroll-mt-24">
               <h2 className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white">
                 <Trophy className="h-6 w-6 text-amber-500" />
                 Bảng xếp hạng
