@@ -608,17 +608,9 @@ export default async function TournamentDetailPage({
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           {actionable ? (
                             <>
-                              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-                                {mission.missionType === "CUSTOM" ? "Tự thiết kế" : "Liên kết ngoài"}
-                              </span>
-                              {mission.verifyMode && (
+                              {mission.verifyMode === "PEER_REVIEW" && (
                                 <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase text-orange-800 dark:bg-orange-950/50 dark:text-orange-300">
-                                  {{
-                                    AUTO_GRADE:    "Quiz",
-                                    AUTO_CHECK:    "Tự kiểm tra",
-                                    PEER_REVIEW:   "Peer review",
-                                    MANUAL_REVIEW: "GV chấm",
-                                  }[mission.verifyMode]}
+                                  Peer review
                                 </span>
                               )}
                               {mission.submissionDeadline && (
