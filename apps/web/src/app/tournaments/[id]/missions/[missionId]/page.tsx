@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { calcAggregateScore, calcMedian } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import MissionSubmitForm from "./MissionSubmitForm";
-import MissionRankingPanel from "./MissionRankingPanel";
 import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -82,75 +80,8 @@ export default async function MissionDetailPage({
         }))
     : [];
 
-  // ── Xếp hạng mission (cho SV): Top 10 + thứ hạng nhóm mình. Điểm = finalScore
-  // hoặc median tạm tính từ review đã hoàn thành. Chỉ cho PEER_REVIEW.
-  let rankingTop: {
-    rank: number;
-    name: string;
-    score: number | null;
-    isFinal: boolean;
-    isMine: boolean;
-  }[] = [];
-  const myRank: { rank: number; total: number; score: number | null } | null =
-    null;
-  if (mission.verifyMode === "PEER_REVIEW") {
-    const rubric =
-      (mission.rubric as { id: string; label: string; scale: string }[] | null) ??
-      [];
-    const allSubs = await prisma.missionSubmission.findMany({
-      where: { missionId: params.missionId },
-      select: {
-        id: true,
-        userId: true,
-        finalScore: true,
-        reviewAssignments: {
-          where: { completedAt: { not: null } },
-          select: { scores: true },
-        },
-      },
-    });
-    // Map captain/submitter → tên nhóm (team) hoặc displayName (solo).
-    const submitterIds = allSubs.map((s) => s.userId);
-    const regs = submitterIds.length
-      ? await prisma.tournamentRegistration.findMany({
-          where: { tournamentId: params.id, userId: { in: submitterIds } },
-          select: {
-            userId: true,
-            team: { select: { name: true } },
-            user: { select: { displayName: true } },
-          },
-        })
-      : [];
-    const nameOf = new Map(
-      regs.map((r) => [r.userId, r.team?.name ?? r.user.displayName]),
-    );
-    const scored = allSubs
-      .map((s) => {
-        const aggs = s.reviewAssignments.map((r) =>
-          calcAggregateScore(
-            (r.scores as { criterionId: string; score: number }[]) ?? [],
-            rubric as never,
-          ),
-        );
-        return {
-          id: s.id,
-          name: nameOf.get(s.userId) ?? "—",
-          score: s.finalScore ?? (aggs.length ? calcMedian(aggs) : null),
-          isFinal: s.finalScore !== null,
-        };
-      })
-      .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
-
-    // Toàn bộ bảng xếp hạng — ai cũng xem được đầy đủ các nhóm.
-    const mineId = submission?.id ?? null;
-    rankingTop = scored.map((r, i) => ({
-      rank: i + 1,
-      name: r.name,
-      score: r.score,
-      isFinal: r.isFinal,
-      isMine: r.id === mineId,
-    }));
-  }
+  // Bảng xếp hạng mission đã chuyển sang trang giải (tab trong "Bảng xếp hạng")
+  // — SV xem ở đó cho dễ, không cần vào lại trang nộp bài.
 
   const content = mission.contentPayload as
     | { markdown?: string; url?: string; instructions?: string }
@@ -181,13 +112,6 @@ export default async function MissionDetailPage({
           </span>
         )}
       </div>
-
-      {/* Xếp hạng mission — hiện ngay đầu trang cho dễ thấy */}
-      {rankingTop.length > 0 && (
-        <div className="mt-5">
-          <MissionRankingPanel top={rankingTop} mine={myRank} />
-        </div>
-      )}
 
       {/* External URL appears first (the action point) */}
       {content?.url && (

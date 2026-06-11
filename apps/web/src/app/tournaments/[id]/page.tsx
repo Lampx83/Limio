@@ -31,10 +31,15 @@ import {
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
+import {
+  isMissionTeamCompatible,
+  calcAggregateScore,
+  calcMedian,
+} from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
 import TournamentTeamPanel from "./TournamentTeamPanel";
+import LeaderboardTabs from "./LeaderboardTabs";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatVN, formatDateTime } from "@/lib/datetime";
@@ -168,6 +173,88 @@ export default async function TournamentDetailPage({
     tournament.status === "published" || tournament.status === "active";
   const isActive = tournament.status === "active";
   const showLeaderboard = isActive || isEnded;
+
+  // ── Xếp hạng theo từng mission PEER_REVIEW (tab trong khu Bảng xếp hạng) ──
+  const peerMissions = tournament.missions.filter(
+    (m) => m.verifyMode === "PEER_REVIEW",
+  );
+  let missionRankings: {
+    id: string;
+    title: string;
+    rows: {
+      rank: number;
+      name: string;
+      score: number | null;
+      isFinal: boolean;
+      isMine: boolean;
+    }[];
+  }[] = [];
+  if (showLeaderboard && peerMissions.length > 0) {
+    const peerIds = peerMissions.map((m) => m.id);
+    const subs = await prisma.missionSubmission.findMany({
+      where: { missionId: { in: peerIds } },
+      select: {
+        id: true,
+        userId: true,
+        missionId: true,
+        finalScore: true,
+        reviewAssignments: {
+          where: { completedAt: { not: null } },
+          select: { scores: true },
+        },
+      },
+    });
+    const submitterIds = [...new Set(subs.map((s) => s.userId))];
+    const subRegs = submitterIds.length
+      ? await prisma.tournamentRegistration.findMany({
+          where: { tournamentId: params.id, userId: { in: submitterIds } },
+          select: {
+            userId: true,
+            team: { select: { name: true } },
+            user: { select: { displayName: true } },
+          },
+        })
+      : [];
+    const nameOf = new Map(
+      subRegs.map((r) => [r.userId, r.team?.name ?? r.user.displayName]),
+    );
+    const myLookupId =
+      registration?.team?.captainId ?? session?.user?.id ?? null;
+    missionRankings = peerMissions.map((m) => {
+      const rubric =
+        (m.rubric as { id: string; label: string; scale: string }[] | null) ??
+        [];
+      const mySubId = myLookupId
+        ? (subs.find((s) => s.missionId === m.id && s.userId === myLookupId)
+            ?.id ?? null)
+        : null;
+      const rows = subs
+        .filter((s) => s.missionId === m.id)
+        .map((s) => {
+          const aggs = s.reviewAssignments.map((r) =>
+            calcAggregateScore(
+              (r.scores as { criterionId: string; score: number }[]) ?? [],
+              rubric as never,
+            ),
+          );
+          return {
+            id: s.id,
+            name: nameOf.get(s.userId) ?? "—",
+            score: s.finalScore ?? (aggs.length ? calcMedian(aggs) : null),
+            isFinal: s.finalScore !== null,
+          };
+        })
+        .sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
+        .map((r, i) => ({
+          rank: i + 1,
+          name: r.name,
+          score: r.score,
+          isFinal: r.isFinal,
+          isMine: r.id === mySubId,
+        }));
+      return { id: m.id, title: m.title, rows };
+    });
+  }
 
   // Hide individual-only missions from learner view in team tournaments —
   // any legacy mission of that type would never contribute to team score.
@@ -595,7 +682,10 @@ export default async function TournamentDetailPage({
                 </span>
               </h2>
 
-              {tournament.rankings.length === 0 ? (
+              <LeaderboardTabs
+                missions={missionRankings}
+                overall={
+                tournament.rankings.length === 0 ? (
                 <div className="mt-4 rounded-2xl border-2 border-dashed border-orange-300 bg-white p-8 text-center text-sm text-slate-600 dark:border-orange-700 dark:bg-slate-800 dark:text-slate-400">
                   <Users className="mx-auto h-10 w-10 text-orange-400" strokeWidth={1.5} />
                   <p className="mt-2 font-semibold">
@@ -676,7 +766,9 @@ export default async function TournamentDetailPage({
                     </div>
                   )}
                 </>
-              )}
+              )
+                }
+              />
             </section>
           )}
         </div>
