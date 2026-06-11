@@ -182,6 +182,13 @@ export default async function MissionDetailPage({
         )}
       </div>
 
+      {/* Xếp hạng mission — hiện ngay đầu trang cho dễ thấy */}
+      {rankingTop.length > 0 && (
+        <div className="mt-5">
+          <MissionRankingPanel top={rankingTop} mine={myRank} />
+        </div>
+      )}
+
       {/* External URL appears first (the action point) */}
       {content?.url && (
         <a
@@ -260,6 +267,8 @@ export default async function MissionDetailPage({
                 passThreshold={mission.passThreshold}
                 peerReviewerCount={mission.peerReviewerCount}
                 submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
+                feedback={receivedFeedback}
+                rubric={rubricCriteria}
               />
             )}
             {(() => {
@@ -294,12 +303,6 @@ export default async function MissionDetailPage({
           </div>
         )}
       </section>
-
-      {rankingTop.length > 0 && (
-        <div className="mt-6">
-          <MissionRankingPanel top={rankingTop} mine={myRank} />
-        </div>
-      )}
     </main>
   );
 }
