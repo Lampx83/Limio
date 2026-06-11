@@ -65,22 +65,22 @@ export default async function MissionDetailPage({
     },
   });
 
-  // Feedback chỉ mở cho SV SAU KHI bài đã chốt (status != pending), ẩn danh.
+  // Feedback hiện NGAY cho SV (reviewer đã ẩn danh nên không cần chờ chốt điểm).
+  // Mỗi review đã hoàn thành hiện liền; điểm tổng hợp (%) chỉ có sau khi chốt.
   const rubricCriteria =
     (mission.rubric as
       | { id: string; label: string; scale: "1-5" | "pass_fail" }[]
       | null) ?? [];
-  const receivedFeedback =
-    submission && submission.status !== "pending"
-      ? submission.reviewAssignments
-          .filter((r) => r.completedAt)
-          .map((r) => ({
-            scores:
-              (r.scores as { criterionId: string; score: number }[]) ?? [],
-            comment: r.comment,
-            aggregateScore: r.aggregateScore,
-          }))
-      : [];
+  const receivedFeedback = submission
+    ? submission.reviewAssignments
+        .filter((r) => r.completedAt)
+        .map((r) => ({
+          scores:
+            (r.scores as { criterionId: string; score: number }[]) ?? [],
+          comment: r.comment,
+          aggregateScore: r.aggregateScore,
+        }))
+    : [];
 
   // ── Xếp hạng mission (cho SV): Top 10 + thứ hạng nhóm mình. Điểm = finalScore
   // hoặc median tạm tính từ review đã hoàn thành. Chỉ cho PEER_REVIEW.
@@ -394,16 +394,15 @@ function SubmissionStatusBlock({
         </a>
       )}
 
-      {verifyMode === "PEER_REVIEW" &&
-        submission.status !== "pending" &&
-        feedback.length > 0 && (
+      {verifyMode === "PEER_REVIEW" && feedback.length > 0 && (
           <div className="rounded-xl border border-token">
             <div className="border-b border-token bg-[rgb(var(--surface-muted))] px-3 py-2">
               <p className="text-sm font-semibold">
                 💬 Nhận xét bạn nhận được ({feedback.length} reviewer)
               </p>
               <p className="text-[11px] text-faint">
-                Ẩn danh người chấm. Điểm cuối là trung vị các đánh giá.
+                Ẩn danh người chấm. Hiện ngay khi reviewer nộp; điểm cuối là trung
+                vị các đánh giá (sau khi chốt).
               </p>
             </div>
             <ul className="divide-y divide-[rgb(var(--border))]">
