@@ -91,7 +91,8 @@ export default async function MissionDetailPage({
     isFinal: boolean;
     isMine: boolean;
   }[] = [];
-  let myRank: { rank: number; total: number; score: number | null } | null = null;
+  const myRank: { rank: number; total: number; score: number | null } | null =
+    null;
   if (mission.verifyMode === "PEER_REVIEW") {
     const rubric =
       (mission.rubric as { id: string; label: string; scale: string }[] | null) ??
@@ -140,23 +141,15 @@ export default async function MissionDetailPage({
       })
       .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
 
+    // Toàn bộ bảng xếp hạng — ai cũng xem được đầy đủ các nhóm.
     const mineId = submission?.id ?? null;
-    rankingTop = scored.slice(0, 10).map((r, i) => ({
+    rankingTop = scored.map((r, i) => ({
       rank: i + 1,
       name: r.name,
       score: r.score,
       isFinal: r.isFinal,
       isMine: r.id === mineId,
     }));
-    if (mineId) {
-      const idx = scored.findIndex((r) => r.id === mineId);
-      if (idx >= 0)
-        myRank = {
-          rank: idx + 1,
-          total: scored.length,
-          score: scored[idx]!.score,
-        };
-    }
   }
 
   const content = mission.contentPayload as
