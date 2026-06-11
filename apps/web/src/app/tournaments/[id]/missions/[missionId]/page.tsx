@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { calcAggregateScore, calcMedian } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import MissionSubmitForm from "./MissionSubmitForm";
+import MissionRankingPanel from "./MissionRankingPanel";
 import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +81,83 @@ export default async function MissionDetailPage({
             aggregateScore: r.aggregateScore,
           }))
       : [];
+
+  // ── Xếp hạng mission (cho SV): Top 10 + thứ hạng nhóm mình. Điểm = finalScore
+  // hoặc median tạm tính từ review đã hoàn thành. Chỉ cho PEER_REVIEW.
+  let rankingTop: {
+    rank: number;
+    name: string;
+    score: number | null;
+    isFinal: boolean;
+    isMine: boolean;
+  }[] = [];
+  let myRank: { rank: number; total: number; score: number | null } | null = null;
+  if (mission.verifyMode === "PEER_REVIEW") {
+    const rubric =
+      (mission.rubric as { id: string; label: string; scale: string }[] | null) ??
+      [];
+    const allSubs = await prisma.missionSubmission.findMany({
+      where: { missionId: params.missionId },
+      select: {
+        id: true,
+        userId: true,
+        finalScore: true,
+        reviewAssignments: {
+          where: { completedAt: { not: null } },
+          select: { scores: true },
+        },
+      },
+    });
+    // Map captain/submitter → tên nhóm (team) hoặc displayName (solo).
+    const submitterIds = allSubs.map((s) => s.userId);
+    const regs = submitterIds.length
+      ? await prisma.tournamentRegistration.findMany({
+          where: { tournamentId: params.id, userId: { in: submitterIds } },
+          select: {
+            userId: true,
+            team: { select: { name: true } },
+            user: { select: { displayName: true } },
+          },
+        })
+      : [];
+    const nameOf = new Map(
+      regs.map((r) => [r.userId, r.team?.name ?? r.user.displayName]),
+    );
+    const scored = allSubs
+      .map((s) => {
+        const aggs = s.reviewAssignments.map((r) =>
+          calcAggregateScore(
+            (r.scores as { criterionId: string; score: number }[]) ?? [],
+            rubric as never,
+          ),
+        );
+        return {
+          id: s.id,
+          name: nameOf.get(s.userId) ?? "—",
+          score: s.finalScore ?? (aggs.length ? calcMedian(aggs) : null),
+          isFinal: s.finalScore !== null,
+        };
+      })
+      .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+
+    const mineId = submission?.id ?? null;
+    rankingTop = scored.slice(0, 10).map((r, i) => ({
+      rank: i + 1,
+      name: r.name,
+      score: r.score,
+      isFinal: r.isFinal,
+      isMine: r.id === mineId,
+    }));
+    if (mineId) {
+      const idx = scored.findIndex((r) => r.id === mineId);
+      if (idx >= 0)
+        myRank = {
+          rank: idx + 1,
+          total: scored.length,
+          score: scored[idx]!.score,
+        };
+    }
+  }
 
   const content = mission.contentPayload as
     | { markdown?: string; url?: string; instructions?: string }
@@ -222,6 +301,12 @@ export default async function MissionDetailPage({
           </div>
         )}
       </section>
+
+      {rankingTop.length > 0 && (
+        <div className="mt-6">
+          <MissionRankingPanel top={rankingTop} mine={myRank} />
+        </div>
+      )}
     </main>
   );
 }
