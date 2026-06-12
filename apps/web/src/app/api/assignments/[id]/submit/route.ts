@@ -15,7 +15,9 @@ export async function POST(
     const r = await submitAssignment(userId, params.id, body);
     const gamification = await onAssignmentDeepReflection({
       userId,
-      courseId: r.courseId,
+      // "" cho tournament không gắn khoá; handler short-circuit khi không có
+      // self-rating/reflection nên không award XP sai.
+      courseId: r.courseId ?? "",
       assignmentId: r.assignmentId,
       selfRating: r.selfRating,
       reflectionLength: r.reflectionLength,

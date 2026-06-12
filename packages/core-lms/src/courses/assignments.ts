@@ -247,13 +247,39 @@ export async function submitAssignment(
       requireSelfRating: true,
       requireReflection: true,
       lesson: { select: { module: { select: { courseId: true } } } },
+      // Tournament MANUAL_REVIEW mission backing (lessonId null trong trường hợp này).
+      tournamentMission: {
+        select: { tournamentId: true, tournament: { select: { courseId: true } } },
+      },
     },
   });
   if (!a) throw new AssignmentError("assignment_not_found");
-  if (!a.lesson) throw new AssignmentError("assignment_not_found");
-  const courseId = a.lesson.module.courseId;
-  if (!(await isUserEnrolled(userId, courseId, db))) {
-    throw new AssignmentError("not_enrolled");
+
+  // courseId: null hợp lệ với tournament "toàn nền tảng" (không gắn course).
+  let courseId: string | null;
+  if (a.lesson) {
+    // Lesson-backed: yêu cầu enroll khoá học.
+    courseId = a.lesson.module.courseId;
+    if (!(await isUserEnrolled(userId, courseId, db))) {
+      throw new AssignmentError("not_enrolled");
+    }
+  } else if (a.tournamentMission) {
+    // Tournament-backed: yêu cầu là người chơi đã đăng ký (chưa bị loại).
+    courseId = a.tournamentMission.tournament.courseId;
+    const reg = await db.tournamentRegistration.findUnique({
+      where: {
+        tournamentId_userId: {
+          tournamentId: a.tournamentMission.tournamentId,
+          userId,
+        },
+      },
+      select: { disqualifiedAt: true },
+    });
+    if (!reg || reg.disqualifiedAt) {
+      throw new AssignmentError("not_enrolled");
+    }
+  } else {
+    throw new AssignmentError("assignment_not_found");
   }
   const parsed = SubmitInput.safeParse(rawInput);
   if (!parsed.success) {

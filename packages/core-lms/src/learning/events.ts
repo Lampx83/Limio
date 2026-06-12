@@ -3,7 +3,8 @@ import type { LearningEventType } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 
 export interface EmitOptions {
-  courseId?: string;
+  /** null/undefined cho event không gắn khoá học (vd tournament "toàn nền tảng"). */
+  courseId?: string | null;
   /** Stable key for idempotent emit. If a row with this key exists, no new event is created. */
   eventKey?: string;
   /**
