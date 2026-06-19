@@ -232,11 +232,11 @@ export default async function CourseDetailPage({
             </div>
           ) : (
             <ol className="mt-4 space-y-4">
-              {course.modules.map((m, mi) => (
+              {course.modules.map((m) => (
                 <li key={m.id} id={`module-${m.id}`} className="card">
                 <header className="flex items-baseline justify-between gap-3 border-b border-token pb-3">
                   <h3 className="text-base font-semibold">
-                    <span className="mr-2 text-faint">Module {mi + 1}</span>
+                    <span className="mr-2 text-faint">Module</span>
                     {m.title}
                   </h3>
                   <span className="text-xs text-faint">

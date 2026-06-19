@@ -180,7 +180,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
             <ol className="mt-4 space-y-4">
               {course.modules
                 .filter((m) => !m.isHidden)
-                .map((m, mi) => {
+                .map((m) => {
                   const visibleLessons = m.lessons.filter((l) => !l.isHidden);
                   const done = visibleLessons.filter((l) =>
                     completedSet.has(l.id)
@@ -195,7 +195,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                     <header className="border-b border-token pb-3">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3 className="font-semibold">
-                          <span className="mr-2 text-faint">Module {mi + 1}</span>
+                          <span className="mr-2 text-faint">Module</span>
                           {m.title}
                         </h3>
                         <span className="text-xs text-faint tabular-nums">

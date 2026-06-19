@@ -60,8 +60,26 @@ export default async function ShowcasePage({
     where: { tournamentId: params.id, isTeamSubmission: true },
     orderBy: { orderIndex: "asc" },
     include: {
+      // PEER_REVIEW / hackathon → MissionSubmission.
       submissions: {
         include: { user: { select: { id: true, displayName: true } } },
+      },
+      // MANUAL_REVIEW (GV chấm) → bài nộp nằm ở AssignmentSubmission.
+      assignment: {
+        select: {
+          submissions: {
+            select: {
+              id: true,
+              userId: true,
+              body: true,
+              attachmentUrl: true,
+              status: true,
+              score: true,
+              submittedAt: true,
+              user: { select: { id: true, displayName: true } },
+            },
+          },
+        },
       },
     },
   });
@@ -105,7 +123,10 @@ export default async function ShowcasePage({
   });
   const myTeamCaptainId = myReg?.team?.captainId ?? null;
 
-  const captainIds = missions.flatMap((m) => m.submissions.map((s) => s.userId));
+  const captainIds = missions.flatMap((m) => [
+    ...m.submissions.map((s) => s.userId),
+    ...(m.assignment?.submissions.map((s) => s.userId) ?? []),
+  ]);
   const teamRegs = captainIds.length
     ? await prisma.tournamentRegistration.findMany({
         where: {
@@ -129,23 +150,45 @@ export default async function ShowcasePage({
     : [];
   const teamByUser = new Map(teamRegs.map((r) => [r.userId, r.team!]));
 
-  const all = missions.flatMap((m) =>
-    m.submissions.map((s) => ({
+  const all = missions.flatMap((m) => [
+    // MissionSubmission (peer review / hackathon) — có bình chọn.
+    ...m.submissions.map((s) => ({
       submissionId: s.id,
       missionId: m.id,
       missionTitle: m.title,
       missionOrder: m.orderIndex,
       missionPoints: m.points,
-      status: s.status,
-      finalScore: s.finalScore,
+      status: s.status as string,
+      finalScore: s.finalScore as number | null,
       submittedAt: s.submittedAt,
       captain: s.user,
       team: teamByUser.get(s.userId) ?? null,
       payload: (s.payload ?? {}) as HackathonPayload,
       voteCount: voteCountBySubmission.get(s.id) ?? 0,
       isTopVoted: topVotedBySubmission.has(s.id),
+      votable: true,
     })),
-  );
+    // AssignmentSubmission (MANUAL_REVIEW) — chuẩn hoá cùng shape; không bình chọn.
+    ...(m.assignment?.submissions ?? []).map((s) => ({
+      submissionId: s.id,
+      missionId: m.id,
+      missionTitle: m.title,
+      missionOrder: m.orderIndex,
+      missionPoints: m.points,
+      status: s.status as string,
+      finalScore: s.score != null ? s.score / 100 : null,
+      submittedAt: s.submittedAt,
+      captain: s.user,
+      team: teamByUser.get(s.userId) ?? null,
+      payload: {
+        writeup: s.body || undefined,
+        repoUrl: s.attachmentUrl || undefined,
+      } as HackathonPayload,
+      voteCount: 0,
+      isTopVoted: false,
+      votable: false,
+    })),
+  ]);
 
   // ── Filter + sort (server-driven via searchParams) ────────────────────
   const sort = (searchParams.sort as SortKey) || "recent";
@@ -397,15 +440,17 @@ export default async function ShowcasePage({
                           ? "Chưa đạt"
                           : "Chờ chấm"}
                     </span>
-                    <VoteButton
-                      tournamentId={params.id}
-                      missionId={f.missionId}
-                      submissionId={f.submissionId}
-                      initialVoted={myVoteByMission.get(f.missionId) === f.submissionId}
-                      initialCount={f.voteCount}
-                      disabled={myTeamCaptainId === f.captain.id}
-                      disabledReason="Không thể vote cho đội của bạn"
-                    />
+                    {f.votable && (
+                      <VoteButton
+                        tournamentId={params.id}
+                        missionId={f.missionId}
+                        submissionId={f.submissionId}
+                        initialVoted={myVoteByMission.get(f.missionId) === f.submissionId}
+                        initialCount={f.voteCount}
+                        disabled={myTeamCaptainId === f.captain.id}
+                        disabledReason="Không thể vote cho đội của bạn"
+                      />
+                    )}
                   </div>
                   <span className="text-faint">
                     {formatDateTime(f.submittedAt)}
