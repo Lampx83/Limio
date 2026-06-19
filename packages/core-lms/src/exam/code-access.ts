@@ -118,10 +118,10 @@ function normaliseEmail(raw: unknown): string {
   return e;
 }
 
-function computeTtlSec(exam: { closeAt: Date }): number {
+function computeTtlSec(closeAt: Date): number {
   // Q6 — cookie covers active exam window + 1h grace for late submit/review.
   // Hard cap at 7 days; floor at 5 min so a near-end claim still has room.
-  const remaining = Math.floor((exam.closeAt.getTime() - Date.now()) / 1000) + 3600;
+  const remaining = Math.floor((closeAt.getTime() - Date.now()) / 1000) + 3600;
   return Math.max(300, Math.min(remaining, 7 * 24 * 3600));
 }
 
@@ -143,6 +143,8 @@ export async function claimByOpenCode(
     where: { openCode: upperCode, accessMode: "open_code" },
     select: {
       id: true,
+      opensAt: true,
+      closesAt: true,
       exam: {
         select: {
           id: true,
@@ -185,9 +187,16 @@ export async function claimByOpenCode(
   if (exam.accessMode !== "open_code" && !sessionMatch)
     throw new ExamError("access_mode_mismatch");
   if (exam.status !== "published") throw new ExamError("exam_not_open");
+  // PR2.12 — Khi code resolve qua ExamSession (mỗi ca 1 mã + cửa sổ riêng) thì
+  // kiểm tra cửa sổ CỦA CA, không phải cửa sổ Exam cha. Landing page (exam/[code])
+  // cũng so theo session.opensAt/closesAt → giữ đồng nhất, tránh case "landing mở
+  // nhưng claim báo đã đóng" khi Exam.closeAt hẹp hơn cửa sổ ca. Legacy
+  // Exam.openCode (không có session) vẫn dùng exam.openAt/closeAt.
+  const openAt = sessionMatch ? sessionMatch.opensAt : exam.openAt;
+  const closeAt = sessionMatch ? sessionMatch.closesAt : exam.closeAt;
   const now = new Date();
-  if (now < exam.openAt) throw new ExamError("exam_not_open");
-  if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
+  if (now < openAt) throw new ExamError("exam_not_open");
+  if (now >= closeAt) throw new ExamError("exam_window_closed");
 
   // Cap on total candidates (anti-spam — Q2 IP rate-limit is layered on top).
   if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
@@ -316,7 +325,7 @@ export async function claimByOpenCode(
     sessionToken,
     displayName: input.displayName,
     resumed: false,
-    ttlSec: computeTtlSec(exam),
+    ttlSec: computeTtlSec(closeAt),
   };
 }
 
@@ -362,6 +371,9 @@ export async function claimByAssignedCode(
       sessionId: true,
       displayName: true,
       disabledAt: true,
+      session: {
+        select: { opensAt: true, closesAt: true },
+      },
       exam: {
         select: {
           id: true,
@@ -383,9 +395,14 @@ export async function claimByAssignedCode(
   if (exam.accessMode !== "assigned_code")
     throw new ExamError("access_mode_mismatch");
   if (exam.status !== "published") throw new ExamError("exam_not_open");
+  // PR2.12 — Kiểm tra cửa sổ CỦA CA (candidate.session) nếu có, fallback exam
+  // window. Đồng nhất với landing page (exam/[code]) dùng
+  // candidate.session?.opensAt/closesAt ?? exam.openAt/closeAt.
+  const openAt = candidate.session?.opensAt ?? exam.openAt;
+  const closeAt = candidate.session?.closesAt ?? exam.closeAt;
   const now = new Date();
-  if (now < exam.openAt) throw new ExamError("exam_not_open");
-  if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
+  if (now < openAt) throw new ExamError("exam_not_open");
+  if (now >= closeAt) throw new ExamError("exam_window_closed");
 
   // Q5: 1 candidate = 1 attempt. Resume if in progress, reject if submitted.
   const existing = await db.examAttempt.findFirst({
@@ -473,6 +490,6 @@ export async function claimByAssignedCode(
     sessionToken,
     displayName: candidate.displayName,
     resumed,
-    ttlSec: computeTtlSec(exam),
+    ttlSec: computeTtlSec(closeAt),
   };
 }
