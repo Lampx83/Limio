@@ -46,6 +46,7 @@ const GROUPS: Group[] = [
     iconFg: PINK_FG,
     items: [
       { label: "Người dùng", href: "/admin/users", icon: Users },
+      { label: "Hoạt động giảng viên", href: "/admin/instructor-activity", icon: History },
       { label: "Skill taxonomy", href: "/admin/skills", icon: Network },
     ],
   },
