@@ -54,6 +54,47 @@ export default async function AdminUserDetailPage({
     },
   });
 
+  // ── AI usage của user này (cost/tokens/turns) ──
+  const [aiAgg, aiByModel, aiRows] = await Promise.all([
+    prisma.aiUsageLog.aggregate({
+      where: { userId: user.id },
+      _sum: {
+        costUsd: true,
+        tokensInput: true,
+        tokensOutput: true,
+        turns: true,
+      },
+    }),
+    prisma.aiUsageLog.groupBy({
+      by: ["model"],
+      where: { userId: user.id },
+      _sum: {
+        costUsd: true,
+        tokensInput: true,
+        tokensOutput: true,
+        turns: true,
+      },
+      orderBy: { _sum: { costUsd: "desc" } },
+    }),
+    prisma.aiUsageLog.findMany({
+      where: { userId: user.id },
+      orderBy: [{ dayKey: "desc" }, { model: "asc" }],
+      take: 60,
+      select: {
+        dayKey: true,
+        model: true,
+        tokensInput: true,
+        tokensOutput: true,
+        costUsd: true,
+        turns: true,
+      },
+    }),
+  ]);
+  const aiTotalCost = aiAgg._sum.costUsd ?? 0;
+  const aiTotalTokens =
+    (aiAgg._sum.tokensInput ?? 0) + (aiAgg._sum.tokensOutput ?? 0);
+  const aiTotalTurns = aiAgg._sum.turns ?? 0;
+
   return (
     <main>
       <Link
@@ -123,6 +164,109 @@ export default async function AdminUserDetailPage({
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+
+        {/* AI usage */}
+        <section className="card lg:col-span-2">
+          <h2 className="mb-3 text-base font-semibold">AI usage</h2>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-lg border border-token p-3">
+              <p className="text-xs text-faint">Tổng chi phí</p>
+              <p className="mt-0.5 text-lg font-bold tabular-nums">
+                ${aiTotalCost.toFixed(4)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-token p-3">
+              <p className="text-xs text-faint">Tổng tokens</p>
+              <p className="mt-0.5 text-lg font-bold tabular-nums">
+                {aiTotalTokens.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-lg border border-token p-3">
+              <p className="text-xs text-faint">Lượt chat</p>
+              <p className="mt-0.5 text-lg font-bold tabular-nums">
+                {aiTotalTurns.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {aiByModel.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">
+              User này chưa dùng AI (tutor / feedback).
+            </p>
+          ) : (
+            <>
+              {/* Theo model */}
+              <h3 className="mt-4 mb-1.5 text-xs font-semibold uppercase text-faint">
+                Theo model
+              </h3>
+              <div className="overflow-x-auto rounded-lg border border-token">
+                <table className="w-full text-sm">
+                  <thead className="bg-[rgb(var(--surface-muted))] text-left text-xs text-faint">
+                    <tr>
+                      <th className="px-3 py-1.5 font-medium">Model</th>
+                      <th className="px-3 py-1.5 font-medium">Tokens</th>
+                      <th className="px-3 py-1.5 font-medium">Lượt</th>
+                      <th className="px-3 py-1.5 text-right font-medium">Chi phí</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-token">
+                    {aiByModel.map((m) => (
+                      <tr key={m.model}>
+                        <td className="px-3 py-1.5 font-mono text-xs">{m.model}</td>
+                        <td className="px-3 py-1.5 tabular-nums">
+                          {(
+                            (m._sum.tokensInput ?? 0) +
+                            (m._sum.tokensOutput ?? 0)
+                          ).toLocaleString()}
+                        </td>
+                        <td className="px-3 py-1.5 tabular-nums">
+                          {(m._sum.turns ?? 0).toLocaleString()}
+                        </td>
+                        <td className="px-3 py-1.5 text-right tabular-nums">
+                          ${(m._sum.costUsd ?? 0).toFixed(4)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Theo ngày (60 dòng gần nhất) */}
+              <h3 className="mt-4 mb-1.5 text-xs font-semibold uppercase text-faint">
+                Theo ngày (gần nhất)
+              </h3>
+              <div className="max-h-72 overflow-auto rounded-lg border border-token">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-[rgb(var(--surface-muted))] text-left text-xs text-faint">
+                    <tr>
+                      <th className="px-3 py-1.5 font-medium">Ngày</th>
+                      <th className="px-3 py-1.5 font-medium">Model</th>
+                      <th className="px-3 py-1.5 font-medium">Tokens (in/out)</th>
+                      <th className="px-3 py-1.5 font-medium">Lượt</th>
+                      <th className="px-3 py-1.5 text-right font-medium">Chi phí</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-token">
+                    {aiRows.map((r, i) => (
+                      <tr key={i}>
+                        <td className="px-3 py-1.5 tabular-nums">{r.dayKey}</td>
+                        <td className="px-3 py-1.5 font-mono text-xs">{r.model}</td>
+                        <td className="px-3 py-1.5 tabular-nums text-faint">
+                          {r.tokensInput.toLocaleString()}/
+                          {r.tokensOutput.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-1.5 tabular-nums">{r.turns}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums">
+                          ${r.costUsd.toFixed(4)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
 
