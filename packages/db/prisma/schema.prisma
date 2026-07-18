@@ -254,6 +254,13 @@ model Course {
   // When false, course runs as standard LMS (no AI feedback) and publish skips the skill-tag gate.
   // Default false — see project_personalization_toggle memory.
   personalizationEnabled Boolean @default(false)
+  // Public access: when true, anyone — including logged-out visitors — may read the
+  // course's lessons (content + video) without enrolling, in the same read-only
+  // preview mode a non-enrolled learner gets. Account-only features (progress,
+  // completion, notes, AI tutor, forum, quizzes) stay hidden.
+  // Only takes effect while `status = published`; a draft course is never public.
+  // Default false — existing courses keep login-gated behaviour.
+  publicAccess   Boolean      @default(false)
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents     Int?
   currency       String       @default("USD")

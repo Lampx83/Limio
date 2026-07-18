@@ -20,6 +20,7 @@ interface Initial {
   priceCents: number | null;
   currency: string;
   personalizationEnabled: boolean;
+  publicAccess: boolean;
 }
 
 export default function CourseMetaForm({
@@ -45,6 +46,7 @@ export default function CourseMetaForm({
   const [personalizationEnabled, setPersonalizationEnabled] = useState(
     initial.personalizationEnabled,
   );
+  const [publicAccess, setPublicAccess] = useState(initial.publicAccess);
   const [busy, setBusy] = useState(false);
 
   const LEVEL_LABEL: Record<string, string> = {
@@ -115,6 +117,7 @@ export default function CourseMetaForm({
         priceCents: parsedPrice,
         currency,
         personalizationEnabled,
+        publicAccess,
       }),
     });
     setBusy(false);
@@ -232,6 +235,26 @@ export default function CourseMetaForm({
               diagnostic feedback, adaptive path và skill badge.
               Tắt → course chạy như LMS truyền thống, publish bỏ qua kiểm tra
               skill. Đổi flag chỉ áp dụng ở lần publish kế tiếp.
+            </p>
+          </div>
+        </label>
+      </div>
+      <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={publicAccess}
+            onChange={(e) => setPublicAccess(e.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0"
+          />
+          <div className="min-w-0">
+            <span className="font-medium">Công khai — xem được không cần đăng nhập</span>
+            <p className="mt-1 text-xs text-muted">
+              Bật → bất kỳ ai, kể cả khách chưa đăng nhập, đọc được mọi bài học
+              (nội dung + video) mà không cần ghi danh. Các tính năng cần tài khoản
+              — tiến độ, hoàn thành bài, ghi chú, thảo luận, quiz, AI tutor — vẫn ẩn.
+              Tắt → bài học yêu cầu đăng nhập như bình thường.
+              Chỉ có hiệu lực khi course đã publish; course draft không bao giờ công khai.
             </p>
           </div>
         </label>

@@ -73,10 +73,18 @@ export default function LessonContent({
   items,
   courseId,
   lessonId,
+  interactive = true,
 }: {
   items: ContentItem[];
   courseId?: string;
   lessonId?: string;
+  /**
+   * False for logged-out visitors on a public course. Content types whose player
+   * needs an authenticated session (SCORM, H5P, LTI) render a sign-in prompt
+   * instead of failing with a 401, and cuepoint gating is dropped — there is no
+   * learner to gate. Everything readable still renders.
+   */
+  interactive?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -88,9 +96,28 @@ export default function LessonContent({
             itemId={item.id}
             courseId={courseId}
             lessonId={lessonId}
+            interactive={interactive}
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Placeholder for players that cannot work without a session. */
+function SignInRequired({ label }: { label: string }) {
+  return (
+    <div className="rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-6 text-center">
+      <p className="text-sm font-semibold">{label}</p>
+      <p className="mt-1 text-xs text-muted">
+        Nội dung này cần tài khoản để ghi nhận kết quả học tập.
+      </p>
+      <a
+        href="/signin"
+        className="mt-3 inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+      >
+        Đăng nhập để dùng
+      </a>
     </div>
   );
 }
@@ -101,12 +128,14 @@ function ContentBlock({
   itemId,
   courseId,
   lessonId,
+  interactive,
 }: {
   type: string;
   payload: unknown;
   itemId: string;
   courseId?: string;
   lessonId?: string;
+  interactive: boolean;
 }) {
   switch (type) {
     case "video": {
@@ -116,7 +145,11 @@ function ContentBlock({
       // through the standard VideoEmbed since we can't intercept their
       // playback without each provider's JS API.
       const isNativeVideo = isNativeVideoUrl(p.url);
-      const hasCuepoints = (p.cuepoints?.length ?? 0) > 0;
+      // Logged out, cuepoints are dropped rather than mounted: the gating player
+      // fetches the quiz behind auth, and on failure it waves the learner through
+      // anyway — so leaving it in would be gating theatre. There is no progress to
+      // protect for an anonymous viewer regardless.
+      const hasCuepoints = interactive && (p.cuepoints?.length ?? 0) > 0;
       return (
         <div>
           {isNativeVideo && hasCuepoints && lessonId ? (
@@ -218,6 +251,7 @@ function ContentBlock({
     }
     case "scorm": {
       const p = payload as ScormPayload;
+      if (!interactive) return <SignInRequired label={p.title ?? "Nội dung SCORM"} />;
       return (
         <div>
           {p.title && (
@@ -237,6 +271,7 @@ function ContentBlock({
     }
     case "lti": {
       const p = payload as LtiPayloadType;
+      if (!interactive) return <SignInRequired label={p.title ?? "Công cụ LTI"} />;
       return (
         <LtiLaunch
           toolId={p.toolId}
@@ -249,6 +284,7 @@ function ContentBlock({
     }
     case "h5p": {
       const p = payload as H5pPayloadType;
+      if (!interactive) return <SignInRequired label={p.title ?? "Nội dung H5P"} />;
       return (
         <H5pPlayer
           packageId={p.packageId}

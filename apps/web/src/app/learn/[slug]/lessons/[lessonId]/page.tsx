@@ -27,21 +27,25 @@ import { isNativeVideoUrl } from "@/lib/videoUrl";
 
 export const dynamic = "force-dynamic";
 
+// Sentinel for user-scoped filters when nobody is signed in. Never a real id, so
+// the filter matches zero rows — as opposed to `undefined`, which Prisma would
+// treat as "no filter at all".
+const NO_USER = "__anonymous__";
+
 export default async function LessonPage({
   params,
 }: {
   params: { slug: string; lessonId: string };
 }) {
   const session = await auth();
-  if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`);
-  }
-  const userId = session.user.id;
+  // May be null: courses with `publicAccess` are readable logged-out. Everything
+  // downstream that filters by user must handle that — see NO_USER below.
+  const userId = session?.user?.id ?? null;
 
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true } } } },
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
         select: {
@@ -68,7 +72,12 @@ export default async function LessonPage({
           requireReflection: true,
           countsTowardGrade: true,
           submissions: {
-            where: { userId },
+            // NEVER pass a nullable userId straight in: Prisma reads `undefined`
+            // as "drop this condition", so an anonymous visitor would match every
+            // learner's submission — score, feedback, reflection and all. The
+            // sentinel matches nothing instead. (strictUndefinedChecks is off
+            // repo-wide, so the type system will not catch this for us.)
+            where: { userId: userId ?? NO_USER },
             select: {
               id: true,
               status: true,
@@ -86,14 +95,24 @@ export default async function LessonPage({
   if (!lesson || lesson.module.course.slug !== params.slug) notFound();
   if (lesson.isHidden) notFound();
 
-  const enrolled = await isUserEnrolled(userId, lesson.module.course.id);
+  // A public course opens every non-hidden lesson to everyone — but only while it
+  // is actually published. Without the status check, flipping `publicAccess` on a
+  // draft would put unfinished material on the open internet.
+  const publiclyReadable =
+    lesson.module.course.publicAccess && lesson.module.course.status === "published";
+
+  const enrolled = userId ? await isUserEnrolled(userId, lesson.module.course.id) : false;
   if (!enrolled) {
-    if (lesson.previewable) {
-      // Allow viewing — fall through and render as preview below
-    } else {
+    if (!userId) {
+      // Logged out: public courses render as preview, everything else signs in.
+      if (!publiclyReadable) {
+        redirect(`/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`);
+      }
+    } else if (!lesson.previewable && !publiclyReadable) {
       const paid = lesson.module.course.priceCents !== null && lesson.module.course.priceCents > 0;
       redirect(`/catalog/${params.slug}${paid ? "?paywall=1" : ""}`);
     }
+    // Otherwise fall through and render as preview below.
   }
 
   const allLessons = await prisma.lesson.findMany({
@@ -105,10 +124,15 @@ export default async function LessonPage({
   const prev = idx > 0 ? allLessons[idx - 1]! : null;
   const next = idx < allLessons.length - 1 ? allLessons[idx + 1]! : null;
 
-  // Preview mode: non-enrolled user accessing a previewable lesson.
-  // Skip enrollment-dependent queries and render with a CTA banner.
+  // Preview mode: anyone without an enrollment — logged out on a public course, or
+  // logged in on a previewable lesson. Skip enrollment-dependent queries and render
+  // with a CTA banner.
   if (!enrolled) {
-    const threads = await listThreadsForLesson(lesson.id);
+    const anonymous = userId === null;
+    // Forum stays behind sign-in: threads carry learner display names, and
+    // publishing those to the open internet is not something a course-visibility
+    // toggle should silently decide (CLAUDE.md §5.4 — privacy by default).
+    const threads = anonymous ? [] : await listThreadsForLesson(lesson.id);
     const course = lesson.module.course;
     const paid = course.priceCents !== null && course.priceCents > 0;
     return (
@@ -119,16 +143,26 @@ export default async function LessonPage({
         {/* Preview banner */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft px-5 py-3">
           <div>
-            <p className="text-sm font-semibold text-brand-700">Bài học preview miễn phí</p>
+            <p className="text-sm font-semibold text-brand-700">
+              {anonymous ? "Bạn đang xem thử công khai" : "Bài học preview miễn phí"}
+            </p>
             <p className="text-xs text-brand-600">
-              {paid ? "Mua khoá học để truy cập toàn bộ nội dung." : "Đăng ký miễn phí để học toàn bộ khoá."}
+              {anonymous
+                ? "Đăng nhập để lưu tiến độ, làm bài tập, thảo luận và nhận phản hồi."
+                : paid
+                  ? "Mua khoá học để truy cập toàn bộ nội dung."
+                  : "Đăng ký miễn phí để học toàn bộ khoá."}
             </p>
           </div>
           <a
-            href={`/catalog/${params.slug}`}
+            href={
+              anonymous
+                ? `/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`
+                : `/catalog/${params.slug}`
+            }
             className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
           >
-            {paid ? "Xem khoá học" : "Đăng ký ngay"}
+            {anonymous ? "Đăng nhập" : paid ? "Xem khoá học" : "Đăng ký ngay"}
           </a>
         </div>
         <header className="mt-6">
@@ -148,11 +182,20 @@ export default async function LessonPage({
               .map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex }))}
             courseId={course.id}
             lessonId={lesson.id}
+            interactive={!anonymous}
           />
         </div>
-        <LessonForumSection threads={threads} lessonId={lesson.id} courseSlug={params.slug} />
+        {!anonymous && (
+          <LessonForumSection threads={threads} lessonId={lesson.id} courseSlug={params.slug} />
+        )}
       </main>
     );
+  }
+
+  // Enrolled implies a session (see `enrolled` above) — this narrows `userId` to a
+  // string for the rest of the page and is unreachable in practice.
+  if (!userId) {
+    redirect(`/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`);
   }
 
   const enrollment = await prisma.enrollment.findUniqueOrThrow({

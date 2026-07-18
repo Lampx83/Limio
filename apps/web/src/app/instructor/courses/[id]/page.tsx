@@ -269,6 +269,7 @@ export default async function InstructorCourseEditPage({
                 priceCents: course.priceCents,
                 currency: course.currency ?? "VND",
                 personalizationEnabled: course.personalizationEnabled,
+                publicAccess: course.publicAccess,
               }}
             />
           </section>

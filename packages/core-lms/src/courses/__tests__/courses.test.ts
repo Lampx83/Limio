@@ -151,6 +151,56 @@ describe("publish flow", () => {
     expect((entry!.payload as { from: boolean; to: boolean }).to).toBe(true);
   });
 
+  it("publicAccess defaults to false on create", async () => {
+    const ownerId = await makeUser("o-public-default@example.com");
+    const c = await createCourse(ownerId, { title: "Public default", description: "x" });
+    const row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.publicAccess).toBe(false);
+  });
+
+  it("toggling publicAccess writes audit log", async () => {
+    const ownerId = await makeUser("o-public-toggle@example.com");
+    const c = await createCourse(ownerId, { title: "Public toggle", description: "x" });
+    await updateCourse(ownerId, c.courseId, { publicAccess: true });
+    const row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.publicAccess).toBe(true);
+    const entry = await prisma.auditLog.findFirst({
+      where: { action: "course.public_access.toggled" },
+      orderBy: { occurredAt: "desc" },
+    });
+    expect(entry).not.toBeNull();
+    expect((entry!.payload as { from: boolean; to: boolean }).from).toBe(false);
+    expect((entry!.payload as { from: boolean; to: boolean }).to).toBe(true);
+  });
+
+  it("re-saving publicAccess unchanged writes no audit log", async () => {
+    const ownerId = await makeUser("o-public-noop@example.com");
+    const c = await createCourse(ownerId, { title: "Public noop", description: "x" });
+    await updateCourse(ownerId, c.courseId, { publicAccess: false });
+    const entry = await prisma.auditLog.findFirst({
+      where: { action: "course.public_access.toggled", payload: { path: ["courseId"], equals: c.courseId } },
+    });
+    expect(entry).toBeNull();
+  });
+
+  it("toggling both flags at once audits each independently", async () => {
+    const ownerId = await makeUser("o-both-flags@example.com");
+    const c = await createCourse(ownerId, { title: "Both flags", description: "x" });
+    await updateCourse(ownerId, c.courseId, {
+      personalizationEnabled: true,
+      publicAccess: true,
+    });
+    const row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.personalizationEnabled).toBe(true);
+    expect(row.publicAccess).toBe(true);
+    for (const action of ["course.personalization.toggled", "course.public_access.toggled"]) {
+      const entry = await prisma.auditLog.findFirst({
+        where: { action, payload: { path: ["courseId"], equals: c.courseId } },
+      });
+      expect(entry, `missing audit for ${action}`).not.toBeNull();
+    }
+  });
+
   it("rejects publish on archived course", async () => {
     const ownerId = await makeUser("o3@example.com");
     const { courseId } = await buildCourseTree(ownerId, "p3");

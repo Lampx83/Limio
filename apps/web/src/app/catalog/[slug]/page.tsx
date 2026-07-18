@@ -45,6 +45,10 @@ export default async function CourseDetailPage({
     enrolled = e !== null && e.status !== "dropped" && e.status !== "refunded";
   }
 
+  // Mirrors the lesson page's gate: a public course opens every lesson to anyone,
+  // but only once published.
+  const publiclyReadable = course.publicAccess && course.status === "published";
+
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
 
   // Top learners (sidebar) — ưu tiên LeaderboardEntry snapshot all_time của course;
@@ -153,6 +157,14 @@ export default async function CourseDetailPage({
                 📚 Standard LMS
               </span>
             )}
+            {publiclyReadable && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700"
+                title="Đọc được nội dung bài học mà không cần đăng nhập. Đăng ký để lưu tiến độ, làm bài và nhận phản hồi."
+              >
+                🌐 Công khai
+              </span>
+            )}
           </div>
           <h1 className="mt-4 h-display text-3xl font-bold leading-tight sm:text-5xl">
             {course.title}
@@ -254,7 +266,7 @@ export default async function CourseDetailPage({
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          {l.previewable && !enrolled ? (
+                          {(l.previewable || publiclyReadable) && !enrolled ? (
                             <Link
                               href={`/learn/${params.slug}/lessons/${l.id}`}
                               className="text-sm font-medium text-brand-600 hover:underline"
@@ -264,7 +276,9 @@ export default async function CourseDetailPage({
                           ) : (
                             <p className="text-sm">{l.title}</p>
                           )}
-                          {l.previewable && !enrolled && (
+                          {/* A per-lesson "Preview" pill would be noise on a course
+                              where every lesson is open — the hero chip says it once. */}
+                          {l.previewable && !publiclyReadable && !enrolled && (
                             <span className="inline-flex items-center rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
                               Preview
                             </span>

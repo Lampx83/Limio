@@ -32,7 +32,17 @@ export const UpdateCourseInput = z.object({
   priceCents: z.number().int().min(0).optional().nullable(),
   currency: z.enum(["VND", "USD"]).optional(),
   personalizationEnabled: z.boolean().optional(),
+  publicAccess: z.boolean().optional(),
 });
+
+// Course flags whose flips are worth an audit trail — both change who can see
+// what, so "when did this become public / personalized, and who did it" must be
+// answerable after the fact.
+const AUDITED_FLAGS = {
+  personalizationEnabled: "course.personalization.toggled",
+  publicAccess: "course.public_access.toggled",
+} as const;
+type AuditedFlag = keyof typeof AUDITED_FLAGS;
 
 export class CourseError extends Error {
   constructor(
@@ -136,28 +146,27 @@ export async function updateCourse(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined),
   );
   if (Object.keys(data).length === 0) return;
-  let previousPersonalization: boolean | null = null;
-  if ("personalizationEnabled" in data) {
+
+  const touched = (Object.keys(AUDITED_FLAGS) as AuditedFlag[]).filter((f) => f in data);
+  const changes: Array<{ action: string; from: boolean; to: boolean }> = [];
+  if (touched.length > 0) {
     const cur = await db.course.findUniqueOrThrow({
       where: { id: courseId },
-      select: { personalizationEnabled: true },
+      select: { personalizationEnabled: true, publicAccess: true },
     });
-    previousPersonalization = cur.personalizationEnabled;
+    for (const flag of touched) {
+      const to = data[flag] as boolean;
+      // Only a real flip is audited — re-saving the form unchanged is not an event.
+      if (cur[flag] !== to) changes.push({ action: AUDITED_FLAGS[flag], from: cur[flag], to });
+    }
   }
   await db.course.update({ where: { id: courseId }, data });
-  if (
-    previousPersonalization !== null &&
-    previousPersonalization !== data.personalizationEnabled
-  ) {
+  for (const c of changes) {
     await logAudit(
       {
-        action: "course.personalization.toggled",
+        action: c.action,
         actorUserId,
-        payload: {
-          courseId,
-          from: previousPersonalization,
-          to: data.personalizationEnabled,
-        },
+        payload: { courseId, from: c.from, to: c.to },
       },
       db,
     );
@@ -360,6 +369,7 @@ export async function listPublishedCourses(
       priceCents: true,
       currency: true,
       personalizationEnabled: true,
+      publicAccess: true,
     },
   });
 
@@ -488,6 +498,7 @@ export async function duplicateCourse(
         // causing the copy to lose personalization / pricing / org scope and
         // appear "hidden" or misconfigured to learners after publish.
         personalizationEnabled: src.personalizationEnabled,
+        publicAccess: src.publicAccess,
         priceCents: src.priceCents,
         currency: src.currency,
         organizationId: src.organizationId,
