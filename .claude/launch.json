@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "web",
-      "runtimeExecutable": "/Users/joynguyen/Library/pnpm/pnpm",
-      "runtimeArgs": ["--filter", "@feedbackme/web", "dev"],
-      "port": 3000
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@feedbackme/web", "exec", "next", "dev"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }
