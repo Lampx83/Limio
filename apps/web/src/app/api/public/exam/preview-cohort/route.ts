@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     courseId = exam.courseId;
   }
 
-  const cohort = await prisma.cohort.findFirst({
+  const cohort = await prisma.courseSection.findFirst({
     where: { courseId, code: cohortCode },
     select: {
       id: true,

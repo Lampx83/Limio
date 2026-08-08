@@ -17,6 +17,7 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "./generated/client";
 import { RoleName, LearningEventType } from "@feedbackme/shared-types";
+import { seedDefaultSectionId } from "./seedHelpers";
 
 const prisma = new PrismaClient();
 const PASSWORD = "password1234";
@@ -208,10 +209,12 @@ async function ensureEnrollment(
     where: { userId_courseId: { userId, courseId } },
   });
   if (existing) return { created: false };
+  const sectionId = await seedDefaultSectionId(courseId, prisma);
   await prisma.enrollment.create({
     data: {
       userId,
       courseId,
+      sectionId,
       courseVersion: 1,
       enrolledAt: new Date(Date.now() - daysAgo * 24 * 3600 * 1000),
     },

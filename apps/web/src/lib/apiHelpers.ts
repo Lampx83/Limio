@@ -22,7 +22,12 @@ export function mapKnownError(err: unknown): NextResponse | null {
     return NextResponse.json({ error: err.code }, { status });
   }
   if (err instanceof CourseError) {
-    const status = err.code === "not_found" ? 404 : 400;
+    const status =
+      err.code === "not_found" || err.code === "section_not_found"
+        ? 404
+        : err.code === "section_name_taken" || err.code === "section_has_enrollments"
+          ? 409
+          : 400;
     return NextResponse.json(
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
@@ -46,7 +51,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
   }
   if (err instanceof EnrollError) {
     const status =
-      err.code === "course_not_found"
+      err.code === "course_not_found" || err.code === "invalid_invite_code"
         ? 404
         : err.code === "payment_required"
           ? 402

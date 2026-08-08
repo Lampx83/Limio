@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import {
+  enrollBySectionCode,
   enrollInCourse,
   EnrollError,
   isUserEnrolled,
@@ -11,6 +12,7 @@ import {
   createCourse,
   publishCourse,
 } from "../../courses/courses";
+import { createCourseSection } from "../../courses/sections";
 import { createModule } from "../../courses/modules";
 import { createLesson } from "../../courses/lessons";
 import { createSkill, tagLessonSkill } from "../../courses/skills";
@@ -129,5 +131,79 @@ describe("enrollInCourse", () => {
     await enrollInCourse(learnerId, c2);
     const list = await listEnrollmentsForUser(learnerId);
     expect(list).toHaveLength(2);
+  });
+
+  it("direct enroll (no sectionId) lazily creates + lands in the default section", async () => {
+    const ownerId = await makeUser("o8@e.com");
+    const courseId = await publishedCourse(ownerId, "e8");
+    const learnerId = await makeUser("l8@e.com");
+
+    const result = await enrollInCourse(learnerId, courseId);
+    const enrollment = await prisma.enrollment.findUniqueOrThrow({
+      where: { id: result.enrollmentId },
+      include: { section: true },
+    });
+    expect(enrollment.section.isDefault).toBe(true);
+    expect(enrollment.section.courseId).toBe(courseId);
+  });
+});
+
+describe("enrollBySectionCode", () => {
+  it("self-enrolls via a section's invite code, landing in that section", async () => {
+    const ownerId = await makeUser("j1@e.com");
+    const courseId = await publishedCourse(ownerId, "j1");
+    const section = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+    const learnerId = await makeUser("jl1@e.com");
+
+    const result = await enrollBySectionCode(learnerId, section.inviteCode!);
+    expect(result.created).toBe(true);
+
+    const enrollment = await prisma.enrollment.findUniqueOrThrow({
+      where: { id: result.enrollmentId },
+    });
+    expect(enrollment.sectionId).toBe(section.id);
+    expect(enrollment.courseId).toBe(courseId);
+  });
+
+  it("re-joining the same invite link is idempotent", async () => {
+    const ownerId = await makeUser("j2@e.com");
+    const courseId = await publishedCourse(ownerId, "j2");
+    const section = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+    const learnerId = await makeUser("jl2@e.com");
+
+    const r1 = await enrollBySectionCode(learnerId, section.inviteCode!);
+    const r2 = await enrollBySectionCode(learnerId, section.inviteCode!);
+    expect(r1.enrollmentId).toBe(r2.enrollmentId);
+    expect(r2.created).toBe(false);
+  });
+
+  it("rejects an unknown invite code", async () => {
+    const learnerId = await makeUser("jl3@e.com");
+    await expect(enrollBySectionCode(learnerId, "NOSUCH")).rejects.toMatchObject({
+      code: "invalid_invite_code",
+    });
+  });
+
+  it("rejects joining via the default section's code (it has none)", async () => {
+    const ownerId = await makeUser("j4@e.com");
+    const courseId = await publishedCourse(ownerId, "j4");
+    const bootstrapLearnerId = await makeUser("jl4a@e.com");
+    await enrollInCourse(bootstrapLearnerId, courseId); // lazily creates default section
+
+    const learnerId = await makeUser("jl4b@e.com");
+    await expect(enrollBySectionCode(learnerId, "FAKECODE")).rejects.toMatchObject({
+      code: "invalid_invite_code",
+    });
+  });
+
+  it("rejects when the course isn't published", async () => {
+    const ownerId = await makeUser("j5@e.com");
+    const c = await createCourse(ownerId, { title: "draft", description: "x", slug: "j5-draft" });
+    const section = await createCourseSection(ownerId, c.courseId, { name: "Lớp A" });
+    const learnerId = await makeUser("jl5@e.com");
+
+    await expect(enrollBySectionCode(learnerId, section.inviteCode!)).rejects.toMatchObject({
+      code: "course_not_enrollable",
+    });
   });
 });

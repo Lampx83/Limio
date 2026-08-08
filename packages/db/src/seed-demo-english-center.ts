@@ -53,6 +53,7 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient, Prisma } from "./generated/client";
 import { RoleName } from "@feedbackme/shared-types";
+import { seedDefaultSectionId } from "./seedHelpers";
 
 const prisma = new PrismaClient();
 
@@ -882,10 +883,12 @@ async function seedEnrollments(
       where: { userId_courseId: { userId, courseId: course.courseId } },
     });
     if (!existingEnroll) {
+      const sectionId = await seedDefaultSectionId(course.courseId, prisma);
       await prisma.enrollment.create({
         data: {
           userId,
           courseId: course.courseId,
+          sectionId,
           courseVersion: 1,
           status: spec.progressPct >= 100 ? "completed" : "active",
           lastLessonId: lessons[lastLessonIdx]?.id ?? null,

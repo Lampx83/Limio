@@ -24,6 +24,8 @@ export const LearningEventType = {
   EnrollmentCreated: "enrollment.created",
   EnrollmentStatusChanged: "enrollment.status_changed",
   CourseCompleted: "course.completed",
+  CourseInstructorAdded: "course.instructor.added",
+  CourseInstructorRemoved: "course.instructor.removed",
 
   // A7 Exam
   ExamCreated: "exam.created",
@@ -153,6 +155,9 @@ export interface QuizQuestionAnsweredPayload {
 export interface EnrollmentCreatedPayload {
   enrollmentId: string;
   courseId: string;
+  // A6 — CourseSection (invite-link) the enrollment landed in. Optional:
+  // additive field, older EnrollmentCreated rows predate CourseSection.
+  sectionId?: string;
 }
 
 // =====================================================================

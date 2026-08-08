@@ -5,6 +5,7 @@
  * Idempotent.
  */
 import { PrismaClient } from "./generated/client";
+import { seedDefaultSectionId } from "./seedHelpers";
 
 const prisma = new PrismaClient();
 const COURSE_SLUG = "dai-so-co-ban";
@@ -87,10 +88,11 @@ async function main() {
   const alice = await prisma.user.findUnique({ where: { email: INSTRUCTOR_EMAIL } });
   if (!alice) throw new Error("Alice user not found");
 
+  const sectionId = await seedDefaultSectionId(course.id, prisma);
   await prisma.enrollment.upsert({
     where: { userId_courseId: { userId: alice.id, courseId: course.id } },
     update: {},
-    create: { userId: alice.id, courseId: course.id, courseVersion: 1 },
+    create: { userId: alice.id, courseId: course.id, sectionId, courseVersion: 1 },
   });
 
   const existingAttempt = await prisma.quizAttempt.findFirst({

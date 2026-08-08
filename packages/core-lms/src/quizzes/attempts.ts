@@ -5,7 +5,7 @@ import { isUserEnrolled } from "../learning/enroll";
 import { emitEvent } from "../learning/events";
 import { gradeAnswer } from "./grading";
 import { QuizError } from "./types";
-import { assertCanEditCourse, canEditCourse } from "../courses/authz";
+import { assertCanEditCourse, assertCanGradeCourse, canEditCourse } from "../courses/authz";
 
 /**
  * Deterministic Fisher-Yates shuffle for ordering question options. Uses a
@@ -559,7 +559,7 @@ export async function gradeEssayResponse(
   if (!r) throw new QuizError("validation_failed", "response_not_found");
   if (!r.question.quiz.courseId)
     throw new QuizError("validation_failed", "no_course");
-  await assertCanEditCourse(graderUserId, r.question.quiz.courseId, db);
+  await assertCanGradeCourse(graderUserId, r.question.quiz.courseId, db);
 
   const max = r.question.points;
   const score = Math.max(0, Math.min(max, Math.round(rawInput.score)));

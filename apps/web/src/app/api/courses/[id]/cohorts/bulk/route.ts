@@ -89,18 +89,18 @@ export async function POST(
 
     try {
       // Match by (courseId, code) — unique. Upsert pattern.
-      const existing = await prisma.cohort.findFirst({
+      const existing = await prisma.courseSection.findFirst({
         where: { courseId: params.id, code },
         select: { id: true },
       });
       if (existing) {
-        await prisma.cohort.update({
+        await prisma.courseSection.update({
           where: { id: existing.id },
           data: { instructorId, name },
         });
         updated++;
       } else {
-        await prisma.cohort.create({
+        await prisma.courseSection.create({
           data: {
             courseId: params.id,
             code,

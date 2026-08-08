@@ -111,9 +111,9 @@ model User {
   bankQuestionsReviewed    BankQuestion[]           @relation("BankQuestionReviewedBy")
   // A5.5 — Exam tạo bởi user này (set khi publish; nullable cho exam legacy).
   examsCreated             Exam[]                   @relation("ExamCreator")
-  // A5.2 Cohort
+  // A5.2 Cohort (renamed to CourseSection — see model comment)
   cohortMemberships        CohortMember[]
-  cohortsAsInstructor      Cohort[]                 @relation("CohortInstructor")
+  sectionsAsInstructor     CourseSection[]          @relation("CohortInstructor")
 
   // PR2.17 — Multi-tenancy
   organization Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
@@ -279,7 +279,7 @@ model Course {
   timerTemplates    TimerTemplate[]
   exams             Exam[]
   questionBanks     QuestionBank[]
-  cohorts           Cohort[]
+  sections          CourseSection[]
   cohortExamClasses CohortExamClass[]
   examRounds        ExamRound[]
   organization      Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
@@ -435,6 +435,10 @@ model Enrollment {
   id              String           @id @default(uuid())
   userId          String
   courseId        String
+  // Lớp học (CourseSection) mà enrollment này thuộc về. courseId vẫn giữ
+  // denormalized song song để không phải sửa các query hiện có đang lọc
+  // theo courseId trực tiếp.
+  sectionId       String
   // Frozen at enrollment time (A2 acceptance: học viên không bị break khi course update).
   courseVersion   Int
   status          EnrollmentStatus @default(active)
@@ -444,11 +448,13 @@ model Enrollment {
   lastLessonId    String?
   lastPositionSec Int?
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id])
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course  Course         @relation(fields: [courseId], references: [id])
+  section CourseSection @relation(fields: [sectionId], references: [id])
 
   @@unique([userId, courseId])
   @@index([userId, status])
+  @@index([sectionId])
 }
 
 // A3 — Note attached to a lesson, optionally to a content item, optionally
@@ -2540,7 +2546,7 @@ model ExamCandidate {
   session    ExamSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   linkedUser User?           @relation("ExamCandidateUser", fields: [userId], references: [id], onDelete: SetNull)
   room       ExamRoom?       @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  cohort     Cohort?         @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  cohort     CourseSection?  @relation(fields: [cohortId], references: [id], onDelete: SetNull)
   attempts   ExamAttempt[]
   events     LearningEvent[]
 
@@ -2616,20 +2622,38 @@ model ExamRoomGrader {
 }
 
 // =====================================================================
-// A5.2 — Cohort + ExamSchedule (P1.5)
-// Cohort = administrative grouping (lớp K65A-DSAI-2025-2). Separate from
-// Enrollment so a learner can be in multiple cohorts of the same course
-// (e.g. lab + lecture sub-group).
-// ExamSchedule = per-cohort open/close window + optional duration override.
+// A5.2 — CourseSection + ExamSchedule (P1.5)
+// CourseSection (Prisma model renamed từ Cohort — SQL table giữ tên "Cohort"
+// qua @@map để zero migration risk, mirror pattern ExamSchedule→ExamSession).
+// = "lớp học" (lớp K65A-DSAI-2025-2): administrative grouping, tách khỏi
+// Course (nội dung dùng chung). Một course có nhiều section, mỗi section có
+// invite link riêng (`inviteCode`) để học viên tự enroll.
+//
+// LƯU Ý QUAN TRỌNG: CohortMember (roster dùng cho exam-gating,
+// assertEligibleForExam) và Enrollment.sectionId (roster dùng cho content
+// access qua invite link) là 2 cơ chế TÁCH BIỆT trong vòng MVP invite-link
+// này — một học viên có thể có mặt ở cái này mà không có ở cái kia. Không
+// giả định chúng đồng bộ; hợp nhất là việc của round sau.
+//
+// ExamSchedule = per-section open/close window + optional duration override.
 // =====================================================================
-model Cohort {
+model CourseSection {
   id           String   @id @default(uuid())
   courseId     String
   name         String
   // PR2.12 — Mã lớp học do nhà trường định nghĩa (6-8 ký tự). SV gõ mã này
-  // ở form open-mode để route kết quả về đúng cohort. Unique trong course.
+  // ở form open-mode để route kết quả về đúng section. Unique trong course.
+  // KHÁC với inviteCode bên dưới (self-enroll, tự sinh, global-unique).
   code         String?
-  // PR2.12 — GV phụ trách cohort (1 GV : N cohort). Null = chưa gán.
+  // Invite-link self-enroll — mã tự sinh (crypto-secure), global-unique.
+  // Null cho section mặc định (isDefault=true), section đó không cho join
+  // qua link. Regenerate được — mã cũ mất hiệu lực ngay khi đổi.
+  inviteCode   String?  @unique
+  // true = section "mặc định" tự tạo cho mỗi course, dùng làm nơi rơi vào
+  // cho enrollment không qua invite link (mua khoá học, bulk-import, data
+  // cũ trước migration). Ẩn khỏi UI quản lý lớp học của GV.
+  isDefault    Boolean  @default(false)
+  // PR2.12 — GV phụ trách section (1 GV : N section). Null = chưa gán.
   instructorId String?
   // Optional human description (e.g. "Lớp K65A-DSAI-2025-2 thứ 7 chiều")
   description  String?  @db.Text
@@ -2642,11 +2666,13 @@ model Cohort {
   schedules   ExamSession[]
   candidates  ExamCandidate[]
   examClasses CohortExamClass[]
+  enrollments Enrollment[]
 
   @@unique([courseId, name])
   @@unique([courseId, code])
   @@index([courseId])
   @@index([instructorId])
+  @@map("Cohort")
 }
 
 // PR2.15 — Mỗi cohort có 2-4 "mã lớp thi" (exam class) ứng với 1 phòng vật
@@ -2662,8 +2688,8 @@ model CohortExamClass {
   expectedStudentCount Int?
   createdAt            DateTime @default(now())
 
-  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  cohort CourseSection @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  course Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, code])
   @@index([cohortId])
@@ -2674,8 +2700,8 @@ model CohortMember {
   userId   String
   joinedAt DateTime @default(now())
 
-  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort CourseSection @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([cohortId, userId])
   @@index([userId])
@@ -2721,7 +2747,7 @@ model ExamSession {
 
   exam       Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
   round      ExamRound       @relation(fields: [roundId], references: [id], onDelete: Restrict)
-  cohort     Cohort?         @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  cohort     CourseSection?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   rooms      ExamRoom[]
   candidates ExamCandidate[]
 

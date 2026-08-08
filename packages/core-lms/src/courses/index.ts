@@ -2,6 +2,8 @@ export * from "./slug";
 export * from "./contentSchemas";
 export * from "./authz";
 export * from "./courses";
+export * from "./instructors";
+export * from "./sections";
 export * from "./modules";
 export * from "./lessons";
 export * from "./contents";

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
+import { getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 import SafeHtml from "@/components/SafeHtml";
@@ -32,11 +32,12 @@ export default async function GradingInboxPage({
   });
   if (!exam || exam.courseId !== course.id) notFound();
 
-  // P1 — instructor OR room grader. Graders see only their rooms.
-  const isInstructor = await canEditCourse(session.user.id, course.id);
-  const scope = isInstructor
-    ? null
-    : await getRoomScope(session.user.id, exam.id);
+  // P1 — instructor-tier (incl. non-editing-teacher/teaching-assistant, via
+  // getRoomScope's canGradeCourse check) OR room grader. Graders see only
+  // their rooms.
+  const roomScope = await getRoomScope(session.user.id, exam.id);
+  const isInstructor = roomScope.isInstructor;
+  const scope = isInstructor ? null : roomScope;
   if (!isInstructor && (!scope || scope.graderRoomIds.length === 0)) {
     redirect("/instructor/courses");
   }

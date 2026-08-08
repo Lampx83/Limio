@@ -1,6 +1,6 @@
 /**
  * P1 — Room-scoped authz for proctor + grader roles. Builds on top of
- * `canEditCourse` (instructor = full access).
+ * `canGradeCourse` (any course-level grading role = full access).
  *
  * Proctor (giám thị) of a room can:
  *   - Read the live-monitor stream, filtered to candidates in their room.
@@ -12,8 +12,12 @@
  *   - Submit manual scores for those answers.
  *   Cannot proctor, edit exam, or see other rooms.
  *
- * Instructor (course owner / co-instructor / admin) — full access. Bypasses
- * all room scoping.
+ * `isInstructor` here means "has course-level grading access" — owner,
+ * co-instructor, non-editing-teacher, teaching-assistant, or platform admin.
+ * All of them bypass room scoping (full access), same as before this field
+ * covered only owner/co-instructor. Room-scoped `ExamRoomGrader` rows remain
+ * the separate mechanism for one-off graders who aren't course instructors
+ * at all.
  *
  * Note: roomIds returned from `effectiveRoomsForUser` are an empty array for
  * instructors (since they have full access, no scoping is needed — callers
@@ -21,7 +25,7 @@
  */
 
 import { prisma, type PrismaClient } from "@feedbackme/db";
-import { canEditCourse } from "../courses/authz";
+import { canGradeCourse } from "../courses/authz";
 
 export interface RoomScope {
   // Instructor / admin — sees everything. Other fields ignored.
@@ -57,7 +61,7 @@ export async function getRoomScope(
   }
 
   const [isInstructor, proctorRooms, graderRows] = await Promise.all([
-    canEditCourse(userId, exam.courseId, db),
+    canGradeCourse(userId, exam.courseId, db),
     db.examRoom.findMany({
       where: { examId, proctorUserId: userId },
       select: { id: true },

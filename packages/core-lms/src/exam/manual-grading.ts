@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse, CourseAuthzError } from "../courses/authz";
+import { CourseAuthzError } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { getRoomScope } from "./room-authz";
 import { ExamError } from "./types";

@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse } from "@feedbackme/core-lms";
+import {
+  canEditCourse,
+  canGradeCourse,
+  canModerateLiveExam,
+  isCourseOwner,
+} from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import LessonSection from "./LessonSection";
@@ -18,6 +23,8 @@ import EditorSidebar from "./EditorSidebar";
 import EditorTabs, { type EditorTab } from "./EditorTabs";
 import EnrollmentList from "./EnrollmentList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
+import InstructorsSection from "./InstructorsSection";
+import SectionsClient from "./SectionsClient";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +47,8 @@ export default async function InstructorCourseEditPage({
   params: { id: string };
   searchParams?: { lesson?: string; tab?: string; lessonView?: string };
 }) {
-  const TAB_VALUES: EditorTab[] = ["overview", "content", "students", "analytics"];
-  const tab: EditorTab = TAB_VALUES.includes(searchParams?.tab as EditorTab)
+  const TAB_VALUES: EditorTab[] = ["overview", "content", "students", "sections", "analytics"];
+  const requestedTab: EditorTab = TAB_VALUES.includes(searchParams?.tab as EditorTab)
     ? (searchParams!.tab as EditorTab)
     : "overview";
   const lessonView: "edit" | "preview" =
@@ -103,8 +110,26 @@ export default async function InstructorCourseEditPage({
   });
   if (!course) notFound();
 
+  // canGradeCourse is the broadest instructor-tier check (all 4 roles) — lets
+  // non-editing-teacher/teaching-assistant reach the page at all (they need
+  // "Học viên" for grading context). Content-edit UI is separately gated by
+  // canEdit below.
+  const canAccess = await canGradeCourse(userId, course.id);
+  if (!canAccess) redirect("/instructor/courses");
   const canEdit = await canEditCourse(userId, course.id);
-  if (!canEdit) redirect("/instructor/courses");
+  const isOwner = await isCourseOwner(userId, course.id);
+  // Analytics is hidden from teaching-assistant (grade-only role, no course
+  // reports) — same role tier as the live-moderate check.
+  const canViewAnalytics = await canModerateLiveExam(userId, course.id);
+  const hiddenTabs: EditorTab[] = [
+    ...(!canEdit ? (["content", "sections"] as const) : []),
+    ...(!canViewAnalytics ? (["analytics"] as const) : []),
+  ];
+  // Requesting a hidden tab falls back to overview — content editor isn't
+  // read-only-safe yet (forms would render but every save 403s server-side).
+  const tab: EditorTab = hiddenTabs.includes(requestedTab)
+    ? "overview"
+    : requestedTab;
 
   const untaggedLessonIds = course.modules.flatMap((m) =>
     m.lessons
@@ -225,7 +250,7 @@ export default async function InstructorCourseEditPage({
       </header>
 
       <div className="mt-6">
-        <EditorTabs courseId={course.id} active={tab} />
+        <EditorTabs courseId={course.id} active={tab} hiddenTabs={hiddenTabs} />
       </div>
 
       {/* TAB: Tổng quan */}
@@ -257,6 +282,7 @@ export default async function InstructorCourseEditPage({
             </div>
           )}
 
+          {canEdit && (
           <section>
             <CourseMetaForm
               courseId={course.id}
@@ -273,14 +299,28 @@ export default async function InstructorCourseEditPage({
               }}
             />
           </section>
+          )}
 
+          <section>
+            <h2 className="mb-3 text-base font-semibold">Giảng viên</h2>
+            <p className="mb-3 text-sm text-muted">
+              Đồng giảng viên có toàn quyền sửa nội dung khóa như chủ khóa.
+              Chỉ chủ khóa mới thêm/gỡ được đồng giảng viên.
+            </p>
+            <InstructorsSection courseId={course.id} isOwner={isOwner} />
+          </section>
+
+          {canEdit && (
           <section>
             <h2 className="mb-3 text-base font-semibold">Hành động khóa</h2>
             <div className="flex flex-wrap items-center gap-2">
               <DuplicateCourseButton courseId={course.id} />
-              <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
+              {isOwner && (
+                <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
+              )}
             </div>
           </section>
+          )}
         </div>
       )}
 
@@ -412,6 +452,19 @@ export default async function InstructorCourseEditPage({
           </div>
 
           <EnrollmentList courseId={course.id} />
+        </div>
+      )}
+
+      {/* TAB: Lớp học (invite link) */}
+      {tab === "sections" && (
+        <div className="mt-8 space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold">Lớp học</h2>
+            <p className="mt-1 text-sm text-muted">
+              Cùng 1 khoá học có thể có nhiều lớp — mỗi lớp có link mời riêng để học viên tự đăng ký.
+            </p>
+          </div>
+          <SectionsClient courseId={course.id} />
         </div>
       )}
 

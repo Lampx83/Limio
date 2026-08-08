@@ -66,6 +66,11 @@ export function generateAssignedCode(): string {
   return generateCode(8);
 }
 
+/** Generate a self-enroll invite code for a CourseSection. Global-unique (caller retries on P2002). */
+export function generateSectionInviteCode(): string {
+  return generateCode(6);
+}
+
 export interface ClaimResult {
   candidateId: string;
   attemptId: string;
@@ -211,7 +216,7 @@ export async function claimByOpenCode(
   // not trust boundary). Cohort phải cùng course với exam.
   let resolvedCohortId: string | null = null;
   if (input.cohortId) {
-    const cohort = await db.cohort.findUnique({
+    const cohort = await db.courseSection.findUnique({
       where: { id: input.cohortId },
       select: { courseId: true },
     });

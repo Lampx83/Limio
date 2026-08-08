@@ -3,7 +3,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { logAudit } from "../auth/audit";
 import { uniqueCourseSlug } from "./slug";
-import { assertCanEditCourse, CourseAuthzError } from "./authz";
+import { assertCanEditCourse, assertIsOwner, CourseAuthzError } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
 
 export const CreateCourseInput = z.object({
@@ -52,7 +52,15 @@ export class CourseError extends Error {
       | "lessons_missing_skills"
       | "invalid_status_transition"
       | "has_enrollments"
-      | "title_mismatch",
+      | "title_mismatch"
+      | "cannot_remove_owner"
+      | "instructor_not_found"
+      | "invalid_email"
+      | "invalid_role"
+      | "cannot_change_owner_role"
+      | "section_not_found"
+      | "section_name_taken"
+      | "section_has_enrollments",
     public readonly details?: unknown,
   ) {
     super(code);
@@ -192,7 +200,7 @@ export async function deleteCourse(
   options: { force?: boolean } = {},
   db: PrismaClient = prisma,
 ): Promise<{ deletedEnrollments: number }> {
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertIsOwner(actorUserId, courseId, db);
   const course = await db.course.findUniqueOrThrow({
     where: { id: courseId },
     select: { id: true, title: true, slug: true },

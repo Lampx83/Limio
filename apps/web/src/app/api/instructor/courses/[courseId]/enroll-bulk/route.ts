@@ -6,6 +6,7 @@ import {
   assertCanEditCourse,
   CourseAuthzError,
   emitEvent,
+  resolveDefaultSectionId,
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
@@ -56,6 +57,9 @@ export async function POST(
   if (!learnerRole) {
     return NextResponse.json({ error: "role_seed_missing" }, { status: 500 });
   }
+
+  // Bulk-import lands everyone in the course's default section (isDefault=true).
+  const sectionId = await resolveDefaultSectionId(course.id, prisma);
 
   let enrolled = 0;
   let alreadyEnrolled = 0;
@@ -122,6 +126,7 @@ export async function POST(
           data: {
             userId: target.id,
             courseId: course.id,
+            sectionId,
             courseVersion: course.version,
             status: "active",
           },

@@ -1,20 +1,23 @@
 import Link from "next/link";
 
-export type EditorTab = "overview" | "content" | "students" | "analytics";
+export type EditorTab = "overview" | "content" | "students" | "sections" | "analytics";
 
 const TABS: Array<{ key: EditorTab; label: string; icon: string }> = [
   { key: "overview", label: "Tổng quan", icon: "ⓘ" },
   { key: "content", label: "Nội dung", icon: "📚" },
   { key: "students", label: "Học viên", icon: "👥" },
+  { key: "sections", label: "Lớp học", icon: "🏫" },
   { key: "analytics", label: "Phân tích", icon: "📊" },
 ];
 
 export default function EditorTabs({
   courseId,
   active,
+  hiddenTabs = [],
 }: {
   courseId: string;
   active: EditorTab;
+  hiddenTabs?: EditorTab[];
 }) {
   return (
     <nav
@@ -22,7 +25,7 @@ export default function EditorTabs({
       aria-label="Course editor tabs"
       className="flex gap-1 overflow-x-auto border-b border-token"
     >
-      {TABS.map((t) => {
+      {TABS.filter((t) => !hiddenTabs.includes(t.key)).map((t) => {
         const isActive = t.key === active;
         return (
           <Link

@@ -38,7 +38,7 @@ export async function PATCH(
     } else {
       try {
         // Resolve cohort → course → organization for per-org template lookup.
-        const cohort = await prisma.cohort.findUnique({
+        const cohort = await prisma.courseSection.findUnique({
           where: { id: params.id },
           select: { course: { select: { organizationId: true } } },
         });

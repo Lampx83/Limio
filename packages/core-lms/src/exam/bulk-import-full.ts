@@ -120,20 +120,20 @@ export async function bulkImportRoundFull(
         }
       }
 
-      const existingCohort = await db.cohort.findFirst({
+      const existingCohort = await db.courseSection.findFirst({
         where: { courseId: round.courseId, code: cohortCode },
         select: { id: true },
       });
       let cohortId: string;
       if (existingCohort) {
-        await db.cohort.update({
+        await db.courseSection.update({
           where: { id: existingCohort.id },
           data: { instructorId: instructorId ?? undefined },
         });
         cohortId = existingCohort.id;
         result.cohortsUpdated++;
       } else {
-        const created = await db.cohort.create({
+        const created = await db.courseSection.create({
           data: {
             courseId: round.courseId,
             code: cohortCode,

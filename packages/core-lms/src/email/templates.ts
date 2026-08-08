@@ -27,6 +27,7 @@ export type TemplateKey =
   | "exam.proctor_invite_bulk"
   | "exam.instructor_invite_bulk"
   | "cohort.instructor_invite"
+  | "course.co_instructor_invite"
   | "course.welcome"
   | "exam.grade_published"
   | "exam.deadline_reminder"
@@ -154,6 +155,11 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
     subject: "Bạn được mời làm GV phụ trách lớp trên Limio.vn",
     bodyHtml: `<p>Xin chào {{name}},</p><p>Đặt mật khẩu (TTL 1h): <a href="{{resetUrl}}">{{resetUrl}}</a></p>`,
     bodyText: `Xin chào {{name}},\n\nĐặt mật khẩu (TTL 1h):\n{{resetUrl}}`,
+  },
+  "course.co_instructor_invite": {
+    subject: "Bạn được thêm làm đồng giảng viên khóa \"{{courseTitle}}\" trên Limio.vn",
+    bodyHtml: `<p>Xin chào,</p><p>Bạn vừa được thêm làm đồng giảng viên khóa <strong>{{courseTitle}}</strong>. Đặt mật khẩu để đăng nhập (TTL 1h): <a href="{{resetUrl}}">{{resetUrl}}</a></p>`,
+    bodyText: `Xin chào,\n\nBạn vừa được thêm làm đồng giảng viên khóa {{courseTitle}}. Đặt mật khẩu để đăng nhập (TTL 1h):\n{{resetUrl}}`,
   },
 };
 

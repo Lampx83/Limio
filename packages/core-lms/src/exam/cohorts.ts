@@ -41,7 +41,7 @@ export async function createCohort(
   if (!parsed.success)
     throw new ExamError("validation_failed", parsed.error.flatten());
   try {
-    const c = await db.cohort.create({
+    const c = await db.courseSection.create({
       data: {
         courseId,
         name: parsed.data.name,
@@ -99,7 +99,7 @@ export async function listCohorts(
   db: PrismaClient = prisma,
 ): Promise<CohortListItem[]> {
   await assertCanEditCourse(actorUserId, courseId, db);
-  const rows = await db.cohort.findMany({
+  const rows = await db.courseSection.findMany({
     where: { courseId },
     orderBy: { name: "asc" },
     select: {
@@ -244,7 +244,7 @@ async function assertCanEditCohort(
   cohortId: string,
   db: PrismaClient,
 ): Promise<{ id: string; courseId: string }> {
-  const c = await db.cohort.findUnique({
+  const c = await db.courseSection.findUnique({
     where: { id: cohortId },
     select: { id: true, courseId: true },
   });
@@ -283,7 +283,7 @@ export async function updateCohort(
   if (patch.description !== undefined) data.description = patch.description;
   if (Object.keys(data).length === 0) return;
   try {
-    await db.cohort.update({ where: { id: cohortId }, data });
+    await db.courseSection.update({ where: { id: cohortId }, data });
   } catch (e) {
     if ((e as { code?: string }).code === "P2002")
       throw new ExamError("cohort_name_taken");
@@ -297,7 +297,7 @@ export async function deleteCohort(
   db: PrismaClient = prisma,
 ): Promise<void> {
   await assertCanEditCohort(actorUserId, cohortId, db);
-  await db.cohort.delete({ where: { id: cohortId } });
+  await db.courseSection.delete({ where: { id: cohortId } });
 }
 
 // ============================================================================
@@ -436,7 +436,7 @@ export async function createExamSession(
 
   // If cohortId set, validate it belongs to the same course.
   if (d.cohortId) {
-    const cohort = await db.cohort.findUnique({
+    const cohort = await db.courseSection.findUnique({
       where: { id: d.cohortId },
       select: { courseId: true },
     });

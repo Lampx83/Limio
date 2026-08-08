@@ -14,7 +14,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanModerateLiveExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import {
   finalizeSubmission,
@@ -72,7 +72,7 @@ export async function extendAttempt(
     throw new ExamError("duration_extension_too_large", { max: MAX_EXTENSION_MIN });
   }
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanEditCourse(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const newDurationSec = a.durationSec + minutes * 60;
@@ -109,7 +109,7 @@ export async function forceSubmitAttempt(
 ): Promise<ExamSubmitResult> {
   const reason = requireReason(rawReason);
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanEditCourse(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const result = await finalizeSubmission(attemptId, "force_submitted", db);
@@ -144,7 +144,7 @@ export async function forceSubmitAttemptMarkOnly(
 ): Promise<MarkAttemptResult> {
   const reason = requireReason(rawReason);
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanEditCourse(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const result = await markAttemptSubmitted(attemptId, "force_submitted", db);
@@ -176,7 +176,7 @@ export async function resetAttemptSession(
   db: PrismaClient = prisma,
 ): Promise<{ sessionToken: string; resumeCount: number }> {
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanEditCourse(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const newToken = randomUUID();
@@ -215,7 +215,7 @@ export async function disqualifyAttempt(
 ): Promise<{ status: "flagged" }> {
   const reason = requireReason(rawReason);
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanEditCourse(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
   if (a.status === "flagged") return { status: "flagged" };
 
   await db.examAttempt.update({

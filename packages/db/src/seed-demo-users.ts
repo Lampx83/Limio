@@ -14,6 +14,7 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "./generated/client";
 import { RoleName } from "@feedbackme/shared-types";
+import { seedDefaultSectionId } from "./seedHelpers";
 
 const prisma = new PrismaClient();
 const PASSWORD = "password1234";
@@ -125,10 +126,12 @@ async function ensureBobIsHalfwayThrough(bobId: string) {
     where: { userId_courseId: { userId: bobId, courseId: course.id } },
   });
   if (!existingEnrollment) {
+    const sectionId = await seedDefaultSectionId(course.id, prisma);
     await prisma.enrollment.create({
       data: {
         userId: bobId,
         courseId: course.id,
+        sectionId,
         courseVersion: course.version,
         status: "active",
       },

@@ -18,7 +18,7 @@
  */
 
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse, canEditCourse } from "../courses/authz";
+import { assertCanModerateLiveExam, canModerateLiveExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 const MIN_ATTEMPTS = 5;
@@ -356,7 +356,7 @@ export async function listExamItemAnalytics(
     select: { id: true, title: true, courseId: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanModerateLiveExam(actorUserId, exam.courseId, db);
 
   const questions = await db.examQuestion.findMany({
     where: { examId },
@@ -467,7 +467,7 @@ export async function listBankItemAnalytics(
   const isOwner = bank.ownerUserId === actorUserId;
   let allowed = isOwner;
   if (!allowed && bank.visibility === "course" && bank.courseId) {
-    allowed = await canEditCourse(actorUserId, bank.courseId, db);
+    allowed = await canModerateLiveExam(actorUserId, bank.courseId, db);
   }
   if (!allowed) throw new ExamError("bank_not_found");
 

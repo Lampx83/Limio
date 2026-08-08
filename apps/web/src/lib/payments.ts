@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { prisma } from "@feedbackme/db";
-import { getIntegrationSecret } from "@feedbackme/core-lms";
+import { getIntegrationSecret, resolveDefaultSectionId } from "@feedbackme/core-lms";
 
 /**
  * Resolve Stripe client. Uses encrypted IntegrationCredential if set,
@@ -117,6 +117,7 @@ export async function processStripeWebhook(event: Stripe.Event) {
         where: { id: order.courseId },
         select: { version: true },
       });
+      const sectionId = await resolveDefaultSectionId(order.courseId, tx as typeof prisma);
       await tx.enrollment.upsert({
         where: {
           userId_courseId: { userId: order.userId, courseId: order.courseId },
@@ -124,6 +125,7 @@ export async function processStripeWebhook(event: Stripe.Event) {
         create: {
           userId: order.userId,
           courseId: order.courseId,
+          sectionId,
           courseVersion: course.version,
         },
         update: {},

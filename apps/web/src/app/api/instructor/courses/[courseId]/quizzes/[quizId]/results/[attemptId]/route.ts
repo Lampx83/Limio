@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import {
-  assertCanEditCourse,
+  assertCanGradeCourse,
   CourseAuthzError,
   getAttemptResultAsInstructor,
 } from "@feedbackme/core-lms";
@@ -41,7 +41,7 @@ export async function GET(
   }
 
   try {
-    await assertCanEditCourse(userId, params.courseId);
+    await assertCanGradeCourse(userId, params.courseId);
   } catch (err) {
     if (err instanceof CourseAuthzError) {
       return NextResponse.json(
