@@ -304,6 +304,7 @@ export default function SessionsPanel({
       {showBulk && (
         <BulkCreateSessionsDialog
           roundId={roundId}
+          availableExams={availableExams}
           onClose={() => setShowBulk(false)}
           onDone={() => {
             setShowBulk(false);
@@ -646,16 +647,20 @@ function AccessModeBadge({
 
 function BulkCreateSessionsDialog({
   roundId,
+  availableExams,
   onClose,
   onDone,
 }: {
   roundId: string;
+  availableExams: ExamOption[];
   onClose: () => void;
   onDone: () => void;
 }) {
   const [count, setCount] = useState(3);
   const [prefix, setPrefix] = useState("Ca");
   const [mode, setMode] = useState<"assigned_code" | "open_code" | null>(null);
+  // "" = tự động (đề đầu tiên của khoá); ngược lại = examId đã chọn.
+  const [examId, setExamId] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -680,6 +685,8 @@ function BulkCreateSessionsDialog({
           // Backend applies this mode to the round's exam after creating
           // sessions. Mode is per-exam currently (not per-session).
           accessMode: mode,
+          // examId chọn tay; bỏ trống → backend lấy đề đầu tiên của khoá.
+          ...(examId ? { examId } : {}),
         }),
       });
       const j = (await r.json().catch(() => null)) as {
@@ -756,6 +763,27 @@ function BulkCreateSessionsDialog({
             />
           </label>
 
+          <label className="block">
+            <span className="block text-xs font-medium text-slate-600">
+              Đề thi cho các ca
+            </span>
+            <select
+              value={examId}
+              onChange={(e) => setExamId(e.target.value)}
+              className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option value="">Tự động (đề đầu tiên của khoá)</option>
+              {availableExams.map((ex) => (
+                <option key={ex.id} value={ex.id}>
+                  {ex.title}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-[11px] text-faint">
+              Áp dụng cho tất cả {count} ca. Có thể đổi đề từng ca sau khi tạo.
+            </span>
+          </label>
+
           <div>
             <span className="block text-xs font-medium text-slate-600">
               Chế độ thi <span className="text-red-600">*</span>
@@ -797,9 +825,12 @@ function BulkCreateSessionsDialog({
           </div>
 
           <p className="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-            Hệ thống tạo {count} ca với đề thi đầu tiên của khoá + cửa sổ thời
-            gian mặc định (1 giờ). Sau khi tạo, click vào ô trong bảng để sửa
-            nhanh tên / đề / thời gian / chế độ từng ca.
+            Hệ thống tạo {count} ca với{" "}
+            {examId
+              ? `đề "${availableExams.find((e) => e.id === examId)?.title ?? "đã chọn"}"`
+              : "đề thi đầu tiên của khoá"}{" "}
+            + cửa sổ thời gian mặc định (1 giờ). Sau khi tạo, click vào ô trong
+            bảng để sửa nhanh tên / đề / thời gian / chế độ từng ca.
           </p>
           {err && (
             <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
