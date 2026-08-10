@@ -674,6 +674,10 @@ function BulkCreateSessionsDialog({
       setErr("Chọn chế độ thi (Theo phòng / Tự do).");
       return;
     }
+    if (!examId) {
+      setErr("Chọn đề thi cho các ca.");
+      return;
+    }
     setBusy(true);
     try {
       const r = await fetch(`/api/exam-rounds/${roundId}/sessions/bulk`, {
@@ -765,14 +769,14 @@ function BulkCreateSessionsDialog({
 
           <label className="block">
             <span className="block text-xs font-medium text-slate-600">
-              Đề thi cho các ca
+              Đề thi cho các ca <span className="text-red-600">*</span>
             </span>
             <select
               value={examId}
               onChange={(e) => setExamId(e.target.value)}
               className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
             >
-              <option value="">Tự động (đề đầu tiên của khoá)</option>
+              <option value="">— Chọn đề thi —</option>
               {availableExams.map((ex) => (
                 <option key={ex.id} value={ex.id}>
                   {ex.title}
@@ -780,7 +784,9 @@ function BulkCreateSessionsDialog({
               ))}
             </select>
             <span className="mt-1 block text-[11px] text-faint">
-              Áp dụng cho tất cả {count} ca. Có thể đổi đề từng ca sau khi tạo.
+              {availableExams.length === 0
+                ? "Khoá chưa có đề thi nào — tạo đề trong khoá trước."
+                : `Áp dụng cho tất cả ${count} ca. Có thể đổi đề từng ca sau khi tạo.`}
             </span>
           </label>
 
@@ -828,7 +834,7 @@ function BulkCreateSessionsDialog({
             Hệ thống tạo {count} ca với{" "}
             {examId
               ? `đề "${availableExams.find((e) => e.id === examId)?.title ?? "đã chọn"}"`
-              : "đề thi đầu tiên của khoá"}{" "}
+              : "đề bạn chọn ở trên"}{" "}
             + cửa sổ thời gian mặc định (1 giờ). Sau khi tạo, click vào ô trong
             bảng để sửa nhanh tên / đề / thời gian / chế độ từng ca.
           </p>

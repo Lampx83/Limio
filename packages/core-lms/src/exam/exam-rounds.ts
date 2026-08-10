@@ -552,9 +552,9 @@ export async function createExamSessionInRound(
 // session detail page if needed.
 export const BulkCreateExamSessionsInput = z
   .object({
-    // examId is optional — backend picks the first exam in the round's
-    // course if not supplied. Instructor can change per-row via inline edit.
-    examId: z.string().uuid().optional(),
+    // examId BẮT BUỘC — instructor phải chọn đề (không auto-lấy đề đầu tiên).
+    // Đổi đề từng ca sau khi tạo qua inline edit trên bảng.
+    examId: z.string().uuid(),
     count: z.number().int().min(1).max(50),
     namePrefix: z.string().min(1).max(40).optional(),
     // Times also optional. Defaults to now+1h / now+2h so the rows show up
@@ -586,25 +586,12 @@ export async function bulkCreateExamSessionsInRound(
   const { count, namePrefix } = parsed.data;
   const prefix = namePrefix?.trim() || "Ca";
 
-  // Resolve examId: explicit > first exam of the round's course (deterministic
-  // by createdAt). After PR2.11, round = 1 course.
+  // examId bắt buộc (schema) — không còn auto-lấy đề đầu tiên của khoá.
   const round = await db.examRound.findUniqueOrThrow({
     where: { id: roundId },
     select: { courseId: true },
   });
-  let examId = parsed.data.examId;
-  if (!examId) {
-    const candidate = await db.exam.findFirst({
-      where: { courseId: round.courseId },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
-    if (!candidate)
-      throw new ExamError("validation_failed", {
-        reason: "round_has_no_exam",
-      });
-    examId = candidate.id;
-  }
+  const examId = parsed.data.examId;
 
   const exam = await db.exam.findUnique({
     where: { id: examId },
