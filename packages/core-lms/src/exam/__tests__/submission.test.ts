@@ -11,6 +11,7 @@ import {
   createPassage,
   getExamAttemptResult,
   publishExam,
+  regradeExamAttempts,
   saveAnswer,
   startExamAttempt,
   submitExamAttempt,
@@ -265,5 +266,72 @@ describe("getExamAttemptResult (A7.5.4)", () => {
     const s = await setup("r3");
     const start = await startExamAttempt(s.learnerId, s.examId);
     await expect(getExamAttemptResult(s.learnerId, start.attemptId)).rejects.toBeTruthy();
+  });
+});
+
+describe("regradeExamAttempts", () => {
+  it("re-scores submitted attempts theo đáp án MỚI; ghi history", async () => {
+    const s = await setup("rg1");
+    const start = await startExamAttempt(s.learnerId, s.examId);
+    // q1=a (đúng, 5đ), q2=b (sai theo đáp án gốc → 0).
+    await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
+    await answerWithToken(s.learnerId, start.attemptId, s.q2, { optionIds: ["b"] }, start.sessionToken);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+    const before = await prisma.examAttempt.findUniqueOrThrow({ where: { id: start.attemptId } });
+    expect(before.score).toBe(5);
+    expect(before.passed).toBe(true); // 50% == passScore 50
+
+    // Instructor sửa đáp án q2: giờ "b" là đúng.
+    await prisma.examQuestion.update({
+      where: { id: s.q2 },
+      data: {
+        config: {
+          options: [
+            { id: "a", label: "A", isCorrect: false },
+            { id: "b", label: "B", isCorrect: true },
+            { id: "c", label: "C", isCorrect: false },
+          ],
+        },
+      },
+    });
+
+    const res = await regradeExamAttempts(s.ownerId, s.examId);
+    expect(res.attemptsChanged).toBeGreaterThanOrEqual(1);
+
+    const after = await prisma.examAttempt.findUniqueOrThrow({ where: { id: start.attemptId } });
+    expect(after.score).toBe(10); // q1 + q2 đều đúng
+    expect(after.scorePct).toBe(100);
+    expect(after.passed).toBe(true);
+
+    // History ghi lại thay đổi điểm câu q2.
+    const q2Answer = await prisma.examAnswer.findUniqueOrThrow({
+      where: { attemptId_questionId: { attemptId: start.attemptId, questionId: s.q2 } },
+    });
+    expect(q2Answer.autoScore).toBe(5);
+    const hist = await prisma.examGradeHistory.findFirst({ where: { answerId: q2Answer.id } });
+    expect(hist).not.toBeNull();
+    expect(hist?.newScore).toBe(5);
+  });
+
+  it("giữ nguyên điểm chấm tay của câu tự luận", async () => {
+    const s = await setup("rg2", { includeEssay: true });
+    const start = await startExamAttempt(s.learnerId, s.examId);
+    await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
+    await answerWithToken(s.learnerId, start.attemptId, s.q3!, { text: "essay" }, start.sessionToken);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+    // Chấm tay essay = 8đ.
+    const essayAns = await prisma.examAnswer.findUniqueOrThrow({
+      where: { attemptId_questionId: { attemptId: start.attemptId, questionId: s.q3! } },
+    });
+    await prisma.examAnswer.update({
+      where: { id: essayAns.id },
+      data: { manualScore: 8, needsGrading: false },
+    });
+
+    await regradeExamAttempts(s.ownerId, s.examId);
+
+    const after = await prisma.examAnswer.findUniqueOrThrow({ where: { id: essayAns.id } });
+    expect(after.manualScore).toBe(8); // không bị đụng
+    expect(after.needsGrading).toBe(false);
   });
 });

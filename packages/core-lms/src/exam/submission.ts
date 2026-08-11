@@ -217,6 +217,182 @@ export async function finalizeSubmission(
   return { autoScore, fullyGraded: allGraded, status: nextStatus };
 }
 
+export interface RegradeExamResult {
+  attemptsProcessed: number;
+  attemptsChanged: number;
+  answersChanged: number;
+}
+
+/**
+ * Chấm lại TẤT CẢ bài đã nộp của 1 đề theo đáp án hiện tại. Dùng sau khi instructor
+ * sửa nội dung/đáp án câu hỏi của đề đã publish (A5).
+ *
+ * - Chấm lại các câu AUTO (mcq/multi/true_false/gap_fill…) bằng gradeExamAnswer.
+ * - KHÔNG đụng câu tự luận (essay/short_answer): giữ nguyên manualScore + trạng
+ *   thái chấm tay của giám khảo.
+ * - Tính lại attempt.score/scorePct/passed theo passScore hiện tại.
+ * - Ghi ExamGradeHistory cho mỗi answer đổi điểm + phát ExamRegraded (audit).
+ *
+ * Authz do route đảm nhiệm (canEditCourse). `actorUserId` chỉ dùng cho history.
+ */
+export async function regradeExamAttempts(
+  actorUserId: string,
+  examId: string,
+  db: PrismaClient = prisma,
+): Promise<RegradeExamResult> {
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { id: true, courseId: true, passScore: true },
+  });
+  if (!exam) throw new ExamError("exam_not_found");
+
+  const questions = await db.examQuestion.findMany({
+    where: { examId },
+    select: { id: true, type: true, config: true, points: true },
+  });
+  const totalPoints = questions.reduce((s, q) => s + q.points, 0);
+
+  const attempts = await db.examAttempt.findMany({
+    where: {
+      examId,
+      status: { in: ["submitted", "auto_submitted", "graded"] },
+    },
+    select: {
+      id: true,
+      userId: true,
+      candidateId: true,
+      status: true,
+      score: true,
+    },
+  });
+
+  let attemptsChanged = 0;
+  let answersChanged = 0;
+
+  for (const attempt of attempts) {
+    const answers = await db.examAnswer.findMany({
+      where: { attemptId: attempt.id },
+      select: {
+        id: true,
+        questionId: true,
+        answerJson: true,
+        autoScore: true,
+        manualScore: true,
+        needsGrading: true,
+      },
+    });
+    const byQ = new Map(answers.map((a) => [a.questionId, a]));
+
+    let autoAnswersChanged = 0;
+    let scoreSum = 0;
+    let allGraded = true;
+
+    await (db as typeof prisma).$transaction(async (tx) => {
+      for (const q of questions) {
+        const a = byQ.get(q.id) ?? null;
+        const isAuto = q.type !== "essay" && q.type !== "short_answer";
+
+        if (isAuto) {
+          const answerJson = a?.answerJson ?? null;
+          const result: GradeResult =
+            answerJson === null
+              ? { autoScore: 0, needsGrading: false }
+              : gradeExamAnswer(
+                  q.type as Parameters<typeof gradeExamAnswer>[0],
+                  q.config,
+                  answerJson,
+                  q.points,
+                );
+          const newAuto = result.autoScore ?? 0;
+
+          if (a) {
+            if (a.autoScore !== newAuto || a.needsGrading !== result.needsGrading) {
+              await tx.examAnswer.update({
+                where: { id: a.id },
+                data: { autoScore: newAuto, needsGrading: result.needsGrading },
+              });
+              await tx.examGradeHistory.create({
+                data: {
+                  answerId: a.id,
+                  oldScore: a.autoScore,
+                  newScore: newAuto,
+                  reason: "regrade_auto",
+                  changedById: actorUserId,
+                },
+              });
+              autoAnswersChanged++;
+            }
+          } else {
+            const created = await tx.examAnswer.create({
+              data: {
+                attemptId: attempt.id,
+                questionId: q.id,
+                autoScore: newAuto,
+                needsGrading: result.needsGrading,
+              },
+            });
+            await tx.examGradeHistory.create({
+              data: {
+                answerId: created.id,
+                oldScore: null,
+                newScore: newAuto,
+                reason: "regrade_auto",
+                changedById: actorUserId,
+              },
+            });
+            autoAnswersChanged++;
+          }
+          scoreSum += newAuto;
+        } else {
+          // Tự luận: giữ nguyên điểm chấm tay.
+          const eff = a?.manualScore ?? null;
+          if (eff === null) allGraded = false;
+          else scoreSum += eff;
+        }
+      }
+
+      const scorePct = totalPoints > 0 ? (scoreSum / totalPoints) * 100 : 0;
+      const nextStatus = allGraded
+        ? "graded"
+        : attempt.status === "auto_submitted"
+          ? "auto_submitted"
+          : "submitted";
+      const now = new Date();
+      await tx.examAttempt.update({
+        where: { id: attempt.id },
+        data: {
+          status: nextStatus,
+          score: scoreSum,
+          scorePct: allGraded ? scorePct : null,
+          passed: allGraded ? scorePct >= exam.passScore : null,
+          gradedAt: allGraded ? now : null,
+        },
+      });
+    });
+
+    answersChanged += autoAnswersChanged;
+    if (autoAnswersChanged > 0 || attempt.score !== scoreSum) {
+      attemptsChanged++;
+      await emitEvent(
+        attempt.userId,
+        LearningEventType.ExamRegraded,
+        { examId, attemptId: attempt.id, score: scoreSum },
+        {
+          courseId: exam.courseId,
+          candidateId: attempt.candidateId ?? undefined,
+        },
+        db,
+      );
+    }
+  }
+
+  return {
+    attemptsProcessed: attempts.length,
+    attemptsChanged,
+    answersChanged,
+  };
+}
+
 export interface MarkAttemptResult {
   status: "submitted" | "auto_submitted" | "graded" | "flagged" | "in_progress";
   alreadyFinalized: boolean;

@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
+import RegradeAllButton from "./RegradeAllButton";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatDateTime } from "@/lib/datetime";
@@ -91,10 +92,16 @@ export default async function GradingInboxPage({
         ← {exam.title}
       </Link>
 
-      <h1 className="mt-3 text-2xl font-bold">Chấm bài</h1>
-      <p className="mt-1 text-sm text-faint">
-        Chỉ hiển thị câu tự luận (Essay) và trả lời ngắn (Short) cần chấm tay.
-      </p>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Chấm bài</h1>
+          <p className="mt-1 text-sm text-faint">
+            Chỉ hiển thị câu tự luận (Essay) và trả lời ngắn (Short) cần chấm tay.
+            Sau khi sửa đáp án trắc nghiệm, bấm “Chấm lại tất cả”.
+          </p>
+        </div>
+        <RegradeAllButton examId={exam.id} />
+      </div>
 
       <section className="mt-6">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-faint">
