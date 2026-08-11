@@ -111,7 +111,7 @@ describe("createPassage (A7.2.1)", () => {
     expect(p.maxAudioPlays).toBe(2);
   });
 
-  it("refuses to create passage on a published exam", async () => {
+  it("allows editing content on a published exam; blocks only archived", async () => {
     const { ownerId, courseId } = await newOwner("c5");
     const { examId } = await createExam(ownerId, courseId, validExam());
     const skill = await prisma.skill.create({
@@ -136,8 +136,19 @@ describe("createPassage (A7.2.1)", () => {
       data: { questionId: q.id, skillId: skill.id },
     });
     await publishExam(ownerId, examId);
+    // Published → cho phép sửa nội dung (A5: mở khoá sau publish/có lượt thi).
+    const created = await createPassage(ownerId, examId, {
+      title: "P",
+      contentJson: emptyDoc(),
+    });
+    expect(created).toBeTruthy();
+    // Archived → vẫn khoá.
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { status: "archived" },
+    });
     await expect(
-      createPassage(ownerId, examId, { title: "P", contentJson: emptyDoc() }),
+      createPassage(ownerId, examId, { title: "P2", contentJson: emptyDoc() }),
     ).rejects.toMatchObject({ code: "exam_not_draft" });
   });
 

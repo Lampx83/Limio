@@ -52,7 +52,7 @@ async function assertExamDraft(examId: string, db: PrismaClient) {
     select: { id: true, courseId: true, status: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  if (exam.status !== "draft") throw new ExamError("exam_not_draft");
+  if (exam.status === "archived") throw new ExamError("exam_not_draft");
   return exam;
 }
 
@@ -154,7 +154,7 @@ export async function updateExamQuestion(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const q = await loadQuestionWithCourse(questionId, db);
-  if (q.exam.status !== "draft") throw new ExamError("exam_not_draft");
+  if (q.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditCourse(actorUserId, q.exam.courseId, db);
   const parsed = UpdateExamQuestionInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
@@ -223,7 +223,7 @@ export async function deleteExamQuestion(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const q = await loadQuestionWithCourse(questionId, db);
-  if (q.exam.status !== "draft") throw new ExamError("exam_not_draft");
+  if (q.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditCourse(actorUserId, q.exam.courseId, db);
   await db.examQuestion.delete({ where: { id: questionId } });
 }

@@ -209,13 +209,20 @@ export default async function EditExamPage({
           <section className="mt-8 rounded border border-default bg-white p-5">
             <h2 className="mb-1 text-base font-semibold">Nội dung bài thi</h2>
             <p className="mb-4 text-sm text-faint">
-              {exam.status === "draft"
-                ? "Thêm đoạn bài đọc và câu hỏi. Mỗi câu hỏi cần ≥ 1 skill trước khi publish."
-                : "Bài thi đã publish; nội dung khoá nếu có lượt thi."}
+              {exam.status === "archived"
+                ? "Bài thi đã lưu trữ — nội dung khoá, không sửa được."
+                : "Thêm/sửa đoạn bài đọc và câu hỏi. Mỗi câu hỏi cần ≥ 1 skill trước khi publish."}
             </p>
+            {isPublished && hasAttempts && (
+              <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+                ⚠ Đề đã có {attemptCount} lượt thi. Sửa nội dung/đáp án câu hỏi có
+                thể làm điểm & đáp án của các bài đã nộp không còn khớp — cân nhắc
+                chấm lại nếu cần.
+              </div>
+            )}
             <ContentManager
               examId={exam.id}
-              editable={exam.status === "draft" || attemptCount === 0}
+              editable={exam.status !== "archived"}
               passages={exam.passages.map((p) => ({
                 id: p.id,
                 title: p.title,
