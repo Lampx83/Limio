@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-interface TiptapDoc {
+export interface TiptapDoc {
   type: "doc";
   content: unknown[];
 }
@@ -83,7 +83,7 @@ interface ElementNode {
   marks?: MarkSpec[];
 }
 
-function renderDoc(doc: TiptapDoc): React.ReactNode {
+export function renderDoc(doc: TiptapDoc): React.ReactNode {
   return (doc.content ?? []).map((c, i) => (
     <RenderNode key={i} node={c as ElementNode} />
   ));

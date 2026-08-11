@@ -6,6 +6,7 @@ import { BookOpen, Upload } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
+import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
 import ImportQuestionsModal from "./ImportQuestionsModal";
 import FromBankModal from "./FromBankModal";
 
@@ -231,7 +232,7 @@ export default function ContentManager({ examId, editable, passages, questions }
     return (
       <div
         {...dp}
-        className={`flex items-center gap-2 rounded border border-default bg-white px-3 py-2 text-sm ${dp.className ?? ""}`}
+        className={`flex items-start gap-2 rounded border border-default bg-white px-3 py-2 text-sm ${dp.className ?? ""}`}
       >
         {editable && (
           <span className="cursor-grab text-faint" title="Kéo để sắp xếp">
@@ -249,7 +250,7 @@ export default function ContentManager({ examId, editable, passages, questions }
             {q.bankCode}
           </span>
         )}
-        <span className="flex-1 truncate">{q.prompt || <em className="text-faint">(chưa có đề)</em>}</span>
+        <span className="flex-1 whitespace-pre-wrap break-words">{q.prompt || <em className="text-faint">(chưa có đề)</em>}</span>
         <span className="text-xs text-faint">{q.points} điểm</span>
         {q.skills.length === 0 && (
           <span
@@ -432,6 +433,16 @@ export default function ContentManager({ examId, editable, passages, questions }
                         </>
                       )}
                     </div>
+                    {/* Nội dung đoạn đọc (Tiptap) — hiện cả ở chế độ xem. */}
+                    {(() => {
+                      const doc = p.contentJson as TiptapDoc | null;
+                      if (!doc || !(doc.content?.length)) return null;
+                      return (
+                        <div className="prose prose-sm mb-2 max-w-none rounded border border-default bg-white px-3 py-2">
+                          {renderDoc(doc)}
+                        </div>
+                      );
+                    })()}
                     <ul className="space-y-1.5">
                       {qs.map((q, i) => (
                         <li key={q.id}>{renderQuestionRow(q, qs, i, p.id)}</li>
