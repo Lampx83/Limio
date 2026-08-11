@@ -81,6 +81,13 @@ export default async function ExamSessionDetailPage({
   const canEdit = await canEditExamRound(userId, detail.roundId);
   const rooms = await listExamRoomsForSession(userId, params.sessionId);
 
+  // Đề cùng khoá để cho phép đổi đề của ca thi trong form edit.
+  const availableExams = await prisma.exam.findMany({
+    where: { courseId: detail.courseId },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, title: true },
+  });
+
   // Results tab: per-candidate attempt data for this session.
   // FIX: previously filtered by `roomId IN [rooms of session]` which dropped
   // candidates with NULL roomId — common in open_code (free) sessions where
@@ -217,7 +224,11 @@ export default async function ExamSessionDetailPage({
           examStatus={detail.examStatus}
         />
         {activeTab === "overview" && (
-          <SessionOverviewPanel detail={detail} canEdit={canEdit} />
+          <SessionOverviewPanel
+            detail={detail}
+            canEdit={canEdit}
+            availableExams={availableExams}
+          />
         )}
         {activeTab === "rooms" && (
           <SessionRoomsPanel

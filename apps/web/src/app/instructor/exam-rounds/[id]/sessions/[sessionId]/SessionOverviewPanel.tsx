@@ -36,9 +36,11 @@ interface SessionDetail {
 export default function SessionOverviewPanel({
   detail,
   canEdit,
+  availableExams,
 }: {
   detail: SessionDetail;
   canEdit: boolean;
+  availableExams: { id: string; title: string }[];
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -107,6 +109,7 @@ export default function SessionOverviewPanel({
         {editing ? (
           <EditForm
             detail={detail}
+            availableExams={availableExams}
             onDone={() => {
               setEditing(false);
               router.refresh();
@@ -224,13 +227,16 @@ function toLocalInput(iso: string): string {
 
 function EditForm({
   detail,
+  availableExams,
   onDone,
   onCancel,
 }: {
   detail: SessionDetail;
+  availableExams: { id: string; title: string }[];
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const [examId, setExamId] = useState(detail.examId);
   const [code, setCode] = useState(detail.code ?? "");
   const [title, setTitle] = useState(detail.title ?? "");
   const [opensAt, setOpensAt] = useState(toLocalInput(detail.opensAt));
@@ -251,6 +257,7 @@ function EditForm({
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
+          examId,
           code: code.trim() || null,
           title: title.trim() || null,
           opensAt: new Date(opensAt).toISOString(),
@@ -273,6 +280,29 @@ function EditForm({
 
   return (
     <div className="mt-4 space-y-3">
+      <label className="block">
+        <span className="block text-xs font-medium text-slate-600">
+          Đề thi <span className="text-red-600">*</span>
+        </span>
+        <select
+          value={examId}
+          onChange={(e) => setExamId(e.target.value)}
+          className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        >
+          {/* Đề hiện tại luôn có trong list; nếu availableExams rỗng vẫn giữ được. */}
+          {availableExams.length === 0 && (
+            <option value={detail.examId}>{detail.examTitle}</option>
+          )}
+          {availableExams.map((ex) => (
+            <option key={ex.id} value={ex.id}>
+              {ex.title}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-[11px] text-faint">
+          Đổi đề cho ca thi này. Chỉ liệt kê đề cùng khoá học.
+        </span>
+      </label>
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="block text-xs font-medium text-slate-600">Mã ca</span>
