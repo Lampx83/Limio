@@ -130,6 +130,10 @@ model User {
   groupMemberships     GroupMembership[]
   timerTemplates       TimerTemplate[]
 
+  // Gameshow
+  gameSessionsHosted GameSession[]     @relation("GameSessionHost")
+  gameParticipations GameParticipant[]
+
   leaderboardEntries LeaderboardEntry[]
 
   // Admin email templates — last editor + revision history
@@ -529,6 +533,7 @@ model Quiz {
   attempts          QuizAttempt[]
   tournamentMission TournamentMission? @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
   lessonActivity    LessonActivity?
+  gameSessions      GameSession[]
 
   @@index([lessonId])
   @@index([courseId])
@@ -2015,6 +2020,92 @@ model TimerTemplate {
   @@index([userId])
   @@index([courseId])
   @@index([isPublic])
+}
+
+// =====================================================================
+// Gameshow — Wayground/Kahoot-style live competitive quiz session.
+// Reuses Quiz/QuizQuestion (multiple_choice/true_false only) as question
+// source, but is a standalone live-session layer: does NOT emit
+// LearningEvent / feed XP-badge — score chỉ tồn tại trong phiên (product
+// decision, không phải giới hạn kỹ thuật). Real-time qua Redis Streams
+// (apps/web/src/lib/realtime) — cùng hạ tầng với Classroom tools ở trên.
+// =====================================================================
+
+model GameSession {
+  id   String @id @default(cuid())
+  code String @unique // 6-char join code, pattern giống InteractiveBoard.code
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  hostId String
+  host   User   @relation("GameSessionHost", fields: [hostId], references: [id], onDelete: Cascade)
+
+  status                   String    @default("lobby") // lobby | running | ended
+  currentQuestionIndex     Int       @default(0)
+  currentQuestionStartedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  participants GameParticipant[]
+  answers      GameAnswer[]
+
+  @@index([hostId, createdAt])
+  @@index([status])
+}
+
+model GameParticipant {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Optional — participant không cần đăng nhập (join bằng code + tên).
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  displayName String
+  avatarKey   String // preset key, vd "fox", "cat" — xem lib/gameshow/avatars.ts
+
+  // Token riêng để xác thực request answer/power-up — chống việc người khác
+  // biết participantId (lộ qua leaderboard) rồi submit hộ/phá đáp án.
+  participantToken String @unique
+
+  totalScore Int @default(0)
+  streak     Int @default(0)
+
+  doublePointsUsed Boolean @default(false)
+  immunityUsed     Boolean @default(false)
+
+  joinedAt DateTime @default(now())
+
+  answers GameAnswer[]
+
+  @@unique([sessionId, displayName])
+  @@index([sessionId, totalScore])
+}
+
+model GameAnswer {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  participantId String
+  participant   GameParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  questionId     String
+  questionIndex  Int
+  chosenOptionId String?
+  isCorrect      Boolean
+  responseTimeMs Int
+  pointsAwarded  Int
+  powerUpUsed    String? // "double_points" | "immunity"
+
+  answeredAt DateTime @default(now())
+
+  @@unique([participantId, questionIndex])
+  @@index([sessionId, questionIndex])
 }
 
 // =====================================================================
