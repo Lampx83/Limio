@@ -13,6 +13,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { generateSectionInviteCode } from "../exam/code-access";
 import { assertCanEditCourse } from "./authz";
 import { CourseError } from "./courses";
+import { getCourseProgress } from "../learning/progress";
 
 export const CreateCourseSectionInput = z.object({
   name: z.string().min(1).max(200).trim(),
@@ -179,4 +180,133 @@ export async function regenerateInviteCode(
   const inviteCode = await createUniqueInviteCode(db);
   await db.courseSection.update({ where: { id: sectionId }, data: { inviteCode } });
   return { inviteCode };
+}
+
+export interface SectionRosterEntry {
+  enrollmentId: string;
+  status: "active" | "completed" | "dropped" | "refunded";
+  enrolledAt: string;
+  user: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  };
+  completedLessons: number;
+  totalLessons: number;
+  courseCompletionPct: number;
+  latestQuizScorePct: number | null;
+}
+
+export interface SectionRoster {
+  section: {
+    id: string;
+    name: string;
+    description: string | null;
+    courseId: string;
+    courseTitle: string;
+  };
+  otherSections: Array<{ id: string; name: string }>;
+  entries: SectionRosterEntry[];
+}
+
+/** Roster of a section: enrolled learners + course-progress % + latest quiz score. */
+export async function getSectionRoster(
+  actorUserId: string,
+  sectionId: string,
+  db: PrismaClient = prisma,
+): Promise<SectionRoster> {
+  const section = await assertCanEditSection(actorUserId, sectionId, db);
+
+  const [sectionRow, course, enrollments, otherSections] = await Promise.all([
+    db.courseSection.findUniqueOrThrow({
+      where: { id: sectionId },
+      select: { name: true, description: true },
+    }),
+    db.course.findUniqueOrThrow({
+      where: { id: section.courseId },
+      select: { title: true },
+    }),
+    db.enrollment.findMany({
+      where: { sectionId },
+      orderBy: { enrolledAt: "desc" },
+      include: {
+        user: { select: { id: true, email: true, displayName: true, avatarUrl: true } },
+      },
+    }),
+    db.courseSection.findMany({
+      where: { courseId: section.courseId, isDefault: false, id: { not: sectionId } },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
+
+  const entries = await Promise.all(
+    enrollments.map(async (e): Promise<SectionRosterEntry> => {
+      const [progress, latestAttempt] = await Promise.all([
+        getCourseProgress(e.userId, section.courseId, db),
+        db.quizAttempt.findFirst({
+          where: {
+            userId: e.userId,
+            status: "submitted",
+            quiz: { courseId: section.courseId, tournamentMissionId: null },
+          },
+          orderBy: { submittedAt: "desc" },
+          select: { scorePct: true },
+        }),
+      ]);
+      return {
+        enrollmentId: e.id,
+        status: e.status,
+        enrolledAt: e.enrolledAt.toISOString(),
+        user: e.user,
+        completedLessons: progress.completedLessons,
+        totalLessons: progress.totalLessons,
+        courseCompletionPct: progress.courseCompletionPct,
+        latestQuizScorePct: latestAttempt?.scorePct ?? null,
+      };
+    }),
+  );
+
+  return {
+    section: {
+      id: sectionId,
+      name: sectionRow.name,
+      description: sectionRow.description,
+      courseId: section.courseId,
+      courseTitle: course.title,
+    },
+    otherSections,
+    entries,
+  };
+}
+
+/** Move an enrollment to a different section of the same course. */
+export async function transferEnrollmentSection(
+  actorUserId: string,
+  enrollmentId: string,
+  targetSectionId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const enrollment = await db.enrollment.findUnique({
+    where: { id: enrollmentId },
+    select: { id: true, courseId: true, sectionId: true },
+  });
+  if (!enrollment) throw new CourseError("not_found");
+  await assertCanEditCourse(actorUserId, enrollment.courseId, db);
+
+  if (targetSectionId === enrollment.sectionId) return;
+
+  const targetSection = await db.courseSection.findUnique({
+    where: { id: targetSectionId },
+    select: { id: true, courseId: true },
+  });
+  if (!targetSection || targetSection.courseId !== enrollment.courseId) {
+    throw new CourseError("section_not_found");
+  }
+
+  await db.enrollment.update({
+    where: { id: enrollmentId },
+    data: { sectionId: targetSectionId },
+  });
 }

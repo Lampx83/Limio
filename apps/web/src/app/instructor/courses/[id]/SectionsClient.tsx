@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { apiUrl } from "@/lib/apiUrl";
 
 type Section = {
@@ -209,13 +210,18 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
             ) : (
               <div className="p-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/instructor/courses/${courseId}/sections/${s.id}`}
+                    className="min-w-0 flex-1 hover:opacity-80"
+                  >
                     <span className="text-sm font-semibold">{s.name}</span>
                     {s.description && (
                       <span className="ml-2 text-xs text-faint">{s.description}</span>
                     )}
-                    <div className="mt-0.5 text-xs text-faint">{s.enrolledCount} học viên</div>
-                  </div>
+                    <div className="mt-0.5 text-xs text-blue-600 underline decoration-dotted">
+                      {s.enrolledCount} học viên
+                    </div>
+                  </Link>
                   <button
                     onClick={() => setEditId(s.id)}
                     className="rounded border border-default bg-white px-3 py-1 text-xs hover:bg-slate-50"

@@ -3,8 +3,10 @@ import { prisma } from "@feedbackme/db";
 import {
   createCourseSection,
   deleteCourseSection,
+  getSectionRoster,
   listCourseSections,
   regenerateInviteCode,
+  transferEnrollmentSection,
   updateCourseSection,
 } from "../sections";
 import { createCourse, CourseError, publishCourse } from "../courses";
@@ -13,6 +15,7 @@ import { createLesson } from "../lessons";
 import { createSkill, tagLessonSkill } from "../skills";
 import { registerUser } from "../../auth/register";
 import { enrollInCourse } from "../../learning/enroll";
+import { completeLesson } from "../../learning/lessons";
 
 const BASE = "http://localhost:3000";
 
@@ -150,5 +153,119 @@ describe("section authz", () => {
     await expect(deleteCourseSection(ownerId, defaultSection.id)).rejects.toMatchObject({
       code: "section_not_found",
     });
+  });
+});
+
+describe("getSectionRoster", () => {
+  it("lists enrolled learners with progress %, latest quiz score, and other sections", async () => {
+    const ownerId = await makeUser("ros-o1@e.com");
+    const courseId = await publishedCourse(ownerId, "ros1");
+    const secA = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+    const secB = await createCourseSection(ownerId, courseId, { name: "Lớp B" });
+
+    const learnerId = await makeUser("ros-l1@e.com");
+    await enrollInCourse(learnerId, courseId, undefined, { sectionId: secA.id });
+
+    const lesson = await prisma.lesson.findFirstOrThrow({ where: { module: { courseId } } });
+    await completeLesson(learnerId, lesson.id);
+
+    const quiz = await prisma.quiz.create({ data: { courseId, title: "Q" } });
+    await prisma.quizAttempt.create({
+      data: {
+        quizId: quiz.id,
+        userId: learnerId,
+        status: "submitted",
+        submittedAt: new Date(),
+        scorePct: 80,
+        passed: true,
+      },
+    });
+
+    const roster = await getSectionRoster(ownerId, secA.id);
+    expect(roster.section.id).toBe(secA.id);
+    expect(roster.otherSections).toEqual([{ id: secB.id, name: "Lớp B" }]);
+    expect(roster.entries).toHaveLength(1);
+    const entry = roster.entries[0]!;
+    expect(entry.user.id).toBe(learnerId);
+    expect(entry.completedLessons).toBe(1);
+    expect(entry.totalLessons).toBe(1);
+    expect(entry.courseCompletionPct).toBe(100);
+    expect(entry.latestQuizScorePct).toBe(80);
+  });
+
+  it("returns empty entries for a section with no learners", async () => {
+    const ownerId = await makeUser("ros-o2@e.com");
+    const courseId = await publishedCourse(ownerId, "ros2");
+    const sec = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+
+    const roster = await getSectionRoster(ownerId, sec.id);
+    expect(roster.entries).toHaveLength(0);
+  });
+
+  it("non-instructor cannot view roster", async () => {
+    const ownerId = await makeUser("ros-o3@e.com");
+    const courseId = await publishedCourse(ownerId, "ros3");
+    const sec = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+    const strangerId = await makeUser("ros-s3@e.com");
+
+    await expect(getSectionRoster(strangerId, sec.id)).rejects.toThrow();
+  });
+});
+
+describe("transferEnrollmentSection", () => {
+  it("moves an enrollment to a different section of the same course", async () => {
+    const ownerId = await makeUser("tr-o1@e.com");
+    const courseId = await publishedCourse(ownerId, "tr1");
+    const secA = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+    const secB = await createCourseSection(ownerId, courseId, { name: "Lớp B" });
+    const learnerId = await makeUser("tr-l1@e.com");
+    await enrollInCourse(learnerId, courseId, undefined, { sectionId: secA.id });
+    const enrollment = await prisma.enrollment.findUniqueOrThrow({
+      where: { userId_courseId: { userId: learnerId, courseId } },
+    });
+
+    await transferEnrollmentSection(ownerId, enrollment.id, secB.id);
+
+    const updated = await prisma.enrollment.findUniqueOrThrow({ where: { id: enrollment.id } });
+    expect(updated.sectionId).toBe(secB.id);
+
+    const rosterA = await getSectionRoster(ownerId, secA.id);
+    const rosterB = await getSectionRoster(ownerId, secB.id);
+    expect(rosterA.entries).toHaveLength(0);
+    expect(rosterB.entries).toHaveLength(1);
+  });
+
+  it("rejects moving to a section from a different course", async () => {
+    const ownerId = await makeUser("tr-o2@e.com");
+    const courseId = await publishedCourse(ownerId, "tr2");
+    const otherCourseId = await publishedCourse(ownerId, "tr2b");
+    const secA = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+    const secOther = await createCourseSection(ownerId, otherCourseId, { name: "Lớp X" });
+    const learnerId = await makeUser("tr-l2@e.com");
+    await enrollInCourse(learnerId, courseId, undefined, { sectionId: secA.id });
+    const enrollment = await prisma.enrollment.findUniqueOrThrow({
+      where: { userId_courseId: { userId: learnerId, courseId } },
+    });
+
+    await expect(
+      transferEnrollmentSection(ownerId, enrollment.id, secOther.id),
+    ).rejects.toMatchObject({ code: "section_not_found" } satisfies Partial<CourseError>);
+  });
+
+  it("non-instructor cannot transfer", async () => {
+    const ownerId = await makeUser("tr-o3@e.com");
+    const courseId = await publishedCourse(ownerId, "tr3");
+    const secA = await createCourseSection(ownerId, courseId, { name: "Lớp A" });
+    const secB = await createCourseSection(ownerId, courseId, { name: "Lớp B" });
+    const learnerId = await makeUser("tr-l3@e.com");
+    await enrollInCourse(learnerId, courseId, undefined, { sectionId: secA.id });
+    const enrollment = await prisma.enrollment.findUniqueOrThrow({
+      where: { userId_courseId: { userId: learnerId, courseId } },
+    });
+    const strangerId = await makeUser("tr-s3@e.com");
+
+    await expect(
+      transferEnrollmentSection(strangerId, enrollment.id, secB.id),
+    ).rejects.toThrow();
   });
 });

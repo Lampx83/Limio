@@ -5,8 +5,10 @@ import {
   assertCanEditCourse,
   CourseAuthzError,
   emitEvent,
+  transferEnrollmentSection,
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
+import { mapKnownError } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
 
@@ -36,6 +38,19 @@ export async function PATCH(
   }
 
   const body = await req.json().catch(() => null);
+
+  const nextSectionId = body?.sectionId as string | undefined;
+  if (nextSectionId) {
+    try {
+      await transferEnrollmentSection(userId, params.enrollmentId, nextSectionId);
+      return NextResponse.json({ ok: true });
+    } catch (e) {
+      const mapped = mapKnownError(e);
+      if (mapped) return mapped;
+      throw e;
+    }
+  }
+
   const nextStatus = body?.status as Status | undefined;
   if (!nextStatus || !VALID_STATUSES.includes(nextStatus)) {
     return NextResponse.json(
