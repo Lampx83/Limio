@@ -17,7 +17,7 @@ export default async function NewGameshowPage() {
     await prisma.courseInstructor.findMany({ where: { userId }, select: { courseId: true } })
   ).map((c) => c.courseId);
 
-  const [quizzes, courses] = await Promise.all([
+  const [quizzes, courses, questionSets] = await Promise.all([
     prisma.quiz.findMany({
       where: {
         courseId: { in: courseIds },
@@ -34,6 +34,11 @@ export default async function NewGameshowPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.course.findMany({ where: { id: { in: courseIds } }, select: { id: true, title: true } }),
+    prisma.gameQuestionSet.findMany({
+      where: { ownerId: userId },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, title: true, _count: { select: { items: true } } },
+    }),
   ]);
   const courseTitleById = new Map(courses.map((c) => [c.id, c.title]));
 
@@ -48,14 +53,17 @@ export default async function NewGameshowPage() {
     }))
     .filter((q) => q.questionCount > 0);
 
+  const eligibleSets = questionSets
+    .map((s) => ({ id: s.id, title: s.title, questionCount: s._count.items }))
+    .filter((s) => s.questionCount > 0);
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-bold">🎮 Tạo Gameshow</h1>
       <p className="mt-1 text-sm text-faint">
-        Chọn 1 quiz làm nguồn câu hỏi (chỉ dùng câu trắc nghiệm / đúng-sai). Học viên tham gia
-        bằng mã, không cần đăng nhập.
+        Chọn nguồn câu hỏi. Học viên tham gia bằng mã, không cần đăng nhập.
       </p>
-      <NewGameshowClient quizzes={eligible} />
+      <NewGameshowClient quizzes={eligible} questionSets={eligibleSets} />
     </main>
   );
 }

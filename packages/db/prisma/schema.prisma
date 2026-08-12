@@ -133,6 +133,7 @@ model User {
   // Gameshow
   gameSessionsHosted GameSession[]     @relation("GameSessionHost")
   gameParticipations GameParticipant[]
+  gameQuestionSets   GameQuestionSet[]
 
   leaderboardEntries LeaderboardEntry[]
 
@@ -2032,16 +2033,23 @@ model TimerTemplate {
 // =====================================================================
 
 model GameSession {
-  id   String @id @default(cuid())
-  code String @unique // 6-char join code, pattern giống InteractiveBoard.code
+  id    String @id @default(cuid())
+  code  String @unique // 6-char join code, pattern giống InteractiveBoard.code
+  title String // Snapshot tên quiz/bộ câu hỏi lúc tạo — không join lại Quiz/QuestionSet để hiển thị.
 
-  quizId String
-  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  // Nguồn câu hỏi — đúng 1 trong 2 (validate ở service layer, không DB CHECK).
+  // Câu hỏi thực tế được SNAPSHOT vào GameSessionQuestion lúc tạo phiên, nên
+  // sửa/xoá Quiz hay QuestionSet sau đó không ảnh hưởng phiên đã tạo.
+  quizId String?
+  quiz   Quiz?   @relation(fields: [quizId], references: [id], onDelete: SetNull)
+
+  questionSetId String?
+  questionSet   GameQuestionSet? @relation(fields: [questionSetId], references: [id], onDelete: SetNull)
 
   hostId String
   host   User   @relation("GameSessionHost", fields: [hostId], references: [id], onDelete: Cascade)
 
-  status                   String    @default("lobby") // lobby | running | ended
+  status                   String    @default("lobby") // lobby | running | reveal | ended
   currentQuestionIndex     Int       @default(0)
   currentQuestionStartedAt DateTime?
 
@@ -2049,11 +2057,89 @@ model GameSession {
   startedAt DateTime?
   endedAt   DateTime?
 
+  questions    GameSessionQuestion[]
   participants GameParticipant[]
   answers      GameAnswer[]
 
   @@index([hostId, createdAt])
   @@index([status])
+}
+
+// Bộ câu hỏi GV tự soạn riêng cho Gameshow — KHÔNG dùng chung với
+// Quiz/Question Bank (product decision), tái dùng được cho nhiều phiên.
+model GameQuestionSet {
+  id      String @id @default(cuid())
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items    GameQuestionSetItem[]
+  sessions GameSession[]
+
+  @@index([ownerId, createdAt])
+}
+
+model GameQuestionSetItem {
+  id    String          @id @default(cuid())
+  setId String
+  set   GameQuestionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  orderIndex   Int
+  type         String // "mcq" | "true_false"
+  prompt       String @db.Text
+  timeLimitSec Int    @default(20)
+
+  options GameQuestionSetOption[]
+
+  @@unique([setId, orderIndex])
+  @@index([setId])
+}
+
+model GameQuestionSetOption {
+  id     String              @id @default(cuid())
+  itemId String
+  item   GameQuestionSetItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  label      String
+  isCorrect  Boolean
+  orderIndex Int
+
+  @@index([itemId])
+}
+
+// Snapshot câu hỏi thực tế của 1 phiên — copy từ Quiz hoặc GameQuestionSet
+// lúc tạo phiên. Mọi route điều khiển game (start/next/reveal/answer) chỉ
+// đọc ở đây, không cần biết nguồn gốc là Quiz hay bộ tự soạn.
+model GameSessionQuestion {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  orderIndex   Int
+  type         String
+  prompt       String @db.Text
+  timeLimitSec Int
+
+  options GameSessionQuestionOption[]
+
+  @@unique([sessionId, orderIndex])
+  @@index([sessionId])
+}
+
+model GameSessionQuestionOption {
+  id         String              @id @default(cuid())
+  questionId String
+  question   GameSessionQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  label      String
+  isCorrect  Boolean
+  orderIndex Int
+
+  @@index([questionId])
 }
 
 model GameParticipant {

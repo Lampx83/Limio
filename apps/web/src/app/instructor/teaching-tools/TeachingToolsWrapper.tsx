@@ -1,6 +1,7 @@
 "use client";
 
-import { BarChart3, Cloud, Clock, Users, Shuffle, StickyNote } from "lucide-react";
+import Link from "next/link";
+import { BarChart3, Cloud, Clock, Users, Shuffle, StickyNote, Gamepad2 } from "lucide-react";
 
 export type ToolType = "poll" | "wordcloud" | "timer" | "random-picker" | "grouping" | "board" | null;
 
@@ -38,6 +39,14 @@ const TOOLS = [
     category: "standalone",
   },
   {
+    id: "gameshow",
+    icon: Gamepad2,
+    label: "Gameshow",
+    description: "Quiz thi đấu real-time, chấm điểm theo tốc độ",
+    category: "standalone",
+    href: "/instructor/gameshow/new",
+  },
+  {
     id: "random-picker",
     icon: Shuffle,
     label: "Chọn Ngẫu Nhiên",
@@ -69,12 +78,10 @@ export default function TeachingToolsWrapper({ onSelectTool }: TeachingToolsWrap
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {standalone.map((tool) => {
             const Icon = tool.icon;
-            return (
-              <button
-                key={tool.id}
-                onClick={() => onSelectTool(tool.id as ToolType)}
-                className="group relative overflow-hidden rounded-2xl border border-accent-200 bg-white p-6 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-lg dark:border-accent-900/40 dark:bg-[rgb(var(--surface))]"
-              >
+            const cardClassName =
+              "group relative overflow-hidden rounded-2xl border border-accent-200 bg-white p-6 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-lg dark:border-accent-900/40 dark:bg-[rgb(var(--surface))]";
+            const cardContent = (
+              <>
                 <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent-400 to-accent-600" />
                 <div className="relative space-y-3 text-center">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-100 text-accent-700 transition-colors group-hover:bg-accent-200 dark:bg-accent-900/30 dark:text-accent-300">
@@ -88,6 +95,19 @@ export default function TeachingToolsWrapper({ onSelectTool }: TeachingToolsWrap
                     Mở
                   </div>
                 </div>
+              </>
+            );
+            return tool.href ? (
+              <Link key={tool.id} href={tool.href} className={cardClassName}>
+                {cardContent}
+              </Link>
+            ) : (
+              <button
+                key={tool.id}
+                onClick={() => onSelectTool(tool.id as ToolType)}
+                className={cardClassName}
+              >
+                {cardContent}
               </button>
             );
           })}

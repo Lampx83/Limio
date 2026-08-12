@@ -131,6 +131,21 @@ export default function PlayGameshowPage() {
     }
   }
 
+  // 1b) Resync khi tab quay lại foreground — điện thoại học viên khoá màn
+  // hình / chuyển app rất phổ biến trong lớp học. EventSource có thể bị
+  // trình duyệt tạm dừng xử lý lúc backgrounded và bỏ lỡ event (SSE không
+  // replay event đã publish trước khi reconnect); fetch lại /state để tự
+  // sửa nếu state cục bộ bị lệch so với server.
+  useEffect(() => {
+    if (!identity) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") rehydrate(identity);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [identity]);
+
   // 2) SSE — chỉ mở sau khi có identity
   useEffect(() => {
     if (!identity) return;
@@ -224,6 +239,14 @@ export default function PlayGameshowPage() {
         displayName: displayName.trim(),
       };
       sessionStorage.setItem(storageKey(code), JSON.stringify(id));
+      // Seed chính mình vào roster ngay — SSE của tab này mở SAU khi event
+      // "participant.joined" của chính mình đã publish xong nên sẽ không
+      // bao giờ nhận lại được nó (cursor "$" chỉ lấy event mới).
+      setParticipants((prev) =>
+        prev.some((p) => p.participantId === id.participantId)
+          ? prev
+          : [...prev, { participantId: id.participantId, displayName: id.displayName, avatarKey: id.avatarKey, totalScore: 0, streak: 0 }],
+      );
       setIdentity(id);
       setPhase("waiting");
     } finally {

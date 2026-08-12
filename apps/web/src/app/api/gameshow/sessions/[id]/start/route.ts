@@ -1,8 +1,8 @@
-import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { requireHostSession } from "@/lib/gameshow/host";
 import { publishQuestionStarted } from "@/lib/gameshow/bus";
-import { ELIGIBLE_QUESTION_TYPES, QUESTION_TIME_LIMIT_MS } from "@/lib/gameshow/constants";
+import { getSessionQuestions } from "@/lib/gameshow/sessionQuestions";
+import { prisma } from "@feedbackme/db";
 
 export const runtime = "nodejs";
 
@@ -15,23 +15,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     return Response.json({ error: "invalid_status" }, { status: 409 });
   }
 
-  const quiz = await prisma.quiz.findUniqueOrThrow({
-    where: { id: check.session.quizId },
-    select: {
-      questions: {
-        orderBy: { orderIndex: "asc" },
-        select: {
-          id: true,
-          type: true,
-          prompt: true,
-          options: { orderBy: { orderIndex: "asc" }, select: { id: true, label: true } },
-        },
-      },
-    },
-  });
-  const questions = quiz.questions.filter((q) =>
-    (ELIGIBLE_QUESTION_TYPES as readonly string[]).includes(q.type),
-  );
+  const questions = await getSessionQuestions(check.session.id);
   const first = questions[0];
   if (!first) return Response.json({ error: "no_eligible_questions" }, { status: 422 });
 
@@ -51,8 +35,8 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     questionIndex: 0,
     questionId: first.id,
     prompt: first.prompt,
-    options: first.options,
-    timeLimitMs: QUESTION_TIME_LIMIT_MS,
+    options: first.options.map((o) => ({ id: o.id, label: o.label })),
+    timeLimitMs: first.timeLimitSec * 1000,
     startedAt: now.getTime(),
   });
 

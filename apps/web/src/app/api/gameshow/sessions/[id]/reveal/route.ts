@@ -1,8 +1,8 @@
-import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { requireHostSession } from "@/lib/gameshow/host";
 import { publishQuestionEnded } from "@/lib/gameshow/bus";
-import { ELIGIBLE_QUESTION_TYPES } from "@/lib/gameshow/constants";
+import { getSessionQuestions } from "@/lib/gameshow/sessionQuestions";
+import { prisma } from "@feedbackme/db";
 
 export const runtime = "nodejs";
 
@@ -18,18 +18,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     return Response.json({ error: "invalid_status" }, { status: 409 });
   }
 
-  const quiz = await prisma.quiz.findUniqueOrThrow({
-    where: { id: check.session.quizId },
-    select: {
-      questions: {
-        orderBy: { orderIndex: "asc" },
-        select: { id: true, type: true, options: { select: { id: true, isCorrect: true } } },
-      },
-    },
-  });
-  const questions = quiz.questions.filter((q) =>
-    (ELIGIBLE_QUESTION_TYPES as readonly string[]).includes(q.type),
-  );
+  const questions = await getSessionQuestions(check.session.id);
   const current = questions[check.session.currentQuestionIndex];
   const correctOptionId = current?.options.find((o) => o.isCorrect)?.id ?? null;
 

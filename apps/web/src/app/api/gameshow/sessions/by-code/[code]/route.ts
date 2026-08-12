@@ -1,5 +1,4 @@
 import { prisma } from "@feedbackme/db";
-import { ELIGIBLE_QUESTION_TYPES } from "@/lib/gameshow/constants";
 
 export const runtime = "nodejs";
 
@@ -10,21 +9,17 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
     select: {
       id: true,
       status: true,
-      quiz: { select: { title: true, questions: { select: { type: true } } } },
-      _count: { select: { participants: true } },
+      title: true,
+      _count: { select: { participants: true, questions: true } },
     },
   });
   if (!gameSession) return Response.json({ error: "not_found" }, { status: 404 });
 
-  const questionCount = gameSession.quiz.questions.filter((q) =>
-    (ELIGIBLE_QUESTION_TYPES as readonly string[]).includes(q.type),
-  ).length;
-
   return Response.json({
     id: gameSession.id,
     status: gameSession.status,
-    quizTitle: gameSession.quiz.title,
-    questionCount,
+    quizTitle: gameSession.title,
+    questionCount: gameSession._count.questions,
     participantCount: gameSession._count.participants,
   });
 }

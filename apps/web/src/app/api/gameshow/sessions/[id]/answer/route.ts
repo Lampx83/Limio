@@ -3,7 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { verifyParticipant } from "@/lib/gameshow/participant";
 import { applyScore, publishAnswerReceived } from "@/lib/gameshow/bus";
 import { computeScore, type PowerUpType } from "@/lib/gameshow/scoring";
-import { ELIGIBLE_QUESTION_TYPES, QUESTION_TIME_LIMIT_MS } from "@/lib/gameshow/constants";
+import { getSessionQuestions } from "@/lib/gameshow/sessionQuestions";
 
 export const runtime = "nodejs";
 
@@ -44,17 +44,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return Response.json({ error: "power_up_already_used" }, { status: 409 });
   }
 
-  // Cùng logic lọc eligible-type như start/next/reveal — currentQuestionIndex
-  // trỏ vào danh sách ĐÃ LỌC, không phải QuizQuestion.orderIndex thô.
-  const allQuestions = await prisma.quizQuestion.findMany({
-    where: { quizId: gameSession.quizId },
-    orderBy: { orderIndex: "asc" },
-    select: { id: true, type: true, options: { select: { id: true, isCorrect: true } } },
-  });
-  const eligibleQuestions = allQuestions.filter((q) =>
-    (ELIGIBLE_QUESTION_TYPES as readonly string[]).includes(q.type),
-  );
-  const question = eligibleQuestions[gameSession.currentQuestionIndex];
+  const questions = await getSessionQuestions(gameSession.id);
+  const question = questions[gameSession.currentQuestionIndex];
   if (!question) return Response.json({ error: "question_not_found" }, { status: 404 });
 
   const responseTimeMs = Math.max(
@@ -65,7 +56,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const pointsAwarded = computeScore({
     isCorrect,
     responseTimeMs,
-    timeLimitMs: QUESTION_TIME_LIMIT_MS,
+    timeLimitMs: question.timeLimitSec * 1000,
     powerUp,
   });
 

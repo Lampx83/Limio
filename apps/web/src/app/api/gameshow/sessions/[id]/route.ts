@@ -1,7 +1,7 @@
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { getSessionSnapshot } from "@/lib/gameshow/bus";
-import { ELIGIBLE_QUESTION_TYPES, QUESTION_TIME_LIMIT_MS } from "@/lib/gameshow/constants";
+import { getSessionQuestions } from "@/lib/gameshow/sessionQuestions";
 
 export const runtime = "nodejs";
 
@@ -17,25 +17,9 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       code: true,
       status: true,
       hostId: true,
+      title: true,
       currentQuestionIndex: true,
       currentQuestionStartedAt: true,
-      quiz: {
-        select: {
-          title: true,
-          questions: {
-            orderBy: { orderIndex: "asc" },
-            select: {
-              id: true,
-              type: true,
-              prompt: true,
-              options: {
-                orderBy: { orderIndex: "asc" },
-                select: { id: true, label: true, isCorrect: true },
-              },
-            },
-          },
-        },
-      },
     },
   });
   if (!gameSession) return Response.json({ error: "not_found" }, { status: 404 });
@@ -43,19 +27,23 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const questions = gameSession.quiz.questions.filter((q) =>
-    (ELIGIBLE_QUESTION_TYPES as readonly string[]).includes(q.type),
-  );
-  const participants = await getSessionSnapshot(gameSession.id);
+  const [questions, participants, answeredCount] = await Promise.all([
+    getSessionQuestions(gameSession.id),
+    getSessionSnapshot(gameSession.id),
+    prisma.gameAnswer.count({
+      where: { sessionId: gameSession.id, questionIndex: gameSession.currentQuestionIndex },
+    }),
+  ]);
 
   return Response.json({
     id: gameSession.id,
     code: gameSession.code,
     status: gameSession.status,
-    quizTitle: gameSession.quiz.title,
+    quizTitle: gameSession.title,
     currentQuestionIndex: gameSession.currentQuestionIndex,
     currentQuestionStartedAt: gameSession.currentQuestionStartedAt?.getTime() ?? null,
-    timeLimitMs: QUESTION_TIME_LIMIT_MS,
+    timeLimitMs: (questions[gameSession.currentQuestionIndex]?.timeLimitSec ?? 20) * 1000,
+    answeredCount,
     questions,
     participants,
   });
