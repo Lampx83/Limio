@@ -36,22 +36,49 @@ jobs:
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
+          API: https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&per_page=1
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          # curl + jq, not `gh` — the self-hosted runner has no gh CLI, and the
+          # first version of this gate silently treated that failure as "no CI
+          # run exists" and deployed anyway.
+          MISSING=0
           for i in $(seq 1 60); do
-            run=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&per_page=1" \
-                    --jq '.workflow_runs[0] | "\(.status) \(.conclusion)"' 2>/dev/null || echo "")
-            case "$run" in
-              "")            echo "CI chưa có run cho SHA này"; ;;
-              "completed success") echo "CI xanh — tiếp tục deploy"; exit 0 ;;
-              "completed "*) echo "::error::CI thất bại ($run) — dừng deploy"; exit 1 ;;
-              *)             echo "CI đang chạy ($run) — chờ..." ;;
-            esac
-            # Nếu sau ~1 phút vẫn không có run nào, coi như CI bị paths-ignore bỏ qua.
-            if [ -z "$run" ] && [ "$i" -ge 6 ]; then
-              echo "Không có CI run cho SHA này (paths-ignore) — deploy tiếp"
-              exit 0
+            body=$(mktemp)
+            code=$(curl -sS -o "$body" -w '%{http_code}' \
+                     -H "Authorization: Bearer ${GH_TOKEN}" \
+                     -H "Accept: application/vnd.github+json" \
+                     "$API" || echo 000)
+            if [ "$code" != "200" ]; then
+              # Cannot verify → do not deploy. Unverifiable is not the same as OK.
+              echo "API trả $code — thử lại ($i)"
+              rm -f "$body"; sleep 10; continue
             fi
+            total=$(jq -r '.total_count // 0' "$body")
+            status=$(jq -r '.workflow_runs[0].status // ""' "$body")
+            concl=$(jq -r '.workflow_runs[0].conclusion // ""' "$body")
+            rm -f "$body"
+
+            if [ "$total" -eq 0 ]; then
+              MISSING=$((MISSING+1))
+              # CI has paths-ignore, so a run genuinely may not exist. Give it
+              # 2 minutes to appear before accepting that.
+              if [ "$MISSING" -ge 12 ]; then
+                echo "Không có CI run cho SHA này (paths-ignore) — deploy tiếp"
+                exit 0
+              fi
+              echo "Chưa thấy CI run ($MISSING/12)..."
+              sleep 10; continue
+            fi
+            MISSING=0
+
+            if [ "$status" = "completed" ]; then
+              if [ "$concl" = "success" ]; then
+                echo "CI xanh — tiếp tục deploy"; exit 0
+              fi
+              echo "::error::CI $concl — dừng deploy"; exit 1
+            fi
+            echo "CI đang chạy ($status)..."
             sleep 10
           done
           echo "::error::Hết thời gian chờ CI"; exit 1

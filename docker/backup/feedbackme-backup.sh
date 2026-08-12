@@ -41,9 +41,10 @@ PG_CTR="feedbackme-postgres-1"
 WEB_CTR="feedbackme-web-1"
 UPLOADS_PATH="/app/apps/web/uploads"
 
-# Off-site target. Left unreachable today; the run still succeeds without it.
+# Off-site target. A failure here does not fail the run — the local copy still
+# has value — but it is recorded in the manifest and shouted in the summary.
 NAS_USER="fit"
-NAS_HOST="172.17.18.18"
+NAS_HOST="172.17.18.13"
 NAS_ROOT="/volume1/homes/fit/feedbackme-backup"
 SSH_KEY="/home/codelab/.ssh/id_ed25519"
 SSH_OPTS="-i ${SSH_KEY} -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8"
