@@ -976,11 +976,15 @@ export async function closeReviewWindow(
           flagReason: outlier ? "outlier_delta_gt_2sd" : null,
         },
       });
-      if (xp.totalXp > 0) {
+      // Platform-wide tournaments have no course to hang XP off — XpTransaction
+      // requires a real courseId. `?? ""` used to be passed here, which the FK
+      // rejected on every single award. Skip instead, matching what
+      // distributePrizes() already does for the same reason.
+      if (xp.totalXp > 0 && mission.tournament.courseId) {
         await awardXp(
           {
             userId: ra.reviewerId,
-            courseId: mission.tournament.courseId ?? "",
+            courseId: mission.tournament.courseId,
             amount: xp.totalXp,
             reason: "tournament.mission.review.awarded",
             sourceId: `mission-review:${ra.id}`,
@@ -1069,10 +1073,17 @@ async function awardMissionXp(
 ): Promise<void> {
   const points = submission.mission.points;
   if (points <= 0) return;
+  // XpTransaction.courseId is a required FK. A platform-wide tournament has no
+  // course, and the old `?? ""` matched no Course row — so every award threw a
+  // foreign-key error *after* the submission had already been marked passed and
+  // its event emitted, leaving the mission passed but unpaid. Skipping keeps the
+  // submit path clean and matches distributePrizes().
+  const courseId = submission.mission.tournament.courseId;
+  if (!courseId) return;
   await awardXp(
     {
       userId: submission.userId,
-      courseId: submission.mission.tournament.courseId ?? "",
+      courseId,
       amount: points,
       reason: "tournament.mission.completed",
       sourceId: `mission-passed:${submission.id}`,
