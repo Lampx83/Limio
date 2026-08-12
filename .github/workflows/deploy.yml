@@ -18,7 +18,7 @@ jobs:
   deploy:
     name: Build & deploy production stack
     runs-on: [self-hosted, Linux]
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     # Đường dẫn file .env.prod trên server. Có thể override bằng repo variable cùng tên.
     env:
@@ -43,7 +43,8 @@ jobs:
           # first version of this gate silently treated that failure as "no CI
           # run exists" and deployed anyway.
           MISSING=0
-          for i in $(seq 1 60); do
+          # CI mất ~12 phút; chờ tối đa 20 phút để còn dư chỗ cho lần chạy chậm.
+          for i in $(seq 1 120); do
             body=$(mktemp)
             code=$(curl -sS -o "$body" -w '%{http_code}' \
                      -H "Authorization: Bearer ${GH_TOKEN}" \
