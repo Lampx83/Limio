@@ -49,6 +49,10 @@ export default async function CourseDetailPage({
   // but only once published.
   const publiclyReadable = course.publicAccess && course.status === "published";
 
+  // "Giảng dạy bởi" names the lead instructor(s), not everyone with edit rights —
+  // co-instructors and TAs keep their access without appearing on the hero.
+  const leadInstructors = course.instructors.filter((i) => i.role === "owner");
+
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
 
   // Top learners (sidebar) — ưu tiên LeaderboardEntry snapshot all_time của course;
@@ -169,11 +173,11 @@ export default async function CourseDetailPage({
           <h1 className="mt-4 h-display text-3xl font-bold leading-tight sm:text-5xl">
             {course.title}
           </h1>
-          {course.instructors.length > 0 && (
+          {leadInstructors.length > 0 && (
             <p className="mt-3 text-sm text-white/85">
               <span className="opacity-70">Giảng dạy bởi</span>{" "}
               <span className="font-medium">
-                {course.instructors.map((i) => i.user.displayName).join(", ")}
+                {leadInstructors.map((i) => i.user.displayName).join(", ")}
               </span>
             </p>
           )}
@@ -266,7 +270,10 @@ export default async function CourseDetailPage({
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          {(l.previewable || publiclyReadable) && !enrolled ? (
+                          {/* Anyone who can actually open the lesson gets a link.
+                              Enrolled learners used to be excluded here, which left
+                              them no way into a lesson from this page at all. */}
+                          {enrolled || publiclyReadable || l.previewable ? (
                             <Link
                               href={`/learn/${params.slug}/lessons/${l.id}`}
                               className="text-sm font-medium text-brand-600 hover:underline"
@@ -283,15 +290,33 @@ export default async function CourseDetailPage({
                               Preview
                             </span>
                           )}
+                          {(() => {
+                            // Surface which lessons carry a lecture video, and how
+                            // long it runs — otherwise the list gives no hint that
+                            // some entries are 45 minutes of video and others a read.
+                            const v = l.contentItems.find((c) => c.type === "video");
+                            if (!v) return null;
+                            const secs = (v.payload as { durationSec?: number } | null)
+                              ?.durationSec;
+                            const mins = secs ? Math.round(secs / 60) : null;
+                            return (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+                                ▶ Video{mins ? ` · ${mins} phút` : ""}
+                              </span>
+                            );
+                          })()}
                         </div>
                         {l.skillTags.length > 0 && (
                           <div className="mt-1 flex flex-wrap gap-1">
+                            {/* Learners see the skill's human name; the code is
+                                an internal identifier and reads as noise here. */}
                             {l.skillTags.map((t) => (
                               <span
                                 key={t.skill.code}
-                                className="inline-flex rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 font-mono text-[11px] text-faint"
+                                title={t.skill.code}
+                                className="inline-flex rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-[11px] text-faint"
                               >
-                                {t.skill.code}
+                                {t.skill.name}
                               </span>
                             ))}
                           </div>
