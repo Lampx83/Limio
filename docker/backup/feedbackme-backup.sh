@@ -149,12 +149,29 @@ log "local done — $(du -sh "$LOCAL_DIR" | cut -f1)"
 OFFSITE="skipped"
 if timeout 6 bash -c "cat < /dev/null > /dev/tcp/${NAS_HOST}/22" 2>/dev/null; then
   log "NAS reachable — rsync"
+  # --rsync-path is required: the Synology login shell does not put rsync on
+  # PATH, so without it the remote side dies and rsync reports "Permission
+  # denied" — which reads like an auth problem and sends you down the wrong path.
   if ssh $SSH_OPTS "${NAS_USER}@${NAS_HOST}" "mkdir -p '${NAS_ROOT}/${MODE}'" 2>>"$LOG" \
-     && rsync -a --partial -e "ssh $SSH_OPTS" \
+     && rsync -a --partial --rsync-path=/usr/bin/rsync -e "ssh $SSH_OPTS" \
           "${LOCAL_DIR}/" "${NAS_USER}@${NAS_HOST}:${NAS_ROOT}/${MODE}/${NAME}/" >> "$LOG" 2>&1; then
     OFFSITE="ok"
   else
     OFFSITE="FAILED"
+  fi
+
+  # The uploads mirror lives outside LOCAL_DIR, so the sync above only carries
+  # the DB dump — and the DB is the part we *can* rebuild. Push the media too:
+  # delta-only, so after the first ~9 GB each run moves just the new files.
+  if [[ "$OFFSITE" == "ok" ]]; then
+    log "rsync uploads mirror -> NAS"
+    if rsync -a --partial --rsync-path=/usr/bin/rsync -e "ssh $SSH_OPTS" \
+         "${MIRROR_DIR}/" "${NAS_USER}@${NAS_HOST}:${NAS_ROOT}/uploads-mirror/" >> "$LOG" 2>&1; then
+      log "uploads offsite ok"
+    else
+      OFFSITE="db-only"
+      log "CẢNH BÁO: dump đã lên NAS nhưng uploads thì chưa"
+    fi
   fi
 else
   OFFSITE="UNREACHABLE"
