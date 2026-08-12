@@ -1,14 +1,22 @@
 name: CI
 
-# Disabled auto-trigger to save GitHub Actions minutes — billing quota hit.
-# Run manually from the Actions tab ("Run workflow") when needed, or re-enable
-# the push/pull_request triggers below once quota refreshes.
+# Runs on every push to main and on PRs. `paths-ignore` keeps doc-only and
+# script-only pushes from burning Actions minutes — the quota ran out once
+# before, and content-seeding commits don't touch anything CI can check.
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  # pull_request:
-  #   branches: [main]
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "apps/web/scripts/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "apps/web/scripts/**"
 
 concurrency:
   group: ci-${{ github.ref }}
