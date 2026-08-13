@@ -18,7 +18,11 @@ jobs:
   deploy:
     name: Build & deploy production stack
     runs-on: [self-hosted, Linux]
-    timeout-minutes: 30
+    timeout-minutes: 45
+
+    permissions:
+      contents: read
+      actions: read # để bước "Wait for CI to pass" đọc được kết quả CI run
 
     # Đường dẫn file .env.prod trên server. Có thể override bằng repo variable cùng tên.
     env:
@@ -27,6 +31,63 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
+      # Gate: production must not roll out over a commit whose tests fail.
+      # CI has `paths-ignore` (docs, markdown, seed scripts), so a run may
+      # legitimately not exist for this SHA — in that case there is nothing
+      # for CI to check and we proceed. Manual `workflow_dispatch` also skips,
+      # so a rollback is never blocked by a red build.
+      - name: Wait for CI to pass
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API: https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&per_page=1
+        run: |
+          set -uo pipefail
+          # curl + jq, not `gh` — the self-hosted runner has no gh CLI, and the
+          # first version of this gate silently treated that failure as "no CI
+          # run exists" and deployed anyway.
+          MISSING=0
+          # CI mất ~12 phút; chờ tối đa 20 phút để còn dư chỗ cho lần chạy chậm.
+          for i in $(seq 1 120); do
+            body=$(mktemp)
+            code=$(curl -sS -o "$body" -w '%{http_code}' \
+                     -H "Authorization: Bearer ${GH_TOKEN}" \
+                     -H "Accept: application/vnd.github+json" \
+                     "$API" || echo 000)
+            if [ "$code" != "200" ]; then
+              # Cannot verify → do not deploy. Unverifiable is not the same as OK.
+              echo "API trả $code — thử lại ($i)"
+              rm -f "$body"; sleep 10; continue
+            fi
+            total=$(jq -r '.total_count // 0' "$body")
+            status=$(jq -r '.workflow_runs[0].status // ""' "$body")
+            concl=$(jq -r '.workflow_runs[0].conclusion // ""' "$body")
+            rm -f "$body"
+
+            if [ "$total" -eq 0 ]; then
+              MISSING=$((MISSING+1))
+              # CI has paths-ignore, so a run genuinely may not exist. Give it
+              # 2 minutes to appear before accepting that.
+              if [ "$MISSING" -ge 12 ]; then
+                echo "Không có CI run cho SHA này (paths-ignore) — deploy tiếp"
+                exit 0
+              fi
+              echo "Chưa thấy CI run ($MISSING/12)..."
+              sleep 10; continue
+            fi
+            MISSING=0
+
+            if [ "$status" = "completed" ]; then
+              if [ "$concl" = "success" ]; then
+                echo "CI xanh — tiếp tục deploy"; exit 0
+              fi
+              echo "::error::CI $concl — dừng deploy"; exit 1
+            fi
+            echo "CI đang chạy ($status)..."
+            sleep 10
+          done
+          echo "::error::Hết thời gian chờ CI"; exit 1
+
       - name: Checkout
         uses: actions/checkout@v4
         with:

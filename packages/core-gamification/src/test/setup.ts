@@ -30,6 +30,17 @@ async function cleanDb() {
     prisma.skillPrerequisite.deleteMany(),
     prisma.skill.deleteMany(),
     prisma.misconception.deleteMany(),
+    // Tournament tree — children first. Tournament.creatorId has no cascade to
+    // User, so leaving these behind makes the user delete below fail with a
+    // foreign-key error for any test that touches a tournament.
+    prisma.missionReviewAssignment.deleteMany(),
+    prisma.missionSubmission.deleteMany(),
+    prisma.tournamentMission.deleteMany(),
+    prisma.tournamentRanking.deleteMany(),
+    prisma.tournamentRegistration.deleteMany(),
+    prisma.tournamentTeam.deleteMany(),
+    prisma.tournamentJudge.deleteMany(),
+    prisma.tournament.deleteMany(),
     prisma.user.deleteMany(),
   ]);
   for (const name of Object.values(RoleName)) {

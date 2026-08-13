@@ -206,6 +206,35 @@ Rollback nhanh: `IMAGE_TAG=<git-sha-cũ> $COMPOSE up -d web` (image cũ phải c
 
 - **`LearningEvent` append-only** (xem §4.5) → không bao giờ DROP/TRUNCATE trong production. Migration nào đụng tới event/audit table phải review tay.
 - **Volume cần backup**: `feedbackme_postgres-data`, `feedbackme_web-uploads`. Redis có thể mất (chỉ là cache + queue) — nhưng BullMQ job đang chờ sẽ mất theo, lưu ý khi restore.
+
+### 7.6. Backup & restore
+
+Script ở `docker/backup/`, cài trên server 224 tại `/home/codelab/services/backup/`:
+
+```bash
+feedbackme-backup.sh daily|weekly|manual [label]   # cron: 2h30 hằng ngày, 4h30 CN
+feedbackme-restore.sh <backup-dir> [--db-only|--uploads-only] --yes
+```
+
+| Thành phần | Cách bảo vệ | Vì sao |
+|---|---|---|
+| Postgres | `pg_dump -Fc` mỗi lần chạy, giữ 14 bản daily / 8 weekly | Dump ~2 MB, rẻ |
+| Uploads | **Mirror** tại `feedbackme-backup-data/uploads-mirror`, không tar | ~9 GB video bất biến; nén hằng tuần tốn ~70 GB đĩa mà không an toàn hơn. Mirror chỉ thêm, không xoá — nên lỡ xoá trên volume thật cũng không lan sang bản sao |
+
+**Mọi artefact đều được kiểm chứng ngay sau khi tạo**, và verify thất bại là lỗi cứng chứ không phải cảnh báo:
+- dump phải đọc được bằng `pg_restore --list` và chứa đủ `LearningEvent`, `User`, `Course`, `Lesson`, `XpTransaction`
+- ghi lại số dòng vào `rowcounts.txt` để lần sau bị cắt cụt là thấy ngay
+- bản weekly đối chiếu mirror với DB: mọi video `ContentItem` phải có file thật
+
+**Chưa có bản sao ngoài máy.** NAS `172.17.18.18` không kết nối được (ScoreUp cũng hỏng bước này từ 05/07/2026, thất bại lặng lẽ 90 lần). Script vẫn chạy xong và ghi `offsite=UNREACHABLE` vào manifest + log. Đến khi NAS thông, backup và bản gốc nằm chung một ổ đĩa — hỏng ổ là mất cả hai.
+
+Kiểm tra định kỳ bằng cách restore vào DB tạm rồi so số dòng (không đụng prod):
+
+```bash
+docker exec feedbackme-postgres-1 psql -U feedbackme -d postgres -c "CREATE DATABASE restore_test;"
+docker cp <dir>/postgres.dump feedbackme-postgres-1:/tmp/rt.dump
+docker exec feedbackme-postgres-1 pg_restore -U feedbackme -d restore_test /tmp/rt.dump
+```
 - **Cron secret rotation**: đổi `CRON_SECRET` trong `.env.prod` rồi `$COMPOSE up -d web cron` (cả hai cần cùng giá trị).
 - **Healthcheck web** dùng `GET /` — nếu đổi sang đường health riêng (vd. `/api/health`), nhớ sửa cả `Dockerfile` và workflow `Wait for web to become healthy`.
 
