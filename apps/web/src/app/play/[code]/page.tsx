@@ -62,6 +62,7 @@ export default function PlayGameshowPage() {
   const [pendingPowerUp, setPendingPowerUp] = useState<"double_points" | "immunity" | null>(null);
   const [usedPowerUps, setUsedPowerUps] = useState<Set<string>>(new Set());
   const [answerResult, setAnswerResult] = useState<AnswerResult | null>(null);
+  const [answerError, setAnswerError] = useState<string | null>(null);
   const [correctOptionId, setCorrectOptionId] = useState<string | null>(null);
   const [chosenOptionId, setChosenOptionId] = useState<string | null>(null);
   const esRef = useRef<EventSource | null>(null);
@@ -183,6 +184,7 @@ export default function PlayGameshowPage() {
         setPendingPowerUp(null);
         setChosenOptionId(null);
         setAnswerResult(null);
+        setAnswerError(null);
         setCorrectOptionId(null);
         setPhase("question");
       } else if (type === "question.ended") {
@@ -272,6 +274,7 @@ export default function PlayGameshowPage() {
   const onAnswer = async (optionId: string) => {
     if (!identity || phase !== "question") return;
     setChosenOptionId(optionId);
+    setAnswerError(null);
     setPhase("answered");
     const r = await fetch(apiUrl(`/api/gameshow/sessions/${identity.sessionId}/answer`), {
       method: "POST",
@@ -288,7 +291,18 @@ export default function PlayGameshowPage() {
       const j = (await r.json()) as AnswerResult;
       setAnswerResult(j);
       if (pendingPowerUp) setUsedPowerUps((prev) => new Set(prev).add(pendingPowerUp));
+      return;
     }
+    // Gửi trễ (câu đã đóng đúng lúc bấm) hoặc lỗi khác — vẫn phải cho biết,
+    // không được im lặng để người chơi đứng hình chờ "chờ kết quả..." mãi.
+    const j = (await r.json().catch(() => null)) as { error?: string } | null;
+    setAnswerError(
+      j?.error === "stale_question" || j?.error === "invalid_status"
+        ? "⏱️ Hết giờ ngay lúc bạn gửi — câu này không tính điểm."
+        : j?.error === "already_answered"
+          ? "Bạn đã trả lời câu này rồi."
+          : "Gửi câu trả lời thất bại. Kết quả câu này sẽ không được tính.",
+    );
   };
 
   if (phase === "loading") {
@@ -444,14 +458,18 @@ export default function PlayGameshowPage() {
         </div>
 
         {phase === "answered" && (
-          <p className="mt-4 text-center text-sm text-faint">
-            {answerResult
-              ? answerResult.isCorrect
-                ? `✅ Đúng! +${answerResult.pointsAwarded} điểm`
-                : answerResult.pointsAwarded > 0
-                  ? `🛡️ Sai, nhưng Miễn nhiễm cứu bạn! +${answerResult.pointsAwarded} điểm`
-                  : "❌ Sai rồi"
-              : "Đã gửi — chờ kết quả..."}
+          <p
+            className={`mt-4 text-center text-sm ${answerError ? "font-medium text-amber-600" : "text-faint"}`}
+          >
+            {answerError
+              ? answerError
+              : answerResult
+                ? answerResult.isCorrect
+                  ? `✅ Đúng! +${answerResult.pointsAwarded} điểm`
+                  : answerResult.pointsAwarded > 0
+                    ? `🛡️ Sai, nhưng Miễn nhiễm cứu bạn! +${answerResult.pointsAwarded} điểm`
+                    : "❌ Sai rồi"
+                : "Đã gửi — chờ kết quả..."}
           </p>
         )}
       </main>
@@ -480,12 +498,19 @@ export default function PlayGameshowPage() {
                 </div>
               ))}
             </div>
-            {answerResult && (
+            {answerResult ? (
               <p className="mt-3 text-center text-sm">
                 {answerResult.pointsAwarded > 0
                   ? `+${answerResult.pointsAwarded} điểm`
                   : "Không có điểm câu này"}
               </p>
+            ) : (
+              answerError &&
+              chosenOptionId && (
+                <p className="mt-3 text-center text-sm font-medium text-amber-600">
+                  {answerError}
+                </p>
+              )
             )}
           </>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
 import { AVATARS } from "@/lib/gameshow/avatars";
@@ -30,11 +30,15 @@ type Snapshot = {
   status: Status;
   quizTitle: string;
   currentQuestionIndex: number;
+  currentQuestionStartedAt: number | null;
   timeLimitMs: number;
   answeredCount: number;
   questions: Question[];
   participants: LiveParticipant[];
 };
+
+// Khoảng dừng để mọi người nhìn đáp án trước khi tự động sang câu kế.
+const REVEAL_PAUSE_MS = 4000;
 
 export default function HostGameClient({ sessionId }: { sessionId: string }) {
   const [snap, setSnap] = useState<Snapshot | null>(null);
@@ -117,51 +121,69 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
     return () => es.close();
   }, [sessionId]);
 
-  const call = async (action: string) => {
-    setBusy(true);
-    setErr(null);
-    try {
-      const r = await fetch(apiUrl(`/api/gameshow/sessions/${sessionId}/${action}`), {
-        method: "POST",
-      });
-      const j = (await r.json().catch(() => null)) as {
-        error?: string;
-        questionIndex?: number;
-        ended?: boolean;
-      } | null;
-      if (!r.ok) {
-        setErr(j?.error ?? `HTTP ${r.status}`);
-        return;
-      }
-      // Optimistic local update cho hành động của chính host — không đợi SSE
-      // round-trip. Phải khớp CHÍNH XÁC những gì server trả về (đặc biệt
-      // "ended"), nếu không sẽ đua với event "game.ended" từ SSE và ghi đè
-      // ngược "ended" -> "running" với currentQuestionIndex vượt quá mảng câu hỏi.
-      if (action === "start") {
-        setAnsweredCount(0);
-        setSnap((s) =>
-          s ? { ...s, status: "running", currentQuestionIndex: j?.questionIndex ?? 0 } : s,
-        );
-      } else if (action === "next") {
-        setAnsweredCount(0);
-        if (j?.ended) {
-          setSnap((s) => (s ? { ...s, status: "ended" } : s));
-        } else {
+  const call = useCallback(
+    async (action: string) => {
+      setBusy(true);
+      setErr(null);
+      try {
+        const r = await fetch(apiUrl(`/api/gameshow/sessions/${sessionId}/${action}`), {
+          method: "POST",
+        });
+        const j = (await r.json().catch(() => null)) as {
+          error?: string;
+          questionIndex?: number;
+          ended?: boolean;
+        } | null;
+        if (!r.ok) {
+          // 409 invalid_status — thường do timer tự động và click thủ công
+          // đụng nhau (đã chuyển bước rồi). Không phải lỗi thật, bỏ qua.
+          if (r.status !== 409) setErr(j?.error ?? `HTTP ${r.status}`);
+          return;
+        }
+        // Optimistic local update cho hành động của chính host — không đợi SSE
+        // round-trip. Phải khớp CHÍNH XÁC những gì server trả về (đặc biệt
+        // "ended"), nếu không sẽ đua với event "game.ended" từ SSE và ghi đè
+        // ngược "ended" -> "running" với currentQuestionIndex vượt quá mảng câu hỏi.
+        if (action === "start") {
+          setAnsweredCount(0);
           setSnap((s) =>
             s
               ? {
                   ...s,
                   status: "running",
-                  currentQuestionIndex: j?.questionIndex ?? s.currentQuestionIndex + 1,
+                  currentQuestionIndex: j?.questionIndex ?? 0,
+                  currentQuestionStartedAt: Date.now(),
                 }
               : s,
           );
+        } else if (action === "next") {
+          setAnsweredCount(0);
+          if (j?.ended) {
+            setSnap((s) => (s ? { ...s, status: "ended" } : s));
+          } else {
+            setSnap((s) =>
+              s
+                ? {
+                    ...s,
+                    status: "running",
+                    currentQuestionIndex: j?.questionIndex ?? s.currentQuestionIndex + 1,
+                    currentQuestionStartedAt: Date.now(),
+                  }
+                : s,
+            );
+          }
         }
+      } finally {
+        setBusy(false);
       }
-    } finally {
-      setBusy(false);
-    }
-  };
+    },
+    [sessionId],
+  );
+
+  const onStart = useCallback(() => call("start"), [call]);
+  const onReveal = useCallback(() => call("reveal"), [call]);
+  const onNext = useCallback(() => call("next"), [call]);
+  const onEnd = useCallback(() => call("end"), [call]);
 
   if (!snap) {
     return (
@@ -186,7 +208,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
           {snap.status !== "ended" && (
             <button
               onClick={() => {
-                if (window.confirm("Kết thúc phiên gameshow?")) call("end");
+                if (window.confirm("Kết thúc phiên gameshow?")) onEnd();
               }}
               disabled={busy}
               className="flex-none rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/20"
@@ -208,7 +230,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
             joinUrl={joinUrl}
             participants={sorted}
             busy={busy}
-            onStart={() => call("start")}
+            onStart={onStart}
           />
         )}
 
@@ -219,8 +241,8 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
             answeredCount={answeredCount}
             participants={sorted}
             busy={busy}
-            onReveal={() => call("reveal")}
-            onNext={() => call("next")}
+            onReveal={onReveal}
+            onNext={onNext}
           />
         )}
 
@@ -312,6 +334,41 @@ function PlayView({
   onNext: () => void;
 }) {
   const isRevealed = snap.status === "reveal";
+  const [remainingMs, setRemainingMs] = useState(snap.timeLimitMs);
+  // Guard theo câu hiện tại — tránh gọi reveal/next lặp lại khi effect
+  // re-run do prop callback đổi reference hoặc parent re-render.
+  const revealedForIndex = useRef<number | null>(null);
+  const nextTriggeredForIndex = useRef<number | null>(null);
+
+  // Đếm ngược + tự động "Xem đáp án" khi hết giờ — không cần đợi host bấm.
+  useEffect(() => {
+    if (snap.status !== "running" || snap.currentQuestionStartedAt == null) return;
+    const startedAt = snap.currentQuestionStartedAt;
+    const tick = () => {
+      const left = Math.max(0, snap.timeLimitMs - (Date.now() - startedAt));
+      setRemainingMs(left);
+      if (left <= 0 && revealedForIndex.current !== snap.currentQuestionIndex) {
+        revealedForIndex.current = snap.currentQuestionIndex;
+        onReveal();
+      }
+    };
+    tick();
+    const t = setInterval(tick, 250);
+    return () => clearInterval(t);
+  }, [snap.status, snap.currentQuestionIndex, snap.currentQuestionStartedAt, snap.timeLimitMs, onReveal]);
+
+  // Tự động sang câu kế (hoặc kết thúc) sau khi hiện đáp án được 1 lúc.
+  useEffect(() => {
+    if (snap.status !== "reveal") return;
+    if (nextTriggeredForIndex.current === snap.currentQuestionIndex) return;
+    const t = setTimeout(() => {
+      nextTriggeredForIndex.current = snap.currentQuestionIndex;
+      onNext();
+    }, REVEAL_PAUSE_MS);
+    return () => clearTimeout(t);
+  }, [snap.status, snap.currentQuestionIndex, onNext]);
+
+  const remainingSec = Math.ceil(remainingMs / 1000);
 
   return (
     <div className="mt-6 flex flex-col gap-4 lg:flex-row">
@@ -320,6 +377,15 @@ function PlayView({
           <span>
             Câu {snap.currentQuestionIndex + 1}/{snap.questions.length}
           </span>
+          {snap.status === "running" && (
+            <span
+              className={`rounded-full px-2.5 py-1 font-mono ${
+                remainingSec <= 5 ? "bg-red-100 text-red-700" : "bg-indigo-100 text-indigo-700"
+              }`}
+            >
+              ⏱ {remainingSec}s
+            </span>
+          )}
           <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-indigo-700">
             {answeredCount}/{participants.length} đã trả lời
           </span>
