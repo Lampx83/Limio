@@ -57,7 +57,11 @@ esac
 
 mkdir -p "$LOCAL_ROOT" "$LOCAL_DIR" "$MIRROR_DIR"
 
-log()  { printf '[%s] [%s] %s\n' "$(date '+%F %T')" "$MODE" "$*" | tee -a "$LOG"; }
+# stdout only — the cron entry already redirects the whole script's stdout to
+# $LOG via `>> $LOG 2>&1`. Also `tee -a "$LOG"` here used to double every line:
+# once from tee's direct file write, once from tee's stdout passthrough being
+# re-captured by cron's redirect into the same file.
+log()  { printf '[%s] [%s] %s\n' "$(date '+%F %T')" "$MODE" "$*"; }
 fail() { log "FAIL: $*"; exit 1; }
 trap 'log "ABORT line $LINENO"' ERR
 
