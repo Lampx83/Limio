@@ -198,7 +198,11 @@ export async function seedMissionTemplates(
 }
 
 // Allow running as a standalone script: `pnpm exec tsx src/seed-mission-templates.ts`
-if (require.main === module) {
+// ESM has no `require`/`module` — compare against the entry-point URL instead.
+// (`require.main === module` silently threw here, breaking `pnpm db:seed`
+// wholesale since seed.ts imports this module.)
+import { pathToFileURL } from "node:url";
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   seedMissionTemplates()
     .catch((e) => {
       console.error(e);
