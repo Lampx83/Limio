@@ -40,12 +40,36 @@ jobs:
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-          API: https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&per_page=1
+          RUNS_API: https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&per_page=1
+          WORKFLOW_API: https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml
         run: |
           set -uo pipefail
           # curl + jq, not `gh` — the self-hosted runner has no gh CLI, and the
           # first version of this gate silently treated that failure as "no CI
           # run exists" and deployed anyway.
+
+          # If CI is disabled outright (Actions UI toggle, or the file is
+          # deleted), `total_count` below stays 0 forever — identical to the
+          # legitimate paths-ignore case — and this gate would deploy
+          # unverified code without anyone touching paths-ignore. Check the
+          # workflow's own state first so that failure mode is distinguishable.
+          wf_body=$(mktemp)
+          wf_code=$(curl -sS -o "$wf_body" -w '%{http_code}' \
+                      -H "Authorization: Bearer ${GH_TOKEN}" \
+                      -H "Accept: application/vnd.github+json" \
+                      "$WORKFLOW_API" || echo 000)
+          if [ "$wf_code" = "200" ]; then
+            wf_state=$(jq -r '.state // "unknown"' "$wf_body")
+            if [ "$wf_state" != "active" ]; then
+              echo "::error::ci.yml đang ở trạng thái '$wf_state', không phải 'active' — dừng deploy. Bật lại CI trước khi deploy."
+              rm -f "$wf_body"; exit 1
+            fi
+          else
+            echo "::error::Không đọc được trạng thái workflow ci.yml (HTTP $wf_code) — dừng deploy."
+            rm -f "$wf_body"; exit 1
+          fi
+          rm -f "$wf_body"
+
           MISSING=0
           # CI mất ~12 phút; chờ tối đa 20 phút để còn dư chỗ cho lần chạy chậm.
           for i in $(seq 1 120); do
@@ -53,7 +77,7 @@ jobs:
             code=$(curl -sS -o "$body" -w '%{http_code}' \
                      -H "Authorization: Bearer ${GH_TOKEN}" \
                      -H "Accept: application/vnd.github+json" \
-                     "$API" || echo 000)
+                     "$RUNS_API" || echo 000)
             if [ "$code" != "200" ]; then
               # Cannot verify → do not deploy. Unverifiable is not the same as OK.
               echo "API trả $code — thử lại ($i)"
