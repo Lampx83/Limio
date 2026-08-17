@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
+import { TEAM_COUNT_MAX, TEAM_COUNT_MIN, TEAM_PRESETS } from "@/lib/gameshow/teams";
 
 type QuizOption = {
   id: string;
@@ -31,6 +32,8 @@ export default function NewGameshowClient({
   const [tab, setTab] = useState<SourceTab>(questionSets.length > 0 ? "question-set" : "quiz");
   const [selectedQuiz, setSelectedQuiz] = useState<string>(quizzes[0]?.id ?? "");
   const [selectedSet, setSelectedSet] = useState<string>(questionSets[0]?.id ?? "");
+  const [teamMode, setTeamMode] = useState(false);
+  const [teamCount, setTeamCount] = useState(4);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -44,9 +47,10 @@ export default function NewGameshowClient({
       const r = await fetch(apiUrl("/api/gameshow/sessions/create"), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(
-          tab === "quiz" ? { quizId: selectedQuiz } : { questionSetId: selectedSet },
-        ),
+        body: JSON.stringify({
+          ...(tab === "quiz" ? { quizId: selectedQuiz } : { questionSetId: selectedSet }),
+          ...(teamMode ? { teamCount } : {}),
+        }),
       });
       if (!r.ok) {
         const j = (await r.json().catch(() => null)) as { error?: string } | null;
@@ -154,6 +158,42 @@ export default function NewGameshowClient({
             ))}
           </div>
         )}
+
+        <div className="rounded border border-default bg-white p-3">
+          <label className="flex cursor-pointer items-center justify-between">
+            <span>
+              <span className="block text-sm font-medium">👥 Chơi theo nhóm</span>
+              <span className="block text-xs text-faint">
+                Học viên tự chọn đội lúc vào phòng, xếp hạng &amp; podium tính theo đội.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={teamMode}
+              onChange={(e) => setTeamMode(e.target.checked)}
+              className="h-5 w-5"
+            />
+          </label>
+
+          {teamMode && (
+            <div className="mt-3 flex items-center gap-3 border-t border-default pt-3">
+              <label htmlFor="team-count" className="text-xs font-medium text-slate-600">
+                Số đội
+              </label>
+              <input
+                id="team-count"
+                type="range"
+                min={TEAM_COUNT_MIN}
+                max={TEAM_COUNT_MAX}
+                value={teamCount}
+                onChange={(e) => setTeamCount(Number(e.target.value))}
+                className="flex-1"
+              />
+              <span className="w-6 text-center text-sm font-semibold">{teamCount}</span>
+              <span className="text-lg">{TEAM_PRESETS[teamCount - 1]?.emoji}</span>
+            </div>
+          )}
+        </div>
 
         {err && (
           <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">

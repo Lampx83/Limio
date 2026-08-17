@@ -5,6 +5,7 @@ import { requireUserId } from "@/lib/session";
 import { generateUniqueGameCode } from "@/lib/gameshow/code";
 import { ELIGIBLE_QUESTION_TYPES } from "@/lib/gameshow/constants";
 import { snapshotQuestionsFromQuiz, snapshotQuestionsFromSet } from "@/lib/gameshow/sessionQuestions";
+import { TEAM_COUNT_MAX, TEAM_COUNT_MIN, createTeamsForSession } from "@/lib/gameshow/teams";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,7 @@ const BodySchema = z
   .object({
     quizId: z.string().min(1).optional(),
     questionSetId: z.string().min(1).optional(),
+    teamCount: z.number().int().min(TEAM_COUNT_MIN).max(TEAM_COUNT_MAX).optional(),
   })
   .refine((v) => (v.quizId ? 1 : 0) + (v.questionSetId ? 1 : 0) === 1, {
     message: "Cần đúng 1 trong 2: quizId hoặc questionSetId",
@@ -28,12 +30,12 @@ export async function POST(req: Request) {
   }
 
   if (parsed.data.quizId) {
-    return createFromQuiz(userId, parsed.data.quizId);
+    return createFromQuiz(userId, parsed.data.quizId, parsed.data.teamCount);
   }
-  return createFromQuestionSet(userId, parsed.data.questionSetId!);
+  return createFromQuestionSet(userId, parsed.data.questionSetId!, parsed.data.teamCount);
 }
 
-async function createFromQuiz(userId: string, quizId: string) {
+async function createFromQuiz(userId: string, quizId: string, teamCount?: number) {
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
     select: {
@@ -68,9 +70,17 @@ async function createFromQuiz(userId: string, quizId: string) {
 
   const code = await generateUniqueGameCode();
   const gameSession = await prisma.gameSession.create({
-    data: { code, title: quiz.title, quizId: quiz.id, hostId: userId, status: "lobby" },
+    data: {
+      code,
+      title: quiz.title,
+      quizId: quiz.id,
+      hostId: userId,
+      status: "lobby",
+      teamModeEnabled: !!teamCount,
+    },
   });
   const questionCount = await snapshotQuestionsFromQuiz(prisma, gameSession.id, quiz.id);
+  if (teamCount) await createTeamsForSession(prisma, gameSession.id, teamCount);
 
   return Response.json({
     id: gameSession.id,
@@ -80,7 +90,7 @@ async function createFromQuiz(userId: string, quizId: string) {
   });
 }
 
-async function createFromQuestionSet(userId: string, questionSetId: string) {
+async function createFromQuestionSet(userId: string, questionSetId: string, teamCount?: number) {
   const set = await prisma.gameQuestionSet.findUnique({
     where: { id: questionSetId },
     select: { id: true, title: true, ownerId: true, _count: { select: { items: true } } },
@@ -93,9 +103,17 @@ async function createFromQuestionSet(userId: string, questionSetId: string) {
 
   const code = await generateUniqueGameCode();
   const gameSession = await prisma.gameSession.create({
-    data: { code, title: set.title, questionSetId: set.id, hostId: userId, status: "lobby" },
+    data: {
+      code,
+      title: set.title,
+      questionSetId: set.id,
+      hostId: userId,
+      status: "lobby",
+      teamModeEnabled: !!teamCount,
+    },
   });
   const questionCount = await snapshotQuestionsFromSet(prisma, gameSession.id, set.id);
+  if (teamCount) await createTeamsForSession(prisma, gameSession.id, teamCount);
 
   return Response.json({
     id: gameSession.id,

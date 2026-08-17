@@ -4,13 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
 import { AVATARS, AVATAR_KEYS, randomAvatarKey } from "@/lib/gameshow/avatars";
+import { emojiForColorKey, teamColorClasses } from "@/lib/gameshow/teams";
 
+type TeamOption = { id: string; name: string; colorKey: string; memberCount: number };
 type RoomInfo = {
   id: string;
   status: string;
   quizTitle: string;
   questionCount: number;
   participantCount: number;
+  teamModeEnabled: boolean;
+  teams: TeamOption[];
 };
 type Identity = {
   sessionId: string;
@@ -18,18 +22,37 @@ type Identity = {
   participantToken: string;
   avatarKey: string;
   displayName: string;
+  teamId: string | null;
 };
 type QuestionOption = { id: string; label: string };
 type LiveParticipant = {
   participantId: string;
   displayName: string;
   avatarKey: string;
+  teamId: string | null;
   totalScore: number;
   streak: number;
 };
+type TeamStanding = {
+  teamId: string;
+  name: string;
+  colorKey: string;
+  avgScore: number;
+  memberCount: number;
+  members: LiveParticipant[];
+};
 type AnswerResult = { isCorrect: boolean; pointsAwarded: number; totalScore: number };
 
-type Phase = "loading" | "invalid" | "name" | "waiting" | "question" | "answered" | "reveal" | "ended";
+type Phase =
+  | "loading"
+  | "invalid"
+  | "name"
+  | "team"
+  | "waiting"
+  | "question"
+  | "answered"
+  | "reveal"
+  | "ended";
 
 function storageKey(code: string) {
   return `fbm-gameshow-${code}`;
@@ -46,10 +69,12 @@ export default function PlayGameshowPage() {
 
   const [displayName, setDisplayName] = useState("");
   const [avatarKey, setAvatarKey] = useState(randomAvatarKey());
+  const [selectedTeamId, setSelectedTeamId] = useState("");
   const [joinErr, setJoinErr] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
 
   const [participants, setParticipants] = useState<LiveParticipant[]>([]);
+  const [teamStandings, setTeamStandings] = useState<TeamStanding[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
   const [question, setQuestion] = useState<{
@@ -115,6 +140,7 @@ export default function PlayGameshowPage() {
     }
     const s = await r.json();
     setParticipants(s.participants);
+    setTeamStandings(s.teamStandings ?? []);
     setQuestionCount(s.questionCount);
     setQuestionIndex(s.currentQuestionIndex);
     setTimeLimitMs(s.timeLimitMs);
@@ -190,11 +216,14 @@ export default function PlayGameshowPage() {
       } else if (type === "question.ended") {
         setCorrectOptionId(data.correctOptionId as string | null);
         setParticipants(data.leaderboard as LiveParticipant[]);
+        if (data.teamStandings) setTeamStandings(data.teamStandings as TeamStanding[]);
         setPhase("reveal");
       } else if (type === "leaderboard.updated") {
         setParticipants(data.leaderboard as LiveParticipant[]);
+        if (data.teamStandings) setTeamStandings(data.teamStandings as TeamStanding[]);
       } else if (type === "game.ended") {
         setParticipants(data.leaderboard as LiveParticipant[]);
+        if (data.teamStandings) setTeamStandings(data.teamStandings as TeamStanding[]);
         setPhase("ended");
       }
     };
@@ -213,15 +242,29 @@ export default function PlayGameshowPage() {
     return () => clearInterval(t);
   }, [phase, startedAt, timeLimitMs]);
 
+  const onProceedFromName = () => {
+    if (!displayName.trim()) return;
+    if (room?.teamModeEnabled) {
+      setPhase("team");
+      return;
+    }
+    onJoin();
+  };
+
   const onJoin = async () => {
     if (!room || !displayName.trim()) return;
+    if (room.teamModeEnabled && !selectedTeamId) return;
     setJoining(true);
     setJoinErr(null);
     try {
       const r = await fetch(apiUrl(`/api/gameshow/sessions/by-code/${code}/join`), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ displayName: displayName.trim(), avatarKey }),
+        body: JSON.stringify({
+          displayName: displayName.trim(),
+          avatarKey,
+          ...(room.teamModeEnabled ? { teamId: selectedTeamId } : {}),
+        }),
       });
       if (!r.ok) {
         const j = (await r.json().catch(() => null)) as { error?: string } | null;
@@ -239,6 +282,7 @@ export default function PlayGameshowPage() {
         participantToken: j.participantToken,
         avatarKey: j.avatarKey,
         displayName: displayName.trim(),
+        teamId: j.teamId ?? null,
       };
       sessionStorage.setItem(storageKey(code), JSON.stringify(id));
       // Seed chính mình vào roster ngay — SSE của tab này mở SAU khi event
@@ -247,7 +291,17 @@ export default function PlayGameshowPage() {
       setParticipants((prev) =>
         prev.some((p) => p.participantId === id.participantId)
           ? prev
-          : [...prev, { participantId: id.participantId, displayName: id.displayName, avatarKey: id.avatarKey, totalScore: 0, streak: 0 }],
+          : [
+              ...prev,
+              {
+                participantId: id.participantId,
+                displayName: id.displayName,
+                avatarKey: id.avatarKey,
+                teamId: id.teamId,
+                totalScore: 0,
+                streak: 0,
+              },
+            ],
       );
       setIdentity(id);
       setPhase("waiting");
@@ -354,8 +408,55 @@ export default function PlayGameshowPage() {
         )}
 
         <button
-          onClick={onJoin}
+          onClick={onProceedFromName}
           disabled={joining || !displayName.trim()}
+          className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-3 text-lg font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+        >
+          {joining ? "Đang vào..." : room?.teamModeEnabled ? "Tiếp theo →" : "Tham gia →"}
+        </button>
+      </main>
+    );
+  }
+
+  if (phase === "team") {
+    return (
+      <main className="mx-auto max-w-md px-4 py-10">
+        <h1 className="text-center text-xl font-bold">👥 Chọn đội của bạn</h1>
+        <p className="mt-1 text-center text-sm text-faint">{displayName}</p>
+
+        <div className="mt-6 space-y-2">
+          {room?.teams.map((t) => {
+            const colors = teamColorClasses(t.colorKey);
+            const selected = selectedTeamId === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setSelectedTeamId(t.id)}
+                className={`flex w-full items-center justify-between rounded-lg border-2 p-3 text-left transition-colors ${
+                  selected ? `border-transparent ${colors.bg} ${colors.text}` : "border-default bg-white"
+                }`}
+              >
+                <span className="flex items-center gap-2 font-medium">
+                  <span className="text-xl">{emojiForColorKey(t.colorKey)}</span>
+                  {t.name}
+                </span>
+                <span className={`text-xs ${selected ? "opacity-90" : "text-faint"}`}>
+                  {t.memberCount} người
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {joinErr && (
+          <div className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+            ⚠ {joinErr}
+          </div>
+        )}
+
+        <button
+          onClick={onJoin}
+          disabled={joining || !selectedTeamId}
           className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-3 text-lg font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
         >
           {joining ? "Đang vào..." : "Tham gia →"}
@@ -365,10 +466,18 @@ export default function PlayGameshowPage() {
   }
 
   if (phase === "waiting") {
+    const myTeam = room?.teams.find((t) => t.id === identity?.teamId);
     return (
       <main className="mx-auto max-w-md px-4 py-10 text-center">
         <h1 className="text-xl font-bold">✅ Đã vào phòng!</h1>
         <p className="mt-1 text-sm text-faint">Đang chờ giảng viên bắt đầu...</p>
+        {myTeam && (
+          <span
+            className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${teamColorClasses(myTeam.colorKey).bg} ${teamColorClasses(myTeam.colorKey).text}`}
+          >
+            {emojiForColorKey(myTeam.colorKey)} {myTeam.name}
+          </span>
+        )}
 
         <p className="mt-6 text-sm text-faint">Đổi avatar</p>
         <div className="mt-2 grid grid-cols-4 gap-2">
@@ -477,8 +586,12 @@ export default function PlayGameshowPage() {
   }
 
   if (phase === "reveal" || phase === "ended") {
+    const teamMode = !!room?.teamModeEnabled;
     const sorted = [...participants].sort((a, b) => b.totalScore - a.totalScore);
     const myRank = identity ? sorted.findIndex((p) => p.participantId === identity.participantId) + 1 : 0;
+    const myTeamRank = identity?.teamId
+      ? teamStandings.findIndex((t) => t.teamId === identity.teamId) + 1
+      : 0;
     return (
       <main className="mx-auto max-w-md px-4 py-8">
         {phase === "reveal" && question && (
@@ -517,31 +630,73 @@ export default function PlayGameshowPage() {
 
         {phase === "ended" && <h1 className="text-center text-2xl font-bold">🏁 Kết thúc!</h1>}
 
-        {identity && myRank > 0 && (
-          <p className="mt-4 text-center text-sm font-semibold">
-            Hạng của bạn: #{myRank} · {sorted[myRank - 1]?.totalScore ?? 0} điểm
-          </p>
-        )}
+        {teamMode ? (
+          <>
+            {identity && myTeamRank > 0 && (
+              <p className="mt-4 text-center text-sm font-semibold">
+                Đội của bạn: #{myTeamRank} · {teamStandings[myTeamRank - 1]?.avgScore ?? 0} điểm TB
+              </p>
+            )}
+            <ol className="mt-4 space-y-2">
+              {teamStandings.map((t, i) => {
+                const colors = teamColorClasses(t.colorKey);
+                const isMine = identity?.teamId === t.teamId;
+                return (
+                  <li
+                    key={t.teamId}
+                    className={`rounded-lg p-3 ${colors.bg} ${colors.text} ${
+                      isMine ? "ring-2 ring-offset-1 ring-indigo-400" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 font-semibold">
+                        <span>{i + 1}</span>
+                        <span>{emojiForColorKey(t.colorKey)}</span>
+                        {t.name}
+                      </span>
+                      <span className="font-bold">{t.avgScore} điểm TB</span>
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs opacity-90">
+                      {t.members.map((m) => (
+                        <span key={m.participantId}>
+                          {AVATARS[m.avatarKey] ?? "🙂"} {m.displayName}
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </>
+        ) : (
+          <>
+            {identity && myRank > 0 && (
+              <p className="mt-4 text-center text-sm font-semibold">
+                Hạng của bạn: #{myRank} · {sorted[myRank - 1]?.totalScore ?? 0} điểm
+              </p>
+            )}
 
-        <ol className="mt-4 space-y-1">
-          {sorted.slice(0, 10).map((p, i) => (
-            <li
-              key={p.participantId}
-              className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
-                identity?.participantId === p.participantId
-                  ? "bg-blue-50"
-                  : "bg-[rgb(var(--surface-muted))]"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <span className="w-5 text-right font-bold text-faint">{i + 1}</span>
-                <span>{AVATARS[p.avatarKey] ?? "🙂"}</span>
-                <span>{p.displayName}</span>
-              </span>
-              <span className="font-semibold">{p.totalScore}</span>
-            </li>
-          ))}
-        </ol>
+            <ol className="mt-4 space-y-1">
+              {sorted.slice(0, 10).map((p, i) => (
+                <li
+                  key={p.participantId}
+                  className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                    identity?.participantId === p.participantId
+                      ? "bg-blue-50"
+                      : "bg-[rgb(var(--surface-muted))]"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="w-5 text-right font-bold text-faint">{i + 1}</span>
+                    <span>{AVATARS[p.avatarKey] ?? "🙂"}</span>
+                    <span>{p.displayName}</span>
+                  </span>
+                  <span className="font-semibold">{p.totalScore}</span>
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
       </main>
     );
   }

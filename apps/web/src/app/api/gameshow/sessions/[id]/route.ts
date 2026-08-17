@@ -1,6 +1,6 @@
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
-import { getSessionSnapshot } from "@/lib/gameshow/bus";
+import { getSessionSnapshot, getTeamStandings } from "@/lib/gameshow/bus";
 import { getSessionQuestions } from "@/lib/gameshow/sessionQuestions";
 
 export const runtime = "nodejs";
@@ -18,8 +18,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       status: true,
       hostId: true,
       title: true,
+      teamModeEnabled: true,
       currentQuestionIndex: true,
       currentQuestionStartedAt: true,
+      teams: { select: { id: true, name: true, colorKey: true } },
     },
   });
   if (!gameSession) return Response.json({ error: "not_found" }, { status: 404 });
@@ -34,17 +36,23 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       where: { sessionId: gameSession.id, questionIndex: gameSession.currentQuestionIndex },
     }),
   ]);
+  const teamStandings = gameSession.teamModeEnabled
+    ? await getTeamStandings(gameSession.id, participants)
+    : [];
 
   return Response.json({
     id: gameSession.id,
     code: gameSession.code,
     status: gameSession.status,
     quizTitle: gameSession.title,
+    teamModeEnabled: gameSession.teamModeEnabled,
+    teams: gameSession.teams,
     currentQuestionIndex: gameSession.currentQuestionIndex,
     currentQuestionStartedAt: gameSession.currentQuestionStartedAt?.getTime() ?? null,
     timeLimitMs: (questions[gameSession.currentQuestionIndex]?.timeLimitSec ?? 20) * 1000,
     answeredCount,
     questions,
     participants,
+    teamStandings,
   });
 }

@@ -2053,11 +2053,17 @@ model GameSession {
   currentQuestionIndex     Int       @default(0)
   currentQuestionStartedAt DateTime?
 
+  // Chế độ nhóm kiểu Kahoot "Personal Devices" — mỗi học viên vẫn tự vào
+  // bằng thiết bị riêng + tự bấm, nhưng gộp điểm theo đội (trung bình cộng,
+  // xem GameParticipant.teamId + lib/gameshow/bus.ts getTeamStandings).
+  teamModeEnabled Boolean @default(false)
+
   createdAt DateTime  @default(now())
   startedAt DateTime?
   endedAt   DateTime?
 
   questions    GameSessionQuestion[]
+  teams        GameTeam[]
   participants GameParticipant[]
   answers      GameAnswer[]
 
@@ -2142,10 +2148,32 @@ model GameSessionQuestionOption {
   @@index([questionId])
 }
 
+// Đội trong 1 phiên — sinh sẵn theo teamCount lúc tạo phiên (tên/màu preset),
+// học viên tự chọn đội lúc join. Điểm đội KHÔNG lưu ở đây — tính real-time
+// (trung bình totalScore các thành viên) trong lib/gameshow/bus.ts.
+model GameTeam {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  name     String
+  colorKey String // preset key cho màu badge — xem lib/gameshow/teams.ts
+
+  createdAt DateTime @default(now())
+
+  participants GameParticipant[]
+
+  @@unique([sessionId, name])
+  @@index([sessionId])
+}
+
 model GameParticipant {
   id        String      @id @default(cuid())
   sessionId String
   session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  teamId String?
+  team   GameTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   // Optional — participant không cần đăng nhập (join bằng code + tên).
   userId String?

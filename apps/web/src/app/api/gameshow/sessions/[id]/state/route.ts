@@ -1,5 +1,5 @@
 import { prisma } from "@feedbackme/db";
-import { getSessionSnapshot } from "@/lib/gameshow/bus";
+import { getSessionSnapshot, getTeamStandings } from "@/lib/gameshow/bus";
 import { getSessionQuestions } from "@/lib/gameshow/sessionQuestions";
 
 export const runtime = "nodejs";
@@ -13,6 +13,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       id: true,
       status: true,
       title: true,
+      teamModeEnabled: true,
       currentQuestionIndex: true,
       currentQuestionStartedAt: true,
     },
@@ -22,6 +23,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const questions = await getSessionQuestions(gameSession.id);
   const currentQuestion = questions[gameSession.currentQuestionIndex] ?? null;
   const participants = await getSessionSnapshot(gameSession.id);
+  const teamStandings = gameSession.teamModeEnabled
+    ? await getTeamStandings(gameSession.id, participants)
+    : [];
 
   const url = new URL(req.url);
   const participantId = url.searchParams.get("participantId");
@@ -51,6 +55,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     id: gameSession.id,
     status: gameSession.status,
     quizTitle: gameSession.title,
+    teamModeEnabled: gameSession.teamModeEnabled,
     questionCount: questions.length,
     currentQuestionIndex: gameSession.currentQuestionIndex,
     currentQuestionStartedAt: gameSession.currentQuestionStartedAt?.getTime() ?? null,
@@ -65,5 +70,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     correctOptionId,
     alreadyAnswered,
     participants,
+    teamStandings,
   });
 }

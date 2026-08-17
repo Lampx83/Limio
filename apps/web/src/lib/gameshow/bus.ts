@@ -8,6 +8,7 @@
  * (mọi client cùng nghe 1 channel). Đáp án đúng chỉ lộ ra ở "question.ended".
  */
 
+import { prisma } from "@feedbackme/db";
 import { getRedis } from "../redis";
 import { publish as streamPublish } from "../realtime/publisher";
 
@@ -15,8 +16,20 @@ export type LiveParticipant = {
   participantId: string;
   displayName: string;
   avatarKey: string;
+  teamId: string | null;
   totalScore: number;
   streak: number;
+};
+
+// Đội = trung bình cộng totalScore các thành viên (kể cả người chưa trả lời
+// tính là 0) — xem quyết định "Personal Devices" team mode kiểu Kahoot.
+export type TeamStanding = {
+  teamId: string;
+  name: string;
+  colorKey: string;
+  avgScore: number;
+  memberCount: number;
+  members: LiveParticipant[];
 };
 
 export type LiveEvent =
@@ -38,9 +51,10 @@ export type LiveEvent =
       questionIndex: number;
       correctOptionId: string | null;
       leaderboard: LiveParticipant[];
+      teamStandings?: TeamStanding[];
     }
-  | { type: "leaderboard.updated"; leaderboard: LiveParticipant[] }
-  | { type: "game.ended"; leaderboard: LiveParticipant[] };
+  | { type: "leaderboard.updated"; leaderboard: LiveParticipant[]; teamStandings?: TeamStanding[] }
+  | { type: "game.ended"; leaderboard: LiveParticipant[]; teamStandings?: TeamStanding[] };
 
 const TTL_SEC = 24 * 60 * 60;
 
@@ -53,6 +67,7 @@ function serialize(p: LiveParticipant): Record<string, string> {
   return {
     displayName: p.displayName,
     avatarKey: p.avatarKey,
+    teamId: p.teamId ?? "",
     totalScore: String(p.totalScore),
     streak: String(p.streak),
   };
@@ -64,9 +79,45 @@ function parse(participantId: string, h: Record<string, string>): LiveParticipan
     participantId,
     displayName: h.displayName,
     avatarKey: h.avatarKey ?? "fox",
+    teamId: h.teamId ? h.teamId : null,
     totalScore: Number(h.totalScore ?? 0),
     streak: Number(h.streak ?? 0),
   };
+}
+
+/** Gom điểm theo đội — trung bình cộng, sắp giảm dần. [] nếu không có đội nào. */
+export async function getTeamStandings(
+  sessionId: string,
+  participants: LiveParticipant[],
+): Promise<TeamStanding[]> {
+  const grouped = new Map<string, LiveParticipant[]>();
+  for (const p of participants) {
+    if (!p.teamId) continue;
+    const list = grouped.get(p.teamId) ?? [];
+    list.push(p);
+    grouped.set(p.teamId, list);
+  }
+  if (grouped.size === 0) return [];
+
+  const teams = await prisma.gameTeam.findMany({
+    where: { sessionId, id: { in: [...grouped.keys()] } },
+    select: { id: true, name: true, colorKey: true },
+  });
+
+  return teams
+    .map((t) => {
+      const members = (grouped.get(t.id) ?? []).sort((a, b) => b.totalScore - a.totalScore);
+      const totalScore = members.reduce((sum, m) => sum + m.totalScore, 0);
+      return {
+        teamId: t.id,
+        name: t.name,
+        colorKey: t.colorKey,
+        avgScore: members.length > 0 ? Math.round(totalScore / members.length) : 0,
+        memberCount: members.length,
+        members,
+      };
+    })
+    .sort((a, b) => b.avgScore - a.avgScore);
 }
 
 async function publishToGame(sessionId: string, event: LiveEvent): Promise<void> {
@@ -152,7 +203,12 @@ export async function applyScore(
   await pipe.exec();
 
   const leaderboard = await getSessionSnapshot(sessionId);
-  await publishToGame(sessionId, { type: "leaderboard.updated", leaderboard });
+  const teamStandings = await getTeamStandings(sessionId, leaderboard);
+  await publishToGame(sessionId, {
+    type: "leaderboard.updated",
+    leaderboard,
+    ...(teamStandings.length ? { teamStandings } : {}),
+  });
 }
 
 export async function publishQuestionEnded(
@@ -161,15 +217,22 @@ export async function publishQuestionEnded(
   correctOptionId: string | null,
 ): Promise<void> {
   const leaderboard = await getSessionSnapshot(sessionId);
+  const teamStandings = await getTeamStandings(sessionId, leaderboard);
   await publishToGame(sessionId, {
     type: "question.ended",
     questionIndex,
     correctOptionId,
     leaderboard,
+    ...(teamStandings.length ? { teamStandings } : {}),
   });
 }
 
 export async function publishGameEnded(sessionId: string): Promise<void> {
   const leaderboard = await getSessionSnapshot(sessionId);
-  await publishToGame(sessionId, { type: "game.ended", leaderboard });
+  const teamStandings = await getTeamStandings(sessionId, leaderboard);
+  await publishToGame(sessionId, {
+    type: "game.ended",
+    leaderboard,
+    ...(teamStandings.length ? { teamStandings } : {}),
+  });
 }

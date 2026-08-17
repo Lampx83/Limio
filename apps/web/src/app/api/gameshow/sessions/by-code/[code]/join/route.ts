@@ -11,6 +11,7 @@ export const runtime = "nodejs";
 const BodySchema = z.object({
   displayName: z.string().trim().min(DISPLAY_NAME_MIN).max(DISPLAY_NAME_MAX),
   avatarKey: z.string().optional(),
+  teamId: z.string().min(1).optional(),
 });
 
 export async function POST(req: Request, { params }: { params: { code: string } }) {
@@ -32,11 +33,26 @@ export async function POST(req: Request, { params }: { params: { code: string } 
 
   const gameSession = await prisma.gameSession.findUnique({
     where: { code: params.code.toUpperCase() },
-    select: { id: true, status: true },
+    select: { id: true, status: true, teamModeEnabled: true },
   });
   if (!gameSession) return Response.json({ error: "not_found" }, { status: 404 });
   if (gameSession.status !== "lobby") {
     return Response.json({ error: "session_already_started" }, { status: 409 });
+  }
+
+  let teamId: string | null = null;
+  if (gameSession.teamModeEnabled) {
+    if (!parsed.data.teamId) {
+      return Response.json({ error: "team_required" }, { status: 400 });
+    }
+    const team = await prisma.gameTeam.findUnique({
+      where: { id: parsed.data.teamId },
+      select: { id: true, sessionId: true },
+    });
+    if (!team || team.sessionId !== gameSession.id) {
+      return Response.json({ error: "team_not_found" }, { status: 404 });
+    }
+    teamId = team.id;
   }
 
   const avatarKey =
@@ -50,6 +66,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     participant = await prisma.gameParticipant.create({
       data: {
         sessionId: gameSession.id,
+        teamId,
         userId,
         displayName: parsed.data.displayName,
         avatarKey,
@@ -67,6 +84,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     participantId: participant.id,
     displayName: participant.displayName,
     avatarKey: participant.avatarKey,
+    teamId: participant.teamId,
     totalScore: 0,
     streak: 0,
   });
@@ -76,5 +94,6 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     participantId: participant.id,
     participantToken: participant.participantToken,
     avatarKey: participant.avatarKey,
+    teamId: participant.teamId,
   });
 }
