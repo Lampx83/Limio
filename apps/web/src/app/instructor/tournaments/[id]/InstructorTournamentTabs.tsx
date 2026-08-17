@@ -5,6 +5,7 @@ import TournamentMetaForm from "./TournamentMetaForm";
 import TournamentMissionManager from "./TournamentMissionManager";
 import RegistrationsList, { type Registration } from "./RegistrationsList";
 import JudgesPanel from "./JudgesPanel";
+import TournamentPrizeForm from "./TournamentPrizeForm";
 
 interface Tab {
   id: string;
@@ -135,7 +136,7 @@ export default function InstructorTournamentTabs({
               </p>
             </div>
 
-            {prizeDistribution && typeof prizeDistribution === "object" && (
+            {prizeDistribution && typeof prizeDistribution === "object" ? (
               <div className="card">
                 <h3 className="text-lg font-semibold">Phân phối theo hạng</h3>
                 <dl className="mt-4 space-y-3">
@@ -148,6 +149,11 @@ export default function InstructorTournamentTabs({
                         2: "🥈",
                         3: "🥉",
                       };
+                      const rankLabels: Record<number, string> = {
+                        1: "Hạng Vàng",
+                        2: "Hạng Bạc",
+                        3: "Hạng Đồng",
+                      };
                       return (
                         <div
                           key={place}
@@ -155,7 +161,10 @@ export default function InstructorTournamentTabs({
                         >
                           <dt className="font-medium">
                             <span className="mr-2">
-                              {medals[Number(place)] ?? `Hạng ${place}`}
+                              {medals[Number(place)] ?? "🎖️"}
+                            </span>
+                            <span>
+                              {rankLabels[Number(place)] ?? `Hạng ${place}`}
                             </span>
                           </dt>
                           <dd className="text-right">
@@ -171,6 +180,32 @@ export default function InstructorTournamentTabs({
                     })}
                 </dl>
               </div>
+            ) : (
+              canEdit &&
+              prizeXp > 0 && (
+                <div className="card border-2 border-dashed border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20">
+                  <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-300">
+                    Chưa chia tỷ lệ giải thưởng
+                  </h3>
+                  <p className="mt-2 text-sm text-amber-700 dark:text-amber-400">
+                    {prizeXp.toLocaleString()} XP sẽ <strong>không được trao cho
+                    ai</strong> khi giải kết thúc nếu chưa thiết lập tỷ lệ chia
+                    theo hạng. Hãy thiết lập ngay bên dưới.
+                  </p>
+                </div>
+              )
+            )}
+
+            {canEdit && prizeXp > 0 && (
+              <TournamentPrizeForm
+                tournamentId={tournamentId}
+                prizeXp={prizeXp}
+                initialDistribution={
+                  prizeDistribution && typeof prizeDistribution === "object"
+                    ? (prizeDistribution as Record<string, number>)
+                    : null
+                }
+              />
             )}
           </div>
         )}

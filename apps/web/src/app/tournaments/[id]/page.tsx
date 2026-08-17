@@ -80,6 +80,12 @@ const RANK_MEDAL_COLOR: Record<number, string> = {
   3: "text-orange-600",
 };
 
+const RANK_LABELS: Record<number, string> = {
+  1: "Hạng Vàng",
+  2: "Hạng Bạc",
+  3: "Hạng Đồng",
+};
+
 function RankMedal({ rank, className = "h-4 w-4" }: { rank: number; className?: string }) {
   const color = RANK_MEDAL_COLOR[rank];
   if (!color) return <span className="text-slate-500">#{rank}</span>;
@@ -597,7 +603,7 @@ export default async function TournamentDetailPage({
                         {mission.description && (
                           <SafeHtml
                             html={plainToRichHtml(mission.description)}
-                            className="prose prose-sm mt-2 max-w-none text-slate-600 dark:prose-invert dark:text-slate-300"
+                            className="prose prose-base mt-2 max-w-none text-slate-600 dark:prose-invert dark:text-slate-300"
                           />
                         )}
                         {mission.prerequisiteId && (
@@ -897,7 +903,7 @@ export default async function TournamentDetailPage({
                           <span className="inline-flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200">
                             <RankMedal rank={placeNum} className="h-4 w-4" />
                             <span className="text-xs text-slate-500">
-                              hạng {place}
+                              {RANK_LABELS[placeNum] ?? `Hạng ${place}`}
                             </span>
                           </span>
                           <span className="font-black tabular-nums text-amber-700 dark:text-amber-400">

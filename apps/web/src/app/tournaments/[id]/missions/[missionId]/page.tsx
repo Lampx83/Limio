@@ -128,7 +128,7 @@ export default async function MissionDetailPage({
       {/* Description / nội dung — rich-text HTML */}
       {mission.description && (
         <div
-          className="prose prose-sm mt-4 max-w-none dark:prose-invert"
+          className="prose prose-2xl mt-4 max-w-none dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: mission.description }}
         />
       )}

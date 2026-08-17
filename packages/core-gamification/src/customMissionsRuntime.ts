@@ -11,6 +11,7 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { awardXp } from "./xp";
+import { recomputeRanking } from "./tournament";
 import {
   calcAggregateScore,
   calcMedian,
@@ -279,6 +280,8 @@ async function verifyAutoGradeSubmission(
 
   if (passed) {
     await awardMissionXp(submission, db);
+    await recordMissionCompletion(submission.userId, submission.mission, db);
+    await recomputeRanking(submission.mission.tournament.id, db);
   }
   return { submissionId, status: passed ? "passed" : "failed" };
 }
@@ -353,7 +356,11 @@ async function verifyAutoCheckSubmission(
     payload: { submissionId, status: passed ? "passed" : "failed", finalScore },
     courseId: submission.mission.tournament.courseId,
   });
-  if (passed) await awardMissionXp(submission, db);
+  if (passed) {
+    await awardMissionXp(submission, db);
+    await recordMissionCompletion(submission.userId, submission.mission, db);
+    await recomputeRanking(submission.mission.tournament.id, db);
+  }
   return { submissionId, status: passed ? "passed" : "failed" };
 }
 
@@ -444,6 +451,8 @@ export async function onAssignmentGraded(
       { id: submission.id, userId: aSub.userId, mission },
       db,
     );
+    await recordMissionCompletion(aSub.userId, mission, db);
+    await recomputeRanking(mission.tournament.id, db);
   }
 }
 
@@ -1037,8 +1046,13 @@ export async function closeReviewWindow(
     });
     if (passed) {
       await awardMissionXp({ ...submission, mission }, db);
+      await recordMissionCompletion(submission.userId, mission, db);
     }
     closed++;
+  }
+
+  if (closed > 0) {
+    await recomputeRanking(mission.tournament.id, db);
   }
 
   return { closed, extended, fallbackManual, skippedUnderQuorum };
@@ -1090,4 +1104,38 @@ async function awardMissionXp(
     },
     db,
   );
+}
+
+/**
+ * Records the idempotent tournament.mission.completed LearningEvent that
+ * recomputeRanking() scans to build TournamentRanking. Mirrors the same
+ * eventKey convention used by completeMission()/gradeMissionSubmission() in
+ * tournament.ts, so a mission counts toward the leaderboard exactly once no
+ * matter which verify mode passed it.
+ *
+ * Does NOT call recomputeRanking() itself — callers that settle many
+ * submissions per mission in one pass (e.g. closeReviewWindow) should call it
+ * once after the loop instead of once per submission.
+ */
+async function recordMissionCompletion(
+  userId: string,
+  mission: { id: string; points: number; tournament: { id: string; courseId: string | null } },
+  db: PrismaClient,
+): Promise<void> {
+  const eventKey = `tournament.mission.completed:${userId}:${mission.id}`;
+  const existing = await db.learningEvent.findUnique({ where: { eventKey } });
+  if (existing) return;
+  await db.learningEvent.create({
+    data: {
+      userId,
+      eventType: LearningEventType.TournamentMissionCompleted,
+      eventKey,
+      payload: {
+        tournamentId: mission.tournament.id,
+        missionId: mission.id,
+        points: mission.points,
+      } as Prisma.InputJsonValue,
+      courseId: mission.tournament.courseId ?? null,
+    },
+  });
 }
