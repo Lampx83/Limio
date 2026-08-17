@@ -201,21 +201,32 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-fuchsia-900 px-4 py-6 text-white sm:px-8">
       <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-between">
-          <h1 className="flex items-center gap-2 text-lg font-bold sm:text-xl">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="flex min-w-0 items-center gap-2 text-lg font-bold sm:text-xl">
             🎮 <span className="truncate">{snap.quizTitle}</span>
           </h1>
-          {snap.status !== "ended" && (
-            <button
-              onClick={() => {
-                if (window.confirm("Kết thúc phiên gameshow?")) onEnd();
-              }}
-              disabled={busy}
-              className="flex-none rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/20"
-            >
-              Kết thúc sớm
-            </button>
-          )}
+          <div className="flex flex-none items-center gap-2">
+            {snap.status === "lobby" && (
+              <button
+                onClick={onStart}
+                disabled={busy}
+                className="gs-glow-pulse rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-2 text-sm font-bold text-indigo-950 shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
+              >
+                ▶ Bắt đầu ({sorted.length})
+              </button>
+            )}
+            {snap.status !== "ended" && (
+              <button
+                onClick={() => {
+                  if (window.confirm("Kết thúc phiên gameshow?")) onEnd();
+                }}
+                disabled={busy}
+                className="flex-none rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/20"
+              >
+                Kết thúc sớm
+              </button>
+            )}
+          </div>
         </div>
 
         {err && (
@@ -225,13 +236,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
         )}
 
         {snap.status === "lobby" && (
-          <LobbyView
-            code={snap.code}
-            joinUrl={joinUrl}
-            participants={sorted}
-            busy={busy}
-            onStart={onStart}
-          />
+          <LobbyView code={snap.code} joinUrl={joinUrl} participants={sorted} />
         )}
 
         {(snap.status === "running" || snap.status === "reveal") && currentQuestion && (
@@ -260,35 +265,50 @@ function LobbyView({
   code,
   joinUrl,
   participants,
-  busy,
-  onStart,
 }: {
   code: string;
   joinUrl: string;
   participants: LiveParticipant[];
-  busy: boolean;
-  onStart: () => void;
 }) {
   return (
-    <div className="mt-6 flex flex-col items-center gap-6 rounded-3xl bg-white/10 p-6 text-center shadow-2xl backdrop-blur-sm sm:p-10">
-      <p className="text-sm font-medium text-white/70">Học viên vào bằng mã hoặc quét QR</p>
+    <div className="mt-6 space-y-4">
+      {/* Thanh vào phòng — hướng dẫn | mã PIN | QR, ngang hàng kiểu Kahoot */}
+      <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-5 text-indigo-950 shadow-2xl sm:flex-row sm:justify-center sm:gap-6">
+        <div className="text-center sm:text-left">
+          <p className="text-xs font-medium text-slate-400">Học viên tham gia tại</p>
+          <p className="max-w-[16rem] truncate text-sm font-semibold text-indigo-700">{joinUrl}</p>
+          <p className="mt-0.5 text-xs text-slate-400">hoặc quét mã QR bên cạnh</p>
+        </div>
 
-      <div className="gs-glow-pulse rounded-2xl bg-white px-8 py-4 text-5xl font-black tracking-[0.2em] text-indigo-900 sm:text-6xl">
-        {code}
+        <div className="hidden h-14 w-px bg-slate-200 sm:block" />
+
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+            Mã phòng
+          </p>
+          <div className="gs-glow-pulse rounded-xl bg-indigo-50 px-6 py-2 text-4xl font-black tracking-[0.2em] text-indigo-900 sm:text-5xl">
+            {code}
+          </div>
+        </div>
+
+        <div className="hidden h-14 w-px bg-slate-200 sm:block" />
+
+        {joinUrl && (
+          <div className="flex-none rounded-lg border border-slate-200 p-1.5">
+            <QRCode value={joinUrl} size={84} />
+          </div>
+        )}
       </div>
 
-      {joinUrl && (
-        <div className="rounded-xl bg-white p-3">
-          <QRCode value={joinUrl} size={160} />
-        </div>
-      )}
-      <p className="text-xs text-white/50">{joinUrl}</p>
-
-      <div className="w-full">
-        <p className="text-sm font-semibold text-white/80">
-          {participants.length} học viên đã vào phòng
+      {/* "Màn hình" lớp học — hiện học viên vào real-time, giống chiếu lên máy chiếu */}
+      <div className="relative overflow-hidden rounded-3xl border-4 border-white/15 bg-gradient-to-br from-indigo-900/70 to-purple-900/70 p-6 shadow-2xl sm:p-10">
+        <p className="text-center text-sm font-medium text-white/60">
+          {participants.length === 0
+            ? "Đang chờ học viên tham gia..."
+            : "Học viên đã vào phòng — sẵn sàng khi bạn bấm Bắt đầu"}
         </p>
-        <div className="mt-3 flex min-h-[3rem] flex-wrap justify-center gap-2">
+
+        <div className="mt-6 flex min-h-[6rem] flex-wrap items-center justify-center gap-2">
           {participants.map((p, i) => (
             <span
               key={p.participantId}
@@ -303,15 +323,11 @@ function LobbyView({
             <span className="text-sm text-white/40">Chưa có ai tham gia...</span>
           )}
         </div>
-      </div>
 
-      <button
-        onClick={onStart}
-        disabled={busy}
-        className="mt-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-8 py-3 text-base font-bold text-indigo-950 shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
-      >
-        ▶ Bắt đầu ({participants.length} học viên)
-      </button>
+        <div className="absolute bottom-3 right-4 flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-xs font-semibold text-white/80">
+          👥 {participants.length}
+        </div>
+      </div>
     </div>
   );
 }
