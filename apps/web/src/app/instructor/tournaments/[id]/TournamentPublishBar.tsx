@@ -165,6 +165,23 @@ export default function TournamentPublishBar({
     }
   }
 
+  async function deleteTournament() {
+    if (!confirm("Xoá tournament nháp này? Không thể hoàn tác.")) return;
+    setBusy(true);
+    setError(null);
+    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}`), {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      router.push("/instructor/tournaments");
+      router.refresh();
+      return;
+    }
+    setBusy(false);
+    const d = await res.json().catch(() => ({}));
+    setError(d.error ?? "delete_failed");
+  }
+
   // ── Draft state ─────────────────────────────────────────────────────────────
 
   if (status === "draft") {
@@ -232,6 +249,14 @@ export default function TournamentPublishBar({
                     : "Publish"}
               </button>
             )}
+
+            <button
+              onClick={deleteTournament}
+              disabled={busy}
+              className="btn-sm inline-flex items-center justify-center rounded-lg border border-danger-300 px-3 py-2 text-sm font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Xoá tournament
+            </button>
           </div>
         </div>
 

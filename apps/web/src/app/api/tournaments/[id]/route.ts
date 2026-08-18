@@ -166,7 +166,17 @@ export async function DELETE(
     );
   }
 
-  await prisma.tournament.delete({ where: { id: params.id } });
+  // Same hidden-Assignment issue as the mission DELETE route (see comment
+  // there): cascading through TournamentMission would SET NULL the
+  // Assignment's tournamentMissionId and violate its "lesson or mission"
+  // CHECK constraint. Delete those hidden Assignment rows for every mission
+  // of this tournament first.
+  await prisma.$transaction([
+    prisma.assignment.deleteMany({
+      where: { tournamentMission: { tournamentId: params.id } },
+    }),
+    prisma.tournament.delete({ where: { id: params.id } }),
+  ]);
 
   return NextResponse.json({ ok: true });
 }

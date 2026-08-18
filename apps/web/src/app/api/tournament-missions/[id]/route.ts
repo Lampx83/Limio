@@ -307,7 +307,15 @@ export async function DELETE(
     );
   }
 
-  await prisma.tournamentMission.delete({ where: { id: params.id } });
+  // MANUAL_REVIEW missions auto-create a hidden Assignment (lessonId=NULL,
+  // tournamentMissionId=<mission>). Assignment.tournamentMissionId is
+  // ON DELETE SET NULL, which then violates the "lesson or mission" CHECK
+  // constraint on Assignment (a row can't have both null). Delete the hidden
+  // Assignment first — its submissions cascade with it.
+  await prisma.$transaction([
+    prisma.assignment.deleteMany({ where: { tournamentMissionId: params.id } }),
+    prisma.tournamentMission.delete({ where: { id: params.id } }),
+  ]);
 
   return NextResponse.json({ ok: true });
 }
