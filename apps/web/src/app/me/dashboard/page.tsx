@@ -146,7 +146,7 @@ export default async function LearnerDashboard() {
           icon="✓"
         />
         <Stat
-          label="Skill master"
+          label="Chủ đề đã nắm"
           value={masteredSkills}
           tone="accent"
           icon=""
@@ -284,17 +284,17 @@ export default async function LearnerDashboard() {
           )}
         </section>
 
-        {/* Weak skills */}
+        {/* Weak topics (B1.5) */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Skill cần ôn</h2>
+            <h2 className="text-base font-semibold">Chủ đề cần ôn</h2>
             <Link href="/me/skills" className="link text-sm">
-              Skill profile →
+              Bản đồ chủ đề →
             </Link>
           </header>
           {weakSkills.length === 0 ? (
             <p className="mt-4 text-sm text-muted">
-              Chưa có skill yếu rõ rệt — tiếp tục học để hệ thống đánh giá!
+              Chưa có chủ đề nào yếu rõ rệt — tiếp tục học để hệ thống đánh giá!
             </p>
           ) : (
             <ul className="mt-4 space-y-2">

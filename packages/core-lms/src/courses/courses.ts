@@ -5,6 +5,12 @@ import { logAudit } from "../auth/audit";
 import { uniqueCourseSlug } from "./slug";
 import { assertCanEditCourse, assertIsOwner, CourseAuthzError } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
+import {
+  backfillCourseTags,
+  ensureLessonTag,
+  ensureQuestionTag,
+  isAutoLessonSkillCode,
+} from "./autoTags";
 
 export const CreateCourseInput = z.object({
   title: z.string().min(1).max(200).trim(),
@@ -95,7 +101,7 @@ export async function createCourse(
         level: parsed.data.level ?? "beginner",
         category: parsed.data.category ?? null,
         coverUrl: parsed.data.coverUrl ?? null,
-        personalizationEnabled: parsed.data.personalizationEnabled ?? false,
+        personalizationEnabled: parsed.data.personalizationEnabled ?? true,
         status: "draft",
         version: 1,
       },
@@ -178,6 +184,16 @@ export async function updateCourse(
       },
       db,
     );
+  }
+
+  // B1.5 AC-1.5 — turning personalization on retro-fits tags onto the lessons
+  // and questions that already exist, so the learner surfaces light up without
+  // the instructor doing a manual tagging pass.
+  const personalizationTurnedOn = changes.some(
+    (c) => c.action === AUDITED_FLAGS.personalizationEnabled && c.to,
+  );
+  if (personalizationTurnedOn) {
+    await backfillCourseTags(courseId, { force: true }, db);
   }
 }
 
@@ -294,6 +310,7 @@ export async function publishCourse(
   }
 
   if (course.personalizationEnabled) {
+    await backfillCourseTags(courseId, { force: true }, db);
     const untagged = await db.$queryRaw<Array<{ id: string; title: string }>>`
       SELECT l.id, l.title
       FROM "Lesson" l
@@ -472,12 +489,15 @@ export async function duplicateCourse(
             orderBy: { orderIndex: "asc" },
             include: {
               contentItems: { orderBy: { orderIndex: "asc" } },
-              skillTags: true,
+              skillTags: { include: { skill: { select: { code: true } } } },
               quizzes: {
                 include: {
                   questions: {
                     orderBy: { orderIndex: "asc" },
-                    include: { options: { orderBy: { orderIndex: "asc" } }, skillTags: true },
+                    include: {
+                      options: { orderBy: { orderIndex: "asc" } },
+                      skillTags: { include: { skill: { select: { code: true } } } },
+                    },
                   },
                 },
               },
@@ -549,6 +569,7 @@ export async function duplicateCourse(
           await attachLessonActivity(tx, newLesson.id, "content", newContent.id);
         }
         for (const t of l.skillTags) {
+          if (isAutoLessonSkillCode(t.skill.code)) continue;
           await tx.contentSkillMapping.create({
             data: {
               contentType: "lesson",
@@ -558,6 +579,7 @@ export async function duplicateCourse(
             },
           });
         }
+        await ensureLessonTag(newLesson.id, tx);
         for (const a of l.assignments) {
           const newAssignment = await tx.assignment.create({
             data: {
@@ -612,10 +634,12 @@ export async function duplicateCourse(
               },
             });
             for (const t of qq.skillTags) {
+              if (isAutoLessonSkillCode(t.skill.code)) continue;
               await tx.questionSkillTag.create({
                 data: { questionId: newQuestion.id, skillId: t.skillId },
               });
             }
+            await ensureQuestionTag(newQuestion.id, tx);
           }
         }
       }

@@ -49,7 +49,7 @@ export default function SkipLessonBanner({
             Bạn có thể bỏ qua bài này
           </p>
           <p className="mt-2 text-xs text-success-700/90">
-            Hệ thống thấy bạn đã master các skill liên quan:
+            Hệ thống thấy bạn đã nắm vững các chủ đề liên quan:
           </p>
           <ul className="mt-2 space-y-1">
             {masteries.map((m) => (

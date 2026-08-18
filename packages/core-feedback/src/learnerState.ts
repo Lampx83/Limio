@@ -1,5 +1,5 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { LearningEventType } from "@feedbackme/shared-types";
+import { isAutoLessonSkillCode, LearningEventType } from "@feedbackme/shared-types";
 import { BKT, updateMasteryBkt } from "./bkt";
 
 /**
@@ -233,6 +233,15 @@ export async function getAverageMasteryForQuiz(
   return sum / states.length;
 }
 
+/** Where a tag sits in the course tree — lets the UI group tags by chapter. */
+export interface SkillGroupView {
+  courseId: string;
+  courseSlug: string;
+  courseTitle: string;
+  moduleTitle: string;
+  lessonId: string;
+}
+
 export interface SkillStateView {
   skillId: string;
   skillCode: string;
@@ -242,6 +251,10 @@ export interface SkillStateView {
   correctCount: number;
   /** True if mastery < 0.5 AND attempts ≥ 2 (per AC). */
   isWeak: boolean;
+  /** B1.5 — tag derived from a lesson rather than authored by an instructor. */
+  isAuto: boolean;
+  /** Null when the tag isn't mapped to any lesson (authored, content-less). */
+  group: SkillGroupView | null;
 }
 
 /**
@@ -285,6 +298,11 @@ export async function getLearnerSkillStates(
     orderBy: { masteryProbability: "asc" },
   });
 
+  const groupBySkill = await resolveSkillGroups(
+    states.map((s) => s.skillId),
+    db,
+  );
+
   return states.map((s) => ({
     skillId: s.skillId,
     skillCode: s.skill.code,
@@ -293,5 +311,51 @@ export async function getLearnerSkillStates(
     attempts: s.attempts,
     correctCount: s.correctCount,
     isWeak: s.masteryProbability < 0.5 && s.attempts >= 2,
+    isAuto: isAutoLessonSkillCode(s.skill.code),
+    group: groupBySkill.get(s.skillId) ?? null,
   }));
+}
+
+/**
+ * Map each skill to the lesson it covers, so the learner UI can group tags by
+ * course → chapter instead of showing one flat list. A skill covering several
+ * lessons is filed under the heaviest one.
+ */
+async function resolveSkillGroups(
+  skillIds: string[],
+  db: PrismaClient,
+): Promise<Map<string, SkillGroupView>> {
+  const groups = new Map<string, SkillGroupView>();
+  if (skillIds.length === 0) return groups;
+
+  const mappings = await db.contentSkillMapping.findMany({
+    where: { contentType: "lesson", skillId: { in: skillIds } },
+    orderBy: [{ coverageWeight: "desc" }, { contentId: "asc" }],
+    select: {
+      skillId: true,
+      lesson: {
+        select: {
+          id: true,
+          module: {
+            select: {
+              title: true,
+              course: { select: { id: true, slug: true, title: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  for (const m of mappings) {
+    if (!m.lesson || groups.has(m.skillId)) continue;
+    groups.set(m.skillId, {
+      courseId: m.lesson.module.course.id,
+      courseSlug: m.lesson.module.course.slug,
+      courseTitle: m.lesson.module.course.title,
+      moduleTitle: m.lesson.module.title,
+      lessonId: m.lesson.id,
+    });
+  }
+  return groups;
 }

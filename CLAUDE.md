@@ -74,9 +74,18 @@ Một số namespace chuẩn:
 - `packages/shared-types` chỉ chứa type, không chứa logic.
 - `packages/db` chỉ export Prisma client + types; không chứa business logic.
 
-### 4.4. Tagging skill
+### 4.4. Tagging skill — lesson-as-tag (B1.5)
 
-Mọi `Lesson`, `Quiz`, `QuizQuestion` **phải tag ít nhất 1 skill** trước khi `published`. Bắt buộc ở DB constraint hoặc service-layer validator — đây là điều kiện tiên quyết cho personalization (xem rủi ro §9 spec).
+Skill tag **không còn là việc tay của GV**. Với course có `personalizationEnabled = true`, hệ thống tự sinh 1 `Skill` cho mỗi `Lesson` (code `lesson.<lessonId>`, tên = tiêu đề bài) kèm `ContentSkillMapping`; `QuizQuestion` kế thừa tag của lesson mà quiz gắn vào. Toàn bộ logic ở `packages/core-lms/src/courses/autoTags.ts`, hook vào lesson CRUD + question CRUD + `publishCourse` + lúc bật cờ personalization.
+
+Quy tắc:
+- Tag GV tự tạo **luôn thắng** tag tự sinh; gắn tag tay sẽ gỡ tag tự sinh khỏi câu hỏi đó.
+- Quiz standalone (không gắn lesson) **không** được auto-tag — gap có chủ ý.
+- Course `personalizationEnabled = false` không sinh row nào (LMS thuần, không rác DB).
+- Convention prefix nằm ở `packages/shared-types/src/skills.ts` vì cả core-lms lẫn core-feedback đều cần, mà 2 module không được import nhau.
+- Dữ liệu cũ: `pnpm backfill:lesson-tags` (idempotent, chỉ đụng course đã bật personalization).
+
+Skill graph (`SkillPrerequisite`) vẫn còn trong schema nhưng **không được Feedback Engine dùng** — không build tính năng mới dựa vào nó.
 
 ### 4.5. Migrations & schema
 
@@ -124,7 +133,7 @@ Năm nguyên tắc dưới đây tổng hợp từ spec §6.1 (event-driven boun
 
 2. **Module giao tiếp qua event và bridge tables, không bao giờ qua import trực tiếp.** core-feedback không gọi function của core-gamification. Nếu gamification cần biết learner đã master skill nào → đọc `LearnerSkillState`. Nếu feedback cần biết learner đã được award XP nào → đọc `XpTransaction` hoặc subscribe event. Vi phạm điều này ⇒ refactor 3 module thành 1 monolith trong vòng 6 tháng (rủi ro "3 module coupling quá chặt", §9).
 
-3. **Tag skill là tiền đề cho mọi personalization.** Reject lesson/quiz/question chưa tag skill ở publish-time. Không có skill tag ⇒ không có learner model ⇒ không có feedback ⇒ không có adaptive path ⇒ không có skill badge. Đây là rủi ro "high" trong §9 ("Instructor không tag skill chi tiết → personalization yếu"). Build LLM tagger semi-auto từ Phase 0, không để Phase 3 mới làm.
+3. **Tag skill là tiền đề cho mọi personalization — nên nó phải tự động.** Không có skill tag ⇒ không có learner model ⇒ không có feedback ⇒ không có adaptive path ⇒ không có skill badge. Rủi ro "high" trong §9 ("Instructor không tag skill chi tiết → personalization yếu") được xử lý bằng cách bỏ hẳn bước tag tay: lesson-as-tag (§4.4) sinh tag từ cấu trúc khoá học. Khi thêm loại nội dung mới có thể sinh câu hỏi, **phải hook auto-tag vào đường tạo đó** — quên hook = nội dung đó vô hình với personalization.
 
 4. **Privacy & GDPR là default, không phải feature riêng.** Learner profile (BKT state, misconception flags, mastery probabilities) là dữ liệu nhạy cảm. Mọi endpoint expose dữ liệu này phải authenticate + authorize. Cung cấp export & delete API cho learner ngay từ A1 — đừng để dồn cuối Phase 4. Audit log mọi role change (§3.1 spec). Hide rank quá thấp trên leaderboard, opt-out leaderboard hoàn toàn được, display name không bắt buộc real name.
 

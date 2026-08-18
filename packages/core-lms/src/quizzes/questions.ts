@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse } from "../courses/authz";
+import { dropAutoTagFromQuestion, ensureQuestionTag } from "../courses/autoTags";
 import { QuizError } from "./types";
 
 const OptionInput = z.object({
@@ -256,6 +257,8 @@ export async function createQuestion(
         data: input.skillIds.map((skillId) => ({ questionId: q.id, skillId })),
         skipDuplicates: true,
       });
+    } else {
+      await ensureQuestionTag(q.id, tx);
     }
     return { questionId: q.id };
   });
@@ -332,6 +335,8 @@ export async function updateQuestion(
           data: skillIds.map((skillId) => ({ questionId, skillId })),
           skipDuplicates: true,
         });
+      } else {
+        await ensureQuestionTag(questionId, tx);
       }
     }
   });
@@ -361,6 +366,7 @@ export async function tagQuestionSkill(
   });
   if (existing) return { created: false };
   await db.questionSkillTag.create({ data: { questionId, skillId } });
+  await dropAutoTagFromQuestion(questionId, skillId, db);
   return { created: true };
 }
 

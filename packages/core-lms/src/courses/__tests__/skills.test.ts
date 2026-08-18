@@ -39,7 +39,7 @@ describe("skills", () => {
     const r2 = await tagLessonSkill(userId, lessonId, { skillId: s.skillId });
     expect(r2.created).toBe(false);
     const mappings = await prisma.contentSkillMapping.findMany({
-      where: { contentType: "lesson", contentId: lessonId },
+      where: { contentType: "lesson", contentId: lessonId, skillId: s.skillId },
     });
     expect(mappings).toHaveLength(1);
   });
@@ -50,7 +50,7 @@ describe("skills", () => {
     await tagLessonSkill(userId, lessonId, { skillId: s.skillId });
     await untagLessonSkill(userId, lessonId, s.skillId);
     const mappings = await prisma.contentSkillMapping.findMany({
-      where: { contentType: "lesson", contentId: lessonId },
+      where: { contentType: "lesson", contentId: lessonId, skillId: s.skillId },
     });
     expect(mappings).toHaveLength(0);
   });

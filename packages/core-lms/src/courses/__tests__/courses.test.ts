@@ -25,11 +25,16 @@ async function makeUser(email: string) {
   return r.userId;
 }
 
-async function buildCourseTree(ownerId: string, slugBase = "demo") {
+async function buildCourseTree(
+  ownerId: string,
+  slugBase = "demo",
+  personalizationEnabled = true,
+) {
   const c = await createCourse(ownerId, {
     title: "Demo course",
     description: "A demo course for testing.",
     slug: slugBase,
+    personalizationEnabled,
   });
   const m = await createModule(ownerId, c.courseId, { title: "M1", orderIndex: 0 });
   const l1 = await createLesson(ownerId, m.moduleId, { title: "L1", orderIndex: 0 });
@@ -93,22 +98,24 @@ describe("createCourse", () => {
 });
 
 describe("publish flow", () => {
-  it("AC-A2.6: rejects publish when any lesson lacks skill tag (personalization on)", async () => {
+  it("AC-B1.5-3.1: publish backfills the missing tag instead of rejecting", async () => {
     const ownerId = await makeUser("o1@example.com");
     const { courseId, lessonIds } = await buildCourseTree(ownerId, "p1");
     await updateCourse(ownerId, courseId, { personalizationEnabled: true });
-    // Tag only l1, not l2.
+    // Hand-tag l1 only; l2 relies on its auto tag.
     const s = await createSkill({ code: "skill.x", name: "X" });
     await tagLessonSkill(ownerId, lessonIds[0]!, { skillId: s.skillId });
 
-    await expect(publishCourse(ownerId, courseId)).rejects.toMatchObject({
-      code: "lessons_missing_skills",
-    });
+    await publishCourse(ownerId, courseId);
 
-    // Course still draft.
     const c = await prisma.course.findUniqueOrThrow({ where: { id: courseId } });
-    expect(c.status).toBe("draft");
-    expect(c.publishedAt).toBeNull();
+    expect(c.status).toBe("published");
+    for (const lessonId of lessonIds) {
+      const tags = await prisma.contentSkillMapping.count({
+        where: { contentType: "lesson", contentId: lessonId },
+      });
+      expect(tags).toBeGreaterThan(0);
+    }
   });
 
   it("AC-A2.7: publishes when all lessons tagged (personalization on)", async () => {
@@ -125,10 +132,10 @@ describe("publish flow", () => {
     expect(c.publishedAt).toBeInstanceOf(Date);
   });
 
-  it("personalization off (default): publishes despite untagged lessons", async () => {
+  it("personalization off: publishes despite untagged lessons", async () => {
     const ownerId = await makeUser("o-perso-off@example.com");
-    const { courseId } = await buildCourseTree(ownerId, "p-perso-off");
-    // Default false — no skill tags, no toggle change. Should publish.
+    const { courseId } = await buildCourseTree(ownerId, "p-perso-off", false);
+    // Plain LMS course — no skill tags, none auto-provisioned. Should publish.
     await publishCourse(ownerId, courseId);
     const c = await prisma.course.findUniqueOrThrow({ where: { id: courseId } });
     expect(c.status).toBe("published");
@@ -140,6 +147,7 @@ describe("publish flow", () => {
     const c = await createCourse(ownerId, {
       title: "Toggle test",
       description: "x",
+      personalizationEnabled: false,
     });
     await updateCourse(ownerId, c.courseId, { personalizationEnabled: true });
     const entry = await prisma.auditLog.findFirst({
@@ -185,7 +193,11 @@ describe("publish flow", () => {
 
   it("toggling both flags at once audits each independently", async () => {
     const ownerId = await makeUser("o-both-flags@example.com");
-    const c = await createCourse(ownerId, { title: "Both flags", description: "x" });
+    const c = await createCourse(ownerId, {
+      title: "Both flags",
+      description: "x",
+      personalizationEnabled: false,
+    });
     await updateCourse(ownerId, c.courseId, {
       personalizationEnabled: true,
       publicAccess: true,

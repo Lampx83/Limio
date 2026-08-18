@@ -702,7 +702,10 @@ model ContentSkillMapping {
 
   skill  Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
   // Soft FK to Lesson (only when contentType = "lesson") — enforced app-side.
-  lesson Lesson? @relation("LessonSkill", fields: [contentId], references: [id], map: "csm_lesson_fk")
+  // Cascade, not the Prisma default Restrict: a mapping is meaningless once its
+  // lesson is gone, and Restrict blocked every lesson/module/course delete once
+  // B1.5 started tagging every lesson.
+  lesson Lesson? @relation("LessonSkill", fields: [contentId], references: [id], onDelete: Cascade, map: "csm_lesson_fk")
 
   @@unique([contentType, contentId, skillId])
   @@index([skillId])

@@ -9,4 +9,5 @@ export * from "./lessons";
 export * from "./contents";
 export * from "./lessonActivity";
 export * from "./skills";
+export * from "./autoTags";
 export * from "./assignments";
