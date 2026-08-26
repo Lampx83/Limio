@@ -114,3 +114,49 @@ describe("listExamRuns", () => {
     expect(runs.some((r) => r.examId === s.examId)).toBe(false);
   });
 });
+
+describe("lọc lịch sử theo hình thức tổ chức", () => {
+  it("link nhanh ghi scale=simple, không lẫn vào lịch sử kỳ thi", async () => {
+    const s = await setup("scale-simple");
+    const shared = await shareExamLink(s.ownerId, s.examId);
+
+    const simple = await listExamRuns(s.ownerId, {
+      purpose: "assessment",
+      scale: "simple",
+    });
+    expect(simple.some((r) => r.sessionId === shared.sessionId)).toBe(true);
+
+    const formal = await listExamRuns(s.ownerId, { scale: "formal" });
+    expect(formal.some((r) => r.sessionId === shared.sessionId)).toBe(false);
+  });
+
+  it("ca sinh ra từ đường đợt/ca mặc định là formal", async () => {
+    const s = await setup("scale-formal");
+    await publishExam(s.ownerId, s.examId);
+    const sessionId = await ensureDefaultSession(s.examId);
+
+    const formal = await listExamRuns(s.ownerId, { scale: "formal" });
+    expect(formal.some((r) => r.sessionId === sessionId)).toBe(true);
+  });
+
+  it("đề thử nghiệm không lẫn vào lịch sử link nhanh", async () => {
+    const s = await setup("scale-ft");
+    await prisma.exam.update({
+      where: { id: s.examId },
+      data: { purpose: "field_test" },
+    });
+    const shared = await shareExamLink(s.ownerId, s.examId);
+
+    const quick = await listExamRuns(s.ownerId, {
+      purpose: "assessment",
+      scale: "simple",
+    });
+    expect(quick.some((r) => r.sessionId === shared.sessionId)).toBe(false);
+
+    const ft = await listExamRuns(s.ownerId, {
+      purpose: "field_test",
+      scale: "simple",
+    });
+    expect(ft.some((r) => r.sessionId === shared.sessionId)).toBe(true);
+  });
+});

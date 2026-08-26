@@ -26,6 +26,7 @@ export interface ExamRun {
   path: string | null;
   /** open_code | assigned_code | authenticated — quyết định cách thí sinh vào. */
   accessMode: string;
+  scale: "simple" | "formal";
   timingMode: "scheduled" | "manual";
   /** Null với ca thủ công — nó đóng khi giáo viên bấm. */
   closesAt: string | null;
@@ -36,7 +37,13 @@ export interface ExamRun {
 
 export async function listExamRuns(
   actorUserId: string,
-  opts: { limit?: number } = {},
+  opts: {
+    limit?: number;
+    /** Lọc theo mục đích của gói đề — đo học sinh hay đo câu hỏi. */
+    purpose?: "assessment" | "field_test";
+    /** Lọc theo quy mô tổ chức — một buổi đơn giản hay kỳ thi nhiều ca. */
+    scale?: "simple" | "formal";
+  } = {},
   db: PrismaClient = prisma,
 ): Promise<ExamRun[]> {
   const rows = await db.examSession.findMany({
@@ -44,8 +51,10 @@ export async function listExamRuns(
       // MỌI lần thi, không chỉ lần phát bằng link nhanh. Lọc theo openCode như
       // trước sẽ giấu mất toàn bộ kỳ thi tổ chức theo đường đợt/ca/phòng — nơi
       // thí sinh dùng mã cấp riêng hoặc vào bằng tài khoản đã ghi danh.
+      ...(opts.scale ? { scale: opts.scale } : {}),
       exam: {
         status: { not: "archived" },
+        ...(opts.purpose ? { purpose: opts.purpose } : {}),
         course: { instructors: { some: { userId: actorUserId } } },
       },
     },
@@ -57,6 +66,7 @@ export async function listExamRuns(
       timingMode: true,
       status: true,
       accessMode: true,
+      scale: true,
       durationOverrideMin: true,
       exam: {
         select: { id: true, title: true, courseId: true, durationMin: true },
@@ -102,6 +112,7 @@ export async function listExamRuns(
     code: r.openCode,
     path: r.openCode ? `/exam/${r.openCode}` : null,
     accessMode: r.accessMode,
+    scale: r.scale,
     timingMode: r.timingMode,
     closesAt: r.closesAt?.toISOString() ?? null,
     durationMin: r.durationOverrideMin ?? r.exam.durationMin,

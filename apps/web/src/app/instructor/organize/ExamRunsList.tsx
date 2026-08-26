@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Download } from "lucide-react";
 import type { ExamRun } from "@feedbackme/core-lms";
 import { apiUrl } from "@/lib/apiUrl";
 
@@ -17,25 +17,32 @@ const fmt = (iso: string) =>
   });
 
 /**
- * Danh sách các LẦN THI — nhà của buổi thi, danh từ thứ hai bên cạnh gói đề.
+ * Lịch sử các lần thi CÙNG MỘT DẠNG.
  *
- * Không giẫm chân tab Kết quả của gói đề: ở đó là "gói đề này chạy ra sao" gộp
- * mọi lần; ở đây là "buổi hôm đó ra sao" của từng lần chạy.
+ * Mỗi hình thức tổ chức có trang riêng, và lịch sử tách theo hình thức chứ
+ * không gộp một chỗ: kỳ thi cuối kỳ cần thấy ca/phòng/giám thị, còn link nhanh
+ * chỉ cần mã và số người nộp.
  */
-export default function ExamRunsList({ runs }: { runs: ExamRun[] }) {
+export default function ExamRunsList({
+  runs,
+  emptyHint,
+}: {
+  runs: ExamRun[];
+  emptyHint?: string;
+}) {
   const open = runs.filter((r) => r.isOpen);
   const past = runs.filter((r) => !r.isOpen);
 
   if (runs.length === 0) {
     return (
-      <p className="mt-6 rounded-lg border border-default bg-white px-4 py-6 text-center text-sm text-faint">
-        Chưa có lần thi nào. Chọn một hình thức bên trên để bắt đầu.
+      <p className="rounded-lg border border-default bg-white px-4 py-6 text-center text-sm text-faint">
+        {emptyHint ?? "Chưa có lần thi nào."}
       </p>
     );
   }
 
   return (
-    <div className="mt-8 space-y-6">
+    <div className="space-y-6">
       {open.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold">
@@ -156,6 +163,16 @@ function Row({ r }: { r: ExamRun }) {
         >
           Kết quả
         </Link>
+        <a
+          href={apiUrl(
+            `/api/exams/${r.examId}/results?sessionId=${r.sessionId}`,
+          )}
+          className="inline-flex items-center gap-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
+          title="Tải kết quả thí sinh của lần thi này"
+        >
+          <Download className="h-3 w-3 shrink-0" />
+          Tải
+        </a>
         {r.timingMode === "manual" && (
           <button
             type="button"

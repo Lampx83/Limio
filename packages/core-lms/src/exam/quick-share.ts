@@ -28,6 +28,8 @@ export async function shareExamLink(
     /** Chỉ dùng khi timingMode = "scheduled". */
     opensAt?: Date;
     closesAt?: Date;
+    /** Quy mô tổ chức — mặc định "simple" vì hàm này phục vụ luồng phát link. */
+    scale?: "simple" | "formal";
   } = {},
   db: PrismaClient = prisma,
 ): Promise<{
@@ -124,6 +126,7 @@ export async function shareExamLink(
           // chạy 15 phút ở lớp này và 30 phút ở lớp kia (kéo dài cho HS cần
           // hỗ trợ). Exam.durationMin chỉ còn là giá trị mặc định.
           durationOverrideMin: opts.durationMin ?? null,
+          scale: opts.scale ?? "simple",
         },
         select: { id: true },
       });
