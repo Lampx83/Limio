@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { withBasePath } from "@/lib/apiUrl";
 import { useRouter } from "next/navigation";
 
 type AccessMode = "authenticated" | "open_code" | "assigned_code";
@@ -117,7 +118,12 @@ export default function AccessPanel({
   };
 
   const shareUrl =
-    openCode && mode === "open_code" ? `${origin}/exam/${openCode}` : null;
+    openCode && mode === "open_code"
+      // withBasePath chứ không nối thẳng: production chạy dưới một tiền tố
+      // đường dẫn, thiếu nó thì link chia sẻ ra 404. Giữ prop `origin` (server
+      // truyền xuống) để bản render phía server không lệch bản client.
+      ? `${origin}${withBasePath(`/exam/${openCode}`)}`
+      : null;
 
   return (
     <section

@@ -9,7 +9,7 @@ export const runtime = "nodejs";
  * "Mở buổi thi" — publish đề, dựng ca + phòng mặc định, sinh mã dự thi, trả link.
  * Gọi lại trên buổi đã mở thì trả đúng mã cũ.
  *
- * Body: { timingMode?, durationMin?, opensAt?, closesAt?, revealAnswers? }
+ * Body: { timingMode?, durationMin?, opensAt?, closesAt?, revealAnswers?, purpose? }
  *
  * Thời lượng và giờ thuộc BUỔI THI, không thuộc gói đề.
  */
@@ -27,6 +27,7 @@ export async function POST(
     opensAt?: unknown;
     closesAt?: unknown;
     revealAnswers?: unknown;
+    purpose?: unknown;
   } | null;
   const timingMode =
     body?.timingMode === "scheduled" ? ("scheduled" as const) : ("manual" as const);
@@ -46,6 +47,10 @@ export async function POST(
     body?.revealAnswers === "after_close"
       ? body.revealAnswers
       : undefined;
+  const purpose =
+    body?.purpose === "assessment" || body?.purpose === "field_test"
+      ? body.purpose
+      : undefined;
 
   try {
     const r = await shareExamLink(userId, params.id, {
@@ -54,6 +59,7 @@ export async function POST(
       opensAt,
       closesAt,
       revealAnswers,
+      purpose,
     });
     return NextResponse.json(r);
   } catch (e) {

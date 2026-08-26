@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 
 type Section = {
   id: string;
@@ -117,10 +117,8 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
     }
   };
 
-  const inviteUrl = (inviteCode: string) =>
-    typeof window !== "undefined"
-      ? `${window.location.origin}/enroll/${inviteCode}`
-      : `/enroll/${inviteCode}`;
+  // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
+  const inviteUrl = (inviteCode: string) => shareUrl(`/enroll/${inviteCode}`);
 
   const onCopyLink = async (id: string, inviteCode: string) => {
     try {

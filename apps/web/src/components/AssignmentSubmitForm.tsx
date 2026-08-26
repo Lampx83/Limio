@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import {
   GENERATIVE_PRESETS,
   acceptForFormat,
@@ -56,7 +56,9 @@ export default function AssignmentSubmitForm({
         });
       } else {
         const d = (await res.json()) as { url: string };
-        const absolute = new URL(d.url, window.location.origin).toString();
+        // d.url là đường dẫn API của Next (/api/assignment-media/...), nên
+        // nó cũng cần tiền tố như mọi đường dẫn nội bộ khác.
+        const absolute = shareUrl(d.url);
         setAttachmentUrl(absolute);
         toast.success("Đã tải file lên");
       }

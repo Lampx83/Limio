@@ -2,8 +2,22 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, Copy } from "lucide-react";
-import { apiUrl } from "@/lib/apiUrl";
+import { Check, Copy, QrCode } from "lucide-react";
+import dynamic from "next/dynamic";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
+
+const QRCode = dynamic(
+  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="rounded-lg border border-emerald-300 bg-white"
+        style={{ width: 180, height: 180 }}
+      />
+    ),
+  },
+);
 
 type RevealPolicy = "immediately" | "never" | "after_close";
 
@@ -13,7 +27,6 @@ interface Paper {
   courseId: string;
   courseTitle: string;
   questionCount: number;
-  defaultDurationMin: number;
 }
 
 /** datetime-local cần giờ ĐỊA PHƯƠNG, không phải ISO UTC. */
@@ -44,9 +57,14 @@ export default function QuickExamForm({
     [papers, paperId],
   );
 
-  const [durationMin, setDurationMin] = useState(
-    papers[0]?.defaultDurationMin ?? 15,
-  );
+  // 15 phút cố định, KHÔNG lấy theo durationMin của gói đề.
+  //
+  // Thời lượng thuộc buổi thi chứ không thuộc gói đề (xem quick-share.ts) —
+  // cùng một gói chạy 15 phút ở lớp này, 30 phút ở lớp kia. Lấy theo gói đề
+  // thì con số nhảy mỗi lần đổi gói, và nhảy về một giá trị đặt từ hồi soạn
+  // đề, chẳng liên quan buổi đang mở. 15 phút hợp với thứ màn này phục vụ:
+  // khảo sát, điểm danh, kiểm tra nhanh tại lớp.
+  const [durationMin, setDurationMin] = useState(15);
   // Mặc định khác nhau theo mục đích, vì rủi ro khác nhau: đề thử nghiệm mà
   // lộ đáp án là đốt câu hỏi, không dùng lại được cho đợt sau.
   const [reveal, setReveal] = useState<RevealPolicy>(
@@ -68,12 +86,11 @@ export default function QuickExamForm({
     sessionId: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
 
-  const onPickPaper = (id: string) => {
-    setPaperId(id);
-    const p = papers.find((x) => x.id === id);
-    if (p) setDurationMin(p.defaultDurationMin);
-  };
+  // Đổi gói đề KHÔNG đụng tới thời lượng đã gõ — thời lượng là lựa chọn cho
+  // buổi thi, người dùng vừa đặt nó thì đừng giật lại.
+  const onPickPaper = (id: string) => setPaperId(id);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +108,9 @@ export default function QuickExamForm({
           timingMode: scheduled ? "scheduled" : "manual",
           durationMin,
           revealAnswers: reveal,
+          // Mục đích thuộc BUỔI THI: cùng một gói đề, mở từ trang thử nghiệm
+          // thì buổi đó là đợt thử; mở từ link nhanh thì là bài thi thật.
+          purpose,
           ...(scheduleOpen ? { opensAt: new Date(opensAt).toISOString() } : {}),
           ...(scheduleClose ? { closesAt: new Date(closesAt).toISOString() } : {}),
         }),
@@ -120,8 +140,7 @@ export default function QuickExamForm({
     return (
       <div className="mt-6 rounded-lg border border-default bg-white p-5">
         <p className="text-sm">
-          Chưa có gói đề nào
-          {purpose === "field_test" ? " dành cho thử nghiệm" : ""} có câu hỏi.
+          Chưa có gói đề nào có câu hỏi.
         </p>
         <p className="mt-1 text-caption text-faint">
           Gói đề là phần nội dung — soạn ở mục Đề thi, rồi quay lại đây để mở
@@ -138,10 +157,9 @@ export default function QuickExamForm({
   }
 
   if (result) {
-    const fullUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}${result.path}`
-        : result.path;
+    // shareUrl, KHÔNG ghép tay với window.location.origin: production chạy
+    // dưới một tiền tố đường dẫn nên ghép tay ra link thiếu tiền tố → 404.
+    const fullUrl = shareUrl(result.path);
     return (
       <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-5">
         <p className="text-sm font-medium text-emerald-900">Đã mở buổi thi.</p>
@@ -165,25 +183,57 @@ export default function QuickExamForm({
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </button>
+          <button
+            type="button"
+            onClick={() => setShowQr((v) => !v)}
+            aria-expanded={showQr}
+            className={`rounded border border-emerald-300 p-1.5 text-emerald-800 hover:bg-emerald-100 ${
+              showQr ? "bg-emerald-100" : ""
+            }`}
+            aria-label={showQr ? "Ẩn mã QR" : "Hiện mã QR"}
+          >
+            <QrCode className="h-4 w-4" />
+          </button>
         </div>
+
+        {showQr && (
+          <div className="mt-3 flex flex-col items-start gap-2">
+            {/* Nền trắng + viền quiet zone: QR trên nền màu hoặc sát mép thì
+                máy quét hay không bắt được. */}
+            <div className="rounded-lg border border-emerald-300 bg-white p-3">
+              <QRCode value={fullUrl} size={180} level="M" />
+            </div>
+            <p className="text-caption text-emerald-800">
+              Chiếu lên màn hình để cả lớp quét. Ai không quét được thì gõ mã{" "}
+              <span className="font-mono font-semibold">{result.code}</span>.
+            </p>
+          </div>
+        )}
         <p className="mt-2 break-all text-caption text-emerald-800">{fullUrl}</p>
-        <div className="mt-4 flex gap-2">
+        {/* Không nút nào nổi bật ở đây. Vừa mở xong thì việc của giáo viên là
+            phát link/QR ở trên — đã xong. "Xem kết quả" từng là nút chính màu
+            xanh đậm, mà lúc đó chưa ai vào thi nên nó mời người ta đi tới một
+            trang trống. Cả hai nay là liên kết chữ, để lúc nào cần thì có. */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Link
+            href="/instructor/organize"
+            className="text-sm text-emerald-900 underline underline-offset-2"
+          >
+            Mở buổi khác
+          </Link>
           <Link
             // Trang gói đề KHÔNG có tab "Kết quả" (bỏ có chủ ý — kết quả nói
             // về ai đã làm, mà "ai" thuộc buổi thi chứ không thuộc gói đề).
             // Link cũ trỏ ?tab=results, parseExamTab không nhận ra nên rơi về
             // tab Tổng quan — bấm "Xem kết quả" lại về màn soạn đề.
             href={`/instructor/exam-runs/${result.sessionId}`}
-            className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+            className="text-sm text-emerald-800 underline underline-offset-2"
           >
             Xem kết quả
           </Link>
-          <Link
-            href="/instructor/organize"
-            className="rounded border border-emerald-300 px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Mở buổi khác
-          </Link>
+          <span className="text-caption text-emerald-800">
+            Kết quả hiện dần khi học sinh nộp.
+          </span>
         </div>
       </div>
     );
@@ -252,19 +302,24 @@ export default function QuickExamForm({
         )}
       </label>
 
-      <div className="rounded border border-default bg-white">
+      {/* Chỉ là một liên kết, không phải ô nhập.
+          Trước đây nó là hộp có viền trắng full-width, trông y hệt ba ô nhập
+          phía trên — mắt đọc thành "ô thứ tư" rồi khựng lại vì không nhập
+          được gì. Phần lớn buổi kiểm tra tại lớp không cần hẹn giờ, nên thứ
+          này phải lùi hẳn ra sau, không tranh chỗ với thứ người ta thật sự
+          phải điền. */}
+      <div>
         <button
           type="button"
           onClick={() => setAdvanced((v) => !v)}
-          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium"
+          className="text-sm text-blue-700 underline underline-offset-2 hover:text-blue-800"
           aria-expanded={advanced}
         >
-          <span>Tuỳ chọn nâng cao — giờ mở/đóng</span>
-          <span className="text-faint">{advanced ? "−" : "+"}</span>
+          {advanced ? "Ẩn tuỳ chọn nâng cao" : "Tuỳ chọn nâng cao — giờ mở/đóng"}
         </button>
 
         {advanced && (
-          <div className="space-y-3 border-t border-default px-3 py-3">
+          <div className="mt-3 space-y-3 border-l-2 border-default pl-3">
             <TimeRow
               label="Hẹn giờ mở"
               hintOff="Bài mở ngay, không chờ giờ."
@@ -333,21 +388,37 @@ function TimeRow({
     <div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium">{label}</span>
+        {/* Công tắc kèm chữ Bật/Tắt ngay bên cạnh, theo mẫu Teams. Chỉ nhìn
+            màu và vị trí núm thì phải biết trước quy ước mới đọc được trạng
+            thái; có chữ thì đọc thẳng. Chữ cũng là vùng bấm luôn — đích bấm
+            rộng gấp đôi, và người dùng hay bấm vào nhãn thay vì cái núm. */}
         <button
           type="button"
           role="switch"
           aria-checked={on}
           aria-label={label}
           onClick={() => setOn(!on)}
-          className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-            on ? "bg-emerald-600" : "bg-slate-300"
-          }`}
+          className="flex shrink-0 items-center gap-2"
         >
           <span
-            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-              on ? "translate-x-4" : "translate-x-0.5"
+            className={`relative block h-5 w-9 rounded-full transition-colors ${
+              on ? "bg-emerald-600" : "bg-slate-300"
             }`}
-          />
+          >
+            <span
+              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                on ? "translate-x-4" : "translate-x-0.5"
+              }`}
+            />
+          </span>
+          {/* w-7 cố định: "Bật" và "Tắt" khác độ rộng, để tự co thì cả hàng
+              nhích mỗi lần bấm. */}
+          <span
+            aria-hidden="true"
+            className={`w-7 text-sm ${on ? "font-medium text-ink" : "text-faint"}`}
+          >
+            {on ? "Bật" : "Tắt"}
+          </span>
         </button>
       </div>
       {on && (

@@ -26,14 +26,17 @@ export default async function OrganizeFieldTestPage() {
       where: {
         courseId: { in: courses.map((c) => c.id) },
         status: { not: "archived" },
-        purpose: "field_test",
+        // KHÔNG lọc theo purpose. Thử nghiệm là tính chất của BUỔI THI, nên
+        // gói đề bình thường cũng đem đo chất lượng câu hỏi được — đó mới là
+        // việc giáo viên hay làm. Lọc `purpose: "field_test"` như trước khiến
+        // danh sách luôn rỗng, vì mọi đường tạo gói đề đều ghi cứng
+        // "assessment" và không màn nào cho đổi lúc tạo.
         questions: { some: {} },
       },
       select: {
         id: true,
         title: true,
         courseId: true,
-        durationMin: true,
         _count: { select: { questions: true } },
       },
       orderBy: { updatedAt: "desc" },
@@ -70,7 +73,6 @@ export default async function OrganizeFieldTestPage() {
             courseId: p.courseId,
             courseTitle: courseTitleById.get(p.courseId) ?? "",
             questionCount: p._count.questions,
-            defaultDurationMin: p.durationMin,
           }))}
         />
       )}

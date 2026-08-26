@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { AVATARS } from "@/lib/gameshow/avatars";
 import { computeTeamStandings, emojiForColorKey, teamColorClasses } from "@/lib/gameshow/teams";
 import type { TeamMeta } from "@/lib/gameshow/teams";
@@ -212,8 +212,9 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
     );
   }
 
-  const joinUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/play/${snap.code}` : "";
+  // shareUrl lo tiền tố đường dẫn của production; ghép tay với origin thì
+  // link và mã QR đều thiếu tiền tố → người quét vào 404.
+  const joinUrl = shareUrl(`/play/${snap.code}`);
   const currentQuestion = snap.questions[snap.currentQuestionIndex];
   const sorted = [...participants].sort((a, b) => b.totalScore - a.totalScore);
 

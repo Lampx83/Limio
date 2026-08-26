@@ -52,7 +52,6 @@ export default async function OrganizePage() {
             title="Link thi nhanh"
             blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp."
             detail="Chọn gói đề, đặt thời lượng. Mở ngay, đóng khi bạn bấm."
-            cta="Mở buổi thi"
             lead
           />
           <OptionCard
@@ -61,15 +60,13 @@ export default async function OrganizePage() {
             title="Thử nghiệm câu hỏi"
             blurb="Đo chất lượng câu trước khi kết nạp vào ngân hàng."
             detail="Chở được câu chưa kết nạp. Không hiện đáp án, để không đốt câu hỏi."
-            cta="Mở đợt thử"
           />
           <OptionCard
             href="/instructor/organize/formal"
             icon={<CalendarCheck className="h-5 w-5 shrink-0 text-amber-600" />}
-            title="Kỳ thi cuối kỳ"
+            title="Kỳ thi chính thức"
             blurb="Nhiều ca, nhiều phòng, có giám thị."
             detail="Chia ca, xếp phòng, cấp mã từng thí sinh, in phiếu."
-            cta="Bắt đầu"
           />
         </div>
       )}
@@ -85,13 +82,20 @@ export default async function OrganizePage() {
   );
 }
 
+/**
+ * Cả thẻ LÀ cái nút, không có nút con bên trong.
+ *
+ * Trước đây mỗi thẻ có thêm một <span> giả dạng nút ("Mở buổi thi", "Bắt
+ * đầu"…). Nhưng cả thẻ vốn đã là <Link> tới cùng đường dẫn, nên cái nút đó
+ * không đi đâu khác — nó chỉ làm người dùng tưởng phải nhắm trúng nó, trong
+ * khi bấm chỗ nào trong thẻ cũng được. Ba lựa chọn giờ là ba nút to.
+ */
 function OptionCard({
   href,
   icon,
   title,
   blurb,
   detail,
-  cta,
   lead,
 }: {
   href: string;
@@ -99,29 +103,29 @@ function OptionCard({
   title: string;
   blurb: string;
   detail: string;
-  cta: string;
   lead?: boolean;
 }) {
   return (
     <Link
       href={href}
-      className={`flex flex-col rounded-lg border bg-white p-4 transition-shadow hover:shadow-md ${
+      className={`group flex flex-col rounded-lg border bg-white p-4 transition-shadow hover:shadow-md ${
         lead ? "border-emerald-400" : "border-default"
       }`}
     >
       {icon}
-      <h2 className="mt-2 text-base font-semibold">{title}</h2>
+      <h2 className="mt-2 flex items-center gap-1.5 text-base font-semibold">
+        {title}
+        {/* Mũi tên là dấu hiệu duy nhất còn lại rằng thẻ bấm được. Nó nhích
+            khi rê chuột nên không cần viền nút để trông "bấm được". */}
+        <span
+          aria-hidden="true"
+          className="text-faint transition-transform group-hover:translate-x-0.5"
+        >
+          →
+        </span>
+      </h2>
       <p className="mt-1 text-sm text-ink-2">{blurb}</p>
       <p className="mt-2 text-caption text-faint">{detail}</p>
-      <span
-        className={`mt-3 inline-block self-start rounded px-3 py-1 text-xs font-medium ${
-          lead
-            ? "bg-emerald-600 text-white"
-            : "border border-default text-faint"
-        }`}
-      >
-        {cta} →
-      </span>
     </Link>
   );
 }

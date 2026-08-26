@@ -47,8 +47,33 @@ function detectBasePath(): string {
 }
 
 export function apiUrl(path: string): string {
+  return withBasePath(path);
+}
+
+/**
+ * Gắn tiền tố base path vào một đường dẫn nội bộ.
+ *
+ * `apiUrl` là tên cũ, giữ lại vì đã dùng ở nhiều chỗ — nhưng việc nó làm
+ * không dính gì tới API, mà là "đường dẫn này phải có tiền tố của app".
+ */
+export function withBasePath(path: string): string {
   if (_cachedBase === undefined) {
     _cachedBase = detectBasePath();
   }
   return `${_cachedBase}${path}`;
+}
+
+/**
+ * Link TUYỆT ĐỐI để đưa cho người khác — dán vào chat, in ra, làm mã QR.
+ *
+ * Phải đi qua đây chứ không tự ghép `window.location.origin + path`. Trên
+ * production app nằm dưới một tiền tố (basePath, ví dụ /limio), nên ghép tay
+ * ra `https://limio.vn/exam/ABC123` trong khi link thật là
+ * `https://limio.vn/limio/exam/ABC123` — người nhận bấm vào thì 404. Dev
+ * không lộ lỗi này vì tiền tố rỗng.
+ */
+export function shareUrl(path: string): string {
+  const withPrefix = withBasePath(path);
+  if (typeof window === "undefined") return withPrefix;
+  return `${window.location.origin}${withPrefix}`;
 }

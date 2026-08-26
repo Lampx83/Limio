@@ -664,7 +664,7 @@ function BulkCreateSessionsDialog({
   const [count, setCount] = useState(3);
   const [prefix, setPrefix] = useState("Ca");
   const [mode, setMode] = useState<"assigned_code" | "open_code" | null>(null);
-  // Kỳ thi cuối kỳ mặc định "sau khi đóng ca": vẫn giữ kín trong lúc thi,
+  // Kỳ thi chính thức mặc định "sau khi đóng ca": vẫn giữ kín trong lúc thi,
   // nhưng cả lớp nộp xong thì cho xem lại — nhu cầu chữa đề của thi thật.
   const [reveal, setReveal] = useState<
     "immediately" | "never" | "after_close"

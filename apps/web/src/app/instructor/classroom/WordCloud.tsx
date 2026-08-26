@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Cloud, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
 
 const QRCode = dynamic(
@@ -207,8 +207,9 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
     return 0.875 + (frequency / maxFrequency) * (2.5 - 0.875);
   };
 
+  // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
   const cloudUrl = currentCloud && !isStateless
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/learn/word-cloud/${currentCloud.id}`
+    ? shareUrl(`/learn/word-cloud/${currentCloud.id}`)
     : null;
 
   // Compute word frequency for display

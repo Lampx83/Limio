@@ -206,7 +206,7 @@ async function recordItemTrialStats(
   return written;
 }
 
-interface QuestionStatsPayload {
+export interface QuestionStatsPayload {
   attemptCount: number;
   correctCount: number;
   pValue: number;
@@ -579,4 +579,99 @@ export async function listBankItemAnalytics(
   }));
 
   return { bank: { id: bank.id, name: bank.name }, rows };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phân tích theo TỪNG ĐỢT
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Điều kiện lọc "các bài làm THUỘC buổi thi này".
+ *
+ * Dùng chung cho phân tích câu hỏi và cho file kết quả, để hai chỗ không bao
+ * giờ trả về hai tập khác nhau.
+ *
+ * Hai nhánh vì lịch sử: bài làm mới ghi thẳng `ExamAttempt.sessionId`, còn bài
+ * làm cũ (trước khi có cột đó) chỉ truy được qua ExamCandidate. Lọc bằng
+ * `candidate.sessionId` không thôi — như bản trước — sẽ bỏ sót TOÀN BỘ bài của
+ * học viên đã ghi danh, vì nhóm đó không có ExamCandidate.
+ */
+export function runAttemptWhere(
+  examId: string,
+  sessionId: string | null,
+): Prisma.ExamAttemptWhereInput {
+  return {
+    examId,
+    status: { in: ["submitted", "auto_submitted", "graded"] },
+    ...(sessionId
+      ? {
+          OR: [
+            { sessionId },
+            { sessionId: null, candidate: { sessionId } },
+          ],
+        }
+      : {}),
+  };
+}
+
+/**
+ * Tính chỉ số từng câu cho MỘT đợt thi, không ghi xuống DB.
+ *
+ * `computeExamAnalytics` ở trên gộp mọi lượt thi của gói đề rồi ghi đè vào
+ * `ExamQuestionStats` — hợp cho cron hằng đêm, nhưng sai khi giáo viên hỏi
+ * "riêng đợt thử hôm nay câu nào tệ". Hàm này tính tại chỗ trên đúng tập bài
+ * làm của đợt, và KHÔNG ghi gì: số của một đợt không được đè lên số tổng.
+ */
+export async function computeItemStatsForRun(
+  examId: string,
+  sessionId: string | null,
+  db: PrismaClient = prisma,
+): Promise<Map<string, QuestionStatsPayload>> {
+  const attempts = await db.examAttempt.findMany({
+    where: runAttemptWhere(examId, sessionId),
+    select: {
+      id: true,
+      score: true,
+      scorePct: true,
+      answers: {
+        select: {
+          questionId: true,
+          answerJson: true,
+          autoScore: true,
+          manualScore: true,
+          question: { select: { type: true, points: true, config: true } },
+        },
+      },
+    },
+  });
+
+  const out = new Map<string, QuestionStatsPayload>();
+  if (attempts.length === 0) return out;
+
+  const totalByAttempt = new Map<string, number>();
+  for (const a of attempts) totalByAttempt.set(a.id, a.score ?? a.scorePct ?? 0);
+
+  const samplesByQuestion = new Map<string, AnswerSample[]>();
+  for (const a of attempts) {
+    for (const ans of a.answers) {
+      const awarded = ans.manualScore ?? ans.autoScore;
+      const sample: AnswerSample = {
+        attemptId: a.id,
+        correct: isCorrect(awarded, ans.question.points),
+        totalScore: totalByAttempt.get(a.id) ?? 0,
+        answerJson: ans.answerJson,
+        type: ans.question.type,
+        points: ans.question.points,
+        config: ans.question.config,
+      };
+      if (!samplesByQuestion.has(ans.questionId))
+        samplesByQuestion.set(ans.questionId, []);
+      samplesByQuestion.get(ans.questionId)!.push(sample);
+    }
+  }
+
+  for (const [questionId, samples] of samplesByQuestion) {
+    out.set(questionId, computeStatsForQuestion(samples));
+  }
+  return out;
 }

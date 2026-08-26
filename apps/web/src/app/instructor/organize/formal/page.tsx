@@ -8,7 +8,7 @@ import OrganizeLayout from "../OrganizeLayout";
 export const dynamic = "force-dynamic";
 
 /**
- * Kỳ thi cuối kỳ — tạo mới + lịch sử các kỳ đã tổ chức.
+ * Kỳ thi chính thức — tạo mới + lịch sử các kỳ đã tổ chức.
  *
  * Phần tạo mới dẫn thẳng vào luồng cũ: đợt thi → ca thi (Tự do / Theo phòng)
  * → phòng thi. Đó là trình tự giáo viên đã quen và nó vốn đầy đủ; hai hình
@@ -30,7 +30,7 @@ export default async function OrganizeFormalPage() {
 
   return (
     <OrganizeLayout
-      title="Kỳ thi cuối kỳ"
+      title="Kỳ thi chính thức"
       blurb="Nhiều ca, nhiều phòng, có giám thị. Chia ca, xếp phòng, cấp mã từng thí sinh, in phiếu."
       runs={runs}
       historyTitle="Các kỳ đã tổ chức"
@@ -47,7 +47,7 @@ export default async function OrganizeFormalPage() {
       ) : (
         <>
           <p className="text-sm">
-            Kỳ thi cuối kỳ đi theo trình tự đầy đủ, ba bước:
+            Kỳ thi chính thức đi theo trình tự đầy đủ, ba bước:
           </p>
           <ol className="mt-2 space-y-1 text-sm text-ink-2">
             <li>

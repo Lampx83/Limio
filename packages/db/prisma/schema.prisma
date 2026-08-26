@@ -2989,6 +2989,19 @@ model ExamSession {
   // trên: cùng một gói đề mở được nhiều ca với chính sách khác nhau — ôn tập
   // thì hiện đáp án, thi thật thì không, mà không phải nhân bản gói đề.
   revealAnswers       ExamRevealPolicy?
+  // Buổi thi này là đợt THỬ NGHIỆM câu hỏi hay bài thi thật. NULL = theo gói
+  // đề (Exam.purpose).
+  //
+  // Nằm ở đây vì "thử nghiệm" là tính chất của LẦN TỔ CHỨC, không phải của
+  // nội dung: cùng một gói đề hôm nay đem đo chất lượng câu hỏi, tuần sau
+  // dùng thi thật. Trước đây nó chỉ có ở Exam, nên trang Thử nghiệm câu hỏi
+  // lọc `purpose = field_test` và không thấy gói đề nào — mọi đường tạo gói
+  // đề đều ghi cứng `assessment`.
+  //
+  // Exam.purpose VẪN GIỮ, nhưng mang nghĩa hẹp hơn: gói đề này có được phép
+  // chứa câu hỏi chưa kết nạp vào ngân hàng không. Đó là tính chất của nội
+  // dung, nên nó vẫn chặn chiều ngược lại (đề thử nghiệm không đem thi thật).
+  purpose             ExamPurpose?
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
   // Empty array = no allowlist; non-empty = only these IPs/CIDRs pass.
   ipAllowlist         String[]          @default([])
