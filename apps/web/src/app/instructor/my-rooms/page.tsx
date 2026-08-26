@@ -56,7 +56,10 @@ export default async function MyRoomsPage() {
         <ul className="mt-6 space-y-3">
           {rooms.map((r) => {
             const opensAt = new Date(r.opensAt).getTime();
-            const closesAt = new Date(r.closesAt).getTime();
+            // Ca thủ công không có giờ đóng — coi như chưa tới hạn.
+            const closesAt = r.closesAt
+              ? new Date(r.closesAt).getTime()
+              : Number.POSITIVE_INFINITY;
             const isFuture = opensAt > now;
             const isLive = opensAt <= now && now < closesAt;
             const detailHref = `/instructor/exam-rounds/${r.roundId}/sessions/${r.sessionId}/rooms/${r.id}`;
@@ -105,7 +108,8 @@ export default async function MyRoomsPage() {
                       · <CalendarDays className="inline h-3 w-3 align-text-bottom text-slate-400" /> {r.sessionTitle ?? "Ca thi"}
                     </div>
                     <div className="mt-0.5 text-xs text-faint">
-                      ⏰ {formatDate(r.opensAt)} → {formatDate(r.closesAt)}
+                      ⏰ {formatDate(r.opensAt)} →{" "}
+                      {r.closesAt ? formatDate(r.closesAt) : "đóng thủ công"}
                       {isFuture && (
                         <span className="ml-2 text-blue-600">
                           (bắt đầu sau {formatRel(opensAt - now)})

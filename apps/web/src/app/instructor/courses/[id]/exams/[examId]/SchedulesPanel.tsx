@@ -9,7 +9,11 @@ type Schedule = {
   cohortId: string | null;
   cohortName: string | null;
   opensAt: string;
-  closesAt: string;
+  /** Null khi ca chạy chế độ thủ công. */
+  closesAt: string | null;
+  timingMode: "scheduled" | "manual";
+  status: "draft" | "open" | "closed" | "archived";
+  isOpenNow: boolean;
   durationOverrideMin: number | null;
   ipAllowlistCount: number;
 };
@@ -85,6 +89,14 @@ export default function SchedulesPanel({
         />
       )}
 
+      {schedules && schedules.some((s) => s.timingMode === "manual" && s.isOpenNow) && (
+        <div className="mt-3 banner-warning px-3 py-2 text-sm">
+          <strong>Đang có ca thi mở.</strong> Ca chạy chế độ thủ công không tự
+          đóng — học sinh còn vào được cho tới khi bạn bấm “Đóng ca”. Nhớ đóng
+          khi hết giờ, nếu không đề và đáp án coi như công khai.
+        </div>
+      )}
+
       {err && (
         <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
           ⚠ {err}
@@ -122,7 +134,13 @@ export default function SchedulesPanel({
                   )}
                 </td>
                 <td className="px-2 py-2 font-mono text-xs">{fmt(s.opensAt)}</td>
-                <td className="px-2 py-2 font-mono text-xs">{fmt(s.closesAt)}</td>
+                <td className="px-2 py-2 text-xs">
+                  {s.timingMode === "manual" ? (
+                    <ManualToggle row={s} onDone={refresh} />
+                  ) : (
+                    <span className="font-mono">{s.closesAt ? fmt(s.closesAt) : "—"}</span>
+                  )}
+                </td>
                 <td className="px-2 py-2 text-xs">
                   {s.durationOverrideMin ? `${s.durationOverrideMin}p` : <span className="text-faint">—</span>}
                 </td>
@@ -164,6 +182,7 @@ function AddScheduleForm({
     return new Date(d.getTime() - tz).toISOString().slice(0, 16);
   };
   const [cohortId, setCohortId] = useState<string>("");
+  const [timingMode, setTimingMode] = useState<"scheduled" | "manual">("scheduled");
   const [opensAt, setOpensAt] = useState(fmt2(now));
   const [closesAt, setClosesAt] = useState(fmt2(inHour));
   const [override, setOverride] = useState("");
@@ -182,8 +201,13 @@ function AddScheduleForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           cohortId: cohortId || null,
-          opensAt: new Date(opensAt).toISOString(),
-          closesAt: new Date(closesAt).toISOString(),
+          timingMode,
+          ...(timingMode === "scheduled"
+            ? {
+                opensAt: new Date(opensAt).toISOString(),
+                closesAt: new Date(closesAt).toISOString(),
+              }
+            : {}),
           durationOverrideMin: override.trim() ? Number(override) : undefined,
           ipAllowlist: ipList
             .split(/[\s,]+/)
@@ -238,25 +262,47 @@ function AddScheduleForm({
           />
         </label>
         <label>
-          <span className="block text-xs font-medium text-slate-600">Mở từ</span>
-          <input
-            type="datetime-local"
-            required
-            value={opensAt}
-            onChange={(e) => setOpensAt(e.target.value)}
+          <span className="block text-xs font-medium text-slate-600">Chế độ</span>
+          <select
+            value={timingMode}
+            onChange={(e) =>
+              setTimingMode(e.target.value as "scheduled" | "manual")
+            }
             className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
-          />
+          >
+            <option value="scheduled">Hẹn giờ</option>
+            <option value="manual">GV tự đóng thủ công</option>
+          </select>
+          {timingMode === "manual" && (
+            <span className="mt-1 block text-caption text-faint">
+              Mở ngay khi tạo. Học sinh vào được cho tới khi bạn bấm “Đóng ca”.
+            </span>
+          )}
         </label>
-        <label>
-          <span className="block text-xs font-medium text-slate-600">Đóng lúc</span>
-          <input
-            type="datetime-local"
-            required
-            value={closesAt}
-            onChange={(e) => setClosesAt(e.target.value)}
-            className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
-          />
-        </label>
+        {timingMode === "scheduled" && (
+          <>
+            <label>
+              <span className="block text-xs font-medium text-slate-600">Mở từ</span>
+              <input
+                type="datetime-local"
+                required
+                value={opensAt}
+                onChange={(e) => setOpensAt(e.target.value)}
+                className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+              />
+            </label>
+            <label>
+              <span className="block text-xs font-medium text-slate-600">Đóng lúc</span>
+              <input
+                type="datetime-local"
+                required
+                value={closesAt}
+                onChange={(e) => setClosesAt(e.target.value)}
+                className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+              />
+            </label>
+          </>
+        )}
       </div>
       <label className="mt-3 block">
         <span className="block text-xs font-medium text-slate-600">
@@ -295,4 +341,57 @@ function fmt(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/**
+ * Nút đóng/mở cho ca thi chạy chế độ thủ công.
+ *
+ * Đóng ca KHÔNG cắt bài của người đang làm dở — họ vẫn hết giờ của mình;
+ * đóng chỉ chặn người vào mới.
+ */
+function ManualToggle({
+  row,
+  onDone,
+}: {
+  row: Schedule;
+  onDone: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const open = row.isOpenNow;
+
+  const toggle = async () => {
+    setBusy(true);
+    try {
+      await fetch(`/api/exam-sessions/${row.id}/open-state`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ open: !open }),
+      });
+      await onDone();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span
+        className={
+          open
+            ? "rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800"
+            : "rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
+        }
+      >
+        {open ? "Đang mở" : "Đã đóng"}
+      </span>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={busy}
+        className="rounded border border-default px-2 py-0.5 text-xs hover:bg-slate-50 disabled:opacity-50"
+      >
+        {busy ? "…" : open ? "Đóng ca" : "Mở lại"}
+      </button>
+    </span>
+  );
 }

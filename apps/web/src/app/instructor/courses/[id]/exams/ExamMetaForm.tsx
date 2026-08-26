@@ -23,6 +23,7 @@ interface InitialValues {
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
   showResultsAfterSubmit: boolean;
+  purpose: "assessment" | "field_test";
 }
 
 interface Props {
@@ -68,6 +69,7 @@ export default function ExamMetaForm({
       shuffleQuestions: v.shuffleQuestions,
       shuffleOptions: v.shuffleOptions,
       showResultsAfterSubmit: v.showResultsAfterSubmit,
+      purpose: v.purpose,
     };
     const url =
       mode === "create"
@@ -150,6 +152,37 @@ export default function ExamMetaForm({
 
       {/* A5.3 PR2.10 — Thời gian mở/đóng đã chuyển sang Tổ chức thi (ca thi). */}
       {/* Đề thi chỉ giữ nội dung; window logistics thuộc ca thi. */}
+
+      <div>
+        <SelectField
+          label="Mục đích"
+          value={v.purpose}
+          disabled={isLocked("purpose")}
+          options={[
+            { value: "assessment", label: "Đề thi thật — đo học sinh" },
+            { value: "field_test", label: "Đề thử nghiệm — đo câu hỏi" },
+          ]}
+          onChange={(s) => {
+            const purpose = s as InitialValues["purpose"];
+            // Chuyển sang đề thử nghiệm thì tắt luôn hiện đáp án: để bật là
+            // đốt câu hỏi, lớp sau không thử nghiệm sạch được nữa. GV vẫn bật
+            // lại được ngay bên dưới nếu cố ý.
+            setV({
+              ...v,
+              purpose,
+              showResultsAfterSubmit:
+                purpose === "field_test" ? false : v.showResultsAfterSubmit,
+            });
+          }}
+        />
+        {v.purpose === "field_test" && (
+          <p className="mt-1 banner-warning px-3 py-2 text-caption">
+            Đề thử nghiệm được phép chở câu hỏi chưa kết nạp vào ngân hàng, và
+            mặc định <strong>không hiện đáp án</strong> sau khi nộp. Điểm của đề này
+            không nên dùng làm điểm chính thức.
+          </p>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectField

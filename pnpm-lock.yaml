@@ -221,6 +221,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@feedbackme/core-lms':
+        specifier: workspace:*
+        version: link:../core-lms
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.17
@@ -301,6 +304,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

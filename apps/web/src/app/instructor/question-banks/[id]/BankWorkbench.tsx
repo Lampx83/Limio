@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 import TopicCombobox from "@/components/instructor/TopicCombobox";
 import { formatDate, formatDateTime } from "@/lib/datetime";
+import { apiUrl } from "@/lib/apiUrl";
 
 type Status = "draft" | "published" | "archived";
 type CognitiveLevel = "remember_understand" | "apply" | "analyze_plus";
@@ -1585,6 +1586,10 @@ function QualityTab({ q }: { q: Item }) {
   const qi = qualityInfo(q.stats);
   return (
     <div className="space-y-4">
+      {/* Chuỗi theo đợt — đặt TRƯỚC số bình quân vì đây mới là thứ để quyết
+          định. Số bình quân bên dưới gộp mọi phiên bản nên chỉ để tham khảo. */}
+      <TrialHistoryBlock questionId={q.id} />
+
       {/* Badge */}
       {qi === null ? (
         <div className="rounded border border-default bg-slate-50 px-3 py-4 text-center">
@@ -2593,5 +2598,107 @@ function DeleteQuestionButton({
     >
       🗑
     </button>
+  );
+}
+
+/**
+ * Chuỗi thử nghiệm của một câu hỏi, gộp theo PHIÊN BẢN câu chữ.
+ *
+ * Khác khối "Chỉ số dễ (p)" bên dưới: khối đó đọc BankQuestionStats, vốn là
+ * trung bình có trọng số gộp mọi phiên bản — một câu tệ rồi sửa tốt sẽ hiện ra
+ * con số ở giữa, không mô tả phiên bản nào từng tồn tại.
+ */
+function TrialHistoryBlock({ questionId }: { questionId: string }) {
+  const [data, setData] = useState<{
+    history: {
+      points: Array<{
+        examTitle: string;
+        examPurpose: string;
+        versionNumber: number;
+        attemptCount: number;
+        pValue: number;
+        discrimination: number;
+      }>;
+      currentVersionNumber: number | null;
+      currentRollup: {
+        totalAttempts: number;
+        pValue: number | null;
+        discrimination: number | null;
+        trials: number;
+      } | null;
+    };
+    readiness: { ready: boolean; blockers: string[] };
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    fetch(apiUrl(`/api/bank-questions/${questionId}/trial-history`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => alive && setData(j))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [questionId]);
+
+  if (loading) return null;
+  if (!data || data.history.points.length === 0) return null;
+
+  const r = data.history.currentRollup;
+  return (
+    <div className="rounded border border-default bg-white p-3">
+      <p className="mb-2 text-xs font-semibold">
+        Lịch sử thử nghiệm
+        {data.history.currentVersionNumber !== null && (
+          <span className="ml-1 font-normal text-faint">
+            · phiên bản hiện tại v{data.history.currentVersionNumber}
+          </span>
+        )}
+      </p>
+
+      <ul className="space-y-1">
+        {data.history.points.map((p, i) => (
+          <li key={i} className="flex items-baseline justify-between gap-2 text-xs">
+            <span className="truncate">
+              <span className="font-mono text-faint">v{p.versionNumber}</span>{" "}
+              {p.examTitle}
+              {p.examPurpose === "field_test" && (
+                <span className="ml-1 text-faint">(thử nghiệm)</span>
+              )}
+            </span>
+            <span className="shrink-0 tabular-nums text-faint">
+              n {p.attemptCount}
+              {p.pValue >= 0 ? ` · p ${p.pValue.toFixed(2)}` : ""}
+              {p.discrimination > -2 ? ` · D ${p.discrimination.toFixed(2)}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {r && (
+        <p className="mt-2 border-t border-default pt-2 text-xs">
+          <strong>Gộp phiên bản hiện tại:</strong>{" "}
+          <span className="tabular-nums">
+            n {r.totalAttempts}
+            {r.pValue !== null ? ` · p ${r.pValue.toFixed(2)}` : ""}
+            {r.discrimination !== null ? ` · D ${r.discrimination.toFixed(2)}` : ""}
+          </span>
+        </p>
+      )}
+
+      {data.readiness.ready ? (
+        <p className="mt-2 text-xs font-medium text-emerald-700">
+          ✓ Đủ bằng chứng để kết nạp vào kho
+        </p>
+      ) : (
+        <ul className="mt-2 list-disc pl-4 text-xs text-amber-700">
+          {data.readiness.blockers.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

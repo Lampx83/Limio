@@ -21,6 +21,7 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 import { buildShuffleSnapshot } from "./attempts";
 import { ensureDefaultSession } from "./exam-rooms";
+import { sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
 
 /**
@@ -123,9 +124,13 @@ function normaliseEmail(raw: unknown): string {
   return e;
 }
 
-function computeTtlSec(closeAt: Date): number {
+/** Ca thủ công không có giờ đóng — cookie sống 24h là đủ cho một buổi học. */
+const MANUAL_SESSION_TTL_SEC = 24 * 3600;
+
+function computeTtlSec(closeAt: Date | null): number {
   // Q6 — cookie covers active exam window + 1h grace for late submit/review.
   // Hard cap at 7 days; floor at 5 min so a near-end claim still has room.
+  if (closeAt === null) return MANUAL_SESSION_TTL_SEC;
   const remaining = Math.floor((closeAt.getTime() - Date.now()) / 1000) + 3600;
   return Math.max(300, Math.min(remaining, 7 * 24 * 3600));
 }
@@ -150,6 +155,8 @@ export async function claimByOpenCode(
       id: true,
       opensAt: true,
       closesAt: true,
+      timingMode: true,
+      status: true,
       exam: {
         select: {
           id: true,
@@ -197,11 +204,19 @@ export async function claimByOpenCode(
   // cũng so theo session.opensAt/closesAt → giữ đồng nhất, tránh case "landing mở
   // nhưng claim báo đã đóng" khi Exam.closeAt hẹp hơn cửa sổ ca. Legacy
   // Exam.openCode (không có session) vẫn dùng exam.openAt/closeAt.
-  const openAt = sessionMatch ? sessionMatch.opensAt : exam.openAt;
-  const closeAt = sessionMatch ? sessionMatch.closesAt : exam.closeAt;
   const now = new Date();
-  if (now < openAt) throw new ExamError("exam_not_open");
-  if (now >= closeAt) throw new ExamError("exam_window_closed");
+  if (sessionMatch) {
+    // Ca thi quyết định — hẹn giờ so cửa sổ, thủ công so status.
+    const state = sessionOpenState(sessionMatch, now);
+    if (state === "not_yet") throw new ExamError("exam_not_open");
+    if (state === "closed") throw new ExamError("exam_window_closed");
+  } else {
+    // Legacy Exam.openCode (không gắn ca nào) vẫn dùng cửa sổ của đề.
+    if (now < exam.openAt) throw new ExamError("exam_not_open");
+    if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
+  }
+  // Null khi ca thủ công — computeTtlSec xử lý riêng.
+  const closeAt = sessionMatch ? sessionMatch.closesAt : exam.closeAt;
 
   // Cap on total candidates (anti-spam — Q2 IP rate-limit is layered on top).
   if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
@@ -377,7 +392,12 @@ export async function claimByAssignedCode(
       displayName: true,
       disabledAt: true,
       session: {
-        select: { opensAt: true, closesAt: true },
+        select: {
+          opensAt: true,
+          closesAt: true,
+          timingMode: true,
+          status: true,
+        },
       },
       exam: {
         select: {
@@ -403,11 +423,18 @@ export async function claimByAssignedCode(
   // PR2.12 — Kiểm tra cửa sổ CỦA CA (candidate.session) nếu có, fallback exam
   // window. Đồng nhất với landing page (exam/[code]) dùng
   // candidate.session?.opensAt/closesAt ?? exam.openAt/closeAt.
-  const openAt = candidate.session?.opensAt ?? exam.openAt;
-  const closeAt = candidate.session?.closesAt ?? exam.closeAt;
   const now = new Date();
-  if (now < openAt) throw new ExamError("exam_not_open");
-  if (now >= closeAt) throw new ExamError("exam_window_closed");
+  if (candidate.session) {
+    const state = sessionOpenState(candidate.session, now);
+    if (state === "not_yet") throw new ExamError("exam_not_open");
+    if (state === "closed") throw new ExamError("exam_window_closed");
+  } else {
+    if (now < exam.openAt) throw new ExamError("exam_not_open");
+    if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
+  }
+  const closeAt = candidate.session
+    ? candidate.session.closesAt
+    : exam.closeAt;
 
   // Q5: 1 candidate = 1 attempt. Resume if in progress, reject if submitted.
   const existing = await db.examAttempt.findFirst({

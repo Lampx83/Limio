@@ -171,7 +171,7 @@ export default async function ExamSessionDetailPage({
             <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 shrink-0 text-slate-400" />{detail.courseTitle}</span>
             <span>·</span>
             <span>
-              {formatDate(detail.opensAt)} → {formatDate(detail.closesAt)}
+              {formatDate(detail.opensAt)} → {detail.closesAt ? formatDate(detail.closesAt) : "đóng thủ công"}
             </span>
             <span>·</span>
             <span>{detail.roomCount} phòng</span>

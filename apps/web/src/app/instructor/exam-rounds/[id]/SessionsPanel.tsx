@@ -27,7 +27,8 @@ export interface SessionRow {
   title: string | null;
   status: SessionStatus;
   opensAt: string;
-  closesAt: string;
+  /** Null khi ca chạy chế độ thủ công. */
+  closesAt: string | null;
   examId: string;
   examTitle: string;
   examAccessMode: string;
@@ -257,7 +258,11 @@ export default function SessionsPanel({
                         )}
                       </td>
                       <td className="px-2 py-1">
-                        {canEdit ? (
+                        {s.closesAt === null ? (
+                          <span className="text-xs text-faint">
+                            đóng thủ công
+                          </span>
+                        ) : canEdit ? (
                           <InlineDateTimeCell
                             value={s.closesAt}
                             onSave={(iso) =>
@@ -267,7 +272,7 @@ export default function SessionsPanel({
                           />
                         ) : (
                           <span className="text-xs text-faint">
-                            {formatDate(s.closesAt)}
+                            {s.closesAt ? formatDate(s.closesAt) : "đóng thủ công"}
                           </span>
                         )}
                       </td>

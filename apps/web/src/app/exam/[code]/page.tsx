@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
+import { sessionOpenState } from "@feedbackme/core-lms";
 import { Clock, Lock, AlertCircle, XCircle } from "lucide-react";
 import ClaimForm from "./ClaimForm";
 import SebBrowserPrompt from "@/components/exam/SebBrowserPrompt";
@@ -27,7 +28,7 @@ interface ResolvedNotYet {
 interface ResolvedClosed {
   state: "closed";
   examTitle: string;
-  closesAt: Date;
+  closesAt: Date | null;
 }
 interface ResolvedNotReady {
   state: "not_ready";
@@ -59,6 +60,8 @@ async function resolveCode(code: string): Promise<Resolved | null> {
       select: {
         opensAt: true,
         closesAt: true,
+        timingMode: true,
+        status: true,
         exam: {
           select: {
             courseId: true,
@@ -73,9 +76,12 @@ async function resolveCode(code: string): Promise<Resolved | null> {
       const exam = session.exam;
       if (exam.status !== "published")
         return { state: "not_ready", reason: "not_published", examTitle: exam.title };
-      if (now < session.opensAt)
+      // Cùng quy tắc với claimByOpenCode — nếu lệch nhau thì sinh ra cảnh
+      // "landing báo mở nhưng vào lại báo đóng".
+      const state = sessionOpenState(session, now);
+      if (state === "not_yet")
         return { state: "not_yet", examTitle: exam.title, opensAt: session.opensAt };
-      if (now >= session.closesAt)
+      if (state === "closed")
         return { state: "closed", examTitle: exam.title, closesAt: session.closesAt };
       return {
         state: "ok",
@@ -267,7 +273,8 @@ function Closed({
   closesAt,
 }: {
   examTitle: string;
-  closesAt: Date;
+  /** Null khi ca chạy chế độ thủ công — giám thị đóng bằng tay, không có mốc giờ. */
+  closesAt: Date | null;
 }) {
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center px-6 py-10 text-center">
@@ -276,8 +283,8 @@ function Closed({
         Ca thi đã kết thúc
       </h1>
       <p className="mt-2 text-sm text-slate-600">
-        Bài thi <strong>{examTitle}</strong> đã đóng lúc{" "}
-        {formatFull(closesAt)}.
+        Bài thi <strong>{examTitle}</strong>{" "}
+        {closesAt ? <>đã đóng lúc {formatFull(closesAt)}.</> : <>đã được giám thị đóng.</>}
       </p>
       <p className="mt-4 text-xs text-slate-400">
         Nếu bạn nghĩ đây là nhầm lẫn, vui lòng liên hệ giám thị.

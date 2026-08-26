@@ -3,6 +3,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse } from "../courses/authz";
 import { QuizError } from "./types";
 import { CreateQuestionInput, UpdateQuestionInput } from "./questions";
+import { ensureQuestionTag } from "../courses/autoTags";
 
 const CuepointQuestionInput = CreateQuestionInput
   .innerType()
@@ -109,13 +110,17 @@ export async function createCuepointQuiz(
         },
       },
     });
-    await tx.questionSkillTag.createMany({
-      data: parsed.data.question.skillIds.map((skillId) => ({
-        questionId: question.id,
-        skillId,
-      })),
-      skipDuplicates: true,
-    });
+    if (parsed.data.question.skillIds.length > 0) {
+      await tx.questionSkillTag.createMany({
+        data: parsed.data.question.skillIds.map((skillId) => ({
+          questionId: question.id,
+          skillId,
+        })),
+        skipDuplicates: true,
+      });
+    } else {
+      await ensureQuestionTag(question.id, tx);
+    }
     return { quizId: quiz.id, questionId: question.id };
   });
 }
@@ -194,6 +199,8 @@ export async function updateCuepointQuiz(
           data: skillIds.map((skillId) => ({ questionId, skillId })),
           skipDuplicates: true,
         });
+      } else {
+        await ensureQuestionTag(questionId, tx);
       }
     }
   });

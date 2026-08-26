@@ -28,7 +28,8 @@ interface SessionDetail {
   title: string | null;
   status: SessionStatus;
   opensAt: string;
-  closesAt: string;
+  /** Null khi ca chạy chế độ thủ công. */
+  closesAt: string | null;
   durationOverrideMin: number | null;
   ipAllowlist: string[];
 }
@@ -135,7 +136,9 @@ export default function SessionOverviewPanel({
                 : "(Theo đề thi)"}
             </Field>
             <Field label="Mở từ">{formatDate(detail.opensAt)}</Field>
-            <Field label="Đóng lúc">{formatDate(detail.closesAt)}</Field>
+            <Field label="Đóng lúc">
+              {detail.closesAt ? formatDate(detail.closesAt) : "Khi giám thị bấm đóng"}
+            </Field>
             <Field label="Đề thi" wide>
               <Link
                 href={`/instructor/courses/${detail.courseId}/exams/${detail.examId}`}
@@ -240,7 +243,10 @@ function EditForm({
   const [code, setCode] = useState(detail.code ?? "");
   const [title, setTitle] = useState(detail.title ?? "");
   const [opensAt, setOpensAt] = useState(toLocalInput(detail.opensAt));
-  const [closesAt, setClosesAt] = useState(toLocalInput(detail.closesAt));
+  // Ca thủ công không có giờ đóng — ô nhập để trống.
+  const [closesAt, setClosesAt] = useState(
+    detail.closesAt ? toLocalInput(detail.closesAt) : "",
+  );
   const [duration, setDuration] = useState(
     detail.durationOverrideMin?.toString() ?? "",
   );

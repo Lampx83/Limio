@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { AlertTriangle, BarChart2, Check } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
 
@@ -242,9 +242,8 @@ export default function AnalyticsPanel({ examId }: { examId: string }) {
                 </tr>
               )}
               {visible?.map((it) => (
-                <>
+                <Fragment key={it.id}>
                   <tr
-                    key={it.id}
                     data-testid={`analytics-row-${it.id}`}
                     onClick={() =>
                       it.distractorStats
@@ -301,7 +300,7 @@ export default function AnalyticsPanel({ examId }: { examId: string }) {
                     </td>
                   </tr>
                   {expandedId === it.id && it.distractorStats && (
-                    <tr key={`${it.id}-distractor`} className="border-b border-default bg-slate-50">
+                    <tr className="border-b border-default bg-slate-50">
                       <td />
                       <td colSpan={5} className="px-4 py-3">
                         <DistractorChart
@@ -311,7 +310,7 @@ export default function AnalyticsPanel({ examId }: { examId: string }) {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

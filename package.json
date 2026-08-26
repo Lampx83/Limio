@@ -18,7 +18,8 @@
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "changelog": "npx --yes git-cliff@latest --output CHANGELOG.md",
-    "changelog:preview": "npx --yes git-cliff@latest"
+    "changelog:preview": "npx --yes git-cliff@latest",
+    "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

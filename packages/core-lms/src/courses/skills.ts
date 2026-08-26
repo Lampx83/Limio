@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
+import { AUTO_LESSON_SKILL_PREFIX } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 import { assertCanEditCourse, CourseAuthzError } from "./authz";
 import { CourseError } from "./courses";
@@ -183,8 +184,20 @@ export async function removeSkillPrerequisite(
   });
 }
 
-export async function listSkillsWithStats(db: DbClient = prisma) {
+/**
+ * Catalog listing for the admin skill manager.
+ *
+ * B1.5 auto tags (one per lesson) would drown the authored taxonomy here, so
+ * they are hidden unless explicitly asked for.
+ */
+export async function listSkillsWithStats(
+  opts: { includeAuto?: boolean } = {},
+  db: DbClient = prisma,
+) {
   const skills = await db.skill.findMany({
+    where: opts.includeAuto
+      ? undefined
+      : { NOT: { code: { startsWith: AUTO_LESSON_SKILL_PREFIX } } },
     orderBy: { code: "asc" },
     select: {
       id: true,

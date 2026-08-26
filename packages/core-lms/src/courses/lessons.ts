@@ -4,6 +4,13 @@ import type { DbClient } from "../auth/tokens";
 import { assertCanEditCourse, CourseAuthzError } from "./authz";
 import { CourseError } from "./courses";
 import { attachLessonActivity } from "./lessonActivity";
+import {
+  ensureLessonTag,
+  ensureQuestionTag,
+  isAutoLessonSkillCode,
+  removeLessonTag,
+  syncLessonTagName,
+} from "./autoTags";
 
 export const CreateLessonInput = z.object({
   title: z.string().min(1).max(200).trim(),
@@ -43,6 +50,9 @@ export async function createLesson(
   const parsed = CreateLessonInput.safeParse(rawInput);
   if (!parsed.success) throw new CourseError("validation_failed", parsed.error.flatten());
   const l = await db.lesson.create({ data: { moduleId, ...parsed.data } });
+  // B1.5 — every lesson carries its own tag so personalization has something to
+  // work with without the instructor tagging anything by hand.
+  await ensureLessonTag(l.id, db);
   return { lessonId: l.id };
 }
 
@@ -59,6 +69,9 @@ export async function updateLesson(
   const data = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
   if (Object.keys(data).length === 0) return;
   await db.lesson.update({ where: { id: lessonId }, data });
+  if (parsed.data.title !== undefined) {
+    await syncLessonTagName(lessonId, parsed.data.title, db);
+  }
 }
 
 export async function deleteLesson(
@@ -68,6 +81,7 @@ export async function deleteLesson(
 ): Promise<void> {
   const courseId = await getCourseIdForLesson(lessonId, db);
   await assertCanEditCourse(actorUserId, courseId, db);
+  await removeLessonTag(lessonId, db);
   await db.lesson.delete({ where: { id: lessonId } });
 }
 
@@ -126,7 +140,7 @@ export async function duplicateLesson(
     include: {
       module: { select: { courseId: true } },
       contentItems: { orderBy: { orderIndex: "asc" } },
-      skillTags: { select: { skillId: true } },
+      skillTags: { select: { skillId: true, skill: { select: { code: true } } } },
       assignments: true,
       quizzes: {
         include: {
@@ -134,7 +148,7 @@ export async function duplicateLesson(
             orderBy: { orderIndex: "asc" },
             include: {
               options: { orderBy: { orderIndex: "asc" } },
-              skillTags: { select: { skillId: true } },
+              skillTags: { select: { skillId: true, skill: { select: { code: true } } } },
             },
           },
         },
@@ -165,12 +179,15 @@ export async function duplicateLesson(
       },
     });
 
-    // Skill tags on the lesson itself
+    // Skill tags on the lesson itself. B1.5 auto tags are lesson-specific, so
+    // the clone mints its own instead of inheriting the source's.
     for (const t of src.skillTags) {
+      if (isAutoLessonSkillCode(t.skill.code)) continue;
       await tx.contentSkillMapping.create({
         data: { contentType: "lesson", contentId: dup.id, skillId: t.skillId },
       });
     }
+    await ensureLessonTag(dup.id, tx);
 
     // Content items
     for (const ci of src.contentItems) {
@@ -242,10 +259,12 @@ export async function duplicateLesson(
           });
         }
         for (const st of qq.skillTags) {
+          if (isAutoLessonSkillCode(st.skill.code)) continue;
           await tx.questionSkillTag.create({
             data: { questionId: questionDup.id, skillId: st.skillId },
           });
         }
+        await ensureQuestionTag(questionDup.id, tx);
       }
     }
 

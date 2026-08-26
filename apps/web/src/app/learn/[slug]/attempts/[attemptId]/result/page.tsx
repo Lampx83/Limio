@@ -230,10 +230,10 @@ export default async function ResultPage({
             Đề xuất ôn lại
           </p>
           <p className="mt-2 text-sm text-accent-800">
-            Bạn đang struggle với{" "}
+            Bạn đang gặp khó ở chủ đề{" "}
             <span className="font-semibold">{remedial.weakestSkill.skillName}</span>{" "}
             <span className="text-xs opacity-70">
-              ({Math.round(remedial.weakestSkill.masteryProbability * 100)}% mastery)
+              (mức nắm vững {Math.round(remedial.weakestSkill.masteryProbability * 100)}%)
             </span>
             . Hãy ôn lại trước khi thử lại quiz này.
           </p>

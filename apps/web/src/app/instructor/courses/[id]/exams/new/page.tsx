@@ -64,6 +64,7 @@ export default async function NewExamPage({
             shuffleQuestions: true,
             shuffleOptions: true,
             showResultsAfterSubmit: true,
+            purpose: "assessment",
           }}
         />
       </div>

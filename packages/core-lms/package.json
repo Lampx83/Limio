@@ -10,7 +10,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "backfill:lesson-tags": "node --env-file=../db/.env --import tsx scripts/backfill-lesson-tags.ts"
   },
   "dependencies": {
     "@feedbackme/db": "workspace:*",
@@ -28,6 +29,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.0",
     "dotenv": "^16.4.5",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

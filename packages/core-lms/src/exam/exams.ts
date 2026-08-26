@@ -24,6 +24,7 @@ export const CreateExamInput = z
     shuffleQuestions: z.boolean().optional(),
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
+    purpose: z.enum(["assessment", "field_test"]).optional(),
   })
   .refine((d) => d.openAt < d.closeAt, {
     message: "openAt must be before closeAt",
@@ -45,6 +46,7 @@ export const UpdateExamInput = z
     shuffleQuestions: z.boolean().optional(),
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
+    purpose: z.enum(["assessment", "field_test"]).optional(),
   });
 
 /** A7.1.1 — Create exam in DRAFT status. */
@@ -74,7 +76,11 @@ export async function createExam(
       passScore: d.passScore ?? 50,
       shuffleQuestions: d.shuffleQuestions ?? true,
       shuffleOptions: d.shuffleOptions ?? true,
-      showResultsAfterSubmit: d.showResultsAfterSubmit ?? true,
+      // Đề thử nghiệm mặc định KHÔNG hiện đáp án: hiện là đốt câu hỏi, lớp sau
+      // không thử nghiệm sạch được nữa. GV vẫn bật lại được nếu cố ý.
+      showResultsAfterSubmit:
+        d.showResultsAfterSubmit ?? (d.purpose === "field_test" ? false : true),
+      purpose: d.purpose ?? "assessment",
     },
     select: { id: true },
   });
