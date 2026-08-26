@@ -6,6 +6,7 @@ export * from "./assets";
 export * from "./questions";
 export * from "./attempts";
 export * from "./grading";
+export * from "./quick-share";
 export * from "./results";
 export * from "./session-window";
 export * from "./submission";

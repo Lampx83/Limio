@@ -9,6 +9,7 @@ import PublishBar from "./PublishBar";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import CloneButton from "./CloneButton";
+import ShareLinkButton from "./ShareLinkButton";
 import ResultsPanel from "./ResultsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
@@ -94,6 +95,13 @@ export default async function EditExamPage({
   });
   if (!exam || exam.courseId !== course.id) notFound();
 
+  // Mã dự thi của ca đầu tiên — nút "Phát link" dùng để biết đã phát chưa.
+  const sharedSession = await prisma.examSession.findFirst({
+    where: { examId: exam.id, accessMode: "open_code", openCode: { not: null } },
+    select: { openCode: true },
+    orderBy: { createdAt: "asc" },
+  });
+
   const attemptCount = exam._count.attempts;
   const hasAttempts = attemptCount > 0;
   const isPublished = exam.status === "published";
@@ -147,6 +155,11 @@ export default async function EditExamPage({
           >
             <CalendarCheck className="h-4 w-4 shrink-0" /> Tổ chức thi
           </Link>
+          <ShareLinkButton
+            examId={exam.id}
+            questionCount={exam._count.questions}
+            existingCode={sharedSession?.openCode ?? null}
+          />
           <CloneButton examId={exam.id} />
           <PublishBar
             examId={exam.id}
