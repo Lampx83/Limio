@@ -197,6 +197,7 @@ export default async function EditExamPage({
               shuffleQuestions: exam.shuffleQuestions,
               shuffleOptions: exam.shuffleOptions,
               showResultsAfterSubmit: exam.showResultsAfterSubmit,
+              purpose: exam.purpose,
             }}
           />
         </div>

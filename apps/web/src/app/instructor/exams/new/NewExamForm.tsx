@@ -66,6 +66,7 @@ export default function NewExamForm({ courses, initialCourseId }: Props) {
           shuffleQuestions: true,
           shuffleOptions: true,
           showResultsAfterSubmit: true,
+          purpose: "assessment",
         }}
       />
     </div>

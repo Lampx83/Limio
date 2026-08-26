@@ -1036,14 +1036,21 @@ export async function copyBankQuestionToExam(
   });
   if (!q) throw new ExamError("bank_question_not_found");
   await assertCanEditBank(actorUserId, q.bankId, db);
-  if (q.status !== "published")
-    throw new ExamError("bank_question_not_publishable");
 
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, status: true },
+    select: { id: true, courseId: true, status: true, purpose: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
+
+  // Câu chưa kết nạp vào kho CHỈ được chở bởi đề thử nghiệm — đó chính là lý do
+  // đề thử nghiệm tồn tại. Đề thi thật vẫn chỉ nhận câu đã published, giữ
+  // nguyên hàng rào cũ.
+  //
+  // Câu archived thì không đường nào cả: nó đã bị loại có chủ ý.
+  if (q.status === "archived") throw new ExamError("bank_question_not_publishable");
+  if (q.status !== "published" && exam.purpose !== "field_test")
+    throw new ExamError("bank_question_not_publishable");
   await assertCanEditCourse(actorUserId, exam.courseId, db);
   if (exam.status !== "draft") {
     // Published exam with attempts is frozen by `assertCanEditExam` elsewhere

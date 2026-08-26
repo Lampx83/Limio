@@ -2232,6 +2232,17 @@ model GameAnswer {
 // hybrid grading, and stimulus passages (text + image P0, audio/video later).
 // =====================================================================
 
+/// Đề này dùng để làm gì. Quyết định vài mặc định quay ngược chiều nhau:
+///   assessment — đo học sinh. Hiện đáp án sau khi nộp, điểm tính cho học sinh,
+///                chỉ lấy câu đã kết nạp vào kho.
+///   field_test — đo câu hỏi. KHÔNG hiện đáp án (hiện là đốt câu hỏi: lớp sau
+///                không thử nghiệm sạch được nữa), điểm không nên tính cho học
+///                sinh vì đề chưa kiểm định, và được phép chở câu nháp.
+enum ExamPurpose {
+  assessment
+  field_test
+}
+
 enum ExamStatus {
   draft
   published
@@ -2337,6 +2348,8 @@ model Exam {
   // When true, learner sees per-question correct/incorrect after final grade.
   showResultsAfterSubmit Boolean             @default(true)
   status                 ExamStatus          @default(draft)
+  // Xem ExamPurpose. Mặc định assessment để đề cũ giữ nguyên hành vi.
+  purpose                ExamPurpose         @default(assessment)
   publishedAt            DateTime?
   // A5.8 — Code-based access. Default keeps existing behaviour intact.
   accessMode             ExamAccessMode      @default(authenticated)
@@ -3210,6 +3223,7 @@ model BankQuestion {
   versions   BankQuestionVersion[]
   copiedTo   ExamQuestionFromBank[]
   stats      BankQuestionStats?
+  trialStats ItemTrialStat[]
 
   @@unique([bankId, code], map: "BankQuestion_bankId_code_key")
   @@index([bankId, status])
@@ -3245,6 +3259,7 @@ model BankQuestionVersion {
 
   bankQuestion BankQuestion           @relation(fields: [bankQuestionId], references: [id], onDelete: Cascade)
   copiedTo     ExamQuestionFromBank[]
+  trialStats   ItemTrialStat[]
 
   @@unique([bankQuestionId, versionNumber])
 }
@@ -3291,6 +3306,54 @@ model ExamQuestionStats {
   computedAt      DateTime @default(now())
 
   examQuestion ExamQuestion @relation(fields: [examQuestionId], references: [id], onDelete: Cascade)
+}
+
+/// Một quan sát cho MỖI lần một phiên bản câu hỏi được đem ra dùng trong một
+/// đợt. CHỈ GHI THÊM — không bao giờ UPDATE/DELETE, giống LearningEvent.
+///
+/// Vì sao cần bảng riêng: `ExamQuestionStats` bị cron ghi đè mỗi đêm (chỉ giữ
+/// ảnh chụp hiện tại) còn `BankQuestionStats` là trung bình có trọng số gộp mọi
+/// phiên bản. Cả hai đều xoá mất chuỗi số liệu theo thời gian — đúng thứ mà
+/// việc thử nghiệm câu hỏi cần giữ.
+///
+/// Khoá theo (phiên bản câu × đề × đợt) chứ không theo câu: cộng dồn lẫn bản
+/// trước và sau khi sửa câu chữ là vô nghĩa.
+model ItemTrialStat {
+  // Khoá là câu-trong-đề, không phải (câu × đợt): computeExamAnalytics() gộp
+  // mọi lượt làm theo ĐỀ chứ không tách theo đợt, nên tách theo đợt ở đây chỉ
+  // là giả vờ có độ phân giải mà tầng tính toán không có.
+  //
+  // Vẫn đủ để dựng chuỗi lịch sử: mỗi lần đem một câu đi thử là một đề khác,
+  // nên sinh ra một ExamQuestion khác, tức một quan sát khác.
+  examQuestionId        String   @id
+  // Câu trong ngân hàng + ĐÚNG phiên bản câu chữ đã đem ra thử.
+  bankQuestionId        String
+  bankQuestionVersionId String
+  // Đề nào chở câu này, và câu đó trong đề là row nào.
+  examId                String
+  // Đợt thi (ExamRound) — metadata để nhóm và hiển thị, không tham gia khoá.
+  // Null khi đề chưa gắn ca nào.
+  roundId               String?
+  // Nhãn tự đặt cho lần thử — để nhóm các đề rời thành một đợt thử nghiệm
+  // logic khi ExamRound không phải đơn vị đúng.
+  trialLabel            String?
+
+  // Cùng bộ chỉ số với ExamQuestionStats, chốt tại thời điểm ghi.
+  attemptCount    Int
+  correctCount    Int
+  pValue          Float
+  discrimination  Float
+  avgTimeSec      Float?
+  distractorStats Json?
+  // Thời điểm chốt số liệu, KHÔNG phải thời điểm thi.
+  computedAt      DateTime @default(now())
+
+  bankQuestion BankQuestion        @relation(fields: [bankQuestionId], references: [id], onDelete: Cascade)
+  version      BankQuestionVersion @relation(fields: [bankQuestionVersionId], references: [id])
+
+  @@index([bankQuestionId, computedAt])
+  @@index([bankQuestionVersionId])
+  @@index([examId])
 }
 
 model BankQuestionStats {

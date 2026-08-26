@@ -31,6 +31,16 @@ function isCorrect(awarded: number | null, max: number): boolean {
   return awarded / max >= 0.99;
 }
 
+interface AnswerSample {
+  attemptId: string;
+  correct: boolean;
+  totalScore: number;
+  answerJson: unknown;
+  type: string;
+  points: number;
+  config: unknown;
+}
+
 /**
  * Compute stats for every ExamQuestion in a single exam. Recomputes from
  * scratch (replaces any prior row via upsert). Returns counters.
@@ -38,7 +48,12 @@ function isCorrect(awarded: number | null, max: number): boolean {
 export async function computeExamAnalytics(
   examId: string,
   db: PrismaClient = prisma,
-): Promise<{ questionsScanned: number; statsWritten: number }> {
+): Promise<{
+  questionsScanned: number;
+  statsWritten: number;
+  /** Số quan sát chốt vào lịch sử thử nghiệm (chỉ câu có nguồn từ ngân hàng). */
+  trialsWritten: number;
+}> {
   // Load all submitted/graded attempts + their answers + question metadata.
   const attempts = await db.examAttempt.findMany({
     where: {
@@ -63,7 +78,7 @@ export async function computeExamAnalytics(
 
   if (attempts.length < 1) {
     // No data — nothing to write. Caller may still see old stats from prior runs.
-    return { questionsScanned: 0, statsWritten: 0 };
+    return { questionsScanned: 0, statsWritten: 0, trialsWritten: 0 };
   }
 
   // Total-score (per attempt) used as the discriminating variable.
@@ -75,15 +90,6 @@ export async function computeExamAnalytics(
   }
 
   // Pivot answers by questionId.
-  type AnswerSample = {
-    attemptId: string;
-    correct: boolean;
-    totalScore: number;
-    answerJson: unknown;
-    type: string;
-    points: number;
-    config: unknown;
-  };
   const samplesByQuestion = new Map<string, AnswerSample[]>();
   for (const a of attempts) {
     for (const ans of a.answers) {
@@ -126,7 +132,78 @@ export async function computeExamAnalytics(
     statsWritten++;
   }
 
-  return { questionsScanned: samplesByQuestion.size, statsWritten };
+  // Chốt cùng bộ số vào lịch sử thử nghiệm. Bảng trên bị ghi đè mỗi lần chạy;
+  // bảng dưới giữ lại từng lần dùng để so được qua các đợt.
+  const trialsWritten = await recordItemTrialStats(examId, samplesByQuestion, db);
+
+  return { questionsScanned: samplesByQuestion.size, statsWritten, trialsWritten };
+}
+
+/**
+ * Ghi một quan sát cho mỗi câu hỏi có nguồn gốc từ ngân hàng.
+ *
+ * Chỉ ghi câu có `ExamQuestionFromBank` — câu gõ thẳng vào đề không có danh
+ * tính bền vững nên không theo dõi qua nhiều đợt được.
+ *
+ * Idempotent: khoá là examQuestionId nên cron chạy lại chỉ cập nhật đúng dòng
+ * đó, không đẻ thêm. Đây là ngoại lệ có chủ ý với quy tắc "chỉ ghi thêm": một
+ * đợt còn đang diễn ra thì số liệu vẫn động, phải chốt lại mỗi đêm cho tới khi
+ * đợt đóng. Lịch sử vẫn giữ được vì mỗi lần đem câu đi thử là một đề khác.
+ */
+async function recordItemTrialStats(
+  examId: string,
+  samplesByQuestion: Map<string, AnswerSample[]>,
+  db: PrismaClient,
+): Promise<number> {
+  const fromBank = await db.examQuestionFromBank.findMany({
+    where: { examQuestionId: { in: [...samplesByQuestion.keys()] } },
+    select: {
+      examQuestionId: true,
+      bankQuestionId: true,
+      bankQuestionVersionId: true,
+    },
+  });
+  if (fromBank.length === 0) return 0;
+
+  // Đợt thi của đề này. Một đề về lý thuyết chạy qua nhiều ca thuộc nhiều đợt;
+  // lấy đợt của ca đầu tiên là đủ cho hiện tại vì ensureDefaultRound() gom mọi
+  // ca của một đề vào cùng một đợt.
+  const session = await db.examSession.findFirst({
+    where: { examId },
+    select: { roundId: true },
+    orderBy: { opensAt: "asc" },
+  });
+  const roundId = session?.roundId ?? null;
+
+  let written = 0;
+  for (const link of fromBank) {
+    const samples = samplesByQuestion.get(link.examQuestionId);
+    if (!samples) continue;
+    const st = computeStatsForQuestion(samples);
+    const payload = {
+      bankQuestionId: link.bankQuestionId,
+      bankQuestionVersionId: link.bankQuestionVersionId,
+      examId,
+      roundId,
+      attemptCount: st.attemptCount,
+      correctCount: st.correctCount,
+      pValue: st.pValue,
+      discrimination: st.discrimination,
+      avgTimeSec: st.avgTimeSec,
+      distractorStats:
+        st.distractorStats === null
+          ? Prisma.JsonNull
+          : (st.distractorStats as Prisma.InputJsonValue),
+      computedAt: new Date(),
+    };
+    await db.itemTrialStat.upsert({
+      where: { examQuestionId: link.examQuestionId },
+      create: { examQuestionId: link.examQuestionId, ...payload },
+      update: payload,
+    });
+    written++;
+  }
+  return written;
 }
 
 interface QuestionStatsPayload {
