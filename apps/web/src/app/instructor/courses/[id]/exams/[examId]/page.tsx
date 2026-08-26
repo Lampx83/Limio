@@ -9,7 +9,6 @@ import PublishBar from "./PublishBar";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import CloneButton from "./CloneButton";
-import ShareLinkButton from "./ShareLinkButton";
 import ResultsPanel from "./ResultsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
@@ -155,11 +154,6 @@ export default async function EditExamPage({
           >
             <CalendarCheck className="h-4 w-4 shrink-0" /> Tổ chức thi
           </Link>
-          <ShareLinkButton
-            examId={exam.id}
-            questionCount={exam._count.questions}
-            existingCode={sharedSession?.openCode ?? null}
-          />
           <CloneButton examId={exam.id} />
           <PublishBar
             examId={exam.id}

@@ -21,7 +21,14 @@ import { ExamError } from "./types";
 export async function shareExamLink(
   actorUserId: string,
   examId: string,
-  opts: { timingMode?: "scheduled" | "manual" } = {},
+  opts: {
+    timingMode?: "scheduled" | "manual";
+    /** Thời lượng làm bài của BUỔI THI này. Bỏ trống = theo mặc định của gói đề. */
+    durationMin?: number;
+    /** Chỉ dùng khi timingMode = "scheduled". */
+    opensAt?: Date;
+    closesAt?: Date;
+  } = {},
   db: PrismaClient = prisma,
 ): Promise<{
   code: string;
@@ -45,6 +52,17 @@ export async function shareExamLink(
   await assertCanEditCourse(actorUserId, exam.courseId, db);
 
   if (exam.status === "archived") throw new ExamError("exam_not_draft");
+  if (
+    opts.timingMode === "scheduled" &&
+    opts.opensAt &&
+    opts.closesAt &&
+    opts.opensAt >= opts.closesAt
+  ) {
+    throw new ExamError("validation_failed", {
+      reason: "bad_window",
+      message: "Giờ mở phải trước giờ đóng.",
+    });
+  }
   if (exam._count.questions === 0) {
     throw new ExamError("validation_failed", {
       reason: "no_questions",
@@ -100,8 +118,12 @@ export async function shareExamLink(
           timingMode: manual ? "manual" : "scheduled",
           // Ca thủ công mở NGAY; status là nguồn sự thật, mốc giờ chỉ để hiển thị.
           status: manual ? "open" : "draft",
-          opensAt: manual ? new Date() : exam.openAt,
-          closesAt: manual ? null : exam.closeAt,
+          opensAt: manual ? new Date() : (opts.opensAt ?? exam.openAt),
+          closesAt: manual ? null : (opts.closesAt ?? exam.closeAt),
+          // Thời lượng thuộc BUỔI THI, không thuộc gói đề: cùng một gói có thể
+          // chạy 15 phút ở lớp này và 30 phút ở lớp kia (kéo dài cho HS cần
+          // hỗ trợ). Exam.durationMin chỉ còn là giá trị mặc định.
+          durationOverrideMin: opts.durationMin ?? null,
         },
         select: { id: true },
       });
