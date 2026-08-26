@@ -62,7 +62,11 @@ export default function QuickExamForm({
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [result, setResult] = useState<{ code: string; path: string } | null>(null);
+  const [result, setResult] = useState<{
+    code: string;
+    path: string;
+    sessionId: string;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
 
   const onPickPaper = (id: string) => {
@@ -94,6 +98,7 @@ export default function QuickExamForm({
       const data = (await res.json().catch(() => ({}))) as {
         code?: string;
         path?: string;
+        sessionId?: string;
         error?: string;
         details?: { message?: string };
       };
@@ -101,7 +106,11 @@ export default function QuickExamForm({
         setErr(data.details?.message ?? data.error ?? `HTTP ${res.status}`);
         return;
       }
-      setResult({ code: data.code, path: data.path! });
+      setResult({
+        code: data.code,
+        path: data.path!,
+        sessionId: data.sessionId!,
+      });
     } finally {
       setBusy(false);
     }
@@ -160,7 +169,11 @@ export default function QuickExamForm({
         <p className="mt-2 break-all text-caption text-emerald-800">{fullUrl}</p>
         <div className="mt-4 flex gap-2">
           <Link
-            href={`/instructor/courses/${paper!.courseId}/exams/${paper!.id}?tab=results`}
+            // Trang gói đề KHÔNG có tab "Kết quả" (bỏ có chủ ý — kết quả nói
+            // về ai đã làm, mà "ai" thuộc buổi thi chứ không thuộc gói đề).
+            // Link cũ trỏ ?tab=results, parseExamTab không nhận ra nên rơi về
+            // tab Tổng quan — bấm "Xem kết quả" lại về màn soạn đề.
+            href={`/instructor/exam-runs/${result.sessionId}`}
             className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
           >
             Xem kết quả
