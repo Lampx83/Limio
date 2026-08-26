@@ -202,8 +202,8 @@ export async function claimByOpenCode(
   // PR2.12 — Khi code resolve qua ExamSession (mỗi ca 1 mã + cửa sổ riêng) thì
   // kiểm tra cửa sổ CỦA CA, không phải cửa sổ Exam cha. Landing page (exam/[code])
   // cũng so theo session.opensAt/closesAt → giữ đồng nhất, tránh case "landing mở
-  // nhưng claim báo đã đóng" khi Exam.closeAt hẹp hơn cửa sổ ca. Legacy
-  // Exam.openCode (không có session) vẫn dùng exam.openAt/closeAt.
+  // nhưng claim báo đã đóng". Mã không gắn ca thì không mở được — ca thi là
+  // tầng duy nhất quyết định giờ.
   const now = new Date();
   if (sessionMatch) {
     // Ca thi quyết định — hẹn giờ so cửa sổ, thủ công so status.
@@ -211,12 +211,16 @@ export async function claimByOpenCode(
     if (state === "not_yet") throw new ExamError("exam_not_open");
     if (state === "closed") throw new ExamError("exam_window_closed");
   } else {
-    // Legacy Exam.openCode (không gắn ca nào) vẫn dùng cửa sổ của đề.
-    if (now < exam.openAt) throw new ExamError("exam_not_open");
-    if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
+    // Mã cũ gắn thẳng vào Exam, không qua ca nào. Ca thi là tầng duy nhất quyết
+    // định giờ mở/đóng, nên mã không có ca thì không mở được — thay vì rơi về
+    // khung giờ của đề, thứ mà giao diện đã ngừng cho sửa.
+    throw new ExamError("exam_not_open", {
+      reason: "no_session",
+      message: "Mã này chưa gắn ca thi nào. Hãy phát lại link từ màn hình đề.",
+    });
   }
   // Null khi ca thủ công — computeTtlSec xử lý riêng.
-  const closeAt = sessionMatch ? sessionMatch.closesAt : exam.closeAt;
+  const closeAt = sessionMatch.closesAt;
 
   // Cap on total candidates (anti-spam — Q2 IP rate-limit is layered on top).
   if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
@@ -421,20 +425,20 @@ export async function claimByAssignedCode(
     throw new ExamError("access_mode_mismatch");
   if (exam.status !== "published") throw new ExamError("exam_not_open");
   // PR2.12 — Kiểm tra cửa sổ CỦA CA (candidate.session) nếu có, fallback exam
-  // window. Đồng nhất với landing page (exam/[code]) dùng
-  // candidate.session?.opensAt/closesAt ?? exam.openAt/closeAt.
+  // window. Đồng nhất với landing page (exam/[code]): ca thi quyết định, và
+  // thí sinh chưa xếp ca thì chưa vào được.
   const now = new Date();
   if (candidate.session) {
     const state = sessionOpenState(candidate.session, now);
     if (state === "not_yet") throw new ExamError("exam_not_open");
     if (state === "closed") throw new ExamError("exam_window_closed");
   } else {
-    if (now < exam.openAt) throw new ExamError("exam_not_open");
-    if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
+    throw new ExamError("exam_not_open", {
+      reason: "no_session",
+      message: "Thí sinh này chưa được xếp vào ca thi nào.",
+    });
   }
-  const closeAt = candidate.session
-    ? candidate.session.closesAt
-    : exam.closeAt;
+  const closeAt = candidate.session.closesAt;
 
   // Q5: 1 candidate = 1 attempt. Resume if in progress, reject if submitted.
   const existing = await db.examAttempt.findFirst({

@@ -181,15 +181,14 @@ describe("listExamResults", () => {
     ).rejects.toBeTruthy();
   });
 
-  it("đề học viên ghi danh không có ca nào — bộ lọc sẽ không hiện", async () => {
+  it("đề một ca — giao diện sẽ không hiện bộ lọc", async () => {
     const s = await setup("filters");
     await learnerTakes(s, 1, "a");
 
     const r = await listExamResults(s.ownerId, s.examId);
-    // publishExam KHÔNG tự tạo ca; ca chỉ sinh ra khi dùng mã dự thi. Đề chạy
-    // theo cửa sổ của chính nó, và giao diện vì thế không hiện bộ lọc ca.
-    expect(r.sessions).toHaveLength(0);
-    expect(r.rooms).toHaveLength(0);
+    // publishExam dựng sẵn đúng MỘT ca mặc định. Bộ lọc chỉ hiện khi có nhiều
+    // hơn một — đó là quyết định ở tầng giao diện.
+    expect(r.sessions).toHaveLength(1);
   });
 
   it("lọc theo ca chỉ giữ lượt làm thuộc ca đó", async () => {

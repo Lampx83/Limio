@@ -625,7 +625,8 @@ export interface ExamEligibility {
  *        course-wide (cohortId IS NULL) schedules.
  *      - User must still be enrolled in the course.
  *      - Effective duration = schedule.durationOverrideMin (if set) else exam.durationMin.
- *   3. If exam has NO schedules: fall back to exam.openAt/closeAt + enrollment.
+ *   3. If exam has NO schedules: NOT takeable. Khung giờ của đề không còn được
+ *      dùng để chặn — ca thi là tầng duy nhất quyết định.
  *
  * Throws ExamError with the appropriate code; otherwise returns eligibility.
  */
@@ -665,11 +666,18 @@ export async function assertEligibleForExam(
   const enrolled = await isUserEnrolled(userId, exam.courseId, db);
   if (!enrolled) throw new ExamError("not_enrolled");
 
+  // Đề KHÔNG có ca thi thì không thi được — dứt khoát thay vì âm thầm rơi về
+  // khung giờ của đề. Khung đó là tầng thời gian thứ ba mà giao diện vẫn hiện
+  // như thể có tác dụng, trong khi nó chỉ sống khi đề chưa có ca nào; kết quả
+  // là giáo viên sửa nó rồi tưởng đã đổi được gì đó.
+  //
+  // Đường tạo đề hiện tại (nút "Phát link") luôn dựng sẵn một ca, nên trạng
+  // thái này chỉ còn là đề chưa phát bao giờ.
   if (exam.schedules.length === 0) {
-    // Legacy path — exam window only.
-    if (now < exam.openAt) throw new ExamError("exam_not_open");
-    if (now >= exam.closeAt) throw new ExamError("exam_window_closed");
-    return { durationSec: exam.durationMin * 60, scheduleId: null };
+    throw new ExamError("exam_not_open", {
+      reason: "no_session",
+      message: "Đề chưa có ca thi nào — bấm “Phát link” để mở cho học sinh.",
+    });
   }
 
   // Schedule-driven path. Filter to "active right now" — ca hẹn giờ so cửa sổ,
