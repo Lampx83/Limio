@@ -7,6 +7,7 @@ export * from "./questions";
 export * from "./attempts";
 export * from "./grading";
 export * from "./item-history";
+export * from "./live-sessions";
 export * from "./quick-share";
 export * from "./results";
 export * from "./session-window";

@@ -13,7 +13,7 @@ export const runtime = "nodejs";
  * Instructor-only.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
@@ -42,11 +42,16 @@ export async function GET(
     select: { id: true, orderInExam: true, points: true },
   });
 
+  // ?sessionId=<uuid> — xuất riêng MỘT lần thi. Không truyền thì gộp mọi lần
+  // của gói đề, giữ nguyên hành vi cũ.
+  const sessionId = new URL(req.url).searchParams.get("sessionId");
+
   // Load all graded attempts with answers
   const attempts = await prisma.examAttempt.findMany({
     where: {
       examId: exam.id,
       status: { in: ["submitted", "auto_submitted", "graded"] },
+      ...(sessionId ? { candidate: { sessionId } } : {}),
     },
     orderBy: { submittedAt: "asc" },
     select: {

@@ -22,14 +22,20 @@ type Slice = "students" | "items" | "grading";
 export default function ResultsPanel({
   examId,
   courseId,
+  lockedSessionId,
 }: {
   examId: string;
   courseId: string;
+  /**
+   * Khoá vào MỘT buổi thi. Dùng ở trang kết quả của từng lần thi: ở đó bộ lọc
+   * ca không còn nghĩa lý gì vì đã chọn ca rồi.
+   */
+  lockedSessionId?: string;
 }) {
   const [slice, setSlice] = useState<Slice>("students");
   const [data, setData] = useState<ExamResults | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState("");
+  const [sessionId, setSessionId] = useState(lockedSessionId ?? "");
   const [roomId, setRoomId] = useState("");
 
   useEffect(() => {
@@ -51,7 +57,9 @@ export default function ResultsPanel({
   }, [examId, sessionId, roomId]);
 
   const s = data?.summary;
-  const showFilters = (data?.sessions.length ?? 0) > 1 || (data?.rooms.length ?? 0) > 1;
+  const showFilters =
+    !lockedSessionId &&
+    ((data?.sessions.length ?? 0) > 1 || (data?.rooms.length ?? 0) > 1);
 
   return (
     <div>

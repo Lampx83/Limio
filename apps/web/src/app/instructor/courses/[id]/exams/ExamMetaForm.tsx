@@ -121,15 +121,11 @@ export default function ExamMetaForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <NumField
-          label="Thời lượng (phút)"
-          value={v.durationMin}
-          min={1}
-          max={24 * 60}
-          disabled={isLocked("durationMin")}
-          onChange={(n) => setV({ ...v, durationMin: n })}
-        />
+      {/* Thời lượng KHÔNG còn ở đây: nó thuộc buổi thi, không thuộc gói đề.
+          Cùng một gói chạy 15 phút ở lớp này và 30 phút ở lớp kia là chuyện
+          bình thường, nên con số đó được chọn lúc mở buổi thi (Tổ chức thi →
+          Link thi nhanh). Exam.durationMin chỉ còn là giá trị mặc định gợi ý. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <NumField
           label="Điểm đạt (%)"
           value={v.passScore}

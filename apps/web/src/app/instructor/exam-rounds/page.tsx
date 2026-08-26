@@ -75,15 +75,15 @@ export default async function ExamRoundsHubPage({
   return (
     <main>
       <Link
-        href="/instructor/dashboard"
+        href="/instructor/organize/formal"
         className="text-sm text-blue-600 hover:underline"
       >
-        ← Dashboard
+        ← Kỳ thi cuối kỳ
       </Link>
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold"><CalendarCheck className="h-6 w-6 shrink-0 text-amber-600" /> Tổ chức thi</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold"><CalendarCheck className="h-6 w-6 shrink-0 text-amber-600" /> Đợt thi</h1>
           <p className="mt-1 text-sm text-faint">
             {rounds.length} đợt · {counts.draft} nháp · {counts.open} đang mở ·{" "}
             {counts.closed} đã đóng · {counts.archived} lưu trữ

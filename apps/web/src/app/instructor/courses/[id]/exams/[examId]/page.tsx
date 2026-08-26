@@ -9,8 +9,6 @@ import PublishBar from "./PublishBar";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import CloneButton from "./CloneButton";
-import ShareLinkButton from "./ShareLinkButton";
-import ResultsPanel from "./ResultsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
 import BlueprintEditor from "./BlueprintEditor";
@@ -58,14 +56,6 @@ export default async function EditExamPage({
     redirect("/instructor/courses");
   }
 
-  const pendingCount = await prisma.examAnswer.count({
-    where: {
-      needsGrading: true,
-      attempt: { examId: params.examId },
-      question: { type: { in: ["essay", "short_answer"] } },
-    },
-  });
-
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
     include: {
@@ -94,13 +84,6 @@ export default async function EditExamPage({
     },
   });
   if (!exam || exam.courseId !== course.id) notFound();
-
-  // Mã dự thi của ca đầu tiên — nút "Phát link" dùng để biết đã phát chưa.
-  const sharedSession = await prisma.examSession.findFirst({
-    where: { examId: exam.id, accessMode: "open_code", openCode: { not: null } },
-    select: { openCode: true },
-    orderBy: { createdAt: "asc" },
-  });
 
   const attemptCount = exam._count.attempts;
   const hasAttempts = attemptCount > 0;
@@ -155,11 +138,6 @@ export default async function EditExamPage({
           >
             <CalendarCheck className="h-4 w-4 shrink-0" /> Tổ chức thi
           </Link>
-          <ShareLinkButton
-            examId={exam.id}
-            questionCount={exam._count.questions}
-            existingCode={sharedSession?.openCode ?? null}
-          />
           <CloneButton examId={exam.id} />
           <PublishBar
             examId={exam.id}
@@ -185,7 +163,6 @@ export default async function EditExamPage({
           badges={{
             content: exam.questions.filter((q) => q.skillTags.length === 0)
               .length,
-            results: pendingCount,
           }}
         />
       </div>
@@ -274,10 +251,6 @@ export default async function EditExamPage({
 
       {activeTab === "blueprint" && (
         <BlueprintEditorLoader examId={exam.id} courseId={course.id} />
-      )}
-
-      {activeTab === "results" && (
-        <ResultsPanel examId={exam.id} courseId={exam.courseId} />
       )}
     </main>
   );

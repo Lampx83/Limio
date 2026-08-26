@@ -2962,6 +2962,9 @@ model ExamSession {
   closesAt            DateTime?
   // Xem ExamSessionTimingMode. Mặc định `scheduled` để ca cũ giữ nguyên hành vi.
   timingMode          ExamSessionTimingMode @default(scheduled)
+  // Xem ExamSessionScale. Mặc định `formal` cho ca CŨ vì chúng đều sinh ra từ
+  // đường đợt/ca/phòng; ca tạo bằng "Phát link" ghi `simple` tường minh.
+  scale               ExamSessionScale      @default(formal)
   // Ai bấm đóng ca thủ công gần nhất — phục vụ đối chiếu khi có khiếu nại.
   closedById          String?
   closedAt            DateTime?
@@ -3013,6 +3016,16 @@ enum ExamSessionStatus {
   open
   closed
   archived
+}
+
+/// Quy mô tổ chức của một lần thi. Trục NÀY tách khỏi ExamPurpose (đo học sinh
+/// hay đo câu hỏi) — hai câu hỏi độc lập:
+///   simple — một buổi, phát bằng link. Kiểm tra đầu giờ, khảo sát, thử nghiệm.
+///   formal — nhiều ca, có phòng và giám thị. Thi cuối kỳ.
+/// Nhồi hai trục vào một enum sẽ trộn "để làm gì" với "quy mô nào".
+enum ExamSessionScale {
+  simple
+  formal
 }
 
 /// Cách một ca thi xác định "đang mở":

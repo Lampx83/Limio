@@ -7,20 +7,16 @@ import { auth } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 /**
- * Bệ phóng tổ chức thi — KHÔNG phải một cái kho.
+ * Trang chọn hình thức tổ chức.
  *
- * Màn hình này không có danh sách đề, không có tab, không giữ trạng thái. Nó
- * hỏi ý định rồi bàn giao; sau khi tạo, mọi thứ sống dưới bài thi.
+ * Chỉ ba thẻ, không danh sách: mỗi hình thức có trang riêng gồm hai phần — tạo
+ * mới và lịch sử các lần CÙNG DẠNG. Tách lịch sử theo hình thức vì ba loại cần
+ * thấy thông tin khác nhau; gộp lại thì bảng phải cõng mọi cột cho mọi kiểu.
  *
- * Ranh giới đó quan trọng: nếu ở đây mọc thêm "các đợt thi của tôi" thì ta lại
- * có hai lối vào cùng một đối tượng — đúng thứ đã đẻ ra hai lối tạo đề và hai
- * bản xuất điểm mà đợt thiết kế lại này vừa dọn.
- *
- * Vì sao có màn hình này dù nguyên tắc chung là "suy ra, đừng hỏi": hỏi trước
- * chỉ đúng khi hai luồng cho ra form khác hẳn nhau. Với MỤC ĐÍCH thì không —
- * cùng bộ trường, chỉ khác mặc định, nên hệ thống tự suy. Với QUY MÔ thì có:
- * link nhanh cần 3 ô, kỳ thi cuối kỳ cần đợt, ca, phòng, giám thị, danh sách
- * thí sinh.
+ * Ba hình thức khác nhau trên HAI trục độc lập, không phải một:
+ *   mục đích (đo học sinh / đo câu hỏi) × quy mô (một buổi / nhiều ca)
+ * Nên chúng nằm ở hai cột riêng — ExamPurpose và ExamSessionScale — thay vì
+ * nhồi chung một enum.
  */
 export default async function OrganizePage() {
   const session = await auth();
@@ -51,7 +47,7 @@ export default async function OrganizePage() {
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <OptionCard
-            href="/instructor/exams/quick?purpose=assessment"
+            href="/instructor/organize/quick"
             icon={<Zap className="h-5 w-5 shrink-0 text-emerald-600" />}
             title="Link thi nhanh"
             blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp."
@@ -60,7 +56,7 @@ export default async function OrganizePage() {
             lead
           />
           <OptionCard
-            href="/instructor/exams/quick?purpose=field_test"
+            href="/instructor/organize/field-test"
             icon={<FlaskConical className="h-5 w-5 shrink-0 text-blue-600" />}
             title="Thử nghiệm câu hỏi"
             blurb="Đo chất lượng câu trước khi kết nạp vào ngân hàng."
@@ -68,7 +64,7 @@ export default async function OrganizePage() {
             cta="Mở đợt thử"
           />
           <OptionCard
-            href="/instructor/exams/new"
+            href="/instructor/organize/formal"
             icon={<CalendarCheck className="h-5 w-5 shrink-0 text-amber-600" />}
             title="Kỳ thi cuối kỳ"
             blurb="Nhiều ca, nhiều phòng, có giám thị."
@@ -78,12 +74,12 @@ export default async function OrganizePage() {
         </div>
       )}
 
-      <p className="mt-6 text-caption text-faint">
-        Cả ba đều tạo ra một bài thi. Sau khi tạo, bạn quản lý nó ở mục{" "}
+      <p className="mt-4 text-caption text-faint">
+        Nội dung câu hỏi soạn ở mục{" "}
         <Link href="/instructor/exams" className="underline">
           Đề thi
         </Link>
-        .
+        ; ở đây quyết định chạy khi nào, bao lâu, ai vào.
       </p>
     </main>
   );

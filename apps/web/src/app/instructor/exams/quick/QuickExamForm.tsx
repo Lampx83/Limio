@@ -1,97 +1,192 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Check, Copy } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
+interface Paper {
+  id: string;
+  title: string;
+  courseId: string;
+  courseTitle: string;
+  questionCount: number;
+  defaultDurationMin: number;
+}
+
+/** datetime-local cần giờ ĐỊA PHƯƠNG, không phải ISO UTC. */
+function toLocalInput(d: Date): string {
+  const tz = d.getTimezoneOffset() * 60_000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 16);
+}
+
 /**
- * Form tạo nhanh: tên bài + thời lượng (+ chọn khoá khi GV dạy nhiều khoá).
+ * Mở buổi thi từ một gói đề có sẵn.
  *
- * Thời lượng hiện ngay trên form chứ không giấu trong "nâng cao":
- * `Exam.durationMin` vốn bắt buộc và không có khái niệm "không giới hạn", nên
- * giấu đi không phải là đơn giản hoá — mà là chọn hộ giáo viên một con số họ
- * không nhìn thấy.
- *
- * Không hỏi giờ mở/đóng: ca thi quyết định, và ca sinh ra lúc bấm "Phát link"
- * chạy chế độ thủ công — mở ngay, đóng khi GV bấm.
+ * Chỉ hỏi hai thứ ở mức cơ bản: dùng gói nào, mỗi học sinh bao nhiêu phút.
+ * Giờ mở/đóng nằm sau "Tuỳ chọn nâng cao" vì phần lớn buổi kiểm tra trên lớp
+ * không cần — mở ngay, đóng khi giáo viên bấm.
  */
 export default function QuickExamForm({
   purpose,
   courses,
-  initialCourseId,
+  papers,
 }: {
   purpose: "assessment" | "field_test";
   courses: Array<{ id: string; title: string }>;
-  initialCourseId: string;
+  papers: Paper[];
 }) {
-  const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [durationMin, setDurationMin] = useState(15);
-  const [courseId, setCourseId] = useState(initialCourseId);
+  const [paperId, setPaperId] = useState(papers[0]?.id ?? "");
+  const paper = useMemo(
+    () => papers.find((p) => p.id === paperId) ?? null,
+    [papers, paperId],
+  );
+
+  const [durationMin, setDurationMin] = useState(
+    papers[0]?.defaultDurationMin ?? 15,
+  );
+  const [advanced, setAdvanced] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleClose, setScheduleClose] = useState(false);
+  const [opensAt, setOpensAt] = useState(() => toLocalInput(new Date()));
+  const [closesAt, setClosesAt] = useState(() =>
+    toLocalInput(new Date(Date.now() + 60 * 60_000)),
+  );
+
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [result, setResult] = useState<{ code: string; path: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const onPickPaper = (id: string) => {
+    setPaperId(id);
+    const p = papers.find((x) => x.id === id);
+    if (p) setDurationMin(p.defaultDurationMin);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!paper) return;
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch(apiUrl(`/api/courses/${courseId}/exams`), {
+      // Bật bất kỳ mốc giờ nào là chuyển sang chế độ hẹn giờ; không bật thì ca
+      // chạy thủ công — mở ngay, đóng khi bấm.
+      const scheduled = scheduleOpen || scheduleClose;
+      const res = await fetch(apiUrl(`/api/exams/${paper.id}/share`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), durationMin, purpose }),
+        body: JSON.stringify({
+          timingMode: scheduled ? "scheduled" : "manual",
+          durationMin,
+          ...(scheduleOpen ? { opensAt: new Date(opensAt).toISOString() } : {}),
+          ...(scheduleClose ? { closesAt: new Date(closesAt).toISOString() } : {}),
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as {
-        examId?: string;
+        code?: string;
+        path?: string;
         error?: string;
+        details?: { message?: string };
       };
-      if (!res.ok || !data.examId) {
-        setErr(data.error ?? `HTTP ${res.status}`);
+      if (!res.ok || !data.code) {
+        setErr(data.details?.message ?? data.error ?? `HTTP ${res.status}`);
         return;
       }
-      // Bàn giao ngay sang tab Nội dung — bước tiếp theo luôn là thêm câu hỏi.
-      router.push(
-        `/instructor/courses/${courseId}/exams/${data.examId}?tab=content`,
-      );
+      setResult({ code: data.code, path: data.path! });
     } finally {
       setBusy(false);
     }
   };
 
+  if (papers.length === 0) {
+    return (
+      <div className="mt-6 rounded-lg border border-default bg-white p-5">
+        <p className="text-sm">
+          Chưa có gói đề nào
+          {purpose === "field_test" ? " dành cho thử nghiệm" : ""} có câu hỏi.
+        </p>
+        <p className="mt-1 text-caption text-faint">
+          Gói đề là phần nội dung — soạn ở mục Đề thi, rồi quay lại đây để mở
+          buổi thi.
+        </p>
+        <Link
+          href={`/instructor/courses/${courses[0]!.id}/exams/new`}
+          className="mt-3 inline-block rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white"
+        >
+          + Soạn gói đề mới
+        </Link>
+      </div>
+    );
+  }
+
+  if (result) {
+    const fullUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${result.path}`
+        : result.path;
+    return (
+      <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-5">
+        <p className="text-sm font-medium text-emerald-900">Đã phát link.</p>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="font-mono text-lg font-semibold tracking-widest text-emerald-900">
+            {result.code}
+          </span>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(fullUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              } catch {
+                /* trình duyệt chặn clipboard — link vẫn hiện để chọn tay */
+              }
+            }}
+            className="rounded border border-emerald-300 p-1.5 text-emerald-800 hover:bg-emerald-100"
+            aria-label="Sao chép link"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </button>
+        </div>
+        <p className="mt-2 break-all text-caption text-emerald-800">{fullUrl}</p>
+        <div className="mt-4 flex gap-2">
+          <Link
+            href={`/instructor/courses/${paper!.courseId}/exams/${paper!.id}?tab=results`}
+            className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+          >
+            Xem kết quả
+          </Link>
+          <Link
+            href="/instructor/organize"
+            className="rounded border border-emerald-300 px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Mở buổi khác
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={submit} className="mt-6 space-y-4">
-      {courses.length > 1 && (
-        <label className="block">
-          <span className="block text-sm font-medium">Khoá học</span>
-          <select
-            value={courseId}
-            onChange={(e) => setCourseId(e.target.value)}
-            className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
-          >
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-
       <label className="block">
-        <span className="block text-sm font-medium">Tên bài</span>
-        <input
-          type="text"
-          required
-          autoFocus
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={
-            purpose === "field_test"
-              ? "Ví dụ: Thử nghiệm câu hỏi HSK1 đợt 1"
-              : "Ví dụ: Kiểm tra đầu giờ buổi 3"
-          }
+        <span className="block text-sm font-medium">Gói đề</span>
+        <select
+          value={paperId}
+          onChange={(e) => onPickPaper(e.target.value)}
           className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
-        />
+        >
+          {papers.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.title} — {p.questionCount} câu
+              {courses.length > 1 ? ` · ${p.courseTitle}` : ""}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-caption text-faint">
+          Chỉ là phần nội dung. Cùng một gói mở được nhiều buổi thi khác nhau.
+        </span>
       </label>
 
       <label className="block">
@@ -106,22 +201,105 @@ export default function QuickExamForm({
           className="mt-1 w-32 rounded border border-default bg-white px-3 py-2 text-sm"
         />
         <span className="mt-1 block text-caption text-faint">
-          Đếm từ lúc học sinh bấm bắt đầu. Bài mở ngay khi bạn phát link, và
-          đóng khi bạn bấm.
+          Đếm từ lúc từng học sinh bấm bắt đầu, không phải giờ đồng hồ.
         </span>
       </label>
 
-      {err && (
-        <div className="banner-danger px-3 py-2 text-sm">Không tạo được: {err}</div>
-      )}
+      <div className="rounded border border-default bg-white">
+        <button
+          type="button"
+          onClick={() => setAdvanced((v) => !v)}
+          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium"
+          aria-expanded={advanced}
+        >
+          <span>Tuỳ chọn nâng cao — giờ mở/đóng</span>
+          <span className="text-faint">{advanced ? "−" : "+"}</span>
+        </button>
+
+        {advanced && (
+          <div className="space-y-3 border-t border-default px-3 py-3">
+            <TimeRow
+              label="Mở lúc"
+              hint="Tắt = mở ngay khi phát link."
+              on={scheduleOpen}
+              setOn={setScheduleOpen}
+              value={opensAt}
+              setValue={setOpensAt}
+            />
+            <TimeRow
+              label="Đóng lúc"
+              hint="Tắt = mở tới khi bạn bấm đóng."
+              on={scheduleClose}
+              setOn={setScheduleClose}
+              value={closesAt}
+              setValue={setClosesAt}
+            />
+            <p className="text-caption text-faint">
+              {scheduleOpen || scheduleClose
+                ? "Buổi thi chạy theo giờ đã đặt."
+                : "Buổi thi mở ngay và chỉ đóng khi bạn bấm — hợp với kiểm tra tại lớp."}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {err && <div className="banner-danger px-3 py-2 text-sm">{err}</div>}
 
       <button
         type="submit"
-        disabled={busy || !title.trim()}
+        disabled={busy || !paper}
         className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
       >
-        {busy ? "Đang tạo…" : "Tạo rồi thêm câu hỏi →"}
+        {busy ? "Đang phát…" : "Phát link"}
       </button>
     </form>
+  );
+}
+
+function TimeRow({
+  label,
+  hint,
+  on,
+  setOn,
+  value,
+  setValue,
+}: {
+  label: string;
+  hint: string;
+  on: boolean;
+  setOn: (v: boolean) => void;
+  value: string;
+  setValue: (v: string) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-medium">{label}</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label={label}
+          onClick={() => setOn(!on)}
+          className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+            on ? "bg-emerald-600" : "bg-slate-300"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+              on ? "translate-x-4" : "translate-x-0.5"
+            }`}
+          />
+        </button>
+      </div>
+      <input
+        type="datetime-local"
+        disabled={!on}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-faint"
+      />
+      <span className="mt-1 block text-caption text-faint">{hint}</span>
+    </div>
   );
 }
