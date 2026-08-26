@@ -108,6 +108,9 @@ export default function QuickExamForm({
           timingMode: scheduled ? "scheduled" : "manual",
           durationMin,
           revealAnswers: reveal,
+          // Mục đích thuộc BUỔI THI: cùng một gói đề, mở từ trang thử nghiệm
+          // thì buổi đó là đợt thử; mở từ link nhanh thì là bài thi thật.
+          purpose,
           ...(scheduleOpen ? { opensAt: new Date(opensAt).toISOString() } : {}),
           ...(scheduleClose ? { closesAt: new Date(closesAt).toISOString() } : {}),
         }),
@@ -137,8 +140,7 @@ export default function QuickExamForm({
     return (
       <div className="mt-6 rounded-lg border border-default bg-white p-5">
         <p className="text-sm">
-          Chưa có gói đề nào
-          {purpose === "field_test" ? " dành cho thử nghiệm" : ""} có câu hỏi.
+          Chưa có gói đề nào có câu hỏi.
         </p>
         <p className="mt-1 text-caption text-faint">
           Gói đề là phần nội dung — soạn ở mục Đề thi, rồi quay lại đây để mở

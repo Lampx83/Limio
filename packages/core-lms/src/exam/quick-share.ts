@@ -38,6 +38,11 @@ export async function shareExamLink(
      * Xem reveal-policy.ts.
      */
     revealAnswers?: RevealPolicy;
+    /**
+     * Buổi này là đợt thử nghiệm câu hỏi hay bài thi thật.
+     * Bỏ trống = theo gói đề.
+     */
+    purpose?: "assessment" | "field_test";
   } = {},
   db: PrismaClient = prisma,
 ): Promise<{
@@ -53,6 +58,7 @@ export async function shareExamLink(
       id: true,
       courseId: true,
       status: true,
+      purpose: true,
       openAt: true,
       closeAt: true,
       _count: { select: { questions: true } },
@@ -103,6 +109,7 @@ export async function shareExamLink(
       closesAt: true,
       timingMode: true,
       status: true,
+      purpose: true,
     },
     // Mới nhất trước: nếu có nhiều ca còn mở thì ca vừa tạo mới là ca giáo
     // viên đang nói tới.
@@ -114,7 +121,11 @@ export async function shareExamLink(
         isSessionOpen(s, now) &&
         // Đổi từ mở-ngay sang hẹn giờ (hoặc ngược lại) là ý định khác hẳn —
         // dùng lại ca cũ sẽ nuốt mất mốc giờ vừa nhập.
-        (s.timingMode === "manual") === wantManual,
+        (s.timingMode === "manual") === wantManual &&
+        // Cùng lý do: buổi đang mở kiểu thi thật thì không được lặng lẽ biến
+        // thành đợt thử nghiệm chỉ vì lần này bấm Mở từ trang thử nghiệm.
+        // Khác mục đích ⇒ đó là buổi khác, mở buổi mới.
+        (s.purpose ?? exam.purpose) === (opts.purpose ?? exam.purpose),
     ) ?? null;
 
   const published = exam.status !== "published";
@@ -140,6 +151,7 @@ export async function shareExamLink(
       data: {
         durationOverrideMin: opts.durationMin ?? null,
         revealAnswers: opts.revealAnswers ?? null,
+        purpose: opts.purpose ?? null,
       },
     });
     return {
@@ -175,6 +187,7 @@ export async function shareExamLink(
           durationOverrideMin: opts.durationMin ?? null,
           scale: opts.scale ?? "simple",
           revealAnswers: opts.revealAnswers ?? null,
+          purpose: opts.purpose ?? null,
         },
         select: { id: true },
       });

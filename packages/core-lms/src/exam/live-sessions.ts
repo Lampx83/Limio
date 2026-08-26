@@ -41,7 +41,10 @@ export async function listExamRuns(
   actorUserId: string,
   opts: {
     limit?: number;
-    /** Lọc theo mục đích của gói đề — đo học sinh hay đo câu hỏi. */
+    /**
+     * Lọc theo mục đích của BUỔI THI — đo học sinh hay đo câu hỏi.
+     * Buổi không tự khai thì tính theo gói đề.
+     */
     purpose?: "assessment" | "field_test";
     /** Lọc theo quy mô tổ chức — một buổi đơn giản hay kỳ thi nhiều ca. */
     scale?: "simple" | "formal";
@@ -54,9 +57,19 @@ export async function listExamRuns(
       // trước sẽ giấu mất toàn bộ kỳ thi tổ chức theo đường đợt/ca/phòng — nơi
       // thí sinh dùng mã cấp riêng hoặc vào bằng tài khoản đã ghi danh.
       ...(opts.scale ? { scale: opts.scale } : {}),
+      // Mục đích của BUỔI thắng; buổi để trống thì rơi về gói đề. Lọc thẳng
+      // trên exam.purpose như trước sẽ bỏ sót đúng trường hợp sinh ra cột
+      // này: gói đề bình thường đem đi thử nghiệm.
+      ...(opts.purpose
+        ? {
+            OR: [
+              { purpose: opts.purpose },
+              { purpose: null, exam: { purpose: opts.purpose } },
+            ],
+          }
+        : {}),
       exam: {
         status: { not: "archived" },
-        ...(opts.purpose ? { purpose: opts.purpose } : {}),
         course: { instructors: { some: { userId: actorUserId } } },
       },
     },
