@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import { useRouter } from "next/navigation";
 import { Copy, LogOut, UserX, Crown, Users } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
@@ -179,9 +180,11 @@ export default function TournamentTeamPanel({
     }
   }
 
-  function copyCode() {
+  async function copyCode() {
     if (!myTeam) return;
-    navigator.clipboard.writeText(myTeam.joinCode);
+    // Bản cũ báo "đã copy" ngay cả khi writeText ném lỗi — hàm không await gì
+    // cả nên lỗi thành unhandled rejection và giao diện vẫn hiện dấu tích.
+    if (!(await copyText(myTeam.joinCode))) return;
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }

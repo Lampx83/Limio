@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { copyText } from "@/lib/clipboard";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
@@ -157,9 +158,10 @@ export default function EmailEditorClient({
             <button
               key={v.name}
               type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(`{{${v.name}}}`);
-                toast.info(`Đã copy {{${v.name}}}`);
+              onClick={async () => {
+                const ok = await copyText(`{{${v.name}}}`);
+                if (ok) toast.info(`Đã copy {{${v.name}}}`);
+                else toast.error("Không sao chép được — copy tay giúp.");
               }}
               className="rounded-full border border-base-300 bg-base-50 px-2.5 py-1 text-xs font-mono hover:border-brand-400 hover:bg-brand-50"
               title={`${v.label} — VD: ${v.example}`}
