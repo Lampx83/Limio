@@ -2944,7 +2944,14 @@ model ExamSession {
   // set = restrict to candidates/users in this cohort.
   cohortId            String?
   opensAt             DateTime
-  closesAt            DateTime
+  // NULL chỉ hợp lệ khi timingMode = manual (ca đóng bằng tay, không có hạn).
+  // timingMode = scheduled thì bắt buộc có, validate ở tầng application.
+  closesAt            DateTime?
+  // Xem ExamSessionTimingMode. Mặc định `scheduled` để ca cũ giữ nguyên hành vi.
+  timingMode          ExamSessionTimingMode @default(scheduled)
+  // Ai bấm đóng ca thủ công gần nhất — phục vụ đối chiếu khi có khiếu nại.
+  closedById          String?
+  closedAt            DateTime?
   // Override Exam.durationMin for this cohort (e.g. extended-time accommodation).
   durationOverrideMin Int?
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
@@ -2993,6 +3000,15 @@ enum ExamSessionStatus {
   open
   closed
   archived
+}
+
+/// Cách một ca thi xác định "đang mở":
+///   scheduled — theo cửa sổ opensAt/closesAt (hành vi cũ, mặc định).
+///   manual    — GV bấm mở/đóng; `status` là nguồn sự thật, closesAt = null.
+/// Thêm mới là additive: mọi ca cũ giữ nguyên `scheduled` nên không đổi hành vi.
+enum ExamSessionTimingMode {
+  scheduled
+  manual
 }
 
 model ExamRound {

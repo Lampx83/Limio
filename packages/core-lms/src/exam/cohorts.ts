@@ -14,6 +14,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
+import { isSessionOpen, sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
 
 // ============================================================================
@@ -409,12 +410,25 @@ export async function listCohortMembers(
 export const CreateSessionInput = z
   .object({
     cohortId: z.string().uuid().nullable().optional(),
-    opensAt: z.coerce.date(),
-    closesAt: z.coerce.date(),
+    // Ca thủ công không nhập giờ: opensAt = lúc tạo, closesAt = null.
+    timingMode: z.enum(["scheduled", "manual"]).default("scheduled"),
+    opensAt: z.coerce.date().optional(),
+    closesAt: z.coerce.date().optional(),
     durationOverrideMin: z.number().int().min(1).max(24 * 60).optional().nullable(),
     ipAllowlist: z.array(z.string().min(3).max(43)).max(50).optional(),
   })
-  .refine((d) => d.opensAt < d.closesAt, { message: "opensAt must be before closesAt" });
+  // Hẹn giờ thì bắt buộc đủ hai mốc và phải theo đúng thứ tự.
+  .refine((d) => d.timingMode === "manual" || (d.opensAt && d.closesAt), {
+    message: "scheduled session requires opensAt and closesAt",
+  })
+  .refine(
+    (d) =>
+      d.timingMode === "manual" ||
+      !d.opensAt ||
+      !d.closesAt ||
+      d.opensAt < d.closesAt,
+    { message: "opensAt must be before closesAt" },
+  );
 
 export async function createExamSession(
   actorUserId: string,
@@ -449,13 +463,18 @@ export async function createExamSession(
   // default round and attach to it. cohortId column kept temporarily for UI
   // backward-compat; dropped when SchedulesPanel is replaced by the new IA.
   const roundId = await ensureDefaultRound(examId, db);
+  // Ca thủ công mở NGAY khi tạo — đó là toàn bộ lý do nó tồn tại. status=open
+  // là nguồn sự thật; opensAt chỉ để hiển thị và sắp xếp danh sách.
+  const isManual = d.timingMode === "manual";
   const s = await db.examSession.create({
     data: {
       examId,
       roundId,
       cohortId: d.cohortId ?? null,
-      opensAt: d.opensAt,
-      closesAt: d.closesAt,
+      timingMode: d.timingMode,
+      status: isManual ? "open" : "draft",
+      opensAt: isManual ? new Date() : d.opensAt!,
+      closesAt: isManual ? null : d.closesAt!,
       durationOverrideMin: d.durationOverrideMin ?? null,
       ipAllowlist: d.ipAllowlist ?? [],
     },
@@ -472,8 +491,14 @@ export interface ExamSessionItem {
   id: string;
   cohortId: string | null;
   cohortName: string | null;
+  timingMode: "scheduled" | "manual";
+  status: "draft" | "open" | "closed" | "archived";
   opensAt: string;
-  closesAt: string;
+  /** Null với ca thủ công — nó không có giờ đóng. */
+  closesAt: string | null;
+  /** Ca này có đang cho học sinh vào ngay lúc gọi hàm không. */
+  isOpenNow: boolean;
+  closedAt: string | null;
   durationOverrideMin: number | null;
   ipAllowlistCount: number;
 }
@@ -497,20 +522,70 @@ export async function listExamSessions(
       cohortId: true,
       opensAt: true,
       closesAt: true,
+      timingMode: true,
+      status: true,
+      closedAt: true,
       durationOverrideMin: true,
       ipAllowlist: true,
       cohort: { select: { name: true } },
     },
   });
+  const now = new Date();
   return rows.map((r) => ({
     id: r.id,
     cohortId: r.cohortId,
     cohortName: r.cohort?.name ?? null,
+    timingMode: r.timingMode,
+    status: r.status,
     opensAt: r.opensAt.toISOString(),
-    closesAt: r.closesAt.toISOString(),
+    closesAt: r.closesAt?.toISOString() ?? null,
+    isOpenNow: isSessionOpen(r, now),
+    closedAt: r.closedAt?.toISOString() ?? null,
     durationOverrideMin: r.durationOverrideMin,
     ipAllowlistCount: r.ipAllowlist.length,
   }));
+}
+
+/**
+ * Đóng / mở lại một ca thi THỦ CÔNG.
+ *
+ * Chỉ áp dụng cho timingMode = manual: ca hẹn giờ đóng mở theo cửa sổ, đổi
+ * status của nó không có tác dụng gì nên chặn luôn thay vì để GV tưởng đã đóng
+ * mà học sinh vẫn vào được.
+ *
+ * Đóng ca KHÔNG đụng tới bài đang làm dở — ai đã vào thì vẫn làm hết giờ của
+ * họ; đóng chỉ chặn người vào mới.
+ */
+export async function setManualSessionOpen(
+  actorUserId: string,
+  sessionId: string,
+  open: boolean,
+  db: PrismaClient = prisma,
+): Promise<{ id: string; status: string }> {
+  const s = await db.examSession.findUnique({
+    where: { id: sessionId },
+    select: {
+      id: true,
+      timingMode: true,
+      exam: { select: { courseId: true } },
+    },
+  });
+  if (!s) throw new ExamError("schedule_not_found");
+  await assertCanEditCourse(actorUserId, s.exam.courseId, db);
+  if (s.timingMode !== "manual") {
+    throw new ExamError("validation_failed", {
+      reason: "session_not_manual",
+      message: "Ca hẹn giờ đóng/mở theo lịch, không bấm tay được.",
+    });
+  }
+  const updated = await db.examSession.update({
+    where: { id: sessionId },
+    data: open
+      ? { status: "open", closedAt: null, closedById: null }
+      : { status: "closed", closedAt: new Date(), closedById: actorUserId },
+    select: { id: true, status: true },
+  });
+  return updated;
 }
 
 export async function deleteExamSession(
@@ -574,6 +649,8 @@ export async function assertEligibleForExam(
           cohortId: true,
           opensAt: true,
           closesAt: true,
+          timingMode: true,
+          status: true,
           durationOverrideMin: true,
         },
       },
@@ -595,13 +672,14 @@ export async function assertEligibleForExam(
     return { durationSec: exam.durationMin * 60, scheduleId: null };
   }
 
-  // Schedule-driven path. Filter to "active right now".
-  const active = exam.schedules.filter(
-    (s) => now >= s.opensAt && now < s.closesAt,
-  );
+  // Schedule-driven path. Filter to "active right now" — ca hẹn giờ so cửa sổ,
+  // ca thủ công so status. Xem session-window.ts.
+  const active = exam.schedules.filter((s) => isSessionOpen(s, now));
   if (active.length === 0) {
     // Differentiate "not yet" vs "closed".
-    const future = exam.schedules.some((s) => now < s.opensAt);
+    const future = exam.schedules.some(
+      (s) => sessionOpenState(s, now) === "not_yet",
+    );
     throw new ExamError(future ? "exam_not_open" : "exam_window_closed");
   }
 

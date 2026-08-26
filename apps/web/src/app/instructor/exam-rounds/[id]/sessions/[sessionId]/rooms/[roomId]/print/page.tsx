@@ -63,7 +63,7 @@ export default async function RoomCandidatesPrintPage({
                   <strong>Ca thi:</strong>{" "}
                   {room.sessionTitle ?? room.sessionCode ?? "Ca thi"} ·{" "}
                   {formatDate(room.sessionOpensAt)} →{" "}
-                  {formatDate(room.sessionClosesAt)}
+                  {room.sessionClosesAt ? formatDate(room.sessionClosesAt) : "đóng thủ công"}
                 </div>
                 <div>
                   <strong>Giám thị:</strong> {room.proctorName}

@@ -7,9 +7,11 @@ import {
   claimByOpenCode,
   createExam,
   createExamQuestion,
+  createExamSession,
   createPassage,
   ensureDefaultSession,
   publishExam,
+  setManualSessionOpen,
 } from "../";
 
 const BASE = "http://localhost:3000";
@@ -72,7 +74,7 @@ async function setupPastExam(slug: string) {
       closesAt: new Date(now + 2 * 60 * 60_000),
     },
   });
-  return { examId, sessionId };
+  return { examId, sessionId, ownerId: owner.userId };
 }
 
 describe("code-access — claim uses the ca thi (ExamSession) window, not the parent Exam window", () => {
@@ -139,5 +141,92 @@ describe("code-access — claim uses the ca thi (ExamSession) window, not the pa
 
     const r = await claimByAssignedCode("CANDWIN1");
     expect(r.attemptId).toBeTruthy();
+  });
+});
+
+describe("ca thủ công — GV bấm mở/đóng", () => {
+  it("mở ngay khi tạo, không cần nhập giờ", async () => {
+    const { examId, ownerId } = await setupPastExam("man-create");
+    const { id } = await createExamSession(
+      ownerId,
+      examId,
+      { timingMode: "manual" },
+    );
+    const row = await prisma.examSession.findUniqueOrThrow({ where: { id } });
+    expect(row.timingMode).toBe("manual");
+    expect(row.status).toBe("open");
+    expect(row.closesAt).toBeNull();
+  });
+
+  it("học sinh vào được khi ca đang mở, dù cửa sổ của ĐỀ đã đóng từ hôm qua", async () => {
+    const { examId, ownerId } = await setupPastExam("man-in");
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { accessMode: "open_code" },
+    });
+    const { id } = await createExamSession(
+      ownerId,
+      examId,
+      { timingMode: "manual" },
+    );
+    await prisma.examSession.update({
+      where: { id },
+      data: { accessMode: "open_code", openCode: "MANOP1" },
+    });
+
+    const r = await claimByOpenCode("MANOP1", {
+      displayName: "SV",
+      phone: "0900000001",
+      email: "sv-man1@e.com",
+    });
+    expect(r.attemptId).toBeTruthy();
+  });
+
+  it("GV bấm đóng thì người vào sau bị chặn", async () => {
+    const { examId, ownerId } = await setupPastExam("man-close");
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { accessMode: "open_code" },
+    });
+    const { id } = await createExamSession(ownerId, examId, { timingMode: "manual" });
+    await prisma.examSession.update({
+      where: { id },
+      data: { accessMode: "open_code", openCode: "MANCL1" },
+    });
+
+    await setManualSessionOpen(ownerId, id, false);
+
+    await expect(
+      claimByOpenCode("MANCL1", {
+        displayName: "SV2",
+        phone: "0900000002",
+        email: "sv-man2@e.com",
+      }),
+    ).rejects.toMatchObject({ code: "exam_window_closed" });
+
+    // Mở lại thì vào được tiếp.
+    await setManualSessionOpen(ownerId, id, true);
+    const r = await claimByOpenCode("MANCL1", {
+      displayName: "SV3",
+      phone: "0900000003",
+      email: "sv-man3@e.com",
+    });
+    expect(r.attemptId).toBeTruthy();
+  });
+
+  it("không cho bấm đóng tay một ca hẹn giờ", async () => {
+    const { sessionId, ownerId } = await setupPastExam("man-guard");
+    await expect(
+      setManualSessionOpen(ownerId, sessionId, false),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
+  it("ca hẹn giờ tạo như cũ vẫn phải có đủ hai mốc", async () => {
+    const { examId, ownerId } = await setupPastExam("man-req");
+    await expect(
+      createExamSession(ownerId, examId, {
+        timingMode: "scheduled",
+      }),
+    ).rejects.toBeTruthy();
   });
 });

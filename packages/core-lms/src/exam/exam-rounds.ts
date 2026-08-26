@@ -425,7 +425,8 @@ export interface ExamRoundSessionItem {
   title: string | null;
   status: "draft" | "open" | "closed" | "archived";
   opensAt: string;
-  closesAt: string;
+  /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
+  closesAt: string | null;
   examId: string;
   examTitle: string;
   examAccessMode: string;
@@ -452,7 +453,8 @@ export interface ExamSessionDetail {
   title: string | null;
   status: "draft" | "open" | "closed" | "archived";
   opensAt: string;
-  closesAt: string;
+  /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
+  closesAt: string | null;
   durationOverrideMin: number | null;
   ipAllowlist: string[];
   createdAt: string;
@@ -864,7 +866,7 @@ export async function getExamSession(
     title: s.title,
     status: s.status,
     opensAt: s.opensAt.toISOString(),
-    closesAt: s.closesAt.toISOString(),
+    closesAt: s.closesAt?.toISOString() ?? null,
     durationOverrideMin: s.durationOverrideMin,
     ipAllowlist: s.ipAllowlist,
     createdAt: s.createdAt.toISOString(),
@@ -912,7 +914,8 @@ export interface ExamRoomDetail {
   sessionTitle: string | null;
   sessionCode: string | null;
   sessionOpensAt: string;
-  sessionClosesAt: string;
+  /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
+  sessionClosesAt: string | null;
   roundId: string;
   roundTitle: string;
   courseId: string;
@@ -976,7 +979,7 @@ export async function getExamRoom(
     sessionTitle: r.session.title,
     sessionCode: r.session.code,
     sessionOpensAt: r.session.opensAt.toISOString(),
-    sessionClosesAt: r.session.closesAt.toISOString(),
+    sessionClosesAt: r.session.closesAt?.toISOString() ?? null,
     roundId: r.session.roundId,
     roundTitle: r.session.round.title,
     courseId: r.exam.course.id,
@@ -1099,7 +1102,8 @@ export interface ProctorRoomItem {
   sessionTitle: string | null;
   sessionStatus: "draft" | "open" | "closed" | "archived";
   opensAt: string;
-  closesAt: string;
+  /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
+  closesAt: string | null;
   roundId: string;
   roundTitle: string;
   examTitle: string;
@@ -1150,7 +1154,7 @@ export async function listMyProctorRooms(
     sessionTitle: r.session.title,
     sessionStatus: r.session.status,
     opensAt: r.session.opensAt.toISOString(),
-    closesAt: r.session.closesAt.toISOString(),
+    closesAt: r.session.closesAt?.toISOString() ?? null,
     roundId: r.session.round.id,
     roundTitle: r.session.round.title,
     examTitle: r.exam.title,
@@ -1717,7 +1721,7 @@ export async function listExamSessionsForRound(
     title: r.title,
     status: r.status,
     opensAt: r.opensAt.toISOString(),
-    closesAt: r.closesAt.toISOString(),
+    closesAt: r.closesAt?.toISOString() ?? null,
     examId: r.exam.id,
     examTitle: r.exam.title,
     examAccessMode: r.accessMode,

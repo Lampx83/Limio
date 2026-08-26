@@ -97,7 +97,7 @@ export default async function PrintRoundRoomCodesPage({
         openCode: s.accessMode === "open_code" ? (s.openCode ?? s.exam.openCode) : null,
         accessMode: s.accessMode,
         opensAt: s.opensAt.toISOString(),
-        closesAt: s.closesAt.toISOString(),
+        closesAt: s.closesAt?.toISOString() ?? null,
         examTitle: s.exam.title,
       },
       room: {
@@ -249,14 +249,14 @@ export default async function PrintRoundRoomCodesPage({
                   </Row>
                   <Row label="Đề thi">{s.examTitle}</Row>
                   <Row label="Thời gian">
-                    {formatDate(s.opensAt)} → {formatDate(s.closesAt)}
+                    {formatDate(s.opensAt)} → {s.closesAt ? formatDate(s.closesAt) : "đóng thủ công"}
                   </Row>
                   <Row label="Giám thị">{r.proctorName}</Row>
                   <Row label="Địa điểm">
                     {r.locationNote ?? <span className="text-slate-400">—</span>}
                   </Row>
                   <Row label="Thời gian thi">
-                    {formatDate(s.opensAt)} → {formatDate(s.closesAt)}
+                    {formatDate(s.opensAt)} → {s.closesAt ? formatDate(s.closesAt) : "đóng thủ công"}
                   </Row>
                   <Row label="Mã lớp thi">
                     {r.examClassCode ? (
