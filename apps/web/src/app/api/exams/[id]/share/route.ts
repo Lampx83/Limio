@@ -6,8 +6,8 @@ import { mapKnownError, readJson } from "@/lib/apiHelpers";
 export const runtime = "nodejs";
 
 /**
- * "Phát link" — publish đề, dựng ca + phòng mặc định, sinh mã dự thi, trả link.
- * Gọi lại trên bài đã phát thì trả đúng mã cũ.
+ * "Mở buổi thi" — publish đề, dựng ca + phòng mặc định, sinh mã dự thi, trả link.
+ * Gọi lại trên buổi đã mở thì trả đúng mã cũ.
  *
  * Body: { timingMode?, durationMin?, opensAt?, closesAt? }
  *

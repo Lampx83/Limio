@@ -127,7 +127,7 @@ export default function QuickExamForm({
         : result.path;
     return (
       <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-5">
-        <p className="text-sm font-medium text-emerald-900">Đã phát link.</p>
+        <p className="text-sm font-medium text-emerald-900">Đã mở buổi thi.</p>
         <div className="mt-3 flex items-center gap-2">
           <span className="font-mono text-lg font-semibold tracking-widest text-emerald-900">
             {result.code}
@@ -220,7 +220,7 @@ export default function QuickExamForm({
           <div className="space-y-3 border-t border-default px-3 py-3">
             <TimeRow
               label="Hẹn giờ mở"
-              hintOff="Bài mở ngay khi bạn phát link."
+              hintOff="Bài mở ngay, không chờ giờ."
               hintOn="Bài chỉ mở từ thời điểm này."
               on={scheduleOpen}
               setOn={setScheduleOpen}
@@ -252,7 +252,7 @@ export default function QuickExamForm({
         disabled={busy || !paper}
         className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
       >
-        {busy ? "Đang phát…" : "Phát link"}
+        {busy ? "Đang mở…" : "Mở"}
       </button>
     </form>
   );
