@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 import { AlertTriangle, BarChart2, Check } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
 
@@ -40,7 +41,17 @@ const FLAG_TONE: Record<string, string> = {
   low_discrimination: "bg-orange-100 text-orange-800",
 };
 
-export default function AnalyticsPanel({ examId }: { examId: string }) {
+/**
+ * `sessionId` = chỉ tính trên bài làm của MỘT đợt thi. Không truyền thì đọc
+ * số đã chốt sẵn, gộp mọi đợt của gói đề.
+ */
+export default function AnalyticsPanel({
+  examId,
+  sessionId,
+}: {
+  examId: string;
+  sessionId?: string;
+}) {
   const [items, setItems] = useState<Item[] | null>(null);
   const [reliability, setReliability] = useState<Reliability | null | undefined>(undefined);
   const [distribution, setDistribution] = useState<DistBin[] | null | undefined>(undefined);
@@ -52,7 +63,11 @@ export default function AnalyticsPanel({ examId }: { examId: string }) {
 
   const load = async () => {
     setErr(null);
-    const r = await fetch(`/api/exams/${examId}/analytics`);
+    const r = await fetch(
+      apiUrl(
+        `/api/exams/${examId}/analytics${sessionId ? `?sessionId=${sessionId}` : ""}`,
+      ),
+    );
     if (!r.ok) { setErr(`HTTP ${r.status}`); return; }
     const j = (await r.json()) as { items: Item[]; reliability: Reliability | null; distribution: DistBin[] | null };
     setItems(j.items);

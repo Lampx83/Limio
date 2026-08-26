@@ -100,11 +100,26 @@ export default function ResultsPanel({
         </Seg>
 
         <a
-          href={apiUrl(`/api/exams/${examId}/results`)}
+          // Kèm ca đang lọc. Thiếu nó thì nút này xuất TOÀN BỘ lượt thi của
+          // gói đề trong khi màn hình đang hiện đúng một đợt — cùng chức năng
+          // mà nút "Tải" ở danh sách buổi lại ra file khác.
+          href={apiUrl(
+            `/api/exams/${examId}/results${sessionId ? `?sessionId=${sessionId}` : ""}`,
+          )}
           className="ml-auto rounded border border-default px-2.5 py-1 text-xs hover:bg-slate-50"
         >
           <Download className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
-          Xuất Excel
+          Bảng điểm
+        </a>
+        <a
+          href={apiUrl(
+            `/api/exams/${examId}/results?format=analysis${sessionId ? `&sessionId=${sessionId}` : ""}`,
+          )}
+          className="rounded border border-default px-2.5 py-1 text-xs hover:bg-slate-50"
+          title="Mỗi thí sinh × mỗi câu một dòng: phương án đã chọn, đáp án đúng, cột 0/1 — nạp thẳng vào R/jMetrik/mirt"
+        >
+          <Download className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
+          Dữ liệu phân tích
         </a>
       </div>
 
@@ -146,7 +161,11 @@ export default function ResultsPanel({
       {slice === "students" && (
         <StudentTable data={data} courseId={courseId} examId={examId} />
       )}
-      {slice === "items" && <AnalyticsPanel examId={examId} />}
+      {slice === "items" && (
+        // Đang xem một đợt thì chỉ số phải tính riêng đợt đó, không gộp mọi
+        // đợt của gói đề — đó là cả lý do trang này tồn tại.
+        <AnalyticsPanel examId={examId} sessionId={sessionId || undefined} />
+      )}
       {slice === "grading" && (
         <GradingSlice
           courseId={courseId}

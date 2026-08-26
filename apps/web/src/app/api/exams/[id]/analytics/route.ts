@@ -1,14 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
-import { assertCanEditCourse } from "@feedbackme/core-lms";
+import {
+  assertCanEditCourse,
+  computeItemStatsForRun,
+  runAttemptWhere,
+} from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
 
-/** A5.4 — Per-exam item analytics + exam-level reliability stats. */
+/**
+ * A5.4 — Chỉ số từng câu + độ tin cậy của đề.
+ *
+ * `?sessionId=<uuid>` giới hạn vào MỘT đợt thi: p-value, độ phân biệt,
+ * Cronbach α, phân tích phương án nhiễu đều tính riêng trên bài làm của đợt
+ * đó. Không truyền thì đọc số đã chốt sẵn trong ExamQuestionStats (cron hằng
+ * đêm gộp mọi đợt) — giữ nguyên hành vi cũ.
+ *
+ * Số của một đợt KHÔNG ghi đè lên số tổng: tính tại chỗ rồi trả về.
+ */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
@@ -29,6 +42,12 @@ export async function GET(
     throw e;
   }
 
+  const sessionId = new URL(req.url).searchParams.get("sessionId");
+  // Chỉ số theo đợt tính tại chỗ; không có sessionId thì dùng bản đã chốt.
+  const perRun = sessionId
+    ? await computeItemStatsForRun(exam.id, sessionId)
+    : null;
+
   const rows = await prisma.examQuestion.findMany({
     where: { examId: exam.id },
     orderBy: { orderInExam: "asc" },
@@ -36,7 +55,7 @@ export async function GET(
   });
 
   const items = rows.map((r) => {
-    const s = r.stats;
+    const s = perRun ? (perRun.get(r.id) ?? null) : r.stats;
     const flags: string[] = [];
     if (s && s.attemptCount >= 5) {
       if (s.pValue >= 0 && s.pValue < 0.2) flags.push("too_hard");
@@ -54,15 +73,16 @@ export async function GET(
       pValue: s?.pValue ?? -1,
       discrimination: s?.discrimination ?? -2,
       distractorStats: s?.distractorStats ?? null,
-      computedAt: s?.computedAt?.toISOString() ?? null,
+      // Chỉ bản đã chốt mới có mốc thời gian; số theo đợt tính ngay lúc gọi.
+      computedAt: perRun ? null : (r.stats?.computedAt?.toISOString() ?? null),
       flags,
     };
   });
 
   // ── Exam-level reliability (Cronbach α) + score distribution ────────
   const [reliability, distribution] = await Promise.all([
-    computeReliability(exam.id),
-    computeDistribution(exam.id),
+    computeReliability(exam.id, sessionId),
+    computeDistribution(exam.id, sessionId),
   ]);
 
   return NextResponse.json({ items, reliability, distribution });
@@ -78,15 +98,15 @@ interface Reliability {
   computedAt: string;
 }
 
-async function computeReliability(examId: string): Promise<Reliability | null> {
+async function computeReliability(
+  examId: string,
+  sessionId: string | null,
+): Promise<Reliability | null> {
   const MIN_N = 5;
 
   // Load graded attempt scores + per-question binary responses.
   const attempts = await prisma.examAttempt.findMany({
-    where: {
-      examId,
-      status: { in: ["submitted", "auto_submitted", "graded"] },
-    },
+    where: runAttemptWhere(examId, sessionId),
     select: {
       id: true,
       scorePct: true,
@@ -155,13 +175,12 @@ async function computeReliability(examId: string): Promise<Reliability | null> {
 
 interface DistBin { bin: number; label: string; count: number }
 
-async function computeDistribution(examId: string): Promise<DistBin[] | null> {
+async function computeDistribution(
+  examId: string,
+  sessionId: string | null,
+): Promise<DistBin[] | null> {
   const attempts = await prisma.examAttempt.findMany({
-    where: {
-      examId,
-      status: { in: ["submitted", "auto_submitted", "graded"] },
-      scorePct: { not: null },
-    },
+    where: { ...runAttemptWhere(examId, sessionId), scorePct: { not: null } },
     select: { scorePct: true },
   });
   if (attempts.length < 5) return null;
