@@ -20,7 +20,7 @@ const fmt = (iso: string) =>
  * Lịch sử các lần thi CÙNG MỘT DẠNG.
  *
  * Mỗi hình thức tổ chức có trang riêng, và lịch sử tách theo hình thức chứ
- * không gộp một chỗ: kỳ thi cuối kỳ cần thấy ca/phòng/giám thị, còn link nhanh
+ * không gộp một chỗ: kỳ thi chính thức cần thấy ca/phòng/giám thị, còn link nhanh
  * chỉ cần mã và số người nộp.
  */
 export default function ExamRunsList({

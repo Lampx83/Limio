@@ -66,7 +66,7 @@ export default async function OrganizePage() {
           <OptionCard
             href="/instructor/organize/formal"
             icon={<CalendarCheck className="h-5 w-5 shrink-0 text-amber-600" />}
-            title="Kỳ thi cuối kỳ"
+            title="Kỳ thi chính thức"
             blurb="Nhiều ca, nhiều phòng, có giám thị."
             detail="Chia ca, xếp phòng, cấp mã từng thí sinh, in phiếu."
             cta="Bắt đầu"

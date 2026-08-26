@@ -78,7 +78,7 @@ export default async function ExamRoundsHubPage({
         href="/instructor/organize/formal"
         className="text-sm text-blue-600 hover:underline"
       >
-        ← Kỳ thi cuối kỳ
+        ← Kỳ thi chính thức
       </Link>
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
