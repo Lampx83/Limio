@@ -219,16 +219,18 @@ export default function QuickExamForm({
         {advanced && (
           <div className="space-y-3 border-t border-default px-3 py-3">
             <TimeRow
-              label="Mở lúc"
-              hint="Tắt = mở ngay khi phát link."
+              label="Hẹn giờ mở"
+              hintOff="Bài mở ngay khi bạn phát link."
+              hintOn="Bài chỉ mở từ thời điểm này."
               on={scheduleOpen}
               setOn={setScheduleOpen}
               value={opensAt}
               setValue={setOpensAt}
             />
             <TimeRow
-              label="Đóng lúc"
-              hint="Tắt = mở tới khi bạn bấm đóng."
+              label="Hẹn giờ đóng"
+              hintOff="Bài mở tới khi bạn bấm đóng."
+              hintOn="Bài tự đóng vào thời điểm này."
               on={scheduleClose}
               setOn={setScheduleClose}
               value={closesAt}
@@ -256,16 +258,25 @@ export default function QuickExamForm({
   );
 }
 
+/**
+ * Một dòng hẹn giờ.
+ *
+ * Ghi chú mô tả ĐIỀU ĐANG XẢY RA theo trạng thái công tắc, không phải "tắt =
+ * ...". Kiểu cũ bắt người đọc suy ngược từ trạng thái họ không chọn, và câu
+ * "Tắt = mở ngay" đọc nhanh thành tự mâu thuẫn.
+ */
 function TimeRow({
   label,
-  hint,
+  hintOn,
+  hintOff,
   on,
   setOn,
   value,
   setValue,
 }: {
   label: string;
-  hint: string;
+  hintOn: string;
+  hintOff: string;
   on: boolean;
   setOn: (v: boolean) => void;
   value: string;
@@ -292,14 +303,17 @@ function TimeRow({
           />
         </button>
       </div>
-      <input
-        type="datetime-local"
-        disabled={!on}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-faint"
-      />
-      <span className="mt-1 block text-caption text-faint">{hint}</span>
+      {on && (
+        <input
+          type="datetime-local"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+        />
+      )}
+      <span className="mt-1 block text-caption text-faint">
+        {on ? hintOn : hintOff}
+      </span>
     </div>
   );
 }
