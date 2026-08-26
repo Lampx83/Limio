@@ -333,21 +333,37 @@ function TimeRow({
     <div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium">{label}</span>
+        {/* Công tắc kèm chữ Bật/Tắt ngay bên cạnh, theo mẫu Teams. Chỉ nhìn
+            màu và vị trí núm thì phải biết trước quy ước mới đọc được trạng
+            thái; có chữ thì đọc thẳng. Chữ cũng là vùng bấm luôn — đích bấm
+            rộng gấp đôi, và người dùng hay bấm vào nhãn thay vì cái núm. */}
         <button
           type="button"
           role="switch"
           aria-checked={on}
           aria-label={label}
           onClick={() => setOn(!on)}
-          className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-            on ? "bg-emerald-600" : "bg-slate-300"
-          }`}
+          className="flex shrink-0 items-center gap-2"
         >
           <span
-            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-              on ? "translate-x-4" : "translate-x-0.5"
+            className={`relative block h-5 w-9 rounded-full transition-colors ${
+              on ? "bg-emerald-600" : "bg-slate-300"
             }`}
-          />
+          >
+            <span
+              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                on ? "translate-x-4" : "translate-x-0.5"
+              }`}
+            />
+          </span>
+          {/* w-7 cố định: "Bật" và "Tắt" khác độ rộng, để tự co thì cả hàng
+              nhích mỗi lần bấm. */}
+          <span
+            aria-hidden="true"
+            className={`w-7 text-sm ${on ? "font-medium text-ink" : "text-faint"}`}
+          >
+            {on ? "Bật" : "Tắt"}
+          </span>
         </button>
       </div>
       {on && (
