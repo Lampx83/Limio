@@ -415,6 +415,11 @@ export const CreateSessionInput = z
     opensAt: z.coerce.date().optional(),
     closesAt: z.coerce.date().optional(),
     durationOverrideMin: z.number().int().min(1).max(24 * 60).optional().nullable(),
+    // Bỏ trống = theo gói đề. Xem reveal-policy.ts.
+    revealAnswers: z
+      .enum(["immediately", "never", "after_close"])
+      .optional()
+      .nullable(),
     ipAllowlist: z.array(z.string().min(3).max(43)).max(50).optional(),
   })
   // Hẹn giờ thì bắt buộc đủ hai mốc và phải theo đúng thứ tự.
@@ -476,6 +481,7 @@ export async function createExamSession(
       opensAt: isManual ? new Date() : d.opensAt!,
       closesAt: isManual ? null : d.closesAt!,
       durationOverrideMin: d.durationOverrideMin ?? null,
+      revealAnswers: d.revealAnswers ?? null,
       ipAllowlist: d.ipAllowlist ?? [],
     },
     select: { id: true },
@@ -586,6 +592,37 @@ export async function setManualSessionOpen(
     select: { id: true, status: true },
   });
   return updated;
+}
+
+/**
+ * Đổi chính sách lộ đáp án của một ca ĐÃ TẠO.
+ *
+ * Cần có, không phải tiện thêm: chọn lúc tạo là chọn trước khi biết buổi thi
+ * diễn ra thế nào. Giáo viên chọn "không hiện" rồi cuối buổi muốn chữa đề cho
+ * cả lớp thì phải sửa được, nếu không họ sẽ đi sửa cờ trên GÓI ĐỀ — mà cờ đó
+ * dùng chung cho mọi ca, sửa là đụng luôn các buổi khác. Đúng cái vòng luẩn
+ * quẩn mà cột trên ca sinh ra để cắt.
+ *
+ * `null` = trả về kế thừa gói đề.
+ */
+export async function setSessionRevealPolicy(
+  actorUserId: string,
+  sessionId: string,
+  policy: "immediately" | "never" | "after_close" | null,
+  db: PrismaClient = prisma,
+): Promise<{ id: string; revealAnswers: string | null }> {
+  const s = await db.examSession.findUnique({
+    where: { id: sessionId },
+    select: { id: true, exam: { select: { courseId: true } } },
+  });
+  if (!s) throw new ExamError("schedule_not_found");
+  await assertCanEditCourse(actorUserId, s.exam.courseId, db);
+
+  return db.examSession.update({
+    where: { id: sessionId },
+    data: { revealAnswers: policy },
+    select: { id: true, revealAnswers: true },
+  });
 }
 
 export async function deleteExamSession(

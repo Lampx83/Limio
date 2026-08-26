@@ -7,11 +7,16 @@
  *                    `email` from claim metadata to identify the specific row.
  *
  * Returns a sanitised view: scores + per-question correctness (only when
- * `exam.showResultsAfterSubmit=true`). Never leaks other candidates' data.
+ * chính sách lộ đáp án của CA THI cho phép — xem reveal-policy.ts). Never
+ * leaks other candidates' data.
  */
 
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { ExamError } from "./types";
+import {
+  canRevealAnswers,
+  REVEAL_SESSION_SELECT,
+} from "./reveal-policy";
 
 export interface CandidateResult {
   examTitle: string;
@@ -110,6 +115,7 @@ export async function lookupCandidateResult(
       score: true,
       scorePct: true,
       passed: true,
+      session: { select: REVEAL_SESSION_SELECT },
       answers: {
         select: {
           questionId: true,
@@ -134,7 +140,9 @@ export async function lookupCandidateResult(
     throw new ExamError("result_not_yet_graded");
 
   const fullyGraded = attempt.status === "graded";
-  const showDetail = exam!.showResultsAfterSubmit && fullyGraded;
+  // Chính sách của CA THI, không phải của gói đề. Xem reveal-policy.ts.
+  const showDetail =
+    fullyGraded && canRevealAnswers(attempt.session, exam!, new Date());
   const details = showDetail
     ? attempt.answers.map((a) => {
         const awarded = a.manualScore ?? a.autoScore;
@@ -186,6 +194,7 @@ export async function getCandidateResultByAttemptId(
       candidateDisplayName: true,
       candidate: { select: { displayName: true } },
       exam: { select: { title: true, showResultsAfterSubmit: true } },
+      session: { select: REVEAL_SESSION_SELECT },
       answers: {
         select: {
           questionId: true,
@@ -202,7 +211,8 @@ export async function getCandidateResultByAttemptId(
     throw new ExamError("result_not_yet_graded");
 
   const fullyGraded = attempt.status === "graded";
-  const showDetail = attempt.exam.showResultsAfterSubmit && fullyGraded;
+  const showDetail =
+    fullyGraded && canRevealAnswers(attempt.session, attempt.exam, new Date());
   const details = showDetail
     ? attempt.answers.map((a) => {
         const awarded = a.manualScore ?? a.autoScore;

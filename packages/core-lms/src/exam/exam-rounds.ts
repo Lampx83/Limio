@@ -575,6 +575,12 @@ export const BulkCreateExamSessionsInput = z
     // (not per-session) — flipping mode here affects ALL other sessions of
     // the same exam.
     accessMode: z.enum(["assigned_code", "open_code"]).optional(),
+    // Áp cho MỌI ca tạo trong lượt này. Bỏ trống = theo gói đề.
+    // Sửa lại từng ca sau bằng setSessionRevealPolicy.
+    revealAnswers: z
+      .enum(["immediately", "never", "after_close"])
+      .optional()
+      .nullable(),
   })
   .refine(
     (d) => !(d.opensAt && d.closesAt) || d.opensAt < d.closesAt,
@@ -664,6 +670,7 @@ export async function bulkCreateExamSessionsInRound(
         closesAt,
         accessMode: mode,
         openCode,
+        revealAnswers: parsed.data.revealAnswers ?? null,
       },
       select: { id: true },
     });

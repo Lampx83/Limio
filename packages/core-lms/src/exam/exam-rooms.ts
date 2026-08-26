@@ -586,6 +586,13 @@ async function nextRoomOrderIndex(
  *
  * Authorization NOT re-checked — caller is the one creating the session and
  * has already passed assertCanEditCourse / assertCanEdit(round).
+ *
+ * Tên phòng phải ĐỘC NHẤT TRONG GÓI ĐỀ, không chỉ trong ca: ExamRoom có
+ * `@@unique([examId, name])`. Bản trước luôn đặt "Phòng mặc định", nên ca THỨ
+ * HAI của cùng một gói đề không tạo nổi phòng — P2002. Lỗi nằm im vì luồng mở
+ * nhanh cũ luôn dùng lại ca cũ thay vì tạo ca mới; nó lộ ra ngay khi cùng một
+ * gói đề mở được nhiều buổi, và nó cũng làm hỏng "Tạo nhiều ca thi" từ 2 ca
+ * trở lên.
  */
 export async function ensureDefaultRoomForSession(
   actorUserId: string,
@@ -607,20 +614,40 @@ export async function ensureDefaultRoomForSession(
   if (!session) throw new ExamError("schedule_not_found");
 
   const accessCode = await generateUniqueRoomCode(sessionId, db);
-  const room = await db.examRoom.create({
-    data: {
-      examId: session.examId,
-      sessionId,
-      orderIndex: 1,
-      name: "Phòng mặc định",
-      proctorUserId: actorUserId,
-      locationNote: null,
-      accessCode,
-      isDefault: true,
-    },
-    select: { id: true },
+
+  // Tìm tên còn trống trong gói đề. Thử theo thứ tự chứ không đếm số phòng
+  // hiện có: phòng bị xoá sẽ để lại lỗ, đếm thì đâm vào tên đã dùng.
+  for (let n = 1; n <= 200; n++) {
+    const name = n === 1 ? "Phòng mặc định" : `Phòng mặc định ${n}`;
+    try {
+      const room = await db.examRoom.create({
+        data: {
+          examId: session.examId,
+          sessionId,
+          orderIndex: 1,
+          name,
+          proctorUserId: actorUserId,
+          locationNote: null,
+          accessCode,
+          isDefault: true,
+        },
+        select: { id: true },
+      });
+      return { created: true, roomId: room.id };
+    } catch (e) {
+      // Chỉ nuốt đúng va chạm tên. Va chạm accessCode hay lỗi khác phải nổ —
+      // thử lại 200 lần với cùng một accessCode thì không đời nào qua được.
+      const err = e as { code?: string; meta?: { target?: unknown } };
+      const target = Array.isArray(err.meta?.target)
+        ? (err.meta!.target as string[])
+        : [];
+      if (err.code !== "P2002" || !target.includes("name")) throw e;
+    }
+  }
+  throw new ExamError("validation_failed", {
+    reason: "room_name_exhausted",
+    message: "Gói đề đã có quá nhiều phòng mặc định.",
   });
-  return { created: true, roomId: room.id };
 }
 
 // A5.3 PR2.6 — Bulk-create N rooms in a session with placeholder names

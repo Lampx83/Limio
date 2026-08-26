@@ -31,6 +31,8 @@ export interface ExamRun {
   /** Null với ca thủ công — nó đóng khi giáo viên bấm. */
   closesAt: string | null;
   durationMin: number;
+  /** Null = ca này theo chính sách của gói đề. Xem reveal-policy.ts. */
+  revealAnswers: "immediately" | "never" | "after_close" | null;
   startedCount: number;
   submittedCount: number;
 }
@@ -67,6 +69,7 @@ export async function listExamRuns(
       status: true,
       accessMode: true,
       scale: true,
+      revealAnswers: true,
       durationOverrideMin: true,
       exam: {
         select: { id: true, title: true, courseId: true, durationMin: true },
@@ -116,6 +119,8 @@ export async function listExamRuns(
     timingMode: r.timingMode,
     closesAt: r.closesAt?.toISOString() ?? null,
     durationMin: r.durationOverrideMin ?? r.exam.durationMin,
+    // null = ca này theo gói đề; UI hiện nhãn kế thừa chứ không đoán hộ.
+    revealAnswers: r.revealAnswers,
     startedCount: countById.get(r.id)?.started ?? 0,
     submittedCount: countById.get(r.id)?.submitted ?? 0,
   }));

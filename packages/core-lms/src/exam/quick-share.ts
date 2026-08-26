@@ -1,7 +1,9 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
+import type { RevealPolicy } from "./reveal-policy";
 import { assertCanEditCourse } from "../courses/authz";
 import { generateOpenCode } from "./code-access";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
+import { isSessionOpen } from "./session-window";
 import { ExamError } from "./types";
 
 /**
@@ -15,8 +17,9 @@ import { ExamError } from "./types";
  * Cấu trúc đợt/ca/phòng vẫn được dựng đầy đủ bên dưới — chỉ là giáo viên không
  * phải học nó. `ensureDefault*` đã tồn tại sẵn cho đúng mục đích này.
  *
- * Idempotent: gọi lại trên buổi đã mở thì trả về đúng mã cũ, không sinh
- * mã mới. Muốn đổi mã thì dùng nút "Sinh mã mới" riêng.
+ * Idempotent trong phạm vi MỘT buổi: gọi lại khi buổi cũ CÒN MỞ thì trả đúng
+ * mã cũ, không sinh mã mới. Buổi cũ đã đóng thì đây là buổi MỚI — sinh mã mới.
+ * Xem chi tiết ở chỗ chọn `existing` bên dưới.
  */
 export async function shareExamLink(
   actorUserId: string,
@@ -30,6 +33,11 @@ export async function shareExamLink(
     closesAt?: Date;
     /** Quy mô tổ chức — mặc định "simple" vì hàm này phục vụ luồng mở nhanh. */
     scale?: "simple" | "formal";
+    /**
+     * Khi nào học sinh được xem đáp án. Bỏ trống = theo gói đề.
+     * Xem reveal-policy.ts.
+     */
+    revealAnswers?: RevealPolicy;
   } = {},
   db: PrismaClient = prisma,
 ): Promise<{
@@ -72,13 +80,42 @@ export async function shareExamLink(
     });
   }
 
-  // Ca đã có mã thì dùng lại — bấm hai lần không được đổi mã dưới chân học
-  // sinh đang chờ.
-  const existing = await db.examSession.findFirst({
+  // Chỉ dùng lại ca CÒN MỞ, và phải cùng kiểu hẹn giờ với thứ vừa chọn.
+  //
+  // Bản trước lấy `findFirst(... orderBy createdAt asc)` — tức ca CŨ NHẤT có
+  // mã, bất kể đóng hay mở. Gói đề đã dùng lần trước thì lần này bấm "Mở" sẽ
+  // trả về đúng cái ca đã đóng từ đời nào, kèm mã của nó; giáo viên tưởng vừa
+  // mở buổi mới, học sinh vào thì báo "đề đã đóng". Mọi lựa chọn vừa đặt
+  // (thời lượng, chính sách đáp án) cũng bị nuốt mất theo.
+  //
+  // Ý định ban đầu — "bấm hai lần không được đổi mã dưới chân học sinh đang
+  // chờ" — vẫn giữ, nhưng nó chỉ đúng khi ca đó CÒN MỞ. Ca đã đóng nghĩa là
+  // buổi thi đó xong rồi; bấm Mở lúc này là mở buổi MỚI, và cùng một gói đề
+  // mở được nhiều buổi là điều cả màn hình này dựa vào.
+  const now = new Date();
+  const wantManual = (opts.timingMode ?? "manual") === "manual";
+  const openCandidates = await db.examSession.findMany({
     where: { examId, accessMode: "open_code", openCode: { not: null } },
-    select: { id: true, openCode: true },
-    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      openCode: true,
+      opensAt: true,
+      closesAt: true,
+      timingMode: true,
+      status: true,
+    },
+    // Mới nhất trước: nếu có nhiều ca còn mở thì ca vừa tạo mới là ca giáo
+    // viên đang nói tới.
+    orderBy: { createdAt: "desc" },
   });
+  const existing =
+    openCandidates.find(
+      (s) =>
+        isSessionOpen(s, now) &&
+        // Đổi từ mở-ngay sang hẹn giờ (hoặc ngược lại) là ý định khác hẳn —
+        // dùng lại ca cũ sẽ nuốt mất mốc giờ vừa nhập.
+        (s.timingMode === "manual") === wantManual,
+    ) ?? null;
 
   const published = exam.status !== "published";
   if (published) {
@@ -95,6 +132,16 @@ export async function shareExamLink(
   });
 
   if (existing?.openCode) {
+    // Áp thiết lập vừa chọn lên ca đang mở. Im lặng bỏ qua thì giáo viên đổi
+    // thời lượng rồi bấm Mở, thấy báo thành công, mà không có gì đổi cả.
+    // Bài đang làm dở không bị ảnh hưởng: durationSec được chốt lúc bắt đầu.
+    await db.examSession.update({
+      where: { id: existing.id },
+      data: {
+        durationOverrideMin: opts.durationMin ?? null,
+        revealAnswers: opts.revealAnswers ?? null,
+      },
+    });
     return {
       code: existing.openCode,
       path: `/exam/${existing.openCode}`,
@@ -105,7 +152,7 @@ export async function shareExamLink(
   }
 
   const roundId = await ensureDefaultRound(examId, db);
-  const manual = (opts.timingMode ?? "manual") === "manual";
+  const manual = wantManual;
 
   // 31^6 ≈ 887 triệu tổ hợp nên đụng mã gần như không xảy ra, nhưng vẫn thử lại.
   for (let i = 0; i < 5; i++) {
@@ -127,6 +174,7 @@ export async function shareExamLink(
           // hỗ trợ). Exam.durationMin chỉ còn là giá trị mặc định.
           durationOverrideMin: opts.durationMin ?? null,
           scale: opts.scale ?? "simple",
+          revealAnswers: opts.revealAnswers ?? null,
         },
         select: { id: true },
       });

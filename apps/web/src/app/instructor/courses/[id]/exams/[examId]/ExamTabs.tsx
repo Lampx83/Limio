@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 // A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề:
-//   Tổng quan / Nội dung / Blueprint / Kết quả
+//   Tổng quan / Nội dung / Blueprint
 // Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
 // chuyển sang "Tổ chức thi" (/instructor/exam-rounds/...).
 export type ExamTab = "overview" | "content" | "blueprint";

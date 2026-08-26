@@ -47,7 +47,7 @@ export default async function OrganizeFieldTestPage() {
   return (
     <OrganizeLayout
       title="Thử nghiệm câu hỏi"
-      blurb="Đo chất lượng câu hỏi trước khi kết nạp vào ngân hàng. Đề loại này không hiện đáp án sau khi nộp."
+      blurb="Đo chất lượng câu hỏi trước khi kết nạp vào ngân hàng. Mặc định không hiện đáp án để không đốt câu hỏi."
       runs={runs}
       historyTitle="Các đợt đã thử"
       emptyHint="Chưa có đợt thử nghiệm nào."
