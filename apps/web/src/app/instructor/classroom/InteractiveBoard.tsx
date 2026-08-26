@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatVN } from "@/lib/datetime";
 import {
   BOARD_NOTE_COLORS,
@@ -315,10 +315,8 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     }
   };
 
-  const joinUrl =
-    current && typeof window !== "undefined"
-      ? `${window.location.origin}/join/${current.code}`
-      : null;
+  // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
+  const joinUrl = current ? shareUrl(`/join/${current.code}`) : null;
 
   const NotesGrid = ({ notes }: { notes: BoardNote[] }) => {
     const visible = notes; // host thấy hết, kể cả hidden

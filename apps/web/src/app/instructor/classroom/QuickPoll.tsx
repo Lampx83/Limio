@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
 
 const QRCode = dynamic(
@@ -235,8 +235,9 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
   };
 
   // Calculate pollUrl for both fullscreen and normal views
+  // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
   const pollUrl = currentPoll && !isStateless
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/learn/poll/${currentPoll.id}`
+    ? shareUrl(`/learn/poll/${currentPoll.id}`)
     : null;
 
   if (isFullscreen && currentPoll && (results || isStateless)) {
