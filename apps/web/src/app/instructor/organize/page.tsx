@@ -2,25 +2,29 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { CalendarCheck, FlaskConical, Zap } from "lucide-react";
+import { listExamRuns } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import ExamRunsList from "./ExamRunsList";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Bệ phóng tổ chức thi — KHÔNG phải một cái kho.
+ * Nhà của BUỔI THI — danh từ thứ hai bên cạnh gói đề.
  *
- * Màn hình này không có danh sách đề, không có tab, không giữ trạng thái. Nó
- * hỏi ý định rồi bàn giao; sau khi tạo, mọi thứ sống dưới bài thi.
+ * Ban đầu tôi dựng đây thành bệ phóng thuần, với lập luận "không được thành cái
+ * kho, kẻo lại có hai lối vào cùng một đối tượng". Lập luận đó đúng KHI buổi
+ * thi chưa có danh tính riêng. Sau khi tách gói đề khỏi buổi thi, buổi thi có
+ * thời lượng riêng, giờ riêng, mã riêng, thí sinh riêng — và không có nhà. Nên
+ * danh sách các lần thi ở đây không phải bản sao của mục "Đề thi".
  *
- * Ranh giới đó quan trọng: nếu ở đây mọc thêm "các đợt thi của tôi" thì ta lại
- * có hai lối vào cùng một đối tượng — đúng thứ đã đẻ ra hai lối tạo đề và hai
- * bản xuất điểm mà đợt thiết kế lại này vừa dọn.
+ * Phân công để hai nơi không giẫm chân nhau:
+ *   - Đề thi → tab Kết quả  = "gói đề này chạy ra sao" (gộp mọi lần)
+ *   - Ở đây                 = "buổi hôm đó ra sao" (từng lần chạy)
  *
- * Vì sao có màn hình này dù nguyên tắc chung là "suy ra, đừng hỏi": hỏi trước
- * chỉ đúng khi hai luồng cho ra form khác hẳn nhau. Với MỤC ĐÍCH thì không —
- * cùng bộ trường, chỉ khác mặc định, nên hệ thống tự suy. Với QUY MÔ thì có:
- * link nhanh cần 3 ô, kỳ thi cuối kỳ cần đợt, ca, phòng, giám thị, danh sách
- * thí sinh.
+ * Ba lựa chọn tạo mới vẫn theo nguyên tắc "hỏi ý định": hỏi trước chỉ đúng khi
+ * hai luồng cho ra form khác hẳn nhau. Với MỤC ĐÍCH thì không (hệ thống tự suy
+ * từ trạng thái câu hỏi); với QUY MÔ thì có — link nhanh cần 3 ô, kỳ thi cuối
+ * kỳ cần đợt, ca, phòng, giám thị, danh sách thí sinh.
  */
 export default async function OrganizePage() {
   const session = await auth();
@@ -29,6 +33,7 @@ export default async function OrganizePage() {
   const courseCount = await prisma.course.count({
     where: { instructors: { some: { userId: session.user.id } } },
   });
+  const runs = await listExamRuns(session.user.id);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
@@ -78,13 +83,15 @@ export default async function OrganizePage() {
         </div>
       )}
 
-      <p className="mt-6 text-caption text-faint">
-        Cả ba đều tạo ra một bài thi. Sau khi tạo, bạn quản lý nó ở mục{" "}
+      <p className="mt-4 text-caption text-faint">
+        Nội dung câu hỏi soạn ở mục{" "}
         <Link href="/instructor/exams" className="underline">
           Đề thi
         </Link>
-        .
+        ; ở đây quyết định chạy khi nào, bao lâu, ai vào.
       </p>
+
+      {courseCount > 0 && <ExamRunsList runs={runs} />}
     </main>
   );
 }

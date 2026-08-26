@@ -11,9 +11,11 @@ import {
 //   Tổng quan / Nội dung / Blueprint / Kết quả
 // Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
 // chuyển sang "Tổ chức thi" (/instructor/exam-rounds/...).
-export type ExamTab = "overview" | "content" | "blueprint" | "results";
+export type ExamTab = "overview" | "content" | "blueprint";
 
-export const EXAM_TABS: ExamTab[] = ["overview", "content", "blueprint", "results"];
+// Không còn tab "Kết quả": kết quả nói về AI ĐÃ LÀM, mà "ai" thuộc buổi thi
+// chứ không thuộc gói đề. Xem ở Tổ chức thi → từng lần thi.
+export const EXAM_TABS: ExamTab[] = ["overview", "content", "blueprint"];
 
 export function parseExamTab(raw: string | string[] | undefined): ExamTab {
   const v = Array.isArray(raw) ? raw[0] : raw;
@@ -24,7 +26,6 @@ const META: Array<{ key: ExamTab; label: string; Icon: LucideIcon }> = [
   { key: "overview", label: "Tổng quan", Icon: Info },
   { key: "content", label: "Nội dung", Icon: BookOpen },
   { key: "blueprint", label: "Blueprint", Icon: Grid3x3 },
-  { key: "results", label: "Kết quả", Icon: ChartBar },
 ];
 
 export default function ExamTabs({
