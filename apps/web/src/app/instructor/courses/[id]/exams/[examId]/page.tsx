@@ -9,7 +9,7 @@ import PublishBar from "./PublishBar";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import CloneButton from "./CloneButton";
-import AnalyticsPanel from "./AnalyticsPanel";
+import ResultsPanel from "./ResultsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
 import BlueprintEditor from "./BlueprintEditor";
@@ -263,7 +263,9 @@ export default async function EditExamPage({
         <BlueprintEditorLoader examId={exam.id} courseId={course.id} />
       )}
 
-      {activeTab === "results" && <AnalyticsPanel examId={exam.id} />}
+      {activeTab === "results" && (
+        <ResultsPanel examId={exam.id} courseId={exam.courseId} />
+      )}
     </main>
   );
 }
