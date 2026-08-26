@@ -2562,6 +2562,16 @@ model ExamAttempt {
   // Exactly one must be set (enforced by raw-SQL CHECK in the migration).
   userId               String?
   candidateId          String?
+  // Ca thi mà bài làm này thuộc về, chốt ngay lúc bắt đầu bài.
+  //
+  // Phải LƯU chứ không đoán lại: assertEligibleForExam chọn ca theo "ca nào
+  // đang mở lúc này", nên lúc học sinh xem lại kết quả, đoán lại có thể ra ca
+  // khác (ca cũ đã đóng, ca mới vừa mở) — chính sách lộ đáp án sẽ nhảy lung
+  // tung. Thí sinh vào bằng mã thì đã có ExamCandidate.sessionId, nhưng học
+  // viên ghi danh thì trước đây không có đường nào về ca.
+  //
+  // NULL = bài làm cũ có trước cột này → rơi về Exam.showResultsAfterSubmit.
+  sessionId            String?
   // Frozen at start. For open_code mode, candidate types displayName in the
   // claim form. For assigned_code mode, instructor pre-fills it. Either way,
   // this snapshot is immutable after start — instructor edits the candidate
@@ -2593,6 +2603,9 @@ model ExamAttempt {
   exam             Exam                     @relation(fields: [examId], references: [id], onDelete: Cascade)
   user             User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   candidate        ExamCandidate?           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  // SetNull chứ không Cascade: xoá ca thi không được kéo bài làm đi theo —
+  // bài làm là bằng chứng, mất là mất điểm của học sinh.
+  session          ExamSession?             @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   answers          ExamAnswer[]
   incidents        ExamIncident[]
   messages         ExamMessage[]
@@ -2601,6 +2614,7 @@ model ExamAttempt {
   // P0 single attempt per user per exam. Implemented as partial unique index
   // in raw SQL because Prisma doesn't model partial unique. See migration.
   @@index([examId, status])
+  @@index([sessionId])
   @@index([userId, submittedAt])
   // Hot index for autosubmit job (A7.5.2) — find in-progress attempts past deadline.
   @@index([status, startedAt])
@@ -2970,6 +2984,11 @@ model ExamSession {
   closedAt            DateTime?
   // Override Exam.durationMin for this cohort (e.g. extended-time accommodation).
   durationOverrideMin Int?
+  // Ghi đè chính sách lộ đáp án của gói đề, cho RIÊNG ca này. NULL = theo gói
+  // đề (Exam.showResultsAfterSubmit). Cùng khuôn với durationOverrideMin ngay
+  // trên: cùng một gói đề mở được nhiều ca với chính sách khác nhau — ôn tập
+  // thì hiện đáp án, thi thật thì không, mà không phải nhân bản gói đề.
+  revealAnswers       ExamRevealPolicy?
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
   // Empty array = no allowlist; non-empty = only these IPs/CIDRs pass.
   ipAllowlist         String[]          @default([])
@@ -2981,6 +3000,7 @@ model ExamSession {
   cohort     CourseSection?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   rooms      ExamRoom[]
   candidates ExamCandidate[]
+  attempts   ExamAttempt[]
 
   @@unique([roundId, openCode])
   @@index([examId, opensAt])
@@ -3023,6 +3043,20 @@ enum ExamSessionStatus {
 ///   simple — một buổi, phát bằng link. Kiểm tra đầu giờ, khảo sát, thử nghiệm.
 ///   formal — nhiều ca, có phòng và giám thị. Thi cuối kỳ.
 /// Nhồi hai trục vào một enum sẽ trộn "để làm gì" với "quy mô nào".
+/// Khi nào học sinh được xem đáp án + điểm chi tiết của bài đã nộp.
+///
+/// Ba nấc vì nghề dạy thật có ba tình huống, không phải hai:
+///   immediately  — ôn tập, kiểm tra nhanh, chữa ngay tại lớp.
+///   never        — thử nghiệm câu hỏi; lộ đáp án là đốt câu hỏi.
+///   after_close  — thi thật, nhưng vẫn muốn học sinh học lại từ đề sau khi
+///                  cả ca đã nộp xong. Nếu chỉ có hai nấc thì nhóm này buộc
+///                  phải chọn `never` rồi cuối buổi vào sửa tay.
+enum ExamRevealPolicy {
+  immediately
+  never
+  after_close
+}
+
 enum ExamSessionScale {
   simple
   formal

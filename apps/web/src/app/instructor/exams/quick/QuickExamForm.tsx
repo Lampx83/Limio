@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Check, Copy } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
+type RevealPolicy = "immediately" | "never" | "after_close";
+
 interface Paper {
   id: string;
   title: string;
@@ -45,6 +47,11 @@ export default function QuickExamForm({
   const [durationMin, setDurationMin] = useState(
     papers[0]?.defaultDurationMin ?? 15,
   );
+  // Mặc định khác nhau theo mục đích, vì rủi ro khác nhau: đề thử nghiệm mà
+  // lộ đáp án là đốt câu hỏi, không dùng lại được cho đợt sau.
+  const [reveal, setReveal] = useState<RevealPolicy>(
+    purpose === "field_test" ? "never" : "immediately",
+  );
   const [advanced, setAdvanced] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleClose, setScheduleClose] = useState(false);
@@ -79,6 +86,7 @@ export default function QuickExamForm({
         body: JSON.stringify({
           timingMode: scheduled ? "scheduled" : "manual",
           durationMin,
+          revealAnswers: reveal,
           ...(scheduleOpen ? { opensAt: new Date(opensAt).toISOString() } : {}),
           ...(scheduleClose ? { closesAt: new Date(closesAt).toISOString() } : {}),
         }),
@@ -203,6 +211,32 @@ export default function QuickExamForm({
         <span className="mt-1 block text-caption text-faint">
           Đếm từ lúc từng học sinh bấm bắt đầu, không phải giờ đồng hồ.
         </span>
+      </label>
+
+      <label className="block">
+        <span className="block text-sm font-medium">Hiện đáp án và kết quả</span>
+        <select
+          value={reveal}
+          onChange={(e) => setReveal(e.target.value as RevealPolicy)}
+          className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+        >
+          <option value="immediately">Hiện ngay sau khi nộp</option>
+          <option value="after_close">Hiện sau khi đóng buổi thi</option>
+          <option value="never">Không hiện</option>
+        </select>
+        <span className="mt-1 block text-caption text-faint">
+          {reveal === "immediately"
+            ? "Học sinh xem được điểm từng câu và đáp án đúng ngay khi nộp."
+            : reveal === "after_close"
+              ? "Học sinh chỉ xem được sau khi bạn đóng buổi thi — cả lớp nộp xong mới lộ đề."
+              : "Học sinh chỉ thấy đã nộp, không thấy điểm chi tiết hay đáp án."}
+        </span>
+        {purpose === "field_test" && reveal !== "never" && (
+          <span className="banner-warning mt-2 block px-3 py-2 text-caption">
+            Đề thử nghiệm mà lộ đáp án là đốt câu hỏi — đợt sau không dùng lại
+            được nữa.
+          </span>
+        )}
       </label>
 
       <div className="rounded border border-default bg-white">

@@ -11,6 +11,7 @@ export * from "./live-sessions";
 export * from "./quick-share";
 export * from "./results";
 export * from "./session-window";
+export * from "./reveal-policy";
 export * from "./submission";
 export * from "./manual-grading";
 export * from "./incidents";

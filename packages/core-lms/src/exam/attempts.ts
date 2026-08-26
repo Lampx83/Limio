@@ -214,6 +214,10 @@ export async function startExamAttempt(
       userId,
       durationSec,
       sessionToken,
+      // Chốt ca thi ngay đây. assertEligibleForExam vừa chọn ca theo "ca nào
+      // đang mở lúc này"; không lưu lại thì lúc xem kết quả phải đoán lại, mà
+      // lúc đó ca có thể đã đóng hoặc đã có ca khác mở.
+      sessionId: eligibility.scheduleId,
       shuffleSnapshot: snapshot as unknown as Prisma.InputJsonValue,
     },
   });

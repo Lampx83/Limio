@@ -4,6 +4,10 @@ import { emitEvent } from "../learning/events";
 import { gradeExamAnswer, type GradeResult } from "./grading";
 import { assertSubjectOwnsAttempt, type ExamSubject } from "./subject";
 import { ExamError } from "./types";
+import {
+  canRevealAnswers,
+  REVEAL_SESSION_SELECT,
+} from "./reveal-policy";
 
 interface QuestionWithAnswer {
   id: string;
@@ -666,7 +670,10 @@ export async function autoSubmitExpiredAttempts(
   return { processed, errors };
 }
 
-/** A7.5.4 — Result for learner. Hides correct answers if exam.showResultsAfterSubmit=false. */
+/**
+ * A7.5.4 — Kết quả cho học sinh. Giấu đáp án khi chính sách của CA THI chưa
+ * cho lộ (xem reveal-policy.ts).
+ */
 export async function getExamAttemptResult(
   userId: string,
   attemptId: string,
@@ -683,6 +690,7 @@ export async function getExamAttemptResult(
           showResultsAfterSubmit: true,
         },
       },
+      session: { select: REVEAL_SESSION_SELECT },
       answers: {
         select: {
           id: true,
@@ -710,7 +718,8 @@ export async function getExamAttemptResult(
     scorePct: isFinal ? attempt.scorePct : null,
     passed: isFinal ? attempt.passed : null,
     passScore: attempt.exam.passScore,
-    showDetails: attempt.exam.showResultsAfterSubmit && isFinal,
+    showDetails:
+      isFinal && canRevealAnswers(attempt.session, attempt.exam, new Date()),
     answers: attempt.answers.map((a) => ({
       questionId: a.questionId,
       autoScore: a.autoScore,
@@ -754,6 +763,7 @@ export async function getExamAttemptReview(
       userId: true,
       examId: true,
       status: true,
+      session: { select: REVEAL_SESSION_SELECT },
       exam: {
         select: {
           title: true,
@@ -787,7 +797,7 @@ export async function getExamAttemptReview(
   if (!attempt) throw new ExamError("attempt_not_found");
   if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
   if (attempt.status !== "graded") throw new ExamError("validation_failed", "not_graded_yet");
-  if (!attempt.exam.showResultsAfterSubmit) {
+  if (!canRevealAnswers(attempt.session, attempt.exam, new Date())) {
     throw new ExamError("validation_failed", "results_hidden");
   }
 

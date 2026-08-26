@@ -1,4 +1,5 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
+import type { RevealPolicy } from "./reveal-policy";
 import { assertCanEditCourse } from "../courses/authz";
 import { generateOpenCode } from "./code-access";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
@@ -30,6 +31,11 @@ export async function shareExamLink(
     closesAt?: Date;
     /** Quy mô tổ chức — mặc định "simple" vì hàm này phục vụ luồng mở nhanh. */
     scale?: "simple" | "formal";
+    /**
+     * Khi nào học sinh được xem đáp án. Bỏ trống = theo gói đề.
+     * Xem reveal-policy.ts.
+     */
+    revealAnswers?: RevealPolicy;
   } = {},
   db: PrismaClient = prisma,
 ): Promise<{
@@ -127,6 +133,7 @@ export async function shareExamLink(
           // hỗ trợ). Exam.durationMin chỉ còn là giá trị mặc định.
           durationOverrideMin: opts.durationMin ?? null,
           scale: opts.scale ?? "simple",
+          revealAnswers: opts.revealAnswers ?? null,
         },
         select: { id: true },
       });

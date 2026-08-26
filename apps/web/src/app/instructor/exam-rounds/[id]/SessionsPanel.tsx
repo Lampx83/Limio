@@ -664,6 +664,11 @@ function BulkCreateSessionsDialog({
   const [count, setCount] = useState(3);
   const [prefix, setPrefix] = useState("Ca");
   const [mode, setMode] = useState<"assigned_code" | "open_code" | null>(null);
+  // Kỳ thi cuối kỳ mặc định "sau khi đóng ca": vẫn giữ kín trong lúc thi,
+  // nhưng cả lớp nộp xong thì cho xem lại — nhu cầu chữa đề của thi thật.
+  const [reveal, setReveal] = useState<
+    "immediately" | "never" | "after_close"
+  >("after_close");
   // "" = tự động (đề đầu tiên của khoá); ngược lại = examId đã chọn.
   const [examId, setExamId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -694,6 +699,7 @@ function BulkCreateSessionsDialog({
           // Backend applies this mode to the round's exam after creating
           // sessions. Mode is per-exam currently (not per-session).
           accessMode: mode,
+          revealAnswers: reveal,
           // examId chọn tay; bỏ trống → backend lấy đề đầu tiên của khoá.
           ...(examId ? { examId } : {}),
         }),
@@ -792,6 +798,32 @@ function BulkCreateSessionsDialog({
               {availableExams.length === 0
                 ? "Khoá chưa có đề thi nào — tạo đề trong khoá trước."
                 : `Áp dụng cho tất cả ${count} ca. Có thể đổi đề từng ca sau khi tạo.`}
+            </span>
+          </label>
+
+          <label className="block">
+            <span className="block text-xs font-medium text-slate-600">
+              Hiện đáp án và kết quả
+            </span>
+            <select
+              value={reveal}
+              onChange={(e) =>
+                setReveal(
+                  e.target.value as "immediately" | "never" | "after_close",
+                )
+              }
+              className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option value="after_close">Hiện sau khi đóng ca</option>
+              <option value="immediately">Hiện ngay sau khi nộp</option>
+              <option value="never">Không hiện</option>
+            </select>
+            <span className="mt-1 block text-[11px] text-faint">
+              {reveal === "after_close"
+                ? "Cả ca nộp xong và bạn đóng ca thì học sinh mới xem được đáp án."
+                : reveal === "immediately"
+                  ? "Học sinh xem được đáp án ngay khi nộp — người thi sau có thể hỏi người thi trước."
+                  : "Học sinh không xem được đáp án hay điểm chi tiết."}
             </span>
           </label>
 
