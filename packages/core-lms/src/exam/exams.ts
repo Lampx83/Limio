@@ -3,6 +3,7 @@ import { ExamStatus, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditCourse } from "../courses/authz";
 import { emitEvent } from "../learning/events";
+import { ensureDefaultSession } from "./exam-rooms";
 import { ExamError } from "./types";
 import { WizardConfigShape, type WizardConfigT, assembleWizardPool } from "./wizard";
 
@@ -15,8 +16,11 @@ export const CreateExamInput = z
     title: z.string().min(1).max(200).trim(),
     description: z.string().max(5_000).optional(),
     durationMin: z.number().int().positive().max(24 * 60),
-    openAt: z.coerce.date(),
-    closeAt: z.coerce.date(),
+    // DI SẢN — không còn được dùng để chặn ai (ca thi là tầng duy nhất quyết
+    // định giờ mở/đóng). Giữ lại vì cột còn NOT NULL trong DB; sẽ xoá ở đợt
+    // migration riêng. Bỏ trống thì điền khung rất rộng.
+    openAt: z.coerce.date().optional(),
+    closeAt: z.coerce.date().optional(),
     attemptPolicy: examAttemptPolicy.optional(),
     gradingMode: examGradingMode.optional(),
     proctoringLevel: examProctoringLevel.optional(),
@@ -26,7 +30,7 @@ export const CreateExamInput = z
     showResultsAfterSubmit: z.boolean().optional(),
     purpose: z.enum(["assessment", "field_test"]).optional(),
   })
-  .refine((d) => d.openAt < d.closeAt, {
+  .refine((d) => !d.openAt || !d.closeAt || d.openAt < d.closeAt, {
     message: "openAt must be before closeAt",
     path: ["closeAt"],
   });
@@ -68,8 +72,9 @@ export async function createExam(
       title: d.title,
       description: d.description ?? null,
       durationMin: d.durationMin,
-      openAt: d.openAt,
-      closeAt: d.closeAt,
+      // Khung rộng khi không truyền: cột còn NOT NULL nhưng giá trị đã vô nghĩa.
+      openAt: d.openAt ?? new Date(),
+      closeAt: d.closeAt ?? new Date(Date.now() + 365 * 24 * 60 * 60_000),
       attemptPolicy: d.attemptPolicy ?? "single",
       gradingMode: d.gradingMode ?? "hybrid",
       proctoringLevel: d.proctoringLevel ?? "none",
@@ -343,6 +348,13 @@ export async function publishExam(
     where: { id: examId },
     data: { status: ExamStatus.published, publishedAt: new Date() },
   });
+
+  // Ca thi là tầng DUY NHẤT quyết định giờ mở/đóng, nên đề publish mà không có
+  // ca nào thì không ai vào được. Dựng sẵn một ca mặc định lấy khung giờ của
+  // đề làm giá trị khởi tạo — giáo viên không phải học khái niệm "ca thi", còn
+  // khung giờ của đề trở thành hạt giống cho ca đầu tiên thay vì một cổng chặn
+  // sống song song.
+  await ensureDefaultSession(examId, db);
 
   await emitEvent(
     actorUserId,

@@ -36,8 +36,15 @@ export const CreateExamRoundInput = z
     code: ExamRoundCodeSchema,
     title: z.string().min(1).max(200).trim(),
     description: z.string().max(2000).optional().nullable(),
-    opensAt: z.coerce.date(),
-    closesAt: z.coerce.date(),
+    // DI SẢN — khung giờ của ĐỢT chưa bao giờ được dùng để chặn ai, và cũng
+    // không ràng buộc các ca bên trong: tạo đợt 8h–10h rồi nhét ca 14h–15h thì
+    // hệ thống không cản, ca vẫn chạy. Trên production 4/6 đợt đã trôi lệch
+    // khỏi các ca của chính mình mà không ai nhận ra.
+    //
+    // Giữ lại vì cột còn NOT NULL; giá trị hiển thị nay suy từ các ca
+    // (roundDisplayWindow). Sẽ xoá ở đợt migration riêng.
+    opensAt: z.coerce.date().optional(),
+    closesAt: z.coerce.date().optional(),
     // PR2.11 — Mỗi đợt thi gắn với 1 học phần duy nhất.
     courseId: z.string().uuid(),
     // PR2.17 — Optional: pick template + dates → auto sinh ExamSession instances.
@@ -46,7 +53,7 @@ export const CreateExamRoundInput = z
     templateIds: z.array(z.string().uuid()).optional(),
     dates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
   })
-  .refine((d) => d.opensAt < d.closesAt, {
+  .refine((d) => !d.opensAt || !d.closesAt || d.opensAt < d.closesAt, {
     message: "opensAt must be before closesAt",
   });
 
@@ -196,8 +203,8 @@ export async function createExamRound(
         code: d.code,
         title: d.title,
         description: d.description ?? null,
-        opensAt: d.opensAt,
-        closesAt: d.closesAt,
+        opensAt: d.opensAt ?? new Date(),
+        closesAt: d.closesAt ?? new Date(Date.now() + 365 * 24 * 60 * 60_000),
         // Creator becomes the first admin automatically.
         admins: { create: [{ userId: actorUserId, grantedBy: actorUserId }] },
       },
@@ -1798,4 +1805,45 @@ export async function removeAdminFromRound(
   await db.examRoundAdmin.deleteMany({
     where: { roundId, userId: targetUserId },
   });
+}
+
+
+/**
+ * Khung giờ HIỂN THỊ của một đợt thi — suy từ các ca bên trong, không đọc
+ * `ExamRound.opensAt/closesAt`.
+ *
+ * Hai cột đó chưa bao giờ chặn ai và cũng không ràng buộc các ca, nên chúng
+ * trôi khỏi thực tế mà không ai nhận ra. Suy từ ca thì không thể lệch.
+ *
+ * Trả null khi đợt chưa có ca nào, hoặc mọi ca đều chạy chế độ thủ công (không
+ * có giờ đóng).
+ */
+export async function roundDisplayWindow(
+  roundId: string,
+  db: PrismaClient = prisma,
+): Promise<{ opensAt: string | null; closesAt: string | null; sessionCount: number }> {
+  const rows = await db.examSession.findMany({
+    where: { roundId },
+    select: { opensAt: true, closesAt: true },
+  });
+  if (rows.length === 0)
+    return { opensAt: null, closesAt: null, sessionCount: 0 };
+
+  const opens = rows.reduce<Date | null>(
+    (m, r) => (m === null || r.opensAt < m ? r.opensAt : m),
+    null,
+  );
+  // Ca thủ công không có giờ đóng — bỏ qua khi tính mốc muộn nhất.
+  const closesCandidates = rows
+    .map((r) => r.closesAt)
+    .filter((d): d is Date => d !== null);
+  const closes = closesCandidates.length
+    ? closesCandidates.reduce((m, d) => (d > m ? d : m))
+    : null;
+
+  return {
+    opensAt: opens?.toISOString() ?? null,
+    closesAt: closes?.toISOString() ?? null,
+    sessionCount: rows.length,
+  };
 }

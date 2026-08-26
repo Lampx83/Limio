@@ -132,15 +132,30 @@ describe("startExamAttempt (A7.4.1)", () => {
     });
   });
 
-  it("rejects after closeAt", async () => {
+  it("rejects sau khi CA THI đóng", async () => {
     const setup = await publishedExamSetup("s4");
-    await prisma.exam.update({
-      where: { id: setup.examId },
-      data: { closeAt: new Date(Date.now() - 60_000) },
+    // Ca thi là tầng duy nhất quyết định giờ. Đóng ca thì học viên không vào
+    // được nữa — kể cả khi khung giờ của đề vẫn đang mở.
+    await prisma.examSession.updateMany({
+      where: { examId: setup.examId },
+      data: { closesAt: new Date(Date.now() - 60_000) },
     });
     await expect(startExamAttempt(setup.learnerId, setup.examId)).rejects.toMatchObject({
       code: "exam_window_closed",
     });
+  });
+
+  it("sửa closeAt của ĐỀ không còn đóng được bài", async () => {
+    const setup = await publishedExamSetup("s4b");
+    await prisma.exam.update({
+      where: { id: setup.examId },
+      data: { closeAt: new Date(Date.now() - 60_000) },
+    });
+    // Khung giờ của đề nay chỉ là giá trị khởi tạo cho ca đầu tiên; sửa nó sau
+    // khi publish không có tác dụng gì. Trước đây đây chính là chỗ giáo viên
+    // sửa rồi tưởng đã đổi được gì đó.
+    const r = await startExamAttempt(setup.learnerId, setup.examId);
+    expect(r.attemptId).toBeTruthy();
   });
 
   it("A7.4.5 — second call resumes existing in-progress attempt and rotates token", async () => {
