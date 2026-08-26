@@ -13,7 +13,6 @@ interface Paper {
   courseId: string;
   courseTitle: string;
   questionCount: number;
-  defaultDurationMin: number;
 }
 
 /** datetime-local cần giờ ĐỊA PHƯƠNG, không phải ISO UTC. */
@@ -44,9 +43,14 @@ export default function QuickExamForm({
     [papers, paperId],
   );
 
-  const [durationMin, setDurationMin] = useState(
-    papers[0]?.defaultDurationMin ?? 15,
-  );
+  // 15 phút cố định, KHÔNG lấy theo durationMin của gói đề.
+  //
+  // Thời lượng thuộc buổi thi chứ không thuộc gói đề (xem quick-share.ts) —
+  // cùng một gói chạy 15 phút ở lớp này, 30 phút ở lớp kia. Lấy theo gói đề
+  // thì con số nhảy mỗi lần đổi gói, và nhảy về một giá trị đặt từ hồi soạn
+  // đề, chẳng liên quan buổi đang mở. 15 phút hợp với thứ màn này phục vụ:
+  // khảo sát, điểm danh, kiểm tra nhanh tại lớp.
+  const [durationMin, setDurationMin] = useState(15);
   // Mặc định khác nhau theo mục đích, vì rủi ro khác nhau: đề thử nghiệm mà
   // lộ đáp án là đốt câu hỏi, không dùng lại được cho đợt sau.
   const [reveal, setReveal] = useState<RevealPolicy>(
@@ -69,11 +73,9 @@ export default function QuickExamForm({
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const onPickPaper = (id: string) => {
-    setPaperId(id);
-    const p = papers.find((x) => x.id === id);
-    if (p) setDurationMin(p.defaultDurationMin);
-  };
+  // Đổi gói đề KHÔNG đụng tới thời lượng đã gõ — thời lượng là lựa chọn cho
+  // buổi thi, người dùng vừa đặt nó thì đừng giật lại.
+  const onPickPaper = (id: string) => setPaperId(id);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -252,19 +254,24 @@ export default function QuickExamForm({
         )}
       </label>
 
-      <div className="rounded border border-default bg-white">
+      {/* Chỉ là một liên kết, không phải ô nhập.
+          Trước đây nó là hộp có viền trắng full-width, trông y hệt ba ô nhập
+          phía trên — mắt đọc thành "ô thứ tư" rồi khựng lại vì không nhập
+          được gì. Phần lớn buổi kiểm tra tại lớp không cần hẹn giờ, nên thứ
+          này phải lùi hẳn ra sau, không tranh chỗ với thứ người ta thật sự
+          phải điền. */}
+      <div>
         <button
           type="button"
           onClick={() => setAdvanced((v) => !v)}
-          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium"
+          className="text-sm text-blue-700 underline underline-offset-2 hover:text-blue-800"
           aria-expanded={advanced}
         >
-          <span>Tuỳ chọn nâng cao — giờ mở/đóng</span>
-          <span className="text-faint">{advanced ? "−" : "+"}</span>
+          {advanced ? "Ẩn tuỳ chọn nâng cao" : "Tuỳ chọn nâng cao — giờ mở/đóng"}
         </button>
 
         {advanced && (
-          <div className="space-y-3 border-t border-default px-3 py-3">
+          <div className="mt-3 space-y-3 border-l-2 border-default pl-3">
             <TimeRow
               label="Hẹn giờ mở"
               hintOff="Bài mở ngay, không chờ giờ."

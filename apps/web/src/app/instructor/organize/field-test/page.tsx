@@ -33,7 +33,6 @@ export default async function OrganizeFieldTestPage() {
         id: true,
         title: true,
         courseId: true,
-        durationMin: true,
         _count: { select: { questions: true } },
       },
       orderBy: { updatedAt: "desc" },
@@ -70,7 +69,6 @@ export default async function OrganizeFieldTestPage() {
             courseId: p.courseId,
             courseTitle: courseTitleById.get(p.courseId) ?? "",
             questionCount: p._count.questions,
-            defaultDurationMin: p.durationMin,
           }))}
         />
       )}

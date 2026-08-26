@@ -33,7 +33,6 @@ export default async function OrganizeQuickPage() {
         id: true,
         title: true,
         courseId: true,
-        durationMin: true,
         _count: { select: { questions: true } },
       },
       orderBy: { updatedAt: "desc" },
@@ -70,7 +69,6 @@ export default async function OrganizeQuickPage() {
             courseId: p.courseId,
             courseTitle: courseTitleById.get(p.courseId) ?? "",
             questionCount: p._count.questions,
-            defaultDurationMin: p.durationMin,
           }))}
         />
       )}
