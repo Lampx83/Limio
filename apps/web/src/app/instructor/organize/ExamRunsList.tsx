@@ -70,8 +70,12 @@ function Row({ r }: { r: ExamRun }) {
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // Lần thi dùng mã cấp riêng hoặc vào bằng tài khoản thì không có link chung
+  // để phát cho cả lớp.
   const fullUrl =
-    typeof window !== "undefined" ? `${window.location.origin}${r.path}` : r.path;
+    r.path && typeof window !== "undefined"
+      ? `${window.location.origin}${r.path}`
+      : (r.path ?? "");
 
   const copy = async () => {
     try {
@@ -116,9 +120,10 @@ function Row({ r }: { r: ExamRun }) {
             r.isOpen ? "text-emerald-900" : "text-faint"
           }`}
         >
-          {r.code}
+          {r.code ??
+            (r.accessMode === "assigned_code" ? "mã riêng" : "ghi danh")}
         </span>
-        {r.isOpen && (
+        {r.isOpen && r.code && (
           <button
             type="button"
             onClick={copy}

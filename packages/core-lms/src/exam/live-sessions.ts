@@ -20,8 +20,12 @@ export interface ExamRun {
   examId: string;
   courseId: string;
   examTitle: string;
-  code: string;
-  path: string;
+  /** Null khi lần thi không dùng mã dự thi chung (mã cấp riêng, hoặc ghi danh). */
+  code: string | null;
+  /** Null khi không có mã chung để phát. */
+  path: string | null;
+  /** open_code | assigned_code | authenticated — quyết định cách thí sinh vào. */
+  accessMode: string;
   timingMode: "scheduled" | "manual";
   /** Null với ca thủ công — nó đóng khi giáo viên bấm. */
   closesAt: string | null;
@@ -37,10 +41,11 @@ export async function listExamRuns(
 ): Promise<ExamRun[]> {
   const rows = await db.examSession.findMany({
     where: {
-      openCode: { not: null },
-      accessMode: "open_code",
+      // MỌI lần thi, không chỉ lần phát bằng link nhanh. Lọc theo openCode như
+      // trước sẽ giấu mất toàn bộ kỳ thi tổ chức theo đường đợt/ca/phòng — nơi
+      // thí sinh dùng mã cấp riêng hoặc vào bằng tài khoản đã ghi danh.
       exam: {
-        status: "published",
+        status: { not: "archived" },
         course: { instructors: { some: { userId: actorUserId } } },
       },
     },
@@ -51,6 +56,7 @@ export async function listExamRuns(
       closesAt: true,
       timingMode: true,
       status: true,
+      accessMode: true,
       durationOverrideMin: true,
       exam: {
         select: { id: true, title: true, courseId: true, durationMin: true },
@@ -64,17 +70,20 @@ export async function listExamRuns(
   const now = new Date();
   const open = rows;
 
-  // Đếm lượt theo từng ca. Thí sinh vào bằng mã được gắn sessionId qua
-  // ExamCandidate, nên đếm qua đó thay vì qua examId (một gói đề có thể đang
-  // chạy nhiều buổi cùng lúc).
+  // Đếm lượt theo từng ca. Thí sinh vào bằng mã gắn với ca qua ExamCandidate;
+  // còn học viên đã ghi danh thì KHÔNG có candidate, nên lần thi kiểu đó đếm
+  // theo đề. Không hoàn hảo khi một gói đề chạy nhiều ca cùng lúc theo kiểu ghi
+  // danh, nhưng thà đếm rộng còn hơn hiện 0 và làm giáo viên tưởng chưa ai làm.
   const perSession = await Promise.all(
     open.map(async (r) => {
-      const started = await db.examAttempt.count({
-        where: { candidate: { sessionId: r.id } },
-      });
+      const byCandidate = r.accessMode !== "authenticated";
+      const where = byCandidate
+        ? { candidate: { sessionId: r.id } }
+        : { examId: r.exam.id };
+      const started = await db.examAttempt.count({ where });
       const submitted = await db.examAttempt.count({
         where: {
-          candidate: { sessionId: r.id },
+          ...where,
           status: { in: ["submitted", "auto_submitted", "graded"] },
         },
       });
@@ -90,8 +99,9 @@ export async function listExamRuns(
     examId: r.exam.id,
     courseId: r.exam.courseId,
     examTitle: r.exam.title,
-    code: r.openCode!,
-    path: `/exam/${r.openCode}`,
+    code: r.openCode,
+    path: r.openCode ? `/exam/${r.openCode}` : null,
+    accessMode: r.accessMode,
     timingMode: r.timingMode,
     closesAt: r.closesAt?.toISOString() ?? null,
     durationMin: r.durationOverrideMin ?? r.exam.durationMin,
