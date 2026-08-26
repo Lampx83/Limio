@@ -22,9 +22,6 @@ import {
   Menu,
   X,
   Library,
-  PenLine,
-  Radio,
-  LineChart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -70,13 +67,17 @@ const FULL_GROUPS: Group[] = [
     label: "Kiểm tra đánh giá",
     iconBg: "bg-amber-100 dark:bg-amber-950/40",
     iconFg: "text-amber-600 dark:text-amber-300",
+    // Sáu mục cũ phản ánh cấu trúc dữ liệu, không phản ánh công việc. Giáo viên
+    // chỉ làm việc với hai danh từ: câu hỏi và bài thi.
+    //
+    // "Tổ chức thi" gộp vào màn hình đề (nút Phát link + Tổ chức thi ở đó).
+    // "Chấm tự luận" và "Phân tích item" nay là hai lát cắt của tab Kết quả.
+    // "Giám sát phòng thi" GIỮ RIÊNG — đây là ranh giới theo VAI (giám thị có
+    // thể không phải giảng viên của khoá), không phải theo cấu trúc dữ liệu.
     items: [
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
-      { label: "Tổ chức thi", href: "/instructor/exam-rounds", icon: Radio },
       PROCTOR_ITEM,
-      { label: "Chấm tự luận", href: "/instructor/grade-essays", icon: PenLine },
-      { label: "Phân tích item", href: "/instructor/item-analytics", icon: LineChart },
     ],
   },
   {

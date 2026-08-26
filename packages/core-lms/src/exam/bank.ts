@@ -128,7 +128,7 @@ export async function listBanks(
   }));
 }
 
-async function assertCanEditBank(
+export async function assertCanEditBank(
   actorUserId: string,
   bankId: string,
   db: PrismaClient,
