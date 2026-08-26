@@ -10,9 +10,12 @@ export const dynamic = "force-dynamic";
 /**
  * Kỳ thi cuối kỳ — tạo mới + lịch sử các kỳ đã tổ chức.
  *
- * Phần tạo mới vẫn dẫn sang wizard cũ. Wizard đó hiện TẠO ĐỀ MỚI chứ chưa cho
- * chọn gói đề có sẵn như hai hình thức kia — chỗ chưa nhất quán còn lại, cần
- * một đợt riêng vì nó đụng cả luồng blueprint và rút ngẫu nhiên.
+ * Phần tạo mới dẫn thẳng vào luồng cũ: đợt thi → ca thi (Tự do / Theo phòng)
+ * → phòng thi. Đó là trình tự giáo viên đã quen và nó vốn đầy đủ; hai hình
+ * thức kia mới là thứ cần rút gọn, không phải cái này.
+ *
+ * "Tự do" = ExamAccessMode.open_code (một mã chung cho cả ca).
+ * "Theo phòng" = assigned_code (mã cấp riêng từng thí sinh, có xếp phòng).
  */
 export default async function OrganizeFormalPage() {
   const session = await auth();
@@ -44,26 +47,38 @@ export default async function OrganizeFormalPage() {
       ) : (
         <>
           <p className="text-sm">
-            Kỳ thi cuối kỳ đi qua trình tạo đề đầy đủ: chọn phạm vi nội dung,
-            cấu hình độ khó, chia ca và phát đề.
+            Kỳ thi cuối kỳ đi theo trình tự đầy đủ, ba bước:
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href="/instructor/exams/new"
-              className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
-            >
-              Bắt đầu kỳ thi mới →
-            </Link>
+          <ol className="mt-2 space-y-1 text-sm text-ink-2">
+            <li>
+              <strong>1. Đợt thi</strong> — kỳ nào, của học phần nào.
+            </li>
+            <li>
+              <strong>2. Ca thi</strong> — mỗi ca chọn gói đề, giờ, và hình thức:{" "}
+              <em>Tự do</em> (một mã chung cho cả ca) hoặc <em>Theo phòng</em>{" "}
+              (mã cấp riêng từng thí sinh).
+            </li>
+            <li>
+              <strong>3. Phòng thi</strong> — xếp phòng, gán giám thị, in phiếu.
+            </li>
+          </ol>
+          <div className="mt-4 flex flex-wrap gap-2">
             <Link
               href="/instructor/exam-rounds"
+              className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+            >
+              Vào quản lý đợt thi →
+            </Link>
+            <Link
+              href="/instructor/exams/new"
               className="rounded border border-default px-3 py-1.5 text-sm"
             >
-              Quản lý đợt và ca
+              Soạn gói đề mới bằng trình hỗ trợ
             </Link>
           </div>
           <p className="mt-3 text-caption text-faint">
-            Trình này hiện tạo gói đề mới. Muốn dùng lại gói đề có sẵn thì mở
-            bằng “Link thi nhanh” — cùng một gói chạy được nhiều lần thi.
+            Gói đề soạn trước ở mục Đề thi, rồi chọn lại khi tạo ca — cùng một
+            gói dùng được cho nhiều ca.
           </p>
         </>
       )}
