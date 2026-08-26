@@ -2,8 +2,22 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, Copy } from "lucide-react";
-import { apiUrl } from "@/lib/apiUrl";
+import { Check, Copy, QrCode } from "lucide-react";
+import dynamic from "next/dynamic";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
+
+const QRCode = dynamic(
+  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="rounded-lg border border-emerald-300 bg-white"
+        style={{ width: 180, height: 180 }}
+      />
+    ),
+  },
+);
 
 type RevealPolicy = "immediately" | "never" | "after_close";
 
@@ -72,6 +86,7 @@ export default function QuickExamForm({
     sessionId: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
 
   // Đổi gói đề KHÔNG đụng tới thời lượng đã gõ — thời lượng là lựa chọn cho
   // buổi thi, người dùng vừa đặt nó thì đừng giật lại.
@@ -140,10 +155,9 @@ export default function QuickExamForm({
   }
 
   if (result) {
-    const fullUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}${result.path}`
-        : result.path;
+    // shareUrl, KHÔNG ghép tay với window.location.origin: production chạy
+    // dưới một tiền tố đường dẫn nên ghép tay ra link thiếu tiền tố → 404.
+    const fullUrl = shareUrl(result.path);
     return (
       <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-5">
         <p className="text-sm font-medium text-emerald-900">Đã mở buổi thi.</p>
@@ -167,25 +181,57 @@ export default function QuickExamForm({
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </button>
+          <button
+            type="button"
+            onClick={() => setShowQr((v) => !v)}
+            aria-expanded={showQr}
+            className={`rounded border border-emerald-300 p-1.5 text-emerald-800 hover:bg-emerald-100 ${
+              showQr ? "bg-emerald-100" : ""
+            }`}
+            aria-label={showQr ? "Ẩn mã QR" : "Hiện mã QR"}
+          >
+            <QrCode className="h-4 w-4" />
+          </button>
         </div>
+
+        {showQr && (
+          <div className="mt-3 flex flex-col items-start gap-2">
+            {/* Nền trắng + viền quiet zone: QR trên nền màu hoặc sát mép thì
+                máy quét hay không bắt được. */}
+            <div className="rounded-lg border border-emerald-300 bg-white p-3">
+              <QRCode value={fullUrl} size={180} level="M" />
+            </div>
+            <p className="text-caption text-emerald-800">
+              Chiếu lên màn hình để cả lớp quét. Ai không quét được thì gõ mã{" "}
+              <span className="font-mono font-semibold">{result.code}</span>.
+            </p>
+          </div>
+        )}
         <p className="mt-2 break-all text-caption text-emerald-800">{fullUrl}</p>
-        <div className="mt-4 flex gap-2">
+        {/* Không nút nào nổi bật ở đây. Vừa mở xong thì việc của giáo viên là
+            phát link/QR ở trên — đã xong. "Xem kết quả" từng là nút chính màu
+            xanh đậm, mà lúc đó chưa ai vào thi nên nó mời người ta đi tới một
+            trang trống. Cả hai nay là liên kết chữ, để lúc nào cần thì có. */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Link
+            href="/instructor/organize"
+            className="text-sm text-emerald-900 underline underline-offset-2"
+          >
+            Mở buổi khác
+          </Link>
           <Link
             // Trang gói đề KHÔNG có tab "Kết quả" (bỏ có chủ ý — kết quả nói
             // về ai đã làm, mà "ai" thuộc buổi thi chứ không thuộc gói đề).
             // Link cũ trỏ ?tab=results, parseExamTab không nhận ra nên rơi về
             // tab Tổng quan — bấm "Xem kết quả" lại về màn soạn đề.
             href={`/instructor/exam-runs/${result.sessionId}`}
-            className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+            className="text-sm text-emerald-800 underline underline-offset-2"
           >
             Xem kết quả
           </Link>
-          <Link
-            href="/instructor/organize"
-            className="rounded border border-emerald-300 px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Mở buổi khác
-          </Link>
+          <span className="text-caption text-emerald-800">
+            Kết quả hiện dần khi học sinh nộp.
+          </span>
         </div>
       </div>
     );

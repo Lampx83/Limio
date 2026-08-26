@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Download } from "lucide-react";
 import type { ExamRun } from "@feedbackme/core-lms";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", {
@@ -79,10 +79,9 @@ function Row({ r }: { r: ExamRun }) {
 
   // Lần thi dùng mã cấp riêng hoặc vào bằng tài khoản thì không có link chung
   // để phát cho cả lớp.
-  const fullUrl =
-    r.path && typeof window !== "undefined"
-      ? `${window.location.origin}${r.path}`
-      : (r.path ?? "");
+  // shareUrl lo phần tiền tố đường dẫn của production — ghép tay với
+  // window.location.origin thì ra link thiếu tiền tố, người nhận bấm vào 404.
+  const fullUrl = r.path ? shareUrl(r.path) : "";
 
   const copy = async () => {
     try {
