@@ -40,6 +40,8 @@ interface State {
   shortMatchMode: "exact" | "case_insensitive";
   essayRubric: string;
   essayMinWords: number;
+  /** Giải thích đáp án — HS đọc sau khi bài được chấm. Lưu trong config. */
+  explanation: string;
   skills: Skill[];
 }
 
@@ -73,6 +75,7 @@ function defaultState(passageId: string | null): State {
     shortMatchMode: "case_insensitive",
     essayRubric: "",
     essayMinWords: 0,
+    explanation: "",
     skills: [],
   };
 }
@@ -94,6 +97,7 @@ export default function QuestionEditor({
     s.points = initial.points;
     s.skills = initial.skills;
     const cfg = initial.config;
+    s.explanation = (cfg.explanation as string) ?? "";
     if (s.type === "mcq" || s.type === "multi") {
       s.options = (cfg.options as State["options"]) ?? s.options;
     } else if (s.type === "true_false_notgiven") {
@@ -119,6 +123,12 @@ export default function QuestionEditor({
   const [error, setError] = useState<string | null>(null);
 
   function buildConfig(): unknown {
+    const base = buildTypeConfig();
+    const explanation = v.explanation.trim();
+    return explanation ? { ...(base as Record<string, unknown>), explanation } : base;
+  }
+
+  function buildTypeConfig(): unknown {
     switch (v.type) {
       case "mcq":
       case "multi":
@@ -453,6 +463,24 @@ export default function QuestionEditor({
           </label>
         </div>
       )}
+
+      <div>
+        <label className="block text-sm font-medium">
+          Giải thích đáp án{" "}
+          <span className="font-normal text-faint">(không bắt buộc)</span>
+        </label>
+        <textarea
+          rows={2}
+          value={v.explanation}
+          onChange={(e) => setV({ ...v, explanation: e.target.value })}
+          placeholder="Vì sao đáp án này đúng — học sinh đọc được sau khi bài được chấm."
+          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+        />
+        <p className="mt-1 text-caption text-faint">
+          Chỉ hiện khi đề bật “Hiện kết quả sau khi nộp”. Để trống thì học sinh
+          không thấy khối giải thích.
+        </p>
+      </div>
 
       <div>
         <span className="block text-sm font-medium">Skill liên quan (bắt buộc khi publish)</span>

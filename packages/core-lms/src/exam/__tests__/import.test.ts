@@ -266,3 +266,71 @@ describe("parseExamQuestionsXlsx", () => {
     expect(r.summary.total).toBe(3);
   });
 });
+
+describe("Explanation column", () => {
+  it("carries the explanation into config for every question type", () => {
+    const rows: Array<Record<string, string | number>> = [
+      { Type: "mcq", Prompt: "1+1?", OptionA: "1", OptionB: "2", Correct: "B",
+        Explanation: "Cộng hai đơn vị." },
+      { Type: "multi", Prompt: "Số chẵn?", OptionA: "2", OptionB: "3", OptionC: "4",
+        Correct: "A;C", Explanation: "Chia hết cho 2." },
+      { Type: "true_false_notgiven", Prompt: "Trời xanh.", Correct: "true",
+        Explanation: "Theo đoạn văn." },
+      { Type: "gap_fill", Prompt: "Thủ đô Pháp là ___.", Blanks: "b1:paris",
+        Explanation: "Paris là thủ đô." },
+      { Type: "short_answer", Prompt: "Thủ đô Pháp?", AcceptedAnswers: "paris",
+        Explanation: "Chấp nhận cả viết hoa." },
+      { Type: "essay", Prompt: "Trình bày.", Rubric: "Đủ 3 ý",
+        Explanation: "Chấm theo rubric." },
+    ];
+    const r = parseExamQuestionsXlsx(buildXlsx(rows), ctx());
+    expect(r.summary.error).toBe(0);
+    expect(r.rows).toHaveLength(6);
+    for (const row of r.rows) {
+      const cfg = row.parsed!.config as Record<string, unknown>;
+      expect(typeof cfg.explanation).toBe("string");
+      expect((cfg.explanation as string).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("accepts the Vietnamese header alias", () => {
+    const buf = buildXlsx([
+      { Type: "mcq", Prompt: "1+1?", OptionA: "1", OptionB: "2", Correct: "B",
+        GiaiThich: "Alias tiếng Việt." },
+    ]);
+    const r = parseExamQuestionsXlsx(buf, ctx());
+    const cfg = r.rows[0]!.parsed!.config as Record<string, unknown>;
+    expect(cfg.explanation).toBe("Alias tiếng Việt.");
+  });
+
+  it("omits the key entirely when the column is blank", () => {
+    const buf = buildXlsx([
+      { Type: "mcq", Prompt: "1+1?", OptionA: "1", OptionB: "2", Correct: "B",
+        Explanation: "   " },
+    ]);
+    const r = parseExamQuestionsXlsx(buf, ctx());
+    const cfg = r.rows[0]!.parsed!.config as Record<string, unknown>;
+    expect("explanation" in cfg).toBe(false);
+  });
+
+  it("does not let Notes leak into config — it is instructor-only", () => {
+    const buf = buildXlsx([
+      { Type: "mcq", Prompt: "1+1?", OptionA: "1", OptionB: "2", Correct: "B",
+        Notes: "Ghi chú nội bộ" },
+    ]);
+    const r = parseExamQuestionsXlsx(buf, ctx());
+    const cfg = r.rows[0]!.parsed!.config as Record<string, unknown>;
+    expect("explanation" in cfg).toBe(false);
+    expect(JSON.stringify(cfg)).not.toContain("Ghi chú nội bộ");
+    expect(r.rows[0]!.parsed!.notes).toBe("Ghi chú nội bộ");
+  });
+
+  it("rejects an over-long explanation instead of silently truncating", () => {
+    const buf = buildXlsx([
+      { Type: "mcq", Prompt: "1+1?", OptionA: "1", OptionB: "2", Correct: "B",
+        Explanation: "x".repeat(2_001) },
+    ]);
+    const r = parseExamQuestionsXlsx(buf, ctx());
+    expect(r.rows[0]!.status).toBe("error");
+  });
+});

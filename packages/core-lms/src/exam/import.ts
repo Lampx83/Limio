@@ -80,6 +80,8 @@ const HEADER_ALIASES: Record<string, string> = {
   matchmode: "MatchMode",
   rubric: "Rubric",
   minwords: "MinWords",
+  explanation: "Explanation",
+  giaithich: "Explanation",
   notes: "Notes",
 };
 
@@ -197,6 +199,13 @@ function parseRow(
     config = buildConfigForType(t, row);
   } catch (e) {
     errors.push(e instanceof Error ? e.message : String(e));
+  }
+
+  // Giải thích đáp án sống trong config cho MỌI loại câu, nên gắn ở đây một
+  // lần thay vì lặp trong từng nhánh của buildConfigForType.
+  const explanation = row.Explanation?.trim();
+  if (explanation && config !== undefined) {
+    config = { ...(config as Record<string, unknown>), explanation };
   }
 
   // Zod schema gives a final structural check.

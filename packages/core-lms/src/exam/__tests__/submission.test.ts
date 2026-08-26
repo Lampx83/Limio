@@ -10,6 +10,7 @@ import {
   createExamQuestion,
   createPassage,
   getExamAttemptResult,
+  getExamAttemptReview,
   publishExam,
   regradeExamAttempts,
   saveAnswer,
@@ -29,6 +30,9 @@ const mcqConfig = () => ({
 
 interface SetupOpts {
   includeEssay?: boolean;
+  /** Attached to q1's config — drives the learner-facing "Giải thích" block. */
+  explanation?: string;
+  hideResults?: boolean;
 }
 
 async function setup(slug: string, opts: SetupOpts = {}) {
@@ -58,7 +62,9 @@ async function setup(slug: string, opts: SetupOpts = {}) {
   const q1 = await createExamQuestion(owner.userId, examId, {
     type: "mcq",
     prompt: "Q1",
-    config: mcqConfig(),
+    config: opts.explanation
+      ? { ...mcqConfig(), explanation: opts.explanation }
+      : mcqConfig(),
     points: 5,
     skillIds: [skill.id],
   });
@@ -78,6 +84,12 @@ async function setup(slug: string, opts: SetupOpts = {}) {
         skillIds: [skill.id],
       })
     : null;
+  if (opts.hideResults) {
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { showResultsAfterSubmit: false },
+    });
+  }
   await publishExam(owner.userId, examId);
   const learner = await registerUser(
     { email: `sub-l-${slug}@e.com`, password: "password1234", displayName: "L" },
@@ -333,5 +345,57 @@ describe("regradeExamAttempts", () => {
     const after = await prisma.examAnswer.findUniqueOrThrow({ where: { id: essayAns.id } });
     expect(after.manualScore).toBe(8); // không bị đụng
     expect(after.needsGrading).toBe(false);
+  });
+});
+
+describe("getExamAttemptReview — giải thích đáp án", () => {
+  it("trả giải thích từ config sau khi bài đã chấm", async () => {
+    const s = await setup("rev1", { explanation: "A đúng vì theo định nghĩa." });
+    const start = await startExamAttempt(s.learnerId, s.examId);
+    await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+
+    const r = await getExamAttemptReview(s.learnerId, start.attemptId);
+    const q1 = r.questions.find((q) => q.id === s.q1)!;
+    expect(q1.explanation).toBe("A đúng vì theo định nghĩa.");
+  });
+
+  it("để null khi câu hỏi không có giải thích", async () => {
+    const s = await setup("rev2", { explanation: "Chỉ q1 có." });
+    const start = await startExamAttempt(s.learnerId, s.examId);
+    await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+
+    const r = await getExamAttemptReview(s.learnerId, start.attemptId);
+    expect(r.questions.find((q) => q.id === s.q2)!.explanation).toBeNull();
+  });
+
+  it("không lộ gì khi đề tắt hiện kết quả sau nộp", async () => {
+    const s = await setup("rev3", { explanation: "Bí mật.", hideResults: true });
+    const start = await startExamAttempt(s.learnerId, s.examId);
+    await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+
+    await expect(getExamAttemptReview(s.learnerId, start.attemptId)).rejects.toBeTruthy();
+  });
+
+  it("không lộ gì khi bài còn chờ chấm tay", async () => {
+    const s = await setup("rev4", { explanation: "Bí mật.", includeEssay: true });
+    const start = await startExamAttempt(s.learnerId, s.examId);
+    await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
+    await answerWithToken(s.learnerId, start.attemptId, s.q3!, { text: "essay" }, start.sessionToken);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+
+    await expect(getExamAttemptReview(s.learnerId, start.attemptId)).rejects.toBeTruthy();
+  });
+
+  it("không cho học sinh khác đọc giải thích của bài này", async () => {
+    const s = await setup("rev5", { explanation: "Bí mật." });
+    const other = await setup("rev6");
+    const start = await startExamAttempt(s.learnerId, s.examId);
+    await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
+    await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
+
+    await expect(getExamAttemptReview(other.learnerId, start.attemptId)).rejects.toBeTruthy();
   });
 });

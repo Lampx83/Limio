@@ -67,6 +67,7 @@ export async function GET(
       MatchMode: "",
       Rubric: "",
       MinWords: "",
+      Explanation: "Chuyển b sang vế phải rồi chia cho a, được x = -b/a.",
       Notes: "Câu cơ bản về phương trình bậc 1",
     },
     {
@@ -88,6 +89,7 @@ export async function GET(
       MatchMode: "",
       Rubric: "",
       MinWords: "",
+      Explanation: "",
       Notes: "MULTI: liệt kê đáp án đúng phân tách bởi ';'",
     },
     {
@@ -109,6 +111,7 @@ export async function GET(
       MatchMode: "",
       Rubric: "",
       MinWords: "",
+      Explanation: "",
       Notes: "Correct: true | false | notgiven",
     },
     {
@@ -130,6 +133,7 @@ export async function GET(
       MatchMode: "case_insensitive",
       Rubric: "",
       MinWords: "",
+      Explanation: "",
       Notes: "Mỗi blank phân tách bởi ';', đáp án trong 1 blank bởi '|'",
     },
     {
@@ -151,6 +155,7 @@ export async function GET(
       MatchMode: "case_insensitive",
       Rubric: "",
       MinWords: "",
+      Explanation: "",
       Notes: "",
     },
     {
@@ -172,6 +177,7 @@ export async function GET(
       MatchMode: "",
       Rubric: "Đầy đủ 3 bước: chuyển vế, gộp, chia.",
       MinWords: 50,
+      Explanation: "",
       Notes: "",
     },
   ];
@@ -196,6 +202,7 @@ export async function GET(
     { wch: 18 },
     { wch: 30 },
     { wch: 10 },
+    { wch: 40 },
     { wch: 30 },
   ];
   XLSX.utils.book_append_sheet(wb, wsQuestions, "Questions");
@@ -225,6 +232,15 @@ export async function GET(
     { Field: "Correct (MCQ)", Values: "Chữ cái: A / B / C / D / E / F (chỉ 1)" },
     { Field: "Correct (MULTI)", Values: "Phân tách bằng ';': A;C;E" },
     { Field: "Correct (TF_NG)", Values: "true | false | notgiven" },
+    {
+      Field: "Explanation",
+      Values:
+        "Giải thích đáp án — HỌC SINH ĐỌC ĐƯỢC sau khi bài được chấm (chỉ khi đề bật 'Hiện kết quả sau khi nộp'). Để trống nếu không muốn hiện.",
+    },
+    {
+      Field: "Notes",
+      Values: "Ghi chú nội bộ cho giảng viên — KHÔNG hiển thị cho học sinh và không lưu vào đề.",
+    },
     { Field: "Blanks (gap_fill)", Values: "id:đáp1|đáp2 ; id:đáp1 — cách bởi ';' giữa blank, '|' giữa đáp án" },
     { Field: "AcceptedAnswers (short)", Values: "Phân tách bằng ';': paris ; Paris ; PARIS" },
     { Field: "MatchMode", Values: "case_insensitive (mặc định) | exact" },
@@ -283,6 +299,7 @@ interface ExampleRow {
   MatchMode: string;
   Rubric: string;
   MinWords: string;
+  Explanation: string;
   Notes: string;
 }
 
@@ -300,6 +317,7 @@ function buildVietnameseExamples(): ExampleRow[] {
     Blanks: "",
     AcceptedAnswers: "",
     MatchMode: "",
+    Explanation: "",
     Rubric: "",
     MinWords: "",
   };
@@ -587,6 +605,7 @@ function buildVietnameseExamples(): ExampleRow[] {
       Rubric:
         "1) Định nghĩa giáo dục (2đ) · 2) Tác động lên nhân lực (3đ) · 3) Tác động lên kinh tế (3đ) · 4) Liên hệ thực tiễn (2đ)",
       MinWords: "300",
+      Explanation: "",
       Notes: "Bài luận nghị luận xã hội",
     },
     {
@@ -600,6 +619,7 @@ function buildVietnameseExamples(): ExampleRow[] {
       Rubric:
         "1) Tính delta = b² - 4ac (2đ) · 2) Phân biệt 3 trường hợp delta >/=/<0 (3đ) · 3) Công thức nghiệm x = (-b ± √Δ)/2a (2đ) · 4) Ví dụ minh hoạ (1đ)",
       MinWords: "150",
+      Explanation: "",
       Notes: "",
     },
     {
@@ -613,6 +633,7 @@ function buildVietnameseExamples(): ExampleRow[] {
       Rubric:
         "1) Hoàn cảnh xã hội (2đ) · 2) Phẩm chất nhân hậu của Lão Hạc (3đ) · 3) Bi kịch & lựa chọn cuối cùng (3đ) · 4) Thông điệp tác phẩm (2đ)",
       MinWords: "400",
+      Explanation: "",
       Notes: "Văn học lớp 8",
     },
     {
@@ -626,6 +647,7 @@ function buildVietnameseExamples(): ExampleRow[] {
       Rubric:
         "Mỗi tiêu chí (nguyên liệu, sản phẩm, vị trí, vai trò) 2đ · Trình bày bằng bảng so sánh được +1đ bonus",
       MinWords: "200",
+      Explanation: "",
       Notes: "Có thể trình bày dạng bảng để dễ so sánh",
     },
   ];

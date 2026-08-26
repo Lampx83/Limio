@@ -383,3 +383,53 @@ describe("deleteExamQuestion", () => {
     ).toBeNull();
   });
 });
+
+describe("explanation in config", () => {
+  it("survives create — zod must not strip it", async () => {
+    const { ownerId, courseId } = await newOwner("expl1");
+    const { examId } = await createExam(ownerId, courseId, validExam());
+    const { questionId } = await createExamQuestion(ownerId, examId, {
+      type: "mcq",
+      prompt: "Q",
+      config: { ...mcqConfig(), explanation: "Vì A đúng theo định nghĩa." },
+    });
+    const row = await prisma.examQuestion.findUniqueOrThrow({
+      where: { id: questionId },
+    });
+    expect((row.config as Record<string, unknown>).explanation).toBe(
+      "Vì A đúng theo định nghĩa.",
+    );
+  });
+
+  it("is not lost when other fields are edited", async () => {
+    const { ownerId, courseId } = await newOwner("expl2");
+    const { examId } = await createExam(ownerId, courseId, validExam());
+    const { questionId } = await createExamQuestion(ownerId, examId, {
+      type: "mcq",
+      prompt: "Q",
+      config: { ...mcqConfig(), explanation: "Giữ nguyên tôi." },
+    });
+    await updateExamQuestion(ownerId, questionId, { prompt: "Q sửa", points: 4 });
+    const row = await prisma.examQuestion.findUniqueOrThrow({
+      where: { id: questionId },
+    });
+    expect(row.prompt).toBe("Q sửa");
+    expect(row.points).toBe(4);
+    expect((row.config as Record<string, unknown>).explanation).toBe("Giữ nguyên tôi.");
+  });
+
+  it("can be cleared by sending a config without it", async () => {
+    const { ownerId, courseId } = await newOwner("expl3");
+    const { examId } = await createExam(ownerId, courseId, validExam());
+    const { questionId } = await createExamQuestion(ownerId, examId, {
+      type: "mcq",
+      prompt: "Q",
+      config: { ...mcqConfig(), explanation: "Xoá tôi đi." },
+    });
+    await updateExamQuestion(ownerId, questionId, { config: mcqConfig() });
+    const row = await prisma.examQuestion.findUniqueOrThrow({
+      where: { id: questionId },
+    });
+    expect("explanation" in (row.config as Record<string, unknown>)).toBe(false);
+  });
+});
