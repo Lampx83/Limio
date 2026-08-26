@@ -50,7 +50,7 @@ async function setup(slug: string, opts: { withQuestion?: boolean } = {}) {
   return { ownerId: owner.userId, examId };
 }
 
-describe("shareExamLink — phát link một nút", () => {
+describe("shareExamLink — mở buổi thi một nút", () => {
   it("publish đề, dựng ca + phòng, sinh mã, trả link", async () => {
     const s = await setup("basic");
     const r = await shareExamLink(s.ownerId, s.examId);

@@ -77,12 +77,11 @@ const FULL_GROUPS: Group[] = [
     // "Giám sát phòng thi" GIỮ RIÊNG — đây là ranh giới theo VAI (giám thị có
     // thể không phải giảng viên của khoá), không phải theo cấu trúc dữ liệu.
     items: [
+      // Thứ tự bám theo trình tự làm việc thật: soạn câu → gom thành gói đề →
+      // mang đi tổ chức → coi thi.
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
-      // Bệ phóng theo ý định, KHÔNG phải cái kho: màn hình này chỉ hỏi "tổ chức
-      // kiểu gì" rồi bàn giao. Nó không có danh sách đề và không giữ trạng thái
-      // — nếu mọc thêm thì ta lại có hai lối vào cùng một đối tượng.
-      { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },
       { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
+      { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },
       PROCTOR_ITEM,
     ],
   },

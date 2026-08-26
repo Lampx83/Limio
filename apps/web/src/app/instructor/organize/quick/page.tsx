@@ -47,10 +47,10 @@ export default async function OrganizeQuickPage() {
   return (
     <OrganizeLayout
       title="Link thi nhanh"
-      blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp. Chọn gói đề, đặt thời lượng, phát link."
+      blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp. Chọn gói đề, đặt thời lượng, bấm Mở."
       runs={runs}
-      historyTitle="Các lần đã phát"
-      emptyHint="Chưa phát link nào. Tạo ở phần trên."
+      historyTitle="Các buổi đã mở"
+      emptyHint="Chưa mở buổi thi nào. Tạo ở phần trên."
     >
       {courses.length === 0 ? (
         <p className="text-sm">

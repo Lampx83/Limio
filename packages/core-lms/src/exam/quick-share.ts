@@ -5,7 +5,7 @@ import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
 import { ExamError } from "./types";
 
 /**
- * "Phát link" — gộp mọi thứ cần để một bài kiểm tra sẵn sàng cho học sinh vào
+ * "Mở buổi thi" — gộp mọi thứ cần để một bài kiểm tra sẵn sàng cho học sinh vào
  * MỘT hành động.
  *
  * Trước đây giáo viên phải: publish đề → sang tab Truy cập → đổi chế độ sang
@@ -15,7 +15,7 @@ import { ExamError } from "./types";
  * Cấu trúc đợt/ca/phòng vẫn được dựng đầy đủ bên dưới — chỉ là giáo viên không
  * phải học nó. `ensureDefault*` đã tồn tại sẵn cho đúng mục đích này.
  *
- * Idempotent: gọi lại trên bài đã phát link thì trả về đúng mã cũ, không sinh
+ * Idempotent: gọi lại trên buổi đã mở thì trả về đúng mã cũ, không sinh
  * mã mới. Muốn đổi mã thì dùng nút "Sinh mã mới" riêng.
  */
 export async function shareExamLink(
@@ -28,7 +28,7 @@ export async function shareExamLink(
     /** Chỉ dùng khi timingMode = "scheduled". */
     opensAt?: Date;
     closesAt?: Date;
-    /** Quy mô tổ chức — mặc định "simple" vì hàm này phục vụ luồng phát link. */
+    /** Quy mô tổ chức — mặc định "simple" vì hàm này phục vụ luồng mở nhanh. */
     scale?: "simple" | "formal";
   } = {},
   db: PrismaClient = prisma,
@@ -68,7 +68,7 @@ export async function shareExamLink(
   if (exam._count.questions === 0) {
     throw new ExamError("validation_failed", {
       reason: "no_questions",
-      message: "Thêm ít nhất một câu hỏi trước khi phát link.",
+      message: "Thêm ít nhất một câu hỏi trước khi mở buổi thi.",
     });
   }
 

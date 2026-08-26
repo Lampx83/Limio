@@ -671,12 +671,12 @@ export async function assertEligibleForExam(
   // như thể có tác dụng, trong khi nó chỉ sống khi đề chưa có ca nào; kết quả
   // là giáo viên sửa nó rồi tưởng đã đổi được gì đó.
   //
-  // Đường tạo đề hiện tại (nút "Phát link") luôn dựng sẵn một ca, nên trạng
+  // Đường mở buổi thi hiện tại luôn dựng sẵn một ca, nên trạng
   // thái này chỉ còn là đề chưa phát bao giờ.
   if (exam.schedules.length === 0) {
     throw new ExamError("exam_not_open", {
       reason: "no_session",
-      message: "Đề chưa có ca thi nào — bấm “Phát link” để mở cho học sinh.",
+      message: "Đề chưa có ca thi nào — vào Tổ chức thi để mở cho học sinh.",
     });
   }
 

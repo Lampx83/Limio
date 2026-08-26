@@ -127,7 +127,7 @@ export default function QuickExamForm({
         : result.path;
     return (
       <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-5">
-        <p className="text-sm font-medium text-emerald-900">Đã phát link.</p>
+        <p className="text-sm font-medium text-emerald-900">Đã mở buổi thi.</p>
         <div className="mt-3 flex items-center gap-2">
           <span className="font-mono text-lg font-semibold tracking-widest text-emerald-900">
             {result.code}
@@ -219,16 +219,18 @@ export default function QuickExamForm({
         {advanced && (
           <div className="space-y-3 border-t border-default px-3 py-3">
             <TimeRow
-              label="Mở lúc"
-              hint="Tắt = mở ngay khi phát link."
+              label="Hẹn giờ mở"
+              hintOff="Bài mở ngay, không chờ giờ."
+              hintOn="Bài chỉ mở từ thời điểm này."
               on={scheduleOpen}
               setOn={setScheduleOpen}
               value={opensAt}
               setValue={setOpensAt}
             />
             <TimeRow
-              label="Đóng lúc"
-              hint="Tắt = mở tới khi bạn bấm đóng."
+              label="Hẹn giờ đóng"
+              hintOff="Bài mở tới khi bạn bấm đóng."
+              hintOn="Bài tự đóng vào thời điểm này."
               on={scheduleClose}
               setOn={setScheduleClose}
               value={closesAt}
@@ -250,22 +252,31 @@ export default function QuickExamForm({
         disabled={busy || !paper}
         className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
       >
-        {busy ? "Đang phát…" : "Phát link"}
+        {busy ? "Đang mở…" : "Mở"}
       </button>
     </form>
   );
 }
 
+/**
+ * Một dòng hẹn giờ.
+ *
+ * Ghi chú mô tả ĐIỀU ĐANG XẢY RA theo trạng thái công tắc, không phải "tắt =
+ * ...". Kiểu cũ bắt người đọc suy ngược từ trạng thái họ không chọn, và câu
+ * "Tắt = mở ngay" đọc nhanh thành tự mâu thuẫn.
+ */
 function TimeRow({
   label,
-  hint,
+  hintOn,
+  hintOff,
   on,
   setOn,
   value,
   setValue,
 }: {
   label: string;
-  hint: string;
+  hintOn: string;
+  hintOff: string;
   on: boolean;
   setOn: (v: boolean) => void;
   value: string;
@@ -292,14 +303,17 @@ function TimeRow({
           />
         </button>
       </div>
-      <input
-        type="datetime-local"
-        disabled={!on}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-faint"
-      />
-      <span className="mt-1 block text-caption text-faint">{hint}</span>
+      {on && (
+        <input
+          type="datetime-local"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+        />
+      )}
+      <span className="mt-1 block text-caption text-faint">
+        {on ? hintOn : hintOff}
+      </span>
     </div>
   );
 }
