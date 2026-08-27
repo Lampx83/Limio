@@ -2828,6 +2828,13 @@ model ExamRoom {
   // Sinh tự động khi tạo phòng. Nullable để rooms tạo trước feature này
   // không vỡ. Unique trong cùng 1 ExamSession.
   accessCode    String?  @db.VarChar(4)
+  // Mã GIÁM THỊ — khác hoàn toàn accessCode ở trên. accessCode là mã phát cho
+  // THÍ SINH (in lên phiếu, chiếu lên màn), nên không dùng làm cửa vào màn
+  // giám sát được: cả phòng đã cầm nó trong tay.
+  //
+  // 8 ký tự thay vì 4, và unique TOÀN HỆ THỐNG chứ không chỉ trong một ca —
+  // người nhập mã chưa biết mình thuộc ca nào, nên mã phải tự định vị được.
+  proctorCode   String?  @unique @db.VarChar(8)
   // Phòng mặc định cho ca thi — thí sinh không nhập mã phòng sẽ auto-assign
   // vào đây. Partial unique index (chỉ 1 default/session) tạo trong migration.
   isDefault     Boolean  @default(false)

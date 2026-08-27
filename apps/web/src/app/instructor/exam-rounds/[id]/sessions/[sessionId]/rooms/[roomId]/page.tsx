@@ -5,6 +5,7 @@ import SetDefaultRoomButton from "./SetDefaultRoomButton";
 import {
   ExamError,
   canEditExamRound,
+  ensureProctorCode,
   getExamRoom,
   listExamCandidatesInRoom,
   listExamRoomsForSession,
@@ -12,6 +13,7 @@ import {
 import { auth } from "@/lib/auth";
 import RoomCandidatesPanel from "./RoomCandidatesPanel";
 import ExamReadinessWarning from "../../ExamReadinessWarning";
+import ProctorCodeCard from "./ProctorCodeCard";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +64,10 @@ export default async function ExamRoomDetailPage({
     }));
   const canEdit = await canEditExamRound(userId, room.roundId);
 
+  // Sinh lười: phòng tạo trước tính năng này chưa có mã, mà chỉ người tổ chức
+  // mới cần thấy nó. getExamRoom ở trên đã chặn người ngoài rồi.
+  const proctorCode = await ensureProctorCode(params.roomId).catch(() => null);
+
   return (
     <main>
       <Link
@@ -105,6 +111,7 @@ export default async function ExamRoomDetailPage({
               <span className="text-xs text-blue-700">Thí sinh nhập mã này khi join để được tự gán vào phòng</span>
             </div>
           )}
+          {proctorCode && <ProctorCodeCard code={proctorCode} />}
           {canEdit && !room.isDefault && (
             <div className="mt-2">
               <SetDefaultRoomButton roomId={room.id} />

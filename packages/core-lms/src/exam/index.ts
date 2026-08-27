@@ -14,6 +14,7 @@ export * from "./session-window";
 export * from "./reveal-policy";
 export * from "./response-export";
 export * from "./live-counts";
+export * from "./proctor-access";
 export * from "./submission";
 export * from "./manual-grading";
 export * from "./incidents";
