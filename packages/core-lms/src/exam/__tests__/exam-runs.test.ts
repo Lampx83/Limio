@@ -174,12 +174,23 @@ describe("đếm lượt thi theo TỪNG ca", () => {
     const caB = await shareExamLink(s.ownerId, s.examId, { durationMin: 10 });
     expect(caB.sessionId).not.toBe(caA.sessionId);
 
-    // 2 bài đã nộp ở ca A, 1 ở ca B.
-    const mk = async (sessionId: string, status: "graded" | "in_progress") =>
-      prisma.examAttempt.create({
+    // 2 bài đã nộp ở ca A, 1 ở ca B. Mỗi bài phải gắn đúng một chủ thể —
+    // hoặc học viên đã ghi danh, hoặc thí sinh vào bằng mã (ExamAttempt_subject_xor).
+    const mk = async (sessionId: string, status: "graded" | "in_progress") => {
+      const c = await prisma.examCandidate.create({
         data: {
           examId: s.examId,
           sessionId,
+          displayName: "X",
+          accessCode: Math.random().toString(36).slice(2, 10).toUpperCase(),
+        },
+        select: { id: true },
+      });
+      return prisma.examAttempt.create({
+        data: {
+          examId: s.examId,
+          sessionId,
+          candidateId: c.id,
           candidateDisplayName: "X",
           durationSec: 600,
           status,
@@ -187,6 +198,7 @@ describe("đếm lượt thi theo TỪNG ca", () => {
         },
         select: { id: true },
       });
+    };
     await mk(caA.sessionId, "graded");
     await mk(caA.sessionId, "graded");
     await mk(caB.sessionId, "graded");
