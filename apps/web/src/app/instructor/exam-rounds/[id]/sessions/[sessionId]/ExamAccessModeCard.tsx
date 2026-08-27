@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Copy, Globe, GraduationCap, RefreshCw, Settings2, Shuffle, Users } from "lucide-react";
 
@@ -95,13 +96,11 @@ export default function ExamAccessModeCard({
 
   const copyCode = async () => {
     if (!openCode) return;
-    try {
-      await navigator.clipboard.writeText(openCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard blocked — silent */
-    }
+    // Mã vẫn hiện to trên màn hình nên hỏng thì đọc được, nhưng vẫn phải
+    // thử đường dự phòng chứ không bỏ ngay.
+    if (!(await copyText(openCode))) return;
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   // State A: unconfigured (authenticated) — show 2-button picker

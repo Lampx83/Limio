@@ -101,4 +101,14 @@ jobs:
           target: runner
           push: false
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # ignore-error: ghi cache hỏng thì CẢNH BÁO, không đánh trượt build.
+          #
+          # Việc của job này là trả lời "image có dựng được không". Đã dựng
+          # xong rồi mà vẫn trượt vì không ghi nổi cache thì câu trả lời sai —
+          # và nó chặn deploy. Đúng chuyện xảy ra với 2221c67: build xanh hết,
+          # tới bước cuối báo "failed to reserve cache" (hạn mức cache 10 GB
+          # của repo cạn vì mode=max ghi cả tầng node_modules ~200 MB mỗi lần)
+          # → CI đỏ → cổng deploy từ chối → production đứng im cả đêm.
+          #
+          # Cache chỉ để chạy nhanh hơn. Mất cache thì build chậm, không sai.
+          cache-to: type=gha,mode=max,ignore-error=true

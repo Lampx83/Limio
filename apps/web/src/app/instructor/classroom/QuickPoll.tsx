@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import { BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
@@ -307,9 +308,10 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
                 />
               </div>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(pollUrl);
-                  toast.success("Đã copy link!");
+                onClick={async () => {
+                  const ok = await copyText(pollUrl);
+                  if (ok) toast.success("Đã copy link!");
+                  else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
                 }}
                 className="text-xs text-brand-600 hover:text-brand-700 underline"
               >

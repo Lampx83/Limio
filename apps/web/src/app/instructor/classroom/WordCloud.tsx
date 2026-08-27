@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import { Cloud, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
@@ -290,7 +291,14 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
                   <QRCode value={cloudUrl} size={200} level="H" includeMargin />
                 </div>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(cloudUrl); toast.success("Đã copy link!"); }}
+                  onClick={async () => {
+                    // Báo theo kết quả THẬT. Bản cũ luôn hiện "Đã copy!" kể cả
+                    // khi clipboard không dùng được (http trần) — người dùng
+                    // tin là xong rồi đi dán ra thứ khác.
+                    const ok = await copyText(cloudUrl);
+                    if (ok) toast.success("Đã copy link!");
+                    else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
+                  }}
                   className="text-xs text-brand-600 hover:text-brand-700 underline"
                 >
                   Copy link

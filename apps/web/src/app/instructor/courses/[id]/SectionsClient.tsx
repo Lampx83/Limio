@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 
@@ -121,13 +122,13 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
   const inviteUrl = (inviteCode: string) => shareUrl(`/enroll/${inviteCode}`);
 
   const onCopyLink = async (id: string, inviteCode: string) => {
-    try {
-      await navigator.clipboard.writeText(inviteUrl(inviteCode));
-      setCopiedId(id);
-      setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 2000);
-    } catch {
+    const ok = await copyText(inviteUrl(inviteCode));
+    if (!ok) {
       setErr("Không copy được — chọn thủ công link bên dưới.");
+      return;
     }
+    setCopiedId(id);
+    setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 2000);
   };
 
   return (

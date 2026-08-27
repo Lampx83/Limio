@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { Check, Copy, QrCode } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -86,6 +87,7 @@ export default function QuickExamForm({
     sessionId: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyErr, setCopyErr] = useState(false);
   const [showQr, setShowQr] = useState(false);
 
   // Đổi gói đề KHÔNG đụng tới thời lượng đã gõ — thời lượng là lựa chọn cho
@@ -170,13 +172,14 @@ export default function QuickExamForm({
           <button
             type="button"
             onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(fullUrl);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              } catch {
-                /* trình duyệt chặn clipboard — link vẫn hiện để chọn tay */
+              const ok = await copyText(fullUrl);
+              if (!ok) {
+                setCopyErr(true);
+                return;
               }
+              setCopyErr(false);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
             }}
             className="rounded border border-emerald-300 p-1.5 text-emerald-800 hover:bg-emerald-100"
             aria-label="Sao chép link"
@@ -210,6 +213,9 @@ export default function QuickExamForm({
           </div>
         )}
         <p className="mt-2 break-all text-caption text-emerald-800">{fullUrl}</p>
+        {copyErr && (
+          <p className="mt-1 text-caption text-red-700">Không sao chép được — chọn link bên dưới rồi copy tay giúp.</p>
+        )}
         {/* Không nút nào nổi bật ở đây. Vừa mở xong thì việc của giáo viên là
             phát link/QR ở trên — đã xong. "Xem kết quả" từng là nút chính màu
             xanh đậm, mà lúc đó chưa ai vào thi nên nó mời người ta đi tới một

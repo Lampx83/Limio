@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Download } from "lucide-react";
@@ -75,6 +76,7 @@ export default function ExamRunsList({
 function Row({ r }: { r: ExamRun }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [copyErr, setCopyErr] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // Lần thi dùng mã cấp riêng hoặc vào bằng tài khoản thì không có link chung
@@ -84,13 +86,17 @@ function Row({ r }: { r: ExamRun }) {
   const fullUrl = r.path ? shareUrl(r.path) : "";
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(fullUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* trình duyệt chặn clipboard — mã vẫn hiện để đọc cho lớp */
+    // Nói thật khi hỏng. Bản cũ nuốt lỗi im lặng: clipboard giữ nguyên nội
+    // dung cũ mà giao diện không báo gì, người dùng dán ra thứ chẳng liên quan
+    // rồi tưởng app copy sai.
+    const ok = await copyText(fullUrl);
+    if (!ok) {
+      setCopyErr(true);
+      setTimeout(() => setCopyErr(false), 4000);
+      return;
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const toggle = async (open: boolean) => {
@@ -162,6 +168,11 @@ function Row({ r }: { r: ExamRun }) {
 
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{r.examTitle}</span>
+        {copyErr && (
+          <span className="block text-caption text-red-700">
+            Không sao chép được — đọc mã cho lớp hoặc bôi đen rồi copy tay.
+          </span>
+        )}
         <span className="block text-caption text-faint">
           {fmt(r.opensAt)} · {r.durationMin} phút · {r.submittedCount}/
           {r.startedCount} đã nộp

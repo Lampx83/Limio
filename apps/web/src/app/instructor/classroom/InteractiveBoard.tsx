@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { copyText } from "@/lib/clipboard";
 import {
   StickyNote, RefreshCw, EyeOff, Eye, Trash2,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
@@ -492,9 +493,10 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 Hoặc truy cập: <code className="font-mono px-1.5 py-0.5 bg-amber-50 rounded">/join/{current.code}</code>
               </p>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(joinUrl);
-                  toast.success("Đã copy link");
+                onClick={async () => {
+                  const ok = await copyText(joinUrl);
+                  if (ok) toast.success("Đã copy link");
+                  else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
                 }}
                 className="mt-3 text-sm text-amber-600 hover:text-amber-700 font-medium underline"
               >
