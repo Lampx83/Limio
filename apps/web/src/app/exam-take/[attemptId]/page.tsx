@@ -90,6 +90,7 @@ export default async function ExamTakePage({
         id: examDetail.id,
         title: examDetail.title,
         showResultsAfterSubmit: examDetail.showResultsAfterSubmit,
+        proctoringLevel: examDetail.proctoringLevel,
       }}
       passages={examDetail.passages.map((p) => ({
         id: p.id,

@@ -27,7 +27,15 @@ export async function POST(
         durationSec: true,
         resumeCount: true,
         user: { select: { displayName: true } },
-        _count: { select: { incidents: true } },
+        // Ô đỏ trên thẻ giám sát là thứ giáo viên đọc như "đáng ngờ", nên
+        // KHÔNG đếm network_lost: mất wifi là chuyện hạ tầng, không phải hành
+        // vi của thí sinh. Sự cố mạng vẫn được ghi và vẫn hiện đủ ở trang chi
+        // tiết từng bài làm — chỉ là không thổi phồng con số cảnh báo.
+        _count: {
+          select: {
+            incidents: { where: { type: { not: "network_lost" } } },
+          },
+        },
         answers: { select: { questionId: true } },
       },
     });
