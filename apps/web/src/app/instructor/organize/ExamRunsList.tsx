@@ -4,7 +4,7 @@ import { useState } from "react";
 import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Download } from "lucide-react";
+import { Check, Copy, Download, Radio } from "lucide-react";
 import type { ExamRun } from "@feedbackme/core-lms";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 
@@ -208,6 +208,24 @@ function Row({ r }: { r: ExamRun }) {
       </Link>
 
       <span className="flex shrink-0 items-center gap-2">
+        {/* Giám sát: xem ai đang làm tới đâu. Có cả khi ca ĐÃ ĐÓNG — lúc đó
+            màn hình chuyển sang "Xem lại", giữ nguyên toàn bộ bài làm của ca.
+            Trang đó vốn lọc 24h gần nhất; truyền sessionId thì bỏ cửa sổ đó,
+            vì chính ca đã bó tập bài làm rồi. */}
+        <Link
+          href={`/instructor/courses/${r.courseId}/exams/${r.examId}/live?sessionId=${r.sessionId}`}
+          className="inline-flex items-center gap-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
+          title={
+            r.isOpen
+              ? "Xem ai đang làm bài, tới câu nào"
+              : "Xem lại diễn biến của ca đã đóng"
+          }
+        >
+          <Radio
+            className={`h-3 w-3 shrink-0 ${r.isOpen ? "text-red-500" : "text-faint"}`}
+          />
+          {r.isOpen ? "Giám sát" : "Xem lại"}
+        </Link>
         <Link
           href={`/instructor/exam-runs/${r.sessionId}`}
           className="text-xs underline"

@@ -74,10 +74,13 @@ export default function LiveDashboard({
   examId,
   initial,
   questions,
+  sessionId
 }: {
   examId: string;
   initial: AttemptLive[];
   questions: ExamQuestionRef[];
+  /** Chỉ theo dõi bài làm của MỘT ca. Bỏ trống = cả gói đề. */
+  sessionId?: string
 }) {
   const [attempts, setAttempts] = useState<Record<string, AttemptLive>>(() =>
     Object.fromEntries(initial.map((a) => [a.attemptId, a])),
@@ -97,7 +100,11 @@ export default function LiveDashboard({
   }, []);
 
   useEffect(() => {
-    const es = new EventSource(`/api/exams/${examId}/live`);
+    // Truyền sessionId để luồng chỉ đẩy bài làm của ca đang xem — nếu không,
+    // màn hình xem một ca sẽ tự mọc thêm bài của ca khác đang chạy song song.
+    const es = new EventSource(
+      `/api/exams/${examId}/live${sessionId ? `?sessionId=${sessionId}` : ""}`,
+    );
     esRef.current = es;
     es.onopen = () => setConnState("open");
     es.onerror = () => setConnState("closed");

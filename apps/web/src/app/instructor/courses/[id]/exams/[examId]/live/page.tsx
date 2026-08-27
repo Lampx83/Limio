@@ -8,11 +8,21 @@ import LiveDashboard from "./LiveDashboard";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Màn giám sát. `?sessionId=<uuid>` giới hạn vào MỘT ca thi.
+ *
+ * Không có sessionId thì giữ nguyên hành vi cũ: mọi bài làm của gói đề trong
+ * 24h. Có sessionId thì bỏ cửa sổ 24h — ca đã bó tập bài làm rồi, và giáo
+ * viên cần xem lại ca đã đóng từ tuần trước chứ không chỉ ca đang chạy.
+ */
 export default async function ExamLiveDashboardPage({
   params,
+  searchParams,
 }: {
   params: { id: string; examId: string };
+  searchParams?: { sessionId?: string };
 }) {
+  const sessionId = searchParams?.sessionId ?? null;
   const session = await auth();
   if (!session?.user?.id)
     redirect(
@@ -58,7 +68,14 @@ export default async function ExamLiveDashboardPage({
   const attempts = await prisma.examAttempt.findMany({
     where: {
       examId: exam.id,
-      startedAt: { gt: since },
+      ...(sessionId
+        ? {
+            OR: [
+              { sessionId },
+              { sessionId: null, candidate: { sessionId } },
+            ],
+          }
+        : { startedAt: { gt: since } }),
       ...(proctorCandidateIds !== null
         ? { candidateId: { in: proctorCandidateIds } }
         : {}),
@@ -83,6 +100,15 @@ export default async function ExamLiveDashboardPage({
   });
 
   const examAccessMode = exam.accessMode ?? "authenticated";
+
+  // Ca thi đang xem — để đầu trang nói rõ đây là ca nào và còn mở hay đã đóng.
+  const run = sessionId
+    ? await prisma.examSession.findFirst({
+        where: { id: sessionId, examId: exam.id },
+        select: { id: true, openCode: true, status: true, timingMode: true },
+      })
+    : null;
+  const runClosed = run !== null && run.status !== "open";
 
   const initial = attempts.map((a) => {
     const subjectType: "user" | "open" | "assigned" = a.userId
@@ -123,16 +149,30 @@ export default async function ExamLiveDashboardPage({
   return (
     <main>
       <Link
-        href={`/instructor/courses/${exam.courseId}/exams/${exam.id}`}
+        href={run ? "/instructor/organize" : `/instructor/courses/${exam.courseId}/exams/${exam.id}`}
         className="text-sm text-blue-600 hover:underline"
       >
-        ← Quay lại bài thi
+        {run ? "← Tổ chức thi" : "← Quay lại bài thi"}
       </Link>
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold"><Radio className="h-5 w-5 shrink-0 text-red-500" /> Live — {exam.title}</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
+            <Radio
+              className={`h-5 w-5 shrink-0 ${runClosed ? "text-faint" : "text-red-500"}`}
+            />
+            {runClosed ? "Xem lại" : "Live"} — {exam.title}
+            {run?.openCode && (
+              <span className="font-mono text-base font-semibold tracking-widest text-faint">
+                {run.openCode}
+              </span>
+            )}
+          </h1>
           <p className="mt-1 text-sm text-faint">
-            Theo dõi trạng thái sinh viên đang thi realtime (24h gần nhất)
+            {run
+              ? runClosed
+                ? "Ca thi đã đóng — đây là toàn bộ bài làm của ca, giữ nguyên để xem lại."
+                : "Theo dõi realtime bài làm của riêng ca này."
+              : "Theo dõi trạng thái sinh viên đang thi realtime (24h gần nhất)"}
           </p>
         </div>
         <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">
@@ -142,6 +182,7 @@ export default async function ExamLiveDashboardPage({
 
       <LiveDashboard
         examId={exam.id}
+        sessionId={run?.id}
         initial={initial}
         questions={questions.map((q) => ({ id: q.id, order: q.orderInExam }))}
       />
