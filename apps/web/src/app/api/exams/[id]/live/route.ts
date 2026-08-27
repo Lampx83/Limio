@@ -1,13 +1,7 @@
 import { prisma } from "@feedbackme/db";
 import { getRoomScope } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
-import {
-  examChannel,
-  getExamSnapshot,
-  seedAttemptsBulk,
-  type AttemptLive,
-  type LiveEvent,
-} from "@/lib/exam-live-bus";
+import { examChannel, getExamSnapshot, roomChannel, seedAttemptsBulk, type AttemptLive, type LiveEvent } from "@/lib/exam-live-bus";
 import { subscribe as streamSubscribe } from "@/lib/realtime/stream";
 
 export const runtime = "nodejs";
@@ -40,10 +34,22 @@ export async function GET(
     return new Response("forbidden", { status: 403 });
   }
 
+  // ?roomId= — thu hẹp vào MỘT phòng, cho mọi vai chứ không chỉ giám thị.
+  // Giám thị vẫn bị chặn trong các phòng mình coi; chọn phòng ngoài phạm vi
+  // đó thì ra tập rỗng, không phải toàn bộ ca.
+  const roomId = new URL(req.url).searchParams.get("roomId");
+  const roomIds: string[] | null = !scope.isInstructor
+    ? roomId
+      ? scope.proctorRoomIds.filter((r) => r === roomId)
+      : scope.proctorRoomIds
+    : roomId
+      ? [roomId]
+      : null;
+
   let allowedCandidateIds: Set<string> | null = null;
-  if (!scope.isInstructor) {
+  if (roomIds !== null) {
     const cands = await prisma.examCandidate.findMany({
-      where: { examId: exam.id, roomId: { in: scope.proctorRoomIds } },
+      where: { examId: exam.id, roomId: { in: roomIds } },
       select: { id: true },
     });
     allowedCandidateIds = new Set(cands.map((c) => c.id));
@@ -186,8 +192,17 @@ export async function GET(
         req.headers.get("last-event-id") ?? req.headers.get("Last-Event-ID") ?? "$";
 
       try {
+        // Nghe kênh PHÒNG khi phạm vi đúng một phòng — bỏ được phần lớn lưu
+        // lượng ngay ở tầng Redis thay vì nhận hết rồi lọc. Nhiều hơn một
+        // phòng (giám thị coi 2 phòng) thì vẫn nghe kênh đề: subscribe chỉ
+        // nhận một kênh, và lọc phía dưới đã đúng sẵn.
+        const channel =
+          roomIds !== null && roomIds.length === 1
+            ? roomChannel(exam.id, roomIds[0]!)
+            : examChannel(exam.id);
+
         for await (const events of streamSubscribe(
-          examChannel(exam.id),
+          channel,
           sinceId,
           abortController.signal,
         )) {

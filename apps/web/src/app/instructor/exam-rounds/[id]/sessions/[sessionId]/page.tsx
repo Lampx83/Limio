@@ -7,6 +7,7 @@ import {
   canEditExamRound,
   getExamSession,
   listExamRoomsForSession,
+  liveCountsByRoom,
 } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
@@ -79,7 +80,16 @@ export default async function ExamSessionDetailPage({
   if (detail.roundId !== params.id) notFound();
 
   const canEdit = await canEditExamRound(userId, detail.roundId);
-  const rooms = await listExamRoomsForSession(userId, params.sessionId);
+  const roomsRaw = await listExamRoomsForSession(userId, params.sessionId);
+
+  // Số liệu giám sát cấp phòng — một truy vấn gộp, không phải nghe luồng sự
+  // kiện. Xem live-counts.ts về vì sao cấp ca/đợt chỉ nên đếm.
+  const roomCounts = await liveCountsByRoom(params.sessionId);
+  const rooms = roomsRaw.map((r) => ({
+    ...r,
+    inProgress: roomCounts.get(r.id)?.inProgress ?? 0,
+    submitted: roomCounts.get(r.id)?.submitted ?? 0,
+  }));
 
   // Đề cùng khoá để cho phép đổi đề của ca thi trong form edit.
   const availableExams = await prisma.exam.findMany({

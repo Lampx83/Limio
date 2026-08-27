@@ -14,6 +14,10 @@ interface RoomRow {
   proctorName: string;
   graders: Array<{ id: string; displayName: string }>;
   candidateCount: number;
+  /** Đang làm bài ngay lúc này. */
+  inProgress: number;
+  /** Đã nộp. */
+  submitted: number;
 }
 
 export default function SessionRoomsPanel({
@@ -143,6 +147,8 @@ export default function SessionRoomsPanel({
                 <th className="px-4 py-2.5">Giám thị</th>
                 <th className="px-4 py-2.5">Người chấm</th>
                 <th className="px-4 py-2.5 text-right">Thí sinh</th>
+                <th className="px-4 py-2.5 text-right">Đang làm</th>
+                <th className="px-4 py-2.5 text-right">Đã nộp</th>
                 <th className="w-32 px-4 py-2.5"></th>
               </tr>
             </thead>
@@ -225,6 +231,21 @@ export default function SessionRoomsPanel({
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">{r.candidateCount}</td>
+                  {/* Số liệu giám sát ở cấp phòng: đủ để biết phòng nào cần
+                      để mắt, không phải dựng lưới thẻ 200 người. Bấm vào tên
+                      phòng để xem chi tiết từng thí sinh. */}
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {r.inProgress > 0 ? (
+                      <span className="font-semibold text-emerald-700">
+                        {r.inProgress}
+                      </span>
+                    ) : (
+                      <span className="text-faint">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-faint">
+                    {r.submitted || "—"}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {canEdit && (
                       <div className="flex justify-end gap-0.5">

@@ -22,6 +22,7 @@
  * ≤ 1 / 30s / attempt via `shouldFlushHeartbeatToDb`.
  */
 
+import { prisma } from "@feedbackme/db";
 import { getRedis } from "./redis";
 import { publish as streamPublish } from "./realtime/publisher";
 
@@ -99,10 +100,30 @@ const HB_FP_WINDOW_SEC = 60;
 const HB_STREAM_THROTTLE_SEC = 15;
 
 export const examChannel = (examId: string) => `exam:${examId}`;
+
+/**
+ * Kênh riêng của một PHÒNG THI.
+ *
+ * Trước đây mọi sự kiện chỉ đi vào `exam:{examId}`, nên ai xem cũng nhận tất.
+ * Đo trên kỳ thi 5 ca × 4 phòng × 50 người: heartbeat 10 giây/thí sinh cho ra
+ * ~100 sự kiện/giây; với 26 người đang xem là ~2.600 lượt giao mỗi giây, mà
+ * giám thị coi một phòng 50 người chỉ dùng 5% trong đó — 95% được truyền đi
+ * rồi vứt.
+ *
+ * Sự kiện của bài làm có phòng nay phát vào CẢ HAI kênh: kênh đề (cho ai xem
+ * cả ca) và kênh phòng (cho giám thị). Người xem một phòng chỉ nghe kênh
+ * phòng.
+ */
+export const roomChannel = (examId: string, roomId: string) =>
+  `exam:${examId}:room:${roomId}`;
 const kAttemptIds = (examId: string) => `exam:${examId}:attemptIds`;
 const kState = (attemptId: string) => `exam:attempt:${attemptId}:state`;
 const kAnswered = (attemptId: string) => `exam:attempt:${attemptId}:answered`;
 const kAttemptExam = (attemptId: string) => `exam:attempt:${attemptId}:exam`;
+// Phòng của bài làm, để khỏi tra DB mỗi lần phát sự kiện. Giá trị rỗng ""
+// nghĩa là "đã tra rồi, bài này KHÔNG thuộc phòng nào" — phân biệt với chưa
+// tra, nếu không thì thi kiểu ghi danh sẽ tra lại DB mỗi 10 giây mãi mãi.
+const kAttemptRoom = (attemptId: string) => `exam:attempt:${attemptId}:room`;
 const kHbDb = (attemptId: string) => `exam:hb:db:${attemptId}`;
 const kHbFp = (attemptId: string) => `exam:hb:fp:${attemptId}`;
 const kHbStream = (attemptId: string) => `exam:hb:stream:${attemptId}`;
@@ -146,9 +167,49 @@ function parseState(
   };
 }
 
+/**
+ * Phòng của một bài làm, có nhớ đệm.
+ *
+ * Tra DB lần đầu rồi giữ trong Redis. Với 1000 thí sinh, đó là 1000 truy vấn
+ * rải ra suốt buổi thi — đổi lại bỏ được ~95% lưu lượng thừa cho tới khi thi
+ * xong. Tra hụt thì trả về null và KHÔNG phát vào kênh phòng, sự kiện vẫn đi
+ * kênh đề như cũ nên không mất gì.
+ */
+async function roomIdForAttempt(attemptId: string): Promise<string | null> {
+  const r = getRedis();
+  const cached = await r.get(kAttemptRoom(attemptId));
+  if (cached !== null) return cached === "" ? null : cached;
+
+  try {
+    const row = await prisma.examAttempt.findUnique({
+      where: { id: attemptId },
+      select: { candidate: { select: { roomId: true } } },
+    });
+    const roomId = row?.candidate?.roomId ?? "";
+    await r.set(kAttemptRoom(attemptId), roomId, "EX", TTL_SEC);
+    return roomId === "" ? null : roomId;
+  } catch {
+    // Tra hụt thì thôi — kênh đề vẫn nhận được sự kiện.
+    return null;
+  }
+}
+
+/** attemptId của sự kiện, nếu có. Sự kiện cấp đề (broadcast) thì không. */
+function attemptIdOf(event: LiveEvent): string | null {
+  if ("attemptId" in event && typeof event.attemptId === "string")
+    return event.attemptId;
+  if ("attempt" in event) return event.attempt.attemptId;
+  return null;
+}
+
 async function publishToExam(examId: string, event: LiveEvent): Promise<void> {
   // streamPublish → XADD into `rt:exam:{examId}` with MAXLEN ~ 10K.
   await streamPublish(examChannel(examId), event);
+
+  const attemptId = attemptIdOf(event);
+  if (!attemptId) return;
+  const roomId = await roomIdForAttempt(attemptId);
+  if (roomId) await streamPublish(roomChannel(examId, roomId), event);
 }
 
 export async function publish(examId: string, event: LiveEvent): Promise<void> {

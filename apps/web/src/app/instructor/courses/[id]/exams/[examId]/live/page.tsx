@@ -2,11 +2,25 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { Radio } from "lucide-react";
-import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
+import {
+  canEditCourse,
+  getRoomScope,
+  liveCountsByRoom,
+} from "@feedbackme/core-lms";
+import RoomGrid, { type RoomCell } from "./RoomGrid";
 import { auth } from "@/lib/auth";
 import LiveDashboard from "./LiveDashboard";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Quá số này thì KHÔNG dựng lưới thẻ, mà bắt chọn phòng.
+ *
+ * 150 là chỗ mắt người hết quét nổi, và cũng là chỗ chi phí bắt đầu vô ích:
+ * mỗi thẻ là 40 chấm tiến độ, và mỗi người xem phải nghe toàn bộ luồng sự
+ * kiện của đề. Mở nhầm cả ca 200 người không được phép làm treo máy ai.
+ */
+const LIVE_CARD_LIMIT = 150;
 
 /**
  * Màn giám sát. `?sessionId=<uuid>` giới hạn vào MỘT ca thi.
@@ -20,9 +34,10 @@ export default async function ExamLiveDashboardPage({
   searchParams,
 }: {
   params: { id: string; examId: string };
-  searchParams?: { sessionId?: string };
+  searchParams?: { sessionId?: string; roomId?: string };
 }) {
   const sessionId = searchParams?.sessionId ?? null;
+  const roomId = searchParams?.roomId ?? null;
   const session = await auth();
   if (!session?.user?.id)
     redirect(
@@ -45,10 +60,27 @@ export default async function ExamLiveDashboardPage({
 
   // Restrict initial seed to candidates of proctor's rooms (the SSE stream
   // applies the same filter; this just keeps the SSR snapshot consistent).
+  // Thu hẹp theo PHÒNG. Hai nguồn ràng buộc, giao nhau:
+  //   - giám thị chỉ được xem phòng mình coi (như trước);
+  //   - bất kỳ ai cũng có thể tự chọn một phòng qua ?roomId=.
+  //
+  // Trước đây chỉ giám thị mới bị thu hẹp, còn giảng viên thấy TẤT CẢ. Với
+  // kỳ thi 5 ca × 4 phòng × 50 người, giảng viên mở màn này là nạp 1000 bài
+  // và nghe toàn bộ luồng sự kiện của đề — không ai đọc nổi 1000 thẻ, mà máy
+  // thì gánh đủ.
+  const roomIds: string[] | null =
+    !isInstructor && scope
+      ? roomId
+        ? scope.proctorRoomIds.filter((r) => r === roomId)
+        : scope.proctorRoomIds
+      : roomId
+        ? [roomId]
+        : null;
+
   let proctorCandidateIds: string[] | null = null;
-  if (!isInstructor && scope) {
+  if (roomIds !== null) {
     const cands = await prisma.examCandidate.findMany({
-      where: { examId: exam.id, roomId: { in: scope.proctorRoomIds } },
+      where: { examId: exam.id, roomId: { in: roomIds } },
       select: { id: true },
     });
     proctorCandidateIds = cands.map((c) => c.id);
@@ -182,6 +214,35 @@ export default async function ExamLiveDashboardPage({
   // Also expose exam.accessMode to the page so we can fetch it for the
   // server-render select above (just used for derivation, no extra query).
 
+  // Phạm vi quá rộng mà chưa chọn phòng → hiện lưới PHÒNG thay vì 200 thẻ.
+  const tooMany = attempts.length > LIVE_CARD_LIMIT && roomId === null;
+  let roomCells: RoomCell[] = [];
+  if (tooMany && run) {
+    const [rooms, counts] = await Promise.all([
+      prisma.examRoom.findMany({
+        where: { sessionId: run.id },
+        select: {
+          id: true,
+          name: true,
+          proctor: { select: { displayName: true, email: true } },
+        },
+        orderBy: { orderIndex: "asc" },
+      }),
+      liveCountsByRoom(run.id),
+    ]);
+    roomCells = rooms.map((r) => {
+      const c = counts.get(r.id);
+      return {
+        id: r.id,
+        name: r.name,
+        proctorName: r.proctor?.displayName ?? r.proctor?.email ?? null,
+        started: c?.started ?? 0,
+        submitted: c?.submitted ?? 0,
+        inProgress: c?.inProgress ?? 0,
+      };
+    });
+  }
+
   return (
     <main>
       <Link
@@ -216,12 +277,23 @@ export default async function ExamLiveDashboardPage({
         </span>
       </div>
 
+      {tooMany && run ? (
+        <RoomGrid
+          courseId={exam.courseId}
+          examId={exam.id}
+          sessionId={run.id}
+          rooms={roomCells}
+          reason={`Ca này có ${attempts.length} lượt thi — quá nhiều để theo dõi từng người trên một màn hình. Chọn phòng để xem chi tiết.`}
+        />
+      ) : (
       <LiveDashboard
         examId={exam.id}
         sessionId={run?.id}
+        roomId={roomId ?? undefined}
         initial={initial}
         questions={questions.map((q) => ({ id: q.id, order: q.orderInExam }))}
       />
+      )}
     </main>
   );
 }
