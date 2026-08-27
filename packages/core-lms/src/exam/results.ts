@@ -122,7 +122,24 @@ export async function listExamResults(
   const attempts = await db.examAttempt.findMany({
     where: {
       examId,
-      ...(filter.sessionId ? { candidate: { sessionId: filter.sessionId } } : {}),
+      // Lọc theo ca đi qua HAI đường, không chỉ qua thí sinh:
+      //   ExamAttempt.sessionId  — bài làm mới, mọi hình thức vào thi.
+      //   candidate.sessionId    — bài làm cũ của thí sinh vào bằng mã.
+      //
+      // Bản cũ chỉ có `candidate: { sessionId }`. Học viên đã ghi danh KHÔNG
+      // có ExamCandidate, nên bài của họ bị loại sạch: mở kết quả một ca kiểu
+      // ghi danh thì bảng trống trơn, trông như chưa ai thi. Đúng lỗi user
+      // báo ở Kỳ thi chính thức.
+      ...(filter.sessionId
+        ? {
+            OR: [
+              { sessionId: filter.sessionId },
+              { sessionId: null, candidate: { sessionId: filter.sessionId } },
+            ],
+          }
+        : {}),
+      // Phòng thì vẫn chỉ qua thí sinh — bài của học viên ghi danh không xếp
+      // phòng, nên lọc theo phòng loại chúng ra là đúng.
       ...(filter.roomId ? { candidate: { roomId: filter.roomId } } : {}),
     },
     orderBy: [{ submittedAt: "asc" }, { startedAt: "asc" }],
@@ -135,6 +152,8 @@ export async function listExamResults(
       submittedAt: true,
       userId: true,
       candidateDisplayName: true,
+      sessionId: true,
+      session: { select: { title: true, code: true } },
       user: { select: { displayName: true, email: true } },
       candidate: {
         select: {
@@ -163,8 +182,14 @@ export async function listExamResults(
     scorePct: a.scorePct,
     passed: a.passed,
     submittedAt: a.submittedAt?.toISOString() ?? null,
-    sessionId: a.candidate?.sessionId ?? null,
-    sessionTitle: a.candidate?.session?.title ?? a.candidate?.session?.code ?? null,
+    // Cột trên bài làm là nguồn chính; rơi về đường thí sinh cho bài làm cũ.
+    sessionId: a.sessionId ?? a.candidate?.sessionId ?? null,
+    sessionTitle:
+      a.session?.title ??
+      a.session?.code ??
+      a.candidate?.session?.title ??
+      a.candidate?.session?.code ??
+      null,
     roomId: a.candidate?.roomId ?? null,
     roomName: a.candidate?.room?.name ?? null,
     needsGrading: a.answers.some((x) => x.needsGrading),
