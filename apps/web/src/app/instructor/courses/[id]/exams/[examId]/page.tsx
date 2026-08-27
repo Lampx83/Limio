@@ -95,7 +95,6 @@ export default async function EditExamPage({
       ? ([
           "durationMin",
           "openAt",
-          "passScore",
           "attemptPolicy",
           "gradingMode",
           "proctoringLevel",
@@ -180,7 +179,6 @@ export default async function EditExamPage({
               durationMin: exam.durationMin,
               openAt: toLocalInput(exam.openAt),
               closeAt: toLocalInput(exam.closeAt),
-              passScore: exam.passScore,
               attemptPolicy: exam.attemptPolicy,
               gradingMode: exam.gradingMode,
               proctoringLevel: exam.proctoringLevel,

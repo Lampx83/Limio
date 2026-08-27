@@ -75,7 +75,6 @@ export async function GET(
           submittedAt: true,
           score: true,
           scorePct: true,
-          passed: true,
         },
       },
     },
@@ -108,7 +107,6 @@ export async function GET(
     "Trạng thái",
     "Điểm số",
     "Điểm %",
-    "Đạt",
     "Đã nộp lúc",
   ];
 
@@ -137,7 +135,6 @@ export async function GET(
         csv(attempt ? (statusMap[attempt.status] ?? attempt.status) : "Chưa vào thi"),
         attempt?.score != null ? attempt.score.toString() : "",
         attempt?.scorePct != null ? attempt.scorePct.toFixed(2) : "",
-        attempt?.passed === true ? "Đạt" : attempt?.passed === false ? "Chưa đạt" : "",
         attempt?.submittedAt ? formatDateTime(attempt.submittedAt) : "",
       ].join(","),
     );

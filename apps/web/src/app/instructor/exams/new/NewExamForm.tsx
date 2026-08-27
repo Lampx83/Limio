@@ -59,7 +59,6 @@ export default function NewExamForm({ courses, initialCourseId }: Props) {
           durationMin: 60,
           openAt: toLocalInput(now),
           closeAt: toLocalInput(inWeek),
-          passScore: 50,
           attemptPolicy: "single",
           gradingMode: "hybrid",
           proctoringLevel: "basic",

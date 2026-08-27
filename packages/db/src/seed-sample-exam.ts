@@ -46,7 +46,6 @@ async function main() {
       durationMin: 20,
       openAt: new Date(now.getTime() - 60_000),
       closeAt: new Date(now.getTime() + 365 * 24 * 60 * 60_000),
-      passScore: 50,
     },
   });
 

@@ -30,7 +30,6 @@ async function loadAttemptForGrading(attemptId: string, db: PrismaClient) {
         select: {
           id: true,
           courseId: true,
-          passScore: true,
           showResultsAfterSubmit: true,
         },
       },
@@ -162,7 +161,6 @@ export async function finalizeSubmission(
       ? "auto_submitted"
       : "submitted";
   const scorePct = totalPoints > 0 ? (autoScore / totalPoints) * 100 : 0;
-  const passed = allGraded ? scorePct >= attempt.exam.passScore : null;
 
   await db.examAttempt.update({
     where: { id: attemptId },
@@ -172,7 +170,6 @@ export async function finalizeSubmission(
       gradedAt: allGraded ? now : null,
       score: autoScore,
       scorePct: allGraded ? scorePct : null,
-      passed,
     },
   });
 
@@ -207,7 +204,6 @@ export async function finalizeSubmission(
         attemptId,
         score: autoScore,
         scorePct,
-        passed: passed ?? false,
       },
       {
         courseId: attempt.exam.courseId,
@@ -234,7 +230,7 @@ export interface RegradeExamResult {
  * - Chấm lại các câu AUTO (mcq/multi/true_false/gap_fill…) bằng gradeExamAnswer.
  * - KHÔNG đụng câu tự luận (essay/short_answer): giữ nguyên manualScore + trạng
  *   thái chấm tay của giám khảo.
- * - Tính lại attempt.score/scorePct/passed theo passScore hiện tại.
+ * - Tính lại attempt.score/scorePct.
  * - Ghi ExamGradeHistory cho mỗi answer đổi điểm + phát ExamRegraded (audit).
  *
  * Authz do route đảm nhiệm (canEditCourse). `actorUserId` chỉ dùng cho history.
@@ -246,7 +242,7 @@ export async function regradeExamAttempts(
 ): Promise<RegradeExamResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, passScore: true },
+    select: { id: true, courseId: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
 
@@ -368,7 +364,6 @@ export async function regradeExamAttempts(
           status: nextStatus,
           score: scoreSum,
           scorePct: allGraded ? scorePct : null,
-          passed: allGraded ? scorePct >= exam.passScore : null,
           gradedAt: allGraded ? now : null,
         },
       });
@@ -484,7 +479,6 @@ export async function applyAutoGradingForAttempt(
 
   const now = new Date();
   const scorePct = totalPoints > 0 ? (autoScore / totalPoints) * 100 : 0;
-  const passed = allGraded ? scorePct >= attempt.exam.passScore : null;
 
   await db.examAttempt.update({
     where: { id: attemptId },
@@ -493,7 +487,6 @@ export async function applyAutoGradingForAttempt(
       gradedAt: allGraded ? now : null,
       score: autoScore,
       scorePct: allGraded ? scorePct : null,
-      passed,
     },
   });
 
@@ -506,7 +499,6 @@ export async function applyAutoGradingForAttempt(
         attemptId,
         score: autoScore,
         scorePct,
-        passed: passed ?? false,
       },
       {
         courseId: attempt.exam.courseId,
@@ -686,7 +678,6 @@ export async function getExamAttemptResult(
         select: {
           id: true,
           title: true,
-          passScore: true,
           showResultsAfterSubmit: true,
         },
       },
@@ -716,8 +707,6 @@ export async function getExamAttemptResult(
     status: attempt.status,
     score: isFinal ? attempt.score : null,
     scorePct: isFinal ? attempt.scorePct : null,
-    passed: isFinal ? attempt.passed : null,
-    passScore: attempt.exam.passScore,
     showDetails:
       isFinal && canRevealAnswers(attempt.session, attempt.exam, new Date()),
     answers: attempt.answers.map((a) => ({

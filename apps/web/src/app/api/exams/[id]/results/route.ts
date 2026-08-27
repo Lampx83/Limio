@@ -79,7 +79,6 @@ export async function GET(
       submittedAt: true,
       scorePct: true,
       score: true,
-      passed: true,
       candidateDisplayName: true,
       user: { select: { email: true, displayName: true } },
       candidate: { select: { displayName: true, accessCode: true } },
@@ -191,7 +190,6 @@ export async function GET(
     "Nộp lúc",
     `Điểm (/${totalPoints})`,
     "Điểm %",
-    "Kết quả",
     ...qHeaders,
   ];
 
@@ -205,8 +203,6 @@ export async function GET(
     const submittedAt = att.submittedAt ? formatDateTime(att.submittedAt) : "";
     const score = att.score != null ? String(att.score) : "";
     const pct = att.scorePct != null ? `${att.scorePct.toFixed(1)}%` : "";
-    const result =
-      att.passed === true ? "Đạt" : att.passed === false ? "Rớt" : "Chưa chấm";
 
     const qCells = questions.map((q) => {
       const ans = att.answers.find((a) => a.questionId === q.id);
@@ -216,7 +212,7 @@ export async function GET(
       return awarded >= q.points ? "Đúng" : awarded > 0 ? `${awarded}/${q.points}` : "Sai";
     });
 
-    return [name, email, submittedAt, score, pct, result, ...qCells];
+    return [name, email, submittedAt, score, pct, ...qCells];
   });
 
   const csvLines = [header, ...rows].map((row) =>

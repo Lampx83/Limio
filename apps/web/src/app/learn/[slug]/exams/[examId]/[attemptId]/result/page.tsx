@@ -48,15 +48,6 @@ export default async function ExamResultPage({
           <div className="mt-2 text-sm text-faint">
             {result.score} / {totalPoints(result)} điểm
           </div>
-          <div
-            className={`mt-4 inline-block rounded-full px-4 py-1 text-sm font-medium ${
-              result.passed
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {result.passed ? "Đạt" : "Chưa đạt"} (ngưỡng {result.passScore}%)
-          </div>
         </div>
       )}
 

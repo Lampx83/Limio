@@ -33,7 +33,6 @@ export interface ExamResultRow {
   status: ExamResultRowStatus;
   score: number | null;
   scorePct: number | null;
-  passed: boolean | null;
   submittedAt: string | null;
   sessionId: string | null;
   sessionTitle: string | null;
@@ -51,7 +50,6 @@ export interface ExamResultsSummary {
   notStarted: number;
   /** Trung bình % trên các bài đã chấm xong. Null khi chưa có bài nào. */
   avgScorePct: number | null;
-  passedCount: number;
   /** Số bài còn câu chờ chấm tay. */
   pendingGrading: number;
 }
@@ -59,7 +57,6 @@ export interface ExamResultsSummary {
 export interface ExamResults {
   examId: string;
   examTitle: string;
-  passScore: number;
   totalPoints: number;
   /** Chỉ hiện bộ lọc khi bài thực sự có nhiều hơn một. */
   sessions: Array<{ id: string; title: string }>;
@@ -99,7 +96,6 @@ export async function listExamResults(
       id: true,
       courseId: true,
       title: true,
-      passScore: true,
       accessMode: true,
       questions: { select: { points: true } },
       schedules: {
@@ -148,7 +144,6 @@ export async function listExamResults(
       status: true,
       score: true,
       scorePct: true,
-      passed: true,
       submittedAt: true,
       userId: true,
       candidateDisplayName: true,
@@ -180,7 +175,6 @@ export async function listExamResults(
     status: mapStatus(a.status),
     score: a.score,
     scorePct: a.scorePct,
-    passed: a.passed,
     submittedAt: a.submittedAt?.toISOString() ?? null,
     // Cột trên bài làm là nguồn chính; rơi về đường thí sinh cho bài làm cũ.
     sessionId: a.sessionId ?? a.candidate?.sessionId ?? null,
@@ -214,7 +208,6 @@ export async function listExamResults(
         status: "not_started" as const,
         score: null,
         scorePct: null,
-        passed: null,
         submittedAt: null,
         sessionId: null,
         sessionTitle: null,
@@ -235,14 +228,12 @@ export async function listExamResults(
       graded.length > 0
         ? graded.reduce((s, r) => s + (r.scorePct ?? 0), 0) / graded.length
         : null,
-    passedCount: rows.filter((r) => r.passed === true).length,
     pendingGrading: rows.filter((r) => r.needsGrading).length,
   };
 
   return {
     examId: exam.id,
     examTitle: exam.title,
-    passScore: exam.passScore,
     totalPoints,
     sessions: exam.schedules.map((s) => ({
       id: s.id,

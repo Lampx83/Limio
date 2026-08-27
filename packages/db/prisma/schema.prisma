@@ -2341,7 +2341,9 @@ model Exam {
   attemptPolicy          ExamAttemptPolicy   @default(single)
   gradingMode            ExamGradingMode     @default(hybrid)
   proctoringLevel        ExamProctoringLevel @default(none)
-  // Passing threshold as % of total points (0-100).
+  // NGỪNG DÙNG: đề thi chỉ trả về điểm; đạt hay không do quy chế bên ngoài
+  // quyết định, không phải thuộc tính của gói đề. Cột còn đây để dữ liệu cũ
+  // không mất; xoá ở đợt migration riêng cùng openAt/closeAt.
   passScore              Int                 @default(50)
   shuffleQuestions       Boolean             @default(true)
   shuffleOptions         Boolean             @default(true)
@@ -2593,6 +2595,7 @@ model ExamAttempt {
   score                Float?
   // 0-100, derived from score / totalPoints * 100.
   scorePct             Float?
+  // NGỪNG GHI: xem Exam.passScore. Bài thi cũ vẫn giữ giá trị đã chấm.
   passed               Boolean?
   // A5.3.4 — Last heartbeat from the learner's browser. Updated by the
   // student heartbeat endpoint with write coalescing (≤ 1 UPDATE / 30s / attempt;

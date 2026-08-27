@@ -1550,7 +1550,6 @@ async function seedExam(
       description: "Bài kiểm tra mô phỏng IELTS gồm 2 phần Listening + Reading.",
       status: "published",
       durationMin: 90,
-      passScore: 60,
       openAt: offset(-1),
       closeAt: offset(30),
       publishedAt: offset(-1),

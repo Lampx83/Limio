@@ -67,7 +67,6 @@ export async function cloneExam(
         attemptPolicy: source.attemptPolicy,
         gradingMode: source.gradingMode,
         proctoringLevel: source.proctoringLevel,
-        passScore: source.passScore,
         shuffleQuestions: source.shuffleQuestions,
         shuffleOptions: source.shuffleOptions,
         showResultsAfterSubmit: source.showResultsAfterSubmit,

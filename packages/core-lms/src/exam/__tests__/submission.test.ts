@@ -132,8 +132,8 @@ describe("submitExamAttempt (A7.5.1)", () => {
     const a = await prisma.examAttempt.findUniqueOrThrow({ where: { id: start.attemptId } });
     expect(a.status).toBe("graded");
     expect(a.scorePct).toBe(50);
-    // passScore default 50 → passed
-    expect(a.passed).toBe(true);
+    // Đề thi không còn khái niệm đạt/không đạt — chỉ còn điểm.
+    expect(a.passed).toBeNull();
     const grade = await prisma.learningEvent.findFirst({
       where: { eventType: LearningEventType.ExamGraded, userId: s.learnerId },
     });
@@ -255,7 +255,6 @@ describe("getExamAttemptResult (A7.5.4)", () => {
     expect(r.status).toBe("graded");
     expect(r.score).toBe(5);
     expect(r.scorePct).toBe(50);
-    expect(r.passed).toBe(true);
     expect(r.showDetails).toBe(true);
     expect(r.answers).toHaveLength(2);
   });
@@ -270,7 +269,6 @@ describe("getExamAttemptResult (A7.5.4)", () => {
     expect(r.status).toBe("submitted");
     expect(r.score).toBeNull();
     expect(r.scorePct).toBeNull();
-    expect(r.passed).toBeNull();
     expect(r.showDetails).toBe(false);
   });
 
@@ -291,7 +289,6 @@ describe("regradeExamAttempts", () => {
     await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
     const before = await prisma.examAttempt.findUniqueOrThrow({ where: { id: start.attemptId } });
     expect(before.score).toBe(5);
-    expect(before.passed).toBe(true); // 50% == passScore 50
 
     // Instructor sửa đáp án q2: giờ "b" là đúng.
     await prisma.examQuestion.update({
@@ -313,7 +310,6 @@ describe("regradeExamAttempts", () => {
     const after = await prisma.examAttempt.findUniqueOrThrow({ where: { id: start.attemptId } });
     expect(after.score).toBe(10); // q1 + q2 đều đúng
     expect(after.scorePct).toBe(100);
-    expect(after.passed).toBe(true);
 
     // History ghi lại thay đổi điểm câu q2.
     const q2Answer = await prisma.examAnswer.findUniqueOrThrow({

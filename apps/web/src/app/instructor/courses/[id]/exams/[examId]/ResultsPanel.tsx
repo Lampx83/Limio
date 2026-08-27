@@ -64,7 +64,7 @@ export default function ResultsPanel({
   return (
     <div>
       {/* Dải số tổng quan — trả lời ngay trước khi phải đọc bảng. */}
-      <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-default bg-default sm:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-default bg-default sm:grid-cols-3">
         <Stat
           label="đã nộp"
           value={s ? `${s.submitted}/${s.expected}` : "—"}
@@ -72,10 +72,6 @@ export default function ResultsPanel({
         <Stat
           label="điểm trung bình"
           value={s?.avgScorePct != null ? `${s.avgScorePct.toFixed(1)}%` : "—"}
-        />
-        <Stat
-          label={`đạt (ngưỡng ${data?.passScore ?? "—"}%)`}
-          value={s ? `${s.passedCount}` : "—"}
         />
         <Stat
           label="chờ chấm tay"
@@ -247,7 +243,7 @@ function StudentTable({
             <th className="px-3 py-2 font-medium">Học sinh</th>
             <th className="px-3 py-2 font-medium">Nộp lúc</th>
             <th className="px-3 py-2 text-right font-medium">Điểm</th>
-            <th className="px-3 py-2 font-medium">Kết quả</th>
+            <th className="px-3 py-2 font-medium">Trạng thái</th>
             <th className="px-3 py-2"></th>
           </tr>
         </thead>
@@ -330,18 +326,6 @@ function Verdict({ r }: { r: ExamResultRow }) {
     return <span className="text-xs text-blue-700">Đang làm</span>;
   if (r.needsGrading)
     return <span className="text-xs text-amber-700">Chờ chấm</span>;
-  if (r.passed === true)
-    return (
-      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
-        Đạt
-      </span>
-    );
-  if (r.passed === false)
-    return (
-      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">
-        Chưa đạt
-      </span>
-    );
   return <span className="text-xs text-faint">Đã nộp</span>;
 }
 

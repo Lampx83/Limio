@@ -16,7 +16,6 @@ interface InitialValues {
   durationMin: number;
   openAt: string; // datetime-local ISO without zone
   closeAt: string;
-  passScore: number;
   attemptPolicy: "single" | "multi";
   gradingMode: "auto" | "manual" | "hybrid";
   proctoringLevel: "none" | "basic" | "strict";
@@ -62,7 +61,6 @@ export default function ExamMetaForm({
       durationMin: v.durationMin,
       openAt: new Date(v.openAt).toISOString(),
       closeAt: new Date(v.closeAt).toISOString(),
-      passScore: v.passScore,
       attemptPolicy: v.attemptPolicy,
       gradingMode: v.gradingMode,
       proctoringLevel: v.proctoringLevel,
@@ -125,15 +123,7 @@ export default function ExamMetaForm({
           Cùng một gói chạy 15 phút ở lớp này và 30 phút ở lớp kia là chuyện
           bình thường, nên con số đó được chọn lúc mở buổi thi (Tổ chức thi →
           Link thi nhanh). Exam.durationMin chỉ còn là giá trị mặc định gợi ý. */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <NumField
-          label="Điểm đạt (%)"
-          value={v.passScore}
-          min={0}
-          max={100}
-          disabled={isLocked("passScore")}
-          onChange={(n) => setV({ ...v, passScore: n })}
-        />
+      <div>
         <SelectField
           label="Số lượt thi"
           value={v.attemptPolicy}
@@ -254,37 +244,6 @@ export default function ExamMetaForm({
         </button>
       </div>
     </form>
-  );
-}
-
-function NumField({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  value: number;
-  min?: number;
-  max?: number;
-  onChange: (n: number) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="block text-sm font-medium">{label}</span>
-      <input
-        type="number"
-        value={value}
-        min={min}
-        max={max}
-        disabled={disabled}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-1 w-full rounded border border-default px-3 py-2 text-sm disabled:bg-slate-50"
-      />
-    </label>
   );
 }
 
