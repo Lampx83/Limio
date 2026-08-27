@@ -136,21 +136,6 @@ function Row({ r }: { r: ExamRun }) {
     }
   };
 
-  const setReveal = async (value: string) => {
-    setBusy(true);
-    try {
-      await fetch(apiUrl(`/api/exam-sessions/${r.sessionId}/reveal-policy`), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        // "inherit" là khái niệm của UI, không phải của API — quy về null.
-        body: JSON.stringify({ policy: value === "inherit" ? null : value }),
-      });
-      router.refresh();
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <li
       className={`flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5 ${
@@ -278,25 +263,6 @@ function Row({ r }: { r: ExamRun }) {
           <Download className="h-3 w-3 shrink-0" />
           Tải
         </a>
-        {/* Đổi được sau khi tạo: giáo viên hay chọn "không hiện" lúc tạo rồi
-            cuối buổi mới muốn chữa đề cho cả lớp. Không cho sửa ở đây thì họ
-            đi sửa cờ trên gói đề — mà cờ đó dùng chung cho mọi ca. */}
-        <span className="text-xs text-faint">Đáp án</span>
-        <select
-          value={r.revealAnswers ?? "inherit"}
-          onChange={(e) => setReveal(e.target.value)}
-          disabled={busy}
-          aria-label={`Chính sách hiện đáp án của buổi thi ${r.examTitle}`}
-          title="Khi nào học sinh được xem đáp án và điểm chi tiết"
-          className="rounded border border-default bg-white px-2 py-1 text-xs disabled:opacity-50"
-        >
-          {r.revealAnswers === null && (
-            <option value="inherit">theo gói đề</option>
-          )}
-          <option value="immediately">hiện ngay</option>
-          <option value="after_close">sau khi đóng</option>
-          <option value="never">không hiện</option>
-        </select>
         {r.timingMode === "manual" && (
           <button
             type="button"

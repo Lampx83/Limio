@@ -351,7 +351,7 @@ describe("getExamAttemptReview — giải thích đáp án", () => {
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
     await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
 
-    const r = await getExamAttemptReview(s.learnerId, start.attemptId);
+    const r = await getExamAttemptReview({ kind: "user", userId: s.learnerId }, start.attemptId);
     const q1 = r.questions.find((q) => q.id === s.q1)!;
     expect(q1.explanation).toBe("A đúng vì theo định nghĩa.");
   });
@@ -362,7 +362,7 @@ describe("getExamAttemptReview — giải thích đáp án", () => {
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
     await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
 
-    const r = await getExamAttemptReview(s.learnerId, start.attemptId);
+    const r = await getExamAttemptReview({ kind: "user", userId: s.learnerId }, start.attemptId);
     expect(r.questions.find((q) => q.id === s.q2)!.explanation).toBeNull();
   });
 
@@ -372,7 +372,7 @@ describe("getExamAttemptReview — giải thích đáp án", () => {
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
     await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
 
-    await expect(getExamAttemptReview(s.learnerId, start.attemptId)).rejects.toBeTruthy();
+    await expect(getExamAttemptReview({ kind: "user", userId: s.learnerId }, start.attemptId)).rejects.toBeTruthy();
   });
 
   it("không lộ gì khi bài còn chờ chấm tay", async () => {
@@ -382,7 +382,7 @@ describe("getExamAttemptReview — giải thích đáp án", () => {
     await answerWithToken(s.learnerId, start.attemptId, s.q3!, { text: "essay" }, start.sessionToken);
     await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
 
-    await expect(getExamAttemptReview(s.learnerId, start.attemptId)).rejects.toBeTruthy();
+    await expect(getExamAttemptReview({ kind: "user", userId: s.learnerId }, start.attemptId)).rejects.toBeTruthy();
   });
 
   it("không cho học sinh khác đọc giải thích của bài này", async () => {
@@ -392,6 +392,6 @@ describe("getExamAttemptReview — giải thích đáp án", () => {
     await answerWithToken(s.learnerId, start.attemptId, s.q1, { optionIds: ["a"] }, start.sessionToken);
     await submitExamAttempt({ kind: "user", userId: s.learnerId }, start.attemptId);
 
-    await expect(getExamAttemptReview(other.learnerId, start.attemptId)).rejects.toBeTruthy();
+    await expect(getExamAttemptReview({ kind: "user", userId: other.learnerId }, start.attemptId)).rejects.toBeTruthy();
   });
 });

@@ -741,7 +741,7 @@ export interface ExamAttemptReviewQuestion {
 }
 
 export async function getExamAttemptReview(
-  userId: string,
+  subject: ExamSubject,
   attemptId: string,
   db: PrismaClient = prisma,
 ): Promise<{ examTitle: string; questions: ExamAttemptReviewQuestion[] }> {
@@ -750,6 +750,7 @@ export async function getExamAttemptReview(
     select: {
       id: true,
       userId: true,
+      candidateId: true,
       examId: true,
       status: true,
       session: { select: REVEAL_SESSION_SELECT },
@@ -784,7 +785,9 @@ export async function getExamAttemptReview(
   });
 
   if (!attempt) throw new ExamError("attempt_not_found");
-  if (attempt.userId !== userId) throw new ExamError("attempt_belongs_to_other");
+  // Thí sinh vào bằng mã cũng được xem lại bài của CHÍNH MÌNH — cookie của
+  // lượt thi là bằng chứng sở hữu, cùng cơ chế mọi thao tác khác trong bài.
+  assertSubjectOwnsAttempt(subject, attempt);
   if (attempt.status !== "graded") throw new ExamError("validation_failed", "not_graded_yet");
   if (!canRevealAnswers(attempt.session, attempt.exam, new Date())) {
     throw new ExamError("validation_failed", "results_hidden");
