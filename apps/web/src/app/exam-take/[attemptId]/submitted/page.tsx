@@ -247,10 +247,6 @@ function Generic({ examTitle }: { examTitle?: string } = {}) {
       <CheckCircle className="mx-auto h-16 w-16 text-emerald-500" />
       <h1 className="mt-4 text-2xl font-bold text-slate-900">Đã nộp bài thi</h1>
       {examTitle && <p className="mt-1 text-sm text-faint">{examTitle}</p>}
-      <p className="mt-6 text-sm text-slate-700">
-        Bài thi của bạn đã được ghi nhận. Để xem kết quả, vui lòng nhập lại mã
-        thi tại trang kết quả khi giám thị thông báo.
-      </p>
       <Link
         href="/"
         className="mt-6 inline-block rounded bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200"
