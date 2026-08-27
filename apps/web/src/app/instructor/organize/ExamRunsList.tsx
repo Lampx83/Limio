@@ -4,9 +4,26 @@ import { useState } from "react";
 import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Download, Radio } from "lucide-react";
+import { Check, Copy, Download, QrCode, Radio } from "lucide-react";
+import dynamic from "next/dynamic";
 import type { ExamRun } from "@feedbackme/core-lms";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
+
+/** Kích thước QR: đủ to để quét từ cuối lớp khi chiếu lên máy chiếu. */
+const QR_SIZE = 220;
+
+const QRCode = dynamic(
+  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="rounded-lg border border-emerald-300 bg-white"
+        style={{ width: QR_SIZE, height: QR_SIZE }}
+      />
+    ),
+  },
+);
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", {
@@ -78,6 +95,7 @@ function Row({ r }: { r: ExamRun }) {
   const [copied, setCopied] = useState(false);
   const [copyErr, setCopyErr] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showQr, setShowQr] = useState(false);
 
   // Lần thi dùng mã cấp riêng hoặc vào bằng tài khoản thì không có link chung
   // để phát cho cả lớp.
@@ -162,6 +180,24 @@ function Row({ r }: { r: ExamRun }) {
             ) : (
               <Copy className="h-3.5 w-3.5" />
             )}
+          </button>
+        )}
+        {r.isOpen && r.code && fullUrl && (
+          <button
+            type="button"
+            onClick={() => setShowQr((v) => !v)}
+            aria-expanded={showQr}
+            className={`rounded p-1 text-emerald-800 hover:bg-emerald-100 ${
+              showQr ? "bg-emerald-100" : ""
+            }`}
+            aria-label={
+              showQr
+                ? `Ẩn mã QR buổi thi ${r.examTitle}`
+                : `Hiện mã QR để chiếu cho lớp — buổi thi ${r.examTitle}`
+            }
+            title={showQr ? "Ẩn mã QR" : "Hiện mã QR để chiếu cho lớp"}
+          >
+            <QrCode className="h-3.5 w-3.5" />
           </button>
         )}
       </span>
@@ -266,12 +302,49 @@ function Row({ r }: { r: ExamRun }) {
             type="button"
             onClick={() => toggle(!r.isOpen)}
             disabled={busy}
-            className="rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-50"
+            /* Đóng ca là hành động cắt dòng người đang vào thi — tô đỏ sẫm để
+               không ai bấm nhầm khi đang lướt qua hàng nút. "Mở lại" thì
+               không: mở thêm một cánh cửa chẳng hỏng gì. */
+            className={
+              r.isOpen
+                ? "rounded border border-danger-700 bg-danger-700 px-2 py-1 text-xs font-medium text-white hover:bg-danger-600 disabled:opacity-50"
+                : "rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-50"
+            }
           >
             {busy ? "…" : r.isOpen ? "Đóng" : "Mở lại"}
           </button>
         )}
       </span>
+
+      {/* Bảng chiếu. `w-full` để flex-wrap đẩy nó xuống hẳn một dòng riêng
+          thay vì chen vào giữa cụm nút.
+
+          Nền trắng + viền quiet zone: QR đặt trên nền màu hoặc sát mép thì
+          máy quét hay không bắt được — nền của thẻ này đang là xanh nhạt. */}
+      {showQr && fullUrl && (
+        <div className="w-full border-t border-emerald-200 pt-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="rounded-lg border border-emerald-300 bg-white p-3">
+              <QRCode value={fullUrl} size={QR_SIZE} level="M" />
+            </div>
+            <div className="min-w-48 flex-1">
+              <p className="text-sm text-emerald-900">
+                Chiếu lên màn hình để cả lớp quét.
+              </p>
+              <p className="mt-1 text-sm text-emerald-800">
+                Ai không quét được thì vào{" "}
+                <span className="font-medium">{shareUrl("/exam")}</span> rồi gõ
+                mã:
+              </p>
+              {/* Mã to hẳn: đây là đường dự phòng khi máy ảnh không bắt được
+                  QR, mà lúc đó người gõ đang nhìn từ cuối lớp. */}
+              <p className="mt-1 font-mono text-3xl font-semibold tracking-widest text-emerald-900">
+                {r.code}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </li>
   );
 }
