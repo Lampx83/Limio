@@ -140,27 +140,6 @@ export default async function ExamSubmittedPage({
               </div>
             </div>
           </div>
-          {result.passed !== null && (
-            <div className="mt-4">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
-                  result.passed
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-rose-50 text-rose-700"
-                }`}
-              >
-                {result.passed ? (
-                  <>
-                    <Check className="h-4 w-4" /> Đạt
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="h-4 w-4" /> Chưa đạt
-                  </>
-                )}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Per-question breakdown */}

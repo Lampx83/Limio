@@ -333,7 +333,7 @@ function Row({ r }: { r: ExamRun }) {
               </p>
               <p className="mt-1 text-sm text-emerald-800">
                 Ai không quét được thì vào{" "}
-                <span className="font-medium">{shareUrl("/exam")}</span> rồi gõ
+                <span className="font-medium">{shareUrl("/thi")}</span> rồi gõ
                 mã:
               </p>
               {/* Mã to hẳn: đây là đường dự phòng khi máy ảnh không bắt được

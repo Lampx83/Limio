@@ -25,7 +25,6 @@ export interface CandidateResult {
   submittedAt: string | null;
   score: number | null;
   scorePct: number | null;
-  passed: boolean | null;
   fullyGraded: boolean;
   showDetail: boolean;
   // When showDetail is true: 1 entry per question this candidate answered.
@@ -114,7 +113,6 @@ export async function lookupCandidateResult(
       submittedAt: true,
       score: true,
       scorePct: true,
-      passed: true,
       session: { select: REVEAL_SESSION_SELECT },
       answers: {
         select: {
@@ -162,7 +160,6 @@ export async function lookupCandidateResult(
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
     score: attempt.score,
     scorePct: attempt.scorePct,
-    passed: attempt.passed,
     fullyGraded,
     showDetail,
     details,
@@ -190,7 +187,6 @@ export async function getCandidateResultByAttemptId(
       submittedAt: true,
       score: true,
       scorePct: true,
-      passed: true,
       candidateDisplayName: true,
       candidate: { select: { displayName: true } },
       exam: { select: { title: true, showResultsAfterSubmit: true } },
@@ -233,7 +229,6 @@ export async function getCandidateResultByAttemptId(
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
     score: attempt.score,
     scorePct: attempt.scorePct,
-    passed: attempt.passed,
     fullyGraded,
     showDetail,
     details,

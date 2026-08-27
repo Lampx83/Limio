@@ -11,7 +11,6 @@ type Result = {
   submittedAt: string | null;
   score: number | null;
   scorePct: number | null;
-  passed: boolean | null;
   fullyGraded: boolean;
   showDetail: boolean;
   details?: {
@@ -147,17 +146,6 @@ function ResultPanel({ r, onReset }: { r: Result; onReset: () => void }) {
             <div className="mt-1 text-sm text-slate-600">
               Tổng điểm: <b>{r.score?.toFixed(2) ?? "—"}</b>
             </div>
-            {r.passed !== null && (
-              <div
-                className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                  r.passed
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {r.passed ? "✓ Đạt" : "✗ Chưa đạt"}
-              </div>
-            )}
           </>
         ) : (
           <div className="mt-3 text-sm text-faint">
