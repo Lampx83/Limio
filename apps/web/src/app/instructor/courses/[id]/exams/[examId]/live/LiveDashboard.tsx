@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  memo,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AlertTriangle, Megaphone, MessageSquare } from "lucide-react";
 
 type AttemptLive = {
@@ -12,16 +20,46 @@ type AttemptLive = {
   startedAt: number;
   expiresAt: number;
   submittedAt: number | null;
-  answeredQuestionIds: string[];
+  /**
+   * Thứ tự các câu ĐÃ trả lời (orderInExam), không phải id.
+   *
+   * Giao diện chỉ cần biết chấm thứ i sáng hay tối. Giữ danh sách UUID thì
+   * 500 thí sinh × 40 câu là 20.000 chuỗi 36 ký tự tải xuống trình duyệt.
+   * Luồng SSE vẫn gửi id (Redis lưu vậy) — quy đổi ngay lúc nhận, xem
+   * `toIdx`.
+   */
+  answeredIdx: number[];
   totalQuestions: number;
   incidentCount: number;
   lastSeenAt: number;
   resumeCount: number;
 };
 
+/**
+ * Bài làm như luồng SSE gửi xuống: vẫn mang danh sách UUID vì Redis lưu vậy.
+ * Quy đổi sang chỉ số ngay khi nhận (`normalize`) để phần còn lại của màn hình
+ * chỉ làm việc với một dạng duy nhất.
+ */
+/**
+ * Đồng hồ dùng chung, nhích mỗi giây.
+ *
+ * Trước đây `now` là prop truyền xuống MỌI thẻ bài làm, mà thẻ không memo hoá
+ * — nên mỗi giây cả danh sách dựng lại. Với 500 thí sinh × 40 chấm tiến độ,
+ * đó là ~20.000 phép so DOM mỗi giây và trình duyệt khựng.
+ *
+ * Nay chỉ ba thành phần lá thật sự cần thời gian mới đọc context này. Thân
+ * thẻ — trong đó có dàn chấm — đứng yên cho tới khi chính bài làm đó đổi.
+ */
+const NowContext = createContext<number>(0);
+const useNow = () => useContext(NowContext);
+
+type WireAttempt = Omit<AttemptLive, "answeredIdx"> & {
+  answeredQuestionIds?: string[];
+};
+
 type Event =
-  | { type: "snapshot"; attempts: AttemptLive[] }
-  | { type: "attempt.started"; attempt: AttemptLive }
+  | { type: "snapshot"; attempts: WireAttempt[] }
+  | { type: "attempt.started"; attempt: WireAttempt }
   | { type: "attempt.heartbeat"; attemptId: string; at: number }
   | { type: "attempt.answered"; attemptId: string; questionId: string; at: number }
   | { type: "attempt.incident"; attemptId: string; incidentType: string; incidentCount: number; at: number }
@@ -93,6 +131,16 @@ export default function LiveDashboard({
   const [now, setNow] = useState(() => Date.now());
   const esRef = useRef<EventSource | null>(null);
 
+  // UUID câu hỏi → thứ tự câu, để quy đổi payload SSE.
+  //
+  // Giữ trong ref chứ không đưa vào deps của effect mở EventSource: đổi deps
+  // là đóng/mở lại kết nối SSE, mất cả hàng đợi sự kiện đang chờ.
+  const idxRef = useRef(new Map<string, number>());
+  idxRef.current = useMemo(
+    () => new Map(questions.map((q) => [q.id, q.order])),
+    [questions],
+  );
+
   // Tick clock every second for live countdown + staleness colors.
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -116,7 +164,9 @@ export default function LiveDashboard({
         return;
       }
       if (ev.type === "ping") return;
-      setAttempts((prev) => applyEvent(prev, ev));
+      setAttempts((prev) =>
+        applyEvent(prev, ev, (qid) => idxRef.current.get(qid)),
+      );
     };
     return () => {
       es.close();
@@ -162,6 +212,7 @@ export default function LiveDashboard({
   }, [attempts, now]);
 
   return (
+    <NowContext.Provider value={now}>
     <div className="mt-6">
       <div className="flex flex-wrap items-center gap-3">
         <ConnBadge state={connState} />
@@ -232,30 +283,52 @@ export default function LiveDashboard({
           }}
         >
           {list.map((a) => (
-            <AttemptCard
-              key={a.attemptId}
-              a={a}
-              now={now}
-              questions={questions}
-            />
+            <AttemptCard key={a.attemptId} a={a} questions={questions} />
           ))}
         </div>
       )}
     </div>
+    </NowContext.Provider>
   );
+}
+
+/** UUID câu hỏi → thứ tự câu. Không biết câu nào thì bỏ qua, không đoán. */
+function normalize(
+  w: WireAttempt,
+  toIdx: (questionId: string) => number | undefined,
+): AttemptLive {
+  const { answeredQuestionIds, ...rest } = w;
+  return {
+    ...rest,
+    answeredIdx: (answeredQuestionIds ?? [])
+      .map(toIdx)
+      .filter((i): i is number => i !== undefined),
+  };
 }
 
 function applyEvent(
   prev: Record<string, AttemptLive>,
   ev: Event,
+  toIdx: (questionId: string) => number | undefined,
 ): Record<string, AttemptLive> {
   if (ev.type === "snapshot") {
     const next = { ...prev };
-    for (const a of ev.attempts) next[a.attemptId] = a;
+    for (const a of ev.attempts) {
+      const incoming = normalize(a, toIdx);
+      const existing = prev[a.attemptId];
+      // Ảnh chụp của luồng SSE lấy từ Redis, mà Redis là CACHE — DB mới là sự
+      // thật. Redis nguội (vừa khởi động lại, hoặc key hết hạn) thì nó trả về
+      // danh sách câu đã trả lời RỖNG; ghi đè thẳng sẽ xoá sạch dàn chấm mà
+      // trang vừa dựng từ DB. Rỗng thì giữ cái đang có.
+      next[a.attemptId] =
+        existing && incoming.answeredIdx.length === 0 && existing.answeredIdx.length > 0
+          ? { ...incoming, answeredIdx: existing.answeredIdx }
+          : incoming;
+    }
     return next;
   }
   if (ev.type === "attempt.started") {
-    return { ...prev, [ev.attempt.attemptId]: ev.attempt };
+    return { ...prev, [ev.attempt.attemptId]: normalize(ev.attempt, toIdx) };
   }
   // Message events don't mutate attempt state; the dashboard just shows them
   // as a confirmation toast handled elsewhere.
@@ -284,14 +357,15 @@ function applyEvent(
     };
   }
   if (ev.type === "attempt.answered") {
-    const has = existing.answeredQuestionIds.includes(ev.questionId);
+    const idx = toIdx(ev.questionId);
+    const has = idx === undefined || existing.answeredIdx.includes(idx);
     return {
       ...prev,
       [ev.attemptId]: {
         ...existing,
-        answeredQuestionIds: has
-          ? existing.answeredQuestionIds
-          : [...existing.answeredQuestionIds, ev.questionId],
+        answeredIdx: has
+          ? existing.answeredIdx
+          : [...existing.answeredIdx, idx],
         lastSeenAt: ev.at,
       },
     };
@@ -338,32 +412,23 @@ function applyEvent(
   return prev;
 }
 
-function AttemptCard({
+/**
+ * memo: thẻ chỉ dựng lại khi CHÍNH bài làm đó đổi, không phải mỗi khi đồng hồ
+ * nhích. Đây là thứ giữ cho danh sách 500 thí sinh không khựng.
+ */
+const AttemptCard = memo(function AttemptCard({
   a,
-  now,
   questions,
 }: {
   a: AttemptLive;
-  now: number;
   questions: ExamQuestionRef[];
 }) {
-  const remainingMs = Math.max(0, a.expiresAt - now);
-  const sinceSeen = Math.max(0, now - a.lastSeenAt);
-  const answeredSet = new Set(a.answeredQuestionIds);
-  const answeredCount = a.answeredQuestionIds.length;
+  const answeredSet = new Set(a.answeredIdx);
+  const answeredCount = a.answeredIdx.length;
   const progressPct =
     a.totalQuestions > 0
       ? Math.round((answeredCount / a.totalQuestions) * 100)
       : 0;
-
-  const liveDot =
-    a.status !== "in_progress"
-      ? "bg-slate-300"
-      : sinceSeen < 15_000
-        ? "bg-emerald-500 animate-pulse"
-        : sinceSeen < 60_000
-          ? "bg-amber-500"
-          : "bg-red-500";
 
   return (
     <div
@@ -371,7 +436,7 @@ function AttemptCard({
       className="rounded-lg border border-default bg-white p-3 shadow-sm"
     >
       <div className="flex items-center gap-2">
-        <span className={`h-2.5 w-2.5 rounded-full ${liveDot}`} />
+        <LiveDot status={a.status} lastSeenAt={a.lastSeenAt} />
         <a
           href={`${typeof window !== "undefined" ? window.location.pathname : ""}/${a.attemptId}`}
           className="min-w-0 flex-1 truncate text-sm font-semibold hover:text-blue-700 hover:underline"
@@ -392,7 +457,7 @@ function AttemptCard({
       </div>
 
       <div className="mt-2 text-xs text-faint">
-        Last ping: {fmtAgo(sinceSeen)}
+        Last ping: <LastPing lastSeenAt={a.lastSeenAt} />
         {a.resumeCount > 0 && (
           <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5">
             resume×{a.resumeCount}
@@ -415,7 +480,7 @@ function AttemptCard({
             aria-label="Tiến độ từng câu hỏi"
           >
             {questions.map((q, i) => {
-              const done = answeredSet.has(q.id);
+              const done = answeredSet.has(q.order);
               return (
                 <span
                   key={q.id}
@@ -436,19 +501,11 @@ function AttemptCard({
         <span className="text-faint">
           {a.status === "in_progress" ? "Còn lại" : "Đã nộp lúc"}
         </span>
-        <span
-          className={`font-mono ${
-            a.status === "in_progress" && remainingMs < 60_000
-              ? "text-red-600"
-              : "text-slate-700"
-          }`}
-        >
-          {a.status === "in_progress"
-            ? fmtCountdown(remainingMs)
-            : a.submittedAt
-              ? fmtAgo(now - a.submittedAt)
-              : "—"}
-        </span>
+        <TimeCell
+          status={a.status}
+          expiresAt={a.expiresAt}
+          submittedAt={a.submittedAt}
+        />
       </div>
 
       {a.incidentCount > 0 && (
@@ -460,7 +517,7 @@ function AttemptCard({
       <ActionMenu a={a} />
     </div>
   );
-}
+});
 
 function ActionMenu({ a }: { a: AttemptLive }) {
   const [busy, setBusy] = useState<string | null>(null);
@@ -712,6 +769,54 @@ function fmtCountdown(ms: number): string {
   if (hh > 0)
     return `${hh}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   return `${mm}:${String(ss).padStart(2, "0")}`;
+}
+
+/** Chấm trạng thái: xanh nhấp nháy khi vừa thấy, đỏ khi mất tăm quá 1 phút. */
+function LiveDot({
+  status,
+  lastSeenAt,
+}: {
+  status: AttemptLive["status"];
+  lastSeenAt: number;
+}) {
+  const sinceSeen = Math.max(0, useNow() - lastSeenAt);
+  const cls =
+    status !== "in_progress"
+      ? "bg-slate-300"
+      : sinceSeen < 15_000
+        ? "bg-emerald-500 animate-pulse"
+        : sinceSeen < 60_000
+          ? "bg-amber-500"
+          : "bg-red-500";
+  return <span className={`h-2.5 w-2.5 rounded-full ${cls}`} />;
+}
+
+function LastPing({ lastSeenAt }: { lastSeenAt: number }) {
+  return <>{fmtAgo(Math.max(0, useNow() - lastSeenAt))}</>;
+}
+
+/** Đếm ngược khi đang làm, "bao lâu trước" khi đã nộp. */
+function TimeCell({
+  status,
+  expiresAt,
+  submittedAt,
+}: {
+  status: AttemptLive["status"];
+  expiresAt: number;
+  submittedAt: number | null;
+}) {
+  const now = useNow();
+  const remainingMs = Math.max(0, expiresAt - now);
+  const urgent = status === "in_progress" && remainingMs < 60_000;
+  return (
+    <span className={`font-mono ${urgent ? "text-red-600" : "text-slate-700"}`}>
+      {status === "in_progress"
+        ? fmtCountdown(remainingMs)
+        : submittedAt
+          ? fmtAgo(now - submittedAt)
+          : "—"}
+    </span>
+  );
 }
 
 function fmtAgo(ms: number): string {

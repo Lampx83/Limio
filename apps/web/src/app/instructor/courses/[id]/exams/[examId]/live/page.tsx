@@ -94,10 +94,46 @@ export default async function ExamLiveDashboardPage({
       user: { select: { displayName: true, email: true } },
       candidate: { select: { displayName: true, accessCode: true } },
       _count: { select: { incidents: true } },
-      answers: { select: { questionId: true } },
     },
     orderBy: { startedAt: "asc" },
   });
+
+  // Câu nào đã trả lời — GỘP TRONG SQL, một dòng mỗi bài làm.
+  //
+  // Trước đây đi kèm findMany bằng `answers: { select: { questionId: true } }`.
+  // Với 500 thí sinh × 40 câu, Prisma dựng 20.000 object rồi Next đóng gói
+  // 20.000 chuỗi UUID xuống trình duyệt — đo được ~1,4 MB chỉ riêng ID. Bản
+  // thân truy vấn chỉ mất 6,6 ms; chi phí nằm ở phần dựng object và tải về.
+  //
+  // Gộp lại còn 502 dòng, và trả về THỨ TỰ CÂU (số nguyên) thay vì UUID: giao
+  // diện chỉ cần biết chấm thứ i sáng hay tối, không cần biết id của nó.
+  const attemptIds = attempts.map((a) => a.id);
+  // Hai chỗ phải đi đường vòng, cả hai đều là giới hạn của $queryRaw:
+  //
+  // 1. `string_agg(...)` chứ không `array_agg(...)` — Prisma không ánh xạ
+  //    được int4[] của Postgres qua $queryRaw.
+  // 2. Danh sách id truyền thành MỘT chuỗi rồi tách bằng string_to_array,
+  //    chứ không `IN (${Prisma.join(ids)})`. Dưới bundler của Next,
+  //    Prisma.join bị đối xử như một giá trị đơn (jsonb) thay vì danh sách
+  //    tham số, và câu lệnh chết với "operator does not exist: text = jsonb".
+  //    Một tham số text thì không dính bẫy đó. UUID không chứa dấu phẩy nên
+  //    tách lại luôn đúng.
+  const answeredRows =
+    attemptIds.length === 0
+      ? []
+      : await prisma.$queryRaw<{ attemptId: string; orders: string }[]>`
+          SELECT an."attemptId", string_agg(q."orderInExam"::text, ',') AS orders
+          FROM "ExamAnswer" an
+          JOIN "ExamQuestion" q ON q.id = an."questionId"
+          WHERE an."attemptId" = ANY(string_to_array(${attemptIds.join(",")}, ','))
+          GROUP BY an."attemptId"
+        `;
+  const answeredByAttempt = new Map(
+    answeredRows.map((r) => [
+      r.attemptId,
+      r.orders ? r.orders.split(",").map(Number) : [],
+    ]),
+  );
 
   const examAccessMode = exam.accessMode ?? "authenticated";
 
@@ -132,7 +168,7 @@ export default async function ExamLiveDashboardPage({
     startedAt: a.startedAt.getTime(),
     expiresAt: a.startedAt.getTime() + a.durationSec * 1000,
     submittedAt: a.submittedAt?.getTime() ?? null,
-    answeredQuestionIds: a.answers.map((x) => x.questionId),
+    answeredIdx: answeredByAttempt.get(a.id) ?? [],
     totalQuestions,
     incidentCount: a._count.incidents,
     lastSeenAt:
