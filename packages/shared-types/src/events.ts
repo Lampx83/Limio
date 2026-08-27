@@ -223,7 +223,8 @@ export interface ExamGradedPayload {
   attemptId: string;
   score: number;
   scorePct: number;
-  passed: boolean;
+  // Không còn `passed`: đề thi trả về điểm, việc đạt hay không do quy chế bên
+  // ngoài quyết định. Sự kiện cũ trong DB vẫn còn khoá này — không ai đọc nó.
 }
 
 export interface ExamRegradedPayload {

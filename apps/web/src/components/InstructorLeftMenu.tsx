@@ -74,15 +74,18 @@ const FULL_GROUPS: Group[] = [
     // "Tổ chức thi" nay là BỆ PHÓNG theo ý định, không phải mục chứa đợt/ca/phòng
     // như trước; việc quản lý một bài thi vẫn nằm gọn trong màn hình đề.
     // "Chấm tự luận" và "Phân tích item" nay là hai lát cắt của tab Kết quả.
-    // "Giám sát phòng thi" GIỮ RIÊNG — đây là ranh giới theo VAI (giám thị có
-    // thể không phải giảng viên của khoá), không phải theo cấu trúc dữ liệu.
+    // "Giám sát phòng thi" ĐÃ BỎ khỏi menu này: giám thị nay vào bằng mã ở
+    // /giam-thi, không cần tài khoản. Mục cũ trỏ tới danh sách gom cả phòng
+    // mặc định của mọi buổi thi nhanh — càng dùng càng thành bãi rác, trong
+    // khi giảng viên đã có nút Giám sát ngay trên từng buổi thi.
+    //
+    // Người CHỈ làm giám thị mà có tài khoản vẫn còn menu rút gọn bên dưới.
     items: [
       // Thứ tự bám theo trình tự làm việc thật: soạn câu → gom thành gói đề →
       // mang đi tổ chức → coi thi.
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
       { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },
-      PROCTOR_ITEM,
     ],
   },
   {
@@ -129,9 +132,8 @@ export default function InstructorLeftMenu({
   isProctor?: boolean;
 }) {
   const pathname = usePathname();
-  // Slim menu only when the user has zero instructor binding but is proctor.
-  // Otherwise (instructor, instructor+proctor, or admin) we render the full
-  // menu — the "Giám sát phòng thi" item is always present in the full menu.
+  // Menu rút gọn chỉ cho người không dạy khoá nào mà được gán coi thi. Giảng
+  // viên dùng menu đầy đủ — ở đó không còn mục giám sát riêng nữa.
   const GROUPS =
     !isInstructor && isProctor ? PROCTOR_ONLY_GROUPS : FULL_GROUPS;
   void isProctor; // visibility only matters for slim mode; full mode shows item always

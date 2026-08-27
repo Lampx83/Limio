@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getExamAttemptResult, getExamAttemptReview } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
-import AnswerReview from "./AnswerReview";
+import AnswerReview from "@/components/exam/AnswerReview";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,10 @@ export default async function ExamResultPage({
   if (!result || result.examId !== params.examId) notFound();
 
   const review = result.showDetails
-    ? await getExamAttemptReview(session.user.id, params.attemptId).catch(() => null)
+    ? await getExamAttemptReview(
+        { kind: "user", userId: session.user.id },
+        params.attemptId,
+      ).catch(() => null)
     : null;
 
   const pending = result.status !== "graded";
@@ -47,15 +50,6 @@ export default async function ExamResultPage({
           </div>
           <div className="mt-2 text-sm text-faint">
             {result.score} / {totalPoints(result)} điểm
-          </div>
-          <div
-            className={`mt-4 inline-block rounded-full px-4 py-1 text-sm font-medium ${
-              result.passed
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {result.passed ? "Đạt" : "Chưa đạt"} (ngưỡng {result.passScore}%)
           </div>
         </div>
       )}

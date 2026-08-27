@@ -145,7 +145,8 @@ describe("gradeManualExamAnswer (A7.6.2)", () => {
     expect(attempt.status).toBe("graded");
     expect(attempt.score).toBe(13); // 5 mcq + 8 essay
     expect(attempt.scorePct).toBeCloseTo((13 / 15) * 100, 2);
-    expect(attempt.passed).toBe(true);
+    // Không còn đạt/không đạt: chấm tay chỉ chốt điểm.
+    expect(attempt.passed).toBeNull();
     const history = await prisma.examGradeHistory.findFirstOrThrow({
       where: { answerId: a.essayAnswerId },
     });

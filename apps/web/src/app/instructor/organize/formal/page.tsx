@@ -34,6 +34,7 @@ export default async function OrganizeFormalPage() {
       blurb="Nhiều ca, nhiều phòng, có giám thị. Chia ca, xếp phòng, cấp mã từng thí sinh, in phiếu."
       runs={runs}
       historyTitle="Các kỳ đã tổ chức"
+      showRooms
       emptyHint="Chưa tổ chức kỳ thi nào."
     >
       {courseCount === 0 ? (

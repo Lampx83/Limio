@@ -145,7 +145,7 @@ export async function gradeManualExamAnswer(
           candidateId: true,
           status: true,
           candidate: { select: { roomId: true } },
-          exam: { select: { courseId: true, passScore: true } },
+          exam: { select: { courseId: true } },
         },
       },
     },
@@ -220,7 +220,6 @@ export async function gradeManualExamAnswer(
     });
     const totalPoints = questions.reduce((s, q) => s + q.points, 0);
     const scorePct = totalPoints > 0 ? (totalScore / totalPoints) * 100 : 0;
-    const passScore = answer.attempt.exam.passScore;
 
     if (!stillPending) {
       await tx.examAttempt.update({
@@ -228,7 +227,6 @@ export async function gradeManualExamAnswer(
         data: {
           score: totalScore,
           scorePct,
-          passed: scorePct >= passScore,
           status: "graded",
           gradedAt: now,
         },

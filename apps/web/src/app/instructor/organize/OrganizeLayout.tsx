@@ -16,6 +16,7 @@ export default function OrganizeLayout({
   runs,
   historyTitle,
   emptyHint,
+  showRooms = false,
 }: {
   title: string;
   blurb: string;
@@ -24,6 +25,8 @@ export default function OrganizeLayout({
   runs: ExamRun[];
   historyTitle: string;
   emptyHint: string;
+  /** Chỉ kỳ thi chính thức mới có nhiều phòng để mà xem. */
+  showRooms?: boolean;
 }) {
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 lg:px-6">
@@ -47,7 +50,7 @@ export default function OrganizeLayout({
         <p className="mb-3 mt-0.5 text-caption text-faint">
           Bấm “Kết quả” để xem chi tiết, hoặc “Tải” để lấy file điểm của lần thi đó.
         </p>
-        <ExamRunsList runs={runs} emptyHint={emptyHint} />
+        <ExamRunsList runs={runs} emptyHint={emptyHint} showRooms={showRooms} />
       </section>
     </main>
   );

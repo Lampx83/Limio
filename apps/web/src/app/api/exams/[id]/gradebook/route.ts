@@ -33,7 +33,6 @@ export async function GET(
       id: true,
       title: true,
       courseId: true,
-      passScore: true,
       accessMode: true,
     },
   });
@@ -73,7 +72,6 @@ export async function GET(
           submittedAt: true,
           score: true,
           scorePct: true,
-          passed: true,
         },
       },
     },

@@ -42,7 +42,6 @@ async function setup(slug: string, opts: { essay?: boolean } = {}) {
     durationMin: 60,
     openAt: new Date(now - 60_000),
     closeAt: new Date(now + 86_400_000),
-    passScore: 50,
   });
   const q1 = await createExamQuestion(owner.userId, examId, {
     type: "mcq",
@@ -141,7 +140,7 @@ describe("listExamResults", () => {
     expect(missing[0]!.attemptId).toBeNull();
   });
 
-  it("tính điểm trung bình và số đạt", async () => {
+  it("tính điểm trung bình", async () => {
     const s = await setup("avg");
     await learnerTakes(s, 1, "a"); // 100%
     await learnerTakes(s, 2, "a"); // 100%
@@ -149,7 +148,6 @@ describe("listExamResults", () => {
 
     const r = await listExamResults(s.ownerId, s.examId);
     expect(r.summary.avgScorePct).toBeCloseTo((100 + 100 + 0) / 3, 5);
-    expect(r.summary.passedCount).toBe(2);
   });
 
   it("đếm bài còn chờ chấm tay", async () => {

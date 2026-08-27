@@ -22,6 +22,15 @@ const STATUS_TONE: Record<Status, string> = {
   archived: "bg-amber-100 text-amber-800",
 };
 
+type ProctorRoom = Awaited<ReturnType<typeof listMyProctorRooms>>[number];
+type SectionKey = "live" | "upcoming" | "done";
+
+const SECTIONS: { key: SectionKey; title: string; hint?: string }[] = [
+  { key: "live", title: "Đang diễn ra" },
+  { key: "upcoming", title: "Sắp tới", hint: "Gần nhất lên đầu." },
+  { key: "done", title: "Đã xong" },
+];
+
 export default async function MyRoomsPage() {
   const session = await auth();
   if (!session?.user?.id)
@@ -30,6 +39,25 @@ export default async function MyRoomsPage() {
 
   const rooms = await listMyProctorRooms(userId);
   const now = Date.now();
+
+  // Ba nhóm theo thứ giám thị cần: ca đang chạy trước, rồi ca sắp tới, rồi
+  // phần đã xong. Một danh sách phẳng theo thời gian bắt người coi thi tự dò
+  // xem dòng nào là dòng của mình lúc này.
+  const grouped: Record<SectionKey, ProctorRoom[]> = {
+    live: [],
+    upcoming: [],
+    done: [],
+  };
+  for (const r of rooms) {
+    const opensAt = new Date(r.opensAt).getTime();
+    const closesAt = r.closesAt ? new Date(r.closesAt).getTime() : Number.POSITIVE_INFINITY;
+    if (opensAt > now) grouped.upcoming.push(r);
+    else if (now < closesAt) grouped.live.push(r);
+    else grouped.done.push(r);
+  }
+  // Sắp tới thì gần nhất lên đầu; hai nhóm kia giữ nguyên thứ tự mới-nhất-trước
+  // của truy vấn.
+  grouped.upcoming.reverse();
 
   return (
     <main>
@@ -43,8 +71,13 @@ export default async function MyRoomsPage() {
       <div className="mt-3">
         <h1 className="flex items-center gap-2 text-2xl font-bold"><Eye className="h-6 w-6 shrink-0 text-amber-600" /> Giám sát phòng thi</h1>
         <p className="mt-1 text-sm text-faint">
-          {rooms.length} phòng thi được phân công cho bạn. Click 1 phòng để
-          điểm danh và monitor.
+          {rooms.length} phòng được phân công cho bạn. Mở một phòng để điểm
+          danh và theo dõi bài làm.
+        </p>
+        <p className="mt-1 text-caption text-faint">
+          Giám thị không có tài khoản trên hệ thống thì vào{" "}
+          <span className="font-medium">/giam-thi</span> bằng mã giám thị của
+          phòng — người tổ chức lấy mã ở mục Tổ chức thi.
         </p>
       </div>
 
@@ -53,18 +86,53 @@ export default async function MyRoomsPage() {
           Bạn chưa được phân công làm giám thị phòng nào.
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
-          {rooms.map((r) => {
-            const opensAt = new Date(r.opensAt).getTime();
-            // Ca thủ công không có giờ đóng — coi như chưa tới hạn.
-            const closesAt = r.closesAt
-              ? new Date(r.closesAt).getTime()
-              : Number.POSITIVE_INFINITY;
-            const isFuture = opensAt > now;
-            const isLive = opensAt <= now && now < closesAt;
-            const detailHref = `/instructor/exam-rounds/${r.roundId}/sessions/${r.sessionId}/rooms/${r.id}`;
-            const projHref = `/proctor/rooms/${r.id}/projection`;
+        <div className="mt-6 space-y-8">
+          {SECTIONS.map(({ key, title, hint }) => {
+            const list = grouped[key];
+            if (list.length === 0) return null;
             return (
+              <section key={key}>
+                <h2 className="text-sm font-semibold">
+                  {title}
+                  <span className="ml-1 font-normal text-faint">· {list.length}</span>
+                </h2>
+                {hint && <p className="mt-0.5 text-caption text-faint">{hint}</p>}
+                <ul className="mt-2 space-y-3">
+                  {list.map((r) => (
+                    <RoomCard key={r.id} r={r} now={now} />
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      )}
+    </main>
+  );
+}
+
+function formatDate(iso: string): string {
+  return formatDateTime(iso);
+}
+
+function formatRel(ms: number): string {
+  const m = Math.floor(ms / 60_000);
+  if (m < 60) return `${m} phút`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} giờ ${m % 60} phút`;
+  const d = Math.floor(h / 24);
+  return `${d} ngày`;
+}
+
+function RoomCard({ r, now }: { r: ProctorRoom; now: number }) {
+  const opensAt = new Date(r.opensAt).getTime();
+  // Ca thủ công không có giờ đóng — coi như chưa tới hạn.
+  const closesAt = r.closesAt ? new Date(r.closesAt).getTime() : Number.POSITIVE_INFINITY;
+  const isFuture = opensAt > now;
+  const isLive = opensAt <= now && now < closesAt;
+  const detailHref = `/instructor/exam-rounds/${r.roundId}/sessions/${r.sessionId}/rooms/${r.id}`;
+  const projHref = `/proctor/rooms/${r.id}/projection`;
+  return (
               <li
                 key={r.id}
                 className="rounded-lg border border-default bg-white p-4 hover:shadow-sm"
@@ -147,23 +215,5 @@ export default async function MyRoomsPage() {
                   </div>
                 </div>
               </li>
-            );
-          })}
-        </ul>
-      )}
-    </main>
   );
-}
-
-function formatDate(iso: string): string {
-  return formatDateTime(iso);
-}
-
-function formatRel(ms: number): string {
-  const m = Math.floor(ms / 60_000);
-  if (m < 60) return `${m} phút`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} giờ ${m % 60} phút`;
-  const d = Math.floor(h / 24);
-  return `${d} ngày`;
 }

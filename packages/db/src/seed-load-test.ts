@@ -81,7 +81,6 @@ async function ensureExamSetup(courseId: string, ownerUserId: string) {
         durationMin: Math.floor(DURATION_SEC / 60),
         openAt: new Date(now.getTime() - 60_000),
         closeAt: new Date(now.getTime() + 365 * 24 * 60 * 60_000),
-        passScore: 50,
         accessMode: "open_code",
         openCode: OPEN_CODE,
         publishedAt: now,

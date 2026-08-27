@@ -44,7 +44,6 @@ function validExamInput(overrides: Partial<Record<string, unknown>> = {}) {
     durationMin: 60,
     openAt: new Date(now + 60_000),
     closeAt: new Date(now + 7 * 24 * 60 * 60_000),
-    passScore: 70,
     ...overrides,
   };
 }

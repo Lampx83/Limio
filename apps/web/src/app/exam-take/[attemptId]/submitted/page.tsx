@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { CheckCircle, Clock, XCircle, Check } from "lucide-react";
+import { CheckCircle, Clock } from "lucide-react";
 import {
   ExamError,
   getCandidateResultByAttemptId,
+  getExamAttemptReview,
 } from "@feedbackme/core-lms";
+import AnswerReview from "@/components/exam/AnswerReview";
 import { requireExamSubject } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -100,12 +102,16 @@ export default async function ExamSubmittedPage({
     );
   }
 
-  // Status C — graded + instructor enabled showResultsAfterSubmit → show full
-  // detail. The candidate sees score, pass/fail, and per-question correctness.
+  // Status C — bài đã chấm xong và ca thi cho phép lộ đáp án.
+  //
+  // Thí sinh vào bằng mã xem được ĐÚNG thứ học viên đăng nhập xem: câu trả lời
+  // của mình, đáp án đúng, và giải thích. Trước đây chỗ này chỉ có chấm xanh/đỏ
+  // — biết mình sai câu nào mà không biết sai chỗ nào thì chưa gọi là chữa bài.
   if (result && result.showDetail) {
     const totalPoints = result.details?.reduce((s, d) => s + d.points, 0) ?? 0;
-    const correctCount =
-      result.details?.filter((d) => d.correct === true).length ?? 0;
+    const review = await getExamAttemptReview(subject, params.attemptId).catch(
+      () => null,
+    );
     return (
       <main className="mx-auto max-w-2xl px-6 py-10">
         <div className="text-center">
@@ -140,90 +146,9 @@ export default async function ExamSubmittedPage({
               </div>
             </div>
           </div>
-          {result.passed !== null && (
-            <div className="mt-4">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
-                  result.passed
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-rose-50 text-rose-700"
-                }`}
-              >
-                {result.passed ? (
-                  <>
-                    <Check className="h-4 w-4" /> Đạt
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="h-4 w-4" /> Chưa đạt
-                  </>
-                )}
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Per-question breakdown */}
-        {result.details && result.details.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-base font-semibold text-slate-900">
-              Chi tiết câu trả lời ({correctCount}/{result.details.length} đúng)
-            </h2>
-            <ul className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white shadow-sm">
-              {result.details.map((d, i) => {
-                const status: "correct" | "wrong" | "pending" =
-                  d.correct === true
-                    ? "correct"
-                    : d.correct === false
-                      ? "wrong"
-                      : "pending";
-                return (
-                  <li
-                    key={i}
-                    className={`flex items-start gap-3 px-4 py-3 text-sm ${
-                      status === "correct"
-                        ? "bg-emerald-50/30"
-                        : status === "wrong"
-                          ? "bg-rose-50/30"
-                          : ""
-                    }`}
-                  >
-                    <span
-                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                        status === "correct"
-                          ? "bg-emerald-500 text-white"
-                          : status === "wrong"
-                            ? "bg-rose-500 text-white"
-                            : "bg-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {status === "correct" ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : status === "wrong" ? (
-                        <XCircle className="h-3.5 w-3.5" />
-                      ) : (
-                        "?"
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium text-slate-900">
-                        Câu {i + 1}
-                      </div>
-                      <p className="mt-0.5 truncate text-slate-600">
-                        {d.prompt}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="font-semibold text-slate-900">
-                        {d.awarded ?? 0}/{d.points}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
+        {review && <AnswerReview questions={review.questions} />}
 
         <div className="mt-6 text-center">
           <Link
@@ -247,10 +172,6 @@ function Generic({ examTitle }: { examTitle?: string } = {}) {
       <CheckCircle className="mx-auto h-16 w-16 text-emerald-500" />
       <h1 className="mt-4 text-2xl font-bold text-slate-900">Đã nộp bài thi</h1>
       {examTitle && <p className="mt-1 text-sm text-faint">{examTitle}</p>}
-      <p className="mt-6 text-sm text-slate-700">
-        Bài thi của bạn đã được ghi nhận. Để xem kết quả, vui lòng nhập lại mã
-        thi tại trang kết quả khi giám thị thông báo.
-      </p>
       <Link
         href="/"
         className="mt-6 inline-block rounded bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200"
