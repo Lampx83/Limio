@@ -1,13 +1,7 @@
 import { prisma } from "@feedbackme/db";
 import { getRoomScope } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
-import {
-  examChannel,
-  getExamSnapshot,
-  seedAttemptsBulk,
-  type AttemptLive,
-  type LiveEvent,
-} from "@/lib/exam-live-bus";
+import { examChannel, getExamSnapshot, roomChannel, seedAttemptsBulk, type AttemptLive, type LiveEvent } from "@/lib/exam-live-bus";
 import { subscribe as streamSubscribe } from "@/lib/realtime/stream";
 
 export const runtime = "nodejs";
@@ -40,20 +34,46 @@ export async function GET(
     return new Response("forbidden", { status: 403 });
   }
 
+  // ?roomId= — thu hẹp vào MỘT phòng, cho mọi vai chứ không chỉ giám thị.
+  // Giám thị vẫn bị chặn trong các phòng mình coi; chọn phòng ngoài phạm vi
+  // đó thì ra tập rỗng, không phải toàn bộ ca.
+  const roomId = new URL(req.url).searchParams.get("roomId");
+  const roomIds: string[] | null = !scope.isInstructor
+    ? roomId
+      ? scope.proctorRoomIds.filter((r) => r === roomId)
+      : scope.proctorRoomIds
+    : roomId
+      ? [roomId]
+      : null;
+
   let allowedCandidateIds: Set<string> | null = null;
-  if (!scope.isInstructor) {
+  if (roomIds !== null) {
     const cands = await prisma.examCandidate.findMany({
-      where: { examId: exam.id, roomId: { in: scope.proctorRoomIds } },
+      where: { examId: exam.id, roomId: { in: roomIds } },
       select: { id: true },
     });
     allowedCandidateIds = new Set(cands.map((c) => c.id));
   }
 
+  // ?sessionId=<uuid> — giới hạn vào MỘT ca thi.
+  //
+  // Có nó thì BỎ cửa sổ 24h: chính ca đã bó tập bài làm rồi, mà cửa sổ 24h
+  // khiến ca thi tuần trước mở ra là trống trơn. Giám sát một ca đang chạy và
+  // xem lại một ca đã đóng là cùng một màn hình, chỉ khác thời điểm.
+  const sessionId = new URL(req.url).searchParams.get("sessionId");
+
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const rows = await prisma.examAttempt.findMany({
     where: {
       examId: exam.id,
-      startedAt: { gt: since },
+      ...(sessionId
+        ? {
+            OR: [
+              { sessionId },
+              { sessionId: null, candidate: { sessionId } },
+            ],
+          }
+        : { startedAt: { gt: since } }),
       ...(allowedCandidateIds !== null
         ? { candidateId: { in: [...allowedCandidateIds] } }
         : {}),
@@ -118,8 +138,12 @@ export async function GET(
   });
   await seedAttemptsBulk(exam.id, seedLive);
 
+  // Danh sách bài làm được phép đẩy qua luồng. Null = đẩy hết.
+  // Lọc theo phòng của giám thị VÀ/HOẶC theo ca — có bất kỳ ràng buộc nào thì
+  // phải chốt danh sách, nếu không luồng sẽ đẩy cả bài của ca khác vào màn
+  // hình đang xem một ca.
   const allowedAttemptIds: Set<string> | null =
-    allowedCandidateIds === null
+    allowedCandidateIds === null && !sessionId
       ? null
       : new Set(rows.map((r) => r.id));
 
@@ -168,8 +192,17 @@ export async function GET(
         req.headers.get("last-event-id") ?? req.headers.get("Last-Event-ID") ?? "$";
 
       try {
+        // Nghe kênh PHÒNG khi phạm vi đúng một phòng — bỏ được phần lớn lưu
+        // lượng ngay ở tầng Redis thay vì nhận hết rồi lọc. Nhiều hơn một
+        // phòng (giám thị coi 2 phòng) thì vẫn nghe kênh đề: subscribe chỉ
+        // nhận một kênh, và lọc phía dưới đã đúng sẵn.
+        const channel =
+          roomIds !== null && roomIds.length === 1
+            ? roomChannel(exam.id, roomIds[0]!)
+            : examChannel(exam.id);
+
         for await (const events of streamSubscribe(
-          examChannel(exam.id),
+          channel,
           sinceId,
           abortController.signal,
         )) {
@@ -198,12 +231,21 @@ export async function GET(
             try {
               const a = await prisma.examAttempt.findUnique({
                 where: { id: attemptId },
-                select: { candidateId: true },
+                select: {
+                  candidateId: true,
+                  sessionId: true,
+                  candidate: { select: { sessionId: true } },
+                },
               });
-              if (
-                a?.candidateId &&
-                allowedCandidateIds!.has(a.candidateId)
-              ) {
+              if (!a) continue;
+              const roomOk =
+                allowedCandidateIds === null ||
+                (!!a.candidateId && allowedCandidateIds.has(a.candidateId));
+              const sessionOk =
+                !sessionId ||
+                a.sessionId === sessionId ||
+                a.candidate?.sessionId === sessionId;
+              if (roomOk && sessionOk) {
                 allowedAttemptIds.add(attemptId);
                 send(e, id);
               }

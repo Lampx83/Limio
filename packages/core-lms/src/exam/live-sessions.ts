@@ -1,4 +1,4 @@
-import { prisma, type PrismaClient } from "@feedbackme/db";
+import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { isSessionOpen } from "./session-window";
 
 /**
@@ -96,23 +96,45 @@ export async function listExamRuns(
   const now = new Date();
   const open = rows;
 
-  // Đếm lượt theo từng ca. Thí sinh vào bằng mã gắn với ca qua ExamCandidate;
-  // còn học viên đã ghi danh thì KHÔNG có candidate, nên lần thi kiểu đó đếm
-  // theo đề. Không hoàn hảo khi một gói đề chạy nhiều ca cùng lúc theo kiểu ghi
-  // danh, nhưng thà đếm rộng còn hơn hiện 0 và làm giáo viên tưởng chưa ai làm.
+  // Đếm lượt của TỪNG ca.
+  //
+  // Hai đường về ca, cộng một đường lui cho dữ liệu cũ:
+  //   ExamAttempt.sessionId   — bài làm mới, mọi hình thức vào thi.
+  //   candidate.sessionId     — bài làm cũ của thí sinh vào bằng mã; cột này
+  //                             vốn bắt buộc nên luôn truy được.
+  //   examId (đường lui)      — chỉ dùng cho ca kiểu ghi danh mà KHÔNG đếm
+  //                             được gì theo hai đường trên.
+  //
+  // Đường lui tồn tại vì học viên đã ghi danh không có ExamCandidate, và
+  // ExamAttempt.sessionId mới có từ 26/08/2026 — bài làm trước đó không có
+  // đường nào về ca. Đếm theo đề thì rộng (một gói đề chạy nhiều ca ghi danh
+  // cùng lúc sẽ ra số trùng), nhưng thà rộng còn hơn hiện 0 và làm giáo viên
+  // tưởng chưa ai thi. Dữ liệu mới không bao giờ chạm tới đường này.
   const perSession = await Promise.all(
     open.map(async (r) => {
-      const byCandidate = r.accessMode !== "authenticated";
-      const where = byCandidate
-        ? { candidate: { sessionId: r.id } }
-        : { examId: r.exam.id };
-      const started = await db.examAttempt.count({ where });
-      const submitted = await db.examAttempt.count({
-        where: {
-          ...where,
-          status: { in: ["submitted", "auto_submitted", "graded"] },
-        },
+      const scoped = {
+        OR: [
+          { sessionId: r.id },
+          { sessionId: null, candidate: { sessionId: r.id } },
+        ],
+      };
+      const graded: Prisma.EnumExamAttemptStatusFilter = {
+        in: ["submitted", "auto_submitted", "graded"],
+      };
+
+      let started = await db.examAttempt.count({ where: scoped });
+      let submitted = await db.examAttempt.count({
+        where: { ...scoped, status: graded },
       });
+
+      if (started === 0 && r.accessMode === "authenticated") {
+        const legacy = { examId: r.exam.id };
+        started = await db.examAttempt.count({ where: legacy });
+        submitted = await db.examAttempt.count({
+          where: { ...legacy, status: graded },
+        });
+      }
+
       return { id: r.id, started, submitted };
     }),
   );

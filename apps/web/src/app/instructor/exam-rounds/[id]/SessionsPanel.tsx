@@ -35,6 +35,10 @@ export interface SessionRow {
   courseId: string;
   courseTitle: string;
   roomCount: number;
+  /** Đang làm bài ngay lúc này, trong cả ca. */
+  inProgress: number;
+  /** Đã nộp, trong cả ca. */
+  submitted: number;
 }
 
 export interface CourseInfo {
@@ -157,6 +161,8 @@ export default function SessionsPanel({
                   <th className="px-3 py-2">Mở từ</th>
                   <th className="px-3 py-2">Đóng lúc</th>
                   <th className="px-4 py-2 text-right">Phòng</th>
+                  <th className="px-4 py-2 text-right">Đang làm</th>
+                  <th className="px-4 py-2 text-right">Đã nộp</th>
                   <th className="px-4 py-2">Trạng thái</th>
                   <th className="px-4 py-2"></th>
                 </tr>
@@ -277,6 +283,21 @@ export default function SessionsPanel({
                         )}
                       </td>
                       <td className="px-4 py-2 text-right">{s.roomCount}</td>
+                      {/* Cấp đợt chỉ cần con số mỗi ca. Muốn nhìn từng thí
+                          sinh thì vào ca → phòng — 1000 thẻ trên một màn hình
+                          không ai đọc, mà máy thì gánh đủ. */}
+                      <td className="px-4 py-2 text-right tabular-nums">
+                        {s.inProgress > 0 ? (
+                          <span className="font-semibold text-emerald-700">
+                            {s.inProgress}
+                          </span>
+                        ) : (
+                          <span className="text-faint">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 text-right tabular-nums text-faint">
+                        {s.submitted || "—"}
+                      </td>
                       <td className="px-4 py-2">
                         <span
                           className={`rounded px-2 py-0.5 text-xs ${STATUS_TONE[s.status]}`}

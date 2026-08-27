@@ -4,7 +4,7 @@ import { useState } from "react";
 import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Download } from "lucide-react";
+import { Check, Copy, Download, Radio } from "lucide-react";
 import type { ExamRun } from "@feedbackme/core-lms";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 
@@ -166,22 +166,66 @@ function Row({ r }: { r: ExamRun }) {
         )}
       </span>
 
-      <span className="min-w-0 flex-1">
+      {/* min-w-48 chứ không min-w-0: khối này chứa TÊN ĐỀ, thứ giáo viên
+          dùng để nhận ra dòng nào là dòng nào. Cho nó co vô hạn thì mọi nút
+          khác giành hết chỗ và tên đề cụt thành "Bài kiểm tra ...". Có sàn thì
+          khi chật, cụm nút xuống dòng — dài thêm một dòng còn hơn mất tên. */}
+      <span className="min-w-48 flex-1">
         <span className="block truncate text-sm font-medium">{r.examTitle}</span>
+        {r.startedCount > r.submittedCount && (
+          <span className="block text-caption text-amber-700">
+            {r.startedCount - r.submittedCount} người đang làm dở
+          </span>
+        )}
         {copyErr && (
           <span className="block text-caption text-red-700">
             Không sao chép được — đọc mã cho lớp hoặc bôi đen rồi copy tay.
           </span>
         )}
         <span className="block text-caption text-faint">
-          {fmt(r.opensAt)} · {r.durationMin} phút · {r.submittedCount}/
-          {r.startedCount} đã nộp
+          {fmt(r.opensAt)} · {r.durationMin} phút
           {r.isOpen && !r.closesAt ? " · đóng khi bạn bấm" : ""}
           {r.closesAt ? ` · đóng ${fmt(r.closesAt)}` : ""}
         </span>
       </span>
 
+      {/* Số bài đã nộp, kiểu Google Form: nhãn + số trong vòng tròn đậm.
+          Trước đây nó nằm lẫn trong dòng phụ ("0/0 đã nộp") giữa giờ mở và
+          thời lượng — thứ giáo viên mở trang này để xem đầu tiên lại là thứ
+          khó thấy nhất.
+
+          Đếm bài ĐÃ NỘP, không đếm bài đã bắt đầu: người mở đề rồi bỏ ngang
+          chưa phải một lượt thi. Số đang làm dở hiện riêng, và chỉ khi có. */}
+      <Link
+        href={`/instructor/exam-runs/${r.sessionId}`}
+        className="flex shrink-0 items-center gap-2 rounded px-1 py-0.5 hover:bg-black/5"
+        title={`${r.submittedCount} bài đã nộp — bấm để xem chi tiết`}
+      >
+        <span className="text-sm text-ink-2">Bài đã nộp</span>
+        <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-800 px-1.5 text-sm font-semibold tabular-nums text-white">
+          {r.submittedCount}
+        </span>
+      </Link>
+
       <span className="flex shrink-0 items-center gap-2">
+        {/* Giám sát: xem ai đang làm tới đâu. Có cả khi ca ĐÃ ĐÓNG — lúc đó
+            màn hình chuyển sang "Xem lại", giữ nguyên toàn bộ bài làm của ca.
+            Trang đó vốn lọc 24h gần nhất; truyền sessionId thì bỏ cửa sổ đó,
+            vì chính ca đã bó tập bài làm rồi. */}
+        <Link
+          href={`/instructor/courses/${r.courseId}/exams/${r.examId}/live?sessionId=${r.sessionId}`}
+          className="inline-flex items-center gap-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
+          title={
+            r.isOpen
+              ? "Xem ai đang làm bài, tới câu nào"
+              : "Xem lại diễn biến của ca đã đóng"
+          }
+        >
+          <Radio
+            className={`h-3 w-3 shrink-0 ${r.isOpen ? "text-red-500" : "text-faint"}`}
+          />
+          {r.isOpen ? "Giám sát" : "Xem lại"}
+        </Link>
         <Link
           href={`/instructor/exam-runs/${r.sessionId}`}
           className="text-xs underline"
@@ -201,6 +245,7 @@ function Row({ r }: { r: ExamRun }) {
         {/* Đổi được sau khi tạo: giáo viên hay chọn "không hiện" lúc tạo rồi
             cuối buổi mới muốn chữa đề cho cả lớp. Không cho sửa ở đây thì họ
             đi sửa cờ trên gói đề — mà cờ đó dùng chung cho mọi ca. */}
+        <span className="text-xs text-faint">Đáp án</span>
         <select
           value={r.revealAnswers ?? "inherit"}
           onChange={(e) => setReveal(e.target.value)}
@@ -210,11 +255,11 @@ function Row({ r }: { r: ExamRun }) {
           className="rounded border border-default bg-white px-2 py-1 text-xs disabled:opacity-50"
         >
           {r.revealAnswers === null && (
-            <option value="inherit">Đáp án: theo gói đề</option>
+            <option value="inherit">theo gói đề</option>
           )}
-          <option value="immediately">Đáp án: hiện ngay</option>
-          <option value="after_close">Đáp án: sau khi đóng</option>
-          <option value="never">Đáp án: không hiện</option>
+          <option value="immediately">hiện ngay</option>
+          <option value="after_close">sau khi đóng</option>
+          <option value="never">không hiện</option>
         </select>
         {r.timingMode === "manual" && (
           <button

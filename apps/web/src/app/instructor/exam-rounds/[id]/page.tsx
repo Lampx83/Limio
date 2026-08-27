@@ -4,10 +4,11 @@ import { prisma } from "@feedbackme/db";
 import { Tag } from "lucide-react";
 import {
   ExamError,
+  canEditExamRound,
   getExamRound,
   listCohorts,
   listExamSessionsForRound,
-  canEditExamRound,
+  liveCountsBySession,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import RoundTabs from "./RoundTabs";
@@ -76,7 +77,15 @@ export default async function ExamRoundDetailPage({
 
   // Data needed by tabs. We fetch sessions + assignable courses (for adding to
   // the round) up front so the server component owns all data fetching.
-  const sessions = await listExamSessionsForRound(userId, params.id);
+  const sessionsRaw = await listExamSessionsForRound(userId, params.id);
+
+  // Số liệu giám sát cấp ca — một truy vấn gộp cho cả đợt. Xem live-counts.ts.
+  const sessionCounts = await liveCountsBySession(params.id);
+  const sessions = sessionsRaw.map((x) => ({
+    ...x,
+    inProgress: sessionCounts.get(x.id)?.inProgress ?? 0,
+    submitted: sessionCounts.get(x.id)?.submitted ?? 0,
+  }));
   const cohorts = await listCohorts(userId, round.course.courseId, {
     roundId: round.id,
   });

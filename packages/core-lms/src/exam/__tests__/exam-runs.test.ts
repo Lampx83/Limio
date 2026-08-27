@@ -160,3 +160,47 @@ describe("lọc lịch sử theo hình thức tổ chức", () => {
     expect(ft.some((r) => r.sessionId === shared.sessionId)).toBe(true);
   });
 });
+
+describe("đếm lượt thi theo TỪNG ca", () => {
+  it("hai ca của cùng gói đề không cộng dồn số của nhau", async () => {
+    const s = await setup("dem");
+    await publishExam(s.ownerId, s.examId);
+
+    const caA = await shareExamLink(s.ownerId, s.examId, { durationMin: 10 });
+    await prisma.examSession.update({
+      where: { id: caA.sessionId },
+      data: { status: "closed" },
+    });
+    const caB = await shareExamLink(s.ownerId, s.examId, { durationMin: 10 });
+    expect(caB.sessionId).not.toBe(caA.sessionId);
+
+    // 2 bài đã nộp ở ca A, 1 ở ca B.
+    const mk = async (sessionId: string, status: "graded" | "in_progress") =>
+      prisma.examAttempt.create({
+        data: {
+          examId: s.examId,
+          sessionId,
+          candidateDisplayName: "X",
+          durationSec: 600,
+          status,
+          ...(status === "graded" ? { submittedAt: new Date() } : {}),
+        },
+        select: { id: true },
+      });
+    await mk(caA.sessionId, "graded");
+    await mk(caA.sessionId, "graded");
+    await mk(caB.sessionId, "graded");
+    await mk(caB.sessionId, "in_progress");
+
+    const runs = await listExamRuns(s.ownerId, { scale: "simple" });
+    const a = runs.find((r) => r.sessionId === caA.sessionId)!;
+    const b = runs.find((r) => r.sessionId === caB.sessionId)!;
+
+    // Bản cũ đếm theo examId với ca kiểu ghi danh nên cả hai cùng ra 3.
+    expect(a.submittedCount).toBe(2);
+    expect(a.startedCount).toBe(2);
+    expect(b.submittedCount).toBe(1);
+    // Bài đang làm dở tính vào startedCount nhưng KHÔNG tính là đã nộp.
+    expect(b.startedCount).toBe(2);
+  });
+});
