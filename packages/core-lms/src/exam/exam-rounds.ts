@@ -1130,7 +1130,10 @@ export async function listMyProctorRooms(
 ): Promise<ProctorRoomItem[]> {
   const rows = await db.examRoom.findMany({
     where: { proctorUserId: userId },
-    orderBy: [{ session: { opensAt: "asc" } }, { orderIndex: "asc" }],
+    // Mới nhất lên đầu. Tăng dần là thứ tự của quyển sổ ghi chép, không phải
+    // của màn hình dùng trong ca thi: ca hôm nay chìm xuống dưới hàng chục ca
+    // đã xong từ tháng trước.
+    orderBy: [{ session: { opensAt: "desc" } }, { orderIndex: "asc" }],
     select: {
       id: true,
       name: true,
