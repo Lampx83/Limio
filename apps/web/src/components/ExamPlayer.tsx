@@ -293,8 +293,19 @@ export default function ExamPlayer(props: Props) {
   // tab_blur is logged by TabBlurWarning (uses visibilitychange — more reliable
   // than window.blur and avoids double-fire when our own modals open).
   useEffect(() => {
+    // Chỉ ghi lần dán ĐỦ DÀI để đáng nghi.
+    //
+    // Bản cũ ghi mọi lần dán, kể cả dán lại hai chữ vừa cắt trong chính ô trả
+    // lời — thao tác soạn thảo bình thường. Nó vừa làm bảng sự cố đầy rác vừa
+    // làm loãng cờ paste_flood: dán 20 lần mỗi lần 3 ký tự không phải chép
+    // bài, mà vẫn kích cờ.
+    //
+    // Ngưỡng đặt ở đây chứ không phải lúc đọc: sự cố là bản ghi vĩnh viễn,
+    // không nên đẻ ra rồi lọc sau.
+    const PASTE_MIN_CHARS = 20;
     const onPaste = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData("text") ?? "";
+      if (text.length < PASTE_MIN_CHARS) return;
       logIncident("paste", { pastedLength: text.length });
     };
     const onOffline = () => logIncident("network_lost");
