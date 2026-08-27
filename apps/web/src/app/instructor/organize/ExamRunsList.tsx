@@ -4,8 +4,9 @@ import { useState } from "react";
 import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Download, QrCode, Radio } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, QrCode, Radio } from "lucide-react";
 import dynamic from "next/dynamic";
+import RoomsExpand from "./RoomsExpand";
 import type { ExamRun } from "@feedbackme/core-lms";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 
@@ -44,9 +45,13 @@ const fmt = (iso: string) =>
 export default function ExamRunsList({
   runs,
   emptyHint,
+  showRooms = false,
 }: {
   runs: ExamRun[];
   emptyHint?: string;
+  /** Bung ra danh sách phòng + mã giám thị. Chỉ bật ở kỳ thi chính thức: thi
+      nhanh mỗi ca đúng một phòng mặc định, bung ra là thêm bấm cho không. */
+  showRooms?: boolean;
 }) {
   const open = runs.filter((r) => r.isOpen);
   const past = runs.filter((r) => !r.isOpen);
@@ -68,7 +73,7 @@ export default function ExamRunsList({
           </h2>
           <ul className="mt-2 space-y-2">
             {open.map((r) => (
-              <Row key={r.sessionId} r={r} />
+              <Row key={r.sessionId} r={r} showRooms={showRooms} />
             ))}
           </ul>
         </section>
@@ -81,7 +86,7 @@ export default function ExamRunsList({
           </h2>
           <ul className="mt-2 space-y-2">
             {past.map((r) => (
-              <Row key={r.sessionId} r={r} />
+              <Row key={r.sessionId} r={r} showRooms={showRooms} />
             ))}
           </ul>
         </section>
@@ -90,12 +95,13 @@ export default function ExamRunsList({
   );
 }
 
-function Row({ r }: { r: ExamRun }) {
+function Row({ r, showRooms }: { r: ExamRun; showRooms: boolean }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [copyErr, setCopyErr] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [openRooms, setOpenRooms] = useState(false);
 
   // Lần thi dùng mã cấp riêng hoặc vào bằng tài khoản thì không có link chung
   // để phát cho cả lớp.
@@ -263,6 +269,22 @@ function Row({ r }: { r: ExamRun }) {
           <Download className="h-3 w-3 shrink-0" />
           Tải
         </a>
+        {showRooms && (
+          <button
+            type="button"
+            onClick={() => setOpenRooms((v) => !v)}
+            aria-expanded={openRooms}
+            className="inline-flex items-center gap-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
+            title="Xem các phòng của ca này và mã giám thị từng phòng"
+          >
+            <ChevronDown
+              className={`h-3 w-3 shrink-0 transition-transform ${
+                openRooms ? "rotate-180" : ""
+              }`}
+            />
+            Phòng thi
+          </button>
+        )}
         {r.timingMode === "manual" && (
           <button
             type="button"
@@ -310,6 +332,14 @@ function Row({ r }: { r: ExamRun }) {
             </div>
           </div>
         </div>
+      )}
+
+      {openRooms && (
+        <RoomsExpand
+          sessionId={r.sessionId}
+          courseId={r.courseId}
+          examId={r.examId}
+        />
       )}
     </li>
   );

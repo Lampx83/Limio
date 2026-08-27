@@ -10,6 +10,7 @@ import {
   ensureDefaultRoomForSession,
   ensureDefaultSession,
   getProctorRoomView,
+  listRoomsForOrganizer,
   publishExam,
   rotateProctorCode,
   setAttendanceByProctorCode,
@@ -167,5 +168,31 @@ describe("màn phòng thi", () => {
     await expect(
       setAttendanceByProctorCode(a.roomId, victim.id, true),
     ).rejects.toBeTruthy();
+  });
+});
+
+describe("danh sách phòng cho người tổ chức", () => {
+  it("sinh mã cho phòng chưa có, và đếm theo từng phòng", async () => {
+    const s = await setup("organizer");
+    const c1 = await addCandidate(s.examId, s.sessionId, s.roomId, "An");
+    await addCandidate(s.examId, s.sessionId, s.roomId, "Bình");
+    await setAttendanceByProctorCode(s.roomId, c1.id, true);
+
+    const rooms = await listRoomsForOrganizer(s.sessionId);
+    expect(rooms).toHaveLength(1);
+    const r = rooms[0]!;
+    expect(r.proctorCode).toHaveLength(8);
+    expect(r.candidates).toBe(2);
+    expect(r.arrived).toBe(1);
+    expect(r.started).toBe(0);
+    // Mã trả về đúng là mã dùng vào được — không phải một chuỗi trang trí.
+    await expect(claimProctorCode(r.proctorCode)).resolves.toBeTruthy();
+  });
+
+  it("gọi lại không đổi mã dưới chân giám thị đang cầm", async () => {
+    const s = await setup("organizer-stable");
+    const a = await listRoomsForOrganizer(s.sessionId);
+    const b = await listRoomsForOrganizer(s.sessionId);
+    expect(b[0]!.proctorCode).toBe(a[0]!.proctorCode);
   });
 });

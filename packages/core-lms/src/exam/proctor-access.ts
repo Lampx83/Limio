@@ -258,3 +258,75 @@ export async function setAttendanceByProctorCode(
   });
   return { arrivedAt: updated.arrivedAt?.toISOString() ?? null };
 }
+
+export interface OrganizerRoomRow {
+  roomId: string;
+  name: string;
+  proctorName: string;
+  locationNote: string | null;
+  proctorCode: string;
+  candidates: number;
+  arrived: number;
+  started: number;
+  submitted: number;
+}
+
+/**
+ * Các phòng của một ca, kèm mã giám thị — dữ liệu cho phần bung ra ở danh sách
+ * "Tổ chức thi".
+ *
+ * Gom mã giám thị vào đây thay vì bắt người tổ chức đi đợt → ca → phòng bốn
+ * lần bấm chỉ để copy một mã. Trước giờ thi họ cần phát mã cho TẤT CẢ phòng,
+ * nên thao tác đó phải nằm trong một màn.
+ *
+ * Sinh mã cho phòng nào chưa có, ngay lúc đọc. Authz do route lo (getExamSession).
+ */
+export async function listRoomsForOrganizer(
+  sessionId: string,
+  db: PrismaClient = prisma,
+): Promise<OrganizerRoomRow[]> {
+  const rooms = await db.examRoom.findMany({
+    where: { sessionId },
+    orderBy: { orderIndex: "asc" },
+    select: {
+      id: true,
+      name: true,
+      locationNote: true,
+      proctorCode: true,
+      proctor: { select: { displayName: true } },
+      candidates: {
+        select: {
+          arrivedAt: true,
+          attempts: {
+            orderBy: { startedAt: "desc" },
+            take: 1,
+            select: { status: true },
+          },
+        },
+      },
+    },
+  });
+
+  const out: OrganizerRoomRow[] = [];
+  for (const r of rooms) {
+    // Tuần tự chứ không Promise.all: mã phải unique toàn hệ thống, mà kiểm tra
+    // trùng rồi ghi song song thì hai phòng có thể cùng nhắm một mã.
+    const code = r.proctorCode ?? (await ensureProctorCode(r.id, db));
+    const started = r.candidates.filter((c) => c.attempts.length > 0).length;
+    const submitted = r.candidates.filter(
+      (c) => c.attempts[0] && c.attempts[0].status !== "in_progress",
+    ).length;
+    out.push({
+      roomId: r.id,
+      name: r.name,
+      proctorName: r.proctor.displayName,
+      locationNote: r.locationNote,
+      proctorCode: code,
+      candidates: r.candidates.length,
+      arrived: r.candidates.filter((c) => c.arrivedAt !== null).length,
+      started,
+      submitted,
+    });
+  }
+  return out;
+}
