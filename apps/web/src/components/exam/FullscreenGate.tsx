@@ -7,6 +7,22 @@ import { useEffect, useState } from "react";
  * they exit (Esc / OS switch). Browsers require a user gesture to enter
  * fullscreen — we can't auto-enter from useEffect.
  */
+/**
+ * Trình duyệt có API toàn màn hình cho phần tử thường không.
+ *
+ * Safari trên iPhone KHÔNG có, và trên iPad thì chỉ máy đời mới mới có. Ép
+ * một chế độ máy không làm được thì cửa sổ chặn không bao giờ đóng đúng cách,
+ * và trên iOS thì bàn phím ảo không bật lên được trong chế độ đó — sinh viên
+ * dùng iPad không gõ được câu tự luận.
+ *
+ * Dò bằng tính năng chứ không đoán theo tên trình duyệt: máy nào làm được thì
+ * vẫn ép như cũ.
+ */
+function fullscreenSupported(): boolean {
+  if (typeof document === "undefined") return false;
+  return typeof document.documentElement.requestFullscreen === "function";
+}
+
 export default function FullscreenGate({
   examTitle,
   onEnter,
@@ -18,22 +34,48 @@ export default function FullscreenGate({
   /** When false (e.g. proctoringLevel=none), the gate is bypassed. */
   required: boolean;
 }) {
-  const [open, setOpen] = useState(required);
+  // Bắt đầu đóng, rồi mới mở nếu máy làm được — dò tính năng phải chạy phía
+  // client, không phải lúc render trên server.
+  const [open, setOpen] = useState(false);
   const [exited, setExited] = useState(false);
 
   useEffect(() => {
-    if (!required) return;
+    if (required && fullscreenSupported()) setOpen(true);
+  }, [required]);
+
+  useEffect(() => {
+    if (!required || !fullscreenSupported()) return;
+    // Chờ 5 giây rồi mới chặn màn hình, khớp với ngưỡng bỏ qua ở ExamPlayer.
+    //
+    // Cửa sổ chat nổi giành tiêu điểm là trình duyệt rớt khỏi toàn màn hình
+    // trong chớp mắt rồi vào lại. Chặn ngay thì sinh viên đang gõ dở bị một
+    // hộp thoại đen sì đập vào mặt kèm chữ "đã được ghi nhận" — vì một tin
+    // nhắn tới. Rớt thật sự thì sau 5 giây hộp thoại vẫn hiện.
+    const GRACE_MS = 5_000;
+    let pending: ReturnType<typeof setTimeout> | null = null;
+
     const onFs = () => {
       if (!document.fullscreenElement) {
-        setExited(true);
-        setOpen(true);
+        if (pending) return;
+        pending = setTimeout(() => {
+          pending = null;
+          setExited(true);
+          setOpen(true);
+        }, GRACE_MS);
       } else {
+        if (pending) {
+          clearTimeout(pending);
+          pending = null;
+        }
         setExited(false);
         setOpen(false);
       }
     };
     document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
+    return () => {
+      if (pending) clearTimeout(pending);
+      document.removeEventListener("fullscreenchange", onFs);
+    };
   }, [required]);
 
   if (!open) return null;
@@ -55,8 +97,8 @@ export default function FullscreenGate({
         <h2 className="mb-2 text-lg font-semibold">{examTitle}</h2>
         {exited ? (
           <p className="mb-4 text-sm text-red-700">
-            Bạn đã thoát chế độ toàn màn hình. Hành vi này đã được ghi nhận.
-            Vui lòng quay lại để tiếp tục làm bài.
+            Bài thi đang không ở chế độ toàn màn hình. Vui lòng quay lại để
+            tiếp tục làm bài — rời quá lâu sẽ được ghi vào nhật ký buổi thi.
           </p>
         ) : (
           <p className="mb-4 text-sm text-faint">

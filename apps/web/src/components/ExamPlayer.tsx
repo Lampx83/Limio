@@ -61,7 +61,13 @@ interface Props {
   startedAt: string;
   durationSec: number;
   serverNow: string;
-  exam: { id: string; title: string; showResultsAfterSubmit: boolean };
+  exam: {
+    id: string;
+    title: string;
+    showResultsAfterSubmit: boolean;
+    /** none | basic | strict. `none` thì không ép toàn màn hình. */
+    proctoringLevel?: string;
+  };
   passages: PassageData[];
   questions: QuestionData[];
   shuffleSnapshot: ShuffleSnapshot;
@@ -292,13 +298,58 @@ export default function ExamPlayer(props: Props) {
       logIncident("paste", { pastedLength: text.length });
     };
     const onOffline = () => logIncident("network_lost");
+    // Thoát toàn màn hình: CHỜ XEM có quay lại không rồi mới ghi nhận.
+    //
+    // Sinh viên phản ánh đúng: một cửa sổ chat nổi trên màn hình (Zalo,
+    // Messenger, thông báo hệ điều hành) giành tiêu điểm là trình duyệt rớt
+    // khỏi toàn màn hình, dù người ta không hề rời bài. Ghi thẳng thì mỗi tin
+    // nhắn tới là một lần bị đánh dấu, và bảng sự cố đầy những thứ không phải
+    // gian lận.
+    //
+    // Nay: rớt rồi quay lại trong GRACE thì bỏ qua. Quá GRACE mới ghi, kèm
+    // thời gian ở ngoài để giáo viên phân biệt "chớp 0,4 giây" với "đi 45
+    // giây". Chớp liên tục vẫn bị ghi một lần khi đủ BLIP_LIMIT — nếu không
+    // thì thoát ra 4 giây một lần sẽ thành lỗ hổng.
+    const GRACE_MS = 5_000;
+    const BLIP_LIMIT = 3;
+    let exitAt: number | null = null;
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    let blips = 0;
+
     const onFullscreenExit = () => {
-      if (!document.fullscreenElement) logIncident("fullscreen_exit");
+      if (!document.fullscreenElement) {
+        exitAt = Date.now();
+        pending = setTimeout(() => {
+          pending = null;
+          logIncident("fullscreen_exit", {
+            awaySec: Math.round((Date.now() - (exitAt ?? Date.now())) / 1000),
+            returned: false,
+          });
+        }, GRACE_MS);
+        return;
+      }
+      // Quay lại rồi.
+      if (pending) {
+        clearTimeout(pending);
+        pending = null;
+        blips++;
+        const awayMs = Date.now() - (exitAt ?? Date.now());
+        if (blips >= BLIP_LIMIT) {
+          logIncident("fullscreen_exit", {
+            awaySec: Math.round(awayMs / 1000),
+            returned: true,
+            blips,
+          });
+          blips = 0;
+        }
+      }
+      exitAt = null;
     };
     window.addEventListener("paste", onPaste, true);
     window.addEventListener("offline", onOffline);
     document.addEventListener("fullscreenchange", onFullscreenExit);
     return () => {
+      if (pending) clearTimeout(pending);
       window.removeEventListener("paste", onPaste, true);
       window.removeEventListener("offline", onOffline);
       document.removeEventListener("fullscreenchange", onFullscreenExit);
@@ -541,7 +592,12 @@ export default function ExamPlayer(props: Props) {
       <FullscreenGate
         examTitle={props.exam.title}
         onEnter={() => undefined}
-        required
+        // Trước đây ghi cứng `required` — proctoringLevel không bao giờ được
+        // đọc, dù chú thích của chính prop này nói "false khi
+        // proctoringLevel=none". Nên đề khai báo KHÔNG giám sát vẫn ép toàn
+        // màn hình, và trên iPad thì đó là ép vào một chế độ mà bàn phím ảo
+        // không bật lên được.
+        required={props.exam.proctoringLevel !== "none"}
       />
       <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
       <MultiTabDetector
