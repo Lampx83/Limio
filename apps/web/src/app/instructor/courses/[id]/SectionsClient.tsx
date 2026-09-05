@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
-import { apiUrl, shareUrl } from "@/lib/apiUrl";
+import { apiUrl } from "@/lib/apiUrl";
+import { ShareCard } from "@/components/ui";
 
 type Section = {
   id: string;
@@ -23,7 +23,6 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const refresh = async () => {
     const r = await fetch(apiUrl(`/api/courses/${courseId}/sections`));
@@ -116,19 +115,6 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
     } finally {
       setBusy(false);
     }
-  };
-
-  // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
-  const inviteUrl = (inviteCode: string) => shareUrl(`/enroll/${inviteCode}`);
-
-  const onCopyLink = async (id: string, inviteCode: string) => {
-    const ok = await copyText(inviteUrl(inviteCode));
-    if (!ok) {
-      setErr("Không copy được — chọn thủ công link bên dưới.");
-      return;
-    }
-    setCopiedId(id);
-    setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 2000);
   };
 
   return (
@@ -242,16 +228,13 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
                   </button>
                 </div>
                 {s.inviteCode && (
-                  <div className="mt-2 flex flex-wrap items-center gap-2 rounded bg-slate-50 px-3 py-2">
-                    <span className="min-w-0 flex-1 truncate font-mono text-xs text-slate-700">
-                      {inviteUrl(s.inviteCode)}
-                    </span>
-                    <button
-                      onClick={() => onCopyLink(s.id, s.inviteCode!)}
-                      className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
-                    >
-                      {copiedId === s.id ? "Đã copy!" : "🔗 Copy link"}
-                    </button>
+                  <div className="mt-2">
+                    <ShareCard
+                      path={`/enroll/${s.inviteCode}`}
+                      label="Link mời vào lớp"
+                      hint="Ai có link này cũng vào được lớp — bấm “Tạo lại mã” là link cũ mất hiệu lực ngay."
+                      fileName={`lop-${s.inviteCode}`}
+                    />
                   </div>
                 )}
               </div>

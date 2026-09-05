@@ -5,6 +5,7 @@ import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import TournamentPublishBar from "./TournamentPublishBar";
 import InstructorTournamentTabs from "./InstructorTournamentTabs";
+import { ShareCard } from "@/components/ui";
 import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -213,6 +214,19 @@ export default async function TournamentDetailPage({
           missionCount={tournament.missions.length}
         />
       </section>
+
+      {/* Link chia sẻ — tournament nháp bị /tournaments/[id] đá về danh sách,
+          nên chưa publish thì không có gì để gửi đi. */}
+      {tournament.status !== "draft" && (
+        <section className="mt-4">
+          <ShareCard
+            path={`/tournaments/${tournament.id}`}
+            label="Link giới thiệu tournament"
+            hint="Người chưa đăng nhập cũng xem được thể lệ và bảng xếp hạng; đăng ký thì cần tài khoản."
+            fileName={`tournament-${tournament.id.slice(0, 8)}`}
+          />
+        </section>
+      )}
 
       {/* E. Tab interface — Basic Info, Missions, Prize, Leaderboard */}
       <InstructorTournamentTabs
