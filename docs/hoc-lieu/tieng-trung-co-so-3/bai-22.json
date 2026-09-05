@@ -1,0 +1,1201 @@
+{
+  "course": {
+    "title": "Tiếng Trung Cơ sở III",
+    "slug": "tieng-trung-co-so-3",
+    "description": "Giáo trình Tiếng Trung Cơ sở III — mỗi bài (课) là một module gồm bài đọc, từ vựng, ngữ pháp và luyện tập chấm tự động.",
+    "language": "zh",
+    "level": "intermediate",
+    "category": "Ngoại ngữ",
+    "personalizationEnabled": true
+  },
+  "modules": [
+    {
+      "title": "第二十二课 我看看皮大衣",
+      "description": "Bài 22 — Tôi xem áo khoác da một chút. Mua sắm, mặc cả, đơn vị tiền tệ.",
+      "lessons": [
+        {
+          "title": "课文（一）我看看皮大衣",
+          "description": "Hội thoại 1 — Mai và Mike chọn áo khoác da ở cửa hàng quần áo.",
+          "vocab": [
+            {
+              "hanzi": "可以",
+              "pinyin": "kěyǐ",
+              "meaning": "có thể, tạm được",
+              "note": "能愿 · khả dĩ"
+            },
+            {
+              "hanzi": "试",
+              "pinyin": "shì",
+              "meaning": "thử",
+              "note": "动 · thí"
+            },
+            {
+              "hanzi": "皮",
+              "pinyin": "pí",
+              "meaning": "da",
+              "note": "名 · bì"
+            },
+            {
+              "hanzi": "大衣",
+              "pinyin": "dàyī",
+              "meaning": "áo khoác",
+              "note": "名 · đại y"
+            },
+            {
+              "hanzi": "又…又…",
+              "pinyin": "yòu… yòu…",
+              "meaning": "vừa… vừa…",
+              "note": "hựu… hựu"
+            },
+            {
+              "hanzi": "真",
+              "pinyin": "zhēn",
+              "meaning": "chân thực, thật",
+              "note": "形、副 · chân"
+            },
+            {
+              "hanzi": "当然",
+              "pinyin": "dāngrán",
+              "meaning": "tất nhiên, dĩ nhiên",
+              "note": "形 · đương nhiên"
+            },
+            {
+              "hanzi": "长",
+              "pinyin": "cháng",
+              "meaning": "dài",
+              "note": "形 · trường"
+            },
+            {
+              "hanzi": "短",
+              "pinyin": "duǎn",
+              "meaning": "ngắn, thiếu",
+              "note": "形 · đoản"
+            },
+            {
+              "hanzi": "一点儿",
+              "pinyin": "yìdiǎnr",
+              "meaning": "một chút",
+              "note": "nhất điểm nhi"
+            },
+            {
+              "hanzi": "深",
+              "pinyin": "shēn",
+              "meaning": "thẫm, sâu, sẫm",
+              "note": "形 · thâm"
+            },
+            {
+              "hanzi": "浅",
+              "pinyin": "qiǎn",
+              "meaning": "nhạt",
+              "note": "形 · thiển"
+            },
+            {
+              "hanzi": "肥",
+              "pinyin": "féi",
+              "meaning": "to, béo, rộng",
+              "note": "形 · phì"
+            },
+            {
+              "hanzi": "瘦",
+              "pinyin": "shòu",
+              "meaning": "nhỏ, gầy, chật",
+              "note": "形 · sấu"
+            },
+            {
+              "hanzi": "正",
+              "pinyin": "zhèng",
+              "meaning": "vừa vặn",
+              "note": "副 · chính"
+            },
+            {
+              "hanzi": "合适",
+              "pinyin": "héshì",
+              "meaning": "hợp, thích hợp",
+              "note": "形 · hợp thích"
+            },
+            {
+              "hanzi": "种",
+              "pinyin": "zhǒng",
+              "meaning": "loại, kiểu",
+              "note": "量 · chủng"
+            },
+            {
+              "hanzi": "应该",
+              "pinyin": "yīnggāi",
+              "meaning": "nên, cần, phải",
+              "note": "能愿 · ưng cai"
+            },
+            {
+              "hanzi": "便宜",
+              "pinyin": "piányi",
+              "meaning": "rẻ",
+              "note": "形 · tiện nghi"
+            },
+            {
+              "hanzi": "卖",
+              "pinyin": "mài",
+              "meaning": "bán",
+              "note": "动 · mại"
+            }
+          ],
+          "quiz": {
+            "title": "Luyện tập 课文（一）",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "「又好又便宜」nghĩa là gì?",
+                "explanation": "「又…又…」nối hai tính chất cùng tồn tại: vừa tốt vừa rẻ.",
+                "options": [
+                  {
+                    "label": "Vừa tốt vừa rẻ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vừa tốt vừa đắt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không tốt cũng không rẻ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tốt nhưng đắt",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "这件太肥了，有没有＿＿一点儿的？(chật hơn một chút)",
+                "explanation": "肥 (rộng) ↔ 瘦 (chật). Cặp phản nghĩa khi nói về quần áo.",
+                "answers": [
+                  "瘦",
+                  "shòu",
+                  "shou"
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép chữ Hán với nghĩa tiếng Việt.",
+                "explanation": "Năm từ trọng tâm của bài đọc 1.",
+                "pairs": [
+                  {
+                    "left": "大衣",
+                    "right": "áo khoác"
+                  },
+                  {
+                    "left": "当然",
+                    "right": "tất nhiên"
+                  },
+                  {
+                    "left": "合适",
+                    "right": "thích hợp, vừa vặn"
+                  },
+                  {
+                    "left": "便宜",
+                    "right": "rẻ"
+                  },
+                  {
+                    "left": "试",
+                    "right": "thử"
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép mỗi tính từ với từ trái nghĩa của nó.",
+                "explanation": "Bài 22 dạy 4 cặp phản nghĩa dùng khi mua quần áo: 长/短, 深/浅, 肥/瘦, 贵/便宜.",
+                "pairs": [
+                  {
+                    "left": "长",
+                    "right": "短"
+                  },
+                  {
+                    "left": "深",
+                    "right": "浅"
+                  },
+                  {
+                    "left": "肥",
+                    "right": "瘦"
+                  },
+                  {
+                    "left": "贵",
+                    "right": "便宜"
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Chị muốn màu thẫm hay màu nhạt?”",
+                "explanation": "Cấu trúc lựa chọn: A 还是 B。你要深颜色的还是要浅的？",
+                "sequence": [
+                  "你",
+                  "要",
+                  "深颜色的",
+                  "还是",
+                  "要",
+                  "浅的",
+                  "？"
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Trong bài, 玛丽 chọn chiếc áo màu 深 (thẫm).",
+                "explanation": "玛丽 trả lời「浅的」— chị ấy chọn màu nhạt.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Chiếc áo 太肥了 — bạn muốn đổi chiếc CHẬT hơn thì hỏi thế nào?",
+                "explanation": "肥 (rộng) đi cặp với 瘦 (chật). 小 nói về cỡ nói chung, 短 là ngắn, 浅 là màu nhạt — cả ba đều lệch trục.",
+                "options": [
+                  {
+                    "label": "有没有瘦一点儿的？",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "有没有小一点儿的？",
+                    "isCorrect": false,
+                    "misconception": "zh_antonym_pair_clothes"
+                  },
+                  {
+                    "label": "有没有短一点儿的？",
+                    "isCorrect": false,
+                    "misconception": "zh_antonym_pair_clothes"
+                  },
+                  {
+                    "label": "有没有浅一点儿的？",
+                    "isCorrect": false,
+                    "misconception": "zh_antonym_pair_clothes"
+                  }
+                ]
+              }
+            ]
+          },
+          "dialogue": {
+            "heading": "课文（一）我看看皮大衣",
+            "scene": "（麦克和玛丽在服装店买大衣）Mike và Mary mua áo khoác ở cửa hàng quần áo",
+            "turns": [
+              {
+                "speaker": "售货员",
+                "zh": "您买什么？",
+                "pinyin": "Nín mǎi shénme?",
+                "vi": "Anh/chị mua gì ạ?"
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "我看看皮大衣。",
+                "pinyin": "Wǒ kànkan pí dàyī.",
+                "vi": "Tôi xem áo khoác da một chút."
+              },
+              {
+                "speaker": "售货员",
+                "zh": "你看看这件怎么样？又好又便宜。",
+                "pinyin": "Nǐ kànkan zhè jiàn zěnmeyàng? Yòu hǎo yòu piányi.",
+                "vi": "Chị xem chiếc này thế nào? Vừa tốt vừa rẻ."
+              },
+              {
+                "speaker": "麦克",
+                "zh": "是真皮的吗？",
+                "pinyin": "Shì zhēnpí de ma?",
+                "vi": "Là da thật à?"
+              },
+              {
+                "speaker": "售货员",
+                "zh": "当然是真皮的。",
+                "pinyin": "Dāngrán shì zhēnpí de.",
+                "vi": "Tất nhiên là da thật."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "这件有一点儿长，有短一点儿的吗？",
+                "pinyin": "Zhè jiàn yǒu yìdiǎnr cháng, yǒu duǎn yìdiǎnr de ma?",
+                "vi": "Chiếc này hơi dài, có chiếc ngắn hơn một chút không?"
+              },
+              {
+                "speaker": "售货员",
+                "zh": "你要深颜色的还是要浅的？",
+                "pinyin": "Nǐ yào shēn yánsè de háishì yào qiǎn de?",
+                "vi": "Chị muốn màu thẫm hay màu nhạt?"
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "浅的。……我试试可以吗？",
+                "pinyin": "Qiǎn de. …… Wǒ shìshi kěyǐ ma?",
+                "vi": "Màu nhạt. …… Tôi thử một chút được không?"
+              },
+              {
+                "speaker": "售货员",
+                "zh": "可以。",
+                "pinyin": "Kěyǐ.",
+                "vi": "Được ạ."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "这件太肥了，有没有瘦一点儿的？",
+                "pinyin": "Zhè jiàn tài féi le, yǒu méiyǒu shòu yìdiǎnr de?",
+                "vi": "Chiếc này rộng quá, có chiếc chật hơn chút không?"
+              },
+              {
+                "speaker": "售货员",
+                "zh": "你再试试这一件。",
+                "pinyin": "Nǐ zài shìshi zhè yí jiàn.",
+                "vi": "Chị thử lại chiếc này xem."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "这件不大不小，正合适。颜色也很好看。",
+                "pinyin": "Zhè jiàn bú dà bù xiǎo, zhèng héshì. Yánsè yě hěn hǎokàn.",
+                "vi": "Chiếc này không to không nhỏ, vừa vặn. Màu cũng rất đẹp."
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "Mẫu câu cần nhớ",
+            "rows": [
+              {
+                "zh": "我看看 + N",
+                "vi": "Tôi xem N một chút"
+              },
+              {
+                "zh": "又 A 又 B",
+                "vi": "Vừa A vừa B"
+              },
+              {
+                "zh": "有一点儿 + tính từ",
+                "vi": "Hơi… (ý không hài lòng)"
+              },
+              {
+                "zh": "有 + tính từ + 一点儿的吗？",
+                "vi": "Có cái… hơn một chút không?"
+              },
+              {
+                "zh": "不大不小，正合适",
+                "vi": "Không to không nhỏ, vừa vặn"
+              }
+            ]
+          }
+        },
+        {
+          "title": "课文（二）这种一件多少钱",
+          "description": "Hội thoại 2 — Hỏi giá và mặc cả. Kèm đơn vị nhân dân tệ.",
+          "vocab": [
+            {
+              "hanzi": "胶卷",
+              "pinyin": "jiāojuǎn",
+              "meaning": "phim chụp ảnh",
+              "note": "名 · giao quyển"
+            },
+            {
+              "hanzi": "牛奶",
+              "pinyin": "niúnǎi",
+              "meaning": "sữa bò",
+              "note": "名 · ngưu nãi"
+            },
+            {
+              "hanzi": "面包",
+              "pinyin": "miànbāo",
+              "meaning": "bánh mì",
+              "note": "名 · miến bao"
+            },
+            {
+              "hanzi": "抽烟",
+              "pinyin": "chōu yān",
+              "meaning": "hút thuốc",
+              "note": "trừu yên"
+            },
+            {
+              "hanzi": "拍照",
+              "pinyin": "pāizhào",
+              "meaning": "chụp ảnh, quay phim",
+              "note": "动 · phách chiếu"
+            },
+            {
+              "hanzi": "牛仔裤",
+              "pinyin": "niúzǎikù",
+              "meaning": "quần bò",
+              "note": "名 · ngưu tử khố"
+            },
+            {
+              "hanzi": "双",
+              "pinyin": "shuāng",
+              "meaning": "đôi, hai",
+              "note": "量 · song"
+            },
+            {
+              "hanzi": "鞋",
+              "pinyin": "xié",
+              "meaning": "giày, dép",
+              "note": "名 · hài"
+            }
+          ],
+          "body": "### 注释（一）Quy tắc đọc số tiền\n\n- Đơn vị **cuối cùng** có thể không nói.\n- Nếu ở giữa có từ hai số 0 trở lên thì chỉ đọc một chữ 零, và lúc đó đơn vị cuối **bắt buộc** phải nói.\n- Nếu chỉ còn **một** đơn vị (块/毛/分), khẩu ngữ thường thêm chữ 钱.\n\n### 注释（二）太 + tính từ + 了\n\nDiễn đạt mức độ vượt quá hoặc rất cao — dùng được cả hai chiều.\n\n- **Không hài lòng:** 太贵了 · 太大了 · 太忙了 · 太旧了\n- **Khen ngợi:** 太好了！· 太美了！",
+          "quiz": {
+            "title": "Luyện tập 课文（二）— giá cả và mặc cả",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "31.89 元 đọc trong khẩu ngữ là gì?",
+                "explanation": "元/角/分 khi nói thành 块/毛/分; đơn vị cuối cùng có thể lược bỏ.",
+                "options": [
+                  {
+                    "label": "三十一块八毛九（分）",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "三十一元八元九元",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "三十一块八十九",
+                    "isCorrect": false,
+                    "misconception": "zh_money_missing_ling_or_unit"
+                  },
+                  {
+                    "label": "三十一块零八毛九",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "100.50 元 phải đọc thế nào?",
+                "explanation": "Ở giữa có hai số 0 trở lên thì đọc một chữ 零, và đơn vị cuối bắt buộc phải nói.",
+                "options": [
+                  {
+                    "label": "一百块零五毛",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "一百块五",
+                    "isCorrect": false,
+                    "misconception": "zh_money_missing_ling_or_unit"
+                  },
+                  {
+                    "label": "一百零五块",
+                    "isCorrect": false,
+                    "misconception": "zh_money_missing_ling_or_unit"
+                  },
+                  {
+                    "label": "一百块五毛钱零",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "0.50 元 chỉ có một đơn vị nên khẩu ngữ đọc là 五毛＿＿。",
+                "explanation": "Khi chỉ còn một đơn vị, khẩu ngữ thường thêm chữ 钱: 五毛钱.",
+                "answers": [
+                  "钱",
+                  "qián",
+                  "qian"
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Loại áo khoác này bao nhiêu tiền một chiếc?”",
+                "explanation": "这种大衣一件多少钱？ — lượng từ 件 đứng trước 多少钱.",
+                "sequence": [
+                  "这种",
+                  "大衣",
+                  "一件",
+                  "多少",
+                  "钱",
+                  "？"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「我试试这＿＿皮鞋可以吗？」— điền lượng từ nào?",
+                "explanation": "Giày đi thành đôi nên dùng 双. 件 dành cho áo, 本 cho sách, 个 là lượng từ chung nhưng không dùng cho giày.",
+                "options": [
+                  {
+                    "label": "双",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "件",
+                    "isCorrect": false,
+                    "misconception": "zh_measure_word_mismatch"
+                  },
+                  {
+                    "label": "本",
+                    "isCorrect": false,
+                    "misconception": "zh_measure_word_mismatch"
+                  },
+                  {
+                    "label": "个",
+                    "isCorrect": false,
+                    "misconception": "zh_measure_word_mismatch"
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép lượng từ với danh từ đi kèm.",
+                "explanation": "Lượng từ trong bài: 件 (áo), 双 (giày), 瓶 (chai), 辆 (xe), 本 (sách).",
+                "pairs": [
+                  {
+                    "left": "一件",
+                    "right": "大衣"
+                  },
+                  {
+                    "left": "一双",
+                    "right": "皮鞋"
+                  },
+                  {
+                    "left": "一瓶",
+                    "right": "牛奶"
+                  },
+                  {
+                    "left": "一辆",
+                    "right": "自行车"
+                  },
+                  {
+                    "left": "一本",
+                    "right": "词典"
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "「太贵了」dùng để khen ngợi.",
+                "explanation": "「太 + tính từ + 了」ở nhóm 不满意 diễn đạt sự không hài lòng. Khen ngợi là 太好了！太美了！",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "zh_tai_le_praise_vs_complaint"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "prompt": "玛丽 đưa 九百块, giá đã thoả thuận là 八百五. Người bán trả lại bao nhiêu? (viết bằng chữ Hán, ví dụ 三十)",
+                "explanation": "900 − 850 = 50 → 找你五十。",
+                "answers": [
+                  "五十",
+                  "五十块",
+                  "wǔshí",
+                  "wushi"
+                ]
+              }
+            ]
+          },
+          "dialogue": {
+            "heading": "课文（二）这种一件多少钱",
+            "turns": [
+              {
+                "speaker": "玛丽",
+                "zh": "这种大衣一件多少钱？",
+                "pinyin": "Zhè zhǒng dàyī yí jiàn duōshao qián?",
+                "vi": "Loại áo khoác này bao nhiêu tiền một chiếc?"
+              },
+              {
+                "speaker": "售货员",
+                "zh": "八百八十块。",
+                "pinyin": "Bābǎi bāshí kuài.",
+                "vi": "Tám trăm tám mươi tệ."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "太贵了。应该便宜一点儿，八百怎么样？",
+                "pinyin": "Tài guì le. Yīnggāi piányi yìdiǎnr, bābǎi zěnmeyàng?",
+                "vi": "Đắt quá. Nên rẻ hơn một chút, tám trăm được không?"
+              },
+              {
+                "speaker": "售货员",
+                "zh": "不行。八百不卖，太少了。",
+                "pinyin": "Bù xíng. Bābǎi bú mài, tài shǎo le.",
+                "vi": "Không được. Tám trăm không bán, ít quá."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "给你八百五，行不行？",
+                "pinyin": "Gěi nǐ bābǎi wǔ, xíng bu xíng?",
+                "vi": "Đưa chị tám trăm rưỡi, được không?"
+              },
+              {
+                "speaker": "售货员",
+                "zh": "行。",
+                "pinyin": "Xíng.",
+                "vi": "Được."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "这是九百块。",
+                "pinyin": "Zhè shì jiǔbǎi kuài.",
+                "vi": "Đây là chín trăm tệ."
+              },
+              {
+                "speaker": "售货员",
+                "zh": "找你五十。",
+                "pinyin": "Zhǎo nǐ wǔshí.",
+                "vi": "Trả lại chị năm mươi."
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "注释（一）Đơn vị nhân dân tệ — cách đọc",
+            "note": "Đơn vị viết là 元、角、分; khẩu ngữ nói là 块、毛、分.",
+            "rows": [
+              {
+                "zh": "三十一块八毛九（分）",
+                "vi": "31.89 元"
+              },
+              {
+                "zh": "四十六块五（毛）",
+                "vi": "46.50 元"
+              },
+              {
+                "zh": "八百九十八块四（毛）",
+                "vi": "898.40 元"
+              },
+              {
+                "zh": "一百块零五毛",
+                "vi": "100.50 元 — giữa có hai số 0 nên phải đọc 零 và nói đơn vị cuối"
+              },
+              {
+                "zh": "二十块（钱）",
+                "vi": "20.00 元 — chỉ một đơn vị thì thêm 钱"
+              },
+              {
+                "zh": "五毛（钱）",
+                "vi": "0.50 元"
+              },
+              {
+                "zh": "五分（钱）",
+                "vi": "0.05 元"
+              }
+            ]
+          }
+        },
+        {
+          "title": "语法（一）动词重叠 — Động từ láy lại",
+          "description": "Hình thức láy lại của động từ, dạng đã hoàn thành, và trọng âm khi đọc.",
+          "body": "## 动词重叠 — Động từ láy lại\n\nKhi biểu thị **thời gian ngắn, thử qua loa, động tác nhẹ nhàng**, tiếng Hán dùng hình thức lặp lại của động từ (V + V). Ngữ khí trở nên nhẹ nhàng, tự nhiên — thường dùng trong khẩu ngữ.\n\n| Loại động từ | Hình thức | Ví dụ |\n|---|---|---|\n| Đơn âm tiết | AA **hoặc** A—A | 试试 / 试一试 · 看看 / 看一看 · 听听 / 听一听 |\n| Song âm tiết | ABAB (**không** chen 一 vào giữa) | 预习预习 · 复习复习 · 介绍介绍 |\n\nVí dụ:\n1. 你**看看**这本词典合适不合适？\n2. 你**听听**这个句子是什么意思？\n3. 我**试试**这件衣服，可以吗？\n\n### Động tác đã xảy ra / đã hoàn thành\n\nDùng 「A 了 A」và 「AB 了 AB」:\n\n- 试试 → 试**了**试\n- 看看 → 看**了**看\n- 复习 → 复习**了**复习\n- 预习 → 预习**了**预习\n\n### Hai trường hợp KHÔNG láy lại được\n\n- Động từ **không biểu thị động tác**: 有、在、是\n- Động tác **đang tiến hành**: ✗ 我正在听听录音呢。\n\n---\n\n## 语音 — Trọng âm khi láy lại\n\nĐộng từ đơn âm tiết láy lại → âm tiết **đầu** đọc nhấn, âm tiết sau và chữ 一 kẹp giữa đọc thanh nhẹ:\n\n**试**试 · **看**看 · **听**听 · **试**一试 · **看**一看\n\nĐộng từ song âm tiết ABAB → **A** đọc nhấn: **介**绍介绍 · **休**息休息 · **锻**炼锻炼\n\nCuối câu cảm thán thì ngữ điệu hạ xuống ↓ — 太好了！↓ 太贵了！↓",
+          "quiz": {
+            "title": "Luyện tập 动词重叠",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Hình thức láy lại đúng của động từ song âm tiết 复习 là gì?",
+                "explanation": "Động từ song âm tiết láy theo dạng ABAB và KHÔNG chen 一 vào giữa.",
+                "options": [
+                  {
+                    "label": "复习复习",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "复一复习",
+                    "isCorrect": false,
+                    "misconception": "zh_reduplication_insert_yi_abab"
+                  },
+                  {
+                    "label": "复习一复习",
+                    "isCorrect": false,
+                    "misconception": "zh_reduplication_insert_yi_abab"
+                  },
+                  {
+                    "label": "复复习习",
+                    "isCorrect": false,
+                    "misconception": "zh_reduplication_insert_yi_abab"
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Động từ 有 có thể láy lại thành 有有。",
+                "explanation": "有、在、是 không biểu thị động tác nên không láy lại được.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "zh_reduplicate_stative_verb"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Câu nào SAI ngữ pháp?",
+                "explanation": "Động tác đang tiến hành không láy lại được — 正在 và hình thức láy loại trừ nhau.",
+                "options": [
+                  {
+                    "label": "我正在听听录音呢。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "你听听这个句子是什么意思？",
+                    "isCorrect": false,
+                    "misconception": "zh_reduplicate_stative_verb"
+                  },
+                  {
+                    "label": "我试试这件衣服，可以吗？",
+                    "isCorrect": false,
+                    "misconception": "zh_reduplicate_stative_verb"
+                  },
+                  {
+                    "label": "你看看这本词典合适不合适？",
+                    "isCorrect": false,
+                    "misconception": "zh_reduplicate_stative_verb"
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép hình thức láy lại với dạng đã hoàn thành của nó.",
+                "explanation": "Động tác đã xảy ra: A 了 A (đơn âm tiết) và AB 了 AB (song âm tiết).",
+                "pairs": [
+                  {
+                    "left": "试试",
+                    "right": "试了试"
+                  },
+                  {
+                    "left": "看看",
+                    "right": "看了看"
+                  },
+                  {
+                    "left": "复习",
+                    "right": "复习了复习"
+                  },
+                  {
+                    "left": "预习",
+                    "right": "预习了预习"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Trong 「介绍介绍」, âm tiết nào đọc nhấn?",
+                "explanation": "Động từ song âm tiết láy lại theo dạng ABAB thì A (âm tiết đầu) đọc nhấn.",
+                "options": [
+                  {
+                    "label": "介 (âm tiết đầu)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "绍 (âm tiết thứ hai)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "介 thứ hai",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cả bốn âm tiết đọc đều nhau",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "Hình thức láy lại",
+            "rows": [
+              {
+                "zh": "试试 / 试一试",
+                "vi": "Động từ ĐƠN âm tiết: AA hoặc A—A"
+              },
+              {
+                "zh": "看看 / 看一看",
+                "vi": "Động từ ĐƠN âm tiết: AA hoặc A—A"
+              },
+              {
+                "zh": "复习复习",
+                "vi": "Động từ SONG âm tiết: ABAB, không chen 一"
+              },
+              {
+                "zh": "介绍介绍",
+                "vi": "Động từ SONG âm tiết: ABAB, không chen 一"
+              },
+              {
+                "zh": "试了试 / 看了看",
+                "vi": "Động tác đã hoàn thành: A 了 A"
+              },
+              {
+                "zh": "复习了复习 / 预习了预习",
+                "vi": "Động tác đã hoàn thành: AB 了 AB"
+              }
+            ]
+          }
+        },
+        {
+          "title": "语法（二）又……又…… — Vừa… vừa…",
+          "description": "Nối hai tính chất cùng tồn tại.",
+          "body": "## 又……又…… — Vừa… vừa…\n\nDùng để nối hai **tính từ, động từ, cụm động từ hoặc cụm tính từ**, biểu đạt hai tình trạng cùng song song tồn tại. Cả hai chữ 又 đều đứng ngay trước thành phần mà nó nối.\n\n1. 这件大衣**又**好**又**便宜。 — Chiếc áo khoác này vừa tốt vừa rẻ.\n2. 我们的教室**又**安静**又**干净。 — Lớp học của chúng tôi vừa yên tĩnh vừa sạch sẽ.\n3. 那个箱子**又**小**又**旧。 — Cái vali kia vừa nhỏ vừa cũ.\n\n> Lưu ý: hai vế phải **cùng chiều** — cùng khen hoặc cùng chê. Không nói 又好又贵 để chê giá, vì 好 là khen.",
+          "quiz": {
+            "title": "Luyện tập 又……又……",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Chiếc áo khoác này vừa tốt vừa rẻ.”",
+                "explanation": "又 A 又 B — cả hai chữ 又 đều đứng trước tính từ.",
+                "sequence": [
+                  "这件",
+                  "大衣",
+                  "又",
+                  "好",
+                  "又",
+                  "便宜",
+                  "。"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我们的教室＿安静＿干净。(vừa… vừa…, điền một chữ dùng cho cả hai chỗ)",
+                "explanation": "又安静又干净 — cả hai chỗ đều là 又.",
+                "answers": [
+                  "又"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「又……又……」nối được những thành phần nào?",
+                "explanation": "Nối tính từ, động từ, cụm động từ hoặc cụm tính từ — miễn là hai thành phần cùng loại và cùng chiều nghĩa.",
+                "options": [
+                  {
+                    "label": "Tính từ, động từ hoặc cụm từ cùng loại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ nối được hai danh từ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ nối được hai chủ ngữ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ dùng được trong câu hỏi",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "语法（三）一点儿 / 有（一）点儿",
+          "description": "Hai từ dễ lẫn nhất của bài — khác nhau ở vị trí trong câu.",
+          "body": "## 一点儿 và 有（一）点儿\n\nHai từ này khác nhau ở **vị trí trong câu**, không phải ở nghĩa.\n\n| | Vai trò | Đứng trước | Ví dụ |\n|---|---|---|---|\n| 一点儿 | Định ngữ | **Danh từ** | 他会**一点儿**汉语。· 请给我（一）点儿水。 |\n| 有（一）点儿 | Trạng ngữ | **Tính từ** | 这件**有（一）点儿**长。· 那件颜色**有（一）点儿**深。 |\n\n**Mẹo nhận biết:** nhìn từ đứng ngay sau chỗ trống.\n- Sau là **danh từ** (汉语, 水) → dùng 一点儿\n- Sau là **tính từ** (长, 深, 难) → dùng 有（一）点儿\n\nNgoài ra 有（一）点儿 thường mang sắc thái **không như ý**: 这件有点儿长 (hơi dài — ý là không vừa). Còn khi muốn so sánh \"… hơn một chút\" thì tính từ đứng TRƯỚC: 短**一点儿**的, 便宜**一点儿**.",
+          "quiz": {
+            "title": "Luyện tập 一点儿 / 有（一）点儿",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "fill_in",
+                "prompt": "这本书＿＿＿＿难，那本容易一点儿。(hơi khó — ý không như ý)",
+                "explanation": "「有（一）点儿」làm trạng ngữ, đứng trước tính từ, thường diễn đạt điều không như ý.",
+                "answers": [
+                  "有点儿",
+                  "有一点儿"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "他会＿＿＿＿汉语。(một chút — làm định ngữ trước danh từ)",
+                "explanation": "「一点儿」làm định ngữ, đứng trước danh từ: 一点儿汉语.",
+                "answers": [
+                  "一点儿",
+                  "点儿"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Câu nào dùng ĐÚNG?",
+                "explanation": "有（一）点儿 đứng trước tính từ; 一点儿 đứng trước danh từ. 今天有点儿冷 — sau chỗ trống là tính từ 冷.",
+                "options": [
+                  {
+                    "label": "今天有点儿冷。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "今天一点儿冷。",
+                    "isCorrect": false,
+                    "misconception": "zh_yidianr_vs_youdianr"
+                  },
+                  {
+                    "label": "他会有点儿汉语。",
+                    "isCorrect": false,
+                    "misconception": "zh_yidianr_vs_youdianr"
+                  },
+                  {
+                    "label": "请给我有点儿水。",
+                    "isCorrect": false,
+                    "misconception": "zh_yidianr_vs_youdianr"
+                  }
+                ]
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "一点儿 và 有（一）点儿",
+            "note": "Khác nhau ở VỊ TRÍ, không phải ở nghĩa.",
+            "rows": [
+              {
+                "zh": "他会一点儿汉语。",
+                "vi": "一点儿 làm định ngữ — đứng trước DANH TỪ"
+              },
+              {
+                "zh": "请给我（一）点儿水。",
+                "vi": "一点儿 làm định ngữ — đứng trước DANH TỪ"
+              },
+              {
+                "zh": "这件有（一）点儿长。",
+                "vi": "有（一）点儿 làm trạng ngữ — đứng trước TÍNH TỪ"
+              },
+              {
+                "zh": "那件颜色有（一）点儿深。",
+                "vi": "有（一）点儿 làm trạng ngữ — thường kèm ý chê nhẹ"
+              },
+              {
+                "zh": "短一点儿的 / 便宜一点儿",
+                "vi": "So sánh “… hơn một chút” — tính từ đứng TRƯỚC"
+              }
+            ]
+          }
+        },
+        {
+          "title": "练习 — Bài tập tổng hợp",
+          "description": "Chọn từ thích hợp điền vào chỗ trống, phân biệt 怎么 / 怎么样.",
+          "body": "## 选词填空 — Chọn từ điền vào chỗ trống\n\nNgân hàng từ: **当然 · 件 · 种 · 双 · 胖 · 深 · 又 · 便宜**\n\nLàm phần trắc nghiệm bên dưới, sau đó tự đọc to lại cả câu.\n\n### 怎么 và 怎么样\n\n| | Dùng để hỏi | Ví dụ |\n|---|---|---|\n| 怎么 | **cách thức** làm việc gì | 我们明天**怎么**去？· 这个词**怎么**读？· 这个字**怎么**写？ |\n| 怎么样 | **đánh giá, nhận xét** | 这本词典**怎么样**？· 你觉得这本书**怎么样**？· 她的学习**怎么样**？ |\n\n### Đọc các con số chỉ tiền\n\n0.05 元 · 0.28 元 · 3.08 元 · 8.88 元 · 35.00 元 · 45.05 元 · 77.55 元 · 109.70 元 · 207.02 元 · 850.00 元 · 1038.75 元",
+          "quiz": {
+            "title": "练习 — Chọn từ điền vào chỗ trống",
+            "passThresholdPct": 60,
+            "questions": [
+              {
+                "type": "fill_in",
+                "prompt": "我试试这＿＿皮鞋可以吗？(lượng từ của giày)",
+                "explanation": "Giày đi thành đôi → lượng từ 双.",
+                "answers": [
+                  "双",
+                  "shuāng",
+                  "shuang"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "这＿＿皮大衣多少钱一件？(loại, kiểu)",
+                "explanation": "种 = loại, kiểu. 这种大衣 = loại áo khoác này.",
+                "answers": [
+                  "种",
+                  "zhǒng",
+                  "zhong"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "有没有颜色浅一点儿的？这件颜色有点儿＿＿。(thẫm)",
+                "explanation": "深 (thẫm) trái nghĩa với 浅 (nhạt).",
+                "answers": [
+                  "深",
+                  "shēn",
+                  "shen"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "这件衣服＿＿便宜＿＿好。(vừa… vừa…, điền một chữ dùng cho cả hai chỗ)",
+                "explanation": "又便宜又好 — cấu trúc 又…又… nối hai tính chất.",
+                "answers": [
+                  "又"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Chọn câu ĐÚNG khi muốn hỏi “Quyển từ điển này thế nào?”",
+                "explanation": "Hỏi đánh giá, nhận xét thì dùng 怎么样; 怎么 dùng để hỏi cách thức.",
+                "options": [
+                  {
+                    "label": "这本词典怎么样？",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "这本词典怎么？",
+                    "isCorrect": false,
+                    "misconception": "zh_zenme_vs_zenmeyang"
+                  },
+                  {
+                    "label": "这本词典怎么读？",
+                    "isCorrect": false,
+                    "misconception": "zh_zenme_vs_zenmeyang"
+                  },
+                  {
+                    "label": "这本词典什么样怎么？",
+                    "isCorrect": false,
+                    "misconception": "zh_zenme_vs_zenmeyang"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「这个字＿＿写？」— điền từ nào?",
+                "explanation": "Hỏi cách viết → hỏi cách thức → dùng 怎么.",
+                "options": [
+                  {
+                    "label": "怎么",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "怎么样",
+                    "isCorrect": false,
+                    "misconception": "zh_zenme_vs_zenmeyang"
+                  },
+                  {
+                    "label": "什么",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "多少",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép món hàng với giá của nó (theo bảng giá trong sách).",
+                "explanation": "Bảng giá bài tập: 啤酒 6.6 元/瓶, 牛奶 10.5 元/瓶, 面包 8.8 元/个, 胶卷 28.8 元/个, 皮鞋 235 元/双, 自行车 950 元/辆.",
+                "pairs": [
+                  {
+                    "left": "啤酒（瓶）",
+                    "right": "6.6 元"
+                  },
+                  {
+                    "left": "牛奶（瓶）",
+                    "right": "10.5 元"
+                  },
+                  {
+                    "left": "面包（个）",
+                    "right": "8.8 元"
+                  },
+                  {
+                    "left": "胶卷（个）",
+                    "right": "28.8 元"
+                  },
+                  {
+                    "left": "皮鞋（双）",
+                    "right": "235 元"
+                  },
+                  {
+                    "left": "自行车（辆）",
+                    "right": "950 元"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "misconceptions": [
+    {
+      "code": "zh_reduplication_insert_yi_abab",
+      "name": "Chen 一 vào giữa động từ song âm tiết láy lại",
+      "description": "Học viên đem quy tắc \"A 一 A\" của động từ đơn âm tiết (试一试, 看一看) áp cho động từ song âm tiết, viết thành 复一复习 hoặc 复习一复习. Động từ song âm tiết chỉ có dạng ABAB và không được chen 一 vào giữa."
+    },
+    {
+      "code": "zh_reduplicate_stative_verb",
+      "name": "Láy lại động từ không biểu thị động tác",
+      "description": "Học viên láy lại 有, 在, 是. Ba động từ này không biểu thị động tác nên không có hình thức láy lại; động từ đang tiến hành cũng vậy (không nói 我正在听听录音呢)."
+    },
+    {
+      "code": "zh_yidianr_vs_youdianr",
+      "name": "Nhầm 一点儿 với 有（一）点儿",
+      "description": "一点儿 làm định ngữ, đứng trước danh từ (一点儿汉语). 有（一）点儿 làm trạng ngữ, đứng trước tính từ và thường mang sắc thái không như ý (有点儿长). Học viên đảo hai vị trí này cho nhau."
+    },
+    {
+      "code": "zh_money_missing_ling_or_unit",
+      "name": "Đọc số tiền thiếu 零 hoặc thiếu đơn vị cuối",
+      "description": "Khi giữa số tiền có từ hai số 0 trở lên thì phải đọc một chữ 零 VÀ bắt buộc nói đơn vị cuối cùng (100.50 元 = 一百块零五毛). Học viên bỏ 零, hoặc bỏ luôn đơn vị và đọc thành 一百块五."
+    },
+    {
+      "code": "zh_zenme_vs_zenmeyang",
+      "name": "Nhầm 怎么 với 怎么样",
+      "description": "怎么 hỏi CÁCH THỨC làm việc gì (怎么去, 怎么写, 怎么读). 怎么样 hỏi ĐÁNH GIÁ, nhận xét (这本词典怎么样). Học viên dùng 怎么 khi cần nhận xét, hoặc ngược lại."
+    },
+    {
+      "code": "zh_tai_le_praise_vs_complaint",
+      "name": "Hiểu 太…了 chỉ có một sắc thái",
+      "description": "Cấu trúc 太 + tính từ + 了 dùng được cả khi không hài lòng (太贵了, 太忙了) lẫn khi khen ngợi (太好了, 太美了). Học viên cho rằng nó luôn là chê, hoặc luôn là khen."
+    },
+    {
+      "code": "zh_antonym_pair_clothes",
+      "name": "Nhầm cặp phản nghĩa khi mô tả quần áo",
+      "description": "Nói về quần áo: 长/短 là dài/ngắn, 肥/瘦 là rộng/chật, 深/浅 là màu thẫm/nhạt. Học viên hay lấy 大/小 thay cho 肥/瘦, hoặc lẫn trục dài-ngắn với trục rộng-chật."
+    },
+    {
+      "code": "zh_measure_word_mismatch",
+      "name": "Dùng sai lượng từ",
+      "description": "Mỗi danh từ đi với một lượng từ riêng: 件 cho áo, 双 cho giày (đi thành đôi), 瓶 cho đồ đựng trong chai, 辆 cho xe, 本 cho sách, 种 cho loại/kiểu. Học viên dùng 个 hoặc lượng từ của danh từ khác."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "body": "Câu này chưa đúng. Đọc lại phần nội dung liên quan ở dưới rồi thử lại nhé — chú ý so lại với ví dụ mẫu trong bài.",
+      "priority": 100
+    },
+    {
+      "misconception": "zh_reduplication_insert_yi_abab",
+      "body": "Bạn đang chen 一 vào giữa động từ song âm tiết. Quy tắc khác nhau theo số âm tiết: động từ MỘT âm tiết có hai dạng — 试试 và 试一试; động từ HAI âm tiết chỉ có một dạng ABAB — 复习复习, 介绍介绍, và không bao giờ chen 一 vào giữa. Cứ đếm số âm tiết trước khi láy.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_reduplicate_stative_verb",
+      "body": "有, 在, 是 không láy lại được. Hình thức láy diễn tả một động tác làm trong thời gian ngắn hoặc thử qua — mà ba từ này không chỉ động tác nào cả, chúng chỉ trạng thái hoặc quan hệ. Cùng lý do đó, động tác đang diễn ra cũng không láy: không nói 我正在听听录音呢.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_yidianr_vs_youdianr",
+      "body": "Hai từ này khác nhau ở VỊ TRÍ, không phải ở nghĩa. 一点儿 đứng trước DANH TỪ: 他会一点儿汉语. 有（一）点儿 đứng trước TÍNH TỪ và thường kèm ý chê nhẹ: 这件有点儿长. Mẹo: sau chỗ trống là danh từ thì dùng 一点儿, là tính từ thì dùng 有点儿.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_money_missing_ling_or_unit",
+      "body": "Bạn bỏ mất chữ 零 hoặc đơn vị cuối. Hai quy tắc đi kèm nhau: đơn vị cuối cùng thường được lược bỏ (46.50 元 = 四十六块五), NHƯNG nếu ở giữa có từ hai số 0 trở lên thì phải đọc một chữ 零 và lúc đó đơn vị cuối bắt buộc phải nói — 100.50 元 = 一百块零五毛, không phải 一百块五.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_zenme_vs_zenmeyang",
+      "body": "怎么 hỏi LÀM THẾ NÀO, 怎么样 hỏi THẤY THẾ NÀO. 这个字怎么写？ — hỏi cách viết. 这本词典怎么样？ — hỏi bạn đánh giá quyển từ điển ra sao. Nếu câu trả lời mong đợi là một cách làm thì dùng 怎么; nếu là một nhận xét (tốt/dở/đắt/rẻ) thì dùng 怎么样.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_tai_le_praise_vs_complaint",
+      "body": "太 + tính từ + 了 đi được cả hai chiều. Chê: 太贵了, 太大了, 太忙了, 太旧了. Khen: 太好了！太美了！Sắc thái nằm ở tính từ ở giữa chứ không nằm ở cấu trúc, nên đừng gán cứng cho nó một nghĩa.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_antonym_pair_clothes",
+      "body": "Đang lẫn trục so sánh. Khi nói về quần áo có ba trục riêng: 长/短 là DÀI hay NGẮN, 肥/瘦 là RỘNG hay CHẬT, 深/浅 là màu THẪM hay NHẠT. 大/小 nói về cỡ nói chung, không thay được cho 肥/瘦. Chiếc áo 太肥了 thì phải hỏi 有没有瘦一点儿的.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_measure_word_mismatch",
+      "body": "Lượng từ phải hợp với danh từ. Trong bài này: 一件大衣 (áo), 一双皮鞋 (giày — đi thành đôi nên dùng 双), 一瓶牛奶 (chai), 一辆自行车 (xe), 一本词典 (sách), 这种大衣 (loại, kiểu). Học lượng từ cùng lúc với danh từ, đừng học riêng.",
+      "priority": 10
+    }
+  ]
+}

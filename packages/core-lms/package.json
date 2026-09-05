@@ -11,7 +11,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "backfill:lesson-tags": "node --env-file=../db/.env --import tsx scripts/backfill-lesson-tags.ts"
+    "backfill:lesson-tags": "node --env-file=../db/.env --import tsx scripts/backfill-lesson-tags.ts",
+    "import:course": "node --env-file=../db/.env --import tsx scripts/import-course.ts",
+    "import:course:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-course.ts"
   },
   "dependencies": {
     "@feedbackme/db": "workspace:*",

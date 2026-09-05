@@ -19,7 +19,10 @@
     "db:down": "docker compose down",
     "changelog": "npx --yes git-cliff@latest --output CHANGELOG.md",
     "changelog:preview": "npx --yes git-cliff@latest",
-    "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags"
+    "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags",
+    "backfill:feedback-coding": "pnpm --filter @feedbackme/core-feedback backfill:feedback-coding",
+    "import:course": "pnpm --filter @feedbackme/core-lms import:course",
+    "import:course:prod": "pnpm --filter @feedbackme/core-lms import:course:prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
