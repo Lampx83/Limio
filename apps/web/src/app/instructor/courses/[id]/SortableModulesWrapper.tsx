@@ -113,7 +113,12 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
       >
         ≡
       </button>
-      <div className="flex-1">{children}</div>
+      {/* min-w-0 là bắt buộc, không phải trang trí: flex item mặc định
+          min-width:auto nên nó không co xuống dưới bề rộng tự nhiên của nội
+          dung. Thiếu nó thì một dòng chữ dài (nội dung richtext không xuống
+          dòng) kéo cả hàng phình ra ngoài khung, đẩy nút sửa/xoá ra khỏi thẻ —
+          dù mọi lớp bên trong đã có min-w-0 và truncate. */}
+      <div className="min-w-0 flex-1">{children}</div>
     </li>
   );
 }

@@ -63,6 +63,7 @@ export default function LessonHeader({
   const [previewable, setPreviewable] = useState(initialPreviewable);
   const [isHidden, setIsHidden] = useState(initialIsHidden);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function togglePreviewable() {
     const next = !previewable;
@@ -89,6 +90,7 @@ export default function LessonHeader({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    setError(null);
     const res = await fetch(apiUrl(`/api/lessons/${lessonId}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -102,7 +104,15 @@ export default function LessonHeader({
     if (res.ok) {
       setEditing(false);
       router.refresh();
+      return;
     }
+    // Không im lặng: form đứng yên sau khi bấm Lưu trông y hệt "không sửa
+    // được tên bài học" — người dùng không có cách nào biết là request hỏng.
+    setError(
+      res.status === 403
+        ? "Bạn không có quyền sửa bài học này."
+        : `Lưu thất bại (lỗi ${res.status}). Thử lại hoặc tải lại trang.`,
+    );
   }
 
   async function remove() {
@@ -154,6 +164,11 @@ export default function LessonHeader({
           placeholder="Mô tả ngắn"
           minHeight={100}
         />
+        {error && (
+          <p role="alert" className="banner-danger text-sm">
+            {error}
+          </p>
+        )}
         <div className="flex gap-2">
           <button type="submit" disabled={busy} className="btn-primary btn-sm">
             Lưu

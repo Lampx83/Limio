@@ -25,6 +25,7 @@ import EnrollmentList from "./EnrollmentList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
+import { ShareCard } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -256,6 +257,17 @@ export default async function InstructorCourseEditPage({
       {/* TAB: Tổng quan */}
       {tab === "overview" && (
         <div className="mt-8 space-y-8">
+          {/* Chỉ khoá đã publish mới có link đưa ra ngoài — /catalog/<slug> của
+              khoá nháp thì người nhận mở ra không thấy gì. */}
+          {course.status === "published" && (
+            <ShareCard
+              path={`/catalog/${course.slug}`}
+              label="Link giới thiệu khoá học"
+              hint="Gửi cho người chưa có tài khoản cũng mở được — họ xem giới thiệu khoá rồi tự đăng ký."
+              fileName={course.slug}
+            />
+          )}
+
           {course.personalizationEnabled && untaggedLessonIds.length > 0 && (
             <div className="banner-warning">
               <span className="text-xl shrink-0" aria-hidden>⚠️</span>
@@ -338,7 +350,11 @@ export default async function InstructorCourseEditPage({
 
           <div className="min-w-0 flex-1">
             {selectedLesson && selectedModule && (
-              <article className="space-y-5">
+              /* key: pane sửa bài học giữ nguyên vị trí trong cây khi đổi
+                 bài, nên không có key thì React tái dùng cùng instance —
+                 form sửa còn nguyên title/ORDER của bài trước, bấm Lưu là
+                 ghi ORDER cũ, đụng unique (moduleId, orderIndex) → 500 câm. */
+              <article key={selectedLesson.id} className="space-y-5">
                 <div className="flex items-center justify-between gap-3">
                   <nav className="flex min-w-0 items-center gap-2 text-sm text-muted">
                     <Link

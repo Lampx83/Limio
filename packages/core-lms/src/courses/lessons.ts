@@ -27,6 +27,7 @@ export const UpdateLessonInput = z.object({
   completionThresholdPct: z.number().int().min(1).max(100).optional().nullable(),
   durationSec: z.number().int().nonnegative().optional().nullable(),
   previewable: z.boolean().optional(),
+  isHidden: z.boolean().optional(),
 });
 
 async function getCourseIdForLesson(lessonId: string, db: DbClient): Promise<string> {
@@ -66,12 +67,70 @@ export async function updateLesson(
   await assertCanEditCourse(actorUserId, courseId, db);
   const parsed = UpdateLessonInput.safeParse(rawInput);
   if (!parsed.success) throw new CourseError("validation_failed", parsed.error.flatten());
-  const data = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
-  if (Object.keys(data).length === 0) return;
-  await db.lesson.update({ where: { id: lessonId }, data });
+  const { orderIndex, ...rest } = parsed.data;
+  const data = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined));
+
+  if (orderIndex !== undefined) {
+    // (moduleId, orderIndex) là UNIQUE, nên gán thẳng số thứ tự người dùng gõ
+    // sẽ đụng bài đang giữ chỗ đó và ném P2002 — API trả 500, form đứng im,
+    // học viên/GV chỉ thấy "bấm Lưu không ăn". Coi ORDER là "chuyển bài này
+    // tới vị trí thứ N" và đánh số lại cả module.
+    await moveLessonToPosition(lessonId, orderIndex, Object.keys(data).length > 0 ? data : null, db);
+  } else if (Object.keys(data).length > 0) {
+    await db.lesson.update({ where: { id: lessonId }, data });
+  } else {
+    return;
+  }
+
   if (parsed.data.title !== undefined) {
     await syncLessonTagName(lessonId, parsed.data.title, db);
   }
+}
+
+/**
+ * Đặt lesson vào vị trí `position` trong module của nó rồi đánh số lại các bài
+ * còn lại thành 0..n-1. Hai pha (âm rồi dương) để không đụng unique
+ * (moduleId, orderIndex) giữa chừng — cùng cách reorderLessons đang làm.
+ */
+async function moveLessonToPosition(
+  lessonId: string,
+  position: number,
+  otherData: Record<string, unknown> | null,
+  db: DbClient,
+): Promise<void> {
+  const lesson = await db.lesson.findUnique({
+    where: { id: lessonId },
+    select: { moduleId: true, orderIndex: true },
+  });
+  if (!lesson) throw new CourseAuthzError("not_found");
+
+  const siblings = await db.lesson.findMany({
+    where: { moduleId: lesson.moduleId },
+    select: { id: true },
+    orderBy: { orderIndex: "asc" },
+  });
+  const rest = siblings.map((l) => l.id).filter((id) => id !== lessonId);
+  const target = Math.min(Math.max(position, 0), rest.length);
+  const ordered = [...rest.slice(0, target), lessonId, ...rest.slice(target)];
+
+  const unchanged =
+    lesson.orderIndex === target && ordered.every((id, i) => siblings[i]?.id === id);
+  if (unchanged) {
+    if (otherData) await db.lesson.update({ where: { id: lessonId }, data: otherData });
+    return;
+  }
+
+  await (db as typeof prisma).$transaction(async (tx) => {
+    for (let i = 0; i < ordered.length; i++) {
+      await tx.lesson.update({ where: { id: ordered[i]! }, data: { orderIndex: -1 - i } });
+    }
+    for (let i = 0; i < ordered.length; i++) {
+      await tx.lesson.update({
+        where: { id: ordered[i]! },
+        data: ordered[i] === lessonId && otherData ? { orderIndex: i, ...otherData } : { orderIndex: i },
+      });
+    }
+  });
 }
 
 export async function deleteLesson(
