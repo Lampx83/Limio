@@ -141,6 +141,29 @@ export default function QuizPlayer({
     return () => clearInterval(t);
   }, [data?.quiz.timeLimitSec]);
 
+  /*
+   * Hết giờ thì tự nộp.
+   *
+   * Trước đây đồng hồ đếm về 00:00 rồi đứng đó, và người học vẫn trả lời tiếp
+   * bình thường — nên "giới hạn thời gian" không giới hạn gì cả, chỉ là một
+   * con số đỏ. Tệ hơn: mở bài rồi để đó vài tiếng, quay lại vẫn làm được, và
+   * điểm vẫn tính.
+   *
+   * Không hỏi lại ở đây: hết giờ là hết giờ, hỏi thì cũng không ai bấm kịp.
+   */
+  const autoSubmittedRef = useRef(false);
+  useEffect(() => {
+    const limit = data?.quiz.timeLimitSec;
+    if (!limit || !data) return;
+    const startedAt = new Date(data.attempt.startedAt).getTime();
+    const remaining = limit - Math.floor((now - startedAt) / 1000);
+    if (remaining > 0) return;
+    if (autoSubmittedRef.current) return;
+    autoSubmittedRef.current = true;
+    void onSubmit({ auto: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [now, data]);
+
   // B12 — không tính giờ khi người học rời tab. Cùng lý do như bộ đo thời gian
   // đọc bài: để tab đó rồi đi ăn cơm không phải là đang nghĩ về câu hỏi, và một
   // con số sai vẫn sẽ được đem đi so sánh độ khó giữa các câu.
@@ -228,12 +251,12 @@ export default function QuizPlayer({
     return qs.filter((q) => !isResponseEmpty(q, answers[q.id]?.response ?? null)).length;
   }
 
-  async function onSubmit() {
+  async function onSubmit(opts?: { auto?: boolean }) {
     // Nộp bài là việc không lùi lại được. Trước đây nút nộp trông y hệt nút
     // "Câu sau" và nằm ngay cạnh, nên một cú bấm nhầm là kết thúc lượt làm bài
     // của người học. Hỏi lại, và nói rõ còn thiếu bao nhiêu câu.
-    const missing = quiz.questions.length - answeredCountNow();
-    if (missing > 0) {
+    const missing = (data?.quiz.questions.length ?? 0) - answeredCountNow();
+    if (missing > 0 && !opts?.auto) {
       const ok = window.confirm(
         `Bạn còn ${missing} câu chưa trả lời. Nộp bài bây giờ thì những câu đó tính là bỏ trống và không sửa lại được.\n\nVẫn nộp?`,
       );
@@ -387,7 +410,7 @@ export default function QuizPlayer({
           {isLast ? (
             <button
               type="button"
-              onClick={onSubmit}
+              onClick={() => onSubmit()}
               disabled={submitting}
               className={`${submitClass} btn-sm`}
             >
@@ -470,7 +493,7 @@ export default function QuizPlayer({
 
           <button
             type="button"
-            onClick={onSubmit}
+            onClick={() => onSubmit()}
             disabled={submitting}
             className={`${submitClass} w-full`}
           >
@@ -496,7 +519,7 @@ export default function QuizPlayer({
           )}
           <button
             type="button"
-            onClick={onSubmit}
+            onClick={() => onSubmit()}
             disabled={submitting}
             className={`${submitClass} btn-sm ml-auto`}
           >

@@ -8,8 +8,12 @@ import { Star } from "lucide-react";
  *
  * Trước đây là năm nút số, và số thì không tự nói lên chiều: người học phải
  * đọc chú thích "1 = đoán · 5 = chắc chắn" mới biết đằng nào là hơn. Sao lấp
- * đầy dần nên thấy ngay chiều tăng, và hai đầu thang được gọi tên ngay tại
- * chỗ — không phải đọc chú thích rời rồi tự nội suy ngược lại.
+ * đầy dần nên thấy ngay chiều tăng mà không cần chữ.
+ *
+ * Hai nhãn "Tôi đoán" / "Tôi chắc chắn" ở hai đầu thang đã bỏ: giữa một trang
+ * làm bài vốn đã nhiều chữ, chúng làm hàng này rối hơn là rõ hơn. Ý nghĩa từng
+ * mức không mất — nó nằm trong `aria-label` và trong tooltip của từng sao, nên
+ * trình đọc màn hình vẫn nghe đủ, và ai rê chuột vẫn đọc được.
  *
  * Vẫn là năm nút thật (không phải một ô input): mỗi mức đều tới được bằng
  * phím Tab và có nhãn đọc lên được cho trình đọc màn hình.
@@ -50,9 +54,6 @@ export default function ConfidenceStars({
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      {/* Tên hai đầu thang đứng ngay cạnh sao: người học đọc được chiều mà
-          không phải tra chú thích rời. */}
-      <span className="text-sm text-muted">Tôi đoán</span>
       <div
         role="radiogroup"
         aria-label="Độ tự tin"
@@ -68,6 +69,7 @@ export default function ConfidenceStars({
               role="radio"
               aria-checked={value === n}
               aria-label={`${n} trên 5 — ${LABELS[n - 1]}`}
+              title={`${n}/5 — ${LABELS[n - 1]}`}
               onClick={() => onChange?.(n)}
               onMouseEnter={() => setHover(n)}
               onFocus={() => setHover(n)}
@@ -87,7 +89,6 @@ export default function ConfidenceStars({
           );
         })}
       </div>
-      <span className="text-sm text-muted">Tôi chắc chắn</span>
     </div>
   );
 }

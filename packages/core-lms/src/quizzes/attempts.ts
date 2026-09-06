@@ -55,6 +55,12 @@ const MatchPair = z.object({
  */
 export const MAX_LATENCY_MS = 2 * 60 * 60 * 1000;
 
+/**
+ * Khoảng ân hạn sau khi hết giờ mà máy chủ vẫn nhận đáp án, tính bằng giây.
+ * Đủ để một lượt nộp gồm hàng chục lời gọi mạng đi hết, không đủ để làm thêm.
+ */
+export const LATE_ANSWER_GRACE_SEC = 60;
+
 export const SubmitAnswerInput = z.object({
   questionId: z.string().uuid(),
   response: z.union([
@@ -188,6 +194,21 @@ export async function submitAnswer(
   }
 
   const answeredAt = new Date();
+
+  // Quá giờ thì không nhận đáp án nữa. Máy khách đã tự nộp lúc đồng hồ về 0,
+  // nhưng đó chỉ là phép lịch sự — ai tắt JavaScript hoặc gọi thẳng API vẫn
+  // trả lời được cả tiếng sau, và điểm vẫn tính.
+  //
+  // Có khoảng ân hạn vì mọi đáp án chỉ được gửi lên MỘT LƯỢT lúc bấm nộp: một
+  // người làm xong đúng giờ nhưng bấm nộp ở giây thứ 601 sẽ mất sạch bài nếu
+  // chặn cứng ở đúng mốc.
+  if (quiz.timeLimitSec !== null) {
+    const elapsed = (answeredAt.getTime() - attempt.startedAt.getTime()) / 1000;
+    if (elapsed > quiz.timeLimitSec + LATE_ANSWER_GRACE_SEC) {
+      throw new QuizError("time_expired");
+    }
+  }
+
   // Giữ tên cũ và nghĩa cũ: số mili-giây tính từ lúc bắt đầu cả lượt làm bài.
   // Dữ liệu cũ đã ghi theo nghĩa này, đổi nghĩa của một cột đang có là làm
   // hỏng dữ liệu cũ một cách lặng lẽ. Thời gian thật của từng câu nằm ở
