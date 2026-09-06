@@ -394,6 +394,45 @@ export async function getAttemptForLearner(
 }
 
 /** Returns full graded result. Only valid for submitted attempts. */
+/**
+ * Phần đáp án của một câu, dùng cho màn hình kết quả.
+ *
+ * Trả về NHÃN của mọi phương án chứ không chỉ id: trang kết quả cần in ra
+ * "bạn chọn gì / đáp án đúng là gì", mà nó không tải riêng đề bài — trước đây
+ * chỉ có `correctOptionIds` nên chẳng dựng lại được chữ nào.
+ *
+ * `orderIndex` và `extra` phải đi kèm: `ordering` chấm theo orderIndex,
+ * `matching` ghép theo `extra.pairKey`/`extra.side`, `drag_drop_fill` theo
+ * `extra.blankIndex`. Thiếu chúng thì không dựng lại được đáp án đúng.
+ *
+ * Chỉ gọi sau khi bài đã nộp — cả hai hàm dưới đây đều chặn trạng thái khác.
+ */
+function optionsForReview(
+  options: { id: string; label: string; isCorrect: boolean; orderIndex: number; extra: unknown }[],
+) {
+  return [...options]
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+    .map((o) => ({
+      id: o.id,
+      label: o.label,
+      isCorrect: o.isCorrect,
+      orderIndex: o.orderIndex,
+      extra: (o.extra ?? null) as Record<string, unknown> | null,
+    }));
+}
+
+/**
+ * Metadata của câu hỏi được phép lộ sau khi nộp: `numerical` cần expected +
+ * tolerance để nói "đáp án đúng là 42 (±0.5)". Bỏ `acceptedRegexes` — mẫu
+ * regex là công cụ chấm, in ra chỉ làm người học rối.
+ */
+function questionMetaForReview(extra: unknown) {
+  const meta = (extra ?? {}) as Record<string, unknown>;
+  const expected = typeof meta.expected === "number" ? meta.expected : null;
+  const tolerance = typeof meta.tolerance === "number" ? meta.tolerance : null;
+  return { expected, tolerance };
+}
+
 export async function getAttemptResult(
   userId: string,
   attemptId: string,
@@ -438,6 +477,8 @@ export async function getAttemptResult(
       isCorrect: r?.isCorrect ?? false,
       confidence: r?.confidence ?? null,
       correctOptionIds,
+      options: optionsForReview(q.options),
+      meta: questionMetaForReview(q.extra),
       misconceptionCode,
     };
   });
@@ -503,14 +544,8 @@ export async function getAttemptResultAsInstructor(
       isCorrect: r?.isCorrect ?? false,
       confidence: r?.confidence ?? null,
       correctOptionIds,
-      // Expose all options so instructor UI can show labels for both picked
-      // and correct ones. SV-side `getAttemptResult` doesn't return option
-      // labels because the SV component fetches the quiz separately.
-      options: q.options.map((o) => ({
-        id: o.id,
-        label: o.label,
-        isCorrect: o.isCorrect,
-      })),
+      options: optionsForReview(q.options),
+      meta: questionMetaForReview(q.extra),
       misconceptionCode,
       // Instructor needs to know if essay/short-answer still needs grading.
       needsGrading: r?.needsGrading ?? false,

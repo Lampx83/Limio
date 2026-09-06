@@ -9,7 +9,9 @@ import {
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import FeedbackRater from "@/components/FeedbackRater";
+import RemediationLink from "@/components/RemediationLink";
 import SafeHtml from "@/components/SafeHtml";
+import AnswerBreakdown from "@/components/quiz/AnswerBreakdown";
 import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
@@ -292,6 +294,10 @@ export default async function ResultPage({
                   className="prose prose-sm max-w-none font-medium dark:prose-invert"
                 />
 
+                {/* Bạn đã chọn gì, đáp án đúng là gì — đặt TRƯỚC phản hồi và
+                    giải thích, vì cả hai đều nói về những phương án này. */}
+                <AnswerBreakdown item={item} />
+
                 {!isCorrect && fb && (
                   <div className="mt-4 rounded-xl bg-danger-50 p-4">
                     <div className="flex items-baseline justify-between gap-3">
@@ -317,12 +323,15 @@ export default async function ResultPage({
                             if (!l) return null;
                             return (
                               <li key={lid}>
-                                <Link
+                                {/* B9.2 — records uptake without delaying the click. */}
+                                <RemediationLink
+                                  deliveryId={fb.deliveryId}
+                                  lessonId={lid}
                                   href={`/learn/${l.courseSlug}/lessons/${lid}`}
                                   className="inline-flex items-center gap-1 text-sm font-medium text-danger-700 underline-offset-2 hover:underline"
                                 >
                                   {l.title}
-                                </Link>
+                                </RemediationLink>
                               </li>
                             );
                           })}
