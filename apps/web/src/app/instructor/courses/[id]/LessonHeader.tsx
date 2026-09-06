@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Pencil, Trash2, Presentation } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
@@ -38,6 +39,7 @@ export default function LessonHeader({
   moduleId,
   siblingLessonIds,
   modules,
+  courseSlug,
   hideUntaggedWarning = false,
 }: {
   lessonId: string;
@@ -53,6 +55,7 @@ export default function LessonHeader({
   moduleId?: string;
   siblingLessonIds?: string[];
   modules?: ModuleRef[];
+  courseSlug?: string;
   hideUntaggedWarning?: boolean;
 }) {
   const router = useRouter();
@@ -201,6 +204,7 @@ export default function LessonHeader({
           moduleId={moduleId}
           siblingLessonIds={siblingLessonIds}
           modules={modules}
+          courseSlug={courseSlug}
           hideUntaggedWarning={hideUntaggedWarning}
         />
         {description && (
@@ -251,6 +255,18 @@ export default function LessonHeader({
           <span className="chip-accent text-xs">chưa tag skill</span>
         )}
         <div className="ml-auto flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
+          {courseSlug && (
+            <Link
+              href={`/learn/${courseSlug}/lessons/${lessonId}?gv=1`}
+              target="_blank"
+              rel="noopener"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
+              title="Mở chế độ giảng dạy trong tab mới"
+              aria-label="Trình chiếu"
+            >
+              <Presentation className="h-3.5 w-3.5" />
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setEditing(true)}

@@ -136,6 +136,7 @@ export default function LessonSection({
           moduleId={moduleId}
           siblingLessonIds={siblingLessonIds}
           modules={modules}
+          courseSlug={courseSlug}
           hideUntaggedWarning={hideUntaggedWarning}
         />
 
