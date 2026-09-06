@@ -458,7 +458,10 @@ function inline(raw: string): string {
  * định dạng trong dòng. Dòng nào không khớp thì coi như đoạn văn — hỏng thì
  * hỏng lộ ra chứ không mất chữ.
  */
-export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSection?: string } = {}): string {
+export function markdownToHtml(
+  md: string,
+  opts: { toc?: boolean; beforeLastSection?: string; hue?: string; textHue?: string } = {},
+): string {
   const lines = md.split("\n");
   const out: string[] = [];
   // Tiêu đề cấp 2 gom lại để dựng mục lục; đếm trùng để hai mục cùng tên
@@ -467,8 +470,10 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
   const used = new Map<string, number>();
   const h2Total = lines.filter((l) => /^## \S/.test(l.trim())).length;
   // Màu của mục đang đọc dở — bảng, trích dẫn trong mục lấy theo màu này.
-  let hue: string = SECTION_HUES[0]!;
-  let textHue: string = SECTION_TEXT_HUES[0]!;
+  // Khối gấp gọn render lồng nên phải nhận màu của mục cha, nếu không nội dung
+  // bên trong nó đột ngột đổi sang màu của mục 1.
+  let hue: string = opts.hue ?? SECTION_HUES[0]!;
+  let textHue: string = opts.textHue ?? SECTION_TEXT_HUES[0]!;
   // Mục lục đánh số 1. 2. 3. thì tiêu đề trong bài cũng phải mang số ấy —
   // không có số thì người đọc phải dò lại bằng tên, đúng việc mà mục lục sinh
   // ra để khỏi phải làm.
@@ -530,6 +535,42 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
       }
       i++; // bỏ dòng đóng
       out.push(raw.join("\n"));
+      continue;
+    }
+
+    // Khối gấp gọn:  :::mau Tiêu đề hiện trên nút  …nội dung…  :::
+    //
+    // Dùng cho mẫu nộp và bài làm mẫu ở phần luyện tập. Chúng phải NẰM SẴN
+    // trong bài (người học cần tới lúc làm bài, không phải lúc đọc), nhưng
+    // hiện ra ngay thì hỏng việc: thấy bài mẫu trước khi tự nghĩ là mất phần
+    // tự nghĩ. Gấp lại thì người học tự chọn thời điểm mở.
+    //
+    // Dùng <details> của trình duyệt chứ không phải JavaScript: nó mở được
+    // bằng bàn phím, in ra vẫn còn chữ, và SafeHtml giữ nguyên thẻ này.
+    if (t.startsWith(":::")) {
+      // `:::mau <tiêu đề>` — từ khoá loại đứng ngay sau ba dấu hai chấm, không
+      // đoán theo chữ đầu: tiêu đề tiếng Việt cũng có thể bắt đầu bằng chữ
+      // thường, đoán mò thì có ngày nuốt mất một từ của tiêu đề.
+      const open = /^:::(mau)\b\s*(.*)$/.exec(t);
+      const title = (open ? open[2]! : t.slice(3)).trim() || "Xem thêm";
+      i++;
+      const inner: string[] = [];
+      while (i < lines.length && lines[i]!.trim() !== ":::") {
+        inner.push(lines[i]!);
+        i++;
+      }
+      i++; // bỏ dòng đóng
+      const body = markdownToHtml(inner.join("\n"), { toc: false, hue, textHue });
+      out.push(
+        `<details style="margin:1rem 0;border:1px solid rgba(${hue},.45);border-radius:.6rem;` +
+          `background:rgba(${hue},.05);overflow:hidden">` +
+          // Giữ tam giác mặc định của trình duyệt: nó tự xoay khi mở, còn mũi
+          // tên tự vẽ thì đứng im và chỉ sai hướng một nửa số lần.
+          `<summary style="cursor:pointer;padding:.7rem 1rem;font-size:${TEXT};font-weight:600;` +
+          `color:rgb(${textHue})">${inline(title)}</summary>` +
+          `<div style="padding:0 1rem 1rem">${body}</div>` +
+          `</details>`,
+      );
       continue;
     }
 
