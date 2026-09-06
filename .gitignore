@@ -54,3 +54,5 @@ logs/
 # B9.3 — file trung gian của quy trình làm giàu misconception (không commit)
 *.export.json
 *.misconceptions.json
+*.misconceptions.sql
+.uiux-mapping/
