@@ -513,7 +513,10 @@ body.gameshow-immersive main.mx-auto {
     display: grid;
     grid-template-columns: 16rem minmax(0, 1fr);
     gap: 2rem;
-    align-items: start;
+    /* KHÔNG dùng align-items:start. Ô lưới của mục lục phải cao bằng cả hàng
+       thì khối `sticky` bên trong nó mới có quãng đường để trôi theo; co ô lại
+       vừa nội dung là mục lục đứng im ở đầu bài rồi cuộn khuất. */
+    align-items: stretch;
     /* Cả lưới căn giữa một lần, thay vì căn giữa từng cột — căn từng cột thì
        mục lục trôi ra xa nội dung trên màn hình rất rộng. */
     max-width: 76rem;
@@ -523,10 +526,14 @@ body.gameshow-immersive main.mx-auto {
     max-width: none;
     margin-inline: 0;
   }
-  /* Trong chế độ toàn màn hình, khối phóng chính là vùng cuộn — mục lục dính
-     theo mép trên của nó, không phải mép trên trang. */
+  /* Trong chế độ toàn màn hình, chính khối phóng là vùng cuộn — nên mục lục
+     dính theo mép trên của nó chứ không phải mép trên trang (top:6rem chừa chỗ
+     cho thanh tiêu đề chỉ đúng khi cuộn cả trang). */
+  #lesson-stage:fullscreen nav[aria-label="Mục lục bài học"] {
+    align-self: stretch;
+  }
   #lesson-stage:fullscreen nav[aria-label="Mục lục bài học"] > div {
-    top: 0;
-    max-height: calc(100vh - 5rem);
+    top: 0.5rem;
+    max-height: calc(100vh - 4rem);
   }
 }
