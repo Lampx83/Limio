@@ -506,6 +506,15 @@ export default async function LessonPage({
         prevTitle={prev?.title ?? null}
         nextLessonId={next?.id ?? null}
         nextTitle={next?.title ?? null}
+        toc={
+          <LessonTocDrawer
+            slug={params.slug}
+            currentLessonId={lesson.id}
+            modules={progress.modules}
+            triggerClassName="btn btn-secondary"
+            triggerLabel={`Mục lục khoá · bài ${idx + 1}/${allLessons.length}`}
+          />
+        }
       />
 
       <AiTutorPanel lessonId={lesson.id} />

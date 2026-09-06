@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
-import { Check } from "lucide-react";
+import { useEffect, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 /**
- * Bottom navigation bar for the lesson page. Show prev/next buttons + a
- * "completed" badge. The actual auto-completion tracking lives in
- * LessonCompletionPrompt (at the top of the page) so the trackers + the API
- * call have a single owner.
+ * Thanh điều hướng cố định dưới đáy trang bài học: bài trước — mục lục khoá —
+ * bài tiếp, kèm huy hiệu đã hoàn thành.
  *
- * Still owns the lesson-view heartbeat — fired once on mount so the server
- * records lastLessonId / lastPositionSec for "continue where you left off."
+ * Hai nút điều hướng dùng kiểu nút đặc chứ không phải chữ mờ: đây là thao tác
+ * người học làm nhiều nhất trên trang, mà bản cũ để chúng cùng màu với chữ phụ
+ * nên gần như tàng hình trên nền sáng. Nút "bài tiếp" nổi hơn "bài trước" —
+ * cùng nổi như nhau thì lại không còn hướng đi mặc định nào.
+ *
+ * Việc tự đánh dấu hoàn thành nằm ở LessonCompletionPrompt (đầu trang) để
+ * phần theo dõi và lời gọi API có đúng một chủ. Ở đây chỉ giữ nhịp tim
+ * lesson-view, bắn một lần lúc mount để máy chủ ghi lastLessonId /
+ * lastPositionSec cho tính năng "học tiếp chỗ đang dở".
  */
 export default function LessonStickyActions({
   lessonId,
@@ -22,18 +27,18 @@ export default function LessonStickyActions({
   prevTitle,
   nextLessonId,
   nextTitle,
+  toc,
 }: {
   lessonId: string;
   courseSlug: string;
-  /** Server-rendered completion state. The auto-completion happens in the
-   * companion LessonCompletionPrompt component, which triggers a router.refresh
-   * after firing — so this prop becomes `true` after the next render. */
   completed: boolean;
   initialResumeSec: number;
   prevLessonId: string | null;
   prevTitle: string | null;
   nextLessonId: string | null;
   nextTitle: string | null;
+  /** Nút mở mục lục khoá học — truyền từ trang để dùng chung một drawer với đầu trang. */
+  toc?: ReactNode;
 }) {
   useEffect(() => {
     fetch(apiUrl(`/api/lessons/${lessonId}/view`), {
@@ -46,30 +51,31 @@ export default function LessonStickyActions({
 
   return (
     <>
-      {/* Spacer so page content not hidden by the fixed bar */}
-      <div aria-hidden className="h-24" />
+      {/* Chừa chỗ để nội dung cuối trang không nằm dưới thanh cố định */}
+      <div aria-hidden className="h-28" />
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-token bg-[rgb(var(--surface)/0.95)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.85)] pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-3">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-token bg-[rgb(var(--surface)/0.95)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.85)] pb-[env(safe-area-inset-bottom)] print:hidden">
+        <div className="mx-auto flex max-w-4xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
           {prevLessonId ? (
             <a
               href={`/learn/${courseSlug}/lessons/${prevLessonId}`}
               title={prevTitle ?? undefined}
               aria-label={prevTitle ? `Bài trước: ${prevTitle}` : "Bài trước"}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+              className="btn btn-secondary min-w-0 shrink-0 sm:max-w-[15rem]"
             >
-              <span aria-hidden>←</span>
+              <ArrowLeft size={16} className="shrink-0" />
               <span className="hidden sm:inline">Bài trước</span>
             </a>
           ) : (
-            <span aria-hidden className="w-10 shrink-0 sm:w-24" />
+            <span aria-hidden className="w-0 shrink-0 sm:w-28" />
           )}
 
-          <div className="flex flex-1 justify-center">
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+            {toc}
             {completed && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-success-50 px-3 py-2 text-sm font-semibold text-success-700">
-                <Check size={16} strokeWidth={2.5} />
-                <span>Đã hoàn thành</span>
+              <span className="hidden items-center gap-1.5 rounded-lg bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-700 md:inline-flex">
+                <Check size={14} strokeWidth={2.5} />
+                Đã hoàn thành
               </span>
             )}
           </div>
@@ -79,17 +85,24 @@ export default function LessonStickyActions({
               href={`/learn/${courseSlug}/lessons/${nextLessonId}`}
               title={nextTitle ?? undefined}
               aria-label={nextTitle ? `Bài tiếp: ${nextTitle}` : "Bài tiếp"}
-              className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${
-                completed
-                  ? "bg-brand-600 text-white hover:bg-brand-700"
-                  : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-              }`}
+              className="btn btn-primary min-w-0 shrink-0 sm:max-w-[18rem]"
             >
+              {/* Tên bài kế tiếp hiện ở màn rộng: biết mình đang đi đâu thì
+                  quyết định bấm tiếp hay dừng lại dễ hơn hẳn một mũi tên trống. */}
               <span className="hidden sm:inline">Bài tiếp</span>
-              <span aria-hidden>→</span>
+              {nextTitle && (
+                <span className="hidden max-w-[10rem] truncate font-normal opacity-90 lg:inline">
+                  · {nextTitle}
+                </span>
+              )}
+              <ArrowRight size={16} className="shrink-0" />
             </a>
           ) : (
-            <span aria-hidden className="w-10 shrink-0 sm:w-24" />
+            <span
+              aria-hidden
+              className="w-0 shrink-0 sm:w-28"
+              data-note="bài cuối khoá: không có nút tiếp"
+            />
           )}
         </div>
       </div>

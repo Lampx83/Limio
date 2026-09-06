@@ -12,10 +12,15 @@ export default function LessonTocDrawer({
   slug,
   currentLessonId,
   modules,
+  triggerClassName,
+  triggerLabel = "Mục lục",
 }: {
   slug: string;
   currentLessonId: string;
   modules: TocModule[];
+  /** Đổi kiểu nút mở khi đặt ở nơi khác (thanh dưới đáy dùng kiểu nút đặc). */
+  triggerClassName?: string;
+  triggerLabel?: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -43,12 +48,15 @@ export default function LessonTocDrawer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+        className={
+          triggerClassName ??
+          "inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+        }
         aria-haspopup="dialog"
         aria-expanded={open}
       >
         <List size={14} />
-        Mục lục
+        {triggerLabel}
       </button>
 
       {open && (
