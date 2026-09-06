@@ -71,6 +71,14 @@ const VocabItem = z.object({
 });
 
 const QuestionSpec = z.object({
+  /**
+   * Khoá định danh ổn định của câu hỏi, ghi vào `extra.manifestKey`.
+   *
+   * Không có nó thì thứ duy nhất để nhận ra "vẫn là câu hỏi ấy" là chính đề
+   * bài — nên sửa một chữ trong đề là script sửa-một-bài coi như câu mới và
+   * đẻ ra bản thứ hai. Đặt khoá cho câu nào dự tính còn sửa.
+   */
+  key: z.string().min(1).max(80).optional(),
   type: z.enum([
     "mcq",
     "true_false",
@@ -161,6 +169,14 @@ export const LessonSpec = z.object({
        * tự tin × đúng/sai (biết mà sai khác hẳn đoán mò mà đúng).
        */
       requireConfidence: z.boolean().optional(),
+      /**
+       * Giới hạn thời gian làm bài, tính bằng giây. Đồng hồ đếm từ lúc học
+       * viên bấm bắt đầu (`attempt.startedAt`), không phải từ lúc mở trang.
+       * Bỏ trống = không giới hạn.
+       */
+      timeLimitSec: z.number().int().min(30).max(86_400).optional(),
+      /** Số lượt làm tối đa. Bỏ trống = làm lại bao nhiêu lần cũng được. */
+      maxAttempts: z.number().int().min(1).max(100).optional(),
       questions: z.array(QuestionSpec).min(1),
     })
     .optional(),
@@ -239,6 +255,7 @@ export function expandQuestion(
     explanation: q.explanation,
     points: q.points,
     orderIndex,
+    ...(q.key ? { extra: { manifestKey: q.key } } : {}),
   };
 
   switch (q.type) {
@@ -316,6 +333,23 @@ const SECTION_HUES = [
   "13,148,136", // ngọc
   "217,150,40", // hổ phách
   "219,90,140", // hồng sen
+] as const;
+
+/**
+ * Bản đậm hơn của cùng dải màu, dùng cho CHỮ tiêu đề.
+ *
+ * Màu ở `SECTION_HUES` chỉ an toàn khi làm nền nhạt hoặc vạch kẻ. Đem nguyên
+ * chúng ra làm màu chữ thì hỏng tương phản: hổ phách gốc chỉ đạt 2.52:1 trên
+ * nền trắng, dưới cả ngưỡng 3:1 của chữ lớn. Năm giá trị dưới đây đã được đo
+ * để đạt ≥4:1 trên CẢ nền trắng lẫn nền tối #111827 — khoá học này dạy WCAG
+ * thì trang của nó không được vi phạm.
+ */
+const SECTION_TEXT_HUES = [
+  "40,118,245", // lam    — 4.20 trên trắng · 4.22 trên tối
+  "138,91,246", // tím    — 4.28 · 4.15
+  "12,141,129", // ngọc   — 4.08 · 4.34
+  "165,113,29", // hổ phách — 4.22 · 4.21
+  "214,67,124", // hồng   — 4.24 · 4.18
 ] as const;
 
 /** Xám trung tính — đọc được trên cả nền sáng lẫn nền tối. */
@@ -398,7 +432,10 @@ function zoomCjk(html: string): string {
 function inline(raw: string): string {
   const html = esc(raw)
     .replace(
-      /\[([^\]]+)\]\((https?:\/\/(?:[^()\s]|\([^()\s]*\))+)\)/g,
+      // Dạng "unrolled loop": tuyến tính, không có định lượng lồng nhau. Vẫn
+      // nhận URL có một cấp ngoặc (trang File của Wikimedia), nhưng không thể
+      // bùng nổ quay lui khi chuỗi không khớp.
+      /\[([^\]]+)\]\((https?:\/\/[^()\s]*(?:\([^()\s]*\)[^()\s]*)*)\)/g,
       `<a href="$2" target="_blank" rel="noopener noreferrer" style="text-decoration:underline">$1</a>`,
     )
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
@@ -431,6 +468,7 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
   const h2Total = lines.filter((l) => /^## \S/.test(l.trim())).length;
   // Màu của mục đang đọc dở — bảng, trích dẫn trong mục lấy theo màu này.
   let hue: string = SECTION_HUES[0]!;
+  let textHue: string = SECTION_TEXT_HUES[0]!;
   // Mục lục đánh số 1. 2. 3. thì tiêu đề trong bài cũng phải mang số ấy —
   // không có số thì người đọc phải dò lại bằng tên, đúng việc mà mục lục sinh
   // ra để khỏi phải làm.
@@ -462,7 +500,8 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
     // Chú thích đi qua inline() nên viết được [tên nguồn](link) trong đó —
     // học liệu dùng lại hình của người khác thì dòng ghi nguồn phải nằm ngay
     // dưới hình, không dồn xuống cuối bài nơi không ai đọc.
-    const img = /^!\[([^\]]*)\]\(((?:[^()\s]|\([^()\s]*\))+)(?:\s+"([^"]*)")?\)$/.exec(t);
+    const img =
+      /^!\[([^\]]*)\]\(([^()\s]*(?:\([^()\s]*\)[^()\s]*)*)(?:\s+"([^"]*)")?\)$/.exec(t);
     if (img) {
       out.push(
         `<figure style="margin:1.2rem 0">` +
@@ -506,7 +545,10 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
       used.set(id, seen + 1);
       if (seen > 0) id = `${id}-${seen + 1}`;
       if (level === 2) headings.push({ id, text, at: out.length });
-      if (level === 2) hue = SECTION_HUES[h2Index % SECTION_HUES.length]!;
+      if (level === 2) {
+        hue = SECTION_HUES[h2Index % SECTION_HUES.length]!;
+        textHue = SECTION_TEXT_HUES[h2Index % SECTION_TEXT_HUES.length]!;
+      }
       const num = level === 2 && wantToc ? ++h2Index : null;
       // scroll-margin-top: chừa chỗ cho thanh tiêu đề dính trên cùng, nếu
       // không thì nhảy tới neo sẽ để tiêu đề nằm khuất dưới thanh đó.
@@ -514,12 +556,13 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
         const badge = num
           ? `<span style="display:inline-flex;align-items:center;justify-content:center;` +
             `min-width:2rem;height:2rem;border-radius:.5rem;background:rgba(${hue},.16);` +
-            `color:rgb(${hue});font-size:1.1rem;font-weight:700;flex:none">${num}</span>`
+            `color:rgb(${textHue});font-size:1.1rem;font-weight:700;flex:none">${num}</span>`
           : "";
         out.push(
           `<h2 id="${id}" style="font-size:${size};margin:2.4rem 0 .9rem;scroll-margin-top:5rem;` +
             `display:flex;align-items:center;gap:.65rem;padding-bottom:.45rem;` +
-            `border-bottom:2px solid rgba(${hue},.38)">${badge}<span>${inline(text)}</span></h2>`,
+            `border-bottom:2px solid rgba(${hue},.38);color:rgb(${textHue})">` +
+            `${badge}<span>${inline(text)}</span></h2>`,
         );
       } else {
         // Cấp 3 nhận cùng màu với mục cha, đánh dấu bằng một vạch dọc ngắn —
@@ -535,7 +578,8 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
           : "";
         out.push(
           `<h${level} id="${id}" style="font-size:${size};margin:1.5rem 0 .4rem;scroll-margin-top:5rem;` +
-            `border-left:3px solid rgba(${hue},.55);padding-left:.6rem">${inline(name)}${chip}</h${level}>`,
+            `border-left:3px solid rgba(${hue},.55);padding-left:.6rem;color:rgb(${textHue})">` +
+            `${inline(name)}${chip}</h${level}>`,
         );
       }
       i++;
@@ -621,10 +665,11 @@ export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSect
     const items = headings
       .map((h, idx) => {
         const c = SECTION_HUES[idx % SECTION_HUES.length]!;
+        const ct = SECTION_TEXT_HUES[idx % SECTION_TEXT_HUES.length]!;
         return (
           `<li style="margin:.35rem 0;break-inside:avoid;display:flex;align-items:center;gap:.55rem">` +
           `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:1.6rem;` +
-          `height:1.6rem;border-radius:.4rem;background:rgba(${c},.16);color:rgb(${c});` +
+          `height:1.6rem;border-radius:.4rem;background:rgba(${c},.16);color:rgb(${ct});` +
           `font-size:.95rem;font-weight:700;flex:none">${idx + 1}</span>` +
           `<a href="#${h.id}" style="text-decoration:none">${inline(h.text)}</a></li>`
         );
@@ -823,11 +868,18 @@ export function countSections(body: string | undefined): number {
   return (body ?? "").split("\n").filter((l) => /^## \S/.test(l.trim())).length;
 }
 
+/**
+ * Thứ tự các khối của một bài học.
+ *
+ * Mục tiêu LUÔN đứng đầu, tổng kết LUÔN đứng cuối — kể cả khi bài có bảng từ
+ * vựng, hội thoại hay bảng mẫu câu chen giữa. Người học phải biết mình sắp
+ * học gì trước khi đọc bất cứ thứ gì khác, và câu chốt lại phải là thứ cuối
+ * cùng họ nhìn thấy. Trước đây hai khối này bị gói chung vào khối thân bài
+ * nên rơi xuống giữa trang ở những bài mở đầu bằng bảng từ vựng.
+ */
 export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   const blocks: string[] = [];
-  if (l.vocab?.length) blocks.push(vocabTable(l.vocab));
-  if (l.dialogue) blocks.push(renderDialogue(l.dialogue));
-  if (l.patterns) blocks.push(patternTable(l.patterns));
+
   // ~200 từ/phút cho văn xuôi tiếng Việt; làm tròn lên phút gần nhất.
   const words = (l.body ?? "").split(/\s+/).filter(Boolean).length;
   const chips: string[] = [];
@@ -835,15 +887,18 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   const sectionCount = countSections(l.body);
   if (sectionCount > 0) chips.push(`${sectionCount} phần`);
   if (l.quiz?.questions.length) chips.push(`${l.quiz.questions.length} câu ôn tập`);
+
   const head =
     (chips.length > 1 ? metaBar(chips) : "") +
     (l.objectives?.length ? objectivesBox(l.objectives) : "");
-  const tail = l.summary?.length ? summaryBox(l.summary) : undefined;
-  if (l.body) {
-    blocks.push(head + markdownToHtml(l.body, { toc: l.toc, beforeLastSection: tail }));
-  } else if (head || tail) {
-    blocks.push(head + (tail ?? ""));
-  }
+  if (head) blocks.push(head);
+
+  if (l.vocab?.length) blocks.push(vocabTable(l.vocab));
+  if (l.dialogue) blocks.push(renderDialogue(l.dialogue));
+  if (l.patterns) blocks.push(patternTable(l.patterns));
+  if (l.body) blocks.push(markdownToHtml(l.body, { toc: l.toc }));
+
+  if (l.summary?.length) blocks.push(summaryBox(l.summary));
   return blocks;
 }
 
@@ -1142,6 +1197,8 @@ async function main() {
             title: l.quiz.title,
             passThresholdPct: l.quiz.passThresholdPct,
             requireConfidence: l.quiz.requireConfidence,
+            timeLimitSec: l.quiz.timeLimitSec,
+            maxAttempts: l.quiz.maxAttempts,
           },
         );
         for (const [qi, q] of l.quiz.questions.entries()) {
