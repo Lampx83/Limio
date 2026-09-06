@@ -446,7 +446,7 @@ export default async function LessonPage({
       </div>
 
       {/* Nội dung bài + mục lục nổi bên trái (từ 1280px trở lên) */}
-      <div className="mt-8 xl:grid xl:grid-cols-[14rem_minmax(0,1fr)] xl:gap-8">
+      <div className="mt-8 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8">
         <LessonSectionNav containerId="lesson-content" />
         <div>
         <LessonContentToolbar

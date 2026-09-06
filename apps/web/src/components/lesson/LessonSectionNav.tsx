@@ -83,7 +83,7 @@ export default function LessonSectionNav({ containerId }: { containerId: string 
       className="hidden xl:block print:hidden"
     >
       <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-faint">
           Trong bài này
         </p>
         <ol className="space-y-0.5 border-l border-token">
@@ -94,7 +94,7 @@ export default function LessonSectionNav({ containerId }: { containerId: string 
                 <a
                   href={`#${s.id}`}
                   aria-current={active ? "true" : undefined}
-                  className={`-ml-px flex gap-2 border-l-2 py-1.5 pl-3 text-xs leading-snug transition-colors ${
+                  className={`-ml-px flex gap-2 border-l-2 py-2 pl-3 text-sm leading-snug transition-colors ${
                     active
                       ? "border-brand-600 font-semibold text-[rgb(var(--text))]"
                       : "border-transparent text-muted hover:border-token hover:text-[rgb(var(--text))]"
