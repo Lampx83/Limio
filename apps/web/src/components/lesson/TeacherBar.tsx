@@ -2,16 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  EyeOff,
-  MonitorPlay,
-  Timer,
-  Link2,
-  Link2Off,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, MonitorPlay, Pause, Play } from "lucide-react";
 
 /**
  * Thanh điều khiển của giảng viên khi đang dạy: bật/tắt ghi chú, mở cửa sổ
@@ -35,6 +26,58 @@ function mmss(totalSec: number): string {
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * Công tắc bật/tắt.
+ *
+ * Nút cũ chỉ đổi chữ ("Hiện ghi chú" ↔ "Ẩn ghi chú") nên không ai đọc ra được
+ * chữ ấy đang tả TRẠNG THÁI HIỆN TẠI hay VIỆC SẼ XẢY RA khi bấm — hai cách hiểu
+ * ngược nhau hoàn toàn. Ở đây tên tính năng đứng yên, còn trạng thái nói bằng
+ * ba thứ cùng lúc: vị trí nút gạt, màu, và chữ BẬT/TẮT.
+ */
+function Toggle({
+  on,
+  label,
+  onToggle,
+  title,
+}: {
+  on: boolean;
+  label: string;
+  onToggle: () => void;
+  title: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={onToggle}
+      title={title}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+        on
+          ? "border-brand-600 bg-brand-soft text-brand-700"
+          : "border-token bg-[rgb(var(--surface))] text-muted"
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`relative h-4 w-7 shrink-0 rounded-full transition-colors ${
+          on ? "bg-brand-600" : "bg-[rgb(var(--border))]"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-all ${
+            on ? "left-3.5" : "left-0.5"
+          }`}
+        />
+      </span>
+      {label}
+      <span className={`text-xs font-bold ${on ? "text-brand-700" : "text-faint"}`}>
+        {on ? "BẬT" : "TẮT"}
+      </span>
+    </button>
+  );
 }
 
 export default function TeacherBar({
@@ -115,9 +158,61 @@ export default function TeacherBar({
     [sections, linked],
   );
 
+  /**
+   * Khi bật Đồng bộ, màn chiếu bám theo lúc bạn CUỘN, không chỉ lúc bấm ‹ ›.
+   *
+   * Gửi kèm `ratio` — bạn đang ở đâu trong mục hiện tại, tính theo phần trăm —
+   * thay vì gửi số pixel: màn chiếu giấu thanh điều hướng và để cỡ chữ lớn hơn
+   * nên cùng một mục ở đó cao khác hẳn, copy pixel sang là lệch ngay.
+   *
+   * Gom việc gửi vào một khung hình bằng requestAnimationFrame; cuộn một cái
+   * bắn ra hàng chục sự kiện, gửi hết thì màn chiếu giật.
+   */
+  useEffect(() => {
+    if (!linked || sections.length === 0) return;
+    // KHÔNG dùng requestAnimationFrame: cửa sổ điều khiển có lúc bị che (bạn
+    // bấm sang cửa sổ màn chiếu), lúc ấy rAF không chạy — mà cờ "đang chờ vẽ"
+    // thì đã bật, nên mọi lần cuộn sau đều bị bỏ qua và màn chiếu đứng im vĩnh
+    // viễn. Hẹn giờ ngắn thì chạy ở mọi trạng thái cửa sổ.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const send = () => {
+      timer = null;
+      const marks = sections
+        .map((s) => document.getElementById(s.id))
+        .filter((e): e is HTMLElement => e !== null);
+      if (marks.length === 0) return;
+      // Mốc đọc lấy hơi dưới mép trên: mục vừa chạm mép chưa phải mục đang đọc.
+      const y = window.scrollY + 120;
+      let i = 0;
+      for (let k = 0; k < marks.length; k++) {
+        if (marks[k]!.getBoundingClientRect().top + window.scrollY <= y) i = k;
+      }
+      const top = marks[i]!.getBoundingClientRect().top + window.scrollY;
+      const nextTop =
+        i + 1 < marks.length
+          ? marks[i + 1]!.getBoundingClientRect().top + window.scrollY
+          : document.documentElement.scrollHeight;
+      const ratio = Math.min(1, Math.max(0, (y - top) / Math.max(1, nextTop - top)));
+      setCurrent(i);
+      chan.current?.postMessage({ type: "goto", id: sections[i]!.id, ratio });
+    };
+    const onScroll = () => {
+      if (!timer) timer = setTimeout(send, 120);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    // Bật Đồng bộ là màn chiếu nhảy về chỗ bạn đang đứng ngay, không phải chờ
+    // tới lần cuộn kế tiếp — bấm một nút mà không thấy gì đổi thì ai cũng tưởng
+    // nút hỏng.
+    send();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (timer) clearTimeout(timer);
+    };
+  }, [linked, sections]);
+
   const openStage = () => {
     const url = `${pathname}?stage=1`;
-    window.open(url, "limio-stage", "noopener=no,width=1280,height=800");
+    window.open(url, "limio-stage", "width=1280,height=800");
     setRunning(true);
   };
 
@@ -138,22 +233,32 @@ export default function TeacherBar({
         Chế độ giảng viên
       </span>
 
-      <button
-        type="button"
-        onClick={toggleNotes}
+      <Toggle
+        on={teacherMode}
+        label="Ghi chú"
+        onToggle={toggleNotes}
         title={
           teacherMode
-            ? "Giấu ghi chú đi. Học viên chưa bao giờ thấy chúng — nút này chỉ đổi màn hình của bạn."
+            ? "Ghi chú giảng viên đang hiện trên màn hình của bạn. Tắt để giấu đi. Học viên chưa bao giờ thấy chúng."
             : noteCount > 0
-              ? `Hiện ${noteCount} ghi chú xen trong bài. Chỉ bạn thấy; địa chỉ trang đổi thành ?gv=1 nên đánh dấu trang được.`
+              ? `Bật để hiện ${noteCount} ghi chú xen trong bài. Chỉ mình bạn thấy.`
               : "Bài này chưa có ghi chú nào. Thêm ở trang soạn khoá: chọn hoạt động “Ghi chú giảng viên”."
         }
-        className="btn-pill bg-[rgb(var(--surface))]"
-      >
-        {teacherMode ? <EyeOff size={16} /> : <Eye size={16} />}
-        {teacherMode ? "Ẩn ghi chú" : noteCount > 0 ? `Hiện ghi chú (${noteCount})` : "Ghi chú (chưa có)"}
-      </button>
+      />
 
+      <Toggle
+        on={linked}
+        label="Màn chiếu bám theo"
+        onToggle={() => setLinked((v) => !v)}
+        title={
+          linked
+            ? "Màn chiếu đang đi theo bạn: bạn cuộn tới đâu, lớp thấy tới đó. Tắt nếu muốn đọc trước phần sau."
+            : "Màn chiếu đang đứng yên. Bật để nó đi theo chỗ bạn đang xem."
+        }
+      />
+
+      {/* Đây là HÀNH ĐỘNG, không phải công tắc — nên để dạng nút đặc, không có
+          nút gạt, và trạng thái "đang mở" nói riêng bằng một chấm xanh bên cạnh. */}
       <button
         type="button"
         onClick={openStage}
@@ -162,10 +267,16 @@ export default function TeacherBar({
             ? "Đưa cửa sổ màn chiếu ra trước. Bấm lại không mở thêm cửa sổ mới."
             : "Mở cửa sổ chỉ có nội dung để kéo sang máy chiếu (F11 cho toàn màn hình). Đồng hồ cũng bắt đầu chạy."
         }
-        className="btn-pill bg-[rgb(var(--surface))]"
+        className="inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
       >
         <MonitorPlay size={16} />
-        {stageOpen ? "Màn chiếu đang mở" : "Mở màn chiếu"}
+        Mở màn chiếu
+        {stageOpen && (
+          <span className="ml-1 inline-flex items-center gap-1 text-xs font-semibold text-success-700">
+            <span aria-hidden className="h-2 w-2 rounded-full bg-success-500" />
+            đang mở
+          </span>
+        )}
       </button>
 
       {sections.length > 1 && (
@@ -175,12 +286,13 @@ export default function TeacherBar({
             onClick={() => goto(Math.max(0, current - 1))}
             disabled={current === 0}
             aria-label="Mục trước"
-            title="Về mục trước. Màn chiếu nhảy theo nếu đang bật Đồng bộ."
+            title="Về mục trước. Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
             className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
           >
             <ChevronLeft size={16} />
           </button>
           <span className="max-w-[16rem] truncate px-1 text-sm">
+            <span className="text-faint">Mục </span>
             {current + 1}/{sections.length} · {sections[current]?.text ?? lessonTitle}
           </span>
           <button
@@ -188,7 +300,7 @@ export default function TeacherBar({
             onClick={() => goto(Math.min(sections.length - 1, current + 1))}
             disabled={current >= sections.length - 1}
             aria-label="Mục sau"
-            title="Sang mục sau. Màn chiếu nhảy theo nếu đang bật Đồng bộ."
+            title="Sang mục sau. Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
             className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
           >
             <ChevronRight size={16} />
@@ -198,28 +310,22 @@ export default function TeacherBar({
 
       <button
         type="button"
-        onClick={() => setLinked((v) => !v)}
-        aria-pressed={linked}
-        title={
-          linked
-            ? "Màn chiếu đang đi theo bạn. Tắt đi nếu muốn đọc trước phần sau mà lớp vẫn nhìn phần hiện tại."
-            : "Màn chiếu đang đứng yên — bạn xem gì cũng không ảnh hưởng tới lớp. Bật lại để nó đi theo."
-        }
-        className="btn-pill bg-[rgb(var(--surface))]"
-      >
-        {linked ? <Link2 size={16} /> : <Link2Off size={16} />}
-        {linked ? "Đồng bộ" : "Rời nhau"}
-      </button>
-
-      <button
-        type="button"
         onClick={() => setRunning((r) => !r)}
         onDoubleClick={() => setElapsed(0)}
-        title="Đồng hồ buổi dạy: bấm để chạy hoặc dừng, bấm đúp để về 00:00 (dùng khi bấm giờ từng hoạt động)."
-        className="btn-pill ml-auto bg-[rgb(var(--surface))] tabular-nums"
+        title={
+          running
+            ? "Đồng hồ đang chạy — bấm để tạm dừng, bấm đúp để về 00:00."
+            : "Đồng hồ đang dừng — bấm để chạy, bấm đúp để về 00:00."
+        }
+        className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium tabular-nums transition-colors ${
+          running
+            ? "border-brand-600 bg-brand-soft text-brand-700"
+            : "border-token bg-[rgb(var(--surface))] text-muted"
+        }`}
       >
-        <Timer size={16} />
+        {running ? <Pause size={16} /> : <Play size={16} />}
         {mmss(elapsed)}
+        <span className="text-xs font-semibold">{running ? "đang chạy" : "đang dừng"}</span>
       </button>
     </div>
   );
@@ -235,9 +341,25 @@ export function StageListener({ lessonId }: { lessonId: string }) {
     const c = new BroadcastChannel(channelName(lessonId));
     c.postMessage({ type: "stage-hello" });
     c.onmessage = (e) => {
-      if (e.data?.type === "goto" && typeof e.data.id === "string") {
-        document.getElementById(e.data.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (e.data?.type !== "goto" || typeof e.data.id !== "string") return;
+      const el = document.getElementById(e.data.id);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const ratio = typeof e.data.ratio === "number" ? e.data.ratio : null;
+      if (ratio === null) {
+        // Lệnh nhảy mục từ nút ‹ ›: cuộn mượt cho lớp nhìn thấy mình đang đi đâu.
+        window.scrollTo({ top, behavior: "smooth" });
+        return;
       }
+      // Bám theo cuộn: nội suy trong chính mục ấy ở KÍCH THƯỚC CỦA MÀN CHIẾU,
+      // và cuộn thẳng — cuộn mượt ở đây sẽ luôn chạy sau tay người dạy.
+      const marks = [...document.querySelectorAll<HTMLElement>("#lesson-content h2[id]")];
+      const idx = marks.findIndex((m) => m.id === el.id);
+      const nextTop =
+        idx >= 0 && idx + 1 < marks.length
+          ? marks[idx + 1]!.getBoundingClientRect().top + window.scrollY
+          : document.documentElement.scrollHeight;
+      window.scrollTo({ top: top + ratio * Math.max(0, nextTop - top), behavior: "auto" });
     };
     const bye = () => c.postMessage({ type: "stage-bye" });
     window.addEventListener("pagehide", bye);
