@@ -202,6 +202,58 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "1.1-sai-tang",
+                "prompt": "Nhật ký hệ thống cho thấy 40% sinh viên mở trang 'Nộp bài' rồi thoát ra mà không nộp. Nhóm đề xuất đổi nút 'Nộp bài' sang màu đỏ cho nổi. Vấn đề của đề xuất này là gì?",
+                "explanation": "Đổi màu là can thiệp ở tầng bề mặt, trong khi ta chưa biết người học tắc ở đâu — có thể họ không tìm thấy chỗ đính kèm, không rõ định dạng file được nhận, hay sợ nộp nhầm là mất lượt. Sửa bề mặt khi chưa biết nguyên nhân thì cùng lắm là đổi chỗ của vấn đề.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nó sửa ở tầng bề mặt trong khi chưa biết người học tắc ở tầng nào",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Màu đỏ không hợp với bộ nhận diện của trường",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có vấn đề gì: nút nổi hơn thì tỉ lệ nộp sẽ tăng",
+                    "isCorrect": false,
+                    "misconception": "uiux.ui-equals-ux"
+                  },
+                  {
+                    "label": "Phải hỏi ý kiến giảng viên trước khi đổi bất cứ thứ gì",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.1-bang-chung-ux",
+                "prompt": "Bằng chứng nào dưới đây nói về một vấn đề <strong>trải nghiệm</strong> chứ không phải một vấn đề <strong>thẩm mỹ giao diện</strong>?",
+                "explanation": "Vấn đề trải nghiệm lộ ra ở hành vi: người dùng dừng lại, quay lui, làm sai, hoặc bỏ đi ở một bước cụ thể. Ý kiến về màu sắc hay phông chữ là nhận xét bề mặt — quan trọng, nhưng không cho biết luồng việc có chạy được không.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Trong 8 buổi test, 6 người quay lui ở bước chọn lớp vì không biết mã lớp lấy ở đâu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ba giảng viên nói phông chữ hơi nhỏ và màu xanh hơi nhạt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ảnh bìa khoá học chưa được căn giữa trên màn hình lớn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Một sinh viên bảo giao diện 'trông cũ, không hiện đại'",
+                    "isCorrect": false,
+                    "misconception": "uiux.ui-equals-ux"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Một ứng dụng luyện thi có giao diện rất chỉn chu, nhưng người học phải qua 9 màn hình mới bắt đầu làm được một bài luyện tập, và thường bỏ giữa chừng ở bước chọn dạng bài. Vấn đề chính nằm ở đâu?",
                 "explanation": "Chỉn chu về thị giác không bù được một luồng dài và rối. Đây là vấn đề của trải nghiệm — cụ thể là số bước và cách bố trí luồng — nên phải sửa từ luồng chứ không từ lớp trang trí.",
                 "points": 2,
@@ -431,6 +483,56 @@
             "title": "Kiểm tra bài 1.2",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "1.2-tuong-tu",
+                "prompt": "Trong danh sách hoạt động của một khoá học, bài đọc, bài kiểm tra và bài nộp đang hiện giống hệt nhau, chỉ khác chữ. Cách sửa nào dùng đúng nguyên lý <strong>tương tự</strong> của Gestalt?",
+                "explanation": "Nguyên lý tương tự: những gì trông giống nhau được hiểu là cùng loại. Cho mỗi loại hoạt động một dấu hiệu thị giác nhất quán (biểu tượng + màu) thì người học phân loại được cả danh sách bằng một cái liếc, trước khi đọc chữ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cho mỗi loại hoạt động một biểu tượng và một màu riêng, dùng nhất quán cả khoá",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tăng khoảng cách giữa các dòng cho thoáng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đổi phông chữ của tiêu đề danh sách sang kiểu đậm hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sắp xếp danh sách theo thứ tự chữ cái",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.2-vi-tri-dau-cuoi",
+                "prompt": "Một trang hướng dẫn nộp bài liệt kê 9 bước như nhau. Sinh viên nhớ bước 1 và bước 9, hay quên các bước giữa. Hiện tượng này gọi là gì, và cách xử lý hợp lý nhất là gì?",
+                "explanation": "Hiệu ứng vị trí đầu – cuối: mục đầu và mục cuối được nhớ tốt hơn mục ở giữa. Không chống lại nó bằng cách hô hào 'đọc kỹ' — hãy chia 9 bước thành ba nhóm ba bước, để mỗi nhóm lại có đầu và cuối của riêng nó.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hiệu ứng vị trí đầu – cuối; nên gộp 9 bước thành ba nhóm nhỏ có tiêu đề riêng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Định luật Fitts; nên làm các bước ở giữa to hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Định luật Hick; nên bỏ bớt bốn bước ở giữa đi cho gọn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nguyên lý khép kín; nên vẽ khung bao quanh cả chín bước",
+                    "isCorrect": false
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "key": "1.2-gan-nhau",
@@ -699,6 +801,114 @@
             "passThresholdPct": 60,
             "questions": [
               {
+                "type": "mcq",
+                "key": "1.3-phan-ky-hoi-tu",
+                "prompt": "Nhóm bạn đang ở nhịp <strong>Khám phá</strong> của Kim cương đôi. Việc nào dưới đây <em>phá</em> đúng tinh thần của nhịp này?",
+                "explanation": "Khám phá là nhịp phân kỳ: mở rộng hiểu biết, thu thập càng nhiều góc nhìn càng tốt, chưa chốt gì. Chốt sớm một giải pháp ở đây nghĩa là ba nhịp còn lại chỉ đi trang trí cho một phán đoán chưa được kiểm chứng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chốt luôn giải pháp là 'làm một ứng dụng nhắc lịch nộp bài' rồi mới đi phỏng vấn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Phỏng vấn cả sinh viên nộp đúng hạn lẫn sinh viên hay trễ hạn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đọc nhật ký hệ thống xem sinh viên hay bỏ dở ở màn hình nào",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Quan sát một buổi học thật để xem giảng viên nhắc bài như thế nào",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "1.3-thu-tu-sau-giai-doan",
+                "prompt": "Sắp xếp sáu giai đoạn làm việc thực tế theo đúng thứ tự.",
+                "explanation": "Sáu giai đoạn đi từ hiểu bối cảnh tới đo lường sau phát hành. Thứ tự này không phải nghi thức: mỗi giai đoạn tạo ra đầu vào cho giai đoạn kế, nên nhảy cóc là làm giai đoạn sau bằng phỏng đoán.",
+                "points": 3,
+                "sequence": [
+                  "Hiểu bối cảnh và người dùng",
+                  "Nghiên cứu và tổng hợp dữ liệu",
+                  "Phát biểu vấn đề và ý tưởng giải pháp",
+                  "Dựng wireframe và prototype",
+                  "Kiểm thử với người dùng thật",
+                  "Bàn giao, phát hành và đo lường"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.3-hieu-hai-ve",
+                "prompt": "Giai đoạn 'Hiểu' có hai vế. Nhóm bạn đã phỏng vấn kỹ 10 sinh viên nhưng dự án vẫn đổ vỡ lúc bàn giao vì tính năng đề xuất cần dữ liệu điểm mà phòng đào tạo không được phép chia sẻ. Vế nào đã bị bỏ qua?",
+                "explanation": "Hiểu người dùng mới là một vế. Vế kia là hiểu bối cảnh triển khai: ai sở hữu dữ liệu, quy định nào ràng buộc, hệ thống hiện có làm được gì. Bỏ vế này thì giải pháp đúng về nhu cầu nhưng không thể tồn tại trong thực tế.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vế bối cảnh: ràng buộc về dữ liệu, quy định và hệ thống sẵn có",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vế người dùng: cần phỏng vấn thêm ít nhất 20 sinh viên nữa",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vế thẩm mỹ: bản thiết kế chưa đủ đẹp để thuyết phục phòng đào tạo",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không vế nào cả — đây là rủi ro không thể lường trước",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "1.3-cach-thu-thap",
+                "prompt": "Nối mỗi cách thu thập dữ liệu với câu hỏi mà nó trả lời tốt nhất.",
+                "explanation": "Mỗi phương pháp mạnh ở một loại câu hỏi. Phỏng vấn cho biết vì sao; quan sát cho biết người ta thật sự làm gì (khác với điều họ kể); nhật ký hệ thống cho biết chuyện đó xảy ra nhiều đến đâu; khảo sát cho biết một ý kiến phổ biến tới mức nào.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Phỏng vấn sâu",
+                    "right": "Vì sao người học làm như vậy?"
+                  },
+                  {
+                    "left": "Quan sát tại chỗ",
+                    "right": "Thực tế họ thao tác thế nào, khác gì lời kể?"
+                  },
+                  {
+                    "left": "Nhật ký hệ thống",
+                    "right": "Chuyện đó xảy ra ở bao nhiêu phần trăm lượt dùng?"
+                  },
+                  {
+                    "left": "Khảo sát diện rộng",
+                    "right": "Ý kiến này phổ biến tới đâu trong cả lớp?"
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "1.3-vong-lap",
+                "prompt": "Kết quả kiểm thử cho thấy người học hiểu sai một khái niệm cốt lõi. Theo tinh thần quy trình, nhóm nên quay lại giai đoạn nghiên cứu chứ không chỉ sửa nhãn trên màn hình.",
+                "explanation": "Đúng. Hiểu sai khái niệm là dấu hiệu mô hình tư duy của người học khác mô hình của nhóm thiết kế — đó là phát hiện thuộc về nhịp 'Khám phá', không phải một lỗi chữ. Sửa nhãn mà không hiểu vì sao họ hiểu sai thì lần sau lại hỏng ở chỗ khác.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false,
+                    "misconception": "uiux.process-linear"
+                  }
+                ]
+              },
+              {
                 "type": "ordering",
                 "prompt": "Sắp xếp bốn nhịp của mô hình Kim cương đôi theo đúng thứ tự.",
                 "explanation": "Hai nhịp đầu làm rõ vấn đề, hai nhịp sau làm rõ giải pháp. Nhảy vào giải pháp trước khi chốt vấn đề là lỗi quy trình phổ biến nhất.",
@@ -860,6 +1070,173 @@
             "passThresholdPct": 60,
             "questions": [
               {
+                "type": "ordering",
+                "key": "1.4-ba-cau",
+                "prompt": "Sắp xếp ba câu bảo vệ một quyết định thiết kế theo thứ tự nên nói.",
+                "explanation": "Trước hết phải rõ đang nói về ai và họ đang cố làm gì, rồi mới đưa bằng chứng cho tình huống ấy, cuối cùng nhận rõ mình đánh đổi cái gì. Đảo thứ tự thì bằng chứng trở thành số liệu không có chủ, còn đánh đổi thành lời thanh minh.",
+                "points": 3,
+                "sequence": [
+                  "Người dùng nào, đang cố làm gì?",
+                  "Bằng chứng nào cho thấy điều đó?",
+                  "Ta đang đánh đổi cái gì, và bù lại bằng cách nào?"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "key": "1.4-cau-thu-hai",
+                "prompt": "Ba câu bảo vệ một quyết định: người dùng nào đang cố làm gì — ______ nào cho thấy điều đó — ta đánh đổi cái gì.",
+                "explanation": "Bằng chứng. Đây là câu biến cuộc họp từ so cảm nhận thành so dữ liệu: quan sát trong buổi test, số liệu hệ thống, hay một trích dẫn từ phỏng vấn.",
+                "points": 1,
+                "answers": [
+                  "bằng chứng",
+                  "bang chung",
+                  "chứng cứ",
+                  "dữ liệu"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.4-nhan-phan-hoi",
+                "prompt": "Trong buổi duyệt, trưởng bộ môn nói: 'Tôi không thích màn hình này lắm.' Phản ứng nào hữu ích nhất?",
+                "explanation": "Nhận xét dạng cảm nhận thường là bề nổi của một lo ngại cụ thể. Việc của nhà thiết kế là hỏi để tìm lo ngại ấy — không phải sửa ngay theo lời, cũng không phải bảo vệ bản thiết kế bằng mọi giá.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hỏi: 'Khi thầy/cô nhìn màn hình này, chỗ nào khiến thầy/cô thấy sinh viên sẽ vướng?'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sửa ngay theo ý người có chức vụ cao nhất trong phòng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giải thích rằng bản thiết kế đã theo đúng hệ thống thiết kế nên không đổi được",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ghi nhận rồi bỏ qua, vì đây chỉ là ý kiến cá nhân",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.4-lxd-khac-gi",
+                "prompt": "Điều gì phân biệt rõ nhất người làm <strong>thiết kế trải nghiệm học tập (LXD)</strong> với người làm UX sản phẩm nói chung?",
+                "explanation": "Sản phẩm thường coi 'dễ và nhanh' là tốt. Học tập thì không phải lúc nào cũng vậy: một số khó khăn là cần thiết để người học nhớ và chuyển được sang tình huống mới. LXD phải cân giữa trải nghiệm mượt và kết quả học thật.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "LXD phải cân giữa 'dễ dùng' và 'học được', vì có những khó khăn cần thiết cho việc học",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "LXD không cần nghiên cứu người dùng vì đã có chương trình đào tạo",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "LXD chỉ làm việc với hình ảnh và video, không đụng tới luồng tác vụ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "LXD dùng công cụ thiết kế khác hẳn, không dùng Figma",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.4-muc-tieu-dung",
+                "prompt": "Mục tiêu học tập nào dưới đây <strong>kiểm tra được</strong>?",
+                "explanation": "Mục tiêu phải nói được người học sẽ làm gì mà người khác quan sát được. 'Hiểu', 'nắm được', 'có ý thức về' đều xảy ra trong đầu — không ai nhìn thấy, nên cũng không ai chấm được.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chỉ ra được ba nguyên lý Gestalt đang bị vi phạm trên một màn hình cho trước",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hiểu sâu sắc về các nguyên lý thiết kế giao diện",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nắm được tầm quan trọng của trải nghiệm người dùng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Có ý thức về khả năng tiếp cận khi thiết kế",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "1.4-bloom",
+                "prompt": "Nối mỗi động từ với mức nhận thức tương ứng trong thang Bloom.",
+                "explanation": "Chọn động từ tức là chọn mức nhận thức, và mức nhận thức quyết định luôn hình thức kiểm tra: 'kể tên' chấm bằng câu trắc nghiệm, 'thiết kế' thì phải chấm bằng sản phẩm.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Kể tên, liệt kê",
+                    "right": "Nhớ"
+                  },
+                  {
+                    "left": "Giải thích, tóm tắt",
+                    "right": "Hiểu"
+                  },
+                  {
+                    "left": "So sánh, phân biệt",
+                    "right": "Phân tích"
+                  },
+                  {
+                    "left": "Thiết kế, dựng",
+                    "right": "Sáng tạo"
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "1.4-tu-quyet",
+                "prompt": "Vì nhà thiết kế là người hiểu người dùng nhất trong nhóm, họ nên tự quyết định các vấn đề thiết kế thay vì bàn với lập trình viên và người phụ trách nội dung.",
+                "explanation": "Sai. Lập trình viên biết cái gì làm được trong thời gian nào, người phụ trách nội dung biết chương trình phải phủ những gì. Quyết định tách khỏi hai ràng buộc ấy thường quay lại thành bản vẽ không ai dựng nổi.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.4-ban-giao-dev",
+                "prompt": "Sắp bàn giao màn hình 'Danh sách bài tập' cho lập trình. Thứ nào dưới đây lập trình viên cần mà bản thiết kế hay thiếu nhất?",
+                "explanation": "Trạng thái rìa — danh sách rỗng, đang tải, lỗi mạng, tên bài quá dài — chiếm phần lớn thời gian lập trình nhưng ít khi được vẽ. Thiếu chúng thì mỗi lập trình viên tự bịa một kiểu, và giao diện vỡ đúng ở những lúc người học cần nó nhất.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Các trạng thái rìa: danh sách rỗng, đang tải, lỗi mạng, nội dung quá dài",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "File ảnh bìa ở độ phân giải cao nhất",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bản trình bày ý tưởng cho ban giám hiệu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Danh sách các phông chữ thay thế khi in",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
                 "type": "mcq",
                 "prompt": "Bộ phận tuyển sinh yêu cầu: 'Thêm một banner quảng bá khoá học trả phí to ở giữa màn hình đang làm bài kiểm tra'. Cách phản hồi có tính thiết kế nhất là gì?",
                 "explanation": "Yêu cầu thường được phát biểu dưới dạng giải pháp. Hỏi ngược về mối lo phía sau giúp tìm ra vấn đề thật, từ đó có thể có cách giải ít cắt ngang việc học hơn.",
@@ -962,6 +1339,155 @@
             "title": "Kiểm tra bài 1.5",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "matching",
+                "key": "1.5-moc-dong-gop",
+                "prompt": "Nối mỗi cột mốc với đóng góp chính của nó cho giao diện ngày nay.",
+                "explanation": "Mỗi mốc bỏ đi một rào cản: dòng lệnh đòi nhớ cú pháp, WIMP cho nhìn thấy lựa chọn, Macintosh đưa nó ra thị trường đại chúng, web thêm liên kết và nút quay lui, cảm ứng bỏ luôn thiết bị trung gian.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Xerox PARC",
+                    "right": "Cửa sổ, biểu tượng, trình đơn, con trỏ (WIMP)"
+                  },
+                  {
+                    "left": "Macintosh 1984",
+                    "right": "Đưa giao diện đồ hoạ tới người dùng phổ thông"
+                  },
+                  {
+                    "left": "Web những năm 1990",
+                    "right": "Liên kết và nút quay lui giữa các trang"
+                  },
+                  {
+                    "left": "Điện thoại cảm ứng",
+                    "right": "Chạm thẳng vào đối tượng, không cần thiết bị trung gian"
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "1.5-cli-kem-hon",
+                "prompt": "Giao diện dòng lệnh luôn kém hiệu quả hơn giao diện đồ hoạ với mọi người dùng.",
+                "explanation": "Sai. Với người đã thạo, dòng lệnh nhanh hơn và tự động hoá được — lập trình viên vẫn dùng hằng ngày. Giao diện đồ hoạ thắng ở chỗ khác: nó cho <em>nhìn thấy</em> lựa chọn, nên người mới không phải nhớ gì trước khi bắt đầu.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.5-jakob",
+                "prompt": "Nhóm bạn thiết kế một hệ thống nộp bài và muốn đặt nút 'Quay lại' ở góc trên bên phải cho lạ mắt. Định luật Jakob nói gì về ý tưởng này?",
+                "explanation": "Định luật Jakob: người dùng dành phần lớn thời gian ở những sản phẩm khác, nên họ mong sản phẩm của bạn hoạt động giống những sản phẩm ấy. Vị trí quen thuộc không phải là thiếu sáng tạo — nó là vốn hiểu biết sẵn có mà ta không nên bắt người học vứt đi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Người học mang theo thói quen từ các sản phẩm khác, nên đặt lạ chỗ sẽ tốn thêm thời gian tìm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vị trí nút không ảnh hưởng gì, miễn là có nhãn rõ ràng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Càng khác biệt càng tốt, vì người học sẽ nhớ sản phẩm lâu hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ cần hướng dẫn ở lần dùng đầu tiên là đủ bù lại",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.5-cam-ung-mat-gi",
+                "prompt": "Chuyển một giao diện web sang bản dùng trên điện thoại cảm ứng, điều gì <strong>mất đi</strong> mà nhà thiết kế phải bù lại?",
+                "explanation": "Cảm ứng không có trạng thái 'trỏ vào mà chưa bấm'. Mọi chỉ dẫn từng nấp trong hover — tên đầy đủ, gợi ý, xem trước — phải hiện sẵn hoặc chuyển sang một thao tác khác. Ngón tay cũng to hơn con trỏ, nên vùng chạm phải lớn hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Trạng thái hover: mọi chỉ dẫn nấp trong đó phải hiện sẵn theo cách khác",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khả năng cuộn trang theo chiều dọc",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khả năng hiển thị hình ảnh màu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khả năng nhập chữ vào biểu mẫu",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "1.5-giong-noi",
+                "prompt": "Một trợ lý học tập bằng giọng nói không có màn hình. Khó khăn cốt lõi so với giao diện đồ hoạ là gì?",
+                "explanation": "Giao diện đồ hoạ cho người dùng <em>nhìn thấy</em> những lựa chọn đang có; giọng nói thì không — người học phải nhớ mình nói được gì. Vì thế thiết kế giọng nói phải gợi ý lựa chọn ngay trong lời đáp và luôn xác nhận lại việc vừa làm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Người dùng không nhìn thấy lựa chọn nào đang có, nên phải nhớ thay vì nhận ra",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giọng nói không truyền được thông tin phức tạp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không thể xác nhận người dùng đã nói gì",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người dùng luôn nói nhanh hơn máy nghe được",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "key": "1.5-nam-mac",
+                "prompt": "Điền năm: Macintosh ra mắt năm ______, đưa giao diện đồ hoạ từ phòng thí nghiệm ra thị trường đại chúng.",
+                "explanation": "1984. Giao diện đồ hoạ đã có ở Xerox PARC từ thập niên 1970, nhưng phải tới Macintosh nó mới thành sản phẩm người thường mua được — một ví dụ sớm về việc dễ dùng trở thành lợi thế cạnh tranh.",
+                "points": 1,
+                "answers": [
+                  "1984"
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "1.5-quy-uoc-con-lai",
+                "prompt": "Kể tên một quy ước giao diện bạn dùng hằng ngày mà bắt nguồn từ WIMP ở Xerox PARC.",
+                "explanation": "Ví dụ chấp nhận được: cửa sổ, biểu tượng, trình đơn, con trỏ chuột, thư mục, thùng rác, thao tác kéo–thả, cắt/dán. Điểm cần thấy: những thứ hôm nay ta coi là hiển nhiên đều từng là phát minh, và chúng tồn tại vì hợp với cách con người nhận biết chứ không vì hợp với máy.",
+                "points": 1,
+                "answers": [
+                  "cửa sổ",
+                  "biểu tượng",
+                  "trình đơn",
+                  "menu",
+                  "con trỏ",
+                  "chuột",
+                  "thư mục",
+                  "thùng rác",
+                  "kéo thả",
+                  "kéo–thả",
+                  "cắt dán",
+                  "icon",
+                  "window"
+                ]
+              },
               {
                 "type": "ordering",
                 "prompt": "Sắp xếp năm mốc của giao diện người – máy theo đúng thứ tự thời gian.",
@@ -1082,6 +1608,190 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "2.1-cau-dan-dat",
+                "prompt": "Câu nào dưới đây là câu hỏi <strong>dẫn dắt</strong>, tức là đã gài sẵn câu trả lời mong muốn?",
+                "explanation": "Câu dẫn dắt cho người trả lời biết bạn muốn nghe gì, và phần lớn người ta sẽ chiều bạn. Hỏi trung tính là hỏi về việc đã xảy ra: 'lần gần nhất... như thế nào', chứ không phải 'có thấy... không'.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bạn có thấy việc nộp bài trên hệ thống hiện tại khá rườm rà không?",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Kể cho tôi nghe lần gần nhất bạn nộp một bài tập trên hệ thống.",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Lúc đó bạn đang ở đâu và dùng thiết bị gì?",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sau bước ấy thì chuyện gì xảy ra?",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.1-so-nguoi",
+                "prompt": "Nhóm bạn có hai tuần và ba người. Phương án nghiên cứu nào hợp lý nhất cho một hệ thống nộp bài của khoa?",
+                "explanation": "Phỏng vấn sâu cho hiểu biết chứ không cho tỉ lệ. 6–8 người thuộc các nhóm khác nhau (nộp đúng hạn, hay trễ, từng bị lỗi) thường đủ để các mô-típ lặp lại. 60 phiếu khảo sát cho con số nhưng không cho biết vì sao.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Phỏng vấn 6–8 sinh viên thuộc các nhóm hành vi khác nhau, mỗi buổi 30 phút",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Gửi khảo sát 20 câu cho toàn khoa và chỉ đọc biểu đồ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Phỏng vấn 40 sinh viên, mỗi người 5 phút, cho đủ số lượng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không phỏng vấn ai, dựa vào kinh nghiệm bản thân vì cũng là sinh viên",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "2.1-loai-cau-hoi",
+                "prompt": "Nối mỗi loại câu hỏi phỏng vấn với thứ nó thu được.",
+                "explanation": "Câu hỏi về hành vi đã xảy ra cho dữ liệu chắc nhất; câu hỏi đào sâu làm rõ lý do; câu hỏi giả định ('nếu có tính năng X thì sao') cho dự đoán — mà con người dự đoán hành vi tương lai của chính mình rất kém.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Kể lại lần gần nhất bạn...",
+                    "right": "Hành vi đã thật sự xảy ra"
+                  },
+                  {
+                    "left": "Vì sao lúc đó bạn làm vậy?",
+                    "right": "Lý do và bối cảnh phía sau"
+                  },
+                  {
+                    "left": "Nếu có tính năng X thì bạn có dùng không?",
+                    "right": "Dự đoán — độ tin cậy thấp"
+                  },
+                  {
+                    "left": "Cho tôi xem bạn làm việc đó nhé?",
+                    "right": "Thao tác quan sát trực tiếp"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.1-ghi-chep",
+                "prompt": "Bạn phỏng vấn một mình, không có người ghi chép. Cách làm nào giữ được dữ liệu tốt nhất mà vẫn tôn trọng người tham gia?",
+                "explanation": "Xin phép ghi âm trước khi bắt đầu, giải thích dùng để làm gì và lưu bao lâu, rồi chỉ ghi vài từ khoá trong lúc nói chuyện. Cắm mặt vào sổ khiến người kia dừng kể; nhớ lại sau buổi thì mất phần lớn chi tiết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Xin phép ghi âm ngay đầu buổi, nói rõ mục đích và thời hạn lưu, chỉ ghi vài từ khoá",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ghi âm lén để người tham gia nói tự nhiên hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không ghi gì, cố nhớ rồi viết lại sau khi kết thúc",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ghi chép toàn văn từng câu trong lúc phỏng vấn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "2.1-cau-hoi-vang",
+                "prompt": "Người tham gia vừa kể xong một việc khó chịu. Viết ra một câu hỏi đào sâu (không dẫn dắt) mà bạn sẽ hỏi tiếp.",
+                "explanation": "Câu tốt thường bắt đầu bằng 'lúc đó', 'vì sao', 'kể thêm', 'rồi sau đó' — nó mời người kia kể tiếp mà không gợi ý sẵn kết luận. Tránh 'có phải vì... không?' vì câu ấy đưa luôn giả thuyết của bạn vào miệng họ.",
+                "points": 2,
+                "answers": [
+                  "vì sao",
+                  "tại sao",
+                  "lúc đó",
+                  "kể thêm",
+                  "rồi sau đó",
+                  "chuyện gì xảy ra",
+                  "bạn đã làm gì"
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "2.1-nguoi-dung-thiet-ke",
+                "prompt": "Nếu nhiều người được phỏng vấn cùng đề nghị một tính năng, nhóm nên xây đúng tính năng đó.",
+                "explanation": "Sai. Đề nghị của người dùng là dữ liệu về <em>vấn đề</em> họ đang gặp, không phải bản thiết kế. Việc của nhóm là tìm ra vấn đề chung phía sau các đề nghị ấy rồi mới chọn giải pháp — có khi giải pháp tốt hơn hẳn thứ được đề nghị.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "uiux.user-says-equals-design"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.1-dao-duc",
+                "prompt": "Trước khi bắt đầu phỏng vấn một sinh viên về việc học của em ấy, việc nào là bắt buộc?",
+                "explanation": "Nói rõ mục đích, cách dữ liệu được dùng và lưu, quyền dừng bất cứ lúc nào, rồi xin đồng ý. Với người học, còn phải nói rõ việc tham gia hay không <em>không</em> ảnh hưởng tới điểm số — nếu không, sự đồng ý ấy không thật sự tự nguyện.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nói rõ mục đích, quyền dừng giữa chừng, và việc tham gia không ảnh hưởng tới điểm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Cam kết sẽ làm theo mọi đề nghị của người tham gia",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cho biết trước các câu hỏi để họ chuẩn bị câu trả lời hay",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần gì cả nếu buổi phỏng vấn dưới 30 phút",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.1-im-lang",
+                "prompt": "Bạn hỏi xong, người tham gia im lặng 5 giây. Đây thường là dấu hiệu gì?",
+                "explanation": "Im lặng thường là lúc người ta đang thật sự nhớ lại. Người phỏng vấn thiếu kinh nghiệm hay lấp chỗ trống bằng một câu gợi ý — và thế là câu trả lời thành của bạn chứ không phải của họ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Họ đang nhớ lại — nên chờ thêm vài giây nữa",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Câu hỏi quá khó — nên đổi sang câu khác ngay",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Họ không muốn trả lời — nên chuyển chủ đề",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nên gợi ý một phương án để họ chọn cho nhanh",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Câu hỏi nào cho dữ liệu đáng tin nhất trong một buổi phỏng vấn người dùng?",
                 "explanation": "Câu hồi tưởng buộc người trả lời kể lại sự việc có thật, kèm bối cảnh. Câu giả định chỉ thu được dự đoán của họ về chính mình — thứ nổi tiếng là không chính xác.",
                 "points": 2,
@@ -1171,6 +1881,175 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "2.2-persona-du-lieu",
+                "prompt": "Thành phần nào <strong>không</strong> nên có trong một persona dùng để làm việc?",
+                "explanation": "Persona chỉ nên chứa những gì ảnh hưởng tới quyết định thiết kế: mục tiêu, bối cảnh, khó khăn, mức thành thạo công nghệ. Tên thú cưng hay món ăn yêu thích làm nhân vật 'sống động' nhưng không đổi được một quyết định nào.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sở thích cá nhân không liên quan tới việc học (món ăn, thú cưng)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mục tiêu chính khi dùng sản phẩm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bối cảnh sử dụng: thiết bị, thời điểm, nơi chốn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khó khăn lặp lại nhiều lần trong dữ liệu nghiên cứu",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.2-diem-cham",
+                "prompt": "Trên bản đồ hành trình 'nộp bài tập nhóm', nhóm bạn phát hiện điểm cảm xúc tụt sâu nhất nằm ở lúc <em>chờ phản hồi của giảng viên</em> — một giai đoạn không có màn hình nào cả. Nên làm gì?",
+                "explanation": "Bản đồ hành trình có giá trị chính ở chỗ này: nó cho thấy trải nghiệm tệ ở những khoảng không có giao diện. Giải pháp không nhất thiết là màn hình mới — có thể là một lời hẹn rõ ràng về thời gian, hoặc một thông báo khi bài đã được nhận.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiết kế cho cả khoảng chờ: hẹn rõ thời gian và báo khi bài đã được nhận",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bỏ qua vì không có màn hình thì không phải việc của nhà thiết kế",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thêm hoạt ảnh vui cho màn hình nộp bài để bù lại",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Rút ngắn các bước nộp bài cho nhanh hơn nữa",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "2.2-lam-persona",
+                "prompt": "Sắp xếp các bước làm persona theo đúng trình tự.",
+                "explanation": "Persona là <em>kết quả</em> của nghiên cứu chứ không phải điểm khởi đầu. Làm ngược — nghĩ ra nhân vật trước rồi đi tìm dữ liệu ủng hộ — chỉ hợp thức hoá phỏng đoán ban đầu.",
+                "points": 3,
+                "sequence": [
+                  "Thu thập dữ liệu từ người dùng thật",
+                  "Tìm các mô-típ hành vi lặp lại",
+                  "Gom mô-típ thành 2–3 nhóm khác biệt",
+                  "Viết persona cho mỗi nhóm, kèm mục tiêu và khó khăn",
+                  "Kiểm chứng lại với người thuộc nhóm đó"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.2-bao-nhieu-persona",
+                "prompt": "Một sản phẩm học tập nên có bao nhiêu persona?",
+                "explanation": "Ít và khác biệt rõ. Hai đến ba persona thì cả nhóm còn nhớ được và còn dùng để tranh luận; bảy persona thì không ai nhớ nổi, và persona nào cũng có thể được viện dẫn cho bất cứ quyết định nào.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "2–3, mỗi persona đại diện một nhóm hành vi thật sự khác nhau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Càng nhiều càng tốt, để phủ hết mọi kiểu người dùng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đúng một, cho cả nhóm tập trung",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Một persona cho mỗi tính năng của sản phẩm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "2.2-ba-nhom",
+                "prompt": "Nối mỗi nhóm người dùng của một hệ thống học tập với mục tiêu chính của họ.",
+                "explanation": "Sản phẩm giáo dục hiếm khi có một loại người dùng. Ba nhóm này thường có lợi ích không trùng nhau, và phần lớn tranh cãi thiết kế trong dự án giáo dục thực chất là tranh cãi xem đang tối ưu cho nhóm nào.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Sinh viên",
+                    "right": "Hoàn thành việc học với ít trở ngại nhất"
+                  },
+                  {
+                    "left": "Giảng viên",
+                    "right": "Theo dõi tiến độ và chấm bài không mất cả tối"
+                  },
+                  {
+                    "left": "Phòng đào tạo",
+                    "right": "Số liệu tổng hợp và tuân thủ quy chế"
+                  },
+                  {
+                    "left": "Nhà phát triển",
+                    "right": "Yêu cầu rõ, ít trạng thái mơ hồ phải đoán"
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "2.2-persona-thay-doi",
+                "prompt": "Persona nên được cập nhật khi có dữ liệu nghiên cứu mới, chứ không phải làm một lần rồi treo tường.",
+                "explanation": "Đúng. Persona lỗi thời nguy hiểm hơn không có persona: nó vẫn được viện dẫn trong họp, nhưng mô tả một nhóm người dùng đã không còn giống thực tế.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "2.2-cam-xuc",
+                "prompt": "Trên bản đồ hành trình, ngoài việc người dùng làm gì và nghĩ gì, hàng thứ ba thường ghi lại điều gì?",
+                "explanation": "Cảm xúc. Đường cảm xúc là thứ chỉ ra chỗ cần can thiệp trước — và nó thường tụt ở những giai đoạn không có giao diện nào, như lúc chờ đợi hoặc lúc không biết chuyện gì đang xảy ra.",
+                "points": 1,
+                "answers": [
+                  "cảm xúc",
+                  "cam xuc",
+                  "tâm trạng",
+                  "emotion"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.2-persona-trang-tri",
+                "prompt": "Dấu hiệu rõ nhất cho thấy persona đã trở thành đồ trang trí là gì?",
+                "explanation": "Persona sống khi nó được viện dẫn để <em>bác bỏ</em> một ý tưởng ('cái này không hợp với Minh vì em ấy dùng điện thoại trên xe buýt'). Nếu suốt dự án chưa lần nào persona làm ai đổi ý, nó chỉ là tấm áp phích.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Suốt dự án chưa lần nào persona khiến nhóm đổi một quyết định",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Persona được in màu và dán lên tường phòng họp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Persona có ảnh chân dung và tên riêng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Persona được viết trong một trang duy nhất",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Nhóm bạn cần persona gấp cho buổi họp ngày mai nhưng chưa phỏng vấn ai. Phương án nào chấp nhận được?",
                 "explanation": "Persona không có dữ liệu sẽ được cả nhóm dùng như sự thật. Ghi rõ đây là giả định cần kiểm chứng giữ được tính trung thực; bịa ra một nhân vật hoàn chỉnh thì không.",
                 "points": 2,
@@ -1258,6 +2137,177 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "2.3-nhan-dinh-hay-du-lieu",
+                "prompt": "Câu nào là <strong>nhận định</strong> chứ không phải dữ liệu thô?",
+                "explanation": "Dữ liệu thô là thứ quan sát được, ghi lại được, không kèm diễn giải. Nhận định là bước rút ra ý nghĩa. Trộn hai tầng vào nhau khiến cả nhóm tranh luận về diễn giải mà tưởng đang tranh luận về sự thật.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sinh viên không tin bài đã nộp thành công nếu không thấy xác nhận",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "5 trong 8 người chụp màn hình sau khi bấm nộp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người thứ ba nói: 'Em chụp lại cho chắc'",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nhật ký ghi nhận 2% lượt nộp bị bỏ dở ở bước đính kèm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.3-phat-bieu-hep",
+                "prompt": "Phát biểu vấn đề nào dưới đây <strong>quá rộng</strong> để làm việc được?",
+                "explanation": "Phát biểu vấn đề phải nêu rõ ai, trong bối cảnh nào, cần gì, vì sao — đủ hẹp để biết bắt đầu từ đâu và biết lúc nào coi là xong. 'Cải thiện trải nghiệm học tập' đúng nhưng không dẫn tới hành động nào cụ thể.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cần cải thiện trải nghiệm học tập trên hệ thống của trường",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sinh viên năm nhất nộp bài trên điện thoại cần biết chắc bài đã được nhận, vì họ hay nộp sát hạn và không có thời gian kiểm tra lại",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giảng viên dạy hai lớp đông cần chấm bài viết mà không phải mở từng file, vì mỗi lượt mở mất 20 giây",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sinh viên đi làm thêm cần học tiếp đúng chỗ đang dở khi chuyển từ điện thoại sang máy tính",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "2.3-affinity",
+                "prompt": "Sắp xếp các bước của một buổi affinity map.",
+                "explanation": "Viết trước, gom sau, đặt tên sau cùng. Đặt tên cụm quá sớm sẽ kéo các ghi chú tiếp theo vào những cái tên đã có — cụm ngày càng to mà không còn phản ánh dữ liệu.",
+                "points": 3,
+                "sequence": [
+                  "Mỗi người viết từng quan sát lên một tờ ghi chú riêng",
+                  "Dán tất cả lên tường, đọc to cho cả nhóm",
+                  "Gom các tờ có vẻ liên quan lại thành cụm, chưa đặt tên",
+                  "Đặt tên cho từng cụm bằng một câu nhận định",
+                  "Chọn cụm quan trọng nhất để viết phát biểu vấn đề"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.3-hmw",
+                "prompt": "Sau khi có phát biểu vấn đề 'sinh viên nộp bài sát hạn không chắc bài đã được nhận', câu phác ý tưởng nào đúng tinh thần 'Làm thế nào để chúng ta...'?",
+                "explanation": "Câu 'Làm thế nào để chúng ta...' phải mở đủ để có nhiều lời giải, nhưng vẫn neo vào vấn đề đã phát biểu. Nếu nó đã gọi tên một giải pháp cụ thể thì buổi phác ý tưởng chỉ còn việc vẽ lại thứ đã quyết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Làm thế nào để sinh viên biết chắc bài đã được nhận ngay tại thời điểm nộp?",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Làm thế nào để gửi email xác nhận sau mỗi lần nộp bài?",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Làm thế nào để cải thiện hệ thống nộp bài?",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Làm thế nào để sinh viên nộp bài sớm hơn hạn ba ngày?",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "2.3-cum-nho",
+                "prompt": "Một quan sát chỉ xuất hiện ở một người tham gia thì chắc chắn không đáng đưa vào phát biểu vấn đề.",
+                "explanation": "Sai. Tần suất không phải thước đo duy nhất: một quan sát hiếm nhưng hậu quả nặng (mất bài đã nộp, không nộp được vì khuyết tật thị giác) vẫn phải xử lý. Cái cần cân là <em>tần suất × hậu quả</em>.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "2.3-ba-tang",
+                "prompt": "Nối mỗi câu với tầng mà nó thuộc về.",
+                "explanation": "Ba tầng đi theo thứ tự chín dần: quan sát được → ý nghĩa rút ra → vấn đề cần giải. Mỗi bước đều phải truy ngược về được tầng dưới, nếu không thì đó là phỏng đoán chứ không phải kết luận.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "6/8 người quay lui ở bước chọn lớp",
+                    "right": "Dữ liệu thô"
+                  },
+                  {
+                    "left": "Người học không biết mã lớp lấy ở đâu",
+                    "right": "Nhận định"
+                  },
+                  {
+                    "left": "Sinh viên năm nhất cần chọn được lớp mà không cần nhớ mã",
+                    "right": "Phát biểu vấn đề"
+                  },
+                  {
+                    "left": "Làm thế nào để việc chọn lớp không đòi trí nhớ?",
+                    "right": "Câu phác ý tưởng"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "2.3-thien-lech",
+                "prompt": "Nhóm bạn tổng hợp dữ liệu và giữ lại đúng những quan sát ủng hộ ý tưởng đã thích từ đầu. Đây là lỗi gì, và cách chống hiệu quả nhất?",
+                "explanation": "Thiên lệch xác nhận. Cách chống rẻ nhất là bắt buộc mỗi nhận định phải trích được ít nhất hai mẩu dữ liệu gốc, và cử một người trong nhóm chuyên đi tìm dữ liệu <em>ngược</em> với kết luận đang thành hình.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiên lệch xác nhận — mỗi nhận định phải trích được dữ liệu gốc, và có người tìm bằng chứng ngược",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hiệu ứng hào quang — nên đổi người dẫn buổi tổng hợp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Định luật Hick — nên giảm số lượng ghi chú xuống",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không phải lỗi — nhóm cần tập trung vào một hướng để làm cho nhanh",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "2.3-truy-nguoc",
+                "prompt": "Một nhận định trong bảng tổng hợp phải luôn truy ngược được về đâu?",
+                "explanation": "Về dữ liệu thô: quan sát, trích dẫn, số liệu cụ thể đã thu được. Nhận định không truy ngược được là ý kiến của nhóm thiết kế đội lốt kết quả nghiên cứu.",
+                "points": 1,
+                "answers": [
+                  "dữ liệu thô",
+                  "du lieu tho",
+                  "dữ liệu",
+                  "quan sát",
+                  "trích dẫn",
+                  "bằng chứng"
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Câu nào là một phát biểu vấn đề dùng được?",
                 "explanation": "Phát biểu vấn đề nêu ai, đang làm gì, kẹt ở đâu — và để ngỏ cách giải. Câu chứa sẵn giải pháp sẽ khoá nhóm vào một hướng trước khi kịp nghĩ.",
                 "points": 2,
@@ -1336,6 +2386,153 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "3.1-nhan-theo-nguoi-dung",
+                "prompt": "Menu của hệ thống học tập đang có mục 'Học liệu số hoá tích hợp'. Trong tree testing, chỉ 2/10 sinh viên tìm đúng mục này khi được yêu cầu 'tìm slide bài giảng tuần 3'. Cách sửa hợp lý nhất?",
+                "explanation": "Nhãn phải dùng từ của người dùng, không phải từ của phòng ban. 'Slide bài giảng' là thứ sinh viên đi tìm; 'học liệu số hoá tích hợp' là cách nhà trường gọi nội bộ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đổi nhãn thành từ sinh viên dùng khi đi tìm, ví dụ 'Bài giảng & slide'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ nhãn nhưng in đậm và tô màu cho dễ thấy",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thêm chú thích dài bên dưới nhãn để giải thích",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thêm một mục menu mới tên 'Slide' bên cạnh mục cũ",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.1-mo-hay-dong",
+                "prompt": "Bạn đã có sẵn cấu trúc menu và muốn biết nó có dễ hiểu không. Nên dùng card sorting <strong>mở</strong> hay <strong>đóng</strong>?",
+                "explanation": "Mở: người dùng tự nhóm và tự đặt tên — dùng khi chưa có cấu trúc. Đóng: nhóm cho sẵn, người dùng xếp thẻ vào — dùng khi đã có cấu trúc và muốn kiểm tra nó. Câu hỏi ở đây là kiểm tra, nên chọn đóng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đóng — nhóm đã cho sẵn, xem người dùng xếp thẻ vào đâu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mở — để người dùng tự nghĩ ra nhóm mới hoàn toàn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần cả hai, chỉ cần hỏi ý kiến giảng viên",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cả hai đều không phù hợp, phải làm kiểm thử khả dụng đầy đủ",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "3.1-quy-trinh-ia",
+                "prompt": "Sắp xếp các bước tổ chức lại thông tin cho một hệ thống đang rối.",
+                "explanation": "Kiểm kê trước, phân nhóm sau, đặt nhãn rồi mới kiểm chứng. Nhảy thẳng vào vẽ menu mới mà chưa kiểm kê nội dung là cách chắc chắn để bỏ sót một nửa số trang đang có.",
+                "points": 3,
+                "sequence": [
+                  "Kiểm kê toàn bộ nội dung đang có",
+                  "Cho người dùng nhóm nội dung bằng card sorting",
+                  "Dựng cây điều hướng nháp và đặt nhãn",
+                  "Kiểm tra cây bằng tree testing",
+                  "Chỉnh nhãn và cấu trúc theo chỗ người dùng đi lạc"
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "3.1-sau-va-rong",
+                "prompt": "Cấu trúc càng ít tầng (nông và rộng) thì luôn dễ tìm hơn cấu trúc nhiều tầng (sâu và hẹp).",
+                "explanation": "Sai — có ngưỡng. Nông và rộng thường tốt hơn cho người dùng phổ thông, nhưng rộng quá thì mỗi lần chọn lại là một lần quét hàng chục mục. Điều quyết định vẫn là nhãn có nói đúng thứ nằm bên trong hay không.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.1-tim-kiem",
+                "prompt": "Có ý kiến: 'Cứ thêm ô tìm kiếm là xong, khỏi cần tổ chức lại menu.' Vấn đề của lập luận này?",
+                "explanation": "Tìm kiếm chỉ giúp người đã biết mình tìm gì và gọi đúng tên nó. Người học thường không biết thứ mình cần tên là gì — đó chính là lúc cấu trúc và nhãn phải làm việc. Tìm kiếm bổ sung cho điều hướng, không thay thế được.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tìm kiếm chỉ giúp người đã biết gọi đúng tên thứ mình cần",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ô tìm kiếm chiếm quá nhiều diện tích màn hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tìm kiếm luôn chậm hơn duyệt menu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có vấn đề gì — tìm kiếm thay thế được điều hướng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "3.1-tree-testing",
+                "prompt": "Tree testing kiểm tra cấu trúc điều hướng mà cố tình bỏ đi thứ gì?",
+                "explanation": "Giao diện — màu sắc, hình ảnh, bố cục. Người tham gia chỉ thấy cây nhãn dạng chữ, nên nếu họ đi lạc thì lỗi nằm ở cấu trúc và cách đặt tên, không đổ được cho phần trang trí.",
+                "points": 1,
+                "answers": [
+                  "giao diện",
+                  "giao dien",
+                  "hình ảnh",
+                  "thiết kế đồ hoạ",
+                  "màu sắc",
+                  "bố cục",
+                  "phần nhìn"
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "3.1-viec-to-chuc",
+                "prompt": "Nối mỗi việc khi tổ chức thông tin với câu hỏi nó trả lời.",
+                "explanation": "Ba việc khác nhau và hay bị gộp làm một: nhóm (cái gì đi với cái gì), đặt tên (gọi nhóm ấy là gì), và sắp thứ tự (cái nào đứng trước). Sai ở việc nào thì sửa đúng việc ấy.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Phân nhóm",
+                    "right": "Những nội dung nào đi cùng nhau?"
+                  },
+                  {
+                    "left": "Đặt nhãn",
+                    "right": "Người dùng gọi nhóm này là gì?"
+                  },
+                  {
+                    "left": "Sắp thứ tự",
+                    "right": "Cái nào cần thấy trước?"
+                  },
+                  {
+                    "left": "Tree testing",
+                    "right": "Người dùng có tìm ra không?"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Website của một trường đại học chia menu chính thành: Phòng Đào tạo, Phòng Công tác sinh viên, Phòng Tài chính, Trung tâm Thông tin. Vấn đề lớn nhất của cấu trúc này là gì?",
                 "explanation": "Cấu trúc phản chiếu sơ đồ tổ chức chứ không phản chiếu việc người dùng cần làm. Sinh viên biết mình cần 'xin giấy xác nhận', không biết phòng nào cấp.",
                 "points": 2,
@@ -1404,6 +2601,176 @@
             "title": "Kiểm tra bài 3.2",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "3.2-nhanh-loi",
+                "prompt": "Vẽ luồng 'nộp bài tập', nhánh nào dưới đây hay bị bỏ quên nhất nhưng gây thiệt hại lớn nhất khi thiếu?",
+                "explanation": "Đường thuận luôn được vẽ; các nhánh hỏng thì không. Với nộp bài, nhánh 'tải file thất bại giữa chừng' để lại người học ở trạng thái không biết bài đã lên hay chưa — đúng lúc gần hết hạn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tải file thất bại giữa chừng — người học không biết bài đã lên hay chưa",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Người học đổi ảnh đại diện trước khi nộp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người học mở trang nộp bài trên hai tab",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người học đọc mô tả bài tập hai lần",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.2-dem-buoc",
+                "prompt": "Luồng đăng ký học phần hiện có 11 bước. Cách rút ngắn nào là <strong>thật</strong>, chứ không phải chỉ dồn việc sang chỗ khác?",
+                "explanation": "Rút ngắn thật là bỏ bớt việc người dùng phải làm hoặc phải nhớ — ví dụ điền sẵn thứ hệ thống đã biết. Gom 11 bước vào 3 màn hình mà vẫn phải nhập từng ấy thứ chỉ là đổi cách chia trang.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Điền sẵn những thông tin hệ thống đã có (mã sinh viên, ngành, khoá)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Gom 11 bước vào 3 màn hình dài, giữ nguyên số ô phải nhập",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bỏ màn hình xác nhận cuối cùng cho nhanh",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đổi nút 'Tiếp' thành mũi tên cho gọn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "3.2-ve-luong",
+                "prompt": "Sắp xếp trình tự dựng một sơ đồ luồng tác vụ.",
+                "explanation": "Xác định điểm vào và mục tiêu trước, rồi vẽ đường thuận, sau đó mới thêm nhánh rẽ và trạng thái lỗi. Bắt đầu bằng việc vẽ mọi nhánh cùng lúc thì sơ đồ rối trước khi kịp đúng.",
+                "points": 3,
+                "sequence": [
+                  "Xác định người dùng vào từ đâu và muốn đạt gì",
+                  "Vẽ đường thuận: chuỗi bước khi mọi thứ suôn sẻ",
+                  "Thêm các điểm quyết định và nhánh rẽ",
+                  "Thêm trạng thái lỗi, rỗng, chờ",
+                  "Rà lại xem có bước nào bỏ được không"
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "3.2-luong-va-man-hinh",
+                "prompt": "Mỗi bước trong sơ đồ luồng tác vụ tương ứng đúng một màn hình giao diện.",
+                "explanation": "Sai. Một bước có thể là một hộp thoại, một thông báo, một việc chạy ngầm, hay một hành động ngoài màn hình (nhận email, đợi giảng viên duyệt). Đánh đồng bước với màn hình là cách nhanh nhất để đẻ ra những màn hình không cần thiết.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.2-diem-quyet-dinh",
+                "prompt": "Trong sơ đồ, hình thoi (điểm quyết định) nên đặt ở đâu?",
+                "explanation": "Ở chỗ hệ thống hoặc người dùng phải chọn giữa nhiều đường đi — 'đã đăng nhập chưa', 'file có đúng định dạng không'. Mỗi hình thoi phải có ít nhất hai đường ra, và cả hai đều phải dẫn tới đâu đó chứ không treo lơ lửng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Ở chỗ có nhiều đường đi khác nhau, và mỗi đường ra phải dẫn tới một trạng thái rõ ràng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ở mỗi màn hình, để sơ đồ cân đối",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ ở cuối luồng, khi người dùng xác nhận",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ở chỗ nào nhóm chưa thống nhất được, để đó bàn sau",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.2-dang-ky-truoc",
+                "prompt": "Một nền tảng khoá học bắt đăng ký tài khoản trước khi cho xem thử bất cứ nội dung nào. Cách sửa nào giữ được cả mục tiêu kinh doanh lẫn trải nghiệm?",
+                "explanation": "Hoãn việc đăng ký tới đúng lúc nó thật sự cần thiết — khi người học muốn lưu tiến độ hoặc nộp bài. Trước đó, cho xem thử một phần nội dung: người ta phải thấy thứ mình sắp đổi lấy thông tin cá nhân.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cho xem thử một phần, chỉ yêu cầu đăng ký khi cần lưu tiến độ hoặc nộp bài",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ nguyên nhưng rút biểu mẫu đăng ký còn ba ô",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thêm một màn hình giải thích vì sao phải đăng ký",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bỏ hẳn tài khoản, ai cũng dùng ẩn danh",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "3.2-duong-thuan",
+                "prompt": "Chuỗi bước khi mọi thứ diễn ra suôn sẻ, không lỗi, không rẽ nhánh — gọi là gì?",
+                "explanation": "Đường thuận (happy path). Nó là điểm khởi đầu để vẽ, nhưng phần lớn công sức thiết kế thật sự nằm ở những nhánh còn lại.",
+                "points": 1,
+                "answers": [
+                  "đường thuận",
+                  "duong thuan",
+                  "happy path",
+                  "đường hạnh phúc",
+                  "luồng thuận"
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "3.2-trang-thai-ria",
+                "prompt": "Nối mỗi trạng thái rìa với câu hỏi thiết kế phải trả lời.",
+                "explanation": "Bốn trạng thái này chiếm phần lớn thời gian lập trình và gần hết những lúc người dùng bực. Thiết kế bỏ trống chúng thì mỗi người trong nhóm sẽ tự bịa một cách xử lý khác nhau.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Danh sách rỗng",
+                    "right": "Người học nên làm gì tiếp theo?"
+                  },
+                  {
+                    "left": "Đang tải",
+                    "right": "Chờ bao lâu, và có huỷ được không?"
+                  },
+                  {
+                    "left": "Lỗi mạng",
+                    "right": "Việc đang làm có mất không, thử lại thế nào?"
+                  },
+                  {
+                    "left": "Không có quyền",
+                    "right": "Vì sao bị chặn, xin quyền ở đâu?"
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "prompt": "Bạn vẽ xong luồng nộp bài và thấy nó chỉ có đúng một đường từ đầu tới cuối. Kết luận hợp lý nhất là gì?",
@@ -1494,6 +2861,187 @@
             "title": "Kiểm tra bài 3.3",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "3.3-chon-mau",
+                "prompt": "Một ứng dụng học tập trên di động có 5 khu vực chính, trong đó 3 khu vực được dùng gần như mỗi phiên. Mẫu điều hướng nào hợp lý nhất?",
+                "explanation": "Thanh tab dưới cho 3–5 mục dùng thường xuyên: luôn nhìn thấy, chạm được bằng ngón cái. Hai khu vực còn lại đưa vào trang cá nhân hoặc mục 'Thêm' — thứ ít dùng không đáng chiếm chỗ vĩnh viễn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thanh tab dưới cho 3 khu vực dùng nhiều, phần còn lại nằm trong trang cá nhân",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ngăn kéo trượt chứa cả 5 khu vực",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thanh tab dưới với đủ 5 mục, thu nhỏ chữ cho vừa",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần điều hướng cố định, mỗi màn hình có nút quay lui là đủ",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.3-boc-lo-dan",
+                "prompt": "Màn hình tạo bài tập cho giảng viên có 18 tuỳ chọn, trong đó 4 tuỳ chọn được dùng ở hầu hết bài tập. Áp dụng 'bộc lộ dần' như thế nào?",
+                "explanation": "Hiện sẵn 4 tuỳ chọn thường dùng với giá trị mặc định hợp lý, 14 tuỳ chọn còn lại gom vào mục 'Tuỳ chọn nâng cao' mở ra khi cần. Người dùng phổ thông xong nhanh, người cần chi tiết vẫn với tới được.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hiện 4 tuỳ chọn thường dùng kèm mặc định hợp lý, gom phần còn lại vào 'nâng cao'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chia 18 tuỳ chọn thành 6 màn hình liên tiếp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giữ cả 18 nhưng làm chữ nhỏ lại cho vừa một màn hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bỏ hẳn 14 tuỳ chọn ít dùng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "3.3-nhan-thuong-hieu",
+                "prompt": "Đặt nhãn menu bằng thuật ngữ riêng của sản phẩm ('Không gian Kiến tạo') giúp người dùng nhớ thương hiệu và nên được ưu tiên hơn nhãn mô tả thẳng.",
+                "explanation": "Sai. Nhãn sáng tạo bắt người dùng học thêm một bộ từ vựng trước khi làm được việc. Trong sản phẩm học tập, phần trí nhớ ấy nên để dành cho nội dung môn học, không phải cho tên các mục menu.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.3-chi-phi-them-muc",
+                "prompt": "Vì sao thêm một mục vào menu chính 'không miễn phí'?",
+                "explanation": "Mỗi mục thêm vào làm mọi mục còn lại khó tìm hơn một chút: quét lâu hơn, chỗ nhìn thấy chia nhỏ ra, và ranh giới giữa các nhóm mờ đi. Chi phí ấy do tất cả người dùng trả, còn lợi ích thường chỉ thuộc về nhóm đề xuất mục mới.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nó làm mọi mục còn lại khó tìm hơn một chút, và chi phí ấy do tất cả người dùng trả",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nó làm tăng thời gian tải trang đáng kể",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nó tốn thêm chi phí lập trình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nó không thật sự tốn gì nếu menu còn chỗ trống",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "3.3-mau-dieu-huong",
+                "prompt": "Nối mỗi mẫu điều hướng với tình huống nó hợp nhất.",
+                "explanation": "Không có mẫu nào tốt nhất tuyệt đối — chỉ có mẫu hợp với số lượng mục, tần suất dùng và kích thước màn hình. Chọn sai mẫu thì mọi việc chỉnh nhãn về sau cũng chỉ chữa được phần ngọn.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Thanh tab dưới",
+                    "right": "3–5 khu vực dùng thường xuyên trên di động"
+                  },
+                  {
+                    "left": "Ngăn kéo trượt",
+                    "right": "Nhiều mục nhưng ít dùng, cần giấu bớt"
+                  },
+                  {
+                    "left": "Vụn bánh mì (breadcrumb)",
+                    "right": "Cấu trúc nhiều tầng, cần biết mình đang ở đâu"
+                  },
+                  {
+                    "left": "Điều hướng theo bước",
+                    "right": "Quy trình tuyến tính có đầu và cuối rõ ràng"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.3-ba-cau-hoi",
+                "prompt": "Người dùng mở một trang lạ trong hệ thống. Câu hỏi thầm nào họ trả lời <strong>đầu tiên</strong>?",
+                "explanation": "Thứ tự là: tôi đang ở đâu → tôi làm được gì ở đây → tôi đi tiếp thế nào. Trang thiếu câu trả lời thứ nhất (không tiêu đề rõ, không vụn bánh mì) khiến hai câu sau trở nên vô nghĩa.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tôi đang ở đâu?",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tôi đi tiếp thế nào?",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Trang này của ai làm?",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tôi có quyền xem trang này không?",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "3.3-nhan-nguoi-dung",
+                "prompt": "Nguyên tắc một dòng về cách đặt nhãn menu: dùng từ của ai?",
+                "explanation": "Từ của người dùng. Nhãn tốt là nhãn người ta gõ vào ô tìm kiếm hoặc nói ra khi hỏi bạn cùng lớp, không phải tên phòng ban hay tên module trong hệ thống.",
+                "points": 1,
+                "answers": [
+                  "người dùng",
+                  "nguoi dung",
+                  "sinh viên",
+                  "người học",
+                  "học viên"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "3.3-menu-an",
+                "prompt": "Chuyển một chức năng từ thanh tab hiện rõ vào ngăn kéo ẩn thường dẫn tới hậu quả nào?",
+                "explanation": "Tần suất dùng giảm rõ rệt — thường là mạnh hơn nhóm thiết kế dự đoán. Đây không phải lý do để không bao giờ ẩn gì, mà là lý do để cân nhắc: ẩn thứ ít dùng thì được, ẩn thứ quan trọng thì mất.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tần suất dùng giảm rõ rệt, thường mạnh hơn nhóm dự đoán",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tần suất dùng không đổi vì người cần vẫn sẽ tìm ra",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tần suất dùng tăng vì giao diện gọn hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ ảnh hưởng tới người dùng mới, người cũ không bị gì",
+                    "isCorrect": false
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "prompt": "Nhóm bạn muốn đưa cả 9 chức năng lên thanh tab dưới của ứng dụng di động để 'người dùng thấy hết'. Nhận xét đúng nhất là gì?",
@@ -1588,6 +3136,174 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "4.1-chi-tiet-som",
+                "prompt": "Nhóm bạn dựng ngay bản thiết kế màu mè, đủ ảnh và phông chữ để mang đi hỏi ý kiến, dù bố cục còn chưa chắc. Hậu quả thường gặp nhất là gì?",
+                "explanation": "Bản càng bóng bẩy thì người xem càng bình luận về màu và chữ, và càng ngại đề nghị thay đổi lớn — họ nghĩ bạn đã tốn nhiều công. Bản phác thô mời gọi phản hồi về cấu trúc, đúng thứ đang cần hỏi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Người xem góp ý về màu và chữ, ngại đề nghị đổi bố cục vì thấy đã tốn công",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Người xem không hiểu bản thiết kế nói gì",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bản thiết kế mất nhiều thời gian tải trên máy yếu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có hậu quả gì, chi tiết sớm luôn tốt hơn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.1-tam-o",
+                "prompt": "Quy tắc 'tám ô' (gấp một tờ A4 thành 8 ô rồi phác 8 phương án trong 8 phút) nhằm mục đích gì?",
+                "explanation": "Ép ra số lượng trước khi chọn chất lượng. Ai cũng có một phương án đầu tiên và thường bám lấy nó; tám ô buộc phải vượt qua phương án hiển nhiên để tới những cách nhìn khác.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Buộc phải vượt qua phương án hiển nhiên đầu tiên để tìm cách nhìn khác",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tiết kiệm giấy khi phác thảo",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Luyện kỹ năng vẽ tay cho nhà thiết kế",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tạo ra tám bản hoàn chỉnh để đưa khách hàng chọn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "4.1-tang-do-chi-tiet",
+                "prompt": "Sắp xếp các mức độ chi tiết theo trình tự nên đi qua.",
+                "explanation": "Độ chi tiết đi sau độ chắc chắn: chỉ đầu tư thêm chi tiết khi đã chắc về tầng dưới. Nhảy thẳng tới bản đủ màu là đặt cược toàn bộ công sức vào một bố cục chưa ai kiểm chứng.",
+                "points": 3,
+                "sequence": [
+                  "Phác tay nhiều phương án",
+                  "Wireframe thô: khối và thứ tự nội dung",
+                  "Wireframe chi tiết: nội dung thật, trạng thái rìa",
+                  "Bản thiết kế đủ màu sắc và kiểu chữ"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.1-noi-dung-that",
+                "prompt": "Vì sao wireframe nên dùng nội dung thật thay vì 'Lorem ipsum'?",
+                "explanation": "Nội dung thật lộ ra vấn đề thật: tên bài dài quá, tiếng Việt có dấu cao hơn nên dòng chật, nhãn 'Nộp' và 'Nộp lại' đứng cạnh nhau gây nhầm. Chữ giả làm mọi bố cục trông đều đẹp.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nội dung thật lộ ra vấn đề về độ dài, dấu tiếng Việt và những nhãn dễ nhầm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Lorem ipsum vi phạm bản quyền",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nội dung thật giúp bản wireframe trông đẹp hơn khi trình bày",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có khác biệt đáng kể, chỉ là thói quen",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "4.1-wireframe-can-gi",
+                "prompt": "Nối mỗi thành phần của wireframe với câu hỏi nó trả lời.",
+                "explanation": "Wireframe không phải bản vẽ đẹp thu nhỏ: nó là công cụ trả lời câu hỏi về cấu trúc. Thiếu một trong bốn thứ này thì bản vẽ chưa dùng để quyết định được.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Thứ tự các khối nội dung",
+                    "right": "Người dùng đọc gì trước?"
+                  },
+                  {
+                    "left": "Hành động chính nổi bật",
+                    "right": "Việc quan trọng nhất trên màn hình là gì?"
+                  },
+                  {
+                    "left": "Trạng thái rỗng và lỗi",
+                    "right": "Khi không có dữ liệu thì sao?"
+                  },
+                  {
+                    "left": "Nội dung thật",
+                    "right": "Bố cục còn đứng vững với dữ liệu thực tế không?"
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "4.1-ve-tay",
+                "prompt": "Phác tay trên giấy vẫn có chỗ đứng dù đã có công cụ thiết kế số.",
+                "explanation": "Đúng. Giấy nhanh hơn, rẻ hơn, và quan trọng nhất là <em>dễ vứt đi hơn</em> — không ai tiếc một bản phác 30 giây, nên nhóm dám thử phương án lạ và dám bỏ đi.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "4.1-trang-thai-rong",
+                "prompt": "Màn hình 'Bài tập của tôi' của một sinh viên chưa có bài nào. Trạng thái này gọi là gì và nên chứa thứ gì?",
+                "explanation": "Trạng thái rỗng. Nó không nên chỉ nói 'Chưa có dữ liệu' mà phải nói người học làm gì tiếp theo — đây thường là màn hình đầu tiên người mới nhìn thấy, tức là cơ hội hướng dẫn tốt nhất.",
+                "points": 2,
+                "answers": [
+                  "trạng thái rỗng",
+                  "trang thai rong",
+                  "empty state",
+                  "rỗng"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.1-bao-nhieu-phuong-an",
+                "prompt": "Trước khi chọn một hướng bố cục để làm tiếp, nhóm nên có bao nhiêu phương án?",
+                "explanation": "Nhiều hơn một, và các phương án phải thật sự khác nhau về cách tiếp cận chứ không phải ba biến thể của cùng một ý. Chỉ khi có phương án để so, việc 'chọn' mới là quyết định chứ không phải mặc định.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vài phương án khác nhau về cách tiếp cận, không phải biến thể của cùng một ý",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng một, để cả nhóm tập trung làm cho tốt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Càng nhiều càng tốt, không giới hạn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Số phương án không quan trọng, quan trọng là vẽ đẹp",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Nhóm vừa chốt phát biểu vấn đề và đang cần biết bố cục lớn có hợp lý không. Nên làm gì trước?",
                 "explanation": "Ở giai đoạn này câu hỏi là về cấu trúc, không phải về hình thức. Bản phác rẻ và khiến người xem góp ý đúng chỗ cần góp ý.",
                 "points": 2,
@@ -1670,6 +3386,170 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "4.2-cau-hoi-truoc",
+                "prompt": "Trước khi dựng prototype, việc đầu tiên phải làm là gì?",
+                "explanation": "Viết ra câu hỏi mà prototype phải trả lời. Câu hỏi ấy quyết định luôn cần nối bao nhiêu màn hình và cần chi tiết tới đâu — không có nó thì người ta dựng cho 'đầy đủ', tốn gấp ba mà vẫn không kết luận được gì.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Viết ra câu hỏi cụ thể mà prototype phải trả lời",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chọn bảng màu và phông chữ cho thống nhất",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nối tất cả các nút để bản chạy trơn tru",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Dựng đủ mọi màn hình có trong sơ đồ luồng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.2-nhiem-vu-test",
+                "prompt": "Nhiệm vụ nào <strong>không</strong> nên giao cho người test vì nó đã mách sẵn đường đi?",
+                "explanation": "Nhiệm vụ phải nêu mục tiêu bằng ngôn ngữ của người dùng, không nêu thao tác. Nói tên nút cần bấm là đã làm hộ phần khó nhất — và bạn sẽ không bao giờ biết họ có tự tìm ra không.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bấm nút 'Nộp bài' màu xanh ở góc dưới bên phải rồi chọn file.",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bạn vừa làm xong bài tập tuần 3, hãy nộp nó lên hệ thống.",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hãy tìm xem điểm bài kiểm tra giữa kỳ của bạn là bao nhiêu.",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bạn muốn xin gia hạn nộp bài, hãy thử làm việc đó.",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "4.2-muc-tuong-tac",
+                "prompt": "Nối mỗi mức prototype với câu hỏi nó trả lời được.",
+                "explanation": "Mỗi mức tốn công gấp bội mức trước. Chọn mức thấp nhất còn trả lời được câu hỏi đang có là cách tiết kiệm nhất — và cũng là cách khiến người xem tập trung đúng chỗ.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Bản giấy, người điều khiển đổi trang",
+                    "right": "Ý tưởng lớn có hợp lý không?"
+                  },
+                  {
+                    "left": "Bản số nối màn hình cơ bản",
+                    "right": "Người dùng có tìm ra đường đi không?"
+                  },
+                  {
+                    "left": "Bản có hoạt cảnh và trạng thái",
+                    "right": "Chuyển cảnh có gây hiểu nhầm không?"
+                  },
+                  {
+                    "left": "Bản dựng bằng mã thật",
+                    "right": "Hiệu năng và cảm giác thật ra sao?"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.2-kich-ban",
+                "prompt": "Kịch bản đi kèm prototype nên chứa gì?",
+                "explanation": "Bối cảnh và mục tiêu — 'bạn là sinh viên năm nhất, đang ngồi trên xe buýt, còn 20 phút nữa hết hạn nộp bài'. Bối cảnh khiến người test hành xử gần với thực tế hơn là ngồi bấm thử trong phòng yên tĩnh.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bối cảnh và mục tiêu của người dùng, không kèm hướng dẫn thao tác",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Danh sách từng bước cần bấm theo thứ tự",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giải thích các quyết định thiết kế của nhóm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thông tin kỹ thuật về công cụ đã dùng để dựng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "4.2-nguoi-dieu-khien",
+                "prompt": "Kỹ thuật test trong đó một người trong nhóm đóng vai hệ thống, đổi màn hình giấy theo thao tác của người dùng, gọi là gì?",
+                "explanation": "Phù thuỷ xứ Oz (Wizard of Oz). Nó cho phép test một ý tưởng phức tạp — kể cả thứ chưa lập trình được — với chi phí gần bằng không.",
+                "points": 1,
+                "answers": [
+                  "wizard of oz",
+                  "phù thuỷ xứ oz",
+                  "phu thuy xu oz",
+                  "wizard-of-oz",
+                  "oz"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.2-khi-nao-dung",
+                "prompt": "Nhóm bạn dựng prototype ngày càng chi tiết suốt ba tuần mà chưa đưa ai test. Vấn đề là gì?",
+                "explanation": "Prototype không tự sinh ra hiểu biết — người dùng làm việc đó. Mỗi ngày thêm chi tiết mà chưa test là thêm một ngày đầu tư vào những giả định chưa ai kiểm chứng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Prototype chỉ có giá trị khi có người dùng thật chạm vào — càng để lâu càng đắt khi phải sửa",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ba tuần là quá ngắn cho một prototype tốt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nhóm nên chuyển sang công cụ khác mạnh hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu bản dựng ngày càng đẹp",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.2-quan-sat",
+                "prompt": "Trong buổi test prototype, người test loay hoay 40 giây rồi hỏi 'em phải bấm vào đâu ạ?'. Bạn nên làm gì?",
+                "explanation": "Trả câu hỏi về cho họ: 'Nếu ở nhà thì bạn sẽ làm gì?'. Chỉ đường là làm hỏng dữ liệu quý nhất của cả buổi — chính chỗ họ bí mới là phát hiện bạn cần.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hỏi lại: 'Nếu đang ở nhà một mình thì bạn sẽ thử làm gì?'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ ngay nút cần bấm để buổi test đi tiếp cho kịp giờ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giải thích thiết kế để họ hiểu ý đồ của nhóm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ghi nhận là người test không phù hợp và dừng buổi",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Nhiệm vụ nào phù hợp để giao cho người test một prototype?",
                 "explanation": "Nhiệm vụ tốt có bối cảnh, có đích đến rõ ràng và không tiết lộ đường đi. Nhiệm vụ mơ hồ khiến người test đi dạo thay vì làm việc.",
                 "points": 2,
@@ -1746,6 +3626,146 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "4.3-auto-layout-noi-dung-dai",
+                "prompt": "Thẻ khoá học dựng bằng auto layout, tên khoá dài 90 ký tự. Điều gì nên xảy ra?",
+                "explanation": "Auto layout cho phép khai báo trước: thẻ cao lên theo nội dung, hoặc tên cắt bớt ở dòng thứ hai kèm dấu ba chấm. Điều <em>không</em> được phép là để chữ tràn ra ngoài thẻ — và nếu bản thiết kế không nói, lập trình viên sẽ tự chọn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thẻ cao lên theo nội dung, hoặc cắt ở dòng thứ hai — nhưng phải là quyết định đã ghi rõ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chữ tự động nhỏ lại cho vừa khung",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chữ tràn ra ngoài thẻ, lập trình viên sẽ xử lý sau",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần tính tới vì tên khoá thường ngắn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "4.3-instance",
+                "prompt": "Bản sao của một component, tự cập nhật khi component gốc thay đổi, gọi là gì?",
+                "explanation": "Instance (thể hiện). Đây là cơ chế khiến sửa một chỗ đổi được cả trăm chỗ — và cũng là lý do phải cân nhắc trước khi tách rời (detach) một instance, vì tách rồi thì nó không nhận cập nhật nữa.",
+                "points": 1,
+                "answers": [
+                  "instance",
+                  "thể hiện",
+                  "the hien",
+                  "bản sao component"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.3-variant",
+                "prompt": "Nút trong sản phẩm có 3 kiểu (chính/phụ/chữ) × 3 cỡ × 4 trạng thái. Cách dựng nào hợp lý?",
+                "explanation": "Một component nút với ba thuộc tính (kiểu, cỡ, trạng thái) — người dùng file chọn tổ hợp bằng menu. Dựng 36 component rời thì đổi bo góc một lần phải sửa 36 chỗ, và chắc chắn sẽ sót.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Một component 'Nút' với ba thuộc tính variant: kiểu, cỡ, trạng thái",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "36 component riêng biệt, đặt tên đầy đủ cho dễ tìm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ba component theo kiểu, còn cỡ và trạng thái chỉnh tay mỗi lần dùng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không dùng component, sao chép nút mỗi khi cần",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.3-token",
+                "prompt": "Vì sao nên đặt màu bằng token (ví dụ <code>color.action.primary</code>) thay vì mã màu trực tiếp?",
+                "explanation": "Token gắn màu với <em>vai trò</em>, không với giá trị. Đổi màu thương hiệu hay làm bản nền tối chỉ cần đổi giá trị của token; còn mã màu rải khắp file thì mỗi lần đổi là một cuộc truy tìm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Token gắn màu với vai trò, nên đổi thương hiệu hay làm nền tối chỉ sửa một chỗ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Token hiển thị màu chính xác hơn mã hex",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Token bắt buộc phải có thì lập trình viên mới dựng được",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Token giúp file thiết kế mở nhanh hơn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "4.3-file-gon",
+                "prompt": "Đồng đội mở file của bạn và mất 10 phút mới tìm được màn hình 'Nộp bài'. Dấu hiệu này nói lên điều gì?",
+                "explanation": "File thiết kế là tài liệu làm việc chung, không phải bản nháp cá nhân. Nếu người khác không tìm được đường, thì mọi lợi ích của component và token cũng không tới được với họ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cách tổ chức trang và đặt tên chưa dùng được cho người khác",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đồng đội chưa quen công cụ, cần đào tạo thêm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "File quá lớn, cần chia thành nhiều file nhỏ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không sao cả, miễn là bản thiết kế đúng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "4.3-component-goc",
+                "prompt": "Sửa một chỗ mà mọi bản sao cùng đổi theo — đó là nhờ khái niệm nào trong công cụ thiết kế?",
+                "explanation": "Component (component gốc / master component). Bản sao là 'instance' kế thừa từ nó — đây chính là cách một hệ thống thiết kế giữ được tính nhất quán mà không cần ai nhớ từng chi tiết.",
+                "points": 1,
+                "answers": [
+                  "component",
+                  "component gốc",
+                  "master component",
+                  "thành phần",
+                  "instance"
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "4.3-dung-file",
+                "prompt": "Sắp xếp trình tự dựng một file thiết kế gọn.",
+                "explanation": "Nền tảng trước, chi tiết sau: token màu và chữ → component cơ bản → component ghép → màn hình. Dựng màn hình trước rồi mới rút component ngược lại thường để lại một mớ ngoại lệ không ai dám dọn.",
+                "points": 3,
+                "sequence": [
+                  "Thống nhất quy ước đặt tên và cấu trúc trang",
+                  "Định nghĩa token màu, cỡ chữ, khoảng cách",
+                  "Dựng component cơ bản: nút, ô nhập, thẻ",
+                  "Ghép thành component lớn và dựng màn hình"
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Lợi ích quan trọng nhất của auto layout đối với chất lượng thiết kế là gì?",
                 "explanation": "Auto layout khai báo quan hệ thay vì toạ độ, nên khi nội dung dài ra bố cục tự co giãn và lộ ngay chỗ sẽ vỡ — thứ mà bản vẽ cố định giấu đi tới lúc lập trình.",
                 "points": 2,
@@ -1820,6 +3840,162 @@
             "title": "Kiểm tra bài 5.1",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "5.1-thu-bac-hong",
+                "prompt": "Trên màn hình 'Chi tiết bài tập', hạn nộp, tên môn, mô tả và nút nộp đều cùng cỡ chữ và cùng màu. Hậu quả là gì?",
+                "explanation": "Không có thứ bậc thì mắt phải đọc tuần tự để tự tìm cái quan trọng — chậm và dễ bỏ sót. Thứ bậc thị giác là cách nói cho mắt biết đọc gì trước, trước cả khi não kịp đọc chữ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mắt không biết đọc gì trước, người học phải quét toàn bộ mới tìm được hạn nộp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Màn hình trông thiếu chuyên nghiệp nhưng vẫn dùng tốt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Trang tải chậm hơn vì nhiều chữ cùng cỡ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có hậu quả gì nếu nội dung đã đúng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "5.1-cong-cu-thu-bac",
+                "prompt": "Nối mỗi công cụ tạo thứ bậc với hiệu quả của nó.",
+                "explanation": "Bốn công cụ này không tương đương: cỡ và độ đậm tác động mạnh nhất và nhanh nhất; vị trí xác định thứ tự quét; khoảng trắng tách nhóm; màu là công cụ yếu nhất và không dùng một mình được.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Cỡ chữ và độ đậm",
+                    "right": "Thu hút chú ý mạnh và nhanh nhất"
+                  },
+                  {
+                    "left": "Vị trí trên màn hình",
+                    "right": "Quyết định thứ tự mắt quét qua"
+                  },
+                  {
+                    "left": "Khoảng trắng",
+                    "right": "Tách nhóm mà không thêm đường kẻ"
+                  },
+                  {
+                    "left": "Màu sắc",
+                    "right": "Đánh dấu vai trò, nhưng không nên dùng một mình"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.1-thang-khoang-cach",
+                "prompt": "Vì sao nên chọn khoảng cách từ một thang cố định (4, 8, 12, 16, 24, 32…) thay vì căn theo cảm nhận từng chỗ?",
+                "explanation": "Thang cố định biến khoảng cách thành thứ có ý nghĩa: hai khối cách 8px là cùng nhóm, cách 32px là khác nhóm. Căn theo cảm nhận cho ra 13px, 17px, 21px — mắt vẫn thấy 'gần như nhau' nên nhóm không còn đọc được.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thang cố định làm khoảng cách mang nghĩa nhóm; khoảng cách tuỳ hứng thì nhóm không đọc được nữa",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Các con số chẵn hiển thị sắc nét hơn trên màn hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Lập trình viên không dùng được số lẻ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thang cố định giúp trang tải nhanh hơn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.1-vung-bam",
+                "prompt": "Kích thước tối thiểu khuyến nghị cho vùng chạm trên giao diện di động là bao nhiêu?",
+                "explanation": "Khoảng 44×44 pt (iOS) hay 48×48 dp (Android). Con số này đến từ kích thước đầu ngón tay, nên không co lại được dù thiết kế trông chật — nếu chật, phải bỏ bớt thứ khác đi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Khoảng 44–48 px mỗi chiều",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khoảng 20–24 px mỗi chiều",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khoảng 30 px mỗi chiều",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có mức tối thiểu, tuỳ thiết kế",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "5.1-luoi-cung",
+                "prompt": "Dùng lưới không có nghĩa là mọi thứ phải nằm gọn trong cột — vẫn có thể cho một khối tràn ra để nhấn mạnh.",
+                "explanation": "Đúng. Lưới là hệ quy chiếu chung để những chỗ 'phá lệ' đọc lên như chủ ý, chứ không phải như lỗi. Không có lưới thì mọi lệch lạc đều trông như bất cẩn.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "5.1-khoang-trang",
+                "prompt": "Công cụ tách nhóm hiệu quả nhất mà không cần thêm đường kẻ hay khung là gì?",
+                "explanation": "Khoảng trắng. Theo nguyên lý gần nhau, mắt gom những gì đứng gần nhau — nên chỉ cần chỉnh khoảng cách là nhóm hiện ra, không cần vẽ thêm gì cả.",
+                "points": 1,
+                "answers": [
+                  "khoảng trắng",
+                  "khoang trang",
+                  "khoảng cách",
+                  "white space",
+                  "whitespace"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.1-quet-mat",
+                "prompt": "Trang danh sách khoá học nhiều chữ. Bố cục nên hỗ trợ kiểu quét mắt nào?",
+                "explanation": "Với khối chữ dày, mắt thường quét theo hình chữ F: dòng đầu ngang, rồi ngắn dần, rồi dọc theo mép trái. Nên thông tin phân biệt (tên khoá, hạn) phải nằm ở đầu dòng, không giấu ở cuối câu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chữ F — đặt thông tin phân biệt ở đầu mỗi dòng, không ở cuối câu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chữ O — đặt thông tin quan trọng ở bốn góc",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chữ X — đặt thông tin theo đường chéo",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có kiểu quét nào, mắt đọc tuần tự từng chữ",
+                    "isCorrect": false
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "key": "5.1-khoang-cach-nhom",
@@ -1909,6 +4085,144 @@
             "title": "Kiểm tra bài 5.2",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "5.2-aa-lon",
+                "prompt": "Theo WCAG 2.1 mức AA, tỉ lệ tương phản tối thiểu cho <strong>chữ lớn</strong> (từ 18pt, hoặc 14pt in đậm) là bao nhiêu?",
+                "explanation": "3:1 cho chữ lớn, 4.5:1 cho chữ thường. Chữ lớn được nới vì nét dày hơn nên dễ tách khỏi nền hơn — nhưng 'lớn' ở đây có định nghĩa cụ thể, không phải cảm nhận.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "3:1",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "4.5:1",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "7:1",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "2:1",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.2-mu-mau",
+                "prompt": "Biểu đồ tiến độ học tập dùng xanh lá cho 'đạt' và đỏ cho 'chưa đạt', không có nhãn nào khác. Vấn đề với người mù màu đỏ–lục là gì, và sửa thế nào?",
+                "explanation": "Khoảng 8% nam giới không phân biệt được cặp đỏ–lục, nên biểu đồ này với họ là hai sắc xám gần giống nhau. Cách sửa rẻ nhất: thêm một kênh thứ hai — nhãn chữ, biểu tượng, hoặc hoạ tiết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Với họ hai màu gần như giống nhau — cần thêm nhãn chữ hoặc biểu tượng làm kênh thứ hai",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu hai màu đủ đậm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ cần đổi sang xanh dương và cam là xong, không cần thêm gì",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nên bỏ biểu đồ, dùng bảng số thay thế",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.2-focus",
+                "prompt": "Nhóm bạn bỏ viền focus (viền hiện khi dùng phím Tab) vì thấy nó xấu. Ai bị ảnh hưởng nặng nhất?",
+                "explanation": "Người điều hướng bằng bàn phím — gồm người khiếm thị dùng trình đọc màn hình, người khuyết tật vận động, và cả người dùng thành thạo. Bỏ viền focus là làm họ mất dấu con trỏ hoàn toàn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Người điều hướng bằng bàn phím — họ mất dấu vị trí đang chọn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Người dùng điện thoại màn hình nhỏ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người dùng mạng chậm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không ai cả, đó chỉ là chi tiết trang trí",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "5.2-kiem-tiep-can",
+                "prompt": "Sắp xếp bốn việc kiểm tra khả năng tiếp cận theo thứ tự nên làm (rẻ và bắt được nhiều lỗi trước).",
+                "explanation": "Bắt đầu bằng những thứ máy kiểm được và tự mình thử được, rồi mới tới kiểm thử với người dùng thật — vốn đắt nhất nhưng cũng là thứ duy nhất phát hiện được vấn đề không nằm trong danh sách kiểm.",
+                "points": 3,
+                "sequence": [
+                  "Đo tương phản của mọi cặp màu chữ – nền",
+                  "Đi hết màn hình chỉ bằng phím Tab",
+                  "Kiểm tra ảnh có văn bản thay thế, biểu mẫu có nhãn",
+                  "Thử với người dùng trình đọc màn hình"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.2-alt-text",
+                "prompt": "Bài giảng có biểu đồ 'tỉ lệ nộp bài đúng hạn theo tuần'. Văn bản thay thế nào phù hợp?",
+                "explanation": "Văn bản thay thế phải truyền đạt <em>thông tin</em> của hình, không phải mô tả hình dáng. Với biểu đồ, thường cần một câu tóm tắt xu hướng, và bảng số đầy đủ đặt gần đó cho ai cần chi tiết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tỉ lệ nộp đúng hạn giảm từ 92% tuần 1 xuống 61% tuần 8, giảm mạnh nhất ở tuần thi giữa kỳ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Biểu đồ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hình ảnh biểu đồ cột màu xanh trên nền trắng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Xem mô tả trong bài giảng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.2-mau-vai-tro",
+                "prompt": "Trong bảng màu của một sản phẩm học tập, màu nên được đặt tên theo cái gì?",
+                "explanation": "Theo vai trò: màu hành động chính, màu cảnh báo, màu nền phụ. Đặt tên theo sắc độ ('xanh lá 500') thì khi đổi thương hiệu, cái tên nói dối — hoặc ai đó dùng 'xanh lá' cho một việc chẳng liên quan gì tới thành công.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Theo vai trò trong giao diện (hành động chính, cảnh báo, nền phụ)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Theo sắc độ (xanh lá 500, đỏ 700)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Theo tên gọi cảm tính (xanh cỏ non, đỏ hoa hồng)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Theo thứ tự thêm vào file thiết kế",
+                    "isCorrect": false
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "key": "5.2-vien-do",
@@ -2007,6 +4321,172 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "5.3-co-chu-than",
+                "prompt": "Cỡ chữ thân bài tối thiểu nên dùng cho nội dung học tập đọc lâu trên web là bao nhiêu?",
+                "explanation": "Từ 16px trở lên cho thân bài. Nhỏ hơn thì người đọc phải phóng to hoặc ghé sát — và với nội dung học tập đọc hàng chục phút, mệt mắt trực tiếp làm giảm khả năng tiếp thu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Từ 16px trở lên",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khoảng 12px",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khoảng 14px",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không quan trọng, miễn là tương phản đủ",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.3-chieu-cao-dong",
+                "prompt": "Chiều cao dòng (line-height) hợp lý cho một đoạn văn dài là khoảng bao nhiêu so với cỡ chữ?",
+                "explanation": "Khoảng 1.5 lần cỡ chữ cho thân bài. Chặt hơn thì mắt khó tìm đầu dòng kế tiếp; rộng quá thì các dòng rời nhau, không còn đọc như một khối. Tiêu đề thì ngược lại — dòng chặt hơn, khoảng 1.2.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Khoảng 1.5 lần cỡ chữ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng bằng cỡ chữ (1.0)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khoảng 2.5 lần cỡ chữ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tuỳ ý, không ảnh hưởng tới việc đọc",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.3-hai-phong",
+                "prompt": "Một sản phẩm học tập nên dùng bao nhiêu họ phông chữ?",
+                "explanation": "Một hoặc hai là đủ: một cho thân bài, có thể thêm một cho tiêu đề. Thứ tạo ra sự phong phú là thang cỡ và độ đậm, không phải số lượng phông — nhiều phông chỉ làm trang trông rời rạc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Một hoặc hai, và tạo phong phú bằng thang cỡ với độ đậm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ít nhất bốn, để mỗi loại nội dung có bản sắc riêng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Một phông cho mỗi module của khoá học",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Càng nhiều càng thể hiện được sự sáng tạo",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "5.3-he-thong-gom-gi",
+                "prompt": "Nối mỗi tầng của hệ thống thiết kế với ví dụ của nó.",
+                "explanation": "Hệ thống thiết kế đi từ giá trị nền tảng tới mẫu ghép sẵn. Mỗi tầng trên chỉ dùng thứ tầng dưới cung cấp — đó là điều giữ cho toàn sản phẩm nhất quán mà không cần ai nhớ từng con số.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Token",
+                    "right": "color.action.primary, space.16"
+                  },
+                  {
+                    "left": "Thành phần cơ bản",
+                    "right": "Nút, ô nhập, huy hiệu"
+                  },
+                  {
+                    "left": "Thành phần ghép",
+                    "right": "Thẻ khoá học, thanh điều hướng"
+                  },
+                  {
+                    "left": "Mẫu trang",
+                    "right": "Trang danh sách, trang chi tiết bài học"
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "5.3-do-dai-dong",
+                "prompt": "Điền số gần đúng: đoạn văn dài dễ đọc nhất khi mỗi dòng có khoảng ______ ký tự.",
+                "explanation": "Khoảng 45–75 ký tự (thường lấy 65 làm mốc). Dòng dài hơn khiến mắt khó bắt đúng dòng kế tiếp; ngắn hơn thì nhịp đọc bị ngắt quá thường xuyên.",
+                "points": 1,
+                "answers": [
+                  "65",
+                  "60",
+                  "70",
+                  "45-75",
+                  "45–75",
+                  "50-75",
+                  "60-70"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.3-chu-hoa",
+                "prompt": "Một tiêu đề mục dài 12 từ được viết TOÀN CHỮ HOA cho nổi bật. Vấn đề là gì?",
+                "explanation": "Chữ hoa toàn bộ xoá mất đường viền trên–dưới của từ — thứ mắt dùng để nhận dạng nhanh — nên đọc chậm hơn rõ rệt với đoạn dài. Dùng được cho nhãn ngắn, không dùng cho câu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mất hình dáng đặc trưng của từ nên đọc chậm hơn — chỉ nên dùng cho nhãn rất ngắn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chữ hoa chiếm ít chỗ hơn nên bố cục bị lệch",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Trình đọc màn hình không đọc được chữ hoa",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có vấn đề gì, chữ hoa luôn nổi bật hơn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "5.3-tai-lieu",
+                "prompt": "Thứ gì khiến một hệ thống thiết kế thật sự được dùng, thay vì nằm im trong file?",
+                "explanation": "Tài liệu nói rõ <em>khi nào</em> dùng cái gì, kèm ví dụ nên và không nên. Một thư viện component không có hướng dẫn thì mỗi người diễn giải một kiểu, và tính nhất quán mất đúng chỗ nó cần nhất.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tài liệu nói rõ khi nào dùng thành phần nào, kèm ví dụ nên và không nên",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Số lượng component càng nhiều càng tốt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bảng màu có nhiều sắc độ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "File được đặt trong thư mục chung của nhóm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Độ dài dòng khoảng bao nhiêu ký tự được xem là dễ đọc cho đoạn văn dài?",
                 "explanation": "Khoảng 45–75 ký tự. Dòng dài hơn khiến mắt khó tìm đầu dòng kế tiếp; ngắn hơn thì nhịp đọc bị ngắt liên tục.",
                 "points": 2,
@@ -2098,6 +4578,170 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "6.1-nam-nguoi",
+                "prompt": "Vì sao 5 người test thường đã đủ cho một vòng kiểm thử khả dụng?",
+                "explanation": "Vì mục tiêu là tìm lỗi, không phải đo tỉ lệ. Các lỗi nghiêm trọng lặp lại ở hầu hết người tham gia, nên 5 người đã lộ ra phần lớn; người thứ 12 chủ yếu xác nhận lại điều đã biết. Thà chạy ba vòng 5 người còn hơn một vòng 15 người.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Lỗi nặng lặp lại ở nhiều người, nên 5 người đã lộ phần lớn — và nên dành ngân sách cho vòng test tiếp theo",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì 5 là cỡ mẫu tối thiểu để tính được ý nghĩa thống kê",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì quá 5 người thì người tham gia sẽ nói giống nhau do đã bàn với nhau",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì mỗi buổi test tốn nhiều tiền nên phải cắt giảm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.1-tuyen-nguoi",
+                "prompt": "Bạn test hệ thống nộp bài dành cho sinh viên năm nhất. Ai là người tham gia phù hợp nhất?",
+                "explanation": "Người tham gia phải giống người dùng thật ở những điểm ảnh hưởng tới hành vi: mức quen thuộc với hệ thống, thiết bị dùng, hoàn cảnh sử dụng. Đồng đội trong nhóm đã biết quá nhiều nên không còn phát hiện được gì.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sinh viên năm nhất chưa từng dùng hệ thống này, dùng chính điện thoại của họ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Các thành viên khác trong nhóm thiết kế",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giảng viên phụ trách môn học",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sinh viên năm cuối đã dùng hệ thống ba năm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.1-noi-it",
+                "prompt": "Trong buổi test, người điều phối nên làm gì nhiều nhất?",
+                "explanation": "Im lặng và quan sát. Mỗi câu giải thích của người điều phối là một mẩu dữ liệu bị mất — vì từ đó trở đi, người tham gia dùng hiểu biết của bạn chứ không phải của họ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Im lặng quan sát, chỉ nhắc nhiệm vụ và hỏi 'bạn đang nghĩ gì?'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giải thích cách hoạt động của từng màn hình khi người tham gia lúng túng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ghi lại ý kiến của người tham gia về màu sắc và phông chữ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hỏi người tham gia xem họ muốn thêm tính năng gì",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.1-uu-tien-sua",
+                "prompt": "Sau ba buổi test, nhóm có 19 phát hiện. Nên ưu tiên sửa theo tiêu chí nào?",
+                "explanation": "Xếp theo mức nghiêm trọng: lỗi chặn hẳn việc chính (không nộp được bài) trước, rồi lỗi gây mất thời gian, cuối cùng là phiền toái nhỏ. Số người gặp là một yếu tố, nhưng một lỗi chặn dù chỉ một người gặp vẫn phải xử lý.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mức nghiêm trọng: chặn việc chính → gây mất thời gian → phiền toái nhỏ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Độ dễ sửa: sửa hết những lỗi nhanh trước cho danh sách ngắn lại",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thứ tự phát hiện: xử lý lần lượt từ buổi test đầu tiên",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ý kiến của người có chức vụ cao nhất trong nhóm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "6.1-quan-sat-hay-y-kien",
+                "prompt": "Nối mỗi ghi chép với loại dữ liệu của nó.",
+                "explanation": "Quan sát là thứ camera cũng ghi được; ý kiến là điều người tham gia nói ra; suy diễn là phần bạn thêm vào. Trộn ba loại trong một danh sách khiến nhóm tranh cãi về suy diễn mà tưởng đang bàn về sự thật.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Người thứ 3 bấm nút 'Lưu nháp' hai lần",
+                    "right": "Quan sát"
+                  },
+                  {
+                    "left": "'Em tưởng bấm xong là nộp rồi'",
+                    "right": "Lời người tham gia"
+                  },
+                  {
+                    "left": "Nhãn nút gây hiểu nhầm giữa lưu và nộp",
+                    "right": "Suy diễn của nhóm"
+                  },
+                  {
+                    "left": "4/5 người dừng lại ở màn hình xác nhận",
+                    "right": "Quan sát tổng hợp"
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "6.1-nghi-thanh-tieng",
+                "prompt": "Kỹ thuật yêu cầu người tham gia nói ra suy nghĩ trong lúc thao tác gọi là gì?",
+                "explanation": "Nghĩ thành tiếng (think-aloud). Nó cho biết vì sao người ta bấm chỗ này chứ không phải chỗ kia — thứ mà chỉ nhìn thao tác thì phải đoán.",
+                "points": 1,
+                "answers": [
+                  "nghĩ thành tiếng",
+                  "nghi thanh tieng",
+                  "think aloud",
+                  "think-aloud",
+                  "nói thành tiếng"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.1-test-som",
+                "prompt": "Thời điểm sớm nhất có thể chạy một buổi kiểm thử khả dụng là khi nào?",
+                "explanation": "Ngay khi có thứ gì đó để người dùng phản ứng — kể cả bản phác trên giấy. Đợi đến khi sản phẩm 'đủ hoàn thiện' nghĩa là mọi phát hiện đều đến sau khi việc sửa đã trở nên đắt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Ngay khi có bản phác giấy — không cần đợi bản dựng hoàn chỉnh",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khi giao diện đã có màu và nội dung thật",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khi sản phẩm đã lập trình xong và chạy được",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sau khi phát hành, dựa trên số liệu thực tế",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Nhóm bạn có ngân sách cho 15 buổi test. Cách dùng nào cho kết quả tốt nhất?",
                 "explanation": "Ba vòng 5 người cho phép sửa giữa các vòng, nên vòng sau kiểm chứng được bản đã sửa. Một vòng 15 người chỉ cho một danh sách dài mà không kiểm chứng lại được gì.",
                 "points": 2,
@@ -2185,6 +4829,120 @@
             "title": "Kiểm tra bài 6.2",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "6.2-muc-nghiem-trong-3",
+                "prompt": "Trong thang mức độ nghiêm trọng 0–3, phát hiện nào đáng xếp mức 3 (nghiêm trọng, phải sửa trước khi phát hành)?",
+                "explanation": "Mức 3 dành cho thứ chặn người dùng hoàn thành việc chính hoặc gây mất mát không hồi phục được. Lỗi thẩm mỹ, dù nhiều, vẫn thuộc mức thấp — xếp mức theo cảm giác khó chịu của người soát là cách làm hỏng cả bảng ưu tiên.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bài đã nộp bị mất khi phiên đăng nhập hết hạn, không khôi phục được",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Biểu tượng trên thanh điều hướng lệch 2px",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Màu nút phụ hơi nhạt so với hệ thống thiết kế",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Trang trợ giúp dùng ảnh chụp màn hình phiên bản cũ",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.2-ghi-phat-hien",
+                "prompt": "Một phát hiện được ghi thế nào thì dùng được?",
+                "explanation": "Phải nêu chỗ nào, vi phạm nguyên tắc gì, hậu quả ra sao, và mức nghiêm trọng. Thiếu hậu quả thì không ai xếp được ưu tiên; thiếu vị trí thì lập trình viên không biết sửa ở đâu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Màn hình nào, nguyên tắc nào bị vi phạm, hậu quả với người học, mức nghiêm trọng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Một câu mô tả cảm nhận chung về màn hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ảnh chụp màn hình kèm dấu khoanh đỏ, không cần chữ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đề xuất giải pháp cụ thể, không cần nêu vấn đề",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.2-bao-nhieu-nguoi-soat",
+                "prompt": "Nên có bao nhiêu người soát trong một đợt đánh giá theo bộ nguyên tắc?",
+                "explanation": "Khoảng 3–5. Một người bỏ sót nhiều; thêm người thì phổ phát hiện rộng ra nhanh trong khoảng này rồi chững lại. Quan trọng hơn số lượng là mỗi người soát độc lập trước khi gộp.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "3–5 người, mỗi người soát độc lập trước",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng một người, để kết quả nhất quán",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Càng nhiều càng tốt, tối thiểu 10 người",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bằng số màn hình cần soát",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "6.2-phan-hoi-he-thong",
+                "prompt": "Nguyên tắc đầu tiên trong mười nguyên tắc của Nielsen nói hệ thống phải luôn cho người dùng biết điều gì?",
+                "explanation": "Trạng thái hiện tại của hệ thống — đang làm gì, xong chưa, kết quả ra sao. Đây là nguyên tắc bị vi phạm nhiều nhất trong sản phẩm giáo dục, thường ở đúng lúc căng nhất: sau khi bấm nộp bài.",
+                "points": 1,
+                "answers": [
+                  "trạng thái",
+                  "trang thai",
+                  "trạng thái hệ thống",
+                  "hệ thống đang làm gì",
+                  "tình trạng"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.2-khi-nao-dung-pp",
+                "prompt": "Tình huống nào phù hợp nhất để dùng đánh giá theo bộ nguyên tắc thay vì kiểm thử người dùng?",
+                "explanation": "Khi cần rà nhanh, ngân sách thấp, hoặc muốn dọn sạch những lỗi hiển nhiên <em>trước</em> buổi test — để buổi test đắt tiền không bị tiêu tốn vào những lỗi mà một chuyên gia đã bắt được trong 30 phút.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Rà nhanh trước buổi test người dùng, để không tốn buổi test vào lỗi hiển nhiên",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khi cần biết bao nhiêu phần trăm người dùng hoàn thành được nhiệm vụ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khi muốn biết người học hiểu sai khái niệm nào trong bài",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khi cần quyết định giữa hai phương án bằng số liệu",
+                    "isCorrect": false
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "prompt": "Sau khi bấm 'Gửi bài', màn hình không thay đổi gì trong 5 giây. Phát hiện này vi phạm nguyên tắc nào rõ nhất?",
@@ -2309,6 +5067,101 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "6.3-do-luong-hai-mat",
+                "prompt": "Sau khi đổi thiết kế, thời gian trung bình để nộp một bài giảm 40%, nhưng tỉ lệ bài nộp sai định dạng tăng gấp ba. Kết luận đúng là gì?",
+                "explanation": "Một chỉ số cải thiện không đủ để kết luận. Ở đây nhiều khả năng thiết kế mới đã bỏ mất một bước kiểm tra — nhanh hơn nhưng dẫn tới hậu quả tốn kém hơn cho cả người học lẫn giảng viên.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiết kế mới nhanh hơn nhưng có thể đã bỏ mất một điểm kiểm tra — cần xem lại trước khi mừng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thành công: mục tiêu là giảm thời gian nộp bài",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không kết luận được gì vì chưa đủ 6 tháng dữ liệu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tỉ lệ sai định dạng là lỗi của người học, không liên quan tới thiết kế",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "key": "6.3-do-sau-phat-hanh",
+                "prompt": "Sắp xếp trình tự đo lường sau khi phát hành một thay đổi thiết kế.",
+                "explanation": "Chốt chỉ số và mốc so sánh <em>trước</em> khi phát hành. Chọn chỉ số sau khi đã thấy số liệu là cách chắc chắn để tìm ra một con số đẹp nào đó và gọi nó là thành công.",
+                "points": 3,
+                "sequence": [
+                  "Nêu rõ thay đổi này nhằm cải thiện điều gì",
+                  "Chọn chỉ số chính và chỉ số đối trọng, ghi lại mốc trước khi đổi",
+                  "Phát hành và thu dữ liệu đủ dài",
+                  "So với mốc, xét cả chỉ số đối trọng",
+                  "Quyết định giữ, chỉnh tiếp hay hoàn tác"
+                ]
+              },
+              {
+                "type": "true_false",
+                "key": "6.3-chi-so-doi-trong",
+                "prompt": "Mỗi chỉ số chính nên đi kèm một chỉ số đối trọng để phát hiện tác dụng phụ.",
+                "explanation": "Đúng. Gần như chỉ số nào cũng có cách 'cải thiện' bằng việc làm hỏng thứ khác — tăng thời gian trên ứng dụng bằng cách làm nội dung khó tìm, chẳng hạn. Chỉ số đối trọng là cái phanh cho việc đó.",
+                "points": 1,
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "6.3-nhan-nut",
+                "prompt": "Nhãn nút nào viết đúng nguyên tắc?",
+                "explanation": "Nhãn nút nên là động từ nói rõ việc sắp xảy ra, để người dùng biết mình đang đồng ý với cái gì. 'OK' và 'Xác nhận' buộc họ phải đọc ngược lên câu hỏi và tự suy ra — và trong hộp thoại nguy hiểm, đó là lúc người ta bấm nhầm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nộp bài",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "OK",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Xác nhận",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tiếp tục",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "6.3-chi-so-doi-trong-ten",
+                "prompt": "Chỉ số dùng để phát hiện tác dụng phụ của một thay đổi, đi kèm chỉ số chính, gọi là gì?",
+                "explanation": "Chỉ số đối trọng (counter metric / guardrail metric). Ví dụ: chính là 'thời gian nộp bài', đối trọng là 'tỉ lệ nộp sai định dạng'.",
+                "points": 1,
+                "answers": [
+                  "chỉ số đối trọng",
+                  "chi so doi trong",
+                  "counter metric",
+                  "guardrail",
+                  "đối trọng"
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Bạn gửi cho lập trình viên link Figma của 5 màn hình ở trạng thái bình thường và coi như đã bàn giao xong. Rủi ro lớn nhất là gì?",
                 "explanation": "Trạng thái rỗng, đang tải, lỗi, nội dung quá dài và quy tắc co giãn không có trong bản vẽ. Lập trình viên buộc phải tự quyết, và mỗi người quyết một kiểu.",
                 "points": 2,
@@ -2428,6 +5281,120 @@
             "title": "Kiểm tra bài 7.1",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "7.1-nguoi-mua-nguoi-hoc",
+                "prompt": "Trong sản phẩm giáo dục, vì sao 'người trả tiền' và 'người ngồi học' tách ra lại là chuyện quan trọng với thiết kế?",
+                "explanation": "Vì thứ thuyết phục người mua (báo cáo, số liệu, cam kết kết quả) không phải thứ giúp người học tiến bộ. Sản phẩm chỉ tối ưu cho người mua thì bán được nhưng không ai học; chỉ tối ưu cho người học thì không ai mua.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thứ thuyết phục người mua khác hẳn thứ giúp người học tiến bộ — phải phục vụ cả hai một cách có ý thức",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Người mua luôn đúng nên phải ưu tiên họ tuyệt đối",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người học chưa đủ trưởng thành để có ý kiến về sản phẩm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đây là vấn đề kinh doanh, không liên quan tới thiết kế",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.1-ba-thu-nuoi-dong-luc",
+                "prompt": "Theo thuyết tự quyết, ba nhu cầu nuôi được động lực lâu dài là gì?",
+                "explanation": "Tự chủ (được chọn), năng lực (thấy mình tiến bộ) và kết nối (thuộc về một nhóm). Điểm thưởng chạm vào động lực ngoại sinh — hiệu quả ngắn hạn, và có thể lấn át động lực nội sinh nếu thành thứ duy nhất.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tự chủ, năng lực, kết nối",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Điểm số, huy hiệu, bảng xếp hạng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tốc độ, tiện lợi, giá rẻ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nhắc nhở, phần thưởng, hình phạt",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.1-xung-dot-loi-ich",
+                "prompt": "Nhà trường muốn khoá học buộc xem hết video mới cho làm bài; giảng viên muốn sinh viên được nhảy tới phần mình chưa hiểu. Cách xử lý nào tốt nhất?",
+                "explanation": "Đưa xung đột ra thành một câu hỏi kiểm chứng được, rồi quyết bằng dữ liệu: cho phép tua nhưng đo xem việc đó ảnh hưởng thế nào tới kết quả bài kiểm tra. Chọn phe theo chức vụ là cách bỏ lỡ cơ hội học điều gì đúng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Biến nó thành câu hỏi kiểm chứng được: cho phép tua, rồi đo tác động tới kết quả học",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Làm theo nhà trường vì họ là bên đặt hàng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Làm theo giảng viên vì họ hiểu người học hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Làm cả hai: bắt xem hết nhưng ẩn thanh tiến độ đi",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "7.1-dong-luc-viec-lam",
+                "prompt": "Nối mỗi nhu cầu động lực với một việc làm cụ thể trong sản phẩm học tập.",
+                "explanation": "Ba nhu cầu này dịch thẳng ra được thành tính năng. Điều đáng chú ý: không cái nào trong số đó là điểm thưởng — phần thưởng ngoại sinh nằm ở tầng khác và có tác dụng phụ riêng.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Tự chủ",
+                    "right": "Cho chọn thứ tự học và mức độ khó"
+                  },
+                  {
+                    "left": "Năng lực",
+                    "right": "Cho thấy mình đã tiến bộ so với chính mình"
+                  },
+                  {
+                    "left": "Kết nối",
+                    "right": "Học chung, thấy bạn cùng lớp cũng đang làm"
+                  },
+                  {
+                    "left": "Mục đích",
+                    "right": "Nói rõ kỹ năng này dùng được vào việc gì"
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "7.1-noi-sinh",
+                "prompt": "Động lực đến từ chính hứng thú và ý nghĩa của việc học, không đến từ phần thưởng bên ngoài — gọi là động lực gì?",
+                "explanation": "Động lực nội sinh. Nó bền hơn nhưng cũng mong manh hơn: phần thưởng ngoại sinh đặt sai chỗ có thể làm nó yếu đi, vì người học chuyển từ 'làm vì thích' sang 'làm vì được thưởng'.",
+                "points": 1,
+                "answers": [
+                  "nội sinh",
+                  "noi sinh",
+                  "động lực nội sinh",
+                  "intrinsic",
+                  "bên trong"
+                ]
+              },
               {
                 "type": "mcq",
                 "prompt": "Nhà trường đặt hàng tính năng 'báo cáo tổng thời gian mỗi học sinh mở ứng dụng mỗi tuần'. Nhận xét thiết kế sắc sảo nhất là gì?",
@@ -2553,6 +5520,144 @@
             "title": "Kiểm tra bài 7.2",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "7.2-ba-loai-tai",
+                "prompt": "Loại tải nhận thức nào người thiết kế nên <strong>cắt bỏ</strong> triệt để nhất?",
+                "explanation": "Tải ngoại lai — phần công sức tiêu vào những thứ không liên quan tới nội dung: nhạc nền, hoạt ảnh thừa, bố cục rối, chữ nhỏ khó đọc. Tải nội tại thuộc về độ khó của bài; tải hữu ích là phần dành cho việc xây hiểu biết, không nên cắt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tải ngoại lai — thứ tiêu sức mà không liên quan tới nội dung",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tải nội tại — độ khó vốn có của kiến thức",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tải hữu ích — phần dành cho việc xây dựng hiểu biết",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cả ba loại đều nên cắt tối đa",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.2-nguyen-tac-gan",
+                "prompt": "Slide bài giảng đặt chú thích của hình ở cuối trang, cách hình khoảng nửa màn hình. Nguyên tắc nào bị vi phạm, và vì sao nó quan trọng?",
+                "explanation": "Nguyên tắc gần nhau về không gian: chữ giải thích phải đặt cạnh phần hình mà nó nói tới. Đặt xa nhau buộc người học phải giữ hình trong trí nhớ làm việc trong lúc đi tìm chữ — tiêu tốn đúng nguồn lực lẽ ra dành cho việc hiểu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Gần nhau về không gian — người học phải giữ hình trong trí nhớ trong lúc đi tìm chữ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nguyên tắc dư thừa — không nên có chú thích cho hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nguyên tắc mạch lạc — chú thích luôn là thứ thừa",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không vi phạm gì, chú thích ở đâu cũng được",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.2-du-thua",
+                "prompt": "Video bài giảng có lời giảng, đồng thời hiện toàn văn lời giảng đó thành chữ trên màn hình. Theo Mayer, vấn đề là gì?",
+                "explanation": "Nguyên tắc dư thừa: nghe và đọc cùng một nội dung buộc kênh thị giác xử lý thêm chữ trong khi đang cần xử lý hình. Phụ đề cho người khiếm thính hay môi trường ồn là chuyện khác — đó là khả năng tiếp cận, và nên bật/tắt được.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Dư thừa: kênh thị giác phải đọc chữ trong lúc đang cần nhìn hình — nên để phụ đề bật/tắt được",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không vấn đề gì: lặp lại hai kênh luôn giúp nhớ tốt hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là chữ chiếm chỗ của hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ là vấn đề thẩm mỹ của video",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.2-cuon-len-xuong",
+                "prompt": "Kiểm thử cho thấy người học liên tục cuộn lên cuộn xuống giữa đề bài và ô trả lời. Cách sửa hợp lý nhất?",
+                "explanation": "Việc cuộn đi cuộn lại là dấu hiệu người học đang phải giữ thông tin trong trí nhớ làm việc để mang từ chỗ này sang chỗ kia. Cho hai phần cùng xuất hiện — ghim đề bài, hoặc chia hai cột trên màn rộng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cho đề bài và ô trả lời cùng nhìn thấy được: ghim đề, hoặc chia hai cột",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Rút gọn đề bài xuống còn một câu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thêm nút 'lên đầu trang' cho cuộn nhanh hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nhắc người học đọc kỹ đề trước khi bắt đầu trả lời",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "7.2-tri-nho-lam-viec",
+                "prompt": "Nút thắt cổ chai của việc học — nơi chỉ giữ được vài đơn vị thông tin cùng lúc — gọi là gì?",
+                "explanation": "Trí nhớ làm việc. Nó nhỏ và dễ quá tải, nên phần lớn nguyên tắc thiết kế học liệu thực chất là các cách để không làm tràn nó.",
+                "points": 1,
+                "answers": [
+                  "trí nhớ làm việc",
+                  "tri nho lam viec",
+                  "working memory",
+                  "trí nhớ ngắn hạn"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.2-vi-du-da-dang",
+                "prompt": "Bài luyện tập cho 10 câu cùng một dạng, số liệu khác nhau. Người học làm đúng hết nhưng gặp dạng biến thể trong bài kiểm tra thì bí. Cách chỉnh nào hợp lý?",
+                "explanation": "Luyện tập lặp cùng một khuôn tạo ra kỹ năng gắn chặt với khuôn ấy. Trộn các dạng và đổi bối cảnh (luyện xen kẽ) khiến việc luyện chậm và có vẻ khó hơn, nhưng chuyển được sang tình huống mới.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Trộn các dạng và đổi bối cảnh, chấp nhận luyện chậm hơn để chuyển được sang tình huống mới",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tăng lên 20 câu cùng dạng cho thật thuộc",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giảm còn 5 câu để đỡ mệt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hiện lời giải ngay sau mỗi câu để học nhanh hơn",
+                    "isCorrect": false
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "prompt": "Nhóm bạn thêm nhạc nền vui và vài ảnh động hài hước vào bài học để 'đỡ khô khan'. Theo nghiên cứu về học đa phương tiện, hệ quả nhiều khả năng là gì?",
@@ -2690,6 +5795,145 @@
             "questions": [
               {
                 "type": "mcq",
+                "key": "7.3-chi-so-tuong-tac",
+                "prompt": "Vì sao 'số phút trên hệ thống' là chỉ số yếu khi đánh giá một sản phẩm học tập?",
+                "explanation": "Nó không phân biệt được người đang học với người đang loay hoay tìm chỗ nộp bài. Thời gian tăng có thể là dấu hiệu tốt, cũng có thể là dấu hiệu giao diện khó dùng — con số ấy tự nó không nói được điều gì.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nó không phân biệt được người đang học với người đang loay hoay vì khó dùng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nó khó thu thập chính xác về mặt kỹ thuật",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nó vi phạm quy định bảo vệ dữ liệu cá nhân",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nó chỉ đo được trên máy tính, không đo được trên điện thoại",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.3-ba-cau-hoi-du-lieu",
+                "prompt": "Trước khi thêm một trường dữ liệu mới về người học, ba câu phải trả lời được là gì?",
+                "explanation": "Dùng để làm gì, ai được xem, và giữ bao lâu. Không trả lời được cả ba thì đó là dữ liệu thu vì tiện — và dữ liệu đã thu thì rủi ro rò rỉ, lạm dụng đi kèm mãi mãi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Dùng vào quyết định gì, ai được xem, và giữ trong bao lâu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Lưu ở đâu, định dạng nào, và sao lưu ra sao",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ai đề xuất, ai duyệt, và bao giờ triển khai",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tốn bao nhiêu dung lượng, bao nhiêu tiền, bao nhiêu thời gian",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.3-mo-hinh-du-doan",
+                "prompt": "Hệ thống gắn nhãn 'nguy cơ bỏ học cao' cho một học sinh và hiển thị nhãn ấy cho giáo viên. Rủi ro thiết kế lớn nhất là gì?",
+                "explanation": "Nhãn dự đoán có thể trở thành lời tiên tri tự ứng nghiệm: giáo viên đối xử khác đi, học sinh cảm nhận được, và kết quả đúng như dự đoán. Nếu vẫn dùng, nhãn phải đi kèm lý do cụ thể và một hành động hỗ trợ được đề xuất — không phải chỉ một con số rủi ro.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nhãn có thể tự ứng nghiệm — cần kèm lý do cụ thể và đề xuất hỗ trợ, không chỉ điểm rủi ro",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mô hình có thể chạy chậm khi số học sinh tăng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giáo viên có thể không hiểu thuật ngữ kỹ thuật",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có rủi ro nào nếu mô hình đủ chính xác",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "key": "7.3-chi-so-loai",
+                "prompt": "Nối mỗi chỉ số với thứ nó thật sự đo được.",
+                "explanation": "Càng gần kết quả học thật thì càng khó đo và càng chậm có số. Cám dỗ là dừng ở những chỉ số dễ — và rồi tối ưu cho chúng, tức là tối ưu cho thứ mình không thật sự quan tâm.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Số lần mở ứng dụng",
+                    "right": "Mức độ ghé thăm, không nói gì về việc học"
+                  },
+                  {
+                    "left": "Số bài hoàn thành",
+                    "right": "Khối lượng đã làm"
+                  },
+                  {
+                    "left": "Điểm bài kiểm tra sau một tuần",
+                    "right": "Kiến thức còn giữ lại"
+                  },
+                  {
+                    "left": "Vận dụng được vào bài tập mới",
+                    "right": "Khả năng chuyển giao — đích thật sự"
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "7.3-thu-toi-thieu",
+                "prompt": "Nguyên tắc 'chỉ thu những dữ liệu thật sự cần cho mục đích đã nêu' gọi là gì?",
+                "explanation": "Thu thập tối thiểu (data minimisation). Nó vừa là yêu cầu pháp lý ở nhiều nơi, vừa là cách giảm rủi ro rẻ nhất: dữ liệu không thu thì không thể rò rỉ.",
+                "points": 1,
+                "answers": [
+                  "thu thập tối thiểu",
+                  "toi thieu",
+                  "tối thiểu hoá dữ liệu",
+                  "data minimisation",
+                  "data minimization"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.3-minh-bach",
+                "prompt": "Người học có quyền biết gì về dữ liệu của mình trong một nền tảng học tập?",
+                "explanation": "Tối thiểu: hệ thống thu gì, dùng vào việc gì, ai xem được, và cách yêu cầu bản sao hoặc xoá. Nói bằng ngôn ngữ đọc được, ở chỗ tìm thấy được — không phải chôn trong 12 trang điều khoản.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thu gì, dùng làm gì, ai xem được, và cách lấy bản sao hoặc yêu cầu xoá",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ cần biết dữ liệu được lưu ở máy chủ trong nước",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần biết gì nếu nền tảng do nhà trường cung cấp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ cần biết khi có sự cố rò rỉ dữ liệu",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
                 "prompt": "Sau khi thêm thông báo đẩy nhắc học mỗi tối, thời gian trung bình trên ứng dụng tăng 40%. Nhóm định báo cáo đây là thành công. Nhận xét đúng nhất?",
                 "explanation": "Thời gian trên ứng dụng là chỉ số tương tác. Nó tăng cả khi người học loay hoay hoặc bị thông báo kéo vào rồi lướt vô định. Phải đối chiếu với chỉ số kết quả học.",
                 "points": 2,
@@ -2794,6 +6038,145 @@
             "title": "Kiểm tra bài 7.4",
             "passThresholdPct": 60,
             "questions": [
+              {
+                "type": "mcq",
+                "key": "7.4-may-dung-chung",
+                "prompt": "Ở nhiều gia đình, một chiếc điện thoại được cả nhà dùng chung. Điều đó đổi gì trong thiết kế nền tảng học tập?",
+                "explanation": "Không thể mặc định 'một thiết bị = một người học'. Cần chuyển tài khoản nhanh, không tự đăng nhập vĩnh viễn, và cẩn trọng với thông báo hiện nội dung riêng tư trên màn hình khoá.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Phải cho đổi tài khoản nhanh và không hiện nội dung riêng tư trên màn hình khoá",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không đổi gì, mỗi người tự đăng xuất khi dùng xong",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nên bắt đăng nhập lại bằng mật khẩu sau mỗi 5 phút",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nên khoá không cho nhiều tài khoản trên cùng một máy",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.4-mobile-first",
+                "prompt": "Vì sao thiết kế cho sản phẩm giáo dục ở Việt Nam nên bắt đầu từ màn hình điện thoại?",
+                "explanation": "Vì với phần lớn người học, điện thoại là thiết bị chính chứ không phải phương án dự phòng. Bắt đầu từ màn hình hẹp buộc phải xếp thứ tự ưu tiên nội dung ngay từ đầu; đi ngược lại thì chỉ còn cách cắt xén.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Điện thoại là thiết bị chính của phần lớn người học, và màn hình hẹp buộc phải ưu tiên nội dung ngay từ đầu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì công cụ thiết kế mặc định mở ở khung điện thoại",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì bản điện thoại dễ vẽ hơn bản máy tính",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì máy tính sẽ không còn được dùng trong vài năm tới",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.4-du-lieu-dat",
+                "prompt": "Bài học có video 80 MB là nội dung chính. Cách nào tôn trọng người dùng gói dữ liệu hạn chế nhất?",
+                "explanation": "Cho biết dung lượng trước khi tải, cho chọn chất lượng, và cho tải về khi có Wi-Fi để xem sau. Tự động phát video nặng là quyết định tiêu tiền thay cho người khác.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Báo dung lượng trước, cho chọn chất lượng, cho tải sẵn khi có Wi-Fi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tự động phát ở chất lượng cao nhất cho trải nghiệm tốt nhất",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nén video xuống thật thấp cho mọi người",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ cho xem video khi phát hiện đang dùng Wi-Fi",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.4-thiet-bi-da-dang",
+                "prompt": "'Thiết bị đa dạng' trong bối cảnh Việt Nam không chỉ là đa dạng cỡ màn hình, mà còn là gì?",
+                "explanation": "Còn là đa dạng về cấu hình, phiên bản hệ điều hành, bộ nhớ, chất lượng mạng, và cả việc máy được dùng chung trong gia đình. Mỗi yếu tố ấy đều đổi cách thiết kế, không riêng gì bề rộng màn hình.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cấu hình yếu, hệ điều hành cũ, bộ nhớ ít, mạng chập chờn, và máy dùng chung",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chủ yếu là tỉ lệ màn hình khác nhau giữa các hãng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chủ yếu là màu sắc hiển thị khác nhau giữa các màn hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ là sự khác biệt giữa Android và iOS",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "key": "7.4-offline",
+                "prompt": "Khả năng của ứng dụng cho phép tiếp tục làm việc khi mất mạng và tự đồng bộ khi có lại — gọi là gì?",
+                "explanation": "Hoạt động ngoại tuyến (offline-first / hỗ trợ offline). Ở nơi mạng chập chờn là chuyện thường, đây không phải tính năng nâng cao mà là yêu cầu cơ bản.",
+                "points": 1,
+                "answers": [
+                  "offline",
+                  "ngoại tuyến",
+                  "ngoai tuyen",
+                  "offline-first",
+                  "hoạt động ngoại tuyến"
+                ]
+              },
+              {
+                "type": "mcq",
+                "key": "7.4-vao-nghe-vn",
+                "prompt": "Bạn là sinh viên Công nghệ giáo dục muốn vào nghề UX giáo dục. Việc nào tạo bằng chứng năng lực thuyết phục nhất?",
+                "explanation": "Một hồ sơ có ít nhất một dự án đi đủ vòng: có nghiên cứu, có bản thiết kế, có kiểm thử với người học thật, và có kết quả trước/sau. Chứng chỉ và bản vẽ đẹp nhiều người có; bằng chứng bạn <em>thay đổi được</em> điều gì thì hiếm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Một dự án đi đủ vòng: nghiên cứu → thiết kế → kiểm thử với người học → kết quả trước/sau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bộ sưu tập nhiều bản thiết kế đẹp không kèm bối cảnh",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Danh sách chứng chỉ các khoá học trực tuyến đã hoàn thành",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thành thạo càng nhiều công cụ thiết kế càng tốt",
+                    "isCorrect": false
+                  }
+                ]
+              },
               {
                 "type": "mcq",
                 "prompt": "Nhóm bạn thiết kế xong bản desktop rồi thu nhỏ mọi thành phần để ra bản điện thoại. Vấn đề lớn nhất của cách làm này là gì?",

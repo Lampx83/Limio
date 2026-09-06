@@ -412,7 +412,7 @@ export default async function LessonPage({
         <div className="mt-5 flex flex-wrap items-center gap-2">
           {/* Toàn màn hình + bản in (mở tab mới, trang in tự gọi hộp thoại in). */}
           <LessonContentToolbar
-            targetId="lesson-content"
+            targetId="lesson-stage"
             printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
           />
         </div>
@@ -453,8 +453,14 @@ export default async function LessonPage({
         />
       </div>
 
-      {/* Nội dung bài + mục lục nổi bên trái (từ 1280px trở lên) */}
-      <div className="mt-8 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8">
+      {/* Nội dung bài + mục lục nổi bên trái (từ 1280px trở lên).
+          Khối phóng toàn màn hình là #lesson-stage chứ không phải riêng phần
+          nội dung: phóng to mà bỏ mục lục lại phía sau thì bài dài mất luôn
+          cách nhảy giữa các mục — đúng lúc cần nhất. */}
+      <div
+        id="lesson-stage"
+        className="mt-8 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8"
+      >
         <LessonSectionNav containerId="lesson-content" />
         <div>
         <div id="lesson-content">
