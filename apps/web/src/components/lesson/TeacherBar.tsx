@@ -403,7 +403,16 @@ export default function TeacherBar({
   return (
     <div
       data-print-hide
-      className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-accent-200 bg-accent-50 px-3 py-2.5 dark:border-accent-800 dark:bg-[rgb(var(--surface-muted))] print:hidden"
+      data-teacher-bar
+      /*
+        Dính dưới thanh tiêu đề của site (cao 63px) thay vì nằm yên ở đầu trang.
+        Đang dạy thì người dạy ở giữa hoặc cuối bài, mà mọi nút điều khiển lại
+        nằm trên đỉnh — mỗi lần bấm đếm ngược hay nhảy mục là một lần cuộn ngược
+        lên rồi cuộn trở lại đúng chỗ cũ.
+        z-20: dưới thanh tiêu đề (z-30) để hai thanh không tranh nhau, trên nội
+        dung để chữ không chạy đè qua.
+      */
+      className="sticky top-16 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-accent-200 bg-accent-50 px-3 py-2.5 shadow-card dark:border-accent-800 dark:bg-[rgb(var(--surface-muted))] print:hidden"
     >
       <span
         title="Thanh này chỉ hiện với người dạy khoá. Học viên không thấy nó, và cũng không thấy ghi chú bên trong bài."
@@ -710,18 +719,27 @@ export function StageListener({ lessonId }: { lessonId: string }) {
         <div
           data-stage-timer
           aria-live="off"
-          className={`fixed right-6 top-6 z-50 rounded-2xl border-2 px-6 py-4 text-center shadow-card backdrop-blur ${
+          /*
+            To hết cỡ, nổi trên nội dung. Người ngồi cuối lớp nhìn máy chiếu từ
+            6–8 mét, nên con số phải cao vài chục xăng-ti-mét trên tường chứ
+            không phải một hộp nhỏ ở góc.
+
+            Cỡ chữ theo vw để tự vừa mọi máy chiếu; nền mờ có blur để phần nội
+            dung phía sau vẫn đọc được — đang làm bài tập thì đề bài vẫn cần
+            nhìn thấy, không chỉ mỗi đồng hồ.
+          */
+          className={`pointer-events-none fixed bottom-8 right-8 z-50 rounded-3xl border-4 px-[3vw] py-[1.5vw] text-center shadow-card backdrop-blur-md ${
             done
-              ? "border-danger-500 bg-danger-50/95 text-danger-700"
+              ? "border-danger-500 bg-danger-50/90 text-danger-700"
               : urgent
-                ? "border-accent-500 bg-accent-50/95 text-accent-700"
-                : "border-brand-300 bg-[rgb(var(--surface))]/95"
+                ? "border-accent-500 bg-accent-50/90 text-accent-700"
+                : "border-brand-400 bg-[rgb(var(--surface))]/85"
           }`}
         >
-          <p className="text-xs font-bold uppercase tracking-widest opacity-70">
+          <p className="text-[1.6vw] font-bold uppercase tracking-[0.3em] opacity-70">
             {done ? "Hết giờ" : "Còn lại"}
           </p>
-          <p className="text-6xl font-bold leading-none tabular-nums">{mmss(left)}</p>
+          <p className="text-[13vw] font-bold leading-[0.9] tabular-nums">{mmss(left)}</p>
         </div>
       )}
     </>,
