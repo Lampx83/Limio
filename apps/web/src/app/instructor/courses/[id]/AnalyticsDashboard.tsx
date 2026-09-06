@@ -62,6 +62,45 @@ const REPORTS: Array<{
   },
 ];
 
+/**
+ * B13 — ba báo cáo dành cho phân tích ngoại tuyến, tách khỏi nhóm trên vì khác
+ * người dùng và khác mục đích: nhóm trên để dạy học hằng ngày, nhóm này để
+ * chạy số liệu. Cả ba đều mở đầu bằng cùng năm cột định danh nên ghép được
+ * với nhau trong Excel hay R bằng cột nào cũng được.
+ */
+const RESEARCH_REPORTS: Array<{
+  key: string;
+  icon: string;
+  title: string;
+  description: string;
+  endpoint: string;
+}> = [
+  {
+    key: "research-answers",
+    icon: "🧪",
+    title: "Từng câu trả lời",
+    description:
+      "Mỗi câu một dòng: đúng/sai, độ tự tin, thời gian nghĩ riêng câu đó, số lần sửa đáp án.",
+    endpoint: "research-answers",
+  },
+  {
+    key: "research-feedback",
+    icon: "💬",
+    title: "Từng lượt phản hồi",
+    description:
+      "Toạ độ SSMMD, điều kiện lúc sinh, có bấm vào bài ôn không, học viên đánh giá thế nào.",
+    endpoint: "research-feedback",
+  },
+  {
+    key: "research-engagement",
+    icon: "⏱️",
+    title: "Hành vi đọc bài",
+    description:
+      "Mỗi (học viên × bài): thời gian đọc thật, cuộn sâu nhất, phần trăm video, số lượt mở.",
+    endpoint: "research-engagement",
+  },
+];
+
 export default function AnalyticsDashboard({
   courseId,
 }: {
@@ -161,6 +200,41 @@ export default function AnalyticsDashboard({
                   `/api/instructor/courses/${courseId}/analytics/exports/${r.endpoint}`,
                 )}
                 className="btn-primary btn-sm flex-shrink-0"
+                download
+              >
+                Tải CSV
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="mb-1 text-base font-semibold">Dữ liệu nghiên cứu</h2>
+        <p className="mb-3 text-xs text-muted">
+          Ba tệp dưới đây có cột <strong>Lớp</strong> và <strong>Điều kiện</strong>,
+          nên so sánh được hai lớp song song của cùng một khoá. Cột{" "}
+          <strong>Mã ẩn danh</strong> ổn định theo từng khoá — chia sẻ dữ liệu thì
+          bỏ hai cột Email và Họ tên đi là xong.
+        </p>
+        <ul className="space-y-2">
+          {RESEARCH_REPORTS.map((r) => (
+            <li
+              key={r.key}
+              className="flex items-start gap-4 rounded-xl border border-token bg-[rgb(var(--surface))] p-4 transition-colors hover:bg-[rgb(var(--surface-muted))/0.3]"
+            >
+              <span className="text-2xl" aria-hidden>
+                {r.icon}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">{r.title}</p>
+                <p className="mt-0.5 text-xs text-muted">{r.description}</p>
+              </div>
+              <a
+                href={apiUrl(
+                  `/api/instructor/courses/${courseId}/analytics/exports/${r.endpoint}`,
+                )}
+                className="btn-secondary btn-sm flex-shrink-0"
                 download
               >
                 Tải CSV

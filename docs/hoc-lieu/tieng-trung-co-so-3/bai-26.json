@@ -1,0 +1,910 @@
+{
+  "course": {
+    "title": "Tiếng Trung Cơ sở III",
+    "slug": "tieng-trung-co-so-3",
+    "description": "Giáo trình Tiếng Trung Cơ sở III — mỗi bài (课) là một module gồm bài đọc, từ vựng, ngữ pháp và luyện tập chấm tự động.",
+    "language": "zh",
+    "level": "intermediate",
+    "category": "Ngoại ngữ",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "zh_dui_gan_xingqu",
+      "name": "Quên 对 khi nói 感兴趣",
+      "description": "感兴趣 không mang tân ngữ trực tiếp. Đối tượng phải đi với giới từ 对 và đứng TRƯỚC: 我对书法感兴趣. Không nói ✗我感兴趣书法. Học viên bê trật tự động-tân của tiếng Việt (thấy hứng thú + thư pháp) sang."
+    },
+    {
+      "code": "zh_pivotal_order",
+      "name": "Sai trật tự câu kiêm ngữ",
+      "description": "Câu kiêm ngữ có trật tự cố định: chủ ngữ + động từ sai khiến (请/叫/让/派) + kiêm ngữ + động từ 2 + tân ngữ. 我请老师教我 — tân ngữ của động từ 1 (老师) đồng thời là chủ ngữ của động từ 2 (教). Học viên đảo vị trí hoặc bỏ mất kiêm ngữ."
+    },
+    {
+      "code": "zh_haishi_vs_huozhe",
+      "name": "Nhầm 还是 với 或者",
+      "description": "还是 dùng trong câu HỎI lựa chọn (你喝茶还是喝咖啡？). 或者 dùng trong câu TRẦN THUẬT (星期六或者星期日去都可以). Cả hai đều dịch là hoặc/hay nên học viên dùng lẫn."
+    },
+    {
+      "code": "zh_yiqian_position",
+      "name": "Đặt 以前 / 以后 trước cụm động từ",
+      "description": "Khi làm trạng ngữ cho một sự việc, 以前 và 以后 đứng SAU cụm từ chứ không đứng trước: 来中国以前 (trước khi đến Trung Quốc), 一个星期以后 (một tuần sau). Học viên theo trật tự tiếng Việt nên viết ✗以前来中国."
+    },
+    {
+      "code": "zh_a_sound_change",
+      "name": "Không biến âm 啊 theo âm cuối đứng trước",
+      "description": "啊 đổi cách đọc theo âm cuối của âm tiết ngay trước nó: sau a/e/i/o/ü đọc ya (呀), sau u/ou/ao đọc wa (哇), sau n đọc na (哪), sau ng đọc nga. Khi viết đều có thể viết 啊."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "zh_dui_gan_xingqu",
+      "body": "感兴趣 là cụm cố định không nhận tân ngữ đứng sau. Đối tượng phải đi kèm giới từ 对 và đặt TRƯỚC nó: 我对书法感兴趣 · 我对汉字输入特别感兴趣. Câu ✗我感兴趣书法 là sai ngữ pháp. Phủ định cũng vậy: 她对这件事不感兴趣.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_pivotal_order",
+      "body": "Câu kiêm ngữ có một trật tự duy nhất: chủ ngữ + 请/叫/让/派 + KIÊM NGỮ + động từ + tân ngữ. Chữ đứng giữa vừa là tân ngữ của động từ trước vừa là chủ ngữ của động từ sau — đó là lý do gọi là kiêm ngữ. 我请老师教我: 老师 là người được mời, đồng thời là người dạy.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_haishi_vs_huozhe",
+      "body": "还是 để HỎI, 或者 để KỂ. Câu hỏi lựa chọn dùng 还是: 你喝茶还是喝咖啡？ Câu trần thuật dùng 或者: 星期六或者星期日去都可以. Mẹo: câu có dấu hỏi thì gần như luôn là 还是.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_yiqian_position",
+      "body": "以前 và 以后 đứng SAU cụm từ mà chúng bổ nghĩa, ngược với tiếng Việt. 来中国以前 = trước khi đến Trung Quốc · 下课以后 = sau khi tan học · 一个星期以后 = một tuần sau. Chỉ khi đứng một mình đầu câu mới ở trước: 以前我是公司职员。",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_a_sound_change",
+      "body": "啊 đọc biến đổi theo âm cuối của chữ ngay trước nó — bốn quy tắc: sau a, e, i, o, ü đọc là ya (viết 呀); sau u, ou, ao đọc là wa (viết 哇); sau n đọc là na (viết 哪); sau ng đọc là nga. Khi viết thì viết 啊 cho cả bốn trường hợp cũng được, nhưng đọc thì phải đổi.",
+      "priority": 10
+    }
+  ],
+  "modules": [
+    {
+      "title": "第二十六课 我打算请老师教京剧",
+      "description": "Bài 26 — Tôi định mời giáo viên dạy kinh kịch. Sở thích, câu kiêm ngữ, 对…感兴趣.",
+      "lessons": [
+        {
+          "title": "课文 我打算请老师教京剧",
+          "description": "Cả lớp kể về sở thích của mình — Mary, Mike, Roland và Tanaka.",
+          "vocab": [
+            {
+              "hanzi": "叫",
+              "pinyin": "jiào",
+              "meaning": "bảo, yêu cầu, gọi",
+              "note": "动 · khiếu"
+            },
+            {
+              "hanzi": "让",
+              "pinyin": "ràng",
+              "meaning": "cho phép, để cho",
+              "note": "动 · nhượng"
+            },
+            {
+              "hanzi": "谈",
+              "pinyin": "tán",
+              "meaning": "nói về, bàn",
+              "note": "动 · đàm"
+            },
+            {
+              "hanzi": "自己",
+              "pinyin": "zìjǐ",
+              "meaning": "chính mình, bản thân",
+              "note": "代 · tự kỷ"
+            },
+            {
+              "hanzi": "爱好",
+              "pinyin": "àihào",
+              "meaning": "sở thích",
+              "note": "名 · ái hảo"
+            },
+            {
+              "hanzi": "大家",
+              "pinyin": "dàjiā",
+              "meaning": "mọi người",
+              "note": "代 · đại gia"
+            },
+            {
+              "hanzi": "唱（歌）",
+              "pinyin": "chàng (gē)",
+              "meaning": "hát, hát ca",
+              "note": "动 · xướng (ca)"
+            },
+            {
+              "hanzi": "京剧",
+              "pinyin": "jīngjù",
+              "meaning": "kinh kịch",
+              "note": "名 · kinh kịch"
+            },
+            {
+              "hanzi": "剧",
+              "pinyin": "jù",
+              "meaning": "kịch tuồng",
+              "note": "名 · kịch"
+            },
+            {
+              "hanzi": "喜欢",
+              "pinyin": "xǐhuan",
+              "meaning": "thích",
+              "note": "动 · hỉ hoan"
+            },
+            {
+              "hanzi": "非常",
+              "pinyin": "fēicháng",
+              "meaning": "vô cùng, rất",
+              "note": "副 · phi thường"
+            },
+            {
+              "hanzi": "输入",
+              "pinyin": "shūrù",
+              "meaning": "nhập vào",
+              "note": "动 · thâu nhập"
+            },
+            {
+              "hanzi": "特别",
+              "pinyin": "tèbié",
+              "meaning": "đặc biệt, riêng biệt",
+              "note": "形 · đặc biệt"
+            },
+            {
+              "hanzi": "感兴趣",
+              "pinyin": "gǎn xìngqù",
+              "meaning": "cảm thấy hứng thú",
+              "note": "cảm hứng thú"
+            },
+            {
+              "hanzi": "兴趣",
+              "pinyin": "xìngqù",
+              "meaning": "hứng thú",
+              "note": "名 · hứng thú"
+            },
+            {
+              "hanzi": "业余",
+              "pinyin": "yèyú",
+              "meaning": "ngoài giờ, nghiệp dư",
+              "note": "nghiệp dư"
+            },
+            {
+              "hanzi": "就",
+              "pinyin": "jiù",
+              "meaning": "liền, ngay (đã… từ)",
+              "note": "副 · tựu"
+            },
+            {
+              "hanzi": "以前",
+              "pinyin": "yǐqián",
+              "meaning": "trước, trước đây",
+              "note": "名 · dĩ tiền"
+            },
+            {
+              "hanzi": "书法",
+              "pinyin": "shūfǎ",
+              "meaning": "thư pháp",
+              "note": "名 · thư pháp"
+            },
+            {
+              "hanzi": "派",
+              "pinyin": "pài",
+              "meaning": "phái, cử đi",
+              "note": "动 · phái"
+            },
+            {
+              "hanzi": "高兴",
+              "pinyin": "gāoxìng",
+              "meaning": "vui vẻ, vui mừng",
+              "note": "形、动 · cao hứng"
+            },
+            {
+              "hanzi": "画",
+              "pinyin": "huà",
+              "meaning": "vẽ",
+              "note": "动 · họa"
+            },
+            {
+              "hanzi": "画儿",
+              "pinyin": "huàr",
+              "meaning": "bức tranh",
+              "note": "名 · hoạ nhi"
+            },
+            {
+              "hanzi": "太极拳",
+              "pinyin": "tàijíquán",
+              "meaning": "thái cực quyền",
+              "note": "名 · bổ sung"
+            },
+            {
+              "hanzi": "足球",
+              "pinyin": "zúqiú",
+              "meaning": "bóng đá",
+              "note": "名 · bổ sung · túc cầu"
+            },
+            {
+              "hanzi": "比赛",
+              "pinyin": "bǐsài",
+              "meaning": "thi đấu",
+              "note": "动、名 · bổ sung · tỉ trại"
+            },
+            {
+              "hanzi": "网球",
+              "pinyin": "wǎngqiú",
+              "meaning": "quần vợt",
+              "note": "名 · bổ sung · võng cầu"
+            },
+            {
+              "hanzi": "跳舞",
+              "pinyin": "tiào wǔ",
+              "meaning": "khiêu vũ",
+              "note": "动 · bổ sung · khiêu vũ"
+            }
+          ],
+          "dialogue": {
+            "heading": "课文 我打算请老师教京剧",
+            "scene": "（上课的时候，王老师叫同学们谈谈自己的爱好……）Trong giờ học, thầy Vương bảo các bạn kể về sở thích của mình.",
+            "turns": [
+              {
+                "speaker": "老师",
+                "zh": "今天想请大家谈谈自己的爱好。谁先说？",
+                "pinyin": "Jīntiān xiǎng qǐng dàjiā tántan zìjǐ de àihào. Shuí xiān shuō?",
+                "vi": "Hôm nay muốn mời cả lớp kể về sở thích của mình. Ai nói trước?"
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "老师，让我先说吧。",
+                "pinyin": "Lǎoshī, ràng wǒ xiān shuō ba.",
+                "vi": "Thưa cô, để em nói trước ạ."
+              },
+              {
+                "speaker": "老师",
+                "zh": "好，你说吧。你有什么爱好？",
+                "pinyin": "Hǎo, nǐ shuō ba. Nǐ yǒu shénme àihào?",
+                "vi": "Được, em nói đi. Em có sở thích gì?"
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "我的爱好是看京剧。",
+                "pinyin": "Wǒ de àihào shì kàn jīngjù.",
+                "vi": "Sở thích của em là xem kinh kịch."
+              },
+              {
+                "speaker": "老师",
+                "zh": "你喜欢看京剧？",
+                "pinyin": "Nǐ xǐhuan kàn jīngjù?",
+                "vi": "Em thích xem kinh kịch à?"
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "是啊，非常喜欢。我还打算学唱京剧，想请一个老师教我。",
+                "pinyin": "Shì a, fēicháng xǐhuan. Wǒ hái dǎsuan xué chàng jīngjù, xiǎng qǐng yí ge lǎoshī jiāo wǒ.",
+                "vi": "Vâng ạ, thích lắm. Em còn định học hát kinh kịch, muốn mời một thầy dạy em."
+              },
+              {
+                "speaker": "老师",
+                "zh": "麦克，你喜欢做什么？",
+                "pinyin": "Màikè, nǐ xǐhuan zuò shénme?",
+                "vi": "Mike, em thích làm gì?"
+              },
+              {
+                "speaker": "麦克",
+                "zh": "我喜欢玩儿电脑。我对汉字输入特别感兴趣。",
+                "pinyin": "Wǒ xǐhuan wánr diànnǎo. Wǒ duì Hànzì shūrù tèbié gǎn xìngqù.",
+                "vi": "Em thích chơi máy tính. Em đặc biệt hứng thú với việc nhập chữ Hán."
+              },
+              {
+                "speaker": "老师",
+                "zh": "罗兰呢？",
+                "pinyin": "Luólán ne?",
+                "vi": "Còn Roland?"
+              },
+              {
+                "speaker": "罗兰",
+                "zh": "我喜欢听音乐。下课以后，听听音乐或者跟朋友聊聊天儿，觉得很愉快。",
+                "pinyin": "Wǒ xǐhuān tīng yīnyuè. Xià kè yǐhòu, tīngting yīnyuè huòzhě gēn péngyou liáoliao tiānr, juéde hěn yúkuài.",
+                "vi": "Em thích nghe nhạc. Sau khi tan học, nghe chút nhạc hoặc tán gẫu với bạn bè, thấy rất dễ chịu."
+              },
+              {
+                "speaker": "老师",
+                "zh": "田中业余时间常常做什么？",
+                "pinyin": "Tiánzhōng yèyú shíjiān chángcháng zuò shénme?",
+                "vi": "Tanaka thời gian rảnh thường làm gì?"
+              },
+              {
+                "speaker": "田中",
+                "zh": "我来中国以前就对书法感兴趣。公司派我来中国，我非常高兴。现在我正跟一个老师学书法，还学画中国画儿。",
+                "pinyin": "Wǒ lái Zhōngguó yǐqián jiù duì shūfǎ gǎn xìngqù. Gōngsī pài wǒ lái Zhōngguó, wǒ fēicháng gāoxìng. Xiànzài wǒ zhèng gēn yí ge lǎoshī xué shūfǎ, hái xué huà Zhōngguó huàr.",
+                "vi": "Trước khi đến Trung Quốc em đã thích thư pháp rồi. Công ty cử em sang Trung Quốc, em rất vui. Bây giờ em đang học thư pháp với một thầy giáo, còn học vẽ tranh Trung Quốc nữa."
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "Mẫu câu nói về sở thích",
+            "rows": [
+              {
+                "zh": "你有什么爱好？",
+                "vi": "Bạn có sở thích gì?"
+              },
+              {
+                "zh": "我的爱好是看京剧。",
+                "vi": "Sở thích của tôi là xem kinh kịch."
+              },
+              {
+                "zh": "我对书法感兴趣。",
+                "vi": "Tôi hứng thú với thư pháp. — 对 + đối tượng + 感兴趣"
+              },
+              {
+                "zh": "我想请一个老师教我。",
+                "vi": "Tôi muốn mời một thầy dạy tôi. — câu kiêm ngữ"
+              },
+              {
+                "zh": "下课以后听听音乐。",
+                "vi": "Sau khi tan học thì nghe chút nhạc. — 以后 đứng SAU"
+              },
+              {
+                "zh": "业余时间常常做什么？",
+                "vi": "Thời gian rảnh thường làm gì?"
+              }
+            ]
+          },
+          "quiz": {
+            "title": "Luyện tập 课文",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Câu nào ĐÚNG?",
+                "explanation": "感兴趣 không nhận tân ngữ trực tiếp — đối tượng phải đi với 对 và đứng trước.",
+                "options": [
+                  {
+                    "label": "我对书法感兴趣。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "我感兴趣书法。",
+                    "isCorrect": false,
+                    "misconception": "zh_dui_gan_xingqu"
+                  },
+                  {
+                    "label": "我感兴趣对书法。",
+                    "isCorrect": false,
+                    "misconception": "zh_dui_gan_xingqu"
+                  },
+                  {
+                    "label": "我书法对感兴趣。",
+                    "isCorrect": false,
+                    "misconception": "zh_dui_gan_xingqu"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "“Trước khi đến Trung Quốc” nói thế nào?",
+                "explanation": "以前 đứng SAU cụm từ nó bổ nghĩa — ngược với tiếng Việt.",
+                "options": [
+                  {
+                    "label": "来中国以前",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "以前来中国",
+                    "isCorrect": false,
+                    "misconception": "zh_yiqian_position"
+                  },
+                  {
+                    "label": "以前的来中国",
+                    "isCorrect": false,
+                    "misconception": "zh_yiqian_position"
+                  },
+                  {
+                    "label": "中国来以前",
+                    "isCorrect": false,
+                    "misconception": "zh_yiqian_position"
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép nhân vật với sở thích của họ trong bài.",
+                "explanation": "Bốn sinh viên, bốn sở thích khác nhau.",
+                "pairs": [
+                  {
+                    "left": "玛丽",
+                    "right": "看京剧"
+                  },
+                  {
+                    "left": "麦克",
+                    "right": "玩儿电脑"
+                  },
+                  {
+                    "left": "罗兰",
+                    "right": "听音乐"
+                  },
+                  {
+                    "left": "田中",
+                    "right": "书法"
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我＿汉字输入特别感兴趣。(giới từ chỉ đối tượng)",
+                "explanation": "对 + đối tượng + 感兴趣.",
+                "answers": [
+                  "对",
+                  "duì",
+                  "dui"
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Em muốn mời một thầy dạy em.”",
+                "explanation": "Câu kiêm ngữ: 想请 + 一个老师 (kiêm ngữ) + 教 + 我.",
+                "sequence": [
+                  "我",
+                  "想请",
+                  "一个老师",
+                  "教",
+                  "我",
+                  "。"
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Theo bài, Tanaka được công ty cử sang Trung Quốc.",
+                "explanation": "公司派我来中国 — đúng.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Hỏi và trả lời về sở thích: 你有什么爱好？",
+            "Dùng đúng cấu trúc 对 + đối tượng + 感兴趣",
+            "Nhận ra câu kiêm ngữ khi nghe: 请一个老师教我"
+          ],
+          "summary": [
+            "爱好 là danh từ, 喜欢 là động từ — 我的爱好是看京剧 khác 我喜欢看京剧",
+            "Đối tượng của 感兴趣 luôn đi với 对 và đứng trước nó",
+            "以前 / 以后 đứng SAU cụm từ: 来中国以前, 下课以后"
+          ],
+          "body": "> [!canh-bao] Ba lỗi mà chính sách giáo trình đánh dấu ✗\n> ✗ 我感兴趣书法 → phải là 我**对**书法感兴趣\n> ✗ 以前来中国 → phải là 来中国**以前**\n> ✗ 三个留学生们 → đã có số lượng thì bỏ 们\n\n> [!ghi-nho] 爱好 và 喜欢 không thay nhau được\n> 爱好 là **danh từ** (sở thích): 我的爱好是看京剧。\n> 喜欢 là **động từ** (thích): 我喜欢看京剧。\n> Không nói ✗ 我爱好看京剧。"
+        },
+        {
+          "title": "注释 是啊 · 以前 / 以后 · 对…感兴趣",
+          "description": "Ba chú thích của bài — biến âm 啊, vị trí 以前/以后, và cụm giới tân 对.",
+          "patterns": {
+            "heading": "Biến âm của 啊",
+            "note": "啊 đổi cách đọc theo âm cuối của âm tiết ngay trước nó. Khi viết đều viết 啊 cũng được.",
+            "rows": [
+              {
+                "zh": "好啊 → đọc “ya”，viết 呀",
+                "vi": "Âm tiết trước kết thúc bằng a, e, i, o, ü"
+              },
+              {
+                "zh": "走啊 → đọc “wa”，viết 哇",
+                "vi": "Âm tiết trước kết thúc bằng u, ou, ao"
+              },
+              {
+                "zh": "看啊 → đọc “na”，viết 哪",
+                "vi": "Âm tiết trước kết thúc bằng n"
+              },
+              {
+                "zh": "想啊 → đọc “nga”",
+                "vi": "Âm tiết trước kết thúc bằng ng"
+              }
+            ]
+          },
+          "body": "## 注释（一）是啊\n\n「是啊」biểu thị **ngữ khí khẳng định** — tương đương “Vâng ạ” trong tiếng Việt.\n\n> [!ghi-nho] Bốn quy tắc biến âm của 啊\n> Nhìn **âm cuối của chữ ngay trước** rồi đổi cách đọc: sau a, e, i, o, ü đọc **ya** (viết 呀) · sau u, ou, ao đọc **wa** (viết 哇) · sau n đọc **na** (viết 哪) · sau ng đọc **nga**.\n\n## 注释（二）以前 và 以后\n\nCả hai **dùng độc lập** được:\n\n1. **以前**我是公司职员，现在是留学生。\n2. 现在他是学生，**以后**当教师。\n\nCũng có thể thêm từ ngữ vào **phía trước** để làm trạng ngữ thời gian:\n\n3. 来中国**以前**我是公司职员。\n4. 我一个星期**以后**回来。\n\n> [!canh-bao] Chỗ ngược với tiếng Việt\n> Ta nói “**trước khi** đến Trung Quốc”, tiếng Hán nói “đến Trung Quốc **以前**”. Cứ viết cụm việc trước, rồi mới đặt 以前 / 以后 vào cuối.\n\n## 注释（三）对 + 名词\n\nCụm giới tân **「对 + danh từ」** làm trạng ngữ, biểu thị **đối tượng** của động tác.\n\n> [!vi-du] Đúng và sai\n> ✓ 我**对书法**感兴趣。 · ✓ 她**对这件事**不感兴趣。 · ✗ 我感兴趣书法。",
+          "quiz": {
+            "title": "Luyện tập chú thích",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Sau âm tiết kết thúc bằng **n** (ví dụ 看 kàn), chữ 啊 đọc thành gì?",
+                "explanation": "Quy tắc 3: sau n thì đọc “na”, viết thành 哪.",
+                "options": [
+                  {
+                    "label": "na — viết 哪",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "ya — viết 呀",
+                    "isCorrect": false,
+                    "misconception": "zh_a_sound_change"
+                  },
+                  {
+                    "label": "wa — viết 哇",
+                    "isCorrect": false,
+                    "misconception": "zh_a_sound_change"
+                  },
+                  {
+                    "label": "nga",
+                    "isCorrect": false,
+                    "misconception": "zh_a_sound_change"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Sau âm tiết kết thúc bằng **ao** (ví dụ 好 hǎo), chữ 啊 đọc thành gì?",
+                "explanation": "Quy tắc 2: sau u, ou, ao thì đọc “wa”, viết thành 哇.",
+                "options": [
+                  {
+                    "label": "wa — viết 哇",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "na — viết 哪",
+                    "isCorrect": false,
+                    "misconception": "zh_a_sound_change"
+                  },
+                  {
+                    "label": "nga",
+                    "isCorrect": false,
+                    "misconception": "zh_a_sound_change"
+                  },
+                  {
+                    "label": "Không đổi, vẫn đọc a",
+                    "isCorrect": false,
+                    "misconception": "zh_a_sound_change"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "“Một tuần sau tôi quay lại” — câu nào đúng?",
+                "explanation": "以后 đứng sau cụm chỉ thời lượng: 一个星期以后.",
+                "options": [
+                  {
+                    "label": "我一个星期以后回来。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "我以后一个星期回来。",
+                    "isCorrect": false,
+                    "misconception": "zh_yiqian_position"
+                  },
+                  {
+                    "label": "以后我一个星期回来。",
+                    "isCorrect": false,
+                    "misconception": "zh_yiqian_position"
+                  },
+                  {
+                    "label": "我回来一个星期以后。",
+                    "isCorrect": false,
+                    "misconception": "zh_yiqian_position"
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "她＿这件事不感兴趣。(giới từ chỉ đối tượng)",
+                "explanation": "对 đứng trước đối tượng, cả ở thể phủ định.",
+                "answers": [
+                  "对",
+                  "duì",
+                  "dui"
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp: “Sau khi tan học thì nghe chút nhạc.”",
+                "explanation": "下课以后 làm trạng ngữ thời gian, đứng đầu câu.",
+                "sequence": [
+                  "下课",
+                  "以后",
+                  "听听",
+                  "音乐",
+                  "。"
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Đọc đúng 啊 theo âm cuối của chữ đứng trước",
+            "Đặt 以前 / 以后 đúng vị trí trong câu",
+            "Dùng cụm giới tân 对 + danh từ làm trạng ngữ"
+          ],
+          "summary": [
+            "啊 biến âm theo bốn quy tắc; khi viết đều viết 啊 cũng được",
+            "以前 / 以后 đứng sau cụm từ, chỉ đứng trước khi dùng một mình đầu câu",
+            "对 + danh từ đặt trước động từ, không đặt sau"
+          ]
+        },
+        {
+          "title": "语法 兼语句 — Câu kiêm ngữ",
+          "description": "Diễn đạt “bảo ai đó làm việc gì” — 请 / 叫 / 让 / 派.",
+          "patterns": {
+            "heading": "Trật tự câu kiêm ngữ",
+            "note": "Chủ ngữ + động từ sai khiến + KIÊM NGỮ + động từ 2 + tân ngữ. Kiêm ngữ vừa là tân ngữ của động từ 1, vừa là chủ ngữ của động từ 2.",
+            "rows": [
+              {
+                "zh": "（我）请你们谈谈自己的爱好。",
+                "vi": "Tôi mời các bạn kể về sở thích của mình."
+              },
+              {
+                "zh": "老师叫大家回答问题。",
+                "vi": "Thầy bảo mọi người trả lời câu hỏi."
+              },
+              {
+                "zh": "公司派他来中国。",
+                "vi": "Công ty cử anh ấy sang Trung Quốc."
+              },
+              {
+                "zh": "我想请一个老师教书法。",
+                "vi": "Tôi muốn mời một thầy dạy thư pháp."
+              },
+              {
+                "zh": "老师，让我先说吧。",
+                "vi": "Thưa cô, để em nói trước ạ."
+              }
+            ]
+          },
+          "body": "## 兼语句 — Câu kiêm ngữ\n\nKhi muốn diễn đạt ý **“bảo ai đó làm một việc gì”**, tiếng Hán dùng câu kiêm ngữ.\n\n> [!ghi-nho] Vì sao gọi là “kiêm” ngữ\n> Vị ngữ do **hai cụm động-tân** ghép lại. Chữ đứng giữa **kiêm** hai vai: vừa là tân ngữ của động từ thứ nhất, vừa là chủ ngữ của động từ thứ hai. Trong 我请老师教我: 老师 là người **được mời**, đồng thời là người **dạy**.\n\nĐộng từ thứ nhất thường mang ý nghĩa sai khiến: **请 · 叫 · 让 · 派**\n\n| Chủ ngữ | Động từ ① | Kiêm ngữ | Động từ ② | Tân ngữ |\n|---|---|---|---|---|\n| （我） | 请 | 你们 | 谈谈 | 自己的爱好。 |\n| 老师 | 叫 | 大家 | 回答 | 问题。 |\n| 公司 | 派 | 他 | 来 | 中国。 |\n| 我 | 想请 | 一个老师 | 教 | 书法。 |\n\n> [!canh-bao] Đừng bỏ mất kiêm ngữ\n> ✗ 老师叫回答问题 — thiếu người được bảo. Phải có kiêm ngữ: 老师叫**大家**回答问题。\n\n> [!meo] Trọng âm khi đọc\n> Kiêm ngữ + động từ → nhấn **động từ**: 请你**谈**。请你**参加**。\n> Kiêm ngữ + động từ + tân ngữ → nhấn **tân ngữ**: 公司派我来**中国**。请老师教**我**。",
+          "quiz": {
+            "title": "Luyện tập 兼语句",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Câu nào ĐÚNG trật tự câu kiêm ngữ?",
+                "explanation": "Chủ ngữ + 叫 + kiêm ngữ + động từ 2 + tân ngữ.",
+                "options": [
+                  {
+                    "label": "老师叫大家回答问题。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "老师叫回答大家问题。",
+                    "isCorrect": false,
+                    "misconception": "zh_pivotal_order"
+                  },
+                  {
+                    "label": "老师回答叫大家问题。",
+                    "isCorrect": false,
+                    "misconception": "zh_pivotal_order"
+                  },
+                  {
+                    "label": "大家叫老师问题回答。",
+                    "isCorrect": false,
+                    "misconception": "zh_pivotal_order"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Trong câu 「公司派我来中国」, chữ nào là KIÊM NGỮ?",
+                "explanation": "我 vừa là tân ngữ của 派 (công ty cử tôi), vừa là chủ ngữ của 来 (tôi đến).",
+                "options": [
+                  {
+                    "label": "我",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "公司",
+                    "isCorrect": false,
+                    "misconception": "zh_pivotal_order"
+                  },
+                  {
+                    "label": "派",
+                    "isCorrect": false,
+                    "misconception": "zh_pivotal_order"
+                  },
+                  {
+                    "label": "中国",
+                    "isCorrect": false,
+                    "misconception": "zh_pivotal_order"
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép động từ sai khiến với nghĩa tiếng Việt.",
+                "explanation": "Bốn động từ mở đầu câu kiêm ngữ.",
+                "pairs": [
+                  {
+                    "left": "请",
+                    "right": "mời"
+                  },
+                  {
+                    "left": "叫",
+                    "right": "bảo, gọi"
+                  },
+                  {
+                    "left": "让",
+                    "right": "để cho, cho phép"
+                  },
+                  {
+                    "left": "派",
+                    "right": "cử, phái đi"
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp: “Công ty cử anh ấy sang Trung Quốc học tiếng Hán.”",
+                "explanation": "公司 + 派 + 他 (kiêm ngữ) + 去中国 + 学习汉语.",
+                "sequence": [
+                  "公司",
+                  "派",
+                  "他",
+                  "去中国",
+                  "学习汉语",
+                  "。"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "老师，＿我先说吧。(để cho em)",
+                "explanation": "让 = để cho, cho phép — cũng là động từ sai khiến mở đầu câu kiêm ngữ.",
+                "answers": [
+                  "让",
+                  "ràng",
+                  "rang"
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Nhận ra đâu là kiêm ngữ trong câu",
+            "Đặt câu kiêm ngữ với 请 / 叫 / 让 / 派",
+            "Đọc đúng trọng âm của câu kiêm ngữ"
+          ],
+          "summary": [
+            "Trật tự cố định: chủ ngữ + 请/叫/让/派 + kiêm ngữ + động từ + tân ngữ",
+            "Kiêm ngữ vừa là tân ngữ của động từ trước, vừa là chủ ngữ của động từ sau",
+            "Có tân ngữ thì nhấn tân ngữ, không có thì nhấn động từ"
+          ]
+        },
+        {
+          "title": "练习 第二十六课",
+          "description": "选词填空 và phân biệt 还是 / 或者.",
+          "body": "## 选词填空 — Chọn từ điền vào chỗ trống\n\nNgân hàng từ: **唱 · 对 · 让 · 爱好 · 以前 · 输入**\n\n## 还是 và 或者\n\n| | Dùng trong | Ví dụ |\n|---|---|---|\n| 还是 | câu **hỏi** lựa chọn | 你喝茶**还是**喝咖啡？ |\n| 或者 | câu **trần thuật** | 星期六**或者**星期日去都可以。 |\n\n> [!meo] Mẹo phân biệt nhanh\n> Nhìn cuối câu: có dấu hỏi thì dùng **还是**, là câu kể thì dùng **或者**. Cả hai đều dịch sang tiếng Việt là “hoặc / hay”, nên phải nhìn loại câu chứ không nhìn nghĩa.\n\n## 朗读 — Đọc rõ ràng\n\n喜欢汉语 · 喜欢音乐 · 喜欢学习 · 喜欢看电视\n\n上课以前 · 睡觉以前 · 来中国以前\n\n下课以后 · 回家以后 · 回国以后\n\n对玩电脑感兴趣 · 对京剧感兴趣 · 对这个不感兴趣",
+          "quiz": {
+            "title": "练习 — Chọn từ điền vào chỗ trống",
+            "passThresholdPct": 60,
+            "questions": [
+              {
+                "type": "fill_in",
+                "prompt": "我＿中国文化非常感兴趣。",
+                "explanation": "对 + đối tượng + 感兴趣.",
+                "answers": [
+                  "对",
+                  "duì",
+                  "dui"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我来中国＿＿是公司职员。(trước đây)",
+                "explanation": "来中国以前 — 以前 đứng sau cụm động từ.",
+                "answers": [
+                  "以前",
+                  "yǐqián",
+                  "yiqian"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "老师＿我们谈谈自己的爱好。(để cho / bảo)",
+                "explanation": "让 mở đầu câu kiêm ngữ.",
+                "answers": [
+                  "让",
+                  "ràng",
+                  "rang"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "她非常喜欢＿京剧。(hát)",
+                "explanation": "唱京剧 = hát kinh kịch.",
+                "answers": [
+                  "唱",
+                  "chàng",
+                  "chang"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「你喝茶＿＿喝咖啡？」— điền từ nào?",
+                "explanation": "Câu hỏi lựa chọn dùng 还是; 或者 chỉ dùng trong câu trần thuật.",
+                "options": [
+                  {
+                    "label": "还是",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "或者",
+                    "isCorrect": false,
+                    "misconception": "zh_haishi_vs_huozhe"
+                  },
+                  {
+                    "label": "和",
+                    "isCorrect": false,
+                    "misconception": "zh_haishi_vs_huozhe"
+                  },
+                  {
+                    "label": "跟",
+                    "isCorrect": false,
+                    "misconception": "zh_haishi_vs_huozhe"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「星期六＿＿星期日去都可以。」— điền từ nào?",
+                "explanation": "Câu trần thuật dùng 或者.",
+                "options": [
+                  {
+                    "label": "或者",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "还是",
+                    "isCorrect": false,
+                    "misconception": "zh_haishi_vs_huozhe"
+                  },
+                  {
+                    "label": "吗",
+                    "isCorrect": false,
+                    "misconception": "zh_haishi_vs_huozhe"
+                  },
+                  {
+                    "label": "呢",
+                    "isCorrect": false,
+                    "misconception": "zh_haishi_vs_huozhe"
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép sở thích với nghĩa tiếng Việt.",
+                "explanation": "Từ mới bổ sung của bài — các môn thể thao và hoạt động.",
+                "pairs": [
+                  {
+                    "left": "太极拳",
+                    "right": "thái cực quyền"
+                  },
+                  {
+                    "left": "足球",
+                    "right": "bóng đá"
+                  },
+                  {
+                    "left": "网球",
+                    "right": "quần vợt"
+                  },
+                  {
+                    "left": "跳舞",
+                    "right": "khiêu vũ"
+                  },
+                  {
+                    "left": "书法",
+                    "right": "thư pháp"
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Chọn đúng từ điền vào chỗ trống trong sáu câu của sách",
+            "Phân biệt 还是 và 或者 theo loại câu"
+          ],
+          "summary": [
+            "还是 dùng trong câu hỏi, 或者 dùng trong câu trần thuật",
+            "Thấy dấu hỏi thì gần như luôn là 还是"
+          ]
+        }
+      ]
+    }
+  ]
+}

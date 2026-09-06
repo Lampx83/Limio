@@ -1,0 +1,1136 @@
+{
+  "course": {
+    "title": "Tiếng Trung Cơ sở III",
+    "slug": "tieng-trung-co-so-3",
+    "description": "Giáo trình Tiếng Trung Cơ sở III — mỗi bài (课) là một module gồm bài đọc, từ vựng, ngữ pháp và luyện tập chấm tự động.",
+    "language": "zh",
+    "level": "intermediate",
+    "category": "Ngoại ngữ",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "zh_clock_cha_before_hour",
+      "name": "Hiểu ngược cách nói 差…分…点",
+      "description": "差五分八点 nghĩa là THIẾU 5 phút nữa mới tới 8 giờ, tức 7:55 — không phải 8:05. 差 đặt trước giờ để lùi lại, học viên đọc xuôi theo thứ tự chữ nên hiểu thành cộng thêm."
+    },
+    {
+      "code": "zh_ke_quarter",
+      "name": "Nhầm 刻 với phút",
+      "description": "刻 là một PHẦN TƯ giờ = 15 phút. 一刻 = 15 phút, 三刻 = 45 phút. Học viên đọc 八点三刻 thành 8 giờ 3 phút thay vì 8:45."
+    },
+    {
+      "code": "zh_time_before_place",
+      "name": "Đặt trạng ngữ địa điểm trước trạng ngữ thời gian",
+      "description": "Khi câu có cả thời gian và địa điểm, tiếng Hán đặt THỜI GIAN TRƯỚC: 我们晚上在宿舍看书. Không nói 我在宿舍晚上看书. Học viên bê trật tự tiếng Việt sang."
+    },
+    {
+      "code": "zh_men_with_number",
+      "name": "Thêm 们 khi đã có số lượng",
+      "description": "们 chỉ số nhiều, đặt sau đại từ hoặc danh từ chỉ người (同学们, 老师们). NHƯNG nếu trước danh từ đã có số lượng hoặc từ chỉ số nhiều thì không được thêm 们: ✗三个留学生们, ✗我有很多老师们."
+    },
+    {
+      "code": "zh_location_needs_nar",
+      "name": "Quên 这儿 / 那儿 sau danh từ chỉ người",
+      "description": "Các động từ và giới từ 来、去、在、从、到 đòi tân ngữ chỉ ĐỊA ĐIỂM. Nếu tân ngữ là người thì phải thêm 这儿 hoặc 那儿 để biến thành nơi chốn: 我去朋友那儿 — không nói 我去朋友."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "zh_clock_cha_before_hour",
+      "body": "差 nghĩa là THIẾU, và nó lùi thời gian lại chứ không cộng thêm. 差五分八点 = còn thiếu 5 phút nữa mới tới 8 giờ = 7:55. Mẹo đọc: gặp 差 thì đọc từ phải sang trái — lấy giờ đứng sau, trừ đi số phút đứng trước.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_ke_quarter",
+      "body": "刻 là một phần tư giờ, tức 15 phút — không phải 1 phút. 一刻 = 15 phút, 三刻 = 45 phút. Vậy 八点三刻 là 8:45, còn 8 giờ 3 phút phải nói là 八点零三分. Nhớ: có chữ 刻 thì nhân với 15.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_time_before_place",
+      "body": "Tiếng Hán xếp trạng ngữ theo thứ tự THỜI GIAN rồi mới tới ĐỊA ĐIỂM: 我们晚上在宿舍看书 (chúng tôi buổi tối ở ký túc xá đọc sách). Tiếng Việt cho phép đảo, tiếng Hán thì không — 我在宿舍晚上看书 là sai. Cứ tự hỏi: khi nào? rồi mới hỏi ở đâu?",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_men_with_number",
+      "body": "们 và số lượng loại trừ nhau. Nói 同学们, 老师们 khi không nêu số. Nhưng đã có số hoặc từ chỉ số nhiều thì bỏ 们 đi: 三个留学生 (không phải 三个留学生们), 很多老师 (không phải 很多老师们). Lý do: bản thân số lượng đã nói lên số nhiều rồi, thêm 们 là thừa.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_location_needs_nar",
+      "body": "来、去、在、从、到 đòi hỏi tân ngữ phải là NƠI CHỐN. Người thì không phải nơi chốn, nên phải thêm 这儿 (chỗ tôi đây) hoặc 那儿 (chỗ người ta đó): 我去朋友那儿聊天儿 · 她明天来我这儿. Bỏ 那儿 đi là câu sai ngữ pháp.",
+      "priority": 10
+    }
+  ],
+  "modules": [
+    {
+      "title": "第二十五课 我们七点一刻出发",
+      "description": "Bài 25 — Chúng tôi 7 giờ 15 phút xuất phát. Xem giờ, lịch sinh hoạt một ngày, hẹn giờ.",
+      "lessons": [
+        {
+          "title": "课文（一）我的一天",
+          "description": "Hội thoại 1 — Mary và Yamamoto luyện khẩu ngữ, hỏi nhau về lịch một ngày.",
+          "vocab": [
+            {
+              "hanzi": "口语",
+              "pinyin": "kǒuyǔ",
+              "meaning": "khẩu ngữ",
+              "note": "名 · khẩu ngữ"
+            },
+            {
+              "hanzi": "差",
+              "pinyin": "chà",
+              "meaning": "thiếu, kém, chênh lệch",
+              "note": "动、形 · sai"
+            },
+            {
+              "hanzi": "分",
+              "pinyin": "fēn",
+              "meaning": "phút",
+              "note": "名、量 · phân"
+            },
+            {
+              "hanzi": "回答",
+              "pinyin": "huídá",
+              "meaning": "trả lời",
+              "note": "动 · hồi đáp"
+            },
+            {
+              "hanzi": "早上",
+              "pinyin": "zǎoshang",
+              "meaning": "sáng, buổi sáng",
+              "note": "名 · tảo thượng"
+            },
+            {
+              "hanzi": "起床",
+              "pinyin": "qǐ chuáng",
+              "meaning": "ngủ dậy",
+              "note": "khởi sàng"
+            },
+            {
+              "hanzi": "半",
+              "pinyin": "bàn",
+              "meaning": "nửa",
+              "note": "名 · bán"
+            },
+            {
+              "hanzi": "刻",
+              "pinyin": "kè",
+              "meaning": "khắc (15 phút)",
+              "note": "量 · khắc"
+            },
+            {
+              "hanzi": "早饭",
+              "pinyin": "zǎofàn",
+              "meaning": "cơm sáng, bữa sáng",
+              "note": "名 · tảo phạn"
+            },
+            {
+              "hanzi": "午饭",
+              "pinyin": "wǔfàn",
+              "meaning": "cơm trưa, bữa trưa",
+              "note": "名 · ngọ phạn"
+            },
+            {
+              "hanzi": "晚饭",
+              "pinyin": "wǎnfàn",
+              "meaning": "cơm tối, bữa tối",
+              "note": "名 · vãn phạn"
+            },
+            {
+              "hanzi": "教室",
+              "pinyin": "jiàoshì",
+              "meaning": "phòng học",
+              "note": "名 · giáo thất"
+            },
+            {
+              "hanzi": "上课",
+              "pinyin": "shàng kè",
+              "meaning": "lên lớp, vào học",
+              "note": "thượng khóa"
+            },
+            {
+              "hanzi": "下课",
+              "pinyin": "xià kè",
+              "meaning": "tan học",
+              "note": "hạ khóa"
+            },
+            {
+              "hanzi": "休息",
+              "pinyin": "xiūxi",
+              "meaning": "nghỉ",
+              "note": "动 · hưu tức"
+            },
+            {
+              "hanzi": "聊天儿",
+              "pinyin": "liáo tiānr",
+              "meaning": "nói chuyện, tán gẫu",
+              "note": "liêu thiên nhi"
+            },
+            {
+              "hanzi": "洗澡",
+              "pinyin": "xǐ zǎo",
+              "meaning": "tắm rửa, tắm",
+              "note": "tẩy tảo"
+            },
+            {
+              "hanzi": "睡觉",
+              "pinyin": "shuì jiào",
+              "meaning": "đi ngủ, ngủ",
+              "note": "thụy giác"
+            }
+          ],
+          "dialogue": {
+            "heading": "课文（一）我的一天",
+            "scene": "（晚上，玛丽和山本在练习说汉语……）Buổi tối, Mary và Yamamoto đang luyện nói tiếng Hán.",
+            "turns": [
+              {
+                "speaker": "山本",
+                "zh": "玛丽，我们练习口语，好吗？",
+                "pinyin": "Mǎlì, wǒmen liànxí kǒuyǔ, hǎo ma?",
+                "vi": "Mary, chúng ta luyện khẩu ngữ nhé?"
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "好。怎么练？",
+                "pinyin": "Hǎo. Zěnme liàn?",
+                "vi": "Được. Luyện thế nào?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "一个人问，一个人回答，怎么样？",
+                "pinyin": "Yí ge rén wèn, yí ge rén huídá, zěnmeyàng?",
+                "vi": "Một người hỏi, một người trả lời, thấy sao?"
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "好吧。我先问。现在几点？",
+                "pinyin": "Hǎo ba. Wǒ xiān wèn. Xiànzài jǐ diǎn?",
+                "vi": "Được thôi. Tôi hỏi trước. Bây giờ mấy giờ?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "现在差五分八点。",
+                "pinyin": "Xiànzài chà wǔ fēn bā diǎn.",
+                "vi": "Bây giờ 8 giờ kém 5 (7:55)."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "你每天早上几点起床？",
+                "pinyin": "Nǐ měi tiān zǎoshang jǐ diǎn qǐ chuáng?",
+                "vi": "Mỗi sáng bạn mấy giờ ngủ dậy?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "六点半起床。",
+                "pinyin": "Liù diǎn bàn qǐ chuáng.",
+                "vi": "6 giờ rưỡi dậy."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "几点吃早饭？",
+                "pinyin": "Jǐ diǎn chī zǎofàn?",
+                "vi": "Mấy giờ ăn sáng?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "七点。七点三刻去教室，八点上课。",
+                "pinyin": "Qī diǎn. Qī diǎn sān kè qù jiàoshì, bā diǎn shàng kè.",
+                "vi": "7 giờ. 7 giờ 45 đi tới phòng học, 8 giờ vào học."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "什么时候下课？",
+                "pinyin": "Shénme shíhou xià kè?",
+                "vi": "Khi nào tan học?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "十二点钟下课。",
+                "pinyin": "Shí'èr diǎn zhōng xià kè.",
+                "vi": "12 giờ tan học."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "中午休息吗？",
+                "pinyin": "Zhōngwǔ xiūxi ma?",
+                "vi": "Buổi trưa có nghỉ không?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "中午回宿舍休息。",
+                "pinyin": "Zhōngwǔ huí sùshè xiūxi.",
+                "vi": "Trưa về ký túc xá nghỉ."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "你下午常常做什么？",
+                "pinyin": "Nǐ xiàwǔ chángcháng zuò shénme?",
+                "vi": "Buổi chiều bạn thường làm gì?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "有时候做练习，有时候去朋友那儿聊天儿。",
+                "pinyin": "Yǒu shíhou zuò liànxí, yǒu shíhou qù péngyou nàr liáotiānr.",
+                "vi": "Có khi làm bài tập, có khi đến chỗ bạn bè tán chuyện."
+              },
+              {
+                "speaker": "玛丽",
+                "zh": "你晚上什么时候睡觉？",
+                "pinyin": "Nǐ wǎnshang shénme shíhou shuì jiào?",
+                "vi": "Buổi tối bạn khi nào đi ngủ?"
+              },
+              {
+                "speaker": "山本",
+                "zh": "晚上十一点洗澡，十一点半睡觉。",
+                "pinyin": "Wǎnshang shíyī diǎn xǐ zǎo, shíyī diǎn bàn shuì jiào.",
+                "vi": "Tối 11 giờ tắm, 11 giờ rưỡi đi ngủ."
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "Mẫu câu hỏi giờ giấc",
+            "rows": [
+              {
+                "zh": "现在几点？",
+                "vi": "Bây giờ mấy giờ?"
+              },
+              {
+                "zh": "你每天早上几点起床？",
+                "vi": "Mỗi sáng bạn mấy giờ dậy?"
+              },
+              {
+                "zh": "什么时候下课？",
+                "vi": "Khi nào tan học?"
+              },
+              {
+                "zh": "你下午常常做什么？",
+                "vi": "Buổi chiều bạn thường làm gì?"
+              },
+              {
+                "zh": "有时候…，有时候…",
+                "vi": "Có khi…, có khi…"
+              }
+            ]
+          },
+          "quiz": {
+            "title": "Luyện tập 课文（一）",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "「现在差五分八点」là mấy giờ?",
+                "explanation": "差 nghĩa là thiếu — thiếu 5 phút nữa mới tới 8 giờ, tức 7:55.",
+                "options": [
+                  {
+                    "label": "7 giờ 55",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "8 giờ 05",
+                    "isCorrect": false,
+                    "misconception": "zh_clock_cha_before_hour"
+                  },
+                  {
+                    "label": "5 giờ 08",
+                    "isCorrect": false,
+                    "misconception": "zh_clock_cha_before_hour"
+                  },
+                  {
+                    "label": "8 giờ 55",
+                    "isCorrect": false,
+                    "misconception": "zh_clock_cha_before_hour"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「七点三刻」là mấy giờ?",
+                "explanation": "刻 = 15 phút, nên 三刻 = 45 phút → 7:45.",
+                "options": [
+                  {
+                    "label": "7 giờ 45",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "7 giờ 03",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  },
+                  {
+                    "label": "7 giờ 30",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  },
+                  {
+                    "label": "3 giờ 07",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  }
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép hoạt động hằng ngày với nghĩa tiếng Việt.",
+                "explanation": "Sáu động từ chỉ sinh hoạt trong bài.",
+                "pairs": [
+                  {
+                    "left": "起床",
+                    "right": "ngủ dậy"
+                  },
+                  {
+                    "left": "上课",
+                    "right": "vào học"
+                  },
+                  {
+                    "left": "下课",
+                    "right": "tan học"
+                  },
+                  {
+                    "left": "洗澡",
+                    "right": "tắm"
+                  },
+                  {
+                    "left": "睡觉",
+                    "right": "đi ngủ"
+                  },
+                  {
+                    "left": "聊天儿",
+                    "right": "tán gẫu"
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "六点＿起床。(6 giờ rưỡi)",
+                "explanation": "半 = nửa, dùng cho 30 phút: 六点半.",
+                "answers": [
+                  "半",
+                  "bàn",
+                  "ban"
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Mỗi sáng bạn mấy giờ ngủ dậy?”",
+                "explanation": "Trật tự: chủ ngữ + thời gian (每天早上) + 几点 + động từ.",
+                "sequence": [
+                  "你",
+                  "每天",
+                  "早上",
+                  "几点",
+                  "起床",
+                  "？"
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Theo bài, Yamamoto ăn sáng lúc 7 giờ và vào học lúc 8 giờ.",
+                "explanation": "七点吃早饭，八点上课 — đúng.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Hỏi giờ và nói lịch sinh hoạt một ngày",
+            "Hiểu đúng 差…分…点 và 刻"
+          ],
+          "summary": [
+            "刻 = 15 phút · 半 = 30 phút",
+            "差 lùi thời gian lại: 差五分八点 = 7:55"
+          ],
+          "body": "> [!canh-bao] Hai cách đọc giờ dễ hiểu ngược\n> 差五分八点 là **7:55**, không phải 8:05 — 差 nghĩa là thiếu.\n> 七点三刻 là **7:45**, không phải 7 giờ 3 phút — 刻 là 15 phút."
+        },
+        {
+          "title": "课文（二）我们七点一刻出发",
+          "description": "Hội thoại 2 — Cô giáo báo lịch đi leo núi, giờ tập hợp và giờ xuất phát.",
+          "vocab": [
+            {
+              "hanzi": "爬山",
+              "pinyin": "pá shān",
+              "meaning": "leo núi",
+              "note": "bà san"
+            },
+            {
+              "hanzi": "爬",
+              "pinyin": "pá",
+              "meaning": "leo, trèo",
+              "note": "动 · bà"
+            },
+            {
+              "hanzi": "山",
+              "pinyin": "shān",
+              "meaning": "núi",
+              "note": "名 · san, sơn"
+            },
+            {
+              "hanzi": "年级",
+              "pinyin": "niánjí",
+              "meaning": "lớp, năm thứ",
+              "note": "名 · niên cấp"
+            },
+            {
+              "hanzi": "前",
+              "pinyin": "qián",
+              "meaning": "trước, tiền",
+              "note": "名 · tiền"
+            },
+            {
+              "hanzi": "集合",
+              "pinyin": "jíhé",
+              "meaning": "tập hợp, tập trung",
+              "note": "动 · tập hợp"
+            },
+            {
+              "hanzi": "上车",
+              "pinyin": "shàng chē",
+              "meaning": "lên xe",
+              "note": "thượng xa"
+            },
+            {
+              "hanzi": "下车",
+              "pinyin": "xià chē",
+              "meaning": "xuống xe",
+              "note": "hạ xa"
+            },
+            {
+              "hanzi": "准时",
+              "pinyin": "zhǔnshí",
+              "meaning": "đúng giờ",
+              "note": "形 · chuẩn thời"
+            },
+            {
+              "hanzi": "出发",
+              "pinyin": "chūfā",
+              "meaning": "xuất phát, lên đường",
+              "note": "动 · xuất phát"
+            },
+            {
+              "hanzi": "带",
+              "pinyin": "dài",
+              "meaning": "mang, đưa",
+              "note": "动 · đái, đới"
+            },
+            {
+              "hanzi": "课间",
+              "pinyin": "kèjiān",
+              "meaning": "giờ nghỉ giải lao",
+              "note": "名 · bổ sung · khoá gian"
+            },
+            {
+              "hanzi": "上班",
+              "pinyin": "shàng bān",
+              "meaning": "đi làm",
+              "note": "bổ sung · thượng ban"
+            },
+            {
+              "hanzi": "下班",
+              "pinyin": "xià bān",
+              "meaning": "tan ca",
+              "note": "bổ sung · hạ ban"
+            },
+            {
+              "hanzi": "等",
+              "pinyin": "děng",
+              "meaning": "đợi, chờ",
+              "note": "动 · bổ sung · đẳng"
+            }
+          ],
+          "dialogue": {
+            "heading": "课文（二）我们七点一刻出发",
+            "turns": [
+              {
+                "speaker": "老师",
+                "zh": "同学们，明天我们去爬山。",
+                "pinyin": "Tóngxuémen, míngtiān wǒmen qù pá shān.",
+                "vi": "Các em, ngày mai chúng ta đi leo núi."
+              },
+              {
+                "speaker": "山本",
+                "zh": "太好了。老师，您去吗？",
+                "pinyin": "Tài hǎo le. Lǎoshī, nín qù ma?",
+                "vi": "Hay quá. Thưa cô, cô có đi không ạ?"
+              },
+              {
+                "speaker": "老师",
+                "zh": "去。一年级的老师和学生都去。",
+                "pinyin": "Qù. Yī niánjí de lǎoshī hé xuésheng dōu qù.",
+                "vi": "Có. Giáo viên và học sinh năm thứ nhất đều đi."
+              },
+              {
+                "speaker": "山本",
+                "zh": "明天什么时候出发？",
+                "pinyin": "Míngtiān shénme shíhou chūfā?",
+                "vi": "Ngày mai khi nào xuất phát ạ?"
+              },
+              {
+                "speaker": "老师",
+                "zh": "明天早上七点在楼前集合上车，七点一刻准时出发。",
+                "pinyin": "Míngtiān zǎoshang qī diǎn zài lóu qián jíhé shàng chē, qī diǎn yí kè zhǔnshí chū fā.",
+                "vi": "Sáng mai 7 giờ tập hợp trước toà nhà rồi lên xe, 7 giờ 15 xuất phát đúng giờ."
+              },
+              {
+                "speaker": "山本",
+                "zh": "中午回来吗？",
+                "pinyin": "Zhōngwǔ huílai ma?",
+                "vi": "Trưa có về không ạ?"
+              },
+              {
+                "speaker": "老师",
+                "zh": "不回来。要带午饭。",
+                "pinyin": "Bù huílai. Yào dài wǔfàn.",
+                "vi": "Không về. Phải mang theo cơm trưa."
+              },
+              {
+                "speaker": "山本",
+                "zh": "什么时候回来？",
+                "pinyin": "Shénme shíhou huílai?",
+                "vi": "Khi nào về ạ?"
+              },
+              {
+                "speaker": "老师",
+                "zh": "下午四点。",
+                "pinyin": "Xiàwǔ sì diǎn.",
+                "vi": "4 giờ chiều."
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "Mẫu câu hẹn giờ",
+            "rows": [
+              {
+                "zh": "什么时候出发？",
+                "vi": "Khi nào xuất phát?"
+              },
+              {
+                "zh": "七点一刻准时出发。",
+                "vi": "7 giờ 15 xuất phát đúng giờ."
+              },
+              {
+                "zh": "七点在楼前集合。",
+                "vi": "7 giờ tập hợp trước toà nhà. — thời gian trước, địa điểm sau"
+              },
+              {
+                "zh": "要带午饭。",
+                "vi": "Phải mang theo cơm trưa."
+              },
+              {
+                "zh": "老师和学生都去。",
+                "vi": "Giáo viên và học sinh đều đi."
+              }
+            ]
+          },
+          "body": "### 注释（一）有时候去朋友那儿聊天儿\n\nCác động từ và giới từ **来、去、在、从、到** đòi tân ngữ chỉ **địa điểm**. Nếu tân ngữ là danh từ hoặc đại từ chỉ **người** thì phải thêm **这儿** hoặc **那儿** vào sau để biến nó thành nơi chốn.\n\n1. 她明天来我**这儿**。 — Ngày mai cô ấy đến chỗ tôi.\n2. 我去王老师**那儿**。 — Tôi đến chỗ thầy Vương.\n\n### 注释（二）同学们……\n\n**们** đặt sau đại từ hoặc danh từ chỉ người để biểu thị số nhiều:\n\n你们 · 我们 · 他们 · 咱们 · 老师们 · 同学们\n\n> Nhưng nếu trước danh từ **đã có** từ chỉ số lượng hoặc từ chỉ số nhiều thì **không được** thêm 们.\n>\n> Không nói: ✗ 三个留学生们 · ✗ 我有很多老师们。\n\n> [!canh-bao] Hai lỗi của bài này\n> ✗ 我去朋友聊天儿 — người không phải nơi chốn, phải thêm 那儿.\n> ✗ 三个留学生们 — đã có số lượng thì bỏ 们.",
+          "quiz": {
+            "title": "Luyện tập 课文（二）",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Câu nào ĐÚNG?",
+                "explanation": "Danh từ chỉ người phải thêm 这儿/那儿 mới làm tân ngữ chỉ nơi chốn được.",
+                "options": [
+                  {
+                    "label": "我去朋友那儿聊天儿。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "我去朋友聊天儿。",
+                    "isCorrect": false,
+                    "misconception": "zh_location_needs_nar"
+                  },
+                  {
+                    "label": "我去朋友的聊天儿。",
+                    "isCorrect": false,
+                    "misconception": "zh_location_needs_nar"
+                  },
+                  {
+                    "label": "我去在朋友聊天儿。",
+                    "isCorrect": false,
+                    "misconception": "zh_location_needs_nar"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Cách nói nào SAI?",
+                "explanation": "Đã có số lượng 三个 thì không thêm 们 nữa.",
+                "options": [
+                  {
+                    "label": "三个留学生们",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "同学们",
+                    "isCorrect": false,
+                    "misconception": "zh_men_with_number"
+                  },
+                  {
+                    "label": "三个留学生",
+                    "isCorrect": false,
+                    "misconception": "zh_men_with_number"
+                  },
+                  {
+                    "label": "老师们",
+                    "isCorrect": false,
+                    "misconception": "zh_men_with_number"
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "她明天来我＿＿。(đến chỗ tôi)",
+                "explanation": "Người + 这儿 = chỗ tôi đây.",
+                "answers": [
+                  "这儿",
+                  "zhèr",
+                  "zher"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「七点一刻」là mấy giờ?",
+                "explanation": "一刻 = 15 phút → 7:15. Đây cũng là giờ xuất phát trong tên bài.",
+                "options": [
+                  {
+                    "label": "7 giờ 15",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "7 giờ 01",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  },
+                  {
+                    "label": "1 giờ 07",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  },
+                  {
+                    "label": "7 giờ 45",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Sáng mai 7 giờ tập hợp trước toà nhà.”",
+                "explanation": "Thời gian (明天早上七点) đứng trước địa điểm (在楼前), rồi mới tới động từ.",
+                "sequence": [
+                  "明天早上七点",
+                  "在楼前",
+                  "集合",
+                  "。"
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Theo bài, buổi trưa cả lớp quay về trường ăn cơm.",
+                "explanation": "老师 nói 不回来。要带午饭 — không về, phải mang cơm trưa theo.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Hẹn giờ tập hợp và giờ xuất phát",
+            "Dùng 这儿 / 那儿 sau danh từ chỉ người",
+            "Dùng 们 đúng chỗ"
+          ],
+          "summary": [
+            "Thời gian đứng trước địa điểm: 七点在楼前集合",
+            "来/去/在/从/到 đòi tân ngữ chỉ nơi chốn"
+          ]
+        },
+        {
+          "title": "语法（一）时刻的表达 — Cách đọc giờ",
+          "description": "点（钟）· 刻 · 分 · 半 · 差 — sáu cách nói giờ trong tiếng Hán.",
+          "patterns": {
+            "heading": "Bảng đọc giờ",
+            "note": "Hỏi giờ: 现在几点？ — Trả lời: 现在八点。",
+            "rows": [
+              {
+                "zh": "八点",
+                "vi": "8:00"
+              },
+              {
+                "zh": "八点零五分",
+                "vi": "8:05 — dưới 10 phút phải đọc 零"
+              },
+              {
+                "zh": "八点一刻 / 八点十五分",
+                "vi": "8:15 — 一刻 = 15 phút"
+              },
+              {
+                "zh": "八点半 / 八点三十分",
+                "vi": "8:30 — 半 = nửa giờ"
+              },
+              {
+                "zh": "八点三刻 / 八点四十五分 / 差一刻九点",
+                "vi": "8:45 — ba cách nói đều đúng"
+              },
+              {
+                "zh": "八点五十五分 / 差五分九点",
+                "vi": "8:55 — 差 nghĩa là thiếu, lùi về trước giờ sau"
+              }
+            ]
+          },
+          "body": "## 时刻的表达 — Biểu đạt giờ phút\n\nCác từ chỉ giờ phút trong tiếng Hán: **点（钟）** (giờ) · **刻** (khắc = 15 phút) · **分** (phút) · **半** (nửa) · **差** (thiếu).\n\nHỏi giờ: 现在几点？ → 现在八点。\n\n### Ba chỗ dễ sai nhất\n\n1. **刻 = 15 phút**, không phải 1 phút. 三刻 = 45 phút.\n2. **差 lùi thời gian lại.** 差五分八点 = thiếu 5 phút nữa mới tới 8 giờ = 7:55. Đọc ngược từ phải sang trái.\n3. **Dưới 10 phút phải đọc 零**: 8:05 là 八点零五分.\n\n> [!meo] Gặp chữ 差 thì đọc ngược\n> Lấy giờ đứng **sau**, trừ đi số phút đứng **trước**. 差一刻九点 = 9 giờ trừ 15 phút = 8:45.",
+          "quiz": {
+            "title": "Luyện tập cách đọc giờ",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "matching",
+                "prompt": "Ghép cách nói tiếng Hán với giờ tương ứng.",
+                "explanation": "Bốn mốc cơ bản: đúng giờ, một khắc, rưỡi, ba khắc.",
+                "pairs": [
+                  {
+                    "left": "八点",
+                    "right": "8:00"
+                  },
+                  {
+                    "left": "八点一刻",
+                    "right": "8:15"
+                  },
+                  {
+                    "left": "八点半",
+                    "right": "8:30"
+                  },
+                  {
+                    "left": "八点三刻",
+                    "right": "8:45"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「差一刻九点」là mấy giờ?",
+                "explanation": "差 = thiếu, 一刻 = 15 phút → thiếu 15 phút nữa là 9 giờ → 8:45.",
+                "options": [
+                  {
+                    "label": "8 giờ 45",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "9 giờ 15",
+                    "isCorrect": false,
+                    "misconception": "zh_clock_cha_before_hour"
+                  },
+                  {
+                    "label": "9 giờ 01",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  },
+                  {
+                    "label": "1 giờ 09",
+                    "isCorrect": false,
+                    "misconception": "zh_clock_cha_before_hour"
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "8:05 đọc là 八点＿五分。(chữ chỉ số không)",
+                "explanation": "Dưới 10 phút phải chèn 零: 八点零五分.",
+                "answers": [
+                  "零",
+                  "líng",
+                  "ling"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Cách nào KHÔNG phải là 8:45?",
+                "explanation": "8:45 nói được ba cách: 八点三刻, 八点四十五分, 差一刻九点. 八点四刻 không tồn tại vì 4 khắc là trọn một giờ.",
+                "options": [
+                  {
+                    "label": "八点四刻",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "八点三刻",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  },
+                  {
+                    "label": "八点四十五分",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  },
+                  {
+                    "label": "差一刻九点",
+                    "isCorrect": false,
+                    "misconception": "zh_ke_quarter"
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Bây giờ 8 giờ kém 5.”",
+                "explanation": "差 + số phút + giờ: 现在差五分八点。",
+                "sequence": [
+                  "现在",
+                  "差",
+                  "五分",
+                  "八点",
+                  "。"
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Đọc được sáu mốc giờ cơ bản",
+            "Dùng đúng 点 · 刻 · 分 · 半 · 差"
+          ],
+          "summary": [
+            "Dưới 10 phút phải đọc 零: 8:05 = 八点零五分",
+            "8:45 nói được ba cách: 八点三刻 / 八点四十五分 / 差一刻九点"
+          ]
+        },
+        {
+          "title": "语法（二）Trật tự và chức năng của từ chỉ thời gian",
+          "description": "Từ lớn đến nhỏ; thời gian đứng trước địa điểm.",
+          "patterns": {
+            "heading": "Trật tự thời gian — từ ĐƠN VỊ LỚN đến đơn vị nhỏ",
+            "note": "年 → 月 → 日 → 点钟 → 分",
+            "rows": [
+              {
+                "zh": "一九四九年十月一日",
+                "vi": "Ngày 1 tháng 10 năm 1949"
+              },
+              {
+                "zh": "一九九九年十月二十五日上午八点二十分",
+                "vi": "8 giờ 20 sáng ngày 25 tháng 10 năm 1999"
+              },
+              {
+                "zh": "现在八点二十。",
+                "vi": "Từ chỉ thời gian làm VỊ NGỮ"
+              },
+              {
+                "zh": "我看晚上七点一刻的电影。",
+                "vi": "Từ chỉ thời gian làm ĐỊNH NGỮ (có 的)"
+              },
+              {
+                "zh": "我们晚上在宿舍看书。",
+                "vi": "Thời gian TRƯỚC địa điểm — không nói 我在宿舍晚上看书"
+              }
+            ]
+          },
+          "body": "## 1. Thứ tự: từ đơn vị lớn đến đơn vị nhỏ\n\n**年 → 月 → 日 → 点钟 → 分**\n\nNgược hẳn với tiếng Việt, nên khi viết cứ tự hỏi: cái nào bao trùm cái nào?\n\n## 2. Từ chỉ thời gian làm được nhiều chức năng\n\n| Chức năng | Ví dụ |\n|---|---|\n| Vị ngữ | 现在八点二十。 |\n| Vị ngữ | 今天星期五。 |\n| Định ngữ | 我看**晚上七点一刻的**电影。 |\n| Trạng ngữ | 我**明天上午**有课。 |\n\n## 3. Thời gian đứng TRƯỚC địa điểm\n\nKhi câu có cả trạng ngữ chỉ thời gian và trạng ngữ chỉ địa điểm, **thời gian đặt trước**.\n\n- 我们**晚上****在宿舍**看书。 ✓ — không nói ✗ 我在宿舍晚上看书\n- **去年**我**在北京**学习。 ✓ — không nói ✗ 我在北京去年学习\n\n## 语音 — Trọng âm\n\n- Trong cụm số lượng, **số từ đọc nhấn**, lượng từ đọc nhẹ: **五**本词典 · **三**本书 · **六**个学生 · **七**件毛衣\n- **几** trong câu hỏi phải đọc nhấn: 你**几**点起床？· 你有**几**本词典？\n\n> [!canh-bao] Trật tự trạng ngữ\n> ✓ 我们晚上在宿舍看书 · ✗ 我在宿舍晚上看书. Tiếng Việt cho phép đảo, tiếng Hán thì không.",
+          "quiz": {
+            "title": "Luyện tập trật tự thời gian",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Câu nào ĐÚNG trật tự? (buổi tối · ở ký túc xá)",
+                "explanation": "Thời gian đứng trước địa điểm: 晚上 rồi mới 在宿舍.",
+                "options": [
+                  {
+                    "label": "我们晚上在宿舍看书。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "我们在宿舍晚上看书。",
+                    "isCorrect": false,
+                    "misconception": "zh_time_before_place"
+                  },
+                  {
+                    "label": "在宿舍我们看书晚上。",
+                    "isCorrect": false,
+                    "misconception": "zh_time_before_place"
+                  },
+                  {
+                    "label": "我们看书晚上在宿舍。",
+                    "isCorrect": false,
+                    "misconception": "zh_time_before_place"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Câu nào ĐÚNG trật tự? (năm ngoái · ở Bắc Kinh)",
+                "explanation": "去年 (thời gian) đứng trước 在北京 (địa điểm).",
+                "options": [
+                  {
+                    "label": "去年我在北京学习。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "我在北京去年学习。",
+                    "isCorrect": false,
+                    "misconception": "zh_time_before_place"
+                  },
+                  {
+                    "label": "我在北京学习去年。",
+                    "isCorrect": false,
+                    "misconception": "zh_time_before_place"
+                  },
+                  {
+                    "label": "在北京去年我学习。",
+                    "isCorrect": false,
+                    "misconception": "zh_time_before_place"
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp: 8 giờ 20 sáng ngày 25 tháng 10 năm 1999.",
+                "explanation": "年 → 月 → 日 → buổi → giờ phút.",
+                "sequence": [
+                  "一九九九年",
+                  "十月",
+                  "二十五日",
+                  "上午",
+                  "八点二十分"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "Trong cụm 五本词典, âm tiết nào đọc nhấn? (viết chữ Hán)",
+                "explanation": "Trong cụm số lượng, số từ đọc nhấn, lượng từ đọc nhẹ → nhấn 五.",
+                "answers": [
+                  "五",
+                  "wǔ",
+                  "wu"
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Xếp đúng thứ tự các đơn vị thời gian",
+            "Đặt trạng ngữ thời gian và địa điểm đúng vị trí"
+          ],
+          "summary": [
+            "Thứ tự: 年 → 月 → 日 → 点钟 → 分",
+            "Câu có cả hai thì THỜI GIAN đứng trước ĐỊA ĐIỂM"
+          ]
+        },
+        {
+          "title": "练习 第二十五课",
+          "description": "Chọn từ điền vào chỗ trống, luyện thời khoá biểu một ngày.",
+          "body": "## 选词填空 — Chọn từ điền vào chỗ trống\n\nNgân hàng từ: **看看 · 每 · 点 · 晚上 · 睡觉 · 年 · 早上**\n\n## 朗读 — Đọc rõ ràng\n\n每天 · 每星期 · 每月 · 每年\n\n每个同学 · 每件大衣 · 每个老师\n\n八点半 · 十点半 · 半天 · 半月 · 半年 · 半个\n\n上课 · 上车 · 上学 · 带午饭 · 带词典 · 带笔",
+          "quiz": {
+            "title": "练习 — Chọn từ điền vào chỗ trống",
+            "passThresholdPct": 60,
+            "questions": [
+              {
+                "type": "fill_in",
+                "prompt": "现在几＿？(hỏi giờ)",
+                "explanation": "现在几点？ — 点 là đơn vị giờ.",
+                "answers": [
+                  "点",
+                  "diǎn",
+                  "dian"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我＿天下午都去操场锻炼身体。(mỗi)",
+                "explanation": "每天 = mỗi ngày.",
+                "answers": [
+                  "每",
+                  "měi",
+                  "mei"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我每天＿＿六点半起床，七点吃早饭。(buổi sáng)",
+                "explanation": "早上 = buổi sáng.",
+                "answers": [
+                  "早上",
+                  "zǎoshang",
+                  "zaoshang"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "每＿都有很多留学生来中国学习。(năm)",
+                "explanation": "每年 = mỗi năm.",
+                "answers": [
+                  "年",
+                  "nián",
+                  "nian"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "晚上我十点半＿＿。(đi ngủ)",
+                "explanation": "睡觉 = đi ngủ.",
+                "answers": [
+                  "睡觉",
+                  "shuì jiào",
+                  "shuijiao"
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp lịch một ngày của 山本 theo đúng thứ tự thời gian.",
+                "explanation": "6:30 dậy → 7:00 ăn sáng → 7:45 tới lớp → 8:00 vào học → 12:00 tan học → 23:30 đi ngủ.",
+                "sequence": [
+                  "六点半起床",
+                  "七点吃早饭",
+                  "七点三刻去教室",
+                  "八点上课",
+                  "十二点下课",
+                  "十一点半睡觉"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「你几点睡觉？」— chữ nào phải đọc nhấn?",
+                "explanation": "几 trong câu hỏi luôn đọc nhấn.",
+                "options": [
+                  {
+                    "label": "几",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "你",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "点",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "睡觉",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Chọn đúng từ chỉ thời gian điền vào chỗ trống",
+            "Sắp xếp lịch một ngày theo đúng thứ tự"
+          ],
+          "summary": [
+            "每 + đơn vị thời gian = mỗi: 每天 · 每星期 · 每月 · 每年",
+            "几 trong câu hỏi luôn đọc nhấn"
+          ]
+        }
+      ]
+    }
+  ]
+}

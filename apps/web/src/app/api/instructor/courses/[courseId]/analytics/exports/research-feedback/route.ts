@@ -4,7 +4,7 @@ import { assertCanEditCourse, CourseAuthzError } from "@feedbackme/core-lms";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { requireUserId } from "@/lib/session";
 import { csvResponse } from "@/lib/csvExport";
-import { identityCols, learnerIndex } from "@/lib/researchExport";
+import { identityCols, IDENTITY_COLUMNS, learnerIndex } from "@/lib/researchExport";
 
 export const runtime = "nodejs";
 
@@ -118,5 +118,26 @@ export async function GET(
   });
 
   const day = new Date().toISOString().slice(0, 10);
-  return csvResponse(`nghien-cuu-phan-hoi-${course.slug}-${day}.csv`, out);
+  // Khai báo cột sẵn: khoá chưa ai làm quiz sai thì chưa có lượt phản hồi nào,
+  // và một tệp trắng trơn trông y hệt một lần tải hỏng.
+  return csvResponse(`nghien-cuu-phan-hoi-${course.slug}-${day}.csv`, out, [
+    ...IDENTITY_COLUMNS,
+    "Mã lượt phản hồi",
+    "Mã lượt làm",
+    "Mã câu hỏi",
+    "Điều kiện lúc sinh",
+    "Tầng trội",
+    "Mọi tầng có mặt",
+    "Mức chi tiết",
+    "Nguồn sinh",
+    "Mã misconception",
+    "Số bài ôn gợi ý",
+    "Đã bấm vào bài ôn?",
+    "Số lần bấm",
+    "Đánh giá (1-5)",
+    "Mastery trung bình lúc sinh",
+    "Phiên bản bộ mã hoá",
+    "Nội dung phản hồi",
+    "Sinh lúc",
+  ]);
 }

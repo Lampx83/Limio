@@ -384,7 +384,18 @@
                 "vi": "Không to không nhỏ, vừa vặn"
               }
             ]
-          }
+          },
+          "objectives": [
+            "Hỏi và mô tả quần áo khi đi mua: dài/ngắn, rộng/chật, màu thẫm/nhạt",
+            "Dùng 又 A 又 B để nêu hai tính chất cùng lúc",
+            "Dùng 有一点儿 khi muốn chê nhẹ"
+          ],
+          "summary": [
+            "Bốn trục mô tả riêng biệt: 长/短 · 肥/瘦 · 深/浅 · 贵/便宜",
+            "有一点儿 + tính từ mang ý không hài lòng",
+            "Hỏi cái vừa hơn: 有 + tính từ + 一点儿的吗？"
+          ],
+          "body": "> [!canh-bao] Đừng lẫn trục so sánh\n> 大/小 nói về cỡ nói chung, **không** thay được cho 肥/瘦 (rộng/chật). Áo 太肥了 thì phải hỏi 有没有**瘦**一点儿的, không hỏi 小一点儿的."
         },
         {
           "title": "课文（二）这种一件多少钱",
@@ -439,7 +450,7 @@
               "note": "名 · hài"
             }
           ],
-          "body": "### 注释（一）Quy tắc đọc số tiền\n\n- Đơn vị **cuối cùng** có thể không nói.\n- Nếu ở giữa có từ hai số 0 trở lên thì chỉ đọc một chữ 零, và lúc đó đơn vị cuối **bắt buộc** phải nói.\n- Nếu chỉ còn **một** đơn vị (块/毛/分), khẩu ngữ thường thêm chữ 钱.\n\n### 注释（二）太 + tính từ + 了\n\nDiễn đạt mức độ vượt quá hoặc rất cao — dùng được cả hai chiều.\n\n- **Không hài lòng:** 太贵了 · 太大了 · 太忙了 · 太旧了\n- **Khen ngợi:** 太好了！· 太美了！",
+          "body": "### 注释（一）Quy tắc đọc số tiền\n\n- Đơn vị **cuối cùng** có thể không nói.\n- Nếu ở giữa có từ hai số 0 trở lên thì chỉ đọc một chữ 零, và lúc đó đơn vị cuối **bắt buộc** phải nói.\n- Nếu chỉ còn **một** đơn vị (块/毛/分), khẩu ngữ thường thêm chữ 钱.\n\n### 注释（二）太 + tính từ + 了\n\nDiễn đạt mức độ vượt quá hoặc rất cao — dùng được cả hai chiều.\n\n- **Không hài lòng:** 太贵了 · 太大了 · 太忙了 · 太旧了\n- **Khen ngợi:** 太好了！· 太美了！\n\n> [!ghi-nho] Hai quy tắc đọc tiền đi kèm nhau\n> Đơn vị **cuối** thường lược bỏ: 46.50 元 = 四十六块五. Nhưng nếu ở giữa có từ hai số 0 trở lên thì phải đọc 零 **và** nói đơn vị cuối: 100.50 元 = 一百块**零**五**毛**.\n\n> [!canh-bao] Lỗi hay gặp\n> ✗ 一百块五 — thiếu cả 零 lẫn đơn vị cuối, người nghe hiểu thành 100,50 hay 105 đều được.",
           "quiz": {
             "title": "Luyện tập 课文（二）— giá cả và mặc cả",
             "passThresholdPct": 70,
@@ -684,12 +695,21 @@
                 "vi": "0.05 元"
               }
             ]
-          }
+          },
+          "objectives": [
+            "Hỏi giá và mặc cả: 多少钱 · 太贵了 · 便宜一点儿",
+            "Đọc đúng số tiền theo khẩu ngữ 块 · 毛 · 分"
+          ],
+          "summary": [
+            "Viết là 元、角、分; nói là 块、毛、分",
+            "Giữa có từ hai số 0 trở lên thì đọc một chữ 零 và bắt buộc nói đơn vị cuối",
+            "太 + tính từ + 了 dùng được cả khi chê lẫn khi khen"
+          ]
         },
         {
           "title": "语法（一）动词重叠 — Động từ láy lại",
           "description": "Hình thức láy lại của động từ, dạng đã hoàn thành, và trọng âm khi đọc.",
-          "body": "## 动词重叠 — Động từ láy lại\n\nKhi biểu thị **thời gian ngắn, thử qua loa, động tác nhẹ nhàng**, tiếng Hán dùng hình thức lặp lại của động từ (V + V). Ngữ khí trở nên nhẹ nhàng, tự nhiên — thường dùng trong khẩu ngữ.\n\n| Loại động từ | Hình thức | Ví dụ |\n|---|---|---|\n| Đơn âm tiết | AA **hoặc** A—A | 试试 / 试一试 · 看看 / 看一看 · 听听 / 听一听 |\n| Song âm tiết | ABAB (**không** chen 一 vào giữa) | 预习预习 · 复习复习 · 介绍介绍 |\n\nVí dụ:\n1. 你**看看**这本词典合适不合适？\n2. 你**听听**这个句子是什么意思？\n3. 我**试试**这件衣服，可以吗？\n\n### Động tác đã xảy ra / đã hoàn thành\n\nDùng 「A 了 A」và 「AB 了 AB」:\n\n- 试试 → 试**了**试\n- 看看 → 看**了**看\n- 复习 → 复习**了**复习\n- 预习 → 预习**了**预习\n\n### Hai trường hợp KHÔNG láy lại được\n\n- Động từ **không biểu thị động tác**: 有、在、是\n- Động tác **đang tiến hành**: ✗ 我正在听听录音呢。\n\n---\n\n## 语音 — Trọng âm khi láy lại\n\nĐộng từ đơn âm tiết láy lại → âm tiết **đầu** đọc nhấn, âm tiết sau và chữ 一 kẹp giữa đọc thanh nhẹ:\n\n**试**试 · **看**看 · **听**听 · **试**一试 · **看**一看\n\nĐộng từ song âm tiết ABAB → **A** đọc nhấn: **介**绍介绍 · **休**息休息 · **锻**炼锻炼\n\nCuối câu cảm thán thì ngữ điệu hạ xuống ↓ — 太好了！↓ 太贵了！↓",
+          "body": "## 动词重叠 — Động từ láy lại\n\nKhi biểu thị **thời gian ngắn, thử qua loa, động tác nhẹ nhàng**, tiếng Hán dùng hình thức lặp lại của động từ (V + V). Ngữ khí trở nên nhẹ nhàng, tự nhiên — thường dùng trong khẩu ngữ.\n\n| Loại động từ | Hình thức | Ví dụ |\n|---|---|---|\n| Đơn âm tiết | AA **hoặc** A—A | 试试 / 试一试 · 看看 / 看一看 · 听听 / 听一听 |\n| Song âm tiết | ABAB (**không** chen 一 vào giữa) | 预习预习 · 复习复习 · 介绍介绍 |\n\nVí dụ:\n1. 你**看看**这本词典合适不合适？\n2. 你**听听**这个句子是什么意思？\n3. 我**试试**这件衣服，可以吗？\n\n### Động tác đã xảy ra / đã hoàn thành\n\nDùng 「A 了 A」và 「AB 了 AB」:\n\n- 试试 → 试**了**试\n- 看看 → 看**了**看\n- 复习 → 复习**了**复习\n- 预习 → 预习**了**预习\n\n### Hai trường hợp KHÔNG láy lại được\n\n- Động từ **không biểu thị động tác**: 有、在、是\n- Động tác **đang tiến hành**: ✗ 我正在听听录音呢。\n\n---\n\n## 语音 — Trọng âm khi láy lại\n\nĐộng từ đơn âm tiết láy lại → âm tiết **đầu** đọc nhấn, âm tiết sau và chữ 一 kẹp giữa đọc thanh nhẹ:\n\n**试**试 · **看**看 · **听**听 · **试**一试 · **看**一看\n\nĐộng từ song âm tiết ABAB → **A** đọc nhấn: **介**绍介绍 · **休**息休息 · **锻**炼锻炼\n\nCuối câu cảm thán thì ngữ điệu hạ xuống ↓ — 太好了！↓ 太贵了！↓\n\n> [!canh-bao] Hai lỗi kinh điển\n> ✗ 复一复习 — chen 一 vào động từ hai âm tiết.\n> ✗ 我正在听听录音呢 — động tác đang tiến hành thì không láy.",
           "quiz": {
             "title": "Luyện tập 动词重叠",
             "passThresholdPct": 70,
@@ -838,12 +858,21 @@
                 "vi": "Động tác đã hoàn thành: AB 了 AB"
               }
             ]
-          }
+          },
+          "objectives": [
+            "Láy động từ đúng dạng theo số âm tiết",
+            "Dùng dạng đã hoàn thành A 了 A và AB 了 AB",
+            "Biết ba động từ không láy lại được"
+          ],
+          "summary": [
+            "Đơn âm tiết: AA hoặc A—A · Song âm tiết: ABAB, không chen 一",
+            "有、在、是 và động tác đang tiến hành thì không láy"
+          ]
         },
         {
           "title": "语法（二）又……又…… — Vừa… vừa…",
           "description": "Nối hai tính chất cùng tồn tại.",
-          "body": "## 又……又…… — Vừa… vừa…\n\nDùng để nối hai **tính từ, động từ, cụm động từ hoặc cụm tính từ**, biểu đạt hai tình trạng cùng song song tồn tại. Cả hai chữ 又 đều đứng ngay trước thành phần mà nó nối.\n\n1. 这件大衣**又**好**又**便宜。 — Chiếc áo khoác này vừa tốt vừa rẻ.\n2. 我们的教室**又**安静**又**干净。 — Lớp học của chúng tôi vừa yên tĩnh vừa sạch sẽ.\n3. 那个箱子**又**小**又**旧。 — Cái vali kia vừa nhỏ vừa cũ.\n\n> Lưu ý: hai vế phải **cùng chiều** — cùng khen hoặc cùng chê. Không nói 又好又贵 để chê giá, vì 好 là khen.",
+          "body": "## 又……又…… — Vừa… vừa…\n\nDùng để nối hai **tính từ, động từ, cụm động từ hoặc cụm tính từ**, biểu đạt hai tình trạng cùng song song tồn tại. Cả hai chữ 又 đều đứng ngay trước thành phần mà nó nối.\n\n1. 这件大衣**又**好**又**便宜。 — Chiếc áo khoác này vừa tốt vừa rẻ.\n2. 我们的教室**又**安静**又**干净。 — Lớp học của chúng tôi vừa yên tĩnh vừa sạch sẽ.\n3. 那个箱子**又**小**又**旧。 — Cái vali kia vừa nhỏ vừa cũ.\n\n> Lưu ý: hai vế phải **cùng chiều** — cùng khen hoặc cùng chê. Không nói 又好又贵 để chê giá, vì 好 là khen.\n\n> [!ghi-nho] Cùng chiều mới đi với nhau\n> 又好又便宜 (cùng khen) ✓ · 又小又旧 (cùng chê) ✓ · 又好又贵 để chê giá ✗ — vì 好 là khen.",
           "quiz": {
             "title": "Luyện tập 又……又……",
             "passThresholdPct": 70,
@@ -894,12 +923,19 @@
                 ]
               }
             ]
-          }
+          },
+          "objectives": [
+            "Nối hai tính chất bằng 又 A 又 B"
+          ],
+          "summary": [
+            "Cả hai chữ 又 đều đứng ngay trước thành phần nó nối",
+            "Hai vế phải cùng chiều — cùng khen hoặc cùng chê"
+          ]
         },
         {
           "title": "语法（三）一点儿 / 有（一）点儿",
           "description": "Hai từ dễ lẫn nhất của bài — khác nhau ở vị trí trong câu.",
-          "body": "## 一点儿 và 有（一）点儿\n\nHai từ này khác nhau ở **vị trí trong câu**, không phải ở nghĩa.\n\n| | Vai trò | Đứng trước | Ví dụ |\n|---|---|---|---|\n| 一点儿 | Định ngữ | **Danh từ** | 他会**一点儿**汉语。· 请给我（一）点儿水。 |\n| 有（一）点儿 | Trạng ngữ | **Tính từ** | 这件**有（一）点儿**长。· 那件颜色**有（一）点儿**深。 |\n\n**Mẹo nhận biết:** nhìn từ đứng ngay sau chỗ trống.\n- Sau là **danh từ** (汉语, 水) → dùng 一点儿\n- Sau là **tính từ** (长, 深, 难) → dùng 有（一）点儿\n\nNgoài ra 有（一）点儿 thường mang sắc thái **không như ý**: 这件有点儿长 (hơi dài — ý là không vừa). Còn khi muốn so sánh \"… hơn một chút\" thì tính từ đứng TRƯỚC: 短**一点儿**的, 便宜**一点儿**.",
+          "body": "## 一点儿 và 有（一）点儿\n\nHai từ này khác nhau ở **vị trí trong câu**, không phải ở nghĩa.\n\n| | Vai trò | Đứng trước | Ví dụ |\n|---|---|---|---|\n| 一点儿 | Định ngữ | **Danh từ** | 他会**一点儿**汉语。· 请给我（一）点儿水。 |\n| 有（一）点儿 | Trạng ngữ | **Tính từ** | 这件**有（一）点儿**长。· 那件颜色**有（一）点儿**深。 |\n\n**Mẹo nhận biết:** nhìn từ đứng ngay sau chỗ trống.\n- Sau là **danh từ** (汉语, 水) → dùng 一点儿\n- Sau là **tính từ** (长, 深, 难) → dùng 有（一）点儿\n\nNgoài ra 有（一）点儿 thường mang sắc thái **không như ý**: 这件有点儿长 (hơi dài — ý là không vừa). Còn khi muốn so sánh \"… hơn một chút\" thì tính từ đứng TRƯỚC: 短**一点儿**的, 便宜**一点儿**.\n\n> [!meo] Nhìn từ đứng ngay sau chỗ trống\n> Sau là danh từ (汉语, 水) → dùng **一点儿**. Sau là tính từ (长, 深, 难) → dùng **有点儿**. Còn so sánh “… hơn một chút” thì tính từ đứng TRƯỚC: 短**一点儿**的.",
           "quiz": {
             "title": "Luyện tập 一点儿 / 有（一）点儿",
             "passThresholdPct": 70,
@@ -975,10 +1011,17 @@
                 "vi": "So sánh “… hơn một chút” — tính từ đứng TRƯỚC"
               }
             ]
-          }
+          },
+          "objectives": [
+            "Phân biệt 一点儿 và 有（一）点儿 theo vị trí trong câu"
+          ],
+          "summary": [
+            "一点儿 đứng trước DANH TỪ, làm định ngữ",
+            "有（一）点儿 đứng trước TÍNH TỪ, làm trạng ngữ, thường mang ý chê nhẹ"
+          ]
         },
         {
-          "title": "练习 — Bài tập tổng hợp",
+          "title": "练习 第二十二课",
           "description": "Chọn từ thích hợp điền vào chỗ trống, phân biệt 怎么 / 怎么样.",
           "body": "## 选词填空 — Chọn từ điền vào chỗ trống\n\nNgân hàng từ: **当然 · 件 · 种 · 双 · 胖 · 深 · 又 · 便宜**\n\nLàm phần trắc nghiệm bên dưới, sau đó tự đọc to lại cả câu.\n\n### 怎么 và 怎么样\n\n| | Dùng để hỏi | Ví dụ |\n|---|---|---|\n| 怎么 | **cách thức** làm việc gì | 我们明天**怎么**去？· 这个词**怎么**读？· 这个字**怎么**写？ |\n| 怎么样 | **đánh giá, nhận xét** | 这本词典**怎么样**？· 你觉得这本书**怎么样**？· 她的学习**怎么样**？ |\n\n### Đọc các con số chỉ tiền\n\n0.05 元 · 0.28 元 · 3.08 元 · 8.88 元 · 35.00 元 · 45.05 元 · 77.55 元 · 109.70 元 · 207.02 元 · 850.00 元 · 1038.75 元",
           "quiz": {
@@ -1105,7 +1148,14 @@
                 ]
               }
             ]
-          }
+          },
+          "objectives": [
+            "Chọn đúng lượng từ và tính từ cho từng ngữ cảnh",
+            "Phân biệt 怎么 (cách thức) và 怎么样 (đánh giá)"
+          ],
+          "summary": [
+            "怎么 hỏi LÀM THẾ NÀO, 怎么样 hỏi THẤY THẾ NÀO"
+          ]
         }
       ]
     }

@@ -148,3 +148,42 @@ người học sửa đáp án, hàng cũ bị ghi đè — mất luôn dấu v�
 4.1 `revisionCount` đếm số lần sửa lại đáp án. Đáp án cũ bị ghi đè nên không
     đếm ở đây thì không còn dấu vết nào khác.
 4.2 `quiz.question.answered` mang theo cả `latencyMs` lẫn `revisionCount`.
+
+---
+
+# B13 — Export dữ liệu cho nghiên cứu
+
+**Bối cảnh.** Mọi báo cáo hiện có đều gom theo khoá học và **không có cột lớp**,
+nên không so sánh được hai lớp song song. Tệ hơn, ba nguồn dữ liệu quý nhất
+không có đường nào ra khỏi hệ thống: `FeedbackDelivery` (không endpoint, không
+script, không trang quản trị nào đọc), `AnswerResponse.confidence`, và toàn bộ
+`LessonEngagement` vừa dựng ở B11. Export event duy nhất là bản tự phục vụ của
+chính người học, cap cứng 5000 dòng.
+
+## Acceptance criteria
+
+**AC-1 — Gắn được dữ liệu với lớp**
+1.1 Ba báo cáo, mỗi báo cáo mở đầu bằng đúng năm cột: `Mã ẩn danh · Lớp ·
+    Điều kiện · Email · Họ tên`. Ghép ba tệp bằng cột nào cũng được.
+1.2 Lớp mặc định hiện là `(chưa gán lớp)` chứ không hiện tên thật của nó —
+    người rơi vào đó không thuộc nhóm thực nghiệm nào và không được đếm nhầm
+    vào một nhánh.
+
+**AC-2 — Ẩn danh dùng được thật**
+2.1 `Mã ẩn danh` băm kèm `courseId`, nên cùng một sinh viên ở hai khoá ra hai
+    mã khác nhau: ghép hai bộ dữ liệu đã ẩn danh cũng không lần ra được người.
+2.2 Bỏ hai cột Email và Họ tên là có ngay bộ dữ liệu chia sẻ được.
+
+**AC-3 — Nội dung ba báo cáo**
+3.1 *Từng câu trả lời*: đúng/sai, độ tự tin, `latencyMs` (B12), `responseTimeMs`,
+    số lần sửa đáp án.
+3.2 *Từng lượt phản hồi*: toạ độ SSMMD đầy đủ, **điều kiện lúc sinh** đọc từ
+    `generationContext` chứ không suy từ lớp hiện tại, số lần bấm bài ôn
+    (uptake), đánh giá, mastery trung bình lúc sinh.
+3.3 *Hành vi đọc bài*: mỗi (người học × bài), kể cả người **chưa từng mở** dưới
+    dạng dòng 0 — "thiếu dữ liệu" và "không đọc" là hai chuyện khác nhau, và
+    bảng chỉ có người đã đọc sẽ đẩy mọi giá trị trung bình lên.
+
+**AC-4 — Tệp rỗng vẫn tự nói được nó là gì**
+4.1 Báo cáo không có dòng nào vẫn ghi dòng tiêu đề. Tệp trắng trơn trông y hệt
+    một lần tải hỏng.

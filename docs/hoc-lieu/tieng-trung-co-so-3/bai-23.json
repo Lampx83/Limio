@@ -1,0 +1,1199 @@
+{
+  "course": {
+    "title": "Tiếng Trung Cơ sở III",
+    "slug": "tieng-trung-co-so-3",
+    "description": "Giáo trình Tiếng Trung Cơ sở III — mỗi bài (课) là một module gồm bài đọc, từ vựng, ngữ pháp và luyện tập chấm tự động.",
+    "language": "zh",
+    "level": "intermediate",
+    "category": "Ngoại ngữ",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "zh_year_digit_reading",
+      "name": "Đọc năm như một số nguyên",
+      "description": "Năm trong tiếng Hán đọc TỪNG CHỮ SỐ một: 1997 年 = 一九九七年, 2002 年 = 二零零二年. Học viên đọc thành số nguyên kiểu 一千九百九十七年 như tiếng Việt hoặc tiếng Anh."
+    },
+    {
+      "code": "zh_date_order_ymd",
+      "name": "Viết ngày tháng ngược thứ tự",
+      "description": "Tiếng Hán đi từ lớn đến nhỏ: 年 → 月 → 日/号 (1997年7月1日). Học viên bê thứ tự tiếng Việt ngày/tháng/năm sang, viết thành 1日7月1997年."
+    },
+    {
+      "code": "zh_ri_vs_hao",
+      "name": "Nhầm 日 với 号",
+      "description": "Cùng nghĩa là ngày, nhưng 日 dùng trong VĂN VIẾT còn 号 dùng trong KHẨU NGỮ. Nói chuyện thì 今天几号, viết giấy tờ thì 7月1日."
+    },
+    {
+      "code": "zh_nominal_predicate_negation",
+      "name": "Phủ định câu vị ngữ danh từ mà quên 是",
+      "description": "Câu vị ngữ danh từ không dùng 是 ở dạng khẳng định (今天十月八号), NHƯNG dạng phủ định bắt buộc phải có: 不是 + danh từ (今天不是十月八号). Học viên bỏ luôn 是 ở câu phủ định, viết thành 今天不十月八号."
+    },
+    {
+      "code": "zh_age_duo_da",
+      "name": "Hỏi tuổi sai cấu trúc",
+      "description": "Hỏi tuổi người lớn dùng 多大 (你今年多大了？), trả lời bằng số + 岁 (二十一岁). 岁 là lượng từ bắt buộc, bỏ đi thì câu cụt."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "zh_year_digit_reading",
+      "body": "Năm đọc từng chữ số một, không đọc như số đếm. 1997 年 là 一九九七年 (một-chín-chín-bảy), không phải 一千九百九十七年. Số 0 trong năm đọc là 零: 2002 年 = 二零零二年. Nhớ mẹo: đọc năm giống như đọc số điện thoại, từng chữ một.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_date_order_ymd",
+      "body": "Tiếng Hán đi từ ĐƠN VỊ LỚN đến đơn vị nhỏ: 年 → 月 → 日/号. Ngày 1/7/1997 viết là 1997年7月1日. Đây là điểm ngược hẳn với tiếng Việt, nên khi viết cứ tự hỏi: cái nào bao trùm cái nào? Năm bao trùm tháng, tháng bao trùm ngày.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_ri_vs_hao",
+      "body": "日 và 号 cùng nghĩa là ngày nhưng khác ngữ vực. 号 dùng khi NÓI: 今天几号？我的生日是十月十八号. 日 dùng khi VIẾT: 1997年7月1日. Bài hội thoại trong sách toàn dùng 号 vì đó là lời nói; giấy tờ và văn bản thì dùng 日.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_nominal_predicate_negation",
+      "body": "Câu vị ngữ danh từ bỏ 是 ở thể khẳng định, nhưng thể phủ định thì bắt buộc phải có. Khẳng định: 今天十月八号 (không cần 是). Phủ định: 今天不是十月八号 — không nói 今天不十月八号. Cứ nhớ: 不 phải đi kèm 是, không đứng một mình trước danh từ được.",
+      "priority": 10
+    },
+    {
+      "misconception": "zh_age_duo_da",
+      "body": "Hỏi tuổi người lớn: 你今年多大了？ Trả lời phải có lượng từ 岁: 我二十一岁了 — không nói 我二十一了 khi muốn nói rõ là tuổi. 多 ở đây nghĩa là bao nhiêu, đi với 大 thành một cụm hỏi tuổi, đừng tách ra.",
+      "priority": 10
+    }
+  ],
+  "modules": [
+    {
+      "title": "第二十三课 你的生日是几月几号",
+      "description": "Bài 23 — Sinh nhật của bạn vào ngày tháng nào? Tuổi, con giáp, ngày tháng năm, lời chúc.",
+      "lessons": [
+        {
+          "title": "课文（一）你哪一年大学毕业",
+          "description": "Hội thoại 1 — Hỏi năm tốt nghiệp, tuổi và con giáp.",
+          "vocab": [
+            {
+              "hanzi": "年",
+              "pinyin": "nián",
+              "meaning": "năm",
+              "note": "名 · niên"
+            },
+            {
+              "hanzi": "今年",
+              "pinyin": "jīnnián",
+              "meaning": "năm nay",
+              "note": "名 · kim niên"
+            },
+            {
+              "hanzi": "明年",
+              "pinyin": "míngnián",
+              "meaning": "sang năm",
+              "note": "名 · minh niên"
+            },
+            {
+              "hanzi": "去年",
+              "pinyin": "qùnián",
+              "meaning": "năm ngoái",
+              "note": "名 · khứ niên"
+            },
+            {
+              "hanzi": "后年",
+              "pinyin": "hòunián",
+              "meaning": "sang năm nữa",
+              "note": "名 · hậu niên"
+            },
+            {
+              "hanzi": "毕业",
+              "pinyin": "bì yè",
+              "meaning": "tốt nghiệp",
+              "note": "tốt nghiệp"
+            },
+            {
+              "hanzi": "多",
+              "pinyin": "duō",
+              "meaning": "nhiều, thừa",
+              "note": "副 · đa"
+            },
+            {
+              "hanzi": "属",
+              "pinyin": "shǔ",
+              "meaning": "loại, thuộc về (cầm tinh)",
+              "note": "动 · thuộc"
+            },
+            {
+              "hanzi": "狗",
+              "pinyin": "gǒu",
+              "meaning": "chó",
+              "note": "名 · cẩu"
+            },
+            {
+              "hanzi": "出生",
+              "pinyin": "chūshēng",
+              "meaning": "đẻ, sinh, ra đời",
+              "note": "动 · xuất sinh"
+            },
+            {
+              "hanzi": "岁",
+              "pinyin": "suì",
+              "meaning": "tuổi",
+              "note": "量 · tuế"
+            }
+          ],
+          "dialogue": {
+            "heading": "课文（一）你哪一年大学毕业",
+            "turns": [
+              {
+                "speaker": "A",
+                "zh": "你哪一年大学毕业？",
+                "pinyin": "Nǐ nǎ yì nián dàxué bì yè?",
+                "vi": "Bạn tốt nghiệp đại học năm nào?"
+              },
+              {
+                "speaker": "B",
+                "zh": "我明年大学毕业。你呢？",
+                "pinyin": "Wǒ míngnián dàxué bì yè. Nǐ ne?",
+                "vi": "Sang năm tôi tốt nghiệp đại học. Còn bạn?"
+              },
+              {
+                "speaker": "A",
+                "zh": "我后年。你今年多大了？",
+                "pinyin": "Wǒ hòunián. Nǐ jīnnián duō dà le?",
+                "vi": "Tôi sang năm nữa. Năm nay bạn bao nhiêu tuổi?"
+              },
+              {
+                "speaker": "B",
+                "zh": "我二十一岁了。属狗的。",
+                "pinyin": "Wǒ èrshíyī suì le. Shǔ gǒu de.",
+                "vi": "Tôi hai mươi mốt tuổi rồi. Cầm tinh con chó."
+              },
+              {
+                "speaker": "A",
+                "zh": "你一九八二年出生，对吗？",
+                "pinyin": "Nǐ yī jiǔ bā èr nián chūshēng, duì ma?",
+                "vi": "Bạn sinh năm 1982, đúng không?"
+              },
+              {
+                "speaker": "B",
+                "zh": "对。",
+                "pinyin": "Duì.",
+                "vi": "Đúng."
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "Mẫu câu cần nhớ",
+            "rows": [
+              {
+                "zh": "你哪一年大学毕业？",
+                "vi": "Bạn tốt nghiệp đại học năm nào?"
+              },
+              {
+                "zh": "你今年多大了？",
+                "vi": "Năm nay bạn bao nhiêu tuổi? (hỏi người lớn)"
+              },
+              {
+                "zh": "我二十一岁了。",
+                "vi": "Tôi hai mươi mốt tuổi rồi. — số + 岁"
+              },
+              {
+                "zh": "属狗的。",
+                "vi": "Cầm tinh con chó. — 属 + con giáp + 的"
+              },
+              {
+                "zh": "你一九八二年出生，对吗？",
+                "vi": "Bạn sinh năm 1982, đúng không?"
+              }
+            ]
+          },
+          "body": "### 注释 属狗的 — Cầm tinh con chó\n\n「属」dùng 12 con giáp để tính năm sinh. Mười hai con giáp là:\n\n鼠 (chuột) · 牛 (trâu) · 虎 (hổ) · 兔 (thỏ) · 龙 (rồng) · 蛇 (rắn) · 马 (ngựa) · 羊 (dê) · 猴 (khỉ) · 鸡 (gà) · 狗 (chó) · 猪 (lợn)\n\n### Bốn từ chỉ năm cần thuộc\n\n去年 (năm ngoái) → 今年 (năm nay) → 明年 (sang năm) → 后年 (sang năm nữa)\n\n> [!ghi-nho] Năm đọc từng chữ số\n> 1982 年 = 一九八二年 (một-chín-tám-hai), không đọc thành số đếm. Đọc năm giống đọc số điện thoại.",
+          "quiz": {
+            "title": "Luyện tập 课文（一）",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "matching",
+                "prompt": "Ghép từ chỉ năm với nghĩa tiếng Việt.",
+                "explanation": "Bốn mốc thời gian liên tiếp: 去年 → 今年 → 明年 → 后年.",
+                "pairs": [
+                  {
+                    "left": "去年",
+                    "right": "năm ngoái"
+                  },
+                  {
+                    "left": "今年",
+                    "right": "năm nay"
+                  },
+                  {
+                    "left": "明年",
+                    "right": "sang năm"
+                  },
+                  {
+                    "left": "后年",
+                    "right": "sang năm nữa"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Muốn hỏi tuổi một bạn sinh viên, nói thế nào?",
+                "explanation": "Hỏi tuổi người đã lớn dùng 多大. 多 ở đây là bao nhiêu, đi liền với 大 thành cụm cố định.",
+                "options": [
+                  {
+                    "label": "你今年多大了？",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "你今年多年了？",
+                    "isCorrect": false,
+                    "misconception": "zh_age_duo_da"
+                  },
+                  {
+                    "label": "你今年几岁大？",
+                    "isCorrect": false,
+                    "misconception": "zh_age_duo_da"
+                  },
+                  {
+                    "label": "你今年多少大了？",
+                    "isCorrect": false,
+                    "misconception": "zh_age_duo_da"
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我二十一＿＿了。(lượng từ chỉ tuổi)",
+                "explanation": "岁 là lượng từ bắt buộc khi nói tuổi: 二十一岁.",
+                "answers": [
+                  "岁",
+                  "suì",
+                  "sui"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Năm 1982 đọc trong tiếng Hán là gì?",
+                "explanation": "Năm đọc từng chữ số một: 一-九-八-二, không đọc thành số đếm.",
+                "options": [
+                  {
+                    "label": "一九八二年",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "一千九百八十二年",
+                    "isCorrect": false,
+                    "misconception": "zh_year_digit_reading"
+                  },
+                  {
+                    "label": "十九八十二年",
+                    "isCorrect": false,
+                    "misconception": "zh_year_digit_reading"
+                  },
+                  {
+                    "label": "一九八十二年",
+                    "isCorrect": false,
+                    "misconception": "zh_year_digit_reading"
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Bạn tốt nghiệp đại học năm nào?”",
+                "explanation": "哪一年 đứng trước cụm động từ 大学毕业.",
+                "sequence": [
+                  "你",
+                  "哪一年",
+                  "大学",
+                  "毕业",
+                  "？"
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Trong bài, B tốt nghiệp đại học vào 后年.",
+                "explanation": "B nói 我明年大学毕业 — sang năm. 后年 là câu trả lời của A.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Hỏi năm tốt nghiệp và tuổi tác",
+            "Nói năm sinh và con giáp của mình"
+          ],
+          "summary": [
+            "去年 → 今年 → 明年 → 后年",
+            "Hỏi tuổi người lớn: 你今年多大了？ Trả lời: số + 岁"
+          ]
+        },
+        {
+          "title": "课文（二）你的生日是几月几号",
+          "description": "Hội thoại 2 — Hỏi sinh nhật và mời dự tiệc. Lưu ý: nhãn A/B trong sách gốc bị đảo vai giữa chừng, học liệu chép đúng như bản in.",
+          "vocab": [
+            {
+              "hanzi": "生日",
+              "pinyin": "shēngrì",
+              "meaning": "sinh nhật, ngày sinh",
+              "note": "名 · sinh nhật"
+            },
+            {
+              "hanzi": "月",
+              "pinyin": "yuè",
+              "meaning": "tháng",
+              "note": "名 · nguyệt"
+            },
+            {
+              "hanzi": "正好",
+              "pinyin": "zhènghǎo",
+              "meaning": "vừa vặn, đúng lúc",
+              "note": "形 · chính hảo"
+            },
+            {
+              "hanzi": "打算",
+              "pinyin": "dǎsuan",
+              "meaning": "toan, dự định",
+              "note": "动、名 · đả toán"
+            },
+            {
+              "hanzi": "过",
+              "pinyin": "guò",
+              "meaning": "đón, sang, qua",
+              "note": "动 · quá"
+            },
+            {
+              "hanzi": "准备",
+              "pinyin": "zhǔnbèi",
+              "meaning": "chuẩn bị",
+              "note": "动、名 · chuẩn bị"
+            },
+            {
+              "hanzi": "举行",
+              "pinyin": "jǔxíng",
+              "meaning": "tiến hành, tổ chức",
+              "note": "动 · cử hành"
+            },
+            {
+              "hanzi": "晚会",
+              "pinyin": "wǎnhuì",
+              "meaning": "buổi liên hoan ban đêm",
+              "note": "名 · vãn hội"
+            },
+            {
+              "hanzi": "参加",
+              "pinyin": "cānjiā",
+              "meaning": "tham dự, tham gia",
+              "note": "动 · tham gia"
+            },
+            {
+              "hanzi": "时间",
+              "pinyin": "shíjiān",
+              "meaning": "thời gian; giờ; lúc",
+              "note": "名 · thời gian"
+            },
+            {
+              "hanzi": "点（钟）",
+              "pinyin": "diǎn (zhōng)",
+              "meaning": "giờ",
+              "note": "量 · điểm (chung)"
+            },
+            {
+              "hanzi": "就",
+              "pinyin": "jiù",
+              "meaning": "ngay, liền (nhấn mạnh)",
+              "note": "副 · tựu"
+            },
+            {
+              "hanzi": "一定",
+              "pinyin": "yídìng",
+              "meaning": "nhất định, chắc chắn",
+              "note": "副 · nhất định"
+            },
+            {
+              "hanzi": "祝",
+              "pinyin": "zhù",
+              "meaning": "chúc mừng, chúc",
+              "note": "动 · chúc"
+            },
+            {
+              "hanzi": "快乐",
+              "pinyin": "kuàilè",
+              "meaning": "vui vẻ, vui sướng",
+              "note": "形 · khoái lạc"
+            },
+            {
+              "hanzi": "新年",
+              "pinyin": "xīnnián",
+              "meaning": "năm mới",
+              "note": "bổ sung · tân niên"
+            },
+            {
+              "hanzi": "春节",
+              "pinyin": "Chūn Jié",
+              "meaning": "Tết Nguyên đán",
+              "note": "名 · bổ sung · xuân tiết"
+            },
+            {
+              "hanzi": "圣诞节",
+              "pinyin": "Shèngdàn Jié",
+              "meaning": "lễ Nô-en, Giáng sinh",
+              "note": "bổ sung · thánh đản tiết"
+            },
+            {
+              "hanzi": "饭店",
+              "pinyin": "fàndiàn",
+              "meaning": "quán cơm, khách sạn",
+              "note": "名 · bổ sung · phạn điếm"
+            },
+            {
+              "hanzi": "礼物",
+              "pinyin": "lǐwù",
+              "meaning": "quà tặng, tặng phẩm",
+              "note": "名 · bổ sung · lễ vật"
+            }
+          ],
+          "dialogue": {
+            "heading": "课文（二）你的生日是几月几号",
+            "scene": "Nhãn A/B dưới đây chép đúng như sách in — vai bị đảo từ lượt thứ ba.",
+            "turns": [
+              {
+                "speaker": "A",
+                "zh": "你的生日是几月几号？",
+                "pinyin": "Nǐ de shēngrì shì jǐ yuè jǐ hào?",
+                "vi": "Sinh nhật bạn vào ngày mấy tháng mấy?"
+              },
+              {
+                "speaker": "B",
+                "zh": "我的生日是十月十八号，正好是星期六。",
+                "pinyin": "Wǒ de shēngrì shì shíyuè shíbā hào, zhènghǎo shì xīngqīliù.",
+                "vi": "Sinh nhật tôi là ngày 18 tháng 10, vừa đúng thứ Bảy."
+              },
+              {
+                "speaker": "B",
+                "zh": "是吗？今天几号？",
+                "pinyin": "Shì ma? Jīntiān jǐ hào?",
+                "vi": "Thế à? Hôm nay ngày mấy?"
+              },
+              {
+                "speaker": "A",
+                "zh": "今天十五号。",
+                "pinyin": "Jīntiān shíwǔ hào.",
+                "vi": "Hôm nay ngày 15."
+              },
+              {
+                "speaker": "B",
+                "zh": "你打算怎么过？",
+                "pinyin": "Nǐ dǎsuan zěnme guò?",
+                "vi": "Bạn định đón sinh nhật thế nào?"
+              },
+              {
+                "speaker": "A",
+                "zh": "我准备举行一个生日晚会。你也来参加，好吗？",
+                "pinyin": "Wǒ zhǔnbèi jǔxíng yí ge shēngrì wǎnhuì. Nǐ yě lái cānjiā, hǎo ma?",
+                "vi": "Tôi định tổ chức một buổi tiệc sinh nhật. Bạn cũng đến dự nhé?"
+              },
+              {
+                "speaker": "B",
+                "zh": "什么时间举行？",
+                "pinyin": "Shénme shíjiān jǔxíng?",
+                "vi": "Tổ chức lúc mấy giờ?"
+              },
+              {
+                "speaker": "A",
+                "zh": "星期六晚上七点。",
+                "pinyin": "Xīngqīliù wǎnshang qī diǎn.",
+                "vi": "Bảy giờ tối thứ Bảy."
+              },
+              {
+                "speaker": "B",
+                "zh": "在哪儿？",
+                "pinyin": "Zài nǎr?",
+                "vi": "Ở đâu?"
+              },
+              {
+                "speaker": "A",
+                "zh": "就在我的房间。",
+                "pinyin": "Jiù zài wǒ de fángjiān.",
+                "vi": "Ngay tại phòng tôi."
+              },
+              {
+                "speaker": "B",
+                "zh": "好。我一定去。祝你生日快乐！",
+                "pinyin": "Hǎo. Wǒ yídìng qù. Zhù nǐ shēngrì kuàilè!",
+                "vi": "Được. Tôi nhất định đến. Chúc bạn sinh nhật vui vẻ!"
+              },
+              {
+                "speaker": "A",
+                "zh": "谢谢！",
+                "pinyin": "Xièxie!",
+                "vi": "Cảm ơn!"
+              }
+            ]
+          },
+          "patterns": {
+            "heading": "Mẫu câu cần nhớ",
+            "rows": [
+              {
+                "zh": "你的生日是几月几号？",
+                "vi": "Sinh nhật bạn ngày mấy tháng mấy?"
+              },
+              {
+                "zh": "你打算怎么过？",
+                "vi": "Bạn định đón (dịp đó) thế nào?"
+              },
+              {
+                "zh": "什么时间举行？",
+                "vi": "Tổ chức lúc mấy giờ?"
+              },
+              {
+                "zh": "就在我的房间。",
+                "vi": "Ngay tại phòng tôi. — 就 nhấn mạnh"
+              },
+              {
+                "zh": "祝你生日快乐！",
+                "vi": "Chúc bạn sinh nhật vui vẻ!"
+              },
+              {
+                "zh": "我一定去。",
+                "vi": "Tôi nhất định đến."
+              }
+            ]
+          },
+          "body": "### 注释（二）是吗？\n\nBiểu đạt ngữ khí **ngạc nhiên, mừng rỡ** — tương đương \"Thế à?\" trong tiếng Việt.\n\n### 注释（三）就在我的房间\n\nPhó từ 「就」ở đây biểu thị sự **nhấn mạnh**: ngay tại phòng tôi, chứ không phải chỗ nào khác.\n\n### Lời chúc theo dịp\n\n祝你生日快乐！· 祝你新年快乐！· 祝你圣诞快乐！· 祝你春节快乐！",
+          "quiz": {
+            "title": "Luyện tập 课文（二）",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "fill_in",
+                "prompt": "祝你生日＿＿！(lời chúc sinh nhật)",
+                "explanation": "祝你生日快乐 — công thức chúc mừng cố định.",
+                "answers": [
+                  "快乐",
+                  "kuàilè",
+                  "kuaile"
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép dịp lễ với tên tiếng Việt.",
+                "explanation": "Bốn dịp trong phần từ mới bổ sung.",
+                "pairs": [
+                  {
+                    "left": "新年",
+                    "right": "năm mới"
+                  },
+                  {
+                    "left": "春节",
+                    "right": "Tết Nguyên đán"
+                  },
+                  {
+                    "left": "圣诞节",
+                    "right": "lễ Giáng sinh"
+                  },
+                  {
+                    "left": "生日",
+                    "right": "sinh nhật"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "「就在我的房间」— chữ 就 ở đây có tác dụng gì?",
+                "explanation": "就 là phó từ nhấn mạnh: ngay tại phòng tôi, không phải chỗ nào khác.",
+                "options": [
+                  {
+                    "label": "Nhấn mạnh — ngay tại phòng tôi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ việc đã hoàn thành",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ tương lai gần",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Là động từ, nghĩa là đi tới",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Tôi định tổ chức một buổi tiệc sinh nhật.”",
+                "explanation": "准备 + 举行 + 一个 + 生日晚会 — lượng từ 个 đứng trước danh từ.",
+                "sequence": [
+                  "我",
+                  "准备",
+                  "举行",
+                  "一个",
+                  "生日晚会",
+                  "。"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我一定＿＿你的生日晚会。(tham dự)",
+                "explanation": "参加 = tham dự, tham gia.",
+                "answers": [
+                  "参加",
+                  "cānjiā",
+                  "canjia"
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Trong bài, buổi tiệc tổ chức vào bảy giờ tối thứ Bảy.",
+                "explanation": "星期六晚上七点 — đúng.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "short_answer",
+                "prompt": "Sinh nhật là ngày 18, hôm nay ngày 15. Còn mấy ngày nữa? (viết bằng chữ Hán, ví dụ 五)",
+                "explanation": "18 − 15 = 3 → 三 (三天).",
+                "answers": [
+                  "三",
+                  "三天",
+                  "sān",
+                  "san"
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Hỏi và nói ngày sinh nhật",
+            "Mời và nhận lời mời dự tiệc",
+            "Chúc mừng theo từng dịp"
+          ],
+          "summary": [
+            "祝你 + dịp + 快乐 là công thức chúc cố định",
+            "就 là phó từ nhấn mạnh: 就在我的房间 = ngay tại phòng tôi"
+          ]
+        },
+        {
+          "title": "语法（一）名词谓语句 — Câu vị ngữ danh từ",
+          "description": "Câu không cần 是, dùng cho ngày tháng, giá cả, tuổi tác, thời tiết.",
+          "patterns": {
+            "heading": "Câu vị ngữ danh từ — ví dụ trong sách",
+            "note": "Trật tự: chủ ngữ (S) + vị ngữ danh từ (N), nghĩa là “A là B” nhưng KHÔNG dùng 是.",
+            "rows": [
+              {
+                "zh": "今天几号？— 今天十月八号。",
+                "vi": "Hôm nay ngày mấy? — Hôm nay ngày 8 tháng 10."
+              },
+              {
+                "zh": "今天星期几？— 今天星期二。",
+                "vi": "Hôm nay thứ mấy? — Hôm nay thứ Ba."
+              },
+              {
+                "zh": "苹果一斤多少钱？— 一斤六块五。",
+                "vi": "Táo một cân bao nhiêu tiền? — Một cân sáu đồng rưỡi."
+              },
+              {
+                "zh": "小马二十岁。",
+                "vi": "Tiểu Mã hai mươi tuổi."
+              },
+              {
+                "zh": "今天不是十月八号。",
+                "vi": "Hôm nay không phải ngày 8 tháng 10. — phủ định BẮT BUỘC có 是"
+              }
+            ]
+          },
+          "body": "## 名词谓语句 — Câu vị ngữ danh từ\n\nLà câu có thành phần vị ngữ do **danh từ, cụm danh từ, số lượng từ hoặc từ chỉ thời gian** đảm nhiệm.\n\n- Trật tự: **chủ ngữ (S) + vị ngữ (N)**\n- Ý nghĩa: “A là B”, nhưng **trước vị ngữ không dùng 是**\n- Phủ định: **不是 + danh từ (N)**\n\nDùng để biểu đạt: thời gian, giá cả, ngày tháng, số lượng, thời tiết, tuổi tác, quê quán.\n\n> Điểm dễ sai nhất: khẳng định bỏ 是 nhưng phủ định thì phải có. 今天十月八号 ✓ · 今天不是十月八号 ✓ · ✗ 今天不十月八号\n\n> [!canh-bao] Lỗi hay gặp nhất của bài này\n> Sách dạy “câu vị ngữ danh từ không dùng 是”, học viên nhớ mỗi vế đó rồi viết ✗ 今天不十月八号. 不 phải đi kèm 是, không đứng một mình trước danh từ.",
+          "quiz": {
+            "title": "Luyện tập 名词谓语句",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Câu phủ định nào ĐÚNG?",
+                "explanation": "Câu vị ngữ danh từ bỏ 是 ở thể khẳng định, nhưng thể phủ định bắt buộc dùng 不是.",
+                "options": [
+                  {
+                    "label": "今天不是十月八号。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "今天不十月八号。",
+                    "isCorrect": false,
+                    "misconception": "zh_nominal_predicate_negation"
+                  },
+                  {
+                    "label": "今天没十月八号。",
+                    "isCorrect": false,
+                    "misconception": "zh_nominal_predicate_negation"
+                  },
+                  {
+                    "label": "今天不有十月八号。",
+                    "isCorrect": false,
+                    "misconception": "zh_nominal_predicate_negation"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Câu khẳng định nào TỰ NHIÊN nhất khi nói?",
+                "explanation": "Ở thể khẳng định, câu vị ngữ danh từ thường lược bỏ 是: 今天星期二.",
+                "options": [
+                  {
+                    "label": "今天星期二。",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "今天不星期二。",
+                    "isCorrect": false,
+                    "misconception": "zh_nominal_predicate_negation"
+                  },
+                  {
+                    "label": "今天有星期二。",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "今天在星期二。",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "今天＿＿＿十月八号。(phủ định: hôm nay KHÔNG PHẢI ngày 8 tháng 10)",
+                "explanation": "Phủ định của câu vị ngữ danh từ là 不是.",
+                "answers": [
+                  "不是",
+                  "bú shì",
+                  "bushi"
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu đúng: “Táo một cân sáu đồng rưỡi.”",
+                "explanation": "苹果 (chủ ngữ) + 一斤 + 六块五 (vị ngữ danh từ, không có 是).",
+                "sequence": [
+                  "苹果",
+                  "一斤",
+                  "六块五",
+                  "。"
+                ]
+              },
+              {
+                "type": "true_false",
+                "prompt": "Câu vị ngữ danh từ dùng được để nói về tuổi tác và giá cả.",
+                "explanation": "Đúng — dùng cho thời gian, giá cả, ngày tháng, số lượng, thời tiết, tuổi tác, quê quán.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Đặt câu vị ngữ danh từ cho ngày tháng, giá cả, tuổi tác",
+            "Phủ định đúng bằng 不是"
+          ],
+          "summary": [
+            "Khẳng định lược bỏ 是: 今天十月八号",
+            "Phủ định BẮT BUỘC có 是: 今天不是十月八号"
+          ]
+        },
+        {
+          "title": "语法（二）年、月、日 — Ngày, tháng, năm",
+          "description": "Cách đọc năm, tên 12 tháng, tên ngày, và thứ tự lớn đến nhỏ.",
+          "patterns": {
+            "heading": "Cách đọc năm",
+            "note": "Năm đọc TỪNG CHỮ SỐ một, không đọc như số đếm. Số 0 đọc là 零.",
+            "rows": [
+              {
+                "zh": "一九九七年",
+                "vi": "1997 年 — yī jiǔ jiǔ qī nián"
+              },
+              {
+                "zh": "二零零零年",
+                "vi": "2000 年 — èr líng líng líng nián"
+              },
+              {
+                "zh": "二零零二年",
+                "vi": "2002 年 — èr líng líng èr nián"
+              },
+              {
+                "zh": "一九九七年七月一日（号）",
+                "vi": "Ngày 1 tháng 7 năm 1997 — thứ tự 年 → 月 → 日"
+              },
+              {
+                "zh": "二零零八年八月二十日（号）",
+                "vi": "Ngày 20 tháng 8 năm 2008"
+              }
+            ]
+          },
+          "body": "## 年、月、日\n\n### 1. Cách đọc năm\n\nĐọc **từng chữ số** một, giống như đọc số điện thoại. Số 0 đọc là 零.\n\n### 2. Tên 12 tháng\n\n一月 · 二月 · 三月 · 四月 · 五月 · 六月 · 七月 · 八月 · 九月 · 十月 · 十一月 · 十二月\n\n### 3. Tên ngày\n\n一日（号）· 二日（号）· 三日（号）… 十一日（号）… 二十日（号）… 三十一日（号）\n\n### 4. Thứ tự — từ LỚN đến NHỎ\n\n**年 → 月 → 日（号）**\n\n1997年7月1日（号） · 2008年8月20日（号）\n\nĐây là điểm ngược hẳn với tiếng Việt (ngày/tháng/năm).\n\n### 5. 日 và 号 khác nhau ở đâu\n\nCả hai đều nghĩa là ngày:\n\n- **日** dùng trong **văn viết**\n- **号** dùng trong **khẩu ngữ**\n\nKhi nói ngày tháng và thứ, có thể dùng câu vị ngữ danh từ **hoặc** câu chữ 是:\n\n今天是十月二十七号。· 今天是星期三。\n\n> [!canh-bao] Ngược hẳn tiếng Việt\n> Ta viết 4/5/1919, tiếng Hán viết 1919年5月4日. Cứ tự hỏi: cái nào bao trùm cái nào?",
+          "quiz": {
+            "title": "Luyện tập 年、月、日",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "mcq",
+                "prompt": "Năm 2002 đọc thế nào?",
+                "explanation": "Đọc từng chữ số, số 0 là 零: 二零零二年.",
+                "options": [
+                  {
+                    "label": "二零零二年",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "两千零二年",
+                    "isCorrect": false,
+                    "misconception": "zh_year_digit_reading"
+                  },
+                  {
+                    "label": "二千零二年",
+                    "isCorrect": false,
+                    "misconception": "zh_year_digit_reading"
+                  },
+                  {
+                    "label": "二十零二年",
+                    "isCorrect": false,
+                    "misconception": "zh_year_digit_reading"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Ngày 4 tháng 5 năm 1919 viết đúng là:",
+                "explanation": "Thứ tự tiếng Hán đi từ lớn đến nhỏ: 年 → 月 → 日.",
+                "options": [
+                  {
+                    "label": "1919年5月4日",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "4日5月1919年",
+                    "isCorrect": false,
+                    "misconception": "zh_date_order_ymd"
+                  },
+                  {
+                    "label": "5月4日1919年",
+                    "isCorrect": false,
+                    "misconception": "zh_date_order_ymd"
+                  },
+                  {
+                    "label": "1919年4日5月",
+                    "isCorrect": false,
+                    "misconception": "zh_date_order_ymd"
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Đang nói chuyện, hỏi hôm nay ngày mấy thì dùng chữ nào?",
+                "explanation": "号 dùng trong khẩu ngữ, 日 dùng trong văn viết.",
+                "options": [
+                  {
+                    "label": "今天几号？",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "今天几日？",
+                    "isCorrect": false,
+                    "misconception": "zh_ri_vs_hao"
+                  },
+                  {
+                    "label": "今天几月？",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "今天几年？",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành ngày tháng đúng: 1 tháng 10 năm 1949.",
+                "explanation": "年 → 月 → 日, từ đơn vị lớn đến đơn vị nhỏ.",
+                "sequence": [
+                  "一九四九年",
+                  "十月",
+                  "一日"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "Trong văn viết trang trọng, ngày 1 tháng 7 viết là 七月一＿。",
+                "explanation": "Văn viết dùng 日; khẩu ngữ mới dùng 号.",
+                "answers": [
+                  "日",
+                  "rì",
+                  "ri"
+                ]
+              },
+              {
+                "type": "matching",
+                "prompt": "Ghép năm với cách đọc.",
+                "explanation": "Đọc từng chữ số một; 0 đọc là 零.",
+                "pairs": [
+                  {
+                    "left": "1997年",
+                    "right": "一九九七年"
+                  },
+                  {
+                    "left": "2000年",
+                    "right": "二零零零年"
+                  },
+                  {
+                    "left": "1982年",
+                    "right": "一九八二年"
+                  },
+                  {
+                    "left": "2005年",
+                    "right": "二零零五年"
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Đọc năm, tháng, ngày đúng cách",
+            "Viết ngày tháng theo thứ tự tiếng Hán",
+            "Phân biệt 日 và 号"
+          ],
+          "summary": [
+            "Thứ tự luôn từ lớn đến nhỏ: 年 → 月 → 日（号）",
+            "日 dùng khi viết, 号 dùng khi nói"
+          ]
+        },
+        {
+          "title": "语法（三）疑问语调 — Ngữ điệu nghi vấn",
+          "description": "Biến câu trần thuật thành câu hỏi chỉ bằng ngữ điệu.",
+          "patterns": {
+            "heading": "Câu trần thuật thành câu hỏi",
+            "note": "Chỉ cần thêm ngữ khí nghi vấn, cuối câu nâng giọng lên ↑ — không thêm 吗 cũng thành câu hỏi.",
+            "rows": [
+              {
+                "zh": "你的生日是十月十八号？",
+                "vi": "Sinh nhật bạn là 18 tháng 10 à? ↑"
+              },
+              {
+                "zh": "你今年二十岁？",
+                "vi": "Năm nay bạn hai mươi tuổi à? ↑"
+              },
+              {
+                "zh": "他也参加？",
+                "vi": "Anh ấy cũng tham gia à? ↑"
+              },
+              {
+                "zh": "你的生日是九月二十五号？",
+                "vi": "Sinh nhật bạn là 25 tháng 9 à? ↑"
+              },
+              {
+                "zh": "他也去？",
+                "vi": "Anh ấy cũng đi à? ↑"
+              }
+            ]
+          },
+          "body": "## 疑问语调 — Ngữ điệu nghi vấn\n\nChỉ cần thêm **ngữ khí nghi vấn** vào sau câu trần thuật là tạo thành câu hỏi — không bắt buộc phải có 吗.\n\n## 语音 — Ngữ điệu\n\nKhi dùng ngữ khí nghi vấn để hỏi, **ngữ điệu cuối câu phải nâng lên** ↑\n\nSo sánh với bài 22: câu cảm thán thì ngữ điệu **hạ xuống** ↓ (太好了！↓ 太贵了！↓)",
+          "quiz": {
+            "title": "Luyện tập 疑问语调",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "type": "true_false",
+                "prompt": "Câu 「他也参加？」là một câu hỏi hợp lệ dù không có 吗.",
+                "explanation": "Đúng — chỉ cần ngữ khí nghi vấn và ngữ điệu nâng lên cuối câu.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "Khi hỏi bằng ngữ điệu nghi vấn, cuối câu đọc thế nào?",
+                "explanation": "Nâng giọng lên ↑. Câu cảm thán (bài 22) thì ngược lại, hạ xuống ↓.",
+                "options": [
+                  {
+                    "label": "Nâng giọng lên",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hạ giọng xuống",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giữ nguyên, đọc đều",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Kéo dài âm cuối rồi hạ",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "ordering",
+                "prompt": "Sắp xếp thành câu hỏi bằng ngữ điệu: “Sinh nhật bạn là 18 tháng 10 à?”",
+                "explanation": "Giữ nguyên trật tự câu trần thuật, chỉ đổi ngữ điệu.",
+                "sequence": [
+                  "你的生日",
+                  "是",
+                  "十月",
+                  "十八号",
+                  "？"
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Biến câu trần thuật thành câu hỏi chỉ bằng ngữ điệu"
+          ],
+          "summary": [
+            "Không cần 吗 — chỉ cần nâng giọng cuối câu ↑",
+            "Ngược với câu cảm thán ở bài 22: 太好了！↓ hạ xuống"
+          ]
+        },
+        {
+          "title": "练习 第二十三课",
+          "description": "Chọn từ điền vào chỗ trống, đọc ngày tháng, đặt câu hỏi bằng ngữ điệu.",
+          "body": "## 选词填空 — Chọn từ điền vào chỗ trống\n\nNgân hàng từ: **参加 · 打算 · 日 · 在 · 正好 · 快乐**\n\n## 读出下列年月日 — Đọc các ngày tháng năm sau\n\n1919年5月4日 · 1931年9月18日 · 1949年10月1日\n\n1997年7月1日 · 2000年9月10日 · 2005年3月28日\n\n> Nhớ hai điều: năm đọc từng chữ số, và thứ tự luôn là 年 → 月 → 日.",
+          "quiz": {
+            "title": "练习 — Chọn từ điền vào chỗ trống",
+            "passThresholdPct": 60,
+            "questions": [
+              {
+                "type": "fill_in",
+                "prompt": "祝你生日＿＿！",
+                "explanation": "快乐 — lời chúc cố định.",
+                "answers": [
+                  "快乐",
+                  "kuàilè",
+                  "kuaile"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "明天＿＿是星期六。(vừa đúng)",
+                "explanation": "正好 = vừa vặn, đúng lúc.",
+                "answers": [
+                  "正好",
+                  "zhènghǎo",
+                  "zhenghao"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我＿＿当翻译。(dự định)",
+                "explanation": "打算 = toan, dự định.",
+                "answers": [
+                  "打算",
+                  "dǎsuan",
+                  "dasuan"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "我一定＿＿你的生日宴会。(tham dự)",
+                "explanation": "参加 = tham dự.",
+                "answers": [
+                  "参加",
+                  "cānjiā",
+                  "canjia"
+                ]
+              },
+              {
+                "type": "fill_in",
+                "prompt": "今天晚上七点＿我的宿舍举行。(giới từ chỉ nơi chốn)",
+                "explanation": "在 = ở, tại.",
+                "answers": [
+                  "在",
+                  "zài",
+                  "zai"
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "你的生日是几月几＿？— điền chữ nào cho đúng khẩu ngữ?",
+                "explanation": "Nói chuyện dùng 号; 日 để dành cho văn viết.",
+                "options": [
+                  {
+                    "label": "号",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "日",
+                    "isCorrect": false,
+                    "misconception": "zh_ri_vs_hao"
+                  },
+                  {
+                    "label": "天",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "年",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "type": "mcq",
+                "prompt": "1949年10月1日 đọc đúng là:",
+                "explanation": "Năm đọc từng chữ số: 一九四九年; rồi 十月, rồi 一日.",
+                "options": [
+                  {
+                    "label": "一九四九年十月一日",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "一千九百四十九年十月一日",
+                    "isCorrect": false,
+                    "misconception": "zh_year_digit_reading"
+                  },
+                  {
+                    "label": "十月一日一九四九年",
+                    "isCorrect": false,
+                    "misconception": "zh_date_order_ymd"
+                  },
+                  {
+                    "label": "一九四九十月一",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          },
+          "objectives": [
+            "Chọn đúng từ điền vào sáu câu của sách",
+            "Đọc thành tiếng các mốc ngày tháng lịch sử"
+          ],
+          "summary": [
+            "Năm đọc từng chữ số, thứ tự luôn 年 → 月 → 日"
+          ]
+        }
+      ]
+    }
+  ]
+}

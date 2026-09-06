@@ -19,9 +19,9 @@ export default function ViewModeToggle() {
     router.replace(qs ? `${pathname}?${qs}` : pathname);
   }
 
-  const items: Array<{ value: View; label: string; icon: string }> = [
-    { value: "edit", label: "Sửa", icon: "" },
-    { value: "preview", label: "Xem trước", icon: "" },
+  const items: Array<{ value: View; label: string }> = [
+    { value: "edit", label: "Sửa" },
+    { value: "preview", label: "Xem trước" },
   ];
 
   return (
@@ -29,7 +29,7 @@ export default function ViewModeToggle() {
       role="radiogroup"
       aria-label="Chế độ xem"
       data-view-keep
-      className="inline-flex items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5"
+      className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5"
     >
       {items.map((it) => {
         const active = current === it.value;
@@ -41,13 +41,12 @@ export default function ViewModeToggle() {
             data-view-keep
             aria-checked={active}
             onClick={() => setView(it.value)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+            className={`inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium transition-colors ${
               active
                 ? "bg-brand-gradient text-white shadow-sm"
                 : "text-muted hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
             }`}
           >
-            <span aria-hidden>{it.icon}</span>
             {it.label}
           </button>
         );

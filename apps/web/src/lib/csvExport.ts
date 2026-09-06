@@ -31,10 +31,22 @@ function escapeCell(v: unknown): string {
   return s;
 }
 
-export function rowsToCsv(rows: Array<Record<string, unknown>>): string {
-  if (rows.length === 0) return "﻿";
-  const keys: string[] = [];
-  const seen = new Set<string>();
+/**
+ * @param columns Tên cột khai báo sẵn, dùng khi báo cáo có thể không có dòng
+ *   nào. Không có nó thì tệp rỗng ra hoàn toàn trắng, và người mở không phân
+ *   biệt được "chưa có dữ liệu" với "tải hỏng" — một dòng tiêu đề trả lời
+ *   được câu đó ngay.
+ */
+export function rowsToCsv(
+  rows: Array<Record<string, unknown>>,
+  columns?: readonly string[],
+): string {
+  if (rows.length === 0) {
+    if (!columns || columns.length === 0) return "﻿";
+    return `﻿${columns.map(escapeCell).join(",")}\n`;
+  }
+  const keys: string[] = [...(columns ?? [])];
+  const seen = new Set<string>(keys);
   for (const r of rows) {
     for (const k of Object.keys(r)) {
       if (!seen.has(k)) {
@@ -50,8 +62,12 @@ export function rowsToCsv(rows: Array<Record<string, unknown>>): string {
   return `﻿${header}\n${body}\n`;
 }
 
-export function csvResponse(filename: string, rows: Array<Record<string, unknown>>) {
-  const csv = rowsToCsv(rows);
+export function csvResponse(
+  filename: string,
+  rows: Array<Record<string, unknown>>,
+  columns?: readonly string[],
+) {
+  const csv = rowsToCsv(rows, columns);
   return new Response(csv, {
     headers: {
       "content-type": "text/csv; charset=utf-8",

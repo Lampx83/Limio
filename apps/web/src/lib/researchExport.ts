@@ -70,6 +70,15 @@ export function identityCols(ref: LearnerRef | undefined) {
   };
 }
 
+/** Năm cột định danh, theo đúng thứ tự — dùng làm tiêu đề khi báo cáo rỗng. */
+export const IDENTITY_COLUMNS = [
+  "Mã ẩn danh",
+  "Lớp",
+  "Điều kiện",
+  "Email",
+  "Họ tên",
+] as const;
+
 export const VARIANT_LABEL: Record<"personalized" | "minimal", string> = {
   personalized: "Cá nhân hoá",
   minimal: "Rút gọn (đối chứng)",
