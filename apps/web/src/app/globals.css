@@ -496,6 +496,17 @@ body.gameshow-immersive main.mx-auto {
   }
 }
 
+/* Ghi chú giảng viên: máy chủ chỉ gửi cho người có quyền sửa khoá, còn việc
+   bật/tắt là chuyện hiển thị nên làm bằng CSS — bấm công tắc là thấy ngay,
+   không phải chờ máy chủ dựng lại cả bài. */
+[data-teacher-note] {
+  display: none;
+}
+:root[data-gv="1"] [data-teacher-note],
+main[data-gv="1"] [data-teacher-note] {
+  display: block;
+}
+
 /* Ảnh trong bài không được cao hơn một màn hình.
    Ảnh học liệu hay là ảnh dọc hoặc sơ đồ cao (thang Bloom, kim tự tháp, ảnh
    chụp cửa): giới hạn theo bề RỘNG thôi thì một tấm vẫn chiếm hai màn hình,

@@ -412,9 +412,23 @@ export default function TeacherBar({
     setRunning(true);
   };
 
+  /**
+   * Bật/tắt ghi chú.
+   *
+   * Đổi thuộc tính trên <html> trước — CSS hiện/giấu ngay trong khung hình kế
+   * tiếp. URL cập nhật sau ở chế độ replace: nó chỉ để giữ trạng thái khi tải
+   * lại trang và để nút "In / Lưu PDF" biết có kèm ghi chú hay không, nên không
+   * đáng để người dạy phải đứng chờ máy chủ dựng lại cả bài.
+   */
+  const [notesOn, setNotesOn] = useState(teacherMode);
+  useEffect(() => {
+    document.documentElement.dataset.gv = notesOn ? "1" : "0";
+  }, [notesOn]);
+
   const toggleNotes = () => {
-    const url = teacherMode ? pathname : `${pathname}?gv=1`;
-    router.push(url);
+    const next = !notesOn;
+    setNotesOn(next);
+    router.replace(next ? `${pathname}?gv=1` : pathname, { scroll: false });
   };
 
   const rowBtn =
@@ -480,11 +494,11 @@ export default function TeacherBar({
 
             <div className="flex flex-col gap-2 p-4">
               <Toggle
-                on={teacherMode}
-                label="Ghi chú"
+                on={notesOn}
+                label={noteCount > 0 ? `Ghi chú (${noteCount})` : "Ghi chú"}
                 onToggle={toggleNotes}
                 title={
-                  teacherMode
+                  notesOn
                     ? "Ghi chú giảng viên đang hiện trên màn hình của bạn. Tắt để giấu đi. Học viên chưa bao giờ thấy chúng."
                     : noteCount > 0
                       ? `Bật để hiện ${noteCount} ghi chú xen trong bài. Chỉ mình bạn thấy.`
@@ -640,6 +654,14 @@ export default function TeacherBar({
               </button>
             </div>
           </aside>
+        </div>
+      )}
+
+      {noteCount === 0 && notesOn && (
+        // Bật ghi chú mà bài không có ghi chú nào: nói thẳng, đừng để người dạy
+        // ngồi đoán xem nút hỏng hay bài trống.
+        <div className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm shadow-card">
+          Bài này chưa có ghi chú giảng viên nào — thêm ở trang soạn khoá.
         </div>
       )}
 

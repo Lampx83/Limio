@@ -388,7 +388,11 @@ export default async function LessonPage({
   const teacherNotes = lesson.contentItems.filter((c) => c.type === "teacher_note");
   const visibleItems = lesson.contentItems
     .filter((c) => !c.isHidden)
-    .filter((c) => c.type !== "teacher_note" || teacherMode)
+    // Người dạy nhận ghi chú NGAY TỪ ĐẦU, bật/tắt chỉ là đổi hiển thị bằng CSS.
+    // Trước đây bật ghi chú phải đi một vòng lên máy chủ để render lại cả bài —
+    // mất vài giây, mà trong lúc ấy màn hình không đổi gì, nên người dạy tưởng
+    // nút hỏng và bấm tiếp. Học viên vẫn không bao giờ nhận được khối này.
+    .filter((c) => c.type !== "teacher_note" || canEdit)
     .map((c) => ({
       id: c.id,
       type: c.type,
@@ -402,6 +406,9 @@ export default async function LessonPage({
       // khối nội dung, phóng cỡ chữ. Làm bằng CSS chứ không dựng một trang
       // riêng — hai bản nội dung khác nhau là hai bản có thể lệch nhau.
       data-stage={stageMode ? "1" : undefined}
+      // Trạng thái ban đầu của công tắc ghi chú; sau đó TeacherBar tự đổi thuộc
+      // tính này trên <html> để bật/tắt tức thì, không tải lại trang.
+      data-gv={teacherMode ? "1" : undefined}
       className="mx-auto max-w-6xl px-4 py-6 lg:px-6"
     >
       {stageMode && <StageListener lessonId={lesson.id} />}
