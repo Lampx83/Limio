@@ -60,6 +60,8 @@ export const LearningEventType = {
   MisconceptionResolved: "misconception.resolved",
   FeedbackDelivered: "feedback.delivered",
   FeedbackRated: "feedback.rated",
+  /** B9.2 — learner opened a lesson the feedback routed them to (uptake). */
+  FeedbackRemediationClicked: "feedback.remediation.clicked",
   AdaptivePathUpdated: "adaptive.path.updated",
 
   // Gamification

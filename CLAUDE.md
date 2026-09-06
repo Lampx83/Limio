@@ -125,6 +125,16 @@ Mọi thay đổi schema đi qua `prisma migrate` — không chỉnh DB tay. Ind
 
 Composite index khi query luôn dùng cả 2 field. Plan partition cho `LearningEvent` (theo tháng), `XpTransaction` (theo quý), `AnswerResponse` (theo year) khi user > 1M.
 
+### 4.8. Feedback instrumentation (B9)
+
+Mỗi `FeedbackDelivery` mang **toạ độ SSMMD của chính nó**, ghi lúc sinh chứ không đoán ngược từ text: `level` (tầng trội) + `levels` (mọi tầng có mặt) + `elaboration` + `sourceKind` + `generationContext`. Logic ở `packages/core-feedback/src/coding.ts` (hàm thuần `codeFeedback`).
+
+- **Thêm đường sinh feedback mới ⇒ phải code delivery đó.** Delivery không có toạ độ là dữ liệu không phân tích được, và nó im lặng — không ai phát hiện cho đến lúc chạy thống kê.
+- `self` **không bao giờ** được emit ở tầng meso: khen ngợi cá nhân nằm ở kênh gamification (Hattie: FS kém hiệu quả nhất). Enum có giá trị đó chỉ để schema biểu diễn được nếu sau này đổi ý.
+- `masteryAtGeneration` phải do **caller snapshot trước khi chấm** (`getMasterySnapshotForAttempt`), vì BKT update chạy song song với sinh feedback. Không snapshot ⇒ để trống, **không** đọc đại một giá trị đang bị race.
+- Cột toạ độ **nullable** có chủ ý: hàng trước B9 chưa từng được mã hoá, không được làm cho giống như đã. Backfill: `pnpm backfill:feedback-coding`, đánh dấu `generationContext.codedRetroactively = true`.
+- `feedback.remediation.clicked` đo uptake — biến trung gian quan trọng nhất khi đánh giá feedback. Ghi event **không bao giờ được chặn hay làm chậm điều hướng** của học viên (xem `RemediationLink`).
+
 ## 5. Năm nguyên tắc khi viết code
 
 Năm nguyên tắc dưới đây tổng hợp từ spec §6.1 (event-driven boundary), §7.3 (index strategy & event sourcing), §9 (risk register). **Không vi phạm**, kể cả khi tiện hơn:

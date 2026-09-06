@@ -259,3 +259,95 @@ describe("generateDiagnosticFeedback", () => {
     expect(r.deliveries).toHaveLength(0);
   });
 });
+
+describe("B9.1 — SSMMD coding is written at generation time", () => {
+  it("AC-2.1/2.2/2.6: a misconception plus remediation codes as elaborated self-regulation", async () => {
+    const s = await setup("b9a");
+    await prisma.feedbackTemplate.create({
+      data: {
+        scope: "per_misconception",
+        misconceptionId: s.misconceptionId,
+        body: "Bạn nhầm tương quan với nhân quả.",
+      },
+    });
+    await prisma.answerResponse.create({
+      data: {
+        attemptId: s.attemptId,
+        questionId: s.questionId,
+        response: [s.optWrongMisc],
+        isCorrect: false,
+        responseTimeMs: 100,
+      },
+    });
+
+    await generateDiagnosticFeedback(s.userId, s.attemptId, undefined, {
+      masterySnapshot: { [s.skillId]: 0.23 },
+    });
+
+    const d = await prisma.feedbackDelivery.findFirstOrThrow({
+      where: { userId: s.userId, attemptId: s.attemptId },
+    });
+    expect(d.level).toBe("self_regulation");
+    expect(d.levels).toEqual(["task", "process", "self_regulation"]);
+    expect(d.elaboration).toBe("elaborated");
+    expect(d.sourceKind).toBe("misconception");
+
+    // AC-2.7 — enough context to reconstruct the decision.
+    expect(d.generationContext).toMatchObject({
+      templateScope: "per_misconception",
+      skillIds: [s.skillId],
+      remediationLessonIds: [s.remediationLessonId],
+      // The completed lesson matched the skill but was dropped.
+      remediationExcludedCompleted: 1,
+      masteryAtGeneration: { [s.skillId]: 0.23 },
+    });
+    const ctx = d.generationContext as { coderVersion?: string };
+    expect(typeof ctx.coderVersion).toBe("string");
+  });
+
+  it("AC-2.7: mastery is absent, not invented, when no snapshot is supplied", async () => {
+    const s = await setup("b9b");
+    await prisma.answerResponse.create({
+      data: {
+        attemptId: s.attemptId,
+        questionId: s.questionId,
+        response: [s.optWrongPlain],
+        isCorrect: false,
+        responseTimeMs: 100,
+      },
+    });
+
+    await generateDiagnosticFeedback(s.userId, s.attemptId);
+
+    const d = await prisma.feedbackDelivery.findFirstOrThrow({
+      where: { userId: s.userId, attemptId: s.attemptId },
+    });
+    expect(d.generationContext).not.toHaveProperty("masteryAtGeneration");
+    // No misconception on this option, but remediation still routes them.
+    expect(d.level).toBe("self_regulation");
+    expect(d.elaboration).toBe("kh");
+    expect(d.sourceKind).toBe("rule_template");
+  });
+
+  it("AC-B3.6 + B9: the delivered event carries the coordinates too", async () => {
+    const s = await setup("b9c");
+    await prisma.answerResponse.create({
+      data: {
+        attemptId: s.attemptId,
+        questionId: s.questionId,
+        response: [s.optWrongPlain],
+        isCorrect: false,
+        responseTimeMs: 100,
+      },
+    });
+    await generateDiagnosticFeedback(s.userId, s.attemptId);
+    const ev = await prisma.learningEvent.findFirstOrThrow({
+      where: { userId: s.userId, eventType: LearningEventType.FeedbackDelivered },
+    });
+    expect(ev.payload).toMatchObject({
+      level: "self_regulation",
+      elaboration: "kh",
+      sourceKind: "rule_template",
+    });
+  });
+});

@@ -10,7 +10,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "backfill:feedback-coding": "node --env-file=../db/.env --import tsx scripts/backfill-feedback-coding.ts"
   },
   "dependencies": {
     "@feedbackme/db": "workspace:*",
@@ -22,6 +23,7 @@
     "@feedbackme/core-lms": "workspace:*",
     "@types/node": "^22.10.0",
     "dotenv": "^16.4.5",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

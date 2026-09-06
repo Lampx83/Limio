@@ -242,6 +242,31 @@ export interface SkillGroupView {
   lessonId: string;
 }
 
+/**
+ * B9 — mastery per skill for every question in an attempt, read *before* the
+ * attempt is scored. Feedback generation and the BKT update run concurrently,
+ * so the value a delivery records as "what the system believed" has to be
+ * captured by the caller first; reading it inside either one would race.
+ */
+export async function getMasterySnapshotForAttempt(
+  userId: string,
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<Record<string, number>> {
+  const tags = await db.questionSkillTag.findMany({
+    where: { question: { responses: { some: { attemptId } } } },
+    select: { skillId: true },
+  });
+  const skillIds = Array.from(new Set(tags.map((t) => t.skillId)));
+  if (skillIds.length === 0) return {};
+
+  const states = await db.learnerSkillState.findMany({
+    where: { userId, skillId: { in: skillIds } },
+    select: { skillId: true, masteryProbability: true },
+  });
+  return Object.fromEntries(states.map((s) => [s.skillId, s.masteryProbability]));
+}
+
 export interface SkillStateView {
   skillId: string;
   skillCode: string;

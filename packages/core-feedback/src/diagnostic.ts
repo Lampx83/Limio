@@ -1,5 +1,6 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
+import { CODER_VERSION, codeFeedback, type GenerationContext } from "./coding";
 
 const REMEDIATION_LIMIT = 3;
 
@@ -9,6 +10,16 @@ interface PerWrongAnswer {
   body: string;
   remediationLessonIds: string[];
   misconceptionCode: string | null;
+}
+
+export interface DiagnosticOptions {
+  /**
+   * B9 — mastery per skill as it stood *before* this attempt was scored. BKT
+   * updates run concurrently with feedback generation, so this cannot be read
+   * here without racing; the caller snapshots it first. Omitted ⇒ the field is
+   * left out of `generationContext` rather than filled with a racy value.
+   */
+  masterySnapshot?: Record<string, number>;
 }
 
 export interface DiagnosticResult {
@@ -29,6 +40,7 @@ export async function generateDiagnosticFeedback(
   userId: string,
   attemptId: string,
   db: PrismaClient = prisma,
+  opts: DiagnosticOptions = {},
 ): Promise<DiagnosticResult> {
   const attempt = await db.quizAttempt.findUnique({
     where: { id: attemptId },
@@ -115,6 +127,7 @@ export async function generateDiagnosticFeedback(
     // excluding ones already completed.
     const skillIds = r.question.skillTags.map((t) => t.skillId);
     let remediationLessonIds: string[] = [];
+    let excludedCompleted = 0;
     if (skillIds.length > 0) {
       const mappings = await db.contentSkillMapping.findMany({
         where: {
@@ -125,18 +138,44 @@ export async function generateDiagnosticFeedback(
         orderBy: { coverageWeight: "desc" },
         select: { contentId: true, coverageWeight: true },
       });
-      remediationLessonIds = Array.from(
-        new Set(
-          mappings
-            .map((m) => m.contentId)
-            .filter((id) => !completedLessonIds.has(id)),
-        ),
-      ).slice(0, REMEDIATION_LIMIT);
+      const candidates = Array.from(new Set(mappings.map((m) => m.contentId)));
+      const fresh = candidates.filter((id) => !completedLessonIds.has(id));
+      excludedCompleted = candidates.length - fresh.length;
+      remediationLessonIds = fresh.slice(0, REMEDIATION_LIMIT);
     }
 
     const body =
       template?.body ??
       "Câu này bạn chưa đúng. Hãy đọc lại nội dung liên quan và thử lại.";
+
+    // B9 — coordinates are derived from the inputs that chose this text, at the
+    // moment they chose it. Never re-derived later by parsing the body.
+    const coding = codeFeedback({
+      templateScope: template?.scope ?? null,
+      declaredLevel: template?.level ?? null,
+      declaredElaboration: template?.elaboration ?? null,
+      misconceptionCode,
+      remediationCount: remediationLessonIds.length,
+    });
+
+    const generationContext: GenerationContext = {
+      coderVersion: CODER_VERSION,
+      templateScope: template?.scope ?? null,
+      templateId: template?.id ?? null,
+      misconceptionCode,
+      skillIds,
+      remediationLessonIds,
+      remediationExcludedCompleted: excludedCompleted,
+      ...(opts.masterySnapshot
+        ? {
+            masteryAtGeneration: Object.fromEntries(
+              skillIds
+                .filter((id) => id in opts.masterySnapshot!)
+                .map((id) => [id, opts.masterySnapshot![id]!]),
+            ),
+          }
+        : {}),
+    };
 
     const delivery = await db.feedbackDelivery.create({
       data: {
@@ -146,6 +185,11 @@ export async function generateDiagnosticFeedback(
         templateId: template?.id ?? null,
         body,
         remediationLessonIds: remediationLessonIds as Prisma.InputJsonValue,
+        level: coding.level,
+        levels: coding.levels as Prisma.InputJsonValue,
+        elaboration: coding.elaboration,
+        sourceKind: coding.sourceKind,
+        generationContext: generationContext as unknown as Prisma.InputJsonValue,
       },
     });
 
@@ -160,6 +204,9 @@ export async function generateDiagnosticFeedback(
           questionId: r.questionId,
           misconceptionCode,
           remediationLessonIds,
+          level: coding.level,
+          elaboration: coding.elaboration,
+          sourceKind: coding.sourceKind,
         } as Prisma.InputJsonValue,
       },
     });

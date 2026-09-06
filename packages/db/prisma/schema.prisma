@@ -818,6 +818,46 @@ enum FeedbackTemplateScope {
   per_skill
 }
 
+// =====================================================================
+// B9 — Research instrumentation. Every delivered feedback records its own
+// analytic coordinates so the corpus can be described without re-reading
+// the text: macro (which data/model produced it), meso (what the feedback
+// targets), micro (how elaborated it is).
+// =====================================================================
+
+/// Meso — Hattie & Timperley feedback levels. `self` is deliberately never
+/// emitted by the Feedback Engine: praise lives in the gamification channel.
+enum FeedbackLevel {
+  task
+  process
+  self_regulation
+  self
+}
+
+/// Micro — elaboration depth, deepest layer present in the delivery.
+///   kr         knowledge of response (it was wrong, nothing more)
+///   kcr        knowledge of the correct response
+///   kh         knowledge about how to proceed (remediation routing)
+///   km         knowledge about the mistake (misconception explanation)
+///   elaborated both km and kh
+enum FeedbackElaboration {
+  kr
+  kcr
+  kh
+  km
+  elaborated
+}
+
+/// Macro — what produced the text. `llm` and `hybrid` are reserved: today the
+/// learner-facing path is deterministic and no model generates the body.
+enum FeedbackSourceKind {
+  rule_template
+  misconception
+  bkt_state
+  llm
+  hybrid
+}
+
 // Plain-text feedback templates. Phase 2 uses static strings; Phase 4 will
 // allow LLM-generated bodies (with the same delivery pipeline).
 model FeedbackTemplate {
@@ -828,6 +868,10 @@ model FeedbackTemplate {
   body            String                @db.Text
   // Lower = higher priority when multiple templates match.
   priority        Int                   @default(100)
+  // B9 — instructor-declared coordinates. Null = derive from `scope` at
+  // generation time (see core-feedback/src/coding.ts).
+  level           FeedbackLevel?
+  elaboration     FeedbackElaboration?
   createdAt       DateTime              @default(now())
 
   misconception Misconception?     @relation(fields: [misconceptionId], references: [id], onDelete: Cascade)
@@ -851,6 +895,18 @@ model FeedbackDelivery {
   remediationLessonIds Json
   // Optional learner rating 1-5 — picked up later in B8 quality loop.
   rating               Int?
+  // ── B9 instrumentation ────────────────────────────────────────────────
+  // Null on rows delivered before B9 shipped, and on rows the backfill could
+  // not classify — never back-dated silently.
+  // `level` is the dominant (highest) layer; `levels` is every layer present,
+  // as a JSON string[], because one delivery genuinely carries several.
+  level                FeedbackLevel?
+  levels               Json?
+  elaboration          FeedbackElaboration?
+  sourceKind           FeedbackSourceKind?
+  // Everything needed to reconstruct why this text was chosen: template scope,
+  // misconception, skills, remediation, and the BKT prior at generation time.
+  generationContext    Json?
   deliveredAt          DateTime @default(now())
 
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -858,6 +914,8 @@ model FeedbackDelivery {
 
   @@index([userId, deliveredAt])
   @@index([attemptId])
+  // B9 — distribution-over-time queries for the feedback corpus.
+  @@index([level, deliveredAt])
 }
 
 // =====================================================================

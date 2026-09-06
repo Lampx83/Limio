@@ -8,6 +8,7 @@ import {
 import {
   detectAndMarkResolved,
   generateDiagnosticFeedback,
+  getMasterySnapshotForAttempt,
   getAverageMasteryForQuiz,
   recordMisconceptionsFromAttempt,
   updateLearnerStateFromAttempt,
@@ -55,9 +56,20 @@ export async function POST(
       });
     }
 
+    // B9 — snapshot mastery before anything scores this attempt, so the
+    // feedback rows can record what the system believed when they were chosen.
+    // Read here rather than inside generation, which runs alongside the BKT
+    // update below and would race it.
+    const masterySnapshot = await getMasterySnapshotForAttempt(
+      userId,
+      result.attemptId,
+    );
+
     // Phase 2 Feedback Engine in parallel.
     const [feedback, detectedMc, bkt] = await Promise.all([
-      generateDiagnosticFeedback(userId, result.attemptId),
+      generateDiagnosticFeedback(userId, result.attemptId, undefined, {
+        masterySnapshot,
+      }),
       recordMisconceptionsFromAttempt(userId, result.attemptId),
       updateLearnerStateFromAttempt(userId, result.attemptId),
     ]);
