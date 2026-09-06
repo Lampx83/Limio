@@ -155,6 +155,7 @@ async function main() {
       id: true,
       title: true,
       description: true,
+      durationSec: true,
       contentItems: { select: { id: true, type: true, payload: true, orderIndex: true }, orderBy: { orderIndex: "asc" } },
       quizzes: {
         select: {
@@ -305,6 +306,19 @@ async function main() {
     console.log(`  ~ tên bài: "${lesson.title}" → "${spec.title}"`);
     plan.push(async () => {
       await updateLesson(owner.id, lesson.id, { title: spec.title });
+    });
+  }
+
+  // Thời lượng dự kiến: ghi cả vào cột `durationSec` chứ không chỉ vẽ lên đầu
+  // bài — trang danh sách và phần xếp lịch học đọc cột này, không đọc HTML.
+  const wantDurationSec = spec.durationMin ? spec.durationMin * 60 : null;
+  if (wantDurationSec !== null && wantDurationSec !== lesson.durationSec) {
+    console.log(`  ~ thời lượng: ${lesson.durationSec ?? "—"} → ${wantDurationSec} giây`);
+    plan.push(async () => {
+      await prisma.lesson.update({
+        where: { id: lesson.id },
+        data: { durationSec: wantDurationSec },
+      });
     });
   }
 

@@ -168,6 +168,16 @@ export const LessonSpec = z.object({
    * đánh số từ 1.
    */
   splitSections: z.boolean().optional(),
+  /**
+   * Thời lượng học dự kiến, tính bằng phút — con số hiện trên đầu bài và ghi
+   * vào `Lesson.durationSec`.
+   *
+   * Bỏ trống thì ước lượng theo số từ (200 từ/phút). Ước lượng ấy chỉ đúng cho
+   * bài thuần chữ: bài có bảng, hình, hoạt động luyện tập thì thời gian thật
+   * dài hơn nhiều, và người học lấy con số đó để xếp lịch nên đừng để nó nói
+   * dối.
+   */
+  durationMin: z.number().int().min(1).max(600).optional(),
   quiz: z
     .object({
       title: z.string().min(1).max(200),
@@ -934,10 +944,12 @@ export function countSections(body: string | undefined): number {
 export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   const blocks: string[] = [];
 
-  // ~200 từ/phút cho văn xuôi tiếng Việt; làm tròn lên phút gần nhất.
+  // Thời lượng do người soạn ấn định thì tin theo; không thì ~200 từ/phút cho
+  // văn xuôi tiếng Việt, làm tròn lên phút gần nhất.
   const words = (l.body ?? "").split(/\s+/).filter(Boolean).length;
   const chips: string[] = [];
-  if (words > 0) chips.push(`~${Math.max(1, Math.round(words / 200))} phút đọc`);
+  if (l.durationMin) chips.push(`${l.durationMin} phút`);
+  else if (words > 0) chips.push(`~${Math.max(1, Math.round(words / 200))} phút đọc`);
   const sectionCount = countSections(l.body);
   if (sectionCount > 0) chips.push(`${sectionCount} phần`);
   if (l.quiz?.questions.length) chips.push(`${l.quiz.questions.length} câu ôn tập`);
