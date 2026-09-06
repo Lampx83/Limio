@@ -57,7 +57,9 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col">
         <Providers>
           <ImpersonationBanner />
-          <AppHeader />
+          <div data-print-hide>
+            <AppHeader />
+          </div>
           <div className="flex flex-1 flex-col">{children}</div>
           <FooterGate>
             <Footer />

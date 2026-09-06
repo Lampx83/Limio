@@ -24,6 +24,7 @@ import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
+import { Download } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -137,9 +138,23 @@ export default async function LessonPage({
     const paid = course.priceCents !== null && course.priceCents > 0;
     return (
       <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
-        <Link href={`/catalog/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
-          ← {course.title}
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link href={`/catalog/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
+            ← {course.title}
+          </Link>
+          {/* Bản in cũng mở cho người xem thử: quy tắc truy cập của trang in
+              giống hệt trang này, nên giấu nút đi chỉ làm khó người dùng chứ
+              không giữ được gì. */}
+          <a
+            href={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+          >
+            <Download size={14} />
+            Tải PDF
+          </a>
+        </div>
         {/* Preview banner */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft px-5 py-3">
           <div>
@@ -363,6 +378,17 @@ export default async function LessonPage({
             currentLessonId={lesson.id}
             modules={progress.modules}
           />
+          {/* Bản in để người học lưu PDF mang về — mở tab mới, trang in tự gọi
+              hộp thoại in. */}
+          <a
+            href={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+          >
+            <Download size={14} />
+            Tải PDF
+          </a>
         </div>
       </div>
 

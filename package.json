@@ -22,7 +22,9 @@
     "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags",
     "backfill:feedback-coding": "pnpm --filter @feedbackme/core-feedback backfill:feedback-coding",
     "import:course": "pnpm --filter @feedbackme/core-lms import:course",
-    "import:course:prod": "pnpm --filter @feedbackme/core-lms import:course:prod"
+    "import:course:prod": "pnpm --filter @feedbackme/core-lms import:course:prod",
+    "update:lesson": "pnpm --filter @feedbackme/core-lms update:lesson",
+    "update:lesson:prod": "pnpm --filter @feedbackme/core-lms update:lesson:prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

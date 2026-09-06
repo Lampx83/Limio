@@ -47,6 +47,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { createCourse } from "../src/courses/courses";
@@ -125,13 +126,30 @@ const PatternsSpec = z.object({
   rows: z.array(z.object({ zh: z.string().min(1), vi: z.string().min(1) })).min(1),
 });
 
-const LessonSpec = z.object({
+export const LessonSpec = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2_000).optional(),
   vocab: z.array(VocabItem).optional(),
   dialogue: DialogueSpec.optional(),
   patterns: PatternsSpec.optional(),
   body: z.string().optional(),
+  /**
+   * Mục tiêu bài học, viết bằng động từ hành vi ("phân biệt được", "xếp được")
+   * chứ không phải "hiểu về" — mục tiêu nào không quan sát được thì cũng không
+   * kiểm tra được, và người học không biết lấy gì làm mốc đã đạt hay chưa.
+   */
+  objectives: z.array(z.string().min(1).max(500)).max(10).optional(),
+  /**
+   * Tổng kết cuối bài — vài ý người học nên mang theo. Chèn NGAY TRƯỚC mục
+   * luyện tập chứ không phải sau cùng: đọc xong nội dung là tới tổng kết, rồi
+   * mới tới bài tập; đặt sau phần nguồn tham khảo thì không ai còn đọc.
+   */
+  summary: z.array(z.string().min(1).max(500)).max(8).optional(),
+  /**
+   * Mục lục đầu bài. Bỏ trống = tự quyết: bài có từ 4 tiêu đề `##` trở lên thì
+   * có mục lục, ngắn hơn thì không (mục lục 2 dòng chỉ tổ chiếm chỗ).
+   */
+  toc: z.boolean().optional(),
   quiz: z
     .object({
       title: z.string().min(1).max(200),
@@ -148,7 +166,7 @@ const LessonSpec = z.object({
     .optional(),
 });
 
-const Manifest = z.object({
+export const Manifest = z.object({
   course: z.object({
     title: z.string().min(1).max(200),
     slug: z
@@ -197,7 +215,7 @@ const Manifest = z.object({
     .min(1),
 });
 
-type QuestionSpec = z.infer<typeof QuestionSpec>;
+export type QuestionSpec = z.infer<typeof QuestionSpec>;
 type VocabItem = z.infer<typeof VocabItem>;
 type DialogueSpec = z.infer<typeof DialogueSpec>;
 type PatternsSpec = z.infer<typeof PatternsSpec>;
@@ -210,7 +228,7 @@ type PatternsSpec = z.infer<typeof PatternsSpec>;
  * không đọc isCorrect; đặt true sẽ khiến UI giảng viên gắn nhãn "đáp án đúng"
  * lên từng mảnh rời của câu hỏi.
  */
-function expandQuestion(
+export function expandQuestion(
   q: QuestionSpec,
   orderIndex: number,
   mcIds?: Map<string, string>,
@@ -272,9 +290,57 @@ function expandQuestion(
 const ZH_SIZE = "1.75rem"; // gấp đôi nền 0.875rem của prose-sm
 const ZH_SIZE_TABLE = "1.6rem";
 const SUB_SIZE = "1.05rem";
+/**
+ * Cỡ chữ cho văn xuôi (`body`) — tách khỏi SUB_SIZE của pinyin/bản dịch.
+ *
+ * `prose-sm` của LessonContent đặt nền 14px: đủ cho một dòng dịch nằm dưới
+ * câu chữ Hán, quá nhỏ để đọc liền vài trăm chữ. Mọi khối cùng cấp — đoạn
+ * văn, danh sách, ô bảng, trích dẫn — dùng CHUNG một cỡ để trang không nhấp
+ * nhô; chỉ tiêu đề và chú thích hình lệch ra khỏi thang này.
+ */
+const TEXT = "1.25rem";
+const CAPTION = "1rem";
+/**
+ * Màu nhận diện cho từng mục cấp 2, lặp lại theo thứ tự.
+ *
+ * Chỉ giữ phần "r,g,b" để chỗ dùng tự chọn độ trong: nền thì nhạt (0.10–0.16),
+ * chữ và vạch thì đậm. Cách này đọc được trên CẢ nền sáng lẫn nền tối — điều
+ * mà một mã màu cố định không làm được, vì học liệu nằm trong DB còn giao diện
+ * thì đổi theo chủ đề sáng/tối của người dùng.
+ *
+ * Không dùng đỏ: trong giao diện màu đỏ đã mang nghĩa lỗi.
+ */
+const SECTION_HUES = [
+  "59,130,246", // lam
+  "139,92,246", // tím
+  "13,148,136", // ngọc
+  "217,150,40", // hổ phách
+  "219,90,140", // hồng sen
+] as const;
+
 /** Xám trung tính — đọc được trên cả nền sáng lẫn nền tối. */
 const MUTED = "rgba(127,127,127,0.95)";
 const RULE = "rgba(127,127,127,0.32)";
+
+/**
+ * Neo cho tiêu đề: bỏ dấu tiếng Việt rồi rút về [a-z0-9-].
+ *
+ * Không dùng thẳng tiêu đề có dấu làm `id`: nó vẫn chạy trên trình duyệt hiện
+ * đại nhưng link chép ra ngoài bị mã hoá phần trăm thành một chuỗi không đọc
+ * được, và vài công cụ vẫn vấp. Tiền tố "muc-" để không đụng id nào của ứng
+ * dụng.
+ */
+function slugify(raw: string): string {
+  const base = raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `muc-${base || "phan"}`;
+}
 
 function esc(s: string): string {
   return s
@@ -284,7 +350,7 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function vocabTable(items: VocabItem[]): string {
+export function vocabTable(items: VocabItem[]): string {
   const hasNote = items.some((v) => v.note);
   const th = `padding:.45rem .6rem;text-align:left;font-size:.9rem;font-weight:600;color:${MUTED};border-bottom:1px solid ${RULE}`;
   const td = `padding:.45rem .6rem;border-bottom:1px solid ${RULE};vertical-align:middle`;
@@ -331,6 +397,10 @@ function zoomCjk(html: string): string {
 /** Định dạng trong dòng: **đậm**, *nghiêng*, `mã`. Escape TRƯỚC, rồi mới gắn thẻ. */
 function inline(raw: string): string {
   const html = esc(raw)
+    .replace(
+      /\[([^\]]+)\]\((https?:\/\/(?:[^()\s]|\([^()\s]*\))+)\)/g,
+      `<a href="$2" target="_blank" rel="noopener noreferrer" style="text-decoration:underline">$1</a>`,
+    )
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
     .replace(
@@ -351,18 +421,32 @@ function inline(raw: string): string {
  * định dạng trong dòng. Dòng nào không khớp thì coi như đoạn văn — hỏng thì
  * hỏng lộ ra chứ không mất chữ.
  */
-function markdownToHtml(md: string): string {
+export function markdownToHtml(md: string, opts: { toc?: boolean; beforeLastSection?: string } = {}): string {
   const lines = md.split("\n");
   const out: string[] = [];
-  const p = `margin:.55rem 0;font-size:${SUB_SIZE};line-height:1.75`;
-  const th = `padding:.45rem .6rem;text-align:left;font-size:.9rem;font-weight:600;color:${MUTED};border-bottom:1px solid ${RULE}`;
-  const td = `padding:.5rem .6rem;border-bottom:1px solid ${RULE};font-size:${SUB_SIZE};vertical-align:top`;
+  // Tiêu đề cấp 2 gom lại để dựng mục lục; đếm trùng để hai mục cùng tên
+  // không nhận cùng một neo.
+  const headings: Array<{ id: string; text: string; at: number }> = [];
+  const used = new Map<string, number>();
+  const h2Total = lines.filter((l) => /^## \S/.test(l.trim())).length;
+  // Màu của mục đang đọc dở — bảng, trích dẫn trong mục lấy theo màu này.
+  let hue: string = SECTION_HUES[0]!;
+  // Mục lục đánh số 1. 2. 3. thì tiêu đề trong bài cũng phải mang số ấy —
+  // không có số thì người đọc phải dò lại bằng tên, đúng việc mà mục lục sinh
+  // ra để khỏi phải làm.
+  const wantToc = (opts.toc ?? h2Total >= 4) && h2Total >= 2;
+  let h2Index = 0;
+  const p = `margin:.7rem 0;font-size:${TEXT};line-height:1.8`;
+  const td = `padding:.55rem .6rem;border-bottom:1px solid ${RULE};font-size:${TEXT};line-height:1.7;vertical-align:top`;
+  const th = () =>
+    `padding:.55rem .6rem;text-align:left;font-size:${CAPTION};font-weight:600;` +
+    `background:rgba(${hue},.10);border-bottom:2px solid rgba(${hue},.35)`;
   let i = 0;
 
   const flushList = (ordered: boolean, items: string[]) => {
     const tag = ordered ? "ol" : "ul";
     out.push(
-      `<${tag} style="margin:.55rem 0;padding-left:1.4rem;font-size:${SUB_SIZE};line-height:1.75">` +
+      `<${tag} style="margin:.7rem 0;padding-left:1.4rem;font-size:${TEXT};line-height:1.8">` +
         items.map((it) => `<li style="margin:.2rem 0">${inline(it)}</li>`).join("") +
         `</${tag}>`,
     );
@@ -374,13 +458,86 @@ function markdownToHtml(md: string): string {
 
     if (t === "") { i++; continue; }
 
+    // Hình minh hoạ trên một dòng riêng: ![mô tả](url "chú thích").
+    // Chú thích đi qua inline() nên viết được [tên nguồn](link) trong đó —
+    // học liệu dùng lại hình của người khác thì dòng ghi nguồn phải nằm ngay
+    // dưới hình, không dồn xuống cuối bài nơi không ai đọc.
+    const img = /^!\[([^\]]*)\]\(((?:[^()\s]|\([^()\s]*\))+)(?:\s+"([^"]*)")?\)$/.exec(t);
+    if (img) {
+      out.push(
+        `<figure style="margin:1.2rem 0">` +
+          `<img src="${esc(img[2]!)}" alt="${esc(img[1] ?? "")}" loading="lazy" ` +
+          `style="max-width:100%;height:auto;border:1px solid ${RULE};border-radius:.5rem;display:block">` +
+          (img[3]
+            ? `<figcaption style="font-size:${CAPTION};color:${MUTED};line-height:1.6;margin:.45rem 0 0">${inline(img[3])}</figcaption>`
+            : "") +
+          `</figure>`,
+      );
+      i++;
+      continue;
+    }
+
+    // Khối HTML thô ```html … ``` — dùng cho sơ đồ tự vẽ bằng div + style
+    // (thang khoảng cách, ô màu, lưới cột). SafeHtml bật USE_PROFILES.html
+    // nên <svg> bị lọc sạch, còn div/table cùng thuộc tính style thì giữ
+    // nguyên; vẽ bằng HTML là cách duy nhất có sơ đồ mà không phụ thuộc vào
+    // một tệp ảnh đặt ở đâu đó bên ngoài.
+    if (t.startsWith("```html")) {
+      i++;
+      const raw: string[] = [];
+      while (i < lines.length && !lines[i]!.trim().startsWith("```")) {
+        raw.push(lines[i]!);
+        i++;
+      }
+      i++; // bỏ dòng đóng
+      out.push(raw.join("\n"));
+      continue;
+    }
+
     if (t === "---") { out.push(`<hr style="border:0;border-top:1px solid ${RULE};margin:1.1rem 0">`); i++; continue; }
 
     const h = /^(#{2,4})\s+(.*)$/.exec(t);
     if (h) {
       const level = h[1]!.length;
-      const size = level === 2 ? "1.35rem" : level === 3 ? "1.15rem" : "1.05rem";
-      out.push(`<h${level} style="font-size:${size};margin:1.1rem 0 .4rem">${inline(h[2]!)}</h${level}>`);
+      const size = level === 2 ? "1.7rem" : level === 3 ? "1.42rem" : "1.25rem";
+      const text = h[2]!;
+      let id = slugify(text);
+      const seen = used.get(id) ?? 0;
+      used.set(id, seen + 1);
+      if (seen > 0) id = `${id}-${seen + 1}`;
+      if (level === 2) headings.push({ id, text, at: out.length });
+      if (level === 2) hue = SECTION_HUES[h2Index % SECTION_HUES.length]!;
+      const num = level === 2 && wantToc ? ++h2Index : null;
+      // scroll-margin-top: chừa chỗ cho thanh tiêu đề dính trên cùng, nếu
+      // không thì nhảy tới neo sẽ để tiêu đề nằm khuất dưới thanh đó.
+      if (level === 2) {
+        const badge = num
+          ? `<span style="display:inline-flex;align-items:center;justify-content:center;` +
+            `min-width:2rem;height:2rem;border-radius:.5rem;background:rgba(${hue},.16);` +
+            `color:rgb(${hue});font-size:1.1rem;font-weight:700;flex:none">${num}</span>`
+          : "";
+        out.push(
+          `<h2 id="${id}" style="font-size:${size};margin:2.4rem 0 .9rem;scroll-margin-top:5rem;` +
+            `display:flex;align-items:center;gap:.65rem;padding-bottom:.45rem;` +
+            `border-bottom:2px solid rgba(${hue},.38)">${badge}<span>${inline(text)}</span></h2>`,
+        );
+      } else {
+        // Cấp 3 nhận cùng màu với mục cha, đánh dấu bằng một vạch dọc ngắn —
+        // đủ để mắt biết nó thuộc về mục nào khi lướt, không cần thêm khung.
+        // "Nhóm 3–4 người (20 phút)" → tên ở tiêu đề, thời lượng thành thẻ
+        // nhỏ bên cạnh: phần luyện tập nhìn ra ngay là mất bao lâu.
+        const timed = /^(.*?)\s*\(([^)]*(?:phút|giờ)[^)]*)\)\s*$/.exec(text);
+        const name = timed ? timed[1]! : text;
+        const chip = timed
+          ? `<span style="display:inline-block;margin-left:.55rem;padding:.1rem .55rem;border-radius:999px;` +
+            `background:rgba(${hue},.14);color:rgb(${hue});font-size:${CAPTION};font-weight:600;` +
+            `vertical-align:middle">${esc(timed[2]!)}</span>`
+          : "";
+        out.push(
+          `<h${level} id="${id}" style="font-size:${size};margin:1.5rem 0 .4rem;scroll-margin-top:5rem;` +
+            `border-left:3px solid rgba(${hue},.55);padding-left:.6rem">${inline(name)}${chip}</h${level}>`,
+        );
+      }
       i++;
       continue;
     }
@@ -391,8 +548,15 @@ function markdownToHtml(md: string): string {
         quote.push(lines[i]!.trim().slice(2));
         i++;
       }
+      const tag = /^\[!([a-z-]+)\]\s*(.*)$/.exec(quote[0] ?? "");
+      if (tag && CALLOUTS[tag[1]!]) {
+        const body = [tag[2] ?? "", ...quote.slice(1)].filter((x) => x.trim() !== "");
+        out.push(calloutBox(tag[1]!, inline(body.join(" "))));
+        continue;
+      }
       out.push(
-        `<blockquote style="margin:.7rem 0;padding:.1rem 0 .1rem .9rem;border-left:3px solid ${RULE};color:${MUTED};font-size:${SUB_SIZE}">` +
+        `<blockquote style="margin:1rem 0;padding:.6rem .9rem;border-left:4px solid rgba(${hue},.5);` +
+          `background:rgba(${hue},.06);border-radius:0 .35rem .35rem 0;font-size:${TEXT};line-height:1.8">` +
           `${inline(quote.join(" "))}</blockquote>`,
       );
       continue;
@@ -408,7 +572,7 @@ function markdownToHtml(md: string): string {
       const [head, ...body] = rows;
       out.push(
         `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin:.7rem 0">` +
-          `<thead><tr>${(head ?? []).map((c) => `<th style="${th}">${inline(c)}</th>`).join("")}</tr></thead>` +
+          `<thead><tr>${(head ?? []).map((c) => `<th style="${th()}">${inline(c)}</th>`).join("")}</tr></thead>` +
           `<tbody>${body.map((r) => `<tr>${r.map((c) => `<td style="${td}">${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody>` +
           `</table></div>`,
       );
@@ -436,18 +600,128 @@ function markdownToHtml(md: string): string {
     }
 
     const para: string[] = [];
-    while (i < lines.length && lines[i]!.trim() !== "" && !/^(#{2,4}\s|[-*]\s|\d+\.\s|\||>\s|---$)/.test(lines[i]!.trim())) {
+    while (i < lines.length && lines[i]!.trim() !== "" && !/^(#{2,4}\s|[-*]\s|\d+\.\s|\||>\s|---$|!\[|```)/.test(lines[i]!.trim())) {
       para.push(lines[i]!.trim());
       i++;
     }
     out.push(`<p style="${p}">${inline(para.join(" "))}</p>`);
   }
 
+  // Tổng kết chèn ngay trước mục luyện tập; bài nào không theo quy ước đó thì
+  // đặt cuối. Chèn trước khi dựng mục lục để chỉ số `at` còn đúng.
+  if (opts.beforeLastSection) {
+    const last = [...headings].reverse().find((h) => h.text.startsWith("Luyện tập"));
+    if (last) out.splice(last.at, 0, opts.beforeLastSection);
+    else out.push(opts.beforeLastSection);
+  }
+
+  // Mục lục dựng sau cùng vì phải biết hết tiêu đề mới xếp được, rồi chèn lên
+  // đầu. `toc` để trống thì tự quyết theo số mục.
+  if (wantToc) {
+    const items = headings
+      .map((h, idx) => {
+        const c = SECTION_HUES[idx % SECTION_HUES.length]!;
+        return (
+          `<li style="margin:.35rem 0;break-inside:avoid;display:flex;align-items:center;gap:.55rem">` +
+          `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:1.6rem;` +
+          `height:1.6rem;border-radius:.4rem;background:rgba(${c},.16);color:rgb(${c});` +
+          `font-size:.95rem;font-weight:700;flex:none">${idx + 1}</span>` +
+          `<a href="#${h.id}" style="text-decoration:none">${inline(h.text)}</a></li>`
+        );
+      })
+      .join("");
+    out.unshift(
+      `<nav aria-label="Mục lục bài học" style="border:1px solid ${RULE};border-radius:.6rem;` +
+        `padding:.9rem 1.1rem;margin:0 0 1.4rem">` +
+        `<div style="font-size:${CAPTION};font-weight:600;color:${MUTED};letter-spacing:.04em;` +
+        `text-transform:uppercase;margin:0 0 .5rem">Trong bài này</div>` +
+        `<ol style="margin:0;padding:0;list-style:none;font-size:${TEXT};line-height:1.6;` +
+        `column-width:19rem;column-gap:2rem">${items}</ol>` +
+        `</nav>`,
+    );
+  }
+
   return out.join("");
 }
 
+/**
+ * Khối "Học xong bài này, bạn có thể…" đặt trên cùng, trước mục lục: người học
+ * cần biết bài này để làm gì trước khi quyết định đọc tiếp.
+ */
+function objectivesBox(items: string[]): string {
+  const lis = items
+    .map((it) => `<li style="margin:.3rem 0">${inline(it)}</li>`)
+    .join("");
+  return (
+    `<section aria-label="Mục tiêu bài học" style="border-left:4px solid rgba(59,130,246,.55);` +
+    `background:rgba(59,130,246,.06);border-radius:.35rem;padding:.9rem 1.1rem;margin:0 0 1.3rem">` +
+    `<div style="font-size:${CAPTION};font-weight:600;color:${MUTED};letter-spacing:.04em;` +
+    `text-transform:uppercase;margin:0 0 .35rem">Mục tiêu bài học</div>` +
+    `<p style="margin:0 0 .5rem;font-size:${TEXT};line-height:1.7">Học xong bài này, bạn có thể:</p>` +
+    `<ul style="margin:0;padding-left:1.3rem;font-size:${TEXT};line-height:1.7">${lis}</ul>` +
+    `</section>`
+  );
+}
+
+/**
+ * Hộp chú giải có nhãn. Viết trong `body` bằng cú pháp:
+ *
+ *   > [!ghi-nho] **Quy tắc nhớ nhanh**
+ *   > UX quyết định chuyện gì xảy ra…
+ *
+ * Bốn loại đủ cho một bài giảng: điều phải nhớ, ví dụ, bẫy thường gặp, mẹo làm.
+ * Màu ở đây mang NGHĨA nên cố định theo loại, không đổi theo màu của mục —
+ * người học nhìn màu là biết đang đọc loại thông tin nào.
+ */
+const CALLOUTS: Record<string, { label: string; hue: string }> = {
+  "ghi-nho": { label: "Ghi nhớ", hue: "59,130,246" },
+  "vi-du": { label: "Ví dụ", hue: "13,148,136" },
+  "canh-bao": { label: "Bẫy thường gặp", hue: "217,150,40" },
+  "meo": { label: "Mẹo thực hành", hue: "139,92,246" },
+};
+
+function calloutBox(kind: string, inner: string): string {
+  const c = CALLOUTS[kind]!;
+  return (
+    `<aside style="border-left:4px solid rgba(${c.hue},.6);background:rgba(${c.hue},.07);` +
+    `border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:1.1rem 0">` +
+    `<div style="font-size:${CAPTION};font-weight:700;letter-spacing:.04em;text-transform:uppercase;` +
+    `color:rgb(${c.hue});margin:0 0 .3rem">${c.label}</div>` +
+    `<div style="font-size:${TEXT};line-height:1.8">${inner}</div></aside>`
+  );
+}
+
+/**
+ * Dải thông tin đầu bài: đọc mất bao lâu, có mấy phần, mấy câu ôn tập.
+ * Người học biết trước mình đang bước vào cái gì thì mới cân được thời gian —
+ * đây là thứ rẻ nhất mà một trang bài giảng có thể cho họ.
+ */
+function metaBar(chips: string[]): string {
+  const items = chips
+    .map(
+      (t) =>
+        `<span style="display:inline-block;padding:.2rem .6rem;border-radius:999px;` +
+        `border:1px solid ${RULE};font-size:${CAPTION};color:${MUTED}">${esc(t)}</span>`,
+    )
+    .join("");
+  return `<div style="display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1rem">${items}</div>`;
+}
+
+/** Khối "Tổng kết" — cùng thang với khối mục tiêu, khác màu để phân biệt. */
+function summaryBox(items: string[]): string {
+  const lis = items.map((it) => `<li style="margin:.3rem 0">${inline(it)}</li>`).join("");
+  return (
+    `<section aria-label="Tổng kết bài học" style="border-left:4px solid rgba(34,139,110,.55);` +
+    `background:rgba(34,139,110,.06);border-radius:.35rem;padding:.9rem 1.1rem;margin:1.6rem 0 1.3rem">` +
+    `<div style="font-size:${CAPTION};font-weight:600;color:${MUTED};letter-spacing:.04em;` +
+    `text-transform:uppercase;margin:0 0 .35rem">Tổng kết</div>` +
+    `<ul style="margin:0;padding-left:1.3rem;font-size:${TEXT};line-height:1.7">${lis}</ul>` +
+    `</section>`
+  );
+}
+
 /** Bảng mẫu câu / cách đọc — cột chữ Hán cùng cỡ với bảng từ vựng. */
-function patternTable(p: PatternsSpec): string {
+export function patternTable(p: PatternsSpec): string {
   const th = `padding:.45rem .6rem;text-align:left;font-size:.9rem;font-weight:600;color:${MUTED};border-bottom:1px solid ${RULE}`;
   const td = `padding:.55rem .6rem;border-bottom:1px solid ${RULE};vertical-align:middle`;
   const rows = p.rows
@@ -474,7 +748,7 @@ function patternTable(p: PatternsSpec): string {
  * trên, câu tiếng Trung cỡ lớn, rồi pinyin và bản dịch. Đọc theo chiều dọc
  * chứ không phải một dải chữ chạy liền như khi viết bằng markdown.
  */
-function renderDialogue(d: DialogueSpec): string {
+export function renderDialogue(d: DialogueSpec): string {
   const turns = d.turns
     .map(
       (t) =>
@@ -537,6 +811,42 @@ async function upsertFeedbackTemplate(
     VALUES (gen_random_uuid()::text, ${scope}::"FeedbackTemplateScope", ${misconceptionId}, NULL, ${body}, ${priority}, NOW())`;
 }
 
+/**
+ * Các khối nội dung của một bài, theo đúng thứ tự mà importer tạo ra.
+ * `update-lesson.ts` dựng lại đúng danh sách này rồi so với những gì đang có
+ * trong DB — nên hai đường không thể lệch nhau về cách render.
+ */
+export const MAX_TOC_ITEMS = 5;
+
+/** Số tiêu đề cấp 2 trong thân bài — cũng chính là số dòng của mục lục. */
+export function countSections(body: string | undefined): number {
+  return (body ?? "").split("\n").filter((l) => /^## \S/.test(l.trim())).length;
+}
+
+export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
+  const blocks: string[] = [];
+  if (l.vocab?.length) blocks.push(vocabTable(l.vocab));
+  if (l.dialogue) blocks.push(renderDialogue(l.dialogue));
+  if (l.patterns) blocks.push(patternTable(l.patterns));
+  // ~200 từ/phút cho văn xuôi tiếng Việt; làm tròn lên phút gần nhất.
+  const words = (l.body ?? "").split(/\s+/).filter(Boolean).length;
+  const chips: string[] = [];
+  if (words > 0) chips.push(`~${Math.max(1, Math.round(words / 200))} phút đọc`);
+  const sectionCount = countSections(l.body);
+  if (sectionCount > 0) chips.push(`${sectionCount} phần`);
+  if (l.quiz?.questions.length) chips.push(`${l.quiz.questions.length} câu ôn tập`);
+  const head =
+    (chips.length > 1 ? metaBar(chips) : "") +
+    (l.objectives?.length ? objectivesBox(l.objectives) : "");
+  const tail = l.summary?.length ? summaryBox(l.summary) : undefined;
+  if (l.body) {
+    blocks.push(head + markdownToHtml(l.body, { toc: l.toc, beforeLastSection: tail }));
+  } else if (head || tail) {
+    blocks.push(head + (tail ?? ""));
+  }
+  return blocks;
+}
+
 // ── Chạy ──────────────────────────────────────────────────────────────────────
 
 function arg(name: string): string | undefined {
@@ -549,7 +859,7 @@ function arg(name: string): string | undefined {
  * không phải gốc repo, nên đường dẫn kiểu `docs/hoc-lieu/bai-22.json` gõ từ
  * gốc repo sẽ không tìm thấy. Thử lần lượt: đúng như gõ → so với gốc repo.
  */
-function resolveManifest(p: string): string {
+export function resolveManifest(p: string): string {
   if (existsSync(p)) return p;
   const fromRepoRoot = resolve(import.meta.dirname, "../../..", p);
   if (existsSync(fromRepoRoot)) return fromRepoRoot;
@@ -598,11 +908,18 @@ async function main() {
       );
     }
   }
+  const warnings: string[] = [];
   let questionCount = 0;
   for (const [mi, m] of manifest.modules.entries()) {
     for (const [li, l] of m.lessons.entries()) {
       if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": rỗng — không có nội dung lẫn quiz`);
+      }
+      const sections = countSections(l.body);
+      if (sections > MAX_TOC_ITEMS) {
+        warnings.push(
+          `module ${mi + 1} / bài ${li + 1} "${l.title}": ${sections} mục cấp 2 — mục lục quá dài, gộp lại còn ${MAX_TOC_ITEMS}`,
+        );
       }
       for (const [qi, q] of (l.quiz?.questions ?? []).entries()) {
         questionCount += 1;
@@ -698,6 +1015,11 @@ async function main() {
       ].filter(Boolean);
       console.log(`      · ${l.title} — ${bits.join(", ") || "trống"}`);
     }
+  }
+
+  if (warnings.length > 0) {
+    console.warn(`\n${warnings.length} cảnh báo (không chặn nhập):`);
+    for (const w of warnings) console.warn(`  ! ${w}`);
   }
 
   if (problems.length > 0) {
@@ -802,35 +1124,13 @@ async function main() {
         orderIndex: li,
       });
 
-      let contentOrder = 0;
-      if (l.vocab?.length) {
+      // Soạn bằng markdown nhưng lưu thành richtext: markdown render ở cỡ chữ
+      // nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
+      for (const [ci, html] of renderLessonBlocks(l).entries()) {
         await createContentItem(actor, lessonId, {
           type: "richtext",
-          orderIndex: contentOrder++,
-          payload: { html: vocabTable(l.vocab) },
-        });
-      }
-      if (l.dialogue) {
-        await createContentItem(actor, lessonId, {
-          type: "richtext",
-          orderIndex: contentOrder++,
-          payload: { html: renderDialogue(l.dialogue) },
-        });
-      }
-      if (l.patterns) {
-        await createContentItem(actor, lessonId, {
-          type: "richtext",
-          orderIndex: contentOrder++,
-          payload: { html: patternTable(l.patterns) },
-        });
-      }
-      if (l.body) {
-        // Soạn bằng markdown nhưng lưu thành richtext: markdown render ở cỡ
-        // chữ nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
-        await createContentItem(actor, lessonId, {
-          type: "richtext",
-          orderIndex: contentOrder++,
-          payload: { html: markdownToHtml(l.body) },
+          orderIndex: ci,
+          payload: { html },
         });
       }
 
@@ -859,9 +1159,13 @@ async function main() {
   );
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => prisma.$disconnect());
+// Chỉ chạy khi được gọi thẳng từ dòng lệnh: file này còn được
+// `update-lesson.ts` import để dùng lại bộ render.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main()
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => prisma.$disconnect());
+}

@@ -426,3 +426,49 @@ body.gameshow-immersive main.mx-auto {
   animation: gs-podium-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+
+/* ── Bản in bài học ────────────────────────────────────────────────────────
+ * Dùng cho trang /learn/[slug]/lessons/[id]/print: người học bấm in rồi chọn
+ * "Lưu thành PDF". Vài quy tắc dưới đây là phần khác biệt giữa một bản PDF
+ * đọc được và một bản bị cắt ngang bảng, mất nguồn dẫn, tốn mực nền.
+ */
+@media print {
+  /* Khung ứng dụng không thuộc về bài học. */
+  body > header,
+  body > footer,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Giấy không bấm được: in kèm địa chỉ để nguồn dẫn còn dùng được. */
+  .prose a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    word-break: break-all;
+    color: #444;
+  }
+
+  /* Không cắt ngang bảng, hình, hộp chú giải; không để tiêu đề mồ côi cuối trang. */
+  figure,
+  table,
+  aside,
+  section,
+  blockquote,
+  li {
+    break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+  }
+}
