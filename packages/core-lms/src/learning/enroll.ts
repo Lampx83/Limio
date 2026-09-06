@@ -9,7 +9,8 @@ export class EnrollError extends Error {
       | "course_not_found"
       | "course_not_enrollable"
       | "payment_required"
-      | "invalid_invite_code",
+      | "invalid_invite_code"
+      | "not_enrolled",
   ) {
     super(code);
   }
@@ -183,8 +184,114 @@ export async function enrollInCourse(
   return enrollUserInResolvedCourse(userId, course, sectionId, db, opts);
 }
 
+export interface SectionInvitePreview {
+  courseTitle: string;
+  courseSlug: string;
+  sectionName: string;
+  /** Lớp người này đang thuộc về, nếu đã ghi danh khoá đó. */
+  current: { sectionName: string; isDefault: boolean } | null;
+  /** Đã ở đúng lớp của mã này rồi. */
+  alreadyHere: boolean;
+}
+
 /**
- * Self-enroll via a CourseSection invite link (`/join/[code]`). Idempotent
+ * Người mở link mời đang ở đâu, để trang mời nói đúng chuyện sẽ xảy ra.
+ *
+ * Trước đây trang chỉ hỏi "tham gia lớp học?" cho mọi trường hợp, kể cả người
+ * đã ghi danh khoá đó bằng đường khác — bấm xong thì báo thành công nhưng lớp
+ * giữ nguyên, và không ai biết. Xem `switchSectionByCode`.
+ */
+export async function previewSectionInvite(
+  userId: string | null,
+  inviteCode: string,
+  db: PrismaClient = prisma,
+): Promise<SectionInvitePreview | null> {
+  const section = await db.courseSection.findUnique({
+    where: { inviteCode },
+    select: {
+      id: true,
+      name: true,
+      isDefault: true,
+      courseId: true,
+      course: { select: { title: true, slug: true } },
+    },
+  });
+  if (!section || section.isDefault) return null;
+
+  const enrollment = userId
+    ? await db.enrollment.findUnique({
+        where: { userId_courseId: { userId, courseId: section.courseId } },
+        select: { sectionId: true, section: { select: { name: true, isDefault: true } } },
+      })
+    : null;
+
+  return {
+    courseTitle: section.course.title,
+    courseSlug: section.course.slug,
+    sectionName: section.name,
+    current: enrollment
+      ? { sectionName: enrollment.section.name, isDefault: enrollment.section.isDefault }
+      : null,
+    alreadyHere: enrollment?.sectionId === section.id,
+  };
+}
+
+/**
+ * Chuyển một người đã ghi danh sang lớp của mã mời này.
+ *
+ * Tách khỏi `enrollBySectionCode` và cần một lần xác nhận riêng ở giao diện:
+ * tự động chuyển thì một sinh viên bấm nhầm link của lớp khác sẽ lặng lẽ rời
+ * khỏi lớp giảng viên đã xếp, và với một khoá đang chạy thực nghiệm thì đó là
+ * đổi luôn nhóm đối chứng của em ấy.
+ */
+export async function switchSectionByCode(
+  userId: string,
+  inviteCode: string,
+  db: PrismaClient = prisma,
+): Promise<{ sectionName: string; courseSlug: string }> {
+  const section = await db.courseSection.findUnique({
+    where: { inviteCode },
+    select: {
+      id: true,
+      name: true,
+      isDefault: true,
+      courseId: true,
+      course: { select: { slug: true } },
+    },
+  });
+  if (!section || section.isDefault) throw new EnrollError("invalid_invite_code");
+
+  const enrollment = await db.enrollment.findUnique({
+    where: { userId_courseId: { userId, courseId: section.courseId } },
+    select: { id: true, sectionId: true },
+  });
+  if (!enrollment) throw new EnrollError("not_enrolled");
+
+  if (enrollment.sectionId !== section.id) {
+    await db.enrollment.update({
+      where: { id: enrollment.id },
+      data: { sectionId: section.id },
+    });
+    await emitEvent(
+      userId,
+      LearningEventType.EnrollmentSectionChanged,
+      {
+        enrollmentId: enrollment.id,
+        courseId: section.courseId,
+        fromSectionId: enrollment.sectionId,
+        toSectionId: section.id,
+        via: "invite_link",
+      },
+      { courseId: section.courseId },
+      db,
+    );
+  }
+
+  return { sectionName: section.name, courseSlug: section.course.slug };
+}
+
+/**
+ * Self-enroll via a CourseSection invite link (`/enroll/[code]`). Idempotent
  * the same way as `enrollInCourse` — re-joining just returns the existing
  * enrollment. The default (isDefault=true) section is never invite-joinable.
  */

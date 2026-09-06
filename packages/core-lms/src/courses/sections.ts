@@ -93,6 +93,30 @@ export async function createCourseSection(
   }
 }
 
+/**
+ * Số học viên đang nằm ở lớp mặc định — tức chưa được xếp vào lớp nào.
+ *
+ * Lớp mặc định bị ẩn khỏi danh sách lớp có chủ ý (nó không phải một lớp thật),
+ * nhưng người rơi vào đó thì phải nhìn thấy được: họ ghi danh qua link giới
+ * thiệu khoá chứ không qua link lớp, và nếu giảng viên không biết thì những em
+ * này lặng lẽ đứng ngoài mọi lớp suốt kỳ.
+ */
+export async function countUnassignedLearners(
+  actorUserId: string,
+  courseId: string,
+  db: PrismaClient = prisma,
+): Promise<number> {
+  await assertCanEditCourse(actorUserId, courseId, db);
+  const def = await db.courseSection.findFirst({
+    where: { courseId, isDefault: true },
+    select: { id: true },
+  });
+  if (!def) return 0;
+  return db.enrollment.count({
+    where: { sectionId: def.id, status: { in: ["active", "completed"] } },
+  });
+}
+
 /** List sections of a course (excludes the auto-created default section). */
 export async function listCourseSections(
   actorUserId: string,

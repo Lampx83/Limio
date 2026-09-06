@@ -40,6 +40,7 @@ type Section = {
 
 export default function SectionsClient({ courseId }: { courseId: string }) {
   const [sections, setSections] = useState<Section[]>([]);
+  const [unassigned, setUnassigned] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -53,8 +54,9 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
       setErr(`HTTP ${r.status}`);
       return;
     }
-    const j = (await r.json()) as { sections: Section[] };
+    const j = (await r.json()) as { sections: Section[]; unassigned?: number };
     setSections(j.sections);
+    setUnassigned(j.unassigned ?? 0);
   };
 
   useEffect(() => {
@@ -145,6 +147,25 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
 
   return (
     <div className="mt-6">
+      {/*
+        Lớp mặc định bị ẩn khỏi danh sách bên dưới có chủ ý — nó không phải một
+        lớp thật. Nhưng người rơi vào đó thì phải nhìn thấy được: họ ghi danh
+        qua link giới thiệu khoá chứ không qua link lớp, và nếu không hiện ra ở
+        đây thì họ lặng lẽ đứng ngoài mọi lớp suốt kỳ.
+      */}
+      {unassigned > 0 && (
+        <div className="banner-warning mb-4 block rounded-xl px-4 py-3 text-sm">
+          <p className="font-medium">
+            {unassigned} học viên chưa được xếp lớp
+          </p>
+          <p className="mt-0.5 text-xs">
+            Họ ghi danh bằng link giới thiệu khoá học thay vì link lớp. Mở một lớp
+            bất kỳ bên dưới rồi dùng nút chuyển lớp để xếp họ vào — hoặc gửi lại
+            link lớp cho họ tự chuyển.
+          </p>
+        </div>
+      )}
+
       <form
         onSubmit={onCreate}
         className="grid grid-cols-1 gap-3 rounded border border-default bg-white p-4 md:grid-cols-3"

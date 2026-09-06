@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { createCourseSection, listCourseSections } from "@feedbackme/core-lms";
+import {
+  countUnassignedLearners,
+  createCourseSection,
+  listCourseSections,
+} from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -12,8 +16,11 @@ export async function GET(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const sections = await listCourseSections(userId, params.id);
-    return NextResponse.json({ sections });
+    const [sections, unassigned] = await Promise.all([
+      listCourseSections(userId, params.id),
+      countUnassignedLearners(userId, params.id),
+    ]);
+    return NextResponse.json({ sections, unassigned });
   } catch (e) {
     const mapped = mapKnownError(e);
     if (mapped) return mapped;

@@ -7,9 +7,12 @@ import { apiUrl } from "@/lib/apiUrl";
 export default function JoinSectionButton({
   code,
   isLoggedIn,
+  /** Đã ghi danh khoá này rồi — bấm nút là chuyển lớp, không phải ghi danh. */
+  mode = "join",
 }: {
   code: string;
   isLoggedIn: boolean;
+  mode?: "join" | "move";
 }) {
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,7 +23,11 @@ export default function JoinSectionButton({
     }
 
     setSubmitting(true);
-    const res = await fetch(apiUrl(`/api/enroll-code/${code}`), { method: "POST" });
+    const res = await fetch(apiUrl(`/api/enroll-code/${code}`), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ move: mode === "move" }),
+    });
     if (res.status === 401) {
       window.location.href = `/signin?callbackUrl=/enroll/${code}`;
       return;
@@ -43,7 +50,9 @@ export default function JoinSectionButton({
       setSubmitting(false);
       return;
     }
-    toast.success("Tham gia thành công", { description: "Đang chuyển vào khóa…" });
+    toast.success(mode === "move" ? "Đã chuyển lớp" : "Tham gia thành công", {
+      description: "Đang chuyển vào khóa…",
+    });
     window.location.href = `/learn/${data.courseSlug}`;
   }
 
@@ -53,7 +62,13 @@ export default function JoinSectionButton({
       disabled={submitting}
       className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:hover:scale-100"
     >
-      {submitting ? "Đang tham gia…" : "Tham gia lớp học"}
+      {submitting
+        ? mode === "move"
+          ? "Đang chuyển…"
+          : "Đang tham gia…"
+        : mode === "move"
+          ? "Chuyển sang lớp này"
+          : "Tham gia lớp học"}
     </button>
   );
 }

@@ -10,6 +10,7 @@ export const LearningEventType = {
   LessonViewed: "lesson.viewed",
   LessonCompleted: "lesson.completed",
   LessonEngaged: "lesson.engaged",
+  EnrollmentSectionChanged: "enrollment.section_changed",
   /** In-video quiz cuepoint passed (formative — not a full QuizAttempt). */
   VideoCuepointPassed: "video.cuepoint.passed",
   QuizStarted: "quiz.started",
@@ -176,6 +177,19 @@ export interface QuizQuestionAnsweredPayload {
   latencyMs: number | null;
   /** Số lần người học sửa lại đáp án của câu này trước khi nộp. */
   revisionCount: number;
+}
+
+/**
+ * B14 — người học đổi lớp. Ghi lại vì với một khoá đang chạy thực nghiệm, đổi
+ * lớp là đổi luôn nhóm đối chứng, và `Enrollment.sectionId` chỉ giữ trạng thái
+ * cuối chứ không giữ lịch sử.
+ */
+export interface EnrollmentSectionChangedPayload {
+  enrollmentId: string;
+  courseId: string;
+  fromSectionId: string;
+  toSectionId: string;
+  via: "invite_link" | "instructor";
 }
 
 export interface EnrollmentCreatedPayload {
