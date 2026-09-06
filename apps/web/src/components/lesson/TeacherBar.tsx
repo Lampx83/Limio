@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
+  Crop,
   Hourglass,
   MonitorPlay,
   Pause,
@@ -30,6 +31,41 @@ import {
 type Section = { id: string; text: string };
 
 const channelName = (lessonId: string) => `limio-lesson-present:${lessonId}`;
+
+/**
+ * Địa chỉ của một phần nội dung, hiểu được ở CẢ HAI cửa sổ.
+ *
+ * Neo vào `data-item-id` của khối chứa nó rồi mới đếm con cháu bên trong: cửa
+ * sổ điều khiển có thêm các khối ghi chú giảng viên xen giữa, nên đánh số theo
+ * thứ tự từ đầu bài sẽ trỏ lệch sang khối khác trên màn chiếu.
+ *
+ * Chỉ gửi ĐỊA CHỈ chứ không gửi HTML: màn chiếu tự tìm phần tử trong DOM của
+ * chính nó rồi nhân bản, nên không có đường nào để HTML lạ đi từ cửa sổ này
+ * sang cửa sổ kia.
+ */
+export type FocusPath = { itemId: string; indexes: number[] };
+
+function pathOf(el: HTMLElement): FocusPath | null {
+  const host = el.closest<HTMLElement>("[data-item-id]");
+  if (!host) return null;
+  const indexes: number[] = [];
+  let node: HTMLElement = el;
+  while (node !== host && node.parentElement) {
+    indexes.unshift([...node.parentElement.children].indexOf(node));
+    node = node.parentElement;
+  }
+  return { itemId: host.dataset.itemId!, indexes };
+}
+
+export function resolvePath(p: FocusPath): HTMLElement | null {
+  let node = document.querySelector<HTMLElement>(`[data-item-id="${p.itemId}"]`);
+  for (const i of p.indexes) {
+    const next = node?.children[i];
+    if (!(next instanceof HTMLElement)) return null;
+    node = next;
+  }
+  return node;
+}
 
 function mmss(totalSec: number): string {
   const m = Math.floor(totalSec / 60);
@@ -116,6 +152,9 @@ export default function TeacherBar({
   // không làm hai bên lệch nhau.
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [focus, setFocus] = useState<{ path: FocusPath; label: string } | null>(null);
+  const focusRef = useRef<{ path: FocusPath; label: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const chan = useRef<BroadcastChannel | null>(null);
   // Bản sao của endsAt cho hàm nghe tin nhắn: hàm ấy được gắn một lần lúc mở
@@ -135,6 +174,9 @@ export default function TeacherBar({
         // nó đứng trắng trong khi lớp đang chờ đồng hồ.
         if (endsAtRef.current !== null) {
           c.postMessage({ type: "timer", endsAt: endsAtRef.current });
+        }
+        if (focusRef.current) {
+          c.postMessage({ type: "focus", path: focusRef.current.path });
         }
       }
       if (e.data?.type === "stage-bye") setStageOpen(false);
@@ -178,6 +220,76 @@ export default function TeacherBar({
     const t = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(t);
   }, [running]);
+
+  const sendFocus = useCallback((next: { path: FocusPath; label: string } | null) => {
+    focusRef.current = next;
+    setFocus(next);
+    chan.current?.postMessage({ type: "focus", path: next ? next.path : null });
+  }, []);
+
+  /**
+   * Chọn vùng chiếu bằng cách rê chuột lên nội dung, giống công cụ soi phần tử
+   * của trình duyệt: rê tới đâu viền sáng tới đó, bấm một cái là chốt.
+   *
+   * Chọn theo PHẦN TỬ chứ không khoanh hình chữ nhật bằng chuột: khoanh theo
+   * pixel thì phải chụp ảnh màn hình rồi phóng to — chữ sẽ nhoè, và khung cố
+   * định ấy không co giãn theo tỉ lệ máy chiếu. Chọn phần tử thì màn chiếu dựng
+   * lại đúng chữ ấy ở cỡ lớn, sắc nét và tự xuống dòng vừa khung.
+   */
+  useEffect(() => {
+    if (!picking) return;
+    const root = document.getElementById(containerId);
+    if (!root) return;
+
+    let marked: HTMLElement | null = null;
+    const clear = () => {
+      if (marked) marked.style.outline = "";
+      marked = null;
+    };
+    const mark = (el: HTMLElement) => {
+      if (marked === el) return;
+      clear();
+      marked = el;
+      el.style.outline = "3px solid rgb(var(--brand))";
+    };
+    // Bỏ qua các thẻ bọc: chọn thứ người dạy trỏ vào, không phải cả khối nội dung.
+    const targetOf = (t: EventTarget | null): HTMLElement | null => {
+      if (!(t instanceof HTMLElement)) return null;
+      const el = t.closest<HTMLElement>(
+        "h2,h3,h4,p,table,figure,details,ul,ol,blockquote,aside,div[style]",
+      );
+      return el && root.contains(el) ? el : null;
+    };
+    const onMove = (e: MouseEvent) => {
+      const el = targetOf(e.target);
+      if (el) mark(el);
+    };
+    const onClick = (e: MouseEvent) => {
+      const el = targetOf(e.target);
+      if (!el) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const path = pathOf(el);
+      if (path) {
+        sendFocus({ path, label: (el.textContent ?? "").trim().slice(0, 40) || "phần đã chọn" });
+      }
+      setPicking(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPicking(false);
+    };
+    root.addEventListener("mousemove", onMove);
+    root.addEventListener("click", onClick, true);
+    window.addEventListener("keydown", onKey);
+    root.style.cursor = "crosshair";
+    return () => {
+      clear();
+      root.style.cursor = "";
+      root.removeEventListener("mousemove", onMove);
+      root.removeEventListener("click", onClick, true);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [picking, containerId, sendFocus]);
 
   const setCountdown = useCallback((minutes: number | null) => {
     const at = minutes === null ? null : Date.now() + minutes * 60_000;
@@ -370,6 +482,30 @@ export default function TeacherBar({
         Công cụ lớp học
       </button>
 
+      {/* Chọn một phần nội dung để chiếu to lên lớp — dùng khi giao hoạt động:
+          lớp chỉ cần nhìn đúng đề bài, không phải cả trang. */}
+      <button
+        type="button"
+        onClick={() => (focus ? sendFocus(null) : setPicking((v) => !v))}
+        title={
+          focus
+            ? `Màn chiếu đang chiếu to: “${focus.label}”. Bấm để trả về cả bài.`
+            : picking
+              ? "Rê chuột lên nội dung rồi bấm vào phần muốn chiếu to. Esc để thoát."
+              : "Chọn một phần nội dung (đề bài, bảng, hình) để chiếu to lên lớp cùng đồng hồ."
+        }
+        className={
+          focus || picking
+            ? "inline-flex max-w-[14rem] items-center gap-1.5 rounded-full border border-brand-600 bg-brand-soft px-3.5 py-1.5 text-sm font-semibold text-brand-700"
+            : "inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
+        }
+      >
+        <Crop size={16} className="shrink-0" />
+        <span className="truncate">
+          {focus ? `Bỏ chiếu to: ${focus.label}` : picking ? "Đang chọn… (Esc để thoát)" : "Chiếu to một phần"}
+        </span>
+      </button>
+
       {/* Đếm ngược CHIẾU LÊN LỚP — khác với đồng hồ buổi dạy ở cuối thanh, cái
           đó chỉ mình bạn thấy. Ở đây chọn số phút rồi cả lớp cùng nhìn. */}
       <span className="relative">
@@ -480,6 +616,8 @@ export default function TeacherBar({
 export function StageListener({ lessonId }: { lessonId: string }) {
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [focusPath, setFocusPath] = useState<FocusPath | null>(null);
+  const focusBox = useRef<HTMLDivElement | null>(null);
   // Portal ra thẳng body. Chế độ màn chiếu giấu MỌI con trực tiếp của <main>
   // trừ khối nội dung — đồng hồ nằm trong <main> thì cũng bị giấu theo, và nó
   // bị giấu một cách im lặng: chữ vẫn có trong DOM, chỉ là không ai thấy.
@@ -494,6 +632,10 @@ export function StageListener({ lessonId }: { lessonId: string }) {
       if (e.data?.type === "timer") {
         setEndsAt(typeof e.data.endsAt === "number" ? e.data.endsAt : null);
         setNow(Date.now());
+        return;
+      }
+      if (e.data?.type === "focus") {
+        setFocusPath(e.data.path ?? null);
         return;
       }
       if (e.data?.type !== "goto" || typeof e.data.id !== "string") return;
@@ -534,28 +676,55 @@ export function StageListener({ lessonId }: { lessonId: string }) {
     return () => clearInterval(t);
   }, [endsAt]);
 
-  if (endsAt === null || !mounted) return null;
-  const left = Math.max(0, Math.round((endsAt - now) / 1000));
-  const done = left === 0;
-  const urgent = left <= 10 && !done;
+  // Nhân bản phần được chọn từ DOM của CHÍNH cửa sổ này — không nhận HTML gửi
+  // qua kênh. Nội dung hai bên vốn giống nhau, nên chỉ cần địa chỉ là đủ.
+  useEffect(() => {
+    const box = focusBox.current;
+    if (!box) return;
+    box.replaceChildren();
+    if (!focusPath) return;
+    const el = resolvePath(focusPath);
+    if (el) box.appendChild(el.cloneNode(true));
+  }, [focusPath]);
+
+  if (!mounted) return null;
+  const left = endsAt === null ? 0 : Math.max(0, Math.round((endsAt - now) / 1000));
+  const done = endsAt !== null && left === 0;
+  const urgent = endsAt !== null && left <= 10 && !done;
 
   return createPortal(
-    <div
-      data-stage-timer
-      aria-live="off"
-      className={`fixed right-6 top-6 z-50 rounded-2xl border-2 px-6 py-4 text-center shadow-card backdrop-blur ${
-        done
-          ? "border-danger-500 bg-danger-50/95 text-danger-700"
-          : urgent
-            ? "border-accent-500 bg-accent-50/95 text-accent-700"
-            : "border-brand-300 bg-[rgb(var(--surface))]/95"
-      }`}
-    >
-      <p className="text-xs font-bold uppercase tracking-widest opacity-70">
-        {done ? "Hết giờ" : "Còn lại"}
-      </p>
-      <p className="text-6xl font-bold leading-none tabular-nums">{mmss(left)}</p>
-    </div>,
+    <>
+      {/* Vùng nội dung được chiếu to: nền đặc để che hẳn bài phía sau — đang
+          làm bài tập thì phần còn lại của trang chỉ là thứ gây phân tán. */}
+      <div
+        hidden={!focusPath}
+        className="fixed inset-0 z-40 overflow-auto bg-[rgb(var(--surface))] px-10 py-12"
+      >
+        <div
+          ref={focusBox}
+          className="mx-auto max-w-5xl text-[1.6rem] leading-relaxed [&_li]:my-2 [&_p]:my-3 [&_table]:text-[1.2rem]"
+        />
+      </div>
+
+      {endsAt !== null && (
+        <div
+          data-stage-timer
+          aria-live="off"
+          className={`fixed right-6 top-6 z-50 rounded-2xl border-2 px-6 py-4 text-center shadow-card backdrop-blur ${
+            done
+              ? "border-danger-500 bg-danger-50/95 text-danger-700"
+              : urgent
+                ? "border-accent-500 bg-accent-50/95 text-accent-700"
+                : "border-brand-300 bg-[rgb(var(--surface))]/95"
+          }`}
+        >
+          <p className="text-xs font-bold uppercase tracking-widest opacity-70">
+            {done ? "Hết giờ" : "Còn lại"}
+          </p>
+          <p className="text-6xl font-bold leading-none tabular-nums">{mmss(left)}</p>
+        </div>
+      )}
+    </>,
     document.body,
   );
 }

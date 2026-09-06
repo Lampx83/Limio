@@ -89,7 +89,10 @@ export default function LessonContent({
   return (
     <div className="space-y-6">
       {items.map((item) => (
-        <div key={item.id}>
+        // data-item-id: mốc neo ổn định giữa cửa sổ điều khiển và màn chiếu.
+        // Không đánh theo thứ tự được — cửa sổ điều khiển có thêm các khối ghi
+        // chú giảng viên xen giữa, nên khối thứ 3 ở hai bên là hai thứ khác nhau.
+        <div key={item.id} data-item-id={item.id}>
           <ContentBlock
             type={item.type}
             payload={item.payload}
