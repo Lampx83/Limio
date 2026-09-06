@@ -521,7 +521,10 @@ export function markdownToHtml(
       out.push(
         `<figure style="margin:1.2rem 0">` +
           `<img src="${esc(img[2]!)}" alt="${esc(img[1] ?? "")}" loading="lazy" ` +
-          `style="max-width:100%;height:auto;border:1px solid ${RULE};border-radius:.5rem;display:block">` +
+          // max-height cũng đặt thẳng vào thẻ: bản in và mọi nơi render lại HTML này
+          // ngoài trang bài học đều không có lớp CSS của app để dựa vào.
+          `style="max-width:100%;max-height:70vh;width:auto;height:auto;border:1px solid ${RULE};` +
+          `border-radius:.5rem;display:block;margin-inline:auto">` +
           (img[3]
             ? `<figcaption style="font-size:${CAPTION};color:${MUTED};line-height:1.6;margin:.45rem 0 0">${inline(img[3])}</figcaption>`
             : "") +

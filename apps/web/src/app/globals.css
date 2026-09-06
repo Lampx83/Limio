@@ -496,6 +496,19 @@ body.gameshow-immersive main.mx-auto {
   }
 }
 
+/* Ảnh trong bài không được cao hơn một màn hình.
+   Ảnh học liệu hay là ảnh dọc hoặc sơ đồ cao (thang Bloom, kim tự tháp, ảnh
+   chụp cửa): giới hạn theo bề RỘNG thôi thì một tấm vẫn chiếm hai màn hình,
+   nên chiếu lên lớp là phải cuộn giữa chừng — lúc ấy nửa lớp nhìn phần trên,
+   nửa nhìn phần dưới. Chặn theo chiều cao khung nhìn thì tấm nào cũng lọt
+   trong một khung, chỉ nhỏ lại chứ không mất gì.
+   `width:auto` để tỉ lệ ảnh không méo khi chiều cao bị chặn. */
+#lesson-content img {
+  max-height: 70vh;
+  width: auto;
+  margin-inline: auto;
+}
+
 /* ── Màn chiếu (?stage=1) ────────────────────────────────────────────────────
    Cửa sổ thứ hai mà giảng viên kéo sang máy chiếu. Vẫn đúng trang bài học ấy,
    chỉ bỏ mọi thứ không phải nội dung và phóng cỡ chữ lên — người ngồi cuối lớp
@@ -522,6 +535,12 @@ main[data-stage="1"] #lesson-content {
 }
 main[data-stage="1"] #lesson-content h2 {
   margin-top: 1.2rem;
+}
+/* Trên màn chiếu chặn chặt hơn: còn phải chừa chỗ cho tiêu đề mục phía trên và
+   dòng chú thích nguồn phía dưới, nếu không thì ảnh lọt màn hình mà chú thích
+   lại rơi xuống dưới mép. */
+main[data-stage="1"] #lesson-content img {
+  max-height: 58vh;
 }
 /* Thanh tiêu đề và chân trang của site nằm ngoài <main>, và không phải con
    trực tiếp của body (layout bọc thêm vài lớp div) — nên bắt ở bất kỳ độ sâu
