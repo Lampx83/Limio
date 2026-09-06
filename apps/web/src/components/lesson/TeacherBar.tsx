@@ -437,7 +437,7 @@ export default function TeacherBar({
         onClick={() => setOpen(true)}
         aria-label="Mở bảng điều khiển giảng viên"
         title="Bảng điều khiển giảng viên: ghi chú, màn chiếu, đếm ngược, công cụ lớp học"
-        className="fixed bottom-40 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg transition-transform hover:scale-105"
+        className="fixed bottom-52 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg transition-transform hover:scale-105"
       >
         <GraduationCap size={20} />
         {(focus || endsAt !== null) && (
@@ -644,7 +644,7 @@ export default function TeacherBar({
       )}
 
       {picking && (
-        <div className="fixed bottom-40 left-1/2 z-40 -translate-x-1/2 rounded-full border border-brand-600 bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-card">
+        <div className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-brand-600 bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-card">
           Rê chuột lên nội dung rồi bấm vào phần muốn chiếu to · Esc để thoát
         </div>
       )}

@@ -1,5 +1,7 @@
 "use client";
 
+import { Bot } from "lucide-react";
+
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 
@@ -142,9 +144,17 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-brand-gradient px-5 py-3 text-sm font-semibold text-white shadow-brand-glow transition-all hover:scale-105"
+        aria-label="Mở AI Tutor"
+        title="AI Tutor — hỏi lại phần chưa hiểu trong bài"
+        /*
+          Nút tròn 44px, xếp thành cột nút nổi bên phải cùng nút ghi chú và nút
+          giảng viên: ba nút cùng cỡ, cùng lề phải, cách đều nhau. Trước đây đây
+          là một viên thuốc có chữ, to hơn hẳn hai nút kia và lệch lề — nhìn như
+          ba thứ không liên quan xếp cạnh nhau.
+        */
+        className="fixed bottom-20 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand-glow transition-transform hover:scale-105"
       >
-        AI Tutor
+        <Bot size={20} />
       </button>
     );
   }
