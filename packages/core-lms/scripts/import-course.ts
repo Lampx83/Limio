@@ -158,6 +158,16 @@ export const LessonSpec = z.object({
    * có mục lục, ngắn hơn thì không (mục lục 2 dòng chỉ tổ chiếm chỗ).
    */
   toc: z.boolean().optional(),
+  /**
+   * Cắt thân bài thành mỗi mục cấp 2 một khối nội dung riêng, thay vì một khối
+   * dài. Dùng khi bài cần chèn ghi chú giảng viên xen giữa các mục — ghi chú là
+   * khối riêng, nên chỉ chèn được vào KHE giữa hai khối.
+   *
+   * Cắt sau khi đã render nguyên bài, không phải render từng mục: mục lục và số
+   * thứ tự tiêu đề được đánh một lần cho cả bài, cắt trước thì mỗi mục lại tự
+   * đánh số từ 1.
+   */
+  splitSections: z.boolean().optional(),
   quiz: z
     .object({
       title: z.string().min(1).max(200),
@@ -937,7 +947,23 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   if (l.vocab?.length) blocks.push(vocabTable(l.vocab));
   if (l.dialogue) blocks.push(renderDialogue(l.dialogue));
   if (l.patterns) blocks.push(patternTable(l.patterns));
-  if (l.body) blocks.push(markdownToHtml(l.body, { toc: l.toc }));
+  if (l.body) {
+    const html = markdownToHtml(l.body, { toc: l.toc });
+    if (l.splitSections) {
+      // Cắt ngay trước mỗi <h2>. Phần trước tiêu đề đầu tiên (mục lục trong
+      // bài, đoạn dẫn) GỘP vào mục 1 chứ không đứng riêng: để riêng thì trên
+      // màn rộng — nơi mục lục trong bài bị ẩn vì đã có mục lục nổi bên trái —
+      // nó thành một khung rỗng cao 34px.
+      const parts = html.split(/(?=<h2 )/).filter((x) => x.trim() !== "");
+      if (parts.length > 1 && !parts[0]!.startsWith("<h2 ")) {
+        parts[1] = parts[0]! + parts[1]!;
+        parts.shift();
+      }
+      blocks.push(...parts);
+    } else {
+      blocks.push(html);
+    }
+  }
 
   if (l.summary?.length) blocks.push(summaryBox(l.summary));
   return blocks;

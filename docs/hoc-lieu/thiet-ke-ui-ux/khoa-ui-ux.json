@@ -184,6 +184,7 @@
         {
           "title": "Bài 1.1 · UX và UI là hai việc khác nhau",
           "description": "Trải nghiệm là toàn bộ hành trình đạt mục tiêu; giao diện là lớp người dùng chạm vào.",
+          "splitSections": true,
           "objectives": [
             "Phân biệt được vấn đề thuộc giao diện với vấn đề thuộc trải nghiệm.",
             "Xếp được một vấn đề vào đúng tầng của sản phẩm và chọn cách kiểm chứng.",
