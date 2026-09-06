@@ -23,6 +23,7 @@ import LessonTasksTab, {
 import LessonStickyActions from "@/components/lesson/LessonStickyActions";
 import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
 import LessonEngagementTracker from "@/components/lesson/LessonEngagementTracker";
+import ScrollEnds from "@/components/ScrollEnds";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import LessonSectionNav from "@/components/lesson/LessonSectionNav";
@@ -534,6 +535,10 @@ export default async function LessonPage({
         vào là làm hỏng chính con số ta định dùng.
       */}
       {enrollment && !stageMode && <LessonEngagementTracker lessonId={lesson.id} />}
+
+      {/* Bài học là trang dài nhất hệ thống có. Xếp tiếp vào cột nút nổi bên
+          phải; ẩn khi đang chiếu, vì lúc đó cả lớp nhìn vào màn hình. */}
+      {!stageMode && <ScrollEnds className="fixed bottom-[17rem] right-4 z-30" />}
 
       <div className="mt-6">
         <LessonCompletionPrompt

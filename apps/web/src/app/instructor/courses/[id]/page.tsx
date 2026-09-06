@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ScrollEnds from "@/components/ScrollEnds";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import {
@@ -184,6 +185,10 @@ export default async function InstructorCourseEditPage({
   const useSidebarLayout = tab === "content";
 
   return (
+    <>
+    {/* Trang soạn khoá dài không kém trang bài học — nhất là khi mở một bài có
+        hai chục khối nội dung. Góc dưới bên phải ở đây đang trống. */}
+    <ScrollEnds className="fixed bottom-4 right-4 z-30" />
     <main
       className={
         useWideLayout
@@ -501,5 +506,6 @@ export default async function InstructorCourseEditPage({
         </div>
       )}
     </main>
+    </>
   );
 }
