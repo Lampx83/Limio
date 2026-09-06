@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight, MonitorPlay, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, MonitorPlay, Pause, Play, Wrench } from "lucide-react";
 
 /**
  * Thanh điều khiển của giảng viên khi đang dạy: bật/tắt ghi chú, mở cửa sổ
@@ -303,6 +303,29 @@ export default function TeacherBar({
             đang mở
           </span>
         )}
+      </button>
+
+      {/*
+        Công cụ lớp học mở ở CỬA SỔ RIÊNG, không nhúng vào trang bài.
+        Đang dạy thì ba thứ chạy song song: bài trên cửa sổ điều khiển, nội dung
+        trên máy chiếu, và đồng hồ hoặc khảo sát trên cửa sổ thứ ba — nhúng vào
+        bài thì mở công cụ là che mất chỗ đang đọc, mà đóng lại là mất đồng hồ.
+        Cửa sổ mang tên cố định nên bấm nhiều lần cũng chỉ một cửa sổ.
+      */}
+      <button
+        type="button"
+        onClick={() =>
+          window.open(
+            `/instructor/classroom/${lessonId}`,
+            "limio-tools",
+            "width=520,height=900",
+          )
+        }
+        title="Bấm giờ, bốc thăm gọi tên, khảo sát nhanh, chia nhóm, word cloud — mở ở cửa sổ riêng cho đúng bài này."
+        className="inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
+      >
+        <Wrench size={16} />
+        Công cụ lớp học
       </button>
 
       {sections.length > 1 && (

@@ -37,9 +37,11 @@ jobs:
       # for CI to check and we proceed. Manual `workflow_dispatch` also skips,
       # so a rollback is never blocked by a red build.
       - name: Wait for CI to pass
+        id: ci-gate
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
+          BRANCH_API: https://api.github.com/repos/${{ github.repository }}/branches/main
           RUNS_API: https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&per_page=1
           WORKFLOW_API: https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml
         run: |
@@ -47,6 +49,36 @@ jobs:
           # curl + jq, not `gh` — the self-hosted runner has no gh CLI, and the
           # first version of this gate silently treated that failure as "no CI
           # run exists" and deployed anyway.
+
+          # Commit này còn là đầu nhánh main không?
+          #
+          # Push liên tiếp là chuyện bình thường ở đây. Khi có commit mới, CI của
+          # commit cũ bị huỷ (ci.yml đặt cancel-in-progress), và lượt deploy cũ
+          # ngồi chờ tới 20 phút một kết quả sẽ không bao giờ tới, rồi đỏ — trong
+          # khi lượt deploy mới xếp hàng phía sau vì deploy-prod không cho chạy
+          # song song. Tức là mỗi lần push nhanh tay lại mất thêm 20 phút và một
+          # dấu X đỏ, cho một tình huống hoàn toàn bình thường.
+          #
+          # Commit cũ thì bỏ qua luôn: commit mới đã chở nội dung của nó rồi.
+          is_superseded() {
+            b=$(mktemp)
+            c=$(curl -sS -o "$b" -w '%{http_code}' \
+                  -H "Authorization: Bearer ${GH_TOKEN}" \
+                  -H "Accept: application/vnd.github+json" \
+                  "$BRANCH_API" || echo 000)
+            tip=""
+            [ "$c" = "200" ] && tip=$(jq -r '.commit.sha // ""' "$b")
+            rm -f "$b"
+            # Không đọc được đầu nhánh thì coi như KHÔNG bị thay thế: thà chờ CI
+            # rồi báo đỏ, còn hơn lặng lẽ bỏ qua một lượt deploy thật.
+            [ -n "$tip" ] && [ "$tip" != "$GITHUB_SHA" ]
+          }
+
+          if is_superseded; then
+            echo "::notice::main đã có commit mới hơn — bỏ qua lượt deploy của $GITHUB_SHA"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           # If CI is disabled outright (Actions UI toggle, or the file is
           # deleted), `total_count` below stays 0 forever — identical to the
@@ -105,6 +137,11 @@ jobs:
               if [ "$concl" = "success" ]; then
                 echo "CI xanh — tiếp tục deploy"; exit 0
               fi
+              if [ "$concl" = "cancelled" ] && is_superseded; then
+                echo "::notice::CI bị huỷ vì có commit mới hơn — bỏ qua lượt deploy này"
+                echo "skip=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
               echo "::error::CI $concl — dừng deploy"; exit 1
             fi
             echo "CI đang chạy ($status)..."
@@ -113,6 +150,7 @@ jobs:
           echo "::error::Hết thời gian chờ CI"; exit 1
 
       - name: Checkout
+        if: steps.ci-gate.outputs.skip != 'true'
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.sha }}
@@ -125,6 +163,7 @@ jobs:
           fetch-tags: true
 
       - name: Verify prerequisites on runner
+        if: steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
           docker version
@@ -132,6 +171,7 @@ jobs:
           test -f "$ENV_FILE" || { echo "::error::Missing $ENV_FILE on runner"; exit 1; }
 
       - name: Build images
+        if: steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
           # --pull omitted: base images (node:20-alpine, alpine:3.20) are
@@ -146,12 +186,14 @@ jobs:
           docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
 
       - name: Apply database migrations
+        if: steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
           docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" \
             run --rm migrate
 
       - name: Seed demo users
+        if: steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
           # Idempotent: seed-demo-users checks existence before inserting.
@@ -161,6 +203,7 @@ jobs:
             ./node_modules/.bin/tsx src/seed-demo-users.ts
 
       - name: Roll out services
+        if: steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
           # Tintin — scale web tới WEB_REPLICAS (default 3) cho exam concurrency.
@@ -174,6 +217,7 @@ jobs:
             postgres redis pgbouncer web web-proxy worker cron
 
       - name: Wait for web replicas to become healthy
+        if: steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
           # Mỗi replica có healthcheck riêng — đợi TẤT CẢ thành healthy
@@ -207,11 +251,11 @@ jobs:
           exit 1
 
       - name: Prune dangling images
-        if: always()
+        if: always() && steps.ci-gate.outputs.skip != 'true'
         run: docker image prune -f
 
       - name: Summary
-        if: success()
+        if: success() && steps.ci-gate.outputs.skip != 'true'
         run: |
           {
             echo "### Deployed"
@@ -226,7 +270,7 @@ jobs:
       # Đọc NEXTAUTH_URL + CRON_SECRET từ .env.prod — không cần secret riêng trong GitHub.
       # Bước này non-fatal: deploy không bị revert nếu ghi DB thất bại.
       - name: Record release in app DB
-        if: success()
+        if: success() && steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
           SHORT="${{ github.sha }}"
