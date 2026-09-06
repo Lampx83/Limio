@@ -104,3 +104,47 @@ cuộn hết bài rồi vứt đi, chỉ gửi lên một chuỗi `reason`.
 4.1 Mọi lỗi mạng của đường đo đều bị nuốt; người học không bao giờ thấy lỗi.
 4.2 Số liệu nằm trong `useRef`, không phải `useState` — cuộn và video chạy
     không được kéo theo một lượt vẽ lại trang bài học.
+
+---
+
+# B12 — Thời gian thật của từng câu hỏi
+
+**Bối cảnh.** `AnswerResponse.responseTimeMs` mang tên gợi ý "thời gian trả
+lời", nhưng công thức là `answeredAt − attempt.startedAt`: thời gian cộng dồn
+từ lúc bắt đầu cả lượt làm bài. Câu cuối luôn "lâu" hơn câu đầu bất kể khó dễ.
+Tệ hơn, `QuizPlayer` gửi **toàn bộ đáp án một lượt lúc bấm nộp**, nên nhìn từ
+máy chủ thì cả bài trông như được trả lời cùng một khoảnh khắc. Và mỗi lần
+người học sửa đáp án, hàng cũ bị ghi đè — mất luôn dấu vết đổi ý.
+
+## Acceptance criteria
+
+**AC-1 — Không đổi nghĩa dữ liệu cũ**
+1.1 `responseTimeMs` giữ nguyên công thức và nguyên nghĩa. Đổi nghĩa một cột
+    đang có là làm hỏng dữ liệu cũ một cách lặng lẽ.
+1.2 Thời gian thật nằm ở cột mới `latencyMs`, **nullable** — hàng trước B12
+    không có số đo này và không được làm cho giống như đã có.
+
+**AC-2 — Đo ở nơi duy nhất biết sự thật**
+2.1 Máy khách cộng dồn số mili-giây mỗi câu **đang hiện trên màn hình**, vì chỉ
+    máy khách biết câu nào đang hiện.
+2.2 Người học đi tới đi lui giữa các câu thì các quãng được cộng dồn, không
+    phải "lúc vào trừ lúc ra" một lần.
+2.3 Không tính giờ khi tab bị ẩn.
+2.4 Chốt sổ câu đang mở trước khi nộp — nếu không thì đúng câu người học ngồi
+    lâu nhất lại là câu duy nhất không được tính giờ.
+
+**AC-3 — Thà trống còn hơn sai**
+3.1 Máy khách cũ không gửi `latencyMs` ⇒ để trống, **không** lấy tạm
+    `responseTimeMs`.
+3.2 Khai dài hơn cả lượt làm bài ⇒ **bỏ hẳn số đo**, không kẹp về mức hợp lệ.
+    Kẹp lại biến một lỗi thành con số trông rất bình thường, mà con số trông
+    bình thường thì không ai kiểm tra nữa. `latencyMs` là một khoảng thời gian
+    do máy khách tự đo chứ không phải mốc thời gian, nên lệch đồng hồ giữa hai
+    máy không biện minh được cho chuyện này.
+3.3 Trần hai tiếng cho một câu: quá mốc đó thì người học đã bỏ đi làm việc
+    khác, con số không còn nói lên độ khó của câu hỏi.
+
+**AC-4 — Giữ dấu vết đổi ý**
+4.1 `revisionCount` đếm số lần sửa lại đáp án. Đáp án cũ bị ghi đè nên không
+    đếm ở đây thì không còn dấu vết nào khác.
+4.2 `quiz.question.answered` mang theo cả `latencyMs` lẫn `revisionCount`.

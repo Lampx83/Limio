@@ -48,6 +48,13 @@ const MatchPair = z.object({
   rightId: z.string(),
 });
 
+/**
+ * Trần cho thời gian một câu: hai tiếng. Quá mốc này thì gần như chắc chắn
+ * người học để tab đó rồi đi làm việc khác — con số không còn nói lên độ khó
+ * của câu hỏi nữa, và giữ lại chỉ làm lệch mọi giá trị trung bình.
+ */
+export const MAX_LATENCY_MS = 2 * 60 * 60 * 1000;
+
 export const SubmitAnswerInput = z.object({
   questionId: z.string().uuid(),
   response: z.union([
@@ -57,6 +64,15 @@ export const SubmitAnswerInput = z.object({
     z.array(MatchPair),
   ]),
   confidence: z.number().int().min(1).max(5).optional(),
+  /**
+   * B12 — số mili-giây từ lúc câu hỏi hiện ra tới lúc người học chọn xong. Chỉ
+   * máy khách biết câu nào đang hiện nên phải do máy khách đo và gửi lên.
+   *
+   * Máy khách cũ không gửi trường này; khi đó `latencyMs` để trống chứ không
+   * lấy tạm `responseTimeMs`, vì hai đại lượng đó khác nhau và trộn vào nhau
+   * là làm hỏng chính con số ta định dùng để đo độ khó.
+   */
+  latencyMs: z.number().int().min(0).max(MAX_LATENCY_MS).optional(),
 });
 
 interface QuizForAttempt {
@@ -172,7 +188,27 @@ export async function submitAnswer(
   }
 
   const answeredAt = new Date();
+  // Giữ tên cũ và nghĩa cũ: số mili-giây tính từ lúc bắt đầu cả lượt làm bài.
+  // Dữ liệu cũ đã ghi theo nghĩa này, đổi nghĩa của một cột đang có là làm
+  // hỏng dữ liệu cũ một cách lặng lẽ. Thời gian thật của từng câu nằm ở
+  // `latencyMs` — cột mới, nullable.
   const responseTimeMs = answeredAt.getTime() - attempt.startedAt.getTime();
+
+  // Thời gian riêng một câu không thể dài hơn cả lượt làm bài. Khai dài hơn
+  // nghĩa là máy khách tính sai hoặc cố tình — bỏ hẳn số đó thay vì kẹp về mức
+  // hợp lệ. Kẹp lại sẽ biến một lỗi thành con số trông rất bình thường, và một
+  // con số trông bình thường thì không ai kiểm tra nữa. `latencyMs` là một
+  // khoảng thời gian do máy khách tự đo, không phải mốc thời gian, nên lệch
+  // đồng hồ giữa hai máy không phải lý do biện minh cho chuyện này.
+  const latencyMs =
+    parsed.data.latencyMs === undefined || parsed.data.latencyMs > responseTimeMs
+      ? null
+      : parsed.data.latencyMs;
+
+  const prior = await db.answerResponse.findUnique({
+    where: { attemptId_questionId: { attemptId, questionId: parsed.data.questionId } },
+    select: { revisionCount: true },
+  });
 
   // Grade now (so isCorrect is stored), but final score computed at submit-time.
   const fullQuestion = await db.quizQuestion.findUniqueOrThrow({
@@ -191,6 +227,8 @@ export async function submitAnswer(
       needsGrading: evalResult.needsGrading ?? false,
       confidence: parsed.data.confidence ?? null,
       responseTimeMs,
+      latencyMs,
+      revisionCount: 0,
       answeredAt,
     },
     update: {
@@ -200,6 +238,11 @@ export async function submitAnswer(
       manualScore: null,
       confidence: parsed.data.confidence ?? null,
       responseTimeMs,
+      latencyMs,
+      // Sửa lại đáp án là một tín hiệu khác hẳn trả lời một phát ăn ngay,
+      // nhất là khi ghép với độ tự tin. Đếm lần sửa vì bản thân đáp án cũ bị
+      // ghi đè — không đếm ở đây thì không còn dấu vết nào.
+      revisionCount: (prior?.revisionCount ?? 0) + 1,
       answeredAt,
     },
   });
@@ -214,6 +257,8 @@ export async function submitAnswer(
       isCorrect: evalResult.isCorrect,
       confidence: parsed.data.confidence,
       responseTimeMs,
+      latencyMs,
+      revisionCount: (prior?.revisionCount ?? 0) + (prior ? 1 : 0),
     },
     { courseId: quiz.courseId ?? undefined },
     db,

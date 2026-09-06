@@ -666,7 +666,18 @@ model AnswerResponse {
   manualScore    Int?
   // 1-5 confidence rating (A4.3).
   confidence     Int?
+  /// KHÔNG phải thời gian làm câu này. Đây là số mili-giây tính từ lúc bắt đầu
+  /// cả lượt làm bài, nên câu cuối luôn "lâu" hơn câu đầu bất kể khó dễ. Giữ
+  /// lại vì dữ liệu cũ đã ghi theo nghĩa này; đo độ khó thì dùng `latencyMs`.
   responseTimeMs Int
+  /// B12 — thời gian thật của riêng câu này: từ lúc câu hiện ra tới lúc người
+  /// học chọn xong. Do máy khách đo, vì chỉ máy khách biết câu nào đang hiện.
+  /// Null ở hàng trước B12 và ở hàng máy khách không gửi lên — để trống chứ
+  /// không suy ra từ `responseTimeMs`, vì hai đại lượng đó khác nhau.
+  latencyMs      Int?
+  /// Số lần người học sửa lại đáp án của câu này. Đổi ý là một tín hiệu khác
+  /// hẳn trả lời một phát ăn ngay, nhất là khi ghép với độ tự tin.
+  revisionCount  Int      @default(0)
   answeredAt     DateTime @default(now())
 
   attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)

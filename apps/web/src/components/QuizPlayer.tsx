@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -105,6 +105,17 @@ export default function QuizPlayer({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  /**
+   * B12 — thời gian thật của từng câu, cộng dồn theo mili-giây câu đó đang
+   * hiện trên màn hình.
+   *
+   * Phải đo ở đây vì mọi đáp án chỉ được gửi lên một lượt lúc bấm nộp: nhìn từ
+   * máy chủ thì cả bài trông như được trả lời cùng một khoảnh khắc. Và người
+   * học đi tới đi lui giữa các câu, nên "lúc vào trừ lúc ra" một lần là không
+   * đủ — phải cộng dồn từng quãng.
+   */
+  const latencyRef = useRef<Record<string, number>>({});
+  const stepEnteredAtRef = useRef<number>(Date.now());
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -129,6 +140,23 @@ export default function QuizPlayer({
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [data?.quiz.timeLimitSec]);
+
+  // B12 — không tính giờ khi người học rời tab. Cùng lý do như bộ đo thời gian
+  // đọc bài: để tab đó rồi đi ăn cơm không phải là đang nghĩ về câu hỏi, và một
+  // con số sai vẫn sẽ được đem đi so sánh độ khó giữa các câu.
+  // Không có mảng phụ thuộc: phải gắn lại mỗi lượt vẽ để bắt đúng câu đang mở.
+  // Thêm/gỡ một listener là rẻ; đọc nhầm câu thì số liệu sai.
+  useEffect(() => {
+    // `data` chưa về thì `quiz` bên dưới còn chưa khởi tạo — gọi flushLatency
+    // lúc này sẽ ném lỗi tham chiếu.
+    if (!data) return;
+    function onVisibility() {
+      if (document.visibilityState === "hidden") flushLatency();
+      else stepEnteredAtRef.current = Date.now();
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  });
 
   if (!data) {
     return (
@@ -189,11 +217,15 @@ export default function QuizPlayer({
         questionId: question.id,
         response: a.response,
         confidence: a.confidence ?? undefined,
+        latencyMs: latencyRef.current[question.id],
       }),
     });
   }
 
   async function onSubmit() {
+    // Chốt sổ câu đang mở trước khi gửi, nếu không thì đúng câu người học vừa
+    // ngồi lâu nhất lại là câu duy nhất không được tính giờ.
+    flushLatency();
     setSubmitting(true);
     setError(null);
     for (const q of quiz.questions) {
@@ -227,8 +259,20 @@ export default function QuizPlayer({
   const isFirst = currentStepIndex === 0;
   const isLast = currentStepIndex === quiz.questions.length - 1;
 
+  /** Dồn quãng vừa rồi vào câu đang hiện, rồi đặt lại mốc. */
+  function flushLatency() {
+    const q = quiz.questions[currentStepIndex];
+    if (!q) return;
+    const now = Date.now();
+    latencyRef.current[q.id] = (latencyRef.current[q.id] ?? 0) + (now - stepEnteredAtRef.current);
+    stepEnteredAtRef.current = now;
+  }
+
   function jumpTo(idx: number) {
-    setCurrentStepIndex(Math.max(0, Math.min(quiz.questions.length - 1, idx)));
+    const next = Math.max(0, Math.min(quiz.questions.length - 1, idx));
+    if (next === currentStepIndex) return;
+    flushLatency();
+    setCurrentStepIndex(next);
   }
 
   return (

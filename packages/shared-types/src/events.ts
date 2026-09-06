@@ -170,7 +170,12 @@ export interface QuizQuestionAnsweredPayload {
   optionIds: string[];
   isCorrect: boolean;
   confidence?: number;
+  /** Mili-giây từ lúc bắt đầu cả lượt làm bài — KHÔNG phải thời gian câu này. */
   responseTimeMs: number;
+  /** B12 — thời gian thật của riêng câu này. Null khi máy khách không gửi. */
+  latencyMs: number | null;
+  /** Số lần người học sửa lại đáp án của câu này trước khi nộp. */
+  revisionCount: number;
 }
 
 export interface EnrollmentCreatedPayload {

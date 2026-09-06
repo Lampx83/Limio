@@ -318,3 +318,107 @@ describe("submitAnswer + submitAttempt", () => {
     await expect(startAttempt(learner.userId, q.quizId)).rejects.toBeInstanceOf(QuizError);
   });
 });
+
+describe("B12 — thời gian thật của từng câu", () => {
+  it("lưu latencyMs do máy khách gửi, tách khỏi responseTimeMs cộng dồn", async () => {
+    const { learnerId, quizId, questionIds } = await setup("b12a");
+    const att = await startAttempt(learnerId, quizId);
+    const correct = await getOptionId(questionIds[0]!, "2");
+    // Để lượt làm bài trôi qua một chút, nếu không thì 40 ms "suy nghĩ" sẽ dài
+    // hơn cả lượt làm bài và bị loại đúng theo quy tắc bên dưới.
+    await new Promise((r) => setTimeout(r, 120));
+
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: questionIds[0]!,
+      response: [correct],
+      latencyMs: 40,
+    });
+
+    const row = await prisma.answerResponse.findFirstOrThrow({
+      where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+    });
+    expect(row.latencyMs).toBe(40);
+    // Cột cũ giữ nguyên nghĩa cũ — thời gian từ lúc bắt đầu cả lượt làm bài.
+    expect(row.responseTimeMs).toBeGreaterThanOrEqual(0);
+    expect(row.revisionCount).toBe(0);
+  });
+
+  it("để trống latencyMs khi máy khách không gửi — không lấy tạm số cộng dồn", async () => {
+    const { learnerId, quizId, questionIds } = await setup("b12b");
+    const att = await startAttempt(learnerId, quizId);
+    const correct = await getOptionId(questionIds[0]!, "2");
+
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: questionIds[0]!,
+      response: [correct],
+    });
+
+    const row = await prisma.answerResponse.findFirstOrThrow({
+      where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+    });
+    expect(row.latencyMs).toBeNull();
+  });
+
+  it("bỏ hẳn số đo khi máy khách khai dài hơn cả lượt làm bài, không kẹp lại", async () => {
+    const { learnerId, quizId, questionIds } = await setup("b12c");
+    const att = await startAttempt(learnerId, quizId);
+    const correct = await getOptionId(questionIds[0]!, "2");
+
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: questionIds[0]!,
+      response: [correct],
+      latencyMs: 60 * 60 * 1000,
+    });
+
+    const row = await prisma.answerResponse.findFirstOrThrow({
+      where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+    });
+    // Không kẹp về một giá trị trông hợp lý — để trống, vì số đó không tin được.
+    expect(row.latencyMs).toBeNull();
+  });
+
+  it("đếm số lần sửa lại đáp án — đáp án cũ bị ghi đè nên không còn dấu vết nào khác", async () => {
+    const { learnerId, quizId, questionIds } = await setup("b12d");
+    const att = await startAttempt(learnerId, quizId);
+    const right = await getOptionId(questionIds[0]!, "2");
+    const wrong = await getOptionId(questionIds[0]!, "3");
+
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: questionIds[0]!,
+      response: [wrong],
+      latencyMs: 1000,
+    });
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: questionIds[0]!,
+      response: [right],
+      latencyMs: 5000,
+    });
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: questionIds[0]!,
+      response: [wrong],
+      latencyMs: 9000,
+    });
+
+    const row = await prisma.answerResponse.findFirstOrThrow({
+      where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+    });
+    expect(row.revisionCount).toBe(2);
+    expect(row.isCorrect).toBe(false);
+  });
+
+  it("từ chối latencyMs âm hoặc quá trần hai tiếng", async () => {
+    const { learnerId, quizId, questionIds } = await setup("b12e");
+    const att = await startAttempt(learnerId, quizId);
+    const correct = await getOptionId(questionIds[0]!, "2");
+
+    for (const bad of [-1, 3 * 60 * 60 * 1000]) {
+      await expect(
+        submitAnswer(learnerId, att.attemptId, {
+          questionId: questionIds[0]!,
+          response: [correct],
+          latencyMs: bad,
+        }),
+      ).rejects.toThrow(QuizError);
+    }
+  });
+});
