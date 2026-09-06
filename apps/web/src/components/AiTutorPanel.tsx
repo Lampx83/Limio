@@ -1,6 +1,7 @@
 "use client";
 
 import { Bot } from "lucide-react";
+import { FabTip } from "./lesson/TeacherBar";
 
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
@@ -152,9 +153,10 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
           là một viên thuốc có chữ, to hơn hẳn hai nút kia và lệch lề — nhìn như
           ba thứ không liên quan xếp cạnh nhau.
         */
-        className="fixed bottom-20 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand-glow transition-transform hover:scale-105"
+        className="group fixed bottom-20 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand-glow transition-transform hover:scale-105"
       >
         <Bot size={20} />
+              <FabTip>Trợ giảng AI</FabTip>
       </button>
     );
   }

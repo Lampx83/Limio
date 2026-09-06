@@ -7,7 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Crop,
-  GraduationCap,
+  Presentation,
   Hourglass,
   MonitorPlay,
   Pause,
@@ -124,6 +124,25 @@ function Toggle({
         {on ? "BẬT" : "TẮT"}
       </span>
     </button>
+  );
+}
+
+/**
+ * Nhãn hiện khi rê chuột vào một nút nổi.
+ *
+ * Ba nút xếp dọc ở mép phải chỉ có biểu tượng, và biểu tượng thì đoán được chứ
+ * không đọc được — `title` của trình duyệt phải chờ cả giây mới hiện, đủ lâu để
+ * người dùng bỏ cuộc và bấm thử. Nhãn này hiện ngay, nằm bên trái nút nên
+ * không tràn ra ngoài mép màn hình.
+ */
+export function FabTip({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute right-full mr-2 whitespace-nowrap rounded-md bg-[rgb(var(--text))] px-2 py-1 text-xs font-medium text-[rgb(var(--surface))] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+    >
+      {children}
+    </span>
   );
 }
 
@@ -450,10 +469,12 @@ export default function TeacherBar({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mở bảng điều khiển giảng viên"
-        title="Bảng điều khiển giảng viên: ghi chú, màn chiếu, đếm ngược, công cụ lớp học"
-        className="fixed bottom-52 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg transition-transform hover:scale-105"
+        className="group fixed bottom-52 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg transition-transform hover:scale-105"
       >
-        <GraduationCap size={20} />
+        {/* Mũ tốt nghiệp đọc ra "sinh viên", không phải "giảng viên" — bảng
+            giảng, đúng nghĩa hơn cho một bảng điều khiển lúc đứng lớp. */}
+        <Presentation size={20} />
+        <FabTip>Bảng giảng viên</FabTip>
         {(focus || endsAt !== null) && (
           // Chấm báo: đang chiếu to hoặc đang đếm ngược thì lớp đang thấy thứ gì
           // đó do bảng này điều khiển, kể cả khi bảng đã đóng.
@@ -783,15 +804,19 @@ export function StageListener({ lessonId }: { lessonId: string }) {
           data-stage-timer
           aria-live="off"
           /*
-            To hết cỡ, nổi trên nội dung. Người ngồi cuối lớp nhìn máy chiếu từ
-            6–8 mét, nên con số phải cao vài chục xăng-ti-mét trên tường chứ
-            không phải một hộp nhỏ ở góc.
+            Một dải ngang cao xấp xỉ tiêu đề bài, không phải một khối choán góc
+            màn hình. Bản trước để chữ số 13vw — rộng gần nửa màn chiếu, đè lên
+            chỗ đáng nhìn nhất và ép dải tiêu đề phải chừa 48vw trống.
 
-            Cỡ chữ theo vw để tự vừa mọi máy chiếu; nền mờ có blur để phần nội
-            dung phía sau vẫn đọc được — đang làm bài tập thì đề bài vẫn cần
-            nhìn thấy, không chỉ mỗi đồng hồ.
+            Trong dải đó thì con số lấy hết chỗ còn lại: nhãn nằm cùng hàng chứ
+            không nằm trên (nằm trên là cộng thêm một dòng chiều cao), và chữ
+            số dùng `leading-none` để hộp không cao hơn chính chữ.
+
+            Cỡ chữ theo clamp: sàn cho máy chiếu độ phân giải thấp, trần để nó
+            không phình ra trên màn hình rất rộng. Nền mờ có blur để nội dung
+            phía sau vẫn đọc được.
           */
-          className={`pointer-events-none fixed right-8 top-8 z-50 rounded-3xl border-4 px-[3vw] py-[1.5vw] text-center shadow-card backdrop-blur-md ${
+          className={`pointer-events-none fixed right-6 top-6 z-50 flex items-baseline gap-3 rounded-2xl border-2 px-4 py-2 shadow-card backdrop-blur-md ${
             done
               ? "border-danger-500 bg-danger-50/90 text-danger-700"
               : urgent
@@ -799,10 +824,12 @@ export function StageListener({ lessonId }: { lessonId: string }) {
                 : "border-brand-400 bg-[rgb(var(--surface))]/85"
           }`}
         >
-          <p className="text-[1.6vw] font-bold uppercase tracking-[0.3em] opacity-70">
+          <span className="text-[clamp(0.7rem,1vw,1rem)] font-bold uppercase tracking-[0.2em] opacity-70">
             {done ? "Hết giờ" : "Còn lại"}
-          </p>
-          <p className="text-[13vw] font-bold leading-[0.9] tabular-nums">{mmss(left)}</p>
+          </span>
+          <span className="text-[clamp(1.8rem,3.4vw,3.4rem)] font-bold leading-none tabular-nums">
+            {mmss(left)}
+          </span>
         </div>
       )}
     </>,

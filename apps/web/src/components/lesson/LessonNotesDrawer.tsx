@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Pencil, X } from "lucide-react";
 import { LessonNotes } from "@/components/LessonActions";
+import { FabTip } from "./TeacherBar";
 
 export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
   const [open, setOpen] = useState(false);
@@ -23,9 +24,10 @@ export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mở ghi chú bài học này"
-        className="fixed bottom-36 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-transform hover:scale-105"
+        className="group fixed bottom-36 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-transform hover:scale-105"
       >
         <Pencil size={18} />
+              <FabTip>Ghi chú của tôi</FabTip>
       </button>
 
       {open && (
