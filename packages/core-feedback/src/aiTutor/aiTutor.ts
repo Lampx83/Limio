@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
+import { LearningEventType } from "@feedbackme/shared-types";
 
 export class AiTutorError extends Error {
   constructor(
@@ -353,6 +354,34 @@ export async function runChatTurn(
       tokensOutput: { increment: outputTokens },
       costUsd: { increment: costUsd },
       turns: { increment: 1 },
+    },
+  });
+
+  // B15 — ghi vào dòng hành vi. Trợ giảng AI trước đây là kênh duy nhất không
+  // phát event, nên khi dựng lại "em này làm gì trong buổi học" thì mọi lượt
+  // hỏi AI biến mất khỏi dòng thời gian. Với một thực nghiệm về phản hồi, đó
+  // đúng là biến cần nhìn: lớp bị cắt phản hồi có quay sang hỏi AI nhiều hơn
+  // không — nếu có thì AI đang bù vào chỗ trống và làm nhiễu phép so sánh.
+  //
+  // Phát SAU khi đã ghi xong tin nhắn: event nói rằng lượt hỏi đã hoàn tất,
+  // nên không được có mặt cho một lượt hỏng giữa chừng.
+  const lessonCourse = await db.lesson.findUnique({
+    where: { id: conv.lessonId },
+    select: { module: { select: { courseId: true } } },
+  });
+  await db.learningEvent.create({
+    data: {
+      userId: input.userId,
+      courseId: lessonCourse?.module.courseId ?? null,
+      eventType: LearningEventType.AiTutorAsked,
+      payload: {
+        lessonId: conv.lessonId,
+        conversationId: conv.id,
+        questionLength: input.userMessage.trim().length,
+        // `conv.messages` là ảnh chụp trước lượt này; mỗi lượt gồm một tin
+        // của người học và một tin của trợ giảng.
+        turnIndex: Math.floor(conv.messages.length / 2) + 1,
+      } as Prisma.InputJsonValue,
     },
   });
 

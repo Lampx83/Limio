@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { assertCanEditCourse, CourseAuthzError, getCourseEngagement } from "@feedbackme/core-lms";
+import { LearningEventType } from "@feedbackme/shared-types";
 import { requireUserId } from "@/lib/session";
 import { csvResponse } from "@/lib/csvExport";
 import { identityCols, learnerIndex } from "@/lib/researchExport";
@@ -39,7 +40,7 @@ export async function GET(
   });
   if (!course) return NextResponse.json({ error: "course_not_found" }, { status: 404 });
 
-  const [index, engagement, lessons] = await Promise.all([
+  const [index, engagement, lessons, tutorEvents] = await Promise.all([
     learnerIndex(params.courseId),
     getCourseEngagement(params.courseId),
     prisma.lesson.findMany({
@@ -52,9 +53,23 @@ export async function GET(
       },
       orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
     }),
+    // B15 — số lượt hỏi trợ giảng AI, đếm từ dòng event chứ không từ bảng hội
+    // thoại: hội thoại gộp theo cửa sổ 24 giờ nên đếm hội thoại sẽ đếm hụt.
+    prisma.learningEvent.findMany({
+      where: { courseId: params.courseId, eventType: LearningEventType.AiTutorAsked },
+      select: { userId: true, payload: true },
+    }),
   ]);
 
   const byPair = new Map(engagement.map((e) => [`${e.userId}:${e.lessonId}`, e]));
+
+  const tutorTurns = new Map<string, number>();
+  for (const e of tutorEvents) {
+    const lid = (e.payload as { lessonId?: string } | null)?.lessonId;
+    if (!e.userId || !lid) continue;
+    const k = `${e.userId}:${lid}`;
+    tutorTurns.set(k, (tutorTurns.get(k) ?? 0) + 1);
+  }
 
   const out: Array<Record<string, unknown>> = [];
   for (const [uid, ref] of index) {
@@ -70,6 +85,7 @@ export async function GET(
         "Cuộn sâu nhất (%)": e?.maxScrollPct ?? 0,
         "Xem video (%)": e?.maxVideoPct ?? 0,
         "Số lượt mở": e?.sessionCount ?? 0,
+        "Số lượt hỏi trợ giảng AI": tutorTurns.get(`${uid}:${l.id}`) ?? 0,
         "Lần cuối vào": e?.lastSeenAt ?? "",
       });
     }

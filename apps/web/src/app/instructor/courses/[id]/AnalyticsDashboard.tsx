@@ -92,6 +92,14 @@ const RESEARCH_REPORTS: Array<{
     endpoint: "research-feedback",
   },
   {
+    key: "research-ai-tutor",
+    icon: "🤖",
+    title: "Hội thoại với trợ giảng AI",
+    description:
+      "Từng tin nhắn, nguyên văn: ai hỏi gì ở bài nào, lượt thứ mấy, tốn bao nhiêu token.",
+    endpoint: "research-ai-tutor",
+  },
+  {
     key: "research-engagement",
     icon: "⏱️",
     title: "Hành vi đọc bài",

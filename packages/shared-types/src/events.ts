@@ -11,6 +11,7 @@ export const LearningEventType = {
   LessonCompleted: "lesson.completed",
   LessonEngaged: "lesson.engaged",
   EnrollmentSectionChanged: "enrollment.section_changed",
+  AiTutorAsked: "ai.tutor.asked",
   /** In-video quiz cuepoint passed (formative — not a full QuizAttempt). */
   VideoCuepointPassed: "video.cuepoint.passed",
   QuizStarted: "quiz.started",
@@ -190,6 +191,23 @@ export interface EnrollmentSectionChangedPayload {
   fromSectionId: string;
   toSectionId: string;
   via: "invite_link" | "instructor";
+}
+
+/**
+ * B15 — người học hỏi trợ giảng AI một lượt.
+ *
+ * KHÔNG mang nội dung câu hỏi. Nội dung đã nằm nguyên văn ở `AiMessage`; nhân
+ * bản nó sang một bảng append-only vĩnh viễn là tăng gấp đôi bề mặt dữ liệu
+ * nhạy cảm mà không trả lời thêm được câu hỏi nào. Cái dòng event này cần trả
+ * lời là "em ấy có hỏi không, hỏi bao nhiêu, ở bài nào, vào lúc nào".
+ */
+export interface AiTutorAskedPayload {
+  lessonId: string;
+  conversationId: string;
+  /** Số ký tự câu hỏi — đo mức đầu tư mà không lưu lại chữ nào. */
+  questionLength: number;
+  /** Lượt thứ mấy trong hội thoại này. Lượt 5 khác hẳn lượt 1. */
+  turnIndex: number;
 }
 
 export interface EnrollmentCreatedPayload {
