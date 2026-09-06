@@ -1,8 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight, MonitorPlay, Pause, Play, Wrench } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Hourglass,
+  MonitorPlay,
+  Pause,
+  Play,
+  Wrench,
+} from "lucide-react";
 
 /**
  * Thanh điều khiển của giảng viên khi đang dạy: bật/tắt ghi chú, mở cửa sổ
@@ -102,7 +111,16 @@ export default function TeacherBar({
   const [running, setRunning] = useState(false);
   const [linked, setLinked] = useState(true);
   const [stageOpen, setStageOpen] = useState(false);
+  // Mốc KẾT THÚC (epoch ms) chứ không phải số giây còn lại: gửi mốc thì màn
+  // chiếu tự tính phần còn lại, nên trễ đường truyền hay mất một tin nhắn cũng
+  // không làm hai bên lệch nhau.
+  const [endsAt, setEndsAt] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const chan = useRef<BroadcastChannel | null>(null);
+  // Bản sao của endsAt cho hàm nghe tin nhắn: hàm ấy được gắn một lần lúc mở
+  // kênh, nên nếu đọc thẳng state thì nó mãi thấy giá trị lúc mount.
+  const endsAtRef = useRef<number | null>(null);
 
   // Kênh phát tới cửa sổ trình chiếu.
   useEffect(() => {
@@ -111,7 +129,14 @@ export default function TeacherBar({
     chan.current = c;
     c.onmessage = (e) => {
       // Màn chiếu báo về khi nó mở/đóng, để nút đổi trạng thái.
-      if (e.data?.type === "stage-hello") setStageOpen(true);
+      if (e.data?.type === "stage-hello") {
+        setStageOpen(true);
+        // Màn chiếu mở SAU khi đã bấm đếm ngược thì phải được kể lại, nếu không
+        // nó đứng trắng trong khi lớp đang chờ đồng hồ.
+        if (endsAtRef.current !== null) {
+          c.postMessage({ type: "timer", endsAt: endsAtRef.current });
+        }
+      }
       if (e.data?.type === "stage-bye") setStageOpen(false);
     };
     return () => {
@@ -140,12 +165,28 @@ export default function TeacherBar({
     return () => mo.disconnect();
   }, [containerId]);
 
+  // Nhịp đếm ngược của thanh điều khiển — giảng viên cũng cần thấy còn bao lâu.
+  useEffect(() => {
+    if (endsAt === null) return;
+    const t = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(t);
+  }, [endsAt]);
+
   // Đồng hồ buổi dạy.
   useEffect(() => {
     if (!running) return;
     const t = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(t);
   }, [running]);
+
+  const setCountdown = useCallback((minutes: number | null) => {
+    const at = minutes === null ? null : Date.now() + minutes * 60_000;
+    endsAtRef.current = at;
+    setEndsAt(at);
+    setNow(Date.now());
+    setPickerOpen(false);
+    chan.current?.postMessage({ type: "timer", endsAt: at });
+  }, []);
 
   const goto = useCallback(
     (index: number) => {
@@ -329,6 +370,57 @@ export default function TeacherBar({
         Công cụ lớp học
       </button>
 
+      {/* Đếm ngược CHIẾU LÊN LỚP — khác với đồng hồ buổi dạy ở cuối thanh, cái
+          đó chỉ mình bạn thấy. Ở đây chọn số phút rồi cả lớp cùng nhìn. */}
+      <span className="relative">
+        <button
+          type="button"
+          onClick={() => setPickerOpen((v) => !v)}
+          aria-expanded={pickerOpen}
+          title={
+            endsAt !== null
+              ? "Đang đếm ngược trên màn chiếu. Bấm để đổi thời lượng hoặc dừng."
+              : "Chiếu đồng hồ đếm ngược lên màn chiếu — cho hoạt động cá nhân, thảo luận nhóm."
+          }
+          className={
+            endsAt !== null
+              ? "inline-flex items-center gap-1.5 rounded-full border border-brand-600 bg-brand-soft px-3.5 py-1.5 text-sm font-semibold tabular-nums text-brand-700"
+              : "inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
+          }
+        >
+          <Hourglass size={16} />
+          {endsAt !== null ? mmss(Math.max(0, Math.round((endsAt - now) / 1000))) : "Đếm ngược"}
+        </button>
+
+        {pickerOpen && (
+          <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-xl border border-token bg-[rgb(var(--surface))] p-2 shadow-card">
+            <p className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">
+              Chiếu lên lớp
+            </p>
+            <div className="grid grid-cols-3 gap-1">
+              {[1, 3, 5, 10, 15, 20].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setCountdown(m)}
+                  className="rounded-lg border border-token px-2 py-1.5 text-sm font-medium hover:bg-brand-soft hover:text-brand-700"
+                >
+                  {m} phút
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setCountdown(null)}
+              disabled={endsAt === null}
+              className="mt-1 w-full rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+            >
+              Tắt đồng hồ khỏi màn chiếu
+            </button>
+          </div>
+        )}
+      </span>
+
       {sections.length > 1 && (
         <span className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface))] px-1.5 py-1">
           <button
@@ -386,11 +478,24 @@ export default function TeacherBar({
  * Tách riêng để cửa sổ ấy không phải tải cả thanh điều khiển.
  */
 export function StageListener({ lessonId }: { lessonId: string }) {
+  const [endsAt, setEndsAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  // Portal ra thẳng body. Chế độ màn chiếu giấu MỌI con trực tiếp của <main>
+  // trừ khối nội dung — đồng hồ nằm trong <main> thì cũng bị giấu theo, và nó
+  // bị giấu một cách im lặng: chữ vẫn có trong DOM, chỉ là không ai thấy.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;
     const c = new BroadcastChannel(channelName(lessonId));
     c.postMessage({ type: "stage-hello" });
     c.onmessage = (e) => {
+      if (e.data?.type === "timer") {
+        setEndsAt(typeof e.data.endsAt === "number" ? e.data.endsAt : null);
+        setNow(Date.now());
+        return;
+      }
       if (e.data?.type !== "goto" || typeof e.data.id !== "string") return;
       const el = document.getElementById(e.data.id);
       if (!el) return;
@@ -419,5 +524,38 @@ export function StageListener({ lessonId }: { lessonId: string }) {
       c.close();
     };
   }, [lessonId]);
-  return null;
+
+  // Nhịp đếm. Tính từ mốc kết thúc chứ không trừ dần một biến đếm: cửa sổ bị che
+  // thì trình duyệt bóp nhịp hẹn giờ, trừ dần sẽ chạy chậm dần so với đồng hồ
+  // thật, mà cả lớp thì đang nhìn vào con số ấy.
+  useEffect(() => {
+    if (endsAt === null) return;
+    const t = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(t);
+  }, [endsAt]);
+
+  if (endsAt === null || !mounted) return null;
+  const left = Math.max(0, Math.round((endsAt - now) / 1000));
+  const done = left === 0;
+  const urgent = left <= 10 && !done;
+
+  return createPortal(
+    <div
+      data-stage-timer
+      aria-live="off"
+      className={`fixed right-6 top-6 z-50 rounded-2xl border-2 px-6 py-4 text-center shadow-card backdrop-blur ${
+        done
+          ? "border-danger-500 bg-danger-50/95 text-danger-700"
+          : urgent
+            ? "border-accent-500 bg-accent-50/95 text-accent-700"
+            : "border-brand-300 bg-[rgb(var(--surface))]/95"
+      }`}
+    >
+      <p className="text-xs font-bold uppercase tracking-widest opacity-70">
+        {done ? "Hết giờ" : "Còn lại"}
+      </p>
+      <p className="text-6xl font-bold leading-none tabular-nums">{mmss(left)}</p>
+    </div>,
+    document.body,
+  );
 }
