@@ -514,6 +514,15 @@ export default async function LessonPage({
       >
         <LessonSectionNav containerId="lesson-content" />
         <div>
+        {/* Trên màn chiếu, tên bài phải luôn nhìn thấy: người vào muộn hoặc ngẩng
+            lên giữa chừng cần biết đang học bài nào mà không phải hỏi. Dính theo
+            mép trên vì cuộn tới mục 4 thì tiêu đề bài đã trôi mất từ lâu. */}
+        {stageMode && (
+          <div className="sticky top-0 z-10 mb-4 border-b border-token bg-[rgb(var(--surface))] pb-2">
+            <p className="text-sm font-medium text-muted">{lesson.module.title}</p>
+            <p className="h-display text-2xl font-bold leading-tight">{lesson.title}</p>
+          </div>
+        )}
         <div id="lesson-content">
         <LessonContent
           items={visibleItems}

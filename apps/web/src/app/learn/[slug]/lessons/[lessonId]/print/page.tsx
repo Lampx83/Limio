@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { canEditCourse, isUserEnrolled } from "@feedbackme/core-lms";
@@ -18,6 +19,29 @@ import PrintTrigger from "@/components/lesson/PrintTrigger";
  * cho xem thử, hoặc khoá công khai VÀ đã publish. Một trang in mở hơn trang
  * học là một đường vòng để lấy nội dung — nên hai nơi phải cùng một luật.
  */
+/**
+ * Tên tài liệu quyết định TÊN FILE mà trình duyệt gợi ý khi người dùng chọn
+ * "Lưu thành PDF" — Chrome, Edge và Safari đều lấy từ <title>. Trước đây nó là
+ * tên mặc định của ứng dụng, nên mọi bài tải về đều trùng tên và người học có
+ * một thư mục toàn file giống hệt nhau.
+ *
+ * Bỏ ký tự "/" và ":" — macOS và Windows đều không cho chúng nằm trong tên file,
+ * và trình duyệt sẽ tự thay bằng thứ gì đó xấu hơn nhiều.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string; lessonId: string };
+}): Promise<Metadata> {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: params.lessonId },
+    select: { title: true, module: { select: { course: { select: { title: true } } } } },
+  });
+  if (!lesson) return { title: "Bản in bài học" };
+  const clean = (v: string) => v.replace(/[/:\\?%*|"<>]/g, "-").trim();
+  return { title: `${clean(lesson.title)} — ${clean(lesson.module.course.title)}` };
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function LessonPrintPage({
