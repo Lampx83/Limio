@@ -450,30 +450,19 @@ export default async function LessonPage({
     >
       {stageMode && <StageListener lessonId={lesson.id} />}
       {/*
-        Breadcrumb + mọi hành động của bài trên CÙNG một hàng.
-        Trước đây "Tải PDF" nằm ở đây còn "In / Lưu PDF" nằm ngay trên nội dung —
-        hai nút mở đúng một trang in, đặt cách nhau nửa màn hình. Giờ còn một
-        nút, và nút mục lục / toàn màn hình đứng cùng cỡ chữ bên cạnh nó.
+        Hàng trên chỉ còn đường quay lại khoá. Mục lục đã có sẵn ở thanh dính
+        dưới đáy — luôn trong tầm tay dù đang đọc tới đâu — nên đặt thêm một
+        nút nữa ở đây chỉ là hai lối vào cùng một ngăn kéo. Vị trí bài và phần
+        trăm hoàn thành chuyển xuống nằm ngay cạnh thanh tiến độ, vì đó chính
+        là thứ chúng nói về.
       */}
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <Link
           href={`/learn/${params.slug}`}
           className="link inline-flex items-center gap-1 text-base font-medium"
         >
           ← {lesson.module.course.title}
         </Link>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-sm text-muted">
-            Bài {idx + 1} / {allLessons.length} · {progress.courseCompletionPct}% hoàn thành
-          </span>
-          <LessonTocDrawer
-            slug={params.slug}
-            currentLessonId={lesson.id}
-            modules={progress.modules}
-            triggerClassName="btn-pill"
-            triggerLabel="Mục lục khoá"
-          />
-        </div>
       </div>
 
       {/*
@@ -493,19 +482,34 @@ export default async function LessonPage({
           />
         )}
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {/* Toàn màn hình + bản in (mở tab mới, trang in tự gọi hộp thoại in). */}
+          {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
           <LessonContentToolbar
-            targetId="lesson-stage"
             printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
               teacherMode ? "?gv=1" : ""
             }`}
           />
         </div>
-        <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+        <div className="mt-5">
+          {/* Chỉ phần trăm khoá học. Bỏ "Bài 2 / 22" vì nó đá nhau với số hiệu
+              in ngay trên tiêu đề: bài tên "Bài 1.2" mà dòng dưới ghi "Bài 2"
+              thì người đọc phải dừng lại đối chiếu hai cách đánh số. */}
+          <p className="mb-1.5 text-sm text-muted">
+            <span className="tabular-nums">{progress.courseCompletionPct}%</span>{" "}
+            hoàn thành khoá học
+          </p>
           <div
-            className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
-            style={{ width: `${progress.courseCompletionPct}%` }}
-          />
+            className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
+            role="progressbar"
+            aria-label="Tiến độ khoá học"
+            aria-valuenow={progress.courseCompletionPct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
+              style={{ width: `${progress.courseCompletionPct}%` }}
+            />
+          </div>
         </div>
       </header>
 
