@@ -192,6 +192,20 @@
     background-color: rgb(var(--surface-muted));
     color: rgb(var(--text-muted));
   }
+  /*
+   * Nút hành động ở đầu trang bài học (mục lục, toàn màn hình, in). Gom vào một
+   * lớp vì trước đây mỗi nút tự viết chuỗi tiện ích riêng: chỉ cần một chỗ quên
+   * đồng bộ là có nút chữ 12px đứng cạnh nút chữ 14px. 14px là cỡ nhỏ nhất còn
+   * đọc thoải mái ở đây — nhỏ hơn nữa thì nút trông như chú thích.
+   */
+  .btn-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-token px-3.5 py-1.5 text-sm font-medium transition-colors;
+    color: rgb(var(--text-muted));
+  }
+  .btn-pill:hover {
+    background-color: rgb(var(--surface-muted));
+    color: rgb(var(--text));
+  }
   .chip-brand {
     @apply chip;
     background-color: rgb(var(--brand-soft));

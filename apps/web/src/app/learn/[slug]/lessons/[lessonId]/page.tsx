@@ -141,21 +141,9 @@ export default async function LessonPage({
     return (
       <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link href={`/catalog/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
+          <Link href={`/catalog/${params.slug}`} className="link inline-flex items-center gap-1 text-base font-medium">
             ← {course.title}
           </Link>
-          {/* Bản in cũng mở cho người xem thử: quy tắc truy cập của trang in
-              giống hệt trang này, nên giấu nút đi chỉ làm khó người dùng chứ
-              không giữ được gì. */}
-          <a
-            href={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-          >
-            <Download size={14} />
-            Tải PDF
-          </a>
         </div>
         {/* Preview banner */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft px-5 py-3">
@@ -163,7 +151,7 @@ export default async function LessonPage({
             <p className="text-sm font-semibold text-brand-700">
               {anonymous ? "Bạn đang xem thử công khai" : "Bài học preview miễn phí"}
             </p>
-            <p className="text-xs text-brand-600">
+            <p className="text-sm text-brand-600">
               {anonymous
                 ? "Đăng nhập để lưu tiến độ, làm bài tập, thảo luận và nhận phản hồi."
                 : paid
@@ -182,15 +170,30 @@ export default async function LessonPage({
             {anonymous ? "Đăng nhập" : paid ? "Xem khoá học" : "Đăng ký ngay"}
           </a>
         </div>
-        <header className="mt-6">
+        {/* Cùng kiểu panel như bản dành cho người đã ghi danh. */}
+        <header className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
           <span className="chip">{lesson.module.title}</span>
           <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">{lesson.title}</h1>
           {lesson.description && (
             <SafeHtml
               html={plainToRichHtml(lesson.description)}
-              className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+              className="prose mt-3 max-w-none text-base text-muted dark:prose-invert"
             />
           )}
+          {/* Bản in cũng mở cho người xem thử: quy tắc truy cập của trang in
+              giống hệt trang này, nên giấu nút đi chỉ làm khó người dùng chứ
+              không giữ được gì. */}
+          <div className="mt-5">
+            <a
+              href={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-pill"
+            >
+              <Download size={16} />
+              In / Lưu PDF
+            </a>
+          </div>
         </header>
         <div className="mt-8">
           <LessonContent
@@ -363,39 +366,39 @@ export default async function LessonPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
-      {/* Breadcrumb + lesson meta */}
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
+      {/*
+        Breadcrumb + mọi hành động của bài trên CÙNG một hàng.
+        Trước đây "Tải PDF" nằm ở đây còn "In / Lưu PDF" nằm ngay trên nội dung —
+        hai nút mở đúng một trang in, đặt cách nhau nửa màn hình. Giờ còn một
+        nút, và nút mục lục / toàn màn hình đứng cùng cỡ chữ bên cạnh nó.
+      */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <Link
           href={`/learn/${params.slug}`}
-          className="link inline-flex items-center gap-1 text-sm"
+          className="link inline-flex items-center gap-1 text-base font-medium"
         >
           ← {lesson.module.course.title}
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-faint">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-sm text-muted">
             Bài {idx + 1} / {allLessons.length} · {progress.courseCompletionPct}% hoàn thành
           </span>
           <LessonTocDrawer
             slug={params.slug}
             currentLessonId={lesson.id}
             modules={progress.modules}
+            triggerClassName="btn-pill"
+            triggerLabel="Mục lục khoá"
           />
-          {/* Bản in để người học lưu PDF mang về — mở tab mới, trang in tự gọi
-              hộp thoại in. */}
-          <a
-            href={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-          >
-            <Download size={14} />
-            Tải PDF
-          </a>
         </div>
       </div>
 
-      {/* Header */}
-      <header className="mt-4">
+      {/*
+        Tiêu đề bài nằm trong panel riêng, và hai nút công cụ đứng ngay dưới nó:
+        chúng thao tác lên chính bài này, nên đặt cạnh tên bài thì rõ phạm vi
+        hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
+      */}
+      <header className="mt-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
         <span className="chip">{lesson.module.title}</span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
           {lesson.title}
@@ -403,18 +406,23 @@ export default async function LessonPage({
         {lesson.description && (
           <SafeHtml
             html={plainToRichHtml(lesson.description)}
-            className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
+            className="prose mt-3 max-w-none text-base text-muted dark:prose-invert"
           />
         )}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {/* Toàn màn hình + bản in (mở tab mới, trang in tự gọi hộp thoại in). */}
+          <LessonContentToolbar
+            targetId="lesson-content"
+            printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
+          />
+        </div>
+        <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+          <div
+            className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
+            style={{ width: `${progress.courseCompletionPct}%` }}
+          />
+        </div>
       </header>
-
-      {/* Lesson progress mini-bar */}
-      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
-        <div
-          className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
-          style={{ width: `${progress.courseCompletionPct}%` }}
-        />
-      </div>
 
       {skipSuggestion?.shouldSkip && (
         <div className="mt-6">
@@ -449,10 +457,6 @@ export default async function LessonPage({
       <div className="mt-8 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8">
         <LessonSectionNav containerId="lesson-content" />
         <div>
-        <LessonContentToolbar
-          targetId="lesson-content"
-          printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
-        />
         <div id="lesson-content">
         <LessonContent
           items={lesson.contentItems

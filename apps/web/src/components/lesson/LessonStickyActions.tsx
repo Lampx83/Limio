@@ -54,7 +54,13 @@ export default function LessonStickyActions({
       {/* Chừa chỗ để nội dung cuối trang không nằm dưới thanh cố định */}
       <div aria-hidden className="h-28" />
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-token bg-[rgb(var(--surface)/0.95)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.85)] pb-[env(safe-area-inset-bottom)] print:hidden">
+      {/*
+        Nền của thanh này KHÁC nền trang (một lớp lime nhạt) chứ không cùng màu
+        trắng: nó nổi lên trên nội dung, nên nếu cùng màu thì lúc cuộn qua một
+        khối trắng, mép thanh biến mất và các nút trông như đang nằm giữa bài.
+        Kèm viền trên đậm hơn và bóng hắt lên để thấy rõ đây là tầng nổi.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-brand-300 bg-brand-100 shadow-[0_-8px_24px_-14px_rgba(0,0,0,0.4)] pb-[env(safe-area-inset-bottom)] dark:border-brand-800 dark:bg-[rgb(var(--brand-soft))] print:hidden">
         <div className="mx-auto flex max-w-4xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
           {prevLessonId ? (
             <a
@@ -73,7 +79,7 @@ export default function LessonStickyActions({
           <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
             {toc}
             {completed && (
-              <span className="hidden items-center gap-1.5 rounded-lg bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-700 md:inline-flex">
+              <span className="hidden items-center gap-1.5 rounded-lg bg-success-50 px-3 py-1.5 text-sm font-semibold text-success-700 md:inline-flex">
                 <Check size={14} strokeWidth={2.5} />
                 Đã hoàn thành
               </span>

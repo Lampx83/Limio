@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { Maximize2, Minimize2, Printer } from "lucide-react";
 
 /**
- * Thanh công cụ nhỏ phía trên nội dung bài: xem toàn màn hình và in ra PDF.
+ * Hai nút công cụ của bài học: xem toàn màn hình và in ra PDF.
+ *
+ * Không tự bọc thanh riêng — nó được xếp chung hàng với nút mục lục ở đầu
+ * trang, để mọi hành động của bài nằm một chỗ thay vì rải hai tầng.
  *
  * "Toàn màn hình" phóng đúng khối nội dung chứ không phải cả trang — người học
  * đang đọc thì thanh điều hướng, tab bài tập và diễn đàn chỉ là nhiễu. Dùng
@@ -14,9 +17,12 @@ import { Maximize2, Minimize2, Printer } from "lucide-react";
 export default function LessonContentToolbar({
   targetId,
   printHref,
+  className = "btn-pill",
 }: {
   targetId: string;
   printHref: string;
+  /** Kiểu nút — mặc định đồng bộ với các nút còn lại ở đầu trang. */
+  className?: string;
 }) {
   const [isFull, setIsFull] = useState(false);
   const [supported, setSupported] = useState(true);
@@ -41,15 +47,15 @@ export default function LessonContentToolbar({
   };
 
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-end gap-2 print:hidden">
+    <>
       {supported && (
         <button
           type="button"
           onClick={toggle}
           aria-pressed={isFull}
-          className="inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+          className={`${className} print:hidden`}
         >
-          {isFull ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          {isFull ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           {isFull ? "Thoát toàn màn hình" : "Toàn màn hình"}
         </button>
       )}
@@ -57,11 +63,11 @@ export default function LessonContentToolbar({
         href={printHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+        className={`${className} print:hidden`}
       >
-        <Printer size={14} />
+        <Printer size={16} />
         In / Lưu PDF
       </a>
-    </div>
+    </>
   );
 }
