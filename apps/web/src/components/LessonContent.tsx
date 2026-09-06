@@ -107,6 +107,42 @@ export default function LessonContent({
   );
 }
 
+/**
+ * Ghi chú giảng viên, gấp lại được.
+ *
+ * Mở sẵn vì đang dạy tới mục nào thì cần đọc ghi chú của mục đó ngay — bắt bấm
+ * thêm một cái trước khi đọc là thừa. Nhưng ghi chú dài (chạy giờ cả buổi) đẩy
+ * nội dung bài xuống rất xa, nên phải gấp lại được khi đã thuộc.
+ *
+ * Tiêu đề trên nút gấp lấy từ dòng đầu của chính ghi chú, để lúc thu gọn vẫn
+ * biết đó là ghi chú của phần nào.
+ */
+function TeacherNote({ html }: { html: string }) {
+  const label = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 64);
+  return (
+    <details
+      open
+      data-teacher-note
+      className="rounded-xl border-l-4 border-accent-400 bg-accent-50 dark:bg-[rgb(var(--surface-muted))]"
+    >
+      <summary className="cursor-pointer px-4 py-3 text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-300">
+        Ghi chú giảng viên · học viên không thấy
+        <span className="ml-2 font-medium normal-case tracking-normal opacity-80">
+          {label}
+        </span>
+      </summary>
+      <SafeHtml
+        html={html}
+        className="prose prose-sm max-w-none px-4 pb-4 dark:prose-invert"
+      />
+    </details>
+  );
+}
+
 /** Placeholder for players that cannot work without a session. */
 function SignInRequired({ label }: { label: string }) {
   return (
@@ -226,20 +262,7 @@ function ContentBlock({
      */
     case "teacher_note": {
       const p = payload as RichTextPayload;
-      return (
-        <aside
-          data-teacher-note
-          className="rounded-xl border-l-4 border-accent-400 bg-accent-50 p-4 dark:bg-[rgb(var(--surface-muted))]"
-        >
-          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-300">
-            Ghi chú giảng viên · học viên không thấy
-          </p>
-          <SafeHtml
-            html={p.html}
-            className="prose prose-sm max-w-none dark:prose-invert"
-          />
-        </aside>
-      );
+      return <TeacherNote html={p.html} />;
     }
     case "external_link": {
       const p = payload as ExternalLinkPayload;
