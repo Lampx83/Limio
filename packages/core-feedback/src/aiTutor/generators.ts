@@ -559,6 +559,22 @@ const MISCONCEPTION_SUGGEST_SCHEMA = {
 /** Codes must satisfy CreateMisconceptionInput in core-lms. */
 const MISCONCEPTION_CODE_RE = /^[a-z][a-z0-9_]*$/;
 
+export interface MisconceptionCatalogueEntry {
+  code: string;
+  name: string;
+  description: string;
+}
+
+export interface MisconceptionSuggestOptions {
+  /**
+   * Danh mục misconception dùng để đối chiếu. Truyền vào khi chạy offline với
+   * dữ liệu trích từ môi trường khác — DB local không có danh mục của prod.
+   */
+  catalogue?: MisconceptionCatalogueEntry[];
+  /** Bỏ ghi AiUsageLog (chế độ offline: DB đang nối không phải nơi phát sinh). */
+  skipUsageLog?: boolean;
+}
+
 export interface MisconceptionQuestionInput {
   questionId: string;
   prompt: string;
@@ -575,14 +591,17 @@ export async function suggestMisconceptionsForQuestion(
   openai: OpenAI,
   model = "gpt-4o-mini",
   db: PrismaClient = prisma,
+  opts: MisconceptionSuggestOptions = {},
 ): Promise<MisconceptionProposal[]> {
   const wrong = question.options.filter((o) => !o.isCorrect);
   if (wrong.length === 0) return [];
 
-  const catalogue = await db.misconception.findMany({
-    select: { code: true, name: true, description: true },
-    orderBy: { code: "asc" },
-  });
+  const catalogue =
+    opts.catalogue ??
+    (await db.misconception.findMany({
+      select: { code: true, name: true, description: true },
+      orderBy: { code: "asc" },
+    }));
   const known = new Set(catalogue.map((m) => m.code));
 
   const catalogueText =
@@ -633,7 +652,9 @@ Trả JSON: { proposals: [{ optionId, misconceptionCode, isNew, misconceptionNam
     MISCONCEPTION_SUGGEST_SCHEMA,
   );
 
-  await logUsage(userId, model, inputTokens, outputTokens, db);
+  if (!opts.skipUsageLog) {
+    await logUsage(userId, model, inputTokens, outputTokens, db);
+  }
 
   const labelById = new Map(wrong.map((o) => [o.id, o.label]));
 

@@ -49,4 +49,8 @@ packages/db/test-*.mjs
 logs/
 
 # File env cho lần nhập học liệu vào production (không commit)
-.env.prod-import
+.env.prod-import*
+
+# B9.3 — file trung gian của quy trình làm giàu misconception (không commit)
+*.export.json
+*.misconceptions.json
