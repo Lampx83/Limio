@@ -1,5 +1,6 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
+import { resolveFeedbackVariant } from "./variant";
 
 /** Per spec §4.4: skip suggestion when ALL tagged skills are ≥ this threshold. */
 export const SKIP_MASTERY_THRESHOLD = 0.85;
@@ -228,6 +229,13 @@ export async function getAdaptiveNextLesson(
   courseId: string,
   db: PrismaClient = prisma,
 ): Promise<AdaptiveNextLesson | null> {
+  // B10 — lớp đối chứng không được định tuyến theo skill yếu. Đây là kênh cá
+  // nhân hoá thứ hai mà người học nhìn thấy (thẻ "Đề xuất" ở trang khoá); để
+  // hở nó thì lớp đối chứng vẫn được dẫn đường và phép so sánh với lớp
+  // cá nhân hoá không còn nói lên điều gì.
+  const { variant } = await resolveFeedbackVariant(userId, courseId, db);
+  if (variant === "minimal") return null;
+
   // All skill ids covered by this course (via lesson mappings or question tags).
   const [csm, qst] = await Promise.all([
     db.contentSkillMapping.findMany({

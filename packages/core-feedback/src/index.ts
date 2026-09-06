@@ -4,6 +4,7 @@ export * from "./misconception";
 export * from "./diagnostic";
 export * from "./coding";
 export * from "./adaptivePath";
+export * from "./variant";
 export * from "./rating";
 export * from "./aiTutor/index";
 export * from "./uptake";

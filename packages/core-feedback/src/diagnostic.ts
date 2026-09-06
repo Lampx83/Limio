@@ -1,6 +1,7 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { CODER_VERSION, codeFeedback, type GenerationContext } from "./coding";
+import { resolveFeedbackVariant } from "./variant";
 
 const REMEDIATION_LIMIT = 3;
 
@@ -48,6 +49,17 @@ export async function generateDiagnosticFeedback(
   });
   if (!attempt || !attempt.quiz.courseId) return { deliveries: [] };
   const courseId = attempt.quiz.courseId;
+
+  // B10 — điều kiện thực nghiệm của lớp người học. `minimal` cắt hai thứ:
+  // nhận diện misconception và bài ôn gợi ý. Lượt feedback vẫn được sinh và
+  // vẫn được mã hoá SSMMD — chỉ là nó rơi về tầng `task`, đúng như một điều
+  // kiện đối chứng phải thế. Không nhóm nào bị bỏ qua.
+  const { variant, sectionId } = await resolveFeedbackVariant(
+    userId,
+    courseId,
+    db,
+  );
+  const personalized = variant === "personalized";
 
   const wrongResponses = await db.answerResponse.findMany({
     where: { attemptId, isCorrect: false },
@@ -111,7 +123,11 @@ export async function generateDiagnosticFeedback(
 
     let misconceptionId: string | null = null;
     let misconceptionCode: string | null = null;
-    if (typeSupportsMisconception && Array.isArray(r.response)) {
+    // B10 — lớp đối chứng không được gọi tên lỗi sai, kể cả khi câu hỏi thừa
+    // sức nhận diện. Ghi nhận misconception vào learner model vẫn chạy bình
+    // thường ở recordMisconceptionsFromAttempt — chỗ này chỉ quyết định người
+    // học *được kể* những gì.
+    if (personalized && typeSupportsMisconception && Array.isArray(r.response)) {
       const selectedIds = r.response.filter(
         (x): x is string => typeof x === "string",
       );
@@ -141,7 +157,7 @@ export async function generateDiagnosticFeedback(
     const skillIds = r.question.skillTags.map((t) => t.skillId);
     let remediationLessonIds: string[] = [];
     let excludedCompleted = 0;
-    if (skillIds.length > 0) {
+    if (personalized && skillIds.length > 0) {
       const mappings = await db.contentSkillMapping.findMany({
         where: {
           contentType: "lesson",
@@ -179,6 +195,8 @@ export async function generateDiagnosticFeedback(
       skillIds,
       remediationLessonIds,
       remediationExcludedCompleted: excludedCompleted,
+      feedbackVariant: variant,
+      sectionId,
       ...(opts.masterySnapshot
         ? {
             masteryAtGeneration: Object.fromEntries(

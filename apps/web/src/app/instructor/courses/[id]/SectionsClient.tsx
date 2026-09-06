@@ -5,12 +5,35 @@ import Link from "next/link";
 import { apiUrl } from "@/lib/apiUrl";
 import { ShareCard } from "@/components/ui";
 
+type FeedbackVariant = "personalized" | "minimal";
+
+// B10 — nhãn cho điều kiện feedback. Viết bằng thứ giảng viên đọc là hiểu ngay
+// mình đang cho lớp nào nhận gì, chứ không phải tên biến trong schema.
+const VARIANTS: Record<
+  FeedbackVariant,
+  { label: string; short: string; desc: string; tone: string }
+> = {
+  personalized: {
+    label: "Cá nhân hoá",
+    short: "Cá nhân hoá",
+    desc: "Phản hồi gọi tên lỗi sai cụ thể, kèm bài ôn gợi ý và đề xuất bài học tiếp theo.",
+    tone: "border-emerald-300 bg-emerald-50 text-emerald-800",
+  },
+  minimal: {
+    label: "Rút gọn (đối chứng)",
+    short: "Rút gọn",
+    desc: "Chỉ phản hồi chung. Vẫn thấy điểm và đáp án đúng, nhưng không gọi tên lỗi sai, không gợi ý bài ôn, không đề xuất bài kế tiếp.",
+    tone: "border-amber-300 bg-amber-50 text-amber-900",
+  },
+};
+
 type Section = {
   id: string;
   name: string;
   description: string | null;
   inviteCode: string | null;
   isDefault: boolean;
+  feedbackVariant: FeedbackVariant;
   enrolledCount: number;
   createdAt: string;
 };
@@ -65,7 +88,10 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
     }
   };
 
-  const onSaveEdit = async (id: string, patch: { name: string; description: string | null }) => {
+  const onSaveEdit = async (
+    id: string,
+    patch: { name: string; description: string | null; feedbackVariant: FeedbackVariant },
+  ) => {
     setBusy(true);
     setErr(null);
     try {
@@ -207,6 +233,12 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
                       {s.enrolledCount} học viên
                     </div>
                   </Link>
+                  <span
+                    title={VARIANTS[s.feedbackVariant].desc}
+                    className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${VARIANTS[s.feedbackVariant].tone}`}
+                  >
+                    {VARIANTS[s.feedbackVariant].short}
+                  </span>
                   <button
                     onClick={() => setEditId(s.id)}
                     className="rounded border border-default bg-white px-3 py-1 text-xs hover:bg-slate-50"
@@ -254,11 +286,16 @@ function EditRow({
 }: {
   section: Section;
   busy: boolean;
-  onSave: (patch: { name: string; description: string | null }) => Promise<void>;
+  onSave: (patch: {
+    name: string;
+    description: string | null;
+    feedbackVariant: FeedbackVariant;
+  }) => Promise<void>;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(section.name);
   const [description, setDescription] = useState(section.description ?? "");
+  const [variant, setVariant] = useState<FeedbackVariant>(section.feedbackVariant);
   return (
     <div className="grid grid-cols-1 gap-3 border-b border-default p-3 md:grid-cols-3">
       <label className="md:col-span-2">
@@ -281,6 +318,30 @@ function EditRow({
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
         />
       </label>
+      <label className="md:col-span-3">
+        <span className="block text-xs font-medium text-slate-600">
+          Điều kiện phản hồi của lớp
+        </span>
+        <select
+          value={variant}
+          onChange={(e) => setVariant(e.target.value as FeedbackVariant)}
+          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+        >
+          {(Object.keys(VARIANTS) as FeedbackVariant[]).map((v) => (
+            <option key={v} value={v}>
+              {VARIANTS[v].label}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-xs text-faint">{VARIANTS[variant].desc}</span>
+        {variant !== section.feedbackVariant && (
+          <span className="mt-1 block text-xs text-amber-800">
+            Đổi giữa kỳ sẽ chia dữ liệu của lớp làm hai giai đoạn — phản hồi đã
+            sinh trước đó vẫn giữ điều kiện cũ. Nên chốt trước khi lớp bắt đầu
+            làm quiz.
+          </span>
+        )}
+      </label>
       <div className="flex items-end justify-end gap-2 md:col-span-3">
         <button
           onClick={onCancel}
@@ -291,7 +352,11 @@ function EditRow({
         </button>
         <button
           onClick={() =>
-            onSave({ name: name.trim(), description: description.trim() ? description.trim() : null })
+            onSave({
+              name: name.trim(),
+              description: description.trim() ? description.trim() : null,
+              feedbackVariant: variant,
+            })
           }
           disabled={busy || !name.trim()}
           className="rounded bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"

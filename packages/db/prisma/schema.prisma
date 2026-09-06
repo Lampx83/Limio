@@ -855,6 +855,18 @@ enum FeedbackElaboration {
 
 /// Macro — what produced the text. `llm` and `hybrid` are reserved: today the
 /// learner-facing path is deterministic and no model generates the body.
+// B10 — điều kiện feedback của một lớp (CourseSection). Cho phép chạy thực
+// nghiệm so sánh trong cùng một khoá học: lớp này nhận feedback cá nhân hoá,
+// lớp kia nhận bản rút gọn. Mặc định `personalized` = hành vi trước B10, nên
+// mọi lớp đang tồn tại không đổi gì sau migration.
+enum FeedbackVariant {
+  // Đầy đủ: template theo misconception + bài ôn gợi ý + đề xuất bài kế tiếp.
+  personalized
+  // Đối chứng: chỉ template chung, không nêu tên misconception, không gợi ý
+  // bài ôn, không định tuyến adaptive. Vẫn thấy điểm và đáp án đúng.
+  minimal
+}
+
 enum FeedbackSourceKind {
   rule_template
   misconception
@@ -2965,6 +2977,10 @@ model CourseSection {
   instructorId String?
   // Optional human description (e.g. "Lớp K65A-DSAI-2025-2 thứ 7 chiều")
   description  String?  @db.Text
+  // B10 — điều kiện feedback áp cho học viên của lớp này. Ghi lên
+  // FeedbackDelivery.generationContext lúc sinh, nên chuyển lớp giữa kỳ không
+  // viết lại lịch sử.
+  feedbackVariant FeedbackVariant @default(personalized)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

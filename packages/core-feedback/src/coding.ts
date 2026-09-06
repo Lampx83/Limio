@@ -135,6 +135,14 @@ export interface GenerationContext {
   /** Lessons that matched but were dropped because the learner finished them. */
   remediationExcludedCompleted: number;
   /**
+   * B10 — điều kiện thực nghiệm đang áp cho người học lúc feedback này được
+   * sinh, cùng lớp đã quyết định nó. Ghi ở đây chứ không suy ngược từ
+   * `Enrollment` lúc phân tích: sinh viên chuyển lớp giữa kỳ thì dữ liệu cũ
+   * vẫn phải giữ đúng điều kiện của chính nó. Vắng mặt ở hàng trước B10.
+   */
+  feedbackVariant?: "personalized" | "minimal";
+  sectionId?: string | null;
+  /**
    * BKT estimate per skill captured *before* this attempt was scored — what the
    * system believed about this learner when it chose this feedback. The caller
    * must snapshot it before scoring, because BKT updates run concurrently with

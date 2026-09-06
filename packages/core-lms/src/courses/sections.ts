@@ -13,6 +13,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { generateSectionInviteCode } from "../exam/code-access";
 import { assertCanEditCourse } from "./authz";
 import { CourseError } from "./courses";
+import { logAudit } from "../auth/audit";
 import { getCourseProgress } from "../learning/progress";
 
 export const CreateCourseSectionInput = z.object({
@@ -23,6 +24,8 @@ export const CreateCourseSectionInput = z.object({
 export const UpdateCourseSectionInput = z.object({
   name: z.string().min(1).max(200).trim().optional(),
   description: z.string().max(2000).optional().nullable(),
+  // B10 — điều kiện feedback của lớp (xem docs/B10-per-section-feedback-variant-AC.md).
+  feedbackVariant: z.enum(["personalized", "minimal"]).optional(),
 });
 
 const INVITE_CODE_MAX_ATTEMPTS = 5;
@@ -45,6 +48,7 @@ export interface CourseSectionItem {
   description: string | null;
   inviteCode: string | null;
   isDefault: boolean;
+  feedbackVariant: "personalized" | "minimal";
   enrolledCount: number;
   createdAt: string;
 }
@@ -77,6 +81,7 @@ export async function createCourseSection(
       description: section.description,
       inviteCode: section.inviteCode,
       isDefault: section.isDefault,
+      feedbackVariant: section.feedbackVariant,
       enrolledCount: 0,
       createdAt: section.createdAt.toISOString(),
     };
@@ -106,6 +111,7 @@ export async function listCourseSections(
     description: r.description,
     inviteCode: r.inviteCode,
     isDefault: r.isDefault,
+    feedbackVariant: r.feedbackVariant,
     enrolledCount: r._count.enrollments,
     createdAt: r.createdAt.toISOString(),
   }));
@@ -115,10 +121,15 @@ async function assertCanEditSection(
   actorUserId: string,
   sectionId: string,
   db: PrismaClient,
-): Promise<{ id: string; courseId: string; isDefault: boolean }> {
+): Promise<{
+  id: string;
+  courseId: string;
+  isDefault: boolean;
+  feedbackVariant: "personalized" | "minimal";
+}> {
   const section = await db.courseSection.findUnique({
     where: { id: sectionId },
-    select: { id: true, courseId: true, isDefault: true },
+    select: { id: true, courseId: true, isDefault: true, feedbackVariant: true },
   });
   if (!section) throw new CourseError("section_not_found");
   await assertCanEditCourse(actorUserId, section.courseId, db);
@@ -136,9 +147,16 @@ export async function updateCourseSection(
   const parsed = UpdateCourseSectionInput.safeParse(rawInput);
   if (!parsed.success) throw new CourseError("validation_failed", parsed.error.flatten());
 
-  const data: { name?: string; description?: string | null } = {};
+  const data: {
+    name?: string;
+    description?: string | null;
+    feedbackVariant?: "personalized" | "minimal";
+  } = {};
   if (parsed.data.name !== undefined) data.name = parsed.data.name;
   if (parsed.data.description !== undefined) data.description = parsed.data.description;
+  if (parsed.data.feedbackVariant !== undefined) {
+    data.feedbackVariant = parsed.data.feedbackVariant;
+  }
   if (Object.keys(data).length === 0) return;
 
   try {
@@ -148,6 +166,28 @@ export async function updateCourseSection(
       throw new CourseError("section_name_taken");
     }
     throw e;
+  }
+
+  // B10 AC-1.4 — đổi điều kiện giữa kỳ làm dữ liệu thực nghiệm gãy làm hai
+  // nửa. Không cấm (giảng viên có thể có lý do), nhưng phải trả lời được
+  // "đổi lúc nào, ai đổi" khi ngồi đọc lại số liệu vài tháng sau.
+  if (
+    data.feedbackVariant !== undefined &&
+    data.feedbackVariant !== section.feedbackVariant
+  ) {
+    await logAudit(
+      {
+        action: "course.section.feedback_variant.changed",
+        actorUserId,
+        payload: {
+          sectionId,
+          courseId: section.courseId,
+          from: section.feedbackVariant,
+          to: data.feedbackVariant,
+        },
+      },
+      db,
+    );
   }
 }
 
