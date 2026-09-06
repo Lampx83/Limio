@@ -28,13 +28,18 @@ export async function getCourseProgress(
   db: PrismaClient = prisma,
 ): Promise<CourseProgress> {
   const [modulesWithLessons, completedRows] = await Promise.all([
+    // Chỉ nội dung học viên thực sự thấy. Không lọc ở đây thì mục lục bài học
+    // liệt kê đủ tên module và tên bài mà giảng viên vừa ẩn đi — kể cả khi
+    // đang chiếu lên máy chiếu — và mẫu số tiến độ tính cả những bài chưa mở,
+    // nên không ai đạt nổi 100% để nhận chứng chỉ.
     db.module.findMany({
-      where: { courseId },
+      where: { courseId, isHidden: false },
       orderBy: { orderIndex: "asc" },
       select: {
         id: true,
         title: true,
         lessons: {
+          where: { isHidden: false },
           orderBy: { orderIndex: "asc" },
           select: { id: true, title: true },
         },

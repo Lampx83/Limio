@@ -120,6 +120,10 @@ export default async function LessonPage({
   // về trang giới thiệu, tức là muốn xem bài mình vừa soạn thì phải tự ghi danh
   // vào khoá của chính mình.
   const canEdit = userId ? await canEditCourse(userId, lesson.module.course.id) : false;
+  // Ẩn cả module thì bài bên trong cũng phải khoá lại, không thì học viên biết
+  // đường dẫn vẫn vào thẳng được. Người dạy khoá này thì vẫn vào — họ cần soạn
+  // và chiếu thử nội dung chưa mở cho lớp.
+  if (lesson.module.isHidden && !canEdit) notFound();
   const teacherMode = canEdit && searchParams?.gv === "1";
   const stageMode = searchParams?.stage === "1";
   if (!enrolled && !canEdit) {

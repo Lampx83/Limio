@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { prisma } from "@feedbackme/db";
 import { completeLesson } from "../lessons";
 import { enrollInCourse } from "../enroll";
 import { getCourseProgress } from "../progress";
@@ -68,6 +69,43 @@ describe("getCourseProgress", () => {
     expect(p.modules[1]?.completionPct).toBe(0);
     expect(p.modules[0]?.lessons[0]?.completed).toBe(true);
     expect(p.modules[0]?.lessons[1]?.completed).toBe(false);
+  });
+
+  it("module đã ẩn không hiện trong mục lục và không tính vào mẫu số", async () => {
+    const { learnerId, courseId, moduleIds, lessonIds } = await build("p4", [2, 2]);
+
+    const before = await getCourseProgress(learnerId, courseId);
+    expect(before.totalLessons).toBe(4);
+    expect(before.modules).toHaveLength(2);
+
+    await prisma.module.update({
+      where: { id: moduleIds[1]! },
+      data: { isHidden: true },
+    });
+
+    const after = await getCourseProgress(learnerId, courseId);
+    // Module ẩn biến mất khỏi mục lục — trước đây nó vẫn hiện đủ tên module và
+    // tên từng bài, kể cả khi giảng viên đang chiếu lên máy chiếu.
+    expect(after.modules).toHaveLength(1);
+    expect(after.modules[0]!.id).toBe(moduleIds[0]);
+    expect(after.totalLessons).toBe(2);
+
+    // Và học xong phần đang mở là đạt 100% — không bị kẹt vì mẫu số tính cả
+    // những bài chưa mở cho ai.
+    for (const lid of lessonIds[0]!) await completeLesson(learnerId, lid);
+    const done = await getCourseProgress(learnerId, courseId);
+    expect(done.courseCompletionPct).toBe(100);
+  });
+
+  it("bài đã ẩn riêng lẻ cũng không tính vào mẫu số", async () => {
+    const { learnerId, courseId, lessonIds } = await build("p5", [2]);
+    await prisma.lesson.update({
+      where: { id: lessonIds[0]![1]! },
+      data: { isHidden: true },
+    });
+    const p = await getCourseProgress(learnerId, courseId);
+    expect(p.totalLessons).toBe(1);
+    expect(p.modules[0]!.lessons).toHaveLength(1);
   });
 
   it("100% after all lessons done", async () => {
