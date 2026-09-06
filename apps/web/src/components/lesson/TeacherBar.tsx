@@ -131,16 +131,39 @@ export default function TeacherBar({
       data-print-hide
       className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-accent-200 bg-accent-50 px-3 py-2.5 dark:border-accent-800 dark:bg-[rgb(var(--surface-muted))] print:hidden"
     >
-      <span className="mr-1 text-sm font-semibold text-accent-700 dark:text-accent-300">
+      <span
+        title="Thanh này chỉ hiện với người dạy khoá. Học viên không thấy nó, và cũng không thấy ghi chú bên trong bài."
+        className="mr-1 cursor-help text-sm font-semibold text-accent-700 dark:text-accent-300"
+      >
         Chế độ giảng viên
       </span>
 
-      <button type="button" onClick={toggleNotes} className="btn-pill bg-[rgb(var(--surface))]">
+      <button
+        type="button"
+        onClick={toggleNotes}
+        title={
+          teacherMode
+            ? "Giấu ghi chú đi. Học viên chưa bao giờ thấy chúng — nút này chỉ đổi màn hình của bạn."
+            : noteCount > 0
+              ? `Hiện ${noteCount} ghi chú xen trong bài. Chỉ bạn thấy; địa chỉ trang đổi thành ?gv=1 nên đánh dấu trang được.`
+              : "Bài này chưa có ghi chú nào. Thêm ở trang soạn khoá: chọn hoạt động “Ghi chú giảng viên”."
+        }
+        className="btn-pill bg-[rgb(var(--surface))]"
+      >
         {teacherMode ? <EyeOff size={16} /> : <Eye size={16} />}
         {teacherMode ? "Ẩn ghi chú" : noteCount > 0 ? `Hiện ghi chú (${noteCount})` : "Ghi chú (chưa có)"}
       </button>
 
-      <button type="button" onClick={openStage} className="btn-pill bg-[rgb(var(--surface))]">
+      <button
+        type="button"
+        onClick={openStage}
+        title={
+          stageOpen
+            ? "Đưa cửa sổ màn chiếu ra trước. Bấm lại không mở thêm cửa sổ mới."
+            : "Mở cửa sổ chỉ có nội dung để kéo sang máy chiếu (F11 cho toàn màn hình). Đồng hồ cũng bắt đầu chạy."
+        }
+        className="btn-pill bg-[rgb(var(--surface))]"
+      >
         <MonitorPlay size={16} />
         {stageOpen ? "Màn chiếu đang mở" : "Mở màn chiếu"}
       </button>
@@ -152,6 +175,7 @@ export default function TeacherBar({
             onClick={() => goto(Math.max(0, current - 1))}
             disabled={current === 0}
             aria-label="Mục trước"
+            title="Về mục trước. Màn chiếu nhảy theo nếu đang bật Đồng bộ."
             className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
           >
             <ChevronLeft size={16} />
@@ -164,6 +188,7 @@ export default function TeacherBar({
             onClick={() => goto(Math.min(sections.length - 1, current + 1))}
             disabled={current >= sections.length - 1}
             aria-label="Mục sau"
+            title="Sang mục sau. Màn chiếu nhảy theo nếu đang bật Đồng bộ."
             className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
           >
             <ChevronRight size={16} />
@@ -175,7 +200,11 @@ export default function TeacherBar({
         type="button"
         onClick={() => setLinked((v) => !v)}
         aria-pressed={linked}
-        title={linked ? "Màn chiếu đang đi theo bạn" : "Màn chiếu đang đứng yên"}
+        title={
+          linked
+            ? "Màn chiếu đang đi theo bạn. Tắt đi nếu muốn đọc trước phần sau mà lớp vẫn nhìn phần hiện tại."
+            : "Màn chiếu đang đứng yên — bạn xem gì cũng không ảnh hưởng tới lớp. Bật lại để nó đi theo."
+        }
         className="btn-pill bg-[rgb(var(--surface))]"
       >
         {linked ? <Link2 size={16} /> : <Link2Off size={16} />}
@@ -186,7 +215,7 @@ export default function TeacherBar({
         type="button"
         onClick={() => setRunning((r) => !r)}
         onDoubleClick={() => setElapsed(0)}
-        title="Bấm để chạy/dừng, bấm đúp để về 0"
+        title="Đồng hồ buổi dạy: bấm để chạy hoặc dừng, bấm đúp để về 00:00 (dùng khi bấm giờ từng hoạt động)."
         className="btn-pill ml-auto bg-[rgb(var(--surface))] tabular-nums"
       >
         <Timer size={16} />
