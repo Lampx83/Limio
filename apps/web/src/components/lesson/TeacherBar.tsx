@@ -311,17 +311,18 @@ export default function TeacherBar({
         trên máy chiếu, và đồng hồ hoặc khảo sát trên cửa sổ thứ ba — nhúng vào
         bài thì mở công cụ là che mất chỗ đang đọc, mà đóng lại là mất đồng hồ.
         Cửa sổ mang tên cố định nên bấm nhiều lần cũng chỉ một cửa sổ.
+
+        Trỏ tới /instructor/teaching-tools chứ KHÔNG phải
+        /instructor/classroom/<lessonId>: trang classroom chỉ render tiêu đề bài,
+        toàn bộ công cụ nằm ở trang teaching-tools. Mở nhầm trang kia thì cửa sổ
+        hiện ra trống trơn.
       */}
       <button
         type="button"
         onClick={() =>
-          window.open(
-            `/instructor/classroom/${lessonId}`,
-            "limio-tools",
-            "width=520,height=900",
-          )
+          window.open("/instructor/teaching-tools", "limio-tools", "width=900,height=900")
         }
-        title="Bấm giờ, bốc thăm gọi tên, khảo sát nhanh, chia nhóm, word cloud — mở ở cửa sổ riêng cho đúng bài này."
+        title="Bấm giờ, bốc thăm gọi tên, khảo sát nhanh, chia nhóm, word cloud, bảng tương tác — mở ở cửa sổ riêng."
         className="inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
       >
         <Wrench size={16} />
