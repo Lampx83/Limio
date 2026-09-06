@@ -7,11 +7,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Crop,
+  GraduationCap,
   Hourglass,
   MonitorPlay,
   Pause,
   Play,
   Wrench,
+  X,
 } from "lucide-react";
 
 /**
@@ -153,6 +155,17 @@ export default function TeacherBar({
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  // Esc đóng ngăn kéo — cùng cách cư xử với ngăn kéo ghi chú của học viên.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open])
   const [focus, setFocus] = useState<{ path: FocusPath; label: string } | null>(null);
   const focusRef = useRef<{ path: FocusPath; label: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -274,6 +287,7 @@ export default function TeacherBar({
         sendFocus({ path, label: (el.textContent ?? "").trim().slice(0, 40) || "phần đã chọn" });
       }
       setPicking(false);
+      setOpen(true);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setPicking(false);
@@ -389,6 +403,9 @@ export default function TeacherBar({
     return () => window.removeEventListener("keydown", onKey);
   }, [goto, current, sections.length]);
 
+  const openTools = () =>
+    window.open("/instructor/teaching-tools", "limio-tools", "width=900,height=900");
+
   const openStage = () => {
     const url = `${pathname}?stage=1`;
     window.open(url, "limio-stage", "width=1280,height=800");
@@ -400,228 +417,241 @@ export default function TeacherBar({
     router.push(url);
   };
 
+  const rowBtn =
+    "inline-flex w-full items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]";
+
   return (
-    <div
-      data-print-hide
-      data-teacher-bar
-      /*
-        Dính dưới thanh tiêu đề của site (cao 63px) thay vì nằm yên ở đầu trang.
-        Đang dạy thì người dạy ở giữa hoặc cuối bài, mà mọi nút điều khiển lại
-        nằm trên đỉnh — mỗi lần bấm đếm ngược hay nhảy mục là một lần cuộn ngược
-        lên rồi cuộn trở lại đúng chỗ cũ.
-        z-20: dưới thanh tiêu đề (z-30) để hai thanh không tranh nhau, trên nội
-        dung để chữ không chạy đè qua.
-      */
-      className="sticky top-16 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-accent-200 bg-accent-50 px-3 py-2.5 shadow-card dark:border-accent-800 dark:bg-[rgb(var(--surface-muted))] print:hidden"
-    >
-      <span
-        title="Thanh này chỉ hiện với người dạy khoá. Học viên không thấy nó, và cũng không thấy ghi chú bên trong bài."
-        className="mr-1 cursor-help text-sm font-semibold text-accent-700 dark:text-accent-300"
-      >
-        Chế độ giảng viên
-      </span>
-
-      <Toggle
-        on={teacherMode}
-        label="Ghi chú"
-        onToggle={toggleNotes}
-        title={
-          teacherMode
-            ? "Ghi chú giảng viên đang hiện trên màn hình của bạn. Tắt để giấu đi. Học viên chưa bao giờ thấy chúng."
-            : noteCount > 0
-              ? `Bật để hiện ${noteCount} ghi chú xen trong bài. Chỉ mình bạn thấy.`
-              : "Bài này chưa có ghi chú nào. Thêm ở trang soạn khoá: chọn hoạt động “Ghi chú giảng viên”."
-        }
-      />
-
-      <Toggle
-        on={linked}
-        label="Màn chiếu bám theo"
-        onToggle={() => setLinked((v) => !v)}
-        title={
-          linked
-            ? "Màn chiếu đang đi theo bạn: cuộn chuột ở cửa sổ này tới đâu, lớp thấy tới đó. Phím ← → để nhảy mục. Tắt nếu muốn đọc trước phần sau."
-            : "Màn chiếu đang đứng yên. Bật để nó đi theo chỗ bạn đang xem."
-        }
-      />
-
-      {/* Đây là HÀNH ĐỘNG, không phải công tắc — nên để dạng nút đặc, không có
-          nút gạt, và trạng thái "đang mở" nói riêng bằng một chấm xanh bên cạnh. */}
-      <button
-        type="button"
-        onClick={openStage}
-        title={
-          stageOpen
-            ? "Đưa cửa sổ màn chiếu ra trước. Bấm lại không mở thêm cửa sổ mới."
-            : "Mở cửa sổ chỉ có nội dung để kéo sang máy chiếu (F11 cho toàn màn hình). Đồng hồ cũng bắt đầu chạy."
-        }
-        className="inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
-      >
-        <MonitorPlay size={16} />
-        Mở màn chiếu
-        {stageOpen && (
-          <span className="ml-1 inline-flex items-center gap-1 text-xs font-semibold text-success-700">
-            <span aria-hidden className="h-2 w-2 rounded-full bg-success-500" />
-            đang mở
-          </span>
-        )}
-      </button>
-
+    <div data-print-hide data-teacher-bar className="print:hidden">
       {/*
-        Công cụ lớp học mở ở CỬA SỔ RIÊNG, không nhúng vào trang bài.
-        Đang dạy thì ba thứ chạy song song: bài trên cửa sổ điều khiển, nội dung
-        trên máy chiếu, và đồng hồ hoặc khảo sát trên cửa sổ thứ ba — nhúng vào
-        bài thì mở công cụ là che mất chỗ đang đọc, mà đóng lại là mất đồng hồ.
-        Cửa sổ mang tên cố định nên bấm nhiều lần cũng chỉ một cửa sổ.
+        Cùng cơ chế với nút ghi chú của học viên: một nút tròn ở mép dưới bên
+        phải, bấm vào thì ngăn kéo trượt ra thành một lớp riêng đè lên trang.
+        Bảng điều khiển trước đây nằm ngang trên đầu nội dung — nó choán một dải
+        suốt bề rộng và che hai dòng đầu của phần đang đọc, trong khi phần lớn
+        thời gian dạy thì không đụng tới nút nào.
 
-        Trỏ tới /instructor/teaching-tools chứ KHÔNG phải
-        /instructor/classroom/<lessonId>: trang classroom chỉ render tiêu đề bài,
-        toàn bộ công cụ nằm ở trang teaching-tools. Mở nhầm trang kia thì cửa sổ
-        hiện ra trống trơn.
+        Xếp trên nút ghi chú (bottom-24) và AI Tutor (bottom-6) trong cùng cột
+        nút nổi bên phải. Màu hổ phách để không lẫn với nút của học viên.
       */}
       <button
         type="button"
-        onClick={() =>
-          window.open("/instructor/teaching-tools", "limio-tools", "width=900,height=900")
-        }
-        title="Bấm giờ, bốc thăm gọi tên, khảo sát nhanh, chia nhóm, word cloud, bảng tương tác — mở ở cửa sổ riêng."
-        className="inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
+        onClick={() => setOpen(true)}
+        aria-label="Mở bảng điều khiển giảng viên"
+        title="Bảng điều khiển giảng viên: ghi chú, màn chiếu, đếm ngược, công cụ lớp học"
+        className="fixed bottom-40 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg transition-transform hover:scale-105"
       >
-        <Wrench size={16} />
-        Công cụ lớp học
-      </button>
-
-      {/* Chọn một phần nội dung để chiếu to lên lớp — dùng khi giao hoạt động:
-          lớp chỉ cần nhìn đúng đề bài, không phải cả trang. */}
-      <button
-        type="button"
-        onClick={() => (focus ? sendFocus(null) : setPicking((v) => !v))}
-        title={
-          focus
-            ? `Màn chiếu đang chiếu to: “${focus.label}”. Bấm để trả về cả bài.`
-            : picking
-              ? "Rê chuột lên nội dung rồi bấm vào phần muốn chiếu to. Esc để thoát."
-              : "Chọn một phần nội dung (đề bài, bảng, hình) để chiếu to lên lớp cùng đồng hồ."
-        }
-        className={
-          focus || picking
-            ? "inline-flex max-w-[14rem] items-center gap-1.5 rounded-full border border-brand-600 bg-brand-soft px-3.5 py-1.5 text-sm font-semibold text-brand-700"
-            : "inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
-        }
-      >
-        <Crop size={16} className="shrink-0" />
-        <span className="truncate">
-          {focus ? `Bỏ chiếu to: ${focus.label}` : picking ? "Đang chọn… (Esc để thoát)" : "Chiếu to một phần"}
-        </span>
-      </button>
-
-      {/* Đếm ngược CHIẾU LÊN LỚP — khác với đồng hồ buổi dạy ở cuối thanh, cái
-          đó chỉ mình bạn thấy. Ở đây chọn số phút rồi cả lớp cùng nhìn. */}
-      <span className="relative">
-        <button
-          type="button"
-          onClick={() => setPickerOpen((v) => !v)}
-          aria-expanded={pickerOpen}
-          title={
-            endsAt !== null
-              ? "Đang đếm ngược trên màn chiếu. Bấm để đổi thời lượng hoặc dừng."
-              : "Chiếu đồng hồ đếm ngược lên màn chiếu — cho hoạt động cá nhân, thảo luận nhóm."
-          }
-          className={
-            endsAt !== null
-              ? "inline-flex items-center gap-1.5 rounded-full border border-brand-600 bg-brand-soft px-3.5 py-1.5 text-sm font-semibold tabular-nums text-brand-700"
-              : "inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
-          }
-        >
-          <Hourglass size={16} />
-          {endsAt !== null ? mmss(Math.max(0, Math.round((endsAt - now) / 1000))) : "Đếm ngược"}
-        </button>
-
-        {pickerOpen && (
-          <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-xl border border-token bg-[rgb(var(--surface))] p-2 shadow-card">
-            <p className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">
-              Chiếu lên lớp
-            </p>
-            <div className="grid grid-cols-3 gap-1">
-              {[1, 3, 5, 10, 15, 20].map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setCountdown(m)}
-                  className="rounded-lg border border-token px-2 py-1.5 text-sm font-medium hover:bg-brand-soft hover:text-brand-700"
-                >
-                  {m} phút
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setCountdown(null)}
-              disabled={endsAt === null}
-              className="mt-1 w-full rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
-            >
-              Tắt đồng hồ khỏi màn chiếu
-            </button>
-          </div>
+        <GraduationCap size={20} />
+        {(focus || endsAt !== null) && (
+          // Chấm báo: đang chiếu to hoặc đang đếm ngược thì lớp đang thấy thứ gì
+          // đó do bảng này điều khiển, kể cả khi bảng đã đóng.
+          <span
+            aria-hidden
+            className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[rgb(var(--surface))] bg-success-500"
+          />
         )}
-      </span>
+      </button>
 
-      {sections.length > 1 && (
-        <span className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface))] px-1.5 py-1">
-          <button
-            type="button"
-            onClick={() => goto(Math.max(0, current - 1))}
-            disabled={current === 0}
-            aria-label="Mục trước"
-            title="Về mục trước (phím ←). Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
-            className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        >
+          <aside
+            role="dialog"
+            aria-label="Bảng điều khiển giảng viên"
+            className="absolute right-0 top-0 flex h-full w-full max-w-sm flex-col overflow-y-auto border-l border-token bg-[rgb(var(--surface))] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="max-w-[16rem] truncate px-1 text-sm">
-            <span className="text-faint">Mục </span>
-            {current + 1}/{sections.length} · {sections[current]?.text ?? lessonTitle}
-          </span>
-          <button
-            type="button"
-            onClick={() => goto(Math.min(sections.length - 1, current + 1))}
-            disabled={current >= sections.length - 1}
-            aria-label="Mục sau"
-            title="Sang mục sau (phím →). Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
-            className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </span>
+            <header className="sticky top-0 z-10 flex items-center justify-between border-b border-token bg-[rgb(var(--surface)/0.95)] px-5 py-3 backdrop-blur">
+              <div>
+                <p className="text-sm font-semibold text-accent-700 dark:text-accent-300">
+                  Chế độ giảng viên
+                </p>
+                <p className="text-xs text-muted">Học viên không thấy bảng này</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Đóng bảng điều khiển"
+                className="rounded-full p-2 text-muted hover:bg-[rgb(var(--surface-muted))]"
+              >
+                <X size={18} />
+              </button>
+            </header>
+
+            <div className="flex flex-col gap-2 p-4">
+              <Toggle
+                on={teacherMode}
+                label="Ghi chú"
+                onToggle={toggleNotes}
+                title={
+                  teacherMode
+                    ? "Ghi chú giảng viên đang hiện trên màn hình của bạn. Tắt để giấu đi. Học viên chưa bao giờ thấy chúng."
+                    : noteCount > 0
+                      ? `Bật để hiện ${noteCount} ghi chú xen trong bài. Chỉ mình bạn thấy.`
+                      : "Bài này chưa có ghi chú nào. Thêm ở trang soạn khoá: chọn hoạt động “Ghi chú giảng viên”."
+                }
+              />
+
+              <Toggle
+                on={linked}
+                label="Màn chiếu bám theo"
+                onToggle={() => setLinked((v) => !v)}
+                title={
+                  linked
+                    ? "Màn chiếu đang đi theo bạn: cuộn chuột ở cửa sổ này tới đâu, lớp thấy tới đó. Phím ← → để nhảy mục."
+                    : "Màn chiếu đang đứng yên. Bật để nó đi theo chỗ bạn đang xem."
+                }
+              />
+
+              <button
+                type="button"
+                onClick={openStage}
+                title={
+                  stageOpen
+                    ? "Đưa cửa sổ màn chiếu ra trước. Bấm lại không mở thêm cửa sổ mới."
+                    : "Mở cửa sổ chỉ có nội dung để kéo sang máy chiếu (F11 cho toàn màn hình). Đồng hồ cũng bắt đầu chạy."
+                }
+                className={rowBtn}
+              >
+                <MonitorPlay size={16} />
+                Mở màn chiếu
+                {stageOpen && (
+                  <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-success-700">
+                    <span aria-hidden className="h-2 w-2 rounded-full bg-success-500" />
+                    đang mở
+                  </span>
+                )}
+              </button>
+
+              {/* Chọn vùng thì ngăn kéo tự đóng: việc kế tiếp là rê chuột lên
+                  chính nội dung đang bị ngăn kéo che. */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (focus) {
+                    sendFocus(null);
+                    return;
+                  }
+                  setPicking(true);
+                  setOpen(false);
+                }}
+                title={
+                  focus
+                    ? `Màn chiếu đang chiếu to: “${focus.label}”. Bấm để trả về cả bài.`
+                    : "Chọn một phần nội dung (đề bài, bảng, hình) để chiếu to lên lớp cùng đồng hồ."
+                }
+                className={rowBtn}
+              >
+                <Crop size={16} className="shrink-0" />
+                <span className="truncate">
+                  {focus ? `Bỏ chiếu to: ${focus.label}` : "Chiếu to một phần"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={openTools}
+                title="Bấm giờ, bốc thăm gọi tên, khảo sát nhanh, chia nhóm, word cloud, bảng tương tác — mở ở cửa sổ riêng."
+                className={rowBtn}
+              >
+                <Wrench size={16} />
+                Công cụ lớp học
+              </button>
+
+              {sections.length > 1 && (
+                <div className="flex items-center gap-1 rounded-lg border border-token bg-[rgb(var(--surface))] px-1.5 py-1">
+                  <button
+                    type="button"
+                    onClick={() => goto(Math.max(0, current - 1))}
+                    disabled={current === 0}
+                    aria-label="Mục trước"
+                    title="Về mục trước (phím ←)."
+                    className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="min-w-0 flex-1 truncate text-center text-sm">
+                    <span className="text-faint">Mục </span>
+                    {current + 1}/{sections.length} · {sections[current]?.text ?? lessonTitle}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => goto(Math.min(sections.length - 1, current + 1))}
+                    disabled={current >= sections.length - 1}
+                    aria-label="Mục sau"
+                    title="Sang mục sau (phím →)."
+                    className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+
+              <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+                    <Hourglass size={16} />
+                    Đếm ngược trên màn chiếu
+                  </span>
+                  {endsAt !== null && (
+                    <span className="text-sm font-bold tabular-nums text-brand-700">
+                      {mmss(Math.max(0, Math.round((endsAt - now) / 1000)))}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-1">
+                  {[1, 3, 5, 10, 15, 20].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setCountdown(m)}
+                      className="rounded-lg border border-token px-2 py-1.5 text-sm font-medium hover:bg-brand-soft hover:text-brand-700"
+                    >
+                      {m} phút
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCountdown(null)}
+                  disabled={endsAt === null}
+                  className="mt-1 w-full rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+                >
+                  Tắt đồng hồ khỏi màn chiếu
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setRunning((r) => !r)}
+                onDoubleClick={() => setElapsed(0)}
+                title={
+                  running
+                    ? "Đồng hồ buổi dạy đang chạy — bấm để tạm dừng, bấm đúp để về 00:00."
+                    : "Đồng hồ buổi dạy đang dừng — bấm để chạy, bấm đúp để về 00:00."
+                }
+                className={`${rowBtn} tabular-nums`}
+              >
+                {running ? <Pause size={16} /> : <Play size={16} />}
+                Buổi dạy: {mmss(elapsed)}
+                <span className="ml-auto text-xs font-semibold text-muted">
+                  {running ? "đang chạy" : "đang dừng"}
+                </span>
+              </button>
+            </div>
+          </aside>
+        </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setRunning((r) => !r)}
-        onDoubleClick={() => setElapsed(0)}
-        title={
-          running
-            ? "Đồng hồ đang chạy — bấm để tạm dừng, bấm đúp để về 00:00."
-            : "Đồng hồ đang dừng — bấm để chạy, bấm đúp để về 00:00."
-        }
-        className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium tabular-nums transition-colors ${
-          running
-            ? "border-brand-600 bg-brand-soft text-brand-700"
-            : "border-token bg-[rgb(var(--surface))] text-muted"
-        }`}
-      >
-        {running ? <Pause size={16} /> : <Play size={16} />}
-        {mmss(elapsed)}
-        <span className="text-xs font-semibold">{running ? "đang chạy" : "đang dừng"}</span>
-      </button>
+      {picking && (
+        <div className="fixed bottom-40 left-1/2 z-40 -translate-x-1/2 rounded-full border border-brand-600 bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-card">
+          Rê chuột lên nội dung rồi bấm vào phần muốn chiếu to · Esc để thoát
+        </div>
+      )}
     </div>
   );
 }
 
-/**
- * Phần chạy trong cửa sổ trình chiếu: nghe lệnh nhảy mục và cuộn tới đó.
- * Tách riêng để cửa sổ ấy không phải tải cả thanh điều khiển.
- */
 export function StageListener({ lessonId }: { lessonId: string }) {
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());

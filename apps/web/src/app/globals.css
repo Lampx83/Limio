@@ -509,16 +509,6 @@ body.gameshow-immersive main.mx-auto {
   margin-inline: auto;
 }
 
-/* Khi có thanh giảng viên dính trên đầu, chỗ trống dành cho neo phải cộng thêm
-   chiều cao của nó — nếu không, bấm nhảy mục sẽ đưa tiêu đề mục nằm khuất ngay
-   dưới thanh, đúng thứ người dạy vừa bấm để nhìn. */
-main:has([data-teacher-bar]) #lesson-content :is(h2, h3, h4) {
-  /* !important vì tiêu đề mang scroll-margin-top:5rem viết thẳng trong thuộc
-     tính style (học liệu nằm trong DB dưới dạng HTML), mà style inline thì
-     không quy tắc nào trong stylesheet đè được nếu thiếu !important. */
-  scroll-margin-top: 12rem !important;
-}
-
 /* ── Màn chiếu (?stage=1) ────────────────────────────────────────────────────
    Cửa sổ thứ hai mà giảng viên kéo sang máy chiếu. Vẫn đúng trang bài học ấy,
    chỉ bỏ mọi thứ không phải nội dung và phóng cỡ chữ lên — người ngồi cuối lớp
