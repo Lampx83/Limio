@@ -12,6 +12,7 @@ import FeedbackRater from "@/components/FeedbackRater";
 import RemediationLink from "@/components/RemediationLink";
 import SafeHtml from "@/components/SafeHtml";
 import AnswerBreakdown from "@/components/quiz/AnswerBreakdown";
+import ConfidenceStars from "@/components/quiz/ConfidenceStars";
 import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
@@ -282,8 +283,9 @@ export default async function ResultPage({
                   </span>
                 </div>
                 {item.confidence !== null && (
-                  <span className="text-xs opacity-80">
-                    Tự tin: {item.confidence}/5
+                  <span className="flex items-center gap-1.5 text-xs opacity-80">
+                    Tự tin:
+                    <ConfidenceStars value={item.confidence} readOnly size={14} />
                   </span>
                 )}
               </header>

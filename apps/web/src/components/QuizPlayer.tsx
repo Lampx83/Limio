@@ -22,6 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
+import ConfidenceStars from "@/components/quiz/ConfidenceStars";
 import { plainToRichHtml, htmlToPlainText } from "@/lib/richText";
 
 type QType =
@@ -284,32 +285,15 @@ export default function QuizPlayer({
               />
             </div>
             {quiz.requireConfidence && (
-              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-token pt-4">
-                <span className="text-xs font-medium text-muted">
-                  Độ tự tin:
-                </span>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => {
-                        setConfidence(currentQ.id, n);
-                        setTimeout(() => saveAnswer(currentQ), 0);
-                      }}
-                      className={`h-8 w-8 rounded-lg text-xs font-semibold transition-all ${
-                        answers[currentQ.id]?.confidence === n
-                          ? "bg-brand-600 text-white shadow-sm"
-                          : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-brand-soft hover:text-brand-700"
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                <span className="text-xs text-faint">
-                  1 = đoán · 5 = chắc chắn
-                </span>
+              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-token pt-4">
+                <span className="text-sm font-medium text-muted">Độ tự tin:</span>
+                <ConfidenceStars
+                  value={answers[currentQ.id]?.confidence ?? null}
+                  onChange={(n) => {
+                    setConfidence(currentQ.id, n);
+                    setTimeout(() => saveAnswer(currentQ), 0);
+                  }}
+                />
               </div>
             )}
           </section>
