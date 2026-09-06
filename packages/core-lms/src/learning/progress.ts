@@ -14,6 +14,12 @@ export interface CourseProgress {
       id: string;
       title: string;
       completed: boolean;
+      /**
+       * B14 — thấy tên nhưng chưa mở được. Bật khi chính bài bị khoá hoặc
+       * module chứa nó bị khoá; đây là giá trị đã gộp nên nơi hiển thị không
+       * phải tự đi hỏi lại module.
+       */
+      locked: boolean;
     }>;
   }>;
 }
@@ -38,10 +44,11 @@ export async function getCourseProgress(
       select: {
         id: true,
         title: true,
+        isLocked: true,
         lessons: {
           where: { isHidden: false },
           orderBy: { orderIndex: "asc" },
-          select: { id: true, title: true },
+          select: { id: true, title: true, isLocked: true },
         },
       },
     }),
@@ -67,9 +74,13 @@ export async function getCourseProgress(
   const modules = modulesWithLessons.map((m) => {
     const lessons = m.lessons.map((l) => {
       const completed = completedSet.has(l.id);
+      const locked = m.isLocked || l.isLocked;
+      // Bài đang khoá vẫn nằm trong mẫu số: học viên nhìn thấy nó, biết mình
+      // còn phải học, nên đếm nó vào tổng là đúng với thứ họ trông thấy. Ẩn
+      // mới là thứ không được đếm — cái đó họ không biết là có.
       totalLessons++;
       if (completed) completedLessons++;
-      return { id: l.id, title: l.title, completed };
+      return { id: l.id, title: l.title, completed, locked };
     });
     const moduleTotal = lessons.length;
     const moduleDone = lessons.filter((l) => l.completed).length;

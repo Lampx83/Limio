@@ -314,6 +314,10 @@ model Module {
   orderIndex Int
   // Instructor-controlled visibility (false = hidden from all learners)
   isHidden   Boolean  @default(false)
+  /// B14 — khoá KHÁC ẩn. Ẩn thì học viên không biết là có; khoá thì thấy tên
+  /// trong mục lục kèm ổ khoá nhưng không mở được nội dung. Dùng khi muốn báo
+  /// trước lộ trình mà chưa mở phần sau.
+  isLocked   Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -337,6 +341,9 @@ model Lesson {
   previewable            Boolean  @default(false)
   // Instructor-controlled visibility (false = hidden from all learners)
   isHidden               Boolean  @default(false)
+  /// B14 — xem giải thích ở Module.isLocked. Bài nằm trong module đã khoá thì
+  /// coi như khoá theo, không cần bật cờ này.
+  isLocked               Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

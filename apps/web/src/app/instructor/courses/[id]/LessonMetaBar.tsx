@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, AlertTriangle, Presentation } from "lucide-react";
+import { ChevronDown, AlertTriangle, Presentation, Lock } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillTagsEditor from "./SkillTagsEditor";
 import LessonActionMenu from "./LessonActionMenu";
@@ -23,6 +23,7 @@ export default function LessonMetaBar({
   lessonId,
   order,
   isHidden: initialIsHidden,
+  isLocked: initialIsLocked,
   previewable: initialPreviewable,
   tags,
   title,
@@ -36,6 +37,7 @@ export default function LessonMetaBar({
   lessonId: string;
   order?: number;
   isHidden: boolean;
+  isLocked: boolean;
   previewable: boolean;
   tags: Tag[];
   title?: string;
@@ -49,6 +51,7 @@ export default function LessonMetaBar({
 }) {
   const router = useRouter();
   const [isHidden, setIsHidden] = useState(initialIsHidden);
+  const [isLocked, setIsLocked] = useState(initialIsLocked);
   const [previewable, setPreviewable] = useState(initialPreviewable);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -86,6 +89,12 @@ export default function LessonMetaBar({
     await patch({ isHidden: next });
   }
 
+  async function toggleLocked() {
+    const next = !isLocked;
+    setIsLocked(next);
+    await patch({ isLocked: next });
+  }
+
   async function togglePreviewable() {
     const next = !previewable;
     setPreviewable(next);
@@ -113,11 +122,26 @@ export default function LessonMetaBar({
               siblingLessonIds={siblingLessonIds}
               modules={modules}
               isHidden={isHidden}
+              isLocked={isLocked}
               previewable={previewable}
               onToggleHidden={toggleHidden}
+              onToggleLocked={toggleLocked}
               onTogglePreviewable={togglePreviewable}
             />
           </div>
+        </>
+      )}
+
+      {isLocked && !isHidden && (
+        <>
+          <Sep />
+          <span
+            className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 font-medium text-accent-700"
+            title="Học viên thấy tên bài kèm ổ khoá, nhưng không mở được nội dung"
+          >
+            <Lock className="h-3 w-3" aria-hidden />
+            Đang khoá
+          </span>
         </>
       )}
 

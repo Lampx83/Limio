@@ -167,10 +167,12 @@ export default async function InstructorCourseEditPage({
     id: m.id,
     title: m.title,
     isHidden: m.isHidden,
+    isLocked: m.isLocked,
     lessons: m.lessons.map((l) => ({
       id: l.id,
       title: l.title,
       isHidden: l.isHidden,
+      isLocked: l.isLocked,
       noSkill: course.personalizationEnabled && l.skillTags.length === 0,
       contentCount: l.contentItems.length,
       quizCount: l.quizzes.length,
@@ -433,6 +435,7 @@ export default async function InstructorCourseEditPage({
                             title: m.title,
                             orderIndex: m.orderIndex,
                             isHidden: m.isHidden,
+                            isLocked: m.isLocked,
                             lessons: sidebarModule.lessons,
                           }}
                           order={i + 1}

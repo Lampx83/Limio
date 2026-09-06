@@ -1,0 +1,80 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@feedbackme/db";
+import { assertCanEditCourse, CourseAuthzError, getCourseEngagement } from "@feedbackme/core-lms";
+import { requireUserId } from "@/lib/session";
+import { csvResponse } from "@/lib/csvExport";
+import { identityCols, learnerIndex } from "@/lib/researchExport";
+
+export const runtime = "nodejs";
+
+/**
+ * B13 — một dòng cho mỗi cặp (người học × bài học): họ ở lại bài bao lâu, cuộn
+ * tới đâu, xem được bao nhiêu phần video.
+ *
+ * Xuất cả những người CHƯA từng mở bài, dưới dạng dòng 0: thiếu dữ liệu và
+ * "không đọc" là hai chuyện khác nhau, mà một bảng chỉ có người đã đọc thì
+ * không phân biệt được — và sẽ đẩy mọi giá trị trung bình lên cao.
+ */
+export async function GET(
+  _req: Request,
+  { params }: { params: { courseId: string } },
+) {
+  const userId = await requireUserId();
+  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  try {
+    await assertCanEditCourse(userId, params.courseId);
+  } catch (err) {
+    if (err instanceof CourseAuthzError) {
+      return NextResponse.json(
+        { error: err.code === "not_found" ? "course_not_found" : "forbidden" },
+        { status: err.code === "not_found" ? 404 : 403 },
+      );
+    }
+    throw err;
+  }
+
+  const course = await prisma.course.findUnique({
+    where: { id: params.courseId },
+    select: { slug: true },
+  });
+  if (!course) return NextResponse.json({ error: "course_not_found" }, { status: 404 });
+
+  const [index, engagement, lessons] = await Promise.all([
+    learnerIndex(params.courseId),
+    getCourseEngagement(params.courseId),
+    prisma.lesson.findMany({
+      where: { module: { courseId: params.courseId }, isHidden: false },
+      select: {
+        id: true,
+        title: true,
+        orderIndex: true,
+        module: { select: { title: true, orderIndex: true } },
+      },
+      orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
+    }),
+  ]);
+
+  const byPair = new Map(engagement.map((e) => [`${e.userId}:${e.lessonId}`, e]));
+
+  const out: Array<Record<string, unknown>> = [];
+  for (const [uid, ref] of index) {
+    for (const l of lessons) {
+      const e = byPair.get(`${uid}:${l.id}`);
+      out.push({
+        ...identityCols(ref),
+        Module: l.module.title,
+        "Bài học": l.title,
+        "Thứ tự bài": l.orderIndex + 1,
+        "Đã mở bài?": e !== undefined,
+        "Thời gian đọc (giây)": e?.activeSec ?? 0,
+        "Cuộn sâu nhất (%)": e?.maxScrollPct ?? 0,
+        "Xem video (%)": e?.maxVideoPct ?? 0,
+        "Số lượt mở": e?.sessionCount ?? 0,
+        "Lần cuối vào": e?.lastSeenAt ?? "",
+      });
+    }
+  }
+
+  const day = new Date().toISOString().slice(0, 10);
+  return csvResponse(`nghien-cuu-doc-bai-${course.slug}-${day}.csv`, out);
+}

@@ -31,8 +31,10 @@ export default function LessonActionMenu({
   siblingLessonIds,
   modules,
   isHidden,
+  isLocked,
   previewable,
   onToggleHidden,
+  onToggleLocked,
   onTogglePreviewable,
 }: {
   lessonId: string;
@@ -45,8 +47,10 @@ export default function LessonActionMenu({
   /** All modules in the course — used for cross-module move sub-menu. */
   modules?: ModuleRef[];
   isHidden?: boolean;
+  isLocked?: boolean;
   previewable?: boolean;
   onToggleHidden?: () => void;
+  onToggleLocked?: () => void;
   onTogglePreviewable?: () => void;
 }) {
   const router = useRouter();
@@ -189,18 +193,33 @@ export default function LessonActionMenu({
                 tone={isHidden ? "danger" : undefined}
               />
             )}
+            {onToggleLocked && (
+              <MenuItem
+                Icon={isLocked ? Lock : Unlock}
+                label={isLocked ? "Đang khoá nội dung" : "Nội dung đang mở"}
+                hint={isLocked ? "Bấm để mở" : "Bấm để khoá"}
+                onClick={() => {
+                  onToggleLocked();
+                  close();
+                }}
+              />
+            )}
             {onTogglePreviewable && (
               <MenuItem
-                Icon={previewable ? Unlock : Lock}
-                label={previewable ? "Cho phép preview" : "Khoá preview"}
-                hint={previewable ? "Bấm để khoá lại" : "Bấm để mở preview"}
+                Icon={previewable ? Eye : EyeOff}
+                label={
+                  previewable
+                    ? "Người chưa ghi danh xem thử được"
+                    : "Chỉ học viên đã ghi danh xem được"
+                }
+                hint={previewable ? "Bấm để tắt xem thử" : "Bấm để mở xem thử"}
                 onClick={() => {
                   onTogglePreviewable();
                   close();
                 }}
               />
             )}
-            {(onToggleHidden || onTogglePreviewable) && (
+            {(onToggleHidden || onToggleLocked || onTogglePreviewable) && (
               <div role="separator" className="my-1 border-t border-token" />
             )}
             <MenuItem Icon={Copy} label="Duplicate lesson" onClick={duplicate} />

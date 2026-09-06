@@ -14,6 +14,7 @@ interface Lesson {
   orderIndex: number;
   previewable: boolean;
   isHidden: boolean;
+  isLocked: boolean;
   contentItems: Array<{
     id: string;
     type: string;
@@ -126,6 +127,7 @@ export default function LessonSection({
           orderIndex={lesson.orderIndex}
           previewable={lesson.previewable}
           isHidden={lesson.isHidden}
+          isLocked={lesson.isLocked}
           noSkill={noSkill}
           showTitle={flat}
           tags={lesson.skillTags.map((t) => ({

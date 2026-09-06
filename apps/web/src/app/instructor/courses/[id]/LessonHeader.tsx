@@ -33,6 +33,7 @@ export default function LessonHeader({
   orderIndex,
   previewable: initialPreviewable,
   isHidden: initialIsHidden,
+  isLocked = false,
   noSkill = false,
   showTitle = false,
   tags = [],
@@ -49,6 +50,7 @@ export default function LessonHeader({
   orderIndex: number;
   previewable: boolean;
   isHidden: boolean;
+  isLocked?: boolean;
   noSkill?: boolean;
   showTitle?: boolean;
   tags?: SkillTag[];
@@ -197,6 +199,7 @@ export default function LessonHeader({
           lessonId={lessonId}
           order={order}
           isHidden={isHidden}
+          isLocked={isLocked}
           previewable={previewable}
           tags={tags}
           title={title}

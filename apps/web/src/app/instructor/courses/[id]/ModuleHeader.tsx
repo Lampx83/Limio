@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2, Lock, LockOpen } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 export default function ModuleHeader({
@@ -11,18 +11,21 @@ export default function ModuleHeader({
   order,
   orderIndex,
   isHidden: initialIsHidden,
+  isLocked: initialIsLocked,
 }: {
   moduleId: string;
   title: string;
   order: number;
   orderIndex: number;
   isHidden: boolean;
+  isLocked: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [t, setT] = useState(title);
   const [oi, setOi] = useState(orderIndex);
   const [isHidden, setIsHidden] = useState(initialIsHidden);
+  const [isLocked, setIsLocked] = useState(initialIsLocked);
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -47,6 +50,17 @@ export default function ModuleHeader({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isHidden: next }),
+    });
+    router.refresh();
+  }
+
+  async function toggleLocked() {
+    const next = !isLocked;
+    setIsLocked(next);
+    await fetch(apiUrl(`/api/modules/${moduleId}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isLocked: next }),
     });
     router.refresh();
   }
@@ -122,6 +136,27 @@ export default function ModuleHeader({
           aria-pressed={isHidden}
         >
           {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+        <button
+          type="button"
+          onClick={toggleLocked}
+          disabled={isHidden}
+          className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:opacity-30 ${
+            isLocked
+              ? "bg-accent-50 text-accent-700 hover:bg-accent-100"
+              : "text-faint hover:bg-brand-soft hover:text-brand-600"
+          }`}
+          title={
+            isHidden
+              ? "Module đang ẩn — học viên không thấy gì, nên khoá không còn ý nghĩa"
+              : isLocked
+                ? "Đang khoá — học viên thấy tên bài kèm ổ khoá nhưng không mở được. Bấm để mở"
+                : "Đang mở — bấm để khoá (học viên vẫn thấy tên bài, nhưng không xem được nội dung)"
+          }
+          aria-label={isLocked ? "Mở khoá module" : "Khoá module"}
+          aria-pressed={isLocked}
+        >
+          {isLocked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
         </button>
         <button
           type="button"

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Lock } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { getCourseProgress, isUserEnrolled } from "@feedbackme/core-lms";
 import {
@@ -227,6 +228,29 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                         if (l.isHidden) return null;
 
                         const completed = completedSet.has(l.id);
+                        const locked = m.isLocked || l.isLocked;
+
+                        // B14 — khoá thì vẫn thấy tên bài (để biết lộ trình còn
+                        // gì) nhưng không phải liên kết: bấm vào rồi mới bị chặn
+                        // chỉ làm người học tưởng mình bấm hỏng.
+                        if (locked) {
+                          return (
+                            <li key={l.id}>
+                              <div
+                                className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-1.5 text-faint"
+                                title="Nội dung đang khoá — giảng viên sẽ mở sau"
+                              >
+                                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))]">
+                                  <Lock className="h-3 w-3" aria-hidden />
+                                </span>
+                                <span className="flex-1 text-sm">{l.title}</span>
+                                <span className="text-[10px] uppercase tracking-wide">
+                                  Đang khoá
+                                </span>
+                              </div>
+                            </li>
+                          );
+                        }
 
                         return (
                           <li key={l.id}>

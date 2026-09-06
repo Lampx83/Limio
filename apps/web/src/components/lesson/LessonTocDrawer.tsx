@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { List, X, Check } from "lucide-react";
+import { List, X, Check, Lock } from "lucide-react";
 
-type TocLesson = { id: string; title: string; completed: boolean };
+type TocLesson = { id: string; title: string; completed: boolean; locked?: boolean };
 type TocModule = { id: string; title: string; lessons: TocLesson[] };
 
 export default function LessonTocDrawer({
@@ -112,6 +112,48 @@ export default function LessonTocDrawer({
                       {m.lessons.map((l) => {
                         counter++;
                         const active = l.id === currentLessonId;
+                        const num = (
+                          <span
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                              l.locked
+                                ? "bg-[rgb(var(--surface-muted))] text-faint"
+                                : l.completed
+                                  ? "bg-emerald-500 text-white"
+                                  : active
+                                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200"
+                                    : "bg-[rgb(var(--surface-muted))] text-faint"
+                            }`}
+                          >
+                            {l.locked ? (
+                              <Lock size={11} strokeWidth={2.5} aria-hidden />
+                            ) : l.completed ? (
+                              <Check size={12} strokeWidth={3} />
+                            ) : (
+                              counter
+                            )}
+                          </span>
+                        );
+
+                        // Bài đang khoá: vẫn thấy tên để biết lộ trình còn gì,
+                        // nhưng không phải một liên kết — bấm vào rồi mới bị
+                        // chặn thì chỉ tổ làm người học tưởng mình bấm hỏng.
+                        if (l.locked) {
+                          return (
+                            <li key={l.id}>
+                              <div
+                                className="flex cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-faint"
+                                title="Nội dung đang khoá — giảng viên sẽ mở sau"
+                              >
+                                {num}
+                                <span className="flex-1 truncate">{l.title}</span>
+                                <span className="shrink-0 text-[10px] uppercase tracking-wide">
+                                  Đang khoá
+                                </span>
+                              </div>
+                            </li>
+                          );
+                        }
+
                         return (
                           <li key={l.id}>
                             <Link
@@ -123,17 +165,7 @@ export default function LessonTocDrawer({
                                   : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                               }`}
                             >
-                              <span
-                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                                  l.completed
-                                    ? "bg-emerald-500 text-white"
-                                    : active
-                                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200"
-                                      : "bg-[rgb(var(--surface-muted))] text-faint"
-                                }`}
-                              >
-                                {l.completed ? <Check size={12} strokeWidth={3} /> : counter}
-                              </span>
+                              {num}
                               <span className="flex-1 truncate">{l.title}</span>
                             </Link>
                           </li>

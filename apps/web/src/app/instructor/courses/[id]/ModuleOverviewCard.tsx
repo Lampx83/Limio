@@ -6,6 +6,7 @@ interface OverviewLesson {
   id: string;
   title: string;
   isHidden: boolean;
+  isLocked: boolean;
   noSkill: boolean;
   contentCount: number;
   quizCount: number;
@@ -23,6 +24,7 @@ export default function ModuleOverviewCard({
     title: string;
     orderIndex: number;
     isHidden: boolean;
+    isLocked: boolean;
     lessons: OverviewLesson[];
   };
   order: number;
@@ -41,6 +43,7 @@ export default function ModuleOverviewCard({
         order={order}
         orderIndex={module.orderIndex}
         isHidden={module.isHidden}
+        isLocked={module.isLocked}
       />
 
       <ul className="divide-y divide-token border-t border-token">
@@ -68,6 +71,9 @@ export default function ModuleOverviewCard({
                 <span className="chip-accent text-xs">chưa tag skill</span>
               )}
               {l.isHidden && <span className="chip-danger text-xs">Ẩn</span>}
+              {!l.isHidden && (l.isLocked || module.isLocked) && (
+                <span className="chip-accent text-xs">Khoá</span>
+              )}
               <span className="hidden sm:inline text-xs text-faint">
                 {l.contentCount}c · {l.quizCount}q · {l.assignmentCount}a
               </span>

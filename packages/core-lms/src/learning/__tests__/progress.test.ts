@@ -108,6 +108,31 @@ describe("getCourseProgress", () => {
     expect(p.modules[0]!.lessons).toHaveLength(1);
   });
 
+  it("bài đã KHOÁ vẫn hiện trong mục lục, có cờ locked, và vẫn tính vào mẫu số", async () => {
+    const { learnerId, courseId, moduleIds, lessonIds } = await build("p6", [2, 1]);
+
+    await prisma.lesson.update({
+      where: { id: lessonIds[0]![1]! },
+      data: { isLocked: true },
+    });
+    await prisma.module.update({
+      where: { id: moduleIds[1]! },
+      data: { isLocked: true },
+    });
+
+    const p = await getCourseProgress(learnerId, courseId);
+
+    // Khoá KHÁC ẩn: học viên vẫn thấy tên bài, nên nó vẫn nằm trong mục lục và
+    // trong mẫu số — họ biết mình còn phải học những gì.
+    expect(p.totalLessons).toBe(3);
+    expect(p.modules).toHaveLength(2);
+
+    expect(p.modules[0]!.lessons[0]!.locked).toBe(false);
+    expect(p.modules[0]!.lessons[1]!.locked).toBe(true);
+    // Khoá cả module thì bài bên trong khoá theo, không cần bật cờ từng bài.
+    expect(p.modules[1]!.lessons[0]!.locked).toBe(true);
+  });
+
   it("100% after all lessons done", async () => {
     const { learnerId, courseId, lessonIds } = await build("p3", [1, 1]);
     for (const mod of lessonIds) {

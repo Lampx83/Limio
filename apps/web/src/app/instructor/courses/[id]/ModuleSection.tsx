@@ -10,12 +10,14 @@ interface Lesson {
   orderIndex: number;
   previewable: boolean;
   isHidden: boolean;
+  isLocked: boolean;
   contentItems: Array<{
     id: string;
     type: string;
     payload: unknown;
     orderIndex: number;
     isHidden: boolean;
+  isLocked: boolean;
   }>;
   skillTags: Array<{
     id: string;
@@ -29,6 +31,7 @@ interface Lesson {
     dueAt: Date | null;
     maxScore: number;
     isHidden: boolean;
+  isLocked: boolean;
     pedagogicalIntent?:
       | "summarizing"
       | "mapping"
@@ -51,6 +54,7 @@ interface Lesson {
     timeLimitSec: number | null;
     maxAttempts: number | null;
     isHidden: boolean;
+  isLocked: boolean;
     questions: Array<{
       id: string;
       type: string;
@@ -81,6 +85,7 @@ interface Module {
   title: string;
   orderIndex: number;
   isHidden: boolean;
+  isLocked: boolean;
   lessons: Lesson[];
 }
 
@@ -107,6 +112,7 @@ export default function ModuleSection({
         order={order}
         orderIndex={module.orderIndex}
         isHidden={module.isHidden}
+        isLocked={module.isLocked}
       />
 
       {/* Module Stats */}

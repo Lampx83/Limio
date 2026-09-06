@@ -29,7 +29,7 @@ import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
-import { Download } from "lucide-react";
+import { Download, Lock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +60,7 @@ export default async function LessonPage({
     where: { id: params.lessonId },
     include: {
       module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true } } } },
+      // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
         select: {
@@ -126,6 +127,36 @@ export default async function LessonPage({
   if (lesson.module.isHidden && !canEdit) notFound();
   const teacherMode = canEdit && searchParams?.gv === "1";
   const stageMode = searchParams?.stage === "1";
+
+  // B14 — khoá thì học viên vẫn biết bài này tồn tại (mục lục hiện tên kèm ổ
+  // khoá), nhưng nội dung không được gửi xuống trình duyệt. Chặn ngay ở đây,
+  // trước mọi truy vấn nội dung, chứ không giấu bằng CSS: giấu bằng CSS thì
+  // toàn bộ bài vẫn nằm trong mã nguồn trang.
+  const lockedForLearner = (lesson.isLocked || lesson.module.isLocked) && !canEdit;
+  if (lockedForLearner) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <Link
+          href={`/learn/${params.slug}`}
+          className="text-sm text-muted underline decoration-dotted"
+        >
+          ← {lesson.module.course.title}
+        </Link>
+        <div className="mt-8 rounded-2xl border border-token bg-[rgb(var(--surface))] px-6 py-10">
+          <Lock className="mx-auto h-10 w-10 text-faint" aria-hidden />
+          <h1 className="mt-4 text-xl font-semibold">{lesson.title}</h1>
+          <p className="mt-1 text-sm text-faint">{lesson.module.title}</p>
+          <p className="mt-4 text-sm text-muted">
+            Nội dung bài này đang khoá. Giảng viên sẽ mở khi lớp học tới phần
+            này — bạn không cần làm gì thêm.
+          </p>
+          <Link href={`/learn/${params.slug}`} className="btn-primary mt-6 inline-block">
+            Về trang khoá học
+          </Link>
+        </div>
+      </main>
+    );
+  }
   if (!enrolled && !canEdit) {
     if (!userId) {
       // Logged out: public courses render as preview, everything else signs in.
