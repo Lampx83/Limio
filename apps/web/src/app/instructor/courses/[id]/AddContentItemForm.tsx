@@ -80,10 +80,12 @@ type ContentType =
   | "pdf"
   | "scorm"
   | "lti"
-  | "h5p";
+  | "h5p"
+  | "teacher_note";
 
 const TYPE_LABEL: Record<ContentType, string> = {
   richtext: "Văn bản (rich text)",
+  teacher_note: "Ghi chú giảng viên (học viên không thấy)",
   markdown: "Markdown",
   video: "Video",
   embed: "Embed",
@@ -325,6 +327,7 @@ export default function AddContentItemForm({
         payload = { body };
         break;
       case "richtext":
+      case "teacher_note":
         if (!html.trim()) {
           setError("empty_content");
           setBusy(false);
@@ -441,12 +444,22 @@ export default function AddContentItemForm({
         />
       )}
 
-      {type === "richtext" && (
+      {(type === "richtext" || type === "teacher_note") && (
         <RichTextEditor
           value={html}
           onChange={setHtml}
-          placeholder="Nhập nội dung văn bản..."
+          placeholder={
+            type === "teacher_note"
+              ? "Ghi chú cho chính bạn khi đứng lớp: hỏi câu gì, dừng ở đâu, đáp án…"
+              : "Nhập nội dung văn bản..."
+          }
         />
+      )}
+      {type === "teacher_note" && (
+        <p className="text-xs text-muted">
+          Khối này không bao giờ gửi tới học viên — kể cả ở bản in. Nó chỉ hiện khi bạn
+          bật &ldquo;Hiện ghi chú&rdquo; trong chế độ giảng viên trên trang bài học.
+        </p>
       )}
 
       {(type === "video" ||

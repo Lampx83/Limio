@@ -15,7 +15,8 @@ type ContentSubtype =
   | "embed"
   | "scorm"
   | "h5p"
-  | "lti";
+  | "lti"
+  | "teacher_note";
 
 type Tile = {
   /** Unique key */
@@ -47,6 +48,15 @@ const TILES: Tile[] = [
     description: "Soạn thảo trực quan (rich text) — bold, list, link, heading",
     keywords: "text richtext wysiwyg editor van ban",
     pick: { kind: "content", subtype: "richtext" },
+  },
+  {
+    key: "teacher_note",
+    group: "resource",
+    icon: "🗒️",
+    name: "Ghi chú giảng viên",
+    description: "Chỉ bạn thấy khi dạy — học viên và bản in của họ không có",
+    keywords: "ghi chu giao an speaker note teacher presenter giang vien",
+    pick: { kind: "content", subtype: "teacher_note" },
   },
   {
     key: "markdown",

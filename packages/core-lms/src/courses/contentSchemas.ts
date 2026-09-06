@@ -100,6 +100,16 @@ export const H5pPayload = z.object({
   title: z.string().max(200).optional(),
 });
 
+/**
+ * Ghi chú của giảng viên, hiển thị xen giữa nội dung nhưng chỉ cho người có
+ * quyền sửa khoá. Cùng hình dạng với richtext để dùng lại đúng bộ soạn thảo và
+ * đúng đường làm sạch HTML — khác nhau ở chỗ ai được nhìn thấy, không ở chỗ nó
+ * chứa gì.
+ */
+export const TeacherNotePayload = z.object({
+  html: z.string().min(1).max(200_000),
+});
+
 const PAYLOAD_BY_TYPE = {
   video: VideoPayload,
   markdown: MarkdownPayload,
@@ -111,6 +121,7 @@ const PAYLOAD_BY_TYPE = {
   scorm: ScormPayload,
   lti: LtiPayload,
   h5p: H5pPayload,
+  teacher_note: TeacherNotePayload,
 } as const;
 
 export type ContentTypeKey = keyof typeof PAYLOAD_BY_TYPE;

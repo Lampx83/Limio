@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { isUserEnrolled } from "@feedbackme/core-lms";
+import { canEditCourse, isUserEnrolled } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
@@ -22,8 +22,11 @@ export const dynamic = "force-dynamic";
 
 export default async function LessonPrintPage({
   params,
+  searchParams,
 }: {
   params: { slug: string; lessonId: string };
+  /** `gv=1`: bản in kèm ghi chú giảng viên, chỉ dựng cho người có quyền sửa khoá. */
+  searchParams?: { gv?: string };
 }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
@@ -48,6 +51,10 @@ export default async function LessonPrintPage({
       // Cùng bộ lọc với trang bài học: khối bị ẩn là khối giảng viên CỐ Ý giấu
       // (đáp án, ghi chú riêng). Trang in trước đây lấy hết, nên bấm
       // "In / Lưu PDF" là thấy đúng những thứ vừa giấu.
+      //
+      // Ghi chú giảng viên lấy về hết ở đây rồi lọc bên dưới theo quyền: bản in
+      // của giảng viên (?gv=1) có ghi chú để cầm lên bục, bản của học viên thì
+      // không.
       contentItems: { where: { isHidden: false }, orderBy: { orderIndex: "asc" } },
     },
   });
@@ -68,6 +75,14 @@ export default async function LessonPrintPage({
       redirect(`/catalog/${params.slug}${paid ? "?paywall=1" : ""}`);
     }
   }
+
+  // Ghi chú chỉ đi vào bản in khi CẢ HAI đúng: người xem có quyền sửa khoá, và
+  // họ chủ động xin bản có ghi chú. Thiếu một trong hai thì lọc sạch.
+  const canEdit = userId ? await canEditCourse(userId, course.id) : false;
+  const withNotes = canEdit && searchParams?.gv === "1";
+  const printItems = lesson.contentItems.filter(
+    (c) => c.type !== "teacher_note" || withNotes,
+  );
 
   const printedAt = new Intl.DateTimeFormat("vi-VN", {
     dateStyle: "long",
@@ -91,9 +106,27 @@ export default async function LessonPrintPage({
         )}
       </header>
 
-      {lesson.contentItems.map((item) => {
+      {printItems.map((item) => {
         const payload = (item.payload ?? {}) as Record<string, unknown>;
         const html = typeof payload.html === "string" ? payload.html : null;
+        if (html && item.type === "teacher_note") {
+          // Trên giấy không có màu nền để phân biệt, nên ghi chú phải tự nói ra
+          // nó là ghi chú — cầm nhầm tờ rồi đọc to lên lớp thì không rút lại được.
+          return (
+            <aside
+              key={item.id}
+              className="mt-6 border-l-4 border-accent-400 pl-4"
+            >
+              <p className="text-xs font-bold uppercase tracking-wider text-accent-700">
+                Ghi chú giảng viên · không phát cho học viên
+              </p>
+              <SafeHtml
+                html={html}
+                className="prose prose-sm mt-1 max-w-none dark:prose-invert"
+              />
+            </aside>
+          );
+        }
         if (html) {
           return (
             <SafeHtml

@@ -213,6 +213,31 @@ function ContentBlock({
         />
       );
     }
+    /**
+     * Ghi chú giảng viên. Chỉ tới được đây khi trang đã xác nhận người xem có
+     * quyền sửa khoá — component này không tự kiểm tra quyền, và không được
+     * phép là nơi duy nhất kiểm tra.
+     *
+     * Trông phải KHÁC hẳn nội dung bài: đang dạy thì mắt chỉ liếc, nhầm ghi chú
+     * thành nội dung rồi đọc to lên trước lớp là hỏng.
+     */
+    case "teacher_note": {
+      const p = payload as RichTextPayload;
+      return (
+        <aside
+          data-teacher-note
+          className="rounded-xl border-l-4 border-accent-400 bg-accent-50 p-4 dark:bg-[rgb(var(--surface-muted))]"
+        >
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-300">
+            Ghi chú giảng viên · học viên không thấy
+          </p>
+          <SafeHtml
+            html={p.html}
+            className="prose prose-sm max-w-none dark:prose-invert"
+          />
+        </aside>
+      );
+    }
     case "external_link": {
       const p = payload as ExternalLinkPayload;
       return (

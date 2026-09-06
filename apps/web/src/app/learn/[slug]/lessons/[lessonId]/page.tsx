@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import {
+  canEditCourse,
   getCourseProgress,
   isUserEnrolled,
   listThreadsForLesson,
@@ -25,6 +26,7 @@ import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
+import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
 import { Download } from "lucide-react";
 
@@ -37,8 +39,16 @@ const NO_USER = "__anonymous__";
 
 export default async function LessonPage({
   params,
+  searchParams,
 }: {
   params: { slug: string; lessonId: string };
+  /**
+   * `gv=1` bật chế độ giảng viên (hiện ghi chú), `stage=1` biến trang thành
+   * màn chiếu: bỏ hết phần điều hướng, chỉ còn nội dung. Cả hai đều nằm trên
+   * URL chứ không phải trong state, để cửa sổ trình chiếu mở ra bằng một
+   * đường dẫn là xong.
+   */
+  searchParams?: { gv?: string; stage?: string };
 }) {
   const session = await auth();
   // May be null: courses with `publicAccess` are readable logged-out. Everything
@@ -105,7 +115,13 @@ export default async function LessonPage({
     lesson.module.course.publicAccess && lesson.module.course.status === "published";
 
   const enrolled = userId ? await isUserEnrolled(userId, lesson.module.course.id) : false;
-  if (!enrolled) {
+  // Người dạy khoá này vào được bài mà không cần ghi danh — trước đây họ bị đá
+  // về trang giới thiệu, tức là muốn xem bài mình vừa soạn thì phải tự ghi danh
+  // vào khoá của chính mình.
+  const canEdit = userId ? await canEditCourse(userId, lesson.module.course.id) : false;
+  const teacherMode = canEdit && searchParams?.gv === "1";
+  const stageMode = searchParams?.stage === "1";
+  if (!enrolled && !canEdit) {
     if (!userId) {
       // Logged out: public courses render as preview, everything else signs in.
       if (!publiclyReadable) {
@@ -130,7 +146,7 @@ export default async function LessonPage({
   // Preview mode: anyone without an enrollment — logged out on a public course, or
   // logged in on a previewable lesson. Skip enrollment-dependent queries and render
   // with a CTA banner.
-  if (!enrolled) {
+  if (!enrolled && !canEdit) {
     const anonymous = userId === null;
     // Forum stays behind sign-in: threads carry learner display names, and
     // publishing those to the open internet is not something a course-visibility
@@ -218,7 +234,10 @@ export default async function LessonPage({
     redirect(`/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`);
   }
 
-  const enrollment = await prisma.enrollment.findUniqueOrThrow({
+  // Giảng viên vào bài mà không ghi danh thì không có hàng enrollment — nên
+  // findUnique chứ không phải findUniqueOrThrow, và mọi thứ đọc từ nó phải
+  // chịu được null (vị trí học dở, tiến độ khoá).
+  const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId: lesson.module.course.id } },
   });
 
@@ -364,8 +383,28 @@ export default async function LessonPage({
     requireScrollToEnd: !hasNativeVideo && !hasAnyActivity,
   };
 
+  // Ghi chú giảng viên là một LOẠI nội dung riêng, không phải khối bị ẩn: học
+  // viên không bao giờ nhận được nó, kể cả khi ai đó lỡ bật `isHidden` sai.
+  const teacherNotes = lesson.contentItems.filter((c) => c.type === "teacher_note");
+  const visibleItems = lesson.contentItems
+    .filter((c) => !c.isHidden)
+    .filter((c) => c.type !== "teacher_note" || teacherMode)
+    .map((c) => ({
+      id: c.id,
+      type: c.type,
+      payload: c.payload,
+      orderIndex: c.orderIndex,
+    }));
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
+    <main
+      // `data-stage` bật bộ CSS biến trang thành màn chiếu: giấu mọi thứ trừ
+      // khối nội dung, phóng cỡ chữ. Làm bằng CSS chứ không dựng một trang
+      // riêng — hai bản nội dung khác nhau là hai bản có thể lệch nhau.
+      data-stage={stageMode ? "1" : undefined}
+      className="mx-auto max-w-6xl px-4 py-6 lg:px-6"
+    >
+      {stageMode && <StageListener lessonId={lesson.id} />}
       {/*
         Breadcrumb + mọi hành động của bài trên CÙNG một hàng.
         Trước đây "Tải PDF" nằm ở đây còn "In / Lưu PDF" nằm ngay trên nội dung —
@@ -413,7 +452,9 @@ export default async function LessonPage({
           {/* Toàn màn hình + bản in (mở tab mới, trang in tự gọi hộp thoại in). */}
           <LessonContentToolbar
             targetId="lesson-stage"
-            printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
+            printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
+              teacherMode ? "?gv=1" : ""
+            }`}
           />
         </div>
         <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
@@ -453,6 +494,16 @@ export default async function LessonPage({
         />
       </div>
 
+      {canEdit && !stageMode && (
+        <TeacherBar
+          lessonId={lesson.id}
+          lessonTitle={lesson.title}
+          teacherMode={teacherMode}
+          noteCount={teacherNotes.length}
+          containerId="lesson-content"
+        />
+      )}
+
       {/* Nội dung bài + mục lục nổi bên trái (từ 1280px trở lên).
           Khối phóng toàn màn hình là #lesson-stage chứ không phải riêng phần
           nội dung: phóng to mà bỏ mục lục lại phía sau thì bài dài mất luôn
@@ -465,14 +516,7 @@ export default async function LessonPage({
         <div>
         <div id="lesson-content">
         <LessonContent
-          items={lesson.contentItems
-            .filter((c) => !c.isHidden)
-            .map((c) => ({
-              id: c.id,
-              type: c.type,
-              payload: c.payload,
-              orderIndex: c.orderIndex,
-            }))}
+          items={visibleItems}
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
         />
@@ -519,7 +563,7 @@ export default async function LessonPage({
         courseSlug={params.slug}
         completed={completedEvent !== null}
         initialResumeSec={
-          enrollment.lastLessonId === lesson.id
+          enrollment?.lastLessonId === lesson.id
             ? enrollment.lastPositionSec ?? 0
             : 0
         }

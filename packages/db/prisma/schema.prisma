@@ -367,6 +367,11 @@ enum ContentType {
   scorm
   lti
   h5p
+  // Ghi chú của giảng viên, xen giữa nội dung bài. KHÔNG BAO GIỜ gửi cho học
+  // viên: mọi truy vấn phía học viên (trang bài, trang in) lọc loại này ra ở
+  // tầng truy vấn, chứ không dựa vào `isHidden` — cờ ấy do giảng viên bật tắt
+  // nên có ngày quên, còn loại nội dung thì không quên được.
+  teacher_note
 }
 
 model ContentItem {

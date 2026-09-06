@@ -496,6 +496,41 @@ body.gameshow-immersive main.mx-auto {
   }
 }
 
+/* ── Màn chiếu (?stage=1) ────────────────────────────────────────────────────
+   Cửa sổ thứ hai mà giảng viên kéo sang máy chiếu. Vẫn đúng trang bài học ấy,
+   chỉ bỏ mọi thứ không phải nội dung và phóng cỡ chữ lên — người ngồi cuối lớp
+   đọc màn hình từ 6–8 mét, còn thanh điều hướng thì không ai cần nhìn.
+   Giấu bằng bộ chọn "mọi con trực tiếp trừ khối nội dung" thay vì gắn cờ lên
+   từng phần: thêm một khối mới vào trang sau này thì nó tự nằm ngoài màn chiếu,
+   không phải nhớ gắn cờ. */
+main[data-stage="1"] {
+  max-width: none;
+  padding: 1.5rem 2.5rem 4rem;
+}
+main[data-stage="1"] > *:not(#lesson-stage) {
+  display: none !important;
+}
+main[data-stage="1"] nav[aria-label="Mục lục bài học"] {
+  display: none;
+}
+main[data-stage="1"] #lesson-stage {
+  display: block;
+  margin-top: 0;
+}
+main[data-stage="1"] #lesson-content {
+  font-size: 1.2rem;
+}
+main[data-stage="1"] #lesson-content h2 {
+  margin-top: 1.2rem;
+}
+/* Thanh tiêu đề và chân trang của site nằm ngoài <main>, và không phải con
+   trực tiếp của body (layout bọc thêm vài lớp div) — nên bắt ở bất kỳ độ sâu
+   nào thay vì bằng dấu ">". */
+body:has(main[data-stage="1"]) header,
+body:has(main[data-stage="1"]) footer {
+  display: none;
+}
+
 /* Bài học khi xem toàn màn hình: trình duyệt đặt nền đen mặc định và bỏ mọi
    lề, nên phải trả lại nền, lề đọc được và khả năng cuộn. Khối được phóng gồm
    cả mục lục nổi lẫn nội dung, nên vẫn giữ lưới hai cột ở màn rộng. */
