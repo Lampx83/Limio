@@ -45,7 +45,10 @@ export default async function LessonPrintPage({
           },
         },
       },
-      contentItems: { orderBy: { orderIndex: "asc" } },
+      // Cùng bộ lọc với trang bài học: khối bị ẩn là khối giảng viên CỐ Ý giấu
+      // (đáp án, ghi chú riêng). Trang in trước đây lấy hết, nên bấm
+      // "In / Lưu PDF" là thấy đúng những thứ vừa giấu.
+      contentItems: { where: { isHidden: false }, orderBy: { orderIndex: "asc" } },
     },
   });
 
