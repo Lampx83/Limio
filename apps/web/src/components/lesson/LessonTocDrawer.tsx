@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { List, X, Check } from "lucide-react";
 
 type TocLesson = { id: string; title: string; completed: boolean };
@@ -24,6 +25,9 @@ export default function LessonTocDrawer({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // Chỉ portal sau khi đã mount: document chưa tồn tại lúc render trên máy chủ.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Auto-close when navigating to another lesson.
   useEffect(() => {
@@ -59,9 +63,18 @@ export default function LessonTocDrawer({
         {triggerLabel}
       </button>
 
-      {open && (
+      {/*
+        Lớp phủ được portal thẳng ra <body>. Nút mở nằm trong thanh cố định
+        dưới đáy, mà thanh đó có `backdrop-blur` — một phần tử có filter trở
+        thành containing block cho mọi con `position: fixed`, nên nếu để tại
+        chỗ thì `inset-0` tính theo thanh chứ không theo màn hình: mục lục bị
+        ép thành một ô nhỏ nằm trong thanh.
+      */}
+      {open &&
+        mounted &&
+        createPortal(
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
           onClick={() => setOpen(false)}
           role="dialog"
           aria-label="Mục lục bài học"
@@ -132,8 +145,9 @@ export default function LessonTocDrawer({
               })}
             </nav>
           </aside>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }
