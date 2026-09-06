@@ -222,7 +222,24 @@ export default function QuizPlayer({
     });
   }
 
+  /** Đếm ngay tại thời điểm gọi — `answeredCount` bên dưới nằm sau early return. */
+  function answeredCountNow() {
+    const qs = data?.quiz.questions ?? [];
+    return qs.filter((q) => !isResponseEmpty(q, answers[q.id]?.response ?? null)).length;
+  }
+
   async function onSubmit() {
+    // Nộp bài là việc không lùi lại được. Trước đây nút nộp trông y hệt nút
+    // "Câu sau" và nằm ngay cạnh, nên một cú bấm nhầm là kết thúc lượt làm bài
+    // của người học. Hỏi lại, và nói rõ còn thiếu bao nhiêu câu.
+    const missing = quiz.questions.length - answeredCountNow();
+    if (missing > 0) {
+      const ok = window.confirm(
+        `Bạn còn ${missing} câu chưa trả lời. Nộp bài bây giờ thì những câu đó tính là bỏ trống và không sửa lại được.\n\nVẫn nộp?`,
+      );
+      if (!ok) return;
+    }
+
     // Chốt sổ câu đang mở trước khi gửi, nếu không thì đúng câu người học vừa
     // ngồi lâu nhất lại là câu duy nhất không được tính giờ.
     flushLatency();
@@ -258,6 +275,17 @@ export default function QuizPlayer({
   const currentQ = quiz.questions[currentStepIndex];
   const isFirst = currentStepIndex === 0;
   const isLast = currentStepIndex === quiz.questions.length - 1;
+
+  /*
+   * Màu của nút "Nộp bài" nói lên MỘT điều: đã trả lời hết chưa.
+   *
+   * Trước đây nút nộp và nút "Câu sau" dùng chung kiểu nền đặc, đặt cạnh nhau,
+   * nên màu không còn phân biệt được việc đi tiếp với việc kết thúc — và kết
+   * thúc thì không lùi lại được. Giờ trong lúc còn câu bỏ trống, nút nộp là nút
+   * viền: vẫn bấm được nếu thật sự muốn, nhưng không tranh chỗ với nút đi tiếp.
+   */
+  const allAnswered = answeredCount === quiz.questions.length;
+  const submitClass = allAnswered ? "btn-primary" : "btn-secondary";
 
   /** Dồn quãng vừa rồi vào câu đang hiện, rồi đặt lại mốc. */
   function flushLatency() {
@@ -361,9 +389,9 @@ export default function QuizPlayer({
               type="button"
               onClick={onSubmit}
               disabled={submitting}
-              className="btn-primary btn-sm"
+              className={`${submitClass} btn-sm`}
             >
-              {submitting ? "Đang nộp…" : "Nộp bài →"}
+              {submitting ? "Đang nộp…" : "Nộp bài"}
             </button>
           ) : (
             <button
@@ -444,7 +472,7 @@ export default function QuizPlayer({
             type="button"
             onClick={onSubmit}
             disabled={submitting}
-            className="btn-primary w-full"
+            className={`${submitClass} w-full`}
           >
             {submitting ? "Đang nộp…" : "Nộp bài"}
           </button>
@@ -470,7 +498,7 @@ export default function QuizPlayer({
             type="button"
             onClick={onSubmit}
             disabled={submitting}
-            className="btn-primary btn-sm ml-auto"
+            className={`${submitClass} btn-sm ml-auto`}
           >
             {submitting ? "Đang nộp…" : "Nộp bài"}
           </button>
