@@ -9,6 +9,7 @@ export const LearningEventType = {
   // LMS
   LessonViewed: "lesson.viewed",
   LessonCompleted: "lesson.completed",
+  LessonEngaged: "lesson.engaged",
   /** In-video quiz cuepoint passed (formative — not a full QuizAttempt). */
   VideoCuepointPassed: "video.cuepoint.passed",
   QuizStarted: "quiz.started",
@@ -125,6 +126,24 @@ export interface LessonViewedPayload {
   lessonId: string;
   durationSec: number;
   positionSec: number;
+}
+
+/**
+ * B11 — một lượt ngồi đọc bài đã khép lại. Phát khi người học rời bài (đóng
+ * tab, chuyển trang, hoặc ẩn tab đủ lâu), KHÔNG phát theo từng nhịp heartbeat:
+ * mỗi nhịp một event thì một lớp 60 người đọc 30 phút sinh ra hàng nghìn dòng
+ * mà chẳng nói thêm được gì so với một dòng tổng kết.
+ */
+export interface LessonEngagedPayload {
+  lessonId: string;
+  /** Số giây tab thực sự hiện và bài đang mở, trong riêng lượt này. */
+  activeSec: number;
+  /** Cuộn sâu nhất trong lượt này, 0–100. */
+  scrollPct: number;
+  /** Tỉ lệ video xem được cao nhất trong lượt này, 0–100. Không có video thì 0. */
+  videoPct: number;
+  /** Tổng số giây cộng dồn của bài này sau khi tính cả lượt vừa rồi. */
+  totalActiveSec: number;
 }
 
 export interface LessonCompletedPayload {

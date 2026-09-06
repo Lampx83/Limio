@@ -56,6 +56,7 @@ model User {
   authoredCourses         CourseInstructor[]
   quizAttempts            QuizAttempt[]
   learningEvents          LearningEvent[]
+  lessonEngagements       LessonEngagement[]
   verificationTokens      VerificationToken[]
   notes                   Note[]
   courseProgress          UserCourseProgress[]
@@ -346,6 +347,7 @@ model Lesson {
   // Unified, ordered view across contentItems + quizzes + assignments.
   // Use this when rendering the lesson's activity list (instructor + learner).
   activities        LessonActivity[]
+  engagements       LessonEngagement[]
   forumThreads      ForumThread[]
   aiConversations   AiConversation[]
   notes             Note[]
@@ -407,6 +409,42 @@ enum LessonActivityKind {
   content
   quiz
   assignment
+}
+
+/// B11 — mức tương tác của một người học với một bài, cộng dồn qua nhiều lượt.
+///
+/// Vì sao là một bảng trạng thái chứ không phải chỉ event: câu hỏi cần trả lời
+/// là "em này đọc bài đó bao lâu, cuộn tới đâu" — hỏi mỗi lần là phải quét lại
+/// toàn bộ event của em đó. Event `lesson.engaged` vẫn được phát mỗi lượt ngồi
+/// đọc để giữ được lịch sử; bảng này là bản tổng đã cộng sẵn.
+///
+/// `activeSec` chỉ đếm lúc tab thực sự hiện. Một tab mở suốt đêm không được
+/// tính là ba tiếng học bài — nếu tính, con số này vô dụng ngay từ đầu.
+model LessonEngagement {
+  id       String @id @default(uuid())
+  userId   String
+  lessonId String
+  // Denormalised — mọi truy vấn phân tích đều lọc theo khoá học trước.
+  courseId String
+
+  /// Tổng giây tab hiện và bài đang mở, cộng dồn mọi lượt.
+  activeSec    Int @default(0)
+  /// Cuộn sâu nhất từng đạt, 0-100.
+  maxScrollPct Int @default(0)
+  /// Tỉ lệ video xem được cao nhất từng đạt, 0-100. 0 khi bài không có video.
+  maxVideoPct  Int @default(0)
+  /// Số lượt mở bài. Mở đi mở lại nhiều lần là một tín hiệu khác hẳn đọc một mạch.
+  sessionCount Int @default(0)
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([courseId, lastSeenAt])
+  @@index([lessonId])
 }
 
 model LessonActivity {

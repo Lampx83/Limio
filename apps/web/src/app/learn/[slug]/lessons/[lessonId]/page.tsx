@@ -22,6 +22,7 @@ import LessonTasksTab, {
 } from "@/components/lesson/LessonTasksTab";
 import LessonStickyActions from "@/components/lesson/LessonStickyActions";
 import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
+import LessonEngagementTracker from "@/components/lesson/LessonEngagementTracker";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import LessonSectionNav from "@/components/lesson/LessonSectionNav";
@@ -492,6 +493,13 @@ export default async function LessonPage({
         still pending before scrolling into content. Self-hides once the lesson
         is already completed (server-rendered state via completedEvent).
       */}
+      {/*
+        B11 — chỉ đo người học đã ghi danh. Giảng viên xem lại bài của chính
+        mình, hay người xem thử bản preview, không phải dữ liệu học tập; trộn
+        vào là làm hỏng chính con số ta định dùng.
+      */}
+      {enrollment && !stageMode && <LessonEngagementTracker lessonId={lesson.id} />}
+
       <div className="mt-6">
         <LessonCompletionPrompt
           lessonId={lesson.id}

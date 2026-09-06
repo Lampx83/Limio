@@ -61,3 +61,46 @@ cơ bản, chỉ không nhận phần cá nhân hoá:
 4.1 `getAdaptiveNextLesson` trả `null` cho người học ở lớp `minimal`, nên thẻ
     "Đề xuất: …" không hiện ở trang khoá. Không bịt kênh này thì lớp đối chứng
     vẫn được định tuyến theo skill yếu và phép so sánh bị nhiễu.
+
+---
+
+# B11 — Log hành vi đọc bài
+
+**Bối cảnh.** Trước B11 hệ thống chỉ biết một người **đã mở** bài: `lesson.viewed`
+bắn đúng một lần lúc trang tải xong, kèm vị trí video *cũ* lấy từ lần trước.
+Trong dữ liệu, em đọc kỹ hai mươi phút và em mở bài rồi bỏ đó trông giống hệt
+nhau. `LessonCompletionPrompt` thậm chí **đã đo** tỉ lệ xem video và thời điểm
+cuộn hết bài rồi vứt đi, chỉ gửi lên một chuỗi `reason`.
+
+## Acceptance criteria
+
+**AC-1 — Đo đúng thứ đáng đo**
+1.1 Chỉ cộng giây khi tab thực sự hiện (`visibilitychange`). Tab để quên qua
+    đêm không được tính là tám tiếng học bài.
+1.2 Cuộn sâu nhất giữ mốc cao nhất, không tụt khi người học cuộn ngược lên.
+1.3 Tỉ lệ video lấy cao nhất trong các video của bài, đo không phụ thuộc vào
+    cấu hình tự động hoàn thành (trước đây chỉ đo khi bật `requireVideoWatch`).
+1.4 Mở lại bài sau khi đã rời đi được đếm là một lượt mới (`sessionCount`).
+
+**AC-2 — Không mất và không bịa số liệu**
+2.1 Máy khách gửi **phần chênh**, không gửi tổng: mất một nhịp thì mất đúng
+    nhịp đó, không làm lệch tổng.
+2.2 Nhịp cuối đi bằng `sendBeacon` để sống sót lúc đóng tab — đó là nhịp giữ
+    phần lớn thời gian của lượt đọc.
+2.3 Máy chủ chặn trần mỗi nhịp (`MAX_DELTA_SEC = 120`) và chặn `scrollPct`/
+    `videoPct` ngoài 0–100.
+2.4 Chỉ ghi cho người **đã ghi danh**. Giảng viên xem lại bài của mình hay
+    người xem bản preview không phải dữ liệu học tập.
+
+**AC-3 — Không làm ngập LearningEvent**
+3.1 `lesson.engaged` chỉ phát khi **khép một lượt** ngồi đọc, không phát theo
+    từng nhịp. Một lớp 60 người đọc 30 phút mà mỗi nhịp một dòng thì sinh ra
+    hàng nghìn dòng nói đúng những gì một dòng tổng kết đã nói.
+3.2 Lượt 0 giây không sinh event.
+3.3 Bảng `LessonEngagement` giữ bản tổng đã cộng sẵn, để không phải quét lại
+    toàn bộ event mỗi lần hỏi "em này đọc bài đó bao lâu".
+
+**AC-4 — Không chặn việc học**
+4.1 Mọi lỗi mạng của đường đo đều bị nuốt; người học không bao giờ thấy lỗi.
+4.2 Số liệu nằm trong `useRef`, không phải `useState` — cuộn và video chạy
+    không được kéo theo một lượt vẽ lại trang bài học.
