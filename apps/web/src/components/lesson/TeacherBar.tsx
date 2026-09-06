@@ -197,7 +197,9 @@ export default function TeacherBar({
       chan.current?.postMessage({ type: "goto", id: sections[i]!.id, ratio });
     };
     const onScroll = () => {
-      if (!timer) timer = setTimeout(send, 120);
+      // 50ms: mắt người thấy liền mạch, mà vẫn gom đủ để không gửi mỗi khung
+      // hình một tin. Cuộn một dòng cũng kịp sang màn chiếu.
+      if (!timer) timer = setTimeout(send, 50);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     // Bật Đồng bộ là màn chiếu nhảy về chỗ bạn đang đứng ngay, không phải chờ
@@ -209,6 +211,30 @@ export default function TeacherBar({
       if (timer) clearTimeout(timer);
     };
   }, [linked, sections]);
+
+  /**
+   * Phím mũi tên ← → nhảy mục, để không phải rê chuột qua lại giữa hai màn hình.
+   *
+   * Chỉ bắt khi con trỏ KHÔNG nằm trong ô nhập liệu — nếu không thì gõ tìm kiếm
+   * cũng làm lớp nhảy mục. Mũi tên trái/phải vốn để cuộn ngang, mà bài học
+   * không cuộn ngang, nên lấy dùng ở đây không giẫm chân ai.
+   */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))) return;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goto(Math.min(sections.length - 1, current + 1));
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goto(Math.max(0, current - 1));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goto, current, sections.length]);
 
   const openStage = () => {
     const url = `${pathname}?stage=1`;
@@ -252,7 +278,7 @@ export default function TeacherBar({
         onToggle={() => setLinked((v) => !v)}
         title={
           linked
-            ? "Màn chiếu đang đi theo bạn: bạn cuộn tới đâu, lớp thấy tới đó. Tắt nếu muốn đọc trước phần sau."
+            ? "Màn chiếu đang đi theo bạn: cuộn chuột ở cửa sổ này tới đâu, lớp thấy tới đó. Phím ← → để nhảy mục. Tắt nếu muốn đọc trước phần sau."
             : "Màn chiếu đang đứng yên. Bật để nó đi theo chỗ bạn đang xem."
         }
       />
@@ -286,7 +312,7 @@ export default function TeacherBar({
             onClick={() => goto(Math.max(0, current - 1))}
             disabled={current === 0}
             aria-label="Mục trước"
-            title="Về mục trước. Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
+            title="Về mục trước (phím ←). Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
             className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
           >
             <ChevronLeft size={16} />
@@ -300,7 +326,7 @@ export default function TeacherBar({
             onClick={() => goto(Math.min(sections.length - 1, current + 1))}
             disabled={current >= sections.length - 1}
             aria-label="Mục sau"
-            title="Sang mục sau. Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
+            title="Sang mục sau (phím →). Màn chiếu nhảy theo nếu công tắc “Màn chiếu bám theo” đang BẬT."
             className="rounded-full p-1 text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
           >
             <ChevronRight size={16} />
