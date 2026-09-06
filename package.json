@@ -24,7 +24,9 @@
     "import:course": "pnpm --filter @feedbackme/core-lms import:course",
     "import:course:prod": "pnpm --filter @feedbackme/core-lms import:course:prod",
     "update:lesson": "pnpm --filter @feedbackme/core-lms update:lesson",
-    "update:lesson:prod": "pnpm --filter @feedbackme/core-lms update:lesson:prod"
+    "update:lesson:prod": "pnpm --filter @feedbackme/core-lms update:lesson:prod",
+    "propose:misconceptions": "pnpm --filter @feedbackme/core-feedback propose:misconceptions",
+    "apply:misconceptions": "pnpm --filter @feedbackme/core-feedback apply:misconceptions"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

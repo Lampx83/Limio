@@ -57,6 +57,7 @@ export async function generateDiagnosticFeedback(
       question: {
         select: {
           id: true,
+          type: true,
           options: {
             select: {
               id: true,
@@ -96,9 +97,21 @@ export async function generateDiagnosticFeedback(
   const deliveries: PerWrongAnswer[] = [];
   for (const r of wrongResponses) {
     // Find the misconception attached to the wrong option the learner picked.
+    //
+    // Only question types whose response is "the options I chose" can support
+    // this. B9.3 AC-1.1/1.2:
+    //   ordering — the response lists EVERY option id (the learner's sequence),
+    //     so `includes(o.id)` is true no matter what they did. Matching on it
+    //     would flag a misconception on every single attempt.
+    //   matching — the response holds pairs, not ids, so nothing ever matches.
+    // Both are excluded explicitly rather than left to chance, because tagging
+    // those options is an easy mistake to make and the corruption is silent.
+    const typeSupportsMisconception =
+      r.question.type === "mcq" || r.question.type === "true_false";
+
     let misconceptionId: string | null = null;
     let misconceptionCode: string | null = null;
-    if (Array.isArray(r.response)) {
+    if (typeSupportsMisconception && Array.isArray(r.response)) {
       const selectedIds = r.response.filter(
         (x): x is string => typeof x === "string",
       );

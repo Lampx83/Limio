@@ -11,7 +11,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "backfill:feedback-coding": "node --env-file=../db/.env --import tsx scripts/backfill-feedback-coding.ts"
+    "backfill:feedback-coding": "node --env-file=../db/.env --import tsx scripts/backfill-feedback-coding.ts",
+    "propose:misconceptions": "node --env-file=../db/.env --import tsx scripts/propose-misconceptions.ts",
+    "apply:misconceptions": "node --env-file=../db/.env --import tsx scripts/apply-misconceptions.ts"
   },
   "dependencies": {
     "@feedbackme/db": "workspace:*",

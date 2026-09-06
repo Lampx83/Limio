@@ -498,3 +498,165 @@ Trả về JSON: { questions: [...] }`;
     )
     .slice(0, input.count);
 }
+
+// =====================================================================
+// (e) Misconception suggester — B9.3.
+//
+// For one MCQ / true-false question, propose what each wrong option reveals
+// about the learner's thinking, reusing the existing catalogue where possible.
+// Output is a PROPOSAL: the instructor reviews it before anything is written.
+// =====================================================================
+
+export interface MisconceptionProposal {
+  optionId: string;
+  optionLabel: string;
+  /** null = this distractor is merely wrong and diagnoses nothing. */
+  misconceptionCode: string | null;
+  isNew: boolean;
+  misconceptionName: string | null;
+  misconceptionDescription: string | null;
+  /** Feedback text the learner will read when they pick this option. */
+  feedbackBody: string | null;
+  confidence: number;
+  rationale: string;
+}
+
+const MISCONCEPTION_SUGGEST_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    proposals: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          optionId: { type: "string" },
+          misconceptionCode: { type: ["string", "null"] },
+          isNew: { type: "boolean" },
+          misconceptionName: { type: ["string", "null"] },
+          misconceptionDescription: { type: ["string", "null"] },
+          feedbackBody: { type: ["string", "null"] },
+          confidence: { type: "number" },
+          rationale: { type: "string" },
+        },
+        required: [
+          "optionId",
+          "misconceptionCode",
+          "isNew",
+          "misconceptionName",
+          "misconceptionDescription",
+          "feedbackBody",
+          "confidence",
+          "rationale",
+        ],
+      },
+    },
+  },
+  required: ["proposals"],
+};
+
+/** Codes must satisfy CreateMisconceptionInput in core-lms. */
+const MISCONCEPTION_CODE_RE = /^[a-z][a-z0-9_]*$/;
+
+export interface MisconceptionQuestionInput {
+  questionId: string;
+  prompt: string;
+  options: Array<{ id: string; label: string; isCorrect: boolean }>;
+  /** Lesson title, so the model can pitch the explanation at the right level. */
+  lessonTitle?: string;
+  /** Language of the feedback shown to learners. */
+  language?: string;
+}
+
+export async function suggestMisconceptionsForQuestion(
+  userId: string,
+  question: MisconceptionQuestionInput,
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<MisconceptionProposal[]> {
+  const wrong = question.options.filter((o) => !o.isCorrect);
+  if (wrong.length === 0) return [];
+
+  const catalogue = await db.misconception.findMany({
+    select: { code: true, name: true, description: true },
+    orderBy: { code: "asc" },
+  });
+  const known = new Set(catalogue.map((m) => m.code));
+
+  const catalogueText =
+    catalogue.length > 0
+      ? catalogue
+          .map((m) => `- ${m.code} | ${m.name} | ${m.description.slice(0, 160)}`)
+          .join("\n")
+      : "(trống)";
+
+  const correct = question.options
+    .filter((o) => o.isCorrect)
+    .map((o) => o.label)
+    .join(" / ");
+
+  const system = `Bạn là chuyên gia thiết kế đánh giá. Với mỗi phương án SAI của một câu hỏi, hãy xác định phương án đó phản ánh hiểu nhầm gì của người học.
+
+Quy tắc bắt buộc:
+- Ưu tiên TÁI DÙNG mã trong danh mục. Chỉ đặt mã mới khi hiểu nhầm thật sự khác, và khi đó isNew=true.
+- Mã mới phải khớp ^[a-z][a-z0-9_]*$ (chữ thường và gạch dưới, không dấu chấm, không gạch ngang).
+- Nếu một phương án chỉ đơn giản là SAI mà không lộ ra hiểu nhầm nào đáng đặt tên, hãy trả misconceptionCode=null. KHÔNG ép gán — gán bừa tạo ra độ chính xác giả và làm hỏng dữ liệu phân tích.
+- feedbackBody viết bằng ${question.language ?? "tiếng Việt"}, xưng hô với người học, 1-3 câu, nói rõ họ nhầm ở đâu và vì sao, KHÔNG chỉ nhắc lại đáp án đúng.
+- confidence là mức tự tin của bạn [0..1].
+
+Chỉ trả JSON.`;
+
+  const user = `# Danh mục hiểu nhầm đã có
+${catalogueText}
+
+# Câu hỏi${question.lessonTitle ? ` (thuộc bài: ${question.lessonTitle})` : ""}
+${question.prompt.slice(0, 2000)}
+
+# Đáp án đúng
+${correct}
+
+# Các phương án SAI cần phân tích
+${wrong.map((o) => `- optionId=${o.id} | ${o.label.slice(0, 400)}`).join("\n")}
+
+Trả JSON: { proposals: [{ optionId, misconceptionCode, isNew, misconceptionName, misconceptionDescription, feedbackBody, confidence, rationale }] }`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<{
+    proposals: Array<Omit<MisconceptionProposal, "optionLabel">>;
+  }>(
+    openai,
+    model,
+    system,
+    user,
+    "misconception_proposals",
+    MISCONCEPTION_SUGGEST_SCHEMA,
+  );
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+
+  const labelById = new Map(wrong.map((o) => [o.id, o.label]));
+
+  return data.proposals
+    .filter((p) => labelById.has(p.optionId))
+    .map((p) => {
+      let code = p.misconceptionCode?.trim() || null;
+      // AC-2.4 — a proposed new code that breaks the format is dropped rather
+      // than silently reshaped; the reviewer sees the gap and decides.
+      const isNew = code !== null && !known.has(code);
+      if (code !== null && isNew && !MISCONCEPTION_CODE_RE.test(code)) {
+        code = null;
+      }
+      return {
+        optionId: p.optionId,
+        optionLabel: labelById.get(p.optionId)!,
+        misconceptionCode: code,
+        isNew: code !== null && !known.has(code),
+        misconceptionName: p.misconceptionName?.trim() || null,
+        misconceptionDescription: p.misconceptionDescription?.trim() || null,
+        feedbackBody: p.feedbackBody?.trim() || null,
+        confidence: Math.max(0, Math.min(1, p.confidence ?? 0)),
+        rationale: p.rationale ?? "",
+      };
+    });
+}

@@ -351,3 +351,78 @@ describe("B9.1 — SSMMD coding is written at generation time", () => {
     });
   });
 });
+
+describe("B9.3 — chỉ mcq/true_false mới khớp misconception", () => {
+  /**
+   * Dựng một câu hỏi thuộc `type` cho trước, có đúng một phương án sai đã gắn
+   * misconception, rồi nộp `response` để xem diagnostic có khớp nhầm không.
+   */
+  async function runWithType(
+    slug: string,
+    type: "ordering" | "matching" | "mcq",
+    buildResponse: (optionIds: string[]) => unknown,
+  ) {
+    const user = await prisma.user.create({
+      data: { email: `g-${slug}@e.com`, passwordHash: "x", displayName: slug },
+    });
+    const course = await prisma.course.create({
+      data: { slug: `c-g-${slug}`, title: "C", description: "x" },
+    });
+    const mc = await prisma.misconception.create({
+      data: { code: `mc_guard_${slug}`, name: "MC", description: "x" },
+    });
+    await prisma.feedbackTemplate.create({
+      data: { scope: "per_misconception", misconceptionId: mc.id, body: "Giải thích chỗ nhầm" },
+    });
+    const quiz = await prisma.quiz.create({
+      data: { courseId: course.id, title: "Q" },
+    });
+    const question = await prisma.quizQuestion.create({
+      data: { quizId: quiz.id, type, prompt: "p", orderIndex: 0 },
+    });
+    const a = await prisma.questionOption.create({
+      data: { questionId: question.id, label: "A", isCorrect: false, orderIndex: 0, misconceptionId: mc.id },
+    });
+    const b = await prisma.questionOption.create({
+      data: { questionId: question.id, label: "B", isCorrect: false, orderIndex: 1 },
+    });
+    const attempt = await prisma.quizAttempt.create({
+      data: { quizId: quiz.id, userId: user.id, status: "submitted" },
+    });
+    await prisma.answerResponse.create({
+      data: {
+        attemptId: attempt.id,
+        questionId: question.id,
+        response: buildResponse([a.id, b.id]) as object,
+        isCorrect: false,
+        responseTimeMs: 100,
+      },
+    });
+    await generateDiagnosticFeedback(user.id, attempt.id);
+    return prisma.feedbackDelivery.findFirstOrThrow({
+      where: { userId: user.id, attemptId: attempt.id },
+    });
+  }
+
+  it("AC-1.1: ordering KHÔNG khớp misconception, dù response chứa mọi option id", async () => {
+    // Đây là bẫy: ordering lưu toàn bộ id theo thứ tự người học sắp, nên
+    // `includes(o.id)` luôn đúng. Không có guard thì mọi lượt đều bị gán nhầm.
+    const d = await runWithType("ord", "ordering", (ids) => ids);
+    expect(d.sourceKind).toBe("rule_template");
+    expect(d.generationContext).toMatchObject({ misconceptionCode: null });
+  });
+
+  it("AC-1.2: matching KHÔNG khớp misconception", async () => {
+    const d = await runWithType("mat", "matching", () => [
+      { left: "x", right: "y" },
+    ]);
+    expect(d.sourceKind).toBe("rule_template");
+    expect(d.generationContext).toMatchObject({ misconceptionCode: null });
+  });
+
+  it("AC-1.3: mcq vẫn khớp bình thường", async () => {
+    const d = await runWithType("mcq", "mcq", (ids) => [ids[0]]);
+    expect(d.sourceKind).toBe("misconception");
+    expect(d.elaboration).toBe("km");
+  });
+});
