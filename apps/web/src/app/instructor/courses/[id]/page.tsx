@@ -188,7 +188,7 @@ export default async function InstructorCourseEditPage({
     <>
     {/* Trang soạn khoá dài không kém trang bài học — nhất là khi mở một bài có
         hai chục khối nội dung. Góc dưới bên phải ở đây đang trống. */}
-    <ScrollEnds className="fixed bottom-4 right-4 z-30" />
+    <ScrollEnds className="fixed bottom-20 right-4 z-30 lg:bottom-4" />
     <main
       className={
         useWideLayout

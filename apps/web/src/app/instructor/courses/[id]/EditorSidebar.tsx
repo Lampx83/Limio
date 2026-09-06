@@ -162,18 +162,23 @@ export default function EditorSidebar({
         {tree}
       </aside>
 
-      {/* Mobile: trigger button (sticky top, inline-flow) */}
+      {/*
+        Dưới `lg` thì sidebar thu thành ngăn kéo, và đây là nút mở nó.
+
+        Trước đây nút này là một thanh ngang chiếm hết bề rộng, dính trên đỉnh
+        và ghi lại đúng tên bài mà breadcrumb ngay bên dưới đã ghi — hai dòng
+        nói cùng một điều, một dòng bám theo suốt lúc cuộn. Giờ là một nút tròn
+        ở góc dưới, giống mọi nút nổi khác của sản phẩm: vẫn với tới được ở bất
+        kỳ chỗ nào trên trang, mà không lấy mất một dòng ở đầu nội dung.
+      */}
       <button
         type="button"
         onClick={() => setDrawerOpen(true)}
-        className="sticky top-4 z-10 mb-3 inline-flex w-full items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2.5 text-sm shadow-card transition-colors hover:border-brand-200 hover:bg-brand-soft lg:hidden"
+        title={`Mở menu nội dung — đang xem: ${triggerLabel}`}
+        aria-label="Mở menu nội dung khoá"
+        className="fixed bottom-4 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-brand-600 shadow-lg transition-transform hover:scale-105 lg:hidden"
       >
-        <ListTree className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-        <span className="text-faint">Nội dung:</span>
-        <span className="min-w-0 flex-1 truncate text-left font-medium">
-          {triggerLabel}
-        </span>
-        <span className="text-xs text-faint">Mở menu</span>
+        <ListTree className="h-5 w-5" aria-hidden />
       </button>
 
       {/* Mobile: drawer overlay */}
