@@ -472,3 +472,24 @@ body.gameshow-immersive main.mx-auto {
     max-width: 100% !important;
   }
 }
+
+/* Mục lục trong thân bài: ẩn đi khi đã có mục lục nổi bên trái (≥1280px).
+   Nội dung bài nằm trong DB nên không sửa được từ React — chặn bằng CSS là
+   cách duy nhất không phải viết lại toàn bộ học liệu. */
+@media (min-width: 1280px) {
+  #lesson-content nav[aria-label="Mục lục bài học"] {
+    display: none;
+  }
+}
+
+/* Nội dung bài khi xem toàn màn hình: trình duyệt đặt nền đen mặc định và bỏ
+   mọi lề, nên phải trả lại nền, lề đọc được và khả năng cuộn. */
+#lesson-content:fullscreen {
+  background: rgb(var(--surface));
+  overflow-y: auto;
+  padding: 3rem 1.5rem;
+}
+#lesson-content:fullscreen > * {
+  max-width: 52rem;
+  margin-inline: auto;
+}

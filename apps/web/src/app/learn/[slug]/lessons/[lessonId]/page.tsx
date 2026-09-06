@@ -23,6 +23,8 @@ import LessonStickyActions from "@/components/lesson/LessonStickyActions";
 import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
+import LessonSectionNav from "@/components/lesson/LessonSectionNav";
+import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
 import { Download } from "lucide-react";
 
@@ -443,8 +445,15 @@ export default async function LessonPage({
         />
       </div>
 
-      {/* Lesson content */}
-      <div className="mt-8">
+      {/* Nội dung bài + mục lục nổi bên trái (từ 1280px trở lên) */}
+      <div className="mt-8 xl:grid xl:grid-cols-[14rem_minmax(0,1fr)] xl:gap-8">
+        <LessonSectionNav containerId="lesson-content" />
+        <div>
+        <LessonContentToolbar
+          targetId="lesson-content"
+          printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
+        />
+        <div id="lesson-content">
         <LessonContent
           items={lesson.contentItems
             .filter((c) => !c.isHidden)
@@ -457,6 +466,8 @@ export default async function LessonPage({
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
         />
+        </div>
+        </div>
       </div>
 
       <LessonTabs
