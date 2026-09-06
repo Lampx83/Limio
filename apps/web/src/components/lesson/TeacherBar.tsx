@@ -706,6 +706,17 @@ export function StageListener({ lessonId }: { lessonId: string }) {
     };
   }, [lessonId]);
 
+  // Đánh dấu lên <body> khi đang đếm ngược, để CSS chừa chỗ cho đồng hồ ở góc
+  // trên bên phải — không chừa thì nó đè lên tên bài, đúng thứ người vào muộn
+  // cần đọc.
+  useEffect(() => {
+    if (endsAt === null) return;
+    document.body.dataset.stageTimer = "1";
+    return () => {
+      delete document.body.dataset.stageTimer;
+    };
+  }, [endsAt]);
+
   // Nhịp đếm. Tính từ mốc kết thúc chứ không trừ dần một biến đếm: cửa sổ bị che
   // thì trình duyệt bóp nhịp hẹn giờ, trừ dần sẽ chạy chậm dần so với đồng hồ
   // thật, mà cả lớp thì đang nhìn vào con số ấy.
@@ -758,7 +769,7 @@ export function StageListener({ lessonId }: { lessonId: string }) {
             dung phía sau vẫn đọc được — đang làm bài tập thì đề bài vẫn cần
             nhìn thấy, không chỉ mỗi đồng hồ.
           */
-          className={`pointer-events-none fixed bottom-8 right-8 z-50 rounded-3xl border-4 px-[3vw] py-[1.5vw] text-center shadow-card backdrop-blur-md ${
+          className={`pointer-events-none fixed right-8 top-8 z-50 rounded-3xl border-4 px-[3vw] py-[1.5vw] text-center shadow-card backdrop-blur-md ${
             done
               ? "border-danger-500 bg-danger-50/90 text-danger-700"
               : urgent

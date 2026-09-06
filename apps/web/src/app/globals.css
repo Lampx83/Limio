@@ -550,6 +550,16 @@ body:has(main[data-stage="1"]) footer {
   display: none;
 }
 
+/* Đồng hồ đếm ngược nằm ở góc trên bên phải màn chiếu, nên dải tiêu đề bài
+   phải thu lại nhường chỗ — không thì tên bài chạy thẳng xuống dưới đồng hồ và
+   bị che mất nửa sau. Chỉ chừa khi thật sự đang đếm. */
+body[data-stage-timer] main[data-stage="1"] .sticky {
+  /* Đồng hồ rộng khoảng 44vw (chữ số 13vw cộng đệm), nên phải chừa hơn thế mới
+     đủ. Đo bằng vw chứ không phải px vì chính đồng hồ cũng đo bằng vw — hai bên
+     co giãn cùng nhịp trên mọi máy chiếu. */
+  padding-right: 48vw;
+}
+
 /* Bài học khi xem toàn màn hình: trình duyệt đặt nền đen mặc định và bỏ mọi
    lề, nên phải trả lại nền, lề đọc được và khả năng cuộn. Khối được phóng gồm
    cả mục lục nổi lẫn nội dung, nên vẫn giữ lưới hai cột ở màn rộng. */
