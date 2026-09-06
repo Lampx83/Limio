@@ -10,6 +10,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { probeEditorLoss, type LossReport } from "./richtext/lossProbe";
 
 interface Props {
   value: string;
@@ -39,6 +40,29 @@ const TEXT_COLORS = [
   { name: "Hồng", value: "#db2777" },
 ];
 
+/**
+ * Một danh sách duy nhất, dùng cho cả editor thật lẫn hàm dò mất mát. Tách ra
+ * đây vì hai chỗ đó mà lệch nhau thì lời cảnh báo sẽ nói sai sự thật.
+ */
+const EXTENSIONS = [
+  StarterKit.configure({
+    heading: { levels: [1, 2, 3] },
+  }),
+  Underline,
+  Link.configure({
+    openOnClick: false,
+    HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
+  }),
+  Highlight.configure({ multicolor: true }),
+  TextStyle,
+  Color,
+  Image.configure({
+    inline: false,
+    allowBase64: false,
+    HTMLAttributes: { class: "max-w-full h-auto rounded-md" },
+  }),
+];
+
 async function uploadImageFile(file: File): Promise<string> {
   const fd = new FormData();
   fd.append("file", file);
@@ -61,26 +85,23 @@ export default function RichTextEditor({
   minHeight = 160,
 }: Props) {
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // null = chưa dò xong (chỉ dò được ở trình duyệt). "source" = soạn HTML thô.
+  const [mode, setMode] = useState<"wysiwyg" | "source" | null>(null);
+  const [loss, setLoss] = useState<LossReport | null>(null);
+  // Chỉ dò một lần cho nội dung ban đầu: sau khi người dùng bắt đầu gõ, `value`
+  // đã là thứ do chính editor sinh ra nên dò lại luôn cho kết quả "không mất gì".
+  const probedRef = useRef(false);
+
+  useEffect(() => {
+    if (probedRef.current) return;
+    probedRef.current = true;
+    const report = probeEditorLoss(value || "", EXTENSIONS);
+    setLoss(report);
+    setMode(report ? "source" : "wysiwyg");
+  }, [value]);
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-      }),
-      Underline,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
-      }),
-      Highlight.configure({ multicolor: true }),
-      TextStyle,
-      Color,
-      Image.configure({
-        inline: false,
-        allowBase64: false,
-        HTMLAttributes: { class: "max-w-full h-auto rounded-md" },
-      }),
-    ],
+    extensions: EXTENSIONS,
     content: value || "",
     immediatelyRender: false,
     editorProps: {
@@ -135,7 +156,7 @@ export default function RichTextEditor({
     }
   }, [value, editor]);
 
-  if (!editor) {
+  if (!editor || mode === null) {
     return (
       <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-sm text-faint">
         Đang tải editor...
@@ -143,9 +164,40 @@ export default function RichTextEditor({
     );
   }
 
+  if (mode === "source") {
+    return (
+      <div className="rounded-lg border border-token bg-[rgb(var(--surface))]">
+        {loss && <LossBanner loss={loss} onForceWysiwyg={() => setMode("wysiwyg")} />}
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          spellCheck={false}
+          style={{ minHeight }}
+          className="w-full resize-y bg-transparent px-3 py-2 font-mono text-xs leading-relaxed focus:outline-none"
+        />
+        <div className="flex items-center justify-between border-t border-token px-3 py-1.5 text-xs text-faint">
+          <span>Chế độ HTML — nội dung được lưu đúng nguyên văn.</span>
+          {!loss && (
+            <button
+              type="button"
+              onClick={() => setMode("wysiwyg")}
+              className="rounded px-2 py-0.5 font-medium text-brand-600 hover:bg-[rgb(var(--surface-muted))]"
+            >
+              Về trình soạn thảo
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-lg border border-token bg-[rgb(var(--surface))]">
-      <Toolbar editor={editor} onUpload={insertImageFiles} />
+      <Toolbar
+        editor={editor}
+        onUpload={insertImageFiles}
+        onSourceMode={() => setMode("source")}
+      />
       <EditorContent editor={editor} />
       {uploadError && (
         <p className="border-t border-token px-3 py-1.5 text-xs text-danger-600">
@@ -156,12 +208,63 @@ export default function RichTextEditor({
   );
 }
 
+/**
+ * Nói thẳng cái gì sẽ mất, bằng con số, chứ không phải "định dạng có thể thay
+ * đổi". Người dạy cần biết đây là mất dữ liệu để dừng lại, không phải một lời
+ * nhắc lịch sự để bấm qua.
+ */
+function LossBanner({
+  loss,
+  onForceWysiwyg,
+}: {
+  loss: LossReport;
+  onForceWysiwyg: () => void;
+}) {
+  const parts: string[] = [];
+  if (loss.lostImages > 0) parts.push(`${loss.lostImages} ảnh`);
+  if (loss.lostChars > 0) parts.push(`${loss.lostChars.toLocaleString("vi-VN")} ký tự nội dung`);
+  if (loss.lostStyles > 0) parts.push(`${loss.lostStyles} định dạng (cỡ chữ, khung, nền…)`);
+
+  return (
+    <div
+      className={`block rounded-none border-x-0 border-t-0 px-3 py-2 text-xs ${
+        loss.contentLoss ? "banner-danger" : "banner-warning"
+      }`}
+    >
+      <p className="font-medium">
+        Nội dung này có định dạng mà trình soạn thảo trực quan không biểu diễn được.
+      </p>
+      <p className="mt-0.5">
+        Mở bằng trình soạn thảo rồi lưu sẽ mất {parts.join(", ")} — kể cả khi bạn
+        không sửa gì. Vì vậy nó đang mở ở chế độ HTML, nơi mọi thứ được giữ nguyên.
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          if (
+            window.confirm(
+              `Chuyển sang trình soạn thảo trực quan sẽ xoá vĩnh viễn ${parts.join(", ")} khi bạn lưu. Vẫn chuyển?`,
+            )
+          ) {
+            onForceWysiwyg();
+          }
+        }}
+        className="mt-1.5 rounded border border-current px-2 py-0.5 font-medium opacity-70 hover:opacity-100"
+      >
+        Vẫn dùng trình soạn thảo trực quan
+      </button>
+    </div>
+  );
+}
+
 function Toolbar({
   editor,
   onUpload,
+  onSourceMode,
 }: {
   editor: Editor;
   onUpload: (files: File[]) => Promise<void>;
+  onSourceMode: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [colorOpen, setColorOpen] = useState(false);
@@ -417,6 +520,14 @@ function Toolbar({
         title="Xoá định dạng"
       >
         ⌫
+      </button>
+      <button
+        type="button"
+        onClick={onSourceMode}
+        className={btn(false)}
+        title="Sửa HTML thô — giữ nguyên mọi định dạng"
+      >
+        HTML
       </button>
     </div>
   );
