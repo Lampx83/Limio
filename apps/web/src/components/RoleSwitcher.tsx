@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { apiUrl } from "@/lib/apiUrl";
+import { apiUrl, withBasePath } from "@/lib/apiUrl";
 
 const ROLE_LABELS: Record<string, string> = {
   learner: "Học viên",
@@ -27,7 +26,6 @@ export default function RoleSwitcher({
   activeRole: string;
   variant?: "header" | "switch";
 }) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   if (roles.length <= 1) return null;
@@ -35,14 +33,35 @@ export default function RoleSwitcher({
   async function switchTo(role: string) {
     if (role === activeRole || busy) return;
     setBusy(true);
-    await fetch(apiUrl("/api/switch-role"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role }),
-    });
-    router.push(ROLE_DEFAULT_PATH[role] ?? "/me/dashboard");
-    router.refresh();
-    setBusy(false);
+    try {
+      const res = await fetch(apiUrl("/api/switch-role"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      // Máy chủ từ chối (vai trò không thuộc tài khoản, phiên hết hạn) thì
+      // đứng yên. Trước đây lỗi bị nuốt rồi vẫn điều hướng, nên người dùng
+      // hạ cánh ở trang mới với vai trò cũ và tưởng menu bị hỏng.
+      if (!res.ok) {
+        setBusy(false);
+        return;
+      }
+    } catch {
+      setBusy(false);
+      return;
+    }
+
+    // Tải lại hẳn trang thay vì điều hướng phía máy khách.
+    //
+    // Vai trò đang hoạt động nằm trong cookie, và cả header lẫn menu trái đều
+    // đọc nó ở phía máy chủ. Điều hướng phía máy khách giữ nguyên layout gốc
+    // đã dựng, nên header vẫn là vai trò cũ; tệ hơn, learner và mentor cùng
+    // trỏ về /me/dashboard nên `router.push` từ chính trang đó là lệnh rỗng —
+    // không có gì dựng lại, và người dùng thấy đúng cái họ vừa bấm để đổi.
+    //
+    // Đổi vai trò là việc hiếm và có chủ ý; một lần tải lại đổi lấy sự chắc
+    // chắn là đáng. Giữ `busy` để nút không bấm lại được trong lúc trang đi.
+    window.location.assign(withBasePath(ROLE_DEFAULT_PATH[role] ?? "/me/dashboard"));
   }
 
   if (variant === "switch") {
