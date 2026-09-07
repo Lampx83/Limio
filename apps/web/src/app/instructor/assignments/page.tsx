@@ -379,6 +379,7 @@ async function AssignmentListView({
                           <Link
                             href={`/instructor/assignments/${a.id}/submissions`}
                             className="btn-secondary btn-sm"
+                            prefetch={false}
                           >
                             Chấm bài
                           </Link>

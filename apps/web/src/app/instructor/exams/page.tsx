@@ -181,6 +181,7 @@ export default async function InstructorExamsHubPage() {
                     <Link
                       href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
                       className={`min-w-0 break-words text-base font-semibold transition group-hover:text-brand-700 ${status.title}`}
+                      prefetch={false}
                     >
                       {e.title}
                     </Link>
@@ -199,6 +200,7 @@ export default async function InstructorExamsHubPage() {
                   <Link
                     href={`/instructor/courses/${e.courseId}`}
                     className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600 transition hover:bg-white hover:text-slate-800"
+                    prefetch={false}
                   >
                     <BookOpen className="h-3 w-3" aria-hidden />
                     <span className="max-w-[200px] truncate">
@@ -246,6 +248,7 @@ export default async function InstructorExamsHubPage() {
                     <Link
                       href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
                       className="inline-flex items-center gap-1.5 rounded-md border border-default bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                      prefetch={false}
                     >
                       <PencilLine className="h-3.5 w-3.5" aria-hidden />
                       Chỉnh sửa
@@ -254,6 +257,7 @@ export default async function InstructorExamsHubPage() {
                       <Link
                         href={`/instructor/courses/${e.courseId}/exams/${e.id}/grading`}
                         className="inline-flex items-center gap-1.5 rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-800 transition hover:bg-blue-100"
+                        prefetch={false}
                       >
                         <ClipboardCheck className="h-3.5 w-3.5" aria-hidden />
                         Chấm bài
@@ -262,6 +266,7 @@ export default async function InstructorExamsHubPage() {
                     <Link
                       href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
                       className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
+                      prefetch={false}
                     >
                       Mở
                       <ChevronRight className="h-3.5 w-3.5" aria-hidden />

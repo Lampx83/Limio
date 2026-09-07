@@ -192,6 +192,7 @@ export default function AdminSidebar() {
                             ? "bg-pink-50 font-semibold text-pink-700 shadow-sm dark:bg-pink-950/40 dark:text-pink-200"
                             : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                         }`}
+                        prefetch={false}
                       >
                         {active && (
                           <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-pink-500" />

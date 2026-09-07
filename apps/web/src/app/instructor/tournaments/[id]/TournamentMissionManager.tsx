@@ -280,6 +280,7 @@ export default function TournamentMissionManager({
                     <Link
                       href={`/instructor/tournaments/${tournamentId}/missions/${m.id}/quiz`}
                       className="text-xs text-brand-700 hover:underline"
+                      prefetch={false}
                     >
                       Sửa câu hỏi →
                     </Link>
@@ -303,6 +304,7 @@ export default function TournamentMissionManager({
                             ? "inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-brand-700"
                             : "text-xs text-brand-700 hover:underline"
                         }
+                        prefetch={false}
                       >
                         {label}
                         {needsGrading && pending > 0 && (

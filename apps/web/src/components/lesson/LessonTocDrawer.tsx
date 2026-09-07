@@ -164,6 +164,7 @@ export default function LessonTocDrawer({
                                   ? "bg-emerald-50 font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
                                   : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                               }`}
+                              prefetch={false}
                             >
                               {num}
                               <span className="flex-1 truncate">{l.title}</span>

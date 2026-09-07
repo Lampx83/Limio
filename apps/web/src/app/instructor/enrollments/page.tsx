@@ -319,6 +319,7 @@ export default async function InstructorEnrollmentsPage({
                         <Link
                           href={`/instructor/courses/${e.course.id}/struggling-students`}
                           className="btn-ghost btn-sm"
+                          prefetch={false}
                         >
                           HV cần hỗ trợ
                         </Link>

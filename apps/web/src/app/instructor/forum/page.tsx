@@ -267,6 +267,7 @@ export default async function InstructorForumHubPage({
                           <Link
                             href={`/learn/${t.lesson.module.course.slug}/threads/${t.id}`}
                             className="btn-secondary btn-sm"
+                            prefetch={false}
                           >
                             Mở thread
                           </Link>

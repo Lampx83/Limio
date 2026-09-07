@@ -338,6 +338,7 @@ export default function UsersBrowser() {
                     <Link
                       href={`/admin/users/${u.id}`}
                       className="btn-secondary btn-sm"
+                      prefetch={false}
                     >
                       Quản lý
                     </Link>

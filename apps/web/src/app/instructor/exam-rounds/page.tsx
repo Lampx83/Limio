@@ -172,6 +172,7 @@ export default async function ExamRoundsHubPage({
                     <Link
                       href={`/instructor/exam-rounds/${r.id}`}
                       className="text-xs font-medium text-blue-600 hover:underline"
+                      prefetch={false}
                     >
                       Xem chi tiết →
                     </Link>

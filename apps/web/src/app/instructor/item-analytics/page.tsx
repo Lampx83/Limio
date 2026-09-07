@@ -286,6 +286,7 @@ function ExamAnalyticsTable({
                           }
                           id={`q-${row.questionId}`}
                           className="text-xs text-brand-600 underline-offset-2 hover:underline"
+                          prefetch={false}
                         >
                           {isExpanded ? "Đóng" : "Distractor"}
                         </Link>

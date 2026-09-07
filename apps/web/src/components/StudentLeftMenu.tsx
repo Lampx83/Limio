@@ -190,6 +190,7 @@ export default function StudentLeftMenu({
                             ? "bg-emerald-50 font-semibold text-emerald-700 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-200"
                             : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                         }`}
+                        prefetch={false}
                       >
                         {active && (
                           <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-emerald-500" />

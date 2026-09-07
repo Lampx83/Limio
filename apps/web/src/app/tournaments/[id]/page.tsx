@@ -637,6 +637,7 @@ export default async function TournamentDetailPage({
                               <Link
                                 href={`/tournaments/${tournament.id}/missions/${mission.id}`}
                                 className="ml-auto inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                                prefetch={false}
                               >
                                 Xem nhiệm vụ <ArrowRight className="h-3.5 w-3.5" />
                               </Link>
@@ -664,6 +665,7 @@ export default async function TournamentDetailPage({
                               <Link
                                 href={`/tournaments/${tournament.id}/missions/${mission.id}`}
                                 className="ml-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:scale-105"
+                                prefetch={false}
                               >
                                 {mStatus ? "Xem nhiệm vụ" : "Làm nhiệm vụ"} <ArrowRight className="h-3.5 w-3.5" />
                               </Link>

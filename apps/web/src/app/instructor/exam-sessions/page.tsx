@@ -214,6 +214,7 @@ export default async function ExamSessionsPage() {
                     <Link
                       href={`/instructor/courses/${r.courseId}/exams/${r.examId}/grading`}
                       className="rounded border border-default bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-100"
+                      prefetch={false}
                     >
                       Chấm bài
                     </Link>

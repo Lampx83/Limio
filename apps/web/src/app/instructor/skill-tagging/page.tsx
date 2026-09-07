@@ -238,6 +238,7 @@ export default async function SkillTaggingHubPage({
                       <Link
                         href={`/instructor/courses/${c.courseId}`}
                         className="btn-ghost btn-sm"
+                        prefetch={false}
                       >
                         Mở khoá →
                       </Link>
