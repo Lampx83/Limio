@@ -440,9 +440,23 @@ export default function TeacherBar({
    * đáng để người dạy phải đứng chờ máy chủ dựng lại cả bài.
    */
   const [notesOn, setNotesOn] = useState(teacherMode);
+  // Câu báo "bài chưa có ghi chú" chỉ sống vài giây mỗi lần bật ghi chú.
+  const [emptyHintOn, setEmptyHintOn] = useState(false);
   useEffect(() => {
     document.documentElement.dataset.gv = notesOn ? "1" : "0";
   }, [notesOn]);
+
+  // Bật ghi chú lên mà bài trống thì báo một lần rồi thôi. Hẹn giờ đặt lại mỗi
+  // lần bật, để lần bật sau vẫn được báo.
+  useEffect(() => {
+    if (!notesOn || noteCount > 0) {
+      setEmptyHintOn(false);
+      return;
+    }
+    setEmptyHintOn(true);
+    const t = setTimeout(() => setEmptyHintOn(false), 6000);
+    return () => clearTimeout(t);
+  }, [notesOn, noteCount]);
 
   const toggleNotes = () => {
     const next = !notesOn;
@@ -678,10 +692,17 @@ export default function TeacherBar({
         </div>
       )}
 
-      {noteCount === 0 && notesOn && (
-        // Bật ghi chú mà bài không có ghi chú nào: nói thẳng, đừng để người dạy
-        // ngồi đoán xem nút hỏng hay bài trống.
-        <div className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm shadow-card">
+      {noteCount === 0 && notesOn && emptyHintOn && (
+        /*
+          Bật ghi chú mà bài không có ghi chú nào: nói thẳng, đừng để người dạy
+          ngồi đoán xem nút hỏng hay bài trống.
+
+          Nhưng đây là một câu báo, không phải một trạng thái. Trước đây nó nằm
+          lì giữa màn hình suốt thời gian bật ghi chú, và vì nền đục nên nó che
+          mất phần nội dung ngay dưới — người dạy tưởng chính bài học bị vỡ.
+          Giờ nó tự tắt sau vài giây, và không bao giờ chắn chuột.
+        */
+        <div className="pointer-events-none fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm shadow-card">
           Bài này chưa có ghi chú giảng viên nào — thêm ở trang soạn khoá.
         </div>
       )}
