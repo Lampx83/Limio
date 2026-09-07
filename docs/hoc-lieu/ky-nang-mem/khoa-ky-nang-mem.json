@@ -73,6 +73,106 @@
       "code": "knm.conflict-binary",
       "name": "Xung đột giá trị chỉ có hai lối: chịu đựng hoặc nghỉ việc",
       "description": "Khi yêu cầu của tổ chức va vào nguyên tắc cá nhân thì chỉ thấy hai lựa chọn cực đoan, bỏ qua các bước ở giữa: làm rõ sự việc, nêu quan ngại đúng kênh, thương lượng phạm vi công việc, ghi nhận bằng văn bản. Hirschman gọi lối ở giữa ấy là lên tiếng, và nó thường được thử trước khi tính tới rời đi."
+    },
+    {
+      "code": "knm.toxic-positivity",
+      "name": "Tích cực nghĩa là không được buồn",
+      "description": "Hiểu tư duy tích cực thành nghĩa vụ phải vui vẻ, nên dập mọi cảm xúc khó chịu của mình và của người khác bằng những câu an ủi rỗng. Cảm xúc bị chặn không biến mất mà chỉ mất kênh xử lý; và người đang gặp chuyện thật sẽ thấy mình không được phép nói ra."
+    },
+    {
+      "code": "knm.positive-thinking-magic",
+      "name": "Chỉ cần nghĩ tích cực là chuyện sẽ tốt lên",
+      "description": "Coi suy nghĩ tích cực như một loại lực tác động thẳng vào thực tại, nên bỏ qua khâu hành động cụ thể. Tư duy tích cực có ích vì nó giữ cho người ta còn thử tiếp và còn nhìn thấy phương án, chứ không phải vì nó tự sinh ra kết quả."
+    },
+    {
+      "code": "knm.emotion-from-event",
+      "name": "Sự kiện gây ra cảm xúc, không có gì ở giữa",
+      "description": "Tin rằng chuyện xảy ra quyết định thẳng cảm xúc, nên không có chỗ nào để can thiệp. Mô hình ABC chỉ ra khâu ở giữa: cách ta diễn giải sự việc. Cùng một điểm số, hai cách diễn giải khác nhau cho hai trạng thái cảm xúc khác nhau."
+    },
+    {
+      "code": "knm.self-label",
+      "name": "Dán nhãn cố định cho bản thân",
+      "description": "Chuyển một kết quả cụ thể thành một phán quyết về con người mình: trượt một bài thành mình kém cỏi. Nhãn ấy vừa không mô tả được điều gì sửa được, vừa chiếm chỗ trong trí nhớ làm việc đáng lẽ dành cho việc đang làm."
+    },
+    {
+      "code": "knm.catastrophizing",
+      "name": "Thổi phồng hậu quả",
+      "description": "Kéo một sự việc trước mắt thành chuỗi hậu quả tồi tệ dài hạn mà không có bước trung gian nào được kiểm chứng: trượt một môn thành mất bằng, mất việc, hỏng cả đời. Đây là lỗi về phạm vi và độ bền, hai trong ba trục giải thích của Seligman."
+    },
+    {
+      "code": "knm.criticism-as-attack",
+      "name": "Coi mọi góp ý là công kích cá nhân",
+      "description": "Nghe nhận xét về sản phẩm thành nhận xét về giá trị con người mình, nên phản ứng bằng phòng thủ và mất luôn phần thông tin dùng được. Tách câu hỏi ai nói ra khỏi câu hỏi điều được nói có đúng phần nào không là kỹ năng học được."
+    },
+    {
+      "code": "knm.fixed-mindset",
+      "name": "Năng lực là thứ cố định",
+      "description": "Tin rằng thông minh và năng khiếu là lượng trời cho, nên nỗ lực bị coi là bằng chứng của sự kém cỏi và thất bại bị coi là phán quyết cuối cùng. Cách tin này khiến người ta né nhiệm vụ khó — đúng loại nhiệm vụ tạo ra tiến bộ."
+    },
+    {
+      "code": "knm.compare-upward",
+      "name": "Lấy người khác làm thước đo tiến bộ của mình",
+      "description": "Đo mình bằng thành tích của người xung quanh hoặc bản dựng của họ trên mạng xã hội, thay vì bằng chính mình của ba tháng trước. Thước đo ấy đổi liên tục theo người mình gặp và không nói được bước tiếp theo cần làm gì."
+    },
+    {
+      "code": "knm.self-compassion-is-weak",
+      "name": "Tự trắc ẩn là nuông chiều bản thân",
+      "description": "Sợ rằng đối xử tử tế với chính mình sẽ làm mất động lực, nên chọn tự đay nghiến như một cách thúc ép. Nghiên cứu của Neff cho thấy ngược lại: người tự trắc ẩn nhận lỗi dễ hơn và quay lại làm tiếp nhanh hơn, vì họ không phải tốn sức bảo vệ hình ảnh bản thân."
+    },
+    {
+      "code": "knm.mental-health-willpower",
+      "name": "Trầm cảm và lo âu là chuyện của ý chí",
+      "description": "Coi các rối loạn tâm lý là trạng thái tinh thần yếu, chỉ cần nghĩ tích cực hơn là hết. Đây là chỗ tư duy tích cực bị dùng sai nguy hiểm nhất: nó làm chậm việc tìm trợ giúp chuyên môn, trong khi các dấu hiệu kéo dài trên hai tuần cần được đánh giá bởi người có chuyên môn."
+    },
+    {
+      "code": "knm.critical-is-negative",
+      "name": "Phản biện là bắt bẻ",
+      "description": "Hiểu tư duy phản biện thành thái độ hoài nghi mọi thứ và tìm lỗi của người khác. Phản biện là quy trình kiểm tra chất lượng của một lập luận — kể cả lập luận của chính mình — và nó kết thúc bằng một kết luận có cơ sở, không phải bằng việc hạ bệ ai."
+    },
+    {
+      "code": "knm.opinion-as-evidence",
+      "name": "Lấy ý kiến hoặc cảm nhận làm bằng chứng",
+      "description": "Đưa niềm tin cá nhân, cảm giác hoặc mức độ chắc chắn của mình vào chỗ đáng lẽ phải là dữ liệu quan sát được. Mức độ tự tin không phải thước đo mức độ đúng; một khẳng định chỉ đứng được khi có bằng chứng người khác kiểm lại được."
+    },
+    {
+      "code": "knm.confirmation-bias",
+      "name": "Chỉ tìm thứ ủng hộ điều mình đã tin",
+      "description": "Tìm, nhớ và tin những thông tin khớp với kết luận sẵn có, đồng thời đòi hỏi tiêu chuẩn khắt khe hơn hẳn với thông tin trái chiều. Kết quả là càng đọc nhiều càng chắc chắn hơn mà không hề chính xác hơn."
+    },
+    {
+      "code": "knm.correlation-causation",
+      "name": "Thấy đi cùng nhau là kết luận cái này gây ra cái kia",
+      "description": "Suy ra quan hệ nhân quả từ việc hai hiện tượng cùng tăng hoặc cùng giảm, bỏ qua ba khả năng khác: chiều ngược lại, một yếu tố thứ ba tác động lên cả hai, hoặc trùng hợp ngẫu nhiên."
+    },
+    {
+      "code": "knm.authority-or-crowd",
+      "name": "Đúng vì người nổi tiếng nói hoặc vì nhiều người tin",
+      "description": "Thay việc xem bằng chứng bằng việc xem ai nói và bao nhiêu người đồng ý. Uy tín của người nói chỉ là lý do để nghe kỹ hơn, không phải lý do để tin; số lượt chia sẻ đo mức lan truyền chứ không đo mức đúng."
+    },
+    {
+      "code": "knm.anecdote-as-proof",
+      "name": "Lấy một trường hợp làm bằng chứng chung",
+      "description": "Khái quát từ một câu chuyện sinh động — người quen, bản thân, một bài đăng — thành quy luật cho số đông. Trường hợp cá biệt nêu ra được giả thuyết, nhưng không nói được nó đúng với bao nhiêu phần trăm và trong điều kiện nào."
+    },
+    {
+      "code": "knm.straw-man",
+      "name": "Bẻ lại phiên bản méo của lập luận đối phương",
+      "description": "Đơn giản hoá hoặc phóng đại ý người khác thành một phiên bản dễ đánh đổ rồi công kích phiên bản ấy. Thắng được bản méo không nói lên điều gì về bản gốc, và người đối thoại thì mất lý do tiếp tục nói chuyện."
+    },
+    {
+      "code": "knm.false-dilemma",
+      "name": "Chỉ thấy hai lựa chọn",
+      "description": "Trình bày một vấn đề như thể chỉ có hai đường đi loại trừ nhau, trong khi còn các phương án trung gian hoặc phương án thứ ba chưa được nêu. Cách đóng khung này ép người nghe chọn nhanh và chọn hẹp."
+    },
+    {
+      "code": "knm.vertical-reading",
+      "name": "Đánh giá một nguồn bằng cách đọc kỹ chính nguồn đó",
+      "description": "Tin hay không tin một trang dựa vào giao diện, giọng văn và phần giới thiệu của chính trang ấy. Nghiên cứu về đọc ngang cho thấy người kiểm chứng chuyên nghiệp làm ngược lại: rời trang ra, xem nơi khác nói gì về nó, rồi mới quay lại."
+    },
+    {
+      "code": "knm.ai-fluency-truth",
+      "name": "Văn trôi chảy của AI nghĩa là thông tin đúng",
+      "description": "Lấy độ mạch lạc, sự tự tin và cách trình bày có trích dẫn của một câu trả lời do AI sinh làm dấu hiệu chính xác. Mô hình ngôn ngữ tối ưu cho tính hợp lý bề mặt, nên nó bịa được cả tên tác giả, năm và số trang trong khi vẫn đọc rất xuôi."
     }
   ],
   "feedbackTemplates": [
@@ -139,6 +239,106 @@
     {
       "misconception": "knm.conflict-binary",
       "body": "Giữa chịu đựng và nghỉ việc còn ba bước: làm rõ yêu cầu thật sự là gì, nêu quan ngại đúng kênh và đúng người, thương lượng lại phạm vi phần việc. Hãy đi hết các bước ấy — và ghi lại — trước khi tính tới lựa chọn cuối cùng.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.toxic-positivity",
+      "body": "Tích cực không phải là cấm buồn. Hãy gọi đúng tên cảm xúc trước — thất vọng, lo, tức — rồi mới hỏi bước tiếp theo làm gì. Bỏ qua bước gọi tên thì cảm xúc không mất đi, nó chỉ chuyển sang chỗ khác và thường đắt hơn.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.positive-thinking-magic",
+      "body": "Suy nghĩ tích cực không tự làm ra kết quả; nó giữ cho bạn còn thử tiếp và còn nhìn ra phương án. Hãy kiểm bằng câu hỏi này: sau suy nghĩ ấy, việc cụ thể nào trong 24 giờ tới thay đổi? Không có việc nào thì mới chỉ có tâm trạng, chưa có tư duy.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.emotion-from-event",
+      "body": "Giữa sự việc và cảm xúc luôn có một khâu: cách bạn diễn giải. Hãy viết ra ba dòng — chuyện gì xảy ra, tôi đang tự nói gì với mình, tôi thấy thế nào. Khâu giữa là chỗ duy nhất sửa được, và nó chỉ hiện ra khi được viết ra.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.self-label",
+      "body": "Đổi nhãn thành mô tả: thay vì mình kém, hãy viết mình chưa làm được phần nào, thiếu cái gì. Nhãn không sửa được; mô tả thì chỉ thẳng vào việc cần làm tiếp.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.catastrophizing",
+      "body": "Hãy kiểm ba trục: chuyện này kéo dài bao lâu, lan tới bao nhiêu phần đời bạn, và bao nhiêu phần thật sự do bạn. Thổi phồng gần như luôn sai ở trục thứ nhất và thứ hai — hãy viết ra hậu quả thật sự trong ba tháng tới, cụ thể và có thể kiểm.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.criticism-as-attack",
+      "body": "Tách hai câu hỏi: người ta nói với thái độ thế nào, và trong đó phần nào đúng. Phần đúng dùng được kể cả khi thái độ khó nghe. Hãy hỏi lại một câu cụ thể — chỗ nào chưa đạt, sửa theo hướng nào — thay vì phản ứng với giọng nói.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.fixed-mindset",
+      "body": "Thêm một chữ vào câu tự nói: tôi chưa làm được. Nỗ lực không phải bằng chứng của kém cỏi, nó là cách duy nhất năng lực tăng lên; và một bài trượt là dữ liệu về cách học hiện tại, không phải phán quyết về trí tuệ của bạn.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.compare-upward",
+      "body": "Đổi mốc so sánh về chính bạn của ba tháng trước: làm được gì bây giờ mà lúc đó chưa làm được. Thước đo đó ổn định, kiểm được, và nói thẳng ra bước tiếp theo — thứ mà bảng xếp hạng với người khác không bao giờ nói.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.self-compassion-is-weak",
+      "body": "Thử phép kiểm này: nếu bạn thân gặp đúng chuyện của bạn, bạn sẽ nói gì với họ? Câu đó thường vừa tử tế vừa thẳng thắn. Tự trắc ẩn là nói câu ấy với chính mình — nó khác với bào chữa, vì nó vẫn gọi đúng tên phần mình làm chưa được.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.mental-health-willpower",
+      "body": "Có một ranh giới cần biết: khi mất ngủ, mất hứng thú, mệt mỏi kéo dài trên hai tuần và ảnh hưởng tới việc học việc làm, đó không còn là chuyện luyện tư duy. Hãy tìm phòng tham vấn tâm lý của trường hoặc bác sĩ chuyên khoa — cũng bình thường như đi khám khi gãy tay.",
+      "priority": 20
+    },
+    {
+      "misconception": "knm.critical-is-negative",
+      "body": "Phản biện không phải tìm lỗi người khác mà là kiểm chất lượng của một lập luận, kể cả của mình. Phép thử: sau khi phản biện, bạn có nói được kết luận nào đáng tin hơn không? Nếu chỉ còn lại sự nghi ngờ thì việc chưa xong.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.opinion-as-evidence",
+      "body": "Hãy tách ba mảnh: khẳng định là gì, bằng chứng nào đỡ nó, và suy luận nào nối hai thứ đó. Cảm giác chắc chắn không nằm ở mảnh nào trong ba mảnh ấy.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.confirmation-bias",
+      "body": "Trước khi tra cứu, hãy viết ra điều gì sẽ khiến bạn đổi ý. Rồi chủ động tìm đúng thứ đó. Đọc thêm mười nguồn cùng chiều chỉ làm bạn chắc chắn hơn, không làm bạn đúng hơn.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.correlation-causation",
+      "body": "Hai thứ đi cùng nhau còn ba cách giải thích khác trước khi tới nhân quả: chiều ngược lại, một yếu tố thứ ba, hoặc trùng hợp. Hãy nêu tên yếu tố thứ ba khả dĩ trước khi kết luận.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.authority-or-crowd",
+      "body": "Uy tín người nói là lý do để nghe kỹ, không phải lý do để tin; lượt chia sẻ đo độ lan truyền, không đo độ đúng. Câu hỏi giữ nguyên: bằng chứng ở đâu, ai kiểm được nó.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.anecdote-as-proof",
+      "body": "Một trường hợp cho bạn giả thuyết, không cho bạn tỉ lệ. Hãy hỏi: điều này đúng với bao nhiêu người, trong điều kiện nào, và có ai đã đo chưa.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.straw-man",
+      "body": "Trước khi phản bác, hãy diễn đạt lại ý đối phương bằng lời của bạn và hỏi họ: mình hiểu đúng chưa? Nếu họ gật đầu thì bạn mới đang tranh luận với bản gốc.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.false-dilemma",
+      "body": "Hỏi thêm một câu: còn phương án thứ ba nào không, và có cách nào lấy phần tốt của cả hai không? Phần lớn tình huống bị đóng khung thành hai lựa chọn là do người trình bày, không phải do bản chất vấn đề.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.vertical-reading",
+      "body": "Đừng đánh giá một trang bằng chính trang đó. Mở tab mới, tìm tên nguồn ấy kèm từ khoá đánh giá hoặc kiểm chứng, xem nơi khác nói gì — rồi mới quay lại đọc nội dung.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.ai-fluency-truth",
+      "body": "Câu trả lời của AI trôi chảy vì mô hình tối ưu cho sự hợp lý bề mặt, không phải cho tính đúng. Mọi con số, tên riêng và trích dẫn đều phải kiểm lại ở nguồn gốc trước khi dùng.",
       "priority": 10
     }
   ],
@@ -788,6 +988,1172 @@
                 "key": "1.3-viet-tuyen-ngon",
                 "type": "essay",
                 "prompt": "Viết bản nháp tuyên ngôn sứ mệnh cá nhân của bạn (200–350 từ), gồm ba phần: (a) các vai trò chính và với mỗi vai trò một cam kết quan sát được; (b) đóng góp cụ thể bạn muốn tạo ra và cho ai; (c) ba nguyên tắc, mỗi nguyên tắc kèm một câu bắt đầu bằng 'Tôi từ chối…'. Ghi thêm hai mốc rà soát trong năm.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 2 · Tư duy tích cực",
+      "description": "Không phải học cách luôn vui, mà học cách giải thích sự việc sao cho mình còn nhìn thấy phương án và còn thử tiếp. Ba bài đi từ phân biệt tư duy tích cực với tích cực độc hại, qua kỹ thuật bẻ lại lối nghĩ méo, tới việc duy trì dài hạn — và ranh giới nơi tư duy tích cực không còn đủ, cần tới hỗ trợ chuyên môn.",
+      "lessons": [
+        {
+          "title": "Bài 2.1 · Tư duy tích cực là gì và không phải là gì",
+          "durationMin": 45,
+          "description": "Phân biệt tư duy tích cực với tích cực độc hại và lạc quan mù quáng; chuỗi sự việc → diễn giải → cảm xúc → hành vi; ba trục giải thích của Seligman và cái giá của việc tự dán nhãn.",
+          "objectives": [
+            "Phân biệt được tư duy tích cực với tích cực độc hại và lạc quan mù quáng bằng dấu hiệu quan sát được",
+            "Chỉ ra được khâu diễn giải nằm giữa sự việc và cảm xúc trong một tình huống của chính mình",
+            "Dùng được ba trục độ bền, phạm vi và quy trách nhiệm để đọc lại một lời tự nói tiêu cực",
+            "Viết lại được một nhãn dán cho bản thân thành một mô tả hành vi sửa được"
+          ],
+          "summary": [
+            "Tư duy tích cực không phải là luôn vui, cũng không phải là tin mọi chuyện sẽ ổn; nó là cách giải thích sự việc sao cho mình còn nhìn thấy phương án và còn thử tiếp.",
+            "Giữa sự việc và cảm xúc luôn có một khâu: cách ta tự nói với mình. Đó là khâu duy nhất sửa được, và nó chỉ hiện ra khi được viết ra.",
+            "Ba trục của Seligman — chuyện này kéo dài bao lâu, lan tới đâu, do ai — giải thích vì sao cùng một thất bại lại đánh gục người này mà không đánh gục người kia.",
+            "Nhãn dán cho bản thân không mô tả được điều gì sửa được, lại chiếm chỗ trong trí nhớ làm việc; đổi nhãn thành mô tả là thao tác rẻ nhất và hiệu quả nhất trong bài này."
+          ],
+          "body": "\nMột khoá kỹ năng mềm nói tới tư duy tích cực rất dễ trượt thành lời khuyên sáo rỗng: hãy nghĩ tốt lên, hãy nhìn vào mặt sáng. Bài này đi hướng khác — coi tư duy tích cực là một **kỹ thuật giải thích sự việc** có thể mô tả, tập được và kiểm được, chứ không phải một trạng thái tâm trạng phải giữ suốt ngày.\n\n## Ba thứ hay bị gọi nhầm là tư duy tích cực\n\n| | Tư duy tích cực | Tích cực độc hại | Lạc quan mù quáng |\n|---|---|---|---|\n| Nói gì khi bạn trượt phỏng vấn | Vòng này mình yếu phần bài tập; xin phản hồi rồi luyện đúng phần đó | Đừng buồn, mọi chuyện xảy ra đều có lý do của nó | Kiểu gì cũng có chỗ khác nhận thôi, khỏi lo |\n| Thái độ với cảm xúc khó chịu | Gọi đúng tên rồi mới tính bước tiếp | Chặn lại, coi là tiêu cực cần dẹp | Bỏ qua vì không cần thiết |\n| Có dẫn tới hành động không | Có, và hành động cụ thể | Không, chỉ dẫn tới im lặng | Không, dẫn tới chờ đợi |\n| Dấu hiệu nhận ra | Mô tả được việc sẽ làm trong 24 giờ tới | Toàn câu an ủi chung chung | Toàn dự đoán tốt đẹp không kèm điều kiện |\n\nKhác biệt nằm ở chỗ **có dẫn tới hành động hay không**. Đây cũng là phép thử nhanh nhất cho chính mình: sau một suy nghĩ được gọi là tích cực, có việc gì cụ thể thay đổi trong ngày mai không? Không có thì mới chỉ là tâm trạng.\n\n> [!canh-bao] Tích cực độc hại thường xuất hiện dưới dạng an ủi. Câu \"còn nhiều người khổ hơn mày\" không làm ai đỡ buồn; nó chỉ dạy người nghe rằng cảm xúc của họ không đủ tư cách để nói ra. Trong nhóm học tập, câu ấy làm im luôn thông tin mà cả nhóm cần biết: có người đang không theo kịp.\n\n## Chuỗi từ sự việc tới kết quả\n\nCùng một sự việc, hai người có hai cảm xúc khác nhau — nên sự việc không thể là nguyên nhân trực tiếp. Nhà tâm lý học Albert Ellis mô tả khâu ở giữa bằng mô hình ABC: **A** là sự việc, **B** là điều ta tự nói với mình về sự việc ấy, **C** là cảm xúc và hành vi đi theo.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"display:flex;flex-wrap:wrap;gap:.45rem;align-items:stretch;font-size:1.05rem\">\n    <div style=\"flex:1 1 7rem;background:rgba(127,127,127,.12);border-radius:.4rem;padding:.6rem .7rem\"><b>Sự việc</b><br><span style=\"opacity:.85\">Điểm giữa kỳ 5,5</span></div>\n    <div style=\"align-self:center;font-weight:700;opacity:.6\">→</div>\n    <div style=\"flex:1 1 9rem;background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.6rem .7rem\"><b>Diễn giải</b><br><span style=\"opacity:.85\">A: mình không hợp ngành này<br>B: mình học sai cách phần bài tập</span></div>\n    <div style=\"align-self:center;font-weight:700;opacity:.6\">→</div>\n    <div style=\"flex:1 1 7rem;background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .7rem\"><b>Cảm xúc</b><br><span style=\"opacity:.85\">A: nản, xấu hổ<br>B: tiếc, quyết tâm</span></div>\n    <div style=\"align-self:center;font-weight:700;opacity:.6\">→</div>\n    <div style=\"flex:1 1 7rem;background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .7rem\"><b>Hành vi</b><br><span style=\"opacity:.85\">A: né môn, bỏ buổi chữa bài<br>B: xin đề cũ, làm lại 10 bài</span></div>\n    <div style=\"align-self:center;font-weight:700;opacity:.6\">→</div>\n    <div style=\"flex:1 1 7rem;background:rgba(217,150,40,.14);border-radius:.4rem;padding:.6rem .7rem\"><b>Kết quả</b><br><span style=\"opacity:.85\">A: điểm cuối kỳ tệ hơn<br>B: khá lên hoặc ít nhất biết mình hổng đâu</span></div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Ô thứ hai là ô duy nhất bạn sửa được ngay, và nó là ô ít người viết ra nhất. Sự việc đã xong; cảm xúc đến sau diễn giải; hành vi thì đi theo cảm xúc.</div>\n</div>\n```\n\nNgười ta hay gọi ô thứ hai là **hạt giống suy nghĩ**: nó nhỏ, xuất hiện trong vài giây, thường không thành lời rõ ràng — nhưng cả chuỗi phía sau mọc lên từ đó. Muốn can thiệp thì phải bắt được nó, mà cách bắt duy nhất đáng tin là viết ra. Nghĩ trong đầu thì hạt giống ấy trôi qua quá nhanh để nhìn thấy.\n\n## Ba trục giải thích của Seligman\n\n![Martin Seligman phát biểu tại Philadelphia năm 2009](https://upload.wikimedia.org/wikipedia/commons/1/1a/Martin_Seligman_Philadelphia_2009.jpg \"Martin Seligman, người khởi xướng ngành tâm lý học tích cực và tác giả khái niệm lạc quan học được. Ảnh: [File:Martin Seligman Philadelphia 2009.jpg](https://commons.wikimedia.org/wiki/File:Martin_Seligman_Philadelphia_2009.jpg), ảnh của Bộ Quốc phòng Hoa Kỳ do D. Myles Cullen chụp, thuộc phạm vi công cộng.\")\n\nSeligman quan sát rằng người bền bỉ và người dễ gục không khác nhau ở số lần thất bại, mà ở **cách họ giải thích** thất bại ấy. Ba trục dưới đây đủ để đọc gần như mọi lời tự nói.\n\n| Trục | Câu hỏi | Cách giải thích làm ta gục | Cách giải thích giữ ta lại |\n|---|---|---|---|\n| Độ bền | Chuyện này kéo dài bao lâu | \"Mình luôn thế này\" | \"Kỳ này mình đuối vì làm thêm quá nhiều\" |\n| Phạm vi | Nó lan tới đâu | \"Mình dốt toàn diện\" | \"Mình yếu phần thống kê, các phần khác ổn\" |\n| Quy trách nhiệm | Bao nhiêu phần do mình | \"Tại mình dốt bẩm sinh\" | \"Mình học sai cách, và đề kỳ này cũng khó hơn\" |\n\nHai chỗ dễ hiểu sai. Thứ nhất, trục thứ ba **không phải lời khuyên đổ lỗi cho hoàn cảnh**: người bền bỉ vẫn nhận phần của mình, nhưng nhận đúng phần — phần thuộc về cách làm, chứ không phải phần thuộc về bản chất con người. Thứ hai, cách giải thích ở cột phải **không lạc quan hơn, nó chính xác hơn**. Đó là lý do nó dùng được: một lời tự nói sai sự thật theo hướng vui vẻ sẽ vỡ ngay lần thất bại sau.\n\n> [!vi-du] Sau khi nhận phản hồi \"phần trình bày của em rời rạc, người nghe không theo được\", Quân có hai đường. Đường một: \"mình vốn không có khiếu nói trước đám đông\" — bền, lan rộng, gán vào bản chất; kết quả là né mọi cơ hội trình bày sau đó. Đường hai: \"bài này mình không có dàn ý, cứ nghĩ tới đâu nói tới đó\" — nhất thời, hẹp, gán vào cách làm; kết quả là lần sau viết dàn ý ba ý chính trước khi mở slide. Cùng một lời chê, hai tương lai khác nhau, và khác nhau ở đúng ba trục ấy.\n\n## Nhãn dán và cái giá của nó\n\n\"Mình kém cỏi\" là một câu ngắn nhưng đắt. Nó gây ba tổn thất cùng lúc.\n\n- **Nó không chỉ ra việc gì cần làm.** \"Kém\" không phải một chẩn đoán; không ai sửa được một tính từ. \"Mình chưa biết cách đọc đề dạng chứng minh\" thì sửa được ngay tối nay.\n- **Nó chiếm chỗ trong đầu lúc đang làm việc.** Trí nhớ làm việc rất hẹp. Phần dung lượng dành cho việc theo dõi xem mình có đang tỏ ra kém hay không là phần bị lấy khỏi bài toán đang giải — đó là lý do người vừa tự dán nhãn thường làm bài tệ hơn khả năng thật.\n- **Nó tự xác nhận.** Đã tin mình kém thì tránh việc khó; tránh việc khó thì không có bằng chứng ngược lại; không có bằng chứng ngược lại thì nhãn ấy càng chắc.\n\n> [!meo] Quy tắc đổi nhãn: mỗi câu bắt đầu bằng \"mình là…\" phải được viết lại thành câu bắt đầu bằng \"mình chưa…\" hoặc \"lần này mình đã…\". Giữ nguyên sự thật, bỏ phần phán quyết. Đây là thao tác cụ thể nhất của cả bài, và nó mất chưa tới một phút.\n\n> [!vi-du] Hân đăng ba video lên kênh của mình, video nào cũng dưới 200 lượt xem. Lời tự nói ban đầu: \"mình không có duyên làm nội dung\". Viết lại theo ba trục: \"ba video đầu mình đều mở đầu dài 40 giây mới vào việc, và mình chưa thử tiêu đề nào khác\" — nhất thời, hẹp, gắn vào cách làm. Điều đáng chú ý là bản viết lại **không hề vui hơn**, chỉ cụ thể hơn; nhưng chỉ từ bản này mới ra được một việc để thử ở video thứ tư.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nChọn một chuyện làm bạn khó chịu trong tuần. Viết ba dòng theo mô hình ABC: sự việc là gì (chỉ ghi sự kiện quan sát được, không kèm nhận xét), mình đang tự nói gì, cảm xúc và hành vi đi theo là gì. Sau đó đọc lại dòng thứ hai và chấm nó theo ba trục của Seligman: bền hay nhất thời, rộng hay hẹp, gán vào bản chất hay gán vào cách làm. Viết một bản thay thế chính xác hơn.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người đưa ra một lời tự nói tiêu cực có thật (không cần kể chi tiết hoàn cảnh). Nhóm làm hai việc: (1) chỉ ra nó lệch ở trục nào trong ba trục; (2) đề xuất bản viết lại **chính xác hơn chứ không vui hơn** — bản nào nghe như an ủi suông thì nhóm loại. Cuối buổi mỗi nhóm nộp một cặp trước–sau đắt giá nhất.\n\n### Bài tập về nhà (45 phút)\n\nTheo dõi năm ngày, mỗi ngày ghi một mục ABC. Cuối tuần viết nửa trang trả lời: lời tự nói của bạn hay lệch ở trục nào nhất; nó xuất hiện nhiều nhất trong bối cảnh nào (học, làm thêm, quan hệ bạn bè); và một câu thay thế bạn sẽ dùng sẵn cho lần sau, viết đúng như bạn sẽ tự nói.\n\n### Xem thêm\n\n- 🎬 [The Gift and Power of Emotional Courage](https://www.youtube.com/watch?v=NDQ1Mi5I4rg) — Susan David, TED, 16 phút. Vì sao ép mình phải tích cực lại làm hỏng việc xử lý cảm xúc; nền cho phần tích cực độc hại.\n- 🎬 [The Power of Believing That You Can Improve](https://www.youtube.com/watch?v=_X0mgOOSpLU) — Carol Dweck, TED, 10 phút. Xem trước cho bài 2.2, phần chữ *chưa*.\n\n### Nguồn tham khảo\n\n- Seligman, M. E. P. (2006). *Learned Optimism: How to Change Your Mind and Your Life.* New York: Vintage Books.\n- Ellis, A., & Harper, R. A. (1997). *A Guide to Rational Living.* Chatsworth: Wilshire Book Company.\n- Beck, J. S. (2011). *Cognitive Behavior Therapy: Basics and Beyond* (2nd ed.). New York: Guilford Press.\n- David, S. (2016). *Emotional Agility: Get Unstuck, Embrace Change, and Thrive in Work and Life.* New York: Avery.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "2.1-tich-cuc-vs-doc-hai",
+                "type": "mcq",
+                "prompt": "Bạn cùng phòng vừa trượt vòng phỏng vấn thực tập và đang buồn. Câu nói nào thể hiện tư duy tích cực đúng nghĩa?",
+                "explanation": "Tư duy tích cực gọi đúng tên cảm xúc rồi dẫn tới một việc cụ thể. Câu an ủi chung chung chặn cảm xúc là tích cực độc hại; câu hứa hẹn không điều kiện là lạc quan mù quáng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Trượt vòng này chắc hụt hẫng thật. Cậu thử xin họ phản hồi xem yếu phần nào, rồi mình luyện đúng phần đó cho vòng sau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đừng buồn, mọi chuyện xảy ra đều có lý do của nó",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  },
+                  {
+                    "label": "Kiểu gì chỗ khác cũng nhận thôi, khỏi lo gì cả",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  },
+                  {
+                    "label": "Tại cậu vốn không hợp với phỏng vấn, tính cách nó thế rồi",
+                    "isCorrect": false,
+                    "misconception": "knm.fixed-mindset"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-hat-giong-suy-nghi",
+                "type": "mcq",
+                "prompt": "Vì sao khâu tự nói với chính mình được coi là chìa khoá của tư duy tích cực?",
+                "explanation": "Sự việc đã xảy ra và cảm xúc đến sau khâu diễn giải, nên diễn giải là khâu duy nhất can thiệp được — và cả chuỗi cảm xúc, hành vi, kết quả mọc lên từ đó.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì đó là khâu duy nhất can thiệp được: sự việc đã xong, còn cảm xúc và hành vi đều đi sau cách ta diễn giải",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì suy nghĩ đủ mạnh sẽ tự thu hút kết quả tốt đến với mình",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  },
+                  {
+                    "label": "Vì cảm xúc do sự việc gây ra trực tiếp, nên phải tránh những sự việc xấu",
+                    "isCorrect": false,
+                    "misconception": "knm.emotion-from-event"
+                  },
+                  {
+                    "label": "Vì người tích cực bẩm sinh không có những suy nghĩ tiêu cực ấy",
+                    "isCorrect": false,
+                    "misconception": "knm.skill-is-innate"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-ba-truc-seligman",
+                "type": "mcq",
+                "prompt": "Sau khi bị chê phần thuyết trình rời rạc, câu tự nói nào là cách giải thích chính xác và giữ được động lực nhất theo ba trục của Seligman?",
+                "explanation": "Cách giải thích giữ được người ta là cách nhất thời, hẹp và gắn vào cách làm — không phải cách vui vẻ nhất, mà cách chính xác nhất.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bài này mình không làm dàn ý trước nên ý bị nhảy; lần sau viết ba ý chính rồi mới mở slide",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mình vốn không có khiếu nói trước đám đông",
+                    "isCorrect": false,
+                    "misconception": "knm.self-label"
+                  },
+                  {
+                    "label": "Thuyết trình dở thì đúng là mình dốt toàn diện rồi",
+                    "isCorrect": false,
+                    "misconception": "knm.catastrophizing"
+                  },
+                  {
+                    "label": "Thầy khó tính thôi chứ bài mình có vấn đề gì đâu",
+                    "isCorrect": false,
+                    "misconception": "knm.criticism-as-attack"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-dan-nhan",
+                "type": "mcq",
+                "prompt": "Vì sao việc tự dán nhãn tiêu cực kiểu mình kém cỏi lại làm giảm hiệu suất học tập?",
+                "explanation": "Nhãn không chỉ ra việc gì sửa được, lại chiếm dung lượng trí nhớ làm việc đang cần cho nhiệm vụ, và dẫn tới né việc khó nên tự xác nhận chính nó.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Vì nó không chỉ ra việc gì sửa được, chiếm chỗ trong trí nhớ làm việc lúc đang làm bài, và khiến ta né những việc khó — chính là loại việc tạo ra tiến bộ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nghĩ xấu về mình sẽ thu hút những điều xấu đến với mình",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  },
+                  {
+                    "label": "Vì người khác nghe thấy sẽ đánh giá thấp mình",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  },
+                  {
+                    "label": "Vì nhãn đó thường đúng, và biết mình kém thì không nên học tiếp",
+                    "isCorrect": false,
+                    "misconception": "knm.fixed-mindset"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-phan-hoi-tieu-cuc",
+                "type": "mcq",
+                "prompt": "Khi nhận được ý kiến phản hồi tiêu cực về sản phẩm của mình, cách xử lý phù hợp với tư duy tích cực là gì?",
+                "explanation": "Tách thái độ người nói khỏi nội dung được nói, giữ lại phần dùng được và hỏi cho cụ thể. Phòng thủ làm mất thông tin; chấp nhận toàn bộ mà không kiểm cũng không phải phản hồi tốt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hỏi lại cho cụ thể chỗ nào chưa đạt và nên sửa theo hướng nào, rồi tự đánh giá phần nào trong đó dùng được",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giải thích ngay vì sao mình làm như vậy để người ta hiểu là mình không sai",
+                    "isCorrect": false,
+                    "misconception": "knm.criticism-as-attack"
+                  },
+                  {
+                    "label": "Nhận hết cho nhanh và tự nhủ mình đúng là chưa đủ giỏi",
+                    "isCorrect": false,
+                    "misconception": "knm.self-label"
+                  },
+                  {
+                    "label": "Bỏ ngoài tai và tự nhắc mình phải luôn suy nghĩ tích cực",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-chuoi-tac-dong",
+                "type": "ordering",
+                "prompt": "Sắp xếp chuỗi tác động của tư duy theo đúng trình tự.",
+                "explanation": "Sự việc chỉ là đầu vào; diễn giải sinh ra cảm xúc, cảm xúc dẫn tới hành vi, hành vi tạo ra kết quả — và kết quả lại làm nguyên liệu cho lần diễn giải sau.",
+                "points": 3,
+                "sequence": [
+                  "Sự việc xảy ra",
+                  "Cách ta tự nói với mình về sự việc đó",
+                  "Cảm xúc nảy sinh",
+                  "Hành vi ta chọn làm",
+                  "Kết quả nhận được"
+                ]
+              },
+              {
+                "key": "2.1-noi-khai-niem",
+                "type": "matching",
+                "prompt": "Nối mỗi câu nói với loại phản ứng đúng của nó.",
+                "explanation": "Tư duy tích cực dẫn tới hành động cụ thể; tích cực độc hại chặn cảm xúc bằng an ủi chung chung; lạc quan mù quáng hứa hẹn kết quả tốt mà không kèm điều kiện nào.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Mình yếu phần bài tập lớn, tối nay xin đề cũ làm lại năm bài",
+                    "right": "Tư duy tích cực"
+                  },
+                  {
+                    "left": "Có gì đâu mà buồn, nhiều người còn khổ hơn mày",
+                    "right": "Tích cực độc hại"
+                  },
+                  {
+                    "left": "Cứ tin đi rồi mọi chuyện sẽ tự tốt lên thôi",
+                    "right": "Lạc quan mù quáng"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-viet-abc",
+                "type": "essay",
+                "prompt": "Chọn một chuyện khiến bạn khó chịu trong hai tuần qua. Viết 150–250 từ gồm: (a) sự việc, chỉ ghi phần quan sát được; (b) lời tự nói của bạn lúc đó, viết đúng như nó xuất hiện trong đầu; (c) chấm lời tự nói ấy theo ba trục độ bền, phạm vi, quy trách nhiệm; (d) một bản viết lại chính xác hơn, kèm việc cụ thể bạn sẽ làm trong 48 giờ tới.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 2.2 · Bẻ lại lối nghĩ méo",
+          "durationMin": 50,
+          "description": "Bảy lối nghĩ méo hay gặp và cách nhận ra chúng trong lời tự nói; quy trình ABCDE để tranh luận với chính mình; chữ chưa của tư duy phát triển và chỗ khái niệm này hay bị dùng sai.",
+          "objectives": [
+            "Gọi tên được lối nghĩ méo trong một lời tự nói cụ thể",
+            "Chạy được quy trình ABCDE trên một tình huống thật của mình",
+            "Dùng được ba câu hỏi bẻ khoá để tìm cách đọc khác cho cùng một sự việc",
+            "Phân biệt được tư duy phát triển thật với cách hiểu sai chỉ cần cố gắng là đủ"
+          ],
+          "summary": [
+            "Lối nghĩ méo không phải dấu hiệu yếu đuối — chúng là đường tắt của bộ não, ai cũng có; việc cần làm là nhận ra chúng đủ nhanh để không hành động theo.",
+            "ABCDE thêm hai bước vào mô hình ABC: tranh luận với lời tự nói bằng bằng chứng, rồi ghi lại hiệu ứng sau khi tranh luận.",
+            "Ba câu hỏi bẻ khoá: bằng chứng nào chống lại nó, còn cách đọc nào khác, và nếu bạn thân gặp chuyện này mình sẽ nói gì.",
+            "Tư duy phát triển không phải là khen cố gắng suông; nó là niềm tin rằng năng lực thay đổi được, kèm việc đổi chiến lược khi cách cũ không chạy."
+          ],
+          "body": "\nBài trước dừng ở chỗ nhận ra khâu diễn giải. Bài này làm phần khó hơn: **cãi lại nó**, một cách có phương pháp chứ không phải bằng cách tự nhủ đừng nghĩ nữa.\n\n## Bảy lối nghĩ méo hay gặp\n\nCác lối nghĩ dưới đây được mô tả trong trị liệu nhận thức — hành vi. Chúng phổ biến tới mức gần như ai cũng dùng vài cái mỗi tuần; điều khác nhau chỉ là có nhận ra kịp hay không.\n\n| Lối nghĩ méo | Nghe như thế nào | Chỗ nó sai |\n|---|---|---|\n| Được ăn cả ngã về không | \"Không đạt 8 phẩy thì coi như hỏng kỳ này\" | Bỏ mất toàn bộ vùng ở giữa, nơi phần lớn đời sống diễn ra |\n| Thổi phồng | \"Trượt môn này là mất bằng, mất việc, hỏng cả tương lai\" | Nối các bước bằng giả định chưa kiểm bước nào |\n| Đọc ý người khác | \"Nhắn không rep tức là nó nghĩ mình phiền\" | Coi một suy đoán là dữ kiện, không kiểm được |\n| Khái quát vội | \"Hai lần bị từ chối rồi, chỗ nào cũng sẽ từ chối thôi\" | Cỡ mẫu hai, kết luận cho toàn bộ thị trường |\n| Lọc tiêu cực | Nhớ đúng một câu chê giữa mười lời khen | Chọn dữ liệu theo tâm trạng rồi kết luận như thể đủ |\n| Suy diễn từ cảm xúc | \"Mình thấy lo, chắc chắn sẽ có chuyện\" | Cảm xúc là dữ liệu về trạng thái của ta, không phải về thế giới |\n| Câu phải và nên | \"Đáng lẽ mình phải giỏi hơn ở tuổi này\" | So với một chuẩn không ai định nghĩa, không đo được |\n\n> [!vi-du] Nhi nhắn cho nhóm đồ án lúc 9 giờ tối, tới 11 giờ chưa ai trả lời. Chuỗi diễn ra trong đầu: \"chắc mọi người khó chịu vì mình hỏi nhiều\" (đọc ý người khác) → \"mình toàn làm phiền người khác\" (khái quát vội) → \"kiểu này nhóm sẽ đẩy mình ra rìa, điểm nhóm sẽ tệ\" (thổi phồng). Ba bước ấy mất chưa tới hai phút và không có bước nào được kiểm. Sáng hôm sau: cả nhóm đi làm thêm ca tối, không ai kịp mở điện thoại.\n\n## Quy trình ABCDE\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"display:grid;gap:.45rem;font-size:1.05rem\">\n    <div style=\"background:rgba(127,127,127,.12);border-radius:.4rem;padding:.55rem .75rem\"><b>A — Sự việc</b> · Nhắn cho nhóm lúc 21h, tới 23h chưa ai trả lời</div>\n    <div style=\"background:rgba(217,150,40,.14);border-radius:.4rem;padding:.55rem .75rem\"><b>B — Lời tự nói</b> · Mọi người khó chịu vì mình hỏi nhiều, mình sắp bị đẩy ra rìa</div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.4rem;padding:.55rem .75rem\"><b>C — Hệ quả</b> · Lo, mất ngủ, định rút khỏi phần việc đang nhận</div>\n    <div style=\"background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.55rem .75rem\"><b>D — Tranh luận</b> · Bằng chứng nào cho thấy họ khó chịu? Không có. Bằng chứng ngược lại? Hôm qua Trang còn nhờ mình rà lại slide. Cách đọc khác? Cả ba bạn đều làm ca tối. Nếu bạn thân kể chuyện này, mình sẽ nói gì?</div>\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.4rem;padding:.55rem .75rem\"><b>E — Hiệu ứng</b> · Bớt lo, ngủ được; sáng mai nhắn một câu hỏi cụ thể kèm hạn chót thay vì rút lui</div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Bước D là chỗ toàn bộ giá trị nằm ở đó, và cũng là bước hay bị bỏ. Tranh luận không phải là tự nhủ đừng nghĩ nữa — nó là đòi hỏi bằng chứng, y như cách bạn sẽ làm với lập luận của người khác.</div>\n</div>\n```\n\nCó một điều kiện để bước D chạy được: **phải viết ra**. Tranh luận trong đầu gần như luôn thua, vì lời tự nói tiêu cực nhắc lại được vô hạn còn phản biện thì trôi mất. Ba dòng trên giấy hoặc trong ghi chú điện thoại đủ để đổi kết quả.\n\n## Ba câu hỏi bẻ khoá\n\nKhi bí, ba câu này gần như luôn mở được một cách đọc khác:\n\n1. **Bằng chứng nào chống lại điều mình vừa nghĩ?** Không hỏi bằng chứng ủng hộ — cái đó đầu bạn đã tự tìm rồi.\n2. **Còn cách đọc nào khác cho đúng những dữ kiện này?** Ép mình nêu ít nhất hai cách, kể cả cách nghe có vẻ khó tin.\n3. **Nếu bạn thân kể đúng câu chuyện này, mình sẽ nói gì với họ?** Câu trả lời gần như luôn vừa tử tế hơn vừa chính xác hơn câu bạn đang nói với chính mình — và đó là dấu hiệu bạn đang dùng hai tiêu chuẩn khác nhau cho cùng một sự việc.\n\n> [!meo] Câu hỏi thứ ba là câu rẻ nhất và hiệu quả nhất. Nó không đòi bạn phải lạc quan; nó chỉ đòi bạn áp dụng cùng một tiêu chuẩn công bằng cho mình như cho người khác.\n\n## Chữ \"chưa\" và chỗ tư duy phát triển bị dùng sai\n\n![Carol Dweck trong một bộ phim tài liệu về đổi mới sáng tạo](https://upload.wikimedia.org/wikipedia/commons/9/9f/Carol_Dweck_for_Innovation_documentary.jpg \"Carol Dweck, nhà tâm lý học Đại học Stanford, tác giả khái niệm tư duy phát triển (growth mindset). Ảnh: [File:Carol Dweck for Innovation documentary.jpg](https://commons.wikimedia.org/wiki/File:Carol_Dweck_for_Innovation_documentary.jpg), tác giả Satheesh Gopalan, giấy phép CC BY-SA 3.0.\")\n\nDweck phân biệt hai niềm tin về năng lực: **cố định** (thông minh là lượng trời cho) và **phát triển** (năng lực thay đổi được qua luyện tập và chiến lược đúng). Khác biệt lộ ra rõ nhất ở chỗ gặp việc khó: người tin cố định coi việc phải cố gắng là bằng chứng mình kém, nên tránh; người tin phát triển coi cố gắng là cách năng lực tăng lên, nên ở lại lâu hơn.\n\nMột chi tiết nhỏ mà hiệu quả: thêm chữ **chưa** vào cuối câu. \"Mình không làm được bài này\" → \"mình chưa làm được bài này\". Câu thứ hai đặt hiện tại lên một trục thời gian thay vì một bản án.\n\n> [!canh-bao] Ba cách hiểu sai phổ biến. **Một**, coi tư duy phát triển là khen cố gắng — cố gắng sai cách mãi thì vẫn không tiến bộ, phần quan trọng là *đổi chiến lược*. **Hai**, dùng nó để đổ trách nhiệm hoàn toàn cho người học, bỏ qua điều kiện học tập, sức khoẻ, tài chính. **Ba**, coi nó là thứ ai cũng có sẵn hoặc không: chính Dweck nhấn mạnh phần lớn người ta là hỗn hợp, và ở môn này thì cố định trong khi môn kia lại phát triển.\n\n> [!vi-du] Long trượt vòng kiểm tra kỹ thuật khi ứng tuyển thực tập. Bản cố định: \"mình không có tư chất lập trình\" → thôi, chuyển sang tìm việc khác. Bản phát triển nhưng *sai*: \"cứ chăm hơn nữa\" → cày thêm 40 bài cùng dạng đã làm được, trượt tiếp. Bản phát triển đúng: xin lại đề, phát hiện mình hỏng ở phần độ phức tạp thuật toán, đổi cách học sang giải thích lại bài cho người khác nghe và làm đúng loại bài đó, không cày loại đã thạo. Điểm mấu chốt không nằm ở nỗ lực mà ở việc **đổi chiến lược sau khi biết mình hổng chỗ nào**.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nLấy lại mục ABC bạn viết ở bài 2.1, thêm hai bước D và E. Bước D bắt buộc phải có: một bằng chứng cụ thể chống lại lời tự nói, một cách đọc khác cho cùng dữ kiện, và câu bạn sẽ nói nếu bạn thân gặp chuyện đó. Bước E ghi lại sau khi viết xong bạn thấy khác đi thế nào — kể cả khi câu trả lời là không khác gì, đó cũng là dữ liệu.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi nhóm nhận ba lối nghĩ méo trong bảng. Với mỗi lối, dựng một tình huống có thật trong đời sinh viên và viết hai phiên bản lời tự nói: phiên bản méo và phiên bản đã tranh luận. Yêu cầu: phiên bản sau **không được là câu an ủi** — nhóm khác sẽ chấm, câu nào nghe như \"rồi sẽ ổn thôi\" bị loại.\n\n### Bài tập về nhà (45–60 phút)\n\nGhi nhật ký ABCDE trong bảy ngày, mỗi ngày một mục, mỗi mục không quá năm dòng. Cuối tuần viết nửa trang: lối nghĩ méo nào của bạn xuất hiện nhiều nhất; nó thường bật lên trong bối cảnh nào; và câu tranh luận nào bạn thấy có tác dụng nhất với chính mình, chép lại nguyên văn để dùng tiếp.\n\n### Xem thêm\n\n- 🎬 [The Power of Believing That You Can Improve](https://www.youtube.com/watch?v=_X0mgOOSpLU) — Carol Dweck, TED, 10 phút. Bản trình bày gốc của tác giả về chữ *chưa*.\n- 🎬 [The Power of Yet](https://www.youtube.com/watch?v=J-swZaKN2Ic) — Carol S. Dweck, TEDxNorrköping, 11 phút. Bản dài hơn, nhiều ví dụ lớp học.\n\n### Nguồn tham khảo\n\n- Dweck, C. S. (2006). *Mindset: The New Psychology of Success.* New York: Random House.\n- Burns, D. D. (1980). *Feeling Good: The New Mood Therapy.* New York: William Morrow — nguồn của danh sách lối nghĩ méo.\n- Beck, A. T. (1979). *Cognitive Therapy and the Emotional Disorders.* New York: Penguin.\n- Sisk, V. F., Burgoyne, A. P., Sun, J., Butler, J. L., & Macnamara, B. N. (2018). To what extent and under which circumstances are growth mind-sets important to academic achievement? *Psychological Science*, 29(4), 549–571 — bài phân tích tổng hợp cho thấy hiệu ứng nhỏ hơn nhiều so với cách khái niệm này được quảng bá.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "2.2-goi-ten-loi-nghi",
+                "type": "matching",
+                "prompt": "Nối mỗi lời tự nói với lối nghĩ méo tương ứng.",
+                "explanation": "Gọi đúng tên lối nghĩ méo là bước đầu để tranh luận với nó — mỗi lối sai ở một chỗ khác nhau nên cách bẻ cũng khác nhau.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Nhắn mà nó không trả lời, chắc nó thấy mình phiền",
+                    "right": "Đọc ý người khác"
+                  },
+                  {
+                    "left": "Trượt môn này là coi như hỏng cả tương lai",
+                    "right": "Thổi phồng"
+                  },
+                  {
+                    "left": "Không đạt 8 phẩy thì kỳ này vứt đi",
+                    "right": "Được ăn cả ngã về không"
+                  },
+                  {
+                    "left": "Mình thấy lo, kiểu gì cũng có chuyện xảy ra",
+                    "right": "Suy diễn từ cảm xúc"
+                  }
+                ]
+              },
+              {
+                "key": "2.2-buoc-D",
+                "type": "mcq",
+                "prompt": "Trong quy trình ABCDE, bước D (tranh luận) được làm đúng khi nào?",
+                "explanation": "Tranh luận là đòi hỏi bằng chứng và tìm cách đọc khác cho cùng dữ kiện, giống hệt cách ta soi lập luận của người khác — không phải tự nhủ đừng nghĩ nữa, cũng không phải an ủi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Khi ta viết ra bằng chứng chống lại lời tự nói và ít nhất một cách đọc khác cho cùng những dữ kiện đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khi ta tự nhủ thôi đừng nghĩ tiêu cực nữa và chuyển sang việc khác",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  },
+                  {
+                    "label": "Khi ta nhắc lại nhiều lần một câu khẳng định tích cực cho tới lúc tin",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  },
+                  {
+                    "label": "Khi ta chấp nhận rằng lời tự nói đó đúng và cố sống chung với nó",
+                    "isCorrect": false,
+                    "misconception": "knm.self-label"
+                  }
+                ]
+              },
+              {
+                "key": "2.2-cau-hoi-ban-than",
+                "type": "mcq",
+                "prompt": "Câu hỏi nếu bạn thân gặp đúng chuyện này mình sẽ nói gì với họ có tác dụng gì?",
+                "explanation": "Nó phơi ra việc ta đang dùng hai tiêu chuẩn khác nhau cho cùng một sự việc, và câu nói dành cho bạn thân thường vừa tử tế vừa chính xác hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nó cho thấy ta đang áp hai tiêu chuẩn khác nhau cho cùng một sự việc, và bản dành cho bạn thân thường chính xác hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nó giúp ta thấy mình vẫn còn may mắn hơn nhiều người khác",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  },
+                  {
+                    "label": "Nó chuyển sự chú ý sang người khác để ta quên chuyện của mình",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  },
+                  {
+                    "label": "Nó giúp ta biết mình nên nghe theo lời khuyên của bạn bè thay vì tự quyết",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  }
+                ]
+              },
+              {
+                "key": "2.2-tu-duy-phat-trien",
+                "type": "mcq",
+                "prompt": "Long trượt vòng kiểm tra kỹ thuật. Phản ứng nào thể hiện tư duy phát triển đúng nghĩa?",
+                "explanation": "Tư duy phát triển không dừng ở cố gắng nhiều hơn; phần quyết định là đổi chiến lược sau khi xác định được mình hổng chỗ nào.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Xin lại đề, xác định mình hổng phần độ phức tạp thuật toán, rồi đổi cách học đúng phần đó thay vì luyện thêm loại bài đã thạo",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Kết luận mình không có tư chất lập trình và chuyển hướng nghề khác",
+                    "isCorrect": false,
+                    "misconception": "knm.fixed-mindset"
+                  },
+                  {
+                    "label": "Cày thêm thật nhiều bài cùng dạng đã làm được, miễn là chăm hơn trước",
+                    "isCorrect": false,
+                    "misconception": "knm.knowing-equals-doing"
+                  },
+                  {
+                    "label": "Tự nhủ lần sau nhất định sẽ đỗ và không nghĩ tới chuyện đã trượt nữa",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  }
+                ]
+              },
+              {
+                "key": "2.2-kho-khan-la-bai-hoc",
+                "type": "mcq",
+                "prompt": "Theo cách tiếp cận xem khó khăn là bài học, câu hỏi phù hợp nhất để tự đặt ra sau một thất bại là gì?",
+                "explanation": "Câu hỏi tốt phải chỉ ra được việc làm khác đi lần sau. Câu hỏi về bản chất con người hoặc về lỗi của người khác đều không dẫn tới hành động nào.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Lần này mình đã làm gì và phần nào trong cách làm ấy cần đổi cho lần sau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì sao chuyện xui xẻo này lại xảy ra với mình",
+                    "isCorrect": false,
+                    "misconception": "knm.circle-of-concern"
+                  },
+                  {
+                    "label": "Mình có phải là người kém cỏi không",
+                    "isCorrect": false,
+                    "misconception": "knm.self-label"
+                  },
+                  {
+                    "label": "Ai là người phải chịu trách nhiệm cho việc này",
+                    "isCorrect": false,
+                    "misconception": "knm.criticism-as-attack"
+                  }
+                ]
+              },
+              {
+                "key": "2.2-thu-tu-abcde",
+                "type": "ordering",
+                "prompt": "Sắp xếp năm bước của quy trình ABCDE theo đúng trình tự.",
+                "explanation": "Ghi sự việc trước để tách khỏi diễn giải, bắt lời tự nói, ghi hệ quả, rồi mới tranh luận bằng bằng chứng và ghi lại hiệu ứng.",
+                "points": 3,
+                "sequence": [
+                  "Ghi lại sự việc, chỉ phần quan sát được",
+                  "Bắt lấy lời tự nói xuất hiện trong đầu",
+                  "Ghi cảm xúc và hành vi đi theo",
+                  "Tranh luận: bằng chứng chống lại, cách đọc khác, câu sẽ nói với bạn thân",
+                  "Ghi lại hiệu ứng sau khi tranh luận và việc sẽ làm"
+                ]
+              },
+              {
+                "key": "2.2-hieu-sai-growth",
+                "type": "mcq",
+                "prompt": "Đâu là cách hiểu sai về tư duy phát triển?",
+                "explanation": "Khen cố gắng mà không đổi chiến lược là cách hiểu sai phổ biến nhất; ngoài ra còn hai cách sai khác là dùng nó để bỏ qua điều kiện học tập, và coi nó là thứ có sẵn hoặc không.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chỉ cần cố gắng nhiều hơn là sẽ tiến bộ, không cần xem lại cách học có đúng không",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Năng lực thay đổi được qua luyện tập và chiến lược phù hợp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Việc khó là nơi năng lực tăng lên, nên đáng ở lại lâu hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Phần lớn người ta là hỗn hợp: phát triển ở lĩnh vực này, cố định ở lĩnh vực khác",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "2.2-viet-abcde",
+                "type": "essay",
+                "prompt": "Viết một mục ABCDE đầy đủ cho một tình huống thật của bạn (200–300 từ). Bước D bắt buộc có đủ ba thành phần: một bằng chứng cụ thể chống lại lời tự nói, một cách đọc khác cho cùng dữ kiện, và câu bạn sẽ nói nếu bạn thân gặp chuyện đó. Bước E ghi trung thực, kể cả khi bạn thấy không khác gì.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 2.3 · Giữ tư duy tích cực bền và biết khi nào cần trợ giúp",
+          "durationMin": 45,
+          "description": "Bốn thói quen có bằng chứng thay cho lời khuyên suông; tự trắc ẩn thay cho tự đay nghiến; cách nhận phản hồi tiêu cực và sống với so sánh xã hội; ranh giới giữa tâm trạng thường ngày và dấu hiệu cần chuyên gia.",
+          "objectives": [
+            "Chọn và duy trì được ít nhất một thói quen có bằng chứng trong bốn thói quen được nêu",
+            "Phân biệt được tự trắc ẩn với nuông chiều bản thân và với tự đay nghiến",
+            "Xử lý được một lời chê và một tình huống so sánh xã hội theo hướng giữ được thông tin dùng được",
+            "Nhận ra được các dấu hiệu cần tìm hỗ trợ chuyên môn thay vì tự luyện tư duy"
+          ],
+          "summary": [
+            "Bốn thói quen có bằng chứng đáng làm: ghi ba điều cụ thể mình biết ơn, viết ra cảm xúc, ngủ và vận động đủ, và làm trước rồi tâm trạng theo sau.",
+            "Tự trắc ẩn gồm ba phần: tử tế với mình, hiểu rằng ai cũng vấp, và nhìn cảm xúc đúng cỡ thật của nó — nó khác nuông chiều vì vẫn gọi đúng tên phần mình làm chưa được.",
+            "Trước một lời chê, tách thái độ người nói khỏi nội dung được nói; trước một người giỏi hơn, đổi câu hỏi từ vì sao không phải mình sang họ làm gì mà mình chưa làm.",
+            "Khi các dấu hiệu kéo dài quá hai tuần và ảnh hưởng tới việc học việc làm, đó là lúc tìm chuyên gia — không phải lúc luyện thêm tư duy tích cực."
+          ],
+          "body": "\nHai bài trước cho công cụ xử lý từng tình huống. Bài này nói về **duy trì**: thứ gì có bằng chứng là giữ được trạng thái tinh thần dài hạn, và quan trọng không kém — chỗ nào tư duy tích cực hết tác dụng và cần thứ khác.\n\n## Bốn thói quen có bằng chứng\n\nThị trường sách phát triển bản thân đầy lời khuyên; phần dưới đây chỉ giữ những thứ đã được kiểm bằng nghiên cứu có nhóm đối chứng, và nêu luôn giới hạn của chúng.\n\n| Thói quen | Làm cụ thể thế nào | Bằng chứng và giới hạn |\n|---|---|---|\n| Ghi điều biết ơn | Mỗi tối viết ba điều cụ thể xảy ra trong ngày và vì sao chúng đáng kể | Hiệu ứng nhỏ tới trung bình với tâm trạng; mất tác dụng nếu viết chung chung hoặc viết mỗi ngày cho có |\n| Viết ra cảm xúc | Viết liền 15–20 phút về chuyện đang làm mình bận tâm, không sửa câu chữ, không cho ai đọc | Nghiên cứu của Pennebaker cho thấy cải thiện sức khoẻ tinh thần và cả thể chất; vài ngày đầu có thể thấy tệ hơn trước khi khá lên |\n| Ngủ và vận động | Ngủ đủ giấc theo nhịp cố định; vận động vừa sức vài buổi mỗi tuần | Nền tảng của mọi thứ còn lại; thiếu ngủ làm lối nghĩ méo xuất hiện dày hơn hẳn |\n| Làm trước, tâm trạng theo sau | Chọn một việc nhỏ đã lên lịch và làm dù chưa thấy muốn | Nguyên tắc kích hoạt hành vi trong trị liệu; chờ có hứng rồi mới làm là vòng lặp tự thít chặt |\n\nThói quen thứ tư là thói quen chống lại trực giác nhất và cũng đáng nhớ nhất: **hành động không đợi tâm trạng**. Khi mệt, việc chờ tới lúc thấy muốn học mới học sẽ khiến việc dồn lại, việc dồn lại làm tâm trạng tệ hơn, tâm trạng tệ hơn lại càng không muốn học. Cắt vòng lặp ở chỗ rẻ nhất: mở tài liệu ra làm mười phút, không hứa hẹn gì hơn.\n\n> [!vi-du] Trang định tập lại thể dục nhưng ba tuần liền không bắt đầu vì \"đợi lúc nào đỡ bận\". Bạn đổi cam kết thành: mặc đồ tập và đi bộ 10 phút, đúng 7 giờ tối, kể cả hôm mệt. Bốn ngày đầu chỉ đi bộ. Từ ngày thứ năm, có ba hôm bạn tự chạy thêm. Điểm quan trọng: cam kết ban đầu nhỏ tới mức không cần động lực nào để thực hiện — đó chính là lý do nó chạy.\n\n## Tự trắc ẩn, không phải tự đay nghiến\n\nNhiều người tin rằng tự đay nghiến là động cơ: không khắt khe với mình thì sẽ lười. Nghiên cứu của Kristin Neff cho kết quả ngược lại — người tự trắc ẩn **nhận sai dễ hơn** và **quay lại làm tiếp nhanh hơn**, vì họ không phải tiêu sức bảo vệ hình ảnh bản thân.\n\nTự trắc ẩn có ba thành phần, và thiếu phần nào cũng hỏng:\n\n- **Tử tế với mình** thay vì phán xét: nói với mình bằng giọng mình dùng với bạn thân.\n- **Nhìn ra cái chung của con người**: ai cũng vấp; cảm giác chỉ mình mình tệ là một cảm giác sai và phổ biến.\n- **Nhìn cảm xúc đúng cỡ**: không đè nén, cũng không phóng đại thành thảm hoạ.\n\n| | Tự đay nghiến | Nuông chiều | Tự trắc ẩn |\n|---|---|---|---|\n| Sau khi nộp bài trễ | \"Mình vô dụng, không làm nổi việc gì ra hồn\" | \"Thầy khó tính ấy mà, ai chả trễ\" | \"Mình trễ vì nhận quá nhiều việc tháng này. Việc đó thật, và mình cần xin lỗi rồi sắp lại lịch\" |\n| Có gọi đúng tên phần lỗi của mình không | Có, nhưng gán vào bản chất | Không | Có, gán vào hành vi |\n| Kết quả thường thấy | Né việc, trì hoãn tiếp | Lặp lại y nguyên | Sửa được và làm tiếp |\n\n## Phản hồi tiêu cực và so sánh xã hội\n\nHai tình huống này bào mòn tinh thần nhiều hơn cả thất bại, vì chúng xảy ra hằng ngày.\n\n**Khi bị chê.** Tách hai câu hỏi: *người ta nói với thái độ thế nào* và *trong đó phần nào đúng*. Phần đúng vẫn dùng được kể cả khi giọng khó nghe; và ngược lại, một lời chê lịch sự chưa chắc đã đúng. Nếu có một người bạn liên tục chê dự án bạn đang làm, câu hỏi cần hỏi không phải \"nên nghe hay nên nghỉ chơi\" mà là: *lời chê ấy có kèm lý do cụ thể và kiểm được không*. Có thì lấy phần dữ liệu; không thì cảm ơn rồi thôi — và giảm tần suất kể cho người đó nghe về những việc đang dang dở, vì việc đang nhen nhóm rất dễ bị dập tắt bởi những nhận xét không có nội dung.\n\n**Khi thấy người khác được khen.** Phản ứng ganh tị là bình thường và không đáng xấu hổ. Cái đáng đổi là câu hỏi tiếp theo: từ \"vì sao không phải mình\" sang \"họ đã làm gì mà mình chưa làm\". Câu thứ hai cho ra thông tin; câu thứ nhất chỉ cho ra tâm trạng. Và nếu câu trả lời là họ có điều kiện tốt hơn thật, thì đó cũng là dữ liệu — về việc bạn cần loại hỗ trợ nào, chứ không phải bằng chứng rằng bạn kém.\n\n> [!vi-du] Nam mở LinkedIn thấy ba người cùng khoá đăng ảnh nhận offer. Câu hỏi cũ: \"sao mình chậm thế này\". Câu hỏi mới: \"ba bạn đó làm gì khác mình\" — hoá ra cả ba đều nộp từ tháng 9 trong khi Nam định tháng 12 mới bắt đầu, và hai người có dự án cá nhân đưa lên hồ sơ. Kết quả của câu hỏi mới là hai việc cụ thể cho tuần này, thay vì một buổi tối mất ngủ.\n\n## Khi tư duy tích cực không đủ\n\nĐây là phần quan trọng nhất của bài, và là phần các khoá kỹ năng mềm hay bỏ qua.\n\nBuồn, lo, mất động lực từng đợt là chuyện bình thường của đời sống. Nhưng có một ranh giới, và nó khá rõ: khi các dấu hiệu **kéo dài liên tục trên hai tuần** và **ảnh hưởng tới việc học, việc làm hoặc quan hệ**, đó không còn là chuyện luyện tư duy nữa.\n\nCác dấu hiệu cần chú ý: mất ngủ hoặc ngủ quá nhiều kéo dài; mất hứng thú với những việc trước đây thích; mệt mỏi không giải thích được; ăn uống thay đổi rõ rệt; khó tập trung tới mức không học nổi; cảm giác vô giá trị hoặc tội lỗi dai dẳng; và — cần đi khám ngay, không chờ — **ý nghĩ làm hại bản thân**.\n\n> [!canh-bao] Nói với một người đang có những dấu hiệu trên rằng hãy suy nghĩ tích cực lên là lời khuyên có hại: nó chuyển trách nhiệm về phía họ và làm chậm việc tìm trợ giúp. Trầm cảm và rối loạn lo âu là vấn đề sức khoẻ, được điều trị bằng phương pháp có bằng chứng, chứ không phải khuyết điểm về ý chí.\n\nChỗ tìm hỗ trợ: phòng tham vấn tâm lý của trường (nhiều trường đại học có, thường miễn phí cho sinh viên), bác sĩ chuyên khoa tâm thần hoặc nhà tâm lý lâm sàng ở bệnh viện, và trong tình huống khẩn cấp thì cơ sở y tế gần nhất. Đi khám tâm lý cũng bình thường như đi khám khi gãy tay — điều duy nhất khác là định kiến xã hội, và định kiến ấy không phải lý do để chịu đựng.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nChọn **một** thói quen trong bốn thói quen ở bảng đầu bài và thu nhỏ nó tới mức không cần động lực để làm (ví dụ: viết một điều biết ơn, đi bộ mười phút, mở tài liệu làm mười phút). Ghi rõ: làm lúc nào trong ngày, dấu hiệu nào nhắc bạn, và bạn sẽ đánh dấu ở đâu. Cam kết bảy ngày.\n\n### Nhóm 3–4 người (25 phút)\n\nĐóng vai theo cặp, hai lượt. Lượt một: một người kể về việc mình đang làm dở, người kia chê chung chung không kèm lý do; người kể tập tách thái độ khỏi nội dung và hỏi một câu làm rõ. Lượt hai: đổi vai, lần này lời chê có kèm lý do cụ thể — người kể tập nhận phần dùng được mà không phòng thủ. Cả nhóm cùng rút ra: câu hỏi nào giúp biến một lời chê mơ hồ thành thông tin dùng được.\n\n### Bài tập về nhà (45 phút)\n\nViết liền 15–20 phút về một chuyện đang làm bạn bận tâm, theo cách của Pennebaker: viết một mạch, không sửa câu chữ, không cần ai đọc — bạn có thể xoá sau khi viết xong. Sau đó viết riêng nửa trang nộp lại (phần này mới là phần nộp): bạn nhận ra điều gì mà trước khi viết chưa nhận ra; và một việc cụ thể bạn sẽ làm trong tuần tới. Nếu trong lúc viết bạn nhận ra mình đang có các dấu hiệu ở mục cuối bài, hãy dùng nửa trang ấy để ghi tên một chỗ bạn có thể tìm tới.\n\n### Xem thêm\n\n- 🎬 [The Space Between Self-Esteem and Self-Compassion](https://www.youtube.com/watch?v=IvtZBUSplr4) — Kristin Neff, TEDxCentennialParkWomen, 19 phút. Bản trình bày gốc về ba thành phần của tự trắc ẩn.\n- 🎬 [The Gift and Power of Emotional Courage](https://www.youtube.com/watch?v=NDQ1Mi5I4rg) — Susan David, TED, 16 phút. Vì sao dán nhãn tốt hoặc xấu lên cảm xúc lại làm hỏng việc xử lý chúng.\n\n### Nguồn tham khảo\n\n- Neff, K. (2011). *Self-Compassion: The Proven Power of Being Kind to Yourself.* New York: William Morrow.\n- Pennebaker, J. W., & Smyth, J. M. (2016). *Opening Up by Writing It Down* (3rd ed.). New York: Guilford Press.\n- Emmons, R. A., & McCullough, M. E. (2003). Counting blessings versus burdens. *Journal of Personality and Social Psychology*, 84(2), 377–389.\n- Cuijpers, P., van Straten, A., & Warmerdam, L. (2007). Behavioral activation treatments of depression: A meta-analysis. *Clinical Psychology Review*, 27(3), 318–326.\n- Tổ chức Y tế Thế giới (2023). *Depressive disorder — fact sheet.* — [who.int/news-room/fact-sheets/detail/depression](https://www.who.int/news-room/fact-sheets/detail/depression)\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "2.3-hanh-dong-truoc",
+                "type": "mcq",
+                "prompt": "Sau một tuần căng thẳng, bạn thấy mình chẳng muốn làm gì và việc thì dồn lại. Cách làm phù hợp với nguyên tắc kích hoạt hành vi là gì?",
+                "explanation": "Chờ có hứng rồi mới làm là vòng lặp tự thít chặt. Cắt vòng lặp bằng một cam kết nhỏ tới mức không cần động lực nào để thực hiện.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chọn một việc nhỏ đã lên lịch và làm mười phút, không hứa hẹn gì hơn, kể cả khi chưa thấy muốn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nghỉ ngơi hoàn toàn cho tới khi thấy có hứng trở lại rồi mới bắt đầu",
+                    "isCorrect": false,
+                    "misconception": "knm.emotion-from-event"
+                  },
+                  {
+                    "label": "Tự nhắc mình phải suy nghĩ tích cực cho tới khi tâm trạng khá lên",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  },
+                  {
+                    "label": "Lập một kế hoạch thật chi tiết cho cả tháng để lấy lại động lực",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "2.3-tu-trac-an",
+                "type": "mcq",
+                "prompt": "Bạn nộp bài trễ hạn. Câu tự nói nào thể hiện tự trắc ẩn đúng nghĩa?",
+                "explanation": "Tự trắc ẩn vẫn gọi đúng tên phần mình làm chưa được nhưng gán vào hành vi thay vì bản chất — khác cả với tự đay nghiến lẫn với bào chữa.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mình trễ vì tháng này nhận quá nhiều việc. Việc đó có thật, mình cần xin lỗi và sắp lại lịch",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mình đúng là vô dụng, chẳng làm nổi việc gì ra hồn",
+                    "isCorrect": false,
+                    "misconception": "knm.self-label"
+                  },
+                  {
+                    "label": "Thầy khó tính thôi, ai chả có lúc trễ hạn",
+                    "isCorrect": false,
+                    "misconception": "knm.criticism-as-attack"
+                  },
+                  {
+                    "label": "Phải khắt khe với bản thân hơn nữa thì lần sau mới không tái phạm",
+                    "isCorrect": false,
+                    "misconception": "knm.self-compassion-is-weak"
+                  }
+                ]
+              },
+              {
+                "key": "2.3-ban-che-du-an",
+                "type": "mcq",
+                "prompt": "Một người bạn liên tục chê bai dự án bạn đang ấp ủ. Cách ứng xử phù hợp là gì?",
+                "explanation": "Điều quyết định không phải thái độ mà là lời chê có kèm lý do cụ thể, kiểm được hay không. Có thì lấy dữ liệu; không thì cảm ơn rồi thôi.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Hỏi lại xem lời chê dựa trên lý do cụ thể nào; có thì giữ phần dùng được, không có thì cảm ơn và không mang việc đang dang dở ra kể với người đó nữa",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tin theo vì bạn ấy nói nhiều lần như vậy thì hẳn là có lý",
+                    "isCorrect": false,
+                    "misconception": "knm.anecdote-as-proof"
+                  },
+                  {
+                    "label": "Phản bác lại ngay để bảo vệ dự án của mình",
+                    "isCorrect": false,
+                    "misconception": "knm.criticism-as-attack"
+                  },
+                  {
+                    "label": "Tự nhủ hãy tích cực lên và bỏ qua toàn bộ, không cần xem có phần nào đúng",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  }
+                ]
+              },
+              {
+                "key": "2.3-dong-nghiep-duoc-khen",
+                "type": "mcq",
+                "prompt": "Bạn thấy một người cùng lớp được khen thưởng vì thành tích nổi bật. Phản ứng phù hợp nhất là gì?",
+                "explanation": "Ganh tị là phản ứng bình thường; điều đáng đổi là câu hỏi tiếp theo — từ vì sao không phải mình sang họ làm gì mà mình chưa làm, vì chỉ câu sau mới cho ra thông tin.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Ghi nhận cảm giác của mình, rồi hỏi bạn ấy đã làm gì khác mình và rút ra một việc cụ thể để thử",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tự nhủ mình cũng giỏi không kém, chỉ là chưa gặp may",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  },
+                  {
+                    "label": "Kết luận mình thua kém và không có cửa cạnh tranh",
+                    "isCorrect": false,
+                    "misconception": "knm.compare-upward"
+                  },
+                  {
+                    "label": "Tìm lý do để chứng minh thành tích đó không đáng kể",
+                    "isCorrect": false,
+                    "misconception": "knm.criticism-as-attack"
+                  }
+                ]
+              },
+              {
+                "key": "2.3-ranh-gioi-chuyen-gia",
+                "type": "mcq",
+                "prompt": "Một người bạn nói ba tuần nay mất ngủ, không còn thấy hứng thú với những việc trước đây thích, và không tập trung học được. Bạn nên làm gì?",
+                "explanation": "Dấu hiệu kéo dài trên hai tuần và ảnh hưởng tới việc học là ranh giới cần hỗ trợ chuyên môn, không phải chỗ để khuyên suy nghĩ tích cực.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Lắng nghe, nói rằng đây là chuyện nên được người có chuyên môn xem, và cùng bạn tìm phòng tham vấn tâm lý của trường hoặc cơ sở y tế",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khuyên bạn ấy suy nghĩ tích cực hơn và nghĩ tới những điều may mắn mình đang có",
+                    "isCorrect": false,
+                    "misconception": "knm.mental-health-willpower"
+                  },
+                  {
+                    "label": "Nói rằng ai cũng có lúc như vậy, vài hôm là hết",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  },
+                  {
+                    "label": "Khuyên bạn ấy cố gắng hơn để lấy lại động lực học",
+                    "isCorrect": false,
+                    "misconception": "knm.mental-health-willpower"
+                  }
+                ]
+              },
+              {
+                "key": "2.3-noi-thoi-quen",
+                "type": "matching",
+                "prompt": "Nối mỗi thói quen với cách làm cụ thể đúng của nó.",
+                "explanation": "Thói quen chỉ có tác dụng khi được làm cụ thể: biết ơn phải chi tiết, viết cảm xúc phải viết liền mạch không sửa, kích hoạt hành vi phải nhỏ tới mức không cần động lực.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Ghi điều biết ơn",
+                    "right": "Mỗi tối ba điều cụ thể xảy ra hôm nay và vì sao chúng đáng kể"
+                  },
+                  {
+                    "left": "Viết ra cảm xúc",
+                    "right": "Viết liền 15–20 phút, không sửa câu chữ, không cần ai đọc"
+                  },
+                  {
+                    "left": "Kích hoạt hành vi",
+                    "right": "Làm một việc nhỏ đã lên lịch, kể cả khi chưa thấy muốn"
+                  }
+                ]
+              },
+              {
+                "key": "2.3-viet-thoi-quen",
+                "type": "essay",
+                "prompt": "Viết 150–250 từ: (a) chọn một thói quen trong bốn thói quen của bài và thu nhỏ nó tới mức bạn làm được kể cả ngày tệ nhất; (b) ghi rõ thời điểm trong ngày, dấu hiệu nhắc bạn và cách bạn đánh dấu đã làm; (c) nêu trước hai tình huống có thể khiến bạn bỏ cuộc và cách bạn định xử lý khi chúng xảy ra.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 3 · Tư duy phản biện",
+      "description": "Kiểm chất lượng một lập luận — kể cả lập luận của chính mình. Ba bài: tách khẳng định khỏi bằng chứng và suy luận; nhận ra thiên lệch của người đọc và nguỵ biện của người nói; đánh giá nguồn trong môi trường mà ai cũng xuất bản được và máy sinh được nội dung trong vài giây.",
+      "lessons": [
+        {
+          "title": "Bài 3.1 · Tách khẳng định, bằng chứng và suy luận",
+          "durationMin": 45,
+          "description": "Phản biện là kiểm chất lượng lập luận chứ không phải bắt bẻ; ba mảnh của một lập luận và cách tách chúng ra; thang suy luận của Argyris và năm câu hỏi dùng được ngay.",
+          "objectives": [
+            "Tách được một phát biểu thành ba mảnh: khẳng định, bằng chứng và suy luận nối hai thứ đó",
+            "Chỉ ra được mình đang ở nấc nào trên thang suy luận trong một tình huống cụ thể",
+            "Đặt được năm câu hỏi kiểm tra cho một tuyên bố gặp trên mạng",
+            "Phân biệt được phản biện với thái độ hoài nghi mọi thứ"
+          ],
+          "summary": [
+            "Phản biện kết thúc bằng một kết luận đáng tin hơn, không phải bằng việc hạ bệ ai — nếu sau khi phản biện chỉ còn lại sự nghi ngờ thì việc chưa xong.",
+            "Mọi lập luận có ba mảnh: khẳng định, bằng chứng, và suy luận nối chúng. Phần lớn tranh cãi trên mạng vỡ ở mảnh thứ ba, chỗ không ai nói ra.",
+            "Thang suy luận giải thích vì sao hai người nhìn cùng một sự việc lại kết luận trái ngược: mỗi người chọn một phần dữ liệu rồi leo rất nhanh lên hành động.",
+            "Năm câu hỏi kiểm tra rẻ tới mức dùng được cho mọi thứ đọc trong ngày: khẳng định là gì, bằng chứng nào, ai nói và họ được gì, còn cách giải thích nào khác, điều gì sẽ khiến tôi đổi ý."
+          ],
+          "body": "\nTư duy phản biện bị hiểu nhầm nhiều nhất trong các kỹ năng mềm. Nó không phải năng khiếu tranh luận, cũng không phải thói quen nghi ngờ. Nó là một **quy trình kiểm tra chất lượng** áp lên các lập luận — của người khác và, phần khó hơn, của chính mình.\n\n## Phản biện không phải là bắt bẻ\n\n| | Phản biện | Bắt bẻ | Hoài nghi mọi thứ |\n|---|---|---|---|\n| Mục đích | Đi tới kết luận đáng tin hơn | Thắng người đối diện | Không tin gì cả |\n| Đối tượng soi | Lập luận, kể cả của mình | Người nói | Mọi tuyên bố như nhau |\n| Kết thúc bằng | Một kết luận có điều kiện rõ ràng | Một người im lặng | Sự tê liệt, không quyết được gì |\n| Dấu hiệu nhận ra | Có nêu điều gì sẽ khiến mình đổi ý | Chỉ tìm lỗi, không nêu phương án | Đòi bằng chứng tuyệt đối cho mọi thứ |\n\n> [!ghi-nho] Phép thử cho một lần phản biện: sau khi làm xong, bạn có nói được một kết luận đáng tin hơn trước không? Nếu chỉ còn lại sự nghi ngờ thì bạn mới phá, chưa xây.\n\nCột thứ ba đáng chú ý vì nó hay được nhầm với tư duy phản biện tốt. Người hoài nghi mọi thứ đòi tiêu chuẩn bằng chứng cao tới mức không gì đạt được, nên cuối cùng vẫn quyết định theo cảm tính — chỉ khác là bây giờ có thêm cảm giác mình tỉnh táo.\n\n## Ba mảnh của một lập luận\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"display:grid;gap:.5rem;font-size:1.05rem\">\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>Khẳng định</b> — điều người nói muốn bạn tin<br><span style=\"opacity:.85\">Học ngành này ra trường thất nghiệp hết</span></div>\n    <div style=\"background:rgba(13,148,136,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>Bằng chứng</b> — dữ kiện đưa ra để đỡ khẳng định<br><span style=\"opacity:.85\">Hai anh khoá trên mình quen đang làm trái ngành</span></div>\n    <div style=\"background:rgba(217,150,40,.16);border:2px solid rgba(217,150,40,.55);border-radius:.4rem;padding:.6rem .8rem\"><b>Suy luận</b> — giả định nối bằng chứng với khẳng định, thường không nói ra<br><span style=\"opacity:.85\">Rằng hai người quen đủ đại diện cho cả ngành, và làm trái ngành nghĩa là thất nghiệp</span></div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Mảnh thứ ba là chỗ hầu hết lập luận yếu đi, và cũng là chỗ ít ai kiểm — vì nó nằm ngầm. Viết nó ra thành một câu là kỹ năng cốt lõi của cả module này.</div>\n</div>\n```\n\nThử với một phát biểu khác: \"Ứng dụng X giúp học tiếng Anh nhanh gấp ba lần.\" Khẳng định rõ. Bằng chứng: một nghiên cứu do chính công ty công bố. Suy luận ngầm: rằng người trong nghiên cứu giống bạn, rằng nhóm đối chứng có học gì đó tương đương, rằng \"nhanh gấp ba\" đo bằng một bài kiểm tra có ý nghĩa. Ba giả định ấy đều có thể sai độc lập với nhau, và không cái nào được nhắc tới trong quảng cáo.\n\n> [!vi-du] Bài đăng trên nhóm sinh viên: \"Đừng học thêm chứng chỉ, phí tiền. Mình có chứng chỉ mà vẫn trượt bốn vòng phỏng vấn.\" Tách ra: **khẳng định** — học chứng chỉ là phí tiền; **bằng chứng** — trải nghiệm của một người; **suy luận ngầm** — rằng chứng chỉ là yếu tố duy nhất quyết định kết quả phỏng vấn, và một trường hợp đủ để kết luận cho mọi người. Chỉ cần viết mảnh thứ ba ra là thấy ngay chỗ hỏng, mà không cần tranh cãi với người viết một câu nào.\n\n## Thang suy luận: vì sao ta nhảy tới kết luận\n\n![Sơ đồ thang suy luận của Chris Argyris, từ dữ liệu quan sát được lên tới hành động](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Ladder_of_inference.svg/1280px-Ladder_of_inference.svg.png \"Thang suy luận (ladder of inference) của Chris Argyris: từ bể dữ liệu quan sát được, ta chọn một phần, gán nghĩa, rút ra giả định, kết luận, hình thành niềm tin rồi hành động — và niềm tin ấy lại quyết định lần sau ta chọn dữ liệu nào. Hình: [File:Ladder of inference.svg](https://commons.wikimedia.org/wiki/File:Ladder_of_inference.svg), tác giả User:Biogeographist, giấy phép CC BY-SA 4.0.\")\n\nĐiểm quan trọng của sơ đồ này không phải là các nấc, mà là **tốc độ**: người ta leo hết bảy nấc trong vài giây và chỉ nhớ nấc cuối. Hai người ngồi cùng một cuộc họp, nghe cùng những câu nói, ra về với hai kết luận trái ngược — không phải vì ai nói dối, mà vì mỗi người chọn một phần dữ liệu khác nhau ngay từ nấc thứ hai.\n\nVòng lặp phản hồi ở bên trái sơ đồ là phần đắt nhất: niềm tin hiện tại quyết định lần sau ta chú ý tới dữ liệu nào. Đã tin một bạn cùng nhóm là người thiếu trách nhiệm thì lần sau bạn ấy nộp muộn năm phút bạn sẽ nhớ, còn ba lần nộp sớm thì không vào bộ nhớ.\n\nCách tụt xuống thang, theo thứ tự:\n\n1. **Nói ra kết luận của mình** kèm dữ liệu mình đã dựa vào — \"mình nghĩ nhóm đang chậm, vì hai phần việc tuần này chưa có ai nhận\".\n2. **Hỏi người kia đang dựa vào dữ liệu nào** — có thể họ nhìn thấy phần bạn không thấy.\n3. **Kiểm giả định ở giữa** — mình đang giả định điều gì để đi từ dữ liệu ấy tới kết luận ấy?\n\n## Năm câu hỏi dùng được ngay\n\nKhông cần nhớ lý thuyết. Năm câu dưới đây đủ cho gần như mọi thứ bạn đọc trong ngày, và mất chưa tới một phút:\n\n1. **Khẳng định ở đây chính xác là gì?** Viết thành một câu. Nhiều bài đăng dài không có nổi một khẳng định rõ ràng — riêng phát hiện ấy đã là kết luận.\n2. **Bằng chứng nào?** Số liệu, nghiên cứu, hay chỉ là một câu chuyện?\n3. **Ai nói, và họ được gì nếu tôi tin?** Không phải để bác bỏ, mà để biết đọc kỹ chỗ nào.\n4. **Còn cách giải thích nào khác cho cùng dữ kiện này?** Bắt buộc nêu ít nhất một.\n5. **Điều gì sẽ khiến tôi đổi ý?** Nếu không có gì, thì thứ bạn đang giữ là niềm tin, không phải kết luận.\n\n> [!meo] Câu thứ năm là câu đắt nhất và nên hỏi **trước** khi tra cứu. Viết ra trước điều gì sẽ khiến mình đổi ý, rồi mới đi tìm — làm ngược lại thì phần lớn thời gian ta chỉ đang gom bằng chứng cho kết luận đã có sẵn.\n\n> [!vi-du] Một video ngắn lan truyền: \"Sinh viên bây giờ ra trường lương khởi điểm 30 triệu, ai bảo khó xin việc.\" Chạy năm câu: khẳng định là mức lương khởi điểm phổ biến ở mức 30 triệu; bằng chứng là ba bạn được phỏng vấn trong video; người nói là một kênh tuyển sinh, họ được lợi nếu bạn tin; cách giải thích khác là ba bạn ấy được chọn vì câu chuyện đẹp, hoặc thuộc nhóm ngành và thành phố cụ thể; điều khiến tôi đổi ý là một khảo sát có cỡ mẫu lớn, nêu rõ ngành và khu vực. Kết luận sau một phút: chưa đủ cơ sở để tin cũng như để bác — nhưng đã biết cần tìm gì tiếp.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nChọn một bài đăng hoặc video bạn xem trong 24 giờ qua có đưa ra một tuyên bố. Tách nó thành ba mảnh: khẳng định, bằng chứng, suy luận ngầm — mảnh thứ ba phải viết thành một câu hoàn chỉnh bắt đầu bằng \"Người nói đang giả định rằng…\". Sau đó chạy năm câu hỏi và viết một dòng kết luận: tôi tin tới mức nào, và tôi cần thêm gì.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người mang tới một tuyên bố có thật (bài đăng, quảng cáo khoá học, lời khuyên nghề nghiệp). Đổi chéo cho nhau. Nhiệm vụ: **không được phản bác**, chỉ được viết ra ba mảnh của lập luận và các giả định ngầm. Cuối buổi so sánh: cùng một tuyên bố, mỗi người tìm ra giả định ngầm khác nhau không — và vì sao.\n\n### Bài tập về nhà (45–60 phút)\n\nChọn một chuyện bạn đã kết luận về một người hoặc một nhóm trong tháng qua (nhóm học tập chậm, một bạn thiếu trách nhiệm, một giảng viên khó tính). Dựng lại thang suy luận của chính bạn: dữ liệu bạn thật sự quan sát được là gì, bạn đã chọn phần nào, gán nghĩa gì, giả định gì, kết luận gì. Rồi viết nửa trang: nếu phải chọn lại dữ liệu ở nấc thứ hai một cách công bằng hơn, kết luận có đổi không.\n\n### Xem thêm\n\n- 🎬 [Why You Think You're Right — Even If You're Wrong](https://www.youtube.com/watch?v=w4RLfVxTGH4) — Julia Galef, TED, 11 phút. Phân biệt tư duy lính chiến (bảo vệ điều mình tin) với tư duy trinh sát (vẽ đúng bản đồ) — khung nền cho cả module.\n\n### Nguồn tham khảo\n\n- Argyris, C. (1990). *Overcoming Organizational Defenses: Facilitating Organizational Learning.* Boston: Allyn & Bacon — nguồn của thang suy luận.\n- Paul, R., & Elder, L. (2019). *The Miniature Guide to Critical Thinking: Concepts and Tools* (8th ed.). Rowman & Littlefield.\n- Toulmin, S. E. (2003). *The Uses of Argument* (updated ed.). Cambridge University Press — mô hình khẳng định – dữ liệu – bảo chứng.\n- Galef, J. (2021). *The Scout Mindset: Why Some People See Things Clearly and Others Don't.* New York: Portfolio.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "3.1-phan-bien-la-gi",
+                "type": "mcq",
+                "prompt": "Đâu là mô tả đúng nhất về tư duy phản biện?",
+                "explanation": "Phản biện là quy trình kiểm chất lượng lập luận — kể cả của chính mình — và kết thúc bằng một kết luận đáng tin hơn, chứ không phải bằng việc thắng ai hay nghi ngờ mọi thứ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Quy trình kiểm tra chất lượng của một lập luận, kể cả lập luận của chính mình, nhằm đi tới kết luận đáng tin hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khả năng tìm ra lỗi trong lời nói của người khác và phản bác lại nhanh",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  },
+                  {
+                    "label": "Thái độ không tin bất cứ điều gì cho tới khi có bằng chứng tuyệt đối",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  },
+                  {
+                    "label": "Kỹ năng tranh luận để bảo vệ quan điểm của mình tới cùng",
+                    "isCorrect": false,
+                    "misconception": "knm.confirmation-bias"
+                  }
+                ]
+              },
+              {
+                "key": "3.1-ba-manh",
+                "type": "matching",
+                "prompt": "Một bạn nói: Đừng học thêm chứng chỉ, phí tiền — mình có chứng chỉ mà vẫn trượt bốn vòng phỏng vấn. Nối mỗi phần với vai trò của nó trong lập luận.",
+                "explanation": "Khẳng định là điều muốn ta tin, bằng chứng là dữ kiện đưa ra, còn suy luận là giả định ngầm nối hai thứ — mảnh thứ ba thường là chỗ lập luận hỏng.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Học thêm chứng chỉ là phí tiền",
+                    "right": "Khẳng định"
+                  },
+                  {
+                    "left": "Mình có chứng chỉ mà vẫn trượt bốn vòng phỏng vấn",
+                    "right": "Bằng chứng"
+                  },
+                  {
+                    "left": "Rằng một trường hợp đủ đại diện, và chứng chỉ là yếu tố duy nhất quyết định kết quả",
+                    "right": "Suy luận ngầm"
+                  }
+                ]
+              },
+              {
+                "key": "3.1-thang-suy-luan",
+                "type": "mcq",
+                "prompt": "Hai bạn dự cùng một buổi họp nhóm và ra về với hai kết luận trái ngược về việc nhóm đang chạy tốt hay không. Theo thang suy luận, cách giải thích hợp lý nhất là gì?",
+                "explanation": "Ngay ở nấc chọn dữ liệu, mỗi người đã lấy một phần khác nhau từ cùng một bể quan sát, rồi leo rất nhanh lên kết luận và chỉ nhớ nấc cuối.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mỗi người chọn một phần dữ liệu khác nhau từ cùng một buổi họp, rồi gán nghĩa và leo lên kết luận trong vài giây",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Một trong hai người chắc chắn đã không chú ý nghe",
+                    "isCorrect": false,
+                    "misconception": "knm.straw-man"
+                  },
+                  {
+                    "label": "Người nào tự tin hơn thì kết luận của người đó đáng tin hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.opinion-as-evidence"
+                  },
+                  {
+                    "label": "Sự thật nằm ở giữa hai kết luận đó",
+                    "isCorrect": false,
+                    "misconception": "knm.false-dilemma"
+                  }
+                ]
+              },
+              {
+                "key": "3.1-tut-thang",
+                "type": "ordering",
+                "prompt": "Sắp xếp các bước tụt xuống thang suy luận khi bạn và một người khác đang kết luận trái ngược nhau.",
+                "explanation": "Nói ra kết luận kèm dữ liệu của mình trước để mọi thứ hiện ra, rồi hỏi dữ liệu của người kia, rồi mới kiểm giả định ở giữa và thống nhất cách đọc.",
+                "points": 3,
+                "sequence": [
+                  "Nói ra kết luận của mình kèm những dữ liệu cụ thể mình đã dựa vào",
+                  "Hỏi người kia đang dựa vào dữ liệu nào",
+                  "Đối chiếu hai tập dữ liệu xem phần nào bên kia thấy mà mình không thấy",
+                  "Kiểm giả định mình dùng để đi từ dữ liệu tới kết luận",
+                  "Phát biểu lại kết luận chung kèm điều kiện còn chưa chắc"
+                ]
+              },
+              {
+                "key": "3.1-cau-hoi-doi-y",
+                "type": "mcq",
+                "prompt": "Vì sao câu hỏi điều gì sẽ khiến tôi đổi ý nên được đặt trước khi đi tra cứu?",
+                "explanation": "Đặt trước thì ta biết mình đang tìm gì để kiểm; đặt sau thì phần lớn thời gian ta chỉ gom bằng chứng ủng hộ kết luận đã có sẵn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì nếu không, ta có xu hướng chỉ gom những thứ ủng hộ kết luận mình đã có sẵn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nó giúp ta tranh luận thắng người khác dễ hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  },
+                  {
+                    "label": "Vì câu trả lời sẽ cho ta biết ai đúng ngay từ đầu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì nó tiết kiệm thời gian bằng cách bỏ qua các nguồn trái chiều",
+                    "isCorrect": false,
+                    "misconception": "knm.confirmation-bias"
+                  }
+                ]
+              },
+              {
+                "key": "3.1-nam-cau-hoi",
+                "type": "mcq",
+                "prompt": "Một video quảng bá nói: sinh viên ngành này ra trường lương khởi điểm 30 triệu, kèm phỏng vấn ba bạn cựu sinh viên. Bước kiểm tra nào cho nhiều thông tin nhất?",
+                "explanation": "Hỏi bằng chứng thuộc loại nào và ai được lợi nếu ta tin sẽ lộ ra ngay rằng đây là ba trường hợp được chọn, do một bên có lợi ích công bố.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hỏi ba trường hợp này được chọn thế nào và ai được lợi nếu người xem tin con số đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Xem video có bao nhiêu lượt xem và chia sẻ",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Xem ba bạn trong video có nói năng tự tin không",
+                    "isCorrect": false,
+                    "misconception": "knm.opinion-as-evidence"
+                  },
+                  {
+                    "label": "Hỏi một người quen xem có đúng vậy không rồi kết luận theo",
+                    "isCorrect": false,
+                    "misconception": "knm.anecdote-as-proof"
+                  }
+                ]
+              },
+              {
+                "key": "3.1-viet-tach-manh",
+                "type": "essay",
+                "prompt": "Chọn một tuyên bố bạn gặp trong 24 giờ qua (bài đăng, quảng cáo, lời khuyên nghề nghiệp). Viết 150–250 từ gồm: (a) khẳng định, viết thành một câu; (b) bằng chứng được đưa ra và nó thuộc loại nào; (c) suy luận ngầm, viết thành câu bắt đầu bằng Người nói đang giả định rằng…; (d) điều gì sẽ khiến bạn tin hoặc không tin tuyên bố đó.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 3.2 · Thiên lệch nhận thức và nguỵ biện",
+          "durationMin": 50,
+          "description": "Vì sao người thông minh vẫn sai một cách có hệ thống; bốn thiên lệch hay gặp nhất, sáu nguỵ biện phổ biến trên mạng, và ba kỹ thuật chống lại thiên lệch của chính mình.",
+          "objectives": [
+            "Giải thích được vì sao thiên lệch nhận thức không phải dấu hiệu thiếu thông minh",
+            "Nhận ra được bốn thiên lệch phổ biến trong quyết định của chính mình",
+            "Gọi tên được sáu nguỵ biện thường gặp trong tranh luận trên mạng",
+            "Áp dụng được ít nhất một kỹ thuật giảm thiên lệch trước một quyết định quan trọng"
+          ],
+          "summary": [
+            "Thiên lệch là đường tắt của bộ não, có ở mọi người và không mất đi khi ta biết tên nó; cách chống hiệu quả là đổi quy trình, không phải cố gắng khách quan hơn.",
+            "Bốn thiên lệch đáng nhớ nhất: xác nhận, neo, sẵn có và tự phục vụ.",
+            "Nguỵ biện là lỗi ở mảnh suy luận: người rơm, công kích cá nhân, lưỡng nan giả, viện dẫn số đông, sau đó nên do đó, và trượt dốc.",
+            "Ba kỹ thuật dùng được ngay: viết trước điều gì sẽ khiến mình đổi ý, mời một người phản biện thật, và làm phép thử đảo chiều."
+          ],
+          "body": "\nBài trước đưa ra bộ khung để tách một lập luận. Bài này nói về hai loại hỏng hóc hay gặp nhất: hỏng ở **người đọc** (thiên lệch nhận thức) và hỏng ở **lập luận** (nguỵ biện).\n\n## Thiên lệch không phải là ngu dốt\n\n![Sơ đồ tổng hợp các thiên lệch nhận thức, xếp thành vòng tròn theo bốn nhóm vấn đề mà bộ não phải xử lý](https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Cognitive_bias_codex_en.svg/1280px-Cognitive_bias_codex_en.svg.png \"Bản đồ các thiên lệch nhận thức đã được đặt tên, nhóm theo bốn bài toán mà bộ não phải giải: quá nhiều thông tin, thiếu ý nghĩa, cần phản ứng nhanh, và không nhớ hết được. Không ai học thuộc bản đồ này; nó ở đây để thấy quy mô của vấn đề. Hình: [File:Cognitive bias codex en.svg](https://commons.wikimedia.org/wiki/File:Cognitive_bias_codex_en.svg), thiết kế John Manoogian III, giấy phép CC BY-SA 4.0.\")\n\nThiên lệch không phải lỗi của người kém thông minh. Chúng là **đường tắt** mà bộ não dùng để xử lý quá nhiều thông tin trong quá ít thời gian — phần lớn thời gian chúng hữu ích, và chỉ sai một cách có hệ thống trong những tình huống nhất định. Hai hệ quả thực tế:\n\n- **Biết tên thiên lệch không làm bạn hết thiên lệch.** Người học về thiên lệch xác nhận vẫn mắc thiên lệch xác nhận, và còn dễ dùng nó để giải thích sai lầm của người khác.\n- **Cách chống hiệu quả là đổi quy trình, không phải cố khách quan hơn.** Viết ra tiêu chí trước khi xem phương án, hỏi ý kiến người ngoài, đặt hạn phải nêu bằng chứng ngược — những thứ này chạy được kể cả khi bạn đang mệt.\n\n## Bốn thiên lệch hay gặp nhất\n\n| Thiên lệch | Nó làm gì | Ví dụ trong đời sinh viên |\n|---|---|---|\n| Xác nhận | Tìm và nhớ thứ khớp với điều đã tin, đòi tiêu chuẩn cao hơn với thứ trái chiều | Đã tin ngành mình chọn là sai lầm nên chỉ đọc những bài than về ngành đó |\n| Neo | Con số hoặc thông tin đầu tiên kéo mọi ước lượng sau về phía nó | Nghe mức lương 30 triệu trước, mọi lời mời 12 triệu sau đó đều thấy thấp bất kể thị trường |\n| Sẵn có | Đánh giá mức phổ biến bằng mức dễ nhớ lại | Đọc vài bài về lừa đảo tuyển dụng rồi tin rằng hầu hết tin tuyển dụng là lừa đảo |\n| Tự phục vụ | Thành công là do mình, thất bại là do hoàn cảnh | Điểm cao vì mình giỏi, điểm thấp vì đề lệch — và bạn cùng nhóm thì ngược lại |\n\n> [!vi-du] Vy phân vân giữa hai lời mời thực tập. Bạn đầu tiên nghe một anh khoá trên nói công ty A \"môi trường độc hại\". Từ đó, mọi thứ Vy đọc về A đều được lọc qua câu ấy: một bình luận tiêu cực trên diễn đàn thành bằng chứng, ba bình luận tích cực thành \"chắc là người của công ty tự viết\". Đây là thiên lệch xác nhận đang chạy, và nó chạy êm tới mức Vy tin mình đang tìm hiểu kỹ. Cách chữa không phải là cố công bằng hơn, mà là đổi quy trình: viết ra ba tiêu chí quan trọng nhất **trước**, rồi tìm bằng chứng cho từng tiêu chí ở cả hai công ty, mỗi bên một lượng nguồn ngang nhau.\n\n## Sáu nguỵ biện hay gặp trên mạng\n\nNguỵ biện là lỗi ở mảnh suy luận: bằng chứng có thể đúng, khẳng định có thể hợp lý, nhưng đường nối giữa chúng hỏng.\n\n| Nguỵ biện | Nghe như thế nào | Chỗ hỏng |\n|---|---|---|\n| Người rơm | \"Vậy ý bạn là cứ mặc kệ hết à?\" khi người kia chỉ nói nên cân nhắc thêm | Bẻ lại một phiên bản méo, thắng nó không nói gì về bản gốc |\n| Công kích cá nhân | \"Bạn còn đang đi học thì biết gì về thị trường\" | Người nói là ai không quyết định điều được nói đúng hay sai |\n| Lưỡng nan giả | \"Hoặc chọn lương cao, hoặc chọn học được nghề\" | Bỏ qua phương án trung gian và phương án thứ ba |\n| Viện dẫn số đông | \"Cả trăm nghìn người theo dõi anh ấy, sai sao được\" | Số lượt đo mức lan truyền, không đo mức đúng |\n| Sau đó nên do đó | \"Từ hồi dùng app này điểm mình tăng hẳn\" | Trùng thời điểm không phải nhân quả; kỳ đó có thể đề dễ hơn |\n| Trượt dốc | \"Cho nghỉ một buổi thì rồi sẽ nghỉ cả kỳ\" | Nối chuỗi hậu quả mà không kiểm bước trung gian nào |\n\n> [!canh-bao] Biết tên nguỵ biện dễ sinh ra một thói xấu: dán nhãn thay cho suy nghĩ. Hô \"nguỵ biện người rơm\" rồi dừng lại cũng là một cách né tranh luận. Sau khi gọi tên, việc còn lại vẫn phải làm — nêu lại đúng ý đối phương và trả lời chính nó.\n\n## Ba kỹ thuật chống lại thiên lệch của chính mình\n\nBa kỹ thuật dưới đây được chọn vì chúng là **thao tác**, không phải lời khuyên về thái độ.\n\n1. **Viết trước điều gì sẽ khiến mình đổi ý.** Trước khi tra cứu, ghi ra một dòng: nếu thấy X thì tôi bỏ kết luận này. Sau đó đi tìm đúng X. Kỹ thuật này cắt thẳng vào thiên lệch xác nhận.\n2. **Mời một người phản biện thật.** Không phải hỏi \"cậu thấy sao\", mà giao nhiệm vụ rõ: \"cậu tìm giúp mình ba lý do mạnh nhất để KHÔNG làm việc này\". Người được giao vai sẽ nói thẳng hơn hẳn khi được hỏi chung chung.\n3. **Phép thử đảo chiều.** Đổi vai trong tình huống rồi hỏi mình có kết luận y như vậy không. \"Nếu bạn cùng nhóm nộp muộn, mình gọi là thiếu trách nhiệm; nếu mình nộp muộn, mình gọi là do tuần này quá tải\" — thấy hai chuẩn khác nhau là thấy thiên lệch tự phục vụ.\n\n> [!vi-du] Trước khi quyết bỏ 8 triệu học một khoá kỹ năng, Khôi làm ba việc: viết trước \"nếu không tìm được ai học xong mà đổi được việc thì mình không đăng ký\"; nhắn cho một người bạn hay nói thẳng và giao đúng vai tìm ba lý do đừng học; và tự hỏi nếu người rủ mình không phải bạn thân mà là một quảng cáo thì mình có tin ngần ấy không. Kết quả không phải là bỏ khoá học — Khôi vẫn đăng ký, nhưng chọn gói rẻ hơn sau khi phát hiện phần đắt tiền là những buổi mà bạn đã có nguồn miễn phí tương đương.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nLấy một quyết định bạn đang phân vân. Làm đủ ba kỹ thuật: (1) viết một dòng điều gì sẽ khiến bạn đổi ý; (2) ghi tên một người bạn sẽ nhờ phản biện và câu bạn sẽ nhắn cho họ, viết nguyên văn; (3) làm phép thử đảo chiều và ghi lại kết quả. Nếu phép thử đảo chiều cho ra kết luận khác, ghi rõ khác ở chỗ nào.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi nhóm chọn một chủ đề đang gây tranh cãi trong sinh viên (học thêm chứng chỉ, làm thêm trong năm nhất, học nhóm hay học một mình). Chia đôi nhóm, mỗi bên chuẩn bị hai phút bảo vệ một phía. Yêu cầu bắt buộc: **trước khi phản bác, phải diễn đạt lại ý đối phương và được họ xác nhận là đúng**. Cuối buổi, cả nhóm gọi tên các nguỵ biện đã suýt dùng.\n\n### Bài tập về nhà (45–60 phút)\n\nTìm một bài đăng hoặc video có ít nhất hai nguỵ biện trong bảng. Viết một trang: chép lại nguyên văn đoạn chứa nguỵ biện; gọi tên và giải thích chỗ hỏng của đường suy luận; viết lại đoạn đó thành một lập luận **trung thực** cho cùng quan điểm — tức là vẫn bảo vệ quan điểm ấy nhưng không dùng nguỵ biện. Bước cuối là bước khó nhất và cũng là bước dạy nhiều nhất.\n\n### Xem thêm\n\n- 🎬 [Can You Outsmart the Fallacy That Divided a Nation?](https://www.youtube.com/watch?v=lmf6bWl-Hco) — TED-Ed, 4 phút 42. Lưỡng nan giả được dựng thành một câu chuyện.\n- 🎬 [Can You Outsmart a Troll (by Thinking Like One)?](https://www.youtube.com/watch?v=Iu4OdhjnN4I) — Claire Wardle, TED-Ed, 5 phút. Cách thông tin sai được thiết kế để lan trên mạng xã hội.\n- 🎬 [Why You Think You're Right — Even If You're Wrong](https://www.youtube.com/watch?v=w4RLfVxTGH4) — Julia Galef, TED, 11 phút.\n\n### Nguồn tham khảo\n\n- Kahneman, D. (2011). *Thinking, Fast and Slow.* New York: Farrar, Straus and Giroux.\n- Nickerson, R. S. (1998). Confirmation bias: A ubiquitous phenomenon in many guises. *Review of General Psychology*, 2(2), 175–220.\n- Tversky, A., & Kahneman, D. (1974). Judgment under uncertainty: Heuristics and biases. *Science*, 185(4157), 1124–1131.\n- Walton, D. (2008). *Informal Logic: A Pragmatic Approach* (2nd ed.). Cambridge University Press.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "3.2-thien-lech-la-gi",
+                "type": "mcq",
+                "prompt": "Phát biểu nào đúng về thiên lệch nhận thức?",
+                "explanation": "Thiên lệch là đường tắt xử lý thông tin, có ở mọi người kể cả người thông minh, và không mất đi khi ta biết tên nó — nên cách chống hiệu quả là đổi quy trình ra quyết định.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chúng là đường tắt của bộ não, có ở mọi người, và biết tên chúng không làm ta hết mắc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chúng chỉ xuất hiện ở người thiếu kiến thức hoặc lười suy nghĩ",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  },
+                  {
+                    "label": "Học thuộc danh sách thiên lệch là cách hiệu quả nhất để tránh chúng",
+                    "isCorrect": false,
+                    "misconception": "knm.knowing-equals-doing"
+                  },
+                  {
+                    "label": "Chỉ cần cố gắng khách quan hơn là loại bỏ được chúng",
+                    "isCorrect": false,
+                    "misconception": "knm.knowing-equals-doing"
+                  }
+                ]
+              },
+              {
+                "key": "3.2-noi-thien-lech",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với thiên lệch tương ứng.",
+                "explanation": "Xác nhận lọc thông tin theo điều đã tin; neo kéo ước lượng về con số đầu tiên; sẵn có nhầm dễ nhớ với phổ biến; tự phục vụ quy công cho mình và quy lỗi cho hoàn cảnh.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Đã tin công ty A độc hại nên bình luận tốt về A đều bị cho là người của công ty tự viết",
+                    "right": "Thiên lệch xác nhận"
+                  },
+                  {
+                    "left": "Nghe mức 30 triệu trước nên mọi lời mời sau đó đều thấy thấp",
+                    "right": "Thiên lệch neo"
+                  },
+                  {
+                    "left": "Đọc vài bài về lừa đảo tuyển dụng rồi tin hầu hết tin tuyển dụng là lừa đảo",
+                    "right": "Thiên lệch sẵn có"
+                  },
+                  {
+                    "left": "Điểm cao là do mình giỏi, điểm thấp là do đề lệch",
+                    "right": "Thiên lệch tự phục vụ"
+                  }
+                ]
+              },
+              {
+                "key": "3.2-nguy-bien-nguoi-rom",
+                "type": "mcq",
+                "prompt": "A nói: mình nghĩ nên cân nhắc thêm trước khi bỏ 8 triệu học khoá đó. B đáp: vậy ý bạn là cứ mãi không đầu tư gì cho bản thân à? B đang mắc nguỵ biện nào?",
+                "explanation": "B đổi ý của A thành một phiên bản cực đoan dễ đánh đổ rồi công kích phiên bản ấy — đó là nguỵ biện người rơm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Người rơm — bẻ lại một phiên bản méo của điều A nói",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Viện dẫn số đông",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Sau đó nên do đó",
+                    "isCorrect": false,
+                    "misconception": "knm.correlation-causation"
+                  },
+                  {
+                    "label": "Công kích cá nhân",
+                    "isCorrect": false,
+                    "misconception": "knm.straw-man"
+                  }
+                ]
+              },
+              {
+                "key": "3.2-nguy-bien-nhan-qua",
+                "type": "mcq",
+                "prompt": "Từ hồi dùng ứng dụng học tập X, điểm mình tăng hẳn — nên ai cũng nên dùng X. Lỗi suy luận ở đây là gì?",
+                "explanation": "Hai việc xảy ra nối tiếp nhau không có nghĩa việc trước gây ra việc sau: kỳ đó có thể đề dễ hơn, người học chăm hơn, hoặc chính việc quyết tâm học mới là nguyên nhân.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Lấy sự trùng thời điểm làm quan hệ nhân quả, và khái quát từ một trường hợp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có lỗi gì, vì đây là trải nghiệm thật của người nói",
+                    "isCorrect": false,
+                    "misconception": "knm.anecdote-as-proof"
+                  },
+                  {
+                    "label": "Lỗi duy nhất là chưa nêu tên ứng dụng cụ thể",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Lỗi là người nói chưa đủ nổi tiếng để lời khuyên có giá trị",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "3.2-luong-nan-gia",
+                "type": "mcq",
+                "prompt": "Hoặc chọn công ty lương cao, hoặc chọn nơi học được nghề — không có đường nào khác. Cách phản biện phù hợp nhất là gì?",
+                "explanation": "Đây là lưỡng nan giả: cách phản biện là chỉ ra các phương án trung gian hoặc phương án thứ ba mà cách đóng khung ấy đã loại bỏ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chỉ ra các phương án bị bỏ qua: nơi trả khá và vẫn có người hướng dẫn, hoặc nhận nơi lương cao rồi thương lượng thời gian học thêm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chọn ngay phương án lương cao vì tiền là thứ đo được",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  },
+                  {
+                    "label": "Hỏi xem đa số bạn cùng lớp chọn phương án nào rồi theo",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Kết luận rằng cả hai phương án đều tệ như nhau",
+                    "isCorrect": false,
+                    "misconception": "knm.false-dilemma"
+                  }
+                ]
+              },
+              {
+                "key": "3.2-ky-thuat-giam-thien-lech",
+                "type": "mcq",
+                "prompt": "Trước một quyết định lớn, kỹ thuật nào cắt thẳng vào thiên lệch xác nhận?",
+                "explanation": "Viết trước điều gì sẽ khiến mình đổi ý rồi chủ động đi tìm đúng thứ đó, thay vì gom thêm bằng chứng cho kết luận đã có sẵn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Viết trước một dòng: nếu thấy điều gì thì tôi sẽ bỏ kết luận này, rồi chủ động đi tìm đúng điều đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đọc thêm thật nhiều bài viết cùng quan điểm với mình để chắc chắn hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.confirmation-bias"
+                  },
+                  {
+                    "label": "Hỏi ý kiến những người thân thiết vì họ hiểu mình nhất",
+                    "isCorrect": false,
+                    "misconception": "knm.confirmation-bias"
+                  },
+                  {
+                    "label": "Chờ tới khi cảm thấy chắc chắn hoàn toàn rồi mới quyết",
+                    "isCorrect": false,
+                    "misconception": "knm.opinion-as-evidence"
+                  }
+                ]
+              },
+              {
+                "key": "3.2-viet-nguy-bien",
+                "type": "essay",
+                "prompt": "Tìm một bài đăng hoặc bình luận có ít nhất hai nguỵ biện trong bảng của bài. Viết 200–300 từ gồm: (a) chép lại đoạn chứa nguỵ biện; (b) gọi tên và giải thích chỗ đường suy luận hỏng; (c) viết lại đoạn đó thành một lập luận trung thực cho cùng quan điểm — vẫn bảo vệ quan điểm ấy nhưng không dùng nguỵ biện.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 3.3 · Đánh giá nguồn và thông tin trong thời AI",
+          "durationMin": 50,
+          "description": "Đọc ngang thay vì đọc dọc để thẩm định một nguồn; đọc một con số cho đúng; vì sao câu trả lời trôi chảy của AI không đồng nghĩa với đúng; và quy trình bốn bước trước khi chia sẻ.",
+          "objectives": [
+            "Thẩm định được một nguồn lạ bằng kỹ thuật đọc ngang trong dưới ba phút",
+            "Nêu được bốn câu hỏi cần đặt cho một con số hoặc một biểu đồ",
+            "Chỉ ra được vì sao độ trôi chảy của câu trả lời do AI sinh không phải dấu hiệu chính xác",
+            "Chạy được quy trình bốn bước trước khi chia sẻ một thông tin"
+          ],
+          "summary": [
+            "Người kiểm chứng chuyên nghiệp không đọc kỹ trang lạ; họ rời trang, xem nơi khác nói gì về nó, rồi mới quay lại — đó là đọc ngang.",
+            "Bốn câu hỏi cho mọi con số: đo trên bao nhiêu người, so với nhóm nào, ai trả tiền cho nghiên cứu, và trục biểu đồ bắt đầu từ đâu.",
+            "Mô hình ngôn ngữ tối ưu cho tính hợp lý bề mặt chứ không cho tính đúng, nên nó bịa được cả tên tác giả, năm và số trang mà vẫn đọc rất xuôi.",
+            "Bốn bước trước khi chia sẻ: dừng lại, tìm nguồn gốc, xem nơi khác nói gì, và hỏi mình đang muốn nó đúng tới mức nào."
+          ],
+          "body": "\nHai bài trước xử lý lập luận. Bài này xử lý **nguồn**: làm sao biết một thông tin có đáng để đưa vào đầu, trong một môi trường mà bất kỳ ai cũng xuất bản được và bất kỳ nội dung nào cũng tạo ra được bằng máy trong vài giây.\n\n## Đọc ngang thay vì đọc dọc\n\nNhóm nghiên cứu của Sam Wineburg ở Stanford cho ba nhóm cùng thẩm định các trang web: sinh viên đại học, giáo sư sử học, và những người kiểm chứng chuyên nghiệp. Sinh viên và cả giáo sư đọc **dọc** — ở lại trên trang, xem giao diện, đọc mục giới thiệu, đánh giá giọng văn. Người kiểm chứng làm ngược lại: chỉ liếc qua vài giây rồi **rời trang**, mở tab mới, tìm xem nơi khác nói gì về tổ chức ấy, rồi mới quay lại. Nhóm thứ ba nhanh hơn hẳn và ít bị lừa hơn hẳn.\n\n| | Đọc dọc (thường làm) | Đọc ngang (nên làm) |\n|---|---|---|\n| Ở đâu | Ở lại trên chính trang đó | Mở tab mới, tìm nơi khác nói về nó |\n| Dựa vào gì | Giao diện, mục Về chúng tôi, giọng văn, có trích dẫn hay không | Nguồn độc lập nói gì về tổ chức và tác giả này |\n| Vì sao hỏng hoặc chạy | Mọi thứ trên trang đều do chính họ viết ra | Đánh giá đến từ bên ngoài, khó dàn dựng hơn |\n\nQuy trình gọn được đặt tên là **SIFT**: *Stop* (dừng lại), *Investigate the source* (tìm hiểu nguồn), *Find better coverage* (tìm bản đưa tin tốt hơn), *Trace claims* (lần về tuyên bố gốc). Bốn bước ấy mất chừng hai tới ba phút.\n\n> [!vi-du] Trên nhóm lớp có bài đăng: \"Nghiên cứu mới cho thấy sinh viên dùng AI làm bài giảm 20% khả năng ghi nhớ.\" Đọc dọc: bài viết có trích dẫn, có tên trường đại học, trông đáng tin. Đọc ngang: mở tab mới, gõ tên \"nghiên cứu\" đó — hoá ra là một bản tóm tắt trên blog của một công ty bán khoá học, dẫn lại một bài báo mà bài báo ấy nói về 34 sinh viên trong một buổi thí nghiệm, không hề đo trí nhớ sau vài tuần. Tuyên bố không sai hoàn toàn, nhưng đã bị kéo giãn qua ba lần dẫn lại.\n\n## Đọc một con số cho đúng\n\nCon số làm người ta tin nhanh hơn chữ, nên nó cũng là chỗ bị lạm dụng nhiều nhất. Bốn câu hỏi đủ cho phần lớn tình huống:\n\n1. **Đo trên bao nhiêu người, và họ là ai?** 34 sinh viên tình nguyện của một trường khác hẳn 3.400 người chọn ngẫu nhiên.\n2. **So với nhóm nào?** \"Tăng 40%\" luôn phải kèm \"so với cái gì\". Không có nhóm đối chứng thì không có kết luận về hiệu quả.\n3. **Ai trả tiền và ai công bố?** Nghiên cứu do nhà cung cấp tài trợ vẫn dùng được, nhưng đọc như một lập luận có lợi ích, không phải một kết luận trung lập.\n4. **Trục của biểu đồ bắt đầu từ đâu?** Cắt trục tung là cách rẻ nhất để biến một chênh lệch 2% thành một cột cao gấp đôi.\n\nVà một quy tắc bao trùm: **tương quan không phải nhân quả**. Trước khi kết luận A gây ra B, phải loại ba khả năng: B gây ra A; một yếu tố C gây ra cả hai; và trùng hợp ngẫu nhiên. Sinh viên dùng ứng dụng học tập có điểm cao hơn — cũng có thể vì người vốn chăm mới chịu cài ứng dụng.\n\n> [!canh-bao] Chú ý cách diễn đạt \"gấp đôi nguy cơ\" hoặc \"tăng 50%\". Nếu nguy cơ ban đầu là 2 phần nghìn thì gấp đôi thành 4 phần nghìn — đúng về mặt số học và gần như vô nghĩa về mặt thực tế. Luôn hỏi con số tuyệt đối.\n\n## Nội dung do AI sinh: trôi chảy không bằng đúng\n\nMô hình ngôn ngữ được tối ưu để sinh ra văn bản **nghe hợp lý**, không phải để sinh ra văn bản **đúng**. Hệ quả trực tiếp: khi mô hình không biết, nó không im lặng — nó viết tiếp bằng thứ trông giống câu trả lời nhất. Đó là lý do các trích dẫn bịa thường rất chỉnh: có tên tác giả thật, tạp chí thật, năm hợp lý, số trang cụ thể, và không tồn tại.\n\nBa thói quen tối thiểu khi dùng AI cho việc học:\n\n- **Mọi con số, tên riêng và trích dẫn phải kiểm lại ở nguồn gốc.** Không kiểm được thì không dùng, dù nó rất hợp ý bạn.\n- **Dùng AI để hiểu, đừng dùng để thay việc nghĩ.** Nhờ nó giải thích một khái niệm rồi tự viết lại bằng lời mình là học; chép nguyên đoạn nó viết là bỏ qua đúng phần tạo ra năng lực — và phần lớn trường đại học coi đó là vi phạm liêm chính học thuật.\n- **Cảnh giác với vòng lặp đồng thuận.** Hỏi AI theo hướng bạn đã tin thì phần lớn thời gian bạn sẽ nhận lại câu trả lời ủng hộ điều đó. Hãy yêu cầu ngược: \"nêu ba lý do mạnh nhất chống lại điều tôi vừa nói\".\n\nẢnh, giọng nói và video tổng hợp thì thêm một lớp nữa: chúng đã vượt qua ngưỡng mà mắt thường phân biệt được trong phần lớn trường hợp. Với ảnh và video, dấu hiệu đáng tin hơn không nằm ở việc soi chi tiết mà nằm ở **xuất xứ**: ai đăng đầu tiên, đăng lúc nào, có cơ quan báo chí nào độc lập đưa cùng sự kiện không.\n\n> [!vi-du] Hà nhờ AI tóm tắt tài liệu cho bài tiểu luận, nhận về một đoạn có câu: \"Theo Nguyễn Văn A (2019), 68% sinh viên Việt Nam…\". Nghe rất dùng được. Hà tra tên bài và không tìm thấy ở đâu; hỏi lại thì mô hình xin lỗi và đưa một trích dẫn khác, cũng không tồn tại. Bài học không phải là bỏ dùng AI, mà là: mọi thứ có dạng \"tác giả – năm – con số\" đều phải đi kiểm, và kiểm mất ba mươi giây trong khi bị phát hiện bịa nguồn thì mất cả bài.\n\n## Bốn bước trước khi chia sẻ\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"display:grid;gap:.45rem;font-size:1.05rem\">\n    <div style=\"background:rgba(217,150,40,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>1. Dừng lại</b> — thấy cảm xúc dâng lên (tức giận, hả hê, sợ) là đúng lúc phải dừng: nội dung được thiết kế để lan thường nhắm vào cảm xúc trước</div>\n    <div style=\"background:rgba(13,148,136,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>2. Tìm nguồn gốc</b> — ai đăng đầu tiên, lúc nào; bài đang xem là bản gốc hay bản dẫn lại lần thứ ba</div>\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>3. Xem nơi khác nói gì</b> — mở tab mới, tìm tên nguồn và tuyên bố đó; có nơi độc lập nào đưa cùng nội dung không</div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>4. Hỏi mình muốn nó đúng tới mức nào</b> — càng muốn nó đúng thì càng phải kiểm kỹ, vì đó chính là lúc thiên lệch xác nhận chạy mạnh nhất</div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Bốn bước này mất khoảng hai phút. Chia sẻ một thông tin sai rồi rút lại thì mất nhiều hơn thế rất nhiều — bản đính chính không bao giờ đi xa bằng bản gốc.</div>\n</div>\n```\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nChọn một trang web hoặc một kênh bạn chưa biết rõ nhưng đang lấy thông tin từ đó. Thẩm định bằng đọc ngang trong tối đa ba phút: mở tab mới, tìm tên nguồn ấy kèm từ khoá đánh giá hoặc kiểm chứng, ghi lại ba điều bạn tìm được từ **nguồn khác** — không tính thông tin do chính trang đó viết về mình.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi nhóm nhận một tuyên bố có kèm con số (giảng viên chuẩn bị trước, hoặc lấy từ nhóm lớp). Chạy bốn câu hỏi về con số và trình bày hai phút: con số này đo trên ai, so với nhóm nào, ai công bố, và mức độ tin của nhóm là bao nhiêu phần mười. Yêu cầu: kết luận phải là một mức độ tin kèm điều kiện, không được là tin hoặc không tin.\n\n### Bài tập về nhà (60 phút)\n\nChọn một chủ đề bạn quan tâm và hỏi một trợ lý AI ba câu về nó, yêu cầu có trích dẫn. Sau đó đi kiểm từng trích dẫn ở nguồn gốc. Viết một trang: bao nhiêu trích dẫn tồn tại thật, bao nhiêu bịa hoặc sai chi tiết; những chỗ bịa có dấu hiệu nào nhận ra được trước khi kiểm không; và bạn sẽ đặt quy tắc gì cho bản thân khi dùng AI trong các bài tập sắp tới.\n\n### Xem thêm\n\n- 🎬 [Check Yourself with Lateral Reading](https://www.youtube.com/watch?v=GoQG6Tin-1E) — Crash Course Navigating Digital Information #3, 13 phút 51. Kỹ thuật đọc ngang, dựng theo nghiên cứu của nhóm Stanford.\n- 🎬 [How to Spot a Misleading Graph](https://www.youtube.com/watch?v=E91bGT9BjYk) — Lea Gaslowitz, TED-Ed, 4 phút 10. Các cách trục biểu đồ đánh lừa mắt người đọc.\n- 🎬 [Can You Outsmart a Troll (by Thinking Like One)?](https://www.youtube.com/watch?v=Iu4OdhjnN4I) — Claire Wardle, TED-Ed, 5 phút.\n\n### Nguồn tham khảo\n\n- Wineburg, S., & McGrew, S. (2019). Lateral reading and the nature of expertise: Reading less and learning more when evaluating digital information. *Teachers College Record*, 121(11), 1–40.\n- Caulfield, M. (2019). *SIFT (The Four Moves).* — [hapgood.us/2019/06/19/sift-the-four-moves](https://hapgood.us/2019/06/19/sift-the-four-moves/)\n- Wardle, C., & Derakhshan, H. (2017). *Information Disorder: Toward an Interdisciplinary Framework for Research and Policy Making.* Council of Europe.\n- Huff, D. (1954). *How to Lie with Statistics.* New York: W. W. Norton.\n- Bender, E. M., Gebru, T., McMillan-Major, A., & Shmitchell, S. (2021). On the dangers of stochastic parrots. *Proceedings of FAccT 2021*, 610–623.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "3.3-doc-ngang",
+                "type": "mcq",
+                "prompt": "Bạn gặp một trang web lạ đưa ra một tuyên bố về thị trường việc làm. Cách thẩm định hiệu quả nhất là gì?",
+                "explanation": "Mọi thứ trên trang đều do chính họ viết, nên đánh giá phải đến từ bên ngoài: rời trang, tìm xem nguồn độc lập nói gì về tổ chức và tuyên bố ấy, rồi mới quay lại.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mở tab mới, tìm xem nguồn độc lập nói gì về trang và về tuyên bố đó, rồi mới quay lại đọc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đọc kỹ mục Về chúng tôi và xem trang có trích dẫn đầy đủ không",
+                    "isCorrect": false,
+                    "misconception": "knm.vertical-reading"
+                  },
+                  {
+                    "label": "Xem giao diện có chuyên nghiệp và văn phong có chỉn chu không",
+                    "isCorrect": false,
+                    "misconception": "knm.vertical-reading"
+                  },
+                  {
+                    "label": "Xem bài có bao nhiêu lượt chia sẻ và bình luận",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "3.3-doc-con-so",
+                "type": "mcq",
+                "prompt": "Một bài viết nói: ứng dụng X giúp người học tiến bộ nhanh hơn 40%. Câu hỏi nào cần đặt đầu tiên?",
+                "explanation": "Con số phần trăm chỉ có nghĩa khi biết so với nhóm nào; không có nhóm đối chứng thì không kết luận được gì về hiệu quả.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nhanh hơn 40% so với nhóm nào, và nhóm đó được học bằng cách gì",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ứng dụng đó có bao nhiêu lượt tải",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Người viết bài có phải chuyên gia giáo dục không",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Bạn bè mình dùng thấy thế nào",
+                    "isCorrect": false,
+                    "misconception": "knm.anecdote-as-proof"
+                  }
+                ]
+              },
+              {
+                "key": "3.3-tuong-quan",
+                "type": "mcq",
+                "prompt": "Khảo sát cho thấy sinh viên dùng ứng dụng học tập có điểm trung bình cao hơn nhóm không dùng. Kết luận nào hợp lý?",
+                "explanation": "Trước khi kết luận nhân quả phải loại ba khả năng: chiều ngược lại, yếu tố thứ ba, và trùng hợp. Ở đây rất có thể người vốn chăm mới chịu cài ứng dụng.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Hai điều này đi cùng nhau; có thể ứng dụng giúp ích, cũng có thể người vốn chăm mới cài ứng dụng — chưa đủ cơ sở kết luận nhân quả",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ứng dụng làm tăng điểm số, nên ai cũng nên cài",
+                    "isCorrect": false,
+                    "misconception": "knm.correlation-causation"
+                  },
+                  {
+                    "label": "Điểm cao khiến sinh viên thích cài ứng dụng hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.correlation-causation"
+                  },
+                  {
+                    "label": "Khảo sát này vô giá trị vì không chứng minh được gì",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  }
+                ]
+              },
+              {
+                "key": "3.3-ai-trich-dan",
+                "type": "mcq",
+                "prompt": "Bạn nhờ AI tóm tắt tài liệu và nhận được một đoạn có trích dẫn rất cụ thể: tên tác giả, năm, tạp chí, số trang. Nên làm gì?",
+                "explanation": "Mô hình ngôn ngữ tối ưu cho tính hợp lý bề mặt nên trích dẫn bịa thường rất chỉnh. Mọi trích dẫn, con số và tên riêng phải kiểm lại ở nguồn gốc trước khi dùng.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Đi kiểm từng trích dẫn ở nguồn gốc; không tìm thấy thì không dùng, dù nó rất khớp với ý mình",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Dùng luôn, vì trích dẫn cụ thể tới mức đó thì khó mà sai",
+                    "isCorrect": false,
+                    "misconception": "knm.ai-fluency-truth"
+                  },
+                  {
+                    "label": "Hỏi lại AI xem trích dẫn có thật không và tin câu trả lời của nó",
+                    "isCorrect": false,
+                    "misconception": "knm.ai-fluency-truth"
+                  },
+                  {
+                    "label": "Bỏ hẳn việc dùng AI trong mọi bài tập",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  }
+                ]
+              },
+              {
+                "key": "3.3-truoc-khi-chia-se",
+                "type": "ordering",
+                "prompt": "Sắp xếp bốn bước nên làm trước khi chia sẻ một thông tin gây chú ý.",
+                "explanation": "Dừng lại khi thấy cảm xúc dâng lên, lần về nguồn gốc, đối chiếu với nơi khác, và cuối cùng tự hỏi mình đang muốn nó đúng tới mức nào.",
+                "points": 3,
+                "sequence": [
+                  "Dừng lại khi nhận ra nội dung đang khơi cảm xúc mạnh",
+                  "Tìm nguồn gốc: ai đăng đầu tiên, đây là bản gốc hay bản dẫn lại",
+                  "Mở tab mới xem nơi độc lập nào nói cùng nội dung đó",
+                  "Tự hỏi mình đang muốn thông tin này đúng tới mức nào"
+                ]
+              },
+              {
+                "key": "3.3-nguy-co-tuong-doi",
+                "type": "mcq",
+                "prompt": "Một bài báo giật tít: thói quen này làm tăng gấp đôi nguy cơ mắc bệnh X. Câu hỏi quan trọng nhất là gì?",
+                "explanation": "Gấp đôi một con số rất nhỏ vẫn là một con số rất nhỏ. Luôn hỏi mức nguy cơ tuyệt đối trước và sau, thay vì chỉ đọc tỉ lệ tương đối.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nguy cơ ban đầu là bao nhiêu, và sau khi tăng gấp đôi thì thành bao nhiêu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bài báo đăng trên trang nào có nổi tiếng không",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Có bao nhiêu người chia sẻ bài viết đó",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Mình có quen ai mắc bệnh đó không",
+                    "isCorrect": false,
+                    "misconception": "knm.anecdote-as-proof"
+                  }
+                ]
+              },
+              {
+                "key": "3.3-viet-kiem-ai",
+                "type": "essay",
+                "prompt": "Hỏi một trợ lý AI ba câu về một chủ đề bạn quan tâm, yêu cầu có trích dẫn, rồi đi kiểm từng trích dẫn. Viết 200–300 từ: bao nhiêu trích dẫn tồn tại thật và bao nhiêu sai hoặc bịa; có dấu hiệu nào nhận ra được trước khi kiểm không; và hai quy tắc bạn đặt cho bản thân khi dùng AI trong các bài tập sắp tới.",
                 "points": 5
               }
             ]

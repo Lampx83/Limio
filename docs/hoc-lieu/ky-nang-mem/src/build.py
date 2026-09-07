@@ -23,6 +23,8 @@ sys.path.insert(0, str(SRC))
 
 import course  # noqa: E402
 import m1_l1, m1_l2, m1_l3  # noqa: E402
+import m2_l1, m2_l2, m2_l3  # noqa: E402
+import m3_l1, m3_l2, m3_l3  # noqa: E402
 
 MODULES = {
     1: {
@@ -34,6 +36,26 @@ MODULES = {
             "được để từ chối."
         ),
         "lessons": [m1_l1.LESSON, m1_l2.LESSON, m1_l3.LESSON],
+    },
+    2: {
+        "title": "Module 2 · Tư duy tích cực",
+        "description": (
+            "Không phải học cách luôn vui, mà học cách giải thích sự việc sao cho mình còn nhìn thấy "
+            "phương án và còn thử tiếp. Ba bài đi từ phân biệt tư duy tích cực với tích cực độc hại, "
+            "qua kỹ thuật bẻ lại lối nghĩ méo, tới việc duy trì dài hạn — và ranh giới nơi tư duy "
+            "tích cực không còn đủ, cần tới hỗ trợ chuyên môn."
+        ),
+        "lessons": [m2_l1.LESSON, m2_l2.LESSON, m2_l3.LESSON],
+    },
+    3: {
+        "title": "Module 3 · Tư duy phản biện",
+        "description": (
+            "Kiểm chất lượng một lập luận — kể cả lập luận của chính mình. Ba bài: tách khẳng định "
+            "khỏi bằng chứng và suy luận; nhận ra thiên lệch của người đọc và nguỵ biện của người "
+            "nói; đánh giá nguồn trong môi trường mà ai cũng xuất bản được và máy sinh được nội dung "
+            "trong vài giây."
+        ),
+        "lessons": [m3_l1.LESSON, m3_l2.LESSON, m3_l3.LESSON],
     },
 }
 

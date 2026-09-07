@@ -18,8 +18,8 @@ trong kho.
 | # | Module | Trạng thái |
 |---|---|---|
 | 1 | Giá trị sống | ✅ 3 bài |
-| 2 | Tư duy tích cực | chưa soạn |
-| 3 | Tư duy phản biện | chưa soạn |
+| 2 | Tư duy tích cực | ✅ 3 bài |
+| 3 | Tư duy phản biện | ✅ 3 bài |
 | 4 | Quản lý thời gian | chưa soạn |
 | 5 | Giao tiếp hiệu quả | chưa soạn |
 | 6 | Kỹ năng lắng nghe | chưa soạn |
@@ -66,3 +66,15 @@ Khoá nhập xong ở trạng thái **nháp**; publish là việc của người
   vào `MISCONCEPTIONS` trong `src/course.py` kèm một mẫu phản hồi tương ứng.
 - Sơ đồ vẽ bằng khối ```html (div + style nội tuyến) thay vì ảnh ngoài: không phụ
   thuộc tệp đặt ở đâu đó, và đọc được trên cả nền sáng lẫn nền tối.
+
+## Ảnh và link mở rộng
+
+- Ảnh lấy từ Wikimedia Commons, **kiểm giấy phép qua API và mở xem tận mắt** trước khi đưa vào; chú thích ngay dưới hình ghi tên file, tác giả và giấy phép.
+- Link video ở mục *Xem thêm* chỉ dùng kênh chính thức (TED, TED-Ed, TEDx, FranklinCovey, CrashCourse). Tiêu đề, kênh và thời lượng lấy từ oEmbed của YouTube — **không ghi theo trí nhớ**, vì link chết hoặc sai tên thì tới tay sinh viên mới lộ.
+
+## Trạng thái trên hệ thống
+
+| Nơi | Khoá | Ghi chú |
+|---|---|---|
+| Local | `ky-nang-mem` | Chủ sở hữu là tài khoản seed; nhập lại bằng `--replace` được vì chưa có học viên |
+| Prod (server 224) | `ky-nang-mem` — `97e97281-3c6e-4fa4-b05c-222d21f97283` | Khoá này **có 3 đợt thi gắn vào** (`ExamRound`), nên không xoá được bằng `--replace`. Module mới luôn nhập bằng `--into`. Ba module đầu tên "Module 1/2/3" với các bài "Bài học 1/2/3" là khung cũ có từ trước, chưa xoá. |
