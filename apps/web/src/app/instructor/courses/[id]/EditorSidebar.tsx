@@ -115,12 +115,15 @@ export default function EditorSidebar({
                 {m.lessons.length === 0 && (
                   <li className="px-3 py-1.5 text-xs text-faint">— chưa có bài</li>
                 )}
+                {/* prefetch={false}: xem chú thích trong EditorTabs.tsx — một
+                    link mỗi bài, prefetch hết là bắn cả chục render/lần mở trang. */}
                 {m.lessons.map((l, li) => {
                   const active = l.id === activeLessonId;
                   return (
                     <li key={l.id}>
                       <Link
                         href={lessonHref(l.id)}
+                        prefetch={false}
                         className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors ${
                           active
                             ? "bg-pink-50 font-medium text-pink-500 dark:bg-pink-500/10"
