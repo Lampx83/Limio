@@ -34,7 +34,7 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
   if (!course) notFound();
 
   if (!(await isUserEnrolled(session.user.id, course.id))) {
-    redirect(`/catalog/${params.slug}`);
+    redirect(`/catalog/${params.slug}?locked=1`);
   }
 
   const enrollment = await prisma.enrollment.findUniqueOrThrow({

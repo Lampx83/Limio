@@ -9,7 +9,7 @@ import { plainToRichHtml } from "@/lib/richText";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { StickyMobileCTA, UserAvatar } from "@/components/ui";
-import { Trophy, Crown } from "lucide-react";
+import { Trophy, Crown, Lock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -24,9 +24,12 @@ export default async function CourseDetailPage({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams?: { paywall?: string };
+  searchParams?: { paywall?: string; locked?: string };
 }) {
   const showPaywall = searchParams?.paywall === "1";
+  // Trước đây khoá miễn phí mà chưa ghi danh thì bị đá về đây KHÔNG kèm cờ nào,
+  // nên người dùng quay lại đúng trang vừa đứng và tưởng cú bấm bị nuốt mất.
+  const showLocked = searchParams?.locked === "1";
   const [session, paymentEnabled] = await Promise.all([auth(), getPaymentEnabled()]);
   let course;
   try {
@@ -109,6 +112,22 @@ export default async function CourseDetailPage({
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
         ← Catalog
       </Link>
+
+      {showLocked && (
+        <div className="banner-info mt-4 flex flex-wrap items-center gap-3 rounded-2xl px-5 py-4">
+          <Lock className="h-5 w-5 shrink-0" aria-hidden />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">Bạn chưa đăng ký khoá học này</p>
+            <p className="text-xs">
+              Đăng ký để mở toàn bộ bài học. Việc này miễn phí và chỉ mất một cú
+              bấm.
+            </p>
+          </div>
+          <a href="#dang-ky" className="btn-primary btn-sm">
+            Đăng ký ngay
+          </a>
+        </div>
+      )}
 
       {/* Paywall notice */}
       {showPaywall && (
@@ -246,6 +265,15 @@ export default async function CourseDetailPage({
             </span>
           </div>
 
+          {!enrolled && !publiclyReadable && course.modules.length > 0 && (
+            /* Nói trước một lần, thay vì để người ta tự suy ra từ việc bấm mà
+               không có gì xảy ra. */
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
+              <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              Bài có biểu tượng khoá sẽ mở sau khi bạn đăng ký khoá học.
+            </p>
+          )}
+
           {course.modules.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center text-sm text-muted">
               Chưa có nội dung.
@@ -286,7 +314,17 @@ export default async function CourseDetailPage({
                               {l.title}
                             </Link>
                           ) : (
-                            <p className="text-sm">{l.title}</p>
+                            /* Không để tên bài trơ ra như chữ chết: bấm vào là
+                               cuộn xuống ô đăng ký, kèm ổ khoá để biết vì sao
+                               nó không mở ra bài. */
+                            <a
+                              href="#dang-ky"
+                              title="Đăng ký khoá học để mở bài này"
+                              className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-default"
+                            >
+                              <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                              {l.title}
+                            </a>
                           )}
                           {/* A per-lesson "Preview" pill would be noise on a course
                               where every lesson is open — the hero chip says it once. */}
@@ -430,7 +468,7 @@ export default async function CourseDetailPage({
               )}
             </div>
             {course.status === "published" && (
-              <div className="card">
+              <div className="card scroll-mt-24" id="dang-ky">
                 {paymentEnabled && !isFree(course.priceCents) && (
                   <div className="mb-3">
                     <div className="text-xs uppercase tracking-wide text-faint">

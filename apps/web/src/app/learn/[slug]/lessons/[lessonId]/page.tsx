@@ -166,7 +166,9 @@ export default async function LessonPage({
       }
     } else if (!lesson.previewable && !publiclyReadable) {
       const paid = lesson.module.course.priceCents !== null && lesson.module.course.priceCents > 0;
-      redirect(`/catalog/${params.slug}${paid ? "?paywall=1" : ""}`);
+      // Luôn kèm lý do: khoá miễn phí trước đây bị đá về tay không, người dùng
+      // quay lại đúng trang cũ và không biết vì sao.
+      redirect(`/catalog/${params.slug}?${paid ? "paywall=1" : "locked=1"}`);
     }
     // Otherwise fall through and render as preview below.
   }
