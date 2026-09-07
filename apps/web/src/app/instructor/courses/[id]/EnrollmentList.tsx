@@ -12,6 +12,7 @@ interface Enrollment {
   completedAt: string | null;
   lastLessonId: string | null;
   lastPositionSec: number | null;
+  section: { name: string; isDefault: boolean };
   user: {
     id: string;
     email: string;
@@ -189,6 +190,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
             <thead className="bg-[rgb(var(--surface-muted))/0.5] text-left text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
                 <th className="px-4 py-2">Học viên</th>
+                <th className="px-4 py-2">Lớp</th>
                 <th className="px-4 py-2">Trạng thái</th>
                 <th className="px-4 py-2 hidden sm:table-cell">Đăng ký</th>
                 <th className="px-4 py-2 hidden lg:table-cell">v</th>
@@ -223,6 +225,17 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                         </p>
                       </div>
                     </div>
+                  </td>
+                  {/* Lớp: chưa gán thì phải nhìn ra ngay, vì đó là việc cần
+                      làm chứ không phải một trạng thái bình thường. */}
+                  <td className="px-4 py-2.5">
+                    {e.section.isDefault ? (
+                      <span className="chip-accent whitespace-nowrap text-xs">
+                        chưa gán lớp
+                      </span>
+                    ) : (
+                      <span className="whitespace-nowrap text-sm">{e.section.name}</span>
+                    )}
                   </td>
                   <td className="px-4 py-2.5">
                     <span className={`${STATUS_CHIP[e.status]} text-xs`}>

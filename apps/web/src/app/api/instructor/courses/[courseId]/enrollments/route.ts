@@ -83,6 +83,9 @@ export async function GET(
           avatarUrl: true,
         },
       },
+      // Danh sách học viên phải nói được ai đã vào lớp nào. Không có cột này
+      // thì người rơi vào lớp mặc định trông y hệt người đã được xếp lớp.
+      section: { select: { name: true, isDefault: true } },
     },
     orderBy: { enrolledAt: "desc" },
     take: limit,
@@ -98,6 +101,7 @@ export async function GET(
       completedAt: e.completedAt?.toISOString() ?? null,
       lastLessonId: e.lastLessonId,
       lastPositionSec: e.lastPositionSec,
+      section: { name: e.section.name, isDefault: e.section.isDefault },
       user: e.user,
     })),
   });
