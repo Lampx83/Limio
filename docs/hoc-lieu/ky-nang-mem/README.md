@@ -20,8 +20,8 @@ trong kho.
 | 1 | Giá trị sống | ✅ 3 bài |
 | 2 | Tư duy tích cực | ✅ 3 bài |
 | 3 | Tư duy phản biện | ✅ 3 bài |
-| 4 | Quản lý thời gian | chưa soạn |
-| 5 | Giao tiếp hiệu quả | chưa soạn |
+| 4 | Quản lý thời gian | ✅ 3 bài |
+| 5 | Giao tiếp hiệu quả | ✅ 3 bài |
 | 6 | Kỹ năng lắng nghe | chưa soạn |
 | 7 | Thuyết trình hiệu quả | chưa soạn |
 | 8 | Nghệ thuật thuyết phục | chưa soạn |

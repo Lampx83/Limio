@@ -25,6 +25,8 @@ import course  # noqa: E402
 import m1_l1, m1_l2, m1_l3  # noqa: E402
 import m2_l1, m2_l2, m2_l3  # noqa: E402
 import m3_l1, m3_l2, m3_l3  # noqa: E402
+import m4_l1, m4_l2, m4_l3  # noqa: E402
+import m5_l1, m5_l2, m5_l3  # noqa: E402
 
 MODULES = {
     1: {
@@ -56,6 +58,26 @@ MODULES = {
             "trong vài giây."
         ),
         "lessons": [m3_l1.LESSON, m3_l2.LESSON, m3_l3.LESSON],
+    },
+    4: {
+        "title": "Module 4 · Quản lý thời gian",
+        "description": (
+            "Thời gian không quản lý được — 24 giờ là cố định; thứ quản lý được là lựa chọn. Ba bài "
+            "đi từ mục tiêu SMART và bốn thế hệ quản trị thời gian, qua ma trận Eisenhower cùng bảy "
+            "kẻ cắp thời gian, tới kỹ thuật giữ khối tập trung: khung giờ vàng, chống đa nhiệm, gỡ "
+            "trì hoãn và nói không mà không hỏng quan hệ."
+        ),
+        "lessons": [m4_l1.LESSON, m4_l2.LESSON, m4_l3.LESSON],
+    },
+    5: {
+        "title": "Module 5 · Giao tiếp hiệu quả",
+        "description": (
+            "Thông điệp chỉ tồn tại ở dạng người kia hiểu. Ba bài: mô hình truyền thông hai chiều "
+            "cùng bốn loại nhiễu và cách xác nhận ý hiểu; phi ngôn ngữ, khoảng cách giao tiếp và "
+            "quy tắc 7–38–55 hay bị dùng sai; cuối cùng là chọn kênh và viết cho người đọc, kèm "
+            "công thức cho bốn tình huống khó nhất."
+        ),
+        "lessons": [m5_l1.LESSON, m5_l2.LESSON, m5_l3.LESSON],
     },
 }
 

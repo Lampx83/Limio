@@ -173,6 +173,101 @@
       "code": "knm.ai-fluency-truth",
       "name": "Văn trôi chảy của AI nghĩa là thông tin đúng",
       "description": "Lấy độ mạch lạc, sự tự tin và cách trình bày có trích dẫn của một câu trả lời do AI sinh làm dấu hiệu chính xác. Mô hình ngôn ngữ tối ưu cho tính hợp lý bề mặt, nên nó bịa được cả tên tác giả, năm và số trang trong khi vẫn đọc rất xuôi."
+    },
+    {
+      "code": "knm.busy-equals-productive",
+      "name": "Bận rộn nghĩa là hiệu quả",
+      "description": "Lấy số việc đã làm và số giờ đã bỏ ra làm thước đo, thay vì lấy kết quả tạo ra. Người bận rộn cả ngày với việc khẩn cấp của người khác vẫn có thể không nhích được mục tiêu nào của mình."
+    },
+    {
+      "code": "knm.urgent-equals-important",
+      "name": "Lẫn khẩn cấp với quan trọng",
+      "description": "Coi mọi việc đang réo là việc phải làm trước. Khẩn cấp nói về thời hạn, quan trọng nói về mức đóng góp cho mục tiêu; việc quan trọng thường im lặng, nên nó luôn thua trong cuộc cạnh tranh sự chú ý."
+    },
+    {
+      "code": "knm.no-time-to-plan",
+      "name": "Không có thời gian để lập kế hoạch",
+      "description": "Bỏ khâu lập kế hoạch vì đang quá bận. Lập kế hoạch là việc điển hình của ô quan trọng nhưng không khẩn cấp: bỏ nó thì ô khẩn cấp phình ra, và càng phình thì càng không còn chỗ để lập kế hoạch."
+    },
+    {
+      "code": "knm.multitask-efficient",
+      "name": "Đa nhiệm giúp làm được nhiều việc hơn",
+      "description": "Tin rằng làm nhiều việc cùng lúc tiết kiệm thời gian. Não người chuyển qua lại giữa các việc chứ không chạy song song, và mỗi lần chuyển đều mất chi phí khởi động lại — tổng thời gian dài hơn, lỗi nhiều hơn."
+    },
+    {
+      "code": "knm.goal-vague",
+      "name": "Mục tiêu chung chung vẫn là mục tiêu",
+      "description": "Đặt mục tiêu kiểu học giỏi hơn, chăm chỉ hơn — không đo được nên không biết đã đạt chưa, và không suy ra được việc phải làm hôm nay."
+    },
+    {
+      "code": "knm.more-goals-better",
+      "name": "Càng nhiều mục tiêu càng tốt",
+      "description": "Đặt cùng lúc quá nhiều mục tiêu cho một học kỳ rồi đuối ở tuần thứ tư. Số mục tiêu chia nhau một quỹ thời gian cố định; quá nhiều mục tiêu đồng nghĩa không mục tiêu nào đủ thời gian để về đích."
+    },
+    {
+      "code": "knm.saying-no-rude",
+      "name": "Nói không là bất lịch sự",
+      "description": "Nhận mọi lời nhờ vả vì sợ mất lòng, rồi trễ hạn với chính những việc đã cam kết. Nói không đúng cách bảo vệ các cam kết đang có; nhận bừa rồi làm hỏng mới là thứ làm mất lòng tin."
+    },
+    {
+      "code": "knm.procrastination-lazy",
+      "name": "Trì hoãn là do lười",
+      "description": "Quy trì hoãn về thiếu ý chí, nên giải pháp duy nhất nghĩ ra được là tự trách. Trì hoãn phần lớn là cách né cảm xúc khó chịu gắn với nhiệm vụ — mơ hồ, sợ làm dở, chán — nên cách chữa nằm ở việc làm rõ và chia nhỏ bước đầu tiên."
+    },
+    {
+      "code": "knm.always-available",
+      "name": "Luôn sẵn sàng trả lời ngay mới là chuyên nghiệp",
+      "description": "Để thông báo mở suốt và trả lời tức thì, coi đó là dấu hiệu trách nhiệm. Mỗi lần gián đoạn tốn thêm thời gian lấy lại mạch tập trung; thoả thuận trước về thời gian phản hồi mới là cách làm chuyên nghiệp."
+    },
+    {
+      "code": "knm.sent-equals-received",
+      "name": "Đã nói là đã truyền đạt",
+      "description": "Coi việc phát ra thông điệp là hoàn thành giao tiếp, bỏ qua khâu người nhận giải mã và phản hồi. Thông điệp chỉ tồn tại ở dạng người kia hiểu, không phải dạng ta phát ra."
+    },
+    {
+      "code": "knm.mehrabian-93",
+      "name": "Nội dung lời nói chỉ chiếm 7%",
+      "description": "Áp tỉ lệ 7–38–55 của Mehrabian cho mọi tình huống giao tiếp. Nghiên cứu gốc chỉ nói về việc truyền đạt thái độ và cảm xúc khi lời nói mâu thuẫn với giọng điệu và nét mặt — không nói rằng nội dung chỉ đáng 7 phần trăm."
+    },
+    {
+      "code": "knm.channel-default",
+      "name": "Dùng một kênh cho mọi việc",
+      "description": "Nhắn tin cho chuyện phức tạp, gửi email cho chuyện nhạy cảm, họp cho chuyện chỉ cần một dòng thông báo. Kênh phải chọn theo độ phức tạp và độ nhạy cảm của nội dung, không theo thói quen của người gửi."
+    },
+    {
+      "code": "knm.jargon-professional",
+      "name": "Dùng thuật ngữ cho ra vẻ chuyên nghiệp",
+      "description": "Chèn biệt ngữ và từ chuyên ngành khi nói với người ngoài ngành, tưởng làm tăng uy tín. Thực tế nó tăng nhiễu ngữ nghĩa: người nghe hoặc hiểu sai, hoặc ngại hỏi lại."
+    },
+    {
+      "code": "knm.single-cue-decoding",
+      "name": "Đọc một cử chỉ đơn lẻ như bằng chứng chắc chắn",
+      "description": "Kết luận khoanh tay là phòng thủ, nhìn đi chỗ khác là nói dối. Tín hiệu phi ngôn ngữ chỉ có nghĩa khi đọc theo cụm, đặt trong bối cảnh, và tốt nhất là kiểm lại bằng một câu hỏi."
+    },
+    {
+      "code": "knm.silence-means-understood",
+      "name": "Không ai hỏi tức là mọi người đã hiểu",
+      "description": "Lấy sự im lặng làm bằng chứng thông điệp đã tới nơi. Im lặng thường có nghĩa người nghe chưa kịp nghĩ ra câu hỏi, hoặc ngại hỏi vì sợ bị coi là chậm hiểu."
+    },
+    {
+      "code": "knm.assertive-is-aggressive",
+      "name": "Quyết đoán nghĩa là nói mạnh, át người khác",
+      "description": "Lẫn quyết đoán với hung hăng, hoặc lẫn lịch sự với phục tùng. Quyết đoán là nói rõ nhu cầu và giới hạn của mình mà vẫn tôn trọng nhu cầu của người kia — hai vế phải cùng có mặt."
+    },
+    {
+      "code": "knm.bad-news-vague",
+      "name": "Báo tin xấu thì nên nói vòng cho nhẹ",
+      "description": "Nói tránh, giấu bớt hoặc trì hoãn khi phải báo tin không vui, tưởng như vậy là tử tế. Người nghe vẫn nhận ra có chuyện, chỉ mất thêm thời gian đoán mò và mất niềm tin khi biết sự thật bị giữ lại."
+    },
+    {
+      "code": "knm.reply-in-anger",
+      "name": "Trả lời khiếu nại bằng phòng thủ",
+      "description": "Đáp lại lời phàn nàn gay gắt bằng cách thanh minh hoặc phản công ngay. Việc cần làm trước là ghi nhận sự việc và tách phần dữ kiện ra khỏi giọng điệu, rồi mới trả lời phần dữ kiện."
+    },
+    {
+      "code": "knm.culture-universal",
+      "name": "Quy tắc phi ngôn ngữ giống nhau ở mọi nơi",
+      "description": "Áp thẳng thói quen giao tiếp của mình sang bối cảnh văn hoá khác: khoảng cách đứng, mức độ nhìn thẳng, cách nói thẳng hay nói vòng đều khác nhau giữa các nền văn hoá và giữa các thế hệ."
     }
   ],
   "feedbackTemplates": [
@@ -339,6 +434,101 @@
     {
       "misconception": "knm.ai-fluency-truth",
       "body": "Câu trả lời của AI trôi chảy vì mô hình tối ưu cho sự hợp lý bề mặt, không phải cho tính đúng. Mọi con số, tên riêng và trích dẫn đều phải kiểm lại ở nguồn gốc trước khi dùng.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.busy-equals-productive",
+      "body": "Hãy đổi thước đo: cuối ngày hỏi mình đã nhích được mục tiêu nào, thay vì đã làm bao nhiêu việc. Một ngày bận kín mà không mục tiêu nào tiến lên là một ngày làm việc của người khác.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.urgent-equals-important",
+      "body": "Khẩn cấp nói về thời hạn, quan trọng nói về đóng góp cho mục tiêu của bạn. Trước khi làm việc đang réo, hỏi một câu: việc này quan trọng với ai? Nhiều việc khẩn cấp là việc quan trọng của người khác.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.no-time-to-plan",
+      "body": "Lập kế hoạch chính là việc quan trọng mà không khẩn cấp, nên nó luôn bị đẩy lùi. Hãy cấp cho nó một khung giờ cố định — mười lăm phút mỗi sáng thứ hai — chứ đừng đợi lúc rảnh, vì lúc ấy không tới.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.multitask-efficient",
+      "body": "Não không chạy song song mà chuyển qua lại, mỗi lần chuyển tốn chi phí khởi động. Hãy thử đo: làm hai việc xen kẽ rồi làm lần lượt từng việc, so tổng thời gian và số lỗi.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.goal-vague",
+      "body": "Một mục tiêu dùng được phải trả lời được: đo bằng con số nào, xong trước ngày nào, và hôm nay làm gì để tiến tới. Học giỏi hơn không trả lời được câu nào trong ba câu đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.more-goals-better",
+      "body": "Quỹ thời gian cố định, nên tám mục tiêu nghĩa là mỗi mục tiêu được một phần tám sự chú ý. Hãy giữ tối đa ba mục tiêu cho một học kỳ và ghi rõ những mục tiêu còn lại đang được hoãn có ý thức.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.saying-no-rude",
+      "body": "Nói không đúng cách gồm ba phần: ghi nhận đề nghị, nêu lý do thật ngắn gọn gắn với cam kết đang có, và đề xuất phương án khác nếu có. Nhận bừa rồi làm hỏng mới là thứ làm mất lòng tin.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.procrastination-lazy",
+      "body": "Hỏi trước khi trách: nhiệm vụ này đang gây cảm giác gì — mơ hồ, sợ làm dở, hay chán? Rồi làm rõ bước đầu tiên nhỏ tới mức làm được trong hai phút. Trì hoãn giảm khi cảm giác khó chịu giảm, không giảm khi ta tự mắng.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.always-available",
+      "body": "Thoả thuận trước thời gian phản hồi — ví dụ trong vòng bốn giờ giờ hành chính — rồi tắt thông báo giữa các khung đó. Chuyên nghiệp là giữ đúng cam kết phản hồi, không phải trả lời tức thì rồi hỏng việc đang làm.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.sent-equals-received",
+      "body": "Thông điệp chỉ tồn tại ở dạng người kia hiểu. Trước khi coi việc đã xong, hãy lấy một tín hiệu phản hồi: nhờ họ tóm tắt lại bằng lời của họ, hoặc hỏi một câu mở về bước tiếp theo.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.mehrabian-93",
+      "body": "Tỉ lệ 7–38–55 chỉ áp dụng cho việc truyền đạt thái độ và cảm xúc khi lời nói mâu thuẫn với giọng điệu và nét mặt. Với một hướng dẫn kỹ thuật hay một bản báo cáo, nội dung vẫn là phần chính.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.channel-default",
+      "body": "Chọn kênh theo nội dung: việc phức tạp hoặc nhạy cảm thì gặp trực tiếp hoặc gọi; việc cần lưu vết và không gấp thì viết. Nhắn tin hợp cho câu hỏi ngắn, không hợp cho tin xấu và tranh luận.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.jargon-professional",
+      "body": "Viết cho người đọc, không viết cho mình. Nếu người nhận ngoài ngành, hãy đổi mỗi thuật ngữ thành một câu đời thường — và nếu buộc phải dùng, giải thích ngay lần đầu xuất hiện.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.single-cue-decoding",
+      "body": "Một cử chỉ đơn lẻ không nói được gì: người khoanh tay có thể chỉ đang lạnh. Hãy đọc theo cụm ba dấu hiệu trở lên, đặt trong bối cảnh, rồi kiểm bằng một câu hỏi thay vì kết luận trong đầu.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.silence-means-understood",
+      "body": "Đừng hỏi mọi người rõ chưa — gần như luôn nhận được cái gật đầu. Hãy hỏi ai đó tóm tắt lại việc mình sẽ làm và hạn nộp, hoặc hỏi một câu mở về chỗ nào dễ vướng nhất.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.assertive-is-aggressive",
+      "body": "Quyết đoán có hai vế cùng lúc: nói rõ nhu cầu và giới hạn của mình, đồng thời ghi nhận nhu cầu của người kia. Thiếu vế đầu là phục tùng, thiếu vế sau là hung hăng.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.bad-news-vague",
+      "body": "Nói tin xấu sớm, rõ và ngắn, rồi mới nói tới bối cảnh và phương án. Người nghe cần biết chuyện gì xảy ra, nó ảnh hưởng tới họ ra sao, và bước tiếp theo là gì — vòng vo chỉ kéo dài phần khó chịu.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.reply-in-anger",
+      "body": "Tách dữ kiện khỏi giọng điệu. Ghi nhận sự việc, xin lỗi đúng phần mình sai, nêu việc sẽ làm và mốc thời gian. Đừng trả lời phần cảm xúc bằng cảm xúc — và nếu đang nóng, hãy soạn nháp rồi gửi sau ba mươi phút.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.culture-universal",
+      "body": "Khoảng cách đứng, mức độ nhìn thẳng, cách nói thẳng hay nói vòng đều thay đổi theo văn hoá, vùng miền và cả thế hệ. Khi làm việc với người từ bối cảnh khác, hãy quan sát và hỏi thay vì suy từ thói quen của mình.",
       "priority": 10
     }
   ],
@@ -2154,6 +2344,1197 @@
                 "key": "3.3-viet-kiem-ai",
                 "type": "essay",
                 "prompt": "Hỏi một trợ lý AI ba câu về một chủ đề bạn quan tâm, yêu cầu có trích dẫn, rồi đi kiểm từng trích dẫn. Viết 200–300 từ: bao nhiêu trích dẫn tồn tại thật và bao nhiêu sai hoặc bịa; có dấu hiệu nào nhận ra được trước khi kiểm không; và hai quy tắc bạn đặt cho bản thân khi dùng AI trong các bài tập sắp tới.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 4 · Quản lý thời gian",
+      "description": "Thời gian không quản lý được — 24 giờ là cố định; thứ quản lý được là lựa chọn. Ba bài đi từ mục tiêu SMART và bốn thế hệ quản trị thời gian, qua ma trận Eisenhower cùng bảy kẻ cắp thời gian, tới kỹ thuật giữ khối tập trung: khung giờ vàng, chống đa nhiệm, gỡ trì hoãn và nói không mà không hỏng quan hệ.",
+      "lessons": [
+        {
+          "title": "Bài 4.1 · Mục tiêu SMART và bốn thế hệ quản trị thời gian",
+          "durationMin": 45,
+          "description": "Vì sao bận rộn không đồng nghĩa với hiệu quả; bốn thế hệ quản trị thời gian và chỗ đứng của thế hệ thứ tư; viết mục tiêu SMART dùng được; mô hình 5A và ba cấp kế hoạch.",
+          "objectives": [
+            "Phân biệt được quản lý thời gian với quản lý lựa chọn và giải thích vì sao bận không bằng hiệu quả",
+            "Nêu được đặc trưng của bốn thế hệ quản trị thời gian và điểm mới của thế hệ thứ tư",
+            "Viết lại được một mục tiêu chung chung thành mục tiêu SMART",
+            "Lập được kế hoạch ba cấp học kỳ – tuần – ngày theo mô hình 5A"
+          ],
+          "summary": [
+            "Không ai quản lý được thời gian: 24 giờ là cố định. Thứ quản lý được là lựa chọn, nên thước đo cuối ngày phải là mục tiêu nào đã nhích, không phải bao nhiêu việc đã làm.",
+            "Bốn thế hệ: ghi nhớ → lịch và sổ hẹn → ưu tiên theo mục tiêu → quản trị bản thân theo điều quan trọng và theo quan hệ; thế hệ bốn hỏi làm việc gì trước khi hỏi làm nhanh thế nào.",
+            "Mục tiêu SMART phải trả lời được ba câu: đo bằng gì, xong trước ngày nào, hôm nay làm gì để tiến tới.",
+            "Kế hoạch có ba cấp — học kỳ, tuần, ngày — và cấp tuần là cấp quan trọng nhất với sinh viên vì nó đủ dài để xoay và đủ ngắn để nhớ."
+          ],
+          "body": "\nCâu \"em không có thời gian\" hầu như luôn sai theo nghĩa đen: ai cũng có đúng 168 giờ một tuần. Câu đúng hơn là \"em đã tiêu 168 giờ đó vào việc khác\". Module này bắt đầu từ chỗ ấy — **thời gian không quản lý được, chỉ có lựa chọn là quản lý được**.\n\n## Bận rộn không phải hiệu quả\n\nHai thước đo hay bị nhầm:\n\n| | Thước đo bận rộn | Thước đo hiệu quả |\n|---|---|---|\n| Câu hỏi cuối ngày | Hôm nay tôi làm bao nhiêu việc? | Hôm nay mục tiêu nào của tôi nhích lên? |\n| Cảm giác đi kèm | Mệt và thấy mình có ích | Đôi khi thấy ít việc mà lại đúng việc |\n| Rủi ro | Kín lịch bằng việc quan trọng của người khác | Phải từ chối, và phải chịu được sự khó chịu đó |\n\n> [!vi-du] Tuần vừa rồi Linh trả lời 140 tin nhắn nhóm, sửa slide hộ hai bạn, đi ba buổi họp câu lạc bộ và không mở nổi đồ án cá nhân. Lịch kín từ sáng tới tối, không có giờ nào bỏ phí. Nhưng nếu hỏi mục tiêu học kỳ nào đã tiến, câu trả lời là không có. Đó là một tuần **bận** chứ không phải một tuần **hiệu quả** — và khác biệt ấy chỉ hiện ra khi ta hỏi đúng câu hỏi.\n\n## Bốn thế hệ quản trị thời gian\n\n| Thế hệ | Công cụ đặc trưng | Câu hỏi trung tâm | Điểm yếu |\n|---|---|---|---|\n| Thứ nhất | Giấy nhớ, danh sách việc cần làm | Tôi cần nhớ những gì? | Không có thứ tự ưu tiên; việc nào cũng ngang nhau |\n| Thứ hai | Lịch, sổ hẹn, kế hoạch theo mốc | Khi nào tôi làm việc đó? | Kín lịch nhưng vẫn có thể toàn việc không quan trọng |\n| Thứ ba | Ưu tiên theo mục tiêu, xếp hạng A–B–C, mục tiêu ngày | Việc nào quan trọng nhất hôm nay? | Ép chặt quá thành cứng nhắc; dễ hy sinh quan hệ con người cho lịch trình |\n| Thứ tư | Ma trận việc quan trọng – khẩn cấp, vai trò và quan hệ | Điều gì thật sự quan trọng, và tôi là ai trong các vai trò của mình? | Đòi hỏi phải biết mình coi trọng gì — nên nó nối thẳng về module 1 |\n\nThế hệ thứ tư, theo Covey, được coi là bước tiến vì nó **đổi câu hỏi**: từ \"làm sao làm được nhiều việc hơn trong một ngày\" sang \"việc nào đáng làm\". Nó cũng đưa **con người và quan hệ** trở lại — một cuộc gọi hỏi thăm người thân không tối ưu theo bất kỳ hệ thống nào của ba thế hệ trước, nhưng nó thuộc về những vai trò mà bạn đã chọn cho mình.\n\n## Mục tiêu SMART\n\n| Chữ | Nghĩa | Câu hỏi kiểm tra |\n|---|---|---|\n| S — cụ thể | Nói rõ làm gì, ở đâu, với ai | Người khác đọc có hiểu giống mình không? |\n| M — đo được | Có con số hoặc bằng chứng xác nhận | Lấy gì để biết đã đạt? |\n| A — khả thi | Vừa sức trong điều kiện hiện có | Với quỹ thời gian thật của mình, có làm nổi không? |\n| R — liên quan | Gắn với mục tiêu lớn hơn và với giá trị của mình | Đạt cái này thì cái gì lớn hơn tiến lên? |\n| T — có hạn | Có mốc thời gian | Xong trước ngày nào? |\n\n> [!vi-du] \"Tôi sẽ học giỏi hơn\" hỏng ở M và T trước tiên: không đo được và không có hạn, nên không suy ra được việc phải làm hôm nay. Bản SMART: \"Trong học kỳ này, tôi đạt tối thiểu 7,5 môn Xác suất thống kê, bằng cách làm đủ 10 bài tập lớn trước hạn và mỗi tuần giải 5 bài đề cũ vào tối thứ ba.\" Đọc câu này là biết ngay tối thứ ba tuần sau phải làm gì.\n\n> [!canh-bao] Đặt tám mục tiêu cho một học kỳ rồi đuối ở tuần thứ tư là chuyện thường gặp — và nguyên nhân không phải thiếu quyết tâm mà là số học: quỹ thời gian cố định, tám mục tiêu chia nhau quỹ đó. Cách xử lý khi đã lỡ: giữ tối đa ba mục tiêu, ghi rõ những mục tiêu còn lại đang được **hoãn có ý thức** — chứ không phải thất bại — và đặt lại lịch cho chúng ở học kỳ sau.\n\n## Mô hình 5A và ba cấp kế hoạch\n\nNăm bước, mỗi bước một chữ A, đủ để đi từ mong muốn tới lịch cụ thể:\n\n1. **Aim — xác định mục tiêu.** Viết theo SMART, tối đa ba mục tiêu cho một học kỳ.\n2. **Analyse — phân tích quỹ thời gian thật.** Ghi lại một tuần thật của mình theo giờ. Gần như ai làm bước này cũng phát hiện ra vài giờ mình không biết đã đi đâu.\n3. **Arrange — sắp xếp thành kế hoạch nhiều cấp.** Kế hoạch **học kỳ** (mốc lớn), kế hoạch **tuần** (việc cụ thể theo ngày), kế hoạch **ngày** (thứ tự và khung giờ). Ba cấp phải nối được với nhau: một việc trong lịch ngày phải truy ngược được tới một mục tiêu học kỳ.\n4. **Act — thực hiện.** Bảo vệ khung giờ đã đặt như bảo vệ một cuộc hẹn với người khác.\n5. **Assess — rà soát.** Mỗi tuần 15 phút: việc gì xong, việc gì trượt, vì sao trượt, tuần sau đổi gì.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.7rem\">Ba cấp kế hoạch phải nối được với nhau</div>\n  <div style=\"display:grid;gap:.45rem;font-size:1.05rem\">\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>Học kỳ</b> — đạt tối thiểu 7,5 môn Xác suất thống kê</div>\n    <div style=\"background:rgba(13,148,136,.14);border-radius:.4rem;padding:.6rem .8rem;margin-left:1.2rem\"><b>Tuần</b> — giải 5 bài đề cũ chương 3, nộp bài tập lớn số 4 trước thứ sáu</div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .8rem;margin-left:2.4rem\"><b>Ngày</b> — thứ ba 19h–20h30: giải 5 bài đề cũ, điện thoại để chế độ không làm phiền</div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Phép thử: chỉ vào một dòng bất kỳ trong lịch ngày và hỏi nó phục vụ mục tiêu học kỳ nào. Không trả lời được thì hoặc việc đó nên bỏ, hoặc bạn đang có một mục tiêu chưa viết ra.</div>\n</div>\n```\n\n> [!meo] Bước Analyse là bước hay bị bỏ nhất và cũng rẻ nhất: ghi lại đúng một tuần theo giờ, không cần chính xác tới phút. Không có bức tranh thật về quỹ thời gian thì mọi kế hoạch sau đó chỉ là mong muốn.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nViết ba mục tiêu SMART cho học kỳ này — đúng ba, không hơn. Với mỗi mục tiêu, kiểm đủ năm chữ và viết ra một việc cụ thể của **tuần này** phục vụ nó. Nếu bạn đang có nhiều hơn ba mục tiêu, liệt kê phần còn lại vào một danh sách riêng đặt tên là *hoãn có ý thức*, kèm học kỳ dự kiến làm.\n\n### Nhóm 3–4 người (25 phút)\n\nĐổi ba mục tiêu cho nhau. Mỗi người chấm mục tiêu của bạn mình theo năm chữ SMART, chỉ ra chữ nào chưa đạt và **viết lại giúp** một mục tiêu cho đạt. Yêu cầu: bản viết lại phải chứa một con số và một mốc thời gian. Cuối buổi, nhóm chọn một cặp trước–sau rõ nhất để chia sẻ.\n\n### Bài tập về nhà (60 phút)\n\nLàm bước Analyse: ghi lại một tuần thật của bạn theo khối 30 phút (dùng lịch trên điện thoại hoặc một bảng giấy). Cuối tuần, tổng hợp theo nhóm hoạt động và viết nửa trang: ba nhóm chiếm nhiều giờ nhất là gì; có bao nhiêu giờ bạn không giải thích được đã đi đâu; và bạn định chuyển bao nhiêu giờ, từ nhóm nào sang nhóm nào cho tuần tới.\n\n### Xem thêm\n\n- 🎬 [How to Gain Control of Your Free Time](https://www.youtube.com/watch?v=n3kNlFMXslo) — Laura Vanderkam, TED, 11 phút. Lập luận rằng thời gian là vấn đề ưu tiên chứ không phải vấn đề số lượng, dựa trên dữ liệu nhật ký thời gian.\n\n### Nguồn tham khảo\n\n- Covey, S. R., Merrill, A. R., & Merrill, R. R. (1994). *First Things First.* New York: Simon & Schuster — nguồn của bốn thế hệ quản trị thời gian.\n- Doran, G. T. (1981). There's a S.M.A.R.T. way to write management's goals and objectives. *Management Review*, 70(11), 35–36.\n- Locke, E. A., & Latham, G. P. (2002). Building a practically useful theory of goal setting and task motivation. *American Psychologist*, 57(9), 705–717.\n- Vanderkam, L. (2018). *Off the Clock: Feel Less Busy While Getting More Done.* New York: Portfolio.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "4.1-smart-thieu",
+                "type": "mcq",
+                "prompt": "Mục tiêu Tôi sẽ học giỏi hơn không đạt nguyên tắc SMART chủ yếu vì lý do nào?",
+                "explanation": "Nó không đo được và không có mốc thời gian, nên không ai biết khi nào coi là đạt và không suy ra được việc phải làm hôm nay.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Không đo được và không có mốc thời gian, nên không suy ra được việc cần làm hôm nay",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mục tiêu này quá dễ nên không tạo động lực",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Mục tiêu này không liên quan tới nghề nghiệp tương lai",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có gì sai, chỉ cần quyết tâm là đủ",
+                    "isCorrect": false,
+                    "misconception": "knm.goal-vague"
+                  }
+                ]
+              },
+              {
+                "key": "4.1-the-he-4",
+                "type": "mcq",
+                "prompt": "Thế hệ quản trị thời gian thứ tư theo Covey nhấn mạnh điều gì?",
+                "explanation": "Thế hệ bốn đổi câu hỏi từ làm sao làm nhiều hơn sang việc nào đáng làm, tổ chức theo điều quan trọng và theo các vai trò, quan hệ của mỗi người.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Quản trị bản thân theo điều thật sự quan trọng và theo các vai trò, quan hệ — thay vì chỉ tối ưu tốc độ làm việc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ghi chép đầy đủ mọi việc cần nhớ trong ngày",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Xếp kín lịch để không lãng phí khoảng trống nào",
+                    "isCorrect": false,
+                    "misconception": "knm.busy-equals-productive"
+                  },
+                  {
+                    "label": "Xếp hạng mọi việc theo A, B, C rồi làm lần lượt từ A",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.1-the-he-1-2",
+                "type": "matching",
+                "prompt": "Nối mỗi thế hệ quản trị thời gian với biểu hiện đặc trưng của nó.",
+                "explanation": "Thế hệ một dừng ở ghi nhớ, thế hệ hai thêm lịch và mốc hẹn, thế hệ ba thêm ưu tiên theo mục tiêu, thế hệ bốn tổ chức theo điều quan trọng và các vai trò.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Giấy nhớ và danh sách việc cần làm, không phân biệt việc nào trước",
+                    "right": "Thế hệ thứ nhất"
+                  },
+                  {
+                    "left": "Lịch và sổ hẹn, sắp xếp việc theo thời điểm",
+                    "right": "Thế hệ thứ hai"
+                  },
+                  {
+                    "left": "Xếp hạng ưu tiên theo mục tiêu, đặt mục tiêu ngày",
+                    "right": "Thế hệ thứ ba"
+                  },
+                  {
+                    "left": "Tổ chức theo điều quan trọng, theo vai trò và quan hệ",
+                    "right": "Thế hệ thứ tư"
+                  }
+                ]
+              },
+              {
+                "key": "4.1-lap-ke-hoach-o2",
+                "type": "mcq",
+                "prompt": "Vì sao việc lập kế hoạch cá nhân thường bị bỏ dù ai cũng biết là cần?",
+                "explanation": "Lập kế hoạch là việc quan trọng nhưng không khẩn cấp: nó không réo, không có hạn chót từ ai, nên luôn thua các việc đang gấp — và càng bỏ thì việc gấp càng nhiều.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì nó quan trọng nhưng không khẩn cấp: không ai giục, không có hạn chót, nên luôn bị đẩy lùi sau các việc đang gấp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nó tốn quá nhiều thời gian so với lợi ích mang lại",
+                    "isCorrect": false,
+                    "misconception": "knm.no-time-to-plan"
+                  },
+                  {
+                    "label": "Vì kế hoạch nào rồi cũng bị thay đổi nên không cần lập",
+                    "isCorrect": false,
+                    "misconception": "knm.no-time-to-plan"
+                  },
+                  {
+                    "label": "Vì chỉ người đi làm mới cần lập kế hoạch",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.1-8-muc-tieu",
+                "type": "mcq",
+                "prompt": "Bạn đặt 8 mục tiêu cho học kỳ này nhưng đuối sức ở tuần thứ tư. Hành động phù hợp là gì?",
+                "explanation": "Quỹ thời gian cố định nên tám mục tiêu chia nhau quỹ đó. Giữ tối đa ba và hoãn phần còn lại một cách có ý thức, thay vì cố kéo cả tám rồi bỏ hết.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Giữ lại tối đa ba mục tiêu quan trọng nhất, chuyển phần còn lại sang danh sách hoãn có ý thức kèm mốc xem lại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Cố giữ cả tám và tăng giờ học mỗi ngày",
+                    "isCorrect": false,
+                    "misconception": "knm.more-goals-better"
+                  },
+                  {
+                    "label": "Bỏ hết mục tiêu, học kỳ sau làm lại từ đầu",
+                    "isCorrect": false,
+                    "misconception": "knm.false-dilemma"
+                  },
+                  {
+                    "label": "Giữ nguyên tám mục tiêu nhưng hạ tiêu chuẩn của từng mục tiêu xuống",
+                    "isCorrect": false,
+                    "misconception": "knm.more-goals-better"
+                  }
+                ]
+              },
+              {
+                "key": "4.1-du-an-3-thang",
+                "type": "mcq",
+                "prompt": "Bạn được giao một dự án kéo dài 3 tháng. Bước đầu tiên để quản lý thời gian hiệu quả là gì?",
+                "explanation": "Trước khi xếp lịch phải có mốc: chia dự án thành các sản phẩm trung gian có hạn cụ thể, rồi mới quy ra việc của tuần và của ngày.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chia dự án thành các sản phẩm trung gian có mốc thời gian, rồi quy ngược về việc của tuần này",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bắt tay làm ngay phần dễ nhất để có cảm giác tiến độ",
+                    "isCorrect": false,
+                    "misconception": "knm.busy-equals-productive"
+                  },
+                  {
+                    "label": "Đợi tới khi gần hạn cho có áp lực rồi làm một thể",
+                    "isCorrect": false,
+                    "misconception": "knm.procrastination-lazy"
+                  },
+                  {
+                    "label": "Xếp kín lịch ba tháng ngay từ ngày đầu tiên",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.1-thu-tu-5a",
+                "type": "ordering",
+                "prompt": "Sắp xếp năm bước của mô hình 5A theo đúng trình tự.",
+                "explanation": "Xác định mục tiêu trước, phân tích quỹ thời gian thật, sắp xếp thành kế hoạch nhiều cấp, thực hiện, rồi rà soát định kỳ.",
+                "points": 3,
+                "sequence": [
+                  "Aim — xác định mục tiêu theo SMART",
+                  "Analyse — ghi lại và phân tích quỹ thời gian thật của mình",
+                  "Arrange — sắp xếp kế hoạch ba cấp: học kỳ, tuần, ngày",
+                  "Act — thực hiện và bảo vệ khung giờ đã đặt",
+                  "Assess — rà soát định kỳ và điều chỉnh"
+                ]
+              },
+              {
+                "key": "4.1-viet-muc-tieu",
+                "type": "essay",
+                "prompt": "Viết 150–250 từ: (a) một mục tiêu học kỳ của bạn ở dạng chung chung như bạn vẫn thường nghĩ; (b) bản viết lại theo SMART, chỉ rõ từng chữ S–M–A–R–T nằm ở đâu trong câu; (c) một việc cụ thể của tuần này phục vụ mục tiêu đó, kèm ngày giờ bạn sẽ làm.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 4.2 · Ma trận Eisenhower và kẻ cắp thời gian",
+          "durationMin": 45,
+          "description": "Phân biệt khẩn cấp với quan trọng; bốn ô của ma trận và việc phải làm với từng ô; vì sao ô hai là nơi đáng đầu tư nhất; và bảy kẻ cắp thời gian phổ biến cùng cách chặn từng loại.",
+          "objectives": [
+            "Phân biệt được khẩn cấp và quan trọng bằng hai câu hỏi kiểm tra",
+            "Xếp được các việc trong tuần của mình vào bốn ô của ma trận Eisenhower",
+            "Nêu được hành động phù hợp cho từng ô, kể cả khi ô một đang đầy",
+            "Nhận diện được kẻ cắp thời gian lớn nhất của bản thân và chọn được cách chặn"
+          ],
+          "summary": [
+            "Khẩn cấp nói về thời hạn, quan trọng nói về mức đóng góp cho mục tiêu của bạn; việc quan trọng thường im lặng nên luôn thua việc đang réo.",
+            "Bốn ô, bốn hành động: làm ngay, lên lịch, giao hoặc rút gọn, và loại bỏ.",
+            "Ô hai — quan trọng nhưng chưa khẩn cấp — là nơi duy nhất làm ô một teo lại theo thời gian; đầu tư vào đó là đầu tư duy nhất có lãi.",
+            "Khi ô một đầy năm việc cùng lúc, việc cần làm không phải làm nhanh hơn mà là truy nguyên: phần lớn chúng từng nằm ở ô hai và đã bị bỏ quên."
+          ],
+          "body": "\nBài trước cho mục tiêu và kế hoạch. Bài này giải quyết chuyện xảy ra ngay sau đó: **mọi thứ cùng đòi làm trước**.\n\n## Khẩn cấp không phải là quan trọng\n\nHai khái niệm này bị dùng lẫn tới mức gần như thành một, nhưng chúng đo hai thứ khác nhau:\n\n- **Khẩn cấp** nói về **thời hạn**: việc này có đang réo không, có ai đang chờ không, để tới mai thì có chuyện gì không.\n- **Quan trọng** nói về **mức đóng góp**: việc này đưa mục tiêu nào của tôi tiến lên, hay giữ cho điều gì tôi coi trọng không đổ vỡ.\n\nVấn đề nằm ở chỗ **việc khẩn cấp thì ồn ào, việc quan trọng thì im lặng**. Tin nhắn nhấp nháy, người ta đứng chờ, chuông điện thoại kêu — trong khi việc ôn tập sớm cho kỳ thi tháng sau không phát ra tiếng nào. Ai không chủ động phân biệt sẽ mặc định làm việc ồn nhất.\n\n> [!ghi-nho] Một câu hỏi tách được hai thứ này rất nhanh: **việc này quan trọng với ai?** Nhiều việc khẩn cấp trong ngày của bạn là việc quan trọng của người khác. Điều đó không có nghĩa là không làm — chỉ có nghĩa là bạn nên biết mình đang chọn gì.\n\n## Bốn ô và bốn hành động\n\n![Ma trận Eisenhower chia công việc thành bốn ô theo hai trục khẩn cấp và quan trọng](https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Eisenhower_matrix.svg/1280px-Eisenhower_matrix.svg.png \"Ma trận Eisenhower: hai trục khẩn cấp và quan trọng chia công việc thành bốn ô, mỗi ô đi kèm một hành động khác nhau. Hình: [File:Eisenhower matrix.svg](https://commons.wikimedia.org/wiki/File:Eisenhower_matrix.svg), tác giả Cmglee, giấy phép CC BY-SA 4.0.\")\n\n| Ô | Loại việc | Ví dụ trong đời sinh viên | Hành động |\n|---|---|---|---|\n| I. Quan trọng · Khẩn cấp | Khủng hoảng, hạn chót sát nút | Bài nộp sáng mai chưa làm; hỏng máy trước buổi bảo vệ | Làm ngay — nhưng ghi lại vì sao nó thành khẩn cấp |\n| II. Quan trọng · Không khẩn cấp | Đầu tư, phòng ngừa, xây dựng | Ôn sớm, lập kế hoạch, học kỹ năng mới, tập thể dục, giữ quan hệ | **Lên lịch** — đây là ô cần được cấp khung giờ cố định |\n| III. Không quan trọng · Khẩn cấp | Việc của người khác, gián đoạn | Tin nhắn nhóm hỏi việc đã có trong file; họp không liên quan phần mình | Giao lại, rút gọn, hoặc hẹn trả lời theo khung giờ |\n| IV. Không quan trọng · Không khẩn cấp | Giết thời gian | Lướt mạng vô định, xem lại nội dung đã xem | Cắt bớt — nhưng chừa chỗ cho nghỉ ngơi có chủ ý |\n\nHai điều thường bị hiểu sai. **Một**, ô IV không đồng nghĩa với nghỉ ngơi: nghỉ có chủ ý (ngủ, đi bộ, gặp bạn) thuộc ô II vì nó giữ cho bạn còn sức làm việc; ô IV là loại nghỉ mà nghỉ xong vẫn thấy mệt. **Hai**, ô III không phải \"việc vô giá trị\": nó có thể rất giá trị với người nhờ bạn — nên cách xử lý là thương lượng, không phải phớt lờ.\n\n> [!vi-du] Tuần này Khoa có năm việc cùng nằm ở ô I: bài tập lớn nộp thứ tư, slide thuyết trình thứ năm, ca làm thêm đổi giờ, đơn xin học bổng hết hạn thứ sáu, và mẹ nhờ gửi hồ sơ. Phản xạ là làm nhanh hơn và thức khuya hơn. Nhưng nếu truy ngược: bài tập lớn có từ ba tuần trước, hồ sơ học bổng mở từ đầu tháng, slide thì nhóm chốt nội dung tuần trước. **Bốn trong năm việc từng nằm ở ô II** và chỉ chuyển sang ô I vì bị bỏ quên. Bài học không nằm ở tuần này — tuần này thì đành làm — mà nằm ở chỗ mỗi tuần phải có khung giờ cho ô II, nếu không tuần nào cũng sẽ như vậy.\n\n## Ô hai là nơi duy nhất có lãi\n\nNếu chỉ nhớ một điều từ cả module, hãy nhớ điều này: **ô I phình hay teo là do ô II được cấp bao nhiêu thời gian**. Ôn sớm làm giảm số đêm trắng; lập kế hoạch làm giảm số việc quên; giữ sức khoẻ làm giảm số ngày ốm; giữ quan hệ làm giảm số mâu thuẫn phải chữa cháy.\n\nNhưng ô II có một đặc tính khó chịu: **nó không bao giờ tự đòi**. Không ai nhắn \"đã tới giờ ôn sớm rồi đấy\". Vì vậy cách duy nhất để nó tồn tại là **cấp cho nó một khung giờ cố định trong lịch tuần và bảo vệ khung giờ đó như một cuộc hẹn với người khác** — bởi thực chất đó là cuộc hẹn với chính mình trong tương lai.\n\n## Bảy kẻ cắp thời gian\n\n| Kẻ cắp | Dấu hiệu | Cách chặn |\n|---|---|---|\n| Gián đoạn liên tục | Thông báo, tin nhắn, người hỏi ngang | Tắt thông báo theo khung; hẹn giờ trả lời và nói trước cho nhóm |\n| Thiếu ưu tiên | Làm việc nào đến trước | Mỗi sáng chọn ba việc quan trọng nhất, viết ra trước khi mở điện thoại |\n| Trì hoãn | Việc bị đẩy lùi nhiều ngày | Làm rõ bước đầu tiên, thu nhỏ tới mức hai phút (xem bài 4.3) |\n| Ôm hết việc | Không giao, không nhờ, sợ người khác làm không đạt | Giao kèm tiêu chí rõ; chấp nhận bản 80% của người khác |\n| Họp và trao đổi vô ích | Ngồi họp không có phần của mình | Hỏi trước mục tiêu buổi họp; xin phần liên quan qua tóm tắt |\n| Tìm kiếm | Mất thời gian tìm tài liệu, file, ghi chú | Đặt tên file theo quy ước; một chỗ duy nhất cho ghi chú |\n| Lướt vô định | Mở mạng xã hội theo phản xạ, không có mục đích | Bỏ ứng dụng khỏi màn hình chính; đặt khung giờ có chủ ý thay vì cấm tuyệt đối |\n\n> [!canh-bao] Đừng bắt đầu bằng việc chặn cả bảy. Chọn **một** kẻ cắp đang lấy nhiều thời gian nhất của bạn tuần này và chặn đúng nó. Danh sách bảy mục chỉ để nhận diện; đánh cùng lúc bảy mặt trận là cách chắc chắn để bỏ cuộc sau ba ngày.\n\n> [!vi-du] Với nhiều sinh viên, kẻ cắp lớn nhất không phải mạng xã hội mà là **thiếu ưu tiên**: mở máy lên và làm việc nào hiện ra trước. Cách chặn rẻ nhất là ba dòng viết tay mỗi sáng — ba việc quan trọng nhất hôm nay — viết **trước khi** mở điện thoại. Ai làm ngược lại sẽ thấy thứ tự ưu tiên của mình do thông báo của người khác quyết định.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nLiệt kê mọi việc bạn đã làm trong ba ngày gần nhất, mỗi việc một dòng. Xếp từng việc vào một trong bốn ô. Đếm số giờ ước lượng cho mỗi ô và ghi lại tỉ lệ. Sau đó trả lời một câu: nếu tuần sau bạn chuyển được hai giờ từ ô III hoặc ô IV sang ô II, bạn sẽ dùng hai giờ đó vào việc gì cụ thể?\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người nêu ba việc đang thấy khẩn cấp. Nhóm chất vấn từng việc bằng hai câu: *việc này quan trọng với ai* và *nếu để tới tuần sau thì chuyện gì thật sự xảy ra*. Mục tiêu không phải chứng minh việc đó vô nghĩa mà là xếp nó vào đúng ô. Cuối buổi, mỗi người rời nhóm với ít nhất một việc đã chuyển từ ô I hoặc ô III sang chỗ đúng của nó.\n\n### Bài tập về nhà (45 phút)\n\nChọn kẻ cắp thời gian lớn nhất của bạn. Viết một trang: bằng chứng cho thấy nó là lớn nhất (số giờ ước lượng, ví dụ cụ thể trong tuần); cách chặn bạn sẽ áp dụng, viết ở dạng hành động quan sát được; và **dự đoán trước** hai tình huống sẽ khiến cách chặn ấy thất bại cùng phương án cho từng tình huống. Tuần sau đối chiếu lại với thực tế.\n\n### Xem thêm\n\n- 🎬 [How to Gain Control of Your Free Time](https://www.youtube.com/watch?v=n3kNlFMXslo) — Laura Vanderkam, TED, 11 phút. Ý tưởng trung tâm trùng với ô hai: thời gian cho việc quan trọng phải được đặt trước, không phải phần còn thừa lại.\n\n### Nguồn tham khảo\n\n- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương \"Put First Things First.\" New York: Free Press.\n- Covey, S. R., Merrill, A. R., & Merrill, R. R. (1994). *First Things First.* New York: Simon & Schuster.\n- Allen, D. (2015). *Getting Things Done: The Art of Stress-Free Productivity* (revised ed.). New York: Penguin.\n- Mark, G., Gudith, D., & Klocke, U. (2008). The cost of interrupted work: More speed and stress. *Proceedings of CHI 2008*, 107–110.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "4.2-hai-tieu-chi",
+                "type": "mcq",
+                "prompt": "Ma trận Eisenhower phân loại công việc dựa trên hai tiêu chí nào?",
+                "explanation": "Hai trục là mức độ khẩn cấp (về thời hạn) và mức độ quan trọng (về đóng góp cho mục tiêu), tạo thành bốn ô với bốn hành động khác nhau.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mức độ khẩn cấp và mức độ quan trọng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mức độ khó và thời gian cần để hoàn thành",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người giao việc và hạn nộp",
+                    "isCorrect": false,
+                    "misconception": "knm.urgent-equals-important"
+                  },
+                  {
+                    "label": "Mức độ yêu thích và mức thù lao",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.2-khan-cap-quan-trong",
+                "type": "mcq",
+                "prompt": "Khác biệt cốt lõi giữa khẩn cấp và quan trọng là gì?",
+                "explanation": "Khẩn cấp gắn với thời hạn và thường ồn ào; quan trọng gắn với mức đóng góp cho mục tiêu và thường im lặng — nên nó hay thua nếu ta không chủ động phân biệt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Khẩn cấp nói về thời hạn, quan trọng nói về mức đóng góp cho mục tiêu của mình",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khẩn cấp là việc khó, quan trọng là việc dễ nhưng cần thiết",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hai từ này về cơ bản là một, chỉ khác cách nói",
+                    "isCorrect": false,
+                    "misconception": "knm.urgent-equals-important"
+                  },
+                  {
+                    "label": "Khẩn cấp do mình quyết, quan trọng do người khác quyết",
+                    "isCorrect": false,
+                    "misconception": "knm.urgent-equals-important"
+                  }
+                ]
+              },
+              {
+                "key": "4.2-o-hai",
+                "type": "mcq",
+                "prompt": "Trong ma trận Eisenhower, ô Quan trọng – Không khẩn cấp gồm những công việc nào và nên xử lý ra sao?",
+                "explanation": "Đây là ô đầu tư và phòng ngừa: ôn sớm, lập kế hoạch, học kỹ năng, giữ sức khoẻ và quan hệ. Vì nó không tự đòi nên phải được cấp khung giờ cố định trong lịch.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Việc đầu tư và phòng ngừa như ôn sớm, lập kế hoạch, học kỹ năng, giữ sức khoẻ — cần được lên lịch với khung giờ cố định",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Việc có thể bỏ qua vì chưa ai giục",
+                    "isCorrect": false,
+                    "misconception": "knm.urgent-equals-important"
+                  },
+                  {
+                    "label": "Việc nên giao lại cho người khác làm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Việc chỉ làm khi đã hết mọi việc khác trong ngày",
+                    "isCorrect": false,
+                    "misconception": "knm.no-time-to-plan"
+                  }
+                ]
+              },
+              {
+                "key": "4.2-o-mot-day",
+                "type": "mcq",
+                "prompt": "Trong tuần, bạn có 5 việc cùng nằm ở ô Quan trọng – Khẩn cấp. Cách phản ứng phù hợp là gì?",
+                "explanation": "Tuần này thì vẫn phải làm, nhưng việc quan trọng hơn là truy nguyên: phần lớn các việc ấy từng ở ô hai và thành khẩn cấp vì bị bỏ quên — nên phải cấp khung giờ cho ô hai từ tuần sau.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Xử lý chúng theo hạn, đồng thời ghi lại vì sao từng việc thành khẩn cấp và cấp khung giờ cho ô hai từ tuần sau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Làm nhanh hơn và thức khuya hơn để kịp cả năm việc",
+                    "isCorrect": false,
+                    "misconception": "knm.busy-equals-productive"
+                  },
+                  {
+                    "label": "Làm song song cả năm việc cùng lúc cho tiết kiệm thời gian",
+                    "isCorrect": false,
+                    "misconception": "knm.multitask-efficient"
+                  },
+                  {
+                    "label": "Bỏ bớt hai việc và coi như không có",
+                    "isCorrect": false,
+                    "misconception": "knm.false-dilemma"
+                  }
+                ]
+              },
+              {
+                "key": "4.2-noi-o-hanh-dong",
+                "type": "matching",
+                "prompt": "Nối mỗi ô của ma trận với hành động phù hợp.",
+                "explanation": "Ô một làm ngay, ô hai lên lịch, ô ba giao lại hoặc rút gọn, ô bốn cắt bớt — nhưng vẫn chừa chỗ cho nghỉ ngơi có chủ ý, vốn thuộc ô hai.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Quan trọng · Khẩn cấp",
+                    "right": "Làm ngay và ghi lại vì sao nó thành khẩn cấp"
+                  },
+                  {
+                    "left": "Quan trọng · Không khẩn cấp",
+                    "right": "Lên lịch với khung giờ cố định và bảo vệ khung giờ đó"
+                  },
+                  {
+                    "left": "Không quan trọng · Khẩn cấp",
+                    "right": "Giao lại, rút gọn hoặc hẹn trả lời theo khung giờ"
+                  },
+                  {
+                    "left": "Không quan trọng · Không khẩn cấp",
+                    "right": "Cắt bớt, chừa chỗ cho nghỉ ngơi có chủ ý"
+                  }
+                ]
+              },
+              {
+                "key": "4.2-ke-cap-thoi-gian",
+                "type": "mcq",
+                "prompt": "Bạn thấy mình thường xuyên trì hoãn nhiệm vụ học tập. Theo cách tiếp cận về kẻ cắp thời gian, nhóm nguyên nhân nào cần xử lý trước tiên?",
+                "explanation": "Trì hoãn thường bắt nguồn từ nhiệm vụ mơ hồ và cảm giác khó chịu đi kèm, nên bước đầu là làm rõ bước đầu tiên và thu nhỏ nó — không phải tự trách hay ép kỷ luật.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sự mơ hồ của nhiệm vụ và cảm giác khó chịu đi kèm — làm rõ và thu nhỏ bước đầu tiên",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thiếu ý chí — cần tự đặt ra hình phạt nghiêm khắc hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.procrastination-lazy"
+                  },
+                  {
+                    "label": "Do người khác làm phiền quá nhiều",
+                    "isCorrect": false,
+                    "misconception": "knm.circle-of-concern"
+                  },
+                  {
+                    "label": "Do chưa có công cụ quản lý công việc đủ tốt",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.2-viet-ma-tran",
+                "type": "essay",
+                "prompt": "Liệt kê các việc bạn đã làm trong ba ngày gần nhất và xếp vào bốn ô. Viết 200–300 từ: (a) tỉ lệ thời gian ước lượng cho từng ô; (b) hai việc đang ở ô một mà lẽ ra từng ở ô hai, kèm lý do chúng bị bỏ quên; (c) khung giờ cụ thể trong tuần tới bạn sẽ cấp cho ô hai và việc bạn sẽ làm trong khung đó.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 4.3 · Tập trung sâu: đa nhiệm, khung giờ vàng và nói không",
+          "durationMin": 50,
+          "description": "Chi phí thật của đa nhiệm và gián đoạn; cách đặt khung giờ vàng cho việc khó; trì hoãn nhìn từ góc cảm xúc thay vì ý chí; và công thức nói không giữ được quan hệ.",
+          "objectives": [
+            "Giải thích được vì sao đa nhiệm làm giảm hiệu suất tổng thể",
+            "Đặt được khung giờ vàng cho nhiệm vụ quan trọng và bảo vệ được khung giờ đó",
+            "Chọn được kỹ thuật phù hợp để bắt đầu một việc đang bị trì hoãn",
+            "Nói không theo công thức ba phần mà không làm hỏng quan hệ"
+          ],
+          "summary": [
+            "Não chuyển qua lại giữa các việc chứ không chạy song song; mỗi lần chuyển tốn chi phí khởi động lại, nên đa nhiệm làm tổng thời gian dài hơn và lỗi nhiều hơn.",
+            "Khung giờ vàng là khoảng bạn tỉnh táo nhất trong ngày, được cấp cho việc khó nhất — chứ không phải cho việc dễ trả lời nhất.",
+            "Trì hoãn phần lớn là né cảm xúc khó chịu gắn với nhiệm vụ, nên cách chữa là làm rõ và thu nhỏ bước đầu tiên, không phải tự trách.",
+            "Nói không có ba phần: ghi nhận, lý do ngắn gắn với cam kết đang có, và phương án thay thế nếu có."
+          ],
+          "body": "\nCó kế hoạch rồi vẫn có thể không làm được gì — vì kế hoạch giả định bạn có những khối thời gian tập trung, mà thứ đó ngày nay phải giành lấy chứ không tự có.\n\n## Đa nhiệm: cái giá không nhìn thấy\n\nBộ não không chạy hai nhiệm vụ đòi hỏi suy nghĩ cùng lúc; nó **chuyển qua lại** rất nhanh. Mỗi lần chuyển có ba khoản chi phí:\n\n- **Chi phí khởi động lại.** Quay lại việc cũ, bạn phải nạp lại ngữ cảnh: đang ở đâu, định làm gì tiếp.\n- **Dư âm chú ý.** Một phần đầu vẫn còn bận với việc vừa rời đi, nên chất lượng của việc đang làm giảm.\n- **Tăng lỗi.** Lỗi phát hiện muộn lại tốn thêm thời gian sửa, thường nhiều hơn phần tưởng là tiết kiệm được.\n\nNghiên cứu về gián đoạn tại nơi làm việc cho thấy sau một lần bị ngắt quãng, người ta cần một khoảng đáng kể mới quay lại được mạch cũ — và điều đáng chú ý là họ thường **làm bù cho nhanh**, tức là làm nhanh hơn nhưng căng thẳng hơn.\n\n> [!vi-du] Minh vừa làm bài tập lớn vừa để mở nhóm chat và thỉnh thoảng trả lời. Bạn ấy thấy mình vẫn làm được bài, chỉ hơi chậm. Thử đo một lần: cùng loại bài, một buổi làm xen kẽ và một buổi tắt thông báo. Kết quả thường gặp là buổi tập trung xong sớm hơn khoảng một phần ba, và số lỗi phải sửa lại ít hơn hẳn. Cảm giác \"vẫn ổn\" không phải thước đo — thời gian thật mới là.\n\n## Khung giờ vàng\n\nMỗi người có vài giờ trong ngày mà đầu óc sắc nhất. Với nhiều người là buổi sáng, với một số là đêm khuya. Nguyên tắc chỉ có một: **cấp khung giờ ấy cho việc khó nhất và quan trọng nhất, không phải cho việc dễ trả lời nhất**.\n\nCái bẫy phổ biến là mở email và tin nhắn ngay đầu giờ vàng. Trả lời tin nhắn cho cảm giác hoàn thành ngay lập tức, nên nó rất hấp dẫn — và nó ăn hết đúng phần thời gian mà việc khó cần.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.7rem\">Một ngày được chia khối, thay vì một danh sách việc</div>\n  <div style=\"display:grid;gap:.4rem;font-size:1.05rem\">\n    <div style=\"background:rgba(13,148,136,.16);border-left:4px solid rgba(13,148,136,.7);border-radius:.35rem;padding:.55rem .8rem\"><b>8h30–10h00 · Khung giờ vàng</b> — việc khó nhất trong ngày. Thông báo tắt, điện thoại úp xuống, chỉ mở đúng tài liệu đang cần</div>\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.35rem;padding:.55rem .8rem\"><b>10h00–10h15</b> — nghỉ thật: đứng dậy, rời màn hình</div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.35rem;padding:.55rem .8rem\"><b>10h15–11h30</b> — việc cần suy nghĩ vừa phải: đọc tài liệu, chuẩn bị slide</div>\n    <div style=\"background:rgba(217,150,40,.14);border-radius:.35rem;padding:.55rem .8rem\"><b>13h30–14h00 · Khung trả lời</b> — gom toàn bộ tin nhắn, email, việc vặt vào đây</div>\n    <div style=\"background:rgba(127,127,127,.12);border-radius:.35rem;padding:.55rem .8rem\"><b>16h00–16h15 · Rà soát</b> — đóng ngày: việc gì xong, việc gì chuyển sang mai, ba việc quan trọng nhất của mai</div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Điểm mấu chốt không phải khung giờ đẹp mà là <b>khung trả lời</b>: gom việc vặt vào một hoặc hai khoảng cố định, rồi nói trước cho nhóm biết bạn trả lời vào lúc nào. Người ta chấp nhận chờ ba tiếng, miễn là biết trước.</div>\n</div>\n```\n\n> [!meo] Với gián đoạn từ tin nhắn công việc, giải pháp không phải là biến mất mà là **thoả thuận thời gian phản hồi**. Một câu nhắn cho nhóm — \"mình tập trung làm phần này tới 11h30, có gì mình trả lời hết vào 13h30, gấp thì gọi điện\" — vừa bảo vệ khối tập trung vừa giữ được sự tin cậy.\n\n## Trì hoãn không phải là lười\n\nNếu trì hoãn chỉ là lười, người ta đã không dọn nhà sạch bong vào đúng đêm trước hạn nộp. Điều thật sự xảy ra: nhiệm vụ gợi lên một cảm giác khó chịu — mơ hồ không biết bắt đầu từ đâu, sợ làm ra thứ dở, chán, hoặc sợ bị đánh giá — và ta né cảm giác ấy bằng cách làm việc khác. Vì vậy cách chữa nằm ở chỗ **giảm cảm giác khó chịu ở bước đầu tiên**, không nằm ở chỗ tự mắng.\n\n| Nguyên nhân | Nghe như thế nào | Cách vào việc |\n|---|---|---|\n| Mơ hồ | \"Không biết bắt đầu từ đâu\" | Viết ra bước đầu tiên nhỏ tới mức làm xong trong hai phút: mở file, đặt tên, viết một dòng tiêu đề |\n| Sợ làm dở | \"Phải làm cho ra hồn mới bắt đầu\" | Hẹn giờ 25 phút, cho phép mình làm ra bản nháp xấu; sửa là việc của lượt sau |\n| Quá lớn | \"Cái này ngốn cả tuần\" | Chia tới đơn vị làm được trong một buổi; ghi hạn cho từng phần |\n| Chán | \"Việc này chẳng thú vị gì\" | Ghép với thứ dễ chịu (quán quen, nhạc không lời) và đặt phần thưởng nhỏ sau khi xong khối |\n\nHai kỹ thuật đáng dùng nhất: **quy tắc hai phút** (nếu bước đầu tiên mất dưới hai phút thì làm ngay, đừng ghi vào danh sách) và **Pomodoro** (25 phút làm, 5 phút nghỉ, không kiểm tra gì trong 25 phút ấy). Cả hai đều tấn công đúng chỗ: rào cản không nằm ở việc làm, nằm ở việc **bắt đầu**.\n\n> [!vi-du] Hân trì hoãn viết báo cáo thực tập ba tuần. Bước đầu tiên bạn tự đặt ban đầu là \"viết báo cáo\" — quá lớn, nên tuần nào cũng trượt. Bản thu nhỏ: \"mở file mới, dán vào đó đề mục do nơi thực tập yêu cầu, viết một câu cho mục Giới thiệu.\" Mất bốn phút. Sau khi mở được file, Hân viết tiếp 40 phút — không phải vì đột nhiên có động lực, mà vì phần khó nhất, tức là bắt đầu, đã qua.\n\n## Nói không đúng cách\n\nNói không là kỹ năng quản lý thời gian vì mỗi lời đồng ý là một khoản rút từ quỹ 168 giờ, và quỹ ấy đã có chủ. Nhận bừa rồi trễ hạn làm mất lòng tin nhiều hơn hẳn một lời từ chối rõ ràng.\n\nCông thức ba phần, dùng được cho hầu hết tình huống:\n\n1. **Ghi nhận** — cho thấy bạn đã nghe và hiểu đề nghị: \"Dự án này nghe hay đấy, cảm ơn cậu đã nghĩ tới mình.\"\n2. **Từ chối kèm lý do ngắn, gắn với cam kết đang có** — không bịa lý do, không kể lể: \"Tháng này mình đang nhận phần dữ liệu cho đồ án và ca làm thêm, nhận thêm là mình làm hỏng cả hai.\"\n3. **Phương án thay thế nếu có** — không bắt buộc: \"Nếu tới tháng sau vẫn cần thì gọi mình, hoặc mình giới thiệu bạn Nam đang muốn làm mảng này.\"\n\n> [!canh-bao] Ba lỗi hay gặp: xin lỗi quá nhiều (làm lời từ chối trông như còn thương lượng được), bịa lý do (rồi lộ), và trả lời ngay lập tức khi chưa kịp xem lịch. Với đề nghị lớn, câu an toàn nhất là: \"Cho mình xem lại lịch, chiều nay mình trả lời cậu\" — rồi trả lời đúng hẹn.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nXác định khung giờ vàng của bạn bằng dữ liệu chứ không bằng cảm giác: nhớ lại ba lần gần nhất bạn làm việc trôi chảy nhất, ghi giờ. Đặt một khung giờ vàng cho tuần tới, ghi vào lịch như một cuộc hẹn, kèm tên việc cụ thể sẽ làm. Viết luôn câu nhắn bạn sẽ gửi cho nhóm về thời gian phản hồi của mình.\n\n### Nhóm 3–4 người (25 phút)\n\nĐóng vai nói không, ba lượt đổi vai: (1) bạn cùng lớp nhờ làm hộ phần việc nhóm; (2) câu lạc bộ mời nhận thêm một ban; (3) người quen nhờ việc gấp trong đúng khung giờ vàng của bạn. Người đóng vai từ chối phải dùng đủ ba phần của công thức. Người còn lại chấm: có ghi nhận không, lý do có ngắn và thật không, có bịa hay xin lỗi lê thê không.\n\n### Bài tập về nhà (45–60 phút)\n\nChạy một tuần theo khối thời gian: mỗi ngày một khung giờ vàng và một khung trả lời. Ghi lại mỗi ngày hai dòng — khung giờ vàng có được bảo vệ không, nếu không thì bị phá bởi cái gì. Cuối tuần viết nửa trang: tỉ lệ ngày giữ được khung; kẻ phá khung phổ biến nhất; và một thay đổi cụ thể cho tuần sau (đổi giờ, đổi chỗ ngồi, đổi thoả thuận với nhóm).\n\n### Xem thêm\n\n- 🎬 [Inside the Mind of a Master Procrastinator](https://www.youtube.com/watch?v=arj7oStGLkU) — Tim Urban, TED, 14 phút. Mô tả cơ chế trì hoãn từ bên trong, và phần cuối nói về loại trì hoãn không có hạn chót — loại nguy hiểm hơn nhiều.\n- 🎬 [How to Gain Control of Your Free Time](https://www.youtube.com/watch?v=n3kNlFMXslo) — Laura Vanderkam, TED, 11 phút.\n\n### Nguồn tham khảo\n\n- Mark, G., Gudith, D., & Klocke, U. (2008). The cost of interrupted work: More speed and stress. *Proceedings of CHI 2008*, 107–110.\n- Rubinstein, J. S., Meyer, D. E., & Evans, J. E. (2001). Executive control of cognitive processes in task switching. *Journal of Experimental Psychology: Human Perception and Performance*, 27(4), 763–797.\n- Steel, P. (2007). The nature of procrastination: A meta-analytic and theoretical review. *Psychological Bulletin*, 133(1), 65–94.\n- Sirois, F., & Pychyl, T. (2013). Procrastination and the priority of short-term mood regulation. *Social and Personality Psychology Compass*, 7(2), 115–127.\n- Newport, C. (2016). *Deep Work: Rules for Focused Success in a Distracted World.* New York: Grand Central Publishing.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "4.3-da-nhiem",
+                "type": "mcq",
+                "prompt": "Vì sao đa nhiệm thường làm giảm hiệu suất tổng thể?",
+                "explanation": "Não chuyển qua lại giữa các nhiệm vụ chứ không chạy song song; mỗi lần chuyển tốn chi phí nạp lại ngữ cảnh, để lại dư âm chú ý và làm tăng lỗi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì não chuyển qua lại giữa các việc chứ không chạy song song, mỗi lần chuyển đều tốn chi phí khởi động lại và làm tăng lỗi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì làm nhiều việc cùng lúc khiến ta mệt nhanh hơn, còn hiệu suất thì không đổi",
+                    "isCorrect": false,
+                    "misconception": "knm.multitask-efficient"
+                  },
+                  {
+                    "label": "Vì đa nhiệm chỉ phù hợp với người có kinh nghiệm lâu năm",
+                    "isCorrect": false,
+                    "misconception": "knm.multitask-efficient"
+                  },
+                  {
+                    "label": "Không đúng — đa nhiệm giúp tận dụng thời gian chết giữa các việc",
+                    "isCorrect": false,
+                    "misconception": "knm.multitask-efficient"
+                  }
+                ]
+              },
+              {
+                "key": "4.3-khung-gio-vang",
+                "type": "mcq",
+                "prompt": "Vì sao thiết lập khung giờ vàng cho nhiệm vụ quan trọng lại hiệu quả?",
+                "explanation": "Khung giờ vàng là lúc ta tỉnh táo nhất; dành nó cho việc khó nhất và chặn gián đoạn giúp giữ được khối tập trung liền mạch — thứ mà việc khó bắt buộc phải có.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì nó ghép lúc đầu óc sắc nhất với việc khó nhất, và bảo vệ được một khối thời gian liền mạch không bị ngắt quãng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì làm việc vào buổi sáng luôn hiệu quả hơn với mọi người",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì nó giúp ta trả lời tin nhắn nhanh hơn trong ngày",
+                    "isCorrect": false,
+                    "misconception": "knm.always-available"
+                  },
+                  {
+                    "label": "Vì nó khiến ta làm được nhiều việc cùng lúc hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.multitask-efficient"
+                  }
+                ]
+              },
+              {
+                "key": "4.3-gian-doan-tin-nhan",
+                "type": "mcq",
+                "prompt": "Bạn liên tục bị tin nhắn công việc làm gián đoạn khi đang tập trung. Giải pháp phù hợp nhất là gì?",
+                "explanation": "Không phải biến mất, cũng không phải trả lời tức thì: thoả thuận trước khung giờ phản hồi rồi tắt thông báo giữa các khung, và chừa một kênh cho việc thật sự gấp.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nhắn cho nhóm biết mình trả lời vào khung giờ cố định, tắt thông báo giữa các khung, và chừa một kênh riêng cho việc thật gấp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Trả lời ngay mọi tin nhắn để thể hiện tinh thần trách nhiệm",
+                    "isCorrect": false,
+                    "misconception": "knm.always-available"
+                  },
+                  {
+                    "label": "Tắt hết thông báo và không báo cho ai biết",
+                    "isCorrect": false,
+                    "misconception": "knm.channel-default"
+                  },
+                  {
+                    "label": "Vừa làm vừa trả lời, dần dần sẽ quen",
+                    "isCorrect": false,
+                    "misconception": "knm.multitask-efficient"
+                  }
+                ]
+              },
+              {
+                "key": "4.3-tri-hoan",
+                "type": "mcq",
+                "prompt": "Bạn đã trì hoãn viết báo cáo thực tập ba tuần. Cách vào việc hiệu quả nhất là gì?",
+                "explanation": "Rào cản nằm ở việc bắt đầu, nên hãy thu nhỏ bước đầu tiên tới mức làm xong trong vài phút; động lực thường đến sau khi đã bắt đầu chứ không đến trước.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Thu nhỏ bước đầu tiên tới mức làm xong trong vài phút: mở file, dán đề mục, viết một câu cho phần giới thiệu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tự đặt hình phạt nghiêm khắc nếu tuần này vẫn chưa viết xong",
+                    "isCorrect": false,
+                    "misconception": "knm.procrastination-lazy"
+                  },
+                  {
+                    "label": "Đợi tới sát hạn để có áp lực rồi viết một mạch",
+                    "isCorrect": false,
+                    "misconception": "knm.procrastination-lazy"
+                  },
+                  {
+                    "label": "Lập một kế hoạch thật chi tiết cho toàn bộ báo cáo trước khi viết dòng nào",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.3-noi-khong",
+                "type": "mcq",
+                "prompt": "Bạn được nhờ nhận thêm một phần việc trong khi đang kín cam kết. Cách nói không phù hợp nhất là gì?",
+                "explanation": "Công thức ba phần: ghi nhận đề nghị, nêu lý do ngắn gắn với cam kết đang có, và đề xuất phương án thay thế nếu có — không bịa lý do, không xin lỗi lê thê.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cảm ơn vì được nghĩ tới, nói rõ tháng này mình đã cam kết những gì và nhận thêm là hỏng cả hai, rồi gợi ý một người hoặc một thời điểm khác",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nhận lời trước đã, tính sau, vì từ chối thì ngại",
+                    "isCorrect": false,
+                    "misconception": "knm.saying-no-rude"
+                  },
+                  {
+                    "label": "Nói bận mà không giải thích gì thêm, cho nhanh gọn",
+                    "isCorrect": false,
+                    "misconception": "knm.assertive-is-aggressive"
+                  },
+                  {
+                    "label": "Bịa một lý do nghe hợp lý để người ta khỏi hỏi thêm",
+                    "isCorrect": false,
+                    "misconception": "knm.saying-no-rude"
+                  }
+                ]
+              },
+              {
+                "key": "4.3-noi-nguyen-nhan-tri-hoan",
+                "type": "matching",
+                "prompt": "Nối mỗi nguyên nhân trì hoãn với cách vào việc phù hợp.",
+                "explanation": "Mỗi nguyên nhân gây ra một loại khó chịu khác nhau nên cần một cách gỡ khác nhau — dùng sai cách thì vẫn tắc.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Không biết bắt đầu từ đâu",
+                    "right": "Viết ra bước đầu tiên nhỏ tới mức làm xong trong hai phút"
+                  },
+                  {
+                    "left": "Sợ làm ra thứ dở",
+                    "right": "Hẹn giờ 25 phút và cho phép mình làm bản nháp xấu"
+                  },
+                  {
+                    "left": "Nhiệm vụ quá lớn",
+                    "right": "Chia tới đơn vị làm được trong một buổi, mỗi phần một hạn"
+                  }
+                ]
+              },
+              {
+                "key": "4.3-viet-khung-gio",
+                "type": "essay",
+                "prompt": "Viết 150–250 từ: (a) khung giờ vàng của bạn là khoảng nào, dựa trên bằng chứng gì; (b) việc cụ thể bạn sẽ đặt vào khung đó tuần tới; (c) câu nhắn bạn sẽ gửi cho nhóm về thời gian phản hồi, viết nguyên văn; (d) hai thứ nhiều khả năng sẽ phá khung giờ đó và cách bạn định xử lý.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 5 · Giao tiếp hiệu quả",
+      "description": "Thông điệp chỉ tồn tại ở dạng người kia hiểu. Ba bài: mô hình truyền thông hai chiều cùng bốn loại nhiễu và cách xác nhận ý hiểu; phi ngôn ngữ, khoảng cách giao tiếp và quy tắc 7–38–55 hay bị dùng sai; cuối cùng là chọn kênh và viết cho người đọc, kèm công thức cho bốn tình huống khó nhất.",
+      "lessons": [
+        {
+          "title": "Bài 5.1 · Giao tiếp là quá trình hai chiều",
+          "durationMin": 45,
+          "description": "Mô hình truyền thông và sáu thành phần của nó; khác biệt giữa giao tiếp một chiều và hai chiều; bốn loại nhiễu; ba kỹ thuật xác nhận ý hiểu thay cho câu hỏi rõ chưa.",
+          "objectives": [
+            "Chỉ ra được sáu thành phần của một quá trình giao tiếp trên một tình huống cụ thể",
+            "Phân biệt được giao tiếp một chiều với hai chiều qua dấu hiệu quan sát được",
+            "Gọi tên được loại nhiễu đang làm hỏng một cuộc trao đổi",
+            "Dùng được ba kỹ thuật xác nhận ý hiểu thay cho câu hỏi mọi người rõ chưa"
+          ],
+          "summary": [
+            "Thông điệp chỉ tồn tại ở dạng người nhận giải mã được, không phải dạng người gửi phát ra — nên phát xong chưa phải là giao tiếp xong.",
+            "Giao tiếp hai chiều khác một chiều ở một điểm duy nhất mà quan sát được: có kênh phản hồi và người gửi thực sự đọc phản hồi đó.",
+            "Bốn loại nhiễu: vật lý, ngữ nghĩa, tâm sinh lý và tâm lý – xã hội; nhiễu ngữ nghĩa là loại phổ biến nhất trong công việc.",
+            "Hỏi rõ chưa gần như luôn nhận được cái gật đầu; hãy nhờ người nghe tóm tắt lại việc họ sẽ làm, hoặc hỏi một câu mở về chỗ dễ vướng."
+          ],
+          "body": "\nPhần lớn sự cố trong nhóm học tập và nơi làm việc không phải do ai đó cố tình, mà do **một thông điệp đã được phát đi và được hiểu thành thứ khác**. Bài này mổ xẻ chỗ hỏng đó.\n\n## Sáu thành phần của một quá trình giao tiếp\n\n![Sơ đồ mô hình truyền thông Shannon–Weaver bằng tiếng Việt, gồm nguồn thông tin, bộ truyền tin, tín hiệu, nguồn tiếng ồn, bên nhận và nơi đến](https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Shannon-Weaver_model_of_communication_vi.svg/1280px-Shannon-Weaver_model_of_communication_vi.svg.png \"Mô hình Shannon–Weaver: thông điệp đi từ nguồn qua bộ truyền tin thành tín hiệu, chịu tác động của nhiễu trên đường truyền, rồi được bên nhận giải mã. Hình: [File:Shannon-Weaver model of communication vi.svg](https://commons.wikimedia.org/wiki/File:Shannon-Weaver_model_of_communication_vi.svg), tác giả Thuyhung2112, giấy phép CC0.\")\n\n| Thành phần | Nghĩa | Chỗ hay hỏng |\n|---|---|---|\n| Người gửi | Người có ý muốn truyền đạt | Bản thân ý nghĩ chưa rõ với chính người gửi |\n| Mã hoá | Chuyển ý thành lời, chữ, cử chỉ | Chọn từ mà người nhận không dùng: biệt ngữ, viết tắt |\n| Thông điệp và kênh | Nội dung và đường truyền: gặp mặt, gọi, nhắn, email | Kênh không hợp với nội dung (xem bài 5.3) |\n| Nhiễu | Mọi thứ làm sai lệch tín hiệu | Ồn, mệt, định kiến, từ đa nghĩa |\n| Giải mã | Người nhận chuyển tín hiệu thành ý nghĩa | Giải mã theo kinh nghiệm riêng, không theo ý người gửi |\n| Phản hồi | Tín hiệu ngược lại cho người gửi | Thiếu hẳn, hoặc chỉ là cái gật đầu cho xong |\n\n**Giải mã** là bước đáng chú ý nhất: nó xảy ra khi người nhận chuyển các tín hiệu tiếp nhận được thành ý nghĩa — và họ làm việc đó bằng vốn từ, kinh nghiệm và tâm trạng của **họ**, không phải của bạn. Vì vậy một câu hoàn toàn rõ ràng với người gửi vẫn có thể ra một nghĩa khác ở đầu kia.\n\n> [!ghi-nho] Thông điệp tồn tại ở dạng người kia hiểu, không phải dạng bạn phát ra. Câu \"tôi nói rồi mà\" không kết thúc được vấn đề nào.\n\n## Một chiều và hai chiều\n\n| | Một chiều | Hai chiều |\n|---|---|---|\n| Dòng chảy | Chỉ đi từ người gửi tới người nhận | Có phản hồi đi ngược lại và người gửi điều chỉnh theo |\n| Ví dụ | Thông báo dán bảng tin, email gửi rồi thôi | Trao đổi có hỏi lại, có xác nhận, có điều chỉnh |\n| Tốc độ | Nhanh hơn | Chậm hơn |\n| Độ chính xác | Thấp hơn, dễ hiểu sai | Cao hơn |\n| Hợp với | Thông tin đơn giản, số đông | Việc phức tạp, nhạy cảm, cần cam kết |\n\nGiao tiếp được gọi là quá trình hai chiều vì **vai người gửi và người nhận liên tục đổi chỗ**: bạn nói, người kia nhíu mày — cái nhíu mày đó đã là một thông điệp gửi ngược lại, và nếu bạn đọc được nó thì bạn sửa cách diễn đạt ngay câu sau. Người giao tiếp tốt không phải người nói hay; đó là người **đọc phản hồi và điều chỉnh nhanh**.\n\n> [!vi-du] Trong buổi họp nhóm, Vy trình bày kế hoạch phân công trong tám phút, không dừng lại lần nào, kết thúc bằng câu \"mọi người rõ chưa?\" Cả nhóm gật. Ba ngày sau, hai phần việc không ai làm vì mỗi người tưởng người kia nhận. Buổi họp ấy là giao tiếp **một chiều có gật đầu** — hình thức phổ biến nhất của việc tưởng đã trao đổi xong.\n\n## Bốn loại nhiễu\n\n| Loại nhiễu | Biểu hiện | Cách giảm |\n|---|---|---|\n| Vật lý | Ồn, mạng lag, tiếng vọng, tin nhắn trôi | Đổi chỗ, đổi kênh, gửi lại bản viết sau cuộc gọi |\n| Ngữ nghĩa | Từ đa nghĩa, biệt ngữ, viết tắt, \"sớm nhất có thể\" | Dùng từ đời thường; thay từ mơ hồ bằng con số và ngày giờ |\n| Tâm sinh lý | Mệt, đói, buồn ngủ, ốm, đau | Dời cuộc trao đổi quan trọng sang lúc tỉnh táo |\n| Tâm lý – xã hội | Định kiến sẵn có, ngại nói với người có quyền, cảm xúc đang mạnh | Tạo chỗ an toàn để hỏi; tách người khỏi vấn đề; hạ nhiệt trước khi bàn tiếp |\n\nNhiễu **ngữ nghĩa** là loại đắt nhất trong công việc vì nó không lộ ra ngay: hai bên đều tin mình hiểu đúng. \"Gửi sớm nhé\" có thể là chiều nay với người này và cuối tuần với người kia — và không ai thấy có gì cần hỏi lại.\n\n> [!meo] Quy tắc rẻ tiền: mọi từ chỉ thời gian, số lượng và mức độ đều phải đổi thành con số. Không viết \"sớm\", viết \"trước 16h thứ năm\". Không viết \"làm kỹ vào\", viết \"kiểm lại ba mục: số liệu, chính tả, định dạng\".\n\n## Xác nhận ý hiểu\n\nCâu \"mọi người rõ chưa\" là câu hỏi tệ nhất trong giao tiếp công việc: nó gợi ý câu trả lời (rõ), và ai chưa rõ thì lại càng ngại nói vì sợ bị coi là chậm hiểu. Ba kỹ thuật thay thế:\n\n1. **Nhờ tóm tắt lại.** \"Để chắc mình nói đủ, bạn tóm tắt giúp mình phần bạn sẽ làm và hạn nộp nhé.\" Đây là kỹ thuật mạnh nhất vì nó buộc thông tin phải đi ngược lại bằng lời của người nghe.\n2. **Hỏi câu mở, không hỏi câu đóng.** Thay vì \"có ai thắc mắc gì không\", hỏi \"theo bạn, phần nào dễ vướng nhất khi làm?\"\n3. **Diễn đạt lại — khi bạn là người nhận.** \"Mình hiểu là em cần bản nháp trước thứ tư để kịp gửi khoa, đúng không ạ?\" Câu này vừa xác nhận vừa cho người kia cơ hội sửa mà không ai mất mặt.\n\n> [!vi-du] Khi nhận nhiệm vụ từ giảng viên mà chưa chắc mình hiểu đúng, cách phản hồi tốt không phải im lặng rồi tự đoán, cũng không phải hỏi \"thầy nói lại được không ạ\". Câu dùng được: \"Em hiểu là bài này cần phân tích hai trường hợp và nộp bản in trước thứ sáu — em hiểu đúng chưa ạ?\" Nếu bạn hiểu đúng, mất năm giây. Nếu sai, bạn vừa tiết kiệm được cả tuần làm nhầm hướng.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nNhớ lại một lần gần đây bạn và người khác hiểu khác nhau về cùng một việc. Viết ra: thông điệp gốc là gì, nó được mã hoá thành lời như thế nào, người kia giải mã ra nghĩa gì, và loại nhiễu nào đã xen vào. Cuối cùng viết lại thông điệp gốc ấy theo quy tắc đổi mọi từ mơ hồ thành con số và ngày giờ.\n\n### Nhóm 3–4 người (25 phút)\n\nTrò chơi truyền tin: người thứ nhất nhận một đoạn hướng dẫn ba câu có chứa hai con số và một điều kiện, đọc thầm rồi kể lại cho người thứ hai, cứ thế tới người cuối. So bản cuối với bản gốc. Cả nhóm phân tích: chi tiết nào rơi trước, chi tiết nào bị đổi, và ở khâu nào một câu xác nhận ý hiểu sẽ chặn được sai lệch.\n\n### Bài tập về nhà (45 phút)\n\nTrong tuần, hãy dùng kỹ thuật nhờ tóm tắt lại hoặc diễn đạt lại ít nhất ba lần: một lần khi nhận việc, một lần khi giao việc, một lần trong đời sống ngoài học tập. Ghi lại mỗi lần hai dòng: câu bạn đã dùng và điều bạn phát hiện ra nhờ nó. Cuối cùng viết một đoạn: lần nào cho thấy có sai lệch, và nếu không xác nhận thì hậu quả sẽ là gì.\n\n### Xem thêm\n\n- 🎬 [10 Ways to Have a Better Conversation](https://www.youtube.com/watch?v=R1vskiVDwl4) — Celeste Headlee, TED, 11 phút. Các nguyên tắc thực hành cho giao tiếp hai chiều, đặc biệt là phần hỏi câu mở.\n\n### Nguồn tham khảo\n\n- Shannon, C. E., & Weaver, W. (1949). *The Mathematical Theory of Communication.* Urbana: University of Illinois Press.\n- Berlo, D. K. (1960). *The Process of Communication.* New York: Holt, Rinehart & Winston.\n- Schramm, W. (1954). How communication works. In W. Schramm (Ed.), *The Process and Effects of Mass Communication.* Urbana: University of Illinois Press.\n- Clark, H. H., & Brennan, S. E. (1991). Grounding in communication. In *Perspectives on Socially Shared Cognition* (pp. 127–149). Washington: APA.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "5.1-giai-ma",
+                "type": "mcq",
+                "prompt": "Trong quá trình giao tiếp, giai đoạn giải mã thông điệp diễn ra khi nào?",
+                "explanation": "Giải mã là khi người nhận chuyển các tín hiệu đã tiếp nhận thành ý nghĩa, dựa trên vốn từ, kinh nghiệm và trạng thái của chính họ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Khi người nhận chuyển các tín hiệu đã tiếp nhận thành ý nghĩa theo kinh nghiệm của chính họ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khi người gửi chọn từ ngữ để diễn đạt ý của mình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khi thông điệp được truyền qua kênh tới người nhận",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Khi người nhận gửi phản hồi trở lại người gửi",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "5.1-hai-chieu",
+                "type": "mcq",
+                "prompt": "Trong một cuộc trò chuyện hai người, biểu hiện nào thể hiện rõ nhất nguyên tắc giao tiếp hai chiều?",
+                "explanation": "Hai chiều nghĩa là có phản hồi đi ngược lại và người nói điều chỉnh theo phản hồi đó — không chỉ là thay nhau nói.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Người nói quan sát phản ứng của người nghe, hỏi lại và điều chỉnh cách diễn đạt ngay trong lúc nói",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Người nói trình bày trọn vẹn ý của mình rồi mới để người kia nói",
+                    "isCorrect": false,
+                    "misconception": "knm.sent-equals-received"
+                  },
+                  {
+                    "label": "Hai người thay nhau nói với thời lượng bằng nhau",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người nghe gật đầu liên tục để thể hiện mình đang nghe",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-means-understood"
+                  }
+                ]
+              },
+              {
+                "key": "5.1-nhieu",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với loại nhiễu tương ứng.",
+                "explanation": "Nhiễu vật lý đến từ môi trường và kênh; nhiễu ngữ nghĩa từ cách dùng từ; nhiễu tâm sinh lý từ trạng thái cơ thể; nhiễu tâm lý – xã hội từ định kiến và quan hệ quyền lực.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Họp online mạng lag, câu được câu mất",
+                    "right": "Nhiễu vật lý"
+                  },
+                  {
+                    "left": "Trưởng nhóm dặn gửi sớm, mỗi người hiểu một mốc khác nhau",
+                    "right": "Nhiễu ngữ nghĩa"
+                  },
+                  {
+                    "left": "Nghe phổ biến quy chế lúc đang đói và buồn ngủ",
+                    "right": "Nhiễu tâm sinh lý"
+                  },
+                  {
+                    "left": "Không dám hỏi lại vì ngại người hướng dẫn đánh giá là chậm hiểu",
+                    "right": "Nhiễu tâm lý – xã hội"
+                  }
+                ]
+              },
+              {
+                "key": "5.1-xac-nhan-y-hieu",
+                "type": "mcq",
+                "prompt": "Sau khi hướng dẫn nhóm cách thực hiện một nhiệm vụ mới, bạn muốn kiểm tra xem mọi người đã hiểu đúng chưa. Cách nào hiệu quả nhất?",
+                "explanation": "Câu hỏi rõ chưa gợi ý sẵn câu trả lời. Nhờ người nghe tóm tắt lại phần việc và hạn nộp bằng lời của họ mới cho thấy thông tin đã tới nơi hay chưa.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nhờ một vài người tóm tắt lại phần việc của họ và hạn nộp bằng lời của chính họ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hỏi cả nhóm mọi người rõ chưa và chờ mọi người gật đầu",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-means-understood"
+                  },
+                  {
+                    "label": "Gửi lại toàn bộ hướng dẫn qua tin nhắn cho chắc",
+                    "isCorrect": false,
+                    "misconception": "knm.sent-equals-received"
+                  },
+                  {
+                    "label": "Nhắc lại một lần nữa thật chậm và rõ ràng",
+                    "isCorrect": false,
+                    "misconception": "knm.sent-equals-received"
+                  }
+                ]
+              },
+              {
+                "key": "5.1-nhan-viec-chua-ro",
+                "type": "mcq",
+                "prompt": "Bạn nhận nhiệm vụ từ giảng viên nhưng chưa chắc mình hiểu đúng yêu cầu. Cách phản hồi phù hợp nhất là gì?",
+                "explanation": "Diễn đạt lại yêu cầu bằng lời của mình rồi xin xác nhận vừa kiểm được cách hiểu, vừa không đẩy người kia vào thế phải giảng lại từ đầu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Diễn đạt lại yêu cầu bằng lời của mình kèm mốc thời gian, rồi hỏi em hiểu đúng chưa ạ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Im lặng làm theo cách mình đoán, sai thì sửa sau",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-means-understood"
+                  },
+                  {
+                    "label": "Hỏi lại thầy nói lại từ đầu được không ạ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hỏi bạn cùng lớp xem họ hiểu thế nào rồi làm theo",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "5.1-mo-ho-thanh-so",
+                "type": "mcq",
+                "prompt": "Câu nhắn nào giảm nhiễu ngữ nghĩa tốt nhất?",
+                "explanation": "Từ chỉ thời gian, số lượng và mức độ phải được đổi thành con số và mốc cụ thể, vì mỗi người giải mã các từ mơ hồ theo một cách khác nhau.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Gửi mình bản nháp phần 2 trước 16h thứ năm, khoảng 2 trang, có bảng số liệu là được",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Gửi mình bản nháp sớm nhất có thể nhé, làm kỹ vào",
+                    "isCorrect": false,
+                    "misconception": "knm.jargon-professional"
+                  },
+                  {
+                    "label": "Cứ deadline mà làm, tuần này nhé",
+                    "isCorrect": false,
+                    "misconception": "knm.jargon-professional"
+                  },
+                  {
+                    "label": "Nhớ gửi đúng format như lần trước",
+                    "isCorrect": false,
+                    "misconception": "knm.jargon-professional"
+                  }
+                ]
+              },
+              {
+                "key": "5.1-viet-nhieu",
+                "type": "essay",
+                "prompt": "Nhớ lại một lần bạn và người khác hiểu khác nhau về cùng một việc. Viết 150–250 từ: (a) thông điệp gốc và cách nó được diễn đạt; (b) người kia đã giải mã thành nghĩa gì; (c) loại nhiễu nào đã xen vào; (d) viết lại thông điệp ấy sao cho mọi từ mơ hồ được thay bằng con số hoặc mốc thời gian.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 5.2 · Phi ngôn ngữ và ấn tượng ban đầu",
+          "durationMin": 45,
+          "description": "Bảy kênh phi ngôn ngữ và điều mỗi kênh nói lên; quy tắc 7–38–55 bị dùng sai như thế nào; khoảng cách giao tiếp theo Hall; và cách đọc tín hiệu theo cụm thay vì đoán từng cử chỉ.",
+          "objectives": [
+            "Kể được các kênh phi ngôn ngữ và nêu ví dụ mỗi kênh trong bối cảnh học tập, công việc",
+            "Nêu đúng phạm vi áp dụng của quy tắc 7–38–55 và chỉ ra cách nó bị dùng sai",
+            "Chọn được khoảng cách phù hợp cho các tình huống giao tiếp thông thường",
+            "Đọc tín hiệu phi ngôn ngữ theo cụm và kiểm lại bằng câu hỏi thay vì kết luận vội"
+          ],
+          "summary": [
+            "Phi ngôn ngữ gồm nét mặt, ánh mắt, cử chỉ, tư thế, khoảng cách, giọng điệu và cả trang phục, thời gian — chúng truyền thái độ và cảm xúc mạnh hơn lời nói.",
+            "Quy tắc 7–38–55 chỉ nói về việc truyền đạt thái độ khi lời nói mâu thuẫn với giọng và nét mặt; nó không có nghĩa nội dung chỉ đáng 7 phần trăm.",
+            "Khoảng cách giao tiếp có bốn vùng; chọn sai vùng gây khó chịu ngay cả khi lời nói hoàn toàn đúng mực.",
+            "Một cử chỉ đơn lẻ không kết luận được gì: đọc theo cụm, đặt trong bối cảnh, rồi kiểm bằng một câu hỏi."
+          ],
+          "body": "\nBài trước nói về thông điệp bằng lời. Nhưng ngay cả khi bạn không nói gì, bạn vẫn đang phát tín hiệu — và người đối diện vẫn đang giải mã chúng.\n\n## Các kênh phi ngôn ngữ\n\n| Kênh | Truyền tải điều gì | Ví dụ đáng chú ý |\n|---|---|---|\n| Nét mặt | Cảm xúc tức thời | Nhíu mày khi nghe góp ý: có thể là chưa hiểu, có thể là không đồng ý — cần hỏi mới biết |\n| Ánh mắt | Mức độ chú ý và sự tham gia | Người nói nhìn vào mắt người nghe để biết họ còn theo kịp hay đã trôi đi |\n| Cử chỉ tay | Nhấn mạnh, mô tả | Tay mở hướng lên gợi cởi mở; tay chỉ thẳng vào người dễ bị đọc là công kích |\n| Tư thế | Mức độ quan tâm, trạng thái | Hơi nghiêng người về phía trước thường gợi sự chú ý và quan tâm |\n| Khoảng cách | Mức độ thân mật, tôn trọng ranh giới | Đứng quá gần trong bối cảnh công việc gây khó chịu ngay lập tức |\n| Giọng và ngữ điệu | Thái độ đi kèm lời nói | Cùng câu \"được thôi\" nói bằng hai ngữ điệu cho hai nghĩa trái ngược |\n| Ngoại hình, trang phục, thời gian | Mức độ nghiêm túc và tôn trọng | Đến muộn mười phút là một thông điệp, dù không ai nói ra |\n\nNgữ điệu thể hiện chủ yếu qua **cao độ, âm lượng, tốc độ và chỗ ngắt nghỉ**. Đây cũng là kênh mà giao tiếp qua tin nhắn đánh mất hoàn toàn — lý do khiến một câu nhắn ngắn rất dễ bị đọc thành lạnh lùng.\n\n> [!vi-du] Trong cuộc họp nhóm, một thành viên khoanh tay, ngồi lùi ra sau và ít nhìn vào ai. Cách hiểu vội: bạn ấy phản đối. Cách hiểu đúng quy trình: đây là **một cụm dấu hiệu đáng chú ý**, nhưng nó có ít nhất bốn cách giải thích — không đồng ý, đang lạnh, đang mệt, hoặc thấy phần đang bàn không liên quan tới mình. Việc cần làm là hỏi một câu mở: \"Phần này liên quan tới phần việc của bạn, bạn thấy chỗ nào khó làm nhất?\"\n\n## 7–38–55: quy tắc bị dùng sai nhiều nhất\n\nCon số quen thuộc — 7% nội dung lời nói, 38% giọng điệu, 55% nét mặt và cử chỉ — đến từ nghiên cứu của Albert Mehrabian. Nhưng phạm vi của nó hẹp hơn nhiều so với cách nó được trích:\n\n- Nó nói về việc truyền đạt **thái độ và cảm xúc**, không nói về mọi loại thông điệp.\n- Nó áp dụng cho tình huống **lời nói mâu thuẫn với giọng điệu và nét mặt** — khi đó người nghe tin vào phần phi ngôn ngữ.\n- Nó **không** có nghĩa là nội dung bạn nói chỉ đáng 7 phần trăm. Với một hướng dẫn kỹ thuật, một bản báo cáo hay một cuộc trao đổi về số liệu, nội dung vẫn là phần chính.\n\n> [!canh-bao] Nếu ai đó nói \"nội dung chỉ chiếm 7%, quan trọng là thần thái\", hãy hỏi lại: 7% của cái gì, trong tình huống nào. Đây là một ví dụ tốt để luyện đúng thứ đã học ở module 3 — một con số có thật, bị kéo ra khỏi phạm vi gốc và dùng cho mọi chuyện.\n\nCách phát biểu đúng và vẫn dùng được: **khi lời nói và tín hiệu phi ngôn ngữ không khớp nhau, người nghe tin tín hiệu phi ngôn ngữ.** Nói \"anh không giận đâu\" bằng giọng cộc lốc thì không ai tin vế lời.\n\n## Khoảng cách giao tiếp\n\n![Sơ đồ bốn vùng khoảng cách giao tiếp: thân mật, cá nhân, xã hội và công cộng](https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Personal_Space.svg/1280px-Personal_Space.svg.png \"Bốn vùng khoảng cách theo Edward T. Hall: thân mật dưới 0,45 m; cá nhân 0,45–1,2 m; xã hội 1,2–3,6 m; công cộng từ 3,6 m trở lên. Các con số này mô tả chuẩn mực Bắc Mỹ giữa thế kỷ 20 và thay đổi theo văn hoá. Hình: [File:Personal Space.svg](https://commons.wikimedia.org/wiki/File:Personal_Space.svg), tác giả WebHamster, giấy phép CC BY-SA 3.0.\")\n\nVới giao tiếp xã hội và công việc thông thường — bắt tay, chào hỏi, trao đổi ngắn — khoảng cách phù hợp nằm ở **vùng cá nhân, quãng một cánh tay**. Gần hơn gây khó chịu, xa hơn thành lạnh nhạt hoặc phải nói to. Trong phòng họp, ngồi đối diện thẳng gợi thế đối đầu, ngồi chếch một góc dễ trao đổi hơn.\n\nQuan trọng: **các con số này không phổ quát**. Chúng thay đổi theo văn hoá, theo giới, theo mức độ quen biết và theo cả thế hệ. Khi làm việc với người từ bối cảnh khác, cách an toàn là quan sát và giữ khoảng cách tương ứng với họ.\n\n## Đọc tín hiệu mà không đoán mò\n\nBa quy tắc để không biến việc đọc phi ngôn ngữ thành trò bói:\n\n1. **Đọc theo cụm, không đọc đơn lẻ.** Một cử chỉ đơn lẻ hầu như không có nghĩa. Ba dấu hiệu cùng chiều mới đáng chú ý.\n2. **Đặt trong bối cảnh.** Người siết chặt tay và gõ chân liên tục có thể đang căng thẳng — hoặc đang vội vì kẹt lịch. Phòng lạnh thì ai cũng khoanh tay.\n3. **Kiểm bằng câu hỏi, đừng kết luận trong đầu.** \"Mình thấy bạn hơi trầm từ nãy, có phải phần này chưa ổn không?\" Một câu hỏi phá được cả chuỗi suy diễn — đúng thao tác tụt thang suy luận ở bài 3.1.\n\n**Ấn tượng ban đầu** hình thành rất nhanh và chịu ảnh hưởng mạnh của phi ngôn ngữ: vẻ mặt, ánh mắt, cái bắt tay, trang phục phù hợp bối cảnh, và việc bạn có đến đúng giờ hay không. Nó không quyết định tất cả, nhưng nó quyết định người kia sẽ **giải mã những gì bạn nói sau đó theo hướng nào** — nên đầu tư vào vài phút đầu là đầu tư rẻ.\n\n> [!vi-du] Trong buổi gặp khách hàng đầu tiên, thứ tạo thiện cảm không phải câu chào hoa mỹ mà là chuỗi việc nhỏ: đến sớm năm phút, tắt thông báo điện thoại, nhớ và gọi đúng tên người đối diện, ngồi hơi nghiêng về phía trước khi họ nói, và ghi chép khi họ nêu yêu cầu. Không việc nào cần năng khiếu; tất cả đều là lựa chọn.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nQuay một đoạn video 60 giây bạn tự trình bày một ý bất kỳ (chỉ mình bạn xem). Xem lại hai lần: lần một tắt tiếng, chỉ quan sát nét mặt, ánh mắt, tư thế, tay; lần hai chỉ nghe tiếng, chú ý tốc độ, âm lượng và chỗ ngắt nghỉ. Ghi ra hai điều bạn muốn giữ và một điều bạn muốn đổi.\n\n### Nhóm 3–4 người (25 phút)\n\nBài tập mâu thuẫn tín hiệu: mỗi người nói câu \"Mình hoàn toàn ổn với phương án này\" ba lần, với ba tổ hợp phi ngôn ngữ khác nhau (đồng thuận thật, miễn cưỡng, phản đối nhưng ngại nói). Nhóm đoán và nêu **cụm dấu hiệu** nào dẫn tới phán đoán đó. Rút ra: dấu hiệu nào ổn định giữa nhiều người, dấu hiệu nào chỉ đúng với một người.\n\n### Bài tập về nhà (45 phút)\n\nTrong một buổi họp hoặc buổi học nhóm, quan sát một người và ghi lại ba lần bạn định kết luận điều gì đó từ tín hiệu phi ngôn ngữ của họ. Với mỗi lần: viết ra cụm dấu hiệu bạn thấy, kết luận vội của bạn, hai cách giải thích khác, và câu hỏi bạn đã hoặc sẽ dùng để kiểm. Nộp kèm nhận xét: bao nhiêu lần kết luận vội của bạn hoá ra sai.\n\n### Xem thêm\n\n- 🎬 [How to Speak So That People Want to Listen](https://www.youtube.com/watch?v=eIho2S0ZahI) — Julian Treasure, TED, 9 phút. Tập trung vào giọng: cao độ, âm lượng, tốc độ, chỗ ngắt — kênh hay bị bỏ quên nhất.\n- 🎬 [10 Ways to Have a Better Conversation](https://www.youtube.com/watch?v=R1vskiVDwl4) — Celeste Headlee, TED, 11 phút.\n\n### Nguồn tham khảo\n\n- Mehrabian, A. (1971). *Silent Messages.* Belmont: Wadsworth — nguồn gốc của tỉ lệ 7–38–55 cùng phạm vi áp dụng hẹp của nó.\n- Hall, E. T. (1966). *The Hidden Dimension.* New York: Doubleday — bốn vùng khoảng cách giao tiếp.\n- Knapp, M. L., Hall, J. A., & Horgan, T. G. (2013). *Nonverbal Communication in Human Interaction* (8th ed.). Boston: Cengage.\n- Ambady, N., & Rosenthal, R. (1992). Thin slices of expressive behavior as predictors of interpersonal consequences. *Psychological Bulletin*, 111(2), 256–274.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "5.2-mehrabian",
+                "type": "mcq",
+                "prompt": "Phát biểu nào đúng về quy tắc 7–38–55 của Albert Mehrabian?",
+                "explanation": "Nghiên cứu gốc nói về truyền đạt thái độ và cảm xúc trong tình huống lời nói mâu thuẫn với giọng điệu và nét mặt — không nói rằng nội dung chỉ đáng 7 phần trăm trong mọi giao tiếp.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nó áp dụng cho việc truyền đạt thái độ, cảm xúc khi lời nói mâu thuẫn với giọng điệu và nét mặt",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nó chứng minh nội dung lời nói chỉ chiếm 7% hiệu quả của mọi cuộc giao tiếp",
+                    "isCorrect": false,
+                    "misconception": "knm.mehrabian-93"
+                  },
+                  {
+                    "label": "Nó cho thấy khi thuyết trình chuyên môn thì thần thái quan trọng hơn nội dung",
+                    "isCorrect": false,
+                    "misconception": "knm.mehrabian-93"
+                  },
+                  {
+                    "label": "Nó áp dụng cho giao tiếp qua tin nhắn và email",
+                    "isCorrect": false,
+                    "misconception": "knm.mehrabian-93"
+                  }
+                ]
+              },
+              {
+                "key": "5.2-khoanh-tay",
+                "type": "mcq",
+                "prompt": "Trong cuộc họp nhóm, một thành viên khoanh tay, ngồi lùi ra sau và ít giao tiếp bằng mắt. Cách hiểu phù hợp nhất là gì?",
+                "explanation": "Cụm dấu hiệu này đáng chú ý nhưng có nhiều cách giải thích; việc cần làm là kiểm bằng một câu hỏi mở thay vì kết luận trong đầu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đây là một cụm dấu hiệu đáng chú ý nhưng chưa đủ để kết luận; nên hỏi một câu mở để kiểm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chắc chắn bạn ấy đang phản đối phương án đang bàn",
+                    "isCorrect": false,
+                    "misconception": "knm.single-cue-decoding"
+                  },
+                  {
+                    "label": "Khoanh tay luôn là dấu hiệu phòng thủ, không cần hỏi thêm",
+                    "isCorrect": false,
+                    "misconception": "knm.single-cue-decoding"
+                  },
+                  {
+                    "label": "Không cần để ý, phi ngôn ngữ không đáng tin",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "5.2-khoang-cach",
+                "type": "mcq",
+                "prompt": "Khi bắt tay và trao đổi ngắn trong bối cảnh công việc thông thường, khoảng cách nào thường phù hợp?",
+                "explanation": "Vùng cá nhân, khoảng một cánh tay (chừng 0,45–1,2 m), là khoảng phù hợp cho phần lớn giao tiếp xã hội và công việc; gần hơn gây khó chịu, xa hơn thành lạnh nhạt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vùng cá nhân, khoảng một cánh tay",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vùng thân mật, dưới nửa mét",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vùng công cộng, trên ba mét rưỡi",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có khác biệt, khoảng cách nào cũng như nhau",
+                    "isCorrect": false,
+                    "misconception": "knm.culture-universal"
+                  }
+                ]
+              },
+              {
+                "key": "5.2-noi-kenh",
+                "type": "matching",
+                "prompt": "Nối mỗi biểu hiện với kênh phi ngôn ngữ tương ứng.",
+                "explanation": "Mỗi kênh truyền một loại thông tin khác nhau; nhận ra kênh giúp ta biết nên điều chỉnh cái gì.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Cao độ, âm lượng, tốc độ nói và chỗ ngắt nghỉ",
+                    "right": "Ngữ điệu"
+                  },
+                  {
+                    "left": "Hơi nghiêng người về phía trước khi người kia nói",
+                    "right": "Tư thế"
+                  },
+                  {
+                    "left": "Đến muộn mười phút mà không báo trước",
+                    "right": "Cách dùng thời gian"
+                  },
+                  {
+                    "left": "Đứng cách người đối diện chừng một cánh tay",
+                    "right": "Khoảng cách"
+                  }
+                ]
+              },
+              {
+                "key": "5.2-an-tuong-ban-dau",
+                "type": "mcq",
+                "prompt": "Trong buổi gặp đầu tiên với đối tác hoặc khách hàng, cách nào tạo thiện cảm hiệu quả nhất?",
+                "explanation": "Ấn tượng ban đầu được xây bằng những việc nhỏ có thể chủ động làm: đúng giờ, tập trung, nhớ tên, lắng nghe và ghi chép — không cần năng khiếu nào.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đến sớm vài phút, tắt thông báo, gọi đúng tên người đối diện, ghi chép khi họ nêu yêu cầu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chuẩn bị sẵn vài câu chào thật ấn tượng và hài hước",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nói nhiều để thể hiện sự tự tin và hiểu biết",
+                    "isCorrect": false,
+                    "misconception": "knm.assertive-is-aggressive"
+                  },
+                  {
+                    "label": "Dùng nhiều thuật ngữ chuyên ngành cho thấy mình chuyên nghiệp",
+                    "isCorrect": false,
+                    "misconception": "knm.jargon-professional"
+                  }
+                ]
+              },
+              {
+                "key": "5.2-mau-thuan-tin-hieu",
+                "type": "mcq",
+                "prompt": "Một người nói mình hoàn toàn ổn với phương án, nhưng giọng cộc lốc và không nhìn ai. Nên hiểu thế nào?",
+                "explanation": "Khi lời nói mâu thuẫn với tín hiệu phi ngôn ngữ, người nghe tin phần phi ngôn ngữ — và việc cần làm là mở đường cho người kia nói thật.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nhiều khả năng có điều chưa nói ra; nên tạo cơ hội an toàn để họ nêu ý kiến thật",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nên tin lời nói vì đó mới là điều họ chính thức phát biểu",
+                    "isCorrect": false,
+                    "misconception": "knm.sent-equals-received"
+                  },
+                  {
+                    "label": "Nên kết luận ngay là họ phản đối và bỏ phương án",
+                    "isCorrect": false,
+                    "misconception": "knm.single-cue-decoding"
+                  },
+                  {
+                    "label": "Nên bỏ qua vì cảm xúc cá nhân không liên quan tới công việc",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "5.2-viet-quan-sat",
+                "type": "essay",
+                "prompt": "Trong một buổi học nhóm hoặc cuộc họp, ghi lại một lần bạn định kết luận điều gì đó từ tín hiệu phi ngôn ngữ của người khác. Viết 150–250 từ: (a) cụm dấu hiệu bạn quan sát được; (b) kết luận vội của bạn; (c) hai cách giải thích khác cho cùng cụm dấu hiệu ấy; (d) câu hỏi bạn dùng để kiểm và kết quả.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 5.3 · Chọn kênh và viết cho người đọc",
+          "durationMin": 50,
+          "description": "Chọn kênh theo độ phức tạp và độ nhạy cảm; viết email dùng được với nguyên tắc ý chính lên đầu; công thức cho bốn tình huống khó — giao việc, nhận việc, tin xấu, khiếu nại; và ranh giới giữa quyết đoán, thụ động, hung hăng.",
+          "objectives": [
+            "Chọn được kênh phù hợp cho một nội dung cụ thể và giải thích được lý do",
+            "Viết được email công việc có ý chính lên đầu, hành động rõ và mốc thời gian",
+            "Áp dụng được công thức cho tình huống báo tin xấu và trả lời khiếu nại",
+            "Phân biệt được ứng xử quyết đoán với thụ động và hung hăng"
+          ],
+          "summary": [
+            "Kênh chọn theo nội dung, không theo thói quen: việc phức tạp hoặc nhạy cảm thì gặp hoặc gọi, việc cần lưu vết thì viết, việc ngắn và không gấp thì nhắn.",
+            "Email dùng được có bốn phần: tiêu đề nói rõ việc, ý chính ngay câu đầu, chi tiết vừa đủ, và một dòng hành động kèm hạn.",
+            "Tin xấu nói sớm, rõ, ngắn — rồi mới tới bối cảnh và phương án; vòng vo chỉ kéo dài phần khó chịu và làm mất niềm tin.",
+            "Quyết đoán có hai vế cùng lúc: nói rõ nhu cầu của mình và ghi nhận nhu cầu của người kia; thiếu vế đầu là thụ động, thiếu vế sau là hung hăng."
+          ],
+          "body": "\nHai bài trước nói về cách thông điệp được hiểu. Bài này về hai quyết định thực tế nhất: **gửi bằng kênh nào** và **viết ra sao**.\n\n## Chọn kênh theo nội dung\n\n| Kênh | Hợp với | Không hợp với |\n|---|---|---|\n| Gặp trực tiếp | Việc phức tạp, nhạy cảm, cần thương lượng hoặc cần đọc phản ứng | Thông tin đơn giản chỉ cần thông báo |\n| Gọi điện, gọi video | Việc cần trao đổi qua lại ngay, cần nghe giọng | Nội dung dài cần tra lại về sau |\n| Email | Việc cần lưu vết, có nhiều chi tiết, người nhận đọc khi thuận tiện | Việc gấp trong vài giờ; tranh luận đang căng |\n| Tin nhắn | Câu hỏi ngắn, xác nhận nhanh, việc gấp | Tin xấu, phản hồi tiêu cực, nội dung nhiều chi tiết |\n\nHai tiêu chí quyết định: **độ phức tạp** (càng phức tạp càng cần kênh giàu, cho phép hỏi đáp ngay) và **độ nhạy cảm** (càng nhạy cảm càng cần kênh có giọng nói và nét mặt).\n\n> [!vi-du] Nhóm cần thống nhất nội dung một dự án mới, có nhiều chỗ chưa rõ và mỗi người hiểu một kiểu. Nhắn tin sẽ đẻ ra ba mươi tin nhắn chồng chéo; email sẽ có người đọc lướt. Kênh đúng là **gặp trực tiếp hoặc gọi video** để hỏi đáp ngay, rồi **gửi lại một email tóm tắt** những gì đã chốt kèm hạn — hai kênh cho hai việc khác nhau: bàn thì cần giàu, chốt thì cần lưu vết.\n\n> [!canh-bao] Ba tình huống hầu như luôn sai kênh: báo tin xấu bằng tin nhắn; tranh luận đang căng qua email dài; và việc gấp trong một giờ gửi bằng email rồi ngồi chờ. Nếu gấp thì gọi.\n\n## Viết email dùng được\n\nNgười đọc email công việc thường quét trong vài giây để tìm hai thứ: **việc này liên quan gì tới tôi** và **tôi phải làm gì**. Cấu trúc dưới đây đưa hai thứ đó lên trước.\n\n1. **Tiêu đề nói rõ việc và hạn** — không viết \"Hỏi chút ạ\" mà viết \"Xin xác nhận lịch thuyết trình nhóm 4 — trước 15/10\".\n2. **Câu đầu tiên là ý chính.** Đừng mở bài ba dòng rồi mới vào việc.\n3. **Chi tiết vừa đủ**, gạch đầu dòng nếu có nhiều mục.\n4. **Dòng hành động cuối**: ai làm gì, trước khi nào.\n\n:::mau Một email trước và sau khi sửa\n**Bản gốc**\n\n> Kính gửi thầy, em là sinh viên lớp thầy dạy môn Kỹ năng mềm ạ. Em viết mail này vì nhóm em đang chuẩn bị bài thuyết trình và có một số vấn đề liên quan tới lịch ạ. Nhóm em cũng đã trao đổi với nhau nhiều lần rồi nhưng chưa thống nhất được vì còn phụ thuộc vào lịch của thầy nữa ạ. Mong thầy phản hồi sớm giúp em ạ. Em cảm ơn thầy nhiều ạ.\n\n**Bản sửa** — tiêu đề: *Xác nhận lịch thuyết trình nhóm 4, lớp KNM01 — mong thầy trả lời trước 15/10*\n\n> Kính gửi thầy,\n>\n> Em là Nguyễn Văn A, nhóm trưởng nhóm 4 lớp KNM01. Em viết để xin thầy xác nhận lịch thuyết trình của nhóm.\n>\n> - Nhóm em đăng ký trình bày chủ đề *Quản lý thời gian*.\n> - Nhóm mong được xếp vào buổi **thứ năm 24/10** hoặc **thứ ba 29/10**.\n> - Nếu hai buổi trên đã kín, nhóm em nhận buổi nào còn trống ạ.\n>\n> Thầy xác nhận giúp em trước **15/10** để nhóm kịp chuẩn bị. Em cảm ơn thầy ạ.\n:::\n\n> [!meo] Với người nhận có trình độ và nền tảng khác nhau, hãy bỏ hết biệt ngữ và viết mỗi ý một câu ngắn. Nếu buộc phải dùng một thuật ngữ, giải thích ngay lần đầu xuất hiện. Dùng từ chuyên ngành với người ngoài ngành không làm bạn chuyên nghiệp hơn — nó chỉ tạo thêm nhiễu.\n\n## Bốn tình huống khó, bốn công thức\n\n**Giao việc.** Nói đủ bốn phần: kết quả mong muốn (không phải cách làm), tiêu chí đạt, hạn, và ai hỗ trợ khi vướng. Kết thúc bằng việc **nhờ người nhận tóm tắt lại** — như đã học ở bài 5.1.\n\n**Nhận việc chưa rõ.** Diễn đạt lại bằng lời của mình rồi xin xác nhận: \"Em hiểu là cần bản nháp hai trang, có bảng số liệu, trước 16h thứ năm — đúng chưa ạ?\"\n\n**Báo tin xấu.** Ba bước, theo đúng thứ tự: (1) nói thẳng chuyện gì đã xảy ra, ngắn gọn, không vòng vo; (2) nói nó ảnh hưởng tới người nghe ra sao; (3) nêu phương án và bước tiếp theo. Ví dụ: \"Ngân sách sự kiện bị cắt 30%. Nghĩa là phần quà và ăn nhẹ sẽ giảm. Mình đề xuất giữ nguyên diễn giả, đổi địa điểm sang hội trường trường — họp 15 phút chiều nay để chốt.\"\n\n**Trả lời khiếu nại gay gắt.** Tách dữ kiện khỏi giọng điệu. Ghi nhận sự việc, xin lỗi đúng phần mình sai (không xin lỗi tràn lan), nêu việc sẽ làm và mốc thời gian, rồi mời trao đổi tiếp nếu cần. Nếu đang nóng: soạn nháp, gửi sau ba mươi phút.\n\n> [!vi-du] Email khách hàng: \"Làm ăn kiểu gì mà sai hết số liệu, cả tuần nay không ai trả lời!\" Phản xạ là thanh minh. Bản chuyên nghiệp: \"Cảm ơn anh đã báo. Em xác nhận báo cáo gửi ngày 12/10 có sai ở bảng 3 — lỗi thuộc về bên em. Em gửi lại bản đúng trước 17h hôm nay và rà lại toàn bộ số liệu quý III. Về việc phản hồi chậm, em xin lỗi anh; từ nay email của anh sẽ được trả lời trong vòng một ngày làm việc.\" Không cãi giọng điệu, chỉ trả lời phần dữ kiện — và nêu việc cụ thể kèm mốc.\n\n## Quyết đoán: giữa thụ động và hung hăng\n\n| | Thụ động | Quyết đoán | Hung hăng |\n|---|---|---|---|\n| Nói gì khi bị giao thêm việc quá tải | \"Vâng ạ, em làm được\" (rồi trễ) | \"Em đang có hai việc hạn thứ năm. Nếu nhận thêm việc này, em cần lùi một trong hai — anh muốn ưu tiên việc nào?\" | \"Sao lúc nào cũng đẩy việc cho em?\" |\n| Nhu cầu của mình | Bị giấu đi | Nói rõ | Nói bằng cách trách móc |\n| Nhu cầu của người kia | Được đặt trên hết | Được ghi nhận | Bị bỏ qua |\n| Kết quả thường thấy | Quá tải, âm thầm bực | Có phương án, quan hệ giữ được | Được việc trước mắt, mất quan hệ |\n\nQuyết đoán không phải nói to hay nói cứng. Dấu hiệu của nó là **hai vế cùng có mặt trong một câu**: nêu rõ giới hạn hoặc nhu cầu của mình, và ghi nhận điều người kia đang cần. Thiếu vế đầu thì thành phục tùng; thiếu vế sau thì thành công kích.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nLấy một email hoặc tin nhắn công việc bạn đã gửi trong tháng qua và viết lại theo bốn phần: tiêu đề nói rõ việc và hạn, ý chính ở câu đầu, chi tiết gạch đầu dòng, dòng hành động kèm mốc. Đếm số từ trước và sau khi sửa — bản sửa thường ngắn hơn khoảng một phần ba mà rõ hơn hẳn.\n\n### Nhóm 3–4 người (25 phút)\n\nĐóng vai ba lượt, đổi vai mỗi lượt: (1) báo cho nhóm tin ngân sách bị cắt; (2) trả lời một email khiếu nại gay gắt (người kia đọc to email trách móc, bạn trả lời bằng lời); (3) từ chối nhận thêm việc theo kiểu quyết đoán. Người quan sát chấm theo hai câu hỏi: câu trả lời có nêu **việc cụ thể kèm mốc** không, và có **ghi nhận nhu cầu của người kia** không.\n\n### Bài tập về nhà (45–60 phút)\n\nChọn một việc thật bạn cần trao đổi trong tuần tới. Viết một trang gồm: (a) chọn kênh nào và vì sao, dựa trên độ phức tạp và độ nhạy cảm; (b) bản thảo nội dung theo cấu trúc bốn phần; (c) dự đoán hai câu hỏi hoặc phản ứng có thể gặp và cách bạn sẽ trả lời. Sau khi gửi thật, ghi thêm ba dòng: chuyện diễn ra có giống dự đoán không.\n\n### Xem thêm\n\n- 🎬 [How to Speak So That People Want to Listen](https://www.youtube.com/watch?v=eIho2S0ZahI) — Julian Treasure, TED, 9 phút.\n- 🎬 [10 Ways to Have a Better Conversation](https://www.youtube.com/watch?v=R1vskiVDwl4) — Celeste Headlee, TED, 11 phút. Đặc biệt hữu ích cho phần quyết đoán và hỏi câu mở.\n\n### Nguồn tham khảo\n\n- Daft, R. L., & Lengel, R. H. (1986). Organizational information requirements, media richness and structural design. *Management Science*, 32(5), 554–571 — cơ sở của việc chọn kênh theo độ phức tạp.\n- Alberti, R., & Emmons, M. (2017). *Your Perfect Right: Assertiveness and Equality in Your Life and Relationships* (10th ed.). Impact Publishers.\n- Patterson, K., Grenny, J., McMillan, R., & Switzler, A. (2011). *Crucial Conversations: Tools for Talking When Stakes Are High* (2nd ed.). New York: McGraw-Hill.\n- Stone, D., & Heen, S. (2014). *Thanks for the Feedback.* New York: Viking.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "5.3-chon-kenh",
+                "type": "mcq",
+                "prompt": "Nhóm cần thảo luận nội dung một dự án mới còn nhiều điểm chưa rõ. Để hạn chế hiểu sai, nên chọn kênh nào?",
+                "explanation": "Nội dung phức tạp cần kênh giàu, cho phép hỏi đáp ngay và đọc được phản ứng; sau đó chốt lại bằng văn bản để lưu vết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Gặp trực tiếp hoặc gọi video để hỏi đáp ngay, rồi gửi email tóm tắt những gì đã chốt kèm hạn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nhắn tin trong nhóm chat vì mọi người đều online",
+                    "isCorrect": false,
+                    "misconception": "knm.channel-default"
+                  },
+                  {
+                    "label": "Gửi một email dài mô tả toàn bộ rồi chờ mọi người phản hồi",
+                    "isCorrect": false,
+                    "misconception": "knm.channel-default"
+                  },
+                  {
+                    "label": "Mỗi người tự đọc tài liệu rồi làm theo cách mình hiểu",
+                    "isCorrect": false,
+                    "misconception": "knm.sent-equals-received"
+                  }
+                ]
+              },
+              {
+                "key": "5.3-email-giang-vien",
+                "type": "mcq",
+                "prompt": "Bạn cần gửi email cho giảng viên xin xác nhận lịch thuyết trình nhóm. Cách viết nào phù hợp nhất?",
+                "explanation": "Email dùng được có tiêu đề nói rõ việc và hạn, ý chính ngay câu đầu, chi tiết gọn và một dòng hành động kèm mốc thời gian.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tiêu đề nêu rõ việc và hạn; câu đầu nói ngay mục đích; liệt kê hai phương án lịch; kết bằng đề nghị xác nhận trước một ngày cụ thể",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mở đầu bằng lời chào và giới thiệu dài, nêu hoàn cảnh của nhóm rồi cuối thư mới đề nghị",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nhắn tin cho thầy vì như vậy nhanh hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.channel-default"
+                  },
+                  {
+                    "label": "Viết ngắn gọn Thầy cho em hỏi lịch thuyết trình ạ",
+                    "isCorrect": false,
+                    "misconception": "knm.jargon-professional"
+                  }
+                ]
+              },
+              {
+                "key": "5.3-tin-xau",
+                "type": "mcq",
+                "prompt": "Bạn cần truyền đạt tin xấu cho nhóm: ngân sách sự kiện bị cắt 30%. Cách giao tiếp phù hợp là gì?",
+                "explanation": "Tin xấu nói sớm, rõ và ngắn, sau đó mới nói ảnh hưởng và phương án. Nói tránh khiến người nghe đoán mò và làm mất niềm tin khi họ biết sự thật.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nói thẳng mức cắt giảm, nêu nó ảnh hưởng tới phần nào, rồi đưa phương án và mời họp ngắn để chốt",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nói tránh cho nhẹ, để mọi người dần nhận ra qua các thay đổi thực tế",
+                    "isCorrect": false,
+                    "misconception": "knm.bad-news-vague"
+                  },
+                  {
+                    "label": "Nhắn vào nhóm chat một dòng rồi thôi",
+                    "isCorrect": false,
+                    "misconception": "knm.channel-default"
+                  },
+                  {
+                    "label": "Chờ tới khi có phương án hoàn chỉnh mới thông báo, dù mất hai tuần",
+                    "isCorrect": false,
+                    "misconception": "knm.bad-news-vague"
+                  }
+                ]
+              },
+              {
+                "key": "5.3-khieu-nai",
+                "type": "mcq",
+                "prompt": "Bạn nhận email khiếu nại từ khách hàng với lời lẽ khá nặng. Cách phản hồi chuyên nghiệp là gì?",
+                "explanation": "Tách dữ kiện khỏi giọng điệu: ghi nhận sự việc, xin lỗi đúng phần mình sai, nêu việc sẽ làm kèm mốc thời gian — không đáp lại phần cảm xúc bằng cảm xúc.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Xác nhận phần sai có thật, xin lỗi đúng phần đó, nêu việc sẽ làm kèm mốc thời gian cụ thể",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giải thích ngay vì sao bên mình không có lỗi trong chuyện này",
+                    "isCorrect": false,
+                    "misconception": "knm.reply-in-anger"
+                  },
+                  {
+                    "label": "Trả lời lại với giọng tương xứng để giữ thể diện",
+                    "isCorrect": false,
+                    "misconception": "knm.reply-in-anger"
+                  },
+                  {
+                    "label": "Bỏ qua email vì lời lẽ không phù hợp để trao đổi",
+                    "isCorrect": false,
+                    "misconception": "knm.reply-in-anger"
+                  }
+                ]
+              },
+              {
+                "key": "5.3-quyet-doan",
+                "type": "mcq",
+                "prompt": "Bạn đang có hai việc hạn thứ năm thì bị giao thêm việc mới. Câu trả lời nào thể hiện tính quyết đoán?",
+                "explanation": "Quyết đoán có hai vế: nêu rõ giới hạn của mình và ghi nhận nhu cầu của người kia — ở đây là đưa lựa chọn ưu tiên thay vì nhận bừa hoặc trách móc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nêu rõ hai việc đang có hạn thứ năm và hỏi người giao muốn ưu tiên việc nào nếu nhận thêm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nhận lời ngay để giữ hoà khí rồi cố làm hết",
+                    "isCorrect": false,
+                    "misconception": "knm.assertive-is-aggressive"
+                  },
+                  {
+                    "label": "Nói thẳng rằng lúc nào cũng bị đẩy việc cho mình",
+                    "isCorrect": false,
+                    "misconception": "knm.assertive-is-aggressive"
+                  },
+                  {
+                    "label": "Im lặng nhận rồi làm chậm cả ba việc",
+                    "isCorrect": false,
+                    "misconception": "knm.saying-no-rude"
+                  }
+                ]
+              },
+              {
+                "key": "5.3-nguoi-nhan-khac-nhau",
+                "type": "mcq",
+                "prompt": "Bạn cần gửi thông báo cho một nhóm người có trình độ và kinh nghiệm khác nhau. Cách viết nào giúp thông điệp tới được nhiều người nhất?",
+                "explanation": "Bỏ biệt ngữ, mỗi ý một câu ngắn, và giải thích ngay thuật ngữ bắt buộc phải dùng. Dùng từ chuyên ngành với người ngoài ngành chỉ tạo thêm nhiễu ngữ nghĩa.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Dùng từ đời thường, mỗi ý một câu ngắn, thuật ngữ bắt buộc thì giải thích ngay lần đầu xuất hiện",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Dùng thuật ngữ chuyên ngành để thông báo trông chuyên nghiệp",
+                    "isCorrect": false,
+                    "misconception": "knm.jargon-professional"
+                  },
+                  {
+                    "label": "Viết thật dài và đầy đủ mọi chi tiết để không ai thiếu thông tin",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Viết ngắn nhất có thể, ai chưa rõ thì tự hỏi lại",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-means-understood"
+                  }
+                ]
+              },
+              {
+                "key": "5.3-noi-kenh-noi-dung",
+                "type": "matching",
+                "prompt": "Nối mỗi nội dung với kênh phù hợp nhất.",
+                "explanation": "Kênh chọn theo độ phức tạp và độ nhạy cảm của nội dung, không theo thói quen của người gửi.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Góp ý về phần việc một bạn làm chưa đạt",
+                    "right": "Gặp trực tiếp hoặc gọi"
+                  },
+                  {
+                    "left": "Chốt lại phân công và hạn nộp sau buổi họp",
+                    "right": "Email để lưu vết"
+                  },
+                  {
+                    "left": "Hỏi một câu ngắn: buổi họp mấy giờ",
+                    "right": "Tin nhắn"
+                  }
+                ]
+              },
+              {
+                "key": "5.3-viet-email",
+                "type": "essay",
+                "prompt": "Chọn một việc thật bạn cần trao đổi trong tuần tới. Viết 200–300 từ gồm: (a) bạn chọn kênh nào và vì sao, dựa trên độ phức tạp và độ nhạy cảm; (b) bản thảo nội dung theo bốn phần — tiêu đề, ý chính câu đầu, chi tiết gạch đầu dòng, dòng hành động kèm mốc; (c) hai phản ứng có thể gặp và cách bạn sẽ trả lời.",
                 "points": 5
               }
             ]
