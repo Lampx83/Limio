@@ -15,7 +15,9 @@
     "import:course": "node --env-file=../db/.env --import tsx scripts/import-course.ts",
     "import:course:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-course.ts",
     "update:lesson": "node --env-file=../db/.env --import tsx scripts/update-lesson.ts",
-    "update:lesson:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/update-lesson.ts"
+    "update:lesson:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/update-lesson.ts",
+    "attach:video": "node --env-file=../db/.env --import tsx scripts/attach-video.ts",
+    "attach:video:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/attach-video.ts"
   },
   "dependencies": {
     "@feedbackme/db": "workspace:*",

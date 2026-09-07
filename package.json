@@ -26,7 +26,9 @@
     "update:lesson": "pnpm --filter @feedbackme/core-lms update:lesson",
     "update:lesson:prod": "pnpm --filter @feedbackme/core-lms update:lesson:prod",
     "propose:misconceptions": "pnpm --filter @feedbackme/core-feedback propose:misconceptions",
-    "apply:misconceptions": "pnpm --filter @feedbackme/core-feedback apply:misconceptions"
+    "apply:misconceptions": "pnpm --filter @feedbackme/core-feedback apply:misconceptions",
+    "attach:video": "pnpm --filter @feedbackme/core-lms attach:video",
+    "attach:video:prod": "pnpm --filter @feedbackme/core-lms attach:video:prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
