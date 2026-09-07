@@ -28,7 +28,11 @@
     "propose:misconceptions": "pnpm --filter @feedbackme/core-feedback propose:misconceptions",
     "apply:misconceptions": "pnpm --filter @feedbackme/core-feedback apply:misconceptions",
     "attach:video": "pnpm --filter @feedbackme/core-lms attach:video",
-    "attach:video:prod": "pnpm --filter @feedbackme/core-lms attach:video:prod"
+    "attach:video:prod": "pnpm --filter @feedbackme/core-lms attach:video:prod",
+    "order:blocks": "pnpm --filter @feedbackme/core-lms order:blocks",
+    "order:blocks:prod": "pnpm --filter @feedbackme/core-lms order:blocks:prod",
+    "layout:lesson": "pnpm --filter @feedbackme/core-lms layout:lesson",
+    "layout:lesson:prod": "pnpm --filter @feedbackme/core-lms layout:lesson:prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

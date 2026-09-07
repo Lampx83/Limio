@@ -40,6 +40,8 @@ interface H5pPayloadType {
 
 interface VideoPayload {
   url: string;
+  title?: string;
+  caption?: string;
   transcriptUrl?: string;
   durationSec?: number;
   cuepoints?: Array<{ atSec: number; quizId: string }>;
@@ -209,6 +211,16 @@ function ContentBlock({
                 </p>
               )}
             </>
+          )}
+          {(p.title || p.caption) && (
+            <figcaption className="mt-2 border-l-2 border-token pl-3">
+              {p.title && (
+                <div className="text-body font-semibold leading-snug">{p.title}</div>
+              )}
+              {p.caption && (
+                <p className="text-meta mt-0.5 leading-relaxed text-muted">{p.caption}</p>
+              )}
+            </figcaption>
           )}
           {p.transcriptUrl && (
             <a href={p.transcriptUrl} className="link mt-2 inline-block text-sm">

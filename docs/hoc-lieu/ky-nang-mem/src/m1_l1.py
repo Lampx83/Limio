@@ -15,6 +15,7 @@ LESSON = {
         "Ba chỗ nói thật về giá trị của bạn: lịch ba tuần gần nhất, các khoản chi tự nguyện, và những lời bạn đã từ chối.",
         "Danh sách mười hai giá trị không ra được quyết định nào; phải ép xuống tối đa năm và có thứ tự thì mới dùng được lúc hai điều tốt loại trừ nhau.",
     ],
+    "splitSections": True,
     "body": r"""
 Một khoá kỹ năng mềm thường bắt đầu bằng giao tiếp, vì đó là thứ dễ thấy thiếu nhất. Khoá này bắt đầu từ chỗ khác, với một lý do thực tế: gần như mọi kỹ năng phía sau đều là kỹ năng **chọn** — chọn nói gì, chọn dành thời gian cho việc nào, chọn nhượng bộ tới đâu trong một cuộc thương lượng, chọn nhận hay từ chối một lời mời làm việc. Kỹ thuật giúp bạn thực hiện lựa chọn cho gọn; nó không nói cho bạn biết nên chọn gì. Câu đó chỉ có hệ giá trị trả lời được.
 

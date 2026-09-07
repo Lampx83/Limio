@@ -98,6 +98,26 @@ nào viết theo trí nhớ**. Nội dung video thì chưa xem hết từng phú
 Khối video không nằm trong manifest học liệu; `update-lesson` chỉ ghi đè khối `richtext`
 nên video sống sót qua các lần cập nhật nội dung bài.
 
+### Bố cục chuẩn của một bài
+
+    mục tiêu bài học → video mở bài → các mục thân bài (video minh hoạ chèn giữa) → tổng kết
+
+Dựng bằng `layout:lesson`, script xoá sạch khối cũ của bài rồi tạo lại theo manifest nên
+chạy bao nhiêu lần cũng ra một kết quả:
+
+```bash
+pnpm layout:lesson -- --file khoa-ky-nang-mem.json --lesson "Bài 1.1" --owner <email> \
+  --video "0|<url>|<tiêu đề> (3:41)|<mô tả một hai câu>" \
+  --video "3|<url>|<tiêu đề> (3:55)|<mô tả>" --dry-run
+```
+
+Vị trí `0` = ngay sau khối mục tiêu, `N` = sau khối thứ N. Bài nào dùng video chèn giữa thì
+phải bật `splitSections: True` trong nguồn Python, nếu không cả thân bài là một khối và
+không có chỗ để chèn.
+
+Tiêu đề và mô tả nằm trong payload của khối video (`title`, `caption`) và hiện ngay dưới
+khung phát — cần bản web đã deploy có phần render này.
+
 ## Trạng thái trên hệ thống
 
 | Nơi | Khoá | Ghi chú |

@@ -36,6 +36,15 @@ export const VideoCuepoint = z.object({
 
 export const VideoPayload = z.object({
   url: UrlOrPath,
+  /**
+   * Nhãn hiện dưới khung phát: tên video và nguồn.
+   *
+   * Trình phát của YouTube/Vimeo có sẵn tiêu đề bên trong khung, nhưng nó biến
+   * mất khi video bắt đầu chạy và không nói người học nên xem cái gì trong đó.
+   */
+  title: z.string().max(200).optional(),
+  /** Một tới hai câu: video nói gì và vì sao nó nằm ở bài này. */
+  caption: z.string().max(600).optional(),
   transcriptUrl: z.string().url().optional(),
   durationSec: z.number().int().positive().optional(),
   cuepoints: z.array(VideoCuepoint).max(20).optional(),
