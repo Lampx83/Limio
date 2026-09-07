@@ -5,7 +5,19 @@ import { getSiteSetting, setSiteSetting } from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 
-const ALLOWED_KEYS = ["payment.enabled", "footer.text", "footer.enabled"] as const;
+const ALLOWED_KEYS = [
+  "payment.enabled",
+  "footer.text",
+  "footer.enabled",
+  // Thông tin chuyển khoản hiện trên trang mua token.
+  "ai.bank.name",
+  "ai.bank.account_number",
+  "ai.bank.account_name",
+  // Hạn mức token: đổi được lúc đang chạy, không cần restart.
+  "ai.monthly_tokens.learner",
+  "ai.monthly_tokens.instructor",
+  "ai.tokens_per_day_global",
+] as const;
 type AllowedKey = (typeof ALLOWED_KEYS)[number];
 
 async function requireAdmin() {

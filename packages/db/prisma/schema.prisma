@@ -146,6 +146,7 @@ model User {
   // Email dispatch batches this user created / approved
   emailBatchesCreated    EmailDispatchBatch[]    @relation("EmailBatchCreator")
   emailBatchesApproved   EmailDispatchBatch[]    @relation("EmailBatchApprover")
+  AiTokenOrder           AiTokenOrder[]
 
   @@index([createdAt])
 }
@@ -1924,6 +1925,58 @@ enum AiTokenLedgerKind {
   consumption // tiêu khi gọi AI (amount âm)
   admin_adjustment // admin cộng/trừ tay
   refund
+}
+
+// Gói token bán cho người học. Giá bằng ĐỒNG, không phải cents — VND không có
+// phần lẻ, để "priceCents" như Course là mời gọi nhân/chia nhầm 100 lần.
+model AiTokenPackage {
+  id        String   @id @default(uuid())
+  name      String
+  tokens    Int
+  priceVnd  Int
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders AiTokenOrder[]
+}
+
+enum AiTokenOrderStatus {
+  pending
+  paid
+  cancelled
+}
+
+// Đơn mua token, thanh toán bằng chuyển khoản rồi admin đối soát.
+//
+// KHÔNG dùng chung bảng Order: Order bắt buộc có courseId và mang hình dạng của
+// Stripe (provider, providerRef). Luồng này khác hẳn — không có cổng thanh
+// toán, thay vào đó là mã đối soát người mua ghi trong nội dung chuyển khoản
+// và một người thật bấm xác nhận. Nhét hai luồng vào một bảng thì mỗi cột đều
+// phải nullable và không cột nào còn ý nghĩa rõ ràng.
+model AiTokenOrder {
+  id          String             @id @default(uuid())
+  userId      String
+  packageId   String
+  // Chốt tại thời điểm đặt: đổi giá gói không được làm thay đổi đơn đang chờ.
+  tokens      Int
+  priceVnd    Int
+  // Mã người mua ghi vào nội dung chuyển khoản để admin đối soát.
+  code        String             @unique
+  status      AiTokenOrderStatus @default(pending)
+  note        String?
+  // Admin đã xác nhận nhận được tiền.
+  confirmedBy String?
+  confirmedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package AiTokenPackage @relation(fields: [packageId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 // Sổ cái append-only. Số dư = tổng amount; AiTokenBalance chỉ là ảnh chụp

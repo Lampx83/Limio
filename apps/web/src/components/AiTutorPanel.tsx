@@ -241,7 +241,11 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
             {error === "no_token_budget" && (
               <p className="mt-1">
                 Bạn đã dùng hết lượt hỏi của tháng này. Hạn mức được cấp lại vào
-                đầu tháng sau; cần dùng ngay thì báo giảng viên.
+                đầu tháng sau —{" "}
+                <a href={apiUrl("/me/ai-tokens")} className="link underline">
+                  mua thêm lượt
+                </a>{" "}
+                nếu cần dùng ngay.
               </p>
             )}
             {error === "global_token_cap" && (

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { AiTutorError } from "./errors";
@@ -169,7 +170,16 @@ export async function ensureMonthlyGrant(
     // refId) để đúng một cái thắng, cái thua đọc lại kết quả của cái thắng.
     if (isUniqueViolation(e)) {
       const row = await db.aiTokenBalance.findUnique({ where: { userId } });
-      if (row) return row;
+      if (row?.periodKey === periodKey) return row;
+      // Sổ cái đã có dòng cấp cho tháng này nhưng ví thì chưa phản ánh — ví bị
+      // dựng lại từ bản sao lưu cũ, hoặc lần ghi trước hỏng giữa hai lệnh.
+      // Sổ cái là nguồn sự thật, nên đồng bộ ví theo nó thay vì trả về một số
+      // dư cũ mà người dùng sẽ nhìn thấy là "hết hạn mức" giữa tháng.
+      return db.aiTokenBalance.upsert({
+        where: { userId },
+        create: { userId, purchased: 0, monthlyRemaining: allowance, periodKey },
+        update: { monthlyRemaining: allowance, periodKey },
+      });
     }
     throw e;
   }
@@ -237,5 +247,82 @@ export async function chargeTokens(
         note: usageLogId ?? undefined,
       },
     }),
+  ]);
+}
+
+/**
+ * Cộng token đã mua vào ví, sau khi admin xác nhận nhận được tiền.
+ *
+ * Trả về false nếu đơn này đã được cộng rồi — unique (userId, kind, refType,
+ * refId) là thứ chặn, chứ không phải một lần đọc trước đó: hai admin bấm xác
+ * nhận cùng lúc thì chỉ một dòng vào được sổ, cái còn lại nhận unique violation
+ * và trả về false. Kiểm bằng cách đọc trước rồi ghi sau sẽ để lọt cả hai.
+ */
+export async function creditPurchasedTokens(
+  userId: string,
+  tokens: number,
+  orderId: string,
+  db: PrismaClient = prisma,
+): Promise<boolean> {
+  if (tokens <= 0) return false;
+  // Đảm bảo có hàng ví để increment — người chưa từng gọi AI thì chưa có.
+  await ensureMonthlyGrant(userId, db);
+  try {
+    await db.$transaction([
+      db.aiTokenLedger.create({
+        data: {
+          userId,
+          kind: "purchase",
+          amount: tokens,
+          refType: "order",
+          refId: orderId,
+        },
+      }),
+      db.aiTokenBalance.update({
+        where: { userId },
+        data: { purchased: { increment: tokens } },
+      }),
+    ]);
+    return true;
+  } catch (e) {
+    if (isUniqueViolation(e)) return false;
+    throw e;
+  }
+}
+
+/**
+ * Admin cộng/trừ token thủ công. Dùng cho hai việc: van xả khi một người học
+ * cạn hạn mức đúng lúc cần (giảng viên báo lên), và sửa sai sót đối soát.
+ *
+ * amount âm thì trừ vào phần đã mua, có chặn sàn 0 — số dư ví không bao giờ âm.
+ */
+export async function adminAdjustTokens(
+  userId: string,
+  amount: number,
+  adminUserId: string,
+  note: string | null,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  if (amount === 0) return;
+  await ensureMonthlyGrant(userId, db);
+  await db.$transaction([
+    db.aiTokenLedger.create({
+      data: {
+        userId,
+        kind: "admin_adjustment",
+        amount,
+        refType: "admin",
+        // refId riêng cho từng lần chỉnh: cùng một admin chỉnh hai lần vẫn phải
+        // thành hai dòng, nên không dùng adminUserId làm khoá.
+        refId: randomUUID(),
+        note: note ? `${adminUserId}: ${note}` : adminUserId,
+      },
+    }),
+    db.$executeRaw`
+      UPDATE "AiTokenBalance"
+      SET "purchased" = GREATEST(0, "purchased" + ${amount}),
+          "updatedAt" = NOW()
+      WHERE "userId" = ${userId}
+    `,
   ]);
 }

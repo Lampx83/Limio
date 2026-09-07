@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 
@@ -59,6 +60,7 @@ const GROUPS: Group[] = [
       { label: "Integrations", href: "/admin/integrations", icon: Plug },
       { label: "LTI tools", href: "/admin/lti-tools", icon: Wrench },
       { label: "Email templates", href: "/admin/emails", icon: Mail },
+      { label: "Token AI", href: "/admin/ai-tokens", icon: Coins },
     ],
   },
   {

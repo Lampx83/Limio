@@ -15,6 +15,10 @@ async function cleanDb() {
     prisma.streakRecord.deleteMany(),
     prisma.xpTransaction.deleteMany(),
     prisma.userCourseProgress.deleteMany(),
+    prisma.aiTokenOrder.deleteMany(),
+    // AiTokenPackage không treo vào User nên không cascade khi xoá user — không
+    // dọn ở đây thì gói của test trước dồn sang test sau.
+    prisma.aiTokenPackage.deleteMany(),
     prisma.userRole.deleteMany(),
     prisma.authProvider.deleteMany(),
     prisma.learningEvent.deleteMany(),
