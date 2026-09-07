@@ -54,6 +54,8 @@ Cái bẫy phổ biến là mở email và tin nhắn ngay đầu giờ vàng. T
 
 ## Trì hoãn không phải là lười
 
+Trước hết, một con số để bỏ bớt phần tự trách: khảo sát của Sirois và cộng sự (2023) cho thấy **khoảng 80–95% sinh viên năm đầu từng trì hoãn ít nhất một lần, và chừng một nửa trì hoãn thường xuyên**. Đây là hiện tượng phổ biến chứ không phải khuyết điểm riêng của ai. Điều đáng lưu ý ở chiều ngược lại: trì hoãn kéo dài đi kèm mức căng thẳng cao hơn, ngủ kém hơn và các thói quen sức khoẻ xấu hơn — nên cảm giác phấn khích khi nộp bài trước hạn năm phút không rẻ như nó tưởng.
+
 Nếu trì hoãn chỉ là lười, người ta đã không dọn nhà sạch bong vào đúng đêm trước hạn nộp. Điều thật sự xảy ra: nhiệm vụ gợi lên một cảm giác khó chịu — mơ hồ không biết bắt đầu từ đâu, sợ làm ra thứ dở, chán, hoặc sợ bị đánh giá — và ta né cảm giác ấy bằng cách làm việc khác. Vì vậy cách chữa nằm ở chỗ **giảm cảm giác khó chịu ở bước đầu tiên**, không nằm ở chỗ tự mắng.
 
 | Nguyên nhân | Nghe như thế nào | Cách vào việc |
@@ -62,6 +64,12 @@ Nếu trì hoãn chỉ là lười, người ta đã không dọn nhà sạch bo
 | Sợ làm dở | "Phải làm cho ra hồn mới bắt đầu" | Hẹn giờ 25 phút, cho phép mình làm ra bản nháp xấu; sửa là việc của lượt sau |
 | Quá lớn | "Cái này ngốn cả tuần" | Chia tới đơn vị làm được trong một buổi; ghi hạn cho từng phần |
 | Chán | "Việc này chẳng thú vị gì" | Ghép với thứ dễ chịu (quán quen, nhạc không lời) và đặt phần thưởng nhỏ sau khi xong khối |
+
+### Chỗ ngồi cũng là một biến số
+
+Một yếu tố hay bị bỏ qua: **môi trường học**. Không gian ồn hoặc đầy thứ gây phân tâm khiến mọi kỹ thuật ở trên tốn công gấp đôi. Lý thuyết phục hồi chú ý (attention restoration) cho rằng môi trường yên tĩnh và có thiên nhiên giúp khôi phục khả năng tập trung; các nghiên cứu về đi bộ trong môi trường tự nhiên cũng cho kết quả cùng hướng.
+
+Việc làm được ngay: chọn sẵn **một chỗ học cố định** ngoài phòng ngủ — thư viện, phòng tự học, quán quen — và để dành chỗ đó chỉ cho việc khó. Khi nghỉ giữa các khối, đứng dậy đi ra ngoài vài phút thay vì đổi từ màn hình này sang màn hình khác.
 
 Hai kỹ thuật đáng dùng nhất: **quy tắc hai phút** (nếu bước đầu tiên mất dưới hai phút thì làm ngay, đừng ghi vào danh sách) và **Pomodoro** (25 phút làm, 5 phút nghỉ, không kiểm tra gì trong 25 phút ấy). Cả hai đều tấn công đúng chỗ: rào cản không nằm ở việc làm, nằm ở việc **bắt đầu**.
 
@@ -104,6 +112,9 @@ Chạy một tuần theo khối thời gian: mỗi ngày một khung giờ vàng
 - Rubinstein, J. S., Meyer, D. E., & Evans, J. E. (2001). Executive control of cognitive processes in task switching. *Journal of Experimental Psychology: Human Perception and Performance*, 27(4), 763–797.
 - Steel, P. (2007). The nature of procrastination: A meta-analytic and theoretical review. *Psychological Bulletin*, 133(1), 65–94.
 - Sirois, F., & Pychyl, T. (2013). Procrastination and the priority of short-term mood regulation. *Social and Personality Psychology Compass*, 7(2), 115–127.
+- Sirois, F. M., Stride, C. B., & Pychyl, T. A. (2023). Procrastination and health: A longitudinal test of the roles of stress and health behaviours. *British Journal of Health Psychology*, 28(1), 860–875.
+- Berman, M. G., Jonides, J., & Kaplan, S. (2008). The cognitive benefits of interacting with nature. *Psychological Science*, 19(12), 1207–1212.
+- LEAP Online (2025). *Time Management.* University of Greater Manchester.
 - Newport, C. (2016). *Deep Work: Rules for Focused Success in a Distracted World.* New York: Grand Central Publishing.
 """,
     "quiz": {

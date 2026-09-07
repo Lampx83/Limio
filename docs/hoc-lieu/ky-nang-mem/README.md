@@ -20,7 +20,7 @@ trong kho.
 | 1 | Giá trị sống | ✅ 3 bài |
 | 2 | Tư duy tích cực | ✅ 3 bài |
 | 3 | Tư duy phản biện | ✅ 3 bài |
-| 4 | Quản lý thời gian | ✅ 3 bài |
+| 4 | Quản lý thời gian | ✅ 4 bài (đối chiếu tài liệu LEAP) |
 | 5 | Giao tiếp hiệu quả | ✅ 3 bài |
 | 6 | Kỹ năng lắng nghe | ✅ 3 bài |
 | 7 | Thuyết trình hiệu quả | ✅ 3 bài |
@@ -71,6 +71,14 @@ Khoá nhập xong ở trạng thái **nháp**; publish là việc của người
 
 - Ảnh lấy từ Wikimedia Commons, **kiểm giấy phép qua API và mở xem tận mắt** trước khi đưa vào; chú thích ngay dưới hình ghi tên file, tác giả và giấy phép.
 - Link video ở mục *Xem thêm* chỉ dùng kênh chính thức (TED, TED-Ed, TEDx, FranklinCovey, CrashCourse). Tiêu đề, kênh và thời lượng lấy từ oEmbed của YouTube — **không ghi theo trí nhớ**, vì link chết hoặc sai tên thì tới tay sinh viên mới lộ.
+
+## Tài liệu nguồn do giảng viên cung cấp
+
+`nguon/LEAP-Time-Management-2025.pdf` — tutorial Time Management của LEAP Online, University of Greater
+Manchester. Đã đối chiếu vào Module 4: self-efficacy (bài 4.1), quy trình theo dõi và phân tích thời
+gian bốn bước (4.2), số liệu trì hoãn và yếu tố không gian học (4.3), và trọn bài 4.4 về ước lượng
+thời gian cùng sáu bước lập lịch. Khung của Kho KNM — bốn thế hệ, SMART, 5A, ma trận Eisenhower —
+được **giữ làm xương sống**, vì ngân hàng câu hỏi hỏi theo khung đó.
 
 ## Trạng thái trên hệ thống
 

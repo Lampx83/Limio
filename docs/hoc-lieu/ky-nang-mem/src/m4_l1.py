@@ -30,6 +30,14 @@ Hai thước đo hay bị nhầm:
 
 > [!vi-du] Tuần vừa rồi Linh trả lời 140 tin nhắn nhóm, sửa slide hộ hai bạn, đi ba buổi họp câu lạc bộ và không mở nổi đồ án cá nhân. Lịch kín từ sáng tới tối, không có giờ nào bỏ phí. Nhưng nếu hỏi mục tiêu học kỳ nào đã tiến, câu trả lời là không có. Đó là một tuần **bận** chứ không phải một tuần **hiệu quả** — và khác biệt ấy chỉ hiện ra khi ta hỏi đúng câu hỏi.
 
+### Niềm tin vào năng lực bản thân
+
+Có một biến số ít được nhắc trong các khoá quản lý thời gian nhưng lại dự báo khá tốt việc ai giữ được kế hoạch: **self-efficacy** — niềm tin của một người rằng mình có thể lập kế hoạch và thực hiện được những việc cần thiết để đạt kết quả mong muốn. Khái niệm này do Bandura đưa ra, và nó được hình thành từ trải nghiệm thành công trước đó, từ việc quan sát người khác làm được, và từ phản hồi mình nhận được.
+
+Liên hệ với module này rất trực tiếp: người có niềm tin ấy cao hơn thì **đặt mục tiêu thực tế hơn, chia nhiệm vụ lớn thành phần nhỏ hơn, phân bổ thời gian sát hơn** và **bền hơn khi gặp trục trặc** — thay vì bỏ luôn kế hoạch sau lần đầu trượt lịch. Tổng hợp nghiên cứu về tự điều chỉnh học tập của Sitzmann và Ely (2011) chỉ ra mối liên hệ này.
+
+Điều đáng nói: niềm tin ấy **tăng được**, và cách tăng rẻ nhất là ghi lại bằng chứng. Mỗi lần bạn giữ được một khung giờ đã hẹn với chính mình, hãy đánh dấu. Chuỗi dấu ấy chính là dữ liệu chống lại câu "mình vốn không có kỷ luật" — và nó thuyết phục hơn mọi lời tự động viên.
+
 ## Bốn thế hệ quản trị thời gian
 
 | Thế hệ | Công cụ đặc trưng | Câu hỏi trung tâm | Điểm yếu |
@@ -102,6 +110,9 @@ Làm bước Analyse: ghi lại một tuần thật của bạn theo khối 30 p
 - Covey, S. R., Merrill, A. R., & Merrill, R. R. (1994). *First Things First.* New York: Simon & Schuster — nguồn của bốn thế hệ quản trị thời gian.
 - Doran, G. T. (1981). There's a S.M.A.R.T. way to write management's goals and objectives. *Management Review*, 70(11), 35–36.
 - Locke, E. A., & Latham, G. P. (2002). Building a practically useful theory of goal setting and task motivation. *American Psychologist*, 57(9), 705–717.
+- Bandura, A. (1997). *Self-Efficacy: The Exercise of Control.* New York: W. H. Freeman.
+- Sitzmann, T., & Ely, K. (2011). A meta-analysis of self-regulated learning in work-related training and educational attainment. *Psychological Bulletin*, 137(3), 421–442.
+- LEAP Online (2025). *Time Management.* University of Greater Manchester — tài liệu hướng dẫn dành cho sinh viên.
 - Vanderkam, L. (2018). *Off the Clock: Feel Less Busy While Getting More Done.* New York: Portfolio.
 """,
     "quiz": {

@@ -25,7 +25,7 @@ import course  # noqa: E402
 import m1_l1, m1_l2, m1_l3  # noqa: E402
 import m2_l1, m2_l2, m2_l3  # noqa: E402
 import m3_l1, m3_l2, m3_l3  # noqa: E402
-import m4_l1, m4_l2, m4_l3  # noqa: E402
+import m4_l1, m4_l2, m4_l3, m4_l4  # noqa: E402
 import m5_l1, m5_l2, m5_l3  # noqa: E402
 import m6_l1, m6_l2, m6_l3  # noqa: E402
 import m7_l1, m7_l2, m7_l3  # noqa: E402
@@ -69,7 +69,7 @@ MODULES = {
             "kẻ cắp thời gian, tới kỹ thuật giữ khối tập trung: khung giờ vàng, chống đa nhiệm, gỡ "
             "trì hoãn và nói không mà không hỏng quan hệ."
         ),
-        "lessons": [m4_l1.LESSON, m4_l2.LESSON, m4_l3.LESSON],
+        "lessons": [m4_l1.LESSON, m4_l2.LESSON, m4_l3.LESSON, m4_l4.LESSON],
     },
     5: {
         "title": "Module 5 · Giao tiếp hiệu quả",

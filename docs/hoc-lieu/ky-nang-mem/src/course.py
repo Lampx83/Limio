@@ -377,6 +377,10 @@ MISCONCEPTIONS = [
     {"code": "knm.no-need-rehearse", "name": "Nắm nội dung rồi thì không cần tập trước", "description": "Bỏ khâu tập vì đã hiểu bài. Tập nói to là cách duy nhất phát hiện chỗ ý nhảy, chỗ hụt hơi và bài quá giờ — ba lỗi không lộ ra khi chỉ đọc thầm."},
     {"code": "knm.qa-must-know-all", "name": "Bị hỏi khó thì phải trả lời cho bằng được", "description": "Chế câu trả lời khi không biết, vì sợ mất uy tín. Người nghe có chuyên môn nhận ra ngay; câu nhận chưa nắm phần đó kèm cam kết tìm hiểu và phản hồi lại giữ được uy tín tốt hơn nhiều."},
     {"code": "knm.rush-when-over-time", "name": "Quá giờ thì nói nhanh cho kịp hết slide", "description": "Tăng tốc để chạy hết nội dung đã chuẩn bị. Kết quả là phần kết — chỗ chốt thông điệp — bị nuốt mất, trong khi bỏ bớt vài slide giữa bài thì không ai nhận ra."},
+    # ── Module 4 · bổ sung sau khi đối chiếu tài liệu LEAP ──────────────────
+    {"code": "knm.planning-fallacy", "name": "Ước lượng thời gian theo hướng lạc quan", "description": "Tin rằng lần này mình sẽ làm nhanh hơn lần trước, dù chưa có gì thay đổi về cách làm. Kahneman và Tversky gọi đây là nguỵ biện lập kế hoạch: người ta thường xuyên ước lượng thiếu thời gian cần cho một việc, kể cả khi đã biết lần trước mất bao lâu."},
+    {"code": "knm.schedule-no-buffer", "name": "Xếp lịch kín không chừa khoảng đệm", "description": "Lấp đầy mọi khoảng trống trong lịch, coi khoảng trống là lãng phí. Một việc trễ hai mươi phút sẽ đổ dây chuyền sang toàn bộ phần còn lại của ngày, và cả lịch mất tác dụng chỉ sau một sự cố nhỏ."},
+    {"code": "knm.two-calendars", "name": "Tách lịch học và lịch cá nhân thành hai nơi", "description": "Giữ hai cuốn lịch riêng cho việc học và việc riêng, nên không nơi nào cho thấy bức tranh đầy đủ. Kết quả là trùng lịch, hoặc nhận thêm cam kết mà quên mất buổi tối hôm đó đã có việc."},
 ]
 
 FEEDBACK_TEMPLATES = [
@@ -556,4 +560,7 @@ FEEDBACK_TEMPLATES = [
     {"misconception": "knm.no-need-rehearse", "body": "Hãy tập nói to ít nhất một lần có bấm giờ. Chỉ khi nói thành tiếng bạn mới phát hiện chỗ ý nhảy, chỗ hụt hơi và phần vượt thời lượng — đọc thầm không lộ ra ba lỗi đó.", "priority": 10},
     {"misconception": "knm.qa-must-know-all", "body": "Không biết thì nói không biết, kèm cam kết cụ thể: phần đó tôi chưa có số liệu, tôi kiểm lại và gửi anh chị trong hôm nay. Chế câu trả lời là cách nhanh nhất để mất uy tín với đúng người hiểu chuyện.", "priority": 10},
     {"misconception": "knm.rush-when-over-time", "body": "Quá giờ thì bỏ bớt phần giữa, đừng bóp phần kết. Khán giả không biết bạn đã bỏ slide nào, nhưng họ nhận ra ngay một bài kết thúc vội và không đọng lại gì.", "priority": 10},
+    {"misconception": "knm.planning-fallacy", "body": "Đừng ước lượng bằng cảm giác — lấy dữ liệu lần trước làm mốc. Lần trước việc này mất bao lâu thì lần này đặt bấy nhiêu, và chỉ rút ngắn khi bạn chỉ ra được cụ thể cách làm nào đã đổi.", "priority": 10},
+    {"misconception": "knm.schedule-no-buffer", "body": "Chừa đệm 15 phút giữa các khối và một giờ trống mỗi ngày cho việc phát sinh. Lịch không có đệm là lịch vỡ ngay ở sự cố đầu tiên, và khi đã vỡ thì người ta bỏ luôn cả lịch.", "priority": 10},
+    {"misconception": "knm.two-calendars", "body": "Gộp mọi cam kết vào một cuốn lịch duy nhất, cả việc học lẫn việc riêng. Chỉ khi nhìn thấy 18h phải đón em, bạn mới biết là không nên nhận buổi họp lúc 17h30.", "priority": 10},
 ]

@@ -52,6 +52,26 @@ Nhưng ô II có một đặc tính khó chịu: **nó không bao giờ tự đ�
 
 ## Bảy kẻ cắp thời gian
 
+### Trước khi bắt kẻ cắp: theo dõi và phân tích
+
+Không ai đoán đúng mình tiêu thời gian vào đâu. Muốn biết, phải đo — và cách đo có bốn bước, mất chừng một tuần:
+
+1. **Chọn công cụ.** Bảng tính, sổ tay, hay một ứng dụng theo dõi thời gian — công cụ tốt nhất là công cụ bạn thật sự dùng, không phải công cụ nhiều tính năng nhất.
+2. **Gom hoạt động thành nhóm.** Đừng ghi hàng trăm việc lẻ; gom thành dăm bảy nhóm lớn: học trên lớp, tự học từng môn, làm thêm, đi lại, tin nhắn và mạng xã hội, nghỉ ngơi.
+3. **Ghi liên tục ít nhất một tuần**, và **ghi ngay lúc làm** chứ không đợi tối ngồi nhớ lại — nhớ lại thì luôn sai theo hướng có lợi cho mình.
+4. **Cộng theo nhóm**, rồi quy ra **phần trăm của tuần**. Ví dụ tuần học 40 giờ mà mạng xã hội chiếm 6 giờ thì đó là 15% quỹ thời gian học.
+
+Theo dõi thời gian giống hệt theo dõi chi tiêu: bạn không đổi được thói quen tiêu tiền khi chưa biết tiền đi đâu. Có số rồi thì hỏi ba câu:
+
+- **Việc này có đáng làm không?** Có cần thiết không, có liên quan tới mục tiêu và giá trị của mình không — nếu không thì cắt hoặc hoãn.
+- **Mình đang làm có hiệu quả không?** Việc nào rút ngắn được bằng cách làm khác, công cụ khác, hoặc gộp lại làm một lần?
+- **Lẽ ra mình nên tiêu thời gian vào đâu?** Chuyển giờ tiết kiệm được sang đúng nhóm việc đang phục vụ mục tiêu học kỳ.
+
+Ba câu hỏi này biến một bảng số liệu thành quyết định. Bỏ bước hỏi thì việc theo dõi chỉ tạo ra cảm giác tội lỗi.
+
+### Bảy kẻ cắp phổ biến
+
+
 | Kẻ cắp | Dấu hiệu | Cách chặn |
 |---|---|---|
 | Gián đoạn liên tục | Thông báo, tin nhắn, người hỏi ngang | Tắt thông báo theo khung; hẹn giờ trả lời và nói trước cho nhóm |
@@ -88,6 +108,7 @@ Chọn kẻ cắp thời gian lớn nhất của bạn. Viết một trang: bằ
 
 - Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương "Put First Things First." New York: Free Press.
 - Covey, S. R., Merrill, A. R., & Merrill, R. R. (1994). *First Things First.* New York: Simon & Schuster.
+- LEAP Online (2025). *Time Management.* University of Greater Manchester — quy trình theo dõi và phân tích thời gian bốn bước.
 - Allen, D. (2015). *Getting Things Done: The Art of Stress-Free Productivity* (revised ed.). New York: Penguin.
 - Mark, G., Gudith, D., & Klocke, U. (2008). The cost of interrupted work: More speed and stress. *Proceedings of CHI 2008*, 107–110.
 """,
