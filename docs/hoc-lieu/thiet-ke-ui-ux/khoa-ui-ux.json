@@ -281,24 +281,24 @@
               },
               {
                 "type": "matching",
-                "prompt": "Nối mỗi việc với lớp công việc mà nó thuộc về.",
-                "explanation": "Phỏng vấn và sơ đồ luồng trả lời câu hỏi 'người dùng cần gì, đi thế nào'; bảng màu và thứ bậc thị giác trả lời câu hỏi 'nó hiện lên ra sao'.",
+                "prompt": "Nối mỗi việc với tầng của sản phẩm mà nó thuộc về.",
+                "explanation": "Bốn việc này nằm ở bốn tầng khác nhau, và đó là lý do sai ở tầng dưới đắt hơn sai ở tầng trên: phỏng vấn trả lời 'người học cần gì' (chiến lược), sơ đồ luồng trả lời 'đi từ đâu tới đâu' (cấu trúc), vị trí nút trả lời 'cái gì đặt ở đâu' (khung), còn bảng màu trả lời 'nó trông thế nào' (bề mặt).",
                 "pairs": [
                   {
                     "left": "Phỏng vấn 5 người học về cách họ đang ôn tập",
-                    "right": "Việc của UX"
+                    "right": "Chiến lược"
                   },
                   {
                     "left": "Vẽ sơ đồ luồng từ lúc mở app tới lúc nộp xong bài",
-                    "right": "Việc thuộc UX"
+                    "right": "Cấu trúc"
+                  },
+                  {
+                    "left": "Quyết định nút “Nộp bài” nằm chỗ nào trên màn hình",
+                    "right": "Khung"
                   },
                   {
                     "left": "Chọn bảng màu và định nghĩa các trạng thái của nút",
-                    "right": "Việc của UI"
-                  },
-                  {
-                    "left": "Cân chỉnh cỡ chữ tiêu đề so với chữ nội dung",
-                    "right": "Việc thuộc UI"
+                    "right": "Bề mặt"
                   }
                 ]
               },
