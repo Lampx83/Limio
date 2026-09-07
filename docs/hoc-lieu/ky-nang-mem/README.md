@@ -24,7 +24,7 @@ trong kho.
 | 5 | Giao tiếp hiệu quả | ✅ 3 bài |
 | 6 | Kỹ năng lắng nghe | ✅ 3 bài |
 | 7 | Thuyết trình hiệu quả | ✅ 3 bài |
-| 8 | Nghệ thuật thuyết phục | chưa soạn |
+| 8 | Nghệ thuật thuyết phục | ✅ 3 bài (theo Cialdini) |
 | 9 | Kỹ năng cá nhân trong làm việc nhóm | chưa soạn |
 | 10 | Viết CV và phỏng vấn xin việc | chưa soạn |
 

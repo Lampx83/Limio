@@ -29,6 +29,7 @@ import m4_l1, m4_l2, m4_l3, m4_l4  # noqa: E402
 import m5_l1, m5_l2, m5_l3  # noqa: E402
 import m6_l1, m6_l2, m6_l3  # noqa: E402
 import m7_l1, m7_l2, m7_l3  # noqa: E402
+import m8_l1, m8_l2, m8_l3  # noqa: E402
 
 MODULES = {
     1: {
@@ -100,6 +101,17 @@ MODULES = {
             "cố thường gặp."
         ),
         "lessons": [m7_l1.LESSON, m7_l2.LESSON, m7_l3.LESSON],
+    },
+    8: {
+        "title": "Module 8 · Nghệ thuật thuyết phục",
+        "description": (
+            "Bảy nguyên tắc gây ảnh hưởng của Robert Cialdini, dạy theo hai chiều: dùng để thuyết "
+            "phục trung thực, và nhận ra khi chúng đang được dùng lên mình. Ba bài: ranh giới giữa "
+            "thuyết phục và thao túng cùng quy trình chuẩn bị; bốn nguyên tắc đáp trả, nhất quán, "
+            "số đông, thiện cảm; và ba nguyên tắc uy quyền, khan hiếm, đồng nhất kèm quy trình tự vệ "
+            "trước quảng cáo gấp gáp và lừa đảo trực tuyến."
+        ),
+        "lessons": [m8_l1.LESSON, m8_l2.LESSON, m8_l3.LESSON],
     },
 }
 

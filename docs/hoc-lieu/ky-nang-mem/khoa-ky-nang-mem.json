@@ -353,6 +353,51 @@
       "code": "knm.two-calendars",
       "name": "Tách lịch học và lịch cá nhân thành hai nơi",
       "description": "Giữ hai cuốn lịch riêng cho việc học và việc riêng, nên không nơi nào cho thấy bức tranh đầy đủ. Kết quả là trùng lịch, hoặc nhận thêm cam kết mà quên mất buổi tối hôm đó đã có việc."
+    },
+    {
+      "code": "knm.persuasion-is-manipulation",
+      "name": "Thuyết phục và thao túng là một",
+      "description": "Coi hai thứ này giống nhau, nên hoặc từ chối học thuyết phục vì thấy nó không tử tế, hoặc dùng thao túng rồi gọi đó là kỹ năng. Khác biệt nằm ở ba chỗ kiểm được: thông tin có trung thực không, người kia có còn tự do chọn không, và kết quả có phục vụ lợi ích của họ không."
+    },
+    {
+      "code": "knm.persuade-by-arguing-harder",
+      "name": "Cứ thêm lý lẽ là thuyết phục được",
+      "description": "Tin rằng người kia chưa đồng ý là vì chưa đủ thông tin, nên chồng thêm lập luận và nói mạnh hơn. Phần lớn bất đồng không nằm ở thiếu dữ kiện mà ở lợi ích, cảm xúc hoặc lòng tin — chồng lý lẽ vào đó chỉ làm đối phương phòng thủ."
+    },
+    {
+      "code": "knm.features-not-benefits",
+      "name": "Kể tính năng thay vì nói lợi ích của người nghe",
+      "description": "Liệt kê những gì sản phẩm hoặc đề xuất của mình có, thay vì nói nó thay đổi điều gì trong đời sống của người nghe. Người ta không mua tính năng, họ mua kết quả mà tính năng ấy tạo ra cho họ."
+    },
+    {
+      "code": "knm.reciprocity-small-gift",
+      "name": "Quà nhỏ thì không ảnh hưởng gì",
+      "description": "Nghĩ rằng một món quà nhỏ, một ly nước, một lời khen hay một ưu đãi dùng thử không tác động tới quyết định của mình. Nguyên tắc đáp trả hoạt động mạnh và gần như tự động, không tỉ lệ thuận với giá trị món quà — và nó vẫn chạy cả khi món quà không ai yêu cầu."
+    },
+    {
+      "code": "knm.consistency-trap",
+      "name": "Đã trót nói có thì phải theo tới cùng",
+      "description": "Giữ nhất quán với một cam kết cũ dù thông tin đã đổi, vì sợ bị coi là người thay đổi. Nhất quán là phẩm chất tốt khi nó theo giá trị của mình; nó thành cái bẫy khi người khác dùng một cam kết nhỏ ban đầu để kéo ta tới một cam kết lớn ta không định nhận."
+    },
+    {
+      "code": "knm.authority-symbols",
+      "name": "Nhầm dấu hiệu uy quyền với chuyên môn thật",
+      "description": "Tin ngay khi thấy chức danh, đồng phục, bằng cấp treo tường hay lượng người theo dõi lớn. Đó là các dấu hiệu, và dấu hiệu thì dựng được — câu hỏi vẫn là người này có chuyên môn đúng lĩnh vực đang bàn không, và họ được lợi gì nếu ta tin."
+    },
+    {
+      "code": "knm.scarcity-always-real",
+      "name": "Tin mọi thông báo khan hiếm là thật",
+      "description": "Phản ứng ngay với đồng hồ đếm ngược, dòng chữ chỉ còn hai suất, ưu đãi hết hạn trong hai giờ. Phần lớn các tín hiệu ấy do người bán đặt ra và lặp lại hằng tuần; điều chúng tạo ra là cảm giác gấp, không phải giá trị."
+    },
+    {
+      "code": "knm.liking-equals-credible",
+      "name": "Dễ mến nghĩa là đáng tin về nội dung",
+      "description": "Chuyển sự thiện cảm với người nói thành sự tin tưởng vào điều họ nói. Thiện cảm nói lên mối quan hệ, không nói gì về chất lượng bằng chứng — và đó chính là lý do nó được dùng nhiều trong quảng cáo."
+    },
+    {
+      "code": "knm.one-size-persuasion",
+      "name": "Một cách thuyết phục dùng cho mọi người",
+      "description": "Lặp lại đúng một kiểu lập luận cho mọi đối tượng. Điều thuyết phục một sinh viên năm nhất khác điều thuyết phục một đồng nghiệp hai mươi năm kinh nghiệm; không đọc được người nghe thì mọi kỹ thuật đều trượt."
     }
   ],
   "feedbackTemplates": [
@@ -699,6 +744,51 @@
     {
       "misconception": "knm.two-calendars",
       "body": "Gộp mọi cam kết vào một cuốn lịch duy nhất, cả việc học lẫn việc riêng. Chỉ khi nhìn thấy 18h phải đón em, bạn mới biết là không nên nhận buổi họp lúc 17h30.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.persuasion-is-manipulation",
+      "body": "Ba câu hỏi tách hai thứ này: thông tin bạn đưa có đúng không, người kia có còn tự do từ chối không, và nếu họ đồng ý thì họ được lợi hay chỉ mình bạn được lợi? Trả lời được cả ba theo hướng tích cực thì đó là thuyết phục.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.persuade-by-arguing-harder",
+      "body": "Trước khi thêm lý lẽ, hãy hỏi vì sao họ chưa đồng ý: thiếu thông tin, sợ mất gì, hay không tin người nói? Ba nguyên nhân ấy cần ba cách xử lý khác nhau, và chỉ nguyên nhân đầu mới cần thêm lập luận.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.features-not-benefits",
+      "body": "Sau mỗi tính năng, viết thêm một câu bắt đầu bằng nghĩa là bạn sẽ… — nếu không viết nổi, tính năng đó không nên nằm trong bài thuyết phục.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.reciprocity-small-gift",
+      "body": "Món quà nhỏ vẫn tạo cảm giác mắc nợ, kể cả khi bạn không xin. Cách phòng vệ không phải là từ chối mọi thiện chí, mà là tách hai câu hỏi: món quà này dễ chịu thật, còn đề nghị đi kèm có đáng nhận không?",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.consistency-trap",
+      "body": "Hãy hỏi: nếu hôm nay mới biết những gì mình biết bây giờ, mình có chọn như vậy không? Nếu không, đổi ý là quyết định đúng — và bạn chỉ cần nói rõ vì sao đổi.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.authority-symbols",
+      "body": "Tách dấu hiệu khỏi chuyên môn bằng hai câu hỏi: người này có chuyên môn đúng lĩnh vực đang bàn không, và họ được lợi gì nếu bạn tin? Chức danh trả lời được câu đầu một phần, không trả lời được câu sau.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.scarcity-always-real",
+      "body": "Kiểm tính thật của khan hiếm: quay lại sau vài ngày xem ưu đãi có còn không, tìm cùng sản phẩm ở nơi khác, và hỏi mình có định mua thứ này trước khi thấy đồng hồ đếm ngược hay không.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.liking-equals-credible",
+      "body": "Thiện cảm giúp bạn chịu nghe, không thay được bằng chứng. Hãy hỏi đúng câu bạn sẽ hỏi nếu người nói là một người lạ khó ưa: bằng chứng ở đâu, ai kiểm được nó.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.one-size-persuasion",
+      "body": "Trước khi thuyết phục, viết ra ba điều về người nghe: họ đang lo gì, họ mất gì nếu đồng ý, và điều gì với họ là bằng chứng đủ mạnh. Ba câu này quyết định bạn dùng lập luận nào, không phải sở thích của bạn.",
       "priority": 10
     }
   ],
@@ -5053,6 +5143,651 @@
                 "key": "7.3-viet-tap",
                 "type": "essay",
                 "prompt": "Tập nói to trọn một bài trình bày có bấm giờ và quay lại. Viết 200–300 từ: (a) thời lượng thật so với thời lượng cho phép; (b) hai chỗ ý bị nhảy và câu chuyển bạn sẽ thêm; (c) hai câu quá dài và bản chẻ ngắn của chúng; (d) phương án không slide: ba ý bạn nói được mà không cần nhìn màn hình.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 8 · Nghệ thuật thuyết phục",
+      "description": "Bảy nguyên tắc gây ảnh hưởng của Robert Cialdini, dạy theo hai chiều: dùng để thuyết phục trung thực, và nhận ra khi chúng đang được dùng lên mình. Ba bài: ranh giới giữa thuyết phục và thao túng cùng quy trình chuẩn bị; bốn nguyên tắc đáp trả, nhất quán, số đông, thiện cảm; và ba nguyên tắc uy quyền, khan hiếm, đồng nhất kèm quy trình tự vệ trước quảng cáo gấp gáp và lừa đảo trực tuyến.",
+      "lessons": [
+        {
+          "title": "Bài 8.1 · Thuyết phục, thao túng và quy trình chuẩn bị",
+          "durationMin": 45,
+          "description": "Ba câu hỏi tách thuyết phục khỏi thao túng; hai đường người nghe xử lý thông điệp; quy trình năm bước trước khi mở miệng; và cách đổi tính năng thành lợi ích của người nghe.",
+          "objectives": [
+            "Phân biệt được thuyết phục với thao túng và với tranh cãi bằng ba câu hỏi kiểm",
+            "Nhận ra người nghe đang xử lý thông điệp theo đường trung tâm hay đường ngoại vi",
+            "Chạy được quy trình năm bước chuẩn bị trước một tình huống thuyết phục thật",
+            "Đổi được một danh sách tính năng thành các câu lợi ích cho đúng người nghe"
+          ],
+          "summary": [
+            "Ba câu tách thuyết phục khỏi thao túng: thông tin có đúng không, người kia có còn tự do từ chối không, và họ có được lợi không.",
+            "Người nghe có động lực và đủ hiểu biết thì xử lý theo lập luận; ngược lại họ dựa vào tín hiệu bên ngoài — nên cùng một bài phải chuẩn bị khác nhau.",
+            "Năm bước chuẩn bị: hiểu người nghe, tìm nhu cầu sâu, đổi tính năng thành lợi ích, chọn thời điểm và kênh, mở đường bằng một cam kết nhỏ.",
+            "Người ta không đồng ý vì bạn có nhiều lý lẽ hơn; họ đồng ý khi thấy điều mình quan tâm được giải quyết."
+          ],
+          "body": "\nThuyết phục là kỹ năng bị nghi ngờ nhiều nhất trong các kỹ năng mềm — nhiều người thấy nó gần với thao túng nên ngại học. Bài này bắt đầu đúng ở chỗ đó, vì ranh giới ấy kiểm được chứ không mơ hồ.\n\n## Thuyết phục, thao túng và tranh cãi\n\n| | Thuyết phục | Thao túng | Tranh cãi để thắng |\n|---|---|---|---|\n| Thông tin đưa ra | Đúng và đủ, kể cả phần bất lợi | Cắt xén, phóng đại, giấu điều kiện | Chỉ chọn phần có lợi cho lập luận |\n| Quyền chọn của người kia | Còn nguyên, kể cả quyền từ chối | Bị bóp lại bằng gấp gáp, áp lực, cảm giác tội lỗi | Bị đẩy vào thế phải bảo vệ mình |\n| Ai được lợi nếu họ đồng ý | Cả hai | Chỉ người thuyết phục | Người thắng cuộc |\n| Sau ba tháng nhìn lại | Người kia vẫn thấy quyết định đó đúng | Người kia thấy mình bị lừa | Quan hệ nguội đi |\n\n> [!ghi-nho] Ba câu hỏi kiểm trước khi dùng bất kỳ kỹ thuật nào trong module này: **Điều tôi nói có đúng không? Người kia có còn tự do từ chối không? Nếu họ đồng ý, họ được gì?** Trả lời được cả ba theo hướng tích cực thì bạn đang thuyết phục; hụt câu nào thì bạn đang làm việc khác.\n\n> [!vi-du] Cùng một mục tiêu — rủ bạn tham gia dự án thiện nguyện cuối tuần. **Thuyết phục:** \"Nhóm cần thêm một người phụ trách hậu cần, đúng thứ cậu làm tốt. Mất một buổi sáng thứ bảy, việc cụ thể là thế này. Cậu xem lịch rồi trả lời mình trước thứ năm nhé, bận thì mình tìm người khác.\" **Thao túng:** \"Ai cũng đăng ký rồi, mỗi cậu chưa. Không đi thì kỳ lắm.\" Câu thứ hai vẫn có thể hiệu quả — và đó chính là lý do phải phân biệt: hiệu quả không phải tiêu chí duy nhất.\n\n## Hai đường người nghe xử lý thông điệp\n\nPetty và Cacioppo mô tả hai đường: khi người nghe **có động lực và đủ hiểu biết**, họ đi đường trung tâm — cân nhắc chất lượng lập luận. Khi họ **bận, mệt hoặc không rành lĩnh vực**, họ đi đường ngoại vi — dựa vào tín hiệu bên ngoài: người nói là ai, có bao nhiêu người đồng tình, trình bày có gọn gàng không.\n\n| | Đường trung tâm | Đường ngoại vi |\n|---|---|---|\n| Khi nào xảy ra | Việc quan trọng với họ, họ có thời gian và nền tảng | Việc nhỏ, họ đang bận, hoặc lĩnh vực xa lạ |\n| Cái gì quyết định | Chất lượng lập luận và bằng chứng | Uy tín người nói, số đông, thiện cảm, hình thức |\n| Kết quả | Thay đổi bền, khó lung lay | Đổi nhanh, cũng đổi lại nhanh |\n\nHệ quả rất thực dụng: **cùng một đề xuất phải chuẩn bị khác nhau**. Trình bày trước hội đồng chấm đồ án — họ đi đường trung tâm, nên bằng chứng và phương pháp là thứ quyết định. Rủ bạn cùng phòng đi tập gym — đường ngoại vi, nên \"đi cùng cho vui, mình đặt lịch 6h chiều thứ ba\" hiệu quả hơn một bài về lợi ích sức khoẻ.\n\n> [!canh-bao] Nhận ra người nghe đang đi đường ngoại vi **không phải giấy phép để dùng tín hiệu rỗng**. Nó chỉ có nghĩa: hãy làm cho thông điệp dễ tiếp nhận, đừng bắt họ tự đãi cát tìm vàng. Nội dung vẫn phải đúng.\n\n## Năm bước chuẩn bị trước khi mở miệng\n\n1. **Hiểu người nghe.** Họ là ai, đang lo gì, đã biết gì về chuyện này, và ai là người thật sự quyết định.\n2. **Tìm nhu cầu sâu.** Điều họ nói ra thường là phần nổi. Sinh viên nói \"em không có thời gian\" có thể đang sợ làm không tốt; đồng nghiệp nói \"quy trình cũ vẫn chạy tốt\" có thể đang lo mình học không kịp cái mới. Thuyết phục trúng phần nổi mà trượt phần chìm thì gần như luôn thất bại.\n3. **Đổi tính năng thành lợi ích của họ** (mục dưới đây).\n4. **Chọn thời điểm và kênh.** Đề nghị lớn không gửi bằng tin nhắn lúc 11 giờ đêm. Người đang chạy hạn không phải người sẽ cân nhắc kỹ đề xuất của bạn.\n5. **Mở đường bằng một cam kết nhỏ.** Xin một bước nhỏ trước — đọc thử một trang, dự một buổi, chạy thử một tuần — thay vì đòi cái gật đầu cho toàn bộ ngay lần đầu.\n\n> [!vi-du] Thuyết phục một đồng nghiệp lớn tuổi áp dụng quy trình làm việc mới. Bước 1: người này giỏi nghề, được kính trọng, và đang lo bị coi là chậm công nghệ. Bước 2 — nhu cầu sâu: **giữ được vị thế chuyên môn**, không phải chống lại cái mới. Bước 3 — lợi ích cho họ: quy trình mới giúp phần việc thủ công của anh giảm còn một nửa, thời gian tiết kiệm dành cho phần chuyên môn mà chỉ anh làm được. Bước 4: nói riêng lúc rảnh, không nêu giữa cuộc họp đông người. Bước 5: \"Anh thử giúp em đúng một tuần với một khâu thôi, rồi anh nói em nghe chỗ nào bất tiện.\" Cách này khác hẳn việc chiếu slide chứng minh quy trình mới ưu việt — vốn vô tình nói rằng cách anh làm bao lâu nay là kém.\n\n## Lợi ích, không phải tính năng\n\nNgười ta không mua tính năng; họ mua **thứ tính năng ấy làm được cho họ**. Phép sửa rất cơ học: sau mỗi tính năng, viết thêm một câu bắt đầu bằng *\"nghĩa là bạn sẽ…\"*.\n\n| Tính năng (bạn có gì) | Lợi ích (họ được gì) |\n|---|---|\n| Ứng dụng có 5.000 bài luyện tập | Nghĩa là mỗi tối bạn chỉ mất 15 phút mà vẫn luyện đúng phần mình yếu |\n| Nhóm mình dùng bảng phân công chung | Nghĩa là bạn không phải hỏi lại ai đang làm gì, và không ai làm trùng việc |\n| Buổi hội thảo có ba diễn giả doanh nghiệp | Nghĩa là bạn hỏi trực tiếp được người đang tuyển thực tập sinh năm nay |\n| Máy tính này có pin 20 giờ | Nghĩa là bạn học cả ngày ở thư viện mà không phải tranh ổ cắm |\n| Em đã làm qua ba dự án tương tự | Nghĩa là anh không mất thời gian hướng dẫn lại từ đầu |\n\nCâu cuối trong bảng là ví dụ cho một tình huống rất cụ thể: **đàm phán lương**. Chuẩn bị đúng cho việc đó gồm ba thứ — mức thị trường cho vị trí ấy tại khu vực ấy (số liệu, không phải cảm giác), danh sách những gì bạn đã tạo ra được kèm bằng chứng, và **mức sàn của chính bạn** đã quyết trước khi bước vào phòng. Thiếu cái thứ ba thì mọi kỹ thuật đều vô nghĩa, vì bạn không biết lúc nào nên đứng dậy.\n\n> [!meo] Với nhóm khán giả đa dạng — sinh viên, giảng viên và doanh nghiệp cùng ngồi nghe — đừng chọn một lập luận trung bình cho tất cả. Hãy nêu **một lợi ích riêng cho từng nhóm**, gọi tên nhóm ra: \"với các bạn sinh viên thì…, với thầy cô thì…, với anh chị doanh nghiệp thì…\". Mất thêm ba mươi giây, nhưng mỗi người nghe được phần dành cho mình.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nChọn một việc bạn thật sự cần thuyết phục ai đó trong hai tuần tới. Viết ra đủ năm bước, trong đó bước 2 phải nêu **nhu cầu sâu** chứ không phải lý do họ nói ra, và bước 3 phải có ít nhất ba câu \"nghĩa là bạn sẽ…\". Cuối cùng, tự chấm bằng ba câu hỏi đạo đức ở đầu bài.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người trình bày đề xuất của mình trong 2 phút. Nhóm đóng vai người nghe khó tính và làm hai việc: (1) chỉ ra chỗ nào là **tính năng chưa đổi thành lợi ích**; (2) đoán **nhu cầu sâu** mà người trình bày chưa chạm tới. Sau đó người trình bày nói lại 1 phút, chỉ sửa hai chỗ đó — cả nhóm so xem lần hai khác lần một thế nào.\n\n### Bài tập về nhà (45 phút)\n\nTìm một quảng cáo hoặc bài đăng bán hàng bạn gặp trong tuần. Viết một trang: liệt kê các **tính năng** nó nêu và các **lợi ích** nó hứa; chỉ ra người nghe được nhắm tới đang được dẫn theo đường trung tâm hay ngoại vi, kèm bằng chứng; và chấm nó theo ba câu hỏi đạo đức — thông tin có đúng không, người mua còn tự do không, ai được lợi.\n\n### Xem thêm\n\n- 🎬 [Robert Cialdini — Science of Persuasion](https://www.youtube.com/watch?v=kv0sOX6Alrk) — 11 phút. Chính tác giả trình bày nền tảng của bảy nguyên tắc sẽ học ở hai bài sau.\n\n### Nguồn tham khảo\n\n- Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion* (new and expanded ed.). New York: Harper Business.\n- Petty, R. E., & Cacioppo, J. T. (1986). *Communication and Persuasion: Central and Peripheral Routes to Attitude Change.* New York: Springer.\n- Fisher, R., Ury, W., & Patton, B. (2011). *Getting to Yes* (3rd ed.). New York: Penguin.\n- Heath, C., & Heath, D. (2007). *Made to Stick.* New York: Random House.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 8.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "8.1-thuyet-phuc-vs-thao-tung",
+                "type": "mcq",
+                "prompt": "Khác biệt giữa thuyết phục và thao túng thể hiện ở đâu?",
+                "explanation": "Ba tiêu chí kiểm được: thông tin có trung thực không, người kia có còn tự do từ chối không, và nếu họ đồng ý thì họ có được lợi không.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thông tin có trung thực không, người kia còn tự do từ chối không, và họ có được lợi khi đồng ý không",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thuyết phục thì nhẹ nhàng, thao túng thì nói to và gây áp lực",
+                    "isCorrect": false,
+                    "misconception": "knm.persuasion-is-manipulation"
+                  },
+                  {
+                    "label": "Thuyết phục dùng lý lẽ, thao túng dùng cảm xúc",
+                    "isCorrect": false,
+                    "misconception": "knm.persuasion-is-manipulation"
+                  },
+                  {
+                    "label": "Không có khác biệt thật sự, chỉ khác ở chỗ ai đang làm",
+                    "isCorrect": false,
+                    "misconception": "knm.persuasion-is-manipulation"
+                  }
+                ]
+              },
+              {
+                "key": "8.1-loi-ich-tinh-nang",
+                "type": "mcq",
+                "prompt": "Vì sao nhấn mạnh lợi ích cụ thể cho người nghe lại quan trọng hơn liệt kê tính năng?",
+                "explanation": "Người nghe quan tâm điều gì thay đổi trong đời sống của họ; tính năng chỉ là phương tiện. Không nối được tính năng với một câu nghĩa là bạn sẽ… thì tính năng đó không thuyết phục được ai.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì người nghe quyết định dựa trên điều họ nhận được, còn tính năng chỉ là phương tiện tạo ra điều đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì liệt kê tính năng làm bài nói dài hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì tính năng là thông tin kỹ thuật, không nên nhắc tới",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì người nghe thường không đủ hiểu biết để nắm tính năng",
+                    "isCorrect": false,
+                    "misconception": "knm.audience-is-me"
+                  }
+                ]
+              },
+              {
+                "key": "8.1-nhu-cau-sau",
+                "type": "mcq",
+                "prompt": "Một đồng nghiệp lớn tuổi nói quy trình cũ vẫn chạy tốt, không cần đổi. Nhu cầu sâu nhiều khả năng nằm ở đâu?",
+                "explanation": "Điều nói ra thường là phần nổi. Ở tình huống này, mối lo thường là giữ vị thế chuyên môn và không bị coi là chậm, chứ không phải sự ưu việt của quy trình.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Lo mất vị thế chuyên môn và bị đánh giá là chậm thích nghi, chứ không hẳn là phản đối quy trình mới",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đơn giản là chưa hiểu quy trình mới, chỉ cần trình bày kỹ hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.persuade-by-arguing-harder"
+                  },
+                  {
+                    "label": "Người lớn tuổi thường ngại công nghệ, đây là chuyện tự nhiên",
+                    "isCorrect": false,
+                    "misconception": "knm.single-cue-decoding"
+                  },
+                  {
+                    "label": "Họ muốn được trả thêm tiền để đổi cách làm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "8.1-hai-duong",
+                "type": "mcq",
+                "prompt": "Bạn trình bày đồ án trước hội đồng chuyên môn. Theo mô hình hai đường xử lý thông điệp, bạn nên đầu tư nhất vào đâu?",
+                "explanation": "Hội đồng có động lực và nền tảng chuyên môn nên đi đường trung tâm: chất lượng lập luận, phương pháp và bằng chứng quyết định, chứ không phải tín hiệu bề ngoài.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chất lượng lập luận, phương pháp và bằng chứng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hiệu ứng slide và phong thái tự tin",
+                    "isCorrect": false,
+                    "misconception": "knm.mehrabian-93"
+                  },
+                  {
+                    "label": "Số lượng người đã khen đề tài của bạn",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Trích dẫn thật nhiều tên tuổi lớn trong ngành",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-symbols"
+                  }
+                ]
+              },
+              {
+                "key": "8.1-thien-nguyen",
+                "type": "mcq",
+                "prompt": "Bạn muốn thuyết phục lớp tham gia một dự án thiện nguyện cuối tuần. Cách triển khai phù hợp nhất là gì?",
+                "explanation": "Nêu việc cụ thể và lợi ích với từng nhóm, xin một cam kết nhỏ và giữ nguyên quyền từ chối — thay vì dùng áp lực đám đông hay cảm giác tội lỗi.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nói rõ việc cần làm, thời lượng, lợi ích với từng nhóm trong lớp, và xin một cam kết nhỏ với hạn trả lời rõ ràng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nhấn mạnh rằng ai cũng đăng ký rồi, không đi thì kỳ",
+                    "isCorrect": false,
+                    "misconception": "knm.persuasion-is-manipulation"
+                  },
+                  {
+                    "label": "Kêu gọi chung chung về ý nghĩa của hoạt động thiện nguyện",
+                    "isCorrect": false,
+                    "misconception": "knm.features-not-benefits"
+                  },
+                  {
+                    "label": "Nhờ lớp trưởng lập danh sách rồi thông báo là mọi người phải tham gia",
+                    "isCorrect": false,
+                    "misconception": "knm.persuasion-is-manipulation"
+                  }
+                ]
+              },
+              {
+                "key": "8.1-dam-phan-luong",
+                "type": "mcq",
+                "prompt": "Trước cuộc đàm phán mức lương, bạn nên chuẩn bị điều gì?",
+                "explanation": "Ba thứ: số liệu mức thị trường cho vị trí và khu vực đó, bằng chứng về giá trị mình đã tạo ra, và mức sàn của chính mình — thiếu mức sàn thì không biết khi nào nên dừng.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Số liệu mức thị trường, bằng chứng cụ thể về kết quả mình đã tạo ra, và mức sàn của chính mình quyết trước khi vào phòng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Một con số cao hơn nhiều so với mong muốn để còn mặc cả xuống",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Danh sách lý do cá nhân cần thêm thu nhập",
+                    "isCorrect": false,
+                    "misconception": "knm.features-not-benefits"
+                  },
+                  {
+                    "label": "Thông tin về mức lương của các đồng nghiệp cùng phòng",
+                    "isCorrect": false,
+                    "misconception": "knm.compare-upward"
+                  }
+                ]
+              },
+              {
+                "key": "8.1-khan-gia-da-dang",
+                "type": "mcq",
+                "prompt": "Khi thuyết phục một nhóm khán giả đa dạng (sinh viên, giảng viên, doanh nghiệp), cách tiếp cận phù hợp là gì?",
+                "explanation": "Không có lập luận trung bình cho mọi nhóm: hãy gọi tên từng nhóm và nêu lợi ích riêng cho họ, vì mỗi nhóm quan tâm một thứ khác nhau.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nêu riêng một lợi ích cho từng nhóm, gọi tên nhóm ra khi nói",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chọn một lập luận trung bình phù hợp với tất cả",
+                    "isCorrect": false,
+                    "misconception": "knm.one-size-persuasion"
+                  },
+                  {
+                    "label": "Nhắm vào nhóm quan trọng nhất và bỏ qua các nhóm còn lại",
+                    "isCorrect": false,
+                    "misconception": "knm.one-size-persuasion"
+                  },
+                  {
+                    "label": "Dùng thật nhiều số liệu để nhóm nào cũng có cái để xem",
+                    "isCorrect": false,
+                    "misconception": "knm.info-not-message"
+                  }
+                ]
+              },
+              {
+                "key": "8.1-viet-nam-buoc",
+                "type": "essay",
+                "prompt": "Chọn một việc bạn cần thuyết phục ai đó trong hai tuần tới. Viết 200–300 từ theo năm bước: (a) người nghe là ai và đang lo gì; (b) nhu cầu sâu của họ — khác với lý do họ nói ra; (c) ba câu lợi ích dạng nghĩa là bạn sẽ…; (d) thời điểm và kênh bạn chọn, kèm lý do; (e) cam kết nhỏ bạn sẽ xin ở lần đầu.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 8.2 · Bốn nguyên tắc gây ảnh hưởng: đáp trả, nhất quán, số đông, thiện cảm",
+          "durationMin": 50,
+          "description": "Bốn nguyên tắc đầu trong bộ nguyên tắc gây ảnh hưởng của Cialdini, mỗi nguyên tắc kèm ví dụ trong học tập, mua sắm và công việc, cách dùng có đạo đức và dấu hiệu nhận ra khi bị dùng lên mình.",
+          "objectives": [
+            "Gọi tên được nguyên tắc đang vận hành trong một tình huống thuyết phục cụ thể",
+            "Dùng được nguyên tắc đáp trả và cam kết nhỏ theo hướng trung thực",
+            "Chọn được loại bằng chứng xã hội phù hợp với người nghe",
+            "Nhận ra được khi bốn nguyên tắc này đang được dùng lên chính mình"
+          ],
+          "summary": [
+            "Đáp trả: nhận rồi thì thấy phải trả, và hiệu ứng không tỉ lệ với giá trị món quà — quà nhỏ vẫn tạo nghĩa vụ, kể cả khi không ai xin.",
+            "Cam kết và nhất quán: người ta muốn hành xử khớp với điều mình đã nói, nhất là khi lời ấy được viết ra và nói công khai.",
+            "Bằng chứng xã hội mạnh nhất khi người ta không chắc chắn và khi người làm gương giống họ.",
+            "Thiện cảm đến từ sự tương đồng, lời khen thật và việc cùng làm chung một việc — nó khiến người ta chịu nghe, không thay được bằng chứng."
+          ],
+          "body": "\n![Chân dung nhà tâm lý học Robert Cialdini](https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Robert_Cialdini.jpg/1280px-Robert_Cialdini.jpg \"Robert B. Cialdini, giáo sư tâm lý học và marketing, tác giả cuốn Influence: The Psychology of Persuasion (1984). Sáu nguyên tắc gây ảnh hưởng trong sách — và nguyên tắc thứ bảy ông bổ sung năm 2016 — là bộ khung được dùng rộng rãi nhất về thuyết phục. Ảnh: [File:Robert Cialdini.jpg](https://commons.wikimedia.org/wiki/File:Robert_Cialdini.jpg), tác giả Viktorbuehler, giấy phép CC BY-SA 3.0.\")\n\nCialdini gọi chúng là **vũ khí gây ảnh hưởng**, và cách gọi ấy có lý do: chúng hoạt động gần như tự động, kể cả khi ta biết mình đang bị tác động. Vì vậy mỗi nguyên tắc dưới đây được trình bày theo ba lớp: **nó là gì**, **dùng thế nào cho trung thực**, và **nhận ra thế nào khi nó đang được dùng lên mình**.\n\n## Nguyên tắc 1 · Đáp trả\n\nNhận của ai cái gì thì thấy khó chịu cho tới khi trả lại được. Đây là chuẩn mực xã hội có ở mọi nền văn hoá, và điểm đáng chú ý: **hiệu ứng không tỉ lệ với giá trị món quà**, đồng thời **vẫn chạy cả khi món quà không ai yêu cầu**.\n\n| Bối cảnh | Ví dụ |\n|---|---|\n| Học tập | Bạn cùng lớp gửi cho bạn bản tóm tắt bài giảng hôm bạn nghỉ; tuần sau bạn ấy nhờ đổi ca trực, bạn gần như không nghĩ mà nhận |\n| Mua sắm | Quầy siêu thị mời nếm thử một miếng xúc xích; tỉ lệ người mua sau khi nếm cao hơn hẳn — chi phí một miếng nhỏ, hiệu quả lớn |\n| Trực tuyến | Ứng dụng cho dùng miễn phí 7 ngày với đầy đủ tính năng, rồi mới hỏi bạn có nâng cấp không |\n| Nơi làm thêm | Quản lý đổi ca giúp bạn hôm bạn có việc gia đình; lần sau anh ấy nhờ làm thêm cuối tuần, bạn thấy khó từ chối |\n| Nhà hàng | Kẹo bạc hà kèm hoá đơn làm tiền tip tăng lên — thêm một cái kẹo thứ hai kèm câu \"dành riêng cho anh chị\" thì tăng mạnh hơn nữa |\n\n**Dùng cho trung thực:** cho trước thứ có giá trị thật và **không kèm điều kiện ngầm**. Giúp bạn cùng nhóm phần việc họ đang tắc, chia sẻ tài liệu mình có, giới thiệu người quen — rồi khi bạn cần, hãy nhờ thẳng chứ đừng nhắc lại món nợ.\n\n**Nhận ra khi bị dùng:** món quà xuất hiện **ngay trước** một lời đề nghị; bạn không xin mà vẫn được cho; và bạn thấy áy náy khi nghĩ tới việc từ chối. Cách xử lý không phải là từ chối mọi thiện chí — mà là tách hai câu hỏi: *món quà này dễ chịu thật*, còn *đề nghị đi kèm có đáng nhận không*.\n\n> [!vi-du] Một trung tâm tiếng Anh phát vé học thử miễn phí hai buổi cho sinh viên trước cổng trường. Học thử xong, tư vấn viên ngồi xuống nói chuyện ba mươi phút và đưa hợp đồng. Hai buổi ấy có giá trị thật — nhưng cảm giác \"người ta đã cho mình học miễn phí\" là thứ đang làm việc trong đầu bạn lúc ký, chứ không phải chất lượng khoá học. Cách phòng vệ rẻ nhất: **không ký ở đó**. Về nhà, so ba trung tâm rồi mới quyết.\n\n## Nguyên tắc 2 · Cam kết và nhất quán\n\nNgười ta muốn hành xử khớp với điều mình đã nói và đã làm — và áp lực ấy mạnh hơn khi cam kết được **nói ra thành lời, viết xuống, và công khai trước người khác**. Vì vậy một cam kết nhỏ ban đầu thường dẫn tới cam kết lớn hơn sau đó.\n\n| Bối cảnh | Ví dụ |\n|---|---|\n| Học nhóm | Ai đã nhận \"mình phụ trách phần dữ liệu\" trong nhóm chat thì khả năng nộp đúng hạn cao hơn hẳn người chỉ gật đầu trong buổi họp |\n| Sức khoẻ | Hẹn đi tập cùng bạn và nhắn vào nhóm giờ tập cụ thể — khó bỏ hơn nhiều so với tự nhủ trong đầu |\n| Bán hàng | Nhân viên hỏi \"anh có quan tâm tới việc tiết kiệm tiền điện không?\" — trả lời có rồi thì khó từ chối nghe tiếp về sản phẩm |\n| Trực tuyến | Điền xong bốn bước của một biểu mẫu dài, tới bước năm hiện phí phát sinh; nhiều người vẫn bấm tiếp vì đã đi tới đó |\n| Lớp học | Sinh viên viết ra mục tiêu điểm số đầu kỳ và dán ở bàn học giữ được kỷ luật ôn tập tốt hơn nhóm chỉ nghĩ trong đầu |\n\n**Dùng cho trung thực:** xin cam kết nhỏ, **cụ thể và tự nguyện** — \"cậu thử một tuần rồi nói mình nghe\" — và giúp người kia viết nó ra. Đừng biến cam kết nhỏ thành cái bẫy để kéo tới thứ họ chưa bao giờ đồng ý.\n\n**Nhận ra khi bị dùng:** chuỗi câu hỏi dễ đồng ý ở đầu; cảm giác \"trót rồi thì theo cho xong\"; hoặc điều kiện chỉ hiện ra sau khi bạn đã đi được nửa quy trình. Câu hỏi phá bẫy: **\"Nếu hôm nay mới biết những gì mình biết bây giờ, mình có chọn như vậy không?\"** Nếu không, đổi ý là quyết định đúng — nhất quán với giá trị của mình quan trọng hơn nhất quán với một lời lỡ nói.\n\n> [!canh-bao] Bẫy chi phí chìm là họ hàng gần của nguyên tắc này: đã đầu tư ba tháng vào một dự án hỏng nên tiếc, không dừng. Tiền và thời gian đã tiêu thì không lấy lại được dù bạn có đi tiếp hay không — quyết định đúng chỉ nên dựa vào chi phí và lợi ích **từ hôm nay trở đi**.\n\n## Nguyên tắc 3 · Bằng chứng xã hội\n\nKhi không chắc phải làm gì, người ta nhìn xem người khác đang làm gì. Nguyên tắc này mạnh nhất ở hai điều kiện: **tình huống không chắc chắn** và **người làm gương giống mình**.\n\n| Bối cảnh | Ví dụ |\n|---|---|\n| Sàn thương mại điện tử | \"1.200 người đã mua trong tháng này\" · \"4,8 sao / 2.300 đánh giá\" |\n| Quán ăn | Quán đông thì người ta xếp hàng, quán vắng bên cạnh thì không ai vào — dù chưa ai nếm món của cả hai |\n| Khách sạn | Bảng nhắc dùng lại khăn tắm hiệu quả hơn hẳn khi ghi \"phần lớn khách ở **chính phòng này** đã dùng lại khăn\" thay vì kêu gọi bảo vệ môi trường chung chung |\n| Học tập | Sinh viên năm nhất chọn môn tự chọn theo lựa chọn của anh chị khoá trên nhiều hơn theo mô tả môn học |\n| Mạng xã hội | Bài có sẵn nhiều lượt thích được đọc kỹ hơn và được tin hơn, dù nội dung không đổi |\n\n**Dùng cho trung thực:** đưa bằng chứng **thật** và **gần với người nghe**. Muốn rủ lớp tham gia dự án, nói \"ba bạn trong lớp mình đã tham gia đợt trước, đây là việc các bạn ấy đã làm\" mạnh hơn \"hàng nghìn sinh viên toàn quốc đã tham gia\".\n\n**Nhận ra khi bị dùng:** con số không kiểm được, đánh giá chung chung không nêu chi tiết, \"mọi người đều đang dùng\" mà không nói mọi người là ai. Và nhớ điều đã học ở module 3: **số đông đo mức lan truyền, không đo mức đúng**.\n\n> [!vi-du] Trên một sàn thương mại, cùng một mẫu tai nghe có hai người bán: A ghi \"đã bán 5.000\" với 4,9 sao; B ghi \"đã bán 120\" với 4,6 sao và 40 đánh giá có ảnh thật, mô tả cụ thể ưu nhược. Bằng chứng xã hội của A mạnh hơn về con số, nhưng của B **kiểm được**. Người mua tỉnh táo đọc mấy đánh giá 3 sao của B — chỗ thường nói thật nhất — thay vì đếm số của A.\n\n## Nguyên tắc 4 · Thiện cảm\n\nTa dễ đồng ý với người mình có cảm tình. Thiện cảm được xây từ ba nguồn chính: **sự tương đồng** (cùng quê, cùng trường, cùng sở thích), **lời khen chân thật**, và **việc cùng làm chung hướng tới một mục tiêu**.\n\n| Bối cảnh | Ví dụ |\n|---|---|\n| Phỏng vấn | Ứng viên và người phỏng vấn phát hiện cùng học một trường — không khí đổi hẳn từ phút đó |\n| Bán hàng | Nhân viên nhớ tên bạn và nhớ lần trước bạn mua gì; bạn quay lại chỗ ấy dù giá không rẻ hơn |\n| Làm nhóm | Hai người từng cùng thức đêm cứu một bài nộp về sau làm việc với nhau dễ hơn hẳn |\n| Quảng cáo | Nhãn hàng thuê người nổi tiếng mà nhóm khách hàng mục tiêu yêu thích — bán bằng thiện cảm, không bằng thông số |\n| Lớp học | Giảng viên nhớ tên sinh viên và hỏi thăm phần đồ án; sinh viên đi học đều hơn |\n\n**Dùng cho trung thực:** tìm điểm chung có thật, khen điều bạn thật sự thấy đáng khen và nói rõ vì sao, và **cùng làm một việc gì đó** trước khi cần nhờ vả. Thiện cảm dựng bằng sự giả tạo thì đổ ngay ở lần thứ hai.\n\n**Nhận ra khi bị dùng:** người lạ khen bạn quá nhanh và quá nhiều; tìm điểm chung một cách sốt sắng; thân thiện tăng vọt ngay trước lúc có đề nghị. Câu hỏi phòng vệ mà Cialdini gợi ý rất gọn: **\"Mình có thấy quý người này nhanh hơn bình thường không?\"** Nếu có, hãy tách cảm tình khỏi món hàng và hỏi đúng câu bạn sẽ hỏi một người bán khó ưa.\n\n> [!ghi-nho] Bốn nguyên tắc này không xấu cũng không tốt — chúng là cách con người ra quyết định nhanh trong một thế giới quá nhiều lựa chọn. Điều quyết định đạo đức là **thông tin đi kèm có thật hay không**: một lời khen thật, một bằng chứng xã hội thật và một món quà không kèm ràng buộc đều là chuyện tử tế.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nTrong 24 giờ qua, tìm **bốn tình huống** bạn đã gặp, mỗi tình huống ứng với một nguyên tắc trong bài (kể cả trên mạng xã hội và ứng dụng mua sắm). Với mỗi tình huống ghi ba dòng: nguyên tắc nào, dấu hiệu nhận ra, và bạn có bị ảnh hưởng không — trung thực, kể cả khi câu trả lời là có.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi nhóm nhận một mục tiêu thuyết phục có thật trong trường (rủ tham gia câu lạc bộ, xin khoa mở thêm buổi phụ đạo, kêu gọi phân loại rác ở căng tin). Thiết kế hai phiên bản: **bản trung thực** dùng ít nhất hai nguyên tắc, và **bản thao túng** dùng đúng những nguyên tắc ấy nhưng vi phạm ba câu hỏi đạo đức ở bài 8.1. Trình bày cả hai, rồi chỉ ra chính xác **câu nào** làm bản thứ hai vượt ranh giới.\n\n### Bài tập về nhà (45–60 phút)\n\nChụp hoặc lưu lại năm ví dụ thuyết phục bạn gặp trong tuần (quảng cáo, trang bán hàng, tin nhắn khuyến mãi, bài đăng của người ảnh hưởng). Viết một trang: mỗi ví dụ dùng nguyên tắc nào, bằng chứng đi kèm có kiểm được không, và bạn chấm nó ở mức trung thực hay thao túng — kèm lý do.\n\n### Xem thêm\n\n- 🎬 [Robert Cialdini — Science of Persuasion](https://www.youtube.com/watch?v=kv0sOX6Alrk) — 11 phút.\n- 🎬 [7 Principles of Psychological Persuasion](https://www.youtube.com/watch?v=P3rbadeF9AI) — Sprouts, 6 phút. Bản hoạt hình tóm tắt cả bảy nguyên tắc.\n\n### Nguồn tham khảo\n\n- Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion* (new and expanded ed.). New York: Harper Business.\n- Cialdini, R. B., Demaine, L. J., Sagarin, B. J., Barrett, D. W., Rhoads, K., & Winter, P. L. (2006). Managing social norms for persuasive impact. *Social Influence*, 1(1), 3–15.\n- Goldstein, N. J., Cialdini, R. B., & Griskevicius, V. (2008). A room with a viewpoint: Using social norms to motivate environmental conservation in hotels. *Journal of Consumer Research*, 35(3), 472–482.\n- Freedman, J. L., & Fraser, S. C. (1966). Compliance without pressure: The foot-in-the-door technique. *Journal of Personality and Social Psychology*, 4(2), 195–202.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 8.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "8.2-dap-tra-qua-nho",
+                "type": "mcq",
+                "prompt": "Vì sao nguyên tắc đáp trả vẫn hiệu quả ngay cả khi món quà nhận được rất nhỏ?",
+                "explanation": "Chuẩn mực đáp trả hoạt động gần như tự động và không tỉ lệ với giá trị món quà; nó còn chạy cả khi món quà không ai yêu cầu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì cảm giác mắc nợ hoạt động gần như tự động, không tỉ lệ với giá trị món quà, và vẫn xuất hiện dù ta không hề xin",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì người nhận sợ bị đánh giá là keo kiệt nếu không mua",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì quà nhỏ thường đi kèm sản phẩm chất lượng cao",
+                    "isCorrect": false,
+                    "misconception": "knm.reciprocity-small-gift"
+                  },
+                  {
+                    "label": "Vì quà nhỏ không ảnh hưởng gì tới quyết định, chỉ tạo thiện cảm",
+                    "isCorrect": false,
+                    "misconception": "knm.reciprocity-small-gift"
+                  }
+                ]
+              },
+              {
+                "key": "8.2-vu-khi-dap-tra",
+                "type": "mcq",
+                "prompt": "Trong các nguyên tắc gây ảnh hưởng, nguyên tắc nào hướng dẫn nên đưa lời mời, món quà hoặc đặc ân TRƯỚC khi đưa ra đề nghị?",
+                "explanation": "Đó là nguyên tắc đáp trả: cho trước tạo ra cảm giác cần trả lại, khiến đề nghị sau đó dễ được chấp nhận hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đáp trả (có đi có lại)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khan hiếm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Uy quyền",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bằng chứng xã hội",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "8.2-cam-ket-nho",
+                "type": "mcq",
+                "prompt": "Vì sao cam kết nhỏ lại hiệu quả trong việc xây dựng cam kết lớn?",
+                "explanation": "Người ta có xu hướng hành xử nhất quán với điều mình đã nói, đặc biệt khi cam kết được nói ra, viết xuống và công khai — nên bước nhỏ mở đường cho bước lớn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì người ta muốn hành xử nhất quán với điều mình đã nói, nhất là khi cam kết được viết ra và nói công khai",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì cam kết nhỏ tốn ít thời gian nên ai cũng đồng ý",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì sau khi làm việc nhỏ, người ta quên mất mục tiêu ban đầu của mình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì cam kết nhỏ không ràng buộc gì nên không ai cảm thấy áp lực",
+                    "isCorrect": false,
+                    "misconception": "knm.consistency-trap"
+                  }
+                ]
+              },
+              {
+                "key": "8.2-bang-chung-xa-hoi",
+                "type": "mcq",
+                "prompt": "Vì sao bằng chứng xã hội mạnh hơn trong các tình huống không chắc chắn?",
+                "explanation": "Khi không biết phải làm gì và thiếu cơ sở tự đánh giá, người ta lấy hành vi của người khác — nhất là người giống mình — làm chỉ dẫn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì khi không có cơ sở tự đánh giá, người ta lấy hành vi của người khác — nhất là người giống mình — làm chỉ dẫn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì số đông thường đúng hơn cá nhân",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Vì trong tình huống khó, người ta có nhiều thời gian quan sát hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì đám đông tạo áp lực khiến người ta không dám chọn khác",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "8.2-thien-cam",
+                "type": "mcq",
+                "prompt": "Thiện cảm trong bộ nguyên tắc của Cialdini được hình thành chủ yếu từ đâu?",
+                "explanation": "Ba nguồn chính: sự tương đồng, lời khen chân thật, và việc cùng làm chung hướng tới một mục tiêu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sự tương đồng, lời khen chân thật, và việc cùng làm chung một mục tiêu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ngoại hình và cách ăn mặc của người nói",
+                    "isCorrect": false,
+                    "misconception": "knm.single-cue-decoding"
+                  },
+                  {
+                    "label": "Số lượng người theo dõi và mức độ nổi tiếng",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Chức danh và bằng cấp của người nói",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-symbols"
+                  }
+                ]
+              },
+              {
+                "key": "8.2-noi-nguyen-tac",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với nguyên tắc gây ảnh hưởng đang được sử dụng.",
+                "explanation": "Nhận ra đúng nguyên tắc là bước đầu để biết mình đang bị tác động bằng cách nào.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Trung tâm phát vé học thử miễn phí trước khi mời ký hợp đồng",
+                    "right": "Đáp trả"
+                  },
+                  {
+                    "left": "Nhân viên hỏi vài câu dễ đồng ý trước khi giới thiệu sản phẩm",
+                    "right": "Cam kết và nhất quán"
+                  },
+                  {
+                    "left": "Trang bán hàng ghi đã bán 1.200 sản phẩm trong tháng",
+                    "right": "Bằng chứng xã hội"
+                  },
+                  {
+                    "left": "Người bán phát hiện cùng quê với bạn và nhắc lại nhiều lần",
+                    "right": "Thiện cảm"
+                  }
+                ]
+              },
+              {
+                "key": "8.2-thoat-bay-nhat-quan",
+                "type": "mcq",
+                "prompt": "Bạn đã trót đồng ý tham gia một dự án, sau đó biết thêm thông tin khiến bạn thấy không nên tham gia. Câu hỏi nào giúp bạn quyết định đúng?",
+                "explanation": "Nhất quán với giá trị của mình quan trọng hơn nhất quán với một lời đã nói khi thông tin đã đổi; câu hỏi phá bẫy là hỏi lại lựa chọn dựa trên thông tin hiện có.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nếu hôm nay mới biết những gì mình biết bây giờ, mình có chọn như vậy không?",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mình đã nói rồi thì phải giữ lời, đổi ý là thiếu nhất quán",
+                    "isCorrect": false,
+                    "misconception": "knm.consistency-trap"
+                  },
+                  {
+                    "label": "Mình đã bỏ công vào đó rồi, bỏ giữa chừng thì phí",
+                    "isCorrect": false,
+                    "misconception": "knm.consistency-trap"
+                  },
+                  {
+                    "label": "Xem những người khác trong dự án có rút không rồi làm theo",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "8.2-viet-bon-tinh-huong",
+                "type": "essay",
+                "prompt": "Tìm bốn tình huống thật bạn gặp trong tuần, mỗi tình huống ứng với một nguyên tắc trong bài. Viết 200–300 từ: mỗi tình huống ghi nguyên tắc nào đang chạy, dấu hiệu nhận ra, bạn có bị ảnh hưởng không, và với ít nhất một tình huống hãy chấm nó là trung thực hay thao túng kèm lý do.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 8.3 · Uy quyền, khan hiếm, đồng nhất — và cách tự vệ",
+          "durationMin": 50,
+          "description": "Ba nguyên tắc còn lại kèm ví dụ; cách nhận ra thủ thuật khan hiếm giả và uy quyền vay mượn; các mẫu thiết kế đánh lừa trên ứng dụng; và quy trình bốn bước tự vệ trước một lời chào mời gấp gáp.",
+          "objectives": [
+            "Giải thích được vì sao uy quyền, khan hiếm và đồng nhất tác động mạnh tới quyết định",
+            "Phân biệt được uy quyền thật với dấu hiệu uy quyền vay mượn",
+            "Nhận ra được khan hiếm giả và các mẫu thiết kế đánh lừa trên ứng dụng, sàn thương mại",
+            "Chạy được quy trình bốn bước tự vệ trước một đề nghị gấp gáp"
+          ],
+          "summary": [
+            "Uy quyền hiệu quả vì ta tiết kiệm công sức khi tin người có chuyên môn — nhưng dấu hiệu uy quyền thì dựng được, nên phải hỏi chuyên môn đúng lĩnh vực và lợi ích của người nói.",
+            "Khan hiếm hoạt động vì con người ghét mất mát hơn thích được thêm; cái hiếm được đánh giá cao hơn dù chất lượng không đổi.",
+            "Đồng nhất là nguyên tắc thứ bảy: người ta chịu ảnh hưởng mạnh nhất từ những người mà họ coi là cùng phe với mình.",
+            "Quy trình tự vệ bốn bước: dừng lại, gọi tên nguyên tắc đang chạy, kiểm thông tin ở nguồn độc lập, và dời quyết định ra khỏi hiện trường."
+          ],
+          "body": "\nBa nguyên tắc còn lại là ba nguyên tắc bị lạm dụng nhiều nhất trong quảng cáo và lừa đảo trực tuyến — nên bài này dành nửa sau cho phần tự vệ.\n\n## Nguyên tắc 5 · Uy quyền\n\nNgười ta có xu hướng nghe theo người có chuyên môn hoặc có vị thế, vì đó là cách tiết kiệm công sức hợp lý: ta không thể tự kiểm chứng mọi thứ. Vấn đề nằm ở chỗ **cái tác động thường là dấu hiệu của uy quyền chứ không phải bản thân chuyên môn** — chức danh, đồng phục, bằng cấp trên tường, số người theo dõi.\n\n| Bối cảnh | Ví dụ |\n|---|---|\n| Quảng cáo | Diễn viên mặc áo blouse trắng giới thiệu thuốc — chiếc áo làm việc, không phải kiến thức y khoa |\n| Mạng xã hội | Tài khoản 500 nghìn người theo dõi khuyên về đầu tư; con số nói về sức hút, không nói về chuyên môn tài chính |\n| Học thuật | Một tên tuổi lớn được trích dẫn để đỡ cho một kết luận nằm **ngoài** lĩnh vực của người đó |\n| Nơi làm việc | Đề xuất được thông qua nhanh hơn khi người trình bày là trưởng nhóm, dù nội dung y hệt bản của thực tập sinh |\n| Lừa đảo | Cuộc gọi tự xưng cán bộ cơ quan chức năng, đọc đúng vài thông tin cá nhân để tạo vẻ chính danh |\n\n**Dùng cho trung thực:** nêu **cơ sở thật** của mình một cách gọn gàng — đã làm ba dự án tương tự, đây là số liệu, đây là chỗ tôi chưa chắc. Và khi trích dẫn người khác, trích đúng lĩnh vực của họ.\n\n**Nhận ra khi bị dùng:** hai câu hỏi. *Người này có chuyên môn đúng lĩnh vực đang bàn không?* và *họ được lợi gì nếu mình tin?* Chức danh trả lời một phần câu đầu và không trả lời được câu sau.\n\n> [!vi-du] Một khoá học đầu tư được quảng bá bởi người tự giới thiệu là \"chuyên gia tài chính quốc tế\", ảnh chụp cạnh siêu xe, hàng nghìn bình luận cảm ơn. Chạy hai câu hỏi: chuyên môn kiểm được ở đâu — có bằng cấp, có tổ chức nào chứng nhận, có bài viết nào bị phản biện công khai không? Và họ kiếm tiền từ đâu — từ đầu tư, hay từ chính học phí của bạn? Câu hỏi thứ hai thường trả lời xong cả vấn đề.\n\n## Nguyên tắc 6 · Khan hiếm\n\nCái gì ít đi thì được đánh giá cao hơn, kể cả khi chất lượng không đổi. Cơ chế nằm ở chỗ **người ta ghét mất mát hơn là thích được thêm** — mất cơ hội là một mất mát, và cảm giác ấy đủ để cắt ngắn quá trình cân nhắc.\n\n| Bối cảnh | Ví dụ |\n|---|---|\n| Ứng dụng học tập | \"Ưu đãi chỉ còn 2 giờ\" — rồi tuần sau lại đúng thông báo ấy |\n| Sàn thương mại | \"Chỉ còn 2 sản phẩm\" · đồng hồ đếm ngược · \"17 người đang xem món này\" |\n| Vé sự kiện | Vé hạng thường \"sắp hết\", trong khi vẫn mở bán suốt |\n| Tuyển sinh | \"Ưu đãi học phí chỉ áp dụng cho 20 hồ sơ đầu tiên\" |\n| Đời thường | Món ăn theo mùa, phiên bản giới hạn, đợt tuyển dụng \"chỉ mở một lần trong năm\" |\n\n**Dùng cho trung thực:** chỉ nói khan hiếm **khi nó có thật** và nêu rõ lý do — lớp chỉ nhận 20 người vì phòng thực hành có 20 máy. Khan hiếm thật thì kiểm được; khan hiếm dựng lên sẽ lộ ở lần thứ hai và bạn mất luôn niềm tin của người mua.\n\n**Nhận ra khi bị dùng:** đồng hồ đếm ngược lặp lại; số lượng còn lại không đổi qua nhiều ngày; áp lực phải quyết ngay tại chỗ. Ba phép thử rẻ: **quay lại sau vài ngày** xem ưu đãi có còn không; **tìm cùng sản phẩm ở nơi khác**; và hỏi mình **có định mua thứ này trước khi thấy đồng hồ đếm ngược không**.\n\n> [!vi-du] Người bán liên tục nhấn \"chỉ còn 2 sản phẩm thôi em, khách hỏi nhiều lắm\". Cách ứng phó không phải là cãi hay bỏ đi cho nhanh. Hãy tách hai câu hỏi và nói thẳng: \"Em cần món này không, và giá này có hợp lý không — hai chuyện đó không đổi vì còn hai hay hai mươi cái. Anh giữ giúp em tới chiều mai nhé, chiều mai em trả lời.\" Nếu người bán không giữ nổi tới chiều mai, thứ bạn vừa tránh được là một quyết định bị ép về thời gian.\n\n## Nguyên tắc 7 · Đồng nhất\n\nCialdini bổ sung nguyên tắc này năm 2016. Nó mạnh hơn thiện cảm: không chỉ là \"tôi quý người này\" mà là **\"người này là người của chúng ta\"** — cùng gia đình, cùng quê, cùng trường, cùng nghề, cùng trải qua một chuyện.\n\n| Bối cảnh | Ví dụ |\n|---|---|\n| Tuyển dụng | Hội cựu sinh viên giới thiệu việc cho nhau; hồ sơ cùng trường được đọc kỹ hơn |\n| Đồng hương | \"Anh cũng dân Nghệ An à\" — cả cuộc trò chuyện đổi giọng từ đó |\n| Cộng đồng nghề | Người trong nghề tin lời khuyên của người cùng nghề hơn của một chuyên gia ngoài ngành |\n| Chiến dịch | \"Sinh viên trường mình cùng nhau…\" hiệu quả hơn \"giới trẻ Việt Nam cùng nhau…\" |\n| Lừa đảo | Kẻ lừa đảo giả danh cùng hội, cùng nhóm sở thích, cùng nhóm phụ huynh của trường để tạo cảm giác an toàn |\n\n**Dùng cho trung thực:** nói đúng cái chung có thật, và dùng nó để **cùng làm việc**, không phải để đòi ưu ái. Một nhóm học tập gọi mình là \"nhóm mình\" và có mục tiêu chung thì hợp tác tốt hơn — đó là mặt lành của nguyên tắc này.\n\n**Nhận ra khi bị dùng:** người lạ nhấn mạnh điểm chung ngay từ đầu; cái chung ấy không kiểm được; và ngay sau đó là một đề nghị về tiền hoặc thông tin cá nhân.\n\n## Tự vệ: bốn bước và những mẫu thiết kế đánh lừa\n\nCác ứng dụng và trang bán hàng có cả một họ thủ thuật thiết kế nhằm đẩy bạn qua ngưỡng cân nhắc — thường gọi là **mẫu thiết kế đánh lừa**:\n\n| Thủ thuật | Nó làm gì | Nguyên tắc bị lợi dụng |\n|---|---|---|\n| Đồng hồ đếm ngược lặp lại hằng tuần | Ép quyết định nhanh | Khan hiếm |\n| \"17 người đang xem sản phẩm này\" | Tạo cảm giác đông và gấp | Bằng chứng xã hội + khan hiếm |\n| Nút *Đồng ý* to và sáng, nút *Từ chối* mờ nhạt | Đẩy lựa chọn mặc định | Cam kết theo mặc định |\n| Dùng thử miễn phí có tự động gia hạn | Tạo nghĩa vụ, rồi tính phí lặng lẽ | Đáp trả + nhất quán |\n| Phí phát sinh chỉ hiện ở bước cuối | Người đã đi tới đó thì ngại quay lại | Cam kết và nhất quán |\n| \"Không, tôi không muốn tiết kiệm tiền\" | Bắt bạn tự phủ nhận điều tốt để từ chối | Nhất quán + cảm giác tội lỗi |\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem\">Bốn bước tự vệ trước một đề nghị gấp gáp</div>\n  <div style=\"display:grid;gap:.45rem;font-size:1.05rem\">\n    <div style=\"background:rgba(217,150,40,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>1 · Dừng lại khi thấy gấp</b> — cảm giác phải quyết ngay chính là tín hiệu cần chậm lại, không phải tín hiệu cần nhanh lên</div>\n    <div style=\"background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.6rem .8rem\"><b>2 · Gọi tên nguyên tắc đang chạy</b> — đáp trả? khan hiếm? uy quyền? số đông? Gọi được tên là gỡ được một phần sức ép</div>\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>3 · Kiểm ở nguồn độc lập</b> — mở tab mới tìm tên người bán, tìm cùng sản phẩm chỗ khác, hỏi một người không liên quan tới thương vụ</div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>4 · Dời quyết định ra khỏi hiện trường</b> — “để tôi về xem lại, mai trả lời” là một câu hoàn chỉnh, không cần giải thích thêm</div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Bước 4 là bước mạnh nhất: gần như mọi thủ thuật đều mất tác dụng khi bạn quyết ở nhà thay vì quyết tại quầy.</div>\n</div>\n```\n\n> [!canh-bao] Biết tên bảy nguyên tắc **không miễn nhiễm cho bạn**. Cialdini nhấn mạnh chúng chạy tự động; người học về chúng vẫn bị tác động. Thứ thật sự bảo vệ bạn là **quy trình** — dời quyết định, kiểm nguồn độc lập — chứ không phải kiến thức.\n\n> [!vi-du] Một ứng dụng học tiếng Anh liên tục báo \"ưu đãi chỉ còn hôm nay\" suốt ba tuần liền. Chạy bốn bước: (1) dừng — mình đang thấy gấp; (2) gọi tên — khan hiếm, và là khan hiếm giả vì thông báo lặp lại; (3) kiểm — chụp màn hình tuần trước, tìm mã giảm giá ở nơi khác, đọc đánh giá ba sao; (4) dời — nếu tuần sau vẫn muốn học thì mua, và nếu ưu đãi thật sự hết thì đó là bằng chứng nó có thật. Kết quả thường thấy: ưu đãi vẫn còn, và mong muốn mua thì đã nguội.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nMở ba ứng dụng bạn hay dùng (mua sắm, giao đồ ăn, học tập) và tìm **ít nhất bốn mẫu thiết kế đánh lừa** trong bảng trên. Chụp màn hình, ghi rõ thủ thuật nào, lợi dụng nguyên tắc nào, và nó khiến bạn suýt làm gì.\n\n### Nhóm 3–4 người (25 phút)\n\nĐóng vai hai lượt. Lượt một: một người bán hàng dùng **khan hiếm giả** và **đáp trả** để ép mua; người kia luyện chạy đủ bốn bước tự vệ, đặc biệt là câu dời quyết định. Lượt hai: đổi vai, lần này người bán dùng **uy quyền vay mượn** và **đồng nhất** (cùng trường, cùng quê). Cả nhóm ghi lại: câu nào của người mua có tác dụng cắt sức ép nhanh nhất.\n\n### Bài tập về nhà (45–60 phút)\n\nViết một trang phân tích một chiến dịch quảng cáo hoặc một vụ lừa đảo trực tuyến có thật mà bạn hoặc người quen từng gặp: nó dùng những nguyên tắc nào, theo thứ tự nào; chỗ nào nó vượt ranh giới thành thao túng theo ba câu hỏi ở bài 8.1; và một quy tắc cá nhân bạn đặt cho mình sau khi phân tích — viết ở dạng hành vi cụ thể, ví dụ \"không quyết bất kỳ khoản chi trên 500 nghìn nào ngay tại chỗ\".\n\n### Xem thêm\n\n- 🎬 [7 Principles of Psychological Persuasion](https://www.youtube.com/watch?v=P3rbadeF9AI) — Sprouts, 6 phút.\n- 🎬 [Robert Cialdini Explains the Seven Principles of Influence](https://www.youtube.com/watch?v=1_urunjhCsw) — Roger Dooley phỏng vấn Cialdini, 5 phút. Chính tác giả nói về nguyên tắc thứ bảy — đồng nhất.\n- 🎬 [Can You Outsmart a Troll (by Thinking Like One)?](https://www.youtube.com/watch?v=Iu4OdhjnN4I) — Claire Wardle, TED-Ed, 5 phút. Cùng bộ kỹ thuật ấy khi được dùng để lan tin sai.\n\n### Nguồn tham khảo\n\n- Cialdini, R. B. (2021). *Influence: The Psychology of Persuasion* (new and expanded ed.). New York: Harper Business — nguyên tắc thứ bảy, đồng nhất, được bổ sung trong *Pre-Suasion* (2016) và bản mở rộng này.\n- Cialdini, R. B. (2016). *Pre-Suasion: A Revolutionary Way to Influence and Persuade.* New York: Simon & Schuster.\n- Kahneman, D., & Tversky, A. (1979). Prospect theory: An analysis of decision under risk. *Econometrica*, 47(2), 263–291 — cơ sở của việc ghét mất mát, nền tảng tâm lý của khan hiếm.\n- Mathur, A., Acar, G., Friedman, M. J., Lucherini, E., Mayer, J., Chetty, M., & Narayanan, A. (2019). Dark patterns at scale: Findings from a crawl of 11K shopping websites. *Proceedings of the ACM on Human-Computer Interaction*, 3(CSCW), 1–32.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 8.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "8.3-uy-quyen",
+                "type": "mcq",
+                "prompt": "Nguyên tắc uy quyền hiệu quả vì lý do nào?",
+                "explanation": "Tin người có chuyên môn là cách tiết kiệm công sức hợp lý, vì ta không thể tự kiểm chứng mọi thứ — nhưng cái tác động thường là dấu hiệu uy quyền chứ không phải chuyên môn thật.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì tin người có chuyên môn là cách tiết kiệm công sức hợp lý — nhưng thứ tác động thường chỉ là dấu hiệu của uy quyền",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì người có chức danh cao thì hầu như luôn đúng",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-symbols"
+                  },
+                  {
+                    "label": "Vì người ta sợ bị phản đối nếu không nghe theo cấp trên",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì chuyên gia luôn có lợi ích trùng với người nghe",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-symbols"
+                  }
+                ]
+              },
+              {
+                "key": "8.3-khan-hiem-tam-ly",
+                "type": "mcq",
+                "prompt": "Nguyên tắc khan hiếm hoạt động dựa trên tâm lý nào?",
+                "explanation": "Con người ghét mất mát hơn thích được thêm; mất một cơ hội là một mất mát, và cảm giác đó rút ngắn quá trình cân nhắc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Ghét mất mát hơn thích được thêm — mất cơ hội là mất mát, nên người ta quyết vội hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thích sở hữu những thứ đắt tiền",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tin rằng sản phẩm ít người mua thì chất lượng cao hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Muốn giống với những người đã mua trước",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "8.3-dau-hieu-khan-hiem",
+                "type": "mcq",
+                "prompt": "Dấu hiệu nào cho thấy người khác đang dùng khan hiếm giả để thuyết phục bạn?",
+                "explanation": "Khan hiếm giả lộ ra ở chỗ lặp lại: đồng hồ đếm ngược xuất hiện đều đặn, số lượng còn lại không đổi qua nhiều ngày, và luôn kèm áp lực quyết ngay.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thông báo sắp hết được lặp lại đều đặn, số lượng còn lại không đổi qua nhiều ngày, kèm áp lực quyết ngay tại chỗ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sản phẩm có giá cao hơn mặt bằng chung",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Người bán mô tả chi tiết thông số kỹ thuật",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cửa hàng có nhiều khách xếp hàng",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "8.3-ung-pho-2-san-pham",
+                "type": "mcq",
+                "prompt": "Người bán liên tục nhấn mạnh chỉ còn 2 sản phẩm để bạn quyết định nhanh. Cách ứng phó phù hợp là gì?",
+                "explanation": "Tách nhu cầu và giá khỏi số lượng còn lại, rồi dời quyết định ra khỏi hiện trường — nếu bên bán không giữ được tới hôm sau thì chính điều đó đã là thông tin.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tự hỏi mình có cần món này không và giá có hợp lý không, rồi đề nghị giữ hàng tới hôm sau để quyết ở nhà",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mua ngay vì cơ hội có thể mất",
+                    "isCorrect": false,
+                    "misconception": "knm.scarcity-always-real"
+                  },
+                  {
+                    "label": "Tranh luận với người bán rằng đó là chiêu bán hàng",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  },
+                  {
+                    "label": "Hỏi xem có bao nhiêu người đã mua để yên tâm hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "8.3-app-uu-dai",
+                "type": "mcq",
+                "prompt": "Một ứng dụng học tiếng Anh liên tục thông báo ưu đãi chỉ còn hôm nay, tuần nào cũng vậy. Cách xử lý phù hợp nhất là gì?",
+                "explanation": "Đây là khan hiếm giả — lộ ra ở chỗ lặp lại. Bốn bước tự vệ: dừng, gọi tên nguyên tắc, kiểm ở nguồn độc lập, và dời quyết định ra khỏi thời điểm bị ép.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nhận ra đây là khan hiếm giả vì thông báo lặp lại, kiểm giá và đánh giá ở nơi khác, rồi quyết sau vài ngày nếu vẫn thấy cần",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mua ngay hôm nay để không mất ưu đãi",
+                    "isCorrect": false,
+                    "misconception": "knm.scarcity-always-real"
+                  },
+                  {
+                    "label": "Gỡ ứng dụng vì mọi quảng cáo đều là lừa đảo",
+                    "isCorrect": false,
+                    "misconception": "knm.critical-is-negative"
+                  },
+                  {
+                    "label": "Hỏi bạn bè xem có ai mua chưa rồi làm theo số đông",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "8.3-dong-nhat",
+                "type": "mcq",
+                "prompt": "Nguyên tắc đồng nhất (unity) khác thiện cảm ở chỗ nào?",
+                "explanation": "Thiện cảm là tôi quý người này; đồng nhất là người này thuộc về nhóm của tôi — cùng trường, cùng quê, cùng nghề, cùng trải qua một chuyện — và nó tác động mạnh hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiện cảm là tôi quý người này; đồng nhất là người này thuộc về nhóm của tôi, nên ảnh hưởng mạnh hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đồng nhất chỉ áp dụng trong gia đình, thiện cảm thì áp dụng ngoài xã hội",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đồng nhất là nguyên tắc cũ hơn và ít hiệu quả hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hai nguyên tắc này giống nhau, chỉ khác tên gọi",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "8.3-bon-buoc-tu-ve",
+                "type": "ordering",
+                "prompt": "Sắp xếp bốn bước tự vệ trước một đề nghị gấp gáp theo đúng trình tự.",
+                "explanation": "Dừng khi thấy gấp, gọi tên nguyên tắc đang chạy, kiểm thông tin ở nguồn độc lập, và cuối cùng dời quyết định ra khỏi hiện trường.",
+                "points": 3,
+                "sequence": [
+                  "Dừng lại ngay khi nhận ra mình đang thấy gấp",
+                  "Gọi tên nguyên tắc gây ảnh hưởng đang được dùng",
+                  "Kiểm thông tin ở một nguồn độc lập với người bán",
+                  "Dời quyết định ra khỏi hiện trường: về nhà rồi trả lời"
+                ]
+              },
+              {
+                "key": "8.3-viet-phan-tich",
+                "type": "essay",
+                "prompt": "Chọn một chiến dịch quảng cáo hoặc một vụ lừa đảo trực tuyến bạn hoặc người quen từng gặp. Viết 200–300 từ: (a) nó dùng những nguyên tắc nào, theo thứ tự nào; (b) chỗ nào vượt ranh giới thành thao túng theo ba câu hỏi ở bài 8.1; (c) bốn bước tự vệ áp vào tình huống đó sẽ diễn ra thế nào; (d) một quy tắc cá nhân bạn đặt cho mình, viết ở dạng hành vi cụ thể.",
                 "points": 5
               }
             ]
