@@ -29,7 +29,24 @@ interface Stats {
   refunded: number;
 }
 
+interface SectionOption {
+  id: string;
+  name: string;
+}
+
 type Filter = "all" | Enrollment["status"];
+
+/**
+ * Danh sách học viên trả về TÊN lớp, còn ô chọn cần ID. Đối chiếu theo tên là
+ * đủ tin: tên lớp unique trong một khoá (ràng buộc @@unique([courseId, name])).
+ */
+function sectionIdOf(
+  e: { section: { name: string; isDefault: boolean } },
+  sections: SectionOption[],
+): string {
+  if (e.section.isDefault) return "";
+  return sections.find((s) => s.name === e.section.name)?.id ?? "";
+}
 
 const STATUS_LABEL: Record<Enrollment["status"], string> = {
   active: "Đang học",
@@ -51,6 +68,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const [sections, setSections] = useState<SectionOption[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,6 +98,50 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
     const t = setTimeout(load, 250);
     return () => clearTimeout(t);
   }, [load]);
+
+  // Danh sách lớp để gán — tải một lần, không đổi theo bộ lọc học viên.
+  useEffect(() => {
+    let bỏ = false;
+    void fetch(apiUrl(`/api/courses/${courseId}/sections`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!bỏ && j?.sections) {
+          setSections(
+            (j.sections as Array<{ id: string; name: string }>).map((x) => ({
+              id: x.id,
+              name: x.name,
+            })),
+          );
+        }
+      })
+      .catch(() => {
+        // Không tải được danh sách lớp thì ô gán lớp ẩn đi; phần còn lại của
+        // bảng vẫn dùng bình thường.
+      });
+    return () => {
+      bỏ = true;
+    };
+  }, [courseId]);
+
+  async function assignSection(enrollment: Enrollment, sectionId: string) {
+    if (!sectionId) return;
+    setBusyId(enrollment.id);
+    const res = await fetch(
+      apiUrl(`/api/instructor/courses/${courseId}/enrollments/${enrollment.id}`),
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sectionId }),
+      },
+    );
+    setBusyId(null);
+    if (res.ok) {
+      void load();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setError(`assign_failed: ${d.error ?? res.status}`);
+    }
+  }
 
   async function changeStatus(
     enrollment: Enrollment,
@@ -249,6 +311,27 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                     v{e.courseVersion}
                   </td>
                   <td className="px-4 py-2.5 text-right">
+                    {/* Gán lớp đứng trước đổi trạng thái: với một khoá đang
+                        chạy hai lớp song song thì xếp lớp là việc làm thường
+                        xuyên hơn nhiều so với đánh dấu bỏ học. */}
+                    {sections.length > 0 && (
+                      <select
+                        value={e.section.isDefault ? "" : sectionIdOf(e, sections)}
+                        disabled={busyId === e.id}
+                        onChange={(ev) => assignSection(e, ev.target.value)}
+                        aria-label={`Gán lớp cho ${e.user.displayName ?? e.user.email}`}
+                        className="select mr-2 py-1 text-xs"
+                      >
+                        <option value="" disabled>
+                          — gán lớp —
+                        </option>
+                        {sections.map((sec) => (
+                          <option key={sec.id} value={sec.id}>
+                            {sec.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                     <select
                       value={e.status}
                       disabled={busyId === e.id}
