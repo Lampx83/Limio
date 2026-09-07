@@ -15,6 +15,7 @@ LESSON = {
         "Mục tiêu SMART phải trả lời được ba câu: đo bằng gì, xong trước ngày nào, hôm nay làm gì để tiến tới.",
         "Kế hoạch có ba cấp — học kỳ, tuần, ngày — và cấp tuần là cấp quan trọng nhất với sinh viên vì nó đủ dài để xoay và đủ ngắn để nhớ.",
     ],
+    "splitSections": True,
     "body": r"""
 Câu "em không có thời gian" hầu như luôn sai theo nghĩa đen: ai cũng có đúng 168 giờ một tuần. Câu đúng hơn là "em đã tiêu 168 giờ đó vào việc khác". Module này bắt đầu từ chỗ ấy — **thời gian không quản lý được, chỉ có lựa chọn là quản lý được**.
 

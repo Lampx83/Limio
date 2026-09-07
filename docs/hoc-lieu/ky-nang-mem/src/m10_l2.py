@@ -15,6 +15,7 @@ LESSON = {
         "STAR: bối cảnh – nhiệm vụ – hành động – kết quả; ba tới năm câu chuyện chuẩn bị trước phủ được phần lớn câu hỏi hành vi.",
         "Phần hậu cần — đường đi, thiết bị, đường truyền, bản in CV — không làm bạn được nhận, nhưng hỏng thì đủ để hỏng cả buổi.",
     ],
+    "splitSections": True,
     "body": r"""
 Phần lớn ứng viên trượt không phải vì thiếu năng lực mà vì **không chuẩn bị** — trong khi câu hỏi phỏng vấn thì lặp lại tới mức đoán được.
 

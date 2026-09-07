@@ -15,6 +15,7 @@ LESSON = {
         "Ba trục của Seligman — chuyện này kéo dài bao lâu, lan tới đâu, do ai — giải thích vì sao cùng một thất bại lại đánh gục người này mà không đánh gục người kia.",
         "Nhãn dán cho bản thân không mô tả được điều gì sửa được, lại chiếm chỗ trong trí nhớ làm việc; đổi nhãn thành mô tả là thao tác rẻ nhất và hiệu quả nhất trong bài này.",
     ],
+    "splitSections": True,
     "body": r"""
 Một khoá kỹ năng mềm nói tới tư duy tích cực rất dễ trượt thành lời khuyên sáo rỗng: hãy nghĩ tốt lên, hãy nhìn vào mặt sáng. Bài này đi hướng khác — coi tư duy tích cực là một **kỹ thuật giải thích sự việc** có thể mô tả, tập được và kiểm được, chứ không phải một trạng thái tâm trạng phải giữ suốt ngày.
 

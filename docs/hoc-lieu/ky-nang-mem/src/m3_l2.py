@@ -15,6 +15,7 @@ LESSON = {
         "Nguỵ biện là lỗi ở mảnh suy luận: người rơm, công kích cá nhân, lưỡng nan giả, viện dẫn số đông, sau đó nên do đó, và trượt dốc.",
         "Ba kỹ thuật dùng được ngay: viết trước điều gì sẽ khiến mình đổi ý, mời một người phản biện thật, và làm phép thử đảo chiều.",
     ],
+    "splitSections": True,
     "body": r"""
 Bài trước đưa ra bộ khung để tách một lập luận. Bài này nói về hai loại hỏng hóc hay gặp nhất: hỏng ở **người đọc** (thiên lệch nhận thức) và hỏng ở **lập luận** (nguỵ biện).
 

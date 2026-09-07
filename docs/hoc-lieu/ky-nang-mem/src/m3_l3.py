@@ -15,6 +15,7 @@ LESSON = {
         "Mô hình ngôn ngữ tối ưu cho tính hợp lý bề mặt chứ không cho tính đúng, nên nó bịa được cả tên tác giả, năm và số trang mà vẫn đọc rất xuôi.",
         "Bốn bước trước khi chia sẻ: dừng lại, tìm nguồn gốc, xem nơi khác nói gì, và hỏi mình đang muốn nó đúng tới mức nào.",
     ],
+    "splitSections": True,
     "body": r"""
 Hai bài trước xử lý lập luận. Bài này xử lý **nguồn**: làm sao biết một thông tin có đáng để đưa vào đầu, trong một môi trường mà bất kỳ ai cũng xuất bản được và bất kỳ nội dung nào cũng tạo ra được bằng máy trong vài giây.
 

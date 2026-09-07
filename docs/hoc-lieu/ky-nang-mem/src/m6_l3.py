@@ -15,6 +15,7 @@ LESSON = {
         "Người đang buồn: mục tiêu không phải chữa được chuyện đó mà là để họ không ở lại một mình; hỏi trước khi khuyên.",
         "Bất đồng quan điểm: lắng nghe không phải nhượng bộ — diễn đạt lại đúng ý đối phương trước khi nêu ý mình là cách duy nhất để tranh luận với bản gốc.",
     ],
+    "splitSections": True,
     "body": r"""
 Ba tình huống dễ nhất để lắng nghe là những tình huống ta không cần cố gắng. Bài này về bốn tình huống còn lại — nơi kỹ thuật ở hai bài trước phải được chọn đúng loại.
 

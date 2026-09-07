@@ -15,6 +15,7 @@ LESSON = {
         "Phần bạn có câu hỏi gì không là cơ hội cuối để thể hiện đã tìm hiểu — và để kiểm tra nơi đó có hợp với mình không.",
         "Sau phỏng vấn: thư cảm ơn ngắn trong 24 giờ; nếu bị từ chối, hỏi xin phản hồi và giữ quan hệ — nhiều người được gọi lại cho vị trí sau.",
     ],
+    "splitSections": True,
     "body": r"""
 Bài này đi theo đúng trình tự một buổi phỏng vấn: mở đầu, phần hỏi đáp, phần bạn hỏi lại, và những gì xảy ra sau đó.
 

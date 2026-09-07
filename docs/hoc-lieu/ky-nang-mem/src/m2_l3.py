@@ -15,6 +15,7 @@ LESSON = {
         "Trước một lời chê, tách thái độ người nói khỏi nội dung được nói; trước một người giỏi hơn, đổi câu hỏi từ vì sao không phải mình sang họ làm gì mà mình chưa làm.",
         "Khi các dấu hiệu kéo dài quá hai tuần và ảnh hưởng tới việc học việc làm, đó là lúc tìm chuyên gia — không phải lúc luyện thêm tư duy tích cực.",
     ],
+    "splitSections": True,
     "body": r"""
 Hai bài trước cho công cụ xử lý từng tình huống. Bài này nói về **duy trì**: thứ gì có bằng chứng là giữ được trạng thái tinh thần dài hạn, và quan trọng không kém — chỗ nào tư duy tích cực hết tác dụng và cần thứ khác.
 

@@ -15,6 +15,7 @@ LESSON = {
         "Ở giai đoạn hoạt động trôi chảy, nhóm tự điều phối và tự giải quyết bất đồng mà không cần trưởng nhóm can thiệp từng việc.",
         "Vai trò nên giao theo thế mạnh và mức sẵn sàng, kèm kỳ vọng nói rõ — người phản biện có giá trị riêng và cần được bảo vệ.",
     ],
+    "splitSections": True,
     "body": r"""
 Nhóm không tự nhiên chạy tốt ngay từ buổi đầu, và cũng không hỏng vĩnh viễn sau buổi cãi nhau đầu tiên. Nó **đi qua các giai đoạn** — biết mình đang ở đâu thì biết việc cần làm là gì.
 

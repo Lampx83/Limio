@@ -15,6 +15,7 @@ LESSON = {
         "Ba câu hỏi bẻ khoá: bằng chứng nào chống lại nó, còn cách đọc nào khác, và nếu bạn thân gặp chuyện này mình sẽ nói gì.",
         "Tư duy phát triển không phải là khen cố gắng suông; nó là niềm tin rằng năng lực thay đổi được, kèm việc đổi chiến lược khi cách cũ không chạy.",
     ],
+    "splitSections": True,
     "body": r"""
 Bài trước dừng ở chỗ nhận ra khâu diễn giải. Bài này làm phần khó hơn: **cãi lại nó**, một cách có phương pháp chứ không phải bằng cách tự nhủ đừng nghĩ nữa.
 

@@ -37,6 +37,24 @@ function args(name: string): string[] {
   return out;
 }
 
+
+/**
+ * Đưa khối tổng kết lên NGAY TRƯỚC mục luyện tập.
+ *
+ * `renderLessonBlocks` đẩy tổng kết xuống cuối; khi thân bài được cắt theo mục
+ * thì tổng kết rơi ra sau cả phần luyện tập và phần nguồn tham khảo — chỗ
+ * không ai còn đọc. Quy ước của khoá là đọc xong nội dung thì tới tổng kết,
+ * rồi mới tới bài tập.
+ */
+function reorderSummaryBeforePractice(blocks: string[]): string[] {
+  const last = blocks[blocks.length - 1];
+  if (!last || !last.includes("Tổng kết bài học")) return blocks;
+  const rest = blocks.slice(0, -1);
+  const practice = rest.findIndex((b) => b.includes('<h2 id="muc-luyen-tap'));
+  if (practice < 0) return blocks;
+  return [...rest.slice(0, practice), last, ...rest.slice(practice)];
+}
+
 type VideoSpec = { at: number; url: string; title?: string; caption?: string };
 
 /** "3|https://…|Tiêu đề|Mô tả" */
@@ -62,7 +80,7 @@ async function main() {
   const specs = manifest.modules.flatMap((m) => m.lessons).filter((l) => l.title.includes(lessonKey));
   if (specs.length !== 1) throw new Error(`Khớp ${specs.length} bài trong manifest với "${lessonKey}"`);
   const spec = specs[0]!;
-  const blocks = renderLessonBlocks(spec);
+  const blocks = reorderSummaryBeforePractice(renderLessonBlocks(spec));
 
   const owner = await prisma.user.findUnique({ where: { email: ownerEmail }, select: { id: true } });
   if (!owner) throw new Error(`Không có tài khoản ${ownerEmail}`);

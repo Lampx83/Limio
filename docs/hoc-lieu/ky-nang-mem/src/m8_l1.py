@@ -15,6 +15,7 @@ LESSON = {
         "Năm bước chuẩn bị: hiểu người nghe, tìm nhu cầu sâu, đổi tính năng thành lợi ích, chọn thời điểm và kênh, mở đường bằng một cam kết nhỏ.",
         "Người ta không đồng ý vì bạn có nhiều lý lẽ hơn; họ đồng ý khi thấy điều mình quan tâm được giải quyết.",
     ],
+    "splitSections": True,
     "body": r"""
 Thuyết phục là kỹ năng bị nghi ngờ nhiều nhất trong các kỹ năng mềm — nhiều người thấy nó gần với thao túng nên ngại học. Bài này bắt đầu đúng ở chỗ đó, vì ranh giới ấy kiểm được chứ không mơ hồ.
 

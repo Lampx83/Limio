@@ -15,6 +15,7 @@ LESSON = {
         "Thành tích cá nhân đến từ kỷ luật với chính mình; thành tích tập thể đến từ tin cậy, giao tiếp và bổ trợ lẫn nhau.",
         "Chất lượng nhóm được quyết định phần lớn bởi những hành vi rất nhỏ: đến đúng giờ, hỏi lại khi chưa rõ, nói sớm khi sắp trễ.",
     ],
+    "splitSections": True,
     "body": r"""
 Module này không nói về cách lãnh đạo một nhóm. Nó nói về **phần của bạn** trong nhóm — thứ bạn kiểm soát được kể cả khi nhóm có vấn đề và bạn không phải nhóm trưởng.
 

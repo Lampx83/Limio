@@ -15,6 +15,7 @@ LESSON = {
         "Sáu bước lập lịch: chọn công cụ và chu kỳ, liệt kê theo ưu tiên, ước lượng thời gian, xếp việc ưu tiên cao trước, xếp việc còn lại, chừa chỗ cho phát sinh.",
         "Lịch là văn bản sống: sửa được, nhưng phải sửa có chủ đích theo ưu tiên chứ không sửa vì bị phân tâm.",
     ],
+    "splitSections": True,
     "body": r"""
 Bài 4.3 cho bạn khối tập trung. Bài này trả lời câu hỏi đứng ngay trước đó: **mỗi việc mất bao lâu, và xếp chúng vào đâu trong tuần.** Sai ở khâu này thì mọi kỹ thuật tập trung phía sau đều vô dụng — bạn giữ được khung giờ, nhưng khung giờ ấy quá ngắn cho việc đã hẹn.
 

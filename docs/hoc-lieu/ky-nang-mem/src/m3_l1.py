@@ -15,6 +15,7 @@ LESSON = {
         "Thang suy luận giải thích vì sao hai người nhìn cùng một sự việc lại kết luận trái ngược: mỗi người chọn một phần dữ liệu rồi leo rất nhanh lên hành động.",
         "Năm câu hỏi kiểm tra rẻ tới mức dùng được cho mọi thứ đọc trong ngày: khẳng định là gì, bằng chứng nào, ai nói và họ được gì, còn cách giải thích nào khác, điều gì sẽ khiến tôi đổi ý.",
     ],
+    "splitSections": True,
     "body": r"""
 Tư duy phản biện bị hiểu nhầm nhiều nhất trong các kỹ năng mềm. Nó không phải năng khiếu tranh luận, cũng không phải thói quen nghi ngờ. Nó là một **quy trình kiểm tra chất lượng** áp lên các lập luận — của người khác và, phần khó hơn, của chính mình.
 

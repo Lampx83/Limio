@@ -15,6 +15,7 @@ LESSON = {
         "Tin xấu nói sớm, rõ, ngắn — rồi mới tới bối cảnh và phương án; vòng vo chỉ kéo dài phần khó chịu và làm mất niềm tin.",
         "Quyết đoán có hai vế cùng lúc: nói rõ nhu cầu của mình và ghi nhận nhu cầu của người kia; thiếu vế đầu là thụ động, thiếu vế sau là hung hăng.",
     ],
+    "splitSections": True,
     "body": r"""
 Hai bài trước nói về cách thông điệp được hiểu. Bài này về hai quyết định thực tế nhất: **gửi bằng kênh nào** và **viết ra sao**.
 

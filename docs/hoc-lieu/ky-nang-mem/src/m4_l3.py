@@ -15,6 +15,7 @@ LESSON = {
         "Trì hoãn phần lớn là né cảm xúc khó chịu gắn với nhiệm vụ, nên cách chữa là làm rõ và thu nhỏ bước đầu tiên, không phải tự trách.",
         "Nói không có ba phần: ghi nhận, lý do ngắn gắn với cam kết đang có, và phương án thay thế nếu có.",
     ],
+    "splitSections": True,
     "body": r"""
 Có kế hoạch rồi vẫn có thể không làm được gì — vì kế hoạch giả định bạn có những khối thời gian tập trung, mà thứ đó ngày nay phải giành lấy chứ không tự có.
 

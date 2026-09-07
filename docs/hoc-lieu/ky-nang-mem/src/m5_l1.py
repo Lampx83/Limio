@@ -15,6 +15,7 @@ LESSON = {
         "Bốn loại nhiễu: vật lý, ngữ nghĩa, tâm sinh lý và tâm lý – xã hội; nhiễu ngữ nghĩa là loại phổ biến nhất trong công việc.",
         "Hỏi rõ chưa gần như luôn nhận được cái gật đầu; hãy nhờ người nghe tóm tắt lại việc họ sẽ làm, hoặc hỏi một câu mở về chỗ dễ vướng.",
     ],
+    "splitSections": True,
     "body": r"""
 Phần lớn sự cố trong nhóm học tập và nơi làm việc không phải do ai đó cố tình, mà do **một thông điệp đã được phát đi và được hiểu thành thứ khác**. Bài này mổ xẻ chỗ hỏng đó.
 

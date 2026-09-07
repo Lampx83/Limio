@@ -15,6 +15,7 @@ LESSON = {
         "Ngắt lời nhiều lần không chỉ bất lịch sự: nó buộc người nói dựng lại mạch và làm mất luôn phần họ chưa kịp tới.",
         "Trước khi khuyên, hỏi một câu ba giây: bạn muốn mình nghe thôi hay muốn mình góp ý.",
     ],
+    "splitSections": True,
     "body": r"""
 Ai cũng biết nên lắng nghe. Bài này nói về những thứ **chắn giữa ý định và thực tế** — và phần lớn chúng là thói quen chứ không phải thiếu thiện chí.
 

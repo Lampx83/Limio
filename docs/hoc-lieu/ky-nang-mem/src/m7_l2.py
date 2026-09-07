@@ -15,6 +15,7 @@ LESSON = {
         "Hình ảnh phải phục vụ nội dung, đủ nét, có nguồn; ảnh trang trí và hiệu ứng thừa chỉ lấy mất chú ý.",
         "Với khán giả ngoài ngành: bỏ thuật ngữ, đổi công thức thành ví dụ, và giữ lại đúng phần họ dùng được.",
     ],
+    "splitSections": True,
     "body": r"""
 Slide không phải bài thuyết trình. Nó là **chỗ dựa thị giác** cho bài nói — và khi bị dùng sai vai, nó trở thành thứ cạnh tranh với chính người nói.
 

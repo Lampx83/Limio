@@ -15,6 +15,7 @@ LESSON = {
         "Giữa chịu đựng và nghỉ việc còn ba bước: làm rõ, lên tiếng đúng kênh, thương lượng phạm vi — và ghi lại. Rời đi là bước cuối, không phải bước đầu.",
         "Quyết định nghề nghiệp lớn nên được giải thích bằng thứ tự giá trị đã lập, chứ không bằng cảm giác lúc quyết.",
     ],
+    "splitSections": True,
     "body": r"""
 ## Tuyên ngôn sứ mệnh cá nhân là gì
 

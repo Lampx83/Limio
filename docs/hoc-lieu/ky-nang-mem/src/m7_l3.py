@@ -15,6 +15,7 @@ LESSON = {
         "Hỏng thiết bị thì bài nói vẫn phải chạy được — chuẩn bị trước phương án không slide là chuyện của lúc soạn, không phải lúc sự cố.",
         "Bị hỏi khó mà không biết thì nói thẳng là chưa nắm phần đó kèm cam kết phản hồi; quá giờ thì bỏ phần giữa chứ đừng bóp phần kết.",
     ],
+    "splitSections": True,
     "body": r"""
 Bài nói tồn tại hai lần: lần bạn soạn và lần bạn đứng nói. Bài này về lần thứ hai — nơi mọi thứ chuẩn bị kỹ vẫn có thể trượt vì một cái máy chiếu.
 

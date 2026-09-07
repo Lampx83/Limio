@@ -15,6 +15,7 @@ LESSON = {
         "Bằng chứng xã hội mạnh nhất khi người ta không chắc chắn và khi người làm gương giống họ.",
         "Thiện cảm đến từ sự tương đồng, lời khen thật và việc cùng làm chung một việc — nó khiến người ta chịu nghe, không thay được bằng chứng.",
     ],
+    "splitSections": True,
     "body": r"""
 ![Chân dung nhà tâm lý học Robert Cialdini](https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Robert_Cialdini.jpg/1280px-Robert_Cialdini.jpg "Robert B. Cialdini, giáo sư tâm lý học và marketing, tác giả cuốn Influence: The Psychology of Persuasion (1984). Sáu nguyên tắc gây ảnh hưởng trong sách — và nguyên tắc thứ bảy ông bổ sung năm 2016 — là bộ khung được dùng rộng rãi nhất về thuyết phục. Ảnh: [File:Robert Cialdini.jpg](https://commons.wikimedia.org/wiki/File:Robert_Cialdini.jpg), tác giả Viktorbuehler, giấy phép CC BY-SA 3.0.")
 

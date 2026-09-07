@@ -15,6 +15,7 @@ LESSON = {
         "Khoảng cách giao tiếp có bốn vùng; chọn sai vùng gây khó chịu ngay cả khi lời nói hoàn toàn đúng mực.",
         "Một cử chỉ đơn lẻ không kết luận được gì: đọc theo cụm, đặt trong bối cảnh, rồi kiểm bằng một câu hỏi.",
     ],
+    "splitSections": True,
     "body": r"""
 Bài trước nói về thông điệp bằng lời. Nhưng ngay cả khi bạn không nói gì, bạn vẫn đang phát tín hiệu — và người đối diện vẫn đang giải mã chúng.
 

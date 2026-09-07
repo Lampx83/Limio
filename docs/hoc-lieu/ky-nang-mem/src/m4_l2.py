@@ -15,6 +15,7 @@ LESSON = {
         "Ô hai — quan trọng nhưng chưa khẩn cấp — là nơi duy nhất làm ô một teo lại theo thời gian; đầu tư vào đó là đầu tư duy nhất có lãi.",
         "Khi ô một đầy năm việc cùng lúc, việc cần làm không phải làm nhanh hơn mà là truy nguyên: phần lớn chúng từng nằm ở ô hai và đã bị bỏ quên.",
     ],
+    "splitSections": True,
     "body": r"""
 Bài trước cho mục tiêu và kế hoạch. Bài này giải quyết chuyện xảy ra ngay sau đó: **mọi thứ cùng đòi làm trước**.
 

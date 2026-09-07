@@ -15,6 +15,7 @@ LESSON = {
         "Đồng nhất là nguyên tắc thứ bảy: người ta chịu ảnh hưởng mạnh nhất từ những người mà họ coi là cùng phe với mình.",
         "Quy trình tự vệ bốn bước: dừng lại, gọi tên nguyên tắc đang chạy, kiểm thông tin ở nguồn độc lập, và dời quyết định ra khỏi hiện trường.",
     ],
+    "splitSections": True,
     "body": r"""
 Ba nguyên tắc còn lại là ba nguyên tắc bị lạm dụng nhiều nhất trong quảng cáo và lừa đảo trực tuyến — nên bài này dành nửa sau cho phần tự vệ.
 

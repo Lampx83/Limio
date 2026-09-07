@@ -15,6 +15,7 @@ LESSON = {
         "Chủ động không phải là hăng hái mà là khoảng dừng giữa việc xảy ra và cách bạn đáp lại — khoảng dừng ấy tập được.",
         "Ba loại vấn đề cần ba cách xử lý khác nhau: đổi thói quen, đổi cách gây ảnh hưởng, hoặc đổi thái độ với thứ không đổi được.",
     ],
+    "splitSections": True,
     "body": r"""
 ## Bạn đang xoay quanh cái gì
 

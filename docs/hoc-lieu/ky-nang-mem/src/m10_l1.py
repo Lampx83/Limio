@@ -15,6 +15,7 @@ LESSON = {
         "Mỗi gạch đầu dòng nên có ba phần: làm gì, bằng cách nào, kết quả đo được — không có số thì dùng mốc thời gian, quy mô hoặc so sánh trước sau.",
         "Một CV dùng cho mọi nơi là cách nhanh nhất để không nơi nào thấy bạn phù hợp.",
     ],
+    "splitSections": True,
     "body": r"""
 Trước khi bàn cách viết, cần biết CV của bạn được dùng thế nào: người tuyển dụng **đọc lướt bản đầu tiên trong vài chục giây**, tìm xem hồ sơ này có khớp với mô tả công việc không, rồi mới quyết định đọc kỹ hay bỏ qua. Ở nhiều nơi, trước bước đó còn một phần mềm lọc theo từ khoá. Mọi lời khuyên dưới đây đều xuất phát từ hai sự thật ấy.
 

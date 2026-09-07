@@ -15,6 +15,7 @@ LESSON = {
         "Cấu trúc ba phần: mở đầu tạo chú ý và nêu lợi ích, thân bài đi theo các luận điểm có bằng chứng, kết bài gói lại thông điệp và nêu bước tiếp theo.",
         "Ba mươi giây đầu quyết định người nghe có bật chế độ chú ý hay không; phần kết quyết định họ mang gì về.",
     ],
+    "splitSections": True,
     "body": r"""
 Phần lớn bài thuyết trình dở không dở ở khâu nói. Chúng hỏng từ lúc soạn — vì người soạn trả lời câu hỏi "tôi biết những gì" thay vì "họ cần mang về điều gì".
 

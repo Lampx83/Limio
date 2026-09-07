@@ -15,6 +15,7 @@ LESSON = {
         "Trước người im lặng: hỏi thẳng và hỏi riêng; im lặng không phải đồng thuận.",
         "Rút kinh nghiệm chỉ có giá trị khi ra được việc làm được cho lần sau, gắn tên người và mốc thời gian.",
     ],
+    "splitSections": True,
     "body": r"""
 Nhóm nào cũng có lúc trục trặc. Bài này về ba việc khó nhất — xung đột, thành viên không giữ cam kết, và buổi rút kinh nghiệm mà phần lớn nhóm bỏ qua.
 

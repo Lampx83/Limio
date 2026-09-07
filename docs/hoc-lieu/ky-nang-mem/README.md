@@ -82,8 +82,10 @@ thời gian cùng sáu bước lập lịch. Khung của Kho KNM — bốn thế
 
 ## Video nhúng trong bài
 
-`videos.tsv` là bản đồ bài → hai video YouTube (cột 4 = `replace` thì gỡ video cũ trước).
-Gắn bằng script `attach:video` — khối video nằm ở đầu bài, đẩy các khối chữ xuống.
+`videos.tsv` là bản đồ bài → hai video, mỗi dòng bảy cột:
+`bài · vị trí video 1 · id 1 · mô tả 1 · vị trí video 2 · id 2 · mô tả 2`.
+Tiêu đề hiện dưới video được sinh từ metadata YouTube (tên video — kênh — thời lượng),
+không chép tay. Dựng lại bố cục cả khoá bằng `layout:lesson` chạy vòng qua bảng này.
 
 ```bash
 pnpm attach:video -- --course ky-nang-mem --lesson "Bài 1.1" --owner <email> \

@@ -15,6 +15,7 @@ LESSON = {
         "Bốn mức phản hồi: lặp lại nguyên văn, diễn giải bằng lời mình, phản ánh cảm xúc, và kết hợp cả hai; càng lên cao càng cho thấy người nghe thật sự hiểu.",
         "Thấu cảm không phải đồng ý: gọi tên cảm xúc của người kia là mô tả trạng thái của họ, không phải thừa nhận kết luận của họ.",
     ],
+    "splitSections": True,
     "body": r"""
 Nhiều người tin mình lắng nghe tốt. Phép thử rất nhanh: sau một cuộc trò chuyện, bạn tóm tắt lại được **ý chính** và **cảm xúc** của người kia không? Nếu chỉ nhớ mình đã nói gì thì đó là một cuộc trò chuyện bạn đã có mặt chứ không phải đã lắng nghe.
 
