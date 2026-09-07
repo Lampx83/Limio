@@ -21,6 +21,7 @@ interface Initial {
   currency: string;
   personalizationEnabled: boolean;
   publicAccess: boolean;
+  enrollMode: "open" | "invite_only";
 }
 
 export default function CourseMetaForm({
@@ -47,6 +48,7 @@ export default function CourseMetaForm({
     initial.personalizationEnabled,
   );
   const [publicAccess, setPublicAccess] = useState(initial.publicAccess);
+  const [enrollMode, setEnrollMode] = useState(initial.enrollMode);
   const [busy, setBusy] = useState(false);
 
   const LEVEL_LABEL: Record<string, string> = {
@@ -118,6 +120,7 @@ export default function CourseMetaForm({
         currency,
         personalizationEnabled,
         publicAccess,
+        enrollMode,
       }),
     });
     setBusy(false);
@@ -240,6 +243,41 @@ export default function CourseMetaForm({
         </label>
       </div>
       <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+        <fieldset className="mb-3 border-b border-token pb-3">
+          <legend className="text-sm font-semibold">Ai vào được khoá này</legend>
+          {(
+            [
+              ["open", "Mở — ai cũng tự đăng ký được", "Trang giới thiệu có nút đăng ký."],
+              [
+                "invite_only",
+                "Chỉ vào bằng link mời lớp",
+                "Trang giới thiệu bỏ nút đăng ký. Chỉ ai có link mời của một lớp mới vào được, và vào thẳng đúng lớp đó.",
+              ],
+            ] as const
+          ).map(([val, nhan, mo]) => (
+            <label key={val} className="flex cursor-pointer items-start gap-3 py-1.5">
+              <input
+                type="radio"
+                name="enrollMode"
+                checked={enrollMode === val}
+                onChange={() => setEnrollMode(val)}
+                className="mt-1 h-4 w-4 shrink-0"
+              />
+              <span>
+                <span className="text-sm font-medium">{nhan}</span>
+                <span className="mt-0.5 block text-xs text-muted">{mo}</span>
+              </span>
+            </label>
+          ))}
+          {/* Đổi sang chỉ-mời không đuổi ai ra: nó chặn cửa, không dọn nhà. */}
+          {enrollMode === "invite_only" && initial.enrollMode === "open" && (
+            <p className="mt-1 text-xs text-accent-700">
+              Người đã ghi danh trước đó vẫn ở lại khoá — thiết lập này chỉ chặn
+              người đăng ký mới.
+            </p>
+          )}
+        </fieldset>
+
         <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"

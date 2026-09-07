@@ -315,6 +315,7 @@ export default async function InstructorCourseEditPage({
                 currency: course.currency ?? "VND",
                 personalizationEnabled: course.personalizationEnabled,
                 publicAccess: course.publicAccess,
+                enrollMode: course.enrollMode,
               }}
             />
           </section>

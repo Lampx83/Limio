@@ -26,6 +26,7 @@ export const CreateCourseInput = z.object({
   category: z.string().max(80).optional(),
   coverUrl: z.string().url().max(500).optional(),
   personalizationEnabled: z.boolean().optional(),
+  enrollMode: z.enum(["open", "invite_only"]).optional(),
 });
 
 export const UpdateCourseInput = z.object({
@@ -39,6 +40,7 @@ export const UpdateCourseInput = z.object({
   currency: z.enum(["VND", "USD"]).optional(),
   personalizationEnabled: z.boolean().optional(),
   publicAccess: z.boolean().optional(),
+  enrollMode: z.enum(["open", "invite_only"]).optional(),
 });
 
 // Course flags whose flips are worth an audit trail — both change who can see
@@ -102,6 +104,7 @@ export async function createCourse(
         category: parsed.data.category ?? null,
         coverUrl: parsed.data.coverUrl ?? null,
         personalizationEnabled: parsed.data.personalizationEnabled ?? true,
+        enrollMode: parsed.data.enrollMode ?? "open",
         status: "draft",
         version: 1,
       },

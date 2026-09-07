@@ -221,13 +221,17 @@ export default async function CourseDetailPage({
               : `${course.modules.length} modules · ${totalLessons} bài`
           }
           action={
-            <EnrollButton
-              slug={params.slug}
-              alreadyEnrolled={enrolled}
-              priceCents={course.priceCents}
-              currency={course.currency}
-              paymentEnabled={paymentEnabled}
-            />
+            course.enrollMode === "invite_only" && !enrolled ? (
+              <span className="text-sm text-muted">Cần link mời của lớp</span>
+            ) : (
+              <EnrollButton
+                slug={params.slug}
+                alreadyEnrolled={enrolled}
+                priceCents={course.priceCents}
+                currency={course.currency}
+                paymentEnabled={paymentEnabled}
+              />
+            )
           }
         />
       )}
@@ -436,13 +440,25 @@ export default async function CourseDetailPage({
                     </div>
                   </div>
                 )}
-                <EnrollButton
-                  slug={params.slug}
-                  alreadyEnrolled={enrolled}
-                  priceCents={course.priceCents}
-                  currency={course.currency}
-                  paymentEnabled={paymentEnabled}
-                />
+                {course.enrollMode === "invite_only" && !enrolled ? (
+                  /* Khoá chỉ nhận link mời: nói rõ cần gì để vào, đừng để một
+                     nút bấm vào rồi báo lỗi — người học không biết hỏi ai. */
+                  <div className="banner-info block rounded-xl px-4 py-3 text-sm">
+                    <p className="font-medium">Khoá học này cần link mời</p>
+                    <p className="mt-0.5 text-xs">
+                      Giảng viên sẽ gửi link mời của lớp bạn. Mở link đó là vào
+                      học được ngay.
+                    </p>
+                  </div>
+                ) : (
+                  <EnrollButton
+                    slug={params.slug}
+                    alreadyEnrolled={enrolled}
+                    priceCents={course.priceCents}
+                    currency={course.currency}
+                    paymentEnabled={paymentEnabled}
+                  />
+                )}
               </div>
             )}
           </div>

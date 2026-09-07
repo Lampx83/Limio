@@ -16,6 +16,7 @@ export default function NewCoursePage() {
   const [level, setLevel] = useState("beginner");
   const [category, setCategory] = useState("");
   const [personalizationEnabled, setPersonalizationEnabled] = useState(false);
+  const [enrollMode, setEnrollMode] = useState<"open" | "invite_only">("open");
   const [status, setStatus] = useState<"idle" | "submitting" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +34,7 @@ export default function NewCoursePage() {
         level,
         category: category || undefined,
         personalizationEnabled,
+        enrollMode,
       }),
     });
     if (res.status === 401) {
@@ -128,6 +130,45 @@ export default function NewCoursePage() {
             />
           </div>
         </div>
+        {/* Ai vào được khoá. Hỏi ngay lúc tạo vì đổi sau khi đã phát link thì
+            những người vào rồi vẫn ở lại — chặn cửa không đuổi được ai. */}
+        <fieldset className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+          <legend className="px-1 text-sm font-semibold">Ai vào được khoá này</legend>
+          <label className="flex cursor-pointer items-start gap-3 py-1.5">
+            <input
+              type="radio"
+              name="enrollMode"
+              checked={enrollMode === "open"}
+              onChange={() => setEnrollMode("open")}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <span>
+              <span className="font-medium">Mở — ai cũng tự đăng ký được</span>
+              <span className="mt-0.5 block text-xs text-muted">
+                Người vào trang giới thiệu khoá thấy nút đăng ký và tự ghi danh.
+                Hợp với khoá mở rộng rãi.
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 py-1.5">
+            <input
+              type="radio"
+              name="enrollMode"
+              checked={enrollMode === "invite_only"}
+              onChange={() => setEnrollMode("invite_only")}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <span>
+              <span className="font-medium">Chỉ vào bằng link mời lớp</span>
+              <span className="mt-0.5 block text-xs text-muted">
+                Trang giới thiệu vẫn xem được nhưng không có nút đăng ký. Chỉ ai
+                có link mời của một lớp cụ thể mới vào được — và vào thẳng đúng
+                lớp đó, không rơi vào “chưa gán lớp”.
+              </span>
+            </span>
+          </label>
+        </fieldset>
+
         <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input

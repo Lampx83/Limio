@@ -466,7 +466,10 @@ async function getInstructorNotifications(
       type: "instructor.assignment.submitted",
       title: `${s.user.displayName} đã nộp bài tập`,
       body: s.assignment.title,
-      link: `/instructor/assignments/${s.assignment.id}`,
+      // Không có trang /instructor/assignments/<id> — chỉ có trang danh sách
+      // bài nộp. Trỏ thiếu đuôi này là bấm vào thông báo ra thẳng 404, mà
+      // thông báo lại là đường duy nhất người dạy biết có bài mới nộp.
+      link: `/instructor/assignments/${s.assignment.id}/submissions`,
       iconKey: "inbox",
       createdAt: s.submittedAt,
     });

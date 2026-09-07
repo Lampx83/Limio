@@ -43,6 +43,9 @@ export async function POST(
           { status: 402 },
         );
       }
+      if (err.code === "invite_required") {
+        return NextResponse.json({ error: "invite_required" }, { status: 403 });
+      }
       if (err.code === "course_not_enrollable") {
         return NextResponse.json({ error: "course_not_enrollable" }, { status: 409 });
       }

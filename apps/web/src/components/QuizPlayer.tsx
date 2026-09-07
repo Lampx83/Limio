@@ -159,6 +159,24 @@ export default function QuizPlayer({
     const remaining = limit - Math.floor((now - startedAt) / 1000);
     if (remaining > 0) return;
     if (autoSubmittedRef.current) return;
+
+    /*
+      KHÔNG tự nộp một lượt chưa trả lời câu nào.
+ 
+      Người vào xem thử đề rồi đóng tab cũng tạo ra một lượt làm. Lượt đó quá
+      hạn từ lâu, nên lần sau họ mở quiz lên là đồng hồ đã bằng 0 và bản tự nộp
+      chốt sổ ngay — ghi cho họ một điểm 0 cho bài họ chưa từng làm. Hôm nay
+      chuyện đó xảy ra 16 lần trên lớp thật.
+ 
+      Không trả lời câu nào thì đó là xem thử, không phải làm bài: bỏ lượt đó
+      đi và mở một lượt mới, để họ vẫn làm được.
+    */
+    if (answeredCountNow() === 0) {
+      autoSubmittedRef.current = true;
+      void restartExpiredAttempt();
+      return;
+    }
+
     autoSubmittedRef.current = true;
     void onSubmit({ auto: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -249,6 +267,22 @@ export default function QuizPlayer({
   function answeredCountNow() {
     const qs = data?.quiz.questions ?? [];
     return qs.filter((q) => !isResponseEmpty(q, answers[q.id]?.response ?? null)).length;
+  }
+
+  /**
+   * Lượt đã quá hạn mà chưa trả lời gì: bỏ nó, mở lượt mới, ở lại trang.
+   *
+   * Bỏ hẳn thay vì nộp, vì một lượt 0 điểm cho bài chưa từng làm là dữ liệu
+   * sai — nó chui vào điểm số, vào thống kê, và vào cả phản hồi gửi cho người
+   * học.
+   */
+  async function restartExpiredAttempt() {
+    try {
+      await fetch(apiUrl(`/api/attempts/${attemptId}/abandon`), { method: "POST" });
+    } catch {
+      // Bỏ được thì tốt; không bỏ được thì vẫn tải lại để lấy lượt mới.
+    }
+    window.location.reload();
   }
 
   async function onSubmit(opts?: { auto?: boolean }) {

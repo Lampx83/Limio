@@ -92,6 +92,25 @@ export default async function LearnerDashboard() {
         <p className="mt-2 text-muted">Tổng quan tiến độ học của bạn.</p>
       </header>
 
+      {/*
+        Chưa ghi danh khoá nào thì nói thẳng ngay ở đây, đừng để người học bấm
+        vào một bài rồi bị đá về trang giới thiệu mà không hiểu vì sao. Trang
+        này là nơi họ hạ cánh ngay sau khi đăng nhập, nên là chỗ đúng để nói.
+      */}
+      {enrollments.length === 0 && (
+        <div className="banner-warning mt-6 block rounded-2xl px-5 py-4">
+          <p className="font-semibold">Bạn chưa ghi danh khoá học nào</p>
+          <p className="mt-1 text-sm">
+            Phải ghi danh rồi mới mở được bài học, bài tập và bài kiểm tra —
+            kể cả với khoá miễn phí. Nếu lớp của bạn có link mời do giảng viên
+            gửi thì mở link đó; còn không, tìm khoá trong danh mục và bấm đăng ký.
+          </p>
+          <Link href="/catalog" className="btn-primary btn-sm mt-3 inline-block">
+            Xem danh mục khoá học
+          </Link>
+        </div>
+      )}
+
       {/* Continue learning hero CTA */}
       {continueTarget && (
         <Link

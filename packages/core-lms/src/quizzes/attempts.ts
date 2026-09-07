@@ -304,6 +304,33 @@ export interface SubmitResult {
   correctCount: number;
 }
 
+/**
+ * Bỏ một lượt làm đang dở.
+ *
+ * Dùng cho lượt đã quá giờ mà chưa trả lời câu nào — người học chỉ mở ra xem.
+ * Nộp một lượt như thế sẽ ghi 0 điểm cho bài họ chưa từng làm, và con số đó
+ * chui vào cả điểm số lẫn thống kê lẫn phản hồi. Bỏ đi thì họ làm lại được.
+ *
+ * Chỉ bỏ được lượt trống: có đáp án rồi thì đó là bài làm thật, và xoá bài làm
+ * thật phải là quyết định của người dạy chứ không phải của một hàm dọn dẹp.
+ */
+export async function abandonAttempt(
+  userId: string,
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const attempt = await loadAttemptOwned(userId, attemptId, db);
+  if (attempt.status !== "in_progress") return;
+
+  const answered = await db.answerResponse.count({ where: { attemptId } });
+  if (answered > 0) throw new QuizError("validation_failed", "attempt_has_answers");
+
+  await db.quizAttempt.update({
+    where: { id: attemptId },
+    data: { status: "abandoned", submittedAt: new Date() },
+  });
+}
+
 export async function submitAttempt(
   userId: string,
   attemptId: string,

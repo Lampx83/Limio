@@ -238,6 +238,16 @@ enum CourseStatus {
   archived
 }
 
+/// B16 — cách một người vào được khoá học.
+enum EnrollMode {
+  /// Ai cũng tự đăng ký từ trang giới thiệu khoá (vẫn qua cổng thanh toán nếu
+  /// khoá có phí).
+  open
+  /// Chỉ vào được bằng link mời của một lớp cụ thể. Trang giới thiệu vẫn xem
+  /// được, nhưng không có nút đăng ký.
+  invite_only
+}
+
 model Course {
   id             String       @id @default(uuid())
   // PR2.17 — Multi-tenancy: course thuộc về 1 Organization. Nullable trong
@@ -259,6 +269,9 @@ model Course {
   // adaptive path, skill badge) and publish requires every lesson to have ≥1 skill tag.
   // When false, course runs as standard LMS (no AI feedback) and publish skips the skill-tag gate.
   // Default false — see project_personalization_toggle memory.
+  /// B16 — mở tự do hay chỉ vào bằng link mời lớp. Mặc định `open` để mọi khoá
+  /// đang có giữ nguyên hành vi sau khi migrate.
+  enrollMode             EnrollMode @default(open)
   personalizationEnabled Boolean @default(false)
   // Public access: when true, anyone — including logged-out visitors — may read the
   // course's lessons (content + video) without enrolling, in the same read-only

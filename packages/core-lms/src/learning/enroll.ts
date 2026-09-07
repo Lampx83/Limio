@@ -10,7 +10,8 @@ export class EnrollError extends Error {
       | "course_not_enrollable"
       | "payment_required"
       | "invalid_invite_code"
-      | "not_enrolled",
+      | "not_enrolled"
+      | "invite_required",
   ) {
     super(code);
   }
@@ -176,6 +177,16 @@ export async function enrollInCourse(
 ): Promise<EnrollResult> {
   const course = await db.course.findUnique({ where: { id: courseId } });
   if (!course) throw new EnrollError("course_not_found");
+
+  // B16 — khoá chỉ nhận người vào bằng link mời lớp. Chặn ở đây chứ không chỉ
+  // ẩn nút ở trang giới thiệu: ẩn nút chỉ giấu đường đi, còn ai gọi thẳng API
+  // vẫn ghi danh được — mà đó đúng là kiểu đăng ký tràn lan cần chặn.
+  //
+  // `enrollBySectionCode` không đi qua nhánh này, nên link mời vẫn dùng bình
+  // thường.
+  if (course.enrollMode === "invite_only") {
+    throw new EnrollError("invite_required");
+  }
   if (course.status !== "published") {
     throw new EnrollError("course_not_enrollable");
   }
