@@ -507,16 +507,16 @@ main[data-gv="1"] [data-teacher-note] {
   display: block;
 }
 
-/* Ảnh trong bài không được cao hơn một màn hình.
-   Ảnh học liệu hay là ảnh dọc hoặc sơ đồ cao (thang Bloom, kim tự tháp, ảnh
-   chụp cửa): giới hạn theo bề RỘNG thôi thì một tấm vẫn chiếm hai màn hình,
-   nên chiếu lên lớp là phải cuộn giữa chừng — lúc ấy nửa lớp nhìn phần trên,
-   nửa nhìn phần dưới. Chặn theo chiều cao khung nhìn thì tấm nào cũng lọt
-   trong một khung, chỉ nhỏ lại chứ không mất gì.
-   `width:auto` để tỉ lệ ảnh không méo khi chiều cao bị chặn. */
+/* Ảnh trong bài: khi ĐỌC thì lấp trọn bề rộng cột.
+   Bản trước chặn `max-height:70vh` cho mọi trường hợp, và vì bề rộng phải co
+   theo để giữ tỉ lệ nên ảnh càng cao càng bị bóp ngang: một trang giáo trình
+   scan 1275×2100 chỉ còn 383px trên cột rộng 1104px — chữ Hán trong ảnh nhỏ
+   tới mức không đọc nổi. Người đọc trên trang web thì cuộn được, nên chiều cao
+   không phải là thứ cần chặn ở đây; chỉ khi CHIẾU lên lớp mới cần (xem hai
+   luật dưới), vì lúc ấy nửa lớp nhìn phần trên, nửa nhìn phần dưới. */
 #lesson-content img {
-  max-height: 70vh;
-  width: auto;
+  max-width: 100%;
+  height: auto;
   margin-inline: auto;
 }
 
@@ -582,6 +582,12 @@ body[data-stage-timer] main[data-stage="1"] .sticky {
 #lesson-stage:fullscreen > * {
   max-width: 52rem;
   margin-inline: auto;
+}
+
+/* Toàn màn hình cũng là để chiếu — ở đây thì chặn chiều cao mới đúng: cả tấm
+   phải lọt trong một khung hình, không ai cuộn giữa lúc đang giảng. */
+#lesson-stage:fullscreen #lesson-content img {
+  max-height: 78vh;
 }
 @media (min-width: 1280px) {
   #lesson-stage:fullscreen {
