@@ -23,6 +23,7 @@ import {
   X,
   CalendarCheck,
   Library,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +57,11 @@ const FULL_GROUPS: Group[] = [
     iconFg: "text-amber-600 dark:text-amber-300",
     items: [
       { label: "Khoá học của tôi", href: "/instructor/courses", icon: BookOpen },
+      // Catalog là trang công khai, đặt ngay dưới "Khoá học của tôi" vì hai mục
+      // trả lời cùng một câu hỏi ở hai phạm vi: khoá tôi phụ trách, và mọi khoá
+      // đang mở. Giảng viên còn dùng nó để xem khoá mình hiện ra sao với người
+      // học trước khi publish.
+      { label: "Catalog khoá học", href: "/catalog", icon: LayoutGrid },
       { label: "Đánh giá Assignment", href: "/instructor/assignments", icon: ClipboardList },
       { label: "Skill tagging", href: "/instructor/skill-tagging", icon: Tag },
       { label: "Tournament của tôi", href: "/instructor/tournaments", icon: Trophy },
