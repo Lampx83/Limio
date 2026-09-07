@@ -27,6 +27,8 @@ import m2_l1, m2_l2, m2_l3  # noqa: E402
 import m3_l1, m3_l2, m3_l3  # noqa: E402
 import m4_l1, m4_l2, m4_l3  # noqa: E402
 import m5_l1, m5_l2, m5_l3  # noqa: E402
+import m6_l1, m6_l2, m6_l3  # noqa: E402
+import m7_l1, m7_l2, m7_l3  # noqa: E402
 
 MODULES = {
     1: {
@@ -78,6 +80,26 @@ MODULES = {
             "công thức cho bốn tình huống khó nhất."
         ),
         "lessons": [m5_l1.LESSON, m5_l2.LESSON, m5_l3.LESSON],
+    },
+    6: {
+        "title": "Module 6 · Kỹ năng lắng nghe",
+        "description": (
+            "Nghe là chuyện của tai, lắng nghe là chuyện của sự chú ý có chủ đích. Ba bài: năm mức "
+            "độ lắng nghe và bốn mức phản hồi; bốn nhóm rào cản cùng năm thói quen làm hỏng việc "
+            "nghe; và bốn tình huống khó nhất — nghe cấp trên khi chưa hiểu, nghe người đang phàn "
+            "nàn, nghe người đang buồn, nghe người mình không đồng ý."
+        ),
+        "lessons": [m6_l1.LESSON, m6_l2.LESSON, m6_l3.LESSON],
+    },
+    7: {
+        "title": "Module 7 · Thuyết trình hiệu quả",
+        "description": (
+            "Bài thuyết trình hỏng phần lớn từ lúc soạn, không phải lúc nói. Ba bài đi theo đúng "
+            "trình tự làm việc: chọn một thông điệp và dựng cấu trúc cho đúng khán giả; thiết kế "
+            "slide làm chỗ dựa thị giác thay vì tài liệu để đọc; rồi tập, đứng nói và xử lý bốn sự "
+            "cố thường gặp."
+        ),
+        "lessons": [m7_l1.LESSON, m7_l2.LESSON, m7_l3.LESSON],
     },
 }
 

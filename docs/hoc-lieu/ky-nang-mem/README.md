@@ -22,8 +22,8 @@ trong kho.
 | 3 | Tư duy phản biện | ✅ 3 bài |
 | 4 | Quản lý thời gian | ✅ 3 bài |
 | 5 | Giao tiếp hiệu quả | ✅ 3 bài |
-| 6 | Kỹ năng lắng nghe | chưa soạn |
-| 7 | Thuyết trình hiệu quả | chưa soạn |
+| 6 | Kỹ năng lắng nghe | ✅ 3 bài |
+| 7 | Thuyết trình hiệu quả | ✅ 3 bài |
 | 8 | Nghệ thuật thuyết phục | chưa soạn |
 | 9 | Kỹ năng cá nhân trong làm việc nhóm | chưa soạn |
 | 10 | Viết CV và phỏng vấn xin việc | chưa soạn |

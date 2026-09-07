@@ -268,6 +268,76 @@
       "code": "knm.culture-universal",
       "name": "Quy tắc phi ngôn ngữ giống nhau ở mọi nơi",
       "description": "Áp thẳng thói quen giao tiếp của mình sang bối cảnh văn hoá khác: khoảng cách đứng, mức độ nhìn thẳng, cách nói thẳng hay nói vòng đều khác nhau giữa các nền văn hoá và giữa các thế hệ."
+    },
+    {
+      "code": "knm.hearing-is-listening",
+      "name": "Nghe thấy là đã lắng nghe",
+      "description": "Coi việc âm thanh lọt vào tai và mình có mặt trong cuộc trò chuyện là đã lắng nghe. Nghe là hiện tượng sinh lý, lắng nghe là hoạt động có chủ đích gồm tập trung, giải mã, ghi nhớ và phản hồi."
+    },
+    {
+      "code": "knm.listen-to-reply",
+      "name": "Nghe để chờ tới lượt nói",
+      "description": "Vừa nghe vừa soạn sẵn câu đáp trong đầu, nên chỉ bắt được phần thông tin phục vụ cho câu đáp ấy. Người nói cảm nhận được điều này gần như ngay lập tức, và họ ngừng nói phần quan trọng."
+    },
+    {
+      "code": "knm.selective-listening",
+      "name": "Nghe chọn lọc rồi tưởng đã hiểu hết",
+      "description": "Chỉ tiếp nhận phần khớp với điều mình quan tâm hoặc đã tin, bỏ qua phần còn lại, rồi kết luận như thể đã nghe trọn vẹn."
+    },
+    {
+      "code": "knm.advice-too-early",
+      "name": "Đưa lời khuyên ngay khi người khác vừa kể",
+      "description": "Nhảy vào giải pháp trước khi người kia kể xong và trước khi họ được ghi nhận cảm xúc. Lời khuyên sớm thường trượt vì chưa đủ thông tin, và nó gửi đi thông điệp rằng vấn đề của họ đơn giản."
+    },
+    {
+      "code": "knm.interrupt-to-help",
+      "name": "Ngắt lời để đẩy nhanh câu chuyện",
+      "description": "Chen vào để tóm tắt hộ, đoán hộ hoặc kéo người nói đi nhanh hơn. Mỗi lần ngắt làm mất mạch của người nói và làm mất luôn phần thông tin họ chưa kịp tới."
+    },
+    {
+      "code": "knm.silence-is-awkward",
+      "name": "Im lặng là khoảng trống phải lấp ngay",
+      "description": "Vội nói tiếp mỗi khi cuộc trò chuyện chùng xuống. Khoảng dừng vài giây là lúc người kia đang sắp xếp ý hoặc chạm vào điều khó nói; lấp nó lại là cắt đúng phần sâu nhất."
+    },
+    {
+      "code": "knm.empathy-is-agreement",
+      "name": "Thấu cảm nghĩa là đồng ý",
+      "description": "Ngại phản ánh cảm xúc của người khác vì sợ như vậy là thừa nhận họ đúng. Thấu cảm là hiểu được họ đang thấy thế nào và vì sao, hoàn toàn không đòi hỏi ta phải đồng tình với kết luận của họ."
+    },
+    {
+      "code": "knm.closed-questions",
+      "name": "Hỏi bằng câu đóng rồi than người ta ít nói",
+      "description": "Dùng các câu hỏi chỉ trả lời được có hoặc không, rồi kết luận người kia không muốn chia sẻ. Câu hỏi mở bắt đầu bằng thế nào, điều gì, kể thêm mở ra thông tin mà câu đóng chặn lại."
+    },
+    {
+      "code": "knm.slide-is-document",
+      "name": "Dùng slide như một tài liệu để đọc",
+      "description": "Nhồi hết nội dung vào slide rồi đứng đọc lại. Khán giả đọc nhanh hơn người nói, nên họ đọc xong trước và ngừng nghe; slide là chỗ dựa thị giác, tài liệu chi tiết nên phát riêng."
+    },
+    {
+      "code": "knm.info-not-message",
+      "name": "Trình bày thông tin thay vì một thông điệp",
+      "description": "Đổ mọi thứ mình biết vào bài nói mà không chọn ra điều muốn người nghe nhớ và làm. Thông tin là nguyên liệu; thông điệp là một câu mà nếu khán giả chỉ nhớ một thứ thì đó là thứ đó."
+    },
+    {
+      "code": "knm.audience-is-me",
+      "name": "Soạn bài cho chính mình, không cho khán giả",
+      "description": "Chọn nội dung, thuật ngữ và độ sâu theo mức hiểu biết của người trình bày. Cùng một đề tài phải được kể khác đi cho hội đồng chuyên môn và cho người ngoài ngành."
+    },
+    {
+      "code": "knm.no-need-rehearse",
+      "name": "Nắm nội dung rồi thì không cần tập trước",
+      "description": "Bỏ khâu tập vì đã hiểu bài. Tập nói to là cách duy nhất phát hiện chỗ ý nhảy, chỗ hụt hơi và bài quá giờ — ba lỗi không lộ ra khi chỉ đọc thầm."
+    },
+    {
+      "code": "knm.qa-must-know-all",
+      "name": "Bị hỏi khó thì phải trả lời cho bằng được",
+      "description": "Chế câu trả lời khi không biết, vì sợ mất uy tín. Người nghe có chuyên môn nhận ra ngay; câu nhận chưa nắm phần đó kèm cam kết tìm hiểu và phản hồi lại giữ được uy tín tốt hơn nhiều."
+    },
+    {
+      "code": "knm.rush-when-over-time",
+      "name": "Quá giờ thì nói nhanh cho kịp hết slide",
+      "description": "Tăng tốc để chạy hết nội dung đã chuẩn bị. Kết quả là phần kết — chỗ chốt thông điệp — bị nuốt mất, trong khi bỏ bớt vài slide giữa bài thì không ai nhận ra."
     }
   ],
   "feedbackTemplates": [
@@ -529,6 +599,76 @@
     {
       "misconception": "knm.culture-universal",
       "body": "Khoảng cách đứng, mức độ nhìn thẳng, cách nói thẳng hay nói vòng đều thay đổi theo văn hoá, vùng miền và cả thế hệ. Khi làm việc với người từ bối cảnh khác, hãy quan sát và hỏi thay vì suy từ thói quen của mình.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.hearing-is-listening",
+      "body": "Nghe là chuyện của tai, lắng nghe là chuyện của sự chú ý có chủ đích. Phép thử: sau cuộc trò chuyện, bạn tóm tắt lại được ý chính và cảm xúc của người kia không? Không thì bạn mới nghe thấy.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.listen-to-reply",
+      "body": "Nếu bạn đang soạn câu đáp trong đầu thì bạn đã ngừng nghe. Hãy đặt một quy tắc: chỉ được nghĩ tới câu trả lời sau khi đã tóm tắt được ý người kia bằng một câu.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.selective-listening",
+      "body": "Hãy hỏi mình phần nào trong câu chuyện vừa rồi bạn thấy khó nghe hoặc không hợp ý. Đó chính là phần bạn dễ bỏ qua nhất — và thường là phần chứa thông tin mới.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.advice-too-early",
+      "body": "Trước khi khuyên, hãy hỏi một câu: bạn muốn mình nghe thôi hay muốn mình góp ý? Câu hỏi này mất ba giây và loại bỏ phần lớn những lời khuyên trượt.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.interrupt-to-help",
+      "body": "Mỗi lần ngắt lời là một lần người nói phải dựng lại mạch. Nếu sợ quên ý của mình, hãy ghi một từ ra giấy rồi để họ nói hết — ý của bạn không mất, còn phần họ chưa kịp nói thì mất thật.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.silence-is-awkward",
+      "body": "Đếm thầm tới ba trước khi nói tiếp. Khoảng dừng ấy thường là lúc người kia đang chạm tới điều khó nói nhất, và họ chỉ nói ra nếu bạn để trống chỗ cho nó.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.empathy-is-agreement",
+      "body": "Gọi tên cảm xúc của người kia không phải là đồng ý với kết luận của họ. Có vẻ bạn đang thất vọng vì việc này là một câu mô tả, không phải một lời thừa nhận đúng sai.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.closed-questions",
+      "body": "Đổi câu hỏi đóng thành câu mở: thay vì em ổn chứ, hãy hỏi phần nào khiến em thấy khó nhất. Câu mở bắt đầu bằng thế nào, điều gì, kể thêm — và nó mở ra đúng phần bạn cần biết.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.slide-is-document",
+      "body": "Slide là chỗ dựa thị giác, không phải bản in để đọc. Hãy giữ mỗi slide một ý, ít dòng chữ, và chuyển toàn bộ chi tiết sang tài liệu phát riêng.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.info-not-message",
+      "body": "Viết ra một câu duy nhất bạn muốn khán giả nhớ sau khi rời phòng, rồi kiểm mọi slide theo câu đó. Slide nào không phục vụ nó là slide nên bỏ.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.audience-is-me",
+      "body": "Trước khi soạn, trả lời ba câu: họ đã biết gì, họ cần gì ở bài này, và họ sẽ dùng nó để làm gì. Cùng một đề tài phải được kể khác đi cho hai nhóm khán giả khác nhau.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.no-need-rehearse",
+      "body": "Hãy tập nói to ít nhất một lần có bấm giờ. Chỉ khi nói thành tiếng bạn mới phát hiện chỗ ý nhảy, chỗ hụt hơi và phần vượt thời lượng — đọc thầm không lộ ra ba lỗi đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.qa-must-know-all",
+      "body": "Không biết thì nói không biết, kèm cam kết cụ thể: phần đó tôi chưa có số liệu, tôi kiểm lại và gửi anh chị trong hôm nay. Chế câu trả lời là cách nhanh nhất để mất uy tín với đúng người hiểu chuyện.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.rush-when-over-time",
+      "body": "Quá giờ thì bỏ bớt phần giữa, đừng bóp phần kết. Khán giả không biết bạn đã bỏ slide nào, nhưng họ nhận ra ngay một bài kết thúc vội và không đọng lại gì.",
       "priority": 10
     }
   ],
@@ -3535,6 +3675,1149 @@
                 "key": "5.3-viet-email",
                 "type": "essay",
                 "prompt": "Chọn một việc thật bạn cần trao đổi trong tuần tới. Viết 200–300 từ gồm: (a) bạn chọn kênh nào và vì sao, dựa trên độ phức tạp và độ nhạy cảm; (b) bản thảo nội dung theo bốn phần — tiêu đề, ý chính câu đầu, chi tiết gạch đầu dòng, dòng hành động kèm mốc; (c) hai phản ứng có thể gặp và cách bạn sẽ trả lời.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 6 · Kỹ năng lắng nghe",
+      "description": "Nghe là chuyện của tai, lắng nghe là chuyện của sự chú ý có chủ đích. Ba bài: năm mức độ lắng nghe và bốn mức phản hồi; bốn nhóm rào cản cùng năm thói quen làm hỏng việc nghe; và bốn tình huống khó nhất — nghe cấp trên khi chưa hiểu, nghe người đang phàn nàn, nghe người đang buồn, nghe người mình không đồng ý.",
+      "lessons": [
+        {
+          "title": "Bài 6.1 · Năm mức độ lắng nghe và bốn mức phản hồi",
+          "durationMin": 45,
+          "description": "Phân biệt nghe với lắng nghe; năm mức độ từ phớt lờ tới thấu cảm; bốn mức phản hồi từ lặp lại nguyên văn tới phản ánh cảm xúc; và cách chọn mức phù hợp với tình huống.",
+          "objectives": [
+            "Phân biệt được nghe và lắng nghe bằng dấu hiệu quan sát được",
+            "Xác định được mình đang ở mức nào trong năm mức độ lắng nghe của một cuộc trò chuyện cụ thể",
+            "Dùng được bốn mức phản hồi và chọn mức phù hợp với tình huống",
+            "Đặt được câu hỏi mở thay cho câu hỏi đóng khi muốn người kia nói tiếp"
+          ],
+          "summary": [
+            "Nghe là hiện tượng sinh lý, lắng nghe là hoạt động có chủ đích gồm tập trung, giải mã, ghi nhớ và phản hồi — phép thử là bạn tóm tắt lại được ý chính và cảm xúc hay không.",
+            "Năm mức: phớt lờ, giả vờ nghe, nghe chọn lọc, nghe chăm chú, và lắng nghe thấu cảm — mức cao nhất là nghe để hiểu chứ không phải nghe để trả lời.",
+            "Bốn mức phản hồi: lặp lại nguyên văn, diễn giải bằng lời mình, phản ánh cảm xúc, và kết hợp cả hai; càng lên cao càng cho thấy người nghe thật sự hiểu.",
+            "Thấu cảm không phải đồng ý: gọi tên cảm xúc của người kia là mô tả trạng thái của họ, không phải thừa nhận kết luận của họ."
+          ],
+          "body": "\nNhiều người tin mình lắng nghe tốt. Phép thử rất nhanh: sau một cuộc trò chuyện, bạn tóm tắt lại được **ý chính** và **cảm xúc** của người kia không? Nếu chỉ nhớ mình đã nói gì thì đó là một cuộc trò chuyện bạn đã có mặt chứ không phải đã lắng nghe.\n\n## Nghe và lắng nghe\n\n| | Nghe | Lắng nghe |\n|---|---|---|\n| Bản chất | Hiện tượng sinh lý, tự động | Hoạt động có chủ đích |\n| Cần gì | Tai bình thường | Tập trung, giải mã, ghi nhớ, phản hồi |\n| Mệt không | Không | Có — nên không giữ được lâu nếu vừa nghe vừa làm việc khác |\n| Kết quả | Biết là có ai đó đang nói | Hiểu được nội dung và trạng thái của người nói |\n\n> [!ghi-nho] Bản chất của lắng nghe và thấu hiểu là **nghe để hiểu người kia**, chứ không phải nghe để chuẩn bị câu trả lời của mình. Đây là toàn bộ khác biệt giữa mức cao nhất và mức thấp hơn.\n\n## Năm mức độ lắng nghe\n\n| Mức | Biểu hiện | Người nói cảm thấy |\n|---|---|---|\n| 1. Phớt lờ | Không nghe, làm việc khác, mắt ở màn hình | Bị coi thường |\n| 2. Giả vờ nghe | Gật đầu, ừ hử, đầu ở chỗ khác | Nhận ra sớm hơn ta tưởng |\n| 3. Nghe chọn lọc | Chỉ bắt phần mình quan tâm hoặc phần khớp với điều mình đã tin | Bị hiểu lệch |\n| 4. Nghe chăm chú | Tập trung vào nội dung, ghi nhớ được, hỏi lại được | Được tôn trọng |\n| 5. Lắng nghe thấu cảm | Nghe cả nội dung lẫn cảm xúc và ý định đằng sau; đặt mình vào khung nhìn của người nói | Được hiểu |\n\nKhác biệt giữa mức 3 và mức 5 lớn hơn vẻ ngoài của nó. **Nghe chọn lọc** lấy ra phần khớp với điều mình đã nghĩ rồi kết luận như thể đã nghe đủ; **lắng nghe thấu hiểu** cố dựng lại bức tranh của người kia, kể cả phần mình không thích nghe.\n\nCần nói rõ: mức 5 không phải mức cần dùng mọi lúc. Nghe thông báo lịch thi thì mức 4 là đủ. Mức 5 dành cho lúc người kia đang mang một chuyện có cảm xúc, hoặc lúc hai bên đang hiểu nhau lệch.\n\n![Chân dung nhà tâm lý học Carl Rogers](https://upload.wikimedia.org/wikipedia/commons/f/f9/Carl_Ransom_Rogers.jpg \"Carl Rogers (1902–1987), người đưa lắng nghe thấu cảm và phản ánh cảm xúc thành phương pháp làm việc chuyên nghiệp. Ảnh: [File:Carl Ransom Rogers.jpg](https://commons.wikimedia.org/wiki/File:Carl_Ransom_Rogers.jpg), giấy phép CC BY 2.5.\")\n\n## Bốn mức phản hồi\n\nLắng nghe là hoạt động có phản hồi — im lặng tuyệt đối không phải lắng nghe tốt, vì người nói không có cách nào biết mình đang được hiểu tới đâu. Bốn mức dưới đây tăng dần theo mức độ cho thấy bạn đã thật sự xử lý thông tin.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"display:grid;gap:.45rem;font-size:1.05rem\">\n    <div style=\"background:rgba(127,127,127,.12);border-radius:.4rem;padding:.6rem .8rem\"><b>1 · Lặp lại nguyên văn</b> — “Cậu nói là nhóm chưa chốt được phần dữ liệu.”<br><span style=\"opacity:.8\">Cho thấy đã nghe, chưa cho thấy đã hiểu. Dùng khi cần xác nhận chi tiết chính xác: số liệu, ngày giờ.</span></div>\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>2 · Diễn giải bằng lời mình</b> — “Tức là phần dữ liệu đang tắc nên mấy phần sau không chạy được, đúng không?”<br><span style=\"opacity:.8\">Cho thấy đã xử lý thông tin và mở đường cho người kia chỉnh lại chỗ mình hiểu sai.</span></div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .8rem\"><b>3 · Phản ánh cảm xúc</b> — “Nghe cậu nói mình thấy hình như cậu đang khá mệt với việc phải nhắc nhiều lần.”<br><span style=\"opacity:.8\">Gọi tên trạng thái đằng sau lời nói. Đây là mức khiến người ta thấy được hiểu.</span></div>\n    <div style=\"background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.6rem .8rem\"><b>4 · Tóm tắt nội dung và cảm xúc</b> — “Vậy là phần dữ liệu tắc hai tuần, cậu đã nhắc ba lần và đang mệt vì chuyện đó. Cậu muốn mình cùng nói với nhóm hay muốn tự xử lý?”<br><span style=\"opacity:.8\">Gộp cả hai lớp rồi mở đường cho bước tiếp theo.</span></div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Mức 1 dùng cho thông tin chính xác; mức 2 dùng khi sợ hiểu lệch; mức 3 và 4 dùng khi câu chuyện có cảm xúc. Dùng mức 3 cho một câu hỏi về lịch thi thì thành khách sáo.</div>\n</div>\n```\n\n> [!vi-du] Vì sao gọi tên cảm xúc lại hiệu quả tới vậy? Vì phần lớn người đang bực hoặc đang lo không cần được giải quyết ngay — họ cần được **công nhận là trạng thái đó có lý do**. Một câu \"có vẻ bạn đang lo cho kịp hạn\" thường làm người kia hạ giọng và bắt đầu nói phần thật sự quan trọng. Nếu bạn đoán sai cảm xúc cũng không sao: họ sẽ sửa lại, và bản thân việc sửa ấy cũng đưa cuộc trò chuyện đi tiếp.\n\n> [!canh-bao] Thấu cảm **không phải** đồng ý. Nói \"mình hiểu là bạn thấy cách phân công không công bằng\" không có nghĩa bạn thừa nhận nó không công bằng. Nhiều người né phản ánh cảm xúc vì sợ bị hiểu là đã nhận lỗi — kết quả là cuộc trò chuyện đứng nguyên ở chỗ tranh cãi ai đúng.\n\n## Câu hỏi mở và khoảng dừng\n\nHai công cụ nhỏ nhưng đổi hẳn chất lượng nghe:\n\n**Câu hỏi mở** bắt đầu bằng *thế nào, điều gì, kể thêm* và không thể trả lời bằng có hoặc không. So sánh: \"Em ổn chứ?\" (đóng — câu trả lời gần như luôn là \"vâng ạ\") với \"Phần nào trong việc này khiến em thấy khó nhất?\" (mở — buộc phải nói ra nội dung).\n\n**Khoảng dừng** là công cụ bị đánh giá thấp nhất. Khi người kia ngừng nói, hãy đếm thầm tới ba trước khi bạn nói. Rất thường xuyên, họ sẽ nói tiếp — và phần nói sau khoảng dừng ấy là phần thật sự quan trọng, vì đó là lúc họ vừa cân nhắc xong có nên nói ra hay không.\n\n> [!meo] Trong tư vấn hoặc trò chuyện nghiêm túc, nếu người kia im lặng kéo dài sau một câu hỏi, đừng vội hỏi lại hay chuyển chủ đề. Giữ im lặng, giữ ánh mắt và tư thế mở. Im lặng ấy hầu như luôn là đang suy nghĩ, không phải là không muốn trả lời.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nNhớ lại ba cuộc trò chuyện gần nhất trong ngày. Chấm mỗi cuộc theo năm mức độ và ghi bằng chứng cụ thể cho mức bạn chấm (bạn đã làm gì, nghĩ gì trong lúc nghe). Chọn một cuộc bạn muốn làm lại và viết ra: nếu ở mức 5, bạn sẽ hỏi câu gì và phản hồi thế nào.\n\n### Nhóm 3 người (25 phút)\n\nVòng ba vai, mỗi vòng 5 phút rồi đổi: người kể (kể một chuyện có thật, có cảm xúc, không cần nghiêm trọng), người nghe (chỉ được dùng bốn mức phản hồi, **không được khuyên**), người quan sát (ghi lại: có ngắt lời không, có bao nhiêu câu hỏi mở, có phản ánh cảm xúc lần nào không, có khoảng dừng nào không). Sau mỗi vòng, người kể nói một câu duy nhất: mình cảm thấy được nghe tới mức nào.\n\n### Bài tập về nhà (45 phút)\n\nTrong tuần, chọn ba cuộc trò chuyện và cố ý dùng ba mức phản hồi khác nhau (diễn giải, phản ánh cảm xúc, tóm tắt cả hai). Ghi lại mỗi lần: câu bạn đã dùng nguyên văn, phản ứng của người kia, và điều bạn biết thêm nhờ câu đó. Cuối cùng viết một đoạn: mức nào khó dùng nhất với bạn và vì sao.\n\n### Xem thêm\n\n- 🎬 [5 Ways to Listen Better](https://www.youtube.com/watch?v=cSohjlYQI2A) — Julian Treasure, TED, 7 phút. Vì sao ta đang mất dần khả năng nghe và năm bài tập ngắn để lấy lại.\n- 🎬 [The Power of Listening](https://www.youtube.com/watch?v=saXfavo1OQo) — William Ury, TEDxSanDiego, 15 phút. Lắng nghe nhìn từ góc đàm phán — nối thẳng sang module 8.\n\n### Nguồn tham khảo\n\n- Rogers, C. R., & Farson, R. E. (1957). *Active Listening.* Chicago: Industrial Relations Center, University of Chicago.\n- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương \"Seek First to Understand, Then to Be Understood.\" New York: Free Press.\n- Bodie, G. D. (2011). The Active-Empathic Listening Scale. *Communication Quarterly*, 59(3), 277–295.\n- Itzchakov, G., & Kluger, A. N. (2018). The listening circle: A simple tool to enhance listening and reduce extremism among employees. *Organizational Dynamics*, 46(4), 220–226.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 6.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "6.1-muc-cao-nhat",
+                "type": "mcq",
+                "prompt": "Trong năm mức độ lắng nghe, mức độ cao nhất là gì?",
+                "explanation": "Mức cao nhất là lắng nghe thấu cảm: nghe cả nội dung lẫn cảm xúc và ý định đằng sau, đặt mình vào khung nhìn của người nói.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Lắng nghe thấu cảm — nghe cả nội dung lẫn cảm xúc và ý định đằng sau lời nói",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nghe chăm chú và ghi chép đầy đủ mọi thông tin",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nghe chọn lọc phần quan trọng nhất để tiết kiệm thời gian",
+                    "isCorrect": false,
+                    "misconception": "knm.selective-listening"
+                  },
+                  {
+                    "label": "Nghe và chuẩn bị sẵn câu trả lời thuyết phục nhất",
+                    "isCorrect": false,
+                    "misconception": "knm.listen-to-reply"
+                  }
+                ]
+              },
+              {
+                "key": "6.1-ban-chat-lang-nghe",
+                "type": "mcq",
+                "prompt": "Lắng nghe thấu cảm khác nghe để trả lời chủ yếu ở chỗ nào?",
+                "explanation": "Lắng nghe thấu cảm nhắm tới việc hiểu khung nhìn của người kia; nghe để trả lời nhắm tới việc chuẩn bị phần nói của mình, nên chỉ bắt phần thông tin phục vụ cho câu đáp.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mục đích: một bên nghe để hiểu người kia, một bên nghe để chuẩn bị câu đáp của mình",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thời lượng: lắng nghe thấu cảm luôn mất nhiều thời gian hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Số câu hỏi: người thấu cảm hỏi nhiều hơn hẳn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thái độ: người thấu cảm luôn đồng ý với người nói",
+                    "isCorrect": false,
+                    "misconception": "knm.empathy-is-agreement"
+                  }
+                ]
+              },
+              {
+                "key": "6.1-bon-muc-phan-hoi",
+                "type": "matching",
+                "prompt": "Nối mỗi câu phản hồi với mức phản hồi tương ứng.",
+                "explanation": "Bốn mức tăng dần: lặp lại nguyên văn, diễn giải bằng lời mình, phản ánh cảm xúc, và tóm tắt cả nội dung lẫn cảm xúc.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Cậu nói là nhóm chưa chốt được phần dữ liệu",
+                    "right": "Lặp lại nguyên văn"
+                  },
+                  {
+                    "left": "Tức là phần dữ liệu tắc nên mấy phần sau không chạy được, đúng không?",
+                    "right": "Diễn giải bằng lời mình"
+                  },
+                  {
+                    "left": "Hình như cậu đang mệt vì phải nhắc nhiều lần",
+                    "right": "Phản ánh cảm xúc"
+                  },
+                  {
+                    "left": "Vậy là tắc hai tuần, cậu đã nhắc ba lần và đang mệt. Cậu muốn mình cùng nói với nhóm không?",
+                    "right": "Tóm tắt nội dung và cảm xúc"
+                  }
+                ]
+              },
+              {
+                "key": "6.1-cau-hoi-mo",
+                "type": "mcq",
+                "prompt": "Câu nào là câu hỏi mở khi lắng nghe?",
+                "explanation": "Câu hỏi mở không trả lời được bằng có hoặc không; nó bắt đầu bằng thế nào, điều gì, kể thêm và buộc người kia nói ra nội dung.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Phần nào trong việc này khiến em thấy khó nhất?",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Em ổn chứ?",
+                    "isCorrect": false,
+                    "misconception": "knm.closed-questions"
+                  },
+                  {
+                    "label": "Em đã làm xong phần đó chưa?",
+                    "isCorrect": false,
+                    "misconception": "knm.closed-questions"
+                  },
+                  {
+                    "label": "Em có muốn anh giúp không?",
+                    "isCorrect": false,
+                    "misconception": "knm.closed-questions"
+                  }
+                ]
+              },
+              {
+                "key": "6.1-goi-ten-cam-xuc",
+                "type": "mcq",
+                "prompt": "Vì sao việc gọi tên cảm xúc của người nói — kiểu có vẻ bạn đang lo lắng — lại hiệu quả?",
+                "explanation": "Nó cho người kia thấy trạng thái của họ được ghi nhận là có lý do, thường làm họ hạ giọng và bắt đầu nói phần thật sự quan trọng; đoán sai cũng có ích vì họ sẽ sửa lại.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Vì nó cho thấy trạng thái của họ được ghi nhận, thường giúp họ bình tĩnh hơn và nói ra phần quan trọng; nếu đoán sai thì họ sẽ tự sửa lại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nó chứng tỏ ta đồng ý với quan điểm của họ",
+                    "isCorrect": false,
+                    "misconception": "knm.empathy-is-agreement"
+                  },
+                  {
+                    "label": "Vì nó giúp kết thúc cuộc trò chuyện nhanh hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.interrupt-to-help"
+                  },
+                  {
+                    "label": "Vì nó cho thấy ta có kiến thức tâm lý học",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "6.1-im-lang-tu-van",
+                "type": "mcq",
+                "prompt": "Trong buổi tư vấn hướng nghiệp, sinh viên im lặng kéo dài sau khi bạn hỏi. Bạn nên làm gì?",
+                "explanation": "Khoảng dừng thường là lúc người kia đang sắp xếp ý hoặc cân nhắc có nên nói ra hay không; giữ im lặng với tư thế mở là cách để phần quan trọng nhất được nói ra.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Giữ im lặng vài giây, giữ ánh mắt và tư thế mở, chờ em ấy nói tiếp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hỏi lại ngay bằng một câu khác cho đỡ trống",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-is-awkward"
+                  },
+                  {
+                    "label": "Chuyển sang chủ đề khác dễ nói hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-is-awkward"
+                  },
+                  {
+                    "label": "Tự đưa ra lời khuyên để em ấy khỏi phải trả lời",
+                    "isCorrect": false,
+                    "misconception": "knm.advice-too-early"
+                  }
+                ]
+              },
+              {
+                "key": "6.1-viet-nghe",
+                "type": "essay",
+                "prompt": "Chọn một cuộc trò chuyện thật trong tuần qua. Viết 150–250 từ: (a) bạn đã ở mức nào trong năm mức độ lắng nghe, kèm bằng chứng cụ thể; (b) bạn đã dùng mức phản hồi nào; (c) viết lại ba câu bạn sẽ nói nếu làm lại — một câu diễn giải, một câu phản ánh cảm xúc, một câu hỏi mở.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 6.2 · Rào cản và những thói quen làm hỏng việc nghe",
+          "durationMin": 45,
+          "description": "Bốn nhóm rào cản lắng nghe; năm thói quen phổ biến làm hỏng cuộc trò chuyện; ngôn ngữ cơ thể của người nghe; và vì sao lời khuyên đưa quá sớm thường trượt.",
+          "objectives": [
+            "Gọi tên được rào cản đang cản trở việc nghe của mình trong một tình huống cụ thể",
+            "Nhận ra và bỏ được ít nhất một thói quen làm hỏng việc nghe",
+            "Điều chỉnh được ngôn ngữ cơ thể để hỗ trợ việc nghe",
+            "Giải thích được vì sao nên hỏi trước khi đưa lời khuyên"
+          ],
+          "summary": [
+            "Rào cản lắng nghe chia làm bốn nhóm: môi trường, sinh lý, thói quen tư duy và quan hệ — mỗi nhóm cần một cách xử lý khác nhau.",
+            "Năm thói quen làm hỏng việc nghe: ngắt lời, nghe để trả lời, nghe chọn lọc, phán xét sớm, và khuyên khi chưa được hỏi.",
+            "Ngắt lời nhiều lần không chỉ bất lịch sự: nó buộc người nói dựng lại mạch và làm mất luôn phần họ chưa kịp tới.",
+            "Trước khi khuyên, hỏi một câu ba giây: bạn muốn mình nghe thôi hay muốn mình góp ý."
+          ],
+          "body": "\nAi cũng biết nên lắng nghe. Bài này nói về những thứ **chắn giữa ý định và thực tế** — và phần lớn chúng là thói quen chứ không phải thiếu thiện chí.\n\n## Bốn nhóm rào cản\n\n| Nhóm | Ví dụ | Cách xử lý |\n|---|---|---|\n| Môi trường | Ồn, họp online mạng chập chờn, vừa nghe vừa nhìn màn hình | Đổi chỗ, tắt màn hình, hẹn lại lúc khác thay vì nghe nửa vời |\n| Sinh lý | Mệt, đói, buồn ngủ, đau | Dời cuộc trao đổi quan trọng; thừa nhận thẳng nếu không dời được |\n| Thói quen tư duy | Soạn sẵn câu đáp, nghe chọn lọc, phán xét trước khi nghe hết | Đặt quy tắc cho mình: chưa tóm tắt được thì chưa nghĩ tới câu trả lời |\n| Quan hệ và cảm xúc | Định kiến sẵn có về người nói, đang giận, sợ mất thể diện | Gọi tên trạng thái của chính mình trước; nếu đang nóng thì hẹn lại |\n\nRào cản **thói quen tư duy** là nhóm đắt nhất vì nó vô hình: bạn vẫn ngồi yên, vẫn gật đầu, và vẫn tin mình đang nghe. Dấu hiệu nhận ra: trong lúc người kia nói, bạn thấy mình đang nghĩ tới ví dụ của **mình** để kể tiếp.\n\n> [!vi-du] Một thành viên mới hỏi bạn về quy trình đã được giải thích nhiều lần. Rào cản bật lên ngay: định kiến \"bạn này không chịu để ý\". Nếu để định kiến dẫn dắt, bạn trả lời cộc lốc và người kia sẽ không hỏi lần sau — kể cả khi họ sắp làm sai. Phản ứng dùng được: trả lời ngắn gọn, rồi hỏi **chỗ nào trong quy trình khiến bạn ấy dễ nhầm nhất**, và ghi lại chỗ đó vào tài liệu. Câu hỏi ấy biến một lần bực mình thành một lần cải tiến tài liệu cho cả nhóm.\n\n## Năm thói quen làm hỏng việc nghe\n\n**1. Ngắt lời.** Mỗi lần chen vào, người nói phải dựng lại mạch, và phần họ chưa kịp tới thường là phần quan trọng nhất. Ngắt nhiều lần còn gửi một thông điệp ngầm: điều tôi định nói giá trị hơn điều bạn đang nói. Nếu sợ quên ý của mình, ghi một từ ra giấy.\n\n**2. Nghe để trả lời.** Đầu bận soạn câu đáp thì tai chỉ bắt phần phục vụ câu đáp đó. Quy tắc chữa: **chưa tóm tắt được ý người kia thì chưa được nghĩ tới câu trả lời.**\n\n**3. Nghe chọn lọc.** Chỉ giữ phần khớp với điều mình đã tin. Cách kiểm: sau cuộc trò chuyện, hỏi mình *phần nào vừa rồi mình thấy khó nghe nhất* — đó chính là phần dễ bị bỏ, và thường là phần chứa thông tin mới.\n\n**4. Phán xét sớm.** Kết luận về người nói ngay từ vài câu đầu, rồi mọi thứ sau đó bị đọc qua kết luận ấy — đúng cơ chế thang suy luận ở bài 3.1.\n\n**5. Khuyên khi chưa được hỏi.** Đây là thói quen được động cơ tốt nuôi dưỡng nên khó bỏ nhất.\n\n## Vì sao lời khuyên sớm thường trượt\n\nBa lý do, xếp theo mức độ quan trọng:\n\n- **Chưa đủ thông tin.** Người ta hiếm khi kể phần khó nhất ngay từ đầu. Khuyên ở phút thứ hai là khuyên dựa trên một phần ba câu chuyện.\n- **Chưa được ghi nhận thì chưa nghe được lời khuyên.** Người đang bận với cảm xúc không có chỗ trống trong đầu cho giải pháp. Ghi nhận trước, giải pháp sau.\n- **Nó gửi đi một thông điệp không định gửi**: rằng vấn đề của bạn đơn giản, tôi nhìn phát là ra. Với người đang vật lộn vài tuần, câu đó gây khó chịu hơn là giúp.\n\n> [!meo] Câu hỏi ba giây trước khi khuyên: **\"Cậu muốn mình nghe thôi, hay muốn mình góp ý?\"** Nó lịch sự, nó cho người kia quyền chọn, và nó loại bỏ phần lớn những lời khuyên trượt. Nếu họ chọn nghe thôi, đừng lén khuyên bằng cách kể chuyện của mình.\n\n> [!vi-du] Một người bạn kể chuyện thất tình. Phản xạ thường gặp: \"Thôi quên đi, người ta không xứng đâu\" — vừa phán xét người kia, vừa bảo bạn mình phải cảm thấy khác đi. Cách dùng được: nghe hết, phản ánh cảm xúc (\"nghe cậu kể mình thấy cậu vẫn còn hụt hẫng lắm\"), hỏi mở (\"giờ cậu thấy khó nhất là lúc nào trong ngày?\"), và **không đưa lời khuyên trừ khi được hỏi**. Bạn không phải chữa được chuyện đó; bạn chỉ cần đừng để họ ở lại một mình với nó.\n\n## Ngôn ngữ cơ thể của người nghe\n\nNgười nói đọc trạng thái của bạn liên tục, nên tư thế cũng là một phần của việc nghe.\n\n| Hỗ trợ việc nghe | Cản trở |\n|---|---|\n| Hướng người và mặt về phía người nói | Người quay đi, mắt ở màn hình |\n| Giao tiếp bằng mắt vừa phải, tự nhiên | Nhìn chằm chằm không rời, hoặc không nhìn lần nào |\n| Gật đầu và ừ hử đúng nhịp, thưa | Gật liên tục như máy — tín hiệu của giả vờ nghe |\n| Hơi nghiêng về phía trước ở đoạn quan trọng | Ngả hẳn ra sau, khoanh tay suốt |\n| Điện thoại úp xuống hoặc cất đi | Điện thoại trong tay, thỉnh thoảng liếc |\n\nChi tiết đáng chú ý: **gật đầu liên tục không phải dấu hiệu nghe tốt**. Người nói giàu kinh nghiệm nhận ra ngay kiểu gật đều đặn vô cảm — nó thường đi cùng ánh mắt trống. Gật đúng chỗ, thưa và có phản hồi bằng lời mới là tín hiệu thật.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nTrong một cuộc trò chuyện hôm nay, đếm hai con số: số lần bạn ngắt lời, và số lần bạn phát hiện mình đang soạn câu đáp trong đầu. Không phán xét, chỉ đếm. Cuối ngày viết ba dòng: con số nào cao hơn bạn nghĩ, tình huống nào hay xảy ra nhất, và một quy tắc bạn đặt cho ngày mai.\n\n### Nhóm 3–4 người (25 phút)\n\nBài tập \"nghe hết đã\": chia cặp, người A kể trong 3 phút, người B **không được nói một lời nào**, chỉ dùng ngôn ngữ cơ thể; hết 3 phút, B tóm tắt lại nội dung và cảm xúc trong 30 giây, A chấm đúng sai. Đổi vai. Sau đó cả nhóm rút ra: im lặng 3 phút khó ở chỗ nào, và bản tóm tắt trượt ở chỗ nào.\n\n### Bài tập về nhà (45 phút)\n\nChọn một người bạn hay có xu hướng khuyên ngay khi họ kể chuyện. Trong tuần, dùng câu hỏi ba giây ít nhất hai lần. Ghi lại: câu bạn hỏi, họ chọn phương án nào, cuộc trò chuyện đi khác đi thế nào so với thường lệ. Viết nửa trang, trong đó có một đoạn trung thực: bạn có thấy khó chịu khi phải giữ lời khuyên lại không, và vì sao.\n\n### Xem thêm\n\n- 🎬 [10 Ways to Have a Better Conversation](https://www.youtube.com/watch?v=R1vskiVDwl4) — Celeste Headlee, TED, 11 phút. Danh sách các thói quen làm hỏng cuộc trò chuyện, rất khớp với mục hai của bài này.\n- 🎬 [5 Ways to Listen Better](https://www.youtube.com/watch?v=cSohjlYQI2A) — Julian Treasure, TED, 7 phút.\n\n### Nguồn tham khảo\n\n- Nichols, R. G., & Stevens, L. A. (1957). Listening to people. *Harvard Business Review*, 35(5), 85–92.\n- Burley-Allen, M. (1995). *Listening: The Forgotten Skill* (2nd ed.). New York: Wiley.\n- Bodie, G. D., Vickery, A. J., Cannava, K., & Jones, S. M. (2015). The role of active listening in informal helping conversations. *Western Journal of Communication*, 79(2), 151–173.\n- Rogers, C. R., & Farson, R. E. (1957). *Active Listening.* Chicago: University of Chicago.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 6.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "6.2-ngat-loi",
+                "type": "mcq",
+                "prompt": "Vì sao việc ngắt lời người nói nhiều lần làm giảm chất lượng lắng nghe?",
+                "explanation": "Ngắt lời buộc người nói dựng lại mạch, làm mất phần họ chưa kịp nói tới, và gửi thông điệp ngầm rằng điều người nghe định nói quan trọng hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì người nói phải dựng lại mạch, phần chưa kịp nói bị mất, và họ nhận được thông điệp ngầm rằng ý của người nghe quan trọng hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì ngắt lời làm cuộc trò chuyện kéo dài hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì đó chỉ là vấn đề phép lịch sự, không ảnh hưởng tới nội dung",
+                    "isCorrect": false,
+                    "misconception": "knm.interrupt-to-help"
+                  },
+                  {
+                    "label": "Vì người nghe sẽ quên mất ý mình định nói",
+                    "isCorrect": false,
+                    "misconception": "knm.interrupt-to-help"
+                  }
+                ]
+              },
+              {
+                "key": "6.2-khuyen-som",
+                "type": "mcq",
+                "prompt": "Khi người khác chia sẻ chuyện khó khăn, vì sao nên hạn chế đưa lời khuyên ngay lập tức?",
+                "explanation": "Người ta hiếm khi kể phần khó nhất ngay từ đầu; người đang bận với cảm xúc chưa có chỗ cho giải pháp; và lời khuyên vội hàm ý vấn đề của họ đơn giản.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Vì ta chưa đủ thông tin, người kia chưa được ghi nhận cảm xúc nên chưa tiếp nhận được giải pháp, và lời khuyên vội hàm ý vấn đề của họ là đơn giản",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì đưa lời khuyên là việc của chuyên gia, không phải của bạn bè",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì lời khuyên luôn khiến người nghe khó chịu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì nên để họ tự xoay xở thì mới trưởng thành",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  }
+                ]
+              },
+              {
+                "key": "6.2-that-tinh",
+                "type": "mcq",
+                "prompt": "Một người bạn kể về việc vừa chia tay. Cách lắng nghe phù hợp nhất là gì?",
+                "explanation": "Nghe hết, phản ánh cảm xúc, hỏi câu mở, và giữ lời khuyên lại trừ khi được hỏi — mục tiêu không phải giải quyết hộ mà là để họ không ở lại một mình với chuyện đó.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nghe hết, gọi tên cảm xúc bạn ấy đang có, hỏi một câu mở, và chỉ góp ý nếu được hỏi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khuyên bạn ấy quên đi vì người kia không xứng đáng",
+                    "isCorrect": false,
+                    "misconception": "knm.advice-too-early"
+                  },
+                  {
+                    "label": "Kể ngay chuyện tương tự của mình để bạn ấy thấy không cô đơn",
+                    "isCorrect": false,
+                    "misconception": "knm.listen-to-reply"
+                  },
+                  {
+                    "label": "Nói rằng chuyện này rồi cũng qua thôi và chuyển chủ đề cho bạn ấy đỡ buồn",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  }
+                ]
+              },
+              {
+                "key": "6.2-ngon-ngu-co-the",
+                "type": "mcq",
+                "prompt": "Ngôn ngữ cơ thể nào KHÔNG hỗ trợ hiệu quả cho việc lắng nghe?",
+                "explanation": "Gật đầu liên tục và đều đặn là dấu hiệu của giả vờ nghe; tín hiệu thật là gật thưa, đúng chỗ, kèm phản hồi bằng lời.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Gật đầu liên tục và đều đặn suốt cuộc trò chuyện",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hướng người và mặt về phía người nói",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giao tiếp bằng mắt vừa phải, tự nhiên",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cất điện thoại hoặc úp màn hình xuống",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "6.2-nghe-chon-loc",
+                "type": "mcq",
+                "prompt": "Khác biệt giữa nghe chọn lọc và lắng nghe thấu hiểu là gì?",
+                "explanation": "Nghe chọn lọc chỉ giữ phần khớp với điều mình quan tâm hoặc đã tin rồi kết luận như đã nghe đủ; lắng nghe thấu hiểu cố dựng lại bức tranh của người nói, kể cả phần mình không muốn nghe.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nghe chọn lọc chỉ giữ phần khớp với điều mình đã tin; lắng nghe thấu hiểu dựng lại bức tranh của người nói, kể cả phần khó nghe",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nghe chọn lọc nhanh hơn nên phù hợp với người bận",
+                    "isCorrect": false,
+                    "misconception": "knm.selective-listening"
+                  },
+                  {
+                    "label": "Hai cách này giống nhau, chỉ khác tên gọi",
+                    "isCorrect": false,
+                    "misconception": "knm.selective-listening"
+                  },
+                  {
+                    "label": "Lắng nghe thấu hiểu nghĩa là ghi nhớ toàn bộ chi tiết được nói ra",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "6.2-thanh-vien-moi",
+                "type": "mcq",
+                "prompt": "Một thành viên mới hỏi bạn về quy trình đã được giải thích nhiều lần. Phản ứng phù hợp là gì?",
+                "explanation": "Trả lời ngắn gọn rồi hỏi chỗ nào dễ nhầm nhất và ghi lại vào tài liệu — biến một lần bực mình thành một cải tiến cho cả nhóm, đồng thời giữ để họ còn dám hỏi lần sau.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Trả lời ngắn gọn, hỏi chỗ nào trong quy trình dễ gây nhầm nhất và bổ sung chỗ đó vào tài liệu chung",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nhắc rằng việc này đã được nói nhiều lần rồi để bạn ấy chú ý hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.criticism-as-attack"
+                  },
+                  {
+                    "label": "Bảo bạn ấy đọc lại tài liệu, không giải thích thêm",
+                    "isCorrect": false,
+                    "misconception": "knm.selective-listening"
+                  },
+                  {
+                    "label": "Trả lời cho xong rồi tránh các câu hỏi tiếp theo",
+                    "isCorrect": false,
+                    "misconception": "knm.interrupt-to-help"
+                  }
+                ]
+              },
+              {
+                "key": "6.2-viet-rao-can",
+                "type": "essay",
+                "prompt": "Viết 150–250 từ: (a) rào cản lắng nghe lớn nhất của bạn thuộc nhóm nào trong bốn nhóm, kèm một tình huống cụ thể trong tuần qua; (b) thói quen nào trong năm thói quen bạn mắc nhiều nhất, kèm bằng chứng; (c) một quy tắc cụ thể bạn đặt cho tuần tới và cách bạn sẽ biết mình có giữ được hay không.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 6.3 · Lắng nghe trong bốn tình huống khó",
+          "durationMin": 45,
+          "description": "Nghe khi chưa hiểu ý cấp trên; nghe khách hàng đang phàn nàn; nghe người đang buồn; nghe khi bất đồng — bốn tình huống mà kỹ thuật đúng khác hẳn nhau.",
+          "objectives": [
+            "Chọn được kỹ thuật lắng nghe phù hợp với từng loại tình huống khó",
+            "Hỏi lại cấp trên hoặc giảng viên mà không tạo cảm giác chất vấn",
+            "Nghe được người đang phàn nàn gay gắt mà không rơi vào phòng thủ",
+            "Nghe được người có quan điểm trái ngược mà vẫn giữ lập trường của mình"
+          ],
+          "summary": [
+            "Chưa hiểu ý cấp trên: ghi lại, chờ chỗ dừng, rồi diễn đạt lại phần mình hiểu và hỏi phần còn thiếu — hỏi bằng cách xác nhận, không bằng cách chất vấn.",
+            "Khách hàng phàn nàn: để họ nói hết, ghi nhận sự việc và cảm xúc, tóm tắt lại, rồi mới tới phương án; cắt ngang ở giai đoạn đầu làm cơn giận kéo dài hơn.",
+            "Người đang buồn: mục tiêu không phải chữa được chuyện đó mà là để họ không ở lại một mình; hỏi trước khi khuyên.",
+            "Bất đồng quan điểm: lắng nghe không phải nhượng bộ — diễn đạt lại đúng ý đối phương trước khi nêu ý mình là cách duy nhất để tranh luận với bản gốc."
+          ],
+          "body": "\nBa tình huống dễ nhất để lắng nghe là những tình huống ta không cần cố gắng. Bài này về bốn tình huống còn lại — nơi kỹ thuật ở hai bài trước phải được chọn đúng loại.\n\n## Khi chưa hiểu ý cấp trên hoặc giảng viên\n\nVấn đề ở đây không phải kỹ năng nghe mà là **rào cản quan hệ**: sợ hỏi thì bị coi là chậm hiểu. Kết quả là gật đầu rồi về làm sai hướng — tốn của cả hai bên nhiều hơn hẳn một câu hỏi.\n\nBa bước dùng được:\n\n1. **Ghi lại trong lúc nghe**, đừng ngắt giữa chừng. Ghi cả những chỗ mình chưa rõ, đánh dấu hỏi bên cạnh.\n2. **Chờ chỗ dừng tự nhiên** — hết một ý hoặc cuối phần trình bày.\n3. **Diễn đạt lại phần đã hiểu rồi hỏi phần thiếu.** \"Em hiểu là kế hoạch sẽ chạy thử ở hai lớp trong tháng 10, rồi mở rộng nếu đạt. Phần em chưa rõ là ai sẽ thu dữ liệu ở giai đoạn chạy thử ạ?\"\n\nCâu ở bước ba làm được ba việc cùng lúc: cho thấy bạn đã nghe, khoanh vùng đúng chỗ thiếu, và đặt câu hỏi mà không hàm ý người kia trình bày chưa rõ.\n\n> [!canh-bao] Hai cách hỏi nên tránh: \"Anh nói lại được không ạ\" (đẩy toàn bộ việc sang người kia và không cho biết bạn đã hiểu tới đâu) và im lặng rồi hỏi người bên cạnh sau đó — thông tin qua tay thứ hai thường sai thêm một lớp.\n\n## Khi khách hàng hoặc đối tác đang phàn nàn\n\nNgười đang bực **chưa nghe được giải pháp** — đây là điểm quan trọng nhất. Nói phương án khi họ mới nói được một phần ba câu chuyện thường làm cơn bực tăng chứ không giảm.\n\nTrình tự có bốn bước, và thứ tự quan trọng hơn nội dung:\n\n1. **Để họ nói hết.** Không ngắt, không thanh minh. Ghi lại các dữ kiện cụ thể (số hoá đơn, ngày, tên người).\n2. **Ghi nhận sự việc và cảm xúc.** \"Việc báo cáo sai số liệu ở bảng 3 là có thật, và tôi hiểu vì sao anh bực khi phải chờ tới một tuần.\"\n3. **Tóm tắt lại để họ xác nhận.** \"Vậy có hai việc: bảng 3 sai, và email của anh không được trả lời kịp. Còn việc nào nữa không ạ?\" — câu hỏi cuối này quan trọng: nó cho họ chỗ nói nốt phần còn lại thay vì bung ra giữa lúc bạn đang trình bày phương án.\n4. **Chỉ khi họ xác nhận đủ mới nói phương án**, kèm mốc thời gian cụ thể.\n\n> [!vi-du] Khách hàng phàn nàn liên tục, giọng gay gắt, lặp đi lặp lại một ý. Phản xạ là chen vào giải thích. Nhưng chính việc lặp lại là dấu hiệu họ **chưa thấy mình được ghi nhận** — người ta ngừng lặp khi thấy điều mình nói đã được ghi lại đúng. Một câu tóm tắt chính xác thường làm giọng hạ xuống nhanh hơn bất kỳ lời thanh minh nào.\n\n## Khi người kia đang buồn\n\nỞ đây mục tiêu **không phải** giải quyết chuyện của họ. Nó thường không giải quyết được, và họ cũng biết vậy. Mục tiêu là để họ không ở lại một mình với chuyện đó.\n\n| Nên | Tránh |\n|---|---|\n| Nghe hết, không ngắt | Ngắt để kể chuyện tương tự của mình |\n| Gọi tên cảm xúc: \"nghe cậu kể mình thấy cậu vẫn còn hụt hẫng\" | Bảo họ nên cảm thấy khác đi: \"có gì đâu mà buồn\" |\n| Hỏi mở: \"giờ lúc nào trong ngày cậu thấy khó nhất?\" | Hỏi dồn về chi tiết vì tò mò |\n| Hỏi trước khi khuyên | Đưa giải pháp ngay ở phút thứ hai |\n| Im lặng cùng họ vài giây | Lấp mọi khoảng trống bằng lời an ủi |\n\nMột điều đáng nhớ từ module 2: **an ủi bằng cách phủ nhận cảm xúc là tích cực độc hại**. \"Nhiều người còn khổ hơn\" không làm ai nhẹ đi; nó chỉ dạy người nghe rằng chuyện của họ không đáng nói.\n\n## Khi bất đồng quan điểm\n\nĐây là tình huống lắng nghe khó nhất, vì cùng lúc phải làm hai việc: hiểu người kia **và** giữ lập trường của mình. Nhiều người nghĩ hai việc ấy loại trừ nhau — thực ra không.\n\nQuy trình ba bước, mượn thẳng từ module 3:\n\n1. **Diễn đạt lại ý đối phương và xin xác nhận**: \"Nếu mình hiểu đúng, cậu cho rằng nên hoãn nộp để làm kỹ phần dữ liệu, kể cả khi bị trừ điểm tiến độ. Đúng ý cậu chưa?\"\n2. **Chỉ khi họ xác nhận đúng mới nêu ý mình** — lúc đó bạn đang tranh luận với bản gốc, không phải với bản méo.\n3. **Nêu điểm chung trước, khác biệt sau**: \"Mình cũng thấy phần dữ liệu đang yếu. Chỗ mình nghĩ khác là mức trừ điểm — với mình nó nặng hơn phần dữ liệu chưa đẹp.\"\n\n> [!ghi-nho] Diễn đạt lại ý người khác **không phải** đồng ý với họ. Đây là hiểu nhầm khiến nhiều cuộc tranh luận đứng nguyên tại chỗ: hai bên đều sợ rằng nhắc lại ý đối phương là đã nhượng bộ một nửa.\n\n> [!meo] Một thước đo chất lượng tranh luận: bạn có nêu lại được quan điểm đối phương theo cách mà **chính họ gật đầu công nhận là đúng** không? Nếu không, bạn chưa hiểu điều mình đang phản đối.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nNhớ lại một lần bạn gật đầu dù chưa hiểu (trong lớp, trong nhóm, ở chỗ làm thêm). Viết ra: điều bạn đã hiểu, điều bạn còn thiếu, và **câu hỏi bạn đáng lẽ nên hỏi**, viết đúng theo mẫu diễn đạt lại rồi hỏi phần thiếu. Nếu chuyện đó chưa quá muộn, gửi câu hỏi ấy hôm nay.\n\n### Nhóm 3–4 người (25 phút)\n\nĐóng vai hai lượt. Lượt một — khiếu nại: một người đóng khách hàng bực bội lặp đi lặp lại một ý, người kia đi đủ bốn bước và **không được nói phương án trước bước bốn**; nhóm bấm giờ xem cơn bực hạ xuống ở bước nào. Lượt hai — bất đồng: hai người chọn một chủ đề thật sự khác quan điểm, mỗi người chỉ được nêu ý mình **sau khi** đã diễn đạt lại ý người kia và được xác nhận đúng.\n\n### Bài tập về nhà (45–60 phút)\n\nChọn một người bạn hay bất đồng. Trong tuần, thực hiện một cuộc trò chuyện về đúng chủ đề hai bên khác nhau, dùng quy trình ba bước. Viết một trang: bản diễn đạt lại của bạn có được họ xác nhận ngay không hay phải sửa mấy lần; điều gì bạn hiểu thêm về lý do họ nghĩ vậy; và quan điểm của bạn có dịch chuyển chút nào không — nếu không dịch chuyển, ghi rõ vì sao, đó cũng là kết quả hợp lệ.\n\n### Xem thêm\n\n- 🎬 [The Power of Listening](https://www.youtube.com/watch?v=saXfavo1OQo) — William Ury, TEDxSanDiego, 15 phút. Lắng nghe như công cụ trong xung đột và đàm phán.\n- 🎬 [How to Disagree Productively and Find Common Ground](https://www.youtube.com/watch?v=phgjouv0BUA) — Julia Dhar, TED, 14 phút. Rất khớp với mục cuối của bài.\n\n### Nguồn tham khảo\n\n- Ury, W. (2015). *Getting to Yes with Yourself.* New York: HarperOne.\n- Fisher, R., Ury, W., & Patton, B. (2011). *Getting to Yes: Negotiating Agreement Without Giving In* (3rd ed.). New York: Penguin.\n- Patterson, K., Grenny, J., McMillan, R., & Switzler, A. (2011). *Crucial Conversations* (2nd ed.). New York: McGraw-Hill.\n- Rogers, C. R. (1961). *On Becoming a Person.* Boston: Houghton Mifflin.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 6.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "6.3-chua-ro-y-sep",
+                "type": "mcq",
+                "prompt": "Trong cuộc họp, cấp trên trình bày kế hoạch mới mà bạn chưa rõ ý. Phản ứng lắng nghe phù hợp là gì?",
+                "explanation": "Ghi lại chỗ chưa rõ, chờ chỗ dừng tự nhiên, rồi diễn đạt lại phần mình đã hiểu và hỏi đúng phần còn thiếu — vừa cho thấy đã nghe, vừa khoanh vùng chính xác.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Ghi lại chỗ chưa rõ, chờ hết ý rồi diễn đạt lại phần mình hiểu và hỏi đúng phần còn thiếu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Gật đầu cho qua rồi hỏi người ngồi cạnh sau buổi họp",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-means-understood"
+                  },
+                  {
+                    "label": "Ngắt lời ngay để hỏi cho khỏi quên",
+                    "isCorrect": false,
+                    "misconception": "knm.interrupt-to-help"
+                  },
+                  {
+                    "label": "Đề nghị trình bày lại từ đầu cho cả phòng cùng nghe",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "6.3-khach-hang-phan-nan",
+                "type": "mcq",
+                "prompt": "Khách hàng phàn nàn liên tục về dịch vụ, giọng gay gắt và lặp lại một ý. Cách lắng nghe phù hợp là gì?",
+                "explanation": "Việc lặp lại là dấu hiệu họ chưa thấy mình được ghi nhận. Để họ nói hết, ghi nhận sự việc và cảm xúc, tóm tắt để họ xác nhận, rồi mới nói phương án.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Để họ nói hết, ghi nhận sự việc và cảm xúc, tóm tắt lại cho họ xác nhận đủ chưa, rồi mới đưa phương án kèm mốc thời gian",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ngắt lời sớm để đưa phương án cho họ đỡ bực",
+                    "isCorrect": false,
+                    "misconception": "knm.advice-too-early"
+                  },
+                  {
+                    "label": "Giải thích ngay vì sao sự việc xảy ra ngoài ý muốn của mình",
+                    "isCorrect": false,
+                    "misconception": "knm.reply-in-anger"
+                  },
+                  {
+                    "label": "Im lặng nghe hết rồi kết thúc, không tóm tắt gì",
+                    "isCorrect": false,
+                    "misconception": "knm.sent-equals-received"
+                  }
+                ]
+              },
+              {
+                "key": "6.3-bat-dong",
+                "type": "mcq",
+                "prompt": "Bạn và một thành viên trong nhóm bất đồng về việc có nên hoãn nộp bài để làm kỹ hơn. Bước đầu tiên nên làm là gì?",
+                "explanation": "Diễn đạt lại ý đối phương và xin xác nhận trước khi nêu ý mình — chỉ khi họ gật đầu là bạn mới đang tranh luận với bản gốc chứ không phải bản méo.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Diễn đạt lại quan điểm của họ bằng lời mình và hỏi mình hiểu đúng chưa",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nêu ngay lý do vì sao quan điểm của mình hợp lý hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.listen-to-reply"
+                  },
+                  {
+                    "label": "Đề nghị bỏ phiếu trong nhóm cho nhanh",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  },
+                  {
+                    "label": "Nhượng bộ cho xong để giữ hoà khí",
+                    "isCorrect": false,
+                    "misconception": "knm.assertive-is-aggressive"
+                  }
+                ]
+              },
+              {
+                "key": "6.3-dien-dat-lai",
+                "type": "mcq",
+                "prompt": "Việc diễn đạt lại ý đối phương trước khi phản bác có nghĩa là gì?",
+                "explanation": "Nó chỉ có nghĩa bạn đã hiểu đúng điều mình sắp phản bác — hoàn toàn không phải là đồng ý hay nhượng bộ một phần.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bạn đã hiểu đúng điều mình sắp phản bác; nó không đồng nghĩa với việc đồng ý",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bạn đã thừa nhận một phần quan điểm của họ là đúng",
+                    "isCorrect": false,
+                    "misconception": "knm.empathy-is-agreement"
+                  },
+                  {
+                    "label": "Bạn đang câu giờ để nghĩ ra lập luận phản bác",
+                    "isCorrect": false,
+                    "misconception": "knm.listen-to-reply"
+                  },
+                  {
+                    "label": "Bạn đang nhượng bộ để giữ hoà khí",
+                    "isCorrect": false,
+                    "misconception": "knm.empathy-is-agreement"
+                  }
+                ]
+              },
+              {
+                "key": "6.3-noi-tinh-huong",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với việc cần làm đầu tiên.",
+                "explanation": "Mỗi tình huống khó đòi một bước mở đầu khác nhau; làm sai thứ tự thì các bước sau không chạy.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Chưa hiểu ý cấp trên trong cuộc họp",
+                    "right": "Ghi lại chỗ chưa rõ, chờ chỗ dừng rồi diễn đạt lại phần đã hiểu"
+                  },
+                  {
+                    "left": "Khách hàng đang bực và nói lặp lại",
+                    "right": "Để họ nói hết và ghi nhận sự việc trước khi bàn phương án"
+                  },
+                  {
+                    "left": "Bạn thân đang buồn chuyện riêng",
+                    "right": "Gọi tên cảm xúc và hỏi họ muốn được nghe hay muốn góp ý"
+                  },
+                  {
+                    "left": "Bất đồng quan điểm trong nhóm",
+                    "right": "Diễn đạt lại ý đối phương và xin xác nhận đúng chưa"
+                  }
+                ]
+              },
+              {
+                "key": "6.3-nguoi-dang-buon",
+                "type": "mcq",
+                "prompt": "Khi nghe một người đang buồn, mục tiêu chính của việc lắng nghe là gì?",
+                "explanation": "Phần lớn chuyện buồn không giải quyết ngay được; mục tiêu là để người kia không ở lại một mình với nó, và cảm xúc của họ được ghi nhận.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Để họ không phải ở lại một mình với chuyện đó và thấy cảm xúc của mình được ghi nhận",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tìm ra giải pháp tốt nhất cho vấn đề của họ",
+                    "isCorrect": false,
+                    "misconception": "knm.advice-too-early"
+                  },
+                  {
+                    "label": "Giúp họ nhìn ra mặt tích cực để bớt buồn",
+                    "isCorrect": false,
+                    "misconception": "knm.toxic-positivity"
+                  },
+                  {
+                    "label": "Thu thập đủ thông tin để đánh giá xem họ có đang phản ứng thái quá không",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "6.3-viet-bat-dong",
+                "type": "essay",
+                "prompt": "Chọn một chủ đề bạn thật sự bất đồng với ai đó. Viết 200–300 từ: (a) diễn đạt lại quan điểm của họ đầy đủ và công bằng tới mức chính họ sẽ gật đầu; (b) điểm chung giữa hai bên; (c) chỗ bạn nghĩ khác và lý do; (d) một câu hỏi bạn sẽ hỏi họ để hiểu thêm thay vì để phản bác.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 7 · Thuyết trình hiệu quả",
+      "description": "Bài thuyết trình hỏng phần lớn từ lúc soạn, không phải lúc nói. Ba bài đi theo đúng trình tự làm việc: chọn một thông điệp và dựng cấu trúc cho đúng khán giả; thiết kế slide làm chỗ dựa thị giác thay vì tài liệu để đọc; rồi tập, đứng nói và xử lý bốn sự cố thường gặp.",
+      "lessons": [
+        {
+          "title": "Bài 7.1 · Từ thông tin tới thông điệp",
+          "durationMin": 45,
+          "description": "Khác biệt giữa thông tin và thông điệp; ba câu hỏi phải trả lời về khán giả trước khi soạn; cấu trúc ba phần và cách làm 30 giây đầu cùng phần kết đáng nhớ.",
+          "objectives": [
+            "Viết được một câu thông điệp duy nhất cho bài trình bày của mình",
+            "Trả lời được ba câu hỏi về khán giả và điều chỉnh nội dung theo đó",
+            "Dựng được dàn ý ba phần với các thành phần đúng của phần thân bài",
+            "Thiết kế được phần mở đầu 30 giây và phần kết gói lại thông điệp"
+          ],
+          "summary": [
+            "Thông tin là mọi thứ bạn biết; thông điệp là một câu bạn muốn người nghe nhớ và làm sau khi rời phòng — bài nói phải được cắt theo câu đó.",
+            "Ba câu hỏi trước khi soạn: họ đã biết gì, họ cần gì ở bài này, họ sẽ dùng nó để làm gì.",
+            "Cấu trúc ba phần: mở đầu tạo chú ý và nêu lợi ích, thân bài đi theo các luận điểm có bằng chứng, kết bài gói lại thông điệp và nêu bước tiếp theo.",
+            "Ba mươi giây đầu quyết định người nghe có bật chế độ chú ý hay không; phần kết quyết định họ mang gì về."
+          ],
+          "body": "\nPhần lớn bài thuyết trình dở không dở ở khâu nói. Chúng hỏng từ lúc soạn — vì người soạn trả lời câu hỏi \"tôi biết những gì\" thay vì \"họ cần mang về điều gì\".\n\n## Thông tin và thông điệp\n\n| | Thông tin | Thông điệp |\n|---|---|---|\n| Là gì | Mọi dữ liệu, ví dụ, số liệu bạn có | Một câu bạn muốn người nghe nhớ và làm |\n| Số lượng | Nhiều, luôn thừa | Đúng một |\n| Vai trò | Nguyên liệu | Tiêu chí để chọn nguyên liệu nào giữ lại |\n| Ví dụ | 12 slide về quy trình tuyển dụng | \"Nộp hồ sơ từ tháng 9 làm tăng cơ hội gấp đôi so với nộp tháng 12\" |\n\nPhép thử: **nếu khán giả chỉ nhớ đúng một câu sau khi ra khỏi phòng, câu đó là gì?** Viết câu ấy ra giấy **trước khi** mở phần mềm làm slide. Sau đó mọi slide đều phải trả lời được: nó phục vụ câu này thế nào. Slide nào không trả lời được là slide nên bỏ — kể cả khi nó đẹp và bạn đã mất một buổi làm nó.\n\n> [!ghi-nho] Một bài trình bày không phải bản báo cáo được đọc to. Báo cáo phục vụ người muốn tra cứu đầy đủ; bài trình bày phục vụ người phải quyết định hoặc phải nhớ được một điều.\n\n## Ba câu hỏi về khán giả\n\nTrước khi viết dòng đầu tiên, trả lời ba câu — bằng chữ, không nghĩ trong đầu:\n\n1. **Họ đã biết gì?** Quyết định bạn bắt đầu từ đâu. Giải thích lại thứ họ biết rồi thì mất người nghe ngay ở phút thứ ba; giả định họ biết thứ họ chưa biết thì mất họ ở phút thứ năm.\n2. **Họ cần gì ở bài này?** Quyết định bạn giữ nội dung nào. Hội đồng cần biết phương pháp có vững không; sinh viên năm nhất cần biết áp dụng ra sao.\n3. **Họ sẽ dùng nó để làm gì?** Quyết định phần kết. Người phải ra quyết định cần một khuyến nghị rõ; người học cần một việc làm được ngay.\n\n> [!vi-du] Cùng đề tài \"ứng dụng AI trong chấm bài tự động\". Với **hội đồng chuyên môn**: bắt đầu từ phương pháp và giới hạn dữ liệu, giữ phần đánh giá độ tin cậy, kết bằng khuyến nghị nghiên cứu tiếp. Với **giáo viên phổ thông**: bắt đầu từ một bài chấm tay mất 4 tiếng, bỏ hết phần kiến trúc mô hình, kết bằng ba bước dùng thử tuần tới. Cùng một nội dung gốc, hai bài nói khác nhau tới mức gần như không dùng lại được slide nào — và đó là dấu hiệu bạn đã soạn cho khán giả chứ không soạn cho mình.\n\n## Cấu trúc ba phần\n\n| Phần | Việc phải làm | Thời lượng gợi ý |\n|---|---|---|\n| Mở đầu | Tạo chú ý, nêu vấn đề và lợi ích của người nghe, giới thiệu ngắn về mình nếu cần, nêu bố cục | ~10–15% |\n| Thân bài | Từng luận điểm: nêu ý → dẫn chứng, số liệu hoặc ví dụ → chốt lại ý ấy trước khi sang ý sau | ~70–80% |\n| Kết bài | Tóm lại thông điệp, gọi hành động cụ thể, mở phần hỏi đáp | ~10–15% |\n\nTrong thân bài, thứ tự **ý → dẫn chứng → chốt** quan trọng hơn vẻ ngoài của nó: người nghe không có bản in để đọc lại, nên mỗi ý phải được đóng lại trước khi sang ý mới. Ba tới bốn luận điểm là vừa cho một bài mười lăm phút; nhiều hơn thì không ai nhớ được ý nào.\n\n> [!canh-bao] Mục đích của phần mở đầu **không phải** là trình bày hết mọi định nghĩa và lý thuyết nền. Đó là chỗ hay bị nhồi nhất trong bài thuyết trình của sinh viên: năm phút đầu dành cho các khái niệm, và khán giả đã trôi đi trước khi tới phần thật sự của bạn.\n\n## Ba mươi giây đầu và phần kết\n\n**Mở đầu.** Ba cách mở có tác dụng, xếp theo mức dễ dùng: một **câu hỏi** buộc người nghe tự trả lời trong đầu; một **câu chuyện ngắn** rất cụ thể; một **con số gây ngạc nhiên** kèm nguồn. Cả ba hơn hẳn cách mở bằng định nghĩa, vì chúng cho người nghe một lý do để chú ý trước khi biết bạn là ai.\n\nVới buổi pitch trước nhà đầu tư hoặc hội đồng, 30 giây đầu nên chứa đủ ba thứ: **vấn đề của ai**, **bạn giải quyết ra sao**, và **vì sao là bây giờ**. Đừng dùng 30 giây ấy để giới thiệu tên từng thành viên.\n\n**Kết bài.** Đây là phần bị cắt xén nhiều nhất và cũng là phần đọng lại lâu nhất. Ba việc: nhắc lại **một câu** thông điệp; nói rõ **bước tiếp theo** (bạn muốn người nghe làm gì, quyết gì, thử gì); rồi mới mời hỏi đáp. Kết bằng \"bài trình bày của em đến đây là hết ạ\" là vứt đi phần đắt nhất.\n\n> [!meo] Viết phần kết **trước** phần thân bài. Khi đã biết mình muốn kết ở đâu, việc chọn giữ nội dung nào trở nên dễ hẳn — và bạn sẽ không bao giờ rơi vào cảnh hết giờ mà chưa kịp nói điều quan trọng nhất.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nChọn một bài trình bày bạn sắp phải làm (hoặc đã làm). Viết ra: (a) câu thông điệp duy nhất; (b) trả lời ba câu hỏi về khán giả; (c) dàn ý ba phần với tối đa bốn luận điểm, mỗi luận điểm ghi rõ dẫn chứng sẽ dùng; (d) phần kết viết trọn vẹn thành lời, khoảng năm câu.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người đọc **chỉ câu thông điệp và phần kết** của mình, không đọc dàn ý. Nhóm trả lời hai câu: nếu chỉ nghe hai phần này, bạn hiểu bài nói về gì và người nói muốn bạn làm gì? Nếu nhóm không trả lời được thì thông điệp còn mơ hồ — viết lại tại chỗ. Sau đó mỗi người thử mở đầu 30 giây, nhóm chấm: có cho người nghe một lý do để chú ý không.\n\n### Bài tập về nhà (45–60 phút)\n\nLấy một chủ đề bạn đã trình bày trước đây và soạn lại cho **một nhóm khán giả khác hẳn** (ví dụ: từ hội đồng chuyên môn sang học sinh phổ thông). Nộp hai dàn ý cạnh nhau và một đoạn nửa trang: bạn đã bỏ gì, thêm gì, đổi thứ tự chỗ nào, và vì sao — mỗi thay đổi phải truy ngược được về một trong ba câu hỏi khán giả.\n\n### Xem thêm\n\n- 🎬 [The Secret Structure of Great Talks](https://www.youtube.com/watch?v=1nYFpuc2Umk) — Nancy Duarte, TEDxEast, 18 phút. Phân tích cấu trúc chung của các bài nói có sức thuyết phục, dựa trên việc so sánh nhiều diễn văn nổi tiếng.\n\n### Nguồn tham khảo\n\n- Duarte, N. (2010). *Resonate: Present Visual Stories That Transform Audiences.* Hoboken: Wiley.\n- Anderson, C. (2016). *TED Talks: The Official TED Guide to Public Speaking.* Boston: Houghton Mifflin Harcourt.\n- Minto, B. (2009). *The Pyramid Principle: Logic in Writing and Thinking* (3rd ed.). Harlow: Pearson.\n- Heath, C., & Heath, D. (2007). *Made to Stick: Why Some Ideas Survive and Others Die.* New York: Random House.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 7.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "7.1-thong-tin-thong-diep",
+                "type": "mcq",
+                "prompt": "Khác biệt giữa thông tin và thông điệp trong thuyết trình là gì?",
+                "explanation": "Thông tin là toàn bộ dữ liệu bạn có; thông điệp là một câu bạn muốn khán giả nhớ và làm — và nó là tiêu chí để quyết định giữ lại nội dung nào.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thông tin là nguyên liệu bạn có; thông điệp là một câu bạn muốn người nghe nhớ và làm, dùng làm tiêu chí chọn nội dung",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thông tin là phần nói, thông điệp là phần chiếu trên slide",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hai khái niệm này giống nhau, chỉ khác cách gọi",
+                    "isCorrect": false,
+                    "misconception": "knm.info-not-message"
+                  },
+                  {
+                    "label": "Thông điệp là phần kết luận đặt ở cuối bài",
+                    "isCorrect": false,
+                    "misconception": "knm.info-not-message"
+                  }
+                ]
+              },
+              {
+                "key": "7.1-ba-phan",
+                "type": "ordering",
+                "prompt": "Sắp xếp các thành phần của một luận điểm trong phần thân bài theo đúng trình tự.",
+                "explanation": "Mỗi luận điểm nên nêu ý trước, đưa dẫn chứng, rồi chốt lại trước khi sang ý mới — vì người nghe không có bản in để đọc lại.",
+                "points": 3,
+                "sequence": [
+                  "Nêu ý chính của luận điểm",
+                  "Đưa dẫn chứng, số liệu hoặc ví dụ",
+                  "Chốt lại ý vừa nêu",
+                  "Chuyển tiếp sang luận điểm sau"
+                ]
+              },
+              {
+                "key": "7.1-tim-hieu-khan-gia",
+                "type": "mcq",
+                "prompt": "Vì sao cần tìm hiểu khán giả trước khi xây dựng nội dung thuyết trình?",
+                "explanation": "Ba câu hỏi về khán giả quyết định bạn bắt đầu từ đâu, giữ nội dung nào và kết bằng gì — cùng một đề tài phải được kể khác nhau cho hai nhóm khác nhau.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì họ đã biết gì quyết định chỗ bắt đầu, họ cần gì quyết định nội dung giữ lại, và họ dùng để làm gì quyết định phần kết",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì cần biết số lượng người nghe để chuẩn bị đủ tài liệu phát",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì cần chọn trang phục và cách xưng hô cho phù hợp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần, nội dung tốt thì khán giả nào cũng tiếp nhận được",
+                    "isCorrect": false,
+                    "misconception": "knm.audience-is-me"
+                  }
+                ]
+              },
+              {
+                "key": "7.1-mo-dau",
+                "type": "mcq",
+                "prompt": "Vì sao mở đầu bằng câu chuyện hoặc câu hỏi thường hiệu quả hơn mở đầu bằng định nghĩa?",
+                "explanation": "Câu chuyện và câu hỏi cho người nghe một lý do để chú ý ngay từ đầu, trong khi định nghĩa đòi họ phải chú ý trước rồi mới hiểu vì sao nó liên quan tới mình.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì chúng cho người nghe một lý do để chú ý trước khi họ biết bạn sẽ nói gì",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì chúng làm bài nói ngắn hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì định nghĩa là phần không cần thiết trong mọi bài thuyết trình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì khán giả không đủ kiên nhẫn nghe nội dung học thuật",
+                    "isCorrect": false,
+                    "misconception": "knm.audience-is-me"
+                  }
+                ]
+              },
+              {
+                "key": "7.1-ket-bai",
+                "type": "mcq",
+                "prompt": "Vì sao việc gói lại thông điệp ở phần kết có ý nghĩa lớn?",
+                "explanation": "Phần kết là thứ đọng lại lâu nhất: nó nhắc lại một câu thông điệp và nói rõ bước tiếp theo, quyết định khán giả mang gì về và làm gì sau đó.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì đó là phần đọng lại lâu nhất, nơi nhắc lại một câu thông điệp và nói rõ khán giả nên làm gì tiếp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì đó là lúc cảm ơn ban giám khảo và khán giả",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì cần tóm tắt lại toàn bộ nội dung đã trình bày cho đầy đủ",
+                    "isCorrect": false,
+                    "misconception": "knm.info-not-message"
+                  },
+                  {
+                    "label": "Vì phần kết là nơi chèn thêm nội dung chưa kịp nói ở thân bài",
+                    "isCorrect": false,
+                    "misconception": "knm.rush-when-over-time"
+                  }
+                ]
+              },
+              {
+                "key": "7.1-pitch-30s",
+                "type": "mcq",
+                "prompt": "Trong buổi pitch ý tưởng cho nhà đầu tư, để tạo ấn tượng tốt ngay 30 giây đầu, bạn nên làm gì?",
+                "explanation": "Ba mươi giây đầu nên trả lời: vấn đề của ai, giải pháp của bạn là gì, và vì sao là lúc này — chứ không dùng để giới thiệu lần lượt từng thành viên.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nói rõ vấn đề của ai, cách bạn giải quyết, và vì sao thời điểm này là đúng lúc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giới thiệu đầy đủ tên và vai trò của từng thành viên trong nhóm",
+                    "isCorrect": false,
+                    "misconception": "knm.audience-is-me"
+                  },
+                  {
+                    "label": "Trình bày lịch sử hình thành ý tưởng từ đầu",
+                    "isCorrect": false,
+                    "misconception": "knm.info-not-message"
+                  },
+                  {
+                    "label": "Nêu các định nghĩa và khái niệm nền tảng của lĩnh vực",
+                    "isCorrect": false,
+                    "misconception": "knm.audience-is-me"
+                  }
+                ]
+              },
+              {
+                "key": "7.1-viet-thong-diep",
+                "type": "essay",
+                "prompt": "Chọn một bài trình bày bạn sắp làm hoặc đã làm. Viết 200–300 từ gồm: (a) câu thông điệp duy nhất; (b) trả lời ba câu hỏi về khán giả; (c) dàn ý ba phần với tối đa bốn luận điểm kèm dẫn chứng; (d) phần kết viết trọn thành lời, khoảng năm câu, có nêu bước tiếp theo cho người nghe.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 7.2 · Thiết kế slide và hỗ trợ trực quan",
+          "durationMin": 45,
+          "description": "Vì sao slide nhồi chữ làm khán giả ngừng nghe; quy tắc về số dòng, cỡ chữ và kiểu chữ; dùng hình ảnh và biểu đồ đúng cách; và cách trình bày đề tài kỹ thuật cho người ngoài ngành.",
+          "objectives": [
+            "Giải thích được vì sao đọc nguyên văn slide làm giảm hiệu quả trình bày",
+            "Áp dụng được quy tắc về lượng chữ, cỡ chữ và kiểu chữ trên slide",
+            "Chọn được hình ảnh và biểu đồ phục vụ thông điệp thay vì trang trí",
+            "Chuyển được một nội dung kỹ thuật thành slide cho khán giả ngoài ngành"
+          ],
+          "summary": [
+            "Khán giả đọc nhanh hơn người nói: slide nhiều chữ khiến họ đọc xong trước rồi ngừng nghe — hai kênh cùng tải chữ thì cạnh tranh nhau chứ không cộng lại.",
+            "Mỗi slide một ý, ít dòng chữ, cỡ chữ đủ lớn để đọc từ cuối phòng, kiểu chữ đơn giản và nhất quán.",
+            "Hình ảnh phải phục vụ nội dung, đủ nét, có nguồn; ảnh trang trí và hiệu ứng thừa chỉ lấy mất chú ý.",
+            "Với khán giả ngoài ngành: bỏ thuật ngữ, đổi công thức thành ví dụ, và giữ lại đúng phần họ dùng được."
+          ],
+          "body": "\nSlide không phải bài thuyết trình. Nó là **chỗ dựa thị giác** cho bài nói — và khi bị dùng sai vai, nó trở thành thứ cạnh tranh với chính người nói.\n\n## Vì sao slide nhồi chữ làm hỏng bài nói\n\nKhán giả đọc nhanh hơn tốc độ bạn nói. Khi slide đầy chữ, họ đọc xong trước, rồi **ngừng nghe** — phần còn lại của bạn thành nền. Tệ hơn, đọc chữ trên màn hình và nghe lời nói cùng lúc là hai luồng ngôn ngữ cạnh tranh cùng một chỗ trong trí nhớ làm việc; hai kênh ấy không cộng lại mà trừ nhau.\n\nVì vậy: **đừng đọc nguyên văn slide**. Nếu mọi thứ cần nói đều nằm trên slide thì bài nói không cần bạn — gửi file là đủ. Cách chia đúng: slide giữ **từ khoá, con số, hình**; miệng giữ **câu chuyện, giải thích, chuyển ý**; tài liệu chi tiết phát riêng sau buổi nói.\n\n```html\n<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.8rem;margin:1.2rem 0\">\n  <div style=\"border:1px solid rgba(217,150,40,.5);border-radius:.6rem;overflow:hidden\">\n    <div style=\"background:rgba(217,150,40,.16);padding:.5rem .8rem;font-weight:700;color:rgb(165,113,29)\">Slide nhồi chữ — khán giả đọc, không nghe</div>\n    <div style=\"padding:.8rem;font-size:.95rem;line-height:1.45\">\n      <div style=\"font-weight:700;margin-bottom:.4rem\">Kết quả khảo sát sinh viên năm cuối về hoạt động thực tập</div>\n      Theo khảo sát được thực hiện trong tháng 9 năm 2026 trên 412 sinh viên năm cuối thuộc bốn khoa, có 68% sinh viên cho biết đã tham gia thực tập tại doanh nghiệp, trong đó 41% cho biết công việc thực tập có liên quan trực tiếp tới chuyên ngành đang học, 27% cho biết công việc chỉ liên quan một phần, và 32% còn lại chưa từng tham gia thực tập vì các lý do khác nhau như thiếu thông tin, không sắp xếp được thời gian, hoặc chưa tìm được vị trí phù hợp với năng lực…\n    </div>\n  </div>\n  <div style=\"border:2px solid rgba(13,148,136,.6);border-radius:.6rem;overflow:hidden\">\n    <div style=\"background:rgba(13,148,136,.16);padding:.5rem .8rem;font-weight:700;color:rgb(12,141,129)\">Slide dựa — khán giả nghe, mắt chỉ liếc</div>\n    <div style=\"padding:1.2rem .8rem;text-align:center\">\n      <div style=\"font-size:1.4rem;font-weight:700;margin-bottom:1rem\">Thực tập: đúng ngành mới là vấn đề</div>\n      <div style=\"font-size:2.6rem;font-weight:800;color:rgb(12,141,129);line-height:1.1\">41%</div>\n      <div style=\"font-size:1.05rem;margin-top:.3rem\">thực tập đúng chuyên ngành</div>\n      <div style=\"font-size:.95rem;opacity:.75;margin-top:.9rem\">n = 412 · khảo sát 9/2026</div>\n    </div>\n  </div>\n</div>\n```\n\nHai slide trên chứa **cùng một dữ liệu**. Bản bên trái buộc người nghe chọn giữa đọc và nghe; bản bên phải để họ nghe bạn kể phần còn lại — 68% có thực tập, nhưng chỉ 41% đúng ngành, và đó mới là chỗ đáng bàn.\n\n## Quy tắc chữ trên slide\n\n| Yếu tố | Khuyến nghị | Lý do |\n|---|---|---|\n| Số dòng chữ | Ít, khoảng **tối đa 6 dòng** một slide; mỗi dòng ngắn gọn | Nhiều hơn thì khán giả chuyển sang chế độ đọc |\n| Số ý | Một slide một ý | Hai ý trên một slide thì ý thứ hai luôn bị lướt |\n| Cỡ chữ | Đủ lớn để đọc từ hàng cuối; tiêu đề lớn hơn nội dung rõ rệt | Người ngồi xa không đọc được thì slide vô nghĩa với họ |\n| Kiểu chữ | Chữ không chân, đơn giản, dùng nhất quán cả bài; tối đa hai kiểu | Chữ trang trí làm giảm tốc độ đọc |\n| Tương phản | Chữ đậm trên nền sáng hoặc ngược lại, tránh nền ảnh rối | Phòng chiếu thường sáng hơn màn hình máy bạn |\n\n> [!meo] Phép thử phòng chiếu: chiếu slide lên rồi lùi ra cuối phòng. Đọc không nổi từ đó thì cỡ chữ chưa đạt — và đây là lỗi phổ biến nhất, vì lúc soạn ta luôn nhìn màn hình cách mắt 50 cm.\n\n## Hình ảnh và biểu đồ\n\nNguyên tắc gọn: **hình phải phục vụ nội dung**. Ba yêu cầu cụ thể:\n\n- **Liên quan trực tiếp** tới ý đang nói. Ảnh trang trí cho đẹp lấy mất chú ý mà không thêm thông tin nào — đúng nguyên tắc mạch lạc trong thiết kế đa phương tiện.\n- **Đủ nét và đủ lớn**, không kéo méo tỉ lệ.\n- **Có nguồn**, ghi ngay dưới hình. Với học liệu dùng lại hình của người khác, đây là yêu cầu bắt buộc chứ không phải phép lịch sự.\n\nVới biểu đồ: mỗi biểu đồ trả lời **một câu hỏi**. Ghi câu trả lời ngay ở tiêu đề biểu đồ (\"Tỉ lệ thực tập đúng ngành giảm dần theo khoá\") thay vì một nhãn trung tính (\"Biểu đồ 3\"). Trục phải bắt đầu từ 0 nếu so sánh độ lớn — cắt trục để phóng đại khác biệt là thứ bạn đã học nhận ra ở bài 3.3, đừng làm nó trên slide của mình.\n\n## Khi khán giả không cùng chuyên ngành\n\nĐây là tình huống sinh viên gặp nhiều nhất khi bảo vệ đồ án trước hội đồng ngoài chuyên môn hẹp, hoặc khi trình bày cho khách hàng.\n\n| Việc cần làm | Cụ thể |\n|---|---|\n| Bỏ thuật ngữ, hoặc giải thích ngay lần đầu | \"độ chính xác của mô hình\" → \"trong 100 bài chấm, máy chấm trùng với giáo viên bao nhiêu bài\" |\n| Đổi công thức thành ví dụ có số | Thay vì công thức, cho một trường hợp cụ thể chạy qua |\n| Cắt phần chỉ dân trong ngành mới quan tâm | Kiến trúc kỹ thuật, tham số — đưa vào phụ lục để trả lời khi được hỏi |\n| Giữ lại phần họ dùng được | Kết quả, giới hạn, việc họ có thể làm với nó |\n| Dùng phép so sánh quen thuộc | Nhưng nói rõ chỗ phép so sánh ấy không còn đúng |\n\n> [!canh-bao] Đơn giản hoá **không phải** là nói sai cho dễ hiểu. Nếu một phép so sánh làm sai bản chất, hãy nói thêm một câu về giới hạn của nó. Khán giả ngoài ngành không kiểm được điều bạn nói — chính vì thế trách nhiệm nói đúng lại nặng hơn, không nhẹ đi.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nLấy một bộ slide bạn đã làm. Chọn slide nhiều chữ nhất và làm lại thành **hai slide dựa**: một slide giữ con số hoặc từ khoá chính, một slide giữ hình hoặc biểu đồ. Viết ra phần bạn sẽ **nói** thay cho phần chữ đã bỏ đi — đúng như bạn sẽ nói thành lời.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người chiếu ba slide của mình lên (điện thoại hoặc máy tính đặt cách 3 mét). Nhóm chấm theo bốn tiêu chí: đọc được từ xa không, một slide có đúng một ý không, hình có phục vụ nội dung không, và **người trình bày có thể bỏ slide này mà bài vẫn chạy không**. Tiêu chí cuối lọc ra các slide chỉ tồn tại để cho đầy.\n\n### Bài tập về nhà (45–60 phút)\n\nChọn một nội dung kỹ thuật hoặc chuyên ngành của bạn và làm hai phiên bản slide cho cùng một ý: một cho người trong ngành, một cho người ngoài ngành. Nộp kèm nửa trang: bạn đã bỏ thuật ngữ nào và thay bằng gì; phép so sánh bạn dùng và **giới hạn của phép so sánh đó**; phần nào bạn chuyển sang phụ lục.\n\n### Xem thêm\n\n- 🎬 [How to Avoid Death by PowerPoint](https://www.youtube.com/watch?v=Iwpi1Lm6dFo) — David JP Phillips, TEDxStockholmSalon, 20 phút. Giải thích bằng chính slide vì sao slide nhồi chữ làm giảm khả năng tiếp nhận.\n\n### Nguồn tham khảo\n\n- Mayer, R. E. (2021). *Multimedia Learning* (3rd ed.). Cambridge University Press — nguyên tắc mạch lạc và nguyên tắc dư thừa.\n- Sweller, J., Ayres, P., & Kalyuga, S. (2011). *Cognitive Load Theory.* New York: Springer.\n- Reynolds, G. (2019). *Presentation Zen: Simple Ideas on Presentation Design and Delivery* (3rd ed.). Berkeley: New Riders.\n- Tufte, E. R. (2001). *The Visual Display of Quantitative Information* (2nd ed.). Cheshire: Graphics Press.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 7.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "7.2-doc-slide",
+                "type": "mcq",
+                "prompt": "Vì sao nên hạn chế đọc nguyên văn slide khi thuyết trình?",
+                "explanation": "Khán giả đọc nhanh hơn người nói nên họ đọc xong trước rồi ngừng nghe; ngoài ra đọc chữ và nghe lời cùng lúc là hai luồng ngôn ngữ cạnh tranh cùng một chỗ trong trí nhớ làm việc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì khán giả đọc nhanh hơn người nói nên sẽ ngừng nghe, và việc vừa đọc vừa nghe cùng nội dung làm giảm khả năng tiếp nhận",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì đọc slide khiến bài nói kéo dài hơn dự kiến",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì người trình bày cần thể hiện là mình đã thuộc bài",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không sao cả, đọc slide giúp khán giả theo dõi dễ hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  }
+                ]
+              },
+              {
+                "key": "7.2-so-dong-chu",
+                "type": "mcq",
+                "prompt": "Khi trình bày thông tin bằng chữ trên slide, nguyên tắc nào phù hợp?",
+                "explanation": "Mỗi slide một ý, ít dòng chữ (khoảng tối đa sáu dòng ngắn), cỡ chữ đủ lớn để đọc từ cuối phòng và kiểu chữ đơn giản, nhất quán.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mỗi slide một ý, tối đa khoảng sáu dòng ngắn, cỡ chữ đủ lớn để đọc từ hàng cuối",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ghi đầy đủ nội dung để khán giả không bỏ sót thông tin nào",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  },
+                  {
+                    "label": "Dùng nhiều kiểu chữ khác nhau cho slide sinh động",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cỡ chữ nhỏ để chứa được nhiều nội dung hơn trên một slide",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  }
+                ]
+              },
+              {
+                "key": "7.2-hinh-anh",
+                "type": "mcq",
+                "prompt": "Khi sử dụng hình ảnh trên slide, nguyên tắc nào phù hợp?",
+                "explanation": "Hình phải liên quan trực tiếp tới nội dung đang nói, đủ nét, không kéo méo, và ghi nguồn — ảnh trang trí chỉ lấy mất chú ý mà không thêm thông tin.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hình liên quan trực tiếp tới ý đang nói, đủ nét, giữ đúng tỉ lệ và có ghi nguồn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Càng nhiều hình càng sinh động, kể cả hình chỉ để trang trí",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  },
+                  {
+                    "label": "Nên phủ kín nền slide bằng ảnh rồi đặt chữ lên trên",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần ghi nguồn nếu chỉ dùng trong nội bộ lớp học",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "7.2-khan-gia-khac-nganh",
+                "type": "mcq",
+                "prompt": "Bạn được yêu cầu trình bày một đề tài kỹ thuật trước khán giả không cùng chuyên ngành. Bạn nên làm gì?",
+                "explanation": "Bỏ hoặc giải thích ngay thuật ngữ, đổi công thức thành ví dụ có số, chuyển phần chuyên sâu vào phụ lục và giữ lại phần khán giả dùng được — đồng thời nêu giới hạn của các phép so sánh.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Bỏ thuật ngữ hoặc giải thích ngay lần đầu, đổi công thức thành ví dụ có số, chuyển phần chuyên sâu vào phụ lục, giữ lại kết quả và giới hạn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Trình bày như với người trong ngành, ai không hiểu thì hỏi sau",
+                    "isCorrect": false,
+                    "misconception": "knm.audience-is-me"
+                  },
+                  {
+                    "label": "Dùng thật nhiều thuật ngữ để thể hiện chiều sâu chuyên môn",
+                    "isCorrect": false,
+                    "misconception": "knm.jargon-professional"
+                  },
+                  {
+                    "label": "Đơn giản hoá tối đa, kể cả khi phép so sánh làm sai bản chất vấn đề",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "7.2-bieu-do",
+                "type": "mcq",
+                "prompt": "Một biểu đồ trên slide nên được thiết kế thế nào?",
+                "explanation": "Mỗi biểu đồ trả lời một câu hỏi, và câu trả lời nên nằm ngay ở tiêu đề; trục phải trung thực, không cắt để phóng đại khác biệt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Trả lời đúng một câu hỏi, ghi kết luận ngay ở tiêu đề, trục trung thực không cắt để phóng đại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hiển thị càng nhiều chuỗi số liệu càng tốt để thể hiện công sức",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  },
+                  {
+                    "label": "Đặt tiêu đề trung tính kiểu Biểu đồ 3 để giữ tính khách quan",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cắt trục tung để khác biệt giữa các cột nhìn rõ hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.correlation-causation"
+                  }
+                ]
+              },
+              {
+                "key": "7.2-noi-slide",
+                "type": "matching",
+                "prompt": "Nối mỗi loại nội dung với chỗ nó nên nằm.",
+                "explanation": "Slide giữ từ khoá, con số và hình; lời nói giữ giải thích và câu chuyện; chi tiết đầy đủ nằm ở tài liệu phát riêng; phần chuyên sâu để phụ lục chờ câu hỏi.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Con số 41% và một dòng chú thích cỡ mẫu",
+                    "right": "Trên slide"
+                  },
+                  {
+                    "left": "Giải thích vì sao con số đó đáng lo",
+                    "right": "Trong lời nói của bạn"
+                  },
+                  {
+                    "left": "Bảng số liệu đầy đủ 12 dòng",
+                    "right": "Tài liệu phát riêng"
+                  },
+                  {
+                    "left": "Tham số kỹ thuật của mô hình",
+                    "right": "Slide phụ lục, chờ được hỏi"
+                  }
+                ]
+              },
+              {
+                "key": "7.2-viet-slide",
+                "type": "essay",
+                "prompt": "Lấy slide nhiều chữ nhất trong một bộ slide bạn đã làm. Viết 150–250 từ: (a) chép lại nội dung slide gốc; (b) mô tả hai slide dựa bạn tách ra từ nó (mỗi slide một ý, ghi rõ chữ và hình sẽ giữ); (c) viết nguyên văn phần bạn sẽ nói thay cho lượng chữ đã bỏ đi.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 7.3 · Trình bày và xử lý tình huống",
+          "durationMin": 50,
+          "description": "Vì sao phải tập nói to trước; giọng, mắt và cơ thể khi đứng nói; xử lý bốn sự cố thường gặp; và cách làm việc với sự hồi hộp thay vì cố dẹp nó.",
+          "objectives": [
+            "Thiết kế được một buổi tập có bấm giờ và biết cần sửa gì sau khi tập",
+            "Điều chỉnh được giao tiếp bằng mắt, giọng và tư thế khi đứng trước người nghe",
+            "Xử lý được bốn sự cố: hỏng thiết bị, câu hỏi khó, quá giờ, khán giả mất tập trung",
+            "Áp dụng được ít nhất một cách làm việc với sự hồi hộp có cơ sở"
+          ],
+          "summary": [
+            "Chỉ khi nói thành tiếng có bấm giờ mới lộ ra ba lỗi: ý nhảy, hụt hơi và quá thời lượng; đọc thầm không phát hiện được cái nào.",
+            "Giao tiếp bằng mắt là kênh phản hồi: nó cho bạn biết người nghe còn theo kịp hay đã trôi đi, để điều chỉnh ngay.",
+            "Hỏng thiết bị thì bài nói vẫn phải chạy được — chuẩn bị trước phương án không slide là chuyện của lúc soạn, không phải lúc sự cố.",
+            "Bị hỏi khó mà không biết thì nói thẳng là chưa nắm phần đó kèm cam kết phản hồi; quá giờ thì bỏ phần giữa chứ đừng bóp phần kết."
+          ],
+          "body": "\nBài nói tồn tại hai lần: lần bạn soạn và lần bạn đứng nói. Bài này về lần thứ hai — nơi mọi thứ chuẩn bị kỹ vẫn có thể trượt vì một cái máy chiếu.\n\n## Tập trước: vì sao không bỏ được\n\n\"Nắm nội dung rồi, khỏi tập\" là câu nói trước gần như mọi bài thuyết trình hỏng. Tập nói to có bấm giờ phát hiện ba thứ mà đọc thầm **không bao giờ** lộ ra:\n\n- **Chỗ ý nhảy.** Trong đầu, hai ý nối liền mạch; nói ra thành tiếng mới thấy thiếu một câu chuyển.\n- **Chỗ hụt hơi và líu lưỡi.** Câu dài viết đọc thì ổn, nói thì đứt quãng — sửa bằng cách chẻ câu.\n- **Thời lượng thật.** Người mới hầu như luôn ước lượng thiếu; bài mười lăm phút trong đầu thường thành hai mươi hai phút khi nói.\n\nCách tập tối thiểu: **một lần nói to trọn bài có bấm giờ**, không dừng lại sửa giữa chừng; ghi lại chỗ vướng rồi mới sửa. Thêm được thì tập lần hai trước một người nghe thật và hỏi họ đúng một câu: \"cậu nhớ được điều gì?\" — nếu câu trả lời không phải thông điệp của bạn, vấn đề nằm ở bài chứ không ở người nghe.\n\n## Giọng, mắt và cơ thể\n\n**Mắt.** Giao tiếp bằng mắt không phải phép lịch sự — nó là **kênh phản hồi**: bạn đọc được người nghe còn theo kịp hay đã trôi, để chậm lại, nhắc lại hoặc bỏ bớt. Cách làm được ngay: chia phòng thành ba vùng, mỗi ý dừng mắt ở một vùng vài giây, đừng lia mắt liên tục và đừng dán mắt vào màn hình.\n\n**Giọng.** Bốn thứ điều chỉnh được: âm lượng (đủ tới hàng cuối), tốc độ (chậm lại ở câu quan trọng), cao độ (đừng để câu nào cũng lên giọng ở cuối), và **khoảng lặng**. Khoảng lặng hai giây trước một con số quan trọng có tác dụng hơn bất kỳ hiệu ứng slide nào.\n\n**Cơ thể.** Đứng vững hai chân, tay để tự nhiên hoặc dùng để nhấn ý — không ôm khư khư tờ giấy, không cầm bút bấm lách cách. Di chuyển thì di chuyển có chủ đích, ở chỗ chuyển ý, rồi dừng lại.\n\n> [!meo] Nếu tay không biết để đâu: cầm một vật nhỏ (bút chỉ, remote) là được, nhưng đừng bấm liên tục. Đó là tiếng ồn duy nhất mà khán giả nhớ rõ hơn nội dung của bạn.\n\n## Bốn sự cố thường gặp\n\n| Sự cố | Việc nên làm | Việc nên tránh |\n|---|---|---|\n| Máy chiếu hoặc file hỏng | Giữ bình tĩnh, báo ngắn gọn, **tiếp tục nói theo dàn ý đã thuộc**; nhờ người hỗ trợ kỹ thuật xử lý song song | Đứng im chờ, xin lỗi lê thê, hoặc huỷ buổi nói |\n| Câu hỏi khó không có sẵn câu trả lời | Ghi nhận câu hỏi, nói thẳng phần mình chưa nắm, cam kết tìm hiểu và phản hồi kèm mốc; trả lời phần mình có cơ sở | Chế câu trả lời, hoặc lảng sang chuyện khác |\n| Nhận ra đang quá giờ | **Bỏ bớt phần giữa**, giữ nguyên phần kết; nói rõ \"phần chi tiết em để trong tài liệu gửi kèm\" | Nói nhanh gấp đôi để chạy hết slide |\n| Khán giả mất tập trung | Đổi nhịp: đặt một câu hỏi, chuyển sang ví dụ cụ thể, hoặc dừng vài giây | Tăng âm lượng và nói tiếp như cũ |\n\nSự cố thiết bị là loại **chuẩn bị được từ trước**: mang bản sao file ở hai nơi, nhớ được ba ý chính không cần nhìn slide, và luôn có phương án nói không slide trong 5 phút. Đây là việc của lúc soạn bài, không phải của lúc đứng trên bục.\n\n> [!vi-du] Một khán giả hỏi \"cỡ mẫu 412 của bạn có đại diện cho toàn trường không?\" và bạn chưa tính phần đó. Bản chế: nói bừa một tỉ lệ — người hỏi thường là người biết, và uy tín mất trong ba giây. Bản dùng được: \"Em chưa kiểm phần đại diện theo khoa, đây là hạn chế của khảo sát. Em sẽ đối chiếu cơ cấu mẫu với số liệu phòng đào tạo và gửi lại trong tuần này.\" Câu này vừa trung thực, vừa cho thấy bạn hiểu tiêu chuẩn đánh giá — thường được đánh giá cao hơn một câu trả lời trơn tru.\n\n## Làm việc với sự hồi hộp\n\nHồi hộp trước khi nói là phản ứng sinh lý bình thường, và nó **không biến mất bằng cách tự nhủ bình tĩnh**. Ba cách có cơ sở hơn:\n\n- **Đổi nhãn cho cảm giác.** Cảm giác tim đập nhanh, tay run là trạng thái kích hoạt; nó gần giống hào hứng hơn là sợ hãi. Tự nói \"mình đang hào hứng\" tỏ ra hiệu quả hơn \"mình phải bình tĩnh\", vì nó không đòi cơ thể làm điều ngược lại với những gì đang xảy ra.\n- **Thở ra dài hơn hít vào** trong một phút trước khi lên. Nhịp thở là thứ can thiệp được ngay, khác với nhịp tim.\n- **Thuộc chắc ba mươi giây đầu.** Phần lớn hồi hộp tập trung ở lúc mở miệng câu đầu tiên. Khi câu đầu chạy trơn, phần còn lại tự xuống nhịp.\n\n> [!canh-bao] Đừng chữa hồi hộp bằng cách viết toàn bộ bài ra rồi đọc. Nó giảm lo trong hai phút đầu và làm hỏng cả bài: giọng thành đều đều, mắt không rời giấy, và mọi kênh phản hồi bị đóng lại.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nTập nói to trọn bài một lần, bấm giờ, quay lại bằng điện thoại. Xem lại và ghi ba cột: chỗ ý nhảy, chỗ câu quá dài phải chẻ, và thời lượng thật so với thời lượng cho phép. Sửa bài theo đúng ba cột đó — không sửa những thứ khác ở lượt này.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người trình bày 3 phút. Nhóm đóng vai khán giả và làm ba việc: một người bấm giờ, một người đặt **một câu hỏi khó** ở cuối, một người quan sát mắt và giọng. Sau mỗi lượt, người trình bày nghe phản hồi theo đúng ba mục đó, mỗi mục một câu. Riêng câu hỏi khó: người trình bày phải trả lời theo mẫu ghi nhận – nói phần chưa nắm – cam kết phản hồi.\n\n### Bài tập về nhà (45–60 phút)\n\nChuẩn bị **phương án không slide** cho bài trình bày gần nhất của bạn: viết ra ba ý chính bạn nói được mà không cần nhìn màn hình, và một bản rút gọn 5 phút. Sau đó tập một lần với điều kiện tự đặt: giữa chừng, tắt màn hình và nói tiếp. Nộp nửa trang: bạn vấp ở chỗ nào khi mất slide, và bạn sẽ ghi nhớ khác đi thế nào.\n\n### Xem thêm\n\n- 🎬 [How to Speak So That People Want to Listen](https://www.youtube.com/watch?v=eIho2S0ZahI) — Julian Treasure, TED, 9 phút. Bốn thứ điều chỉnh được ở giọng nói.\n- 🎬 [The Secret Structure of Great Talks](https://www.youtube.com/watch?v=1nYFpuc2Umk) — Nancy Duarte, TEDxEast, 18 phút.\n- 🎬 [How to Avoid Death by PowerPoint](https://www.youtube.com/watch?v=Iwpi1Lm6dFo) — David JP Phillips, TEDxStockholmSalon, 20 phút.\n\n### Nguồn tham khảo\n\n- Anderson, C. (2016). *TED Talks: The Official TED Guide to Public Speaking.* Boston: Houghton Mifflin Harcourt.\n- Brooks, A. W. (2014). Get excited: Reappraising pre-performance anxiety as excitement. *Journal of Experimental Psychology: General*, 143(3), 1144–1158.\n- Bodie, G. D. (2010). A racing heart, rattling knees, and ruminative thoughts: Defining, explaining, and treating public speaking anxiety. *Communication Education*, 59(1), 70–105.\n- Reynolds, G. (2019). *Presentation Zen* (3rd ed.). Berkeley: New Riders.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 7.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "7.3-luyen-tap-truoc",
+                "type": "mcq",
+                "prompt": "Vì sao cần luyện tập nói to trước một bài thuyết trình quan trọng?",
+                "explanation": "Chỉ khi nói thành tiếng có bấm giờ mới lộ ra chỗ ý nhảy, câu quá dài gây hụt hơi và thời lượng thật — ba lỗi không phát hiện được khi chỉ đọc thầm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì nói to có bấm giờ mới lộ ra chỗ ý nhảy, câu quá dài và thời lượng thật của bài",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì cần học thuộc lòng toàn bộ nội dung để khỏi quên",
+                    "isCorrect": false,
+                    "misconception": "knm.no-need-rehearse"
+                  },
+                  {
+                    "label": "Vì tập nhiều lần sẽ hết hồi hộp hoàn toàn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần thiết nếu đã nắm chắc nội dung",
+                    "isCorrect": false,
+                    "misconception": "knm.no-need-rehearse"
+                  }
+                ]
+              },
+              {
+                "key": "7.3-giao-tiep-mat",
+                "type": "mcq",
+                "prompt": "Tại sao giao tiếp bằng mắt với khán giả lại quan trọng?",
+                "explanation": "Đó là kênh phản hồi: nhìn khán giả cho biết họ còn theo kịp hay đã trôi đi, để người nói điều chỉnh tốc độ và nội dung ngay tại chỗ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì nó là kênh phản hồi cho biết khán giả còn theo kịp hay không, để điều chỉnh ngay trong lúc nói",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì đó là phép lịch sự bắt buộc khi đứng trước đám đông",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì nhìn thẳng liên tục vào một người sẽ tạo uy lực",
+                    "isCorrect": false,
+                    "misconception": "knm.single-cue-decoding"
+                  },
+                  {
+                    "label": "Vì nó giúp người nói đỡ quên nội dung hơn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "7.3-may-chieu",
+                "type": "mcq",
+                "prompt": "Đang thuyết trình thì máy chiếu gặp sự cố. Cách xử lý phù hợp là gì?",
+                "explanation": "Bài nói phải chạy được cả khi không có slide: báo ngắn gọn, tiếp tục theo dàn ý đã thuộc, để người hỗ trợ xử lý kỹ thuật song song.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Báo ngắn gọn rồi tiếp tục nói theo dàn ý đã thuộc, để người hỗ trợ xử lý kỹ thuật song song",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Dừng lại chờ tới khi máy chiếu hoạt động trở lại",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Xin lỗi nhiều lần và đề nghị dời buổi trình bày",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đọc to nội dung slide từ máy tính cá nhân của mình",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  }
+                ]
+              },
+              {
+                "key": "7.3-cau-hoi-xoay",
+                "type": "mcq",
+                "prompt": "Một khán giả đặt câu hỏi xoáy mà bạn không có sẵn câu trả lời. Cách ứng xử phù hợp là gì?",
+                "explanation": "Ghi nhận câu hỏi, nói thẳng phần mình chưa nắm, trả lời phần có cơ sở và cam kết phản hồi kèm mốc — chế câu trả lời là cách nhanh nhất để mất uy tín.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Ghi nhận câu hỏi, nói rõ phần mình chưa nắm, trả lời phần có cơ sở và hẹn phản hồi kèm mốc thời gian",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đưa ra một câu trả lời nghe hợp lý để giữ uy tín trước khán giả",
+                    "isCorrect": false,
+                    "misconception": "knm.qa-must-know-all"
+                  },
+                  {
+                    "label": "Nói rằng câu hỏi nằm ngoài phạm vi đề tài rồi chuyển sang người khác",
+                    "isCorrect": false,
+                    "misconception": "knm.qa-must-know-all"
+                  },
+                  {
+                    "label": "Xin lỗi và nhận là mình chuẩn bị chưa tốt, không trả lời gì thêm",
+                    "isCorrect": false,
+                    "misconception": "knm.self-label"
+                  }
+                ]
+              },
+              {
+                "key": "7.3-qua-gio",
+                "type": "mcq",
+                "prompt": "Giữa chừng bạn nhận ra bài trình bày đang quá thời lượng cho phép. Bạn nên làm gì?",
+                "explanation": "Bỏ bớt phần giữa và giữ nguyên phần kết. Khán giả không biết bạn đã bỏ slide nào, nhưng họ nhận ra ngay một bài kết thúc vội và không đọng lại gì.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bỏ bớt các phần ở giữa, giữ nguyên phần kết, và nói rõ phần chi tiết nằm trong tài liệu gửi kèm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nói nhanh hơn để kịp trình bày hết các slide đã chuẩn bị",
+                    "isCorrect": false,
+                    "misconception": "knm.rush-when-over-time"
+                  },
+                  {
+                    "label": "Bỏ phần kết vì phần đó chỉ là tóm tắt lại",
+                    "isCorrect": false,
+                    "misconception": "knm.rush-when-over-time"
+                  },
+                  {
+                    "label": "Xin thêm thời gian để trình bày trọn vẹn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "7.3-hoi-hop",
+                "type": "mcq",
+                "prompt": "Cách nào làm việc với sự hồi hộp trước khi nói có cơ sở hơn cả?",
+                "explanation": "Đổi nhãn từ lo lắng sang hào hứng tỏ ra hiệu quả hơn là ép mình bình tĩnh, vì nó không đòi cơ thể làm ngược lại trạng thái đang có; kết hợp với thở ra dài và thuộc chắc ba mươi giây đầu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Gọi trạng thái đang có là hào hứng thay vì bắt mình phải bình tĩnh, thở ra dài hơn hít vào, và thuộc chắc ba mươi giây mở đầu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Viết toàn bộ bài ra giấy rồi đọc để chắc chắn không quên",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  },
+                  {
+                    "label": "Tự nhủ nhiều lần rằng mình phải bình tĩnh cho tới khi hết run",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  },
+                  {
+                    "label": "Tránh nhìn khán giả để đỡ căng thẳng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "7.3-viet-tap",
+                "type": "essay",
+                "prompt": "Tập nói to trọn một bài trình bày có bấm giờ và quay lại. Viết 200–300 từ: (a) thời lượng thật so với thời lượng cho phép; (b) hai chỗ ý bị nhảy và câu chuyển bạn sẽ thêm; (c) hai câu quá dài và bản chẻ ngắn của chúng; (d) phương án không slide: ba ý bạn nói được mà không cần nhìn màn hình.",
                 "points": 5
               }
             ]
