@@ -398,6 +398,81 @@
       "code": "knm.one-size-persuasion",
       "name": "Một cách thuyết phục dùng cho mọi người",
       "description": "Lặp lại đúng một kiểu lập luận cho mọi đối tượng. Điều thuyết phục một sinh viên năm nhất khác điều thuyết phục một đồng nghiệp hai mươi năm kinh nghiệm; không đọc được người nghe thì mọi kỹ thuật đều trượt."
+    },
+    {
+      "code": "knm.team-is-division",
+      "name": "Làm việc nhóm là chia việc rồi ghép lại",
+      "description": "Coi nhóm chỉ là cách chia nhỏ khối lượng: mỗi người làm phần của mình rồi dán vào một file. Cách này bỏ mất thứ duy nhất khiến nhóm hơn tổng các cá nhân — sự bổ trợ, phản biện và trách nhiệm chung với kết quả cuối cùng."
+    },
+    {
+      "code": "knm.wait-for-assignment",
+      "name": "Chờ được phân công mới làm",
+      "description": "Ngồi đợi trưởng nhóm giao việc rồi mới bắt đầu, và chỉ làm đúng phần được giao. Đây là biểu hiện của mô thức phụ thuộc trong nhóm; nó đẩy toàn bộ chi phí điều phối sang một người và làm nhóm chậm ở mọi khâu chuyển tiếp."
+    },
+    {
+      "code": "knm.conflict-is-bad",
+      "name": "Xung đột trong nhóm là dấu hiệu nhóm hỏng",
+      "description": "Coi mọi bất đồng là điều cần dập tắt. Giai đoạn sóng gió là giai đoạn bắt buộc trong quá trình phát triển nhóm: đó là lúc các kỳ vọng ngầm được nói ra và chuẩn làm việc chung được hình thành. Nhóm không bao giờ tranh luận thường là nhóm có người đang im lặng."
+    },
+    {
+      "code": "knm.avoid-conflict",
+      "name": "Né tránh để giữ hoà khí",
+      "description": "Chọn im lặng khi thấy vấn đề, mong nó tự qua. Né tránh giữ được không khí dễ chịu trong ngắn hạn và trả giá ở hạn nộp: vấn đề vẫn còn, cộng thêm sự bực bội đã tích lại và thời gian đã mất."
+    },
+    {
+      "code": "knm.carry-the-team",
+      "name": "Làm hộ hết cho nhanh",
+      "description": "Thấy đồng đội chậm thì tự làm luôn phần của họ. Cách này cứu được một hạn nộp và tạo ra ba vấn đề: người kia không học được gì, bạn kiệt sức, và nhóm hình thành thói quen ỷ lại vào một người."
+    },
+    {
+      "code": "knm.silence-is-agreement",
+      "name": "Im lặng trong họp nghĩa là đồng ý",
+      "description": "Coi việc không ai phản đối là cả nhóm đã đồng thuận. Im lặng thường có nghĩa người ta chưa kịp nghĩ, ngại nói trước người có vị thế hơn, hoặc đã bỏ cuộc — và sự bất đồng chưa nói ra sẽ quay lại ở khâu thực hiện."
+    },
+    {
+      "code": "knm.leader-decides-all",
+      "name": "Trưởng nhóm là người quyết hết và làm nhiều nhất",
+      "description": "Hiểu vai trò trưởng nhóm thành người giỏi nhất, làm nhiều nhất, quyết mọi việc. Việc chính của trưởng nhóm là làm rõ mục tiêu, phân công đúng năng lực, gỡ vướng và giữ nhịp — chứ không phải gánh phần lớn khối lượng."
+    },
+    {
+      "code": "knm.role-by-title",
+      "name": "Giao vai trò theo quen biết thay vì theo năng lực",
+      "description": "Chọn người vào vai trò vì thân quen, vì họ hay xung phong, hoặc vì chức danh sẵn có. Vai trò trong nhóm nên được giao theo thế mạnh, sở thích và mức sẵn sàng của từng người, và nên nói rõ kỳ vọng đi kèm."
+    },
+    {
+      "code": "knm.blame-the-person",
+      "name": "Quy kết tính cách thay vì hỏi nguyên nhân",
+      "description": "Kết luận người trễ hạn là vô trách nhiệm, rồi xử lý bằng thái độ. Cùng một hành vi có nhiều nguyên nhân — quá tải, hiểu sai yêu cầu, vướng việc riêng — và mỗi nguyên nhân cần một cách gỡ khác nhau."
+    },
+    {
+      "code": "knm.cv-one-for-all",
+      "name": "Một CV gửi cho mọi vị trí",
+      "description": "Dùng chung một bản cho mọi nơi ứng tuyển. Nhà tuyển dụng đọc CV để tìm sự khớp với mô tả công việc cụ thể của họ; một bản chung chung buộc họ tự đi tìm phần liên quan, và phần lớn sẽ không làm việc đó."
+    },
+    {
+      "code": "knm.cv-duties-not-results",
+      "name": "Liệt kê nhiệm vụ thay vì kết quả",
+      "description": "Viết những việc mình từng được giao mà không nói kết quả tạo ra. Câu chịu trách nhiệm quản lý fanpage không nói được gì; tăng lượng tương tác 40% trong ba tháng nhờ đổi lịch đăng thì kiểm được và so sánh được."
+    },
+    {
+      "code": "knm.cv-longer-better",
+      "name": "CV càng dài càng chứng tỏ nhiều kinh nghiệm",
+      "description": "Nhồi mọi hoạt động từng tham gia vào CV. Người đọc lướt bản đầu tiên trong vài chục giây; độ dài làm loãng phần quan trọng, và với sinh viên mới ra trường thì một trang là đủ."
+    },
+    {
+      "code": "knm.weakness-fake",
+      "name": "Trả lời điểm yếu bằng ưu điểm trá hình",
+      "description": "Nói em quá cầu toàn hoặc em làm việc quá nhiều. Người phỏng vấn nghe câu này hằng ngày và đọc nó thành thiếu tự nhận thức hoặc thiếu trung thực; câu trả lời tốt nêu một điểm yếu thật, không chí mạng với vị trí, kèm việc mình đang làm để cải thiện."
+    },
+    {
+      "code": "knm.no-questions-asked",
+      "name": "Không hỏi lại nhà tuyển dụng câu nào",
+      "description": "Trả lời không có câu hỏi gì ạ khi được mời hỏi. Phần này là cơ hội cuối để thể hiện mình đã tìm hiểu và để kiểm tra xem nơi ấy có hợp với mình không — bỏ qua nó thường được đọc là thiếu quan tâm."
+    },
+    {
+      "code": "knm.interview-improvise",
+      "name": "Không cần chuẩn bị, vào rồi ứng biến",
+      "description": "Tin rằng nói năng tự nhiên là đủ. Các câu hỏi phỏng vấn lặp lại tới mức dự đoán được; chuẩn bị trước ba tới năm câu chuyện có cấu trúc là khác biệt lớn nhất giữa hai ứng viên ngang trình độ."
     }
   ],
   "feedbackTemplates": [
@@ -789,6 +864,81 @@
     {
       "misconception": "knm.one-size-persuasion",
       "body": "Trước khi thuyết phục, viết ra ba điều về người nghe: họ đang lo gì, họ mất gì nếu đồng ý, và điều gì với họ là bằng chứng đủ mạnh. Ba câu này quyết định bạn dùng lập luận nào, không phải sở thích của bạn.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.team-is-division",
+      "body": "Chia việc là bước đầu, không phải toàn bộ. Nhóm chỉ hơn tổng các cá nhân khi có ba thứ: mục tiêu chung ai cũng nói được, phần ghép nối được bàn từ sớm, và một lần rà chéo trước khi nộp.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.wait-for-assignment",
+      "body": "Đừng đợi được giao. Hãy hỏi trước một câu: phần nào đang chưa ai nhận, và mình làm được phần nào? Chủ động trong nhóm bắt đầu bằng câu hỏi ấy, không cần chức danh nào cả.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.conflict-is-bad",
+      "body": "Sóng gió là giai đoạn bắt buộc, không phải tai nạn. Việc cần làm không phải dập nó mà là giữ tranh luận ở mức công việc: nói về cách làm và tiêu chí, không nói về con người.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.avoid-conflict",
+      "body": "Né tránh chỉ dời vấn đề tới gần hạn nộp hơn, khi nó đắt hơn nhiều. Hãy nói sớm, nói riêng, và nói bằng sự việc: phần này trễ hai ngày thì phần của mình lùi theo, mình cần biết khi nào có.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.carry-the-team",
+      "body": "Trước khi làm hộ, hãy hỏi vì sao chậm và đề nghị chia nhỏ phần việc đó. Làm hộ cứu được một hạn nộp và tạo ra một nhóm quen ỷ lại — lần sau bạn vẫn là người phải cứu.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.silence-is-agreement",
+      "body": "Đừng đọc im lặng là đồng thuận. Hãy hỏi thẳng người chưa nói: mình muốn nghe ý của bạn về phương án này, hoặc mời từng người nêu một điểm lo ngại trước khi chốt.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.leader-decides-all",
+      "body": "Việc của trưởng nhóm là làm rõ mục tiêu, phân công đúng người, gỡ vướng và giữ nhịp. Nếu bạn đang làm phần lớn khối lượng thì nhóm đang thiếu phân công, chứ không phải bạn đang lãnh đạo tốt.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.role-by-title",
+      "body": "Giao vai trò theo thế mạnh và mức sẵn sàng, và nói rõ kỳ vọng đi kèm từng vai. Người xung phong nhanh nhất không phải lúc nào cũng là người hợp nhất với vai trò đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.blame-the-person",
+      "body": "Hỏi trước khi kết luận: có phải phần việc quá lớn, hay yêu cầu chưa rõ, hay bạn ấy đang vướng chuyện riêng? Mỗi nguyên nhân cần một cách gỡ khác nhau, và không nguyên nhân nào được gỡ bằng thái độ.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.cv-one-for-all",
+      "body": "Mỗi vị trí một bản. Không cần viết lại từ đầu: đổi mục tiêu nghề nghiệp, đảo thứ tự các gạch đầu dòng, và dùng lại đúng từ khoá trong mô tả công việc.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.cv-duties-not-results",
+      "body": "Viết theo mẫu: làm gì — bằng cách nào — kết quả đo được. Không có số thì dùng mốc thời gian, quy mô hoặc so sánh trước sau; câu nào không nói được kết quả thì cắt.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.cv-longer-better",
+      "body": "Sinh viên mới ra trường: một trang. Giữ những gì liên quan tới vị trí đang ứng tuyển, phần còn lại để dành cho buổi phỏng vấn hoặc portfolio.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.weakness-fake",
+      "body": "Nêu một điểm yếu thật, không chí mạng với vị trí, kèm việc bạn đang làm để cải thiện và một bằng chứng cho thấy nó đã đỡ hơn. Câu quá cầu toàn bị đọc là né câu hỏi.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.no-questions-asked",
+      "body": "Chuẩn bị sẵn ba câu hỏi về công việc thật: người tiền nhiệm làm gì trong ba tháng đầu, đội nhóm đánh giá công việc này thành công dựa trên gì, và bước tiếp theo của quy trình tuyển là gì.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.interview-improvise",
+      "body": "Câu hỏi phỏng vấn lặp lại tới mức dự đoán được. Hãy chuẩn bị ba tới năm câu chuyện theo cấu trúc bối cảnh – nhiệm vụ – hành động – kết quả, rồi luyện nói to một lần cho mỗi câu chuyện.",
       "priority": 10
     }
   ],
@@ -5788,6 +5938,1207 @@
                 "key": "8.3-viet-phan-tich",
                 "type": "essay",
                 "prompt": "Chọn một chiến dịch quảng cáo hoặc một vụ lừa đảo trực tuyến bạn hoặc người quen từng gặp. Viết 200–300 từ: (a) nó dùng những nguyên tắc nào, theo thứ tự nào; (b) chỗ nào vượt ranh giới thành thao túng theo ba câu hỏi ở bài 8.1; (c) bốn bước tự vệ áp vào tình huống đó sẽ diễn ra thế nào; (d) một quy tắc cá nhân bạn đặt cho mình, viết ở dạng hành vi cụ thể.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 9 · Kỹ năng cá nhân trong làm việc nhóm",
+      "description": "Phần của bạn trong nhóm — thứ bạn kiểm soát được kể cả khi không phải nhóm trưởng. Ba bài: ba mô thức phụ thuộc – độc lập – tương thuộc cùng những hành vi nhỏ làm nên nhóm chạy được; năm giai đoạn phát triển nhóm và các vai trò; và ba tình huống khó nhất — xung đột, thành viên không giữ cam kết, buổi rút kinh nghiệm cuối dự án.",
+      "lessons": [
+        {
+          "title": "Bài 9.1 · Từ phụ thuộc tới tương thuộc: cá nhân trong nhóm",
+          "durationMin": 45,
+          "description": "Ba mô thức phụ thuộc – độc lập – tương thuộc; nhóm khác tập hợp người ở đâu; và những hành vi cá nhân nhỏ làm nên một nhóm chạy được.",
+          "objectives": [
+            "Phân biệt được ba mô thức và nhận ra mình đang ở mô thức nào trong một nhóm cụ thể",
+            "Nêu được đặc trưng cơ bản phân biệt nhóm với một tập hợp người",
+            "Chỉ ra được hành vi cá nhân tương ứng với từng phẩm chất làm việc nhóm",
+            "Chọn được hai hành vi để thay đổi trong nhóm hiện tại của mình"
+          ],
+          "summary": [
+            "Ba mô thức theo Covey: phụ thuộc (cần người khác), độc lập (tự làm được), tương thuộc (cùng người khác tạo ra thứ một mình không làm nổi) — tương thuộc là mức cao nhất vì nó đòi phải có độc lập trước.",
+            "Nhóm khác tập hợp người ở mục tiêu chung, sự phụ thuộc lẫn nhau trong công việc và trách nhiệm chung với kết quả.",
+            "Thành tích cá nhân đến từ kỷ luật với chính mình; thành tích tập thể đến từ tin cậy, giao tiếp và bổ trợ lẫn nhau.",
+            "Chất lượng nhóm được quyết định phần lớn bởi những hành vi rất nhỏ: đến đúng giờ, hỏi lại khi chưa rõ, nói sớm khi sắp trễ."
+          ],
+          "body": "\nModule này không nói về cách lãnh đạo một nhóm. Nó nói về **phần của bạn** trong nhóm — thứ bạn kiểm soát được kể cả khi nhóm có vấn đề và bạn không phải nhóm trưởng.\n\n## Ba mô thức: phụ thuộc, độc lập, tương thuộc\n\n| Mô thức | Câu nói đặc trưng | Trong nhóm học tập | Thiếu gì |\n|---|---|---|---|\n| Phụ thuộc | \"Bạn làm giúp mình\" · \"Chờ trưởng nhóm phân công đã\" | Ngồi đợi được giao việc, làm đúng phần được giao rồi thôi | Chưa tự đứng được |\n| Độc lập | \"Việc của mình mình lo xong\" | Hoàn thành tốt phần của mình, đúng hạn, không cần ai nhắc | Chưa cộng hưởng với ai |\n| Tương thuộc | \"Cùng nhau mình làm được thứ này\" | Xong phần mình, hỏi đồng đội có cần hỗ trợ, chủ động nối phần việc với nhau | — |\n\nĐiểm dễ hiểu sai: **tương thuộc không phải là quay lại phụ thuộc**. Nó chỉ đạt được sau khi đã độc lập — một người chưa tự lo nổi phần mình thì không có gì để đóng góp, và sự \"hợp tác\" của họ thực chất là nhờ vả. Đây là lý do Covey xếp tương thuộc ở mức cao nhất: nó **đòi hỏi độc lập làm điều kiện**.\n\n> [!vi-du] Ba sinh viên cùng nhóm đồ án. **A** mỗi buổi họp đều ngồi chờ trưởng nhóm phân công mới bắt đầu nghĩ — mô thức phụ thuộc. **B** làm xong phần mình trước hạn hai ngày, chất lượng tốt, nhưng không quan tâm phần khác chạy tới đâu — độc lập. **C** làm xong phần mình rồi nhắn: \"phần dữ liệu của cậu có kẹt chỗ nào không, tớ từng làm cái tương tự\", và chủ động rà chỗ ghép giữa hai phần — tương thuộc. Cả ba đều \"hoàn thành nhiệm vụ\", nhưng chỉ nhóm có C mới nộp được một bài liền mạch.\n\n**Thành tích cá nhân** đến từ những gì bạn tự làm chủ: kỷ luật với chính mình, chủ động, biết ưu tiên, giữ lời hứa với bản thân — đúng những thứ đã học ở module 1 và 4. **Thành tích tập thể** đến từ thứ khác hẳn: tin cậy lẫn nhau, giao tiếp rõ ràng, biết lắng nghe, và bổ trợ chỗ mạnh chỗ yếu của nhau.\n\n## Nhóm khác tập hợp người ở đâu\n\nNăm người cùng ngồi trong thư viện không phải một nhóm. Ba đặc trưng làm nên nhóm:\n\n- **Mục tiêu chung** mà mọi thành viên đều nói ra được bằng lời của mình — không phải mục tiêu chỉ có trưởng nhóm biết.\n- **Sự phụ thuộc lẫn nhau trong công việc**: phần của người này là đầu vào của người kia, nên chậm một khâu là cả nhóm chậm.\n- **Trách nhiệm chung với kết quả cuối cùng**: bài nộp là bài của cả nhóm, không phải năm bài dán vào nhau.\n\n> [!canh-bao] Cách làm nhóm phổ biến nhất ở đại học vi phạm đúng đặc trưng thứ ba: chia năm phần, mỗi người làm một phần, đêm trước hạn ghép file. Sản phẩm ấy gần như luôn lộ ra ở ba chỗ — thuật ngữ không thống nhất, phần nọ nhắc lại phần kia, và không ai trả lời được câu hỏi tổng thể khi bảo vệ. Cách chữa rẻ nhất: **một buổi ghép và rà chéo trước hạn ít nhất hai ngày**, mỗi người đọc phần của người khác.\n\n## Những hành vi nhỏ làm nên nhóm tốt\n\nNhóm chạy được không nhờ tuyên ngôn mà nhờ các hành vi lặp lại. Bảng dưới đây đọc theo chiều ngược lại cũng đúng: mỗi phẩm chất chỉ tồn tại khi có hành vi tương ứng.\n\n| Hành vi cụ thể | Phẩm chất mà nó thể hiện |\n|---|---|\n| Đến họp đúng giờ | Tôn trọng thời gian của người khác, đáng tin cậy |\n| Hỏi kỹ lại khi chưa hiểu ý người trình bày | Cầu thị, và ngăn được việc làm sai hướng cả tuần |\n| Làm rõ những điểm chưa rõ trong phần việc được giao | Có trách nhiệm với chất lượng, không giả vờ đã hiểu |\n| Nói sớm khi thấy mình có nguy cơ trễ | Trung thực, cho nhóm thời gian xoay xở |\n| Nói rõ với người trễ hạn rằng việc đó ảnh hưởng thế nào tới kết quả chung | Thẳng thắn dựa trên sự việc, không phải công kích |\n| Viết tiêu đề email và tin nhắn rõ ràng, ngắn gọn | Tôn trọng sự chú ý của người nhận |\n| Ghi lại phân công và hạn sau mỗi buổi họp | Giữ trí nhớ chung cho cả nhóm |\n\nĐiểm chung của bảy hành vi trên: **không cái nào cần chức danh, cần tài năng đặc biệt, hay cần sự cho phép của ai**. Tất cả đều nằm trong vòng tròn ảnh hưởng của bạn theo đúng nghĩa ở bài 1.2 — và đó là lý do chúng là chỗ bắt đầu tốt nhất.\n\n> [!meo] Việc đầu tiên trong buổi họp nhóm lần đầu với người chưa quen **không phải** là phân công. Hãy dành mười phút để mỗi người nói tên, thế mạnh, và thời gian mình bận trong tuần. Mười phút ấy tiết kiệm nhiều giờ ở các tuần sau, vì phân công sẽ dựa trên dữ liệu thật thay vì phỏng đoán.\n\n> [!vi-du] Giảng viên giao một tiểu luận lớn trong hai ngày — quá tải rõ ràng. Phản ứng phụ thuộc: than trong nhóm chat rồi chờ ai đó xử lý. Phản ứng độc lập: cắm đầu làm phần của mình, mặc kệ nhóm. Phản ứng tương thuộc: nhóm họp mười lăm phút, tách đề thành các phần độc lập nhất có thể, thống nhất **một dàn ý và một bộ thuật ngữ** trước khi ai viết chữ nào, chốt giờ ghép sớm hơn hạn nộp nửa ngày — và cử một người hỏi lại giảng viên phạm vi nào có thể rút gọn. Kết quả có thể vẫn không hoàn hảo, nhưng khác hẳn năm mảnh rời.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nChọn một nhóm bạn đang tham gia. Tự chấm mình theo ba mô thức, **kèm bằng chứng hành vi** trong hai tuần gần nhất — không chấm theo ý định. Sau đó chọn **hai hành vi** trong bảng bảy hành vi mà bạn làm chưa tốt, và viết ra bạn sẽ làm khác đi thế nào ở buổi họp tới, cụ thể tới mức người khác quan sát được.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người kể một tình huống nhóm gần đây **không** suôn sẻ, trong 2 phút, không nêu tên ai. Cả nhóm phân tích bằng hai câu hỏi: các thành viên trong đó đang ở mô thức nào, và **hành vi nhỏ nào** — trong bảng bảy hành vi — nếu có mặt thì đã ngăn được vấn đề. Cuối buổi, mỗi nhóm chốt ba hành vi đáng đưa vào \"quy ước nhóm\" cho học kỳ này.\n\n### Bài tập về nhà (45 phút)\n\nViết bản **quy ước làm việc nhóm** cho nhóm bạn đang tham gia, tối đa một trang, gồm: mục tiêu chung diễn đạt bằng một câu; cách phân công và ghi lại; hạn phản hồi tin nhắn trong nhóm; quy tắc khi ai đó sắp trễ; và cách nhóm rà chéo trước khi nộp. Đưa nhóm đọc và ghi lại phản ứng của họ — bản quy ước không được cả nhóm đồng ý thì chỉ là mong muốn cá nhân.\n\n### Xem thêm\n\n- 🎬 [Why It's Time to Forget the Pecking Order at Work](https://www.youtube.com/watch?v=Vyn_xLrtZaY) — Margaret Heffernan, TED, 15 phút. Nhóm hiệu quả không phải nhóm gom nhiều ngôi sao nhất — bằng chứng từ nghiên cứu về sự gắn kết xã hội trong nhóm.\n\n### Nguồn tham khảo\n\n- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, phần về ba mô thức phụ thuộc – độc lập – tương thuộc. New York: Free Press.\n- Katzenbach, J. R., & Smith, D. K. (1993). *The Wisdom of Teams: Creating the High-Performance Organization.* Boston: Harvard Business School Press.\n- Hackman, J. R. (2002). *Leading Teams: Setting the Stage for Great Performances.* Boston: Harvard Business School Press.\n- Woolley, A. W., Chabris, C. F., Pentland, A., Hashmi, N., & Malone, T. W. (2010). Evidence for a collective intelligence factor in the performance of human groups. *Science*, 330(6004), 686–688.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 9.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "9.1-tuong-thuoc",
+                "type": "mcq",
+                "prompt": "Vì sao mô thức Tương thuộc được coi là cao nhất trong ba mô thức phụ thuộc – độc lập – tương thuộc?",
+                "explanation": "Tương thuộc đòi hỏi độc lập làm điều kiện: người chưa tự lo nổi phần mình thì không có gì để đóng góp. Nó tạo ra kết quả mà một cá nhân không làm được.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Vì nó đòi phải độc lập trước đã, rồi mới cộng hưởng được với người khác để tạo ra thứ một mình không làm nổi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nó cho phép chia sẻ công việc nên mỗi người làm ít hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.team-is-division"
+                  },
+                  {
+                    "label": "Vì người tương thuộc luôn được nhóm giúp đỡ khi cần",
+                    "isCorrect": false,
+                    "misconception": "knm.wait-for-assignment"
+                  },
+                  {
+                    "label": "Vì nó giúp tránh mọi xung đột trong nhóm",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-is-bad"
+                  }
+                ]
+              },
+              {
+                "key": "9.1-cho-phan-cong",
+                "type": "mcq",
+                "prompt": "Bạn A mỗi lần họp nhóm đều ngồi chờ trưởng nhóm phân công mới bắt đầu làm. A đang ở mô thức nào?",
+                "explanation": "Chờ được giao việc rồi mới làm là biểu hiện của mô thức phụ thuộc — nó đẩy toàn bộ chi phí điều phối sang một người.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Phụ thuộc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Độc lập",
+                    "isCorrect": false,
+                    "misconception": "knm.wait-for-assignment"
+                  },
+                  {
+                    "label": "Tương thuộc",
+                    "isCorrect": false,
+                    "misconception": "knm.wait-for-assignment"
+                  },
+                  {
+                    "label": "Không xác định được nếu chưa biết A làm việc có tốt không",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "9.1-nhom-vs-tap-hop",
+                "type": "mcq",
+                "prompt": "Sự khác nhau cơ bản giữa nhóm và một tập hợp người là ở yếu tố nào?",
+                "explanation": "Nhóm có mục tiêu chung, các phần việc phụ thuộc lẫn nhau, và trách nhiệm chung với kết quả cuối cùng — thiếu ba thứ này thì chỉ là nhiều người cùng có mặt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mục tiêu chung, công việc phụ thuộc lẫn nhau, và trách nhiệm chung với kết quả cuối",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Số lượng thành viên đủ lớn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Có một người được cử làm trưởng nhóm",
+                    "isCorrect": false,
+                    "misconception": "knm.leader-decides-all"
+                  },
+                  {
+                    "label": "Cùng có mặt ở một nơi trong cùng khoảng thời gian",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "9.1-hanh-vi-pham-chat",
+                "type": "matching",
+                "prompt": "Nối mỗi hành vi cá nhân với phẩm chất làm việc nhóm mà nó thể hiện.",
+                "explanation": "Phẩm chất chỉ tồn tại khi có hành vi tương ứng — và bảy hành vi này đều nằm trong tầm kiểm soát của mỗi cá nhân, không cần chức danh nào.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Đến họp đúng giờ",
+                    "right": "Tôn trọng thời gian người khác, đáng tin cậy"
+                  },
+                  {
+                    "left": "Hỏi kỹ lại khi chưa hiểu ý người trình bày",
+                    "right": "Cầu thị, tránh làm sai hướng"
+                  },
+                  {
+                    "left": "Nói sớm khi thấy mình có nguy cơ trễ hạn",
+                    "right": "Trung thực, cho nhóm thời gian xoay xở"
+                  },
+                  {
+                    "left": "Viết tiêu đề email rõ ràng, ngắn gọn",
+                    "right": "Tôn trọng sự chú ý của người nhận"
+                  }
+                ]
+              },
+              {
+                "key": "9.1-ho-tro-dong-doi",
+                "type": "mcq",
+                "prompt": "Bạn B hoàn thành tốt phần việc của mình, đồng thời chủ động hỏi đồng đội có cần hỗ trợ và rà lại chỗ ghép nối giữa các phần. B thể hiện điều gì?",
+                "explanation": "Đây là mô thức tương thuộc: đã độc lập trong phần việc của mình và còn tạo thêm giá trị ở chỗ nối — thứ mà cách chia việc thuần tuý bỏ sót.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mô thức tương thuộc — vừa tự lo được phần mình, vừa tạo giá trị ở chỗ nối giữa các phần",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mô thức độc lập, vì bạn ấy đã hoàn thành phần việc riêng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Làm hộ người khác, dễ khiến nhóm ỷ lại",
+                    "isCorrect": false,
+                    "misconception": "knm.carry-the-team"
+                  },
+                  {
+                    "label": "Vượt quá vai trò được giao trong nhóm",
+                    "isCorrect": false,
+                    "misconception": "knm.wait-for-assignment"
+                  }
+                ]
+              },
+              {
+                "key": "9.1-hop-lan-dau",
+                "type": "mcq",
+                "prompt": "Trong buổi họp nhóm lần đầu với các thành viên chưa quen, việc nên làm đầu tiên là gì?",
+                "explanation": "Trước khi phân công, cần biết mỗi người mạnh gì và bận lúc nào — phân công dựa trên dữ liệu thật thay vì phỏng đoán tiết kiệm nhiều giờ ở các tuần sau.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Làm quen ngắn: mỗi người nói thế mạnh và thời gian bận trong tuần, rồi mới thống nhất mục tiêu và phân công",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Phân công ngay để tiết kiệm thời gian",
+                    "isCorrect": false,
+                    "misconception": "knm.role-by-title"
+                  },
+                  {
+                    "label": "Bầu trưởng nhóm rồi để trưởng nhóm quyết mọi việc",
+                    "isCorrect": false,
+                    "misconception": "knm.leader-decides-all"
+                  },
+                  {
+                    "label": "Chia đều số trang cho mỗi người",
+                    "isCorrect": false,
+                    "misconception": "knm.team-is-division"
+                  }
+                ]
+              },
+              {
+                "key": "9.1-viet-quy-uoc",
+                "type": "essay",
+                "prompt": "Viết 200–300 từ: (a) bạn đang ở mô thức nào trong nhóm hiện tại, kèm hai bằng chứng hành vi cụ thể trong hai tuần qua; (b) hai hành vi trong bảng bảy hành vi bạn làm chưa tốt và cách bạn sẽ làm khác đi ở buổi họp tới; (c) ba điều bạn muốn đưa vào quy ước làm việc chung của nhóm.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 9.2 · Năm giai đoạn phát triển nhóm và vai trò trong nhóm",
+          "durationMin": 45,
+          "description": "Mô hình Tuckman và việc cần làm ở từng giai đoạn; các vai trò trong nhóm cùng giá trị của mỗi vai; cách chọn người vào vai trò và cách đón thành viên mới.",
+          "objectives": [
+            "Xác định được nhóm của mình đang ở giai đoạn nào và việc cần làm ở giai đoạn đó",
+            "Giải thích được vì sao giai đoạn sóng gió là bắt buộc chứ không phải tai nạn",
+            "Nhận ra được các vai trò trong nhóm và giá trị riêng của từng vai",
+            "Chọn được người vào vai trò theo thế mạnh thay vì theo quen biết"
+          ],
+          "summary": [
+            "Năm giai đoạn: hình thành, sóng gió, ổn định, hoạt động trôi chảy, kết thúc — nhóm nào cũng đi qua, và bỏ qua giai đoạn nào thì nó quay lại sau.",
+            "Sóng gió là giai đoạn các kỳ vọng ngầm được nói ra; nhóm không bao giờ tranh luận thường là nhóm có người đang im lặng.",
+            "Ở giai đoạn hoạt động trôi chảy, nhóm tự điều phối và tự giải quyết bất đồng mà không cần trưởng nhóm can thiệp từng việc.",
+            "Vai trò nên giao theo thế mạnh và mức sẵn sàng, kèm kỳ vọng nói rõ — người phản biện có giá trị riêng và cần được bảo vệ."
+          ],
+          "body": "\nNhóm không tự nhiên chạy tốt ngay từ buổi đầu, và cũng không hỏng vĩnh viễn sau buổi cãi nhau đầu tiên. Nó **đi qua các giai đoạn** — biết mình đang ở đâu thì biết việc cần làm là gì.\n\n## Năm giai đoạn theo Tuckman\n\n![Sơ đồ năm giai đoạn phát triển nhóm của Tuckman: forming, storming, norming, performing, adjourning](https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Tuckman_stages_of_group_development.svg/1280px-Tuckman_stages_of_group_development.svg.png \"Mô hình Tuckman: hình thành, sóng gió, ổn định, hoạt động trôi chảy, và kết thúc. Hình: [File:Tuckman stages of group development.svg](https://commons.wikimedia.org/wiki/File:Tuckman_stages_of_group_development.svg), tác giả Tens49, giấy phép CC BY-SA 4.0.\")\n\n| Giai đoạn | Dấu hiệu nhận ra | Việc cần làm |\n|---|---|---|\n| 1 · Hình thành | Lịch sự, dè dặt, ít nói thật; mọi người chờ xem luật chơi là gì; phụ thuộc vào người dẫn dắt | Làm rõ mục tiêu, phân công, hạn và cách liên lạc; cho mọi người biết nhau |\n| 2 · Sóng gió | Bất đồng về cách làm và vai trò; có bè nhóm nhỏ; ai đó thấy mình làm nhiều hơn | Đưa tranh luận về công việc và tiêu chí; nói ra kỳ vọng ngầm; **không dập** |\n| 3 · Ổn định | Đã có chuẩn chung: họp thế nào, phản hồi ra sao, chất lượng tới đâu | Ghi lại các chuẩn ấy thành quy ước; giữ cho nó được áp dụng đều |\n| 4 · Hoạt động trôi chảy | Nhóm tự điều phối, tự gỡ bất đồng; trưởng nhóm không phải can thiệp từng việc | Giao quyền nhiều hơn, tập trung gỡ vướng bên ngoài; giữ nhịp rà soát |\n| 5 · Kết thúc | Dự án xong, nhóm giải thể hoặc đổi thành phần | Rút kinh nghiệm bằng văn bản; ghi nhận đóng góp từng người |\n\n> [!ghi-nho] Khác biệt giữa giai đoạn 3 và 4 hay bị nhầm: **ổn định** là nhóm đã hết cãi nhau và làm việc theo chuẩn chung; **hoạt động trôi chảy** là nhóm tự giải quyết được vấn đề mới phát sinh mà không cần ai đứng ra điều phối. Nhiều nhóm sinh viên dừng ở giai đoạn 3 cho tới hết học kỳ — và đó vẫn là kết quả tốt.\n\n## Vì sao sóng gió là giai đoạn bắt buộc\n\nỞ giai đoạn hình thành, mọi người mang theo **kỳ vọng ngầm**: chất lượng thế nào là đủ, trễ bao lâu thì chấp nhận được, họp có cần bật camera không, ai được quyết cái gì. Không ai nói ra vì tưởng đó là chuyện hiển nhiên — và chúng khác nhau giữa các thành viên.\n\nSóng gió là lúc những kỳ vọng ấy **va vào nhau và buộc phải nói ra**. Nhóm nào cũng phải trả cái giá này; khác biệt chỉ là trả sớm ở tuần thứ hai với chi phí thấp, hay trả muộn ở đêm trước hạn nộp với chi phí rất cao.\n\n> [!canh-bao] Một nhóm chưa bao giờ tranh luận không phải nhóm hoà thuận — thường là nhóm có người đã bỏ cuộc hoặc không dám nói. Dấu hiệu: mọi đề xuất đều được đồng ý ngay, không ai hỏi lại, nhưng công việc thì trễ.\n\nViệc cần làm ở giai đoạn này không phải dập tranh luận mà là **giữ nó ở mức công việc**: nói về cách làm, tiêu chí, hạn — không nói về con người. Ba câu hữu ích: *\"Mình đang khác nhau ở tiêu chí hay ở cách làm?\"* · *\"Nếu chọn hướng của cậu thì phần nào phải đổi?\"* · *\"Cả hai hướng đều được, mình chọn theo tiêu chí nào?\"*\n\n## Các vai trò trong nhóm\n\nMột nhóm chạy tốt cần nhiều loại đóng góp khác nhau — và người giỏi ở vai này thường không giỏi ở vai kia.\n\n| Vai trò | Đặc điểm nổi bật | Giá trị mang lại | Rủi ro nếu thiếu kiểm soát |\n|---|---|---|---|\n| Trưởng nhóm | Làm rõ mục tiêu, phân công, giữ nhịp, gỡ vướng | Nhóm biết đang đi đâu và ai làm gì | Ôm hết việc, hoặc quyết thay cả nhóm |\n| Người điều phối | Kết nối các phần việc, theo dõi tiến độ, giữ liên lạc thông suốt | Không ai bị bỏ quên, chỗ ghép không vỡ | Sa vào quản lý vi mô |\n| Người thực hiện | Biến kế hoạch thành sản phẩm; kỷ luật, đúng hạn, làm tới nơi | Nhóm có thứ để nộp | Ngại thay đổi khi kế hoạch cần sửa |\n| Người phản biện | Chỉ ra lỗ hổng, hỏi câu khó, kiểm giả định trước khi nhóm lao đi | Chặn được sai lầm khi sửa còn rẻ | Bị coi là tiêu cực nếu chỉ chê mà không đề xuất |\n| Người sáng tạo ý tưởng | Đưa phương án mới, nhìn vấn đề từ góc khác | Nhóm không mắc kẹt ở lựa chọn đầu tiên | Ý tưởng nhiều mà không ai chốt |\n| Người gắn kết | Chú ý tới trạng thái các thành viên, làm dịu căng thẳng | Nhóm không vỡ ở giai đoạn sóng gió | Né mọi xung đột kể cả xung đột cần thiết |\n\n**Người phản biện** đáng được nói riêng: đây là vai dễ bị ghét nhất và có giá trị cao nhất ở giai đoạn đầu. Nhóm nào cũng cần một người hỏi \"nếu giả định này sai thì sao?\" **trước khi** cả nhóm bỏ ba tuần đi theo một hướng. Nếu bạn đóng vai này, hãy kèm theo một đề xuất thay thế mỗi khi chỉ ra vấn đề — đó là khác biệt giữa phản biện và chê bai.\n\n**Khi chọn người vào vai trò:** dựa trên thế mạnh và mức sẵn sàng, hỏi ý muốn của họ, nói rõ kỳ vọng đi kèm từng vai, và không dồn hai vai xung khắc vào một người (ví dụ vừa là người chốt tiến độ vừa là người phản biện mọi phương án).\n\n> [!vi-du] Nhóm của Minh tranh luận về cách trình bày báo cáo cuối kỳ. Thay vì áp đặt, nhóm làm ba việc: liệt kê hai phương án lên giấy; thống nhất **tiêu chí chọn** trước (dễ theo dõi cho người chấm, thời gian còn lại, phần ai đã làm được tới đâu); rồi chấm hai phương án theo đúng ba tiêu chí ấy. Kết quả: chọn được trong mười phút, và người có phương án bị loại vẫn thấy quy trình công bằng — thứ quyết định là **tiêu chí được thống nhất trước khi bàn phương án**.\n\n> [!meo] Nhóm đang ở giai đoạn hoạt động trôi chảy mà có thành viên mới gia nhập thì nhóm **quay lại một phần giai đoạn hình thành** — chuyện bình thường, đừng ngạc nhiên. Việc cần làm: cử một người kèm cặp, viết lại quy ước nhóm cho người mới đọc, giao một phần việc nhỏ trọn vẹn trong tuần đầu, và nói rõ cách nhóm phản hồi cho nhau.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nChọn một nhóm bạn đang tham gia. Xác định nhóm đang ở giai đoạn nào, **kèm ba dấu hiệu cụ thể**. Nếu nhóm ở giai đoạn 1 hoặc 2, viết ra hai việc bạn làm được trong tuần này để đẩy nhóm sang giai đoạn sau. Sau đó tự nhận diện mình đang đóng vai nào trong bảng vai trò, và vai nào nhóm bạn đang thiếu.\n\n### Nhóm 3–4 người (25 phút)\n\nBài tập thống nhất tiêu chí: cả nhóm chọn một quyết định thật đang phải ra (chọn đề tài, chọn cách trình bày, chọn công cụ). Quy định: **cấm bàn phương án trong 10 phút đầu**, chỉ được thống nhất tiêu chí chọn và trọng số. Sau đó mới đưa phương án ra chấm theo tiêu chí. Cuối buổi thảo luận: cách này khác gì so với cách nhóm thường quyết.\n\n### Bài tập về nhà (45 phút)\n\nViết một trang phân tích một nhóm bạn từng tham gia và **đã kết thúc**: nhóm đi qua những giai đoạn nào, mắc lại ở đâu và vì sao; các vai trò được lấp đầy hay bỏ trống vai nào; và nếu làm lại, hai việc bạn sẽ làm khác đi — mỗi việc gắn với một giai đoạn cụ thể.\n\n### Xem thêm\n\n- 🎬 [Build a Tower, Build a Team](https://www.youtube.com/watch?v=H0_yKBitO8M) — Tom Wujec, TED, 7 phút. Thí nghiệm marshmallow: vì sao nhóm bỏ qua khâu thử nghiệm sớm lại thua nhóm chịu thử và sửa.\n- 🎬 [Why It's Time to Forget the Pecking Order at Work](https://www.youtube.com/watch?v=Vyn_xLrtZaY) — Margaret Heffernan, TED, 15 phút.\n\n### Nguồn tham khảo\n\n- Tuckman, B. W. (1965). Developmental sequence in small groups. *Psychological Bulletin*, 63(6), 384–399.\n- Tuckman, B. W., & Jensen, M. A. C. (1977). Stages of small-group development revisited. *Group & Organization Studies*, 2(4), 419–427.\n- Belbin, R. M. (2010). *Team Roles at Work* (2nd ed.). Oxford: Butterworth-Heinemann.\n- Edmondson, A. C. (1999). Psychological safety and learning behavior in work teams. *Administrative Science Quarterly*, 44(2), 350–383.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 9.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "9.2-giai-doan-xung-dot",
+                "type": "mcq",
+                "prompt": "Giai đoạn nào trong quá trình phát triển nhóm thường xuất hiện nhiều mâu thuẫn, bè nhóm và tranh giành vai trò?",
+                "explanation": "Đó là giai đoạn sóng gió (storming) — lúc các kỳ vọng ngầm va vào nhau và buộc phải được nói ra.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sóng gió (storming)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hình thành (forming)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Ổn định (norming)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hoạt động trôi chảy (performing)",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "9.2-vi-sao-song-gio",
+                "type": "mcq",
+                "prompt": "Vì sao giai đoạn sóng gió lại quan trọng với sự phát triển của nhóm?",
+                "explanation": "Đây là lúc các kỳ vọng ngầm về chất lượng, hạn, vai trò được nói ra và thống nhất — trả cái giá này sớm rẻ hơn nhiều so với trả vào đêm trước hạn nộp.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Vì đó là lúc các kỳ vọng ngầm được nói ra và nhóm hình thành chuẩn làm việc chung",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nó giúp loại bớt những thành viên không phù hợp",
+                    "isCorrect": false,
+                    "misconception": "knm.blame-the-person"
+                  },
+                  {
+                    "label": "Vì nhóm cần một giai đoạn căng thẳng để tăng động lực",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không quan trọng — nhóm tốt nên bỏ qua giai đoạn này",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-is-bad"
+                  }
+                ]
+              },
+              {
+                "key": "9.2-hoan-thien",
+                "type": "mcq",
+                "prompt": "Đặc điểm khác biệt của giai đoạn hoạt động trôi chảy so với giai đoạn ổn định là gì?",
+                "explanation": "Ở giai đoạn ổn định nhóm đã có chuẩn chung và hết cãi nhau; ở giai đoạn hoạt động trôi chảy nhóm tự điều phối và tự gỡ vấn đề mới mà không cần ai can thiệp từng việc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nhóm tự điều phối và tự gỡ được vấn đề mới phát sinh, không cần trưởng nhóm can thiệp từng việc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nhóm không còn bất đồng nào nữa",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-is-bad"
+                  },
+                  {
+                    "label": "Nhóm đã phân công xong toàn bộ công việc",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nhóm có nhiều thành viên hơn giai đoạn trước",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "9.2-vai-tro-phan-bien",
+                "type": "mcq",
+                "prompt": "Vai trò người phản biện trong nhóm có giá trị gì?",
+                "explanation": "Người phản biện chỉ ra lỗ hổng và kiểm giả định trước khi nhóm lao đi, nhờ đó chặn được sai lầm khi sửa còn rẻ — với điều kiện họ kèm theo đề xuất thay thế.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chỉ ra lỗ hổng và kiểm giả định sớm, chặn được sai lầm khi chi phí sửa còn thấp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ cho không khí nhóm luôn nghiêm túc",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thay trưởng nhóm giám sát các thành viên khác",
+                    "isCorrect": false,
+                    "misconception": "knm.leader-decides-all"
+                  },
+                  {
+                    "label": "Không có giá trị rõ ràng, dễ làm nhóm mất đoàn kết",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-is-bad"
+                  }
+                ]
+              },
+              {
+                "key": "9.2-chon-vai-tro",
+                "type": "mcq",
+                "prompt": "Khi chọn cá nhân vào các vai trò cụ thể trong nhóm, nên làm gì?",
+                "explanation": "Dựa trên thế mạnh, sở thích và mức sẵn sàng của từng người; hỏi ý họ, nói rõ kỳ vọng đi kèm và tránh dồn hai vai xung khắc vào một người.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Dựa trên thế mạnh và mức sẵn sàng, hỏi ý người đó, nói rõ kỳ vọng của từng vai",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giao cho người thân quen hoặc người hay xung phong nhất",
+                    "isCorrect": false,
+                    "misconception": "knm.role-by-title"
+                  },
+                  {
+                    "label": "Trưởng nhóm giữ những vai quan trọng nhất cho chắc",
+                    "isCorrect": false,
+                    "misconception": "knm.leader-decides-all"
+                  },
+                  {
+                    "label": "Chia đều mỗi người một vai theo thứ tự bảng chữ cái",
+                    "isCorrect": false,
+                    "misconception": "knm.role-by-title"
+                  }
+                ]
+              },
+              {
+                "key": "9.2-thanh-vien-moi",
+                "type": "mcq",
+                "prompt": "Nhóm bạn đang ở giai đoạn hoạt động trôi chảy thì có thành viên mới gia nhập. Bạn nên làm gì?",
+                "explanation": "Nhóm sẽ quay lại một phần giai đoạn hình thành. Việc cần làm là kèm cặp, chia sẻ quy ước nhóm, giao một phần việc nhỏ trọn vẹn và nói rõ cách nhóm phản hồi cho nhau.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chấp nhận nhóm quay lại một phần giai đoạn hình thành: cử người kèm, chia sẻ quy ước, giao một phần việc nhỏ trọn vẹn trong tuần đầu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ nguyên nhịp làm việc, người mới tự thích nghi dần",
+                    "isCorrect": false,
+                    "misconception": "knm.wait-for-assignment"
+                  },
+                  {
+                    "label": "Giao ngay phần việc lớn để đánh giá năng lực thật",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hạn chế giao việc cho tới khi dự án kết thúc",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "9.2-thong-nhat-tieu-chi",
+                "type": "ordering",
+                "prompt": "Nhóm phải chọn một trong hai hướng triển khai dự án. Sắp xếp các bước theo trình tự hợp lý.",
+                "explanation": "Thống nhất tiêu chí trước khi bàn phương án là thứ khiến quyết định nhanh hơn và người có phương án bị loại vẫn thấy công bằng.",
+                "points": 3,
+                "sequence": [
+                  "Liệt kê rõ hai phương án đang cân nhắc",
+                  "Thống nhất tiêu chí chọn và mức quan trọng của từng tiêu chí",
+                  "Chấm từng phương án theo đúng các tiêu chí đó",
+                  "Chốt phương án và ghi lại lý do chọn",
+                  "Phân công lại phần việc theo phương án đã chốt"
+                ]
+              },
+              {
+                "key": "9.2-viet-giai-doan",
+                "type": "essay",
+                "prompt": "Chọn một nhóm bạn đang hoặc đã tham gia. Viết 200–300 từ: (a) nhóm đang hoặc đã ở giai đoạn nào, kèm ba dấu hiệu cụ thể; (b) nhóm mắc lại ở giai đoạn nào và vì sao; (c) các vai trò được lấp đầy và vai nào bị bỏ trống; (d) hai việc bạn sẽ làm khác đi, mỗi việc gắn với một giai đoạn cụ thể.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 9.3 · Xung đột, thành viên khó và rút kinh nghiệm",
+          "durationMin": 50,
+          "description": "Năm kiểu phản ứng trước xung đột và lúc nào dùng kiểu nào; cách xử lý ba tình huống khó nhất trong nhóm sinh viên; và cách rút kinh nghiệm sau dự án để lần sau khác đi.",
+          "objectives": [
+            "Gọi tên được kiểu phản ứng của mình trước xung đột và chọn được kiểu phù hợp với tình huống",
+            "Nói chuyện được với thành viên trễ hạn bằng sự việc thay vì quy kết tính cách",
+            "Xử lý được tình huống hai người bất đồng kéo dài và tình huống có người im lặng",
+            "Chủ trì được một buổi rút kinh nghiệm cuối dự án cho ra việc làm được"
+          ],
+          "summary": [
+            "Năm kiểu phản ứng: đương đầu, né tránh, nhượng bộ, thoả hiệp, hợp tác — không kiểu nào luôn đúng, nhưng né tránh là kiểu bị lạm dụng nhiều nhất.",
+            "Trước người trễ hạn: hỏi nguyên nhân trước khi kết luận, nói bằng sự việc và ảnh hưởng, thống nhất mốc mới có kiểm chứng.",
+            "Trước người im lặng: hỏi thẳng và hỏi riêng; im lặng không phải đồng thuận.",
+            "Rút kinh nghiệm chỉ có giá trị khi ra được việc làm được cho lần sau, gắn tên người và mốc thời gian."
+          ],
+          "body": "\nNhóm nào cũng có lúc trục trặc. Bài này về ba việc khó nhất — xung đột, thành viên không giữ cam kết, và buổi rút kinh nghiệm mà phần lớn nhóm bỏ qua.\n\n## Năm kiểu phản ứng trước xung đột\n\n| Kiểu | Biểu hiện | Dùng được khi | Hỏng khi |\n|---|---|---|---|\n| Đương đầu (cạnh tranh) | Bảo vệ quan điểm tới cùng, muốn phần thắng thuộc về mình | Việc gấp, có nguyên tắc không đổi được, an toàn bị đe doạ | Dùng cho mọi chuyện — nhóm ngừng nói thật với bạn |\n| Né tránh | Im lặng, lảng sang chuyện khác, mong nó tự qua | Chuyện nhỏ, hoặc cần thời gian hạ nhiệt trước khi bàn | Vấn đề ảnh hưởng tới kết quả chung — nó quay lại lúc gần hạn |\n| Nhượng bộ | Chiều theo ý người kia để giữ hoà khí | Việc không quan trọng với bạn nhưng quan trọng với họ | Nhượng bộ liên tục — bạn kiệt sức và nhóm mất một tiếng nói |\n| Thoả hiệp | Mỗi bên nhường một nửa | Thời gian gấp, hai phương án đều tạm được | Vấn đề cần giải pháp đúng, không cần giải pháp giữa |\n| Hợp tác | Cùng tìm phương án đáp ứng được cả hai mối quan tâm | Việc quan trọng, còn thời gian, quan hệ cần giữ lâu dài | Dùng cho chuyện vặt — tốn thời gian không đáng |\n\nHai kiểu đáng nói riêng. **Đương đầu** không xấu: khi bạn đang giữ một nguyên tắc — như tình huống nhóm định nộp bài của khoá trước ở module 1 — thì đó là phản ứng đúng. **Né tránh** là kiểu bị lạm dụng nhiều nhất trong nhóm sinh viên, vì nó dễ chịu ngay lập tức và trả giá về sau.\n\n> [!vi-du] Hai thành viên bất đồng về cách chia việc. X nói thẳng quan điểm và kèm lý do; Y im lặng suốt buổi họp rồi nhắn riêng cho từng người sau đó. X đang **đương đầu ở mức công việc** — hoàn toàn dùng được, miễn là nói về cách làm chứ không về con người. Y đang **né tránh**, và cách nhắn riêng từng người còn tạo thêm một vấn đề mới: nhóm bắt đầu có hai kênh thông tin, một kênh chính thức và một kênh sau lưng.\n\n## Thành viên không giữ cam kết\n\nĐây là tình huống phổ biến nhất và cũng là chỗ nhiều người xử lý sai nhất — bằng cách kết luận về tính cách rồi hành xử theo kết luận đó.\n\nQuy trình bốn bước, theo thứ tự:\n\n1. **Hỏi trước khi kết luận, và hỏi riêng.** Cùng một hành vi trễ hạn có nhiều nguyên nhân: phần việc quá lớn, yêu cầu chưa rõ, đang vướng chuyện gia đình hoặc sức khoẻ, hoặc đúng là thiếu trách nhiệm. Bốn nguyên nhân, bốn cách gỡ khác nhau.\n2. **Nói bằng sự việc và ảnh hưởng, không bằng nhãn.** So sánh: *\"Cậu vô trách nhiệm quá\"* với *\"Phần dữ liệu trễ ba ngày nên phần phân tích của mình chưa bắt đầu được, và cả nhóm đang lùi so với kế hoạch.\"* Câu thứ hai khó cãi vì nó là sự thật, và nó không buộc người kia phải bảo vệ danh dự.\n3. **Thống nhất mốc mới, nhỏ và kiểm chứng được.** Đừng nhận lời hứa \"mai xong\"; hãy chốt \"tối nay gửi phần khung, mai gửi phần số liệu\" — mốc nhỏ cho phép phát hiện sớm nếu lại trượt.\n4. **Nếu lặp lại: đưa ra nhóm, rồi mới tới giảng viên.** Nói ở nhóm bằng dữ kiện đã ghi lại, kèm đề xuất chia lại việc. Chỉ báo giảng viên khi đã thử các bước trên và có ghi chép — giống hệt thang xử lý xung đột ở bài 1.3.\n\n> [!canh-bao] Cách xử lý sai phổ biến nhất: **làm hộ luôn cho nhanh**. Nó cứu được hạn nộp lần này và tạo ra ba vấn đề: người kia không học được gì, bạn kiệt sức, và nhóm hình thành thói quen ỷ lại. Nếu buộc phải gánh để kịp hạn, hãy nói rõ đó là ngoại lệ một lần và ghi lại phần việc thực tế của từng người.\n\n> [!vi-du] Hùng liên tục đến họp muộn 20–30 phút và nộp việc trễ. Bạn biết Hùng đang làm thêm ca tối. Bước 1 — hỏi riêng: hoá ra ca làm kết thúc lúc 22h, nên khung giờ họp 20h là bất khả thi với bạn ấy. Bước 2 — nói ảnh hưởng: nhóm phải nhắc lại nội dung, mất 15 phút mỗi buổi. Bước 3 — mốc mới: đổi giờ họp sang 21h30 hoặc Hùng nhận phần việc không phụ thuộc thời gian họp, và gửi cập nhật bằng văn bản trước 21h. Vấn đề này **không giải được bằng thái độ** — nhưng giải được bằng một câu hỏi và một lần đổi lịch.\n\n## Người im lặng và hai người bất đồng kéo dài\n\n**Khi một thành viên im lặng dù bạn biết họ có ý kiến hay:** đừng đọc im lặng là đồng thuận. Ba cách, tăng dần: mời trực tiếp trong buổi họp — *\"Lan, phần này liên quan tới mảng cậu làm, cậu thấy chỗ nào dễ vướng nhất?\"*; hỏi riêng sau buổi họp; hoặc đổi cách họp — cho mỗi người viết ý ra giấy hai phút trước khi thảo luận, cách này gỡ được thế bất lợi của người nói chậm.\n\n**Khi hai người bất đồng kéo dài và làm cả nhóm căng:** đưa tranh luận về tiêu chí. Bốn bước: gặp riêng từng người để nghe đủ; đưa ra nhóm dưới dạng **hai phương án, không phải hai con người**; thống nhất tiêu chí chọn trước khi so; và nếu vẫn hoà thì chọn theo tiêu chí đã định rồi ghi lại lý do. Điều quan trọng: **quyết định phải được ghi lại** — bất đồng chưa được chốt bằng văn bản sẽ quay lại ở tuần sau.\n\n> [!meo] Khi bạn là người bị phản đối: đừng trả lời ngay. Hỏi lại một câu để hiểu đúng — *\"Ý cậu là cách này tốn thời gian hơn, hay là nó không đạt tiêu chí của thầy?\"* — rồi mới phản hồi. Phần lớn phản đối ban đầu được phát biểu chưa chính xác, kể cả bởi người phản đối.\n\n## Rút kinh nghiệm sau dự án\n\nGiai đoạn kết thúc là giai đoạn bị bỏ qua nhiều nhất: nộp bài xong là nhóm tan. Nhưng đây là lúc rẻ nhất để học, vì mọi thứ còn nhớ rõ.\n\nMột buổi rút kinh nghiệm 30 phút, bốn câu hỏi:\n\n1. **Kết quả so với mục tiêu ban đầu:** đạt phần nào, hụt phần nào, đo bằng gì?\n2. **Cái gì đã chạy tốt** và nên giữ cho lần sau — hỏi câu này trước, vì nhóm nào cũng có thứ làm được.\n3. **Cái gì vướng**, và vướng vì quy trình hay vì con người? Phần lớn là quy trình, và đó là tin tốt vì quy trình sửa được.\n4. **Lần sau làm khác đi điều gì** — tối đa ba việc, mỗi việc **gắn tên người và mốc**.\n\n> [!ghi-nho] Buổi rút kinh nghiệm không có mục 4 chỉ là một buổi than thở có tổ chức. Ngược lại, mục 4 mà không có tên người và mốc thời gian thì cũng chỉ là một danh sách mong muốn.\n\n> [!vi-du] Một nhóm vừa nộp báo cáo cuối kỳ. Nhìn lại: báo cáo hoàn thành đúng hạn nhưng ba ngày cuối cả nhóm thức trắng, hai phần trùng nội dung, và một thành viên gần như không tham gia. Rút kinh nghiệm đúng cách không dừng ở \"lần sau bắt đầu sớm hơn\" — nó ra ba việc cụ thể: **(1)** buổi họp thứ hai của dự án dành riêng cho việc chốt dàn ý chung và ranh giới giữa các phần, Minh chuẩn bị mẫu; **(2)** mỗi tuần một lần cập nhật ngắn bằng văn bản trong nhóm chat vào tối chủ nhật, Lan nhắc; **(3)** ai chưa gửi cập nhật hai tuần liên tiếp thì nhóm hỏi riêng ngay tuần đó, không đợi tới hạn nộp. Ba việc này có tên và có mốc, nên lần sau kiểm được là nhóm có làm hay không.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nNhớ lại ba lần bất đồng gần nhất trong nhóm. Với mỗi lần, gọi tên kiểu phản ứng của bạn trong năm kiểu, và tự đánh giá kiểu đó có phù hợp với tình huống không. Nếu bạn dùng **né tránh** từ hai lần trở lên, viết ra câu bạn đáng lẽ nên nói — viết nguyên văn, bắt đầu bằng sự việc và ảnh hưởng.\n\n### Nhóm 3–4 người (25 phút)\n\nĐóng vai ba lượt, đổi vai mỗi lượt: (1) nói chuyện với thành viên trễ hạn liên tục — người đóng vai phải đi đủ bốn bước và **không được dùng nhãn**; (2) mời người im lặng phát biểu; (3) làm trung gian cho hai người bất đồng bằng cách đưa về tiêu chí. Người quan sát ghi: có câu nào quy kết tính cách không, và mốc mới có kiểm chứng được không.\n\n### Bài tập về nhà (45–60 phút)\n\nTổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đang tham gia, theo bốn câu hỏi trong bài. Nộp biên bản một trang: kết quả so với mục tiêu; hai việc chạy tốt; hai việc vướng kèm phân loại quy trình hay con người; và **ba việc cho lần sau, mỗi việc có tên người và mốc thời gian**.\n\n### Xem thêm\n\n- 🎬 [Build a Tower, Build a Team](https://www.youtube.com/watch?v=H0_yKBitO8M) — Tom Wujec, TED, 7 phút.\n- 🎬 [How to Disagree Productively and Find Common Ground](https://www.youtube.com/watch?v=phgjouv0BUA) — Julia Dhar, TED, 14 phút.\n- 🎬 [Building a Psychologically Safe Workplace](https://www.youtube.com/watch?v=LhoLuui9gX8) — Amy Edmondson, TEDxHGSE, 11 phút. Vì sao có nhóm dám nói ra vấn đề sớm còn nhóm khác thì không.\n\n### Nguồn tham khảo\n\n- Thomas, K. W., & Kilmann, R. H. (1974). *Thomas–Kilmann Conflict Mode Instrument.* Mountain View: CPP.\n- Edmondson, A. C. (2012). *Teaming: How Organizations Learn, Innovate, and Compete in the Knowledge Economy.* San Francisco: Jossey-Bass.\n- Patterson, K., Grenny, J., McMillan, R., & Switzler, A. (2011). *Crucial Conversations* (2nd ed.). New York: McGraw-Hill.\n- Derby, E., & Larsen, D. (2006). *Agile Retrospectives: Making Good Teams Great.* Raleigh: Pragmatic Bookshelf.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 9.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "9.3-ne-tranh",
+                "type": "mcq",
+                "prompt": "Khi mâu thuẫn nhóm xảy ra, kiểu phản ứng né tránh có biểu hiện thế nào?",
+                "explanation": "Né tránh là im lặng, lảng sang chuyện khác, mong vấn đề tự qua — dễ chịu trong ngắn hạn nhưng trả giá khi gần hạn nộp.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Im lặng, lảng sang chuyện khác, mong vấn đề tự qua đi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bảo vệ quan điểm của mình tới cùng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chiều theo ý người kia để giữ hoà khí",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Cùng tìm phương án đáp ứng mối quan tâm của cả hai bên",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "9.3-thanh-vien-tre-han",
+                "type": "mcq",
+                "prompt": "Hùng liên tục đến họp muộn và nộp việc trễ. Bạn biết Hùng đang làm thêm ca tối. Cách xử lý phù hợp nhất là gì?",
+                "explanation": "Hỏi riêng để biết nguyên nhân thật, nói bằng sự việc và ảnh hưởng, rồi thống nhất mốc mới kiểm chứng được — nhiều tình huống loại này giải được bằng một lần đổi lịch chứ không phải bằng thái độ.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Hỏi riêng để biết nguyên nhân, nói rõ việc trễ ảnh hưởng thế nào tới nhóm, rồi thống nhất cách làm mới phù hợp với lịch của Hùng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nêu chuyện đó giữa cuộc họp để Hùng thấy trách nhiệm",
+                    "isCorrect": false,
+                    "misconception": "knm.blame-the-person"
+                  },
+                  {
+                    "label": "Tự làm hộ phần của Hùng cho kịp hạn",
+                    "isCorrect": false,
+                    "misconception": "knm.carry-the-team"
+                  },
+                  {
+                    "label": "Báo ngay với giảng viên để trừ điểm Hùng",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-binary"
+                  }
+                ]
+              },
+              {
+                "key": "9.3-noi-bang-su-viec",
+                "type": "mcq",
+                "prompt": "Câu nào nói về việc trễ hạn theo hướng dựa trên sự việc thay vì quy kết tính cách?",
+                "explanation": "Nói bằng sự việc và ảnh hưởng thì khó cãi và không buộc người kia phải bảo vệ danh dự — đó là điều kiện để câu chuyện đi tiếp về giải pháp.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Phần dữ liệu trễ ba ngày nên phần phân tích chưa bắt đầu được, cả nhóm đang lùi so với kế hoạch",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Cậu lúc nào cũng vô trách nhiệm với việc chung",
+                    "isCorrect": false,
+                    "misconception": "knm.blame-the-person"
+                  },
+                  {
+                    "label": "Chắc cậu không quan tâm tới điểm nhóm rồi",
+                    "isCorrect": false,
+                    "misconception": "knm.blame-the-person"
+                  },
+                  {
+                    "label": "Thôi để mình làm nốt cho nhanh, khỏi bàn nữa",
+                    "isCorrect": false,
+                    "misconception": "knm.carry-the-team"
+                  }
+                ]
+              },
+              {
+                "key": "9.3-nguoi-im-lang",
+                "type": "mcq",
+                "prompt": "Trong cuộc họp nhóm, một thành viên giữ im lặng dù bạn biết họ có nhiều ý kiến hay. Bạn nên làm gì?",
+                "explanation": "Im lặng không phải đồng thuận. Mời trực tiếp bằng câu hỏi gắn với phần việc của họ, hoặc đổi cách họp để mọi người viết ý ra trước khi thảo luận.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mời họ nói bằng một câu hỏi gắn với phần việc của họ, hoặc cho cả nhóm viết ý ra giấy trước khi thảo luận",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Coi như họ đồng ý với phương án đang bàn",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-is-agreement"
+                  },
+                  {
+                    "label": "Nhắc trước cả nhóm rằng ai cũng phải phát biểu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bỏ qua, ai muốn nói thì tự nói",
+                    "isCorrect": false,
+                    "misconception": "knm.silence-is-agreement"
+                  }
+                ]
+              },
+              {
+                "key": "9.3-hai-nguoi-bat-dong",
+                "type": "mcq",
+                "prompt": "Hai thành viên liên tục bất đồng và đẩy nhóm vào căng thẳng. Cách xử lý phù hợp là gì?",
+                "explanation": "Gặp riêng từng người, đưa ra nhóm dưới dạng hai phương án chứ không phải hai con người, thống nhất tiêu chí trước khi so, và ghi lại quyết định.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nghe riêng từng người, đưa ra nhóm dưới dạng hai phương án, thống nhất tiêu chí chọn rồi chốt và ghi lại lý do",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Để hai người tự giải quyết với nhau, nhóm không can thiệp",
+                    "isCorrect": false,
+                    "misconception": "knm.avoid-conflict"
+                  },
+                  {
+                    "label": "Trưởng nhóm quyết luôn cho nhanh, khỏi tranh cãi",
+                    "isCorrect": false,
+                    "misconception": "knm.leader-decides-all"
+                  },
+                  {
+                    "label": "Bỏ phiếu ngay trong buổi họp để có kết quả rõ ràng",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-or-crowd"
+                  }
+                ]
+              },
+              {
+                "key": "9.3-rut-kinh-nghiem",
+                "type": "mcq",
+                "prompt": "Nhóm vừa nộp báo cáo: đúng hạn nhưng ba ngày cuối phải thức trắng, hai phần trùng nội dung, một thành viên gần như không tham gia. Buổi rút kinh nghiệm nên kết thúc bằng gì?",
+                "explanation": "Rút kinh nghiệm chỉ có giá trị khi ra được tối đa ba việc cụ thể cho lần sau, mỗi việc gắn tên người và mốc thời gian — nếu không nó chỉ là một buổi than thở có tổ chức.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tối đa ba việc làm khác đi cho lần sau, mỗi việc gắn tên người phụ trách và mốc thời gian",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Kết luận rằng lần sau nên bắt đầu sớm hơn",
+                    "isCorrect": false,
+                    "misconception": "knm.goal-vague"
+                  },
+                  {
+                    "label": "Chỉ ra ai là người làm nhóm chậm để rút kinh nghiệm",
+                    "isCorrect": false,
+                    "misconception": "knm.blame-the-person"
+                  },
+                  {
+                    "label": "Ghi nhận là nhóm đã nộp đúng hạn, không cần bàn thêm",
+                    "isCorrect": false,
+                    "misconception": "knm.avoid-conflict"
+                  }
+                ]
+              },
+              {
+                "key": "9.3-noi-kieu-xung-dot",
+                "type": "matching",
+                "prompt": "Nối mỗi kiểu phản ứng trước xung đột với tình huống dùng được của nó.",
+                "explanation": "Không kiểu nào luôn đúng: mỗi kiểu có vùng dùng được riêng, và vấn đề chỉ xuất hiện khi ta dùng một kiểu cho mọi tình huống.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Đương đầu",
+                    "right": "Việc gấp hoặc có nguyên tắc không thể nhượng bộ"
+                  },
+                  {
+                    "left": "Né tránh",
+                    "right": "Chuyện nhỏ, hoặc cần hạ nhiệt trước khi bàn tiếp"
+                  },
+                  {
+                    "left": "Thoả hiệp",
+                    "right": "Thời gian gấp và hai phương án đều tạm chấp nhận được"
+                  },
+                  {
+                    "left": "Hợp tác",
+                    "right": "Việc quan trọng, còn thời gian, quan hệ cần giữ lâu dài"
+                  }
+                ]
+              },
+              {
+                "key": "9.3-viet-xung-dot",
+                "type": "essay",
+                "prompt": "Nhớ lại ba lần bất đồng gần nhất trong nhóm của bạn. Viết 200–300 từ: (a) kiểu phản ứng của bạn trong mỗi lần và nó có phù hợp không; (b) một lần bạn đã né tránh — viết nguyên văn câu bạn đáng lẽ nên nói, bắt đầu bằng sự việc và ảnh hưởng; (c) ba việc cho lần sau kèm tên người và mốc, như một biên bản rút kinh nghiệm thu nhỏ.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Module 10 · Viết CV và phỏng vấn xin việc",
+      "description": "Module khép khoá, đưa mọi thứ đã học vào một tình huống có thật: xin việc. Ba bài — CV một trang viết cho người đọc lướt trong ba mươi giây; thư ứng tuyển, tìm hiểu công ty và chuẩn bị câu chuyện theo cấu trúc STAR; và buổi phỏng vấn cùng những gì xảy ra sau đó, kể cả khi bị từ chối.",
+      "lessons": [
+        {
+          "title": "Bài 10.1 · Viết CV cho người đọc trong 30 giây",
+          "durationMin": 45,
+          "description": "Người tuyển dụng làm gì với CV của bạn; cấu trúc một trang và những thông tin nên bỏ; cách viết thành tựu có kết quả đo được; và vì sao phải sửa CV cho từng vị trí.",
+          "objectives": [
+            "Sắp xếp được một CV một trang theo thứ tự người đọc cần",
+            "Loại bỏ được những thông tin không cần thiết trong CV",
+            "Viết lại được một gạch đầu dòng nhiệm vụ thành một gạch đầu dòng kết quả",
+            "Cá nhân hoá được CV cho một vị trí cụ thể trong dưới 20 phút"
+          ],
+          "summary": [
+            "Bản CV đầu tiên được đọc lướt trong vài chục giây để tìm sự khớp với mô tả công việc — nên thứ tự và độ ngắn quyết định nhiều hơn hình thức.",
+            "Sinh viên mới ra trường: một trang, kinh nghiệm xếp từ mới nhất tới cũ nhất, mục tiêu nghề nghiệp viết cho đúng vị trí đang ứng tuyển.",
+            "Mỗi gạch đầu dòng nên có ba phần: làm gì, bằng cách nào, kết quả đo được — không có số thì dùng mốc thời gian, quy mô hoặc so sánh trước sau.",
+            "Một CV dùng cho mọi nơi là cách nhanh nhất để không nơi nào thấy bạn phù hợp."
+          ],
+          "body": "\nTrước khi bàn cách viết, cần biết CV của bạn được dùng thế nào: người tuyển dụng **đọc lướt bản đầu tiên trong vài chục giây**, tìm xem hồ sơ này có khớp với mô tả công việc không, rồi mới quyết định đọc kỹ hay bỏ qua. Ở nhiều nơi, trước bước đó còn một phần mềm lọc theo từ khoá. Mọi lời khuyên dưới đây đều xuất phát từ hai sự thật ấy.\n\n## Cấu trúc một trang\n\n| Mục | Nội dung | Lưu ý |\n|---|---|---|\n| Thông tin liên hệ | Họ tên, số điện thoại, email nghiêm túc, liên kết tới hồ sơ hoặc portfolio | Email kiểu *cobelanhlung99@…* làm mất điểm trước khi ai kịp đọc gì |\n| Mục tiêu nghề nghiệp | 2–3 dòng, **nói rõ vị trí ứng tuyển** và bạn mang lại gì | Đây là mục phải sửa cho từng nơi; viết chung chung thì nên bỏ hẳn |\n| Học vấn | Trường, ngành, năm tốt nghiệp, điểm trung bình nếu khá trở lên | Sinh viên mới ra trường có thể để mục này lên trên kinh nghiệm |\n| Kinh nghiệm | **Từ mới nhất tới cũ nhất**, mỗi việc 2–4 gạch đầu dòng có kết quả | Thực tập, làm thêm, dự án môn học, hoạt động câu lạc bộ đều tính |\n| Kỹ năng | Chia nhóm: chuyên môn, công cụ, ngoại ngữ; ghi mức độ trung thực | Đừng ghi \"thành thạo\" cho thứ mới dùng vài lần |\n| Hoạt động, giải thưởng | Chỉ giữ phần liên quan tới vị trí | Giải thưởng thời phổ thông thường không còn liên quan |\n\n**Những thông tin nên bỏ:** số chứng minh nhân dân hoặc căn cước, tình trạng hôn nhân, tôn giáo, chiều cao cân nặng, sở thích chung chung kiểu \"nghe nhạc, đọc sách\", lý do nghỉ việc cũ, mức lương cũ, và cả câu \"tham chiếu sẽ cung cấp khi được yêu cầu\" — thừa, ai cũng biết vậy. Ảnh chân dung thì tuỳ nơi: nhiều nhà tuyển dụng Việt Nam vẫn mong có, nên nếu để thì dùng ảnh nghiêm túc, nền đơn giản.\n\n> [!ghi-nho] Độ dài hợp lý cho sinh viên mới ra trường là **một trang**. Không phải vì quy tắc hình thức, mà vì bản đầu được đọc lướt: trang thứ hai gần như không ai đọc, và nó làm loãng phần đáng chú ý ở trang một.\n\n## Viết thành tựu, không viết nhiệm vụ\n\nĐây là khác biệt lớn nhất giữa một CV bị bỏ qua và một CV được gọi phỏng vấn. Công thức ba phần: **làm gì — bằng cách nào — kết quả đo được**.\n\n```html\n<div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.8rem;margin:1.2rem 0\">\n  <div style=\"border:1px solid rgba(217,150,40,.5);border-radius:.6rem;overflow:hidden\">\n    <div style=\"background:rgba(217,150,40,.16);padding:.5rem .8rem;font-weight:700;color:rgb(165,113,29)\">Nhiệm vụ — không nói được gì</div>\n    <div style=\"padding:.8rem;font-size:1.05rem;line-height:1.6\">\n      • Chịu trách nhiệm quản lý fanpage của câu lạc bộ<br>\n      • Hỗ trợ tổ chức sự kiện<br>\n      • Tham gia làm báo cáo cho nhóm<br>\n      • Có kinh nghiệm dùng Excel\n    </div>\n  </div>\n  <div style=\"border:2px solid rgba(13,148,136,.6);border-radius:.6rem;overflow:hidden\">\n    <div style=\"background:rgba(13,148,136,.16);padding:.5rem .8rem;font-weight:700;color:rgb(12,141,129)\">Kết quả — kiểm được, so sánh được</div>\n    <div style=\"padding:.8rem;font-size:1.05rem;line-height:1.6\">\n      • Quản lý fanpage 4.000 người theo dõi; đổi lịch đăng và định dạng bài, tăng tương tác trung bình 40% trong 3 tháng<br>\n      • Điều phối hậu cần sự kiện 200 khách: đặt địa điểm, phân công 12 tình nguyện viên, sự kiện chạy đúng lịch<br>\n      • Viết phần phân tích dữ liệu cho báo cáo nhóm 5 người, đạt điểm A môn Phương pháp nghiên cứu<br>\n      • Excel: hàm tra cứu, PivotTable, dựng bảng theo dõi chi tiêu cho 3 sự kiện của câu lạc bộ\n    </div>\n  </div>\n</div>\n```\n\nNếu không có số liệu thì vẫn viết được kết quả bằng ba cách: **mốc thời gian** (\"hoàn thành trước hạn hai tuần\"), **quy mô** (\"cho 200 khách\", \"nhóm 12 người\"), hoặc **so sánh trước sau** (\"trước đó chưa có quy trình, tôi dựng bảng theo dõi được cả nhóm dùng lại ở hai sự kiện sau\").\n\n> [!canh-bao] Đừng bịa số. Nhà tuyển dụng sẽ hỏi lại chính con số ấy trong buổi phỏng vấn — \"40% là đo bằng gì, trong khoảng nào?\" — và một câu trả lời lúng túng làm hỏng toàn bộ phần còn lại. Con số nhỏ mà thật vẫn tốt hơn con số lớn không giải thích được.\n\n## Cá nhân hoá cho từng vị trí\n\nCá nhân hoá **không phải viết lại từ đầu**. Ba việc, mất khoảng mười lăm phút:\n\n1. **Đọc kỹ mô tả công việc** và gạch chân các từ khoá lặp lại — chúng cho biết nơi đó thật sự cần gì.\n2. **Đảo thứ tự các gạch đầu dòng** để phần liên quan nhất nằm trên cùng, và cắt bớt phần không liên quan.\n3. **Viết lại mục tiêu nghề nghiệp** cho đúng vị trí và đúng tên công ty; dùng lại chính các từ khoá trong mô tả công việc — vừa giúp phần mềm lọc nhận ra, vừa cho người đọc thấy bạn đã đọc tin tuyển dụng.\n\n> [!vi-du] Cùng một sinh viên ứng tuyển hai vị trí. **Thực tập marketing:** đưa lên đầu phần fanpage 4.000 người theo dõi và sự kiện 200 khách; mục tiêu ghi rõ \"ứng tuyển vị trí Thực tập sinh Marketing tại ABC, mong muốn phát triển mảng nội dung số\". **Thực tập phân tích dữ liệu:** đưa lên đầu phần phân tích dữ liệu và kỹ năng Excel, thêm môn học liên quan và một dự án nhỏ; phần fanpage rút còn một dòng. Cùng một bộ trải nghiệm, hai bản CV — và cả hai đều thật.\n\n**Ba lỗi hình thức làm mất điểm ngay:** lỗi chính tả và sai tên công ty (dấu hiệu chép lại CV cho nơi khác); định dạng lộn xộn với năm loại phông chữ; và gửi file dạng có thể chỉnh sửa được thay vì PDF, khiến bố cục vỡ trên máy người nhận. Đặt tên file cũng là một chi tiết: `NguyenVanA-CV-ThucTapMarketing.pdf` chứ không phải `CV cuoi cung sua lan 3.pdf`.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nLấy CV hiện tại của bạn (chưa có thì viết bản đầu tiên). Chọn **năm gạch đầu dòng** đang ở dạng nhiệm vụ và viết lại theo công thức làm gì — bằng cách nào — kết quả. Với mỗi dòng, nếu không có số thì dùng mốc thời gian, quy mô hoặc so sánh trước sau. Sau đó rà bỏ mọi thông tin thuộc danh sách nên bỏ.\n\n### Nhóm 3–4 người (25 phút)\n\nĐổi CV cho nhau, mỗi người **chỉ được đọc 30 giây** rồi úp lại và nói ba điều nhớ được. Nếu ba điều ấy không phải ba điều chủ CV muốn người ta nhớ, thứ tự trong CV đang sai — sửa ngay tại chỗ. Vòng hai: đọc kỹ và đánh dấu mọi dòng chỉ nêu nhiệm vụ mà không có kết quả.\n\n### Bài tập về nhà (45–60 phút)\n\nTìm hai tin tuyển dụng thật cho hai vị trí khác nhau mà bạn quan tâm. Làm **hai bản CV** từ cùng một bộ trải nghiệm, theo ba bước cá nhân hoá. Nộp kèm nửa trang: bạn đã đảo thứ tự gì, cắt gì, và những từ khoá nào bạn lấy từ mô tả công việc.\n\n### Xem thêm\n\n- 🎬 [Looking for a Job? Highlight Your Ability, Not Your Experience](https://www.youtube.com/watch?v=guXxy8LH2QM) — Jason Shen, TED, 6 phút. Cách trình bày năng lực khi bạn chưa có nhiều kinh nghiệm — đúng tình huống của sinh viên mới ra trường.\n\n### Nguồn tham khảo\n\n- Bolles, R. N. (2022). *What Color Is Your Parachute?* New York: Ten Speed Press.\n- Yate, M. (2021). *Knock 'em Dead Resumes: A Killer Resume Gets More Job Interviews.* Adams Media.\n- Harvard Office of Career Services (2024). *Resumes and Cover Letters* — hướng dẫn của bộ phận hướng nghiệp Đại học Harvard.\n- LEAP Online (2025). *Employability resources.* University of Greater Manchester.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 10.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "10.1-do-dai-cv",
+                "type": "mcq",
+                "prompt": "Độ dài hợp lý nhất cho CV của sinh viên mới ra trường thường là bao nhiêu?",
+                "explanation": "Một trang: bản đầu tiên được đọc lướt trong vài chục giây, trang thứ hai gần như không ai đọc và chỉ làm loãng phần quan trọng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Một trang",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ba tới bốn trang để thể hiện đầy đủ",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-longer-better"
+                  },
+                  {
+                    "label": "Càng dài càng tốt, miễn là thông tin thật",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-longer-better"
+                  },
+                  {
+                    "label": "Không quan trọng, chỉ cần đẹp mắt",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.1-thong-tin-khong-can",
+                "type": "mcq",
+                "prompt": "Thông tin nào KHÔNG cần thiết trong CV?",
+                "explanation": "Số căn cước, tình trạng hôn nhân, tôn giáo, chiều cao cân nặng và mức lương cũ không giúp đánh giá sự phù hợp với công việc — và một số còn là dữ liệu nhạy cảm không nên đưa vào hồ sơ gửi đi nhiều nơi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Số căn cước công dân, tình trạng hôn nhân, chiều cao cân nặng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Kinh nghiệm làm thêm và dự án môn học liên quan",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Email liên hệ và liên kết tới portfolio",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Kỹ năng chuyên môn và công cụ đã dùng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.1-thu-tu-kinh-nghiem",
+                "type": "mcq",
+                "prompt": "Khi viết phần kinh nghiệm làm việc, nên trình bày theo thứ tự nào?",
+                "explanation": "Từ mới nhất tới cũ nhất, vì kinh nghiệm gần đây phản ánh đúng năng lực hiện tại và là thứ người đọc tìm trước.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Từ công việc gần đây nhất tới cũ nhất",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Từ cũ nhất tới mới nhất để thấy quá trình trưởng thành",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Theo mức lương từ cao xuống thấp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Theo thứ tự bảng chữ cái tên công ty",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.1-muc-tieu-nghe-nghiep",
+                "type": "mcq",
+                "prompt": "Mục Mục tiêu nghề nghiệp trong CV nên viết thế nào?",
+                "explanation": "Ngắn, nói rõ vị trí đang ứng tuyển và giá trị mình mang lại; viết chung chung cho mọi nơi thì thà bỏ hẳn mục này.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hai tới ba dòng, nêu rõ vị trí ứng tuyển và điều bạn mang lại cho nơi đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Một đoạn dài nói về ước mơ và định hướng cả đời",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-one-for-all"
+                  },
+                  {
+                    "label": "Một câu chung chung dùng được cho mọi vị trí",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-one-for-all"
+                  },
+                  {
+                    "label": "Nêu mức lương mong muốn và điều kiện làm việc",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.1-ca-nhan-hoa",
+                "type": "mcq",
+                "prompt": "Vì sao nên cá nhân hoá CV cho mỗi vị trí ứng tuyển?",
+                "explanation": "Người đọc tìm sự khớp với mô tả công việc cụ thể của họ; đảo thứ tự và dùng lại từ khoá trong tin tuyển dụng giúp cả người đọc lẫn phần mềm lọc nhận ra sự phù hợp.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Vì người đọc tìm sự khớp với mô tả công việc của họ; đảo thứ tự và dùng lại từ khoá của tin tuyển dụng làm sự phù hợp hiện ra ngay",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nhà tuyển dụng có thể kiểm tra xem bạn có gửi CV cho nơi khác không",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì mỗi công ty yêu cầu một mẫu CV riêng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần thiết, một CV tốt thì nơi nào cũng nhận ra giá trị của bạn",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-one-for-all"
+                  }
+                ]
+              },
+              {
+                "key": "10.1-thanh-tuu",
+                "type": "mcq",
+                "prompt": "Gạch đầu dòng nào trong CV được viết đúng cách?",
+                "explanation": "Công thức: làm gì — bằng cách nào — kết quả đo được. Không có số thì dùng quy mô, mốc thời gian hoặc so sánh trước sau.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Quản lý fanpage 4.000 người theo dõi; đổi lịch đăng và định dạng bài, tăng tương tác trung bình 40% trong 3 tháng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chịu trách nhiệm quản lý fanpage của câu lạc bộ",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-duties-not-results"
+                  },
+                  {
+                    "label": "Có kinh nghiệm trong lĩnh vực truyền thông và tổ chức sự kiện",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-duties-not-results"
+                  },
+                  {
+                    "label": "Tham gia hỗ trợ nhiều hoạt động của câu lạc bộ",
+                    "isCorrect": false,
+                    "misconception": "knm.cv-duties-not-results"
+                  }
+                ]
+              },
+              {
+                "key": "10.1-viet-cv",
+                "type": "essay",
+                "prompt": "Lấy CV hiện tại của bạn. Viết 200–300 từ: (a) chép lại ba gạch đầu dòng đang ở dạng nhiệm vụ; (b) viết lại chúng theo công thức làm gì — bằng cách nào — kết quả đo được; (c) liệt kê những thông tin bạn sẽ bỏ khỏi CV và lý do; (d) một tin tuyển dụng cụ thể bạn nhắm tới và ba từ khoá bạn sẽ lấy từ đó.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 10.2 · Thư ứng tuyển và chuẩn bị phỏng vấn",
+          "durationMin": 45,
+          "description": "CV khác thư ứng tuyển ở đâu; tìm hiểu công ty và vị trí trước buổi phỏng vấn: tìm gì, ở đâu; chuẩn bị ba tới năm câu chuyện theo cấu trúc STAR; và phần hậu cần dễ bị bỏ quên.",
+          "objectives": [
+            "Phân biệt được vai trò của CV và thư ứng tuyển, viết được một thư ứng tuyển ngắn",
+            "Tìm được thông tin cần thiết về công ty và vị trí trước buổi phỏng vấn",
+            "Chuẩn bị được ba tới năm câu chuyện theo cấu trúc STAR",
+            "Chuẩn bị được phần hậu cần cho phỏng vấn trực tiếp và phỏng vấn trực tuyến"
+          ],
+          "summary": [
+            "CV trả lời tôi đã làm được gì; thư ứng tuyển trả lời vì sao là vị trí này, vì sao là nơi này và vì sao là tôi.",
+            "Tìm hiểu công ty để trả lời được vì sao chọn nơi này, hỏi được câu hỏi có chất lượng, và biết nơi đó có hợp với mình không.",
+            "STAR: bối cảnh – nhiệm vụ – hành động – kết quả; ba tới năm câu chuyện chuẩn bị trước phủ được phần lớn câu hỏi hành vi.",
+            "Phần hậu cần — đường đi, thiết bị, đường truyền, bản in CV — không làm bạn được nhận, nhưng hỏng thì đủ để hỏng cả buổi."
+          ],
+          "body": "\nPhần lớn ứng viên trượt không phải vì thiếu năng lực mà vì **không chuẩn bị** — trong khi câu hỏi phỏng vấn thì lặp lại tới mức đoán được.\n\n## CV và thư ứng tuyển: hai việc khác nhau\n\n| | CV | Thư ứng tuyển |\n|---|---|---|\n| Trả lời câu hỏi | Tôi đã làm được những gì | Vì sao là vị trí này, vì sao là nơi này, vì sao là tôi |\n| Hình thức | Gạch đầu dòng, dữ kiện, một trang | Văn xuôi ngắn, 3–4 đoạn, dưới một trang |\n| Mức cá nhân hoá | Đảo thứ tự và sửa mục tiêu cho từng nơi | **Viết riêng cho từng nơi**, có tên công ty và tên vị trí |\n| Cái người đọc tìm | Sự khớp về kinh nghiệm và kỹ năng | Động lực, sự hiểu về công việc, cách bạn viết |\n\nBố cục một thư ứng tuyển dùng được: **đoạn 1** — ứng tuyển vị trí nào, biết tin từ đâu, một câu vì sao bạn quan tâm; **đoạn 2** — hai bằng chứng cụ thể cho thấy bạn làm được việc, lấy từ CV nhưng kể ngắn thành câu chuyện; **đoạn 3** — vì sao là công ty này, dựa trên điều bạn đã tìm hiểu được; **đoạn 4** — một câu đề nghị trao đổi thêm và lời cảm ơn.\n\n> [!canh-bao] Thư ứng tuyển chỉ có tác dụng khi nó **không thể dán sang nơi khác**. Nếu đổi tên công ty mà thư vẫn dùng được y nguyên thì nó chưa nói gì về nơi này, và người đọc nhận ra ngay.\n\n## Tìm hiểu công ty và vị trí\n\nTìm hiểu trước không phải để khoe hiểu biết, mà để làm được ba việc: trả lời câu **\"vì sao em chọn công ty chúng tôi\"**, hỏi được câu hỏi có chất lượng ở cuối buổi, và tự đánh giá xem nơi này có hợp với mình không — buổi phỏng vấn là hai chiều.\n\n| Tìm gì | Tìm ở đâu |\n|---|---|\n| Công ty làm gì, khách hàng là ai, đang tăng trưởng hay thu hẹp | Trang chủ, trang tuyển dụng, tin tức gần đây |\n| Vị trí này làm gì hằng ngày, thuộc bộ phận nào, báo cáo cho ai | Mô tả công việc; hỏi lại người tuyển dụng nếu chưa rõ |\n| Sản phẩm hoặc dịch vụ — dùng thử được thì dùng thử | Ứng dụng, cửa hàng, fanpage |\n| Văn hoá làm việc thực tế | Bài đăng của nhân viên, đánh giá trên các trang việc làm, người quen đang làm ở đó |\n| Người sẽ phỏng vấn bạn | Hồ sơ nghề nghiệp công khai của họ |\n\n> [!vi-du] Hai ứng viên cùng được hỏi \"vì sao em chọn công ty chúng tôi\". A: \"Vì công ty có môi trường trẻ trung năng động và cơ hội phát triển.\" B: \"Em có dùng ứng dụng của công ty ba tháng nay. Phần em thấy thú vị là cách tính năng nhắc nhở được thiết kế cho người mới bắt đầu — em cũng đang làm một dự án nhỏ về mảng này và muốn học cách một đội làm sản phẩm thật giải quyết bài toán đó.\" Câu của A dùng được cho mọi công ty, nên nó không nói gì. Câu của B mất khoảng ba mươi phút chuẩn bị.\n\n## Chuẩn bị câu chuyện theo STAR\n\nCác câu hỏi hành vi — \"kể về một lần em…\" — chiếm phần lớn buổi phỏng vấn, và chúng đều trả lời được bằng cùng một cấu trúc:\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"display:grid;gap:.45rem;font-size:1.05rem\">\n    <div style=\"background:rgba(127,127,127,.12);border-radius:.4rem;padding:.55rem .8rem\"><b>S — Bối cảnh</b> · Học kỳ trước, nhóm em làm đồ án 5 người, còn 10 ngày thì một bạn rút vì lý do sức khoẻ <span style=\"opacity:.75\">(2 câu, đủ để người nghe hình dung)</span></div>\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.4rem;padding:.55rem .8rem\"><b>T — Nhiệm vụ</b> · Em nhận phần phân tích dữ liệu vốn của bạn ấy, đồng thời vẫn phải hoàn thành phần của mình</div>\n    <div style=\"background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.55rem .8rem\"><b>A — Hành động</b> · Em chia lại phần việc theo mức khó, xin nhóm bỏ một phần phụ không ảnh hưởng tiêu chí chấm, dựng bảng theo dõi tiến độ hằng ngày và họp 15 phút mỗi tối <span style=\"opacity:.75\">(phần dài nhất — nói <b>em</b> đã làm gì, không phải nhóm em)</span></div>\n    <div style=\"background:rgba(217,150,40,.14);border-radius:.4rem;padding:.55rem .8rem\"><b>R — Kết quả</b> · Nhóm nộp đúng hạn, đạt 8.5; và từ đó nhóm giữ thói quen họp ngắn hằng ngày ở các môn sau</div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Lỗi phổ biến nhất: kể quá dài phần bối cảnh và quá ngắn phần hành động — trong khi phần hành động mới là thứ người phỏng vấn muốn nghe.</div>\n</div>\n```\n\nChuẩn bị **ba tới năm câu chuyện** là đủ, vì một câu chuyện tốt dùng lại được cho nhiều câu hỏi. Nên có: một lần bạn giải quyết vấn đề khó; một lần bạn làm việc nhóm hoặc xử lý bất đồng; một lần bạn **thất bại và học được gì**; một lần bạn học nhanh một thứ mới; và một lần bạn chủ động làm việc không ai giao.\n\n> [!meo] Viết ra bốn dòng cho mỗi câu chuyện rồi **nói to một lần** — đúng như đã học ở bài 7.3. Câu chuyện đọc trong đầu thấy gọn, nói ra thành tiếng mới lộ chỗ dài dòng. Và đừng học thuộc lòng: nhớ bốn mốc, còn lời thì để tự nhiên.\n\n## Phần hậu cần hay bị bỏ quên\n\nNhững thứ này không làm bạn được nhận, nhưng hỏng thì đủ để hỏng cả buổi:\n\n- **Trực tiếp:** biết đường đi và thời gian di chuyển, đến sớm 10–15 phút, mang theo bản in CV và giấy bút, trang phục gọn gàng phù hợp với nơi ứng tuyển, tắt chuông điện thoại.\n- **Trực tuyến:** thử micro và camera **trước một ngày**, ngồi nơi yên tĩnh với nền phía sau gọn, đặt camera ngang tầm mắt, có phương án dự phòng nếu mất mạng (số điện thoại của người phỏng vấn, sẵn sàng chuyển sang gọi thoại), và mở sẵn CV cùng ghi chú ở màn hình phụ hoặc bản in — nhưng **không đọc** chúng khi nói.\n- **Cả hai:** đọc lại mô tả công việc và CV của chính mình ngay trước buổi phỏng vấn, vì bạn sẽ được hỏi đúng những gì mình viết.\n\n> [!canh-bao] Điều nên tránh để không mất điểm ngay từ đầu: đến muộn mà không báo trước; nói xấu nơi làm cũ hoặc trường cũ; hỏi về lương và ngày nghỉ ngay câu đầu tiên; trả lời cụt lủn kiểu có hoặc không; và không nhớ nổi những gì chính mình viết trong CV.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nChọn một tin tuyển dụng thật. Làm hai việc: (a) tra cứu công ty theo bảng tìm gì ở đâu, ghi lại năm dòng thông tin và viết một câu trả lời riêng cho \"vì sao em chọn nơi này\" — câu ấy phải **không dùng được cho công ty khác**; (b) viết bốn dòng STAR cho một câu chuyện của bạn, phần hành động phải dài hơn phần bối cảnh.\n\n### Nhóm 3–4 người (25 phút)\n\nPhỏng vấn thử theo cặp, đổi vai: người phỏng vấn hỏi ba câu hành vi (\"kể về một lần em…\"), người trả lời dùng STAR. Người thứ ba bấm giờ và ghi hai chỉ số: **tỉ lệ thời gian dành cho phần hành động**, và số lần người trả lời nói \"nhóm em\" ở chỗ lẽ ra phải nói \"em\". Sau mỗi lượt phản hồi đúng hai chỉ số đó.\n\n### Bài tập về nhà (60 phút)\n\nViết trọn bộ hồ sơ cho một vị trí thật: CV đã cá nhân hoá (từ bài 10.1) và một thư ứng tuyển bốn đoạn. Kèm theo **năm câu chuyện STAR** ở dạng bốn dòng mỗi câu chuyện. Phép thử cuối: đổi tên công ty trong thư ứng tuyển sang một nơi khác — nếu thư vẫn dùng được y nguyên, hãy viết lại đoạn ba.\n\n### Xem thêm\n\n- 🎬 [How to Ace an Interview: 5 Tips from a Harvard Career Advisor](https://www.youtube.com/watch?v=DHDrj0_bMQ0) — Harvard Extension School, 5 phút. Phần chuẩn bị và cấu trúc câu trả lời.\n- 🎬 [Looking for a Job? Highlight Your Ability, Not Your Experience](https://www.youtube.com/watch?v=guXxy8LH2QM) — Jason Shen, TED, 6 phút.\n\n### Nguồn tham khảo\n\n- Yate, M. (2020). *Knock 'em Dead Job Interview: How to Turn Job Interviews into Job Offers.* Adams Media.\n- Bolles, R. N. (2022). *What Color Is Your Parachute?* New York: Ten Speed Press.\n- Huffcutt, A. I., & Arthur, W. (1994). Hunter and Hunter (1984) revisited: Interview validity for entry-level jobs. *Journal of Applied Psychology*, 79(2), 184–190 — vì sao phỏng vấn có cấu trúc dự báo tốt hơn phỏng vấn tự do.\n- Campion, M. A., Palmer, D. K., & Campion, J. E. (1997). A review of structure in the selection interview. *Personnel Psychology*, 50(3), 655–702.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 10.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "10.2-cv-vs-cover",
+                "type": "mcq",
+                "prompt": "Khác biệt giữa CV và thư xin việc (cover letter) là gì?",
+                "explanation": "CV trình bày dữ kiện về những gì bạn đã làm được; thư ứng tuyển giải thích vì sao là vị trí này, vì sao là nơi này và vì sao là bạn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "CV trả lời tôi đã làm được gì; thư ứng tuyển trả lời vì sao vị trí này, vì sao nơi này và vì sao là tôi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "CV dài hơn, thư xin việc ngắn hơn nhưng nội dung như nhau",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thư xin việc là bản tóm tắt của CV",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thư xin việc chỉ cần khi ứng tuyển vào công ty nước ngoài",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.2-tim-hieu-cong-ty",
+                "type": "mcq",
+                "prompt": "Vì sao việc tìm hiểu công ty trước khi phỏng vấn lại quan trọng?",
+                "explanation": "Nó cho phép trả lời được câu vì sao chọn nơi này, hỏi được câu hỏi có chất lượng, và tự đánh giá nơi đó có hợp với mình không — phỏng vấn là quá trình hai chiều.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Để trả lời được vì sao chọn nơi này, hỏi được câu hỏi có chất lượng, và tự đánh giá nơi đó có hợp với mình không",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Để thể hiện mình biết nhiều thông tin hơn các ứng viên khác",
+                    "isCorrect": false,
+                    "misconception": "knm.authority-symbols"
+                  },
+                  {
+                    "label": "Để biết trước mức lương công ty sẽ trả",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần thiết, người phỏng vấn sẽ giới thiệu về công ty",
+                    "isCorrect": false,
+                    "misconception": "knm.interview-improvise"
+                  }
+                ]
+              },
+              {
+                "key": "10.2-star",
+                "type": "ordering",
+                "prompt": "Sắp xếp bốn phần của một câu trả lời theo cấu trúc STAR.",
+                "explanation": "Bối cảnh ngắn để người nghe hình dung, nhiệm vụ nêu rõ phần của bạn, hành động là phần dài nhất, kết quả có thể đo hoặc kiểm được.",
+                "points": 3,
+                "sequence": [
+                  "Bối cảnh: chuyện xảy ra ở đâu, khi nào, với ai",
+                  "Nhiệm vụ: phần việc và trách nhiệm cụ thể của bạn",
+                  "Hành động: bạn đã làm những gì, theo thứ tự",
+                  "Kết quả: điều đạt được và bài học rút ra"
+                ]
+              },
+              {
+                "key": "10.2-chuan-bi-truoc",
+                "type": "mcq",
+                "prompt": "Trước buổi phỏng vấn tuyển dụng, ứng viên cần chuẩn bị những gì?",
+                "explanation": "Tìm hiểu công ty và vị trí, chuẩn bị ba tới năm câu chuyện STAR, đọc lại CV của chính mình, chuẩn bị câu hỏi để hỏi lại, và lo phần hậu cần.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tìm hiểu công ty và vị trí, chuẩn bị 3–5 câu chuyện STAR, đọc lại chính CV của mình, soạn câu hỏi để hỏi lại, và kiểm tra phần hậu cần",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Học thuộc một bài giới thiệu bản thân dài ba phút",
+                    "isCorrect": false,
+                    "misconception": "knm.interview-improvise"
+                  },
+                  {
+                    "label": "Chuẩn bị mức lương mong muốn để nêu ngay đầu buổi",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần chuẩn bị nhiều, vào rồi ứng biến cho tự nhiên",
+                    "isCorrect": false,
+                    "misconception": "knm.interview-improvise"
+                  }
+                ]
+              },
+              {
+                "key": "10.2-tranh-gi",
+                "type": "mcq",
+                "prompt": "Để tạo ấn tượng tốt với nhà tuyển dụng, ứng viên cần tránh điều gì?",
+                "explanation": "Đến muộn không báo, nói xấu nơi cũ, hỏi lương và ngày nghỉ ngay câu đầu, trả lời cụt lủn, và không nhớ nổi nội dung chính mình viết trong CV.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đến muộn không báo trước, nói xấu nơi làm cũ, và không nhớ nổi những gì mình viết trong CV",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hỏi lại về công việc hằng ngày của vị trí",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thừa nhận một phần mình chưa có kinh nghiệm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Mang theo bản in CV và giấy bút",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.2-phong-van-online",
+                "type": "mcq",
+                "prompt": "Với phỏng vấn trực tuyến, việc chuẩn bị nào là cần thiết nhất?",
+                "explanation": "Thử thiết bị và đường truyền trước một ngày, chọn nơi yên tĩnh nền gọn, camera ngang tầm mắt, và có phương án dự phòng khi mất mạng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thử micro, camera và đường truyền từ hôm trước; chọn chỗ yên tĩnh; có phương án dự phòng nếu mất mạng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mở sẵn nhiều tài liệu để đọc khi trả lời",
+                    "isCorrect": false,
+                    "misconception": "knm.slide-is-document"
+                  },
+                  {
+                    "label": "Dùng phông nền ảo thật nổi bật để gây ấn tượng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần chuẩn bị gì thêm so với phỏng vấn trực tiếp",
+                    "isCorrect": false,
+                    "misconception": "knm.interview-improvise"
+                  }
+                ]
+              },
+              {
+                "key": "10.2-viet-star",
+                "type": "essay",
+                "prompt": "Chọn một tin tuyển dụng thật. Viết 200–300 từ: (a) năm dòng thông tin bạn tìm được về công ty và vị trí; (b) một câu trả lời riêng cho vì sao em chọn nơi này — câu này phải không dùng được cho công ty khác; (c) một câu chuyện STAR đầy đủ bốn phần, trong đó phần hành động dài hơn phần bối cảnh.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 10.3 · Trong và sau buổi phỏng vấn",
+          "durationMin": 50,
+          "description": "Trả lời câu giới thiệu bản thân; các nhóm câu hỏi thường gặp kèm câu trả lời mẫu, gồm cả câu điểm yếu và câu lương; câu hỏi bạn nên hỏi lại; và việc cần làm sau buổi phỏng vấn kể cả khi bị từ chối.",
+          "objectives": [
+            "Trả lời được câu giới thiệu bản thân trong khoảng 90 giây, đúng trọng tâm vị trí",
+            "Trả lời được các nhóm câu hỏi thường gặp, gồm câu về điểm yếu và câu về lương",
+            "Chuẩn bị và đặt được câu hỏi ngược có chất lượng cho nhà tuyển dụng",
+            "Viết được thư cảm ơn sau phỏng vấn và xử lý được kết quả bị từ chối"
+          ],
+          "summary": [
+            "Câu giới thiệu bản thân không phải kể tiểu sử: nó là 90 giây tóm tắt bạn là ai về mặt nghề nghiệp, đã làm được gì liên quan, và vì sao ngồi ở đây hôm nay.",
+            "Câu về điểm yếu cần một điểm yếu thật, không chí mạng với vị trí, kèm việc đang làm để cải thiện và bằng chứng đã đỡ hơn.",
+            "Phần bạn có câu hỏi gì không là cơ hội cuối để thể hiện đã tìm hiểu — và để kiểm tra nơi đó có hợp với mình không.",
+            "Sau phỏng vấn: thư cảm ơn ngắn trong 24 giờ; nếu bị từ chối, hỏi xin phản hồi và giữ quan hệ — nhiều người được gọi lại cho vị trí sau."
+          ],
+          "body": "\nBài này đi theo đúng trình tự một buổi phỏng vấn: mở đầu, phần hỏi đáp, phần bạn hỏi lại, và những gì xảy ra sau đó.\n\n## Câu đầu tiên: \"Hãy giới thiệu về bản thân\"\n\nĐây gần như luôn là câu mở đầu, và mục đích của nó **không phải** để nghe tiểu sử. Người phỏng vấn muốn ba thứ: bạn tóm tắt được bản thân về mặt nghề nghiệp không, bạn chọn nhấn vào điều gì (cho thấy bạn hiểu vị trí tới đâu), và bạn nói năng thế nào khi không có câu hỏi cụ thể.\n\nCấu trúc 90 giây, ba phần: **hiện tại** (bạn đang là ai, học gì, làm gì) → **quá khứ liên quan** (một tới hai kinh nghiệm gắn với vị trí này, có kết quả) → **vì sao ngồi đây hôm nay** (điều bạn tìm ở vị trí này).\n\n> [!vi-du] \"Em là Nam, vừa tốt nghiệp ngành Hệ thống thông tin quản lý. Trong năm cuối em làm hai việc gắn với dữ liệu: thực tập ba tháng ở một công ty bán lẻ, dựng báo cáo doanh thu hằng tuần thay cho quy trình làm tay mất nửa ngày mỗi lần; và đồ án tốt nghiệp về dự báo tồn kho, đạt 8.5. Em ứng tuyển vị trí này vì phần mô tả công việc có mảng tự động hoá báo cáo — đúng phần em làm được và muốn làm sâu hơn.\" — Khoảng 80 giây, không có câu nào về quê quán hay sở thích, và mọi chi tiết đều phục vụ vị trí đang ứng tuyển.\n\n## Các nhóm câu hỏi thường gặp\n\n| Câu hỏi | Người phỏng vấn muốn biết | Cách trả lời | Nên tránh |\n|---|---|---|---|\n| Vì sao em ứng tuyển vị trí này? | Bạn hiểu công việc tới đâu, động lực thật là gì | Nối phần việc cụ thể trong mô tả với thứ bạn đã làm và muốn làm | \"Vì em thấy môi trường năng động\" |\n| Điểm mạnh của em là gì? | Bạn tự đánh giá có chính xác không | Một tới hai điểm mạnh liên quan tới vị trí, mỗi điểm kèm một bằng chứng ngắn | Liệt kê năm tính từ không có ví dụ |\n| Điểm yếu của em là gì? | Bạn có tự nhận thức và có đang cải thiện không | Một điểm yếu thật, không chí mạng với vị trí, kèm việc đang làm và bằng chứng đã đỡ hơn | \"Em quá cầu toàn\" · \"Em làm việc quá nhiều\" |\n| Kể về một lần em thất bại | Bạn phản ứng thế nào khi hỏng việc | STAR, phần kết tập trung vào bài học và thay đổi cụ thể sau đó | Kể một thất bại giả, hoặc đổ lỗi cho người khác |\n| Kể về một lần bất đồng trong nhóm | Bạn xử lý xung đột ra sao | STAR; nói về cách làm và tiêu chí, không nói xấu ai | \"Nhóm em toàn người lười\" |\n| Vì sao em nghỉ chỗ cũ? | Bạn có nói xấu nơi cũ không | Nêu lý do trung tính và hướng về phía trước | Kể tội sếp cũ |\n| Em thấy mình ở đâu sau 3 năm? | Bạn có định hướng không, có gắn bó không | Định hướng nghề nghiệp thật, gắn với con đường ở vị trí này | \"Em muốn làm quản lý\" mà không nói vì sao |\n| Mức lương mong muốn của em? | Kỳ vọng của bạn có khớp ngân sách không | Nêu khoảng dựa trên khảo sát thị trường, kèm sự linh hoạt và đề nghị nghe thêm về phạm vi công việc | Nói một con số ngẫu nhiên, hoặc \"bao nhiêu cũng được\" |\n\n**Câu điểm yếu** đáng nói kỹ vì đây là câu bị trả lời sáo nhất. Một câu dùng được: *\"Em hay ôm quá nhiều việc vì ngại từ chối, và học kỳ vừa rồi có lần trễ hạn một môn vì thế. Từ đó em bắt đầu ghi hết cam kết vào một lịch và tập nói không kèm phương án thay thế — kỳ này em từ chối hai lời nhờ và không trễ hạn lần nào.\"* Cấu trúc: điểm yếu thật → hậu quả cụ thể → việc đang làm → bằng chứng đã đỡ.\n\n**Câu lương** với sinh viên mới ra trường: hãy tra khảo sát thị trường cho đúng vị trí và khu vực trước, nêu **một khoảng** thay vì một con số, và cho biết bạn linh hoạt tuỳ phạm vi công việc. Nếu bị hỏi trước khi bạn hiểu rõ công việc, hoàn toàn được phép nói: *\"Em muốn hiểu rõ phạm vi công việc trước; anh chị có thể chia sẻ khoảng ngân sách cho vị trí này không ạ?\"*\n\n> [!canh-bao] Đừng bịa kinh nghiệm hay phóng đại con số trong CV. Câu hỏi tiếp theo gần như luôn là \"em làm cụ thể phần nào trong đó\" — và người phỏng vấn có chuyên môn nhận ra ngay. Nói thẳng \"phần đó em chưa làm, nhưng em đã làm việc tương tự là…\" giữ được uy tín tốt hơn nhiều.\n\n## Câu hỏi bạn nên hỏi lại\n\nKhi được hỏi \"em có câu hỏi gì cho chúng tôi không\", trả lời \"dạ không ạ\" là bỏ mất cơ hội cuối cùng — và thường bị đọc là thiếu quan tâm. Chuẩn bị sẵn **ba câu**, hỏi hai câu tuỳ diễn biến:\n\n- *\"Người làm tốt ở vị trí này trong ba tháng đầu thường làm được những gì ạ?\"* — cho bạn biết kỳ vọng thật.\n- *\"Anh chị đánh giá công việc này thành công dựa trên những tiêu chí nào?\"* — cho biết cách bạn sẽ bị đánh giá.\n- *\"Một ngày làm việc điển hình của vị trí này diễn ra thế nào ạ?\"* — lộ ra khoảng cách giữa mô tả và thực tế.\n- *\"Đội của em sẽ gồm những ai, và em sẽ làm việc gần nhất với ai ạ?\"*\n- *\"Bước tiếp theo của quy trình tuyển dụng là gì và khi nào em có thể nhận được phản hồi ạ?\"* — nên là câu cuối cùng.\n\nTránh hỏi ở buổi đầu: ngày nghỉ phép, giờ về, thưởng Tết, \"công ty mình có hay tăng ca không\" — những câu này hợp lý nhưng để dành cho lúc đã có lời mời làm việc.\n\n> [!ghi-nho] Ngôn ngữ cơ thể trong phỏng vấn quan trọng vì nó là kênh phản hồi và là phần người ta nhớ lâu nhất: bắt tay chắc, nhìn vào mắt người hỏi, hơi nghiêng về phía trước khi nghe, không khoanh tay, không bấm bút. Đúng những thứ đã học ở bài 5.2 — chỉ khác là ở đây bạn có 45 phút để thể hiện.\n\n## Sau buổi phỏng vấn\n\n**Thư cảm ơn** trong vòng 24 giờ, ngắn — bốn tới năm câu: cảm ơn thời gian, nhắc một chi tiết cụ thể trong buổi trò chuyện (cho thấy bạn thật sự nghe), khẳng định lại sự quan tâm, và một câu bổ sung nếu có điều bạn trả lời chưa trọn. Việc này được khuyến khích vì nó thể hiện sự chuyên nghiệp, giữ tên bạn trong trí nhớ người tuyển, và cho bạn một cơ hội sửa chữa nhỏ.\n\n**Nếu bị từ chối:** trả lời lại một câu cảm ơn và **hỏi xin phản hồi** — \"anh chị có thể cho em biết phần nào em cần cải thiện cho lần sau không ạ?\". Không phải nơi nào cũng trả lời, nhưng nơi trả lời sẽ cho bạn thứ quý nhất trong cả quá trình. Giữ liên hệ tử tế: các vị trí mở lại, và người từng phỏng vấn bạn là người nhớ tới bạn đầu tiên.\n\n**Và tự rút kinh nghiệm ngay khi còn nhớ:** ghi lại các câu hỏi đã gặp, câu nào bạn trả lời tốt, câu nào lúng túng, và chuẩn bị lại đúng câu đó. Sau ba buổi phỏng vấn, danh sách này thường phủ gần hết các câu bạn sẽ gặp về sau.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nViết và **nói to** câu trả lời cho \"hãy giới thiệu về bản thân\", bấm giờ để trong khoảng 90 giây, theo cấu trúc hiện tại – quá khứ liên quan – vì sao ngồi đây. Sau đó viết câu trả lời cho câu điểm yếu theo đủ bốn phần: điểm yếu thật, hậu quả cụ thể, việc đang làm, bằng chứng đã đỡ hơn.\n\n### Nhóm 3–4 người (25 phút)\n\nPhỏng vấn thử 10 phút mỗi lượt, đổi vai. Người phỏng vấn hỏi năm câu lấy từ bảng trong bài, trong đó **bắt buộc có câu điểm yếu và câu lương**. Người quan sát chấm ba thứ: câu giới thiệu có quá 2 phút không, câu điểm yếu có phải ưu điểm trá hình không, và ứng viên có hỏi ngược ít nhất một câu có chất lượng không.\n\n### Bài tập về nhà (45–60 phút)\n\nChuẩn bị trọn bộ cho một vị trí thật: câu giới thiệu 90 giây viết thành lời; câu trả lời cho sáu câu trong bảng; ba câu hỏi để hỏi lại nhà tuyển dụng; và một thư cảm ơn mẫu để sẵn, chỉ chừa chỗ điền chi tiết cụ thể sau buổi phỏng vấn. Nếu đã đi phỏng vấn thật, nộp kèm danh sách câu hỏi bạn đã gặp và đánh dấu câu nào cần chuẩn bị lại.\n\n### Xem thêm\n\n- 🎬 [How to Ace an Interview: 5 Tips from a Harvard Career Advisor](https://www.youtube.com/watch?v=DHDrj0_bMQ0) — Harvard Extension School, 5 phút.\n- 🎬 [Looking for a Job? Highlight Your Ability, Not Your Experience](https://www.youtube.com/watch?v=guXxy8LH2QM) — Jason Shen, TED, 6 phút.\n- 🎬 [How to Speak So That People Want to Listen](https://www.youtube.com/watch?v=eIho2S0ZahI) — Julian Treasure, TED, 9 phút. Phần giọng nói, dùng được ngay cho buổi phỏng vấn.\n\n### Nguồn tham khảo\n\n- Yate, M. (2020). *Knock 'em Dead Job Interview.* Adams Media.\n- Levashina, J., Hartwell, C. J., Morgeson, F. P., & Campion, M. A. (2014). The structured employment interview: Narrative and quantitative review. *Personnel Psychology*, 67(1), 241–293.\n- Barrick, M. R., Shaffer, J. A., & DeGrassi, S. W. (2009). What you see may not be what you get: Relationships among self-presentation tactics and ratings of interview and job performance. *Journal of Applied Psychology*, 94(6), 1394–1411.\n- Bolles, R. N. (2022). *What Color Is Your Parachute?* New York: Ten Speed Press.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 10.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "10.3-gioi-thieu-ban-than",
+                "type": "mcq",
+                "prompt": "Câu hỏi Bạn hãy giới thiệu về bản thân trong phỏng vấn thường nhằm mục đích gì?",
+                "explanation": "Người phỏng vấn muốn xem bạn tóm tắt bản thân về mặt nghề nghiệp thế nào, bạn chọn nhấn vào điều gì (cho thấy hiểu vị trí tới đâu), và bạn diễn đạt ra sao — không phải để nghe tiểu sử.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Xem bạn tóm tắt bản thân về mặt nghề nghiệp thế nào và chọn nhấn vào điều gì liên quan tới vị trí",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nghe tiểu sử đầy đủ từ quê quán, gia đình tới sở thích",
+                    "isCorrect": false,
+                    "misconception": "knm.info-not-message"
+                  },
+                  {
+                    "label": "Kiểm tra trí nhớ của ứng viên về nội dung CV",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ là câu xã giao mở đầu, không có mục đích đánh giá",
+                    "isCorrect": false,
+                    "misconception": "knm.interview-improvise"
+                  }
+                ]
+              },
+              {
+                "key": "10.3-diem-yeu",
+                "type": "mcq",
+                "prompt": "Khi được hỏi về điểm yếu, cách tiếp cận thông minh là gì?",
+                "explanation": "Nêu một điểm yếu thật, không chí mạng với vị trí, kèm hậu quả cụ thể, việc đang làm để cải thiện và bằng chứng đã đỡ hơn.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nêu một điểm yếu thật không chí mạng với vị trí, kèm việc bạn đang làm để cải thiện và bằng chứng cho thấy đã đỡ hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nói em quá cầu toàn hoặc em làm việc quá nhiều",
+                    "isCorrect": false,
+                    "misconception": "knm.weakness-fake"
+                  },
+                  {
+                    "label": "Nói mình không có điểm yếu đáng kể nào cho vị trí này",
+                    "isCorrect": false,
+                    "misconception": "knm.weakness-fake"
+                  },
+                  {
+                    "label": "Nêu một điểm yếu nghiêm trọng để thể hiện sự trung thực tuyệt đối",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.3-cau-hoi-nguoc",
+                "type": "mcq",
+                "prompt": "Khi nhà tuyển dụng hỏi Bạn có câu hỏi gì cho chúng tôi không, cách trả lời tốt nhất là gì?",
+                "explanation": "Đây là cơ hội cuối để thể hiện đã tìm hiểu và để kiểm tra nơi đó có hợp với mình không — nên hỏi về kỳ vọng ba tháng đầu, tiêu chí đánh giá, đội nhóm và bước tiếp theo.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Hỏi hai câu đã chuẩn bị về kỳ vọng ba tháng đầu, tiêu chí đánh giá công việc hoặc đội nhóm, và kết bằng câu về bước tiếp theo",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Trả lời dạ em không có câu hỏi gì ạ cho gọn",
+                    "isCorrect": false,
+                    "misconception": "knm.no-questions-asked"
+                  },
+                  {
+                    "label": "Hỏi ngay về ngày nghỉ phép, giờ về và thưởng Tết",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hỏi lại những thông tin đã có sẵn trên trang chủ công ty",
+                    "isCorrect": false,
+                    "misconception": "knm.interview-improvise"
+                  }
+                ]
+              },
+              {
+                "key": "10.3-ngon-ngu-co-the",
+                "type": "mcq",
+                "prompt": "Vì sao ngôn ngữ cơ thể quan trọng trong buổi phỏng vấn?",
+                "explanation": "Nó vừa là kênh phản hồi hai chiều, vừa là phần người phỏng vấn nhớ lâu; khi lời nói và tín hiệu phi ngôn ngữ không khớp thì người nghe tin phần phi ngôn ngữ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì nó truyền thái độ và sự tự tin song song với lời nói, và khi hai kênh mâu thuẫn thì người nghe tin phần phi ngôn ngữ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì nội dung lời nói chỉ chiếm 7% hiệu quả giao tiếp",
+                    "isCorrect": false,
+                    "misconception": "knm.mehrabian-93"
+                  },
+                  {
+                    "label": "Vì nhà tuyển dụng chấm điểm phong thái nhiều hơn chuyên môn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì chỉ cần tự tin là sẽ được nhận",
+                    "isCorrect": false,
+                    "misconception": "knm.positive-thinking-magic"
+                  }
+                ]
+              },
+              {
+                "key": "10.3-thu-cam-on",
+                "type": "mcq",
+                "prompt": "Vì sao gửi thư cảm ơn sau phỏng vấn được khuyến khích?",
+                "explanation": "Nó thể hiện sự chuyên nghiệp, giữ tên bạn trong trí nhớ người tuyển, và cho bạn cơ hội bổ sung điều trả lời chưa trọn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thể hiện sự chuyên nghiệp, giữ tên bạn trong trí nhớ người tuyển, và cho cơ hội bổ sung điều còn nói chưa trọn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Để nhắc nhà tuyển dụng phải trả lời sớm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì đó là thủ tục bắt buộc trong quy trình tuyển dụng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Để thể hiện mình rất cần công việc này",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "10.3-bi-tu-choi",
+                "type": "mcq",
+                "prompt": "Bạn nhận được thư từ chối sau buổi phỏng vấn. Việc nên làm là gì?",
+                "explanation": "Cảm ơn, hỏi xin phản hồi để biết cần cải thiện gì, ghi lại các câu hỏi đã gặp để chuẩn bị lại, và giữ quan hệ — nhiều người được gọi lại cho vị trí sau.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cảm ơn và hỏi xin phản hồi về phần cần cải thiện, ghi lại các câu đã lúng túng, giữ liên hệ tử tế",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không trả lời gì thêm vì đã bị từ chối",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hỏi lý do cụ thể vì sao người khác được chọn thay mình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Kết luận mình không phù hợp với ngành này",
+                    "isCorrect": false,
+                    "misconception": "knm.self-label"
+                  }
+                ]
+              },
+              {
+                "key": "10.3-noi-cau-hoi",
+                "type": "matching",
+                "prompt": "Nối mỗi câu hỏi phỏng vấn với điều nhà tuyển dụng thật sự muốn biết.",
+                "explanation": "Hiểu ý đồ đằng sau câu hỏi giúp trả lời trúng thay vì trả lời theo chữ.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Điểm yếu của em là gì?",
+                    "right": "Bạn có tự nhận thức và có đang cải thiện không"
+                  },
+                  {
+                    "left": "Kể về một lần em thất bại",
+                    "right": "Bạn phản ứng thế nào khi hỏng việc"
+                  },
+                  {
+                    "left": "Vì sao em ứng tuyển vị trí này?",
+                    "right": "Bạn hiểu công việc tới đâu và động lực thật là gì"
+                  },
+                  {
+                    "left": "Em thấy mình ở đâu sau ba năm?",
+                    "right": "Bạn có định hướng nghề nghiệp và khả năng gắn bó không"
+                  }
+                ]
+              },
+              {
+                "key": "10.3-viet-phong-van",
+                "type": "essay",
+                "prompt": "Chuẩn bị cho một vị trí thật. Viết 250–350 từ gồm: (a) câu giới thiệu bản thân 90 giây, viết thành lời theo cấu trúc hiện tại – quá khứ liên quan – vì sao ngồi đây; (b) câu trả lời cho câu điểm yếu theo đủ bốn phần; (c) ba câu hỏi bạn sẽ hỏi lại nhà tuyển dụng và lý do chọn từng câu.",
                 "points": 5
               }
             ]

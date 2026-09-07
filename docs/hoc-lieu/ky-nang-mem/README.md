@@ -25,10 +25,10 @@ trong kho.
 | 6 | Kỹ năng lắng nghe | ✅ 3 bài |
 | 7 | Thuyết trình hiệu quả | ✅ 3 bài |
 | 8 | Nghệ thuật thuyết phục | ✅ 3 bài (theo Cialdini) |
-| 9 | Kỹ năng cá nhân trong làm việc nhóm | chưa soạn |
-| 10 | Viết CV và phỏng vấn xin việc | chưa soạn |
+| 9 | Kỹ năng cá nhân trong làm việc nhóm | ✅ 3 bài |
+| 10 | Viết CV và phỏng vấn xin việc | ✅ 3 bài |
 
-Thứ tự đi từ trong ra ngoài: nền tảng cá nhân trước (giá trị, tư duy, thời gian),
+**Khoá đã soạn xong toàn bộ 10 module (31 bài).** Thứ tự đi từ trong ra ngoài: nền tảng cá nhân trước (giá trị, tư duy, thời gian),
 rồi tới các kỹ năng cần người khác mới luyện được, cuối cùng là nghề nghiệp.
 
 Câu hỏi cuối bài **soạn mới** và gắn mã lỗi tư duy (`knm.*`) để Feedback Engine

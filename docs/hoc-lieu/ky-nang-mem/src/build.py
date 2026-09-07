@@ -30,6 +30,8 @@ import m5_l1, m5_l2, m5_l3  # noqa: E402
 import m6_l1, m6_l2, m6_l3  # noqa: E402
 import m7_l1, m7_l2, m7_l3  # noqa: E402
 import m8_l1, m8_l2, m8_l3  # noqa: E402
+import m9_l1, m9_l2, m9_l3  # noqa: E402
+import m10_l1, m10_l2, m10_l3  # noqa: E402
 
 MODULES = {
     1: {
@@ -112,6 +114,26 @@ MODULES = {
             "trước quảng cáo gấp gáp và lừa đảo trực tuyến."
         ),
         "lessons": [m8_l1.LESSON, m8_l2.LESSON, m8_l3.LESSON],
+    },
+    9: {
+        "title": "Module 9 · Kỹ năng cá nhân trong làm việc nhóm",
+        "description": (
+            "Phần của bạn trong nhóm — thứ bạn kiểm soát được kể cả khi không phải nhóm trưởng. Ba "
+            "bài: ba mô thức phụ thuộc – độc lập – tương thuộc cùng những hành vi nhỏ làm nên nhóm "
+            "chạy được; năm giai đoạn phát triển nhóm và các vai trò; và ba tình huống khó nhất — "
+            "xung đột, thành viên không giữ cam kết, buổi rút kinh nghiệm cuối dự án."
+        ),
+        "lessons": [m9_l1.LESSON, m9_l2.LESSON, m9_l3.LESSON],
+    },
+    10: {
+        "title": "Module 10 · Viết CV và phỏng vấn xin việc",
+        "description": (
+            "Module khép khoá, đưa mọi thứ đã học vào một tình huống có thật: xin việc. Ba bài — CV "
+            "một trang viết cho người đọc lướt trong ba mươi giây; thư ứng tuyển, tìm hiểu công ty "
+            "và chuẩn bị câu chuyện theo cấu trúc STAR; và buổi phỏng vấn cùng những gì xảy ra sau "
+            "đó, kể cả khi bị từ chối."
+        ),
+        "lessons": [m10_l1.LESSON, m10_l2.LESSON, m10_l3.LESSON],
     },
 }
 
