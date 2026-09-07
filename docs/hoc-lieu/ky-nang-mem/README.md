@@ -80,6 +80,24 @@ gian bốn bước (4.2), số liệu trì hoãn và yếu tố không gian họ
 thời gian cùng sáu bước lập lịch. Khung của Kho KNM — bốn thế hệ, SMART, 5A, ma trận Eisenhower —
 được **giữ làm xương sống**, vì ngân hàng câu hỏi hỏi theo khung đó.
 
+## Video nhúng trong bài
+
+`videos.tsv` là bản đồ bài → hai video YouTube (cột 4 = `replace` thì gỡ video cũ trước).
+Gắn bằng script `attach:video` — khối video nằm ở đầu bài, đẩy các khối chữ xuống.
+
+```bash
+pnpm attach:video -- --course ky-nang-mem --lesson "Bài 1.1" --owner <email> \
+  --url https://www.youtube.com/watch?v=... --url https://www.youtube.com/watch?v=... --dry-run
+```
+
+Quy ước chọn video: mỗi bài **hai video, mỗi video 3–6 phút**, một video giải thích khái
+niệm và một video là ví dụ hoặc tình huống. Mọi id đều được xác minh qua oEmbed (tiêu đề,
+kênh) và lấy `lengthSeconds` từ trang xem để lọc đúng khoảng thời lượng — **không có link
+nào viết theo trí nhớ**. Nội dung video thì chưa xem hết từng phút, chọn theo kênh và chủ đề.
+
+Khối video không nằm trong manifest học liệu; `update-lesson` chỉ ghi đè khối `richtext`
+nên video sống sót qua các lần cập nhật nội dung bài.
+
 ## Trạng thái trên hệ thống
 
 | Nơi | Khoá | Ghi chú |
