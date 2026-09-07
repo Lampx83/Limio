@@ -197,6 +197,7 @@ export default async function NotificationsPage({
                       ? "border-brand-200 bg-brand-soft/40 dark:border-brand-800/60"
                       : "border-token bg-[rgb(var(--surface))]"
                   }`}
+                  prefetch={false}
                 >
                   <span
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${ic.cls}`}

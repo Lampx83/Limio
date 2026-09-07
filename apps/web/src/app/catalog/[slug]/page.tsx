@@ -281,6 +281,7 @@ export default async function CourseDetailPage({
                             <Link
                               href={`/learn/${params.slug}/lessons/${l.id}`}
                               className="text-sm font-medium text-brand-600 hover:underline"
+                              prefetch={false}
                             >
                               {l.title}
                             </Link>

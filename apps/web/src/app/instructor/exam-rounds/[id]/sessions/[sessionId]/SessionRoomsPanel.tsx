@@ -176,6 +176,7 @@ export default function SessionRoomsPanel({
                         href={`${pathname}/rooms/${r.id}`}
                         className="text-xs text-blue-600 hover:underline"
                         title="Vào trang quản lý thí sinh"
+                        prefetch={false}
                       >
                         ↗
                       </Link>

@@ -118,6 +118,7 @@ export default async function LeaderboardPage({
                   : "rounded-full px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:text-brand-700"
               }
               aria-current={active ? "page" : undefined}
+              prefetch={false}
             >
               {PERIOD_LABELS[p]}
             </Link>

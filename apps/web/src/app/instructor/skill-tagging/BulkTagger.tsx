@@ -289,6 +289,7 @@ export default function BulkTagger({
                       <Link
                         href={`/instructor/courses/${l.courseId}#lesson-${l.lessonId}`}
                         className="btn-ghost btn-sm"
+                        prefetch={false}
                       >
                         Tag thủ công
                       </Link>

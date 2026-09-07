@@ -149,6 +149,7 @@ export default async function GradeEssaysPage({
             key={c.id}
             href={filterHref(c.id)}
             className={courseFilter === c.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {c.title}
           </Link>
@@ -168,6 +169,7 @@ export default async function GradeEssaysPage({
                 key={g.examId}
                 href={`/instructor/courses/${g.courseId}/exams/${g.examId}/grading`}
                 className="flex items-center justify-between gap-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card transition hover:border-brand-300"
+                prefetch={false}
               >
                 <div>
                   <p className="font-medium">{g.title}</p>

@@ -240,6 +240,7 @@ export default function LessonForumSection({
                 key={t.id}
                 href={`/learn/${courseSlug}/threads/${t.id}`}
                 className={`group relative block rounded-2xl ${c.bg} p-5 shadow-sm ring-1 ${c.ring} transition-all hover:-translate-y-1 hover:shadow-lg hover:rotate-[-0.4deg]`}
+                prefetch={false}
               >
                 {/* "Tape" trang trí trên đầu — giống sticky note Padlet */}
                 <span

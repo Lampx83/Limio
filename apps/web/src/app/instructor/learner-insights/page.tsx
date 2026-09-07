@@ -214,6 +214,7 @@ export default async function LearnerInsightsPage({
             key={c.id}
             href={filterHref(c.id)}
             className={courseFilter === c.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {c.title}
           </Link>

@@ -103,7 +103,7 @@ export default async function InstructorTournamentsPage({
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {tournaments.map((t) => (
             <li key={t.id}>
-              <Link href={`/instructor/tournaments/${t.id}`} className="group block h-full">
+              <Link href={`/instructor/tournaments/${t.id}`} className="group block h-full" prefetch={false}>
                 <div className="card-hover h-full">
                   <div className="flex items-start justify-between gap-3">
                     <span className="text-base font-semibold transition-colors group-hover:text-brand-600">

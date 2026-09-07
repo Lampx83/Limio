@@ -72,6 +72,7 @@ export default async function ExamDispatchHistoryPage({
                 key={b.id}
                 href={`/instructor/exams/${params.examId}/dispatch/${b.id}`}
                 className="block px-4 py-3 transition-colors hover:bg-base-100"
+                prefetch={false}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">

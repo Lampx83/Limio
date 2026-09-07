@@ -245,6 +245,7 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
                   <Link
                     href={`/instructor/courses/${courseId}/sections/${s.id}`}
                     className="min-w-0 flex-1 hover:opacity-80"
+                    prefetch={false}
                   >
                     <span className="text-sm font-semibold">{s.name}</span>
                     {s.description && (

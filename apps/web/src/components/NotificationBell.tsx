@@ -169,6 +169,7 @@ export default function NotificationBell({
                         href={n.link}
                         onClick={() => setOpen(false)}
                         className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[rgb(var(--surface-muted))] ${isNew ? "bg-brand-soft/40" : ""}`}
+                        prefetch={false}
                       >
                         <span
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${ic.cls}`}

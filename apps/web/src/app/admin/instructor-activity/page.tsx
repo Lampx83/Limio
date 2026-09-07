@@ -125,6 +125,7 @@ export default async function InstructorActivityPage({
                 ? "bg-brand-gradient text-white"
                 : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-[rgb(var(--surface))]"
             }`}
+            prefetch={false}
           >
             {i.displayName || i.email}
             <span className="ml-1 opacity-70">

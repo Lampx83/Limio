@@ -198,6 +198,7 @@ export default function LessonSection({
                       target="_blank"
                       rel="noopener"
                       className="card-hover group flex items-center justify-between gap-3"
+                      prefetch={false}
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium transition-colors group-hover:text-brand-600">

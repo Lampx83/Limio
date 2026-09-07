@@ -228,6 +228,7 @@ export default async function LearnerDashboard() {
                     <Link
                       href={`/learn/${e.course.slug}`}
                       className="group relative block overflow-hidden rounded-xl border border-token transition-colors hover:border-brand-300"
+                      prefetch={false}
                     >
                       <span className={`absolute inset-y-0 left-0 w-1 ${rail}`} aria-hidden />
                       <div className={`flex items-center justify-between gap-2 pl-4 pr-3 py-2 ${headerBg}`}>

@@ -231,6 +231,7 @@ export default async function InstructorAnalyticsPage({
             key={c.id}
             href={`/instructor/analytics?course=${c.id}`}
             className={c.id === selectedId ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {c.title}
           </Link>

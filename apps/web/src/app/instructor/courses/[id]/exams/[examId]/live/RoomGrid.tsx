@@ -66,6 +66,7 @@ export default function RoomGrid({
             key={r.id}
             href={`/instructor/courses/${courseId}/exams/${examId}/live?sessionId=${sessionId}&roomId=${r.id}`}
             className="group rounded-lg border border-default bg-white p-3 transition-shadow hover:shadow-md"
+            prefetch={false}
           >
             <div className="flex items-center gap-2">
               <DoorOpen className="h-4 w-4 shrink-0 text-faint" />

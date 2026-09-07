@@ -172,6 +172,7 @@ export default async function CatalogPage({
               role="listitem"
               className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100"
               aria-label={`Bỏ lọc ${c.label}`}
+              prefetch={false}
             >
               {c.label}
               <span aria-hidden>×</span>
@@ -198,7 +199,7 @@ export default async function CatalogPage({
               className="animate-fade-in-up"
               style={{ animationDelay: `${Math.min(idx * 40, 280)}ms` }}
             >
-              <Link href={`/catalog/${c.slug}`} className="card-hover group block h-full">
+              <Link href={`/catalog/${c.slug}`} className="card-hover group block h-full" prefetch={false}>
                 {/* cover-style header */}
                 <div className="relative -m-5 mb-4 h-24 overflow-hidden rounded-t-xl bg-brand-gradient">
                   <div

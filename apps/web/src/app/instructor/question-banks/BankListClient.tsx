@@ -141,6 +141,7 @@ export default function BankListClient({
               <Link
                 href={`/instructor/question-banks/${b.id}`}
                 className="block rounded border border-default bg-white p-4 pr-12 hover:bg-slate-50"
+                prefetch={false}
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-base font-semibold">{b.name}</h2>

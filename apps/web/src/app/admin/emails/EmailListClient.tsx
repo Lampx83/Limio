@@ -91,6 +91,7 @@ export default function EmailListClient({
                   key={it.key}
                   href={`/admin/emails/${encodeURIComponent(it.key)}?scope=${activeScopeId}`}
                   className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-base-100"
+                  prefetch={false}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

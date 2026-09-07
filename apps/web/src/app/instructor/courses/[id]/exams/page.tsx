@@ -116,6 +116,7 @@ export default async function InstructorExamsPage({
                   <Link
                     href={`/instructor/courses/${course.id}/exams/${e.id}`}
                     className="rounded border border-default px-3 py-1.5 text-sm hover:bg-slate-50"
+                    prefetch={false}
                   >
                     Chỉnh sửa
                   </Link>

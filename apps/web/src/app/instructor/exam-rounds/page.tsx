@@ -144,6 +144,7 @@ export default async function ExamRoundsHubPage({
                     <Link
                       href={`/instructor/exam-rounds/${r.id}`}
                       className="font-medium hover:text-blue-700"
+                      prefetch={false}
                     >
                       {r.title}
                     </Link>

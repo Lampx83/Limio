@@ -60,6 +60,7 @@ export default function ExamTabs({
                 ? "border-amber-600 text-amber-700"
                 : "border-transparent text-muted hover:border-token hover:text-default"
             }`}
+            prefetch={false}
           >
             <t.Icon aria-hidden size={16} strokeWidth={1.75} />
             <span>{t.label}</span>

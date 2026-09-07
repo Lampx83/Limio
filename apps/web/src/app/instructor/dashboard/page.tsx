@@ -345,6 +345,7 @@ export default async function InstructorDashboard() {
                     <Link
                       href={it.href}
                       className="card-hover flex items-start gap-3 rounded-xl border border-token p-4 transition-colors hover:border-brand-200"
+                      prefetch={false}
                     >
                       <span
                         className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${style.dot}`}

@@ -199,6 +199,7 @@ export default async function StrugglingStudentsPage({
                   <Link
                     href={`/instructor/courses/${course.id}/struggling-students/${r.userId}`}
                     className="group block"
+                    prefetch={false}
                   >
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-gradient text-xs font-semibold text-white">

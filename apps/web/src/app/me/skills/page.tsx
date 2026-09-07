@@ -103,6 +103,7 @@ export default async function SkillsPage() {
                       <Link
                         href={`/learn/${group.courseSlug}`}
                         className="link text-sm"
+                        prefetch={false}
                       >
                         {group.courseTitle}
                       </Link>

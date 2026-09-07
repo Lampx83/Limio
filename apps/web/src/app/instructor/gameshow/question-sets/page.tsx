@@ -47,6 +47,7 @@ export default async function QuestionSetsPage() {
               <Link
                 href={`/instructor/gameshow/question-sets/${s.id}`}
                 className="flex items-center justify-between rounded border border-default bg-white p-4 hover:border-blue-400 hover:bg-blue-50"
+                prefetch={false}
               >
                 <div>
                   <p className="text-sm font-semibold">{s.title}</p>

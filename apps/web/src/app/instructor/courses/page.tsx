@@ -131,6 +131,7 @@ export default async function InstructorCoursesPage() {
                       <Link
                         href={`/instructor/courses/${c.id}`}
                         className={`min-w-0 break-words text-base font-semibold transition group-hover:text-brand-700 ${status.title}`}
+                        prefetch={false}
                       >
                         {c.title}
                       </Link>

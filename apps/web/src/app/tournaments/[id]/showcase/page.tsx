@@ -262,6 +262,7 @@ export default async function ShowcasePage({
                       ? "border-brand-500 bg-brand-soft text-brand-700"
                       : "border-token hover:bg-[rgb(var(--surface-muted))]"
                   }`}
+                  prefetch={false}
                 >
                   {sortLabels[k]}
                 </Link>
@@ -293,6 +294,7 @@ export default async function ShowcasePage({
                   ? "border-brand-500 bg-brand-soft text-brand-700"
                   : "border-token hover:bg-[rgb(var(--surface-muted))]"
               }`}
+              prefetch={false}
             >
               {m.title}
             </Link>

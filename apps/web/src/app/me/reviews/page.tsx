@@ -57,7 +57,7 @@ export default async function PeerReviewQueuePage() {
                       Hạn chấm: {formatDateTime(due)}
                     </p>
                   </div>
-                  <Link href={`/me/reviews/${ra.id}`} className="btn-primary btn-sm shrink-0">
+                  <Link href={`/me/reviews/${ra.id}`} className="btn-primary btn-sm shrink-0" prefetch={false}>
                     Chấm
                   </Link>
                 </div>

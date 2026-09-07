@@ -167,6 +167,7 @@ export default async function InstructorForumHubPage({
             key={c.id}
             href={filterHref({ course: c.id })}
             className={courseFilter === c.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {c.title}
           </Link>
@@ -188,6 +189,7 @@ export default async function InstructorForumHubPage({
             key={f.id}
             href={filterHref({ status: f.id })}
             className={status === f.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {f.label}
           </Link>
@@ -310,6 +312,7 @@ export default async function InstructorForumHubPage({
                       <Link
                         href={`/learn/${t.lesson.module.course.slug}/threads/${t.id}`}
                         className="btn-secondary btn-sm"
+                        prefetch={false}
                       >
                         Mở
                       </Link>

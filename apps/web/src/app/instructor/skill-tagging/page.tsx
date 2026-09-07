@@ -115,6 +115,7 @@ export default async function SkillTaggingHubPage({
             key={c.courseId}
             href={filterHref({ course: c.courseId })}
             className={courseFilter === c.courseId ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {c.courseTitle}
           </Link>
@@ -282,7 +283,7 @@ export default async function SkillTaggingHubPage({
                   </div>
                 </dl>
                 <div className="mt-3 border-t border-token pt-3 text-right">
-                  <Link href={`/instructor/courses/${c.courseId}`} className="btn-ghost btn-sm">
+                  <Link href={`/instructor/courses/${c.courseId}`} className="btn-ghost btn-sm" prefetch={false}>
                     Mở khoá →
                   </Link>
                 </div>

@@ -196,6 +196,7 @@ export default async function InstructorAssignmentsPage({
             key={c.id}
             href={buildHref({ course: c.id })}
             className={selectedCourseId === c.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {c.title}
           </Link>
@@ -294,6 +295,7 @@ async function AssignmentListView({
             key={f.id}
             href={buildHref({ filter: f.id, view: "list" })}
             className={filter === f.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {f.label}
           </Link>
@@ -419,6 +421,7 @@ async function AssignmentListView({
                       <Link
                         href={`/instructor/assignments/${a.id}/submissions`}
                         className="btn-secondary btn-sm"
+                        prefetch={false}
                       >
                         Chấm
                       </Link>
@@ -592,7 +595,7 @@ async function PendingStreamView({ courseIds }: { courseIds: string[] }) {
                       {formatAgo(it.submittedAt)}
                     </td>
                     <td className="px-4 py-3 align-top text-right">
-                      <Link href={it.href} className="btn-secondary btn-sm">
+                      <Link href={it.href} className="btn-secondary btn-sm" prefetch={false}>
                         Chấm
                       </Link>
                     </td>

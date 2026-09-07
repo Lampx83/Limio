@@ -213,6 +213,7 @@ export default async function InstructorEnrollmentsPage({
             key={c.id}
             href={filterHref({ course: c.id })}
             className={courseFilter === c.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {c.title}
           </Link>
@@ -235,6 +236,7 @@ export default async function InstructorEnrollmentsPage({
             key={f.id}
             href={filterHref({ status: f.id })}
             className={statusFilter === f.id ? "chip-brand" : "chip"}
+            prefetch={false}
           >
             {f.label}
           </Link>
@@ -283,6 +285,7 @@ export default async function InstructorEnrollmentsPage({
                         <Link
                           href={`/instructor/courses/${e.course.id}`}
                           className="text-xs hover:text-brand-600"
+                          prefetch={false}
                         >
                           {e.course.title}
                         </Link>
