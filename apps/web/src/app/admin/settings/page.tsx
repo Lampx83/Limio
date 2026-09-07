@@ -1,12 +1,17 @@
-import { getPaymentEnabled, getFooterSettings } from "@/lib/site-settings";
+import {
+  getPaymentEnabled,
+  getFooterSettings,
+  getAiBankSettings,
+} from "@/lib/site-settings";
 import SettingsClient from "./SettingsClient";
 
 export const revalidate = 30;
 
 export default async function AdminSettingsPage() {
-  const [paymentEnabled, footer] = await Promise.all([
+  const [paymentEnabled, footer, bank] = await Promise.all([
     getPaymentEnabled(),
     getFooterSettings(),
+    getAiBankSettings(),
   ]);
 
   return (
@@ -21,6 +26,7 @@ export default async function AdminSettingsPage() {
         initialPaymentEnabled={paymentEnabled}
         initialFooterText={footer.text}
         initialFooterEnabled={footer.enabled}
+        initialBank={bank}
       />
     </div>
   );

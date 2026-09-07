@@ -42,22 +42,36 @@ function ToggleRow({
   );
 }
 
+interface BankSettings {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
 export default function SettingsClient({
   initialPaymentEnabled,
   initialFooterText,
   initialFooterEnabled,
+  initialBank,
 }: {
   initialPaymentEnabled: boolean;
   initialFooterText: string;
   initialFooterEnabled: boolean;
+  initialBank: BankSettings;
 }) {
   const [paymentEnabled, setPaymentEnabled] = useState(initialPaymentEnabled);
   const [footerText, setFooterText] = useState(initialFooterText);
   const [footerEnabled, setFooterEnabled] = useState(initialFooterEnabled);
   const [savedFooterText, setSavedFooterText] = useState(initialFooterText);
+  const [bank, setBank] = useState(initialBank);
+  const [savedBank, setSavedBank] = useState(initialBank);
   const [pending, startTransition] = useTransition();
 
   const footerDirty = footerText !== savedFooterText;
+  const bankDirty =
+    bank.bankName !== savedBank.bankName ||
+    bank.accountNumber !== savedBank.accountNumber ||
+    bank.accountName !== savedBank.accountName;
 
   async function patchSettings(body: Record<string, string>) {
     const res = await fetch(apiUrl("/api/admin/settings"), {
@@ -96,6 +110,31 @@ export default function SettingsClient({
         setFooterText(trimmed);
         toast.success("Đã lưu nội dung footer");
       }
+    });
+  }
+
+  function saveBank() {
+    const trimmed: BankSettings = {
+      bankName: bank.bankName.trim(),
+      accountNumber: bank.accountNumber.trim(),
+      accountName: bank.accountName.trim(),
+    };
+    // Số tài khoản người ta hay dán kèm khoảng trắng hoặc dấu chấm từ app ngân
+    // hàng; bỏ hết để hiện ra một chuỗi liền, đúng cái người mua sẽ gõ lại.
+    trimmed.accountNumber = trimmed.accountNumber.replace(/[\s.]/g, "");
+    startTransition(async () => {
+      const ok = await patchSettings({
+        "ai.bank.name": trimmed.bankName,
+        "ai.bank.account_number": trimmed.accountNumber,
+        "ai.bank.account_name": trimmed.accountName,
+      });
+      if (!ok) {
+        toast.error("Cập nhật thất bại", { description: "Vui lòng thử lại." });
+        return;
+      }
+      setBank(trimmed);
+      setSavedBank(trimmed);
+      toast.success("Đã lưu thông tin tài khoản nhận tiền");
     });
   }
 
@@ -150,6 +189,97 @@ export default function SettingsClient({
             nhưng thanh toán thực tế chưa hoạt động. Cần cấu hình Stripe/VNPay trước khi thu tiền thật.
           </div>
         )}
+      </section>
+
+      {/* Tài khoản nhận tiền mua token AI */}
+      <section className="card">
+        <header className="border-b border-token pb-4">
+          <h2 className="text-base font-semibold">
+            Tài khoản nhận tiền mua token AI
+          </h2>
+          <p className="mt-1 text-xs text-muted">
+            Hiện trên trang <code>/me/ai-tokens</code> để người học chuyển
+            khoản. Chưa điền đủ tên ngân hàng và số tài khoản thì trang mua báo
+            &ldquo;chưa cấu hình&rdquo; thay vì mời chuyển tiền.
+          </p>
+        </header>
+
+        <div className="space-y-3 py-4">
+          <div>
+            <label className="text-sm font-semibold" htmlFor="bank-name">
+              Ngân hàng
+            </label>
+            <input
+              id="bank-name"
+              value={bank.bankName}
+              onChange={(e) => setBank({ ...bank, bankName: e.target.value })}
+              placeholder="Vietcombank"
+              className="mt-1 w-full rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold" htmlFor="bank-number">
+              Số tài khoản
+            </label>
+            <input
+              id="bank-number"
+              value={bank.accountNumber}
+              onChange={(e) =>
+                setBank({ ...bank, accountNumber: e.target.value })
+              }
+              placeholder="0123456789"
+              inputMode="numeric"
+              className="mt-1 w-full rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold" htmlFor="bank-holder">
+              Tên chủ tài khoản
+            </label>
+            <input
+              id="bank-holder"
+              value={bank.accountName}
+              onChange={(e) =>
+                setBank({ ...bank, accountName: e.target.value })
+              }
+              placeholder="TRUONG DAI HOC ..."
+              className="mt-1 w-full rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted">
+              {bank.bankName.trim() && bank.accountNumber.trim()
+                ? "Đã đủ để hiện cho người mua."
+                : "Thiếu ngân hàng hoặc số tài khoản — trang mua sẽ báo chưa cấu hình."}
+            </span>
+            <button
+              type="button"
+              onClick={saveBank}
+              disabled={pending || !bankDirty}
+              className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {pending ? "Đang lưu…" : "Lưu"}
+            </button>
+          </div>
+
+          <div className="rounded-lg border border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-muted">
+              Người mua sẽ thấy
+            </p>
+            <p className="mt-1 text-sm">
+              {bank.bankName.trim() && bank.accountNumber.trim() ? (
+                <>
+                  Chuyển tới: <strong>{bank.bankName.trim()}</strong> —{" "}
+                  <strong>{bank.accountNumber.trim()}</strong>
+                  {bank.accountName.trim() ? ` (${bank.accountName.trim()})` : ""}
+                </>
+              ) : (
+                "Thông tin tài khoản nhận chưa được cấu hình — liên hệ admin trước khi chuyển tiền."
+              )}
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Footer section */}

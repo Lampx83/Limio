@@ -25,6 +25,29 @@ export async function getFooterSettings(): Promise<{ text: string; enabled: bool
   };
 }
 
+export interface AiBankSettings {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
+/**
+ * Tài khoản nhận tiền mua token AI. Trả về chuỗi rỗng thay vì null để form
+ * admin bind thẳng được; trang mua tự coi rỗng là "chưa cấu hình".
+ */
+export async function getAiBankSettings(): Promise<AiBankSettings> {
+  const [bankName, accountNumber, accountName] = await Promise.all([
+    getSiteSetting("ai.bank.name"),
+    getSiteSetting("ai.bank.account_number"),
+    getSiteSetting("ai.bank.account_name"),
+  ]);
+  return {
+    bankName: bankName ?? "",
+    accountNumber: accountNumber ?? "",
+    accountName: accountName ?? "",
+  };
+}
+
 export async function setSiteSetting(key: string, value: string): Promise<void> {
   await prisma.siteSetting.upsert({
     where: { key },
