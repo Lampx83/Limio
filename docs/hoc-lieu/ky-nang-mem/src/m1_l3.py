@@ -79,6 +79,20 @@ Rà soát không có nghĩa viết lại từ đầu mỗi sáu tháng. Nó là 
 
 Nhà kinh tế học Albert Hirschman mô tả ba cách con người đáp lại khi tổ chức mình thuộc về đi chệch hướng: **rời đi** (exit), **lên tiếng** (voice), và **ở lại vì gắn bó** (loyalty). Điểm quan trọng trong lập luận của ông: khi người ta chỉ biết tới lựa chọn rời đi, tổ chức mất luôn nguồn thông tin để tự sửa. Lên tiếng là lựa chọn tốn công hơn nhưng thường được thử trước.
 
+![Chân dung Albert O. Hirschman năm 1945](https://upload.wikimedia.org/wikipedia/commons/6/63/Albert_O._Hirschman%2C_1945_%28cropped%29.jpg "Albert O. Hirschman (1915–2012), nhà kinh tế học, tác giả Exit, Voice, and Loyalty (1970) — khung ba lối đáp lại khi tổ chức mình thuộc về đi chệch hướng. Ảnh chụp năm 1945: [File:Albert O. Hirschman, 1945 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Albert_O._Hirschman,_1945_(cropped).jpg), tác giả Sgt. Charles James, thuộc phạm vi công cộng.")
+
+```html
+<div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem">Ba lối đáp lại của Hirschman — và chỗ hay bị bỏ quên</div>
+  <div style="display:flex;flex-wrap:wrap;gap:.5rem;font-size:1.1rem">
+    <div style="flex:1 1 11rem;background:rgba(217,150,40,.14);border-radius:.4rem;padding:.7rem .8rem"><b>Rời đi</b><br><span style="font-size:1rem;opacity:.85">Nghỉ việc, rút khỏi nhóm. Dứt điểm, nhưng tổ chức mất luôn thông tin để sửa.</span></div>
+    <div style="flex:1 1 11rem;background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.7rem .8rem"><b>Lên tiếng</b><br><span style="font-size:1rem;opacity:.85">Làm rõ, nêu quan ngại, thương lượng phạm vi. Tốn công nhất, và là lối hầu hết mọi người bỏ qua.</span></div>
+    <div style="flex:1 1 11rem;background:rgba(139,92,246,.14);border-radius:.4rem;padding:.7rem .8rem"><b>Ở lại vì gắn bó</b><br><span style="font-size:1rem;opacity:.85">Ở lại và chờ. Lành mạnh khi kèm lên tiếng; thành chịu đựng khi thay cho lên tiếng.</span></div>
+  </div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Phản xạ thường thấy là nhảy thẳng từ ô ba sang ô một khi chịu hết nổi. Bảng dưới đây bẻ ô giữa ra thành các bước làm được.</div>
+</div>
+```
+
 | Bước | Việc cụ thể | Vì sao đứng ở vị trí này |
 |---|---|---|
 | 1. Làm rõ | Hỏi lại để biết yêu cầu thật sự là gì, ai yêu cầu, dựa trên căn cứ nào | Một phần đáng kể các "xung đột giá trị" hoá ra là hiểu nhầm về phạm vi hoặc thẩm quyền |
@@ -88,6 +102,12 @@ Nhà kinh tế học Albert Hirschman mô tả ba cách con người đáp lại
 | 5. Rời đi | Chỉ khi các bước trên đã thử và yêu cầu vẫn buộc bạn làm điều sai | Là lựa chọn hợp lệ và đôi khi là lựa chọn đúng — nhưng là bước cuối |
 
 Có một ngoại lệ cần nói rõ: khi yêu cầu là **hành vi gian lận hoặc vi phạm pháp luật** rõ ràng, bước 1 và 2 rút ngắn lại rất nhanh và việc từ chối tham gia phải xảy ra ngay, song song với việc ghi lại. Thương lượng phạm vi không áp dụng cho việc sai bản chất; nó chỉ dùng cho những vùng xám về cách làm.
+
+> [!vi-du] Linh có 12 nghìn người theo dõi và được một nhãn hàng đề nghị 3 triệu đồng cho một bài đăng khen sản phẩm bạn chưa dùng bao giờ, kèm yêu cầu không gắn nhãn quảng cáo. Ở đây có hai lớp: khen thứ chưa dùng là nói điều mình không biết có đúng không, còn giấu việc được trả tiền là làm người xem hiểu sai về tư cách người nói. Lựa chọn giữ được cả hai phía: nhận hợp tác nhưng dùng thật hai tuần rồi viết đúng cảm nhận, và ghi rõ đây là bài có tài trợ. Nhãn hàng nào từ chối điều kiện đó thì thứ họ mua không phải nội dung của bạn — mà là lòng tin của những người theo dõi bạn, món bạn không có quyền bán hộ.
+
+> [!vi-du] Ngọc thực tập ở một công ty phần mềm, được giao viết mười đánh giá năm sao cho ứng dụng của công ty bằng mười tài khoản khác nhau. Đây không phải vùng xám — đó là tạo đánh giá giả. Bước 1 và 2 rút gọn thành một câu nói ngay với người giao việc: mình không làm phần này vì đó là đánh giá không có thật, và nếu nền tảng phát hiện thì tài khoản ứng dụng có thể bị gỡ. Bước 3 vẫn còn chỗ dùng: đề xuất việc thay thế đạt cùng mục đích — soạn kịch bản mời người dùng thật đánh giá sau khi họ dùng xong. Bước 4 làm ngay chiều hôm đó: lưu lại tin nhắn giao việc và câu trả lời của mình.
+
+> [!vi-du] Sơn làm nhóm trưởng một câu lạc bộ, được đề nghị ghi số người tham dự sự kiện là 200 thay vì 120 để báo cáo cho đẹp. Ở đây vẫn còn vùng thương lượng: Sơn đề xuất báo đúng 120 kèm ba dòng giải thích bối cảnh (trùng lịch thi giữa kỳ) và một đề xuất cải thiện cho kỳ sau. Cách này giữ được số liệu đúng mà vẫn trả lời được mối lo thật sự của người đề nghị — họ sợ báo cáo trông như một thất bại.
 
 > [!vi-du] Nhóm của Hải muốn dùng bài của khoá trước nộp lại cho nhanh. Phản ứng theo hai cực: hoặc im lặng đồng ý, hoặc mắng cả nhóm rồi bỏ nhóm. Cách theo thang trên: nói ngay và nói bằng sự việc — "mình không tham gia phần này, vì nếu bị phát hiện thì cả nhóm mất điểm toàn học phần" — kèm một đề xuất thay thế khả thi: "mình nhận viết phần khung tối nay, sáng mai cả nhóm điền dữ liệu thật." Giữ được nguyên tắc mà vẫn để nhóm một lối đi.
 
@@ -106,6 +126,8 @@ Với các quyết định nghề nghiệp lớn — chọn nơi thực tập, n
 | Học hỏi | Việc lặp lại sau ba tháng đầu | Người hướng dẫn cam kết 1 giờ/tuần, có lộ trình rõ |
 | Trách nhiệm tài chính với gia đình | Hỗ trợ tốt hơn ngay lập tức | Đủ sống, chậm hơn khoảng một năm |
 
+> [!vi-du] Sau khi làm bảng này, Mai phát hiện thứ mình do dự thật ra không phải lương mà là khoảng cách: nơi B đi làm mất 70 phút mỗi chiều, tức mất luôn hai buổi tối học thêm tiếng Anh mỗi tuần — thứ gắn với giá trị học hỏi đứng thứ hai của bạn. Bảng không quyết định hộ Mai, nhưng nó đổi câu hỏi từ chọn A hay B thành đàm phán được hai ngày làm từ xa hay không. Nhiều quyết định tưởng là chọn một trong hai hoá ra là một cuộc thương lượng chưa ai mở lời.
+
 Bảng ví dụ trên cho thấy vì sao **điều kiện loại trừ** phải được đánh dấu trước khi so sánh: nếu chỉ cộng điểm, nơi A có thể thắng. Đây cũng chính là tình huống mà một người có trọng tâm nguyên tắc trả lời khác với người có trọng tâm tiền bạc — không phải vì họ coi nhẹ thu nhập, mà vì họ đã quyết định trước rằng có những ô không đem ra đổi.
 
 > [!meo] Làm bảng này **trước** khi bước vào cuộc thương lượng lương, không phải sau. Biết trước ô nào không đổi được thì bạn thương lượng bình tĩnh hơn hẳn, và không rơi vào tình huống đồng ý xong mới thấy mình vừa bán mất thứ không định bán.
@@ -123,6 +145,12 @@ Viết bản nháp tuyên ngôn sứ mệnh cá nhân theo ba câu hỏi ở m�
 ### Bài tập về nhà (60 phút)
 
 Chọn một quyết định lớn bạn đang phải ra hoặc vừa ra trong sáu tháng qua (chọn nơi thực tập, nhận việc, đổi hướng học). Làm bảng đối chiếu giá trị như ở mục **Ra quyết định lớn bằng giá trị** với ít nhất hai phương án và ba giá trị, đánh dấu điều kiện loại trừ nếu có. Viết nửa trang trả lời: quyết định của bạn có giải thích được bằng ba giá trị ấy không; nếu không thì thứ đang thật sự dẫn dắt bạn là gì.
+
+### Xem thêm
+
+- 🎬 [The Psychology of Your Future Self](https://www.youtube.com/watch?v=XNbaR54Gpj4) — Dan Gilbert, TED, 6 phút. Con người đánh giá thấp mức mình sẽ thay đổi trong mười năm tới — lý do thực nghiệm cho việc phải đặt mốc rà soát tuyên ngôn.
+- 🎬 [Building a Psychologically Safe Workplace](https://www.youtube.com/watch?v=LhoLuui9gX8) — Amy Edmondson, TEDxHGSE, 11 phút. Điều gì khiến người ta dám hoặc không dám lên tiếng trong tổ chức — bối cảnh cho bước 2 của thang xử lý xung đột.
+- 🎬 [How Great Leaders Inspire Action](https://www.youtube.com/watch?v=qp0HIF3SfI4) — Simon Sinek, TED, 18 phút. Xem lại ở bài này với câu hỏi khác: phần *vì sao* trong tuyên ngôn của bạn đã đủ rõ để người khác hiểu chưa.
 
 ### Nguồn tham khảo
 

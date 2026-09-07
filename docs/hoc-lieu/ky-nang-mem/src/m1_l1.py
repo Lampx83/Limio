@@ -34,7 +34,17 @@ Phần lớn câu trả lời cho câu hỏi "giá trị sống của bạn là 
 | Khi phải trả giá | Vẫn giữ, và đó là lúc nó lộ ra | Có thể đổi mục tiêu khác | Thường bỏ ngay |
 | Câu hỏi kiểm tra | "Giữ điều này, tôi mất gì?" | "Tích ô hoàn thành được chưa?" | "Không có nó tôi có sao không?" |
 
+> [!vi-du] Trang được nhận thực tập ở một công ty lớn tại thành phố khác, lương gấp đôi chỗ hiện tại. Bạn từ chối vì mẹ vừa mổ và cần người ở nhà sáu tháng. Trước đó Trang có nói mình coi trọng gia đình — nhưng phải tới lúc câu nói ấy tốn một suất thực tập thì nó mới trở thành bằng chứng. Ngược lại, nếu Trang nhận việc và thu xếp người chăm mẹ, điều đó cũng không biến bạn thành người vô tâm: nó chỉ cho thấy ở thời điểm này, trách nhiệm tài chính với gia đình đang xếp trên sự có mặt trực tiếp. Cả hai lựa chọn đều đọc được, miễn là người chọn nhìn thẳng vào cái mình vừa đổi.
+
 Phép thử **trả giá** là phép thử mạnh nhất. Ai cũng nói mình coi trọng trung thực khi trung thực không tốn gì. Giá trị ấy chỉ được chứng minh vào lúc nói thật thì mất điểm, mất việc, hoặc mất lòng người mình quý. Tương tự, "coi trọng gia đình" là một câu chưa có nội dung cho tới khi nó buộc bạn từ chối một cơ hội nào đó.
+
+> [!vi-du] Ba người cùng nói coi trọng **học hỏi**, nhưng bối cảnh khác nhau nên hành vi phải khác nhau — và chỉ hành vi mới kiểm tra được.
+>
+> | Bối cảnh | Câu nói giống nhau | Hành vi cho thấy đó là giá trị thật |
+> |---|---|---|
+> | Sinh viên năm nhất | Em muốn học hỏi nhiều | Nộp bài sớm để còn kịp sửa theo góp ý, thay vì nộp sát hạn cho xong |
+> | Người đi làm năm thứ hai | Tôi coi trọng phát triển bản thân | Nhận phần việc mình chưa biết làm dù biết sẽ bị chê ở bản nháp đầu |
+> | Người đang chuyển ngành | Tôi sẵn sàng học lại từ đầu | Chấp nhận mức lương thấp hơn một năm để đổi lấy nơi có người hướng dẫn |
 
 Còn một khái niệm thứ tư hay bị trộn vào: **nguyên tắc**. Trong cách dùng của Stephen Covey, nguyên tắc là những quy luật vận hành của đời sống con người mà ta không tạo ra và không sửa được — gieo gì gặt nấy, tin cậy xây bằng nhất quán chứ không bằng lời hứa, tôn trọng thì có đi có lại. Giá trị là thứ **bạn chọn** để coi trọng; nguyên tắc là thứ **tồn tại sẵn**, và hệ quả của việc đi ngược nó không phụ thuộc vào việc bạn có tin hay không. Một người có thể chọn giá trị "thắng bằng mọi giá", nhưng nguyên tắc về niềm tin vẫn hoạt động: rồi sẽ không ai muốn hợp tác nữa.
 
@@ -57,6 +67,8 @@ Ngồi nghĩ ra giá trị của mình từ tờ giấy trắng rất khó và t
 
 Nhà tâm lý học **Shalom Schwartz** khảo sát ở hơn 80 quốc gia và tìm ra mười nhóm giá trị cơ bản xuất hiện ở gần như mọi nền văn hoá. Điểm quan trọng của mô hình không nằm ở danh sách mười nhóm, mà ở **cấu trúc vòng tròn**: các nhóm nằm cạnh nhau thì tương hợp, các nhóm nằm đối diện thì xung khắc — theo đuổi mạnh bên này thường phải nhả bớt bên kia.
 
+![Chân dung nhà tâm lý học Shalom H. Schwartz](https://upload.wikimedia.org/wikipedia/commons/c/cd/Shalom_H_Schwartz.jpg "Shalom H. Schwartz, người xây dựng lý thuyết giá trị cơ bản dựa trên khảo sát ở hơn 80 quốc gia. Ảnh: [File:Shalom H Schwartz.jpg](https://commons.wikimedia.org/wiki/File:Shalom_H_Schwartz.jpg), tải lên bởi Maksim Rudnev, giấy phép CC BY-SA 3.0.")
+
 | Nhóm giá trị | Nội dung cốt lõi | Nhóm đối diện (khó cùng tối đa) |
 |---|---|---|
 | Tự chủ (self-direction) | Tự nghĩ, tự chọn, độc lập | Tuân thủ và truyền thống |
@@ -70,6 +82,23 @@ Nhà tâm lý học **Shalom Schwartz** khảo sát ở hơn 80 quốc gia và t
 | Nhân từ (benevolence) | Chăm lo người gần gũi | Thành đạt và quyền lực |
 | Phổ quát (universalism) | Công bằng, bảo vệ tự nhiên và người xa lạ | Quyền lực |
 
+![Sơ đồ vòng tròn liên tục 19 giá trị của Schwartz, chia thành bốn nhóm bậc cao: cởi mở với thay đổi, tự đề cao, bảo tồn, vượt lên cái tôi](https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Proposed_circular_motivational_continuum_of_19_values_with_sources_that_underlie_their_order.png/1280px-Proposed_circular_motivational_continuum_of_19_values_with_sources_that_underlie_their_order.png "Bản tinh chỉnh năm 2012: mười giá trị được tách nhỏ thành mười chín, xếp thành một vòng liên tục. Giá trị càng gần nhau càng dễ cùng theo đuổi, càng đối diện nhau càng khó cùng tối đa. Bốn nhóm bậc cao ở vành ngoài: Openness to Change (cởi mở với thay đổi), Self-Enhancement (tự đề cao), Conservation (bảo tồn), Self-Transcendence (vượt lên cái tôi). Hình: [File:Proposed circular motivational continuum of 19 values](https://commons.wikimedia.org/wiki/File:Proposed_circular_motivational_continuum_of_19_values_with_sources_that_underlie_their_order.png), tác giả Schwartz, Cieciuch, Vecchione và cộng sự, giấy phép CC BY-SA 4.0.")
+
+```html
+<div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem">Hai trục đối lập — bản tiếng Việt để tra nhanh</div>
+  <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center;font-size:1.1rem">
+    <div style="background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem"><b>Cởi mở với thay đổi</b><br><span style="font-size:1rem;opacity:.85">tự chủ · kích thích · hưởng thụ</span></div>
+    <div style="text-align:center;font-weight:700;color:rgba(127,127,127,0.95)">↔</div>
+    <div style="background:rgba(217,150,40,.14);border-radius:.4rem;padding:.6rem .8rem"><b>Bảo tồn</b><br><span style="font-size:1rem;opacity:.85">an toàn · tuân thủ · truyền thống</span></div>
+    <div style="background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .8rem"><b>Tự đề cao</b><br><span style="font-size:1rem;opacity:.85">thành đạt · quyền lực</span></div>
+    <div style="text-align:center;font-weight:700;color:rgba(127,127,127,0.95)">↔</div>
+    <div style="background:rgba(13,148,136,.14);border-radius:.4rem;padding:.6rem .8rem"><b>Vượt lên cái tôi</b><br><span style="font-size:1rem;opacity:.85">nhân từ · phổ quát</span></div>
+  </div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Đọc theo hàng: đẩy mạnh một bên thường phải nhả bớt bên kia. Muốn đổi việc liên tục để học nhanh (cởi mở) mà vẫn muốn thu nhập ổn định và ít rủi ro (bảo tồn) không phải là bạn thiếu quyết tâm — đó là hai đầu của một trục.</div>
+</div>
+```
+
 Cột thứ ba là phần hay bị bỏ qua và cũng là phần hữu dụng nhất. Nó giải thích vì sao bạn thấy giằng xé mà không hiểu tại sao: mong muốn thăng tiến nhanh (thành đạt, quyền lực) và mong muốn có mặt đủ cho gia đình (nhân từ) không mâu thuẫn về mặt đạo lý, nhưng cạnh tranh trực tiếp về thời gian và sự chú ý. Cảm giác giằng xé không phải dấu hiệu bạn có vấn đề; nó là dấu hiệu bạn đang giữ hai giá trị nằm đối diện nhau trên vòng tròn.
 
 Trong giáo dục phổ thông và các chương trình giá trị sống ở Việt Nam, danh sách thường dùng ngắn và gần gũi hơn — hoà bình, tôn trọng, yêu thương, khoan dung, trung thực, khiêm tốn, hợp tác, hạnh phúc, trách nhiệm, giản dị, tự do, đoàn kết. Hai danh sách phục vụ hai việc khác nhau: danh sách của Schwartz để **hiểu vì sao mình giằng xé**, danh sách giá trị sống để **chọn từ ngữ gọi tên điều mình coi trọng**. Dùng cái nào cũng được, miễn là bước tiếp theo phải làm.
@@ -80,15 +109,18 @@ Trong giáo dục phổ thông và các chương trình giá trị sống ở Vi
 
 Argyris và Schön, khi nghiên cứu cách các nhà chuyên môn hành nghề, phân biệt **lý thuyết tuyên bố** — điều người ta nói mình tin — với **lý thuyết đang dùng** — điều suy ra được từ hành vi thực tế của họ. Hai thứ này lệch nhau ở gần như tất cả mọi người, và người trưởng thành về nghề nghiệp không phải người không có khoảng lệch, mà là người **đo được** khoảng lệch của mình.
 
-Áp vào giá trị sống: đừng hỏi mình coi trọng điều gì, hãy đọc ba nguồn dữ liệu sau. Chúng khó chối cãi hơn trí nhớ.
+Áp vào giá trị sống: đừng hỏi mình coi trọng điều gì, hãy đọc bốn nguồn dữ liệu sau. Chúng khó chối cãi hơn trí nhớ.
 
 | Nguồn | Cách đọc | Nó tiết lộ điều gì |
 |---|---|---|
 | Lịch ba tuần gần nhất | Cộng số giờ theo nhóm hoạt động, bỏ qua giờ ngủ và giờ bắt buộc | Thứ bạn thật sự dành thời gian, sau khi trừ hết những lời giải thích |
 | Các khoản chi tự nguyện ba tháng | Chỉ tính khoản tự quyết, bỏ tiền trọ và ăn cơ bản | Thứ bạn đổi tiền để lấy khi không ai ép |
 | Những lời bạn đã từ chối | Liệt kê 5 lần gần nhất nói không, và lý do thật | Thứ bạn bảo vệ khi phải trả giá — dữ liệu quý nhất trong ba nguồn |
+| Thời gian dùng điện thoại 7 ngày | Mở Screen Time (iOS) hoặc Digital Wellbeing (Android), xem ba ứng dụng đứng đầu | Thứ đang lấy mất phần thời gian bạn tưởng mình dành cho việc khác |
 
 Khoảng lệch giữa danh sách bạn viết ra và ba bảng dữ liệu này không phải bằng chứng bạn giả dối. Thường nó nói lên một trong ba điều: giá trị ấy là **của người khác gán cho bạn** (cha mẹ, thầy cô, mạng xã hội) và bạn chưa kịp kiểm tra xem mình có thật sự tin không; hoặc nó là giá trị thật nhưng bạn **chưa dựng được cơ chế** để sống theo; hoặc nó đã bị một giá trị khác **âm thầm xếp cao hơn** mà bạn chưa thừa nhận.
+
+> [!vi-du] Khoa mở Screen Time và thấy 4 giờ 10 phút mỗi ngày cho mạng xã hội, trong khi danh sách giá trị của bạn ghi học hỏi ở vị trí số một. Kết luận vội là tự trách. Kết luận đúng cần thêm một bước: 4 giờ ấy đang phục vụ nhu cầu gì — giải trí sau giờ học, sợ bỏ lỡ chuyện bạn bè, hay là cách trốn một môn đang học không nổi? Nguồn dữ liệu chỉ chỉ chỗ để nhìn; giá trị nào đang thắng thì phải tự trả lời. Và nếu câu trả lời là môn học kia quá khó, thì việc cần làm nằm ở môn học đó chứ không nằm ở ứng dụng.
 
 > [!vi-du] Nam viết ba giá trị: sức khoẻ, gia đình, học hỏi. Lịch ba tuần cho thấy: 0 buổi tập, 2 cuộc gọi về nhà, 11 buổi tối làm thêm ở quán. Kết luận đúng không phải "Nam nói dối", mà là: thu nhập đang được xếp trên cả ba giá trị kia. Câu hỏi tiếp theo mới là câu đáng giá — Nam đang đánh đổi có ý thức để trả học phí, hay chỉ trôi theo vì chưa bao giờ ngồi xuống xếp thứ tự?
 
@@ -135,6 +167,12 @@ Làm bảng ba nguồn dữ liệu ở mục **Giá trị tuyên bố và giá t
 
 **Việc sẽ làm trong 6 tuần:** … (một hành vi quan sát được, có thời điểm cụ thể)
 :::
+
+### Xem thêm
+
+- 🎬 [How Great Leaders Inspire Action](https://www.youtube.com/watch?v=qp0HIF3SfI4) — Simon Sinek, TED, 18 phút. Lập luận rằng cái *vì sao* đứng trước cái *làm gì*; xem để thấy sự khác nhau giữa một mục tiêu và một lý do đi cùng nhiều mục tiêu.
+- 🎬 [The Paradox of Choice](https://www.youtube.com/watch?v=VO6XEQIsCoM) — Barry Schwartz, TED, 20 phút. Vì sao càng nhiều lựa chọn càng khó chọn và càng dễ hối tiếc — nền tâm lý học cho bước ép danh sách 12 giá trị xuống còn 5.
+- 🎬 [Are You a Giver or a Taker?](https://www.youtube.com/watch?v=YyXRYgjQXX0) — Adam Grant, TED, 13 phút. Ba kiểu người trong tổ chức; dùng để soi giá trị nhân từ và thành đạt nằm ở đâu trong cách bạn làm việc nhóm.
 
 ### Nguồn tham khảo
 
