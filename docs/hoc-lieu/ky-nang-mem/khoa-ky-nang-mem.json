@@ -1,0 +1,799 @@
+{
+  "course": {
+    "title": "Kỹ năng mềm",
+    "slug": "ky-nang-mem",
+    "description": "Khoá kỹ năng mềm dành cho sinh viên đại học và người mới đi làm. Mười module, mỗi module một kỹ năng, đi từ trong ra ngoài: bắt đầu ở nền tảng cá nhân — giá trị sống, tư duy tích cực, tư duy phản biện, quản lý thời gian — rồi mới tới các kỹ năng cần người khác mới luyện được: giao tiếp, lắng nghe, thuyết trình, thuyết phục, làm việc nhóm, và cuối cùng là viết CV cùng phỏng vấn xin việc. Thứ tự ấy có lý do: một người chưa biết mình coi trọng điều gì thì thuyết phục người khác bằng gì, và một người không quản được thời gian của mình thì không giữ được cam kết với nhóm. Khoá học không dạy mẹo ứng xử. Mỗi bài đặt một khung khái niệm có nguồn gốc rõ ràng, cho thấy khung ấy được dùng thế nào trong một tình huống học tập hoặc công sở cụ thể, rồi buộc người học tự chạy nó trên chính đời sống của mình qua ba lớp luyện tập: cá nhân, nhóm và bài tập về nhà. Mỗi bài kết bằng một bài kiểm tra ngắn, phương án sai được gắn mã lỗi tư duy để phản hồi chỉ đúng chỗ hiểu nhầm thay vì báo sai chung chung.",
+    "language": "vi",
+    "level": "beginner",
+    "category": "Kỹ năng mềm",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "knm.skill-is-innate",
+      "name": "Coi kỹ năng mềm là tính cách bẩm sinh",
+      "description": "Tin rằng người ta sinh ra đã hoạt ngôn hoặc đã kỷ luật, nên việc luyện tập chỉ dành cho người có sẵn tố chất. Cách nghĩ này biến mọi thất bại thành bằng chứng về bản chất mình và chấm dứt việc luyện tập ngay tại đó, trong khi phần lớn kỹ năng mềm là chuỗi hành vi quan sát được và tập được."
+    },
+    {
+      "code": "knm.knowing-equals-doing",
+      "name": "Biết khung lý thuyết là đã có kỹ năng",
+      "description": "Đọc hiểu một mô hình rồi coi như đã sở hữu kỹ năng tương ứng. Cảm giác hiểu bài đo độ quen thuộc với khái niệm, không đo khả năng thực hiện dưới áp lực; khoảng cách giữa hai thứ chỉ đóng lại bằng luyện tập có phản hồi."
+    },
+    {
+      "code": "knm.value-as-goal",
+      "name": "Lẫn giá trị với mục tiêu",
+      "description": "Coi giá trị sống và mục tiêu là một, nên trả lời câu hỏi về giá trị bằng những thứ đạt được rồi gạch đi: có bằng thạc sĩ, mua được nhà, lên trưởng nhóm. Mục tiêu có điểm kết thúc và có thể đo xong; giá trị là phương hướng đi suốt đời, không bao giờ tích xong ô."
+    },
+    {
+      "code": "knm.value-as-preference",
+      "name": "Lẫn giá trị với sở thích hay cảm xúc nhất thời",
+      "description": "Xếp những thứ mình thích — cà phê sáng, du lịch, một môn thể thao — ngang hàng với giá trị sống. Sở thích thay đổi theo tâm trạng và hoàn cảnh, không đòi hỏi trả giá; giá trị chỉ lộ ra đúng lúc phải trả giá để giữ nó."
+    },
+    {
+      "code": "knm.espoused-values",
+      "name": "Lấy giá trị tuyên bố thay cho giá trị thật",
+      "description": "Nhận diện giá trị của mình bằng danh sách mình muốn tin, thay vì bằng dấu vết hành vi thực tế trong lịch, trong chi tiêu và trong những lần từ chối. Argyris và Schön gọi đây là khoảng cách giữa lý thuyết tuyên bố và lý thuyết đang dùng; ai cũng có, người tự nhận thức được là người biết đo nó."
+    },
+    {
+      "code": "knm.value-no-priority",
+      "name": "Giữ mọi giá trị ngang nhau, không xếp thứ tự",
+      "description": "Cho rằng tất cả những gì mình coi trọng đều quan trọng như nhau nên không cần ưu tiên. Danh sách không xếp hạng chỉ hữu ích khi mọi thứ cùng đạt được; đúng lúc phải chọn — và mọi quyết định lớn đều là lúc ấy — nó không giúp được gì."
+    },
+    {
+      "code": "knm.self-center-is-maturity",
+      "name": "Coi trọng tâm bản thân là dấu hiệu trưởng thành",
+      "description": "Đồng nhất việc lấy bản thân làm trung tâm mọi quyết định với sự độc lập và tự tin. Trọng tâm bản thân khiến tầm nhìn co lại quanh cái được mất trước mắt của mình và làm hỏng các mối quan hệ vốn cần có đi có lại; nó khác hẳn việc tự trọng và biết giới hạn."
+    },
+    {
+      "code": "knm.external-center",
+      "name": "Đặt trọng tâm vào thứ có thể mất",
+      "description": "Neo sự vững vàng của mình vào công việc, tiền bạc, một người cụ thể hay sự công nhận từ đám đông. Những trọng tâm ấy đều nằm ngoài tầm kiểm soát và đều có thể mất, nên khi chúng lung lay thì cả hệ giá trị lung lay theo."
+    },
+    {
+      "code": "knm.circle-of-concern",
+      "name": "Dồn sức vào vòng tròn quan tâm",
+      "description": "Đổ phần lớn năng lượng vào việc bình luận, than phiền, phân tích những chuyện mình không tác động được, rồi nhầm mức độ bức xúc với mức độ trách nhiệm. Theo Covey, năng lượng đặt ở vòng tròn quan tâm làm vòng tròn ảnh hưởng co lại."
+    },
+    {
+      "code": "knm.proactive-is-enthusiasm",
+      "name": "Hiểu chủ động là xông xáo, nhiệt tình",
+      "description": "Đo tính chủ động bằng độ hăng hái, số việc nhận thêm hay tốc độ phản ứng. Chủ động theo nghĩa gốc là khoảng dừng giữa kích thích và phản ứng — khả năng chọn cách đáp lại thay vì bị hoàn cảnh bấm nút; một người im lặng cân nhắc vẫn có thể chủ động hơn người phản ứng tức thì."
+    },
+    {
+      "code": "knm.mission-as-slogan",
+      "name": "Viết tuyên ngôn sứ mệnh như một khẩu hiệu",
+      "description": "Soạn một câu nghe hay, chung chung, đúng với mọi người — sống tử tế, không ngừng vươn lên — nên không dùng để quyết định được việc gì. Tuyên ngôn có ích là tuyên ngôn nói rõ vai trò, đóng góp cụ thể và những gì mình sẵn sàng từ chối."
+    },
+    {
+      "code": "knm.mission-write-once",
+      "name": "Viết tuyên ngôn một lần rồi thôi",
+      "description": "Coi bản tuyên ngôn sứ mệnh cá nhân là văn bản viết xong là xong, không cần xem lại. Vai trò, năng lực và hoàn cảnh sống thay đổi theo năm; một bản không được rà soát định kỳ sẽ lặng lẽ mô tả một người không còn tồn tại."
+    },
+    {
+      "code": "knm.conflict-binary",
+      "name": "Xung đột giá trị chỉ có hai lối: chịu đựng hoặc nghỉ việc",
+      "description": "Khi yêu cầu của tổ chức va vào nguyên tắc cá nhân thì chỉ thấy hai lựa chọn cực đoan, bỏ qua các bước ở giữa: làm rõ sự việc, nêu quan ngại đúng kênh, thương lượng phạm vi công việc, ghi nhận bằng văn bản. Hirschman gọi lối ở giữa ấy là lên tiếng, và nó thường được thử trước khi tính tới rời đi."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "knm.skill-is-innate",
+      "body": "Hãy tách tính cách khỏi hành vi. Bạn không cần trở thành người hướng ngoại để hỏi lại một câu cho rõ ý, hay để viết ba dòng tóm tắt cuộc họp. Kỹ năng mềm được đo bằng những hành vi cụ thể như thế, và hành vi thì tập được.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.knowing-equals-doing",
+      "body": "Đọc hiểu mô hình mới là bước đầu. Hãy chọn một tình huống thật trong tuần này, chạy khung vừa học vào đó, rồi ghi lại chỗ nó vướng — chính chỗ vướng ấy là phần bạn chưa có kỹ năng, chứ không phải phần bạn chưa hiểu.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.value-as-goal",
+      "body": "Thử phép kiểm tra này: thứ bạn vừa nêu có thể tích ô hoàn thành được không? Nếu có, đó là mục tiêu. Giá trị là hướng đi đằng sau mục tiêu ấy — thứ vẫn còn nguyên sau khi bạn đã đạt được nó, và vẫn còn nguyên nếu bạn trượt.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.value-as-preference",
+      "body": "Sở thích là thứ bạn chọn khi mọi việc thuận lợi; giá trị là thứ bạn giữ khi phải trả giá. Hãy hỏi lại: giữ điều này, bạn mất gì? Không mất gì thì nhiều khả năng đó mới là một sở thích.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.espoused-values",
+      "body": "Đừng hỏi mình coi trọng điều gì — hãy đọc dấu vết. Ba tuần gần nhất trong lịch, trong chi tiêu và trong những lời bạn đã từ chối cho biết giá trị thật của bạn chính xác hơn bất kỳ danh sách nào bạn tự khai.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.value-no-priority",
+      "body": "Một danh sách không xếp hạng chỉ dùng được khi không phải chọn. Hãy ép mình so từng cặp và giữ lại tối đa năm giá trị; thứ tự ấy chính là công cụ ra quyết định khi hai điều tốt loại trừ nhau.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.self-center-is-maturity",
+      "body": "Tự trọng khác với lấy mình làm trung tâm. Người có trọng tâm bản thân đo mọi việc bằng được mất trước mắt của riêng mình, nên tầm nhìn ngắn lại và quan hệ mòn dần — đó là một trọng tâm mong manh, không phải dấu hiệu độc lập.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.external-center",
+      "body": "Hãy hỏi: trọng tâm này có thể mất không? Công việc, thu nhập, một người, sự tán thưởng — tất cả đều có thể mất, và mất tới đâu thì bạn chông chênh tới đó. Nguyên tắc thì không ai lấy đi được.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.circle-of-concern",
+      "body": "Hãy chia đôi tờ giấy: bên trái những gì bạn tác động được, bên phải những gì chỉ có thể lo lắng. Mỗi giờ dồn vào cột phải là một giờ không tiêu ở cột trái — và cột trái chính là phần duy nhất nở ra được khi bạn làm việc trong đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.proactive-is-enthusiasm",
+      "body": "Chủ động không đo bằng độ hăng hái mà bằng khoảng dừng: giữa việc xảy ra và việc bạn đáp lại, bạn có kịp chọn không? Nhận thêm việc trong lúc bực bội vẫn là phản ứng; im lặng ba mươi giây rồi hỏi một câu đúng chỗ mới là chủ động.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.mission-as-slogan",
+      "body": "Phép thử cho một tuyên ngôn: nó có giúp bạn từ chối được điều gì không? Câu nào cũng đúng với mọi người thì không hướng dẫn được ai. Hãy viết lại kèm vai trò cụ thể, đóng góp cụ thể và ít nhất một thứ bạn sẽ nói không.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.mission-write-once",
+      "body": "Đặt lịch xem lại tuyên ngôn mỗi sáu tháng, và xem lại ngay khi đổi vai trò lớn. Không phải vì giá trị đổi xoành xoạch, mà vì cách bạn sống theo giá trị ấy phải đổi khi hoàn cảnh đổi.",
+      "priority": 10
+    },
+    {
+      "misconception": "knm.conflict-binary",
+      "body": "Giữa chịu đựng và nghỉ việc còn ba bước: làm rõ yêu cầu thật sự là gì, nêu quan ngại đúng kênh và đúng người, thương lượng lại phạm vi phần việc. Hãy đi hết các bước ấy — và ghi lại — trước khi tính tới lựa chọn cuối cùng.",
+      "priority": 10
+    }
+  ],
+  "modules": [
+    {
+      "title": "Module 1 · Giá trị sống",
+      "description": "Nền móng của cả khoá: bạn coi trọng điều gì, dựa vào đâu để thấy vững, và giữ được điều đó tới đâu khi phải trả giá. Ba bài đi từ phân biệt giá trị với mục tiêu, qua trọng tâm cuộc sống và vòng tròn ảnh hưởng, tới bản tuyên ngôn sứ mệnh cá nhân dùng được để từ chối.",
+      "lessons": [
+        {
+          "title": "Bài 1.1 · Giá trị sống là gì và làm sao biết giá trị thật của mình",
+          "durationMin": 45,
+          "description": "Phân biệt giá trị với mục tiêu, sở thích và nguyên tắc; đọc dấu vết hành vi để tìm giá trị thật thay vì giá trị mình muốn tin; rút danh sách dài xuống ba giá trị dùng được để ra quyết định.",
+          "objectives": [
+            "Phân biệt được giá trị sống với mục tiêu, sở thích và nguyên tắc bằng ba phép thử cụ thể",
+            "Chỉ ra được khoảng cách giữa giá trị mình tuyên bố và giá trị hiện ra trong hành vi",
+            "Rút được danh sách giá trị của bản thân xuống tối đa năm mục và xếp được thứ tự ưu tiên",
+            "Dùng được thứ tự ấy để giải thích một quyết định mình đã ra trong ba tháng gần đây"
+          ],
+          "summary": [
+            "Giá trị là phương hướng đi suốt đời, mục tiêu là điểm dừng có thể tích ô hoàn thành; lẫn hai thứ này là lý do nhiều người đạt hết mục tiêu mà vẫn thấy trống rỗng.",
+            "Giá trị chỉ lộ ra khi phải trả giá. Điều gì giữ mà không mất gì thì nhiều khả năng mới là sở thích.",
+            "Ba chỗ nói thật về giá trị của bạn: lịch ba tuần gần nhất, các khoản chi tự nguyện, và những lời bạn đã từ chối.",
+            "Danh sách mười hai giá trị không ra được quyết định nào; phải ép xuống tối đa năm và có thứ tự thì mới dùng được lúc hai điều tốt loại trừ nhau."
+          ],
+          "body": "\nMột khoá kỹ năng mềm thường bắt đầu bằng giao tiếp, vì đó là thứ dễ thấy thiếu nhất. Khoá này bắt đầu từ chỗ khác, với một lý do thực tế: gần như mọi kỹ năng phía sau đều là kỹ năng **chọn** — chọn nói gì, chọn dành thời gian cho việc nào, chọn nhượng bộ tới đâu trong một cuộc thương lượng, chọn nhận hay từ chối một lời mời làm việc. Kỹ thuật giúp bạn thực hiện lựa chọn cho gọn; nó không nói cho bạn biết nên chọn gì. Câu đó chỉ có hệ giá trị trả lời được.\n\nĐiều này không phải chuyện triết lý xa xôi. Nó hiện ra rất sớm trong đời sinh viên: nhận thêm một dự án làm thêm hay giữ điểm học phần, nói thẳng với bạn cùng nhóm đang làm hỏng việc chung hay giữ hoà khí, chọn công ty trả cao hơn hay chọn nơi có người hướng dẫn tử tế. Người có hệ giá trị rõ không ra quyết định nhanh hơn, nhưng ít quay lại hối tiếc hơn — vì họ biết mình đã đánh đổi cái gì lấy cái gì, thay vì chỉ nhớ là mình đã chọn đại.\n\n> [!ghi-nho] Giá trị sống là những điều bạn coi là quan trọng đến mức sẵn sàng trả giá để giữ, và chúng ổn định đủ lâu để định hướng nhiều quyết định khác nhau trong nhiều năm.\n\n## Ba thứ hay bị lẫn: giá trị, mục tiêu, sở thích\n\nPhần lớn câu trả lời cho câu hỏi \"giá trị sống của bạn là gì\" thực ra là mục tiêu hoặc sở thích. Ba phép thử dưới đây tách chúng ra nhanh.\n\n| | Giá trị | Mục tiêu | Sở thích |\n|---|---|---|---|\n| Ví dụ | Trung thực, học hỏi suốt đời, chăm sóc gia đình | Tốt nghiệp loại giỏi, có việc trước tháng 6, mua xe | Cà phê sáng, bóng đá, đi phượt |\n| Có điểm kết thúc không | Không — đi cả đời theo hướng ấy | Có — đạt rồi thì gạch đi | Không cố định, đổi theo giai đoạn |\n| Đo bằng gì | Bằng hành vi lặp lại, nhất là lúc bất lợi | Bằng kết quả có mốc thời gian | Bằng mức độ thấy dễ chịu |\n| Khi phải trả giá | Vẫn giữ, và đó là lúc nó lộ ra | Có thể đổi mục tiêu khác | Thường bỏ ngay |\n| Câu hỏi kiểm tra | \"Giữ điều này, tôi mất gì?\" | \"Tích ô hoàn thành được chưa?\" | \"Không có nó tôi có sao không?\" |\n\nPhép thử **trả giá** là phép thử mạnh nhất. Ai cũng nói mình coi trọng trung thực khi trung thực không tốn gì. Giá trị ấy chỉ được chứng minh vào lúc nói thật thì mất điểm, mất việc, hoặc mất lòng người mình quý. Tương tự, \"coi trọng gia đình\" là một câu chưa có nội dung cho tới khi nó buộc bạn từ chối một cơ hội nào đó.\n\nCòn một khái niệm thứ tư hay bị trộn vào: **nguyên tắc**. Trong cách dùng của Stephen Covey, nguyên tắc là những quy luật vận hành của đời sống con người mà ta không tạo ra và không sửa được — gieo gì gặt nấy, tin cậy xây bằng nhất quán chứ không bằng lời hứa, tôn trọng thì có đi có lại. Giá trị là thứ **bạn chọn** để coi trọng; nguyên tắc là thứ **tồn tại sẵn**, và hệ quả của việc đi ngược nó không phụ thuộc vào việc bạn có tin hay không. Một người có thể chọn giá trị \"thắng bằng mọi giá\", nhưng nguyên tắc về niềm tin vẫn hoạt động: rồi sẽ không ai muốn hợp tác nữa.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.7rem\">Bốn tầng, từ bền nhất tới dễ đổi nhất</div>\n  <div style=\"display:flex;flex-direction:column;gap:.4rem\">\n    <div style=\"background:rgba(13,148,136,.14);border-left:4px solid rgba(13,148,136,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>Nguyên tắc</b> — không do ta đặt ra, không sửa được: gieo gì gặt nấy, tin cậy xây bằng nhất quán</div>\n    <div style=\"background:rgba(59,130,246,.14);border-left:4px solid rgba(59,130,246,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>Giá trị</b> — ta chọn coi trọng, ổn định nhiều năm: trung thực, học hỏi, trách nhiệm với gia đình</div>\n    <div style=\"background:rgba(139,92,246,.14);border-left:4px solid rgba(139,92,246,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>Mục tiêu</b> — có mốc và có điểm kết thúc: tốt nghiệp đúng hạn, có việc đúng ngành trước tháng 6</div>\n    <div style=\"background:rgba(217,150,40,.14);border-left:4px solid rgba(217,150,40,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>Việc làm hôm nay</b> — lịch của bạn trong 24 giờ tới</div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.7rem;line-height:1.6\">Ba tầng trên chỉ có ý nghĩa nếu nhìn thấy được ở tầng dưới cùng. Một giá trị không để lại dấu vết nào trong lịch của bạn là một giá trị đang được tuyên bố, chưa được sống.</div>\n</div>\n```\n\n## Bản đồ giá trị: mượn của người đi trước cho đỡ mất công\n\nNgồi nghĩ ra giá trị của mình từ tờ giấy trắng rất khó và thường cho ra vài chữ sáo. Dễ hơn là chọn từ một danh sách đã được nghiên cứu kỹ, rồi loại dần.\n\nNhà tâm lý học **Shalom Schwartz** khảo sát ở hơn 80 quốc gia và tìm ra mười nhóm giá trị cơ bản xuất hiện ở gần như mọi nền văn hoá. Điểm quan trọng của mô hình không nằm ở danh sách mười nhóm, mà ở **cấu trúc vòng tròn**: các nhóm nằm cạnh nhau thì tương hợp, các nhóm nằm đối diện thì xung khắc — theo đuổi mạnh bên này thường phải nhả bớt bên kia.\n\n| Nhóm giá trị | Nội dung cốt lõi | Nhóm đối diện (khó cùng tối đa) |\n|---|---|---|\n| Tự chủ (self-direction) | Tự nghĩ, tự chọn, độc lập | Tuân thủ và truyền thống |\n| Kích thích (stimulation) | Mới lạ, thử thách | An toàn |\n| Hưởng thụ (hedonism) | Khoái cảm, tận hưởng | Tuân thủ |\n| Thành đạt (achievement) | Thành công theo chuẩn xã hội | Nhân từ và phổ quát |\n| Quyền lực (power) | Địa vị, kiểm soát nguồn lực | Nhân từ và phổ quát |\n| An toàn (security) | Ổn định, an ninh cho mình và người thân | Kích thích |\n| Tuân thủ (conformity) | Kiềm chế, không làm phiền lòng người khác | Tự chủ |\n| Truyền thống (tradition) | Tôn trọng phong tục, tín ngưỡng | Tự chủ và kích thích |\n| Nhân từ (benevolence) | Chăm lo người gần gũi | Thành đạt và quyền lực |\n| Phổ quát (universalism) | Công bằng, bảo vệ tự nhiên và người xa lạ | Quyền lực |\n\nCột thứ ba là phần hay bị bỏ qua và cũng là phần hữu dụng nhất. Nó giải thích vì sao bạn thấy giằng xé mà không hiểu tại sao: mong muốn thăng tiến nhanh (thành đạt, quyền lực) và mong muốn có mặt đủ cho gia đình (nhân từ) không mâu thuẫn về mặt đạo lý, nhưng cạnh tranh trực tiếp về thời gian và sự chú ý. Cảm giác giằng xé không phải dấu hiệu bạn có vấn đề; nó là dấu hiệu bạn đang giữ hai giá trị nằm đối diện nhau trên vòng tròn.\n\nTrong giáo dục phổ thông và các chương trình giá trị sống ở Việt Nam, danh sách thường dùng ngắn và gần gũi hơn — hoà bình, tôn trọng, yêu thương, khoan dung, trung thực, khiêm tốn, hợp tác, hạnh phúc, trách nhiệm, giản dị, tự do, đoàn kết. Hai danh sách phục vụ hai việc khác nhau: danh sách của Schwartz để **hiểu vì sao mình giằng xé**, danh sách giá trị sống để **chọn từ ngữ gọi tên điều mình coi trọng**. Dùng cái nào cũng được, miễn là bước tiếp theo phải làm.\n\n> [!canh-bao] Chọn xong một danh sách đẹp rồi dừng lại chính là chỗ hầu hết người học dừng. Danh sách chưa phải kết quả; nó chỉ là nguyên liệu cho hai bước dưới đây.\n\n## Giá trị tuyên bố và giá trị thật\n\nArgyris và Schön, khi nghiên cứu cách các nhà chuyên môn hành nghề, phân biệt **lý thuyết tuyên bố** — điều người ta nói mình tin — với **lý thuyết đang dùng** — điều suy ra được từ hành vi thực tế của họ. Hai thứ này lệch nhau ở gần như tất cả mọi người, và người trưởng thành về nghề nghiệp không phải người không có khoảng lệch, mà là người **đo được** khoảng lệch của mình.\n\nÁp vào giá trị sống: đừng hỏi mình coi trọng điều gì, hãy đọc ba nguồn dữ liệu sau. Chúng khó chối cãi hơn trí nhớ.\n\n| Nguồn | Cách đọc | Nó tiết lộ điều gì |\n|---|---|---|\n| Lịch ba tuần gần nhất | Cộng số giờ theo nhóm hoạt động, bỏ qua giờ ngủ và giờ bắt buộc | Thứ bạn thật sự dành thời gian, sau khi trừ hết những lời giải thích |\n| Các khoản chi tự nguyện ba tháng | Chỉ tính khoản tự quyết, bỏ tiền trọ và ăn cơ bản | Thứ bạn đổi tiền để lấy khi không ai ép |\n| Những lời bạn đã từ chối | Liệt kê 5 lần gần nhất nói không, và lý do thật | Thứ bạn bảo vệ khi phải trả giá — dữ liệu quý nhất trong ba nguồn |\n\nKhoảng lệch giữa danh sách bạn viết ra và ba bảng dữ liệu này không phải bằng chứng bạn giả dối. Thường nó nói lên một trong ba điều: giá trị ấy là **của người khác gán cho bạn** (cha mẹ, thầy cô, mạng xã hội) và bạn chưa kịp kiểm tra xem mình có thật sự tin không; hoặc nó là giá trị thật nhưng bạn **chưa dựng được cơ chế** để sống theo; hoặc nó đã bị một giá trị khác **âm thầm xếp cao hơn** mà bạn chưa thừa nhận.\n\n> [!vi-du] Nam viết ba giá trị: sức khoẻ, gia đình, học hỏi. Lịch ba tuần cho thấy: 0 buổi tập, 2 cuộc gọi về nhà, 11 buổi tối làm thêm ở quán. Kết luận đúng không phải \"Nam nói dối\", mà là: thu nhập đang được xếp trên cả ba giá trị kia. Câu hỏi tiếp theo mới là câu đáng giá — Nam đang đánh đổi có ý thức để trả học phí, hay chỉ trôi theo vì chưa bao giờ ngồi xuống xếp thứ tự?\n\n## Từ danh sách dài xuống ba giá trị dùng được\n\nMột danh sách mười hai giá trị nghe rất phong phú và hoàn toàn vô dụng lúc phải quyết định, vì mọi lựa chọn khó đều là lựa chọn giữa **hai điều đều tốt**. Bước rút gọn dưới đây tốn khoảng hai mươi phút và cho ra thứ dùng được.\n\n1. **Chọn rộng.** Từ danh sách có sẵn, khoanh 10–12 mục nghe đúng với mình. Đừng cân nhắc nhiều ở bước này.\n2. **Ép xuống 5.** Với mỗi mục, hỏi: \"Trong mười hai tháng qua, tôi đã trả giá gì để giữ điều này?\" Mục nào không nêu được một cái giá cụ thể thì gạch. Nếu vẫn còn hơn năm mục, so từng cặp: bắt buộc chọn một, không được hoà.\n3. **Xếp thứ tự 3 mục đầu.** Đây là bước khó chịu nhất và cũng là bước sinh ra công dụng: thứ tự chỉ có ý nghĩa khi nó buộc bạn nói ra điều gì phải nhường điều gì.\n4. **Viết mệnh đề hành vi.** Mỗi giá trị trong ba mục đầu viết một câu theo mẫu: *\"Coi trọng X nghĩa là tôi sẽ ⟨hành vi quan sát được⟩, kể cả khi ⟨cái giá⟩.\"* Không viết được vế sau thì giá trị đó chưa qua kiểm tra.\n5. **Đối chiếu với một quyết định cũ.** Lấy một quyết định lớn trong ba tháng qua và thử giải thích nó bằng thứ tự vừa lập. Giải thích được thì thứ tự đúng; không giải thích được thì hoặc thứ tự sai, hoặc quyết định ấy đáng xem lại.\n\n> [!meo] Mệnh đề hành vi viết ở bước 4 chính là thứ bạn mang sang bài 1.3 để dựng bản tuyên ngôn sứ mệnh cá nhân, và mang sang module Quản lý thời gian để kiểm tra lịch tuần. Giữ lại tờ giấy này.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nChạy hết năm bước ở mục trên với chính mình. Nộp ba sản phẩm: (1) danh sách 5 giá trị sau khi ép, (2) thứ tự 3 mục đầu, (3) ba mệnh đề hành vi có đủ vế \"kể cả khi\". Yêu cầu bắt buộc ở vế sau: cái giá phải cụ thể — \"kể cả khi mất lòng người khác\" là chung chung, \"kể cả khi phải nói với nhóm rằng phần việc tôi làm chưa đạt và xin lùi hạn\" mới là cụ thể.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người đọc **ba mệnh đề hành vi** của mình, không đọc danh sách giá trị. Nhóm nghe và đoán ngược lại ba giá trị đứng sau. Đoán trúng nghĩa là mệnh đề đủ cụ thể; đoán trật hoặc đoán ra một chữ chung chung nghĩa là mệnh đề còn sáo và cần viết lại ngay tại chỗ. Cuối buổi, mỗi nhóm chọn một mệnh đề được viết lại tốt nhất để chia sẻ với lớp.\n\n### Bài tập về nhà (45–60 phút)\n\nLàm bảng ba nguồn dữ liệu ở mục **Giá trị tuyên bố và giá trị thật** với dữ liệu thật của bạn: lịch ba tuần, chi tiêu tự nguyện ba tháng, năm lần từ chối gần nhất. Viết một trang trả lời hai câu: (a) khoảng lệch lớn nhất giữa danh sách bạn tự khai và dữ liệu là ở giá trị nào; (b) khoảng lệch ấy thuộc loại nào trong ba loại đã nêu — giá trị của người khác gán cho bạn, thiếu cơ chế, hay đã bị một giá trị khác xếp cao hơn — và bạn định làm gì với nó trong sáu tuần tới.\n\n:::mau Mẫu nộp bài tập về nhà\n**Ba giá trị tôi tự khai:** …\n\n**Bảng dữ liệu**\n\n| Nguồn | Số liệu | Giá trị hiện ra sau dữ liệu |\n|---|---|---|\n| Lịch 3 tuần | … giờ cho …, … giờ cho … | … |\n| Chi tự nguyện 3 tháng | … | … |\n| 5 lần từ chối gần nhất | … | … |\n\n**Khoảng lệch lớn nhất:** … vì …\n\n**Loại khoảng lệch:** ☐ của người khác gán ☐ thiếu cơ chế ☐ đã bị xếp thấp hơn\n\n**Việc sẽ làm trong 6 tuần:** … (một hành vi quan sát được, có thời điểm cụ thể)\n:::\n\n### Nguồn tham khảo\n\n- Schwartz, S. H. (2012). An overview of the Schwartz theory of basic values. *Online Readings in Psychology and Culture*, 2(1). — [doi.org/10.9707/2307-0919.1116](https://doi.org/10.9707/2307-0919.1116)\n- Rokeach, M. (1973). *The Nature of Human Values.* New York: Free Press.\n- Argyris, C., & Schön, D. A. (1974). *Theory in Practice: Increasing Professional Effectiveness.* San Francisco: Jossey-Bass.\n- Covey, S. R. (1989). *The 7 Habits of Highly Effective People.* New York: Free Press — bản tiếng Việt: *7 thói quen của người thành đạt.*\n- Living Values Education (2019). *Living Values Education Programme — 12 giá trị nền tảng.* — [livingvalues.net](https://www.livingvalues.net/)\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "1.1-gia-tri-vs-muc-tieu",
+                "type": "mcq",
+                "prompt": "Đâu là điểm khác biệt cốt lõi giữa giá trị sống và mục tiêu?",
+                "explanation": "Mục tiêu có điểm kết thúc và tích ô hoàn thành được; giá trị là phương hướng đi suốt đời, vẫn còn nguyên sau khi mục tiêu đã đạt hoặc đã trượt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mục tiêu có điểm kết thúc và đo xong được; giá trị là phương hướng không có điểm kết thúc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giá trị quan trọng hơn nên khó đạt hơn mục tiêu",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-goal"
+                  },
+                  {
+                    "label": "Mục tiêu do bản thân đặt ra, còn giá trị do gia đình và xã hội quy định",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giá trị chỉ có ở người trưởng thành, mục tiêu thì ai cũng có",
+                    "isCorrect": false,
+                    "misconception": "knm.skill-is-innate"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-phep-thu-tra-gia",
+                "type": "mcq",
+                "prompt": "Minh nói ba điều quan trọng nhất với mình là trung thực, sức khoẻ và du lịch. Muốn biết điều nào trong ba điều ấy là giá trị sống thật sự, phép thử nào cho câu trả lời đáng tin nhất?",
+                "explanation": "Giá trị chỉ lộ ra khi phải trả giá. Điều nào Minh vẫn giữ dù mất mát thì đó là giá trị; điều nào bỏ ngay khi bất tiện thì gần với sở thích hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Hỏi Minh đã giữ điều nào khi giữ nó khiến bạn ấy mất mát thật sự",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hỏi Minh thấy điều nào làm mình vui và thoải mái nhất",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-preference"
+                  },
+                  {
+                    "label": "Xem điều nào Minh nhắc tới nhiều nhất khi nói chuyện với bạn bè",
+                    "isCorrect": false,
+                    "misconception": "knm.espoused-values"
+                  },
+                  {
+                    "label": "Xem điều nào Minh đặt làm mục tiêu trong năm nay",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-goal"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-gia-tri-that",
+                "type": "mcq",
+                "prompt": "Hà viết bản danh sách giá trị gồm gia đình, sức khoẻ và học hỏi. Muốn kiểm tra xem đó có phải giá trị thật của Hà không, nguồn dữ liệu nào nói thật nhất?",
+                "explanation": "Argyris và Schön phân biệt lý thuyết tuyên bố với lý thuyết đang dùng. Dấu vết hành vi — thời gian, tiền tự chi, những lần từ chối — cho biết giá trị đang được sống, còn danh sách tự khai cho biết giá trị đang được tuyên bố.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Lịch ba tuần gần nhất, các khoản chi tự nguyện và những lần Hà đã từ chối",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bài viết Hà đăng trên mạng xã hội về điều mình theo đuổi",
+                    "isCorrect": false,
+                    "misconception": "knm.espoused-values"
+                  },
+                  {
+                    "label": "Danh sách mục tiêu năm nay của Hà",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-goal"
+                  },
+                  {
+                    "label": "Kết quả một bài trắc nghiệm tính cách Hà làm trên mạng",
+                    "isCorrect": false,
+                    "misconception": "knm.skill-is-innate"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-xung-khac-schwartz",
+                "type": "mcq",
+                "prompt": "Theo cấu trúc vòng tròn giá trị của Schwartz, việc một người thấy giằng xé giữa mong muốn thăng tiến nhanh và mong muốn có mặt đủ cho gia đình nên được hiểu thế nào?",
+                "explanation": "Thành đạt và quyền lực nằm đối diện nhân từ trên vòng tròn: theo đuổi mạnh bên này thường phải nhả bớt bên kia. Giằng xé ở đây là dấu hiệu cấu trúc, không phải dấu hiệu người đó có vấn đề.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đó là hai nhóm giá trị nằm đối diện nhau, nên khó cùng tối đa và buộc phải chọn mức đánh đổi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đó là dấu hiệu người ấy chưa đủ quyết tâm với sự nghiệp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đó là dấu hiệu người ấy đang không trung thực với chính mình",
+                    "isCorrect": false,
+                    "misconception": "knm.espoused-values"
+                  },
+                  {
+                    "label": "Chỉ cần giữ cả hai giá trị ở mức quan trọng như nhau là hết giằng xé",
+                    "isCorrect": false,
+                    "misconception": "knm.value-no-priority"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-mua-danh-sach-12",
+                "type": "mcq",
+                "prompt": "Tuấn liệt kê được 12 giá trị quan trọng với mình và thấy không thể ưu tiên cái nào hơn cái nào. Bước đi phù hợp là gì?",
+                "explanation": "Mọi lựa chọn khó đều là lựa chọn giữa hai điều đều tốt, nên danh sách không xếp hạng không dùng được lúc quyết định. Ép xuống tối đa năm mục bằng câu hỏi về cái giá đã trả, rồi xếp thứ tự ba mục đầu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Với từng mục, hỏi mình đã trả giá gì trong năm qua để giữ nó, loại dần xuống còn tối đa năm mục rồi xếp thứ tự ba mục đầu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ nguyên cả 12 mục vì giá trị nào cũng quan trọng như nhau",
+                    "isCorrect": false,
+                    "misconception": "knm.value-no-priority"
+                  },
+                  {
+                    "label": "Chọn ba mục nghe hay nhất để viết vào hồ sơ xin việc",
+                    "isCorrect": false,
+                    "misconception": "knm.mission-as-slogan"
+                  },
+                  {
+                    "label": "Chuyển cả 12 mục thành mục tiêu có thời hạn trong năm nay",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-goal"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-thu-tu-rut-gon",
+                "type": "ordering",
+                "prompt": "Sắp xếp năm bước rút danh sách giá trị xuống mức dùng được để ra quyết định.",
+                "explanation": "Chọn rộng trước để không bỏ sót, ép hẹp bằng phép thử trả giá, xếp thứ tự để dùng được lúc phải chọn, viết mệnh đề hành vi để kiểm tra được, cuối cùng đối chiếu với một quyết định thật.",
+                "points": 3,
+                "sequence": [
+                  "Khoanh 10–12 giá trị nghe đúng với mình từ một danh sách có sẵn",
+                  "Ép xuống tối đa 5 mục bằng câu hỏi: năm qua tôi đã trả giá gì để giữ điều này",
+                  "Xếp thứ tự ba mục đầu, chấp nhận nói rõ điều gì phải nhường điều gì",
+                  "Viết mỗi giá trị một mệnh đề hành vi có vế 'kể cả khi ⟨cái giá⟩'",
+                  "Đối chiếu thứ tự vừa lập với một quyết định lớn trong ba tháng qua"
+                ]
+              },
+              {
+                "key": "1.1-phan-biet-khai-niem",
+                "type": "matching",
+                "prompt": "Nối mỗi phát biểu với loại khái niệm đúng của nó.",
+                "explanation": "Nguyên tắc tồn tại sẵn và không sửa được; giá trị là thứ ta chọn coi trọng; mục tiêu có mốc kết thúc; sở thích đổi theo hoàn cảnh và không đòi hỏi trả giá.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Tin cậy chỉ xây được bằng hành vi nhất quán, không xây bằng lời hứa",
+                    "right": "Nguyên tắc"
+                  },
+                  {
+                    "left": "Tôi coi trung thực là điều đáng giữ, kể cả khi nó khiến tôi mất điểm",
+                    "right": "Giá trị"
+                  },
+                  {
+                    "left": "Tôi sẽ có việc làm đúng ngành trước tháng 6 năm sau",
+                    "right": "Mục tiêu"
+                  },
+                  {
+                    "left": "Tôi thích uống cà phê ở quán quen vào sáng thứ bảy",
+                    "right": "Sở thích"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-viet-menh-de-hanh-vi",
+                "type": "essay",
+                "prompt": "Chọn một giá trị bạn tin là quan trọng nhất với mình. Viết 150–250 từ gồm: (a) một mệnh đề hành vi theo mẫu 'Coi trọng X nghĩa là tôi sẽ ⟨hành vi quan sát được⟩, kể cả khi ⟨cái giá cụ thể⟩'; (b) một lần trong sáu tháng qua bạn đã KHÔNG sống đúng mệnh đề ấy, kể lại tình huống và cái giá lúc đó; (c) một thay đổi cụ thể trong sáu tuần tới để lần sau kết quả khác đi.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 1.2 · Trọng tâm cuộc sống và vòng tròn ảnh hưởng",
+          "durationMin": 45,
+          "description": "Bạn đang xoay quanh cái gì: công việc, tiền, một người, hay nguyên tắc — và hệ quả của mỗi lựa chọn. Hai vòng tròn của Covey, ba loại vấn đề và cách chuyển từ phản ứng sang chủ động bằng ngôn ngữ.",
+          "objectives": [
+            "Nhận ra được trọng tâm cuộc sống mình đang dựa vào và nêu được điểm yếu của trọng tâm ấy",
+            "Giải thích được vì sao trọng tâm nguyên tắc bền hơn các trọng tâm còn lại",
+            "Phân loại được một vấn đề vào ba nhóm: kiểm soát trực tiếp, gián tiếp, không kiểm soát",
+            "Chuyển được một câu nói phản ứng thành câu nói chủ động tương ứng"
+          ],
+          "summary": [
+            "Trọng tâm cuộc sống là thứ bạn dựa vào để thấy an toàn và để ra quyết định; mọi trọng tâm nằm ngoài tầm kiểm soát đều có thể mất, và mất tới đâu thì bạn chông chênh tới đó.",
+            "Vòng tròn quan tâm chứa mọi thứ bạn để tâm; vòng tròn ảnh hưởng chỉ chứa phần bạn tác động được. Dồn sức vào phần ngoài làm phần trong co lại.",
+            "Chủ động không phải là hăng hái mà là khoảng dừng giữa việc xảy ra và cách bạn đáp lại — khoảng dừng ấy tập được.",
+            "Ba loại vấn đề cần ba cách xử lý khác nhau: đổi thói quen, đổi cách gây ảnh hưởng, hoặc đổi thái độ với thứ không đổi được."
+          ],
+          "body": "\n## Bạn đang xoay quanh cái gì\n\nAi cũng có một thứ ở trung tâm — điểm tựa vô hình quyết định lúc phân vân thì mình nghiêng về đâu. Phần lớn người chưa bao giờ gọi tên nó, nhưng nó vẫn hoạt động: nó chọn hộ bạn khi hai việc tốt va nhau, và nó quyết định mức độ bạn chao đảo khi có biến cố.\n\nCovey liệt kê nhiều trọng tâm thường gặp; bảng dưới rút gọn về những trọng tâm hay gặp nhất ở người trẻ Việt Nam, kèm dấu hiệu nhận ra và chỗ nó gãy.\n\n| Trọng tâm | Dấu hiệu nhận ra | Chỗ nó gãy |\n|---|---|---|\n| Công việc | Tự giới thiệu bằng chức danh; nghỉ phép thấy bứt rứt; hỏng việc là hỏng cả người | Mất việc, đổi ngành, hoặc chỉ cần một dự án thất bại là mất luôn giá trị bản thân |\n| Tiền bạc | Mọi quyết định quy về được bao nhiêu; khó từ chối việc trả cao dù trái nguyên tắc | Thu nhập là số so sánh được, luôn có người hơn; và khủng hoảng kinh tế thì không hỏi ý bạn |\n| Một người cụ thể | Tâm trạng lên xuống theo người ấy; ngại nói thật vì sợ mất lòng | Người ta có đời sống riêng, có thể đổi ý, có thể rời đi |\n| Bạn bè hoặc đối thủ | Chọn theo đám đông, hoặc chọn ngược lại chỉ để hơn một người | Cả hai đều để người khác cầm lái; hướng đi phụ thuộc vào người bạn so mình với |\n| Sở hữu, hình ảnh | Đo mình bằng thứ đang có và bằng cách người khác nhìn | Đồ vật cũ đi, hình ảnh phải nuôi liên tục; mệt và không bao giờ đủ |\n| Hưởng thụ | Ưu tiên việc dễ chịu ngay; hoãn thứ khó | Ngưỡng khoái cảm tăng dần; năng lực và quan hệ thì bào mòn dần |\n| Bản thân | Mọi việc quy về được mất của mình; khó thấy nhu cầu người khác | Tầm nhìn co lại quanh cái trước mắt; quan hệ mòn vì thiếu có đi có lại |\n| Nguyên tắc | Hỏi \"điều đúng ở đây là gì\" trước khi hỏi \"tôi được gì\" | Không ai lấy đi được; cái giá phải trả là đôi khi thiệt trước mắt |\n\n> [!ghi-nho] Trọng tâm nguyên tắc được coi là lựa chọn bền nhất vì nguyên tắc không đổi theo hoàn cảnh, không phụ thuộc vào tâm trạng của ai, và không thể bị lấy mất. Mọi trọng tâm khác đều là thứ có thể mất — nên chúng chỉ chống đỡ được cho tới ngày mất.\n\nCần nói rõ một chuyện hay bị hiểu lệch: lấy nguyên tắc làm trọng tâm **không có nghĩa là coi nhẹ công việc, tiền bạc hay người thân**. Nó chỉ đổi thứ tự câu hỏi. Người lấy công việc làm trọng tâm hỏi \"việc này ảnh hưởng sự nghiệp tôi thế nào\" rồi mới hỏi tới đúng sai. Người lấy nguyên tắc làm trọng tâm hỏi ngược lại — và vì thế, khi hai câu trả lời mâu thuẫn, họ biết mình sẽ nghiêng về đâu trước khi cơn giằng xé bắt đầu.\n\nCũng cần phân biệt **trọng tâm bản thân** với **lòng tự trọng**. Người tự trọng biết giới hạn của mình, biết từ chối, không cần người khác xác nhận liên tục. Người lấy bản thân làm trọng tâm đo mọi việc bằng được mất của riêng mình trong ngắn hạn — đó không phải độc lập, đó là một trọng tâm hẹp và dễ vỡ, vì đời sống thì luôn cần đi lại hai chiều.\n\n## Hai vòng tròn\n\nHình dưới đây là công cụ đơn giản nhất trong cả module này, và cũng là công cụ được dùng lại nhiều nhất ở các module sau.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1.1rem;margin:1.2rem 0\">\n  <div style=\"border:2px dashed rgba(217,150,40,.65);border-radius:.6rem;padding:1rem;background:rgba(217,150,40,.07)\">\n    <div style=\"font-weight:700;color:rgb(165,113,29);font-size:1.1rem;margin-bottom:.5rem\">VÒNG TRÒN QUAN TÂM — mọi thứ tôi để tâm</div>\n    <div style=\"font-size:1.05rem;line-height:1.7;color:rgba(127,127,127,0.95)\">giá xăng · điểm thi đã công bố · tính cách của trưởng nhóm · thị trường tuyển dụng · thời tiết ngày thi · quyết định của nhà trường · chuyện người khác nghĩ gì về tôi</div>\n    <div style=\"border:2px solid rgba(13,148,136,.75);border-radius:.5rem;padding:.9rem;margin-top:.8rem;background:rgba(13,148,136,.12)\">\n      <div style=\"font-weight:700;color:rgb(12,141,129);font-size:1.1rem;margin-bottom:.5rem\">VÒNG TRÒN ẢNH HƯỞNG — phần tôi tác động được</div>\n      <div style=\"font-size:1.05rem;line-height:1.7\">giờ tôi ngủ · phần việc tôi nhận · cách tôi hỏi lại khi chưa rõ · chất lượng bản nháp tôi gửi · việc tôi có nhắn tin xin lỗi hay không · những gì tôi luyện trước buổi phỏng vấn</div>\n    </div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.7rem;line-height:1.6\">Năng lượng đổ vào vành ngoài không làm vành ngoài đổi, chỉ làm vòng trong co lại. Năng lượng đổ vào vòng trong làm chính vòng trong nở ra — người liên tục làm tốt phần mình được giao dần được giao phần lớn hơn.</div>\n</div>\n```\n\nCơ chế của nó rất thẳng thắn. Thời gian và sức chú ý là hữu hạn: mỗi buổi tối dành cho việc bình luận về sự bất công của một quy chế là một buổi tối không dành cho việc chuẩn bị hồ sơ hay hỏi thẳng người có thẩm quyền. Càng ở lâu trong vòng ngoài, hai thứ càng lớn lên: cảm giác bất lực và thói quen quy trách nhiệm cho hoàn cảnh. Cả hai đều làm năng lực tác động thật sự teo đi.\n\nCần tránh hiểu sai thành thái độ vô cảm. Quan tâm tới những chuyện lớn mình không đổi được — bất bình đẳng, môi trường, chính sách — là điều nên có. Vấn đề chỉ nảy sinh khi **toàn bộ** năng lượng dừng ở mức bức xúc và không có mẩu nào chuyển thành hành động nằm trong tầm với: một lá thư gửi đúng nơi, một buổi tình nguyện, một lá phiếu, một thay đổi trong cách mình tiêu dùng.\n\n> [!vi-du] Nhóm của Linh gặp đủ thứ bất lợi: đề bài khó, phòng máy thiếu thiết bị, các thành viên chưa ăn khớp. Trong khi cả nhóm than về đề và về phòng máy — hai thứ nằm ở vành ngoài — Linh ôn lại phần mình còn yếu, nhắn tin phân công lại cho rõ, chuẩn bị tài liệu cho buổi họp sau. Ba việc ấy đều nằm trong vòng ảnh hưởng. Kết quả thường thấy: sau vài tuần, nhóm bắt đầu hỏi ý Linh trước khi quyết — vòng ảnh hưởng của bạn ấy vừa nở ra.\n\n## Chủ động là khoảng dừng, không phải độ hăng hái\n\nTừ \"chủ động\" trong ngôn ngữ hằng ngày hay bị hiểu thành xông xáo, nhận nhiều việc, trả lời nhanh. Nghĩa gốc ở đây khác và hẹp hơn: giữa **kích thích** (việc xảy ra với bạn) và **phản ứng** (điều bạn làm), con người có một khoảng trống, và trong khoảng trống ấy bạn có quyền chọn. Người bị động để hoàn cảnh bấm nút; người chủ động dùng khoảng dừng đó.\n\nVì khoảng dừng là thứ bên trong, cách quan sát dễ nhất là qua **ngôn ngữ**. Câu chữ tiết lộ khá chính xác một người đang đứng ở đâu.\n\n| Ngôn ngữ phản ứng | Ngôn ngữ chủ động | Khác biệt thật sự |\n|---|---|---|\n| \"Chẳng làm gì được đâu\" | \"Thử xem còn cách nào khác\" | Đóng hay mở khả năng tìm phương án |\n| \"Tính tôi nó thế\" | \"Tôi có thể tập cách khác\" | Coi hành vi là cố định hay là thứ tập được |\n| \"Sếp làm tôi phát điên\" | \"Tôi đang để chuyện này chi phối mình\" | Trao quyền cho người khác hay giữ lại quyền chọn cảm xúc |\n| \"Tôi buộc phải làm\" | \"Tôi chọn làm, vì tôi muốn giữ …\" | Che giấu hay nhìn thẳng vào cái giá của lựa chọn |\n| \"Giá mà nhóm có người giỏi hơn\" | \"Tôi sẽ làm rõ phần việc của từng người\" | Chờ hoàn cảnh đổi hay tác động vào phần mình nắm |\n\nBảng này không phải trò chơi chữ. Nói \"tôi buộc phải nhận việc này\" khiến bạn thấy mình là nạn nhân và bỏ luôn việc xem xét các phương án; nói \"tôi chọn nhận việc này để giữ quan hệ với nhóm và vì tôi cần kinh nghiệm\" buộc bạn nhìn thấy mình đang đổi cái gì lấy cái gì — và có thể quyết định khác đi vào lần sau.\n\n> [!canh-bao] Ngôn ngữ chủ động không phải là tự đổ lỗi cho mình trong mọi tình huống. Có những việc thật sự do người khác gây ra, và gọi tên đúng trách nhiệm của họ là điều lành mạnh. Chủ động chỉ nói về phần còn lại: sau khi việc đã xảy ra, bạn định làm gì với phần mình đang nắm.\n\n## Ba loại vấn đề, ba cách xử lý\n\nKhông phải vấn đề nào cũng xử lý theo một kiểu. Phân loại trước khi hành động tránh được hai lỗi phổ biến: cố sức đổi thứ không đổi được, và bỏ mặc thứ lẽ ra đổi được.\n\n| Loại vấn đề | Nhận ra bằng | Cách xử lý | Ví dụ |\n|---|---|---|---|\n| Kiểm soát trực tiếp | Nằm trong hành vi của chính bạn | Đổi thói quen; bắt đầu từ một hành vi nhỏ, có thời điểm cụ thể | Đi trễ, nộp bài sát hạn, không đọc kỹ đề |\n| Kiểm soát gián tiếp | Phụ thuộc hành vi người khác | Đổi cách gây ảnh hưởng: hỏi, thương lượng, làm gương, đưa bằng chứng | Bạn cùng nhóm không nộp phần việc; giảng viên chưa rõ tiêu chí chấm |\n| Không kiểm soát | Đã xảy ra, hoặc ngoài tầm với | Đổi thái độ và chuẩn bị: chấp nhận, rút bài học, dựng phương án dự phòng | Điểm đã công bố; chính sách tuyển dụng của công ty; thời tiết ngày thi |\n\nSai lầm hay gặp nhất là xử lý vấn đề loại hai bằng công cụ của loại ba: thấy bạn cùng nhóm không làm việc thì kết luận \"cậu ấy vốn thế\" rồi im lặng chịu đựng, trong khi phần lớn tình huống loại này chỉ cần một cuộc nói chuyện thẳng, sớm và cụ thể. Sai lầm ngược lại cũng tốn kém: dồn nhiều tuần bực bội vào một quyết định đã ban hành thay vì dùng chừng ấy thời gian dựng phương án B.\n\n> [!meo] Khi bị mắc kẹt, vẽ ba cột lên giấy và ném từng mảnh của vấn đề vào đúng cột. Riêng cột ba, viết thêm một dòng: \"phần tôi vẫn còn quyết được ở đây là gì\" — hầu như không có tình huống nào cột ấy trống hoàn toàn.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (15 phút)\n\nChọn một chuyện đang khiến bạn khó chịu trong hai tuần gần đây. Làm ba việc: (1) vẽ hai vòng tròn và đặt từng mảnh của chuyện đó vào đúng vòng; (2) ước lượng trong bảy ngày qua bạn đã dành bao nhiêu phút cho vành ngoài (than, đọc, bình luận, nghĩ đi nghĩ lại) và bao nhiêu phút cho vòng trong; (3) chọn **một** việc trong vòng ảnh hưởng, ghi rõ sẽ làm vào lúc nào trong 72 giờ tới.\n\n### Nhóm 3–4 người (25 phút)\n\nMỗi người kể một tình huống trong 90 giây, cố ý dùng ngôn ngữ phản ứng như thói quen thường ngày. Nhóm ghi lại các câu phản ứng nghe được, rồi cùng viết lại thành ngôn ngữ chủ động — yêu cầu: bản viết lại phải giữ nguyên sự thật, không được biến việc người khác gây ra thành lỗi của người kể. Cuối buổi, mỗi nhóm chọn một cặp câu trước–sau rõ nhất và giải thích bản viết lại mở ra hành động nào mà bản gốc đóng lại.\n\n### Bài tập về nhà (45–60 phút)\n\nTheo dõi bảy ngày. Mỗi tối ghi một dòng: hôm nay tôi đã tiêu nhiều năng lượng nhất vào vòng nào, vì việc gì. Cuối tuần viết nửa trang: (a) tỉ lệ ước lượng giữa hai vòng; (b) một việc thuộc loại \"kiểm soát gián tiếp\" bạn đã né tránh và câu mở đầu cụ thể bạn sẽ dùng để nói chuyện với người liên quan; (c) một việc thuộc loại \"không kiểm soát\" bạn quyết định thôi mang theo, kèm phương án dự phòng nếu điều xấu ấy xảy ra thật.\n\n### Nguồn tham khảo\n\n- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương \"Be Proactive\" và \"Principle-Centered Living.\" New York: Free Press.\n- Frankl, V. E. (1946/2006). *Man's Search for Meaning.* Boston: Beacon Press — nguồn của ý niệm khoảng trống giữa kích thích và phản ứng.\n- Rotter, J. B. (1966). Generalized expectancies for internal versus external control of reinforcement. *Psychological Monographs*, 80(1), 1–28.\n- Bandura, A. (1997). *Self-Efficacy: The Exercise of Control.* New York: W. H. Freeman.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1.2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "1.2-covey-chu-dong-bi-dong",
+                "type": "mcq",
+                "prompt": "So sánh người chủ động và người bị động trong mô hình vòng tròn ảnh hưởng của Covey, điểm khác biệt cốt lõi là gì?",
+                "explanation": "Người chủ động dồn năng lượng vào phần mình tác động được, nên vòng ảnh hưởng nở ra; người bị động dồn năng lượng vào phần chỉ có thể lo lắng, nên vòng ảnh hưởng co lại.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Người chủ động tập trung vào vòng tròn ảnh hưởng; người bị động tập trung vào phần nằm ngoài vòng tròn ảnh hưởng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Người chủ động quan tâm nhiều việc hơn, người bị động chỉ quan tâm việc của mình",
+                    "isCorrect": false,
+                    "misconception": "knm.circle-of-concern"
+                  },
+                  {
+                    "label": "Người chủ động phản ứng nhanh và nhận nhiều việc hơn người bị động",
+                    "isCorrect": false,
+                    "misconception": "knm.proactive-is-enthusiasm"
+                  },
+                  {
+                    "label": "Người chủ động sinh ra đã quyết đoán, người bị động thì không",
+                    "isCorrect": false,
+                    "misconception": "knm.skill-is-innate"
+                  }
+                ]
+              },
+              {
+                "key": "1.2-linh-nhom-du-an",
+                "type": "mcq",
+                "prompt": "Nhóm của Linh gặp khó: đề khó, phòng máy thiếu thiết bị, thành viên chưa phối hợp. Trong khi các bạn than về đề và phòng máy, Linh ôn lại phần mình còn yếu, nhắn tin phân công lại cho rõ và chuẩn bị tài liệu cho buổi họp sau. Linh đang tập trung nỗ lực vào phạm vi nào?",
+                "explanation": "Ba việc Linh làm đều nằm trong phần bạn ấy tác động được — năng lực bản thân, cách phân công, khâu chuẩn bị — tức là vòng tròn ảnh hưởng.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vòng tròn ảnh hưởng — phần Linh tác động được bằng hành vi của chính mình",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vòng tròn quan tâm — vì Linh vẫn đang lo lắng về kết quả của nhóm",
+                    "isCorrect": false,
+                    "misconception": "knm.circle-of-concern"
+                  },
+                  {
+                    "label": "Cả hai vòng như nhau, vì Linh vừa lo vừa làm",
+                    "isCorrect": false,
+                    "misconception": "knm.circle-of-concern"
+                  },
+                  {
+                    "label": "Ngoài cả hai vòng, vì kết quả cuối cùng do giảng viên quyết định",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "1.2-trong-tam-nguyen-tac",
+                "type": "mcq",
+                "prompt": "Vì sao trọng tâm nguyên tắc được coi là điểm tựa bền hơn công việc, tiền bạc hay một người cụ thể?",
+                "explanation": "Nguyên tắc không đổi theo hoàn cảnh và không ai lấy đi được; các trọng tâm còn lại đều có thể mất, và mất tới đâu thì người dựa vào chúng chông chênh tới đó.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì nguyên tắc không phụ thuộc hoàn cảnh và không thể bị lấy mất, trong khi các trọng tâm kia đều có thể mất",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì người sống theo nguyên tắc luôn đạt kết quả tốt hơn về thu nhập và địa vị",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì nguyên tắc do mỗi người tự đặt ra nên luôn phù hợp với mình",
+                    "isCorrect": false,
+                    "misconception": "knm.self-center-is-maturity"
+                  },
+                  {
+                    "label": "Vì công việc và tiền bạc là những thứ không đáng coi trọng",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  }
+                ]
+              },
+              {
+                "key": "1.2-trong-tam-ban-than",
+                "type": "mcq",
+                "prompt": "Vì sao 'trọng tâm bản thân' không phải là lựa chọn lý tưởng cho trọng tâm cuộc sống?",
+                "explanation": "Lấy được mất ngắn hạn của riêng mình làm thước đo khiến tầm nhìn co lại và làm mòn các quan hệ vốn cần có đi có lại. Đây là chuyện khác với lòng tự trọng hay khả năng từ chối.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì mọi việc bị quy về được mất ngắn hạn của riêng mình, làm tầm nhìn hẹp lại và quan hệ mòn dần",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì đặt bản thân làm trung tâm là biểu hiện của sự độc lập và trưởng thành",
+                    "isCorrect": false,
+                    "misconception": "knm.self-center-is-maturity"
+                  },
+                  {
+                    "label": "Vì người trưởng thành phải luôn đặt nhu cầu người khác lên trước nhu cầu của mình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vì bản thân là thứ thay đổi liên tục theo tuổi tác nên không đáng tin",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "1.2-ba-loai-van-de",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với cách xử lý phù hợp theo ba loại vấn đề.",
+                "explanation": "Vấn đề nằm trong hành vi của mình thì đổi thói quen; phụ thuộc hành vi người khác thì đổi cách gây ảnh hưởng; đã xảy ra hoặc ngoài tầm với thì đổi thái độ và dựng phương án dự phòng.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Tôi hay nộp bài sát hạn nên bài luôn cẩu thả",
+                    "right": "Kiểm soát trực tiếp — đổi thói quen của mình"
+                  },
+                  {
+                    "left": "Bạn cùng nhóm liên tục trễ phần việc được giao",
+                    "right": "Kiểm soát gián tiếp — đổi cách gây ảnh hưởng, nói chuyện sớm và cụ thể"
+                  },
+                  {
+                    "left": "Nhà trường vừa đổi quy chế xét học bổng, đã ban hành",
+                    "right": "Không kiểm soát — đổi thái độ và dựng phương án dự phòng"
+                  }
+                ]
+              },
+              {
+                "key": "1.2-ngon-ngu-chu-dong",
+                "type": "mcq",
+                "prompt": "Câu nào dưới đây là bản viết lại theo ngôn ngữ chủ động đúng nhất cho câu 'Tôi buộc phải nhận thêm việc này, không còn cách nào khác'?",
+                "explanation": "Bản viết lại phải nhìn thẳng vào lựa chọn và cái giá của nó, chứ không phải chối bỏ sự thật hay tự trách mình.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Tôi chọn nhận việc này vì muốn giữ quan hệ với nhóm, và tôi chấp nhận mất hai buổi tối tuần này'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Tôi nhận vì tính tôi cả nể, sửa không được đâu'",
+                    "isCorrect": false,
+                    "misconception": "knm.skill-is-innate"
+                  },
+                  {
+                    "label": "'Tôi phải nhận vì sếp ép, lỗi hoàn toàn ở sếp'",
+                    "isCorrect": false,
+                    "misconception": "knm.circle-of-concern"
+                  },
+                  {
+                    "label": "'Tôi sẽ nhận mọi việc được giao để chứng minh mình chủ động'",
+                    "isCorrect": false,
+                    "misconception": "knm.proactive-is-enthusiasm"
+                  }
+                ]
+              },
+              {
+                "key": "1.2-thu-tu-xu-ly",
+                "type": "ordering",
+                "prompt": "Sắp xếp các bước xử lý một chuyện đang khiến bạn bế tắc, theo trình tự hợp lý.",
+                "explanation": "Tách các mảnh trước khi hành động, phân loại để chọn đúng công cụ, chọn một việc nằm trong tầm với, ấn định thời điểm, rồi mới xem lại kết quả.",
+                "points": 3,
+                "sequence": [
+                  "Viết ra từng mảnh của chuyện đang bế tắc, mỗi mảnh một dòng",
+                  "Xếp mỗi mảnh vào vòng ảnh hưởng hay vòng quan tâm",
+                  "Với các mảnh trong vòng ảnh hưởng, phân loại kiểm soát trực tiếp hay gián tiếp",
+                  "Chọn một việc cụ thể và ấn định thời điểm làm trong 72 giờ tới",
+                  "Sau một tuần, xem lại tỉ lệ năng lượng đã dồn vào mỗi vòng"
+                ]
+              },
+              {
+                "key": "1.2-viet-hai-vong-tron",
+                "type": "essay",
+                "prompt": "Chọn một chuyện đang khiến bạn khó chịu. Viết 200–300 từ gồm: (a) liệt kê các mảnh của chuyện đó và xếp mỗi mảnh vào vòng quan tâm hay vòng ảnh hưởng; (b) ước lượng bảy ngày qua bạn đã dồn năng lượng vào vòng nào nhiều hơn và dấu hiệu nào cho thấy điều đó; (c) một việc cụ thể trong vòng ảnh hưởng bạn sẽ làm trong 72 giờ tới, kèm thời điểm.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 1.3 · Tuyên ngôn sứ mệnh cá nhân và khi giá trị bị thử",
+          "durationMin": 50,
+          "description": "Viết một bản tuyên ngôn dùng được để từ chối, rà soát nó định kỳ, và xử lý hai tình huống giá trị bị thử: khi yêu cầu của tổ chức va vào nguyên tắc, và khi phải chọn giữa hai điều đều tốt.",
+          "objectives": [
+            "Viết được bản nháp tuyên ngôn sứ mệnh cá nhân có vai trò, đóng góp và điều sẽ từ chối",
+            "Nêu được lý do phải rà soát tuyên ngôn định kỳ và mốc rà soát của riêng mình",
+            "Liệt kê được các bước ở giữa hai cực chịu đựng và nghỉ việc khi giá trị xung đột với tổ chức",
+            "Dùng được bảng đối chiếu giá trị để giải thích một quyết định nghề nghiệp"
+          ],
+          "summary": [
+            "Tuyên ngôn sứ mệnh cá nhân là bản mô tả bằng chữ về con người bạn muốn trở thành và nguyên tắc bạn dựa vào — phép thử của nó là: nó có giúp bạn từ chối được điều gì không.",
+            "Viết một lần rồi cất đi là hỏng: vai trò và hoàn cảnh đổi theo năm, nên bản tuyên ngôn cần mốc rà soát cố định và một lần rà soát bất thường mỗi khi đổi vai trò lớn.",
+            "Giữa chịu đựng và nghỉ việc còn ba bước: làm rõ, lên tiếng đúng kênh, thương lượng phạm vi — và ghi lại. Rời đi là bước cuối, không phải bước đầu.",
+            "Quyết định nghề nghiệp lớn nên được giải thích bằng thứ tự giá trị đã lập, chứ không bằng cảm giác lúc quyết."
+          ],
+          "body": "\n## Tuyên ngôn sứ mệnh cá nhân là gì\n\nHai bài trước cho bạn hai thứ: một thứ tự giá trị đã được ép xuống còn ba mục, và một trọng tâm để dựa vào. Bài này ghép chúng thành một văn bản ngắn dùng được hằng ngày.\n\n**Bản tuyên ngôn sứ mệnh cá nhân** là bản viết ra con người bạn muốn trở thành, những đóng góp bạn muốn tạo ra, và các nguyên tắc bạn dựa vào để quyết định. Nó không phải bản kế hoạch có mốc thời gian, cũng không phải danh sách mục tiêu — nó là **hiến pháp cá nhân**: thứ đứng cao hơn từng quyết định lẻ và được dùng để soi khi các quyết định mâu thuẫn nhau.\n\n| Tuyên ngôn sứ mệnh là | Tuyên ngôn sứ mệnh không phải là |\n|---|---|\n| Bản mô tả con người mình muốn trở thành và nguyên tắc mình dựa vào | Danh sách mục tiêu có thời hạn |\n| Công cụ để từ chối những việc lệch hướng | Khẩu hiệu để trưng ra cho người khác xem |\n| Văn bản riêng, viết bằng ngôn ngữ của chính mình | Bản sao câu chữ hay từ sách hoặc từ người mình ngưỡng mộ |\n| Thứ được rà soát định kỳ | Thứ viết một lần rồi cất |\n\n> [!canh-bao] Phép thử duy nhất cho một bản tuyên ngôn: **nó có giúp bạn từ chối được điều gì cụ thể không?** \"Tôi sống tử tế, không ngừng học hỏi và cống hiến hết mình\" đúng với mọi người và vì thế không hướng dẫn được ai. Một tuyên ngôn không loại trừ điều gì thì cũng không chọn được điều gì.\n\n### Ba câu hỏi để viết bản nháp đầu tiên\n\nĐừng cố viết hay. Bản nháp đầu tiên chỉ cần trả lời được ba câu hỏi dưới đây bằng ngôn ngữ đời thường.\n\n1. **Vai trò.** Trong năm năm tới, tôi giữ những vai trò nào — người con, bạn học, thành viên nhóm, người làm nghề gì đó, công dân? Với mỗi vai trò, tôi muốn người trong vai trò đối diện mô tả tôi bằng câu nào?\n2. **Đóng góp.** Nếu công việc tôi làm biến mất, thứ gì thật sự thiếu đi cho ai đó? Câu trả lời càng cụ thể càng tốt: \"giúp sinh viên năm nhất đỡ lạc lối trong kỳ đầu\" dùng được, \"tạo giá trị cho cộng đồng\" thì không.\n3. **Nguyên tắc và ranh giới.** Ba giá trị đầu ở bài 1.1 của tôi là gì, và với mỗi giá trị, **tôi sẽ từ chối điều gì** để giữ nó?\n\nGhép ba câu trả lời lại, cắt hết những chữ nghe kêu mà không kiểm tra được, giữ độ dài trong khoảng nửa trang. Bản nháp xong là dùng được — nó sẽ còn được sửa nhiều lần.\n\n:::mau Một bản tuyên ngôn mẫu (rút gọn, để tham khảo cấu trúc chứ không để chép)\n**Vai trò và cam kết**\n\n- *Người con:* mỗi tuần một cuộc gọi thật sự hỏi han, không phải nhắn tin cho xong.\n- *Thành viên nhóm:* nói sớm khi phần việc của tôi có nguy cơ trễ, kể cả khi việc đó khiến tôi mất mặt.\n- *Người làm nghề giáo dục:* làm ra thứ giúp người học tự đi tiếp được, không phải thứ khiến họ phụ thuộc vào tôi.\n\n**Đóng góp tôi muốn tạo ra**\n\nGiúp sinh viên năm nhất ngành tôi đỡ mất một học kỳ để hiểu ngành mình học là gì — bằng tài liệu, buổi chia sẻ và việc trả lời tin nhắn của các em trong vòng 48 giờ.\n\n**Nguyên tắc và điều tôi từ chối**\n\n- *Trung thực:* tôi báo cáo đúng số liệu, kể cả khi số liệu ấy cho thấy việc tôi làm chưa hiệu quả. Tôi từ chối tham gia phần việc phải làm đẹp số.\n- *Học hỏi:* mỗi quý tôi học xong một thứ mới có sản phẩm chứng minh. Tôi từ chối nhận thêm việc lặp lại chỉ vì nó dễ và trả tiền ngay.\n- *Gia đình:* hai tối trong tuần không làm việc sau 20 giờ. Tôi từ chối các cuộc họp đặt vào hai tối đó, và nói trước lý do.\n\n**Mốc rà soát:** tháng 1 và tháng 7 hằng năm; rà soát bất thường mỗi khi đổi vai trò lớn.\n:::\n\n## Vì sao phải rà soát định kỳ\n\nBản tuyên ngôn không phải bia đá. Ba loại thay đổi dưới đây đều làm nó lệch khỏi đời sống thật, và không loại nào báo trước.\n\n- **Vai trò đổi.** Ra trường, đi làm, chuyển ngành, lập gia đình — mỗi lần như vậy danh sách vai trò đổi, và cam kết viết cho vai trò cũ có thể vô nghĩa hoặc bất khả thi trong vai trò mới.\n- **Hiểu biết về chính mình đổi.** Sau vài lần trả giá thật, bạn phát hiện điều mình tưởng coi trọng hoá ra không, và điều mình ít nhắc tới hoá ra lại là thứ mình bảo vệ đến cùng.\n- **Hoàn cảnh đổi.** Sức khoẻ, tài chính, trách nhiệm với người thân — chúng đổi cả cái giá mà mỗi cam kết đòi hỏi.\n\nRà soát không có nghĩa viết lại từ đầu mỗi sáu tháng. Nó là ba câu hỏi ngắn: cam kết nào tôi đã **không** giữ nổi kỳ vừa rồi và vì sao; điều gì tôi từ chối được, điều gì không; có vai trò nào mới cần thêm vào không. Phần lớn lần rà soát chỉ sửa vài dòng — nhưng chính vài dòng ấy giữ cho văn bản còn mô tả đúng người đang sống.\n\n> [!ghi-nho] Đặt hai mốc cố định trong năm cho việc rà soát, cộng thêm một lần bất thường mỗi khi đổi vai trò lớn. Mốc cố định quan trọng hơn bạn nghĩ: không có mốc thì việc rà soát chỉ xảy ra sau khủng hoảng, tức là quá muộn để nó giúp được gì.\n\n## Khi giá trị va vào yêu cầu của tổ chức\n\nĐây là tình huống làm lộ ra ai đã thật sự có hệ giá trị. Phản xạ thường gặp là nhìn thấy đúng hai lối: **im lặng làm theo** hoặc **bỏ đi**. Cả hai đều là phản ứng, và cả hai đều bỏ qua phần lớn khoảng ở giữa.\n\nNhà kinh tế học Albert Hirschman mô tả ba cách con người đáp lại khi tổ chức mình thuộc về đi chệch hướng: **rời đi** (exit), **lên tiếng** (voice), và **ở lại vì gắn bó** (loyalty). Điểm quan trọng trong lập luận của ông: khi người ta chỉ biết tới lựa chọn rời đi, tổ chức mất luôn nguồn thông tin để tự sửa. Lên tiếng là lựa chọn tốn công hơn nhưng thường được thử trước.\n\n| Bước | Việc cụ thể | Vì sao đứng ở vị trí này |\n|---|---|---|\n| 1. Làm rõ | Hỏi lại để biết yêu cầu thật sự là gì, ai yêu cầu, dựa trên căn cứ nào | Một phần đáng kể các \"xung đột giá trị\" hoá ra là hiểu nhầm về phạm vi hoặc thẩm quyền |\n| 2. Nêu quan ngại | Nói với đúng người, đúng kênh, mô tả sự việc chứ không quy kết động cơ | Nêu sớm thì còn là góp ý; nêu muộn thì đã thành tố cáo |\n| 3. Thương lượng phạm vi | Đề xuất cách làm khác đạt cùng mục đích; xin rút khỏi đúng phần việc va vào nguyên tắc | Giữ được nguyên tắc mà không buộc tổ chức phải thua toàn bộ |\n| 4. Ghi lại | Lưu email, biên bản, tin nhắn về yêu cầu và về phản hồi của bạn | Bảo vệ bạn nếu sự việc đi xa, và giúp bạn nhìn lại chính mình sau này |\n| 5. Rời đi | Chỉ khi các bước trên đã thử và yêu cầu vẫn buộc bạn làm điều sai | Là lựa chọn hợp lệ và đôi khi là lựa chọn đúng — nhưng là bước cuối |\n\nCó một ngoại lệ cần nói rõ: khi yêu cầu là **hành vi gian lận hoặc vi phạm pháp luật** rõ ràng, bước 1 và 2 rút ngắn lại rất nhanh và việc từ chối tham gia phải xảy ra ngay, song song với việc ghi lại. Thương lượng phạm vi không áp dụng cho việc sai bản chất; nó chỉ dùng cho những vùng xám về cách làm.\n\n> [!vi-du] Nhóm của Hải muốn dùng bài của khoá trước nộp lại cho nhanh. Phản ứng theo hai cực: hoặc im lặng đồng ý, hoặc mắng cả nhóm rồi bỏ nhóm. Cách theo thang trên: nói ngay và nói bằng sự việc — \"mình không tham gia phần này, vì nếu bị phát hiện thì cả nhóm mất điểm toàn học phần\" — kèm một đề xuất thay thế khả thi: \"mình nhận viết phần khung tối nay, sáng mai cả nhóm điền dữ liệu thật.\" Giữ được nguyên tắc mà vẫn để nhóm một lối đi.\n\n## Ra quyết định lớn bằng giá trị\n\nVới các quyết định nghề nghiệp lớn — chọn nơi thực tập, nhận hay từ chối lời mời làm việc, đổi ngành — thứ tự giá trị ở bài 1.1 mới phát huy công dụng. Cách làm mất chừng ba mươi phút.\n\n1. Viết ba giá trị đầu của bạn thành ba dòng.\n2. Với mỗi phương án, ghi **bằng chứng cụ thể** cho thấy phương án ấy hỗ trợ hay cản trở từng giá trị. Bằng chứng phải kiểm tra được: \"có người hướng dẫn dành 1 giờ/tuần\" là bằng chứng, \"môi trường trẻ trung năng động\" thì không.\n3. Đánh dấu ô nào là **điều kiện loại trừ** — thứ mà nếu vi phạm thì mọi ưu điểm khác không bù được.\n4. Chọn, rồi viết một câu giải thích lựa chọn bằng chính ba giá trị ấy. Không viết nổi câu đó nghĩa là bạn đang chọn bằng thứ khác — có thể là cảm giác, có thể là sức ép từ người khác — và ít nhất bạn nên biết điều đó trước khi ký.\n\n| | Nơi A (lương cao, việc lặp lại) | Nơi B (lương thấp hơn 20%, có người hướng dẫn) |\n|---|---|---|\n| Trung thực | Được yêu cầu làm đẹp số liệu báo cáo — **điều kiện loại trừ** | Không có dấu hiệu; hỏi được hai người từng làm |\n| Học hỏi | Việc lặp lại sau ba tháng đầu | Người hướng dẫn cam kết 1 giờ/tuần, có lộ trình rõ |\n| Trách nhiệm tài chính với gia đình | Hỗ trợ tốt hơn ngay lập tức | Đủ sống, chậm hơn khoảng một năm |\n\nBảng ví dụ trên cho thấy vì sao **điều kiện loại trừ** phải được đánh dấu trước khi so sánh: nếu chỉ cộng điểm, nơi A có thể thắng. Đây cũng chính là tình huống mà một người có trọng tâm nguyên tắc trả lời khác với người có trọng tâm tiền bạc — không phải vì họ coi nhẹ thu nhập, mà vì họ đã quyết định trước rằng có những ô không đem ra đổi.\n\n> [!meo] Làm bảng này **trước** khi bước vào cuộc thương lượng lương, không phải sau. Biết trước ô nào không đổi được thì bạn thương lượng bình tĩnh hơn hẳn, và không rơi vào tình huống đồng ý xong mới thấy mình vừa bán mất thứ không định bán.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (25 phút)\n\nViết bản nháp tuyên ngôn sứ mệnh cá nhân theo ba câu hỏi ở mục **Tuyên ngôn sứ mệnh cá nhân là gì**, dài nửa trang. Yêu cầu bắt buộc: phần nguyên tắc phải có ít nhất **ba câu bắt đầu bằng \"Tôi từ chối…\"**, mỗi câu gắn với một giá trị. Cuối bản, ghi hai mốc rà soát trong năm.\n\n### Nhóm 3–4 người (25 phút)\n\nĐổi bản nháp cho nhau. Mỗi người đọc bản của bạn mình và trả lời đúng hai câu: (1) bản này giúp bạn ấy từ chối được điều gì cụ thể; (2) câu nào trong bản đúng với mọi người và vì thế nên bị gạch. Trả lại bản kèm nhận xét. Người nhận sửa ngay tại chỗ ít nhất một câu.\n\n### Bài tập về nhà (60 phút)\n\nChọn một quyết định lớn bạn đang phải ra hoặc vừa ra trong sáu tháng qua (chọn nơi thực tập, nhận việc, đổi hướng học). Làm bảng đối chiếu giá trị như ở mục **Ra quyết định lớn bằng giá trị** với ít nhất hai phương án và ba giá trị, đánh dấu điều kiện loại trừ nếu có. Viết nửa trang trả lời: quyết định của bạn có giải thích được bằng ba giá trị ấy không; nếu không thì thứ đang thật sự dẫn dắt bạn là gì.\n\n### Nguồn tham khảo\n\n- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương \"Begin with the End in Mind.\" New York: Free Press.\n- Hirschman, A. O. (1970). *Exit, Voice, and Loyalty: Responses to Decline in Firms, Organizations, and States.* Cambridge, MA: Harvard University Press.\n- Schein, E. H. (1990). *Career Anchors: Discovering Your Real Values.* San Diego: Pfeiffer.\n- Badaracco, J. L. (1997). *Defining Moments: When Managers Must Choose Between Right and Right.* Boston: Harvard Business School Press.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1.3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "1.3-tuyen-ngon-la-gi",
+                "type": "mcq",
+                "prompt": "'Bản tuyên ngôn sứ mệnh cá nhân' là gì?",
+                "explanation": "Đó là bản viết ra con người mình muốn trở thành, đóng góp mình muốn tạo ra và nguyên tắc mình dựa vào — một thứ hiến pháp cá nhân, không phải danh sách mục tiêu có thời hạn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bản mô tả con người mình muốn trở thành, đóng góp mình muốn tạo ra và nguyên tắc mình dựa vào để quyết định",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Danh sách mục tiêu có thời hạn cho năm năm tới",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-goal"
+                  },
+                  {
+                    "label": "Một câu khẩu hiệu ngắn gọn, dễ nhớ để trưng ra khi cần giới thiệu bản thân",
+                    "isCorrect": false,
+                    "misconception": "knm.mission-as-slogan"
+                  },
+                  {
+                    "label": "Bản cam kết nộp cho tổ chức nơi mình học tập hoặc làm việc",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "1.3-ra-soat-dinh-ky",
+                "type": "mcq",
+                "prompt": "Vì sao bản tuyên ngôn sứ mệnh cá nhân nên được rà soát định kỳ?",
+                "explanation": "Vai trò, hiểu biết về bản thân và hoàn cảnh sống đều đổi theo thời gian; bản không rà soát sẽ mô tả một người không còn tồn tại.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vì vai trò, hiểu biết về bản thân và hoàn cảnh đều thay đổi, nên cách sống theo giá trị cũng phải đổi theo",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì giá trị sống của con người thay đổi liên tục theo từng tháng",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-preference"
+                  },
+                  {
+                    "label": "Vì viết xong một lần là đủ, rà soát chỉ để cho đẹp hồ sơ",
+                    "isCorrect": false,
+                    "misconception": "knm.mission-write-once"
+                  },
+                  {
+                    "label": "Vì tổ chức nơi mình làm việc yêu cầu cập nhật hằng năm",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  }
+                ]
+              },
+              {
+                "key": "1.3-tuyen-ngon-dung-duoc",
+                "type": "mcq",
+                "prompt": "Ba bạn cùng viết tuyên ngôn. Bản nào có nhiều khả năng dùng được để ra quyết định nhất?",
+                "explanation": "Phép thử là khả năng từ chối: bản nào nêu rõ vai trò, đóng góp cụ thể và điều sẵn sàng nói không thì mới hướng dẫn được hành vi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Tôi làm sản phẩm giúp sinh viên năm nhất tự định hướng; tôi từ chối các việc phải làm đẹp số liệu và các cuộc họp vào hai tối tôi dành cho gia đình'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Tôi sống tử tế, không ngừng học hỏi và cống hiến hết mình cho cộng đồng'",
+                    "isCorrect": false,
+                    "misconception": "knm.mission-as-slogan"
+                  },
+                  {
+                    "label": "'Trong ba năm tới tôi sẽ có bằng thạc sĩ, mua được xe và lên vị trí trưởng nhóm'",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-goal"
+                  },
+                  {
+                    "label": "'Tôi sẽ luôn cố gắng để không ai phải thất vọng về mình'",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  }
+                ]
+              },
+              {
+                "key": "1.3-xung-dot-to-chuc",
+                "type": "mcq",
+                "prompt": "Khi giá trị cá nhân xung đột với yêu cầu của tổ chức, cách tiếp cận trưởng thành là gì?",
+                "explanation": "Giữa chịu đựng và rời đi còn các bước làm rõ, lên tiếng đúng kênh, thương lượng phạm vi và ghi lại. Rời đi là lựa chọn hợp lệ nhưng là bước cuối.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Làm rõ yêu cầu, nêu quan ngại đúng người đúng kênh, thương lượng lại phạm vi phần việc và ghi lại; rời đi chỉ khi các bước ấy đã thử mà vẫn buộc làm điều sai",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Im lặng làm theo để giữ hoà khí, vì tổ chức nào cũng có chỗ chưa hợp lý",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-binary"
+                  },
+                  {
+                    "label": "Nộp đơn nghỉ ngay khi thấy yêu cầu trái với nguyên tắc của mình",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-binary"
+                  },
+                  {
+                    "label": "Đăng sự việc lên mạng xã hội để tạo áp lực dư luận trước đã",
+                    "isCorrect": false,
+                    "misconception": "knm.circle-of-concern"
+                  }
+                ]
+              },
+              {
+                "key": "1.3-luong-cao-trai-nguyen-tac",
+                "type": "mcq",
+                "prompt": "Bạn nhận được lời mời làm việc lương cao nhưng công việc đòi hỏi làm trái nguyên tắc trung thực của bạn. Theo định hướng 'trọng tâm hướng về nguyên tắc', bạn nên làm gì?",
+                "explanation": "Trọng tâm nguyên tắc không cấm cân nhắc thu nhập; nó đặt trước một số ô không đem ra đổi. Ô ấy là điều kiện loại trừ, nên phương án vi phạm bị loại dù các ưu điểm khác lớn tới đâu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Coi yêu cầu trái trung thực là điều kiện loại trừ: từ chối phần việc đó, và nếu không tách được thì từ chối lời mời",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nhận việc vì lương cao, rồi tìm cách hạn chế phần trái nguyên tắc ở mức thấp nhất có thể",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  },
+                  {
+                    "label": "Nhận việc và coi đây là chuyện phổ biến ở mọi nơi, không tránh được",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-binary"
+                  },
+                  {
+                    "label": "Nhận việc nếu tính ra tổng thu nhập vẫn bù được cho phần rủi ro",
+                    "isCorrect": false,
+                    "misconception": "knm.value-no-priority"
+                  }
+                ]
+              },
+              {
+                "key": "1.3-nhom-gian-lan",
+                "type": "mcq",
+                "prompt": "Nhóm bạn đề xuất nộp lại bài của khoá trước cho nhanh. Cách ứng xử giữ được giá trị mà vẫn để nhóm một lối đi là gì?",
+                "explanation": "Với việc sai bản chất thì từ chối tham gia phải xảy ra ngay và nói bằng sự việc, nhưng vẫn nên kèm một đề xuất thay thế khả thi để nhóm có lựa chọn khác.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nói ngay rằng mình không tham gia phần đó kèm lý do bằng sự việc, đồng thời đề xuất một cách làm thay thế khả thi trong thời gian còn lại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Im lặng để nhóm làm, mình không tham gia nhưng cũng không nói gì",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-binary"
+                  },
+                  {
+                    "label": "Đồng ý cho xong việc rồi rút kinh nghiệm ở lần sau",
+                    "isCorrect": false,
+                    "misconception": "knm.conflict-binary"
+                  },
+                  {
+                    "label": "Báo giảng viên trước khi nói gì với nhóm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "1.3-thang-xung-dot",
+                "type": "ordering",
+                "prompt": "Sắp xếp các bước xử lý khi một yêu cầu trong công việc va vào nguyên tắc của bạn (trường hợp vùng xám, chưa phải vi phạm pháp luật rõ ràng).",
+                "explanation": "Làm rõ trước để loại trừ hiểu nhầm, rồi lên tiếng đúng kênh, rồi thương lượng phạm vi, ghi lại toàn bộ, và chỉ rời đi khi các bước trên đã thử.",
+                "points": 3,
+                "sequence": [
+                  "Hỏi lại để biết yêu cầu thật sự là gì, do ai đưa ra và dựa trên căn cứ nào",
+                  "Nêu quan ngại với đúng người, đúng kênh, mô tả sự việc chứ không quy kết động cơ",
+                  "Đề xuất cách làm khác đạt cùng mục đích, hoặc xin rút khỏi đúng phần việc va vào nguyên tắc",
+                  "Lưu lại email, biên bản, tin nhắn về yêu cầu và phản hồi của mình",
+                  "Cân nhắc rời đi nếu vẫn bị buộc làm điều sai"
+                ]
+              },
+              {
+                "key": "1.3-ke-hoach-5-nam",
+                "type": "mcq",
+                "prompt": "Khi xây dựng kế hoạch nghề nghiệp 5 năm theo định hướng giá trị sống, việc đầu tiên cần làm là gì?",
+                "explanation": "Giá trị đứng trước mục tiêu: xác định và xếp thứ tự giá trị cùng các điều kiện loại trừ trước, rồi mới đặt mục tiêu và chọn phương án phù hợp với thứ tự ấy.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Xác định và xếp thứ tự các giá trị cốt lõi cùng những điều kiện mình không đem ra đổi, rồi mới đặt mục tiêu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Liệt kê các vị trí công việc có thu nhập cao nhất trong ngành rồi chọn lộ trình tới đó",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  },
+                  {
+                    "label": "Đặt trước các mục tiêu có mốc thời gian rồi suy ra giá trị từ những mục tiêu ấy",
+                    "isCorrect": false,
+                    "misconception": "knm.value-as-goal"
+                  },
+                  {
+                    "label": "Hỏi bạn bè cùng khoá xem phần lớn mọi người đang chọn hướng nào",
+                    "isCorrect": false,
+                    "misconception": "knm.external-center"
+                  }
+                ]
+              },
+              {
+                "key": "1.3-viet-tuyen-ngon",
+                "type": "essay",
+                "prompt": "Viết bản nháp tuyên ngôn sứ mệnh cá nhân của bạn (200–350 từ), gồm ba phần: (a) các vai trò chính và với mỗi vai trò một cam kết quan sát được; (b) đóng góp cụ thể bạn muốn tạo ra và cho ai; (c) ba nguyên tắc, mỗi nguyên tắc kèm một câu bắt đầu bằng 'Tôi từ chối…'. Ghi thêm hai mốc rà soát trong năm.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
