@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   AiGenerationError,
+  AiTutorError,
   generateFeedbackBody,
 } from "@feedbackme/core-feedback";
 import { isAdmin } from "@feedbackme/core-lms";
@@ -83,6 +84,14 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ draft });
   } catch (e) {
+    if (e instanceof AiTutorError) {
+      // Vượt trần token — 429 chứ không phải 400: người gọi không sai gì,
+      // chỉ là hết hạn mức, và thử lại sau thì được.
+      return NextResponse.json(
+        { error: e.code, details: e.details },
+        { status: 429 },
+      );
+    }
     if (e instanceof AiGenerationError) {
       return NextResponse.json(
         { error: e.code, details: e.details },

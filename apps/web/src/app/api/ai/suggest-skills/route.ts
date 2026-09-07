@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   AiGenerationError,
+  AiTutorError,
   suggestSkillsForContent,
 } from "@feedbackme/core-feedback";
 import { canEditCourse, isAdmin } from "@feedbackme/core-lms";
@@ -103,6 +104,14 @@ export async function POST(req: Request) {
     const suggestions = await suggestSkillsForContent(userId, contentText, openai);
     return NextResponse.json({ suggestions });
   } catch (e) {
+    if (e instanceof AiTutorError) {
+      // Vượt trần token — 429 chứ không phải 400: người gọi không sai gì,
+      // chỉ là hết hạn mức, và thử lại sau thì được.
+      return NextResponse.json(
+        { error: e.code, details: e.details },
+        { status: 429 },
+      );
+    }
     if (e instanceof AiGenerationError) {
       return NextResponse.json(
         { error: e.code, details: e.details },

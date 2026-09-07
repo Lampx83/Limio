@@ -26,7 +26,24 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
     tokensOutput: number;
     costUsd: number;
   } | null>(null);
+  const [budget, setBudget] = useState<{
+    estimatedTurns: number;
+    total: number;
+    purchased: number;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Nạp số dư khi mở panel và sau mỗi lượt. Chính lời gọi này cũng là lúc hạn
+  // mức tháng được cấp, nên mở panel đầu tháng là đã thấy quota mới.
+  const refreshBudget = async () => {
+    const r = await fetch(apiUrl("/api/ai/budget"));
+    if (r.ok) setBudget(await r.json());
+  };
+  useEffect(() => {
+    if (!open) return;
+    void refreshBudget();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     if (!open || conversationId) return;
@@ -139,6 +156,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
     }
     setStreamBuffer("");
     setStreaming(false);
+    void refreshBudget();
   }
 
   if (!open) {
@@ -169,7 +187,11 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
                       </span>
           <div>
             <p className="text-sm font-semibold leading-tight">AI Tutor</p>
-            <p className="text-xs opacity-80">Hỏi gì cũng được</p>
+            <p className="text-xs opacity-80">
+              {budget
+                ? `Còn khoảng ${budget.estimatedTurns} lượt hỏi tháng này`
+                : "Hỏi gì cũng được"}
+            </p>
           </div>
         </div>
         <button
@@ -216,8 +238,17 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
             {error === "rate_limited" && (
               <p className="mt-1">Bạn đã hỏi quá nhiều trong 1 giờ, đợi chút nhé.</p>
             )}
-            {error === "daily_token_cap" && (
-              <p className="mt-1">Đã hết quota AI hôm nay, thử lại ngày mai.</p>
+            {error === "no_token_budget" && (
+              <p className="mt-1">
+                Bạn đã dùng hết lượt hỏi của tháng này. Hạn mức được cấp lại vào
+                đầu tháng sau; cần dùng ngay thì báo giảng viên.
+              </p>
+            )}
+            {error === "global_token_cap" && (
+              <p className="mt-1">
+                Cả hệ thống đã chạm trần AI hôm nay. Đây là hạn mức chung, không
+                phải lỗi của bạn — báo giảng viên hoặc thử lại ngày mai.
+              </p>
             )}
           </div>
         )}

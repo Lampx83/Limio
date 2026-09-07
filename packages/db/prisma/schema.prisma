@@ -22,73 +22,75 @@ datasource db {
 // =====================================================================
 
 model User {
-  id                   String    @id @default(uuid())
-  email                String    @unique
-  emailVerifiedAt      DateTime?
-  passwordHash         String?
-  displayName          String
-  avatarUrl            String?
+  id                          String    @id @default(uuid())
+  email                       String    @unique
+  emailVerifiedAt             DateTime?
+  passwordHash                String?
+  displayName                 String
+  avatarUrl                   String?
   // PR2.17 — Multi-tenancy: user thuộc về 1 Organization. Nullable trong
   // backfill phase; sẽ siết NOT NULL ở migration tiếp theo.
-  organizationId       String?
-  locale               String    @default("vi")
-  timezone             String    @default("Asia/Ho_Chi_Minh")
+  organizationId              String?
+  locale                      String    @default("vi")
+  timezone                    String    @default("Asia/Ho_Chi_Minh")
   // Phase 1 C5: when true, user's XP transactions are excluded from public
   // leaderboards. Per spec §5.5 "opt-out leaderboard hoàn toàn được".
-  leaderboardOptOut    Boolean   @default(false)
+  leaderboardOptOut           Boolean   @default(false)
   // A5.5 — Cơ bản/Nâng cao mode toggle. False = ẩn IRT/anchor/equating metrics,
   // chỉ hiện badge ⭐ và mức tư duy 3 nhóm. True = mở khoá full psychometrics.
-  expertAssessmentMode Boolean   @default(false)
+  expertAssessmentMode        Boolean   @default(false)
   // A5.5 — Counter exam đã tạo. Tăng atomic khi exam publish. Dùng để trigger
   // banner gợi ý "Bật chế độ Nâng cao?" khi >= 3 và expertAssessmentMode=false.
-  examsCreatedCount    Int       @default(0)
+  examsCreatedCount           Int       @default(0)
   // Last time user opened the notification bell — drives unread-count.
   // notificationsLastSeenAt: legacy global value; new code uses the JSON map
   // below so each role tracks its own seen-state independently.
-  notificationsLastSeenAt    DateTime?
+  notificationsLastSeenAt     DateTime?
   notificationsLastSeenByRole Json?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
 
-  authProviders           AuthProvider[]
-  userRoles               UserRole[]
-  enrollments             Enrollment[]
-  authoredCourses         CourseInstructor[]
-  quizAttempts            QuizAttempt[]
-  learningEvents          LearningEvent[]
-  lessonEngagements       LessonEngagement[]
-  verificationTokens      VerificationToken[]
-  notes                   Note[]
-  courseProgress          UserCourseProgress[]
-  xpTransactions          XpTransaction[]
-  userBadges              UserBadge[]
-  streakRecords           StreakRecord[]
-  skillStates             LearnerSkillState[]
-  misconceptionFlags      MisconceptionFlag[]
-  feedbackDeliveries      FeedbackDelivery[]
-  assignmentSubmissions   AssignmentSubmission[]   @relation("Submitter")
-  gradedSubmissions       AssignmentSubmission[]   @relation("Grader")
-  forumThreads            ForumThread[]
-  forumPosts              ForumPost[]
-  questProgress           UserQuestProgress[]
-  tournamentRegistrations TournamentRegistration[]
-  tournamentCreated       Tournament[]             @relation("TournamentCreator")
-  tournamentTeamsCaptained TournamentTeam[]        @relation("TeamCaptain")
-  hackathonVotes           HackathonVote[]         @relation("HackathonVoter")
-  tournamentJudgeOf        TournamentJudge[]       @relation("TournamentJudge")
-  missionSubmissions      MissionSubmission[]
-  missionReviews          MissionReviewAssignment[]
-  scormAttempts           ScormAttempt[]
-  scormPackagesUploaded   ScormPackage[]           @relation("ScormUploader")
-  ltiToolsRegistered      LtiTool[]                @relation("LtiToolRegistrar")
-  ltiLaunches             LtiLaunch[]
-  h5pPackagesUploaded     H5pPackage[]             @relation("H5pUploader")
-  h5pAttempts             H5pAttempt[]
-  aiConversations         AiConversation[]
-  aiUsageLogs             AiUsageLog[]
-  orders                  Order[]
-  auditEntriesAsActor     AuditLog[]               @relation("AuditActor")
-  auditEntriesAsTarget    AuditLog[]               @relation("AuditTarget")
+  authProviders            AuthProvider[]
+  userRoles                UserRole[]
+  enrollments              Enrollment[]
+  authoredCourses          CourseInstructor[]
+  quizAttempts             QuizAttempt[]
+  learningEvents           LearningEvent[]
+  lessonEngagements        LessonEngagement[]
+  verificationTokens       VerificationToken[]
+  notes                    Note[]
+  courseProgress           UserCourseProgress[]
+  xpTransactions           XpTransaction[]
+  userBadges               UserBadge[]
+  streakRecords            StreakRecord[]
+  skillStates              LearnerSkillState[]
+  misconceptionFlags       MisconceptionFlag[]
+  feedbackDeliveries       FeedbackDelivery[]
+  assignmentSubmissions    AssignmentSubmission[]    @relation("Submitter")
+  gradedSubmissions        AssignmentSubmission[]    @relation("Grader")
+  forumThreads             ForumThread[]
+  forumPosts               ForumPost[]
+  questProgress            UserQuestProgress[]
+  tournamentRegistrations  TournamentRegistration[]
+  tournamentCreated        Tournament[]              @relation("TournamentCreator")
+  tournamentTeamsCaptained TournamentTeam[]          @relation("TeamCaptain")
+  hackathonVotes           HackathonVote[]           @relation("HackathonVoter")
+  tournamentJudgeOf        TournamentJudge[]         @relation("TournamentJudge")
+  missionSubmissions       MissionSubmission[]
+  missionReviews           MissionReviewAssignment[]
+  scormAttempts            ScormAttempt[]
+  scormPackagesUploaded    ScormPackage[]            @relation("ScormUploader")
+  ltiToolsRegistered       LtiTool[]                 @relation("LtiToolRegistrar")
+  ltiLaunches              LtiLaunch[]
+  h5pPackagesUploaded      H5pPackage[]              @relation("H5pUploader")
+  h5pAttempts              H5pAttempt[]
+  aiConversations          AiConversation[]
+  aiUsageLogs              AiUsageLog[]
+  aiTokenLedger            AiTokenLedger[]
+  aiTokenBalance           AiTokenBalance?
+  orders                   Order[]
+  auditEntriesAsActor      AuditLog[]                @relation("AuditActor")
+  auditEntriesAsTarget     AuditLog[]                @relation("AuditTarget")
 
   // A7 Exam
   examAttempts             ExamAttempt[]
@@ -142,8 +144,8 @@ model User {
   emailTemplatesUpdated  EmailTemplate[]         @relation("EmailTemplateEditor")
   emailTemplateRevisions EmailTemplateRevision[] @relation("EmailTemplateReviser")
   // Email dispatch batches this user created / approved
-  emailBatchesCreated  EmailDispatchBatch[] @relation("EmailBatchCreator")
-  emailBatchesApproved EmailDispatchBatch[] @relation("EmailBatchApprover")
+  emailBatchesCreated    EmailDispatchBatch[]    @relation("EmailBatchCreator")
+  emailBatchesApproved   EmailDispatchBatch[]    @relation("EmailBatchApprover")
 
   @@index([createdAt])
 }
@@ -249,42 +251,42 @@ enum EnrollMode {
 }
 
 model Course {
-  id             String       @id @default(uuid())
+  id                     String       @id @default(uuid())
   // PR2.17 — Multi-tenancy: course thuộc về 1 Organization. Nullable trong
   // backfill phase, sẽ siết NOT NULL sau.
-  organizationId String?
-  slug           String       @unique
-  title          String
-  description    String       @db.Text
-  language       String       @default("vi")
-  level          String       @default("beginner") // beginner | intermediate | advanced
-  category       String?
-  coverUrl       String?
-  status         CourseStatus @default(draft)
+  organizationId         String?
+  slug                   String       @unique
+  title                  String
+  description            String       @db.Text
+  language               String       @default("vi")
+  level                  String       @default("beginner") // beginner | intermediate | advanced
+  category               String?
+  coverUrl               String?
+  status                 CourseStatus @default(draft)
   // Course versioning (A2 acceptance: "học viên đang học bản cũ không bị break").
   // Bump this when publishing a breaking change; new enrollments take the new version.
-  version        Int          @default(1)
-  publishedAt    DateTime?
+  version                Int          @default(1)
+  publishedAt            DateTime?
   // Personalization toggle: when true, course uses Feedback Engine (BKT, diagnostic,
   // adaptive path, skill badge) and publish requires every lesson to have ≥1 skill tag.
   // When false, course runs as standard LMS (no AI feedback) and publish skips the skill-tag gate.
   // Default false — see project_personalization_toggle memory.
   /// B16 — mở tự do hay chỉ vào bằng link mời lớp. Mặc định `open` để mọi khoá
   /// đang có giữ nguyên hành vi sau khi migrate.
-  enrollMode             EnrollMode @default(open)
-  personalizationEnabled Boolean @default(false)
+  enrollMode             EnrollMode   @default(open)
+  personalizationEnabled Boolean      @default(false)
   // Public access: when true, anyone — including logged-out visitors — may read the
   // course's lessons (content + video) without enrolling, in the same read-only
   // preview mode a non-enrolled learner gets. Account-only features (progress,
   // completion, notes, AI tutor, forum, quizzes) stay hidden.
   // Only takes effect while `status = published`; a draft course is never public.
   // Default false — existing courses keep login-gated behaviour.
-  publicAccess   Boolean      @default(false)
+  publicAccess           Boolean      @default(false)
   // Pricing — null = free; positive = paid (cents of `currency`).
-  priceCents     Int?
-  currency       String       @default("USD")
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  priceCents             Int?
+  currency               String       @default("USD")
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
 
   modules           Module[]
   enrollments       Enrollment[]
@@ -516,8 +518,8 @@ model Enrollment {
   lastLessonId    String?
   lastPositionSec Int?
 
-  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course  Course         @relation(fields: [courseId], references: [id])
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course  Course        @relation(fields: [courseId], references: [id])
   section CourseSection @relation(fields: [sectionId], references: [id])
 
   @@unique([userId, courseId])
@@ -566,31 +568,31 @@ enum QuestionType {
 }
 
 model Quiz {
-  id                String   @id @default(uuid())
+  id                  String   @id @default(uuid())
   // A quiz can attach to a lesson, or stand alone within a course.
-  lessonId          String?
-  courseId          String?
-  title             String
-  description       String?
+  lessonId            String?
+  courseId            String?
+  title               String
+  description         String?
   // 1-5 (per spec gamification XP table). Null until set by instructor.
-  difficulty        Int?
-  passThresholdPct  Int      @default(70)
-  timeLimitSec      Int?
-  maxAttempts       Int?
-  randomizeOrder    Boolean  @default(false)
+  difficulty          Int?
+  passThresholdPct    Int      @default(70)
+  timeLimitSec        Int?
+  maxAttempts         Int?
+  randomizeOrder      Boolean  @default(false)
   // A4 acceptance: confidence rating bắt buộc trước khi xem đáp án (per-quiz toggle).
-  requireConfidence Boolean  @default(true)
+  requireConfidence   Boolean  @default(true)
   // Instructor-controlled visibility (false = hidden from all learners)
-  isHidden          Boolean  @default(false)
+  isHidden            Boolean  @default(false)
   // True when this quiz was auto-created as a 1-question in-video cuepoint.
   // Filtered out of learner lesson-quiz lists; rendered with a badge in
   // instructor Question Bank. See docs/SPEC §6.1 cuepoint flow.
-  cuepointOnly      Boolean  @default(false)
+  cuepointOnly        Boolean  @default(false)
   // Set when this quiz backs a TournamentMission with verifyMode=AUTO_GRADE.
   // Filtered out of all course/lesson listings; reachable only in tournament UI.
-  tournamentMissionId String? @unique
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  tournamentMissionId String?  @unique
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   lesson            Lesson?            @relation(fields: [lessonId], references: [id])
   questions         QuizQuestion[]
@@ -971,12 +973,12 @@ model FeedbackTemplate {
 // Audit + UI history of every feedback impression. body is snapshotted so
 // editing the template later doesn't change historical text.
 model FeedbackDelivery {
-  id                   String   @id @default(uuid())
+  id                   String               @id @default(uuid())
   userId               String
   attemptId            String?
   questionId           String?
   templateId           String?
-  body                 String   @db.Text
+  body                 String               @db.Text
   // Array of lesson IDs surfaced as remediation. Stored as Json for flexibility.
   remediationLessonIds Json
   // Optional learner rating 1-5 — picked up later in B8 quality loop.
@@ -993,7 +995,7 @@ model FeedbackDelivery {
   // Everything needed to reconstruct why this text was chosen: template scope,
   // misconception, skills, remediation, and the BKT prior at generation time.
   generationContext    Json?
-  deliveredAt          DateTime @default(now())
+  deliveredAt          DateTime             @default(now())
 
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template FeedbackTemplate? @relation(fields: [templateId], references: [id])
@@ -1129,20 +1131,20 @@ enum ResponseFormat {
 }
 
 model Assignment {
-  id          String    @id @default(uuid())
+  id                  String    @id @default(uuid())
   // Nullable so an assignment can stand alone (e.g. backing a
   // TournamentMission with verifyMode=MANUAL_REVIEW in a cross-course
   // tournament). DB CHECK enforces lessonId OR tournamentMissionId is set.
-  lessonId    String?
-  tournamentMissionId String? @unique
-  title       String
-  description String    @db.Text
+  lessonId            String?
+  tournamentMissionId String?   @unique
+  title               String
+  description         String    @db.Text
   // Optional deadline shown to learners; not enforced server-side in MVP.
-  dueAt       DateTime?
+  dueAt               DateTime?
   // Maximum score the instructor can award (0..maxScore).
-  maxScore    Int       @default(100)
+  maxScore            Int       @default(100)
   // Instructor-controlled visibility (false = hidden from all learners)
-  isHidden    Boolean   @default(false)
+  isHidden            Boolean   @default(false)
 
   // Generative learning metadata. Null = traditional instructor-graded assignment.
   pedagogicalIntent GenerativeActivityType?
@@ -1295,27 +1297,27 @@ enum TournamentStatus {
 }
 
 model Tournament {
-  id                String           @id @default(uuid())
+  id                    String           @id @default(uuid())
   // Optional course context — null = platform-wide tournament.
-  courseId          String?
-  creatorId         String
-  title             String
-  description       String           @db.Text
-  status            TournamentStatus @default(draft)
-  startsAt          DateTime
-  endsAt            DateTime
+  courseId              String?
+  creatorId             String
+  title                 String
+  description           String           @db.Text
+  status                TournamentStatus @default(draft)
+  startsAt              DateTime
+  endsAt                DateTime
   // Optional max team size (1 = solo, >1 = team-based).
-  teamSize          Int              @default(1)
+  teamSize              Int              @default(1)
   // Total prize XP — distributed to top finishers per `prizeDistribution`.
-  prizeXp           Int              @default(0)
-  prizeDistribution Json? // e.g. { "1": 50, "2": 30, "3": 20 } percentages
+  prizeXp               Int              @default(0)
+  prizeDistribution     Json? // e.g. { "1": 50, "2": 30, "3": 20 } percentages
   // Cho phép đăng ký tham dự khi tournament đã chuyển sang `active`. Mặc định
   // true để giữ behavior cũ của solo; instructor có thể tắt để chốt danh sách
   // tại thời điểm startsAt (đặc biệt hữu ích cho team-based khi muốn lock
   // composition sau khi bắt đầu).
-  allowLateRegistration Boolean      @default(true)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  allowLateRegistration Boolean          @default(true)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   course        Course?                  @relation(fields: [courseId], references: [id], onDelete: SetNull)
   creator       User                     @relation("TournamentCreator", fields: [creatorId], references: [id])
@@ -1339,9 +1341,9 @@ model TournamentRegistration {
   registeredAt   DateTime  @default(now())
   disqualifiedAt DateTime?
 
-  tournament Tournament       @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  team       TournamentTeam?  @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  tournament Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team       TournamentTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@unique([tournamentId, userId])
   @@index([tournamentId, teamId])
@@ -1428,14 +1430,14 @@ model MissionTemplate {
 
 enum MissionType {
   COURSE_LINKED // behavior-based on existing course content (uses conditionType)
-  CUSTOM        // content authored inline (markdown/embedded quiz/instructions)
-  EXTERNAL      // content lives outside platform (URL/3rd-party tool)
+  CUSTOM // content authored inline (markdown/embedded quiz/instructions)
+  EXTERNAL // content lives outside platform (URL/3rd-party tool)
 }
 
 enum VerifyMode {
-  AUTO_GRADE    // inline quiz; reuses Quiz + QuizAttempt
-  AUTO_CHECK    // rule-based: URL pattern, webhook callback, file format
-  PEER_REVIEW   // N reviewers score by rubric, median scoring
+  AUTO_GRADE // inline quiz; reuses Quiz + QuizAttempt
+  AUTO_CHECK // rule-based: URL pattern, webhook callback, file format
+  PEER_REVIEW // N reviewers score by rubric, median scoring
   MANUAL_REVIEW // reuses Assignment + instructor grading flow
 }
 
@@ -1462,9 +1464,9 @@ model TournamentMission {
 
   // ── Custom missions (C5.x) ─────────────────────────────────────────
   // Default COURSE_LINKED keeps existing missions backwards-compatible.
-  missionType        MissionType @default(COURSE_LINKED)
+  missionType MissionType @default(COURSE_LINKED)
   // Null for COURSE_LINKED (behavior auto-checked). Required for the others.
-  verifyMode         VerifyMode?
+  verifyMode  VerifyMode?
 
   // Submission window — required when verifyMode is set; null means
   // "completion derived from behavior" (COURSE_LINKED).
@@ -1474,43 +1476,43 @@ model TournamentMission {
   // Shape varies by missionType:
   //   CUSTOM:   { markdown?, instructions?, attachments? }
   //   EXTERNAL: { url, instructions }
-  contentPayload     Json?
+  contentPayload Json?
 
   // AUTO_CHECK rule: { type: "url_pattern" | "webhook" | "file_format", config: {...} }
-  autoCheckRule      Json?
+  autoCheckRule Json?
 
   // PEER_REVIEW config.
   // rubric: [{ id, label, scale: "1-5"|"pass_fail", weight }]
-  rubric             Json?
-  peerReviewerCount  Int?       @default(3)
+  rubric                 Json?
+  peerReviewerCount      Int?      @default(3)
   // Số review HOÀN THÀNH tối thiểu để tự chốt điểm 1 bài (quorum), TÁCH khỏi
   // peerReviewerCount (số reviewer được phân). Null = dùng peerReviewerCount
   // (hành vi cũ). Cho phép phân nhiều reviewer cho coverage mà vẫn chốt khi đủ
   // quorum. Luôn bị kẹp ≤ peerReviewerCount khi tính.
-  reviewQuorum       Int?
+  reviewQuorum           Int?
   // Team peer-review only: true = chỉ captain (người nộp) được phân chấm chéo;
   // false (default) = mở cho mọi thành viên đang active của giải. Bỏ qua khi
   // mission không phải nộp-nhóm (solo luôn dùng pool người-đã-nộp).
-  peerReviewCaptainsOnly Boolean @default(false)
-  reviewWindowEndAt  DateTime?
+  peerReviewCaptainsOnly Boolean   @default(false)
+  reviewWindowEndAt      DateTime?
   // 0..1 — instructor sets per mission; required for PEER_REVIEW and
   // MANUAL_REVIEW to decide PASSED vs FAILED.
-  passThreshold      Float?
+  passThreshold          Float?
   // How many times reviewWindowEndAt was auto-extended due to too few reviews
   // (max 2; after that, submissions fall back to manual review). AC-4.10.
-  reviewExtendCount  Int        @default(0)
+  reviewExtendCount      Int       @default(0)
   // Team mode only: true = COLLECTIVE submission (1 captain nộp 1 lần,
   // tính cho cả đội). False = INDIVIDUAL (mỗi member nộp riêng, SUM).
   // Chỉ hợp lệ khi tournament.teamSize > 1 và verifyMode != AUTO_GRADE.
-  isTeamSubmission   Boolean    @default(false)
+  isTeamSubmission       Boolean   @default(false)
 
-  tournament   Tournament          @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  prerequisite TournamentMission?  @relation("MissionPrereq", fields: [prerequisiteId], references: [id])
-  unlocks      TournamentMission[] @relation("MissionPrereq")
-  template     MissionTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  submissions  MissionSubmission[]
-  quiz         Quiz?
-  assignment   Assignment?
+  tournament     Tournament          @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  prerequisite   TournamentMission?  @relation("MissionPrereq", fields: [prerequisiteId], references: [id])
+  unlocks        TournamentMission[] @relation("MissionPrereq")
+  template       MissionTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  submissions    MissionSubmission[]
+  quiz           Quiz?
+  assignment     Assignment?
   hackathonVotes HackathonVote[]
 
   @@unique([tournamentId, orderIndex])
@@ -1519,7 +1521,7 @@ model TournamentMission {
 }
 
 enum MissionSubmissionStatus {
-  pending      // waiting for verify (peer window, manual grading, webhook)
+  pending // waiting for verify (peer window, manual grading, webhook)
   passed
   failed
   disqualified // anti-cheat (speed-run, collusion, etc.)
@@ -1541,10 +1543,10 @@ model MissionSubmission {
   finalScore  Float?
   verifiedAt  DateTime?
 
-  mission          TournamentMission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
-  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission           TournamentMission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   reviewAssignments MissionReviewAssignment[]
-  hackathonVotes   HackathonVote[]
+  hackathonVotes    HackathonVote[]
 
   @@unique([missionId, userId])
   @@index([userId, submittedAt])
@@ -1552,21 +1554,21 @@ model MissionSubmission {
 }
 
 model MissionReviewAssignment {
-  id              String    @id @default(uuid())
-  submissionId    String
-  reviewerId      String
-  assignedAt      DateTime  @default(now())
-  dueAt           DateTime
-  completedAt     DateTime?
+  id           String    @id @default(uuid())
+  submissionId String
+  reviewerId   String
+  assignedAt   DateTime  @default(now())
+  dueAt        DateTime
+  completedAt  DateTime?
   // [{ criterionId, score }] — score domain depends on rubric scale.
-  scores          Json?
-  comment         String?   @db.Text
+  scores       Json?
+  comment      String?   @db.Text
 
   // Filled by close-review-window job.
   aggregateScore  Float?
   deltaFromMedian Float?
   xpAwarded       Int?
-  flagged         Boolean   @default(false)
+  flagged         Boolean @default(false)
   flagReason      String?
 
   submission MissionSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
@@ -1900,6 +1902,66 @@ model AiUsageLog {
 
   @@unique([userId, dayKey, model])
   @@index([userId, dayKey])
+  // Trần toàn hệ thống cộng tổng theo dayKey (không kèm userId), nên unique
+  // ở trên không dùng được — cột dẫn đầu của nó là userId. Thiếu index này thì
+  // mỗi lượt gọi AI là một lần quét toàn bảng, và bảng lớn thêm mỗi ngày một
+  // dòng cho mỗi người dùng hoạt động.
+  @@index([dayKey])
+}
+
+// =====================================================================
+// Ví token AI (P0 của cơ chế hạn mức tháng + mua thêm).
+//
+// AiUsageLog trả lời "đã tiêu bao nhiêu"; hai bảng dưới đây trả lời "được tiêu
+// bao nhiêu nữa". Tách đôi có chủ ý: sổ tiêu là dữ liệu quan sát (gộp theo
+// ngày/model để làm báo cáo), còn ví là dữ liệu kế toán — phải cộng trừ chính
+// xác từng đơn vị và phải truy được nguồn gốc của mỗi lần cộng.
+// =====================================================================
+
+enum AiTokenLedgerKind {
+  monthly_grant // cấp đầu tháng theo vai trò, không cộng dồn
+  purchase // mua thêm, cộng dồn
+  consumption // tiêu khi gọi AI (amount âm)
+  admin_adjustment // admin cộng/trừ tay
+  refund
+}
+
+// Sổ cái append-only. Số dư = tổng amount; AiTokenBalance chỉ là ảnh chụp
+// dựng lại được từ đây (cùng lối với LearningEvent — §5.1).
+model AiTokenLedger {
+  id        String            @id @default(uuid())
+  userId    String
+  kind      AiTokenLedgerKind
+  // Dương = cộng vào ví, âm = tiêu đi.
+  amount    Int
+  // Nguồn của dòng này: refType "month" | "order" | "usage" | "admin",
+  // refId tương ứng "2026-09" | orderId | aiUsageLogId | adminUserId.
+  refType   String?
+  refId     String?
+  note      String?
+  createdAt DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Chặn cộng trùng: webhook thanh toán gọi lại lần hai, hay cấp tháng chạy
+  // hai lần do hai request song song, đều không được thành hai dòng.
+  @@unique([userId, kind, refType, refId])
+  @@index([userId, createdAt])
+}
+
+// Ảnh chụp số dư. Cập nhật trong cùng transaction với dòng ledger sinh ra nó,
+// nên sai lệch là bug chứ không phải chuyện thường — và dựng lại được.
+model AiTokenBalance {
+  userId           String   @id
+  // Phần đã mua: cộng dồn, không mất khi sang tháng.
+  purchased        Int      @default(0)
+  // Phần được cấp tháng này: reset mỗi tháng, không cộng dồn.
+  monthlyRemaining Int      @default(0)
+  // Tháng đang áp dụng, "YYYY-MM" theo giờ VN. Khác tháng hiện tại = chưa cấp.
+  periodKey        String
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // =====================================================================
@@ -2071,8 +2133,8 @@ model WordCloudSubmission {
 // Standalone teaching tool — instructor tạo board từ /instructor/teaching-tools,
 // sinh viên join qua code 6 chữ + post note text. Realtime broadcast qua SSE.
 model InteractiveBoard {
-  id    String @id @default(cuid())
-  code  String @unique // 6-char join code (uppercase alphanumeric)
+  id   String @id @default(cuid())
+  code String @unique // 6-char join code (uppercase alphanumeric)
 
   // Optional gắn vào ClassroomSession nếu instructor mở từ classroom flow.
   sessionId String?
@@ -2103,9 +2165,9 @@ model BoardNote {
   // Optional — sinh viên không cần login để post (join bằng code).
   authorId   String?
   author     User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  authorName String  // Tên hiển thị (bắt buộc, học viên tự nhập khi join)
+  authorName String // Tên hiển thị (bắt buộc, học viên tự nhập khi join)
 
-  content       String  // Note text (≤500 ký tự)
+  content       String // Note text (≤500 ký tự)
   color         String? // Hex, optional (random pastel client-side)
   attachmentUrl String? // URL ảnh / video / audio / YouTube / link bất kỳ (https only)
   hidden        Boolean @default(false) // Instructor moderate
@@ -2576,16 +2638,16 @@ model ExamWizardConfig {
 // bucketed poolFilter on an ExamSection.
 // =====================================================================
 model ExamBlueprint {
-  examId String @id
+  examId     String   @id
   // "skill_matrix" (Bloom × difficulty cells, scope=lessonIds → skills)
   // | "topic_only" (per-topic cells with optional Bloom/difficulty narrowing,
   //   scope=all course banks instructor can edit).
-  mode   String @default("skill_matrix")
+  mode       String   @default("skill_matrix")
   // Lesson IDs in scope (skill_matrix mode); mapped to skillIds via ContentSkillMapping.
   // Empty in topic_only mode.
-  lessonIds String[] @default([])
+  lessonIds  String[] @default([])
   // Reserved for future explicit-pick UX in topic_only mode. Empty = auto-resolve from course.
-  bankIds   String[] @default([])
+  bankIds    String[] @default([])
   // skill_matrix: [{cognitiveLevel, difficulty, count}]
   // topic_only:  [{topic, cognitiveLevel?, difficulty?, count}]
   cells      Json     @default("[]")
@@ -3027,31 +3089,31 @@ model ExamRoomGrader {
 // ExamSchedule = per-section open/close window + optional duration override.
 // =====================================================================
 model CourseSection {
-  id           String   @id @default(uuid())
-  courseId     String
-  name         String
+  id              String          @id @default(uuid())
+  courseId        String
+  name            String
   // PR2.12 — Mã lớp học do nhà trường định nghĩa (6-8 ký tự). SV gõ mã này
   // ở form open-mode để route kết quả về đúng section. Unique trong course.
   // KHÁC với inviteCode bên dưới (self-enroll, tự sinh, global-unique).
-  code         String?
+  code            String?
   // Invite-link self-enroll — mã tự sinh (crypto-secure), global-unique.
   // Null cho section mặc định (isDefault=true), section đó không cho join
   // qua link. Regenerate được — mã cũ mất hiệu lực ngay khi đổi.
-  inviteCode   String?  @unique
+  inviteCode      String?         @unique
   // true = section "mặc định" tự tạo cho mỗi course, dùng làm nơi rơi vào
   // cho enrollment không qua invite link (mua khoá học, bulk-import, data
   // cũ trước migration). Ẩn khỏi UI quản lý lớp học của GV.
-  isDefault    Boolean  @default(false)
+  isDefault       Boolean         @default(false)
   // PR2.12 — GV phụ trách section (1 GV : N section). Null = chưa gán.
-  instructorId String?
+  instructorId    String?
   // Optional human description (e.g. "Lớp K65A-DSAI-2025-2 thứ 7 chiều")
-  description  String?  @db.Text
+  description     String?         @db.Text
   // B10 — điều kiện feedback áp cho học viên của lớp này. Ghi lên
   // FeedbackDelivery.generationContext lúc sinh, nên chuyển lớp giữa kỳ không
   // viết lại lịch sử.
   feedbackVariant FeedbackVariant @default(personalized)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   course      Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
   instructor  User?             @relation("CohortInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
@@ -3105,7 +3167,7 @@ model CohortMember {
 // names (`createExamSchedule`, `listExamSchedules`, ...) sẽ rename ở
 // PR1c.2+ cùng với việc siết NOT NULL roundId và drop cohortId.
 model ExamSession {
-  id                  String            @id @default(uuid())
+  id                  String                @id @default(uuid())
   examId              String
   // A5.3 PR1c.5 — ca thi thuộc về 1 đợt thi. Required. createExamSession()
   // tự ensure round mặc định cho legacy exam-scoped callers.
@@ -3116,10 +3178,10 @@ model ExamSession {
   // A5.3 PR1a additive — tên hiển thị (vd "Ca 1 — Sáng 14/5").
   title               String?
   // A5.3 PR1a additive — trạng thái lifecycle của ca.
-  status              ExamSessionStatus @default(draft)
+  status              ExamSessionStatus     @default(draft)
   // PR2.12 — Access mode per-session (move xuống từ Exam). Mỗi ca có thể
   // khác mode (vd ca giấy = assigned_code, ca online = open_code).
-  accessMode          ExamAccessMode    @default(authenticated)
+  accessMode          ExamAccessMode        @default(authenticated)
   // PR2.12 — Mã access 6 ký tự khi accessMode = open_code. Mỗi ca 1 mã
   // riêng để giảm rủi ro rò rỉ. Null cho các mode khác.
   openCode            String?
@@ -3162,9 +3224,9 @@ model ExamSession {
   purpose             ExamPurpose?
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
   // Empty array = no allowlist; non-empty = only these IPs/CIDRs pass.
-  ipAllowlist         String[]          @default([])
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  ipAllowlist         String[]              @default([])
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
   exam       Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
   round      ExamRound       @relation(fields: [roundId], references: [id], onDelete: Restrict)
@@ -3543,7 +3605,7 @@ model ItemTrialStat {
   //
   // Vẫn đủ để dựng chuỗi lịch sử: mỗi lần đem một câu đi thử là một đề khác,
   // nên sinh ra một ExamQuestion khác, tức một quan sát khác.
-  examQuestionId        String   @id
+  examQuestionId        String  @id
   // Câu trong ngân hàng + ĐÚNG phiên bản câu chữ đã đem ra thử.
   bankQuestionId        String
   bankQuestionVersionId String
@@ -3755,28 +3817,28 @@ enum EmailDispatchItemStatus {
 }
 
 model EmailDispatchBatch {
-  id   String @id @default(uuid())
+  id             String              @id @default(uuid())
   // Owning org — drives per-tenant template lookup at send time and
   // limits visibility (org admins only see their own batches).
   organizationId String?
   // Stable template key (e.g. "exam.access_code"). Renders use the
   // normal org→global→fallback lookup.
-  templateKey String
+  templateKey    String
   // Polymorphic link to the "thing" this batch is about. e.g.
   // targetType="exam", targetId=<examId>. Lets the review UI link
   // back without a hard FK to every possible owner table.
-  targetType String
-  targetId   String
+  targetType     String
+  targetId       String
   // Human-readable title shown in history list, e.g.
   // "Gửi mã dự thi — Kỳ thi cuối kỳ K65".
-  title       String
+  title          String
   // Free-form notes the creator adds for context.
-  description String?             @db.Text
-  status      EmailDispatchStatus @default(draft)
-  totalItems  Int                 @default(0)
-  sentCount   Int                 @default(0)
-  failedCount Int                 @default(0)
-  skippedCount Int                @default(0)
+  description    String?             @db.Text
+  status         EmailDispatchStatus @default(draft)
+  totalItems     Int                 @default(0)
+  sentCount      Int                 @default(0)
+  failedCount    Int                 @default(0)
+  skippedCount   Int                 @default(0)
 
   createdByUserId  String
   // Who clicked the "Approve & send" button. May equal createdByUserId
@@ -3789,9 +3851,9 @@ model EmailDispatchBatch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  createdBy    User                  @relation("EmailBatchCreator", fields: [createdByUserId], references: [id])
-  approvedBy   User?                 @relation("EmailBatchApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  organization Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdBy    User                @relation("EmailBatchCreator", fields: [createdByUserId], references: [id])
+  approvedBy   User?               @relation("EmailBatchApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
   items        EmailDispatchItem[]
 
   @@index([organizationId, createdAt])
@@ -3801,31 +3863,31 @@ model EmailDispatchBatch {
 }
 
 model EmailDispatchItem {
-  id      String @id @default(uuid())
-  batchId String
+  id             String  @id @default(uuid())
+  batchId        String
   // Recipient address — required, must be valid by the time batch is approved.
   recipientEmail String
   recipientName  String
   // Resolved Handlebars variables for THIS recipient. Frozen at batch
   // creation so reviewers see exactly what will be sent.
-  variables Json
+  variables      Json
   // Polymorphic back-link to the originating row (e.g. examCandidateId).
   // Lets the UI mark the source as "đã gửi" after send.
-  sourceType String?
-  sourceId   String?
+  sourceType     String?
+  sourceId       String?
 
   // User toggles this in the review UI. Unticked rows are marked
   // skipped (not pending) when batch is approved.
   selected Boolean @default(true)
 
-  status       EmailDispatchItemStatus @default(pending)
-  errorMessage String?
+  status        EmailDispatchItemStatus @default(pending)
+  errorMessage  String?
   // Resend hooks: bumped each time we attempt this item.
-  attemptCount Int       @default(0)
+  attemptCount  Int                     @default(0)
   lastAttemptAt DateTime?
-  sentAt       DateTime?
+  sentAt        DateTime?
   // Provider message ID (Resend returns this) for traceability.
-  providerId String?
+  providerId    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

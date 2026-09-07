@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
+import { assertWithinCaps, recordAiUsage } from "./aiTutor";
 
 /**
  * AI authoring generators — used by instructor UI to draft skill tags,
@@ -9,6 +10,12 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
  *
  * Each generator logs its usage to AiUsageLog so cost tracking is unified
  * with AI Tutor (per-day-per-model bucket per user).
+ *
+ * Mọi generator đều gọi assertWithinCaps(..., "generator") trước khi chạm
+ * OpenAI. Trước đây chỉ hội thoại bị chặn cap, còn nhánh này thì không —
+ * mà nó mới là nhánh đắt: mỗi lần tới 2.000 token đầu ra, có endpoint chạy
+ * theo lô cả khoá. Thêm generator mới thì phải thêm cả lời gọi này, nếu
+ * không nó lại là một cửa mở thầm lặng.
  */
 
 export class AiGenerationError extends Error {
@@ -23,22 +30,6 @@ export class AiGenerationError extends Error {
   }
 }
 
-const PRICE_PER_1K_INPUT: Record<string, number> = {
-  "gpt-4o-mini": 0.00015,
-  "gpt-4o": 0.0025,
-};
-const PRICE_PER_1K_OUTPUT: Record<string, number> = {
-  "gpt-4o-mini": 0.0006,
-  "gpt-4o": 0.01,
-};
-
-function dayKey(now = new Date()): string {
-  const y = now.getUTCFullYear();
-  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(now.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
 async function logUsage(
   userId: string,
   model: string,
@@ -46,29 +37,7 @@ async function logUsage(
   outputTokens: number,
   db: PrismaClient,
 ) {
-  const inP = PRICE_PER_1K_INPUT[model] ?? 0;
-  const outP = PRICE_PER_1K_OUTPUT[model] ?? 0;
-  const costUsd = (inputTokens / 1000) * inP + (outputTokens / 1000) * outP;
-  const k = dayKey();
-  await db.aiUsageLog.upsert({
-    where: { userId_dayKey_model: { userId, dayKey: k, model } },
-    create: {
-      userId,
-      dayKey: k,
-      model,
-      tokensInput: inputTokens,
-      tokensOutput: outputTokens,
-      costUsd,
-      turns: 1,
-    },
-    update: {
-      tokensInput: { increment: inputTokens },
-      tokensOutput: { increment: outputTokens },
-      costUsd: { increment: costUsd },
-      turns: { increment: 1 },
-    },
-  });
-  return costUsd;
+  return recordAiUsage(userId, model, inputTokens, outputTokens, db);
 }
 
 /** Wraps OpenAI's structured-output API. Returns parsed JSON + usage. */
@@ -161,6 +130,7 @@ export async function suggestSkillsForContent(
   if (!contentText.trim()) {
     throw new AiGenerationError("validation_failed", "empty_content");
   }
+  await assertWithinCaps(userId, db, "generator");
   const skills = await db.skill.findMany({
     select: { id: true, code: true, name: true, description: true },
     orderBy: { code: "asc" },
@@ -282,6 +252,7 @@ export async function suggestActivitiesForContent(
   if (!contentText.trim()) {
     throw new AiGenerationError("validation_failed", "empty_content");
   }
+  await assertWithinCaps(userId, db, "generator");
   const system = `Bạn là chuyên gia thiết kế hoạt động học sâu (generative learning, Fiorella & Mayer 2016).
 Nhiệm vụ: Đọc nội dung bài học và đề xuất 2–3 hoạt động học sâu phù hợp giúp học viên CHỦ ĐỘNG xây dựng kiến thức (thay vì học thuộc).
 Mỗi hoạt động phải gắn với 1 trong 7 type:
@@ -362,6 +333,7 @@ export async function generateFeedbackBody(
   if (!input.misconceptionName.trim() || !input.misconceptionDescription.trim()) {
     throw new AiGenerationError("validation_failed");
   }
+  await assertWithinCaps(userId, db, "generator");
 
   const system = `Bạn là chuyên gia giáo dục viết phản hồi (feedback) cho học viên.
 Nhiệm vụ: Khi học viên trả lời sai vì rơi vào misconception, viết một đoạn ngắn (60-150 từ) bằng TIẾNG VIỆT để:
@@ -458,6 +430,8 @@ export async function generateQuestions(
   model = "gpt-4o-mini",
   db: PrismaClient = prisma,
 ): Promise<QuestionDraft[]> {
+  await assertWithinCaps(userId, db, "generator");
+
   const skills = await db.skill.findMany({ select: { code: true, name: true } });
   const catalog = skills.map((s) => `- ${s.code}: ${s.name}`).join("\n");
 
@@ -595,6 +569,8 @@ export async function suggestMisconceptionsForQuestion(
 ): Promise<MisconceptionProposal[]> {
   const wrong = question.options.filter((o) => !o.isCorrect);
   if (wrong.length === 0) return [];
+
+  await assertWithinCaps(userId, db, "generator");
 
   const catalogue =
     opts.catalogue ??

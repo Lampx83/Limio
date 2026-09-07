@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   AiGenerationError,
+  AiTutorError,
+  assertWithinCaps,
   suggestSkillsForContent,
 } from "@feedbackme/core-feedback";
 import { canEditCourse } from "@feedbackme/core-lms";
@@ -41,6 +43,20 @@ type QuestionResult = {
 export async function POST(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  // Chặn một lần ở đầu thay vì để từng item đâm vào cap rồi hỏng lẻ tẻ: đây là
+  // endpoint chạy theo lô, gọi generator một lần cho mỗi bài/câu hỏi.
+  try {
+    await assertWithinCaps(userId, prisma, "generator");
+  } catch (e) {
+    if (e instanceof AiTutorError) {
+      return NextResponse.json(
+        { error: e.code, details: e.details },
+        { status: 429 },
+      );
+    }
+    throw e;
+  }
 
   const body = (await readJson(req)) as
     | { lessonIds?: string[]; questionIds?: string[] }

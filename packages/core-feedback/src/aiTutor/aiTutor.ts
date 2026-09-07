@@ -1,27 +1,82 @@
 import OpenAI from "openai";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
+import { AiTutorError } from "./errors";
+import { assertHasTokenBudget, chargeTokens } from "./tokenWallet";
 
-export class AiTutorError extends Error {
-  constructor(
-    public readonly code:
-      | "no_api_key"
-      | "rate_limited"
-      | "daily_token_cap"
-      | "lesson_not_found"
-      | "validation_failed"
-      | "openai_error",
-    public readonly details?: unknown,
-  ) {
-    super(code);
-  }
-}
+export { AiTutorError } from "./errors";
 
 // Caps — override per env if needed.
 export const MAX_TURNS_PER_HOUR = Number(process.env.AI_TURNS_PER_HOUR ?? "10");
-export const MAX_TOKENS_PER_DAY = Number(
-  process.env.AI_TOKENS_PER_DAY ?? "50000",
+// Trần toàn hệ thống. Hai cap trên bảo vệ người dùng khỏi chính họ; cap này
+// bảo vệ hoá đơn. Cap-theo-người nhân với số người là một con số không có
+// chặn trên, mà số người thì chỉ có tăng — mở AI tutor cho 5.000 sinh viên là
+// mở trần 250 triệu token/ngày mà không ai cố tình làm gì sai cả.
+export const GLOBAL_TOKENS_PER_DAY_KEY = "ai.tokens_per_day_global";
+export const DEFAULT_GLOBAL_TOKENS_PER_DAY = Number(
+  process.env.AI_TOKENS_PER_DAY_GLOBAL ?? "5000000",
 );
+
+/**
+ * Cộng dồn một lần gọi AI vào sổ ngày. Mọi đường sinh ra chi phí đều phải đi
+ * qua đây — cap chỉ đúng bằng mức đầy đủ của sổ mà nó đọc; một endpoint gọi
+ * OpenAI mà quên ghi thì vừa vô hình trong báo cáo, vừa làm cap của mọi
+ * endpoint khác nới ra một cách thầm lặng.
+ */
+export async function recordAiUsage(
+  userId: string,
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  db: PrismaClient = prisma,
+): Promise<number> {
+  const costUsd = estimateCost(model, inputTokens, outputTokens);
+  const dayKey = dayKeyUtc();
+  await db.aiUsageLog.upsert({
+    where: { userId_dayKey_model: { userId, dayKey, model } },
+    create: {
+      userId,
+      dayKey,
+      model,
+      tokensInput: inputTokens,
+      tokensOutput: outputTokens,
+      costUsd,
+      turns: 1,
+    },
+    update: {
+      tokensInput: { increment: inputTokens },
+      tokensOutput: { increment: outputTokens },
+      costUsd: { increment: costUsd },
+      turns: { increment: 1 },
+    },
+  });
+  const log = await db.aiUsageLog.findUnique({
+    where: { userId_dayKey_model: { userId, dayKey, model } },
+    select: { id: true },
+  });
+  await chargeTokens(userId, inputTokens + outputTokens, log?.id ?? null, db);
+  return costUsd;
+}
+
+/** Phạm vi gọi AI — quyết định cap nào được áp. */
+export type AiCapScope = "tutor" | "generator";
+
+/**
+ * Trần ngày toàn hệ thống. Ưu tiên SiteSetting (đổi được lúc đang chạy, không
+ * cần restart) rồi mới tới env. Giá trị 0 là công tắc khẩn: tắt sạch mọi lời
+ * gọi AI. Giá trị rác thì bỏ qua và quay về mặc định — một ký tự gõ nhầm
+ * trong ô cấu hình không được phép âm thầm biến thành "không giới hạn".
+ */
+async function resolveGlobalTokenCap(db: PrismaClient): Promise<number> {
+  const row = await db.siteSetting.findUnique({
+    where: { key: GLOBAL_TOKENS_PER_DAY_KEY },
+  });
+  if (row) {
+    const n = Number(row.value);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return DEFAULT_GLOBAL_TOKENS_PER_DAY;
+}
 
 // Default model. gpt-4o-mini = cheap + fast. Override per-conversation if needed.
 export const DEFAULT_MODEL = "gpt-4o-mini";
@@ -50,43 +105,61 @@ function estimateCost(model: string, inputTokens: number, outputTokens: number):
   return (inputTokens / 1000) * inP + (outputTokens / 1000) * outP;
 }
 
-/** Throws AiTutorError if user has exceeded turns/hour or tokens/day cap. */
+/**
+ * Ném AiTutorError nếu vượt bất kỳ trần nào: toàn hệ thống, lượt/giờ, hoặc
+ * token/ngày của chính người gọi. Gọi TRƯỚC khi chạm OpenAI — cap chỉ có ý
+ * nghĩa nếu nó chặn được request chứ không phải ghi nhận sau khi đã tiêu tiền.
+ *
+ * Thứ tự kiểm có chủ ý: trần toàn hệ thống đứng trước, vì nó là thứ duy nhất
+ * đứng giữa một con bug (vòng lặp gọi AI, script chạy hoảng) và hoá đơn — nên
+ * phải chặn kể cả khi người gọi còn dư quota riêng.
+ *
+ * `scope: "generator"` bỏ qua cap lượt/giờ: cap đó đếm AiMessage, mà chỉ hội
+ * thoại mới tạo bản ghi ấy. Áp cho generator là đếm nhầm sang việc khác —
+ * giảng viên sinh câu hỏi mười lần sẽ bị chặn bởi một bộ đếm không hề tăng.
+ */
 export async function assertWithinCaps(
   userId: string,
   db: PrismaClient = prisma,
+  scope: AiCapScope = "tutor",
 ): Promise<void> {
-  // Turns/hour: count user's assistant messages in last 60 min.
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  const turnsLastHour = await db.aiMessage.count({
-    where: {
-      role: "assistant",
-      conversation: { userId },
-      createdAt: { gte: oneHourAgo },
-    },
+  const today = dayKeyUtc();
+
+  // 1. Trần toàn hệ thống.
+  const globalCap = await resolveGlobalTokenCap(db);
+  const globalAgg = await db.aiUsageLog.aggregate({
+    where: { dayKey: today },
+    _sum: { tokensInput: true, tokensOutput: true },
   });
-  if (turnsLastHour >= MAX_TURNS_PER_HOUR) {
-    throw new AiTutorError("rate_limited", {
-      turnsLastHour,
-      cap: MAX_TURNS_PER_HOUR,
+  const globalToday =
+    (globalAgg._sum.tokensInput ?? 0) + (globalAgg._sum.tokensOutput ?? 0);
+  if (globalToday >= globalCap) {
+    throw new AiTutorError("global_token_cap", {
+      globalToday,
+      cap: globalCap,
     });
   }
 
-  // Tokens/day: aggregate from AiUsageLog for today.
-  const today = dayKeyUtc();
-  const logs = await db.aiUsageLog.findMany({
-    where: { userId, dayKey: today },
-    select: { tokensInput: true, tokensOutput: true },
-  });
-  const totalToday = logs.reduce(
-    (s, l) => s + l.tokensInput + l.tokensOutput,
-    0,
-  );
-  if (totalToday >= MAX_TOKENS_PER_DAY) {
-    throw new AiTutorError("daily_token_cap", {
-      totalToday,
-      cap: MAX_TOKENS_PER_DAY,
+  // 2. Lượt/giờ — chỉ với hội thoại.
+  if (scope === "tutor") {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const turnsLastHour = await db.aiMessage.count({
+      where: {
+        role: "assistant",
+        conversation: { userId },
+        createdAt: { gte: oneHourAgo },
+      },
     });
+    if (turnsLastHour >= MAX_TURNS_PER_HOUR) {
+      throw new AiTutorError("rate_limited", {
+        turnsLastHour,
+        cap: MAX_TURNS_PER_HOUR,
+      });
+    }
   }
+
+  // 3. Ví token của người gọi — hạn mức tháng cộng phần đã mua.
+  await assertHasTokenBudget(userId, db);
 }
 
 interface LessonContext {

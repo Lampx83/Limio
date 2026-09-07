@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { assertCanEditCourse, CourseAuthzError } from "@feedbackme/core-lms";
+import {
+  AiTutorError,
+  assertWithinCaps,
+  recordAiUsage,
+} from "@feedbackme/core-feedback";
 import { requireUserId } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 
@@ -102,9 +107,25 @@ export async function POST(
     .filter(Boolean)
     .join("\n");
 
+  // Endpoint này gọi thẳng OpenAI chứ không đi qua generator, nên trước đây
+  // nằm ngoài mọi hạn mức VÀ ngoài mọi sổ sách: token nó tiêu không hiện trong
+  // AiUsageLog, tức là vừa không bị chặn vừa âm thầm nới cap của chỗ khác.
+  const AI_MODEL = "gpt-4o-mini";
+  try {
+    await assertWithinCaps(userId, prisma, "generator");
+  } catch (e) {
+    if (e instanceof AiTutorError) {
+      return NextResponse.json(
+        { error: e.code, details: e.details },
+        { status: 429 },
+      );
+    }
+    throw e;
+  }
+
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: AI_MODEL,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -112,6 +133,12 @@ export async function POST(
       response_format: { type: "json_object" },
       temperature: 0.2,
     });
+    await recordAiUsage(
+      userId,
+      AI_MODEL,
+      completion.usage?.prompt_tokens ?? 0,
+      completion.usage?.completion_tokens ?? 0,
+    );
     const raw = completion.choices[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(raw) as {
       suggestedScore?: number;
