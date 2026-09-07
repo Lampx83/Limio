@@ -816,7 +816,7 @@ export function StageListener({ lessonId }: { lessonId: string }) {
             không phình ra trên màn hình rất rộng. Nền mờ có blur để nội dung
             phía sau vẫn đọc được.
           */
-          className={`pointer-events-none fixed right-6 top-6 z-50 flex items-baseline gap-3 rounded-2xl border-2 px-4 py-2 shadow-card backdrop-blur-md ${
+          className={`pointer-events-none fixed right-6 top-6 z-50 flex items-baseline gap-4 rounded-3xl border-2 px-6 py-3 shadow-card backdrop-blur-md ${
             done
               ? "border-danger-500 bg-danger-50/90 text-danger-700"
               : urgent
@@ -824,10 +824,10 @@ export function StageListener({ lessonId }: { lessonId: string }) {
                 : "border-brand-400 bg-[rgb(var(--surface))]/85"
           }`}
         >
-          <span className="text-[clamp(0.7rem,1vw,1rem)] font-bold uppercase tracking-[0.2em] opacity-70">
+          <span className="text-[clamp(1.4rem,2vw,2rem)] font-bold uppercase tracking-[0.2em] opacity-70">
             {done ? "Hết giờ" : "Còn lại"}
           </span>
-          <span className="text-[clamp(1.8rem,3.4vw,3.4rem)] font-bold leading-none tabular-nums">
+          <span className="text-[clamp(3.6rem,6.8vw,6.8rem)] font-bold leading-none tabular-nums">
             {mmss(left)}
           </span>
         </div>

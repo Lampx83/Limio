@@ -565,10 +565,10 @@ body:has(main[data-stage="1"]) footer {
    phải thu lại nhường chỗ — không thì tên bài chạy thẳng xuống dưới đồng hồ và
    bị che mất nửa sau. Chỉ chừa khi thật sự đang đếm. */
 body[data-stage-timer] main[data-stage="1"] .sticky {
-  /* Đồng hồ giờ là một dải ngang cao xấp xỉ tiêu đề, rộng khoảng 14rem. Chừa
-     rộng hơn một chút cho khoảng thở. Dùng min() để trên máy chiếu hẹp thì nó
-     lùi về theo tỉ lệ màn hình thay vì ăn hết dòng tiêu đề. */
-  padding-right: min(17rem, 38vw);
+  /* Đồng hồ rộng khoảng 30rem sau khi nhân đôi cỡ chữ. Chừa rộng hơn một chút
+     cho khoảng thở. Dùng min() để trên máy chiếu hẹp thì nó lùi về theo tỉ lệ
+     màn hình thay vì ăn hết dòng tiêu đề. */
+  padding-right: min(33rem, 44vw);
 }
 
 /* Bài học khi xem toàn màn hình: trình duyệt đặt nền đen mặc định và bỏ mọi
