@@ -295,9 +295,7 @@ export default function CourseMetaForm({
               <span className="text-sm font-medium">Chỉ vào bằng link mời lớp</span>
               <span className="mt-0.5 block text-xs text-muted">
                 Trang giới thiệu bỏ nút đăng ký. Chỉ ai có link mời của một lớp
-                mới vào được, và vào thẳng đúng lớp đó. Chế độ này luôn miễn
-                phí — muốn thu tiền, chọn &ldquo;Mở&rdquo; ở trên rồi phát mã
-                kích hoạt.
+                mới vào được, và vào thẳng đúng lớp đó.
               </span>
             </span>
           </label>
