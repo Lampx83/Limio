@@ -161,9 +161,60 @@ export default function LessonCompletionPrompt({
     videoMet,
   ]);
 
-  // Already completed before this page load — don't show the prompt at all.
-  // The bottom bar shows the "Đã hoàn thành" badge.
-  if (completed && !justCompleted) return null;
+  // Gộp video%/hoạt động done-total/đã-cuộn-hết thành MỘT con số cho thanh
+  // tiến độ đầu trang — trung bình cộng tỉ lệ hoàn thành của từng điều kiện
+  // đang áp dụng cho bài này (chỉ điều kiện nào áp dụng mới tính, ví dụ bài
+  // không có video thì không kéo tụt vì "video 0%"). Mỗi điều kiện quy về
+  // 0-1 trước khi gộp:
+  //   - video: tỉ lệ đã xem so với NGƯỠNG yêu cầu (xem 40% mà ngưỡng 80% thì
+  //     tính 0.5, không phải 0.4) — đúng tinh thần "còn cách đích bao xa".
+  //   - hoạt động: done/total, đã có sẵn dạng phân số.
+  //   - cuộn hết bài: 0 hoặc 1, vì tự thân nó không có "cuộn dở".
+  const progressFractions: number[] = [];
+  if (autoComplete.requireVideoWatch) {
+    const targetRatio = autoComplete.videoThresholdPct / 100;
+    progressFractions.push(targetRatio > 0 ? Math.min(1, videoRatio / targetRatio) : 1);
+  }
+  if (autoComplete.requireAllActivities) {
+    const total = autoComplete.totalActivityCount;
+    const done = total - autoComplete.pendingActivityCount;
+    progressFractions.push(total > 0 ? done / total : 1);
+  }
+  if (autoComplete.requireScrollToEnd) {
+    progressFractions.push(scrollMet ? 1 : 0);
+  }
+  const lessonProgressPct = completed
+    ? 100
+    : progressFractions.length > 0
+      ? Math.round(
+          (progressFractions.reduce((sum, f) => sum + f, 0) / progressFractions.length) * 100,
+        )
+      : 0;
+
+  const progressBar = (
+    <div className="mb-4">
+      <p className="mb-1.5 text-sm text-muted">
+        <span className="tabular-nums">{lessonProgressPct}%</span> hoàn thành bài học
+      </p>
+      <div
+        className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
+        role="progressbar"
+        aria-label="Tiến độ bài học"
+        aria-valuenow={lessonProgressPct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
+          style={{ width: `${lessonProgressPct}%` }}
+        />
+      </div>
+    </div>
+  );
+
+  // Đã hoàn thành từ trước khi vào trang này — chỉ còn thanh tiến độ (đứng
+  // yên ở 100%), bỏ dải chip "để hoàn thành" vì không còn gì phải làm nữa.
+  if (completed && !justCompleted) return progressBar;
 
   // Build the checklist rows. Each row has: icon, label (with live progress
   // sub-text where useful), done state.
@@ -207,27 +258,30 @@ export default function LessonCompletionPrompt({
   }
 
   // No tracker applied (shouldn't happen — server always picks at least one,
-  // but defensive). Render nothing.
-  if (rows.length === 0) return null;
+  // but defensive). Vẫn hiện thanh tiến độ, chỉ bỏ dải chip.
+  if (rows.length === 0) return progressBar;
 
   // Success state — briefly shown before the page refreshes.
   if (justCompleted) {
     return (
-      <div className="mb-6 rounded-2xl border-2 border-success-200 bg-success-50 p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-600 text-white">
-            <Check size={20} strokeWidth={2.5} />
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-success-800">
-              Hoàn thành bài học!
-            </p>
-            <p className="text-xs text-success-700">
-              Đang lưu tiến độ và tải lại trang…
-            </p>
+      <>
+        {progressBar}
+        <div className="mb-6 rounded-2xl border-2 border-success-200 bg-success-50 p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-600 text-white">
+              <Check size={20} strokeWidth={2.5} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-success-800">
+                Hoàn thành bài học!
+              </p>
+              <p className="text-xs text-success-700">
+                Đang lưu tiến độ và tải lại trang…
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -239,7 +293,9 @@ export default function LessonCompletionPrompt({
   // chỗ nó nằm trong bài. Luôn hiện đủ, không thu gọn/mở rộng — 1-3 chip một
   // dòng không cần che bớt.
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-sm">
+    <>
+      {progressBar}
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-sm">
       <span className="shrink-0 text-xs font-medium text-[rgb(var(--text-muted))]">
         {allDone ? "Đang lưu…" : "Để hoàn thành bài:"}
       </span>
@@ -257,6 +313,7 @@ export default function LessonCompletionPrompt({
           {r.detail && !r.done && <span className="opacity-80">({r.detail})</span>}
         </span>
       ))}
-    </div>
+      </div>
+    </>
   );
 }

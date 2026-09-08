@@ -288,7 +288,6 @@ export default async function LessonPage({
       eventKey: `lesson.completed:${userId}:${lesson.id}`,
     },
   });
-
   const progress = await getCourseProgress(userId, lesson.module.course.id);
   const threads = await listThreadsForLesson(lesson.id);
 
@@ -505,27 +504,18 @@ export default async function LessonPage({
             }`}
           />
         </div>
+        {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
+            nhất từ video%/hoạt động done-total/đã cuộn hết — tự cập nhật
+            theo dõi trực tiếp (video đang xem, đã cuộn tới đâu), nên phải
+            là client component; xem LessonCompletionPrompt để biết công
+            thức gộp. */}
         <div className="mt-5">
-          {/* Chỉ phần trăm khoá học. Bỏ "Bài 2 / 22" vì nó đá nhau với số hiệu
-              in ngay trên tiêu đề: bài tên "Bài 1.2" mà dòng dưới ghi "Bài 2"
-              thì người đọc phải dừng lại đối chiếu hai cách đánh số. */}
-          <p className="mb-1.5 text-sm text-muted">
-            <span className="tabular-nums">{progress.courseCompletionPct}%</span>{" "}
-            hoàn thành khoá học
-          </p>
-          <div
-            className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
-            role="progressbar"
-            aria-label="Tiến độ khoá học"
-            aria-valuenow={progress.courseCompletionPct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
-              style={{ width: `${progress.courseCompletionPct}%` }}
-            />
-          </div>
+          <LessonCompletionPrompt
+            lessonId={lesson.id}
+            courseSlug={params.slug}
+            initiallyCompleted={completedEvent !== null}
+            autoComplete={autoCompleteConfig}
+          />
         </div>
       </header>
 
@@ -559,15 +549,6 @@ export default async function LessonPage({
       {/* Bài học là trang dài nhất hệ thống có. Xếp tiếp vào cột nút nổi bên
           phải; ẩn khi đang chiếu, vì lúc đó cả lớp nhìn vào màn hình. */}
       {!stageMode && <ScrollEnds className="fixed bottom-[17rem] right-4 z-30" />}
-
-      <div className="mt-6">
-        <LessonCompletionPrompt
-          lessonId={lesson.id}
-          courseSlug={params.slug}
-          initiallyCompleted={completedEvent !== null}
-          autoComplete={autoCompleteConfig}
-        />
-      </div>
 
       {canEdit && !stageMode && (
         <TeacherBar
