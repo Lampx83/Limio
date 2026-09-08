@@ -16,6 +16,7 @@ import {
   X,
   ShieldCheck,
   Coins,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 
@@ -50,6 +51,13 @@ const GROUPS: Group[] = [
       { label: "Hoạt động giảng viên", href: "/admin/instructor-activity", icon: History },
       { label: "Skill taxonomy", href: "/admin/skills", icon: Network },
     ],
+  },
+  {
+    id: "catalog",
+    label: "Catalog",
+    iconBg: PINK_BG,
+    iconFg: PINK_FG,
+    items: [{ label: "Section catalog", href: "/admin/catalog-sections", icon: LayoutGrid }],
   },
   {
     id: "integrations",
