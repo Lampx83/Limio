@@ -181,13 +181,15 @@ describe("generateDiagnosticFeedback", () => {
     });
     const r = await generateDiagnosticFeedback(s.userId, s.attemptId);
     expect(r.deliveries).toHaveLength(1);
-    expect(r.deliveries[0]!.body).toBe("Bạn nhầm dấu rồi.");
+    // B11 — template nay là một nước bên trong body đã ghép, không phải cả body.
+    expect(r.deliveries[0]!.body).toContain("Bạn nhầm dấu rồi.");
+    expect(r.deliveries[0]!.body).toContain("Mình thấy bạn chọn");
     expect(r.deliveries[0]!.misconceptionCode).toMatch(/^mc-d1$/);
 
     const persisted = await prisma.feedbackDelivery.findFirstOrThrow({
       where: { attemptId: s.attemptId, questionId: s.questionId },
     });
-    expect(persisted.body).toBe("Bạn nhầm dấu rồi.");
+    expect(persisted.body).toContain("Bạn nhầm dấu rồi.");
   });
 
   it("falls back to generic template when no per-misconception match", async () => {
@@ -202,7 +204,7 @@ describe("generateDiagnosticFeedback", () => {
       },
     });
     const r = await generateDiagnosticFeedback(s.userId, s.attemptId);
-    expect(r.deliveries[0]!.body).toBe("Generic msg");
+    expect(r.deliveries[0]!.body).toContain("Generic msg");
     expect(r.deliveries[0]!.misconceptionCode).toBeNull();
   });
 
@@ -215,7 +217,10 @@ describe("generateDiagnosticFeedback", () => {
       },
     });
     const r = await generateDiagnosticFeedback(s.userId, s.attemptId);
-    expect(r.deliveries[0]!.body).toContain("đọc lại");
+    // Không template, không giải thích riêng ⇒ vẫn phải nói được người học đã
+    // chọn gì và đáp án đúng là gì, thay vì chỉ một câu chung chung.
+    expect(r.deliveries[0]!.body).toContain("Mình thấy bạn chọn");
+    expect(r.deliveries[0]!.body).toContain("đáp án đúng là");
   });
 
   it("AC-B3.4: remediation excludes already-completed lessons + caps at 3", async () => {

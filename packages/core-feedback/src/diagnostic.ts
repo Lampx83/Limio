@@ -1,6 +1,7 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { CODER_VERSION, codeFeedback, type GenerationContext } from "./coding";
+import { composeFeedbackBody } from "./compose";
 import { resolveFeedbackVariant } from "./variant";
 
 const REMEDIATION_LIMIT = 3;
@@ -70,12 +71,17 @@ export async function generateDiagnosticFeedback(
         select: {
           id: true,
           type: true,
+          // B11 — nguyên liệu để ghép phản hồi theo khung Hattie.
+          explanation: true,
+          learningObjective: true,
+          quiz: { select: { lesson: { select: { title: true } } } },
           options: {
             select: {
               id: true,
+              label: true,
               isCorrect: true,
               misconceptionId: true,
-              misconception: { select: { id: true, code: true } },
+              misconception: { select: { id: true, code: true, name: true } },
             },
           },
           skillTags: { select: { skillId: true } },
@@ -123,6 +129,7 @@ export async function generateDiagnosticFeedback(
 
     let misconceptionId: string | null = null;
     let misconceptionCode: string | null = null;
+    let misconceptionName: string | null = null;
     // B10 — lớp đối chứng không được gọi tên lỗi sai, kể cả khi câu hỏi thừa
     // sức nhận diện. Ghi nhận misconception vào learner model vẫn chạy bình
     // thường ở recordMisconceptionsFromAttempt — chỗ này chỉ quyết định người
@@ -140,6 +147,7 @@ export async function generateDiagnosticFeedback(
       if (wrongPicked?.misconception) {
         misconceptionId = wrongPicked.misconception.id;
         misconceptionCode = wrongPicked.misconception.code;
+        misconceptionName = wrongPicked.misconception.name;
       }
     }
 
@@ -156,6 +164,7 @@ export async function generateDiagnosticFeedback(
     // excluding ones already completed.
     const skillIds = r.question.skillTags.map((t) => t.skillId);
     let remediationLessonIds: string[] = [];
+    let remediationTitles: string[] = [];
     let excludedCompleted = 0;
     if (personalized && skillIds.length > 0) {
       const mappings = await db.contentSkillMapping.findMany({
@@ -165,17 +174,49 @@ export async function generateDiagnosticFeedback(
           lesson: { module: { courseId } },
         },
         orderBy: { coverageWeight: "desc" },
-        select: { contentId: true, coverageWeight: true },
+        select: {
+          contentId: true,
+          coverageWeight: true,
+          lesson: { select: { title: true } },
+        },
       });
       const candidates = Array.from(new Set(mappings.map((m) => m.contentId)));
       const fresh = candidates.filter((id) => !completedLessonIds.has(id));
       excludedCompleted = candidates.length - fresh.length;
       remediationLessonIds = fresh.slice(0, REMEDIATION_LIMIT);
+      const titleById = new Map(
+        mappings.flatMap((m) => (m.lesson ? [[m.contentId, m.lesson.title] as const] : [])),
+      );
+      remediationTitles = remediationLessonIds.flatMap((id) => {
+        const t = titleById.get(id);
+        return t ? [t] : [];
+      });
     }
 
-    const body =
-      template?.body ??
-      "Câu này bạn chưa đúng. Hãy đọc lại nội dung liên quan và thử lại.";
+    // B11 — chỉ mcq/true_false mới nói được "bạn đã chọn gì": ordering trả về
+    // TOÀN BỘ id theo thứ tự người học sắp, matching trả về cặp ghép. Với hai
+    // loại đó, khẳng định "bạn chọn X" sẽ là bịa.
+    const chosenLabels =
+      typeSupportsMisconception && Array.isArray(r.response)
+        ? r.question.options
+            .filter(
+              (o) =>
+                !o.isCorrect &&
+                (r.response as unknown[]).some((x) => x === o.id),
+            )
+            .map((o) => o.label)
+        : [];
+
+    const body = composeFeedbackBody({
+      learningObjective: r.question.learningObjective,
+      lessonTitle: r.question.quiz.lesson?.title ?? null,
+      chosenLabels,
+      correctLabels: r.question.options.filter((o) => o.isCorrect).map((o) => o.label),
+      misconceptionName,
+      explanation: r.question.explanation,
+      templateBody: template?.body ?? null,
+      remediationLessonTitles: remediationTitles,
+    });
 
     // B9 — coordinates are derived from the inputs that chose this text, at the
     // moment they chose it. Never re-derived later by parsing the body.
@@ -185,6 +226,10 @@ export async function generateDiagnosticFeedback(
       declaredElaboration: template?.elaboration ?? null,
       misconceptionCode,
       remediationCount: remediationLessonIds.length,
+      // B11 — giải thích riêng của câu hỏi giờ luôn được ghép vào, nên sàn
+      // elaboration nâng lên kcr. Không khai báo thì dữ liệu nghiên cứu sẽ
+      // nói kr trong khi người học thật ra nhận được nhiều hơn thế.
+      hasExplanation: Boolean(r.question.explanation?.trim()),
     });
 
     const generationContext: GenerationContext = {

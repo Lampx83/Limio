@@ -29,7 +29,10 @@ import type {
  * rows coded by different versions are not directly comparable, and a reader of
  * the data needs to be able to tell.
  */
-export const CODER_VERSION = "b9.coding.v1";
+// b11.v2: B11 ghép giải thích riêng của câu hỏi vào body, nên `hasExplanation`
+// tham gia vào bậc elaboration. Hàng mã hoá bởi v1 và v2 không so sánh trực
+// tiếp được — người đọc dữ liệu phải phân biệt được, nên phiên bản đổi theo.
+export const CODER_VERSION = "b11.coding.v2";
 
 /**
  * Meso layers ordered by how far they go beyond the item itself. `self` is not
@@ -51,6 +54,11 @@ export interface CodingInput {
   misconceptionCode: string | null;
   /** How many remediation lessons were surfaced alongside the text. */
   remediationCount: number;
+  /**
+   * B11 — câu hỏi có phần giải thích riêng được ghép vào body hay không. Có thì
+   * người học nhận được lý do của đáp án đúng, nên sàn elaboration là `kcr`.
+   */
+  hasExplanation?: boolean;
 }
 
 export interface FeedbackCoding {
@@ -73,6 +81,7 @@ export function codeFeedback(input: CodingInput): FeedbackCoding {
   const hasMisconception = input.misconceptionCode !== null;
   const hasRemediation = input.remediationCount > 0;
   const hasTemplate = input.templateScope !== null;
+  const hasExplanation = input.hasExplanation === true;
 
   // ── meso ────────────────────────────────────────────────────────────────
   const levels: FeedbackLevel[] = ["task"]; // AC-2.3
@@ -99,7 +108,7 @@ export function codeFeedback(input: CodingInput): FeedbackCoding {
     inferredElaboration = "km";
   } else if (hasRemediation) {
     inferredElaboration = "kh";
-  } else if (hasTemplate) {
+  } else if (hasTemplate || hasExplanation) {
     inferredElaboration = "kcr";
   } else {
     // Only the hard-coded fallback sentence — the learner learns that they were

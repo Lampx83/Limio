@@ -115,6 +115,21 @@ export default async function ResultPage({
     return acc;
   }, 0);
 
+  // B11 — lời chào ở đầu trang, một lần cho cả lượt làm bài. Gọi tên để xưng
+  // hô, không để đánh giá: feedback cấp `self` (khen/chê con người) là cấp mà
+  // Hattie & Timperley cảnh báo có thể làm giảm học tập.
+  const learner = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { displayName: true },
+  });
+  const greetName = learner?.displayName?.trim() || null;
+
+  // B11 — nút "hỏi thêm" dẫn về bài học chứa quiz, nơi AI tutor đang sống.
+  const quizLesson = await prisma.quiz.findUnique({
+    where: { id: result.attempt.quizId },
+    select: { lessonId: true },
+  });
+
   const deliveries = await getDeliveriesForAttempt(userId, params.attemptId);
   const feedbackByQuestion = new Map<string, FeedbackByQuestion>();
   for (const d of deliveries) {
@@ -176,6 +191,9 @@ export default async function ResultPage({
           <p className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur">
             {passed ? "✓ Đạt yêu cầu" : "✗ Chưa đạt"}
           </p>
+          {greetName && (
+            <p className="mt-3 text-lg font-semibold">Chào {greetName},</p>
+          )}
           <p className="mt-4 h-display text-6xl font-bold tabular-nums">
             {result.attempt.scorePct?.toFixed(1) ?? "—"}
             <span className="text-3xl opacity-70">%</span>
@@ -314,6 +332,17 @@ export default async function ResultPage({
                     <p className="mt-2 whitespace-pre-wrap text-sm text-danger-700/90">
                       {fb.body}
                     </p>
+                    {quizLesson?.lessonId && (
+                      <Link
+                        href={`/learn/${params.slug}/lessons/${quizLesson.lessonId}?hoi=${encodeURIComponent(
+                          `Mình vừa làm sai câu: “${item.prompt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300)}”. ` +
+                            `Bạn giải thích giúp mình vì sao đáp án mình chọn lại chưa đúng nhé.`,
+                        )}`}
+                        className="mt-3 inline-flex items-center gap-1 rounded-lg border border-danger-200 bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-danger-700 transition-colors hover:bg-danger-50"
+                      >
+                        Chỗ này mình chưa rõ — hỏi thêm
+                      </Link>
+                    )}
                     {fb.remediationLessonIds.length > 0 && (
                       <div className="mt-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-danger-700">
@@ -343,7 +372,9 @@ export default async function ResultPage({
                   </div>
                 )}
 
-                {item.explanation && (
+                {/* B11 — câu sai đã có giải thích ghép sẵn trong khối phản hồi;
+                    hiện lại ở đây là bắt đọc hai lần. */}
+                {item.explanation && !fb && (
                   <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                       Giải thích

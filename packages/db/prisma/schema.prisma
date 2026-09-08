@@ -660,6 +660,9 @@ model QuizQuestion {
   //   short_answer: { acceptedRegexes: string[] }   // case-insensitive
   //   essay:       null (manual graded)
   extra       Json?
+  // B11 — mục tiêu học tập của câu hỏi, dùng cho nước "feed up" của phản hồi
+  // (Hattie & Timperley: mục tiêu là gì). Null ⇒ lùi về tiêu đề bài học.
+  learningObjective String? @db.Text
 
   quiz      Quiz               @relation(fields: [quizId], references: [id], onDelete: Cascade)
   options   QuestionOption[]

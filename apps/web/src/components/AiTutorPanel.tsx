@@ -39,6 +39,20 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
     const r = await fetch(apiUrl("/api/ai/budget"));
     if (r.ok) setBudget(await r.json());
   };
+  // B11 — người học bấm "hỏi thêm" ở trang kết quả thì tới đây kèm sẵn câu hỏi.
+  // Mở khung và điền sẵn, nhưng KHÔNG tự gửi: gửi hộ là tiêu token của họ mà
+  // chưa hỏi, và họ mất cơ hội sửa lại câu hỏi cho đúng ý mình.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const seeded = new URLSearchParams(window.location.search).get("hoi");
+    if (!seeded) return;
+    setOpen(true);
+    setInput(seeded);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("hoi");
+    window.history.replaceState({}, "", url.toString());
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     void refreshBudget();
