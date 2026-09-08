@@ -121,7 +121,7 @@ export default function EnrollButton({
           </button>
         </div>
         <p className="text-xs text-muted">
-          Chưa có mã? Thanh toán với giảng viên để nhận mã kích hoạt.
+          Chưa có mã? Liên hệ ngay với chúng tôi để nhận mã kích hoạt.
         </p>
       </div>
     );
