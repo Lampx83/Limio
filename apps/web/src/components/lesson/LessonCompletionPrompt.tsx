@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, CircleDashed, Video, ListChecks, ScrollText } from "lucide-react";
+import { Check, Video, ListChecks, ScrollText } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 /**
@@ -179,9 +179,9 @@ export default function LessonCompletionPrompt({
     const pct = Math.round(videoRatio * 100);
     rows.push({
       key: "video",
-      icon: <Video size={16} />,
-      label: `Xem ít nhất ${autoComplete.videoThresholdPct}% video`,
-      detail: videoMet ? undefined : `Đã xem ${pct}%`,
+      icon: <Video size={13} />,
+      label: "Video",
+      detail: videoMet ? undefined : `${pct}%/${autoComplete.videoThresholdPct}%`,
       done: videoMet,
     });
   }
@@ -189,20 +189,19 @@ export default function LessonCompletionPrompt({
     const done = autoComplete.totalActivityCount - autoComplete.pendingActivityCount;
     rows.push({
       key: "activities",
-      icon: <ListChecks size={16} />,
-      label: "Hoàn thành các hoạt động",
+      icon: <ListChecks size={13} />,
+      label: "Hoạt động",
       detail: activitiesMet
         ? undefined
-        : `${done}/${autoComplete.totalActivityCount} đã xong — còn ${autoComplete.pendingActivityCount}`,
+        : `${done}/${autoComplete.totalActivityCount}`,
       done: activitiesMet,
     });
   }
   if (autoComplete.requireScrollToEnd) {
     rows.push({
       key: "scroll",
-      icon: <ScrollText size={16} />,
-      label: "Đọc hết nội dung bài",
-      detail: scrollMet ? undefined : "Cuộn xuống cuối trang",
+      icon: <ScrollText size={13} />,
+      label: "Đọc hết bài",
       done: scrollMet,
     });
   }
@@ -234,59 +233,30 @@ export default function LessonCompletionPrompt({
 
   const allDone = rows.every((r) => r.done);
 
+  // Nén thành dải chip ngang thay vì khung viền dày + danh sách cột dọc —
+  // bản cũ tốn cả trăm pixel chiều cao dù chỉ có 1 điều kiện (trường hợp phổ
+  // biến nhất), và lặp lại thông tin mỗi hoạt động đã tự hiển thị ngay tại
+  // chỗ nó nằm trong bài. Luôn hiện đủ, không thu gọn/mở rộng — 1-3 chip một
+  // dòng không cần che bớt.
   return (
-    <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-soft/40 p-4 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex-1">
-          <h2 className="text-sm font-semibold text-brand-800">
-            {allDone
-              ? "Đang đánh dấu hoàn thành…"
-              : "Để hoàn thành bài học này, bạn cần:"}
-          </h2>
-          <ul className="mt-2.5 space-y-1.5">
-            {rows.map((r) => (
-              <li
-                key={r.key}
-                className={`flex items-start gap-2.5 text-sm ${
-                  r.done ? "text-success-700" : "text-[rgb(var(--text))]"
-                }`}
-              >
-                <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                    r.done
-                      ? "bg-success-600 text-white"
-                      : "bg-[rgb(var(--surface))] text-[rgb(var(--text-muted))] ring-1 ring-token"
-                  }`}
-                >
-                  {r.done ? (
-                    <Check size={12} strokeWidth={3} />
-                  ) : (
-                    <CircleDashed size={12} />
-                  )}
-                </span>
-                <span className="flex-1">
-                  <span className={r.done ? "line-through opacity-70" : ""}>
-                    {r.label}
-                  </span>
-                  {r.detail && (
-                    <span className="ml-2 text-xs text-[rgb(var(--text-muted))]">
-                      ({r.detail})
-                    </span>
-                  )}
-                </span>
-                <span className="shrink-0 text-[rgb(var(--text-muted))]">
-                  {r.icon}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {!allDone && (
-            <p className="mt-3 text-[11px] text-[rgb(var(--text-muted))]">
-              Hệ thống sẽ tự đánh dấu hoàn thành khi bạn đạt đủ các mục trên.
-            </p>
-          )}
-        </div>
-      </div>
+    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-sm">
+      <span className="shrink-0 text-xs font-medium text-[rgb(var(--text-muted))]">
+        {allDone ? "Đang lưu…" : "Để hoàn thành bài:"}
+      </span>
+      {rows.map((r) => (
+        <span
+          key={r.key}
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+            r.done
+              ? "bg-success-50 text-success-700 dark:bg-success-950/30"
+              : "bg-[rgb(var(--surface))] text-[rgb(var(--text-muted))] ring-1 ring-token"
+          }`}
+        >
+          {r.done ? <Check size={12} strokeWidth={3} /> : r.icon}
+          <span className={r.done ? "line-through opacity-70" : ""}>{r.label}</span>
+          {r.detail && !r.done && <span className="opacity-80">({r.detail})</span>}
+        </span>
+      ))}
     </div>
   );
 }
