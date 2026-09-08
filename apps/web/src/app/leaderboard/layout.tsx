@@ -1,24 +1,6 @@
-import { auth } from "@/lib/auth";
-import StudentLeftMenu from "@/components/StudentLeftMenu";
-import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
-
-export default async function LeaderboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return <>{children}</>;
-  }
-  const [badges, continueTo] = await Promise.all([
-    getStudentMenuBadges(session.user.id),
-    getStudentMenuContinue(session.user.id),
-  ]);
-  return (
-    <div className="flex w-full">
-      <StudentLeftMenu badges={badges} continueTo={continueTo} />
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
-  );
+// Bảng xếp hạng là trang công khai, không phải workspace riêng của role
+// nào, nên không mang sidebar (cùng lý do với /catalog). Lối về workspace cá
+// nhân đã có sẵn ở AppHeader.
+export default function LeaderboardLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }

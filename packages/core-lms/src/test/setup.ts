@@ -45,6 +45,9 @@ async function cleanDb() {
     prisma.module.deleteMany(),
     prisma.courseInstructor.deleteMany(),
     prisma.enrollment.deleteMany(),
+    // CatalogSectionCourse cascades from either side, but a section with 0
+    // courses has no Course FK to cascade from — must clear it explicitly.
+    prisma.catalogSection.deleteMany(),
     prisma.course.deleteMany(),
     prisma.skillPrerequisite.deleteMany(),
     prisma.skill.deleteMany(),

@@ -45,7 +45,14 @@ export const VideoPayload = z.object({
   title: z.string().max(200).optional(),
   /** Một tới hai câu: video nói gì và vì sao nó nằm ở bài này. */
   caption: z.string().max(600).optional(),
-  transcriptUrl: z.string().url().optional(),
+  /**
+   * A2.7 — có thể là link ngoài (mở tab mới) HOẶC path file .vtt/.srt tự
+   * upload qua /api/lesson-media/transcripts (cùng-origin, không phải URL
+   * tuyệt đối) — dùng UrlOrPath như field `url` ở trên vì cùng lý do.
+   * Đuôi .vtt/.srt bật hộp transcript đồng bộ (chỉ video YouTube); URL khác
+   * hoặc video khác YouTube thì giữ hành vi cũ — link "Xem transcript" tĩnh.
+   */
+  transcriptUrl: UrlOrPath.optional(),
   durationSec: z.number().int().positive().optional(),
   cuepoints: z.array(VideoCuepoint).max(20).optional(),
 });

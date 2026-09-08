@@ -66,9 +66,11 @@ export default async function AppHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Tournament CTA — always visible in header */}
+          {/* Tournament CTA — always visible in header. Instructor đang active
+              role đó thì đưa về khu quản lý tournament của họ thay vì trang
+              tham gia dành cho học viên. */}
           <Link
-            href="/tournaments"
+            href={activeRole === "instructor" ? "/instructor/tournaments" : "/tournaments"}
             className="relative hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm shadow-amber-300/50 transition-all hover:from-amber-500 hover:to-orange-600 hover:shadow-md hover:shadow-amber-300/60 hover:-translate-y-px dark:shadow-amber-900/40"
           >
             {/* Live pulse dot */}

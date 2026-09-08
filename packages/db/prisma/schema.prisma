@@ -308,9 +308,47 @@ model Course {
   examRounds        ExamRound[]
   accessCodes       CourseAccessCode[]
   organization      Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  catalogSectionCourses CatalogSectionCourse[]
 
   @@index([status, publishedAt])
   @@index([category, level])
+}
+
+enum CatalogSectionType {
+  MANUAL
+  AUTO_RECENT
+}
+
+/// A2.6 — Catalog curated sections: nhóm khoá học hiển thị trên trang public
+/// `/catalog` thay vì 1 list phẳng. `/catalog` hiện tại KHÔNG lọc theo
+/// Organization (1 danh sách chung toàn hệ thống) nên section cũng global,
+/// quản lý bởi Platform Admin (`isAdmin`), không phải OrgAdmin.
+model CatalogSection {
+  id        String                 @id @default(uuid())
+  title     String
+  type      CatalogSectionType
+  order     Int                    @default(0)
+  isActive  Boolean                @default(true)
+  // Chỉ dùng khi type = AUTO_RECENT: số course published gần nhất sẽ hiển thị.
+  autoLimit Int?
+  courses   CatalogSectionCourse[]
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  @@index([isActive, order])
+}
+
+/// Join table cho section type MANUAL — admin tự chọn course + thứ tự.
+/// Section type AUTO_RECENT không tạo row ở đây, courses được suy ra lúc query.
+model CatalogSectionCourse {
+  sectionId String
+  courseId  String
+  order     Int            @default(0)
+  section   CatalogSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  course    Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([sectionId, courseId])
+  @@index([courseId])
 }
 
 model CourseInstructor {
