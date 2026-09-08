@@ -88,12 +88,14 @@ export default async function CatalogPage({
               : "Chưa có khóa học nào được publish."}
           </p>
         </div>
-        <Link
-          href={isInstructor ? "/instructor/dashboard" : "/instructor/courses"}
-          className="btn-secondary btn-sm"
-        >
-          {isInstructor ? "Quay lại Instructor Studio →" : "Bạn là instructor? →"}
-        </Link>
+        {session?.user?.id && (
+          <Link
+            href={isInstructor ? "/instructor/dashboard" : "/me/dashboard"}
+            className="btn-secondary btn-sm"
+          >
+            {isInstructor ? "Quay lại Workspace giảng viên →" : "Quay lại workspace học viên →"}
+          </Link>
+        )}
       </div>
 
       {/* Filters — collapsible on mobile via <details>, inline on lg+ */}
