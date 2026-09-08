@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { getCourseDetail, CourseError } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import EnrollButton from "@/components/EnrollButton";
+import EnrollNudgeAction from "@/components/EnrollNudgeAction";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { isFree, formatPrice } from "@/lib/formatPrice";
@@ -265,14 +266,40 @@ export default async function CourseDetailPage({
             </span>
           </div>
 
-          {!enrolled && !publiclyReadable && course.modules.length > 0 && (
-            /* Nói trước một lần, thay vì để người ta tự suy ra từ việc bấm mà
-               không có gì xảy ra. */
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
-              <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              Bài có biểu tượng khoá sẽ mở sau khi bạn đăng ký khoá học.
-            </p>
-          )}
+          {!enrolled &&
+            !publiclyReadable &&
+            course.modules.length > 0 &&
+            // invite_only không có nút đăng ký tự phục vụ nào để bấm — mời
+            // "đăng ký ngay" ở đây là chỉ đường vào ngõ cụt. Khoá đó đã có
+            // banner riêng "Cần link mời của lớp" phía dưới.
+            course.enrollMode === "open" && (
+              /* Trực quan hơn hẳn dòng chữ xám nhỏ trước đây — nói trước một
+                 lần, thay vì để người ta tự suy ra từ việc bấm mà không có gì
+                 xảy ra. Cùng một banner cho cả khoá miễn phí lẫn có phí: câu
+                 chữ không nhắc tới giá, nên đúng cho cả hai. EnrollNudgeAction
+                 tự quyết — khoá miễn phí thì bấm là ghi danh luôn; khoá có phí
+                 thì bấm "Đăng ký ngay" mở ngay tại chỗ ô giá + nhập mã kích
+                 hoạt, không cuộn trang xuống sidebar (sidebar còn ẩn trên
+                 mobile, cuộn-tới sẽ không tới đâu cả). */
+              <div className="banner-info mt-3 flex flex-wrap items-center gap-3 rounded-2xl px-5 py-4">
+                <Lock className="h-5 w-5 shrink-0" aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">
+                    Bạn chưa đăng ký khoá học này
+                  </p>
+                  <p className="text-xs">
+                    Hãy đăng ký khoá học để bắt đầu nội dung học tập ngay hôm
+                    nay.
+                  </p>
+                </div>
+                <EnrollNudgeAction
+                  slug={params.slug}
+                  priceCents={course.priceCents}
+                  currency={course.currency}
+                  paymentEnabled={paymentEnabled}
+                />
+              </div>
+            )}
 
           {course.modules.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center text-sm text-muted">
