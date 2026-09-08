@@ -206,7 +206,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
 
   if (!snap) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-900 to-fuchsia-900 text-sm text-white/70">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-gray-950 to-pink-950 text-sm text-white/70">
         Đang tải...
       </div>
     );
@@ -219,11 +219,24 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
   const sorted = [...participants].sort((a, b) => b.totalScore - a.totalScore);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-fuchsia-900 px-4 py-6 text-white sm:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-brand-900 via-gray-950 to-pink-950 px-4 py-6 text-white sm:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between gap-2">
           <h1 className="flex min-w-0 items-center gap-2 text-lg font-bold sm:text-xl">
-            🎮 <span className="truncate">{snap.quizTitle}</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5 flex-none text-pink-300 sm:h-6 sm:w-6"
+              aria-hidden="true"
+            >
+              <path d="M7.5 4.5h9a6 6 0 0 1 5.94 6.85l-.82 5.4a3 3 0 0 1-5.4 1.22L15 15.5H9l-1.22 2.47a3 3 0 0 1-5.4-1.22l-.82-5.4A6 6 0 0 1 7.5 4.5Z" />
+              <g fill="#111827" opacity="0.55">
+                <path d="M7 8.25a.75.75 0 0 1 .75.75v1h1a.75.75 0 0 1 0 1.5h-1v1a.75.75 0 0 1-1.5 0v-1h-1a.75.75 0 0 1 0-1.5h1v-1A.75.75 0 0 1 7 8.25Z" />
+                <circle cx="16" cy="9.5" r="1.15" />
+                <circle cx="18.5" cy="12" r="1.15" />
+              </g>
+            </svg>
+            <span className="truncate">{snap.quizTitle}</span>
           </h1>
           <div className="flex flex-none items-center gap-2">
             {snap.status === "lobby" && (
@@ -338,7 +351,7 @@ function LobbyView({
       </div>
 
       {/* "Màn hình" lớp học — hiện học viên vào real-time, giống chiếu lên máy chiếu */}
-      <div className="relative overflow-hidden rounded-3xl border-4 border-white/15 bg-gradient-to-br from-indigo-900/70 to-purple-900/70 p-6 shadow-2xl sm:p-10">
+      <div className="relative overflow-hidden rounded-3xl border-4 border-white/15 bg-gradient-to-br from-brand-800/70 to-pink-900/70 p-6 shadow-2xl sm:p-10">
         <p className="text-center text-sm font-medium text-white/60">
           {participants.length === 0
             ? "Đang chờ học viên tham gia..."
@@ -394,7 +407,21 @@ function LobbyView({
         )}
 
         <div className="absolute bottom-3 right-4 flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-xs font-semibold text-white/80">
-          👥 {participants.length}
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="h-3.5 w-3.5"
+            aria-hidden="true"
+          >
+            <path d="M7.5 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+            <path d="M13.5 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" opacity="0.6" />
+            <path d="M2 16c0-2.9 2.46-5 5.5-5s5.5 2.1 5.5 5v.5H2V16Z" />
+            <path
+              d="M13.5 11.2c2.42.32 4 2.13 4 4.3v.5h-3v-.5c0-1.6-.53-2.98-1.5-4.02.17-.1.34-.19.5-.28Z"
+              opacity="0.6"
+            />
+          </svg>
+          {participants.length}
         </div>
       </div>
     </div>
