@@ -88,6 +88,8 @@ model User {
   aiUsageLogs              AiUsageLog[]
   aiTokenLedger            AiTokenLedger[]
   aiTokenBalance           AiTokenBalance?
+  createdAccessCodes       CourseAccessCode[]        @relation("CourseAccessCodeCreator")
+  redeemedAccessCodes      CourseAccessCode[]        @relation("CourseAccessCodeRedeemer")
   orders                   Order[]
   auditEntriesAsActor      AuditLog[]                @relation("AuditActor")
   auditEntriesAsTarget     AuditLog[]                @relation("AuditTarget")
@@ -146,7 +148,7 @@ model User {
   // Email dispatch batches this user created / approved
   emailBatchesCreated    EmailDispatchBatch[]    @relation("EmailBatchCreator")
   emailBatchesApproved   EmailDispatchBatch[]    @relation("EmailBatchApprover")
-  AiTokenOrder           AiTokenOrder[]
+  aiTokenOrders          AiTokenOrder[]
 
   @@index([createdAt])
 }
@@ -304,6 +306,7 @@ model Course {
   sections          CourseSection[]
   cohortExamClasses CohortExamClass[]
   examRounds        ExamRound[]
+  accessCodes       CourseAccessCode[]
   organization      Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@index([status, publishedAt])
@@ -2068,6 +2071,47 @@ model Order {
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
+}
+
+// =====================================================================
+// Mã kích hoạt khoá học có phí (thay cho luồng "liên hệ giảng viên" đã bỏ).
+//
+// Học viên trả tiền cho giảng viên ngoài hệ thống (chuyển khoản, tiền mặt —
+// hệ thống không biết và không cần biết cách nào); giảng viên sinh một mã,
+// gửi cho đúng người đó; học viên gõ mã vào là ghi danh ngay, không cần admin
+// duyệt. Khác AiTokenOrder (mã đó chỉ để admin ĐỐI SOÁT sau khi đã xác minh
+// tiền về) — mã này TỰ NÓ cấp quyền vào khoá, không ai xác minh lại, nên phải
+// đủ dài để không đoán được: 12 ký tự trên bảng 32 ký tự (~10^18 khả năng),
+// và endpoint redeem có rate-limit để chặn dò mã.
+// =====================================================================
+
+enum CourseAccessCodeStatus {
+  unused
+  redeemed
+  revoked
+}
+
+model CourseAccessCode {
+  id                 String                 @id @default(uuid())
+  courseId           String
+  code               String                 @unique
+  status             CourseAccessCodeStatus @default(unused)
+  // Chốt tại thời điểm sinh mã, cho báo cáo doanh thu — đổi giá khoá sau này
+  // không được làm sai lệch số liệu của mã đã phát ra trước đó.
+  priceCentsSnapshot Int?
+  currency           String                 @default("VND")
+  createdBy          String
+  redeemedByUserId   String?
+  redeemedAt         DateTime?
+  note               String?
+  createdAt          DateTime               @default(now())
+
+  course     Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator    User   @relation("CourseAccessCodeCreator", fields: [createdBy], references: [id])
+  redeemedBy User?  @relation("CourseAccessCodeRedeemer", fields: [redeemedByUserId], references: [id])
+
+  @@index([courseId, status])
+  @@index([redeemedByUserId])
 }
 
 // =====================================================================

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  AccessCodeError,
   AssignmentError,
   CourseAuthzError,
   CourseError,
@@ -57,6 +58,20 @@ export function mapKnownError(err: unknown): NextResponse | null {
           ? 402
           : 400;
     return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof AccessCodeError) {
+    const status =
+      err.code === "course_not_found" || err.code === "code_not_found"
+        ? 404
+        : err.code === "code_already_used" || err.code === "course_not_enrollable"
+          ? 409
+          : err.code === "code_revoked"
+            ? 410
+            : 400;
+    return NextResponse.json(
+      err.details ? { error: err.code, details: err.details } : { error: err.code },
+      { status },
+    );
   }
   if (err instanceof LearningError) {
     const status =

@@ -306,6 +306,29 @@ export async function switchSectionByCode(
  * the same way as `enrollInCourse` — re-joining just returns the existing
  * enrollment. The default (isDefault=true) section is never invite-joinable.
  */
+/**
+ * Ghi danh sau khi bằng chứng thanh toán đã được xác minh NGOÀI đường
+ * Order/Stripe (ví dụ: mã kích hoạt do giảng viên phát cho người đã trả
+ * tiền). Bỏ qua payment gate như enrollBySectionCode bỏ qua nó cho link mời —
+ * cùng triết lý: cả hai đều là kênh giảng viên tự cấp quyền, orthogonal với
+ * self-enroll công khai.
+ */
+export async function enrollWithVerifiedPayment(
+  userId: string,
+  course: Course,
+  db: PrismaClient,
+  opts?: Pick<EnrollOptions, "baseUrl" | "sectionId">,
+): Promise<EnrollResult> {
+  if (course.status !== "published") {
+    throw new EnrollError("course_not_enrollable");
+  }
+  const sectionId = opts?.sectionId ?? (await resolveDefaultSectionId(course.id, db));
+  return enrollUserInResolvedCourse(userId, course, sectionId, db, {
+    skipPaymentCheck: true,
+    baseUrl: opts?.baseUrl,
+  });
+}
+
 export async function enrollBySectionCode(
   userId: string,
   inviteCode: string,

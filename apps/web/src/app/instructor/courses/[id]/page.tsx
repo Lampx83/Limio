@@ -10,6 +10,7 @@ import {
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
+import AccessCodesPanel from "./AccessCodesPanel";
 import LessonSection from "./LessonSection";
 import ModuleSection from "./ModuleSection";
 import ModuleOverviewCard from "./ModuleOverviewCard";
@@ -319,6 +320,12 @@ export default async function InstructorCourseEditPage({
               }}
             />
           </section>
+          )}
+
+          {canEdit && course.priceCents !== null && course.priceCents > 0 && (
+            <section>
+              <AccessCodesPanel courseId={course.id} />
+            </section>
           )}
 
           <section>

@@ -1,3 +1,4 @@
+export * from "./accessCode";
 export * from "./events";
 export * from "./enroll";
 export * from "./lessons";
