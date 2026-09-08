@@ -53,6 +53,7 @@ type DateShardedKind =
   | "lesson-media/images"
   | "lesson-media/videos"
   | "lesson-media/pdfs"
+  | "lesson-media/transcripts"
   | "exam-assets"
   | "submissions"
   | "proctor-snapshots";
@@ -75,6 +76,10 @@ export function lessonVideoKey(date: Date, filename: string): StorageKey {
 }
 export function lessonPdfKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/pdfs", date, filename);
+}
+/** A2.7 — Interactive transcript: GV upload file .vtt/.srt cho video YouTube. */
+export function lessonTranscriptKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "lesson-media/transcripts", date, filename);
 }
 export function examAssetKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "exam-assets", date, filename);
@@ -112,6 +117,9 @@ export function lessonVideoKeyFromFilename(filename: string): StorageKey | null 
 }
 export function lessonPdfKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/pdfs", filename);
+}
+export function lessonTranscriptKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "lesson-media/transcripts", filename);
 }
 export function examAssetKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "exam-assets", filename);

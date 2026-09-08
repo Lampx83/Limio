@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { listPublishedCourses } from "@feedbackme/core-lms";
+import { listPublishedCourses, listCatalogSectionsForDisplay } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
+import { auth } from "@/lib/auth";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { htmlToPlainText } from "@/lib/richText";
 import { getPaymentEnabled } from "@/lib/site-settings";
@@ -36,7 +37,13 @@ export default async function CatalogPage({
 }: {
   searchParams: { category?: string; level?: string; language?: string; q?: string };
 }) {
-  const [{ items }, categories, paymentEnabled] = await Promise.all([
+  const hasFilter =
+    !!(searchParams.q || searchParams.level || searchParams.language || searchParams.category);
+
+  const session = await auth();
+  const isInstructor = (session?.user?.roles ?? []).includes("instructor");
+
+  const [{ items }, categories, paymentEnabled, sections] = await Promise.all([
     listPublishedCourses({
       category: searchParams.category,
       level: searchParams.level,
@@ -45,10 +52,10 @@ export default async function CatalogPage({
     }),
     getDistinctCategories(),
     getPaymentEnabled(),
+    // Section curated chỉ có ý nghĩa trên trang catalog mặc định — có filter/search
+    // thì chuyển về list phẳng kết quả tìm kiếm như trước, nên bỏ qua query này.
+    hasFilter ? Promise.resolve([]) : listCatalogSectionsForDisplay(),
   ]);
-
-  const hasFilter =
-    !!(searchParams.q || searchParams.level || searchParams.language || searchParams.category);
 
   // Build active-filter chips so user sees what's filtering even khi drawer đóng.
   const activeChips: Array<{ label: string; clearHref: string }> = [];
@@ -81,8 +88,11 @@ export default async function CatalogPage({
               : "Chưa có khóa học nào được publish."}
           </p>
         </div>
-        <Link href="/instructor/courses" className="btn-secondary btn-sm">
-          Bạn là instructor? →
+        <Link
+          href={isInstructor ? "/instructor/dashboard" : "/instructor/courses"}
+          className="btn-secondary btn-sm"
+        >
+          {isInstructor ? "Quay lại Instructor Studio →" : "Bạn là instructor? →"}
         </Link>
       </div>
 
@@ -191,83 +201,119 @@ export default async function CatalogPage({
             actions={hasFilter ? [{ label: "Xem tất cả khoá học", href: "/catalog" }] : undefined}
           />
         </div>
-      ) : (
-        <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((c, idx) => (
-            <li
-              key={c.id}
-              className="animate-fade-in-up"
-              style={{ animationDelay: `${Math.min(idx * 40, 280)}ms` }}
-            >
-              <Link href={`/catalog/${c.slug}`} className="card-hover group block h-full" prefetch={false}>
-                {/* cover-style header */}
-                <div className="relative -m-5 mb-4 h-24 overflow-hidden rounded-t-xl bg-brand-gradient">
-                  <div
-                    className="absolute inset-0 bg-hero-grid opacity-30"
-                    style={{ backgroundSize: "16px 16px" }}
-                    aria-hidden
-                  />
-                  <div className="absolute right-3 top-3 flex gap-1.5">
-                    {c.language && (
-                      <span className="rounded-md bg-white/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm backdrop-blur">
-                        {c.language}
-                      </span>
-                    )}
-                  </div>
-                  <div className="absolute bottom-3 left-4 right-4 flex flex-wrap gap-1.5">
-                    {c.level && (
-                      <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-bold text-brand-700 shadow">
-                        {LEVEL_LABEL[c.level] ?? c.level}
-                      </span>
-                    )}
-                    {c.category && (
-                      <span className="rounded-md bg-white/30 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur">
-                        {c.category}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <h2 className="text-base font-semibold leading-snug transition-colors group-hover:text-brand-600">
-                  {c.title}
-                </h2>
-                <p className="mt-2 line-clamp-3 text-sm text-muted">{htmlToPlainText(c.description)}</p>
-
-                <div className="mt-3 flex items-center gap-1.5">
-                  {c.personalizationEnabled ? (
-                    <span
-                      className="rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700"
-                      title="AI feedback theo skill"
-                    >
-                      🤖 AI Feedback
-                    </span>
-                  ) : (
-                    <span
-                      className="rounded-md bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 text-[10px] font-semibold text-muted"
-                      title="LMS truyền thống"
-                    >
-                      📚 Standard LMS
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
-                  {paymentEnabled && !isFree(c.priceCents) ? (
-                    <span className="font-semibold text-accent-600">
-                      {formatPrice(c.priceCents!, c.currency)}
-                    </span>
-                  ) : (
-                    <span className="font-semibold text-success-600">Miễn phí</span>
-                  )}
-                  <span className="ml-auto font-semibold text-brand-600 group-hover:text-brand-700">
-                    Xem chi tiết →
-                  </span>
-                </div>
-              </Link>
-            </li>
+      ) : !hasFilter && sections.length > 0 ? (
+        <div className="mt-8 space-y-10">
+          {sections.map((section) => (
+            <section key={section.id}>
+              <h2 className="h-display text-h3">{section.title}</h2>
+              <CourseGrid courses={section.courses} paymentEnabled={paymentEnabled} />
+            </section>
           ))}
-        </ul>
+        </div>
+      ) : (
+        <CourseGrid courses={items} paymentEnabled={paymentEnabled} className="mt-8" />
       )}
     </main>
+  );
+}
+
+interface CourseCardData {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  level: string;
+  category: string | null;
+  language: string;
+  personalizationEnabled: boolean;
+  priceCents: number | null;
+  currency: string;
+}
+
+function CourseGrid({
+  courses,
+  paymentEnabled,
+  className = "",
+}: {
+  courses: CourseCardData[];
+  paymentEnabled: boolean;
+  className?: string;
+}) {
+  return (
+    <ul className={`grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${className}`}>
+      {courses.map((c, idx) => (
+        <li
+          key={c.id}
+          className="animate-fade-in-up"
+          style={{ animationDelay: `${Math.min(idx * 40, 280)}ms` }}
+        >
+          <Link href={`/catalog/${c.slug}`} className="card-hover group block h-full" prefetch={false}>
+            {/* cover-style header */}
+            <div className="relative -m-5 mb-4 h-24 overflow-hidden rounded-t-xl bg-brand-gradient">
+              <div
+                className="absolute inset-0 bg-hero-grid opacity-30"
+                style={{ backgroundSize: "16px 16px" }}
+                aria-hidden
+              />
+              <div className="absolute right-3 top-3 flex gap-1.5">
+                {c.language && (
+                  <span className="rounded-md bg-white/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm backdrop-blur">
+                    {c.language}
+                  </span>
+                )}
+              </div>
+              <div className="absolute bottom-3 left-4 right-4 flex flex-wrap gap-1.5">
+                {c.level && (
+                  <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-bold text-brand-700 shadow">
+                    {LEVEL_LABEL[c.level] ?? c.level}
+                  </span>
+                )}
+                {c.category && (
+                  <span className="rounded-md bg-white/30 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur">
+                    {c.category}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <h3 className="text-base font-semibold leading-snug transition-colors group-hover:text-brand-600">
+              {c.title}
+            </h3>
+            <p className="mt-2 line-clamp-3 text-sm text-muted">{htmlToPlainText(c.description)}</p>
+
+            <div className="mt-3 flex items-center gap-1.5">
+              {c.personalizationEnabled ? (
+                <span
+                  className="rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700"
+                  title="AI feedback theo skill"
+                >
+                  🤖 AI Feedback
+                </span>
+              ) : (
+                <span
+                  className="rounded-md bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 text-[10px] font-semibold text-muted"
+                  title="LMS truyền thống"
+                >
+                  📚 Standard LMS
+                </span>
+              )}
+            </div>
+
+            <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
+              {paymentEnabled && !isFree(c.priceCents) ? (
+                <span className="font-semibold text-accent-600">
+                  {formatPrice(c.priceCents!, c.currency)}
+                </span>
+              ) : (
+                <span className="font-semibold text-success-600">Miễn phí</span>
+              )}
+              <span className="ml-auto font-semibold text-brand-600 group-hover:text-brand-700">
+                Xem chi tiết →
+              </span>
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

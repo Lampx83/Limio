@@ -4,12 +4,17 @@ import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
+import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import SafeHtml from "./SafeHtml";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
 const H5pPlayer = dynamic(() => import("./H5pPlayer"), { ssr: false });
 const VideoWithCuepoints = dynamic(() => import("./VideoWithCuepoints"), {
+  ssr: false,
+});
+// A2.7 — interactive transcript, YouTube only (see file docstring for why).
+const YouTubeWithTranscript = dynamic(() => import("./YouTubeWithTranscript"), {
   ssr: false,
 });
 const PdfViewer = dynamic(() => import("./PdfViewer"), { ssr: false });
@@ -191,6 +196,12 @@ function ContentBlock({
       // anyway — so leaving it in would be gating theatre. There is no progress to
       // protect for an anonymous viewer regardless.
       const hasCuepoints = interactive && (p.cuepoints?.length ?? 0) > 0;
+      // A2.7 — interactive transcript only for YouTube + a .vtt/.srt file.
+      // Everything else (native video, other providers, plain transcript
+      // link, no transcript) keeps the exact behavior below unchanged.
+      const parsedForTranscript = !isNativeVideo ? parseVideoUrl(p.url) : null;
+      const showInteractiveTranscript =
+        parsedForTranscript?.kind === "youtube" && isSyncableTranscriptUrl(p.transcriptUrl);
       return (
         <div>
           {isNativeVideo && hasCuepoints && lessonId ? (
@@ -200,6 +211,8 @@ function ContentBlock({
               contentItemId={itemId}
               lessonId={lessonId}
             />
+          ) : showInteractiveTranscript ? (
+            <YouTubeWithTranscript url={p.url} transcriptUrl={p.transcriptUrl!} />
           ) : (
             <>
               <VideoEmbed url={p.url} />
@@ -222,7 +235,7 @@ function ContentBlock({
               )}
             </figcaption>
           )}
-          {p.transcriptUrl && (
+          {p.transcriptUrl && !showInteractiveTranscript && (
             <a href={p.transcriptUrl} className="link mt-2 inline-block text-sm">
               Xem transcript
             </a>

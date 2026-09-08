@@ -139,6 +139,11 @@ export default function AddContentItemForm({
   const [lessonQuizzes, setLessonQuizzes] = useState<LessonQuizRow[]>([]);
   const [skills, setSkills] = useState<SkillRow[]>([]);
   const [cuepoints, setCuepoints] = useState<CuepointDraft[]>([]);
+  // A2.7 — interactive transcript (YouTube only; harmless static link for
+  // other providers). Own upload flag, separate from `uploading` (video/pdf
+  // panel), so the two file pickers don't fight over one busy state.
+  const [transcriptUrl, setTranscriptUrl] = useState("");
+  const [transcriptUploading, setTranscriptUploading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -320,7 +325,11 @@ export default function AddContentItemForm({
           return;
         }
         resolved.sort((a, b) => a.atSec - b.atSec);
-        payload = resolved.length > 0 ? { url, cuepoints: resolved } : { url };
+        payload = {
+          url,
+          ...(resolved.length > 0 ? { cuepoints: resolved } : {}),
+          ...(transcriptUrl.trim() ? { transcriptUrl: transcriptUrl.trim() } : {}),
+        };
         break;
       }
       case "markdown":
@@ -520,6 +529,19 @@ export default function AddContentItemForm({
               quizzes={lessonQuizzes}
               skills={skills}
             />
+          )}
+          {type === "video" && (
+            <TranscriptUploadPanel
+              uploading={transcriptUploading}
+              setUploading={setTranscriptUploading}
+              setError={setError}
+              onUploaded={(uploadedUrl) => setTranscriptUrl(uploadedUrl)}
+            />
+          )}
+          {type === "video" && transcriptUrl && (
+            <p className="text-xs text-success-600">
+              ✓ Đã upload transcript: {transcriptUrl.split("/").pop()}
+            </p>
           )}
         </div>
       )}
@@ -1399,6 +1421,80 @@ function PdfUploadPanel({
         Chỉ nhận file <span className="font-mono font-semibold text-faint">PDF</span>
         {" · "}tối đa <span className="font-semibold">{PDF_MAX_MB} MB</span>
       </p>
+    </div>
+  );
+}
+
+const TRANSCRIPT_MAX_MB = 2;
+
+/**
+ * A2.7 — Transcript file uploader (.vtt/.srt). Only wired up for `video`
+ * type. Interactive sync only activates for YouTube videos (see
+ * YouTubeWithTranscript) — for every other provider/native upload, the
+ * uploaded file still shows as a plain "Xem transcript" link, so uploading
+ * here is never wasted even outside the YouTube case.
+ */
+function TranscriptUploadPanel({
+  uploading,
+  setUploading,
+  setError,
+  onUploaded,
+}: {
+  uploading: boolean;
+  setUploading: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  onUploaded: (url: string) => void;
+}) {
+  async function handleFile(file: File) {
+    setUploading(true);
+    setError(null);
+    if (file.size > TRANSCRIPT_MAX_MB * 1024 * 1024) {
+      setUploading(false);
+      setError(
+        `File transcript quá lớn (${(file.size / (1024 * 1024)).toFixed(1)} MB). Giới hạn ${TRANSCRIPT_MAX_MB} MB.`,
+      );
+      return;
+    }
+    const fd = new FormData();
+    fd.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(apiUrl("/api/lesson-media/transcripts"), {
+        method: "POST",
+        body: fd,
+      });
+    } catch (networkErr) {
+      setUploading(false);
+      console.error("[TranscriptUploadPanel] network error", networkErr);
+      setError("network_error");
+      return;
+    }
+    setUploading(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      return;
+    }
+    const data = (await res.json()) as { url: string };
+    onUploaded(data.url);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+        Transcript (.vtt / .srt) — bật hộp transcript đồng bộ cho video YouTube
+      </p>
+      <input
+        type="file"
+        accept=".vtt,.srt,text/vtt"
+        disabled={uploading}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+        }}
+        className="mt-2 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {uploading && <p className="mt-1 text-xs text-muted">Đang upload...</p>}
     </div>
   );
 }
