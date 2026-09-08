@@ -97,7 +97,10 @@ export default async function LeaderboardPage({
             </>
           ) : (
             <>Top học viên theo XP đạt được.</>
-          )}
+          )}{" "}
+          <Link href="/xp-guide" className="link">
+            Cách tính điểm →
+          </Link>
         </p>
       </div>
 

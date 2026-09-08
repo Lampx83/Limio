@@ -29,7 +29,9 @@ export interface LessonCompletedInput {
   lessonId: string;
 }
 
-const LESSON_COMPLETED_XP = 10;
+// export: dùng lại nguyên giá trị này cho trang giải thích cách tính điểm
+// (/xp-guide) — tránh chép tay một bộ số thứ hai rồi lệch dần với code thật.
+export const LESSON_COMPLETED_XP = 10;
 
 export interface LessonCompletedResult {
   xp: AwardResult;
@@ -126,7 +128,10 @@ export interface QuizSubmittedInput {
   elapsedSec: number;
 }
 
-const SPEED_RUN_THRESHOLD_SEC = 10;
+export const SPEED_RUN_THRESHOLD_SEC = 10;
+/** Base XP trước khi nhân độ khó/hệ số thích ứng — xem {@link adaptiveMultiplier}. */
+export const QUIZ_FIRST_TRY_BASE_XP = 50;
+export const QUIZ_RETRY_BASE_XP = 20;
 
 export interface QuizSubmittedResult {
   xp: AwardResult | null;
@@ -181,7 +186,8 @@ export async function onQuizSubmitted(
     );
   } else {
     const difficulty = input.difficulty ?? 1;
-    const baseAmount = (input.isFirstPass ? 50 : 20) * difficulty;
+    const baseAmount =
+      (input.isFirstPass ? QUIZ_FIRST_TRY_BASE_XP : QUIZ_RETRY_BASE_XP) * difficulty;
     const amount = Math.round(baseAmount * multiplier);
     // Reason stays in the canonical {first_try, retry} bucket so the daily cap
     // counts adaptive grants together with normal ones. The multiplier is
@@ -238,7 +244,7 @@ export async function onQuizSubmitted(
 // farming by intentionally re-failing then re-clearing (CLAUDE.md §5.5).
 // =====================================================================
 
-const MISCONCEPTION_RESOLVED_XP = 15;
+export const MISCONCEPTION_RESOLVED_XP = 15;
 
 export interface MisconceptionResolvedInput {
   userId: string;
@@ -253,7 +259,7 @@ export interface MisconceptionResolvedInput {
 // Lifetime-once per (user, packageId) via sourceId — anti-farm (CLAUDE.md §5.5).
 // =====================================================================
 
-const H5P_COMPLETED_XP = 20;
+export const H5P_COMPLETED_XP = 20;
 
 export interface H5pCompletedInput {
   userId: string;
@@ -312,8 +318,8 @@ export interface AssignmentDeepReflectionInput {
   reflectionLength: number;
 }
 
-const ASSIGNMENT_DEEP_REFLECTION_XP = 15;
-const REFLECTION_MIN_CHARS = 20;
+export const ASSIGNMENT_DEEP_REFLECTION_XP = 15;
+export const REFLECTION_MIN_CHARS = 20;
 
 export async function onAssignmentDeepReflection(
   input: AssignmentDeepReflectionInput,

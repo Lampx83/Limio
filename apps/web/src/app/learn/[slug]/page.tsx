@@ -110,16 +110,24 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
               tone="white"
             />
             <ProgressTile
-              label={`Level ${xp.level} · ${xp.levelName}`}
+              label="Điểm tương tác"
               value={`${xp.xp} XP`}
               hint={
-                xp.isMaxLevel ? null : `+${xp.xpToNext} → L${xp.level + 1}`
+                xp.isMaxLevel
+                  ? `Level ${xp.level} · ${xp.levelName} (tối đa)`
+                  : `Level ${xp.level} · ${xp.levelName} — +${xp.xpToNext} → L${xp.level + 1}`
               }
               pct={xp.levelProgressPct}
               barClass="bg-accent-300"
               tone="white"
             />
           </div>
+          <Link
+            href="/xp-guide"
+            className="mt-2 inline-block text-xs text-white/80 underline-offset-2 hover:underline"
+          >
+            Cách tính điểm →
+          </Link>
 
           {/* Action buttons */}
           <div className="mt-5 flex flex-wrap gap-2">
