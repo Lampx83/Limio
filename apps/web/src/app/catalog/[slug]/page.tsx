@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { getCourseDetail, CourseError } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import EnrollButton from "@/components/EnrollButton";
+import EnrollNudgeAction from "@/components/EnrollNudgeAction";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { isFree, formatPrice } from "@/lib/formatPrice";
@@ -271,15 +272,15 @@ export default async function CourseDetailPage({
             // invite_only không có nút đăng ký tự phục vụ nào để bấm — mời
             // "đăng ký ngay" ở đây là chỉ đường vào ngõ cụt. Khoá đó đã có
             // banner riêng "Cần link mời của lớp" phía dưới.
-            course.enrollMode === "open" &&
-            // Chỉ khoá THỰC SỰ miễn phí mới ghi "đăng ký miễn phí" — khoá có
-            // giá đã có ô giá + mã kích hoạt riêng trong sidebar, nói "miễn
-            // phí" ở đây với khoá đó là sai.
-            (!paymentEnabled || isFree(course.priceCents)) && (
+            course.enrollMode === "open" && (
               /* Trực quan hơn hẳn dòng chữ xám nhỏ trước đây — nói trước một
                  lần, thay vì để người ta tự suy ra từ việc bấm mà không có gì
-                 xảy ra. Nút đăng ký là EnrollButton thật (không phải link cuộn
-                 trang xuống) — bấm là ghi danh ngay tại chỗ. */
+                 xảy ra. Cùng một banner cho cả khoá miễn phí lẫn có phí: câu
+                 chữ không nhắc tới giá, nên đúng cho cả hai. EnrollNudgeAction
+                 tự quyết — khoá miễn phí thì bấm là ghi danh luôn; khoá có phí
+                 thì bấm "Đăng ký ngay" mở ngay tại chỗ ô giá + nhập mã kích
+                 hoạt, không cuộn trang xuống sidebar (sidebar còn ẩn trên
+                 mobile, cuộn-tới sẽ không tới đâu cả). */
               <div className="banner-info mt-3 flex flex-wrap items-center gap-3 rounded-2xl px-5 py-4">
                 <Lock className="h-5 w-5 shrink-0" aria-hidden />
                 <div className="min-w-0 flex-1">
@@ -291,16 +292,12 @@ export default async function CourseDetailPage({
                     nay.
                   </p>
                 </div>
-                <div className="shrink-0">
-                  <EnrollButton
-                    slug={params.slug}
-                    alreadyEnrolled={false}
-                    priceCents={course.priceCents}
-                    currency={course.currency}
-                    paymentEnabled={paymentEnabled}
-                    freeLabel="Đăng ký ngay"
-                  />
-                </div>
+                <EnrollNudgeAction
+                  slug={params.slug}
+                  priceCents={course.priceCents}
+                  currency={course.currency}
+                  paymentEnabled={paymentEnabled}
+                />
               </div>
             )}
 
