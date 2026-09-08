@@ -89,7 +89,7 @@ describe("redeemAccessCode", () => {
     const owner = await makeUser("redeem-owner@e.com");
     const courseId = await paidCourse(owner, "redeem-1");
     const learner = await makeUser("redeem-learner@e.com");
-    const [{ code }] = await generateAccessCodes(courseId, owner, 1);
+    const { code } = (await generateAccessCodes(courseId, owner, 1))[0]!;
 
     const result = await redeemAccessCode(learner, code);
     expect(result.created).toBe(true);
@@ -106,7 +106,7 @@ describe("redeemAccessCode", () => {
     const owner = await makeUser("redeem-norm-owner@e.com");
     const courseId = await paidCourse(owner, "redeem-norm");
     const learner = await makeUser("redeem-norm-learner@e.com");
-    const [{ code }] = await generateAccessCodes(courseId, owner, 1);
+    const { code } = (await generateAccessCodes(courseId, owner, 1))[0]!;
     const sloppy = code.toLowerCase().replace(/-/g, " ");
 
     const result = await redeemAccessCode(learner, sloppy);
@@ -118,7 +118,7 @@ describe("redeemAccessCode", () => {
     const courseId = await paidCourse(owner, "redeem-twice");
     const first = await makeUser("redeem-twice-a@e.com");
     const second = await makeUser("redeem-twice-b@e.com");
-    const [{ code }] = await generateAccessCodes(courseId, owner, 1);
+    const { code } = (await generateAccessCodes(courseId, owner, 1))[0]!;
 
     await redeemAccessCode(first, code);
     expect(await codeOf(redeemAccessCode(second, code))).toBe("code_already_used");
@@ -129,7 +129,7 @@ describe("redeemAccessCode", () => {
     const owner = await makeUser("redeem-bad-owner@e.com");
     const courseId = await paidCourse(owner, "redeem-bad");
     const learner = await makeUser("redeem-bad-learner@e.com");
-    const [row] = await generateAccessCodes(courseId, owner, 1);
+    const row = (await generateAccessCodes(courseId, owner, 1))[0]!;
     await revokeAccessCode(courseId, row.id);
 
     expect(await codeOf(redeemAccessCode(learner, "ZZZZ-ZZZZ-ZZZZ"))).toBe("code_not_found");
@@ -148,7 +148,7 @@ describe("redeemAccessCode", () => {
     await prisma.enrollment.create({
       data: { userId: learner, courseId, sectionId, courseVersion: 1 },
     });
-    const [{ code }] = await generateAccessCodes(courseId, owner, 1);
+    const { code } = (await generateAccessCodes(courseId, owner, 1))[0]!;
 
     const result = await redeemAccessCode(learner, code);
     expect(result.created).toBe(false);
@@ -162,7 +162,7 @@ describe("redeemAccessCode", () => {
     const owner = await makeUser("redeem-draft-owner@e.com");
     const courseId = await paidCourse(owner, "redeem-draft", { publish: false });
     const learner = await makeUser("redeem-draft-learner@e.com");
-    const [{ code }] = await generateAccessCodes(courseId, owner, 1);
+    const { code } = (await generateAccessCodes(courseId, owner, 1))[0]!;
 
     expect(await codeOf(redeemAccessCode(learner, code))).toBe("course_not_enrollable");
   });
@@ -173,7 +173,9 @@ describe("revokeAccessCode", () => {
     const owner = await makeUser("revoke-owner@e.com");
     const courseId = await paidCourse(owner, "revoke-1");
     const learner = await makeUser("revoke-learner@e.com");
-    const [unused, used] = await generateAccessCodes(courseId, owner, 2);
+    const generated = await generateAccessCodes(courseId, owner, 2);
+    const unused = generated[0]!;
+    const used = generated[1]!;
     await redeemAccessCode(learner, used.code);
 
     await revokeAccessCode(courseId, unused.id);
