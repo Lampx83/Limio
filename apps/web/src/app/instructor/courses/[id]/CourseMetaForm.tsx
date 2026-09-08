@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
+import { toast } from "@/lib/toast";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -125,8 +126,17 @@ export default function CourseMetaForm({
     });
     setBusy(false);
     if (res.ok) {
-      setOpen(false);
+      // Trước đây lưu xong thu gọn form về thẻ tóm tắt — bản thân việc thu
+      // gọn LÀ tín hiệu "đã lưu". Giữ form mở lại (dễ sửa tiếp, dễ soi đúng
+      // cái vừa đổi) thì tín hiệu đó mất, nên phải nói ra bằng toast — không
+      // thì lưu thành công và lưu thất bại trông giống hệt nhau.
+      toast.success("Đã lưu thay đổi");
       router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast.error("Lưu thất bại", {
+        description: data.error ?? "Vui lòng thử lại.",
+      });
     }
   }
 
