@@ -20,12 +20,18 @@ export default function EnrollButton({
   priceCents,
   currency = "VND",
   paymentEnabled = false,
+  // Chữ trên nút ở nhánh miễn phí. Mặc định "Đăng ký miễn phí" đứng cạnh ô
+  // giá/thẻ "Miễn phí" nên hợp ngữ cảnh; nơi nào không có gì để so sánh giá
+  // bên cạnh (banner "chưa đăng ký" trên trang khoá) thì truyền nhãn trung
+  // tính hơn như "Đăng ký ngay" — nút vẫn làm đúng một việc, chỉ đổi chữ.
+  freeLabel = "Đăng ký miễn phí",
 }: {
   slug: string;
   alreadyEnrolled: boolean;
   priceCents?: number | null;
   currency?: string;
   paymentEnabled?: boolean;
+  freeLabel?: string;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [code, setCode] = useState("");
@@ -127,7 +133,7 @@ export default function EnrollButton({
       disabled={submitting}
       className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:hover:scale-100"
     >
-      {submitting ? "Đang đăng ký…" : "Đăng ký miễn phí"}
+      {submitting ? "Đang đăng ký…" : freeLabel}
     </button>
   );
 }

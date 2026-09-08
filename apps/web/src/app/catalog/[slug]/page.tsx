@@ -298,6 +298,7 @@ export default async function CourseDetailPage({
                     priceCents={course.priceCents}
                     currency={course.currency}
                     paymentEnabled={paymentEnabled}
+                    freeLabel="Đăng ký ngay"
                   />
                 </div>
               </div>
