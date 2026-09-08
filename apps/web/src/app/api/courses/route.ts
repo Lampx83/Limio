@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCourse, listPublishedCourses } from "@feedbackme/core-lms";
+import { createCourse, isInstructor, listPublishedCourses } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
@@ -27,6 +27,12 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Instructor status is admin-granted, not self-serve — createCourse() itself
+  // no longer auto-promotes the caller (see courses.ts), so this is the one
+  // place that actually stops a learner from creating a course over the API.
+  if (!(await isInstructor(userId))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
   const body = await readJson(req);
   try {
     const result = await createCourse(userId, body);

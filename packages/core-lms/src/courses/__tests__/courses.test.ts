@@ -43,12 +43,8 @@ async function buildCourseTree(
 }
 
 describe("createCourse", () => {
-  it("AC-A2.1: creates draft course + owner CourseInstructor + auto-grants instructor role", async () => {
+  it("AC-A2.1: creates draft course + owner CourseInstructor", async () => {
     const userId = await makeUser("teacher@example.com");
-    const before = await prisma.userRole.findFirst({
-      where: { userId, role: { name: RoleName.Instructor } },
-    });
-    expect(before).toBeNull();
 
     const result = await createCourse(userId, {
       title: "Intro to BKT",
@@ -66,15 +62,16 @@ describe("createCourse", () => {
     expect(course.instructors[0]?.userId).toBe(userId);
     expect(course.instructors[0]?.role).toBe("owner");
 
-    const after = await prisma.userRole.findFirst({
+    // A2.x — instructor status is admin-granted, not self-serve: creating a
+    // course no longer auto-promotes the caller (see /api/courses route,
+    // which now gates who may even call createCourse over HTTP).
+    const grantedRole = await prisma.userRole.findFirst({
       where: { userId, role: { name: RoleName.Instructor } },
     });
-    expect(after).not.toBeNull();
+    expect(grantedRole).toBeNull();
 
     const audits = await prisma.auditLog.findMany({ where: { actorUserId: userId } });
-    const actions = audits.map((a) => a.action);
-    expect(actions).toContain("course.created");
-    expect(actions).toContain("role.granted");
+    expect(audits.map((a) => a.action)).toContain("course.created");
   });
 
   it("auto-generates unique slug on collision (-2, -3)", async () => {
