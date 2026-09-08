@@ -150,6 +150,31 @@ describe("awardXp", () => {
     expect(r.amountGranted).toBe(10);
   });
 
+  it("AC-C1.11: daily cap boundary is VN-local, not UTC — same VN day across a UTC-midnight crossing still counts toward the cap", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    // 2026-01-01T20:00Z = 2026-01-02T03:00 VN (3am, VN day Jan 2).
+    const earlyVnMorning = new Date("2026-01-01T20:00:00Z");
+    for (let i = 0; i < 10; i++) {
+      await prisma.xpTransaction.create({
+        data: {
+          userId, courseId, amount: 10,
+          reason: "lesson.completed", sourceId: `E-${i}`,
+          occurredAt: earlyVnMorning,
+        },
+      });
+    }
+    // 2026-01-02T03:00Z = 2026-01-02T10:00 VN (10am, SAME VN day Jan 2 —
+    // but a DIFFERENT UTC calendar day than the transactions above).
+    const sameVnDayLater = new Date("2026-01-02T03:00:00Z");
+    const eleventh = await awardXp(
+      { userId, courseId, amount: 10, reason: "lesson.completed", sourceId: "Later-1" },
+      undefined,
+      sameVnDayLater,
+    );
+    expect(eleventh.amountGranted).toBe(0);
+    expect(eleventh.storedReason).toBe("xp.capped.daily");
+  });
+
   it("getCourseXpProgress returns level + bracket math", async () => {
     const { userId, courseId } = await makeUserCourse();
     await awardXp({

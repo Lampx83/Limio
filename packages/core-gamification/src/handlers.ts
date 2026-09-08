@@ -86,9 +86,30 @@ export interface QuizStartedInput {
 export async function onQuizStarted(
   input: QuizStartedInput,
   db: PrismaClient = prisma,
-): Promise<{ badges: BadgeCheckResult }> {
+): Promise<{ badges: BadgeCheckResult; streak: StreakResult }> {
   const badges = await checkQuizStartedBadges(input, db);
-  return { badges };
+  const streak = await recordActivity(input.userId, input.courseId, db);
+  return { badges, streak };
+}
+
+// =====================================================================
+// AC-C4.9 — a streak should reflect ANY day the learner engaged with a
+// course, not only days they completed something. Viewing is XP-free
+// (no anti-farm concern: recordActivity is a same-VN-day no-op, so a
+// heartbeat firing every ~10s can't inflate the streak beyond +1/day).
+// =====================================================================
+
+export interface LessonViewedInput {
+  userId: string;
+  courseId: string;
+}
+
+export async function onLessonViewed(
+  input: LessonViewedInput,
+  db: PrismaClient = prisma,
+): Promise<{ streak: StreakResult }> {
+  const streak = await recordActivity(input.userId, input.courseId, db);
+  return { streak };
 }
 
 export interface QuizSubmittedInput {

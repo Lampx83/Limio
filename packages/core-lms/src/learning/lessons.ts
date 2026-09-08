@@ -38,6 +38,11 @@ async function getLessonContext(
   return { lessonId: row.id, courseId: row.module.courseId };
 }
 
+export interface TrackViewResult {
+  /** Course this lesson lives under — lets the caller wire gamification (streak) without a re-query. */
+  courseId: string;
+}
+
 /**
  * Heartbeat — caller should hit this every ~10s while watching a video,
  * or once on lesson load for non-video content.
@@ -48,7 +53,7 @@ export async function trackLessonView(
   lessonId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
-): Promise<void> {
+): Promise<TrackViewResult> {
   const ctx = await getLessonContext(lessonId, db);
   if (!ctx) throw new LearningError("lesson_not_found");
   if (!(await isUserEnrolled(userId, ctx.courseId, db))) {
@@ -72,6 +77,7 @@ export async function trackLessonView(
     { courseId: ctx.courseId },
     db,
   );
+  return { courseId: ctx.courseId };
 }
 
 export interface CompleteResult {

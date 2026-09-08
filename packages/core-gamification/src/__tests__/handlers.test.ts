@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
-import { onLessonCompleted, onQuizSubmitted } from "../handlers";
+import { onLessonCompleted, onLessonViewed, onQuizSubmitted } from "../handlers";
 
 async function makeUserCourse() {
   const user = await prisma.user.create({
@@ -86,4 +86,26 @@ describe("onQuizSubmitted", () => {
     });
     expect(r.xp?.amountGranted).toBe(50);
   });
+});
+
+describe("onLessonViewed", () => {
+  it("AC-C4.9: first view of the day extends the streak to 1, no XP", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    const r = await onLessonViewed({ userId, courseId });
+    expect(r.streak.currentStreak).toBe(1);
+    expect(r.streak.extended).toBe(true);
+    const xpTx = await prisma.xpTransaction.findFirst({ where: { userId, courseId } });
+    expect(xpTx).toBeNull();
+  });
+
+  it("AC-C4.9: repeated same-day views (heartbeat) don't inflate the streak", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    await onLessonViewed({ userId, courseId });
+    const second = await onLessonViewed({ userId, courseId });
+    const third = await onLessonViewed({ userId, courseId });
+    expect(second.streak.currentStreak).toBe(1);
+    expect(third.streak.currentStreak).toBe(1);
+    expect(third.streak.extended).toBe(false);
+  });
+
 });

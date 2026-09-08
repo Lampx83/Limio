@@ -1,6 +1,7 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { computeLevel, LEVEL_THRESHOLDS, levelName, MAX_LEVEL, nextLevelXp } from "./levels";
+import { periodRange } from "./leaderboard/periodKey";
 
 /**
  * Daily caps per (user, course, reason). Awards beyond the cap go through
@@ -54,21 +55,21 @@ export class XpError extends Error {
   }
 }
 
-function startOfTodayUtc(): Date {
-  const d = new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-}
-
 /**
  * Award XP for a (user, course, reason, sourceId) tuple. Idempotent on the
  * tuple — re-calling with the same sourceId returns awarded=false and the
  * already-stored result. Capped at the daily limit per reason; over-cap
  * grants are recorded with amount=0 and reason="xp.capped.daily".
+ *
+ * The daily window is the VN-local calendar day (via `periodRange`), not
+ * UTC — matching streak.ts and the leaderboard's own day bucketing. Using
+ * UTC here would reset the cap at 07:00 VN instead of midnight, letting a
+ * learner active before and after that instant double up within one VN day.
  */
 export async function awardXp(
   input: AwardInput,
   db: PrismaClient = prisma,
+  now: Date = new Date(),
 ): Promise<AwardResult> {
   if (input.amount < 0) throw new XpError("validation_failed");
 
@@ -111,7 +112,7 @@ export async function awardXp(
         courseId: input.courseId,
         reason: input.reason,
         amount: { gt: 0 },
-        occurredAt: { gte: startOfTodayUtc() },
+        occurredAt: { gte: periodRange("daily", now).start },
       },
     });
     if (todayCount >= cap) {

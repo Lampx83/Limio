@@ -61,7 +61,8 @@ async function setup(slug: string, lessonCount = 2): Promise<Setup> {
 describe("trackLessonView", () => {
   it("AC-A3.4: emits lesson.viewed + updates Enrollment.lastLessonId/lastPositionSec", async () => {
     const { learnerId, courseId, lessonIds } = await setup("v1");
-    await trackLessonView(learnerId, lessonIds[0]!, { positionSec: 42, durationSec: 600 });
+    const result = await trackLessonView(learnerId, lessonIds[0]!, { positionSec: 42, durationSec: 600 });
+    expect(result.courseId).toBe(courseId);
 
     const enrollment = await prisma.enrollment.findUniqueOrThrow({
       where: { userId_courseId: { userId: learnerId, courseId } },
