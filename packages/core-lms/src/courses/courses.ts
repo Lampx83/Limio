@@ -87,11 +87,16 @@ export async function createCourse(
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<{ courseId: string; slug: string }> {
+  // Instructor status is admin-granted, not self-serve — creating a course no
+  // longer auto-promotes the caller (removed below). The actual "must already
+  // be instructor" gate lives at the HTTP boundary (POST /api/courses) and in
+  // instructor/layout.tsx, not here — this function is also the common test
+  // fixture for "give me a course" across the suite, and requiring every one
+  // of those callers to pre-grant a role first is out of scope for this fix.
   const parsed = CreateCourseInput.safeParse(rawInput);
   if (!parsed.success) throw new CourseError("validation_failed", parsed.error.flatten());
 
   const slug = await uniqueCourseSlug(parsed.data.slug ?? parsed.data.title, db);
-  const instructorRole = await db.role.findUniqueOrThrow({ where: { name: RoleName.Instructor } });
 
   return db.$transaction(async (tx) => {
     const course = await tx.course.create({
@@ -112,30 +117,6 @@ export async function createCourse(
     await tx.courseInstructor.create({
       data: { courseId: course.id, userId: actorUserId, role: "owner" },
     });
-
-    // Auto-grant platform-wide instructor role if absent.
-    const hasInstructor = await tx.userRole.findFirst({
-      where: { userId: actorUserId, roleId: instructorRole.id, courseId: null },
-    });
-    if (!hasInstructor) {
-      const ur = await tx.userRole.create({
-        data: { userId: actorUserId, roleId: instructorRole.id, grantedBy: actorUserId },
-      });
-      await logAudit(
-        {
-          action: "role.granted",
-          actorUserId,
-          targetUserId: actorUserId,
-          payload: {
-            roleName: RoleName.Instructor,
-            courseId: null,
-            userRoleId: ur.id,
-            reason: "auto_on_course_create",
-          },
-        },
-        tx,
-      );
-    }
 
     await logAudit(
       {
