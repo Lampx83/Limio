@@ -246,6 +246,19 @@ export default function QuizPlayer({
     }
   }
 
+  /**
+   * "Đã trả lời" phải khớp với điều kiện server thật sự chấp nhận — không chỉ
+   * có response. Trước đây `requireConfidence` chỉ chặn `saveAnswer` gọi API
+   * (im lặng), còn đếm/tô màu/nút Nộp vẫn coi câu đó là xong vì chỉ nhìn
+   * `response`. Hậu quả: học viên chọn đáp án, không để ý sao độ tự tin, bấm
+   * Nộp không bị cảnh báo — và câu đó chưa từng được lưu, tính như bỏ trống.
+   */
+  function isAnswerIncomplete(question: Question, answer: AnswerState | undefined): boolean {
+    if (isResponseEmpty(question, answer?.response ?? null)) return true;
+    if (quiz.requireConfidence && (answer?.confidence ?? null) === null) return true;
+    return false;
+  }
+
   async function saveAnswer(question: Question) {
     const a = answers[question.id];
     if (!a) return;
@@ -266,7 +279,7 @@ export default function QuizPlayer({
   /** Đếm ngay tại thời điểm gọi — `answeredCount` bên dưới nằm sau early return. */
   function answeredCountNow() {
     const qs = data?.quiz.questions ?? [];
-    return qs.filter((q) => !isResponseEmpty(q, answers[q.id]?.response ?? null)).length;
+    return qs.filter((q) => !isAnswerIncomplete(q, answers[q.id])).length;
   }
 
   /**
@@ -291,8 +304,11 @@ export default function QuizPlayer({
     // của người học. Hỏi lại, và nói rõ còn thiếu bao nhiêu câu.
     const missing = (data?.quiz.questions.length ?? 0) - answeredCountNow();
     if (missing > 0 && !opts?.auto) {
+      const reason = quiz.requireConfidence
+        ? "chưa trả lời hoặc chưa chọn độ tự tin"
+        : "chưa trả lời";
       const ok = window.confirm(
-        `Bạn còn ${missing} câu chưa trả lời. Nộp bài bây giờ thì những câu đó tính là bỏ trống và không sửa lại được.\n\nVẫn nộp?`,
+        `Bạn còn ${missing} câu ${reason}. Nộp bài bây giờ thì những câu đó tính là bỏ trống và không sửa lại được.\n\nVẫn nộp?`,
       );
       if (!ok) return;
     }
@@ -316,7 +332,7 @@ export default function QuizPlayer({
   }
 
   const answeredCount = quiz.questions.filter(
-    (q) => !isResponseEmpty(q, answers[q.id]?.response ?? null),
+    (q) => !isAnswerIncomplete(q, answers[q.id]),
   ).length;
 
   // Timer: dùng attempt.startedAt + quiz.timeLimitSec để tính thời gian còn lại.
@@ -423,6 +439,12 @@ export default function QuizPlayer({
                     setTimeout(() => saveAnswer(currentQ), 0);
                   }}
                 />
+                {!isResponseEmpty(currentQ, answers[currentQ.id]?.response ?? null) &&
+                  (answers[currentQ.id]?.confidence ?? null) === null && (
+                    <p className="banner-warning w-full py-1.5 text-xs">
+                      Chưa chọn độ tự tin — câu này chưa được lưu, cần chọn trước khi nộp bài.
+                    </p>
+                  )}
               </div>
             )}
           </section>
@@ -499,10 +521,7 @@ export default function QuizPlayer({
             </p>
             <div className="grid grid-cols-6 gap-1.5">
               {quiz.questions.map((q, idx) => {
-                const answered = !isResponseEmpty(
-                  q,
-                  answers[q.id]?.response ?? null,
-                );
+                const answered = !isAnswerIncomplete(q, answers[q.id]);
                 const isCurrent = idx === currentStepIndex;
                 return (
                   <button
@@ -562,10 +581,7 @@ export default function QuizPlayer({
         </div>
         <div className="flex flex-wrap gap-1">
           {quiz.questions.map((q, idx) => {
-            const answered = !isResponseEmpty(
-              q,
-              answers[q.id]?.response ?? null,
-            );
+            const answered = !isAnswerIncomplete(q, answers[q.id]);
             const isCurrent = idx === currentStepIndex;
             return (
               <button
