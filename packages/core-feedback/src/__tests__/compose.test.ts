@@ -7,6 +7,8 @@ const full: ComposeInput = {
   lessonTitle: "Bài 1.2 · Tâm lý học nhận thức trong UI/UX",
   chosenLabels: ["Sinh viên chủ quan, cần nhắc đọc kỹ hướng dẫn hơn"],
   correctLabels: ["Mô hình của hệ thống và mô hình của người học lệch nhau"],
+  typedResponse: null,
+  orderedCorrectLabels: [],
   misconceptionName: "Đổ lỗi cho người dùng",
   explanation: "Thanh tiến độ đang đếm số bài đã mở, không phải số bài đã hiểu.",
   templateBody: "Đoạn văn dùng chung cho nhiều câu.",
@@ -71,6 +73,8 @@ describe("composeFeedbackBody — khung Hattie", () => {
       lessonTitle: null,
       chosenLabels: [],
       correctLabels: [],
+      typedResponse: null,
+      orderedCorrectLabels: [],
       misconceptionName: null,
       explanation: null,
       templateBody: null,
@@ -119,5 +123,58 @@ describe("composeFeedbackBody — không bao giờ chạm cấp `self`", () => {
     for (const out of outs) {
       expect(out).not.toMatch(/giỏi|thông minh|kém|dốt|lười|cố lên/i);
     }
+  });
+});
+
+describe("composeFeedbackBody — fill_in (chuỗi tự do)", () => {
+  it("nêu đúng chữ đã gõ, không lẫn với chosenLabels", () => {
+    const out = composeFeedbackBody({
+      ...full,
+      chosenLabels: [],
+      typedResponse: "trông ra sau",
+      orderedCorrectLabels: [],
+    });
+    expect(out).toContain("Mình thấy bạn điền “trông ra sau”");
+    expect(out).toContain("đáp án đúng là");
+    expect(out).not.toContain("Mình thấy bạn chọn");
+  });
+
+  it("gõ trắng thì không bịa ra nước feed-back", () => {
+    const out = composeFeedbackBody({
+      ...full,
+      chosenLabels: [],
+      typedResponse: "   ",
+      orderedCorrectLabels: [],
+    });
+    expect(out).not.toContain("Mình thấy bạn điền");
+    expect(out).toContain("Đáp án đúng là");
+  });
+});
+
+describe("composeFeedbackBody — ordering (thứ tự, không phải isCorrect)", () => {
+  it("không phương án nào isCorrect vẫn nói được thứ tự đúng, nhờ orderedCorrectLabels", () => {
+    const out = composeFeedbackBody({
+      ...full,
+      chosenLabels: [],
+      correctLabels: [], // đúng thực tế: ordering không đánh dấu isCorrect
+      typedResponse: null,
+      orderedCorrectLabels: ["Nghiên cứu", "Cấu trúc", "Khung sườn", "Bề mặt"],
+    });
+    expect(out).toContain("Thứ tự đúng là:");
+    expect(out).toContain("Nghiên cứu” → “Cấu trúc” → “Khung sườn” → “Bề mặt");
+  });
+
+  it("thiếu cả correctLabels lẫn orderedCorrectLabels thì bỏ hẳn nước feed-back, không im lặng đến mức bịa", () => {
+    const out = composeFeedbackBody({
+      ...full,
+      chosenLabels: [],
+      correctLabels: [],
+      typedResponse: null,
+      orderedCorrectLabels: [],
+    });
+    expect(out).not.toContain("Đáp án đúng là");
+    expect(out).not.toContain("Thứ tự đúng là");
+    // Vẫn còn giải thích + feed forward — không rơi về fallback trắng.
+    expect(out).toContain("Thanh tiến độ đang đếm");
   });
 });

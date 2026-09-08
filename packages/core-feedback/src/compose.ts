@@ -28,10 +28,27 @@ export interface ComposeInput {
   learningObjective: string | null;
   /** Tên bài học chứa câu hỏi, dùng làm proxy cho feed up. */
   lessonTitle: string | null;
-  /** Nhãn các phương án người học đã chọn. Rỗng với matching/ordering. */
+  /**
+   * Nhãn các phương án người học đã chọn (mcq/true_false). Rỗng với các loại
+   * câu khác — mỗi loại có nước riêng nói "bạn đã làm gì" (`typedResponse`,
+   * `orderedCorrectLabels`), matching thì không loại nào áp dụng được.
+   */
   chosenLabels: string[];
-  /** Nhãn các phương án đúng. */
+  /** Nhãn các phương án đúng — mcq/true_false/fill_in đều đánh dấu `isCorrect`. */
   correctLabels: string[];
+  /**
+   * Chuỗi người học đã gõ, cho câu điền từ. Chấm bằng so khớp chuỗi
+   * (`grading.ts` case "fill_in"), không phải chọn phương án, nên tách khỏi
+   * `chosenLabels` — không mang rủi ro khớp giả như ordering.
+   */
+  typedResponse: string | null;
+  /**
+   * Thứ tự đúng cho câu sắp xếp, theo `orderIndex` — KHÔNG lấy từ `isCorrect`.
+   * `grading.ts` case "ordering" chấm bằng so cả chuỗi với thứ tự chuẩn, nên
+   * không phương án nào được đánh dấu `isCorrect=true` riêng lẻ; thiếu trường
+   * này thì nước feed-back của câu ordering hoàn toàn im lặng.
+   */
+  orderedCorrectLabels: string[];
   /**
    * Tên ngắn của chỗ nhầm (`Misconception.name`), KHÔNG phải đoạn văn dùng
    * chung. Null khi không nhận diện được, hoặc khi lớp đang ở điều kiện đối
@@ -80,12 +97,23 @@ export function composeFeedbackBody(input: ComposeInput): string {
   // ── feed back: tôi đang ở đâu ─────────────────────────────────────────────
   const chosen = input.chosenLabels.filter((s) => s.trim());
   const correct = input.correctLabels.filter((s) => s.trim());
+  const ordered = input.orderedCorrectLabels.filter((s) => s.trim());
+  const typed = input.typedResponse?.trim() || "";
+
   if (chosen.length > 0 && correct.length > 0) {
     moves.push(
       `Mình thấy bạn chọn ${joinLabels(chosen)}, trong khi đáp án đúng là ${joinLabels(correct)}.`,
     );
+  } else if (typed && correct.length > 0) {
+    // fill_in: chuỗi tự do, không phải chọn phương án — nêu đúng chữ đã gõ.
+    moves.push(
+      `Mình thấy bạn điền ${quote(typed)}, trong khi đáp án đúng là ${joinLabels(correct)}.`,
+    );
+  } else if (ordered.length > 0) {
+    // ordering: không phương án nào tự nó "đúng/sai" — đúng ở chỗ thứ tự.
+    moves.push(`Thứ tự đúng là: ${ordered.map(quote).join(" → ")}.`);
   } else if (correct.length > 0) {
-    // matching / ordering: không nói được "bạn chọn gì", nhưng vẫn nêu được đáp án.
+    // matching: không nói được "bạn chọn gì", nhưng vẫn nêu được đáp án.
     moves.push(`Đáp án đúng là ${joinLabels(correct)}.`);
   }
 
@@ -107,7 +135,13 @@ export function composeFeedbackBody(input: ComposeInput): string {
 
   if (moves.length === 0) return FALLBACK;
   // Chỉ có mỗi feed up thì chưa nói được gì về bài làm — thêm câu chốt.
-  if (moves.length === 1 && !explanation && chosen.length === 0) {
+  if (
+    moves.length === 1 &&
+    !explanation &&
+    chosen.length === 0 &&
+    ordered.length === 0 &&
+    !typed
+  ) {
     moves.push(FALLBACK);
   }
   return moves.join("\n\n");

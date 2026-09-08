@@ -80,6 +80,7 @@ export async function generateDiagnosticFeedback(
               id: true,
               label: true,
               isCorrect: true,
+              orderIndex: true,
               misconceptionId: true,
               misconception: { select: { id: true, code: true, name: true } },
             },
@@ -207,11 +208,30 @@ export async function generateDiagnosticFeedback(
             .map((o) => o.label)
         : [];
 
+    // fill_in chấm bằng so khớp chuỗi (grading.ts), không phải chọn phương án —
+    // nêu đúng chữ người học đã gõ, tách khỏi chosenLabels.
+    const typedResponse =
+      r.question.type === "fill_in" && typeof r.response === "string"
+        ? r.response
+        : null;
+
+    // ordering chấm bằng so cả chuỗi với orderIndex (grading.ts case
+    // "ordering"), nên không phương án nào tự nó isCorrect=true — thứ tự
+    // chuẩn là nguồn duy nhất để nói "đáp án đúng" cho loại câu này.
+    const orderedCorrectLabels =
+      r.question.type === "ordering"
+        ? [...r.question.options]
+            .sort((a, b) => a.orderIndex - b.orderIndex)
+            .map((o) => o.label)
+        : [];
+
     const body = composeFeedbackBody({
       learningObjective: r.question.learningObjective,
       lessonTitle: r.question.quiz.lesson?.title ?? null,
       chosenLabels,
       correctLabels: r.question.options.filter((o) => o.isCorrect).map((o) => o.label),
+      typedResponse,
+      orderedCorrectLabels,
       misconceptionName,
       explanation: r.question.explanation,
       templateBody: template?.body ?? null,
