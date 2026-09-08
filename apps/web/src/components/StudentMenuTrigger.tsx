@@ -6,7 +6,7 @@ import { STUDENT_MENU_TOGGLE_EVENT } from "./StudentLeftMenu";
 
 type Variant = "header" | "floating";
 
-const PATH_PREFIXES = ["/me", "/learn/", "/catalog", "/tournaments", "/leaderboard"];
+const PATH_PREFIXES = ["/me", "/learn/"];
 
 function shouldShow(pathname: string): boolean {
   return PATH_PREFIXES.some((p) => pathname === p || pathname.startsWith(p));
