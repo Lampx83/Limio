@@ -177,6 +177,26 @@ export async function updateCourse(
       if (cur[flag] !== to) changes.push({ action: AUDITED_FLAGS[flag], from: cur[flag], to });
     }
   }
+  // Bất biến: "Chỉ vào bằng link mời lớp" và thu phí không đi cùng nhau.
+  // Link mời không có nơi nào để trả tiền (không UI nhập mã kích hoạt, trang
+  // /enroll/[code] không xử lý lỗi đòi thanh toán) — khoá invite_only mà vẫn
+  // giữ giá là sinh mã xong không ai có chỗ dùng. Ép ở đây, không chỉ ở
+  // CourseMetaForm, để không đường nào khác (kể cả gọi API thẳng) tạo lại
+  // được tổ hợp đó. Chỉ query thêm khi thực sự đụng tới 1 trong 2 trường.
+  if ("enrollMode" in data || "priceCents" in data) {
+    const resultingEnrollMode =
+      (data as { enrollMode?: string }).enrollMode ??
+      (
+        await db.course.findUniqueOrThrow({
+          where: { id: courseId },
+          select: { enrollMode: true },
+        })
+      ).enrollMode;
+    if (resultingEnrollMode === "invite_only") {
+      (data as Record<string, unknown>).priceCents = null;
+    }
+  }
+
   await db.course.update({ where: { id: courseId }, data });
   for (const c of changes) {
     await logAudit(

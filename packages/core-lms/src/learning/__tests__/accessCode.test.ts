@@ -72,6 +72,20 @@ describe("generateAccessCodes", () => {
     expect(after.every((r) => r.priceCentsSnapshot === 250_000)).toBe(true);
   });
 
+  it("từ chối sinh mã cho khoá đang ở chế độ link mời — không ai có chỗ dùng mã", async () => {
+    const owner = await makeUser("gen-invite-owner@e.com");
+    const courseId = await paidCourse(owner, "gen-invite");
+    await updateCourse(owner, courseId, { enrollMode: "invite_only" });
+
+    // updateCourse đã tự xoá giá khi chuyển invite_only (bất biến ở courses.ts).
+    // Test này khẳng định lớp phòng thủ THỨ HAI ở generateAccessCodes vẫn chặn
+    // đúng, để lỡ có đường nào khác đặt được invite_only+có giá thì cũng không
+    // sinh ra mã vô dụng.
+    await prisma.course.update({ where: { id: courseId }, data: { priceCents: 199_000 } });
+
+    expect(await codeOf(generateAccessCodes(courseId, owner, 1))).toBe("course_invite_only");
+  });
+
   it("từ chối số lượng không hợp lệ và khoá không tồn tại", async () => {
     const owner = await makeUser("gen-bad-owner@e.com");
     const courseId = await paidCourse(owner, "gen-bad");

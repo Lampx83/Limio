@@ -63,7 +63,9 @@ export function mapKnownError(err: unknown): NextResponse | null {
     const status =
       err.code === "course_not_found" || err.code === "code_not_found"
         ? 404
-        : err.code === "code_already_used" || err.code === "course_not_enrollable"
+        : err.code === "code_already_used" ||
+            err.code === "course_not_enrollable" ||
+            err.code === "course_invite_only"
           ? 409
           : err.code === "code_revoked"
             ? 410

@@ -213,6 +213,50 @@ describe("publish flow", () => {
     }
   });
 
+  it("chuyển sang invite_only xoá giá — link mời không có nơi nào để trả tiền", async () => {
+    const ownerId = await makeUser("o-invite-price@example.com");
+    const c = await createCourse(ownerId, { title: "Invite price", description: "x" });
+    await updateCourse(ownerId, c.courseId, { priceCents: 199_000, currency: "VND" });
+    let row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.priceCents).toBe(199_000);
+
+    await updateCourse(ownerId, c.courseId, { enrollMode: "invite_only" });
+    row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.priceCents).toBeNull();
+  });
+
+  it("đặt giá và invite_only trong cùng một lần gọi vẫn ưu tiên xoá giá", async () => {
+    const ownerId = await makeUser("o-invite-price-same-call@example.com");
+    const c = await createCourse(ownerId, { title: "Invite price same call", description: "x" });
+
+    await updateCourse(ownerId, c.courseId, {
+      priceCents: 250_000,
+      enrollMode: "invite_only",
+    });
+    const row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.priceCents).toBeNull();
+    expect(row.enrollMode).toBe("invite_only");
+  });
+
+  it("khoá invite_only từ trước, chỉ sửa giá mà không đổi enrollMode, vẫn bị ép về null", async () => {
+    const ownerId = await makeUser("o-invite-already@example.com");
+    const c = await createCourse(ownerId, { title: "Invite already", description: "x" });
+    await updateCourse(ownerId, c.courseId, { enrollMode: "invite_only" });
+
+    await updateCourse(ownerId, c.courseId, { priceCents: 50_000 });
+    const row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.priceCents).toBeNull();
+  });
+
+  it("khoá open đặt giá bình thường, không đụng tới trường không liên quan", async () => {
+    const ownerId = await makeUser("o-open-price@example.com");
+    const c = await createCourse(ownerId, { title: "Open price", description: "x" });
+    await updateCourse(ownerId, c.courseId, { priceCents: 99_000, currency: "VND" });
+    const row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.priceCents).toBe(99_000);
+    expect(row.enrollMode).toBe("open");
+  });
+
   it("rejects publish on archived course", async () => {
     const ownerId = await makeUser("o3@example.com");
     const { courseId } = await buildCourseTree(ownerId, "p3");

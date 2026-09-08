@@ -16,6 +16,7 @@ export class AccessCodeError extends Error {
   constructor(
     public readonly code:
       | "course_not_found"
+      | "course_invite_only"
       | "validation_failed"
       | "code_not_found"
       | "code_already_used"
@@ -74,9 +75,16 @@ export async function generateAccessCodes(
   }
   const course = await db.course.findUnique({
     where: { id: courseId },
-    select: { priceCents: true, currency: true },
+    select: { priceCents: true, currency: true, enrollMode: true },
   });
   if (!course) throw new AccessCodeError("course_not_found");
+  // Bất biến khớp với updateCourse (core-lms/courses/courses.ts): invite_only
+  // luôn priceCents=null, nên trường hợp này chỉ xảy ra nếu ai đó gọi thẳng
+  // Prisma/SQL bỏ qua updateCourse — sinh mã cho một khoá không ai vào catalog
+  // thấy được ô nhập mã (trang link mời không có UI redeem) là công vô ích.
+  if (course.enrollMode === "invite_only") {
+    throw new AccessCodeError("course_invite_only");
+  }
 
   const created: GeneratedAccessCode[] = [];
   for (let i = 0; i < count; i++) {

@@ -189,40 +189,6 @@ export default function CourseMetaForm({
           />
         </div>
       </div>
-
-      {/* Pricing */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="sm:col-span-2">
-          <label className="label" htmlFor="cm-price">
-            Giá khoá học
-          </label>
-          <div className="mt-1.5 flex gap-2">
-            <input
-              id="cm-price"
-              type="number"
-              min={0}
-              step={1000}
-              value={priceCents}
-              onChange={(e) => setPriceCents(e.target.value)}
-              placeholder="Để trống = miễn phí"
-              className="input flex-1"
-            />
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="select w-24"
-            >
-              <option value="VND">VND</option>
-              <option value="USD">USD</option>
-            </select>
-          </div>
-          <p className="mt-1 text-xs text-faint">
-            {currency === "VND"
-              ? "Nhập số nguyên (đồng). Ví dụ: 299000"
-              : "Nhập số cents. Ví dụ: 999 = $9.99"}
-          </p>
-        </div>
-      </div>
       <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
         <label className="flex items-start gap-3 cursor-pointer">
           <input
@@ -245,30 +211,86 @@ export default function CourseMetaForm({
       <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
         <fieldset className="mb-3 border-b border-token pb-3">
           <legend className="text-sm font-semibold">Ai vào được khoá này</legend>
-          {(
-            [
-              ["open", "Mở — ai cũng tự đăng ký được", "Trang giới thiệu có nút đăng ký."],
-              [
-                "invite_only",
-                "Chỉ vào bằng link mời lớp",
-                "Trang giới thiệu bỏ nút đăng ký. Chỉ ai có link mời của một lớp mới vào được, và vào thẳng đúng lớp đó.",
-              ],
-            ] as const
-          ).map(([val, nhan, mo]) => (
-            <label key={val} className="flex cursor-pointer items-start gap-3 py-1.5">
-              <input
-                type="radio"
-                name="enrollMode"
-                checked={enrollMode === val}
-                onChange={() => setEnrollMode(val)}
-                className="mt-1 h-4 w-4 shrink-0"
-              />
-              <span>
-                <span className="text-sm font-medium">{nhan}</span>
-                <span className="mt-0.5 block text-xs text-muted">{mo}</span>
+          <label className="flex cursor-pointer items-start gap-3 py-1.5">
+            <input
+              type="radio"
+              name="enrollMode"
+              checked={enrollMode === "open"}
+              onChange={() => setEnrollMode("open")}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="text-sm font-medium">Mở — ai cũng tự đăng ký được</span>
+              <span className="mt-0.5 block text-xs text-muted">
+                Trang giới thiệu có nút đăng ký (miễn phí) hoặc ô nhập mã kích
+                hoạt (nếu đặt giá bên dưới).
               </span>
-            </label>
-          ))}
+              {/* Giá chỉ có nghĩa ở nhánh "Mở": link mời không có nơi nào để
+                  trả tiền — trang /enroll/[code] không có UI nhập mã, không xử
+                  lý lỗi đòi thanh toán. Đặt lồng trong nhánh này thay vì để một
+                  mục Pricing riêng, để không ai đặt được giá cho khoá invite_only
+                  trên chính giao diện — server (updateCourse) vẫn ép lại bất
+                  biến này dù client có lỡ gửi gì. */}
+              {enrollMode === "open" && (
+                <span className="mt-2 flex gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={priceCents}
+                    onChange={(e) => setPriceCents(e.target.value)}
+                    placeholder="Để trống = miễn phí"
+                    className="input flex-1"
+                    aria-label="Giá khoá học"
+                  />
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className="select w-24"
+                  >
+                    <option value="VND">VND</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </span>
+              )}
+              {enrollMode === "open" && (
+                <span className="mt-1 block text-xs text-faint">
+                  {currency === "VND"
+                    ? "Nhập số nguyên (đồng). Ví dụ: 299000."
+                    : "Nhập số cents. Ví dụ: 999 = $9.99."}{" "}
+                  Có giá → sinh mã kích hoạt ở mục bên dưới sau khi lưu.
+                </span>
+              )}
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 py-1.5">
+            <input
+              type="radio"
+              name="enrollMode"
+              checked={enrollMode === "invite_only"}
+              onChange={() => {
+                if (priceCents.trim() !== "") {
+                  const priceLabel = `${Number(priceCents).toLocaleString("vi-VN")} ${currency}`;
+                  const ok = window.confirm(
+                    `Khoá đang có giá ${priceLabel}. Chuyển sang "Chỉ vào bằng link mời lớp" sẽ xoá giá này — khoá trở thành miễn phí cho người có link. Tiếp tục?`,
+                  );
+                  if (!ok) return;
+                  setPriceCents("");
+                }
+                setEnrollMode("invite_only");
+              }}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <span>
+              <span className="text-sm font-medium">Chỉ vào bằng link mời lớp</span>
+              <span className="mt-0.5 block text-xs text-muted">
+                Trang giới thiệu bỏ nút đăng ký. Chỉ ai có link mời của một lớp
+                mới vào được, và vào thẳng đúng lớp đó. Chế độ này luôn miễn
+                phí — muốn thu tiền, chọn &ldquo;Mở&rdquo; ở trên rồi phát mã
+                kích hoạt.
+              </span>
+            </span>
+          </label>
           {/* Đổi sang chỉ-mời không đuổi ai ra: nó chặn cửa, không dọn nhà. */}
           {enrollMode === "invite_only" && initial.enrollMode === "open" && (
             <p className="mt-1 text-xs text-accent-700">
@@ -294,6 +316,14 @@ export default function CourseMetaForm({
               Tắt → bài học yêu cầu đăng nhập như bình thường.
               Chỉ có hiệu lực khi course đã publish; course draft không bao giờ công khai.
             </p>
+            {publicAccess && enrollMode === "open" && priceCents.trim() !== "" && (
+              <p className="mt-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-xs text-warning-800">
+                ⚠ Đang thu phí nhưng bật công khai — ai cũng đọc được hết nội
+                dung miễn phí, mất lý do trả tiền. Muốn học viên xem thử trước
+                khi mua, dùng nút &ldquo;Cho preview&rdquo; ở từng bài thay vì
+                bật cả khoá.
+              </p>
+            )}
           </div>
         </label>
       </div>

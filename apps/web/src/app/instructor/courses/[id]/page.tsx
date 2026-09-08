@@ -322,11 +322,18 @@ export default async function InstructorCourseEditPage({
           </section>
           )}
 
-          {canEdit && course.priceCents !== null && course.priceCents > 0 && (
-            <section>
-              <AccessCodesPanel courseId={course.id} />
-            </section>
-          )}
+          {canEdit &&
+            course.priceCents !== null &&
+            course.priceCents > 0 &&
+            course.enrollMode === "open" && (
+              // "Chỉ vào bằng link mời lớp" + có giá là bất biến bị cấm ở
+              // updateCourse (courses.ts) — invite_only luôn priceCents=null.
+              // Điều kiện enrollMode ở đây chỉ để phòng dữ liệu cũ/lệch,
+              // không phải nhánh sẽ thực sự chạy trong luồng bình thường.
+              <section>
+                <AccessCodesPanel courseId={course.id} />
+              </section>
+            )}
 
           <section>
             <h2 className="mb-3 text-base font-semibold">Giảng viên</h2>
