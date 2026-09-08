@@ -88,9 +88,12 @@ export default async function CatalogPage({
               : "Chưa có khóa học nào được publish."}
           </p>
         </div>
-        {isInstructor && (
-          <Link href="/instructor/dashboard" className="btn-secondary btn-sm">
-            Quay lại Instructor Studio →
+        {session?.user?.id && (
+          <Link
+            href={isInstructor ? "/instructor/dashboard" : "/me/dashboard"}
+            className="btn-secondary btn-sm"
+          >
+            {isInstructor ? "Quay lại Workspace giảng viên →" : "Quay lại workspace học viên →"}
           </Link>
         )}
       </div>
