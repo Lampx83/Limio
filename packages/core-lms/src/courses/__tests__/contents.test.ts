@@ -31,6 +31,20 @@ describe("createContentItem — per-type payload validation", () => {
     expect(row.type).toBe("video");
   });
 
+  it("A2.7: video accepts transcriptUrl as an uploaded same-origin path, not just an absolute URL", async () => {
+    const { userId, lessonId } = await setup();
+    const item = await createContentItem(userId, lessonId, {
+      type: "video",
+      orderIndex: 0,
+      payload: {
+        url: "https://www.youtube.com/watch?v=abc12345678",
+        transcriptUrl: "/api/lesson-media/transcripts/u-123-abc.vtt",
+      },
+    });
+    const row = await prisma.contentItem.findUniqueOrThrow({ where: { id: item.contentItemId } });
+    expect(row.type).toBe("video");
+  });
+
   it("video rejects missing url", async () => {
     const { userId, lessonId } = await setup();
     await expect(
