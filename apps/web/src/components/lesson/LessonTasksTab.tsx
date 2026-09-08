@@ -62,6 +62,11 @@ function StatusChip({
 }
 
 function QuizCard({ item, courseSlug }: { item: QuizItem; courseSlug: string }) {
+  // Đã nộp nhưng chưa đạt: bài học vẫn tính hoàn thành (xem autoComplete ở
+  // page.tsx — tiêu chí là "đã nộp", không phải "đã đạt"), nên cần một tín
+  // hiệu riêng, rõ ràng để học viên không lầm tưởng thế là xong — đổi cả màu
+  // thẻ lẫn dòng chữ, không chỉ cái chip nhỏ ở góc.
+  const notPassed = item.attempted && item.passed === false;
   const chip = !item.attempted ? (
     <StatusChip variant="todo">Chưa làm</StatusChip>
   ) : item.passed ? (
@@ -77,12 +82,18 @@ function QuizCard({ item, courseSlug }: { item: QuizItem; courseSlug: string }) 
   return (
     <Link
       href={`/learn/${courseSlug}/quizzes/${item.id}`}
-      className="card-hover group flex items-center justify-between gap-3"
+      className={`card-hover group flex items-center justify-between gap-3 ${
+        notPassed ? "border-danger-100 bg-danger-50" : ""
+      }`}
     >
       <div className="flex min-w-0 items-center gap-3">
         <span
           aria-hidden
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+            notPassed
+              ? "bg-danger-100 text-danger-700"
+              : "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+          }`}
         >
           📝
         </span>
@@ -90,12 +101,18 @@ function QuizCard({ item, courseSlug }: { item: QuizItem; courseSlug: string }) 
           <p className="truncate text-sm font-medium transition-colors group-hover:text-brand-600">
             {item.title}
           </p>
-          <p className="text-xs text-faint">Quiz</p>
+          {notPassed ? (
+            <p className="text-xs font-medium text-danger-700">
+              Kết quả Quiz của bạn chưa đạt yêu cầu, làm lại ngay?
+            </p>
+          ) : (
+            <p className="text-xs text-faint">Quiz</p>
+          )}
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {chip}
-        <span aria-hidden className="text-brand-600">
+        <span aria-hidden className={notPassed ? "text-danger-600" : "text-brand-600"}>
           →
         </span>
       </div>

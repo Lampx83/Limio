@@ -313,26 +313,35 @@ export default async function LessonPage({
     : [];
   const bestAttemptByQuiz = new Map<
     string,
-    { passed: boolean | null; scorePct: number | null; attempted: boolean }
+    {
+      passed: boolean | null;
+      scorePct: number | null;
+      attempted: boolean;
+      submitted: boolean;
+    }
   >();
   for (const att of quizAttempts) {
     const cur = bestAttemptByQuiz.get(att.quizId);
     const score = att.scorePct ?? null;
+    const isSubmitted = att.status === "submitted";
     if (!cur) {
       bestAttemptByQuiz.set(att.quizId, {
         attempted: true,
+        submitted: isSubmitted,
         passed: att.passed ?? null,
         scorePct: score,
       });
     } else {
-      // Keep "passed" sticky; otherwise prefer the higher score.
+      // Keep "passed"/"submitted" sticky; otherwise prefer the higher score.
       const passed = cur.passed || (att.passed ?? false) ? true : cur.passed;
+      const submitted = cur.submitted || isSubmitted;
       const bestScore =
         score !== null && (cur.scorePct === null || score > cur.scorePct)
           ? score
           : cur.scorePct;
       bestAttemptByQuiz.set(att.quizId, {
         attempted: true,
+        submitted,
         passed,
         scorePct: bestScore,
       });
@@ -406,9 +415,14 @@ export default async function LessonPage({
   );
   const hasAnyActivity =
     visibleQuizzes.length > 0 || visibleAssignments.length > 0;
-  // Pending = quizzes not yet passed + assignments without any submission.
+  // Pending = quizzes never submitted + assignments without any submission.
+  // Trước đây tính theo `passed` — nộp bài mà chưa đạt điểm coi như chưa
+  // xong, nên hoàn thành bài lẫn % tiến độ khoá kẹt ở chỗ học viên đã làm
+  // xong quiz (dù trượt) và nộp bài tập rồi. Đổi tiêu chí "hoàn thành hoạt
+  // động" sang "đã nộp" — độ đạt/không đạt vẫn hiện riêng qua cảnh báo ở
+  // LessonTasksTab, chỉ không còn chặn hoàn thành bài học nữa.
   const pendingActivityCount =
-    visibleQuizzes.filter((q) => !(bestAttemptByQuiz.get(q.id)?.passed === true))
+    visibleQuizzes.filter((q) => !(bestAttemptByQuiz.get(q.id)?.submitted === true))
       .length +
     visibleAssignments.filter((a) => a.submissions.length === 0).length;
   const totalActivityCount = visibleQuizzes.length + visibleAssignments.length;
