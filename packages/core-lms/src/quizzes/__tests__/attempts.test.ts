@@ -10,6 +10,7 @@ import { createSkill, tagLessonSkill } from "../../courses/skills";
 import { createQuiz } from "../quizzes";
 import { createQuestion } from "../questions";
 import {
+  getAttemptForLearner,
   getAttemptResult,
   startAttempt,
   submitAnswer,
@@ -152,6 +153,57 @@ describe("startAttempt", () => {
     await expect(startAttempt(outsider.userId, quizId)).rejects.toMatchObject({
       code: "not_enrolled",
     });
+  });
+});
+
+describe("getAttemptForLearner — isSingleAnswer + không lộ đáp án đúng", () => {
+  it("mcq đúng 1 option isCorrect=true → isSingleAnswer=true", async () => {
+    const { learnerId, quizId, questionIds } = await setup("iso1");
+    const { attemptId } = await startAttempt(learnerId, quizId);
+    const { quiz } = await getAttemptForLearner(learnerId, attemptId);
+    const q1 = quiz.questions.find((q) => q.id === questionIds[0]);
+    expect(q1?.type).toBe("mcq");
+    expect(q1?.isSingleAnswer).toBe(true);
+  });
+
+  it("mcq với ≥2 option isCorrect=true → isSingleAnswer=false (giữ multi-select)", async () => {
+    const { ownerId, learnerId, courseId } = await setup("iso2");
+    const q = await createQuiz(ownerId, { courseId }, { title: "multi" });
+    const qq = await createQuestion(ownerId, q.quizId, {
+      type: "mcq",
+      prompt: "Chọn số chẵn",
+      points: 1,
+      orderIndex: 0,
+      options: [
+        { label: "2", isCorrect: true },
+        { label: "4", isCorrect: true },
+        { label: "3", isCorrect: false },
+      ],
+    });
+    const { attemptId } = await startAttempt(learnerId, q.quizId);
+    const { quiz } = await getAttemptForLearner(learnerId, attemptId);
+    const question = quiz.questions.find((row) => row.id === qq.questionId);
+    expect(question?.isSingleAnswer).toBe(false);
+  });
+
+  it("true_false không set isSingleAnswer (chỉ áp dụng cho mcq)", async () => {
+    const { learnerId, quizId, questionIds } = await setup("iso3");
+    const { attemptId } = await startAttempt(learnerId, quizId);
+    const { quiz } = await getAttemptForLearner(learnerId, attemptId);
+    const q2 = quiz.questions.find((q) => q.id === questionIds[1]);
+    expect(q2?.type).toBe("true_false");
+    expect(q2?.isSingleAnswer).toBe(false);
+  });
+
+  it("options trả về cho learner không có field isCorrect (không lộ đáp án)", async () => {
+    const { learnerId, quizId } = await setup("iso4");
+    const { attemptId } = await startAttempt(learnerId, quizId);
+    const { quiz } = await getAttemptForLearner(learnerId, attemptId);
+    for (const q of quiz.questions) {
+      for (const opt of q.options) {
+        expect(opt).not.toHaveProperty("isCorrect");
+      }
+    }
   });
 });
 

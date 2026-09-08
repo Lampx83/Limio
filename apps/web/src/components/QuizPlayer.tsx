@@ -54,6 +54,9 @@ interface Question {
   orderIndex: number;
   extra?: Record<string, unknown> | null;
   options: Option[];
+  /** mcq với đúng 1 option đúng → hiện radio thay vì checkbox. Server tính
+   *  sẵn (không lộ option nào đúng); mặc định false cho type khác mcq. */
+  isSingleAnswer?: boolean;
 }
 interface Quiz {
   id: string;
@@ -406,7 +409,9 @@ export default function QuizPlayer({
                   {currentStepIndex + 1}
                 </span>
                 <span className="chip">
-                  {TYPE_LABEL[currentQ.type] ?? currentQ.type}
+                  {currentQ.type === "mcq" && currentQ.isSingleAnswer
+                    ? "Chọn 1"
+                    : (TYPE_LABEL[currentQ.type] ?? currentQ.type)}
                 </span>
               </div>
               <span className="text-xs font-medium text-faint">
@@ -674,8 +679,13 @@ function QuestionInput({
       const selected = Array.isArray(answer?.response)
         ? (answer!.response as string[])
         : [];
+      // true_false luôn 1 đáp án; mcq với đúng 1 option đúng (server tính,
+      // không lộ đáp án nào) cũng vậy — chọn cái mới tự bỏ cái cũ, thay vì
+      // để học viên tick nhầm thêm phương án sai vào một câu vốn chỉ có 1
+      // đáp án đúng.
+      const isSingleChoice = question.type === "true_false" || question.isSingleAnswer === true;
       function toggle(optId: string) {
-        if (question.type === "true_false") {
+        if (isSingleChoice) {
           onChange([optId]);
         } else {
           const next = selected.includes(optId)
@@ -685,10 +695,10 @@ function QuestionInput({
         }
         setTimeout(onBlur, 0);
       }
-      const isRadio = question.type === "true_false";
-      // True/False luôn 1 cột (chỉ có 2 lựa chọn). MCQ ≥ tablet hiển thị
-      // 2 cột để tận dụng không gian ngang trên laptop, tránh cảm giác
-      // "mobile single-column".
+      const isRadio = isSingleChoice;
+      // True/False và mcq-1-đáp-án luôn 1 cột (radio đọc dọc tự nhiên hơn).
+      // MCQ nhiều đáp án ≥ tablet hiển thị 2 cột để tận dụng không gian
+      // ngang trên laptop, tránh cảm giác "mobile single-column".
       const listClass = isRadio
         ? "space-y-2"
         : "grid grid-cols-1 gap-2 sm:grid-cols-2";

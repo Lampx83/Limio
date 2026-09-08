@@ -438,7 +438,7 @@ export async function getAttemptForLearner(
   db: PrismaClient = prisma,
 ) {
   const attempt = await loadAttemptOwned(userId, attemptId, db);
-  const quiz = await db.quiz.findUniqueOrThrow({
+  const rawQuiz = await db.quiz.findUniqueOrThrow({
     where: { id: attempt.quizId },
     include: {
       questions: {
@@ -454,36 +454,65 @@ export async function getAttemptForLearner(
           extra: true,
           options: {
             orderBy: { orderIndex: "asc" },
-            select: { id: true, label: true, orderIndex: true, extra: true },
+            select: {
+              id: true,
+              label: true,
+              orderIndex: true,
+              extra: true,
+              // isCorrect chỉ dùng để tính isSingleAnswer bên dưới rồi bị
+              // strip khỏi payload trả về — never leak which option is right.
+              isCorrect: true,
+            },
           },
         },
       },
     },
   });
-  // Strip numerical answer keys from `extra` before returning to learner.
-  for (const q of quiz.questions) {
-    if (q.type === "numerical" && q.extra) {
-      const { expected: _e, tolerance: _t, ...rest } = q.extra as Record<string, unknown>;
-      q.extra = Object.keys(rest).length > 0 ? (rest as typeof q.extra) : null;
+
+  const questions = rawQuiz.questions.map((q) => {
+    let extra = q.extra;
+    // Strip numerical answer keys from `extra` before returning to learner.
+    if (q.type === "numerical" && extra) {
+      const { expected: _e, tolerance: _t, ...rest } = extra as Record<string, unknown>;
+      extra = Object.keys(rest).length > 0 ? (rest as typeof extra) : null;
     }
-    if (q.type === "short_answer" && q.extra) {
+    if (q.type === "short_answer" && extra) {
       // Strip acceptedRegexes (would leak answer pattern).
-      const { acceptedRegexes: _r, ...rest } = q.extra as Record<string, unknown>;
-      q.extra = Object.keys(rest).length > 0 ? (rest as typeof q.extra) : null;
+      const { acceptedRegexes: _r, ...rest } = extra as Record<string, unknown>;
+      extra = Object.keys(rest).length > 0 ? (rest as typeof extra) : null;
     }
+
+    let options = q.options;
     // Ordering: options.orderBy(orderIndex) = thứ tự đúng → trả về như vậy
     // sẽ leak đáp án (learner chỉ cần Submit không sửa). Shuffle với seed
     // deterministic (attemptId + questionId) để khi reload giữ nguyên thứ
     // tự — không bị nhảy options gây confusion.
-    if (q.type === "ordering" && q.options.length > 1) {
-      q.options = seededShuffleOrdering(q.options, `${attemptId}:${q.id}`);
+    if (q.type === "ordering" && options.length > 1) {
+      options = seededShuffleOrdering(options, `${attemptId}:${q.id}`);
     }
-  }
+
+    // A5.x — mcq với đúng 1 option đúng nên hiện radio (chỉ chọn 1) thay vì
+    // checkbox: học viên đối diện câu chỉ có 1 đáp án đúng vẫn thấy giao
+    // diện "chọn nhiều" trước đây, có thể lỡ tick thêm và bị chấm sai dù đã
+    // chọn đúng đáp án chính. 0 hoặc ≥2 option đúng thì vẫn coi là multi
+    // (giữ hành vi checkbox cũ) — 0 đúng là cấu hình lỗi phía giảng viên,
+    // không phải trường hợp "chắc chắn 1 đáp án" nên không nên ép radio.
+    const isSingleAnswer =
+      q.type === "mcq" && options.filter((o) => o.isCorrect).length === 1;
+
+    return {
+      ...q,
+      extra,
+      isSingleAnswer,
+      options: options.map(({ isCorrect: _isCorrect, ...rest }) => rest),
+    };
+  });
+
   const responses = await db.answerResponse.findMany({
     where: { attemptId },
     select: { questionId: true, response: true, confidence: true },
   });
-  return { attempt, quiz, responses };
+  return { attempt, quiz: { ...rawQuiz, questions }, responses };
 }
 
 /** Returns full graded result. Only valid for submitted attempts. */
