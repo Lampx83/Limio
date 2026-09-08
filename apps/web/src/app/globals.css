@@ -520,6 +520,17 @@ main[data-gv="1"] [data-teacher-note] {
   margin-inline: auto;
 }
 
+/* Chừa chỗ cho thanh tiêu đề dính trên cùng khi nhảy neo từ mục lục
+   ("Trong bài này", `LessonSectionNav.tsx`) — không thì heading nhảy tới sẽ
+   nằm khuất dưới thanh đó. Học liệu import sẵn tự set `scroll-margin-top`
+   inline cho từng heading; luật này phủ luôn heading soạn qua editor (không
+   có style inline) nên mục lục cuộn đúng bất kể nội dung từ đâu ra. */
+#lesson-content h1[id],
+#lesson-content h2[id],
+#lesson-content h3[id] {
+  scroll-margin-top: 5rem;
+}
+
 /* ── Màn chiếu (?stage=1) ────────────────────────────────────────────────────
    Cửa sổ thứ hai mà giảng viên kéo sang máy chiếu. Vẫn đúng trang bài học ấy,
    chỉ bỏ mọi thứ không phải nội dung và phóng cỡ chữ lên — người ngồi cuối lớp

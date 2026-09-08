@@ -11,6 +11,7 @@ import Color from "@tiptap/extension-color";
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { probeEditorLoss, type LossReport } from "./richtext/lossProbe";
+import { HeadingId } from "./richtext/headingId";
 
 interface Props {
   value: string;
@@ -61,6 +62,7 @@ const EXTENSIONS = [
     allowBase64: false,
     HTMLAttributes: { class: "max-w-full h-auto rounded-md" },
   }),
+  HeadingId,
 ];
 
 async function uploadImageFile(file: File): Promise<string> {
