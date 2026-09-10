@@ -401,8 +401,14 @@ export default function QuizPlayer({
         )}
 
         {/* Current question */}
+        {/* min-h chặn khung câu hỏi co lại còn vài dòng khi chuyển từ câu dài
+            (4 phương án, prompt dài) sang câu ngắn (Đúng/Sai) — trước đây
+            khung tự co giãn hết cỡ theo nội dung nên mỗi lần bấm "Câu sau"
+            cả trang giật lên/xuống theo chiều cao khác nhau. Không chặn
+            chiều CAO TỐI ĐA — câu thật sự dài vẫn hiện đủ, chỉ không bao giờ
+            nhỏ hơn mức này. */}
         {currentQ && (
-          <section className="card">
+          <section className="card min-h-[26rem]">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700">
@@ -434,58 +440,64 @@ export default function QuizPlayer({
                 onBlur={() => saveAnswer(currentQ)}
               />
             </div>
-            {quiz.requireConfidence && (
-              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-token pt-4">
-                <span className="text-sm font-medium text-muted">Độ tự tin:</span>
-                <ConfidenceStars
-                  value={answers[currentQ.id]?.confidence ?? null}
-                  onChange={(n) => {
-                    setConfidence(currentQ.id, n);
-                    setTimeout(() => saveAnswer(currentQ), 0);
-                  }}
-                />
-                {!isResponseEmpty(currentQ, answers[currentQ.id]?.response ?? null) &&
-                  (answers[currentQ.id]?.confidence ?? null) === null && (
-                    <p className="banner-warning w-full py-1.5 text-xs">
-                      Chưa chọn độ tự tin — câu này chưa được lưu, cần chọn trước khi nộp bài.
-                    </p>
-                  )}
-              </div>
-            )}
           </section>
         )}
 
-        {/* Bottom step nav */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-3">
-          <button
-            type="button"
-            onClick={() => jumpTo(currentStepIndex - 1)}
-            disabled={isFirst}
-            className="btn-ghost btn-sm disabled:opacity-40"
-          >
-            ← Câu trước
-          </button>
-          <span className="text-sm text-muted tabular-nums">
-            Câu {currentStepIndex + 1}/{quiz.questions.length}
-          </span>
-          {isLast ? (
-            <button
-              type="button"
-              onClick={() => onSubmit()}
-              disabled={submitting}
-              className={`${submitClass} btn-sm`}
-            >
-              {submitting ? "Đang nộp…" : "Nộp bài"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => jumpTo(currentStepIndex + 1)}
-              className="btn-primary btn-sm"
-            >
-              Câu sau →
-            </button>
+        {/* Bottom step nav — độ tự tin nằm NGAY TRÊN hàng nút, không còn nằm
+            trong card câu hỏi: card dài ngắn tuỳ câu (2-4 phương án, có ảnh
+            hay không) làm cả khối tự tin bị đẩy lên xuống theo, học viên phải
+            cuộn tìm; đưa vào khung điều hướng cố định này thì luôn thấy ngay
+            cạnh nút Câu sau/Nộp bài, không phụ thuộc độ dài câu hỏi. */}
+        <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-3">
+          {quiz.requireConfidence && currentQ && (
+            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-token pb-3">
+              <span className="text-sm font-medium text-muted">Độ tự tin:</span>
+              <ConfidenceStars
+                value={answers[currentQ.id]?.confidence ?? null}
+                onChange={(n) => {
+                  setConfidence(currentQ.id, n);
+                  setTimeout(() => saveAnswer(currentQ), 0);
+                }}
+              />
+              {!isResponseEmpty(currentQ, answers[currentQ.id]?.response ?? null) &&
+                (answers[currentQ.id]?.confidence ?? null) === null && (
+                  <p className="banner-warning w-full py-1.5 text-xs">
+                    Chưa chọn độ tự tin — câu này chưa được lưu, cần chọn trước khi nộp bài.
+                  </p>
+                )}
+            </div>
           )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => jumpTo(currentStepIndex - 1)}
+              disabled={isFirst}
+              className="btn-ghost btn-sm disabled:opacity-40"
+            >
+              ← Câu trước
+            </button>
+            <span className="text-sm text-muted tabular-nums">
+              Câu {currentStepIndex + 1}/{quiz.questions.length}
+            </span>
+            {isLast ? (
+              <button
+                type="button"
+                onClick={() => onSubmit()}
+                disabled={submitting}
+                className={`${submitClass} btn-sm`}
+              >
+                {submitting ? "Đang nộp…" : "Nộp bài"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => jumpTo(currentStepIndex + 1)}
+                className="btn-primary btn-sm"
+              >
+                Câu sau →
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
