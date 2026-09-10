@@ -95,6 +95,18 @@ export const PdfPayload = z.object({
   totalPages: z.number().int().positive().optional(),
 });
 
+/**
+ * GV upload 1 file .html duy nhất, hiển thị trong lesson qua iframe sandbox.
+ * `url` cùng dạng UrlOrPath với PdfPayload — hoặc file tự upload qua
+ * /api/lesson-media/html (path cùng-origin), hoặc URL ngoài đã host sẵn.
+ */
+export const HtmlBlockPayload = z.object({
+  url: UrlOrPath,
+  title: z.string().max(200).optional(),
+  // Chiều cao khung hiển thị (px). Mặc định 480 nếu bỏ trống — xem LessonContent.
+  heightPx: z.number().int().positive().max(4000).optional(),
+});
+
 export const ScormPayload = z.object({
   packageId: z.string().uuid(),
   title: z.string().max(200).optional(),
@@ -138,6 +150,7 @@ const PAYLOAD_BY_TYPE = {
   lti: LtiPayload,
   h5p: H5pPayload,
   teacher_note: TeacherNotePayload,
+  html_block: HtmlBlockPayload,
 } as const;
 
 export type ContentTypeKey = keyof typeof PAYLOAD_BY_TYPE;

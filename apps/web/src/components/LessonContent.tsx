@@ -75,6 +75,11 @@ interface PdfPayload {
   title?: string;
   totalPages?: number;
 }
+interface HtmlBlockPayload {
+  url: string;
+  title?: string;
+  heightPx?: number;
+}
 
 export default function LessonContent({
   items,
@@ -373,6 +378,28 @@ function ContentBlock({
     case "pdf": {
       const p = payload as PdfPayload;
       return <PdfViewer url={p.url} title={p.title} />;
+    }
+    case "html_block": {
+      const p = payload as HtmlBlockPayload;
+      return (
+        <div>
+          {p.title && (
+            <p className="mb-2 text-sm font-medium text-muted">{p.title}</p>
+          )}
+          {/*
+           * No `allow-same-origin`: script trong file HTML này (do giảng viên
+           * tự upload) không được đọc cookie/session của Limio hay chạm vào
+           * trang cha, kể cả khi file được host cùng-origin. Xem thêm ghi chú
+           * ở route serve /api/lesson-media/html/[file] (CSP sandbox header).
+           */}
+          <iframe
+            src={p.url}
+            sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+            height={p.heightPx ?? 480}
+            className="w-full rounded-xl border border-token shadow-card"
+          />
+        </div>
+      );
     }
     default:
       return (

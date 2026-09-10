@@ -124,6 +124,45 @@ describe("createContentItem — per-type payload validation", () => {
     ).rejects.toMatchObject({ code: "validation_failed" });
   });
 
+  it("html_block accepts {url} and optional title", async () => {
+    const { userId, lessonId } = await setup();
+    await createContentItem(userId, lessonId, {
+      type: "html_block",
+      orderIndex: 0,
+      payload: {
+        url: "/api/lesson-media/html/u-123-abc.html",
+        title: "Infographic tương tác",
+      },
+    });
+    await createContentItem(userId, lessonId, {
+      type: "html_block",
+      orderIndex: 1,
+      payload: { url: "https://example.com/widget.html" },
+    });
+  });
+
+  it("html_block rejects missing url", async () => {
+    const { userId, lessonId } = await setup();
+    await expect(
+      createContentItem(userId, lessonId, {
+        type: "html_block",
+        orderIndex: 0,
+        payload: { title: "Just a title" },
+      }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
+  it("html_block rejects a url that is neither http(s) nor a same-origin path", async () => {
+    const { userId, lessonId } = await setup();
+    await expect(
+      createContentItem(userId, lessonId, {
+        type: "html_block",
+        orderIndex: 0,
+        payload: { url: "not-a-url" },
+      }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
   it("update with new type re-validates payload against new type", async () => {
     const { userId, lessonId } = await setup();
     const item = await createContentItem(userId, lessonId, {

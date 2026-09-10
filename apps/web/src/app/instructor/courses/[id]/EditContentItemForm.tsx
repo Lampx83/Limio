@@ -36,7 +36,8 @@ type ContentType =
   | "pdf"
   | "scorm"
   | "lti"
-  | "h5p";
+  | "h5p"
+  | "html_block";
 
 interface Props {
   item: {
@@ -89,6 +90,7 @@ export default function EditContentItemForm({ item, onClose }: Props) {
         break;
       case "external_link":
       case "pdf":
+      case "html_block":
         payload = { url, title: linkTitle.trim() || undefined };
         break;
       case "scorm":
@@ -172,12 +174,16 @@ export default function EditContentItemForm({ item, onClose }: Props) {
         type === "embed" ||
         type === "file" ||
         type === "external_link" ||
-        type === "pdf") && (
+        type === "pdf" ||
+        type === "html_block") && (
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           required
-          type="url"
+          // html_block URLs are always a same-origin upload path
+          // (/api/lesson-media/html/<file>) — type="url" would reject those,
+          // same reasoning as the upload-path fields in AddContentItemForm.
+          type={type === "html_block" ? "text" : "url"}
           placeholder="URL"
           className="input"
         />
@@ -196,6 +202,7 @@ export default function EditContentItemForm({ item, onClose }: Props) {
 
       {(type === "external_link" ||
         type === "pdf" ||
+        type === "html_block" ||
         type === "scorm" ||
         type === "h5p" ||
         type === "lti") && (

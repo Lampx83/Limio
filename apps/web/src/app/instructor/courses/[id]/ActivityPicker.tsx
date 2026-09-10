@@ -16,7 +16,8 @@ type ContentSubtype =
   | "scorm"
   | "h5p"
   | "lti"
-  | "teacher_note";
+  | "teacher_note"
+  | "html_block";
 
 type Tile = {
   /** Unique key */
@@ -111,6 +112,15 @@ const TILES: Tile[] = [
     description: "Nhúng iframe URL bất kỳ",
     keywords: "iframe embed url",
     pick: { kind: "content", subtype: "embed" },
+  },
+  {
+    key: "html_block",
+    group: "resource",
+    icon: "🌐",
+    name: "HTML tự tải lên",
+    description: "Upload 1 file .html, hiển thị trong khung riêng (sandbox)",
+    keywords: "html file iframe sandbox upload",
+    pick: { kind: "content", subtype: "html_block" },
   },
   {
     key: "quiz",

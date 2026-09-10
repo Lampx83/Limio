@@ -81,7 +81,8 @@ type ContentType =
   | "scorm"
   | "lti"
   | "h5p"
-  | "teacher_note";
+  | "teacher_note"
+  | "html_block";
 
 const TYPE_LABEL: Record<ContentType, string> = {
   richtext: "Văn bản (rich text)",
@@ -95,6 +96,7 @@ const TYPE_LABEL: Record<ContentType, string> = {
   scorm: "SCORM",
   lti: "LTI 1.3",
   h5p: "H5P",
+  html_block: "HTML tự tải lên",
 };
 
 export default function AddContentItemForm({
@@ -356,6 +358,9 @@ export default function AddContentItemForm({
       case "pdf":
         payload = { url, title: linkTitle.trim() || undefined };
         break;
+      case "html_block":
+        payload = { url, title: linkTitle.trim() || undefined };
+        break;
       case "scorm":
         if (!scormPackageId) {
           setError("missing_scorm_package");
@@ -475,16 +480,17 @@ export default function AddContentItemForm({
         type === "embed" ||
         type === "file" ||
         type === "external_link" ||
-        type === "pdf") && (
+        type === "pdf" ||
+        type === "html_block") && (
         <div className="space-y-2">
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
-            // For video / file / pdf the URL may be a same-origin path
-            // (e.g. /api/lesson-media/videos/<file>) populated by the upload
-            // panel below. type="url" rejects path-only values, so we use
-            // type="text" for those and keep type="url" for purely-external
+            // For video / file / pdf / html_block the URL may be a same-origin
+            // path (e.g. /api/lesson-media/videos/<file>) populated by the
+            // upload panel below. type="url" rejects path-only values, so we
+            // use type="text" for those and keep type="url" for purely-external
             // fields (embed, external_link).
             type={
               type === "embed" || type === "external_link" ? "url" : "text"
@@ -494,7 +500,9 @@ export default function AddContentItemForm({
                 ? "Dán URL: YouTube · Vimeo · Loom · Wistia · Bunny · Mux — hoặc upload file bên dưới"
                 : type === "pdf"
                   ? "URL PDF (https://.../file.pdf) — hoặc upload file bên dưới"
-                  : "URL"
+                  : type === "html_block"
+                    ? "URL file .html đã host sẵn — hoặc upload file bên dưới"
+                    : "URL"
             }
             className="input"
           />
@@ -508,6 +516,14 @@ export default function AddContentItemForm({
           )}
           {type === "pdf" && (
             <PdfUploadPanel
+              uploading={uploading}
+              setUploading={setUploading}
+              setError={setError}
+              onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+            />
+          )}
+          {type === "html_block" && (
+            <HtmlUploadPanel
               uploading={uploading}
               setUploading={setUploading}
               setError={setError}
@@ -554,6 +570,23 @@ export default function AddContentItemForm({
           placeholder="Tiêu đề PDF (optional)"
           className="input"
         />
+      )}
+
+      {type === "html_block" && (
+        <>
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề (optional)"
+            className="input"
+          />
+          <p className="text-xs text-muted">
+            File sẽ hiển thị trong khung riêng (iframe), tách biệt khỏi trang —
+            script trong file không đọc được đăng nhập của học viên hay sửa
+            phần còn lại của trang.
+          </p>
+        </>
       )}
 
       {type === "scorm" && (
@@ -1420,6 +1453,83 @@ function PdfUploadPanel({
       <p className="mt-2 text-[11px] text-muted">
         Chỉ nhận file <span className="font-mono font-semibold text-faint">PDF</span>
         {" · "}tối đa <span className="font-semibold">{PDF_MAX_MB} MB</span>
+      </p>
+    </div>
+  );
+}
+
+const HTML_MAX_MB = 10;
+
+function HtmlUploadPanel({
+  uploading,
+  setUploading,
+  setError,
+  onUploaded,
+}: {
+  uploading: boolean;
+  setUploading: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  onUploaded: (url: string) => void;
+}) {
+  async function handleFile(file: File) {
+    setUploading(true);
+    setError(null);
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+
+    if (file.size > HTML_MAX_MB * 1024 * 1024) {
+      setUploading(false);
+      setError(
+        `File quá lớn (${sizeMb} MB). Giới hạn của hệ thống là ${HTML_MAX_MB} MB.`,
+      );
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(apiUrl("/api/lesson-media/html"), {
+        method: "POST",
+        body: fd,
+      });
+    } catch (networkErr) {
+      setUploading(false);
+      console.error("[HtmlUploadPanel] network error", networkErr);
+      setError("network_error");
+      return;
+    }
+    setUploading(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      return;
+    }
+    const data = (await res.json()) as { url: string };
+    onUploaded(data.url);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+        Hoặc upload 1 file .html từ máy
+      </p>
+      <input
+        type="file"
+        accept=".html,.htm,text/html"
+        disabled={uploading}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+        }}
+        className="mt-2 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {uploading && (
+        <p className="mt-1 text-xs text-muted">Đang upload...</p>
+      )}
+      <p className="mt-2 text-[11px] text-muted">
+        Chỉ nhận 1 file <span className="font-mono font-semibold text-faint">.html/.htm</span>
+        {" · "}tối đa <span className="font-semibold">{HTML_MAX_MB} MB</span>
+        {" · "}không kèm file ảnh/CSS/JS riêng (nhúng thẳng trong file nếu cần)
       </p>
     </div>
   );

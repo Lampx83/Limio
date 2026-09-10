@@ -7,6 +7,7 @@
  *     lesson-media/images/{yyyy}/{mm}/{filename}
  *     lesson-media/videos/{yyyy}/{mm}/{filename}
  *     lesson-media/pdfs/{yyyy}/{mm}/{filename}
+ *     lesson-media/html/{yyyy}/{mm}/{filename}
  *     exam-assets/{yyyy}/{mm}/{filename}
  *   private/                                         # auth-gated
  *     submissions/{yyyy}/{mm}/{filename}
@@ -53,6 +54,7 @@ type DateShardedKind =
   | "lesson-media/images"
   | "lesson-media/videos"
   | "lesson-media/pdfs"
+  | "lesson-media/html"
   | "lesson-media/transcripts"
   | "exam-assets"
   | "submissions"
@@ -76,6 +78,9 @@ export function lessonVideoKey(date: Date, filename: string): StorageKey {
 }
 export function lessonPdfKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/pdfs", date, filename);
+}
+export function lessonHtmlKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "lesson-media/html", date, filename);
 }
 /** A2.7 — Interactive transcript: GV upload file .vtt/.srt cho video YouTube. */
 export function lessonTranscriptKey(date: Date, filename: string): StorageKey {
@@ -117,6 +122,9 @@ export function lessonVideoKeyFromFilename(filename: string): StorageKey | null 
 }
 export function lessonPdfKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/pdfs", filename);
+}
+export function lessonHtmlKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "lesson-media/html", filename);
 }
 export function lessonTranscriptKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/transcripts", filename);

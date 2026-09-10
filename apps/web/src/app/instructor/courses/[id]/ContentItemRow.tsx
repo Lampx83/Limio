@@ -37,6 +37,8 @@ function summarize(type: string, payload: unknown): string {
       return `${String(p.title ?? "")} — ${String(p.url ?? "")}`;
     case "pdf":
       return `${String(p.title ?? "PDF")} — ${String(p.url ?? "")}`;
+    case "html_block":
+      return `${String(p.title ?? "HTML")} — ${String(p.url ?? "")}`;
     case "scorm":
       return `${String(p.title ?? "SCORM")} — packageId=${String(p.packageId ?? "")}`;
     case "lti":
@@ -58,6 +60,7 @@ const ICON: Record<string, string> = {
   scorm: "",
   lti: "",
   h5p: "",
+  html_block: "🌐",
 };
 
 export default function ContentItemRow({ item }: { item: Item }) {

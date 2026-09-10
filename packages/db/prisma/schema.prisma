@@ -438,6 +438,10 @@ enum ContentType {
   // tầng truy vấn, chứ không dựa vào `isHidden` — cờ ấy do giảng viên bật tắt
   // nên có ngày quên, còn loại nội dung thì không quên được.
   teacher_note
+  // GV upload 1 file .html, hiển thị trong lesson qua iframe sandbox (KHÔNG
+  // allow-same-origin — script trong file không được đọc cookie/session của
+  // Limio). Khác "embed" (chỉ nhận URL ngoài) và "file" (chỉ tải xuống).
+  html_block
 }
 
 model ContentItem {
