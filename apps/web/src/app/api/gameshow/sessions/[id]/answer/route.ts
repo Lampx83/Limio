@@ -97,7 +97,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const answeredCount = await prisma.gameAnswer.count({
     where: { sessionId: gameSession.id, questionIndex: gameSession.currentQuestionIndex },
   });
-  await publishAnswerReceived(gameSession.id, gameSession.currentQuestionIndex, answeredCount);
+  await publishAnswerReceived(
+    gameSession.id,
+    gameSession.currentQuestionIndex,
+    answeredCount,
+    participant.id,
+  );
 
   return Response.json({
     isCorrect,

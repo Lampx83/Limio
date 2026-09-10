@@ -6,6 +6,17 @@ import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { AVATARS } from "@/lib/gameshow/avatars";
 import { computeTeamStandings, emojiForColorKey, teamColorClasses } from "@/lib/gameshow/teams";
 import type { TeamMeta } from "@/lib/gameshow/teams";
+import type { LiveParticipant, TeamStanding } from "@/lib/gameshow/types";
+import { useRankDeltas } from "@/lib/gameshow/useRankDeltas";
+import { useScoreDeltas } from "@/lib/gameshow/useScoreDeltas";
+import type { ScoreDelta } from "@/lib/gameshow/useScoreDeltas";
+import { useFlipList } from "@/lib/gameshow/useFlipList";
+import { useCountUp } from "@/lib/gameshow/useCountUp";
+import { CircularTimer } from "@/components/gameshow/CircularTimer";
+import { Podium } from "@/components/gameshow/Podium";
+import { OptionCard, OPTION_LETTERS } from "@/components/gameshow/OptionCard";
+import { RankBadge, initials, avatarGradient } from "@/components/gameshow/RankBadge";
+import { BarChart3, ChevronUp, ChevronDown, Minus, Flame, Check, Trophy } from "lucide-react";
 
 const QRCode = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeSVG), {
   ssr: false,
@@ -18,22 +29,6 @@ type Status = "lobby" | "running" | "reveal" | "ended";
 
 type QuestionOption = { id: string; label: string; isCorrect: boolean };
 type Question = { id: string; type: string; prompt: string; options: QuestionOption[] };
-type LiveParticipant = {
-  participantId: string;
-  displayName: string;
-  avatarKey: string;
-  teamId: string | null;
-  totalScore: number;
-  streak: number;
-};
-type TeamStanding = {
-  teamId: string;
-  name: string;
-  colorKey: string;
-  avgScore: number;
-  memberCount: number;
-  members: LiveParticipant[];
-};
 
 type Snapshot = {
   id: string;
@@ -52,6 +47,9 @@ type Snapshot = {
 
 // Khoảng dừng để mọi người nhìn đáp án trước khi tự động sang câu kế.
 const REVEAL_PAUSE_MS = 4000;
+// Splash "Câu N" chớp qua trước khi hiện nội dung câu hỏi — thuần cosmetic,
+// timer thật (currentQuestionStartedAt) vẫn chạy phía dưới song song.
+const QUESTION_SPLASH_MS = 700;
 
 export default function HostGameClient({ sessionId }: { sessionId: string }) {
   const [snap, setSnap] = useState<Snapshot | null>(null);
@@ -62,8 +60,15 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
     [participants, teamsMeta],
   );
   const [answeredCount, setAnsweredCount] = useState(0);
+  // Ai đã nộp câu hiện tại — chỉ để tô chấm trạng thái sống trên bảng xếp
+  // hạng (đang trả lời/đã nộp), reset mỗi khi bắt đầu câu mới.
+  const [answeredIds, setAnsweredIds] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [pinCopied, setPinCopied] = useState(false);
+  const [kickingId, setKickingId] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(false);
+  const splashForIndex = useRef<number | null>(null);
   const esRef = useRef<EventSource | null>(null);
 
   // Full-screen "arena" — ẩn sidebar giảng viên trong lúc host gameshow.
@@ -78,11 +83,12 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
       setErr(`HTTP ${r.status}`);
       return;
     }
-    const j = (await r.json()) as Snapshot;
+    const j = (await r.json()) as Snapshot & { answeredParticipantIds?: string[] };
     setSnap(j);
     setParticipants(j.participants);
     setTeamsMeta(j.teams ?? []);
     setAnsweredCount(j.answeredCount);
+    setAnsweredIds(new Set(j.answeredParticipantIds ?? []));
   };
 
   useEffect(() => {
@@ -125,8 +131,11 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
               : p,
           ),
         );
+      } else if (type === "participant.kicked") {
+        setParticipants((prev) => prev.filter((p) => p.participantId !== data.participantId));
       } else if (type === "answer.received") {
         setAnsweredCount(data.answeredCount as number);
+        setAnsweredIds((prev) => new Set(prev).add(data.participantId as string));
       } else if (type === "question.ended") {
         setParticipants(data.leaderboard as LiveParticipant[]);
         setSnap((s) => (s ? { ...s, status: "reveal" } : s));
@@ -139,6 +148,16 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
     };
     return () => es.close();
   }, [sessionId]);
+
+  // Splash "Câu N" — chớp mỗi khi bước sang 1 câu mới (running + index mới).
+  useEffect(() => {
+    if (!snap || snap.status !== "running") return;
+    if (splashForIndex.current === snap.currentQuestionIndex) return;
+    splashForIndex.current = snap.currentQuestionIndex;
+    setShowSplash(true);
+    const t = setTimeout(() => setShowSplash(false), QUESTION_SPLASH_MS);
+    return () => clearTimeout(t);
+  }, [snap?.status, snap?.currentQuestionIndex]);
 
   const call = useCallback(
     async (action: string) => {
@@ -165,6 +184,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
         // ngược "ended" -> "running" với currentQuestionIndex vượt quá mảng câu hỏi.
         if (action === "start") {
           setAnsweredCount(0);
+          setAnsweredIds(new Set());
           setSnap((s) =>
             s
               ? {
@@ -177,6 +197,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
           );
         } else if (action === "next") {
           setAnsweredCount(0);
+          setAnsweredIds(new Set());
           if (j?.ended) {
             setSnap((s) => (s ? { ...s, status: "ended" } : s));
           } else {
@@ -203,6 +224,31 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
   const onReveal = useCallback(() => call("reveal"), [call]);
   const onNext = useCallback(() => call("next"), [call]);
   const onEnd = useCallback(() => call("end"), [call]);
+
+  const onKick = useCallback(
+    async (participantId: string) => {
+      setKickingId(participantId);
+      // Optimistic — không đợi round-trip, host cần thấy phản hồi ngay khi
+      // click; SSE participant.kicked tới sau sẽ là no-op (đã filter rồi).
+      setParticipants((prev) => prev.filter((p) => p.participantId !== participantId));
+      try {
+        await fetch(apiUrl(`/api/gameshow/sessions/${sessionId}/participants/${participantId}`), {
+          method: "DELETE",
+        });
+      } finally {
+        setKickingId(null);
+      }
+    },
+    [sessionId],
+  );
+
+  const onCopyPin = useCallback(() => {
+    if (!snap) return;
+    navigator.clipboard?.writeText(snap.code).then(() => {
+      setPinCopied(true);
+      setTimeout(() => setPinCopied(false), 1500);
+    });
+  }, [snap]);
 
   if (!snap) {
     return (
@@ -242,10 +288,13 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
             {snap.status === "lobby" && (
               <button
                 onClick={onStart}
-                disabled={busy}
-                className="gs-glow-pulse rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-2 text-sm font-bold text-indigo-950 shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
+                disabled={busy || sorted.length === 0}
+                style={{ ["--gs-btn-shadow" as string]: "#b45309" }}
+                className={`gs-btn-3d rounded-2xl bg-gradient-to-b from-amber-400 to-orange-500 px-6 py-3 text-base font-black text-indigo-950 disabled:opacity-40 sm:text-lg ${
+                  sorted.length > 0 ? "gs-glow-pulse" : ""
+                }`}
               >
-                ▶ Bắt đầu ({sorted.length})
+                ▶ BẮT ĐẦU ({sorted.length})
               </button>
             )}
             {snap.status !== "ended" && (
@@ -275,28 +324,57 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
             participants={sorted}
             teamModeEnabled={snap.teamModeEnabled}
             teamStandings={teamStandings}
+            onCopyPin={onCopyPin}
+            pinCopied={pinCopied}
+            onKick={onKick}
+            kickingId={kickingId}
           />
         )}
 
         {(snap.status === "running" || snap.status === "reveal") && currentQuestion && (
-          <PlayView
-            snap={snap}
-            currentQuestion={currentQuestion}
-            answeredCount={answeredCount}
-            participants={sorted}
-            teamStandings={teamStandings}
-            busy={busy}
-            onReveal={onReveal}
-            onNext={onNext}
-          />
+          <div className="relative">
+            {showSplash && (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+                <span className="gs-splash-in rounded-3xl bg-black/60 px-10 py-6 text-4xl font-black tracking-tight sm:text-6xl">
+                  Câu {snap.currentQuestionIndex + 1}
+                </span>
+              </div>
+            )}
+            <PlayView
+              snap={snap}
+              currentQuestion={currentQuestion}
+              answeredCount={answeredCount}
+              answeredIds={answeredIds}
+              participants={sorted}
+              teamStandings={teamStandings}
+              busy={busy}
+              onReveal={onReveal}
+              onNext={onNext}
+            />
+          </div>
         )}
 
         {snap.status === "ended" && (
-          <PodiumView
-            participants={sorted}
-            teamModeEnabled={snap.teamModeEnabled}
-            teamStandings={teamStandings}
-          />
+          <div className="mt-6 rounded-3xl bg-white/10 p-6 text-center shadow-2xl backdrop-blur-sm sm:p-10">
+            <h2 className="flex items-center justify-center gap-2 text-2xl font-black sm:text-3xl">
+              <Trophy className="h-7 w-7 flex-none text-amber-400 sm:h-8 sm:w-8" aria-hidden="true" />
+              Kết thúc!
+            </h2>
+            <div className="mt-8">
+              <Podium
+                teamModeEnabled={snap.teamModeEnabled}
+                participants={sorted}
+                teamStandings={teamStandings}
+              />
+            </div>
+            <a
+              href="/instructor/gameshow"
+              className="gs-btn-3d mt-8 inline-block rounded-2xl bg-white/15 px-6 py-3 text-sm font-bold text-white hover:bg-white/25"
+              style={{ ["--gs-btn-shadow" as string]: "#00000066" }}
+            >
+              ← Về danh sách Gameshow
+            </a>
+          </div>
         )}
       </div>
     </div>
@@ -307,22 +385,37 @@ function Avatar({ avatarKey, size = "text-2xl" }: { avatarKey: string; size?: st
   return <span className={size}>{AVATARS[avatarKey] ?? "🙂"}</span>;
 }
 
+// Tilt nhẹ, ổn định theo participantId (không random lại mỗi lần re-render).
+function tiltForId(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 997;
+  return (h % 5) - 2; // -2..2 độ
+}
+
 function LobbyView({
   code,
   joinUrl,
   participants,
   teamModeEnabled,
   teamStandings,
+  onCopyPin,
+  pinCopied,
+  onKick,
+  kickingId,
 }: {
   code: string;
   joinUrl: string;
   participants: LiveParticipant[];
   teamModeEnabled: boolean;
   teamStandings: TeamStanding[];
+  onCopyPin: () => void;
+  pinCopied: boolean;
+  onKick: (participantId: string) => void;
+  kickingId: string | null;
 }) {
   return (
     <div className="mt-6 space-y-4">
-      {/* Thanh vào phòng — hướng dẫn | mã PIN | QR, ngang hàng kiểu Kahoot */}
+      {/* Thanh vào phòng — hướng dẫn | mã PIN + copy | QR, ngang hàng kiểu Kahoot */}
       <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-5 text-indigo-950 shadow-2xl sm:flex-row sm:justify-center sm:gap-6">
         <div className="text-center sm:text-left">
           <p className="text-xs font-medium text-slate-400">Học viên tham gia tại</p>
@@ -336,23 +429,40 @@ function LobbyView({
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
             Mã phòng
           </p>
-          <div className="gs-glow-pulse rounded-xl bg-indigo-50 px-6 py-2 text-4xl font-black tracking-[0.2em] text-indigo-900 sm:text-5xl">
+          <button
+            onClick={onCopyPin}
+            title="Bấm để copy"
+            className="gs-glow-pulse group relative rounded-xl bg-indigo-50 px-6 py-2 text-4xl font-black tracking-[0.2em] text-indigo-900 transition-transform hover:scale-105 sm:text-5xl"
+          >
             {code}
-          </div>
+            <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs text-white opacity-0 shadow transition-opacity group-hover:opacity-100">
+              {pinCopied ? "✓" : "⧉"}
+            </span>
+          </button>
+          {pinCopied && <span className="text-xs font-semibold text-emerald-600">Đã copy!</span>}
         </div>
 
         <div className="hidden h-14 w-px bg-slate-200 sm:block" />
 
         {joinUrl && (
           <div className="flex-none rounded-lg border border-slate-200 p-1.5">
-            <QRCode value={joinUrl} size={84} />
+            <QRCode value={joinUrl} size={96} />
           </div>
         )}
       </div>
 
       {/* "Màn hình" lớp học — hiện học viên vào real-time, giống chiếu lên máy chiếu */}
       <div className="relative overflow-hidden rounded-3xl border-4 border-white/15 bg-gradient-to-br from-brand-800/70 to-pink-900/70 p-6 shadow-2xl sm:p-10">
-        <p className="text-center text-sm font-medium text-white/60">
+        <div className="flex justify-center">
+          <span
+            key={participants.length}
+            className="gs-bounce-in inline-flex items-center gap-1.5 rounded-full bg-black/30 px-4 py-1.5 text-sm font-bold text-amber-300 shadow"
+          >
+            🔥 {participants.length} người sẵn sàng
+          </span>
+        </div>
+
+        <p className="mt-3 text-center text-sm font-medium text-white/60">
           {participants.length === 0
             ? "Đang chờ học viên tham gia..."
             : "Học viên đã vào phòng — sẵn sàng khi bạn bấm Bắt đầu"}
@@ -373,11 +483,16 @@ function LobbyView({
                     {t.members.map((m, i) => (
                       <span
                         key={m.participantId}
-                        style={{ animationDelay: `${Math.min(i, 20) * 40}ms` }}
-                        className="gs-pop-in flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium"
+                        style={{ animationDelay: `${Math.min(i, 20) * 40}ms`, transform: `rotate(${tiltForId(m.participantId)}deg)` }}
+                        className="group/chip gs-pop-in relative flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium"
                       >
                         <Avatar avatarKey={m.avatarKey} size="text-sm" />
                         {m.displayName}
+                        <KickButton
+                          participantId={m.participantId}
+                          onKick={onKick}
+                          busy={kickingId === m.participantId}
+                        />
                       </span>
                     ))}
                     {t.members.length === 0 && (
@@ -393,11 +508,16 @@ function LobbyView({
             {participants.map((p, i) => (
               <span
                 key={p.participantId}
-                style={{ animationDelay: `${Math.min(i, 20) * 40}ms` }}
-                className="gs-pop-in flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium"
+                style={{ animationDelay: `${Math.min(i, 20) * 40}ms`, transform: `rotate(${tiltForId(p.participantId)}deg)` }}
+                className="group/chip gs-pop-in relative flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium transition-transform hover:scale-105 hover:rotate-0"
               >
                 <Avatar avatarKey={p.avatarKey} size="text-lg" />
                 <span>{p.displayName}</span>
+                <KickButton
+                  participantId={p.participantId}
+                  onKick={onKick}
+                  busy={kickingId === p.participantId}
+                />
               </span>
             ))}
             {participants.length === 0 && (
@@ -405,26 +525,32 @@ function LobbyView({
             )}
           </div>
         )}
-
-        <div className="absolute bottom-3 right-4 flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-xs font-semibold text-white/80">
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-3.5 w-3.5"
-            aria-hidden="true"
-          >
-            <path d="M7.5 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-            <path d="M13.5 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" opacity="0.6" />
-            <path d="M2 16c0-2.9 2.46-5 5.5-5s5.5 2.1 5.5 5v.5H2V16Z" />
-            <path
-              d="M13.5 11.2c2.42.32 4 2.13 4 4.3v.5h-3v-.5c0-1.6-.53-2.98-1.5-4.02.17-.1.34-.19.5-.28Z"
-              opacity="0.6"
-            />
-          </svg>
-          {participants.length}
-        </div>
       </div>
     </div>
+  );
+}
+
+function KickButton({
+  participantId,
+  onKick,
+  busy,
+}: {
+  participantId: string;
+  onKick: (id: string) => void;
+  busy: boolean;
+}) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        if (window.confirm("Đá học viên này khỏi phòng?")) onKick(participantId);
+      }}
+      disabled={busy}
+      title="Đá khỏi phòng"
+      className="ml-0.5 flex h-4 w-4 flex-none items-center justify-center rounded-full bg-black/30 text-[10px] text-white/70 opacity-0 transition-opacity hover:bg-red-500 hover:text-white group-hover/chip:opacity-100 disabled:opacity-30"
+    >
+      ✕
+    </button>
   );
 }
 
@@ -432,6 +558,7 @@ function PlayView({
   snap,
   currentQuestion,
   answeredCount,
+  answeredIds,
   participants,
   teamStandings,
   busy,
@@ -441,6 +568,7 @@ function PlayView({
   snap: Snapshot;
   currentQuestion: Question;
   answeredCount: number;
+  answeredIds: Set<string>;
   participants: LiveParticipant[];
   teamStandings: TeamStanding[];
   busy: boolean;
@@ -482,53 +610,37 @@ function PlayView({
     return () => clearTimeout(t);
   }, [snap.status, snap.currentQuestionIndex, onNext]);
 
-  const remainingSec = Math.ceil(remainingMs / 1000);
-
   return (
     <div className="mt-6 flex flex-col gap-4 lg:flex-row">
       <div className="flex-1 rounded-3xl bg-white/95 p-6 text-slate-900 shadow-2xl">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-          <span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
             Câu {snap.currentQuestionIndex + 1}/{snap.questions.length}
           </span>
           {snap.status === "running" && (
-            <span
-              className={`rounded-full px-2.5 py-1 font-mono ${
-                remainingSec <= 5 ? "bg-red-100 text-red-700" : "bg-indigo-100 text-indigo-700"
-              }`}
-            >
-              ⏱ {remainingSec}s
-            </span>
+            <CircularTimer remainingMs={remainingMs} totalMs={snap.timeLimitMs} size={72} strokeWidth={6} />
           )}
-          <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-indigo-700">
+          <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700">
             {answeredCount}/{participants.length} đã trả lời
           </span>
         </div>
-        <h2 className="mt-3 text-xl font-bold">{currentQuestion.prompt}</h2>
+        <h2 className="mt-4 text-center text-2xl font-black leading-snug sm:text-3xl">
+          {currentQuestion.prompt}
+        </h2>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {currentQuestion.options.map((o, i) => {
-            const palette = [
-              "from-red-500 to-rose-500",
-              "from-blue-500 to-indigo-500",
-              "from-amber-400 to-yellow-500",
-              "from-emerald-500 to-teal-500",
-            ];
-            const isCorrect = o.isCorrect;
-            return (
-              <div
-                key={o.id}
-                className={`rounded-xl bg-gradient-to-r px-4 py-4 text-sm font-semibold text-white shadow ${
-                  palette[i % palette.length]
-                } ${isRevealed && !isCorrect ? "opacity-40" : ""} ${
-                  isRevealed && isCorrect ? "ring-4 ring-green-400" : ""
-                }`}
-              >
-                {o.label}
-                {isRevealed && isCorrect && " ✅"}
-              </div>
-            );
-          })}
+        <div
+          className={`mt-6 grid gap-4 ${currentQuestion.options.length <= 2 ? "grid-cols-1" : "grid-cols-2"}`}
+        >
+          {currentQuestion.options.map((o, i) => (
+            <OptionCard
+              key={o.id}
+              letter={OPTION_LETTERS[i] ?? "?"}
+              label={o.label}
+              state={isRevealed ? (o.isCorrect ? "correct" : "dimmed") : "idle"}
+              disabled
+              tiltSign={i % 2 === 0 ? -1 : 1}
+            />
+          ))}
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
@@ -536,7 +648,8 @@ function PlayView({
             <button
               onClick={onReveal}
               disabled={busy}
-              className="rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow hover:bg-indigo-700 disabled:opacity-50"
+              style={{ ["--gs-btn-shadow" as string]: "#3730a3" }}
+              className="gs-btn-3d rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white disabled:opacity-50"
             >
               Xem đáp án
             </button>
@@ -545,7 +658,8 @@ function PlayView({
             <button
               onClick={onNext}
               disabled={busy}
-              className="rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-2.5 text-sm font-bold text-indigo-950 shadow hover:scale-105"
+              style={{ ["--gs-btn-shadow" as string]: "#b45309" }}
+              className="gs-btn-3d rounded-2xl bg-gradient-to-b from-amber-400 to-orange-500 px-6 py-3 text-sm font-black text-indigo-950"
             >
               {snap.currentQuestionIndex + 1 >= snap.questions.length
                 ? "Xem kết quả cuối"
@@ -559,8 +673,104 @@ function PlayView({
         participants={participants}
         teamModeEnabled={snap.teamModeEnabled}
         teamStandings={teamStandings}
+        answeredIds={answeredIds}
+        answeredCount={answeredCount}
+        isLive={snap.status === "running"}
       />
     </div>
+  );
+}
+
+function RankDelta({ delta }: { delta: number | undefined }) {
+  if (!delta) return <Minus className="h-3.5 w-3.5 flex-none text-white/20" aria-hidden="true" />;
+  return delta > 0 ? (
+    <span className="flex flex-none items-center gap-0.5 text-[10px] font-bold text-emerald-400">
+      <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+      {delta}
+    </span>
+  ) : (
+    <span className="flex flex-none items-center gap-0.5 text-[10px] font-bold text-red-400">
+      <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+      {Math.abs(delta)}
+    </span>
+  );
+}
+
+
+function LeaderboardRow({
+  flipId,
+  rank,
+  name,
+  score,
+  colorKey,
+  streak,
+  delta,
+  scoreDelta,
+  liveStatus,
+}: {
+  flipId: string;
+  rank: number;
+  name: string;
+  score: number;
+  colorKey?: string;
+  streak?: number;
+  delta: number | undefined;
+  scoreDelta: ScoreDelta | undefined;
+  liveStatus?: "answering" | "submitted";
+}) {
+  const shownScore = useCountUp(score);
+
+  return (
+    <li
+      data-flip-id={flipId}
+      className={`relative flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm backdrop-blur-md ${
+        delta ? "gs-row-flash" : ""
+      }`}
+    >
+      <RankBadge rank={rank} />
+      <span
+        className={`flex h-8 w-8 flex-none items-center justify-center rounded-full text-[11px] font-black text-white ${
+          colorKey ? teamColorClasses(colorKey).bg : ""
+        }`}
+        style={colorKey ? undefined : { background: avatarGradient(flipId) }}
+      >
+        {initials(name)}
+      </span>
+      <span className="min-w-0 flex-1 truncate font-semibold text-white">{name}</span>
+
+      {!!streak && streak >= 2 && (
+        <span className="flex flex-none items-center gap-0.5 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-[10px] font-bold text-orange-300">
+          <Flame className="h-3 w-3" aria-hidden="true" />
+          {streak}x
+        </span>
+      )}
+
+      {liveStatus === "answering" && (
+        <span
+          className="gs-live-dot h-2 w-2 flex-none rounded-full bg-emerald-400"
+          title="Đang trả lời"
+        />
+      )}
+      {liveStatus === "submitted" && (
+        <Check className="h-3.5 w-3.5 flex-none text-blue-400" aria-label="Đã nộp" />
+      )}
+
+      <RankDelta delta={delta} />
+
+      <span className="relative flex-none font-black tabular-nums text-amber-300">
+        {shownScore}
+        {scoreDelta && (
+          <span
+            key={scoreDelta.nonce}
+            className={`pointer-events-none absolute -top-1 right-0 translate-x-1/3 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white ${
+              scoreDelta.delta >= 0 ? "gs-delta-rise bg-emerald-500/90" : "gs-delta-drop bg-rose-500/90"
+            }`}
+          >
+            {scoreDelta.delta >= 0 ? `+${scoreDelta.delta}` : scoreDelta.delta}
+          </span>
+        )}
+      </span>
+    </li>
   );
 }
 
@@ -568,206 +778,75 @@ function LiveLeaderboard({
   participants,
   teamModeEnabled,
   teamStandings,
+  answeredIds,
+  answeredCount,
+  isLive,
 }: {
   participants: LiveParticipant[];
   teamModeEnabled: boolean;
   teamStandings: TeamStanding[];
+  answeredIds: Set<string>;
+  answeredCount: number;
+  isLive: boolean;
 }) {
-  return (
-    <aside className="w-full flex-none rounded-3xl bg-white/10 p-4 shadow-2xl backdrop-blur-sm lg:w-72">
-      <h3 className="flex items-center gap-1.5 text-sm font-bold text-white/90">
-        🏆 Bảng xếp hạng
-      </h3>
-      {teamModeEnabled ? (
-        <ol className="mt-3 space-y-1.5">
-          {teamStandings.map((t, i) => {
-            const colors = teamColorClasses(t.colorKey);
-            return (
-              <li
-                key={t.teamId}
-                className={`rounded-lg px-3 py-2 text-sm ${colors.bg} ${colors.text}`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="flex min-w-0 items-center gap-2 font-semibold">
-                    <span className="w-4 flex-none text-right text-xs">{i + 1}</span>
-                    <span>{emojiForColorKey(t.colorKey)}</span>
-                    <span className="truncate">{t.name}</span>
-                  </span>
-                  <span className="flex-none font-bold">{t.avgScore}</span>
-                </div>
-              </li>
-            );
-          })}
-          {teamStandings.length === 0 && (
-            <li className="text-xs text-white/40">Chưa có dữ liệu</li>
-          )}
-        </ol>
-      ) : (
-        <ol className="mt-3 space-y-1.5">
-          {participants.slice(0, 8).map((p, i) => (
-            <li
-              key={p.participantId}
-              className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-sm"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="w-4 flex-none text-right text-xs font-bold text-white/50">
-                  {i + 1}
-                </span>
-                <Avatar avatarKey={p.avatarKey} size="text-base" />
-                <span className="truncate">{p.displayName}</span>
-                {p.streak >= 2 && <span className="flex-none text-xs">🔥{p.streak}</span>}
-              </span>
-              <span className="flex-none font-bold text-amber-300">{p.totalScore}</span>
-            </li>
-          ))}
-          {participants.length === 0 && (
-            <li className="text-xs text-white/40">Chưa có dữ liệu</li>
-          )}
-        </ol>
-      )}
-    </aside>
+  const top5Participants = participants.slice(0, 5);
+  const top5Teams = teamStandings.slice(0, 5);
+  const orderedIds = teamModeEnabled
+    ? top5Teams.map((t) => t.teamId)
+    : top5Participants.map((p) => p.participantId);
+  const deltas = useRankDeltas(orderedIds);
+  const scoreDeltas = useScoreDeltas(
+    teamModeEnabled
+      ? top5Teams.map((t) => ({ id: t.teamId, score: t.avgScore }))
+      : top5Participants.map((p) => ({ id: p.participantId, score: p.totalScore })),
   );
-}
+  const listRef = useRef<HTMLOListElement>(null);
+  useFlipList(listRef, orderedIds);
 
-const MEDAL = ["🥇", "🥈", "🥉"];
-const PODIUM_HEIGHT = ["h-40 sm:h-56", "h-28 sm:h-40", "h-20 sm:h-28"];
-const PODIUM_ORDER = [1, 0, 2]; // hiện #2 - #1 - #3 giống bục thật
-
-function PodiumView({
-  participants,
-  teamModeEnabled,
-  teamStandings,
-}: {
-  participants: LiveParticipant[];
-  teamModeEnabled: boolean;
-  teamStandings: TeamStanding[];
-}) {
-  const top3 = teamModeEnabled ? teamStandings.slice(0, 3) : participants.slice(0, 3);
-  const rest = teamModeEnabled ? teamStandings.slice(3) : participants.slice(3);
-
-  const confetti = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, i) => ({
-        left: `${(i * 37) % 100}%`,
-        delay: `${(i * 0.13) % 2.5}s`,
-        duration: `${2 + (i % 5) * 0.3}s`,
-        color: ["#facc15", "#f472b6", "#60a5fa", "#4ade80", "#fb923c"][i % 5],
-      })),
-    [],
-  );
+  const total = teamModeEnabled ? teamStandings.length : participants.length;
 
   return (
-    <div className="mt-6 rounded-3xl bg-white/10 p-6 text-center shadow-2xl backdrop-blur-sm sm:p-10">
-      <h2 className="text-2xl font-black sm:text-3xl">🏁 Kết thúc!</h2>
-
-      <div className="relative mt-8 flex items-end justify-center gap-3 overflow-hidden pb-2 sm:gap-6">
-        {confetti.map((c, i) => (
-          <span
-            key={i}
-            className="gs-confetti pointer-events-none absolute top-0 h-2.5 w-2.5 rounded-sm"
-            style={{
-              left: c.left,
-              backgroundColor: c.color,
-              animationDelay: c.delay,
-              animationDuration: c.duration,
-            }}
-          />
-        ))}
-
-        {PODIUM_ORDER.map((rank) => {
-          const entry = top3[rank] as LiveParticipant | TeamStanding | undefined;
-          if (!entry) return <div key={rank} className="w-24 sm:w-32" />;
-          const isTeam = teamModeEnabled;
-          const team = isTeam ? (entry as TeamStanding) : null;
-          const p = !isTeam ? (entry as LiveParticipant) : null;
-          const colors = team ? teamColorClasses(team.colorKey) : null;
-          const key = team ? team.teamId : p!.participantId;
-          const score = team ? team.avgScore : p!.totalScore;
-          return (
-            <div
-              key={key}
-              className="gs-podium-rise flex w-24 flex-col items-center sm:w-32"
-              style={{ animationDelay: `${rank * 150}ms` }}
-            >
-              <div className="gs-float mb-2 flex flex-col items-center">
-                <span className="text-3xl sm:text-4xl">{MEDAL[rank]}</span>
-                {team ? (
-                  <>
-                    <span className="text-3xl sm:text-5xl">{emojiForColorKey(team.colorKey)}</span>
-                    <span className="mt-1 max-w-[6rem] truncate text-sm font-bold sm:max-w-[8rem]">
-                      {team.name}
-                    </span>
-                    <div className="mt-1 flex flex-wrap justify-center gap-0.5">
-                      {team.members.slice(0, 6).map((m) => (
-                        <span key={m.participantId} className="text-sm" title={m.displayName}>
-                          {AVATARS[m.avatarKey] ?? "🙂"}
-                        </span>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-3xl sm:text-5xl">{AVATARS[p!.avatarKey] ?? "🙂"}</span>
-                    <span className="mt-1 max-w-[6rem] truncate text-sm font-bold sm:max-w-[8rem]">
-                      {p!.displayName}
-                    </span>
-                  </>
-                )}
-                <span className="text-xs font-semibold text-amber-300">{score} điểm</span>
-              </div>
-              <div
-                className={`w-full rounded-t-xl ${PODIUM_HEIGHT[rank]} ${
-                  colors
-                    ? colors.bg
-                    : rank === 0
-                      ? "bg-gradient-to-b from-amber-300 to-amber-500"
-                      : rank === 1
-                        ? "bg-gradient-to-b from-slate-200 to-slate-400"
-                        : "bg-gradient-to-b from-orange-300 to-orange-500"
-                } flex items-start justify-center pt-2 text-2xl font-black text-white/90`}
-              >
-                {rank + 1}
-              </div>
-            </div>
-          );
-        })}
+    <aside className="w-full flex-none rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-md lg:w-80">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white/80">
+          <BarChart3 className="h-4 w-4 flex-none text-brand-400" aria-hidden="true" />
+          Bảng xếp hạng
+        </h3>
+        <span className="flex-none rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/70">
+          {answeredCount}/{total}
+        </span>
       </div>
-
-      {rest.length > 0 && (
-        <ol className="mx-auto mt-8 max-w-md space-y-1.5 text-left">
-          {teamModeEnabled
-            ? (rest as TeamStanding[]).map((t, i) => (
-                <li
-                  key={t.teamId}
-                  className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-sm"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="w-5 text-right text-xs font-bold text-white/50">{i + 4}</span>
-                    <span>{emojiForColorKey(t.colorKey)}</span>
-                    <span>{t.name}</span>
-                  </span>
-                  <span className="font-bold text-amber-300">{t.avgScore}</span>
-                </li>
-              ))
-            : (rest as LiveParticipant[]).map((p, i) => (
-                <li
-                  key={p.participantId}
-                  className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-sm"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="w-5 text-right text-xs font-bold text-white/50">{i + 4}</span>
-                    <Avatar avatarKey={p.avatarKey} size="text-base" />
-                    <span>{p.displayName}</span>
-                  </span>
-                  <span className="font-bold text-amber-300">{p.totalScore}</span>
-                </li>
-              ))}
-        </ol>
-      )}
-
-      {(teamModeEnabled ? teamStandings.length === 0 : participants.length === 0) && (
-        <p className="mt-6 text-sm text-white/50">Không có học viên nào tham gia phiên này.</p>
-      )}
-    </div>
+      <ol ref={listRef} className="relative mt-3 space-y-1.5">
+        {teamModeEnabled
+          ? top5Teams.map((t, i) => (
+              <LeaderboardRow
+                key={t.teamId}
+                flipId={t.teamId}
+                rank={i + 1}
+                name={t.name}
+                score={t.avgScore}
+                colorKey={t.colorKey}
+                delta={deltas.get(t.teamId)}
+                scoreDelta={scoreDeltas.get(t.teamId)}
+              />
+            ))
+          : top5Participants.map((p, i) => (
+              <LeaderboardRow
+                key={p.participantId}
+                flipId={p.participantId}
+                rank={i + 1}
+                name={p.displayName}
+                score={p.totalScore}
+                streak={p.streak}
+                delta={deltas.get(p.participantId)}
+                scoreDelta={scoreDeltas.get(p.participantId)}
+                liveStatus={
+                  isLive ? (answeredIds.has(p.participantId) ? "submitted" : "answering") : undefined
+                }
+              />
+            ))}
+        {total === 0 && <li className="text-xs text-white/40">Chưa có dữ liệu</li>}
+      </ol>
+    </aside>
   );
 }

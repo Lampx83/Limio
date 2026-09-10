@@ -4,7 +4,11 @@ import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/realtime/rateLimit";
 import { seedParticipant } from "@/lib/gameshow/bus";
 import { isValidAvatarKey, randomAvatarKey } from "@/lib/gameshow/avatars";
-import { DISPLAY_NAME_MAX, DISPLAY_NAME_MIN } from "@/lib/gameshow/constants";
+import {
+  DISPLAY_NAME_MAX,
+  DISPLAY_NAME_MIN,
+  MAX_PARTICIPANTS_PER_SESSION,
+} from "@/lib/gameshow/constants";
 
 export const runtime = "nodejs";
 
@@ -33,11 +37,19 @@ export async function POST(req: Request, { params }: { params: { code: string } 
 
   const gameSession = await prisma.gameSession.findUnique({
     where: { code: params.code.toUpperCase() },
-    select: { id: true, status: true, teamModeEnabled: true },
+    select: {
+      id: true,
+      status: true,
+      teamModeEnabled: true,
+      _count: { select: { participants: true } },
+    },
   });
   if (!gameSession) return Response.json({ error: "not_found" }, { status: 404 });
   if (gameSession.status !== "lobby") {
     return Response.json({ error: "session_already_started" }, { status: 409 });
+  }
+  if (gameSession._count.participants >= MAX_PARTICIPANTS_PER_SESSION) {
+    return Response.json({ error: "room_full" }, { status: 409 });
   }
 
   let teamId: string | null = null;

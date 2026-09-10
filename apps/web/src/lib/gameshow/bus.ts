@@ -11,31 +11,15 @@
 import { prisma } from "@feedbackme/db";
 import { getRedis } from "../redis";
 import { publish as streamPublish } from "../realtime/publisher";
+import type { LiveParticipant, TeamStanding } from "./types";
 
-export type LiveParticipant = {
-  participantId: string;
-  displayName: string;
-  avatarKey: string;
-  teamId: string | null;
-  totalScore: number;
-  streak: number;
-};
-
-// Đội = trung bình cộng totalScore các thành viên (kể cả người chưa trả lời
-// tính là 0) — xem quyết định "Personal Devices" team mode kiểu Kahoot.
-export type TeamStanding = {
-  teamId: string;
-  name: string;
-  colorKey: string;
-  avgScore: number;
-  memberCount: number;
-  members: LiveParticipant[];
-};
+export type { LiveParticipant, TeamStanding };
 
 export type LiveEvent =
   | { type: "snapshot"; participants: LiveParticipant[] }
   | { type: "participant.joined"; participant: LiveParticipant }
   | { type: "participant.avatar_changed"; participantId: string; avatarKey: string }
+  | { type: "participant.kicked"; participantId: string }
   | {
       type: "question.started";
       questionIndex: number;
@@ -45,7 +29,7 @@ export type LiveEvent =
       timeLimitMs: number;
       startedAt: number;
     }
-  | { type: "answer.received"; questionIndex: number; answeredCount: number }
+  | { type: "answer.received"; questionIndex: number; answeredCount: number; participantId: string }
   | {
       type: "question.ended";
       questionIndex: number;
@@ -151,6 +135,17 @@ export async function updateAvatar(
   });
 }
 
+// Chỉ dùng khi phòng còn ở "lobby" — kick giữa game sẽ để lại GameAnswer mồ
+// côi (participant vẫn cần tồn tại để tính điểm những câu đã trả lời).
+export async function removeParticipant(sessionId: string, participantId: string): Promise<void> {
+  const r = getRedis();
+  const pipe = r.pipeline();
+  pipe.del(kParticipant(sessionId, participantId));
+  pipe.srem(kParticipantIds(sessionId), participantId);
+  await pipe.exec();
+  await publishToGame(sessionId, { type: "participant.kicked", participantId });
+}
+
 export async function getSessionSnapshot(sessionId: string): Promise<LiveParticipant[]> {
   const r = getRedis();
   const ids = await r.smembers(kParticipantIds(sessionId));
@@ -183,8 +178,14 @@ export async function publishAnswerReceived(
   sessionId: string,
   questionIndex: number,
   answeredCount: number,
+  participantId: string,
 ): Promise<void> {
-  await publishToGame(sessionId, { type: "answer.received", questionIndex, answeredCount });
+  await publishToGame(sessionId, {
+    type: "answer.received",
+    questionIndex,
+    answeredCount,
+    participantId,
+  });
 }
 
 /** Cộng điểm + streak vào Hash sống, publish leaderboard mới nhất. */

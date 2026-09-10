@@ -6,7 +6,6 @@ import IORedis, { type Redis, type RedisOptions } from "ioredis";
 
 const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined;
-  redisSubscriber: Redis | undefined;
 };
 
 const url = () => process.env.REDIS_URL ?? "redis://localhost:6379";
@@ -28,12 +27,15 @@ export function getRedis(): Redis {
   return c;
 }
 
-// Pub/Sub & blocking commands (XREAD BLOCK, BLPOP, SUBSCRIBE) need a dedicated
-// connection — ioredis puts that connection into a special mode that can't run
-// normal commands. Use this for those.
-export function getRedisSubscriber(): Redis {
-  if (globalForRedis.redisSubscriber) return globalForRedis.redisSubscriber;
-  const c = createClient();
-  globalForRedis.redisSubscriber = c;
-  return c;
+// XREAD BLOCK giữ nguyên connection cho tới khi có data hoặc hết BLOCK_MS —
+// mỗi listener (mỗi SSE connection) PHẢI có connection riêng, không được
+// dùng chung 1 connection singleton như getRedis(). Dùng chung sẽ khiến các
+// blocking read xếp hàng trên cùng 1 connection: listener join sau bị kẹt
+// phía sau blocking call của listener join trước, và khi tới lượt thực thi,
+// cursor "$" resolve lại từ thời điểm đó → bỏ lỡ đúng event vừa làm listener
+// kia tỉnh dậy (bug đã gặp: 2 học viên join gameshow, người join sau kẹt ở
+// màn hình chờ tới tận câu hỏi kế tiếp mới nhận được event).
+// Gọi hàm này cho MỖI subscribe() và disconnect() khi xong (xem stream.ts).
+export function createBlockingConnection(): Redis {
+  return createClient();
 }

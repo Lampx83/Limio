@@ -29,11 +29,12 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const [questions, participants, answeredCount] = await Promise.all([
+  const [questions, participants, answeredParticipants] = await Promise.all([
     getSessionQuestions(gameSession.id),
     getSessionSnapshot(gameSession.id),
-    prisma.gameAnswer.count({
+    prisma.gameAnswer.findMany({
       where: { sessionId: gameSession.id, questionIndex: gameSession.currentQuestionIndex },
+      select: { participantId: true },
     }),
   ]);
   const teamStandings = gameSession.teamModeEnabled
@@ -50,7 +51,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     currentQuestionIndex: gameSession.currentQuestionIndex,
     currentQuestionStartedAt: gameSession.currentQuestionStartedAt?.getTime() ?? null,
     timeLimitMs: (questions[gameSession.currentQuestionIndex]?.timeLimitSec ?? 20) * 1000,
-    answeredCount,
+    answeredCount: answeredParticipants.length,
+    // Host cần biết CHÍNH XÁC ai đã nộp (không chỉ đếm) để tô chấm trạng thái
+    // sống trên bảng xếp hạng — join giữa chừng/tải lại trang không mất data.
+    answeredParticipantIds: answeredParticipants.map((a) => a.participantId),
     questions,
     participants,
     teamStandings,

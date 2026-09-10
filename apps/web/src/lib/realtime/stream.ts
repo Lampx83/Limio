@@ -1,4 +1,4 @@
-import { getRedis, getRedisSubscriber } from "../redis";
+import { getRedis, createBlockingConnection } from "../redis";
 
 // Wrapper mỏng quanh Redis Streams. Mỗi channel = 1 stream key `rt:{channel}`.
 // MAXLEN ~ N giữ stream gọn (xấp xỉ, không exact — `~` nhanh hơn nhiều).
@@ -55,47 +55,62 @@ export async function* subscribe(
   signal: AbortSignal,
 ): AsyncGenerator<StreamEvent[], void, void> {
   let cursor = sinceId;
-  while (!signal.aborted) {
-    let res: [string, [string, string[]][]][] | null = null;
-    try {
-      // XREAD BLOCK 25000 COUNT 50 STREAMS rt:{ch} <cursor>
-      // ioredis typing cho overload xread phức tạp — cast args qua any cho gọn,
-      // shape return value vẫn đúng theo Redis protocol.
-      res = (await (getRedisSubscriber().xread as unknown as (
-        ...args: unknown[]
-      ) => Promise<[string, [string, string[]][]][] | null>)(
-        "BLOCK",
-        BLOCK_MS,
-        "COUNT",
-        50,
-        "STREAMS",
-        key(channel),
-        cursor,
-      )) ?? null;
-    } catch {
+  // Connection RIÊNG cho listener này — không share với listener khác. XREAD
+  // BLOCK giữ nguyên connection tới khi có data/hết BLOCK_MS; share 1
+  // connection cho nhiều listener khiến các blocking call xếp hàng lên
+  // nhau — listener join sau bị kẹt phía sau, và khi tới lượt thực thi,
+  // cursor "$" resolve lại từ thời điểm ĐÓ nên bỏ lỡ đúng event vừa đánh
+  // thức listener trước (bug thực tế: học viên join gameshow sau bị kẹt màn
+  // hình chờ tới tận câu hỏi kế tiếp).
+  const conn = createBlockingConnection();
+  const onAbort = () => conn.disconnect();
+  signal.addEventListener("abort", onAbort);
+  try {
+    while (!signal.aborted) {
+      let res: [string, [string, string[]][]][] | null = null;
+      try {
+        // XREAD BLOCK 25000 COUNT 50 STREAMS rt:{ch} <cursor>
+        // ioredis typing cho overload xread phức tạp — cast args qua any cho gọn,
+        // shape return value vẫn đúng theo Redis protocol.
+        res = (await (conn.xread as unknown as (
+          ...args: unknown[]
+        ) => Promise<[string, [string, string[]][]][] | null>)(
+          "BLOCK",
+          BLOCK_MS,
+          "COUNT",
+          50,
+          "STREAMS",
+          key(channel),
+          cursor,
+        )) ?? null;
+      } catch {
+        if (signal.aborted) return;
+        // Reconnect/transient — chờ 500ms rồi thử lại
+        await new Promise((r) => setTimeout(r, 500));
+        continue;
+      }
       if (signal.aborted) return;
-      // Reconnect/transient — chờ 500ms rồi thử lại
-      await new Promise((r) => setTimeout(r, 500));
-      continue;
+      if (!res || res.length === 0) {
+        // Timeout block — yield empty để caller có dịp gửi heartbeat
+        yield [];
+        continue;
+      }
+      const first = res[0];
+      if (!first) {
+        yield [];
+        continue;
+      }
+      const [, entries] = first;
+      const events = parseEntries(channel, entries);
+      if (events.length > 0) {
+        const last = events[events.length - 1];
+        if (last) cursor = last.id;
+        yield events;
+      }
     }
-    if (signal.aborted) return;
-    if (!res || res.length === 0) {
-      // Timeout block — yield empty để caller có dịp gửi heartbeat
-      yield [];
-      continue;
-    }
-    const first = res[0];
-    if (!first) {
-      yield [];
-      continue;
-    }
-    const [, entries] = first;
-    const events = parseEntries(channel, entries);
-    if (events.length > 0) {
-      const last = events[events.length - 1];
-      if (last) cursor = last.id;
-      yield events;
-    }
+  } finally {
+    signal.removeEventListener("abort", onAbort);
+    conn.disconnect();
   }
 }
 
