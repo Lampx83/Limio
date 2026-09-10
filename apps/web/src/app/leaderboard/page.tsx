@@ -97,11 +97,11 @@ export default async function LeaderboardPage({
             </>
           ) : (
             <>Top học viên theo XP đạt được.</>
-          )}{" "}
-          <Link href="/xp-guide" className="link">
-            Cách tính điểm →
-          </Link>
+          )}
         </p>
+        <Link href="/xp-guide" className="btn-pill mt-3 text-xs">
+          💡 Cách tính điểm
+        </Link>
       </div>
 
       {/* Period tabs */}

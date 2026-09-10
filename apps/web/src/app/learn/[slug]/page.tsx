@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Lock } from "lucide-react";
+import { Crown, Lock } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { getCourseProgress, isUserEnrolled } from "@feedbackme/core-lms";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@feedbackme/core-gamification";
 import { getAdaptiveNextLesson } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
-import { StickyMobileCTA } from "@/components/ui";
+import { StickyMobileCTA, UserAvatar } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -124,9 +124,9 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
           </div>
           <Link
             href="/xp-guide"
-            className="mt-2 inline-block text-xs text-white/80 underline-offset-2 hover:underline"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition-colors hover:bg-white/30"
           >
-            Cách tính điểm →
+            💡 Cách tính điểm
           </Link>
 
           {/* Action buttons */}
@@ -363,9 +363,14 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                 Đầy đủ →
               </Link>
             </div>
-            <p className="mt-0.5 text-xs text-faint">
-              {leaderboard.totalParticipants} người tham gia
-            </p>
+            <div className="mt-0.5 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-faint">
+                {leaderboard.totalParticipants} người tham gia
+              </p>
+              <Link href="/xp-guide" className="btn-pill py-1 text-xs">
+                💡 Cách tính điểm
+              </Link>
+            </div>
             {leaderboard.selfOptedOut && (
               <p className="mt-2 text-xs text-faint">
                 Bạn đã tắt BXH. Bật lại trong{" "}
@@ -380,32 +385,74 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                 Chưa ai có XP tuần này. Trở thành người đầu tiên!
               </p>
             ) : (
-              <ol className="mt-3 space-y-1">
-                {leaderboard.entries.map((e) => (
-                  <li
-                    key={e.userId}
-                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${
-                      e.isYou
-                        ? "bg-brand-soft font-semibold text-brand-700"
-                        : ""
-                    }`}
-                  >
-                    <span className="w-6 shrink-0 text-right tabular-nums text-faint">
-                      {e.rank === 1
-                        ? ""
-                        : e.rank === 2
-                          ? ""
-                          : e.rank === 3
-                            ? ""
-                            : `#${e.rank}`}
-                    </span>
-                    <span className="flex-1 truncate">{e.displayName}</span>
-                    <span className="text-xs text-faint">L{e.level}</span>
-                    <span className="w-14 text-right text-xs tabular-nums font-medium">
-                      {e.weeklyXp} XP
-                    </span>
-                  </li>
-                ))}
+              <ol className="mt-3 space-y-1.5 text-sm">
+                {leaderboard.entries.map((e) => {
+                  const crown =
+                    e.rank === 1
+                      ? {
+                          wrap: "h-11 w-11 bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-600 ring-4 ring-amber-200/70 shadow-[0_0_18px_-2px_rgba(245,158,11,0.7)] animate-pulse",
+                          icon: "h-6 w-6 text-white drop-shadow-md",
+                          badge:
+                            "h-4 w-4 text-[10px] bg-amber-600 text-white ring-2 ring-white",
+                        }
+                      : e.rank === 2
+                        ? {
+                            wrap: "h-9 w-9 bg-gradient-to-br from-slate-200 to-slate-400 ring-2 ring-slate-200 shadow-sm",
+                            icon: "h-5 w-5 text-white drop-shadow-sm",
+                            badge:
+                              "h-3.5 w-3.5 text-[9px] bg-white text-slate-700 ring-1 ring-slate-200",
+                          }
+                        : e.rank === 3
+                          ? {
+                              wrap: "h-7 w-7 bg-gradient-to-br from-orange-300 to-amber-700 ring-2 ring-orange-200 shadow-sm",
+                              icon: "h-3.5 w-3.5 text-white drop-shadow-sm",
+                              badge:
+                                "h-3 w-3 text-[8px] bg-white text-orange-800 ring-1 ring-orange-200",
+                            }
+                          : null;
+                  return (
+                    <li
+                      key={e.userId}
+                      className={`flex items-center gap-2 rounded-lg px-1.5 ${
+                        e.rank === 1 ? "py-2" : "py-1"
+                      } ${e.isYou ? "bg-brand-soft font-semibold text-brand-700" : ""}`}
+                    >
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+                        {crown ? (
+                          <span
+                            className={`relative flex items-center justify-center rounded-full ${crown.wrap}`}
+                            title={`Hạng ${e.rank}`}
+                          >
+                            <Crown
+                              className={crown.icon}
+                              fill="currentColor"
+                              aria-hidden
+                            />
+                            <span
+                              className={`absolute -bottom-1 -right-1 flex items-center justify-center rounded-full font-bold tabular-nums ${crown.badge}`}
+                            >
+                              {e.rank}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-[11px] font-bold tabular-nums text-faint">
+                            {e.rank}
+                          </span>
+                        )}
+                      </span>
+                      <UserAvatar name={e.displayName} size="sm" />
+                      <span className="min-w-0 flex-1 truncate text-sm">
+                        {e.displayName}
+                      </span>
+                      <span className="shrink-0 text-[11px] text-faint">
+                        L{e.level}
+                      </span>
+                      <span className="shrink-0 text-[11px] font-semibold tabular-nums text-brand-700">
+                        {e.weeklyXp.toLocaleString("vi-VN")} XP
+                      </span>
+                    </li>
+                  );
+                })}
               </ol>
             )}
             {leaderboard.selfRank && (
