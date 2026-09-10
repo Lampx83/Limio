@@ -8,6 +8,7 @@ import {
   type Scope,
 } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
+import { BackButton } from "@/components/ui";
 import LeaderboardOptOutToggle from "./LeaderboardOptOutToggle";
 
 export const dynamic = "force-dynamic";
@@ -74,6 +75,11 @@ export default async function LeaderboardPage({
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
         <div className="mx-auto h-64 max-w-3xl rounded-full bg-gradient-to-r from-amber-200/40 via-brand-200/40 to-accent-200/40 blur-3xl" />
       </div>
+
+      <BackButton
+        fallbackHref={course ? `/learn/${course.slug}` : "/me/dashboard"}
+        className="mb-3 inline-flex items-center gap-1.5 text-sm text-brand-700 hover:underline"
+      />
 
       {/* Hero */}
       <div className="text-center sm:text-left">

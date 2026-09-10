@@ -5,3 +5,4 @@ export { default as DateTime, Countdown } from "./DateTime";
 export { default as StickyMobileCTA } from "./StickyMobileCTA";
 export { default as KpiCard, type KpiTone } from "./KpiCard";
 export { default as ShareCard } from "./ShareCard";
+export { default as BackButton } from "./BackButton";

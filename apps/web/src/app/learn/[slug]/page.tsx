@@ -120,14 +120,16 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
               pct={xp.levelProgressPct}
               barClass="bg-accent-300"
               tone="white"
+              action={
+                <Link
+                  href="/xp-guide"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium text-white backdrop-blur transition-colors hover:bg-white/30"
+                >
+                  💡 Cách tính điểm
+                </Link>
+              }
             />
           </div>
-          <Link
-            href="/xp-guide"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition-colors hover:bg-white/30"
-          >
-            💡 Cách tính điểm
-          </Link>
 
           {/* Action buttons */}
           <div className="mt-5 flex flex-wrap gap-2">
@@ -560,6 +562,7 @@ function ProgressTile({
   pct,
   barClass,
   tone,
+  action,
 }: {
   label: string;
   value: string;
@@ -567,6 +570,7 @@ function ProgressTile({
   pct: number;
   barClass: string;
   tone: "white";
+  action?: React.ReactNode;
 }) {
   void tone;
   return (
@@ -583,7 +587,12 @@ function ProgressTile({
           style={{ width: `${pct}%` }}
         />
       </div>
-      {hint && <p className="mt-1 text-xs opacity-75">{hint}</p>}
+      {(hint || action) && (
+        <div className="mt-1 flex items-center justify-between gap-2">
+          {hint && <p className="text-xs opacity-75">{hint}</p>}
+          {action}
+        </div>
+      )}
     </div>
   );
 }

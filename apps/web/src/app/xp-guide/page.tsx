@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackButton } from "@/components/ui";
 import {
   ASSIGNMENT_DEEP_REFLECTION_XP,
   DAILY_CAPS,
@@ -80,6 +81,7 @@ const rows: Row[] = [
 export default function XpGuidePage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 lg:px-6">
+      <BackButton fallbackHref="/leaderboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-brand-700 hover:underline" />
       <span className="chip-accent inline-flex items-center gap-1.5">🏆 Gamification</span>
       <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
         Cách tính điểm (XP)
