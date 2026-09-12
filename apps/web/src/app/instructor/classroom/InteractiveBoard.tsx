@@ -66,6 +66,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [qrPanelOpen, setQrPanelOpen] = useState(true);
   const [history, setHistory] = useState<BoardHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [title, setTitle] = useState("");
@@ -436,9 +437,9 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 {menuHidden ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
               </button>
               <button
-                onClick={() => setShowQrModal(true)}
+                onClick={() => setQrPanelOpen((v) => !v)}
                 className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5"
-                title="Hiện QR / mã"
+                title={qrPanelOpen ? "Ẩn khung QR" : "Hiện khung QR"}
               >
                 <QrCode size={14} />
                 {current.code}
@@ -503,7 +504,33 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           </button>
         )}
 
-        {/* QR Modal — bấm vào code/QR button thì hiện QR to để học viên scan */}
+        {/* Khung QR nhỏ, đứng yên góc màn hình — luôn thấy được cùng lúc với các note đổ về,
+            khác với modal full-screen cũ vốn che mất NotesGrid. Bấm vào QR để phóng to khi cần
+            (vd. lớp đông, học viên ngồi xa). */}
+        {qrPanelOpen && joinUrl && (
+          <div
+            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 left-6 z-40 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-amber-200 animate-fade-in-up`}
+          >
+            <button
+              onClick={() => setQrPanelOpen(false)}
+              className="absolute -top-2 -right-2 rounded-full bg-white p-1 shadow ring-1 ring-gray-200 hover:bg-gray-100"
+              aria-label="Ẩn khung QR"
+              title="Ẩn khung QR"
+            >
+              <X size={12} />
+            </button>
+            <button
+              onClick={() => setShowQrModal(true)}
+              title="Bấm để phóng to"
+              className="rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
+            >
+              <QRCode value={joinUrl} size={110} level="H" includeMargin />
+            </button>
+            <p className="text-sm font-extrabold font-mono tracking-[0.15em] text-amber-700">{current.code}</p>
+          </div>
+        )}
+
+        {/* QR Modal phóng to — bấm vào khung QR góc màn hình hoặc nút mã để hiện QR to hơn */}
         {showQrModal && joinUrl && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in-up p-4"
