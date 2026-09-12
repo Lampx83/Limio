@@ -162,7 +162,7 @@ export default function LessonTocDrawer({
                               className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors ${
                                 active
                                   ? "bg-emerald-50 font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200"
-                                  : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+                                  : "text-[rgb(var(--text-muted))] hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-200"
                               }`}
                               prefetch={false}
                             >
