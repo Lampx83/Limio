@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import SafeHtml from "./SafeHtml";
@@ -79,6 +79,7 @@ interface PdfPayload {
 interface HtmlBlockPayload {
   url: string;
   title?: string;
+  body?: string;
   heightPx?: number;
 }
 
@@ -389,25 +390,35 @@ function ContentBlock({
       // Mở trực tiếp bằng navigation top-level thì trình duyệt render đúng
       // kích thước gốc như mở file .html trên máy.
       return (
-        <div>
-          {p.title && (
-            <p className="mb-2 text-sm font-medium text-muted">{p.title}</p>
-          )}
-          {/*
-           * target="_blank" mở URL này y hệt link thường — không đọc được
-           * cookie/session của Limio vì route serve /api/lesson-media/html/[file]
-           * tự gắn Content-Security-Policy: sandbox (không allow-same-origin)
-           * lên chính response, áp dụng cho cả điều hướng top-level lẫn iframe.
-           */}
-          <a
-            href={p.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
-          >
-            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
-            Mở tài nguyên HTML (tab mới)
-          </a>
+        <div className="flex items-start gap-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card transition-shadow hover:shadow-card-hover sm:p-5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-600">
+            <Globe className="h-5 w-5" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1 pt-1">
+            {/*
+             * target="_blank" mở URL này y hệt link thường — không đọc được
+             * cookie/session của Limio vì route serve /api/lesson-media/html/[file]
+             * tự gắn Content-Security-Policy: sandbox (không allow-same-origin)
+             * lên chính response, áp dụng cho cả điều hướng top-level lẫn iframe.
+             */}
+            <a
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/link inline-flex items-center gap-1.5 text-base font-semibold text-[rgb(var(--text))] hover:text-brand-700"
+            >
+              <span className="underline decoration-transparent decoration-2 underline-offset-4 transition-colors group-hover/link:decoration-brand-400">
+                {p.title || "Mở tài nguyên HTML"}
+              </span>
+              <ExternalLink className="h-4 w-4 shrink-0 text-faint transition-colors group-hover/link:text-brand-600" aria-hidden />
+            </a>
+            {p.body && (
+              <SafeHtml
+                html={p.body}
+                className="prose prose-sm mt-0.5 max-w-none leading-snug text-muted [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 dark:prose-invert"
+              />
+            )}
+          </div>
         </div>
       );
     }

@@ -127,6 +127,7 @@ export default function AddContentItemForm({
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
   const [html, setHtml] = useState("");
+  const [htmlBlockBody, setHtmlBlockBody] = useState("");
   const [filename, setFilename] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
   const [scormPackages, setScormPackages] = useState<ScormPackageRow[]>([]);
@@ -359,7 +360,11 @@ export default function AddContentItemForm({
         payload = { url, title: linkTitle.trim() || undefined };
         break;
       case "html_block":
-        payload = { url, title: linkTitle.trim() || undefined };
+        payload = {
+          url,
+          title: linkTitle.trim() || undefined,
+          body: htmlBlockBody.trim() || undefined,
+        };
         break;
       case "scorm":
         if (!scormPackageId) {
@@ -480,17 +485,16 @@ export default function AddContentItemForm({
         type === "embed" ||
         type === "file" ||
         type === "external_link" ||
-        type === "pdf" ||
-        type === "html_block") && (
+        type === "pdf") && (
         <div className="space-y-2">
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
-            // For video / file / pdf / html_block the URL may be a same-origin
-            // path (e.g. /api/lesson-media/videos/<file>) populated by the
-            // upload panel below. type="url" rejects path-only values, so we
-            // use type="text" for those and keep type="url" for purely-external
+            // For video / file / pdf the URL may be a same-origin path (e.g.
+            // /api/lesson-media/videos/<file>) populated by the upload panel
+            // below. type="url" rejects path-only values, so we use
+            // type="text" for those and keep type="url" for purely-external
             // fields (embed, external_link).
             type={
               type === "embed" || type === "external_link" ? "url" : "text"
@@ -500,9 +504,7 @@ export default function AddContentItemForm({
                 ? "Dán URL: YouTube · Vimeo · Loom · Wistia · Bunny · Mux — hoặc upload file bên dưới"
                 : type === "pdf"
                   ? "URL PDF (https://.../file.pdf) — hoặc upload file bên dưới"
-                  : type === "html_block"
-                    ? "URL file .html đã host sẵn — hoặc upload file bên dưới"
-                    : "URL"
+                  : "URL"
             }
             className="input"
           />
@@ -516,14 +518,6 @@ export default function AddContentItemForm({
           )}
           {type === "pdf" && (
             <PdfUploadPanel
-              uploading={uploading}
-              setUploading={setUploading}
-              setError={setError}
-              onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
-            />
-          )}
-          {type === "html_block" && (
-            <HtmlUploadPanel
               uploading={uploading}
               setUploading={setUploading}
               setError={setError}
@@ -572,19 +566,43 @@ export default function AddContentItemForm({
         />
       )}
 
+      {/* Nhập nội dung (tiêu đề + mô tả) trước, chọn file HTML sau — instructor
+          soạn cái học viên sẽ đọc trước, "đính kèm file nào" là bước chốt
+          cuối cùng chứ không phải điều đầu tiên phải nghĩ tới. */}
       {type === "html_block" && (
         <>
           <input
             value={linkTitle}
             onChange={(e) => setLinkTitle(e.target.value)}
             maxLength={200}
-            placeholder="Tiêu đề (optional)"
+            placeholder="Tiêu đề — sẽ hiện thành link bấm mở được (dòng trên cùng)"
             className="input"
           />
+          <RichTextEditor
+            value={htmlBlockBody}
+            onChange={setHtmlBlockBody}
+            placeholder="Mô tả (optional) — hiện ngay dưới tiêu đề"
+          />
+          <div className="space-y-2">
+            <input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              required
+              type="text"
+              placeholder="URL file .html đã host sẵn — hoặc upload file bên dưới"
+              className="input"
+            />
+            <HtmlUploadPanel
+              uploading={uploading}
+              setUploading={setUploading}
+              setError={setError}
+              onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+            />
+          </div>
           <p className="text-xs text-muted">
-            File sẽ hiển thị trong khung riêng (iframe), tách biệt khỏi trang —
-            script trong file không đọc được đăng nhập của học viên hay sửa
-            phần còn lại của trang.
+            Học viên thấy tiêu đề (bấm mở file trong tab mới, không nhúng
+            iframe) + mô tả ngay dưới — script trong file không đọc được
+            đăng nhập của học viên hay sửa phần còn lại của trang.
           </p>
         </>
       )}

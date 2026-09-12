@@ -103,7 +103,11 @@ export const PdfPayload = z.object({
 export const HtmlBlockPayload = z.object({
   url: UrlOrPath,
   title: z.string().max(200).optional(),
-  // Chiều cao khung hiển thị (px). Mặc định 480 nếu bỏ trống — xem LessonContent.
+  // Mô tả rich-text hiển thị phía trên link mở tài nguyên — cùng cách soạn
+  // và làm sạch với RichTextPayload.html ở trên (Tiptap + DOMPurify).
+  body: z.string().max(200_000).optional(),
+  // Chiều cao khung hiển thị (px). Không còn dùng để render (html_block giờ
+  // là link mở tab mới, không nhúng iframe) — giữ lại cho payload cũ.
   heightPx: z.number().int().positive().max(4000).optional(),
 });
 

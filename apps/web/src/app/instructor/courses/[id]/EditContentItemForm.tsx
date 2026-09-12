@@ -62,6 +62,9 @@ export default function EditContentItemForm({ item, onClose }: Props) {
   const [url, setUrl] = useState<string>(String(initial.url ?? ""));
   const [filename, setFilename] = useState<string>(String(initial.filename ?? ""));
   const [linkTitle, setLinkTitle] = useState<string>(String(initial.title ?? ""));
+  const [htmlBlockBody, setHtmlBlockBody] = useState<string>(
+    String(initial.body ?? ""),
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,8 +93,14 @@ export default function EditContentItemForm({ item, onClose }: Props) {
         break;
       case "external_link":
       case "pdf":
-      case "html_block":
         payload = { url, title: linkTitle.trim() || undefined };
+        break;
+      case "html_block":
+        payload = {
+          url,
+          title: linkTitle.trim() || undefined,
+          body: htmlBlockBody.trim() || undefined,
+        };
         break;
       case "scorm":
         payload = {
@@ -174,16 +183,12 @@ export default function EditContentItemForm({ item, onClose }: Props) {
         type === "embed" ||
         type === "file" ||
         type === "external_link" ||
-        type === "pdf" ||
-        type === "html_block") && (
+        type === "pdf") && (
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           required
-          // html_block URLs are always a same-origin upload path
-          // (/api/lesson-media/html/<file>) — type="url" would reject those,
-          // same reasoning as the upload-path fields in AddContentItemForm.
-          type={type === "html_block" ? "text" : "url"}
+          type="url"
           placeholder="URL"
           className="input"
         />
@@ -202,7 +207,6 @@ export default function EditContentItemForm({ item, onClose }: Props) {
 
       {(type === "external_link" ||
         type === "pdf" ||
-        type === "html_block" ||
         type === "scorm" ||
         type === "h5p" ||
         type === "lti") && (
@@ -213,6 +217,35 @@ export default function EditContentItemForm({ item, onClose }: Props) {
           placeholder="Tiêu đề (optional)"
           className="input"
         />
+      )}
+
+      {/* Cùng thứ tự với AddContentItemForm: tiêu đề + mô tả (nội dung học
+          viên đọc) trước, URL file (chi tiết kỹ thuật) sau. */}
+      {type === "html_block" && (
+        <>
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề — sẽ hiện thành link bấm mở được (dòng trên cùng)"
+            className="input"
+          />
+          <RichTextEditor
+            value={htmlBlockBody}
+            onChange={setHtmlBlockBody}
+            placeholder="Mô tả (optional) — hiện ngay dưới tiêu đề"
+          />
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+            // URL là same-origin upload path (/api/lesson-media/html/<file>)
+            // — type="url" sẽ reject giá trị dạng path thuần.
+            type="text"
+            placeholder="URL"
+            className="input"
+          />
+        </>
       )}
 
       {type === "pdf" && url.trim() && (
