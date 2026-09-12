@@ -214,8 +214,8 @@ describe("Assignments — A5", () => {
       a.assignmentId,
     );
     expect(beforeSubmit).toHaveLength(1);
-    expect(beforeSubmit[0].user.id).toBe(s.learnerId);
-    expect(beforeSubmit[0].submission).toBeNull();
+    expect(beforeSubmit[0]!.user.id).toBe(s.learnerId);
+    expect(beforeSubmit[0]!.submission).toBeNull();
 
     await submitAssignment(s.learnerId, a.assignmentId, { body: "Bài làm" });
 
@@ -224,8 +224,8 @@ describe("Assignments — A5", () => {
       a.assignmentId,
     );
     expect(afterSubmit).toHaveLength(1);
-    expect(afterSubmit[0].submission?.body).toBe("Bài làm");
-    expect(afterSubmit[0].submission?.status).toBe("submitted");
+    expect(afterSubmit[0]!.submission?.body).toBe("Bài làm");
+    expect(afterSubmit[0]!.submission?.status).toBe("submitted");
   });
 
   it("creates assignment with generative metadata (defaults preserved when omitted)", async () => {
