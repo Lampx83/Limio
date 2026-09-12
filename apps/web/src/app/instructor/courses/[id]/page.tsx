@@ -27,6 +27,7 @@ import EnrollmentList from "./EnrollmentList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
+import CourseAssignmentsBrowser from "../../assignments/CourseAssignmentsBrowser";
 import { ShareCard } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -48,9 +49,22 @@ export default async function InstructorCourseEditPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams?: { lesson?: string; tab?: string; lessonView?: string };
+  searchParams?: {
+    lesson?: string;
+    tab?: string;
+    lessonView?: string;
+    assignmentLesson?: string;
+    assignmentFilter?: string;
+  };
 }) {
-  const TAB_VALUES: EditorTab[] = ["overview", "content", "students", "sections", "analytics"];
+  const TAB_VALUES: EditorTab[] = [
+    "overview",
+    "content",
+    "students",
+    "sections",
+    "assignments",
+    "analytics",
+  ];
   const requestedTab: EditorTab = TAB_VALUES.includes(searchParams?.tab as EditorTab)
     ? (searchParams!.tab as EditorTab)
     : "overview";
@@ -184,6 +198,17 @@ export default async function InstructorCourseEditPage({
 
   const useWideLayout = tab === "content";
   const useSidebarLayout = tab === "content";
+
+  const buildAssignmentHref = (next: { lesson?: string | null; filter?: string }) => {
+    const params = new URLSearchParams();
+    params.set("tab", "assignments");
+    const l =
+      next.lesson === undefined ? (searchParams?.assignmentLesson ?? null) : next.lesson;
+    if (l) params.set("assignmentLesson", l);
+    const f = next.filter ?? searchParams?.assignmentFilter ?? "all";
+    if (f && f !== "all") params.set("assignmentFilter", f);
+    return `/instructor/courses/${course.id}?${params.toString()}`;
+  };
 
   return (
     <>
@@ -505,6 +530,18 @@ export default async function InstructorCourseEditPage({
           </div>
           <SectionsClient courseId={course.id} />
         </div>
+      )}
+
+      {/* TAB: Assignment — danh sách bài học (theo module) → assignment của
+          bài học đó, dùng chung component với trang /instructor/assignments. */}
+      {tab === "assignments" && (
+        <CourseAssignmentsBrowser
+          courseId={course.id}
+          courseTitle={course.title}
+          requestedLessonId={searchParams?.assignmentLesson ?? null}
+          filter={searchParams?.assignmentFilter ?? "all"}
+          buildHref={buildAssignmentHref}
+        />
       )}
 
       {/* TAB: Phân tích học tập */}

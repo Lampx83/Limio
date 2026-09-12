@@ -11,13 +11,20 @@ import Link from "next/link";
  * cần đánh đổi như vậy.
  */
 
-export type EditorTab = "overview" | "content" | "students" | "sections" | "analytics";
+export type EditorTab =
+  | "overview"
+  | "content"
+  | "students"
+  | "sections"
+  | "assignments"
+  | "analytics";
 
 const TABS: Array<{ key: EditorTab; label: string; icon: string }> = [
   { key: "overview", label: "Tổng quan", icon: "ⓘ" },
   { key: "content", label: "Nội dung", icon: "📚" },
   { key: "students", label: "Học viên", icon: "👥" },
   { key: "sections", label: "Lớp học", icon: "🏫" },
+  { key: "assignments", label: "Assignment", icon: "📝" },
   { key: "analytics", label: "Phân tích", icon: "📊" },
 ];
 
