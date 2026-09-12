@@ -12,6 +12,12 @@ interface Course {
   _count: { enrollments: number };
 }
 
+interface Section {
+  id: string;
+  name: string;
+  enrolledCount: number;
+}
+
 interface StudentListGateProps {
   courses: Course[];
   title: string;
@@ -29,10 +35,35 @@ export default function StudentListGate({
 }: StudentListGateProps) {
   const [mode, setMode] = useState<Mode>("course");
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [sections, setSections] = useState<Section[]>([]);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [manualText, setManualText] = useState("");
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+
+  const handleSelectCourse = useCallback((courseId: string | null) => {
+    setSelectedCourseId(courseId);
+    setSelectedSectionId(null);
+  }, []);
+
+  useEffect(() => {
+    if (mode !== "course" || !selectedCourseId) {
+      setSections([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(apiUrl(`/api/courses/${selectedCourseId}/sections`))
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (Array.isArray(data?.sections)) setSections(data.sections);
+      })
+      .catch((err) => console.error("[StudentListGate] fetch sections error", err));
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, selectedCourseId]);
 
   useEffect(() => {
     if (mode !== "course" || !selectedCourseId) {
@@ -41,7 +72,10 @@ export default function StudentListGate({
     }
     let cancelled = false;
     setIsLoading(true);
-    fetch(apiUrl(`/api/courses/${selectedCourseId}/enrollments`))
+    const url = selectedSectionId
+      ? `/api/courses/${selectedCourseId}/enrollments?sectionId=${selectedSectionId}`
+      : `/api/courses/${selectedCourseId}/enrollments`;
+    fetch(apiUrl(url))
       .then((r) => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -52,7 +86,7 @@ export default function StudentListGate({
     return () => {
       cancelled = true;
     };
-  }, [mode, selectedCourseId]);
+  }, [mode, selectedCourseId, selectedSectionId]);
 
   const studentList = useMemo<StudentItem[]>(() => {
     if (mode === "course" && enrollments.length > 0) {
@@ -84,7 +118,13 @@ export default function StudentListGate({
           <p className="text-sm">
             <span className="font-medium">{studentList.length} sinh viên</span>{" "}
             <span className="text-muted">
-              ({mode === "course" ? "từ khóa học" : "nhập thủ công"})
+              (
+              {mode === "course"
+                ? selectedSectionId
+                  ? `lớp ${sections.find((s) => s.id === selectedSectionId)?.name ?? ""}`
+                  : "từ khóa học"
+                : "nhập thủ công"}
+              )
             </span>
           </p>
           <button
@@ -133,13 +173,33 @@ export default function StudentListGate({
       </div>
 
       {mode === "course" ? (
-        <CourseSelector
-          courses={courses}
-          selectedCourseId={selectedCourseId}
-          onSelectCourse={setSelectedCourseId}
-          enrollmentCount={enrollments.length}
-          isLoading={isLoading}
-        />
+        <div className="space-y-4">
+          <CourseSelector
+            courses={courses}
+            selectedCourseId={selectedCourseId}
+            onSelectCourse={handleSelectCourse}
+            enrollmentCount={enrollments.length}
+            isLoading={isLoading}
+          />
+          {selectedCourseId && sections.length > 0 && (
+            <div>
+              <label className="label mb-2 block font-medium">Chọn lớp (tuỳ chọn)</label>
+              <select
+                value={selectedSectionId || ""}
+                onChange={(e) => setSelectedSectionId(e.target.value || null)}
+                disabled={isLoading}
+                className="input w-full"
+              >
+                <option value="">Tất cả học viên trong khóa học</option>
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.name} ({section.enrolledCount} học viên)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       ) : (
         <ManualStudentInput
           value={manualText}

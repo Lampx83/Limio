@@ -12,11 +12,12 @@ export async function GET(
 
   try {
     const courseId = params.id;
-    console.log("[enrollments API] Fetching enrollments for course:", courseId);
+    const sectionId = new URL(req.url).searchParams.get("sectionId") || undefined;
+    console.log("[enrollments API] Fetching enrollments for course:", courseId, "section:", sectionId ?? "(all)");
 
     // First, just fetch enrollmentIds
     const enrollments = await prisma.enrollment.findMany({
-      where: { courseId },
+      where: { courseId, ...(sectionId ? { sectionId } : {}) },
       select: {
         userId: true,
       },
