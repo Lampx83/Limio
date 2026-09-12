@@ -290,10 +290,12 @@
     background-color: rgb(var(--surface-success));
     border-color: rgb(var(--success) / 0.3);
   }
+  /* Warning/danger read as plain red text, no box — not a boxed callout like success/info */
   .banner-warning {
     @apply banner;
-    background-color: rgb(var(--surface-warning));
-    border-color: rgb(var(--warning) / 0.4);
+    background-color: transparent;
+    border-color: transparent;
+    color: rgb(var(--danger));
   }
   .banner-info {
     @apply banner;
@@ -302,8 +304,9 @@
   }
   .banner-danger {
     @apply banner;
-    background-color: rgb(var(--surface-danger));
-    border-color: rgb(var(--danger) / 0.3);
+    background-color: transparent;
+    border-color: transparent;
+    color: rgb(var(--danger));
   }
 }
 

@@ -119,14 +119,24 @@ export default async function CourseDetailPage({
           <Lock className="h-5 w-5 shrink-0" aria-hidden />
           <div className="flex-1">
             <p className="text-sm font-semibold">Bạn chưa đăng ký khoá học này</p>
-            <p className="text-xs">
-              Đăng ký để mở toàn bộ bài học. Việc này miễn phí và chỉ mất một cú
-              bấm.
-            </p>
+            {course.enrollMode === "invite_only" ? (
+              /* invite_only không có đường tự đăng ký — nói luôn cần gì ở
+                 đây, đừng để banner khác lặp lại/mâu thuẫn phía dưới. */
+              <p className="text-xs">
+                Hãy liên hệ giáo viên để lấy link vào khoá học.
+              </p>
+            ) : (
+              <p className="text-xs">
+                Đăng ký để mở toàn bộ bài học. Việc này miễn phí và chỉ mất một cú
+                bấm.
+              </p>
+            )}
           </div>
-          <a href="#dang-ky" className="btn-primary btn-sm">
-            Đăng ký ngay
-          </a>
+          {course.enrollMode !== "invite_only" && (
+            <a href="#dang-ky" className="btn-primary btn-sm">
+              Đăng ký ngay
+            </a>
+          )}
         </div>
       )}
 
@@ -494,39 +504,34 @@ export default async function CourseDetailPage({
                 </ol>
               )}
             </div>
-            {course.status === "published" && (
-              <div className="card scroll-mt-24" id="dang-ky">
-                {paymentEnabled && !isFree(course.priceCents) && (
-                  <div className="mb-3">
-                    <div className="text-xs uppercase tracking-wide text-faint">
-                      Học phí
+            {course.status === "published" &&
+              // invite_only đã báo "liên hệ giáo viên" ở banner đầu trang —
+              // không lặp lại message đó ở đây. Card này chỉ còn lý do tồn
+              // tại khi có gì để hiện: học phí, hoặc nút đăng ký tự phục vụ.
+              ((paymentEnabled && !isFree(course.priceCents)) ||
+                !(course.enrollMode === "invite_only" && !enrolled)) && (
+                <div className="card scroll-mt-24" id="dang-ky">
+                  {paymentEnabled && !isFree(course.priceCents) && (
+                    <div className="mb-3">
+                      <div className="text-xs uppercase tracking-wide text-faint">
+                        Học phí
+                      </div>
+                      <div className="text-2xl font-bold tabular-nums">
+                        {formatPrice(course.priceCents!, course.currency)}
+                      </div>
                     </div>
-                    <div className="text-2xl font-bold tabular-nums">
-                      {formatPrice(course.priceCents!, course.currency)}
-                    </div>
-                  </div>
-                )}
-                {course.enrollMode === "invite_only" && !enrolled ? (
-                  /* Khoá chỉ nhận link mời: nói rõ cần gì để vào, đừng để một
-                     nút bấm vào rồi báo lỗi — người học không biết hỏi ai. */
-                  <div className="banner-info block rounded-xl px-4 py-3 text-sm">
-                    <p className="font-medium">Khoá học này cần link mời</p>
-                    <p className="mt-0.5 text-xs">
-                      Giảng viên sẽ gửi link mời của lớp bạn. Mở link đó là vào
-                      học được ngay.
-                    </p>
-                  </div>
-                ) : (
-                  <EnrollButton
-                    slug={params.slug}
-                    alreadyEnrolled={enrolled}
-                    priceCents={course.priceCents}
-                    currency={course.currency}
-                    paymentEnabled={paymentEnabled}
-                  />
-                )}
-              </div>
-            )}
+                  )}
+                  {!(course.enrollMode === "invite_only" && !enrolled) && (
+                    <EnrollButton
+                      slug={params.slug}
+                      alreadyEnrolled={enrolled}
+                      priceCents={course.priceCents}
+                      currency={course.currency}
+                      paymentEnabled={paymentEnabled}
+                    />
+                  )}
+                </div>
+              )}
           </div>
         </aside>
       </div>
