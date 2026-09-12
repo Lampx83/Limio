@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  type ComponentType,
+  type SVGProps,
+} from "react";
+import { createPortal } from "react-dom";
+import { MoreVertical, Check, Layers, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
 import DateTime from "@/components/ui/DateTime";
@@ -62,6 +71,14 @@ const STATUS_CHIP: Record<Enrollment["status"], string> = {
   completed: "chip-brand",
   dropped: "chip-danger",
   refunded: "chip-accent",
+};
+
+/** Chấm màu trong menu hành động — cùng tông với STATUS_CHIP ở trên. */
+const STATUS_DOT: Record<Enrollment["status"], string> = {
+  active: "bg-success-500",
+  completed: "bg-brand-500",
+  dropped: "bg-danger-500",
+  refunded: "bg-accent-500",
 };
 
 export default function EnrollmentList({ courseId }: { courseId: string }) {
@@ -344,58 +361,14 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                     v{e.courseVersion}
                   </td>
                   <td className="px-4 py-2.5 text-right">
-                    {/* Gán lớp đứng trước đổi trạng thái: với một khoá đang
-                        chạy hai lớp song song thì xếp lớp là việc làm thường
-                        xuyên hơn nhiều so với đánh dấu bỏ học. */}
-                    {sections.length > 0 && (
-                      <select
-                        value={e.section.isDefault ? "" : sectionIdOf(e, sections)}
-                        disabled={busyId === e.id}
-                        onChange={(ev) => assignSection(e, ev.target.value)}
-                        aria-label={`Gán lớp cho ${e.user.displayName ?? e.user.email}`}
-                        className="select mr-2 py-1 text-xs"
-                      >
-                        <option value="" disabled>
-                          — gán lớp —
-                        </option>
-                        {sections.map((sec) => (
-                          <option key={sec.id} value={sec.id}>
-                            {sec.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                    <select
-                      value={e.status}
-                      disabled={busyId === e.id}
-                      onChange={(ev) =>
-                        changeStatus(
-                          e,
-                          ev.target.value as Enrollment["status"],
-                        )
-                      }
-                      className="select mr-2 py-1 text-xs"
-                    >
-                      {(Object.keys(STATUS_LABEL) as Enrollment["status"][]).map(
-                        (s) => (
-                          <option key={s} value={s}>
-                            {STATUS_LABEL[s]}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                    {/* Xoá hẳn — khác đổi trạng thái "Bỏ học": enrollment
-                        biến mất khỏi DB, không phục hồi được. Đứng cuối
-                        cùng, tách biệt bằng màu danger, và luôn confirm. */}
-                    <button
-                      type="button"
-                      disabled={busyId === e.id}
-                      onClick={() => removeEnrollment(e)}
-                      aria-label={`Xoá ${e.user.displayName ?? e.user.email} khỏi khoá học`}
-                      className="rounded-lg border border-token px-2 py-1 text-xs font-medium text-danger-700 transition-colors hover:border-danger-500 hover:bg-danger-50 disabled:opacity-50"
-                    >
-                      Xoá
-                    </button>
+                    <EnrollmentActionsMenu
+                      enrollment={e}
+                      sections={sections}
+                      busy={busyId === e.id}
+                      onAssignSection={(sectionId) => assignSection(e, sectionId)}
+                      onChangeStatus={(status) => changeStatus(e, status)}
+                      onRemove={() => removeEnrollment(e)}
+                    />
                   </td>
                 </tr>
               ))}
@@ -443,6 +416,190 @@ function StatCard({
         {label}
       </p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
+    </button>
+  );
+}
+
+/**
+ * Gộp "gán lớp" + "đổi trạng thái" + "xoá" vào một menu kebab thay vì 2 select
+ * + 1 nút chen nhau trong ô bảng hẹp (select bị cắt chữ, nút Xoá rớt xuống
+ * dòng dưới, lệch hàng). Cùng pattern với LessonActionMenu.tsx.
+ */
+function EnrollmentActionsMenu({
+  enrollment,
+  sections,
+  busy,
+  onAssignSection,
+  onChangeStatus,
+  onRemove,
+}: {
+  enrollment: Enrollment;
+  sections: SectionOption[];
+  busy: boolean;
+  onAssignSection: (sectionId: string) => void;
+  onChangeStatus: (status: Enrollment["status"]) => void;
+  onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  // Toạ độ menu tính từ nút bấm, render qua portal — bảng bọc ngoài có
+  // overflow-hidden (để bo góc), một menu absolute bình thường ở hàng cuối
+  // sẽ bị cắt cụt mất phần lớn. Portal ra <body> + position:fixed thoát
+  // hẳn khỏi mọi ancestor overflow.
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const label = enrollment.user.displayName ?? enrollment.user.email;
+
+  function openMenu() {
+    const rect = btnRef.current?.getBoundingClientRect();
+    if (rect) {
+      setPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
+    setOpen(true);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (
+        !btnRef.current?.contains(e.target as Node) &&
+        !menuRef.current?.contains(e.target as Node)
+      )
+        setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    // Cuộn trang/resize thì đóng luôn thay vì đuổi theo tính lại vị trí —
+    // đơn giản hơn nhiều mà UX vẫn ổn, vì đây chỉ là menu ngắn hạn.
+    function onScrollOrResize() {
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScrollOrResize, true);
+    window.addEventListener("resize", onScrollOrResize);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
+  }, [open]);
+
+  const currentSectionId = enrollment.section.isDefault
+    ? ""
+    : sectionIdOf(enrollment, sections);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => (open ? setOpen(false) : openMenu())}
+        disabled={busy}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-default disabled:opacity-50"
+        title={`Hành động cho ${label}`}
+        aria-label={`Hành động cho ${label}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <MoreVertical className="h-4 w-4" aria-hidden />
+      </button>
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{ top: pos.top, right: pos.right }}
+            className="fixed z-30 min-w-[220px] rounded-xl border border-token bg-[rgb(var(--surface))] py-1 shadow-2xl"
+          >
+            {sections.length > 0 && (
+              <>
+                <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-faint">
+                  Gán lớp
+                </p>
+                {sections.map((sec) => (
+                  <MenuItem
+                    key={sec.id}
+                    Icon={Layers}
+                    label={sec.name}
+                    selected={sec.id === currentSectionId}
+                    onClick={() => {
+                      onAssignSection(sec.id);
+                      setOpen(false);
+                    }}
+                  />
+                ))}
+                <div role="separator" className="my-1 border-t border-token" />
+              </>
+            )}
+            <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-faint">
+              Trạng thái
+            </p>
+            {(Object.keys(STATUS_LABEL) as Enrollment["status"][]).map((s) => (
+              <MenuItem
+                key={s}
+                dotClassName={STATUS_DOT[s]}
+                label={STATUS_LABEL[s]}
+                selected={s === enrollment.status}
+                onClick={() => {
+                  onChangeStatus(s);
+                  setOpen(false);
+                }}
+              />
+            ))}
+            <div role="separator" className="my-1 border-t border-token" />
+            <MenuItem
+              Icon={Trash2}
+              label="Xoá khỏi khoá học"
+              danger
+              onClick={() => {
+                setOpen(false);
+                onRemove();
+              }}
+            />
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+function MenuItem({
+  Icon,
+  dotClassName,
+  label,
+  selected,
+  danger,
+  onClick,
+}: {
+  Icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  /** Chấm màu thay icon — dùng cho trạng thái, khớp màu với STATUS_CHIP. */
+  dotClassName?: string;
+  label: string;
+  selected?: boolean;
+  danger?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+        danger
+          ? "text-danger-600 hover:bg-danger-50"
+          : "hover:bg-[rgb(var(--surface-muted))]"
+      }`}
+    >
+      {Icon && <Icon className="h-4 w-4 shrink-0" aria-hidden />}
+      {dotClassName && (
+        <span className={`h-2 w-2 shrink-0 rounded-full ${dotClassName}`} aria-hidden />
+      )}
+      <span className="flex-1 truncate">{label}</span>
+      {selected && <Check className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />}
     </button>
   );
 }
