@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
+import DateTime from "@/components/ui/DateTime";
 
 interface Enrollment {
   id: string;
@@ -12,6 +13,7 @@ interface Enrollment {
   completedAt: string | null;
   lastLessonId: string | null;
   lastPositionSec: number | null;
+  lastActivityAt: string | null;
   section: { name: string; isDefault: boolean };
   user: {
     id: string;
@@ -176,6 +178,29 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
     }
   }
 
+  async function removeEnrollment(enrollment: Enrollment) {
+    const label = enrollment.user.displayName ?? enrollment.user.email;
+    if (
+      !confirm(
+        `Xoá hẳn "${label}" khỏi khoá học? Toàn bộ enrollment (lớp, trạng thái, tiến độ xem dở) sẽ mất, không phục hồi được.`,
+      )
+    )
+      return;
+
+    setBusyId(enrollment.id);
+    const res = await fetch(
+      apiUrl(`/api/instructor/courses/${courseId}/enrollments/${enrollment.id}`),
+      { method: "DELETE" },
+    );
+    setBusyId(null);
+    if (res.ok) {
+      void load();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setError(`remove_failed: ${d.error ?? res.status}`);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* Stats */}
@@ -255,6 +280,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                 <th className="px-4 py-2">Lớp</th>
                 <th className="px-4 py-2">Trạng thái</th>
                 <th className="px-4 py-2 hidden sm:table-cell">Đăng ký</th>
+                <th className="px-4 py-2 hidden md:table-cell">Hoạt động gần nhất</th>
                 <th className="px-4 py-2 hidden lg:table-cell">v</th>
                 <th className="px-4 py-2 text-right">Hành động</th>
               </tr>
@@ -307,6 +333,13 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                   <td className="px-4 py-2.5 hidden sm:table-cell text-xs text-muted">
                     {formatDate(e.enrolledAt)}
                   </td>
+                  <td className="px-4 py-2.5 hidden md:table-cell text-xs text-muted">
+                    {e.lastActivityAt ? (
+                      <DateTime value={e.lastActivityAt} format="relative" />
+                    ) : (
+                      <span className="text-faint">chưa có hoạt động</span>
+                    )}
+                  </td>
                   <td className="px-4 py-2.5 hidden lg:table-cell text-xs text-faint">
                     v{e.courseVersion}
                   </td>
@@ -341,7 +374,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                           ev.target.value as Enrollment["status"],
                         )
                       }
-                      className="select py-1 text-xs"
+                      className="select mr-2 py-1 text-xs"
                     >
                       {(Object.keys(STATUS_LABEL) as Enrollment["status"][]).map(
                         (s) => (
@@ -351,6 +384,18 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                         ),
                       )}
                     </select>
+                    {/* Xoá hẳn — khác đổi trạng thái "Bỏ học": enrollment
+                        biến mất khỏi DB, không phục hồi được. Đứng cuối
+                        cùng, tách biệt bằng màu danger, và luôn confirm. */}
+                    <button
+                      type="button"
+                      disabled={busyId === e.id}
+                      onClick={() => removeEnrollment(e)}
+                      aria-label={`Xoá ${e.user.displayName ?? e.user.email} khỏi khoá học`}
+                      className="rounded-lg border border-token px-2 py-1 text-xs font-medium text-danger-700 transition-colors hover:border-danger-500 hover:bg-danger-50 disabled:opacity-50"
+                    >
+                      Xoá
+                    </button>
                   </td>
                 </tr>
               ))}

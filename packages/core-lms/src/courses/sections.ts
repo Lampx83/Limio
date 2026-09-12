@@ -374,3 +374,36 @@ export async function transferEnrollmentSection(
     data: { sectionId: targetSectionId },
   });
 }
+
+/**
+ * Hard-remove một học viên khỏi khoá — xoá hẳn row Enrollment, khác với đổi
+ * status "dropped"/"refunded" (vẫn giữ lịch sử ghi danh). Dùng khi enroll
+ * nhầm hoặc học viên yêu cầu gỡ hẳn.
+ *
+ * `LearningEvent` không tham chiếu enrollmentId (chỉ userId + courseId rời
+ * rạc trong payload) nên xoá Enrollment không đụng tới lịch sử event —
+ * đúng nguyên tắc append-only ở §4.5.
+ */
+export async function unenrollStudent(
+  actorUserId: string,
+  enrollmentId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const enrollment = await db.enrollment.findUnique({
+    where: { id: enrollmentId },
+    select: { id: true, courseId: true, userId: true },
+  });
+  if (!enrollment) throw new CourseError("not_found");
+  await assertCanEditCourse(actorUserId, enrollment.courseId, db);
+
+  await db.enrollment.delete({ where: { id: enrollmentId } });
+  await logAudit(
+    {
+      action: "enrollment.removed",
+      actorUserId,
+      targetUserId: enrollment.userId,
+      payload: { enrollmentId: enrollment.id, courseId: enrollment.courseId },
+    },
+    db,
+  );
+}

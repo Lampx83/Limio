@@ -6,6 +6,7 @@ import {
   CourseAuthzError,
   emitEvent,
   transferEnrollmentSection,
+  unenrollStudent,
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
@@ -95,4 +96,30 @@ export async function PATCH(
   );
 
   return NextResponse.json({ ok: true, status: updated.status });
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { courseId: string; enrollmentId: string } },
+) {
+  const userId = await requireUserId();
+  if (!userId)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: params.enrollmentId },
+  });
+  if (!enrollment || enrollment.courseId !== params.courseId) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  try {
+    await unenrollStudent(userId, params.enrollmentId);
+  } catch (e) {
+    const mapped = mapKnownError(e);
+    if (mapped) return mapped;
+    throw e;
+  }
+
+  return NextResponse.json({ ok: true });
 }

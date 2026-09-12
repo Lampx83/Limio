@@ -91,6 +91,26 @@ export async function GET(
     take: limit,
   });
 
+  // Hoạt động gần nhất mỗi học viên trong khoá — không có cột nào cho việc
+  // này trên Enrollment (đúng §6.1: state phái sinh đọc từ LearningEvent,
+  // không denormalize thêm), nên lấy occurredAt mới nhất mỗi userId.
+  const lastActivityByUser = new Map<string, string>();
+  if (enrollments.length > 0) {
+    const lastEvents = await prisma.learningEvent.groupBy({
+      by: ["userId"],
+      where: {
+        userId: { in: enrollments.map((e) => e.userId) },
+        courseId: params.courseId,
+      },
+      _max: { occurredAt: true },
+    });
+    for (const ev of lastEvents) {
+      if (ev.userId && ev._max.occurredAt) {
+        lastActivityByUser.set(ev.userId, ev._max.occurredAt.toISOString());
+      }
+    }
+  }
+
   return NextResponse.json({
     stats,
     enrollments: enrollments.map((e) => ({
@@ -101,6 +121,7 @@ export async function GET(
       completedAt: e.completedAt?.toISOString() ?? null,
       lastLessonId: e.lastLessonId,
       lastPositionSec: e.lastPositionSec,
+      lastActivityAt: lastActivityByUser.get(e.userId) ?? null,
       section: { name: e.section.name, isDefault: e.section.isDefault },
       user: e.user,
     })),
