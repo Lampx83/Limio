@@ -467,6 +467,13 @@ export default function TeacherBar({
   const rowBtn =
     "inline-flex w-full items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]";
 
+  // Còn lại của đồng hồ đếm ngược, dùng chung cho nút sticky bên dưới — cùng
+  // cách tính với dòng hiển thị trong bảng điều khiển (dòng ~647).
+  const countdownLeft =
+    endsAt === null ? 0 : Math.max(0, Math.round((endsAt - now) / 1000));
+  const countdownDone = endsAt !== null && countdownLeft === 0;
+  const countdownUrgent = endsAt !== null && countdownLeft <= 10 && !countdownDone;
+
   return (
     <div data-print-hide data-teacher-bar className="print:hidden">
       {/*
@@ -498,6 +505,37 @@ export default function TeacherBar({
           />
         )}
       </button>
+
+      {/*
+        Chưa mở cửa sổ màn chiếu thì đồng hồ vừa bấm chỉ chạy âm thầm trong
+        BroadcastChannel — không cửa sổ nào nghe, nên không ai thấy nó đếm.
+        Nhiều buổi dạy chỉ chiếu thẳng chính màn hình này (chia sẻ màn hình,
+        không mở cửa sổ phụ), nên khi đó nút này đứng ra làm màn chiếu chính.
+        Nút tự ẩn khi mở màn chiếu (vì lúc đó đồng hồ đã hiện bên màn chiếu
+        rồi) hoặc khi tắt đồng hồ đếm ngược từ bảng điều khiển của giáo viên —
+        KHÔNG ẩn khi bảng điều khiển đang mở, nên z-50 (cao hơn lớp phủ z-40
+        của bảng) và lệch trái khỏi nút đóng (X) ở góc bảng để không đè lên nhau.
+      */}
+      {endsAt !== null && !stageOpen && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`Còn ${mmss(countdownLeft)} — bấm để mở bảng điều khiển giảng viên`}
+          title="Chưa mở màn chiếu nên đồng hồ chạy ngay trên màn hình này. Bấm để mở bảng điều khiển."
+          className={`fixed right-20 top-4 z-50 flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-bold shadow-lg backdrop-blur-md transition-colors ${
+            countdownDone
+              ? "border-danger-500 bg-danger-50/90 text-danger-700"
+              : countdownUrgent
+                ? "border-accent-500 bg-accent-50/90 text-accent-700"
+                : "border-brand-400 bg-[rgb(var(--surface))]/90 text-brand-700"
+          }`}
+        >
+          <Hourglass size={14} />
+          <span className="tabular-nums">
+            {countdownDone ? "Hết giờ" : mmss(countdownLeft)}
+          </span>
+        </button>
+      )}
 
       {open && (
         <div
@@ -644,7 +682,7 @@ export default function TeacherBar({
                   </span>
                   {endsAt !== null && (
                     <span className="text-sm font-bold tabular-nums text-brand-700">
-                      {mmss(Math.max(0, Math.round((endsAt - now) / 1000)))}
+                      {mmss(countdownLeft)}
                     </span>
                   )}
                 </div>
