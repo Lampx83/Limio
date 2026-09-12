@@ -27,6 +27,23 @@ const WORD_COLORS = [
   "from-accent-400 to-accent-500",
 ];
 
+const CLIENT_ID_KEY = "wordcloud_client_id";
+
+// Định danh ẩn danh ổn định theo thiết bị — dùng để server rate-limit đúng
+// người gửi thay vì theo IP (cả lớp dùng chung wifi sẽ ra cùng 1 IP).
+function getClientId(): string {
+  try {
+    let id = localStorage.getItem(CLIENT_ID_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(CLIENT_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
 export default function WordCloudSubmitPage({
   wordCloud,
 }: {
@@ -36,6 +53,7 @@ export default function WordCloudSubmitPage({
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [results, setResults] = useState<WordFrequencyResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [clientId] = useState(getClientId);
 
   const handleSubmit = async () => {
     if (!text.trim()) {
@@ -55,7 +73,7 @@ export default function WordCloudSubmitPage({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: text.trim() }),
+          body: JSON.stringify({ text: text.trim(), clientId }),
         }
       );
 
