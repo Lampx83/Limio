@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ExternalLink } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import SafeHtml from "./SafeHtml";
@@ -381,23 +382,32 @@ function ContentBlock({
     }
     case "html_block": {
       const p = payload as HtmlBlockPayload;
+      // Mở tab riêng thay vì nhúng iframe: cột nội dung bài học (~700-900px)
+      // luôn hẹp hơn nhiều so với khổ file HTML giảng viên tự thiết kế
+      // (thường canh cho màn desktop, có khi max-width tới 1500px) — nhúng
+      // trong khung hẹp thì co lại đúng như vậy, không phải bug CSS sửa được.
+      // Mở trực tiếp bằng navigation top-level thì trình duyệt render đúng
+      // kích thước gốc như mở file .html trên máy.
       return (
         <div>
           {p.title && (
             <p className="mb-2 text-sm font-medium text-muted">{p.title}</p>
           )}
           {/*
-           * No `allow-same-origin`: script trong file HTML này (do giảng viên
-           * tự upload) không được đọc cookie/session của Limio hay chạm vào
-           * trang cha, kể cả khi file được host cùng-origin. Xem thêm ghi chú
-           * ở route serve /api/lesson-media/html/[file] (CSP sandbox header).
+           * target="_blank" mở URL này y hệt link thường — không đọc được
+           * cookie/session của Limio vì route serve /api/lesson-media/html/[file]
+           * tự gắn Content-Security-Policy: sandbox (không allow-same-origin)
+           * lên chính response, áp dụng cho cả điều hướng top-level lẫn iframe.
            */}
-          <iframe
-            src={p.url}
-            sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-            height={p.heightPx ?? 480}
-            className="w-full rounded-xl border border-token shadow-card"
-          />
+          <a
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
+          >
+            <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+            Mở tài nguyên HTML (tab mới)
+          </a>
         </div>
       );
     }
