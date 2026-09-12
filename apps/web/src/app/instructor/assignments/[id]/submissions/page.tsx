@@ -88,9 +88,13 @@ export default async function SubmissionsPage({
     notFound();
   }
 
-  const submissions = await listSubmissionsForInstructor(userId, params.id);
-  const gradedCount = submissions.filter((s) => s.status === "graded").length;
-  const pendingCount = submissions.length - gradedCount;
+  const roster = await listSubmissionsForInstructor(userId, params.id);
+  const submittedRows = roster.filter((r) => r.submission !== null);
+  const gradedCount = submittedRows.filter(
+    (r) => r.submission!.status === "graded",
+  ).length;
+  const pendingCount = submittedRows.length - gradedCount;
+  const notSubmittedCount = roster.length - submittedRows.length;
 
   return (
     <main>
@@ -128,8 +132,13 @@ export default async function SubmissionsPage({
       </div>
 
       {/* Stats */}
-      <div className="mt-6 grid grid-cols-3 gap-3 sm:gap-4">
-        <Stat label="Tổng bài nộp" value={submissions.length} tone="brand" />
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <Stat label="Tổng học viên" value={roster.length} tone="brand" />
+        <Stat
+          label="Chưa nộp"
+          value={notSubmittedCount}
+          tone={notSubmittedCount > 0 ? "accent" : "success"}
+        />
         <Stat
           label="Chờ chấm"
           value={pendingCount}
@@ -138,33 +147,133 @@ export default async function SubmissionsPage({
         <Stat label="Đã chấm" value={gradedCount} tone="success" />
       </div>
 
-      {/* Submissions */}
+      {/* Roster: STT – Người nộp – Trạng thái, theo danh sách đăng ký khoá học */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold">
-          Bài nộp{" "}
+          Danh sách{" "}
           <span className="text-sm font-normal text-faint">
-            ({submissions.length})
+            ({roster.length})
           </span>
         </h2>
-        {submissions.length === 0 ? (
+        {roster.length === 0 ? (
           <div className="mt-4">
             <EmptyState
-              icon="📥"
-              title="Chưa có học viên nào nộp bài"
-              description="Khi học viên nộp bài, danh sách sẽ hiện ở đây để bạn chấm."
+              icon="👥"
+              title={
+                ctx.kind === "tournament"
+                  ? "Chưa có ai nộp bài"
+                  : "Khoá học chưa có học viên"
+              }
+              description={
+                ctx.kind === "tournament"
+                  ? "Khi có người tham gia nộp bài, danh sách sẽ hiện ở đây."
+                  : "Chưa có học viên nào đăng ký khoá học này."
+              }
               actions={[
                 { label: ctx.kind === "tournament" ? "Quay lại mission" : "Xem khoá học", href: ctx.backHref, variant: "secondary" },
               ]}
             />
           </div>
         ) : (
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-token">
+            <table className="w-full text-sm">
+              <thead className="bg-[rgb(var(--surface-muted))] text-left text-xs text-faint">
+                <tr className="border-b border-token">
+                  <th className="px-3 py-2 font-medium">STT</th>
+                  <th className="px-3 py-2 font-medium">Người nộp</th>
+                  <th className="px-3 py-2 font-medium">Trạng thái</th>
+                  <th className="px-3 py-2 font-medium">Ngày giờ nộp</th>
+                  <th className="px-3 py-2 font-medium">Bài làm</th>
+                  <th className="px-3 py-2 font-medium text-right">Điểm</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-token">
+                {roster.map((r, i) => {
+                  const s = r.submission;
+                  const isGraded = s?.status === "graded";
+                  return (
+                    <tr key={r.user.id}>
+                      <td className="px-3 py-2 tabular-nums text-muted">
+                        {i + 1}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <UserAvatar name={r.user.displayName} size="sm" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium leading-tight">
+                              {r.user.displayName}
+                            </p>
+                            <p className="truncate text-xs text-faint">
+                              {r.user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <StatusBadge
+                          tone={s ? (isGraded ? "success" : "warning") : "neutral"}
+                        >
+                          {s ? "Đã nộp" : "Chưa nộp"}
+                        </StatusBadge>
+                      </td>
+                      <td className="px-3 py-2 text-muted">
+                        {s ? (
+                          <DateTime value={s.submittedAt} format="datetime" />
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {s ? (
+                          <a href={`#s-${s.id}`} className="link text-xs">
+                            Xem bài làm
+                          </a>
+                        ) : (
+                          <span className="text-faint">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {!s ? (
+                          <span className="text-faint">—</span>
+                        ) : isGraded ? (
+                          <span className="font-semibold">
+                            {s.score}/{assignment.maxScore}
+                          </span>
+                        ) : (
+                          <span className="text-faint">Chưa chấm</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Chi tiết bài làm + chấm điểm */}
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold">
+          Bài nộp{" "}
+          <span className="text-sm font-normal text-faint">
+            ({submittedRows.length})
+          </span>
+        </h2>
+        {submittedRows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">
+            Chưa có bài nộp nào để chấm.
+          </p>
+        ) : (
           <ul className="mt-4 space-y-4">
-            {submissions.map((s) => {
+            {submittedRows.map((r) => {
+              const s = r.submission!;
               const isGraded = s.status === "graded";
               return (
                 <li
+                  id={`s-${s.id}`}
                   key={s.id}
-                  className={`overflow-hidden rounded-2xl border bg-[rgb(var(--surface))] shadow-card ${
+                  className={`scroll-mt-20 overflow-hidden rounded-2xl border bg-[rgb(var(--surface))] shadow-card ${
                     isGraded ? "border-success-100" : "border-accent-200"
                   }`}
                 >
@@ -176,13 +285,13 @@ export default async function SubmissionsPage({
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <UserAvatar name={s.user.displayName} size="sm" />
+                      <UserAvatar name={r.user.displayName} size="sm" />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold leading-tight">
-                          {s.user.displayName}
+                          {r.user.displayName}
                         </p>
                         <p className="mt-0.5 truncate text-xs opacity-80">
-                          {s.user.email}
+                          {r.user.email}
                         </p>
                       </div>
                     </div>

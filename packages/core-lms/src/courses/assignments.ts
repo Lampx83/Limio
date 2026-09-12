@@ -507,22 +507,54 @@ const submissionForInstructorInclude = {
   user: { select: { id: true, displayName: true, email: true } },
 } satisfies Prisma.AssignmentSubmissionInclude;
 
+export type InstructorSubmissionRow = {
+  user: { id: string; displayName: string; email: string };
+  enrolledAt: Date | null;
+  submission: Prisma.AssignmentSubmissionGetPayload<{
+    include: typeof submissionForInstructorInclude;
+  }> | null;
+};
+
+/**
+ * Roster đầy đủ theo danh sách đăng ký khoá học (kể cả học viên chưa nộp bài),
+ * không chỉ những ai đã có row AssignmentSubmission. Với assignment gắn
+ * tournament mission platform-wide (không có courseId) thì không có roster để
+ * đối chiếu — chỉ liệt kê ai đã nộp, như trước.
+ */
 export async function listSubmissionsForInstructor(
   userId: string,
   assignmentId: string,
   db: PrismaClient = prisma,
-): Promise<
-  Array<
-    Prisma.AssignmentSubmissionGetPayload<{
-      include: typeof submissionForInstructorInclude;
-    }>
-  >
-> {
+): Promise<InstructorSubmissionRow[]> {
   const scope = await loadAssignmentCourse(assignmentId, db);
   await assertCanGradeAssignment(userId, scope, db);
-  return db.assignmentSubmission.findMany({
+
+  const submissions = await db.assignmentSubmission.findMany({
     where: { assignmentId },
-    orderBy: [{ status: "asc" }, { submittedAt: "desc" }],
     include: submissionForInstructorInclude,
   });
+
+  if (!scope.courseId) {
+    return submissions
+      .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime())
+      .map((s) => ({ user: s.user, enrolledAt: null, submission: s }));
+  }
+
+  const enrollments = await db.enrollment.findMany({
+    where: { courseId: scope.courseId, status: { in: ["active", "completed"] } },
+    select: {
+      enrolledAt: true,
+      user: { select: { id: true, displayName: true, email: true } },
+    },
+  });
+
+  const submissionByUserId = new Map(submissions.map((s) => [s.userId, s]));
+
+  return enrollments
+    .map((e) => ({
+      user: e.user,
+      enrolledAt: e.enrolledAt,
+      submission: submissionByUserId.get(e.user.id) ?? null,
+    }))
+    .sort((a, b) => a.user.displayName.localeCompare(b.user.displayName, "vi"));
 }

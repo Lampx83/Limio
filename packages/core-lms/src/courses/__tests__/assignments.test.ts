@@ -202,6 +202,32 @@ describe("Assignments — A5", () => {
     ).rejects.toMatchObject({ code: "forbidden" });
   });
 
+  it("listSubmissionsForInstructor returns full course roster, including learners who haven't submitted", async () => {
+    const s = await setup();
+    const a = await createAssignment(s.instId, s.lessonId, {
+      title: "T",
+      description: "x",
+    });
+
+    const beforeSubmit = await listSubmissionsForInstructor(
+      s.instId,
+      a.assignmentId,
+    );
+    expect(beforeSubmit).toHaveLength(1);
+    expect(beforeSubmit[0].user.id).toBe(s.learnerId);
+    expect(beforeSubmit[0].submission).toBeNull();
+
+    await submitAssignment(s.learnerId, a.assignmentId, { body: "Bài làm" });
+
+    const afterSubmit = await listSubmissionsForInstructor(
+      s.instId,
+      a.assignmentId,
+    );
+    expect(afterSubmit).toHaveLength(1);
+    expect(afterSubmit[0].submission?.body).toBe("Bài làm");
+    expect(afterSubmit[0].submission?.status).toBe("submitted");
+  });
+
   it("creates assignment with generative metadata (defaults preserved when omitted)", async () => {
     const s = await setup();
     const a = await createAssignment(s.instId, s.lessonId, {
