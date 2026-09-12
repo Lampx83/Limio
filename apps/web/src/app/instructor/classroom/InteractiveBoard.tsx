@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { copyText } from "@/lib/clipboard";
 import {
-  StickyNote, RefreshCw, EyeOff, Eye, Trash2,
+  StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
   PanelLeftOpen, PanelLeftClose,
 } from "lucide-react";
@@ -84,6 +84,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [noteAttachmentUrl, setNoteAttachmentUrl] = useState("");
   const [posting, setPosting] = useState(false);
   const [postInfo, setPostInfo] = useState<string | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Toggle body class để CSS ẩn left sidebar (xem globals.css)
   useEffect(() => {
@@ -126,6 +127,9 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       }
       if (ev.type === "note.deleted" && ev.noteId) {
         return { ...b, notes: b.notes.filter((n) => n.id !== ev.noteId) };
+      }
+      if (ev.type === "board.reset") {
+        return { ...b, notes: [] };
       }
       return b;
     });
@@ -316,6 +320,26 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     }
   };
 
+  // Xoá hết note hiện tại nhưng giữ nguyên board (id + code + title/prompt) —
+  // dùng lại được cho lớp nhỏ tiếp theo mà không cần tạo board mới.
+  const handleReset = async () => {
+    if (!current) return;
+    if (!confirm("Xoá toàn bộ note hiện tại để bắt đầu phiên mới? Không thể hoàn tác.")) return;
+    setIsResetting(true);
+    try {
+      const res = await fetch(apiUrl(`/api/instructor/teaching-tools/boards/${current.id}/reset`), {
+        method: "POST",
+      });
+      if (!res.ok) { toast.error("Không thể reset"); return; }
+      setCurrent((b) => (b ? { ...b, notes: [] } : b));
+      toast.success("Đã reset board");
+    } catch {
+      toast.error("Lỗi mạng");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
   const joinUrl = current ? shareUrl(`/join/${current.code}`) : null;
 
@@ -424,6 +448,15 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
               >
                 {isFullscreen ? "⛶ Thoát" : "⛶ Full"}
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={isResetting}
+                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                title="Xoá toàn bộ note, bắt đầu phiên mới"
+              >
+                <RotateCcw size={14} className={isResetting ? "animate-spin" : ""} />
+                {isResetting ? "..." : "Reset"}
               </button>
               {current.status === "open" && (
                 <button

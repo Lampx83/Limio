@@ -106,6 +106,9 @@ export default function JoinBoardPage() {
           if (ev.type === "note.moderated" && ev.noteId && ev.hidden) {
             return { ...b, notes: b.notes.filter((n) => n.id !== ev.noteId) };
           }
+          if (ev.type === "board.reset") {
+            return { ...b, notes: [] };
+          }
           return b;
         });
       } catch {
