@@ -20,7 +20,7 @@ import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
 import LessonTasksTab, {
   type TaskItem,
 } from "@/components/lesson/LessonTasksTab";
-import LessonStickyActions from "@/components/lesson/LessonStickyActions";
+import LessonViewBeacon from "@/components/lesson/LessonViewBeacon";
 import LessonCompletionPrompt from "@/components/lesson/LessonCompletionPrompt";
 import LessonEngagementTracker from "@/components/lesson/LessonEngagementTracker";
 import ScrollEnds from "@/components/ScrollEnds";
@@ -176,10 +176,9 @@ export default async function LessonPage({
   const allLessons = await prisma.lesson.findMany({
     where: { module: { courseId: lesson.module.course.id } },
     orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
-    select: { id: true, title: true },
+    select: { id: true },
   });
   const idx = allLessons.findIndex((l) => l.id === lesson.id);
-  const prev = idx > 0 ? allLessons[idx - 1]! : null;
   const next = idx < allLessons.length - 1 ? allLessons[idx + 1]! : null;
 
   // Preview mode: anyone without an enrollment — logged out on a public course, or
@@ -394,7 +393,7 @@ export default async function LessonPage({
 
   // Auto-complete criteria. Computed server-side because we already know all
   // the inputs here (content shape + per-user activity status). Client-side
-  // tracker (LessonStickyActions) only handles the live signals we can't
+  // tracker (LessonCompletionPrompt) only handles the live signals we can't
   // determine from the server: ongoing video watch %, and scroll-to-end.
   //
   // Rules:
@@ -623,28 +622,20 @@ export default async function LessonPage({
       {/* Sentinel for scroll-to-end auto-complete tracker (text-only lessons). */}
       <div id="lesson-end-sentinel" aria-hidden className="h-px w-full" />
 
-      <LessonStickyActions
+      <LessonViewBeacon
         lessonId={lesson.id}
-        courseSlug={params.slug}
-        completed={completedEvent !== null}
         initialResumeSec={
           enrollment?.lastLessonId === lesson.id
             ? enrollment.lastPositionSec ?? 0
             : 0
         }
-        prevLessonId={prev?.id ?? null}
-        prevTitle={prev?.title ?? null}
-        nextLessonId={next?.id ?? null}
-        nextTitle={next?.title ?? null}
-        toc={
-          <LessonTocDrawer
-            slug={params.slug}
-            currentLessonId={lesson.id}
-            modules={progress.modules}
-            triggerClassName="btn btn-secondary"
-            triggerLabel={`Mục lục khoá · bài ${idx + 1}/${allLessons.length}`}
-          />
-        }
+      />
+
+      <LessonTocDrawer
+        slug={params.slug}
+        currentLessonId={lesson.id}
+        modules={progress.modules}
+        tooltipLabel={`Mục lục khoá · bài ${idx + 1}/${allLessons.length}`}
       />
 
       <AiTutorPanel lessonId={lesson.id} />

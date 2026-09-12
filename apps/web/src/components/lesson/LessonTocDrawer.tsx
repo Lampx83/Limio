@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { List, X, Check, Lock } from "lucide-react";
+import { FabTip } from "./TeacherBar";
 
 type TocLesson = { id: string; title: string; completed: boolean; locked?: boolean };
 type TocModule = { id: string; title: string; lessons: TocLesson[] };
@@ -13,15 +14,13 @@ export default function LessonTocDrawer({
   slug,
   currentLessonId,
   modules,
-  triggerClassName,
-  triggerLabel = "Mục lục",
+  tooltipLabel = "Mục lục",
 }: {
   slug: string;
   currentLessonId: string;
   modules: TocModule[];
-  /** Đổi kiểu nút mở khi đặt ở nơi khác (thanh dưới đáy dùng kiểu nút đặc). */
-  triggerClassName?: string;
-  triggerLabel?: string;
+  /** Tên hiện khi rê chuột vào nút — vd. "Mục lục khoá · bài 3/22". */
+  tooltipLabel?: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -49,18 +48,19 @@ export default function LessonTocDrawer({
 
   return (
     <>
+      {/* Cùng cột nút nổi bên phải với Ghi chú / Trợ giảng AI / Bảng giảng
+          viên (xem TeacherBar, LessonNotesDrawer, AiTutorPanel) — thấp nhất
+          trong cột vì đây là điều hướng dùng đầu tiên khi vào bài. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={
-          triggerClassName ??
-          "inline-flex items-center gap-1.5 rounded-full border border-token px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-        }
+        aria-label={tooltipLabel}
+        className="group fixed bottom-4 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-pink-500 text-white shadow-lg transition-transform hover:scale-105"
         aria-haspopup="dialog"
         aria-expanded={open}
       >
-        <List size={14} />
-        {triggerLabel}
+        <List size={18} />
+        <FabTip>{tooltipLabel}</FabTip>
       </button>
 
       {/*

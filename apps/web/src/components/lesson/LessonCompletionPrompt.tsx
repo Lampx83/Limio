@@ -14,9 +14,8 @@ import { apiUrl } from "@/lib/apiUrl";
  * scrolling. Hidden once the lesson is already completed (server tells us via
  * `initiallyCompleted`).
  *
- * Trackers live here (not in LessonStickyActions) so the prompt and the bottom
- * bar don't double-fire /complete. The bottom bar reads server-rendered
- * completion state and just shows the badge.
+ * Trackers live here (not in LessonViewBeacon) so nothing else double-fires
+ * /complete.
  */
 
 interface AutoCompleteConfig {
