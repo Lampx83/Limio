@@ -510,6 +510,7 @@ const submissionForInstructorInclude = {
 export type InstructorSubmissionRow = {
   user: { id: string; displayName: string; email: string };
   enrolledAt: Date | null;
+  section: { id: string; name: string } | null;
   submission: Prisma.AssignmentSubmissionGetPayload<{
     include: typeof submissionForInstructorInclude;
   }> | null;
@@ -537,7 +538,7 @@ export async function listSubmissionsForInstructor(
   if (!scope.courseId) {
     return submissions
       .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime())
-      .map((s) => ({ user: s.user, enrolledAt: null, submission: s }));
+      .map((s) => ({ user: s.user, enrolledAt: null, section: null, submission: s }));
   }
 
   const enrollments = await db.enrollment.findMany({
@@ -545,6 +546,7 @@ export async function listSubmissionsForInstructor(
     select: {
       enrolledAt: true,
       user: { select: { id: true, displayName: true, email: true } },
+      section: { select: { id: true, name: true } },
     },
   });
 
@@ -554,6 +556,7 @@ export async function listSubmissionsForInstructor(
     .map((e) => ({
       user: e.user,
       enrolledAt: e.enrolledAt,
+      section: e.section,
       submission: submissionByUserId.get(e.user.id) ?? null,
     }))
     .sort((a, b) => a.user.displayName.localeCompare(b.user.displayName, "vi"));

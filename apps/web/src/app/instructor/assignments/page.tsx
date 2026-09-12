@@ -12,7 +12,7 @@ type View = "list" | "pending";
 export default async function InstructorAssignmentsPage({
   searchParams,
 }: {
-  searchParams?: { course?: string; filter?: string; view?: string };
+  searchParams?: { course?: string; lesson?: string; filter?: string; view?: string };
 }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -48,6 +48,7 @@ export default async function InstructorAssignmentsPage({
       : null;
   const filter = searchParams?.filter ?? "all";
   const view: View = searchParams?.view === "pending" ? "pending" : "list";
+  const requestedLessonId = searchParams?.lesson ?? null;
 
   const scopedCourseIds = selectedCourseId ? [selectedCourseId] : courseIds;
 
@@ -91,10 +92,17 @@ export default async function InstructorAssignmentsPage({
   ]);
   const totalPending = pendingSubmissionsCount + pendingEssaysCount;
 
-  const buildHref = (next: { course?: string | null; filter?: string; view?: View }) => {
+  const buildHref = (next: {
+    course?: string | null;
+    lesson?: string | null;
+    filter?: string;
+    view?: View;
+  }) => {
     const params = new URLSearchParams();
     const c = next.course === undefined ? selectedCourseId : next.course;
     if (c) params.set("course", c);
+    const l = next.lesson === undefined ? requestedLessonId : next.lesson;
+    if (l && c) params.set("lesson", l);
     const f = next.filter ?? filter;
     if (f && f !== "all") params.set("filter", f);
     const v = next.view ?? view;
@@ -180,32 +188,38 @@ export default async function InstructorAssignmentsPage({
         </Link>
       </div>
 
-      {/* Common: course filter */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Khoá:
-        </span>
-        <Link
-          href={buildHref({ course: null })}
-          className={selectedCourseId === null ? "chip-brand" : "chip"}
-        >
-          Tất cả ({ownedCourses.length})
-        </Link>
-        {ownedCourses.map((c) => (
+      {/* Course filter — chỉ dùng cho tab "Cần chấm" (stream xuyên khoá). Tab
+          "Danh sách assignment" chọn khoá qua bước drill-down bên dưới. */}
+      {view === "pending" && (
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+            Khoá:
+          </span>
           <Link
-            key={c.id}
-            href={buildHref({ course: c.id })}
-            className={selectedCourseId === c.id ? "chip-brand" : "chip"}
-            prefetch={false}
+            href={buildHref({ course: null })}
+            className={selectedCourseId === null ? "chip-brand" : "chip"}
           >
-            {c.title}
+            Tất cả ({ownedCourses.length})
           </Link>
-        ))}
-      </div>
+          {ownedCourses.map((c) => (
+            <Link
+              key={c.id}
+              href={buildHref({ course: c.id })}
+              className={selectedCourseId === c.id ? "chip-brand" : "chip"}
+              prefetch={false}
+            >
+              {c.title}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {view === "list" ? (
-        <AssignmentListView
+        <AssignmentDrillDown
+          ownedCourses={ownedCourses}
           courseIds={scopedCourseIds}
+          selectedCourseId={selectedCourseId}
+          requestedLessonId={requestedLessonId}
           filter={filter}
           buildHref={buildHref}
         />
@@ -216,17 +230,18 @@ export default async function InstructorAssignmentsPage({
   );
 }
 
-async function AssignmentListView({
-  courseIds,
-  filter,
-  buildHref,
-}: {
-  courseIds: string[];
-  filter: string;
-  buildHref: (n: { filter?: string; view?: View }) => string;
-}) {
+type BuildHref = (n: {
+  course?: string | null;
+  lesson?: string | null;
+  filter?: string;
+  view?: View;
+}) => string;
+
+type AssignmentCounts = { pending: number; graded: number; total: number };
+
+async function loadAssignmentsWithCounts(moduleIds: string[]) {
   const assignments = await prisma.assignment.findMany({
-    where: { lesson: { module: { courseId: { in: courseIds } } } },
+    where: { lessonId: { not: null }, lesson: { moduleId: { in: moduleIds } } },
     select: {
       id: true,
       title: true,
@@ -234,15 +249,7 @@ async function AssignmentListView({
       maxScore: true,
       isHidden: true,
       createdAt: true,
-      lesson: {
-        select: {
-          id: true,
-          title: true,
-          module: {
-            select: { course: { select: { id: true, title: true } } },
-          },
-        },
-      },
+      lessonId: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -252,10 +259,7 @@ async function AssignmentListView({
     where: { assignmentId: { in: assignments.map((a) => a.id) } },
     _count: { _all: true },
   });
-  const countsByAssignment = new Map<
-    string,
-    { pending: number; graded: number; total: number }
-  >();
+  const countsByAssignment = new Map<string, AssignmentCounts>();
   for (const row of submissionCounts) {
     const existing = countsByAssignment.get(row.assignmentId) ?? {
       pending: 0,
@@ -268,18 +272,255 @@ async function AssignmentListView({
     countsByAssignment.set(row.assignmentId, existing);
   }
 
-  const enriched = assignments.map((a) => ({
+  return assignments.map((a) => ({
     ...a,
     counts: countsByAssignment.get(a.id) ?? { pending: 0, graded: 0, total: 0 },
   }));
+}
 
-  const filtered = enriched.filter((a) => {
+/**
+ * Drill-down: chọn khoá học → danh sách bài học (theo thứ tự module) →
+ * danh sách assignment của bài học đó → (link ra) danh sách sinh viên nộp bài.
+ */
+async function AssignmentDrillDown({
+  ownedCourses,
+  courseIds,
+  selectedCourseId,
+  requestedLessonId,
+  filter,
+  buildHref,
+}: {
+  ownedCourses: { id: string; title: string }[];
+  courseIds: string[];
+  selectedCourseId: string | null;
+  requestedLessonId: string | null;
+  filter: string;
+  buildHref: BuildHref;
+}) {
+  // Bước 1: chọn khoá học.
+  if (!selectedCourseId) {
+    const modules = await prisma.module.findMany({
+      where: { courseId: { in: courseIds } },
+      select: {
+        id: true,
+        courseId: true,
+        lessons: { select: { id: true } },
+      },
+    });
+    const lessonCourse = new Map<string, string>();
+    for (const m of modules) {
+      for (const l of m.lessons) lessonCourse.set(l.id, m.courseId);
+    }
+    const assignments = await loadAssignmentsWithCounts(modules.map((m) => m.id));
+
+    const stats = new Map<
+      string,
+      { lessonCount: number; assignmentCount: number; pendingCount: number }
+    >();
+    for (const c of ownedCourses) {
+      if (courseIds.includes(c.id)) {
+        stats.set(c.id, { lessonCount: 0, assignmentCount: 0, pendingCount: 0 });
+      }
+    }
+    for (const m of modules) {
+      const s = stats.get(m.courseId);
+      if (s) s.lessonCount += m.lessons.length;
+    }
+    for (const a of assignments) {
+      const cid = lessonCourse.get(a.lessonId!);
+      const s = cid ? stats.get(cid) : undefined;
+      if (s) {
+        s.assignmentCount += 1;
+        s.pendingCount += a.counts.pending;
+      }
+    }
+
+    return (
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold">Chọn khoá học</h2>
+        {ownedCourses.length === 0 ? (
+          <EmptyState
+            className="mt-4"
+            icon="📚"
+            title="Chưa có khoá học nào"
+            description="Tạo khoá học đầu tiên để bắt đầu quản lý assignment."
+          />
+        ) : (
+          <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {ownedCourses.map((c) => {
+              const s = stats.get(c.id) ?? {
+                lessonCount: 0,
+                assignmentCount: 0,
+                pendingCount: 0,
+              };
+              return (
+                <li key={c.id}>
+                  <Link
+                    href={buildHref({ course: c.id, lesson: null })}
+                    className="block rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card transition-colors hover:border-brand-300"
+                    prefetch={false}
+                  >
+                    <p className="font-semibold">{c.title}</p>
+                    <p className="mt-1 text-xs text-faint">
+                      {s.lessonCount} bài học · {s.assignmentCount} assignment
+                    </p>
+                    {s.pendingCount > 0 && (
+                      <span className="chip-accent mt-2 inline-block text-[10px]">
+                        {s.pendingCount} chờ chấm
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    );
+  }
+
+  const course = ownedCourses.find((c) => c.id === selectedCourseId);
+  if (!course) redirect(buildHref({ course: null, lesson: null }));
+
+  const modules = await prisma.module.findMany({
+    where: { courseId: selectedCourseId },
+    orderBy: { orderIndex: "asc" },
+    select: {
+      id: true,
+      title: true,
+      lessons: {
+        orderBy: { orderIndex: "asc" },
+        select: { id: true, title: true },
+      },
+    },
+  });
+  const allLessons = modules.flatMap((m) =>
+    m.lessons.map((l) => ({ ...l, moduleTitle: m.title })),
+  );
+  const selectedLessonId =
+    requestedLessonId && allLessons.some((l) => l.id === requestedLessonId)
+      ? requestedLessonId
+      : null;
+
+  const assignments = await loadAssignmentsWithCounts(modules.map((m) => m.id));
+
+  // Bước 2: danh sách bài học trong khoá, theo thứ tự module.
+  if (!selectedLessonId) {
+    const byLesson = new Map<
+      string,
+      { assignmentCount: number; pendingCount: number; gradedCount: number }
+    >();
+    for (const a of assignments) {
+      const cur = byLesson.get(a.lessonId!) ?? {
+        assignmentCount: 0,
+        pendingCount: 0,
+        gradedCount: 0,
+      };
+      cur.assignmentCount += 1;
+      cur.pendingCount += a.counts.pending;
+      cur.gradedCount += a.counts.graded;
+      byLesson.set(a.lessonId!, cur);
+    }
+
+    return (
+      <section className="mt-8">
+        <Link
+          href={buildHref({ course: null, lesson: null })}
+          className="link inline-flex items-center gap-1 text-sm"
+        >
+          ← Tất cả khoá học
+        </Link>
+        <h2 className="mt-3 text-lg font-semibold">{course.title}</h2>
+        <p className="text-sm text-muted">Chọn bài học để xem assignment.</p>
+
+        {modules.length === 0 ? (
+          <EmptyState
+            className="mt-4"
+            icon="📖"
+            title="Khoá học chưa có bài học"
+            description="Thêm module + bài học trong trang biên soạn khoá học."
+            actions={[
+              {
+                label: "Mở trang biên soạn",
+                href: `/instructor/courses/${course.id}`,
+                variant: "secondary",
+              },
+            ]}
+          />
+        ) : (
+          <div className="mt-4 space-y-6">
+            {modules.map((m) => (
+              <div key={m.id}>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-faint">
+                  {m.title}
+                </h3>
+                {m.lessons.length === 0 ? (
+                  <p className="mt-2 text-xs text-faint">Chưa có bài học.</p>
+                ) : (
+                  <ul className="mt-2 divide-y divide-token overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
+                    {m.lessons.map((l) => {
+                      const s = byLesson.get(l.id) ?? {
+                        assignmentCount: 0,
+                        pendingCount: 0,
+                        gradedCount: 0,
+                      };
+                      return (
+                        <li key={l.id}>
+                          <Link
+                            href={buildHref({ lesson: l.id })}
+                            className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                            prefetch={false}
+                          >
+                            <span className="min-w-0 truncate">{l.title}</span>
+                            <span className="flex shrink-0 items-center gap-2 text-xs text-faint">
+                              {s.assignmentCount === 0 ? (
+                                "Chưa có assignment"
+                              ) : (
+                                <>
+                                  {s.assignmentCount} assignment
+                                  {s.pendingCount > 0 && (
+                                    <span className="chip-accent text-[10px]">
+                                      {s.pendingCount} chờ
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                              <span aria-hidden>→</span>
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  // Bước 3: danh sách assignment của bài học đã chọn.
+  const lesson = allLessons.find((l) => l.id === selectedLessonId)!;
+  const lessonAssignments = assignments.filter((a) => a.lessonId === selectedLessonId);
+  const filtered = lessonAssignments.filter((a) => {
     if (filter === "pending") return a.counts.pending > 0;
     if (filter === "hidden") return a.isHidden;
     return true;
   });
+
   return (
-    <>
+    <section className="mt-8">
+      <Link
+        href={buildHref({ lesson: null })}
+        className="link inline-flex items-center gap-1 text-sm"
+      >
+        ← {course.title}
+      </Link>
+      <h2 className="mt-3 text-lg font-semibold">{lesson.title}</h2>
+      <p className="text-sm text-muted">{lesson.moduleTitle}</p>
+
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-faint">
           Trạng thái:
@@ -302,139 +543,82 @@ async function AssignmentListView({
         ))}
       </div>
 
-      <section className="mt-8">
+      <div className="mt-4">
         {filtered.length === 0 ? (
           <EmptyState
             icon="🔍"
-            title="Không có bài tập khớp bộ lọc"
-            description="Đổi khoá hoặc bộ lọc trạng thái để xem thêm."
+            title={
+              lessonAssignments.length === 0
+                ? "Bài học này chưa có assignment"
+                : "Không có assignment khớp bộ lọc"
+            }
+            description={
+              lessonAssignments.length === 0
+                ? "Thêm assignment cho bài học này trong trang biên soạn khoá học."
+                : "Đổi bộ lọc trạng thái để xem thêm."
+            }
+            actions={
+              lessonAssignments.length === 0
+                ? [
+                    {
+                      label: "Mở trang biên soạn",
+                      href: `/instructor/courses/${course.id}`,
+                      variant: "secondary",
+                    },
+                  ]
+                : undefined
+            }
           />
         ) : (
-          <>
-            {/* Desktop table */}
-            <div className="hidden overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card lg:block">
-              <table className="w-full text-sm">
-                <thead className="bg-[rgb(var(--surface-muted))]">
-                  <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted">
-                    <th className="px-4 py-3">Tiêu đề</th>
-                    <th className="px-4 py-3">Khoá / Bài học</th>
-                    <th className="px-4 py-3">Hạn nộp</th>
-                    <th className="px-4 py-3 text-right">Chờ chấm</th>
-                    <th className="px-4 py-3 text-right">Đã chấm</th>
-                    <th className="px-4 py-3 text-right">Tổng</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-token">
-                  {filtered.map((a) => {
-                    const due = a.dueAt ? new Date(a.dueAt) : null;
-                    const overdue = due && due < new Date();
-                    return (
-                      <tr
-                        key={a.id}
-                        className="transition-colors hover:bg-[rgb(var(--surface-muted))]"
-                      >
-                        <td className="px-4 py-3 align-top">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{a.title}</span>
-                            {a.isHidden && (
-                              <span className="chip text-[10px]">Đang ẩn</span>
-                            )}
-                          </div>
-                          <p className="mt-0.5 text-xs text-faint">
-                            Tối đa {a.maxScore} điểm
-                          </p>
-                        </td>
-                        <td className="px-4 py-3 align-top">
-                          <p className="text-xs text-muted">
-                            {a.lesson?.module.course.title ?? ""}
-                          </p>
-                          <p className="mt-0.5 text-xs text-faint">
-                            {a.lesson?.title ?? ""}
-                          </p>
-                        </td>
-                        <td className="px-4 py-3 align-top text-xs">
-                          {due ? (
-                            <span className={overdue ? "text-danger-600" : ""}>
-                              {formatDate(due)}
-                            </span>
-                          ) : (
-                            <span className="text-faint">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right align-top tabular-nums">
-                          {a.counts.pending > 0 ? (
-                            <span className="chip-accent">{a.counts.pending}</span>
-                          ) : (
-                            <span className="text-faint">0</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right align-top tabular-nums text-success-600">
-                          {a.counts.graded}
-                        </td>
-                        <td className="px-4 py-3 text-right align-top tabular-nums">
-                          {a.counts.total}
-                        </td>
-                        <td className="px-4 py-3 text-right align-top">
-                          <Link
-                            href={`/instructor/assignments/${a.id}/submissions`}
-                            className="btn-secondary btn-sm"
-                            prefetch={false}
-                          >
-                            Chấm bài
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile card stack */}
-            <ul className="space-y-3 lg:hidden">
-              {filtered.map((a) => {
-                const due = a.dueAt ? new Date(a.dueAt) : null;
-                const overdue = due && due < new Date();
-                return (
-                  <li key={a.id} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="line-clamp-1 font-medium">{a.title}</span>
-                          {a.isHidden && <span className="chip text-[10px] shrink-0">Ẩn</span>}
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted">{a.lesson?.module.course.title ?? ""}</p>
-                        <p className="text-xs text-faint">{a.lesson?.title ?? ""}</p>
+          <ul className="space-y-3">
+            {filtered.map((a) => {
+              const due = a.dueAt ? new Date(a.dueAt) : null;
+              const overdue = due && due < new Date();
+              return (
+                <li
+                  key={a.id}
+                  className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{a.title}</span>
+                        {a.isHidden && <span className="chip text-[10px]">Đang ẩn</span>}
                       </div>
-                      {a.counts.pending > 0 && (
-                        <span className="chip-accent shrink-0">{a.counts.pending} chờ</span>
-                      )}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-token pt-3 text-xs">
-                      <span className="text-faint">
+                      <p className="mt-0.5 text-xs text-faint">
+                        Tối đa {a.maxScore} điểm ·{" "}
                         {due ? (
                           <span className={overdue ? "text-danger-600" : ""}>
-                            Hạn: {formatDate(due)}
+                            Hạn {formatDate(due)}
                           </span>
-                        ) : "Không hạn"} · {a.counts.graded}/{a.counts.total} chấm
+                        ) : (
+                          "Không hạn"
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3 text-xs">
+                      <span className="text-faint">
+                        {a.counts.graded}/{a.counts.total} chấm
                       </span>
+                      {a.counts.pending > 0 && (
+                        <span className="chip-accent">{a.counts.pending} chờ</span>
+                      )}
                       <Link
                         href={`/instructor/assignments/${a.id}/submissions`}
                         className="btn-secondary btn-sm"
                         prefetch={false}
                       >
-                        Chấm
+                        Chấm bài
                       </Link>
                     </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
 
