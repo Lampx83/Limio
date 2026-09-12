@@ -510,11 +510,13 @@ export default function TeacherBar({
         Chưa mở cửa sổ màn chiếu thì đồng hồ vừa bấm chỉ chạy âm thầm trong
         BroadcastChannel — không cửa sổ nào nghe, nên không ai thấy nó đếm.
         Nhiều buổi dạy chỉ chiếu thẳng chính màn hình này (chia sẻ màn hình,
-        không mở cửa sổ phụ), nên khi đó nút này đứng ra làm màn chiếu chính.
-        Nút tự ẩn khi mở màn chiếu (vì lúc đó đồng hồ đã hiện bên màn chiếu
-        rồi) hoặc khi tắt đồng hồ đếm ngược từ bảng điều khiển của giáo viên —
-        KHÔNG ẩn khi bảng điều khiển đang mở, nên z-50 (cao hơn lớp phủ z-40
-        của bảng) và lệch trái khỏi nút đóng (X) ở góc bảng để không đè lên nhau.
+        không mở cửa sổ phụ), nên khi đó nút này đứng ra làm màn chiếu chính —
+        to bằng đúng đồng hồ bên StageListener (cùng cỡ chữ clamp), để đứng xa
+        cũng đọc được, không phải một nút bé tí như FAB.
+        Tự ẩn khi mở màn chiếu (đồng hồ đã hiện bên đó rồi) hoặc khi tắt đồng
+        hồ từ bảng điều khiển — KHÔNG ẩn khi bảng điều khiển đang mở. Đặt ở
+        góc dưới-trái, chỗ duy nhất không có FAB (cột nút nổi bên phải) hay
+        thanh AppHeader (dính đỉnh trang) choán chỗ.
       */}
       {endsAt !== null && !stageOpen && (
         <button
@@ -522,17 +524,19 @@ export default function TeacherBar({
           onClick={() => setOpen(true)}
           aria-label={`Còn ${mmss(countdownLeft)} — bấm để mở bảng điều khiển giảng viên`}
           title="Chưa mở màn chiếu nên đồng hồ chạy ngay trên màn hình này. Bấm để mở bảng điều khiển."
-          className={`fixed right-20 top-4 z-50 flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-bold shadow-lg backdrop-blur-md transition-colors ${
+          className={`fixed bottom-6 left-6 z-50 flex items-baseline gap-4 rounded-3xl border-2 px-6 py-3 shadow-card backdrop-blur-md transition-transform hover:scale-[1.02] ${
             countdownDone
               ? "border-danger-500 bg-danger-50/90 text-danger-700"
               : countdownUrgent
                 ? "border-accent-500 bg-accent-50/90 text-accent-700"
-                : "border-brand-400 bg-[rgb(var(--surface))]/90 text-brand-700"
+                : "border-brand-400 bg-[rgb(var(--surface))]/85"
           }`}
         >
-          <Hourglass size={14} />
-          <span className="tabular-nums">
-            {countdownDone ? "Hết giờ" : mmss(countdownLeft)}
+          <span className="text-[clamp(1.4rem,2vw,2rem)] font-bold uppercase tracking-[0.2em] opacity-70">
+            {countdownDone ? "Hết giờ" : "Còn lại"}
+          </span>
+          <span className="text-[clamp(3.6rem,6.8vw,6.8rem)] font-bold leading-none tabular-nums">
+            {mmss(countdownLeft)}
           </span>
         </button>
       )}
