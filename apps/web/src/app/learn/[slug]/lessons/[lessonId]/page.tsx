@@ -568,7 +568,12 @@ export default async function LessonPage({
         className="mt-8 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8"
       >
         <LessonSectionNav containerId="lesson-content" />
-        <div>
+        {/* col-start-2 cố định: bài < 2 mục thì LessonSectionNav trả về null
+            (không chiếm ô grid nào), và nếu không ghim cột thì div này — vốn
+            là item thứ 2 trên nguồn nhưng giờ thành item DUY NHẤT — bị grid
+            auto-placement đẩy vào cột 1 (16rem, chỗ của mục lục) thay vì cột
+            nội dung (1fr), khiến cả bài co lại còn ~256px. */}
+        <div className="xl:col-start-2">
         {/* Trên màn chiếu, tên bài phải luôn nhìn thấy: người vào muộn hoặc ngẩng
             lên giữa chừng cần biết đang học bài nào mà không phải hỏi. Dính theo
             mép trên vì cuộn tới mục 4 thì tiêu đề bài đã trôi mất từ lâu. */}

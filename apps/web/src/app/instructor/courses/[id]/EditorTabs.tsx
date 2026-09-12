@@ -1,4 +1,13 @@
 import Link from "next/link";
+import {
+  Info,
+  BookOpen,
+  Users,
+  School,
+  ClipboardList,
+  BarChart3,
+  type LucideIcon,
+} from "lucide-react";
 
 /*
  * prefetch={false} ở mọi link trỏ về chính route này:
@@ -19,13 +28,13 @@ export type EditorTab =
   | "assignments"
   | "analytics";
 
-const TABS: Array<{ key: EditorTab; label: string; icon: string }> = [
-  { key: "overview", label: "Tổng quan", icon: "ⓘ" },
-  { key: "content", label: "Nội dung", icon: "📚" },
-  { key: "students", label: "Học viên", icon: "👥" },
-  { key: "sections", label: "Lớp học", icon: "🏫" },
-  { key: "assignments", label: "Assignment", icon: "📝" },
-  { key: "analytics", label: "Phân tích", icon: "📊" },
+const TABS: Array<{ key: EditorTab; label: string; icon: LucideIcon }> = [
+  { key: "overview", label: "Tổng quan", icon: Info },
+  { key: "content", label: "Nội dung", icon: BookOpen },
+  { key: "students", label: "Học viên", icon: Users },
+  { key: "sections", label: "Lớp học", icon: School },
+  { key: "assignments", label: "Assignment", icon: ClipboardList },
+  { key: "analytics", label: "Phân tích", icon: BarChart3 },
 ];
 
 export default function EditorTabs({
@@ -45,6 +54,7 @@ export default function EditorTabs({
     >
       {TABS.filter((t) => !hiddenTabs.includes(t.key)).map((t) => {
         const isActive = t.key === active;
+        const Icon = t.icon;
         return (
           <Link
             key={t.key}
@@ -52,13 +62,16 @@ export default function EditorTabs({
             aria-selected={isActive}
             href={`/instructor/courses/${courseId}?tab=${t.key}`}
             prefetch={false}
-            className={`-mb-px inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`-mb-px inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-4 py-2.5 text-base font-medium transition-all duration-150 ${
               isActive
-                ? "border-brand-600 text-brand-700"
-                : "border-transparent text-muted hover:border-token hover:text-default"
+                ? "border-brand-600 bg-[rgb(var(--brand-soft))] font-semibold text-brand-700 shadow-sm"
+                : "border-transparent text-muted hover:border-token hover:bg-[rgb(var(--surface-muted))] hover:text-default"
             }`}
           >
-            <span aria-hidden>{t.icon}</span>
+            <Icon
+              className={`h-5 w-5 shrink-0 transition-colors ${isActive ? "text-brand-600" : ""}`}
+              aria-hidden
+            />
             <span>{t.label}</span>
           </Link>
         );
