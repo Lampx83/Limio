@@ -105,6 +105,10 @@ export default async function CourseDetailPage({
       ? formatPrice(course.priceCents!, course.currency)
       : "Miễn phí";
 
+  // Banner "chưa đăng ký" trong section Nội dung khóa học đã có đủ message +
+  // action (Đăng ký ngay / liên hệ giáo viên) — sidebar không lặp lại nút nữa.
+  const showEnrollNudge = !enrolled && !publiclyReadable && course.modules.length > 0;
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
@@ -247,7 +251,7 @@ export default async function CourseDetailPage({
             </span>
           </div>
 
-          {!enrolled && !publiclyReadable && course.modules.length > 0 && (
+          {showEnrollNudge && (
             /* Trực quan hơn hẳn dòng chữ xám nhỏ trước đây — nói trước một
                lần, thay vì để người ta tự suy ra từ việc bấm mà không có gì
                xảy ra. Banner "chưa đăng ký" gộp về đây thay vì nằm riêng ở
@@ -482,11 +486,11 @@ export default async function CourseDetailPage({
               )}
             </div>
             {course.status === "published" &&
-              // invite_only đã báo "liên hệ giáo viên" ở banner đầu trang —
-              // không lặp lại message đó ở đây. Card này chỉ còn lý do tồn
-              // tại khi có gì để hiện: học phí, hoặc nút đăng ký tự phục vụ.
-              ((paymentEnabled && !isFree(course.priceCents)) ||
-                !(course.enrollMode === "invite_only" && !enrolled)) && (
+              // Banner "chưa đăng ký"/"liên hệ giáo viên" ở section Nội dung
+              // khóa học đã đủ message + action rồi — không lặp lại nút ở
+              // đây. Card này chỉ còn lý do tồn tại khi có gì để hiện: học
+              // phí, hoặc nút đăng ký (đã enrolled, hoặc chưa có nudge ở trên).
+              ((paymentEnabled && !isFree(course.priceCents)) || !showEnrollNudge) && (
                 <div className="card scroll-mt-24" id="dang-ky">
                   {paymentEnabled && !isFree(course.priceCents) && (
                     <div className="mb-3">
@@ -498,7 +502,7 @@ export default async function CourseDetailPage({
                       </div>
                     </div>
                   )}
-                  {!(course.enrollMode === "invite_only" && !enrolled) && (
+                  {!showEnrollNudge && (
                     <EnrollButton
                       slug={params.slug}
                       alreadyEnrolled={enrolled}
