@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { copyText } from "@/lib/clipboard";
-import { BarChart3, RefreshCw } from "lucide-react";
+import { BarChart3, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
@@ -51,6 +51,7 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
   const [results, setResults] = useState<PollResults | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [history, setHistory] = useState<PollHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
@@ -154,7 +155,19 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
     esRef.current = es;
     es.onmessage = (e) => {
       try {
-        const ev = JSON.parse(e.data) as { choice?: string };
+        const ev = JSON.parse(e.data) as { choice?: string; reset?: boolean };
+        if (ev.reset) {
+          setResults((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  totalVotes: 0,
+                  votesByOption: Object.fromEntries(prev.options.map((_, idx) => [idx.toString(), 0])),
+                }
+              : prev,
+          );
+          return;
+        }
         if (!ev.choice) return;
         setResults((prev) => {
           if (!prev) return prev;
@@ -189,6 +202,34 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
       toast.error("Lỗi mạng");
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  // Xoá hết phiếu bầu hiện tại nhưng giữ nguyên poll (id + câu hỏi + lựa chọn +
+  // QR) — dùng lại được cho lớp nhỏ tiếp theo mà không cần tạo poll mới.
+  const handleReset = async () => {
+    if (!currentPoll) return;
+    if (!confirm("Xoá toàn bộ phiếu bầu hiện tại để bắt đầu phiên mới? Không thể hoàn tác.")) return;
+
+    if (isStateless || isStandalone) {
+      setVotesByOption(Object.fromEntries(currentPoll.options.map((_, idx) => [idx.toString(), 0])));
+      toast.success("Đã reset poll");
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const res = await fetch(apiUrl(`/api/classroom/quick-poll/${currentPoll.id}/reset`), {
+        method: "POST",
+      });
+      if (!res.ok) { toast.error("Không thể reset"); return; }
+      const data = await res.json();
+      setResults((prev) => (prev ? { ...prev, totalVotes: 0, votesByOption: data.votesByOption } : prev));
+      toast.success("Đã reset poll");
+    } catch {
+      toast.error("Lỗi mạng");
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -274,21 +315,21 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
               {isRefreshing ? "Đang tải..." : "Làm mới"}
             </button>
             <button
+              onClick={handleReset}
+              disabled={isResetting}
+              className="btn-secondary text-sm flex items-center gap-1"
+              title="Xoá toàn bộ phiếu, bắt đầu phiên mới"
+            >
+              <RotateCcw size={14} className={isResetting ? "animate-spin" : ""} />
+              {isResetting ? "..." : "Reset"}
+            </button>
+            <button
               onClick={() => setIsFullscreen(false)}
               className="btn-secondary text-sm"
               title="Exit fullscreen"
             >
               ⛶ Thoát
             </button>
-            {onExit && (
-              <button
-                onClick={onExit}
-                className="btn-secondary text-sm"
-                title="Exit tool"
-              >
-                ✕ Exit
-              </button>
-            )}
           </div>
         </div>
 
@@ -453,6 +494,15 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
             >
               <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
               {isRefreshing ? "..." : "Làm mới"}
+            </button>
+            <button
+              onClick={handleReset}
+              disabled={isResetting}
+              className="btn-secondary btn-sm text-xs flex items-center gap-1"
+              title="Xoá toàn bộ phiếu, bắt đầu phiên mới"
+            >
+              <RotateCcw size={12} className={isResetting ? "animate-spin" : ""} />
+              {isResetting ? "..." : "Reset"}
             </button>
             <button
               onClick={() => setIsFullscreen(true)}

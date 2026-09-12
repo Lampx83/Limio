@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { copyText } from "@/lib/clipboard";
-import { Cloud, RefreshCw } from "lucide-react";
+import { Cloud, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
@@ -52,6 +52,7 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
   const [results, setResults] = useState<WordFrequencyResult | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [history, setHistory] = useState<WordCloudHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -130,7 +131,11 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
     esRef.current = es;
     es.onmessage = (e) => {
       try {
-        const evt = JSON.parse(e.data) as { text?: string };
+        const evt = JSON.parse(e.data) as { text?: string; reset?: boolean };
+        if (evt.reset) {
+          setResults({ cloudId, totalSubmissions: 0, wordFrequency: {} });
+          return;
+        }
         if (!evt.text) return;
         const phrase = normalizePhrase(evt.text);
         if (!phrase) return;
@@ -169,6 +174,33 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
       toast.error("Lỗi mạng");
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  // Xoá hết kết quả hiện tại nhưng giữ nguyên cloud (id + prompt + QR) — dùng
+  // lại được cho lớp nhỏ tiếp theo mà không cần tạo word cloud mới.
+  const handleReset = async () => {
+    if (!currentCloud) return;
+    if (!confirm("Xoá toàn bộ kết quả hiện tại để bắt đầu phiên mới? Không thể hoàn tác.")) return;
+
+    if (isStateless) {
+      setSubmissions([]);
+      toast.success("Đã reset word cloud");
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const res = await fetch(apiUrl(`/api/classroom/word-cloud/${currentCloud.id}/reset`), {
+        method: "POST",
+      });
+      if (!res.ok) { toast.error("Không thể reset"); return; }
+      setResults({ cloudId: currentCloud.id, totalSubmissions: 0, wordFrequency: {} });
+      toast.success("Đã reset word cloud");
+    } catch {
+      toast.error("Lỗi mạng");
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -237,6 +269,13 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
     </button>
   );
 
+  const ResetBtn = ({ size = 14, className = "btn-secondary btn-sm text-xs" }: { size?: number; className?: string }) => (
+    <button onClick={handleReset} disabled={isResetting} className={`${className} flex items-center gap-1`} title="Xoá kết quả, bắt đầu phiên mới">
+      <RotateCcw size={size} className={isResetting ? "animate-spin" : ""} />
+      {isResetting ? "..." : "Reset"}
+    </button>
+  );
+
   const WordCloudDisplay = ({ wordFrequency, totalSubmissions }: { wordFrequency: Record<string, number>; totalSubmissions: number }) => {
     const maxFrequency = Math.max(...Object.values(wordFrequency), 1);
     const sortedWords = Object.entries(wordFrequency).sort(([, a], [, b]) => b - a).slice(0, 50);
@@ -278,8 +317,8 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
           </div>
           <div className="flex gap-2">
             {!isStateless && <RefreshBtn size={14} className="btn-secondary text-sm" />}
+            <ResetBtn size={14} className="btn-secondary text-sm" />
             <button onClick={() => setIsFullscreen(false)} className="btn-secondary text-sm">⛶ Thoát</button>
-            {onExit && <button onClick={onExit} className="btn-secondary text-sm">✕ Exit</button>}
           </div>
         </div>
 
@@ -353,6 +392,7 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
           </div>
           <div className="flex gap-2">
             {!isStateless && <RefreshBtn />}
+            <ResetBtn />
             <button onClick={() => setIsFullscreen(true)} className="btn-secondary btn-sm text-xs">⛶ Full</button>
             {onExit && <button onClick={onExit} className="btn-secondary btn-sm text-xs">✕ Exit</button>}
           </div>
