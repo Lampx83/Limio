@@ -234,7 +234,13 @@ export default async function CourseAssignmentsBrowser({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{a.title}</span>
+                        <Link
+                          href={`/instructor/assignments/${a.id}/submissions`}
+                          className="font-medium hover:text-brand-600 hover:underline"
+                          prefetch={false}
+                        >
+                          {a.title}
+                        </Link>
                         {a.isHidden && <span className="chip text-[10px]">Đang ẩn</span>}
                       </div>
                       <p className="mt-0.5 text-xs text-faint">
