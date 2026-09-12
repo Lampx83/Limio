@@ -94,6 +94,10 @@ export async function POST(req: Request) {
       userId: selected.userId,
       displayName: selected.user.displayName,
       sessionId,
+      // Roster of candidates this pick was drawn from — lets the client animate
+      // a reel through real names instead of just revealing the winner.
+      roster: candidates.map((c) => c.user.displayName),
+      winnerIndex: randomIndex,
     });
   } catch (err) {
     console.error("[classroom/random-pick]", err);
