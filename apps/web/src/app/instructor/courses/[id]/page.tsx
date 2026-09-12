@@ -8,6 +8,7 @@ import {
   canModerateLiveExam,
   isCourseOwner,
 } from "@feedbackme/core-lms";
+import { Presentation } from "lucide-react";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import AccessCodesPanel from "./AccessCodesPanel";
@@ -154,6 +155,8 @@ export default async function InstructorCourseEditPage({
       .map((l) => ({ id: l.id, title: l.title })),
   );
 
+  const firstLessonId = course.modules[0]?.lessons[0]?.id;
+
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
   const totalQuizzes = course.modules.reduce(
     (s, m) => s + m.lessons.reduce((ls, l) => ls + l.quizzes.length, 0),
@@ -264,9 +267,25 @@ export default async function InstructorCourseEditPage({
         </div>
 
         <div>
-          <h1 className="h-display text-3xl font-bold leading-tight sm:text-4xl">
-            {course.title}
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="h-display text-3xl font-bold leading-tight sm:text-4xl">
+              {course.title}
+            </h1>
+            {/* Trình chiếu khoá học — mở ngay bài đầu tiên ở chế độ giảng dạy
+                trong tab mới, để trang soạn còn nguyên. */}
+            {firstLessonId && (
+              <Link
+                href={`/learn/${course.slug}/lessons/${firstLessonId}?gv=1`}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+                title="Mở khoá học ở chế độ giảng dạy (thanh giảng viên, ghi chú, màn chiếu) trong tab mới"
+              >
+                <Presentation className="h-4 w-4" aria-hidden />
+                Trình chiếu khoá học
+              </Link>
+            )}
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-faint">
             <code className="rounded bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono">
               /{course.slug}
