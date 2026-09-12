@@ -64,7 +64,10 @@ interface InteractiveBoardProps {
 export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [current, setCurrent] = useState<Board | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // Mặc định full-screen ngay khi vào phiên board — che luôn top nav +
+  // sidebar + "← Quay lại" của trang cha (xem TeachingToolsClient.tsx),
+  // tránh 2 nút exit cùng hiển thị. Nút "⛶ Thoát" vẫn cho phép thu nhỏ lại.
+  const [isFullscreen, setIsFullscreen] = useState(true);
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrPanelOpen, setQrPanelOpen] = useState(true);
   const [history, setHistory] = useState<BoardHistoryItem[]>([]);
@@ -670,14 +673,24 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       <header className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 text-white px-6 py-6">
         <div className="absolute inset-0 opacity-30 mix-blend-overlay"
           style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
-        <div className="relative flex items-center gap-3">
-          <div className="bg-white/30 backdrop-blur rounded-xl p-2.5">
-            <StickyNote size={28} strokeWidth={2} />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/30 backdrop-blur rounded-xl p-2.5">
+              <StickyNote size={28} strokeWidth={2} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90">Bảng tương tác</p>
+              <h2 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm">Tạo bảng mới</h2>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90">Bảng tương tác</p>
-            <h2 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm">Tạo bảng mới</h2>
-          </div>
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors shrink-0"
+            >
+              ✕ Exit
+            </button>
+          )}
         </div>
       </header>
 

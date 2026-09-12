@@ -55,12 +55,17 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
 
   return (
     <div>
-      <button
-        onClick={() => setSelectedTool(null)}
-        className="mb-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
-      >
-        ← Quay lại
-      </button>
+      {/* Bảng tương tác tự mở full-screen ngay khi có phiên (xem InteractiveBoard.tsx)
+          và có sẵn nút thoát riêng trong header của nó — không cần "← Quay lại" ở đây
+          nữa, tránh 2 nút exit cùng hiển thị. */}
+      {selectedTool !== "board" && (
+        <button
+          onClick={() => setSelectedTool(null)}
+          className="mb-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+        >
+          ← Quay lại
+        </button>
+      )}
 
       {selectedTool === "poll" && <QuickPoll onExit={() => setSelectedTool(null)} />}
       {selectedTool === "wordcloud" && <WordCloud onExit={() => setSelectedTool(null)} />}
