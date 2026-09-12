@@ -28,9 +28,6 @@ export default async function CourseDetailPage({
   searchParams?: { paywall?: string; locked?: string };
 }) {
   const showPaywall = searchParams?.paywall === "1";
-  // Trước đây khoá miễn phí mà chưa ghi danh thì bị đá về đây KHÔNG kèm cờ nào,
-  // nên người dùng quay lại đúng trang vừa đứng và tưởng cú bấm bị nuốt mất.
-  const showLocked = searchParams?.locked === "1";
   const [session, paymentEnabled] = await Promise.all([auth(), getPaymentEnabled()]);
   let course;
   try {
@@ -113,32 +110,6 @@ export default async function CourseDetailPage({
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
         ← Catalog
       </Link>
-
-      {showLocked && (
-        <div className="banner-info mt-4 flex flex-wrap items-center gap-3 rounded-2xl px-5 py-4">
-          <Lock className="h-5 w-5 shrink-0" aria-hidden />
-          <div className="flex-1">
-            <p className="text-sm font-semibold">Bạn chưa đăng ký khoá học này</p>
-            {course.enrollMode === "invite_only" ? (
-              /* invite_only không có đường tự đăng ký — nói luôn cần gì ở
-                 đây, đừng để banner khác lặp lại/mâu thuẫn phía dưới. */
-              <p className="text-xs">
-                Hãy liên hệ giáo viên để lấy link vào khoá học.
-              </p>
-            ) : (
-              <p className="text-xs">
-                Đăng ký để mở toàn bộ bài học. Việc này miễn phí và chỉ mất một cú
-                bấm.
-              </p>
-            )}
-          </div>
-          {course.enrollMode !== "invite_only" && (
-            <a href="#dang-ky" className="btn-primary btn-sm">
-              Đăng ký ngay
-            </a>
-          )}
-        </div>
-      )}
 
       {/* Paywall notice */}
       {showPaywall && (
@@ -276,40 +247,46 @@ export default async function CourseDetailPage({
             </span>
           </div>
 
-          {!enrolled &&
-            !publiclyReadable &&
-            course.modules.length > 0 &&
-            // invite_only không có nút đăng ký tự phục vụ nào để bấm — mời
-            // "đăng ký ngay" ở đây là chỉ đường vào ngõ cụt. Khoá đó đã có
-            // banner riêng "Cần link mời của lớp" phía dưới.
-            course.enrollMode === "open" && (
-              /* Trực quan hơn hẳn dòng chữ xám nhỏ trước đây — nói trước một
-                 lần, thay vì để người ta tự suy ra từ việc bấm mà không có gì
-                 xảy ra. Cùng một banner cho cả khoá miễn phí lẫn có phí: câu
-                 chữ không nhắc tới giá, nên đúng cho cả hai. EnrollNudgeAction
-                 tự quyết — khoá miễn phí thì bấm là ghi danh luôn; khoá có phí
-                 thì bấm "Đăng ký ngay" mở ngay tại chỗ ô giá + nhập mã kích
-                 hoạt, không cuộn trang xuống sidebar (sidebar còn ẩn trên
-                 mobile, cuộn-tới sẽ không tới đâu cả). */
-              <div className="banner-info mt-3 flex flex-wrap items-center gap-3 rounded-2xl px-5 py-4">
-                <Lock className="h-5 w-5 shrink-0" aria-hidden />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">
-                    Bạn chưa đăng ký khoá học này
+          {!enrolled && !publiclyReadable && course.modules.length > 0 && (
+            /* Trực quan hơn hẳn dòng chữ xám nhỏ trước đây — nói trước một
+               lần, thay vì để người ta tự suy ra từ việc bấm mà không có gì
+               xảy ra. Banner "chưa đăng ký" gộp về đây thay vì nằm riêng ở
+               đầu trang — một chỗ duy nhất, không lặp/mâu thuẫn với sidebar. */
+            <div className="banner-info mt-3 flex flex-wrap items-center gap-3 rounded-2xl px-5 py-4">
+              <Lock className="h-5 w-5 shrink-0" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">
+                  Bạn chưa đăng ký khoá học này
+                </p>
+                {course.enrollMode === "invite_only" ? (
+                  // invite_only không có nút đăng ký tự phục vụ nào để bấm —
+                  // nói luôn cần gì ở đây thay vì mời bấm vào ngõ cụt.
+                  <p className="text-xs">
+                    Hãy liên hệ giáo viên để lấy link vào khoá học.
                   </p>
+                ) : (
                   <p className="text-xs">
                     Hãy đăng ký khoá học để bắt đầu nội dung học tập ngay hôm
                     nay.
                   </p>
-                </div>
+                )}
+              </div>
+              {course.enrollMode !== "invite_only" && (
+                // Cùng một banner cho cả khoá miễn phí lẫn có phí: câu chữ
+                // không nhắc tới giá, nên đúng cho cả hai. EnrollNudgeAction tự
+                // quyết — khoá miễn phí thì bấm là ghi danh luôn; khoá có phí
+                // thì bấm "Đăng ký ngay" mở ngay tại chỗ ô giá + nhập mã kích
+                // hoạt, không cuộn trang xuống sidebar (sidebar còn ẩn trên
+                // mobile, cuộn-tới sẽ không tới đâu cả).
                 <EnrollNudgeAction
                   slug={params.slug}
                   priceCents={course.priceCents}
                   currency={course.currency}
                   paymentEnabled={paymentEnabled}
                 />
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
           {course.modules.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center text-sm text-muted">
