@@ -10,6 +10,7 @@ import CountdownTimer from "../classroom/CountdownTimer";
 import RandomPicker from "../classroom/RandomPicker";
 import GroupingTool from "../classroom/GroupingTool";
 import InteractiveBoard from "../classroom/InteractiveBoard";
+import Whiteboard from "../classroom/Whiteboard";
 import type { ToolType } from "./TeachingToolsWrapper";
 
 export interface StudentItem {
@@ -27,7 +28,15 @@ interface TeachingToolsClientProps {
   courses: Course[];
 }
 
-const VALID_TOOLS: ToolType[] = ["poll", "wordcloud", "timer", "random-picker", "grouping", "board"];
+const VALID_TOOLS: ToolType[] = [
+  "poll",
+  "wordcloud",
+  "timer",
+  "random-picker",
+  "grouping",
+  "board",
+  "whiteboard",
+];
 
 export default function TeachingToolsClient({ courses }: TeachingToolsClientProps) {
   const router = useRouter();
@@ -58,7 +67,7 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
       {/* Bảng tương tác tự mở full-screen ngay khi có phiên (xem InteractiveBoard.tsx)
           và có sẵn nút thoát riêng trong header của nó — không cần "← Quay lại" ở đây
           nữa, tránh 2 nút exit cùng hiển thị. */}
-      {selectedTool !== "board" && (
+      {selectedTool !== "board" && selectedTool !== "whiteboard" && (
         <button
           onClick={() => setSelectedTool(null)}
           className="mb-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
@@ -71,6 +80,7 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
       {selectedTool === "wordcloud" && <WordCloud onExit={() => setSelectedTool(null)} />}
       {selectedTool === "timer" && <CountdownTimer onExit={() => setSelectedTool(null)} />}
       {selectedTool === "board" && <InteractiveBoard onExit={() => setSelectedTool(null)} />}
+      {selectedTool === "whiteboard" && <Whiteboard onExit={() => setSelectedTool(null)} />}
 
       {selectedTool === "random-picker" && (
         <StudentListGate

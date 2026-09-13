@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { PenTool } from "lucide-react";
 import RandomPicker from "./RandomPicker";
 import QuickPoll from "./QuickPoll";
 import WordCloud from "./WordCloud";
 import GroupingTool from "./GroupingTool";
 import CountdownTimer from "./CountdownTimer";
+import Whiteboard from "./Whiteboard";
 
 interface TeachingToolsDrawerProps {
   lessonId: string;
@@ -18,6 +20,10 @@ export default function TeachingToolsDrawer({
   isOpen,
   onClose,
 }: TeachingToolsDrawerProps) {
+  // Whiteboard cần toàn màn hình (canvas) — không nhét vừa panel nhỏ của
+  // drawer như các tool còn lại, nên mở như overlay riêng đè lên trên.
+  const [whiteboardOpen, setWhiteboardOpen] = useState(false);
+
   // Close on ESC key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -28,6 +34,14 @@ export default function TeachingToolsDrawer({
       return () => document.removeEventListener("keydown", handleEsc);
     }
   }, [isOpen, onClose]);
+
+  if (whiteboardOpen) {
+    return (
+      <div className="fixed inset-0 z-[60] bg-white dark:bg-zinc-900">
+        <Whiteboard onExit={() => setWhiteboardOpen(false)} />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -71,6 +85,21 @@ export default function TeachingToolsDrawer({
 
         {/* Content - Scrollable */}
         <div className="space-y-6 overflow-y-auto p-6" style={{ maxHeight: "calc(100vh - 80px)" }}>
+          <button
+            onClick={() => {
+              setWhiteboardOpen(true);
+              onClose();
+            }}
+            className="flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-teal-50 p-4 text-left transition-colors hover:border-sky-400 dark:border-sky-900/40"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
+              <PenTool size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 dark:text-gray-100">Whiteboard</p>
+              <p className="text-xs text-muted">Vẽ tay đồng bộ, toàn màn hình</p>
+            </div>
+          </button>
           <RandomPicker lessonId={lessonId} />
           <QuickPoll lessonId={lessonId} />
           <WordCloud lessonId={lessonId} />

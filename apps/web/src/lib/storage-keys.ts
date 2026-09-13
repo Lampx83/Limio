@@ -58,7 +58,9 @@ type DateShardedKind =
   | "lesson-media/transcripts"
   | "exam-assets"
   | "submissions"
-  | "proctor-snapshots";
+  | "proctor-snapshots"
+  | "oral-exam-materials"
+  | "whiteboard-pages";
 
 function dateSharded(
   layer: StorageLayer,
@@ -89,12 +91,24 @@ export function lessonTranscriptKey(date: Date, filename: string): StorageKey {
 export function examAssetKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "exam-assets", date, filename);
 }
+/** B — Whiteboard annotate tài liệu: ảnh nền mỗi trang (public, guest xem không cần login). */
+export function whiteboardPageKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "whiteboard-pages", date, filename);
+}
 export function submissionKey(date: Date, filename: string): StorageKey {
   return dateSharded("private", "submissions", date, filename);
 }
 /** A7.7.5 — Proctor snapshots: private, date-sharded under proctor-snapshots/. */
 export function proctorSnapshotKey(date: Date, filename: string): StorageKey {
   return dateSharded("private", "proctor-snapshots", date, filename);
+}
+/**
+ * A6.1 — Vấn đáp AI: tài liệu GV upload cho giảng viên ảo. `private` — KHÁC
+ * examAssetKey (public) vì đây không phải nội dung hiển thị cho sinh viên,
+ * chỉ AI đọc.
+ */
+export function oralExamMaterialKey(date: Date, filename: string): StorageKey {
+  return dateSharded("private", "oral-exam-materials", date, filename);
 }
 
 /**
@@ -132,11 +146,17 @@ export function lessonTranscriptKeyFromFilename(filename: string): StorageKey | 
 export function examAssetKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "exam-assets", filename);
 }
+export function whiteboardPageKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "whiteboard-pages", filename);
+}
 export function submissionKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("private", "submissions", filename);
 }
 export function proctorSnapshotKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("private", "proctor-snapshots", filename);
+}
+export function oralExamMaterialKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("private", "oral-exam-materials", filename);
 }
 
 /** Tmp staging for rich-text paste / multipart-upload flows. */

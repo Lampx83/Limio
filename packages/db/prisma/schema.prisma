@@ -132,6 +132,7 @@ model User {
   wordCloudSubmissions WordCloudSubmission[]
   ownedBoards          InteractiveBoard[]    @relation("BoardOwner")
   boardNotes           BoardNote[]
+  ownedWhiteboards     Whiteboard[]          @relation("WhiteboardOwner")
   groupMemberships     GroupMembership[]
   timerTemplates       TimerTemplate[]
 
@@ -2177,6 +2178,7 @@ model ClassroomSession {
   wordClouds  WordCloud[]
   groupings   GroupingSession[]
   boards      InteractiveBoard[]
+  whiteboards Whiteboard[]
 
   createdAt DateTime @default(now())
 
@@ -2319,6 +2321,48 @@ model BoardNote {
   @@index([boardId, createdAt])
   @@index([boardId, hidden, createdAt])
   @@index([authorId])
+}
+
+// Whiteboard — vẽ tay tự do, đồng bộ real-time qua Redis Stream (không lưu
+// từng nét vào Postgres — chỉ giữ `snapshot` đã reconcile theo version của
+// element, giống InteractiveBoard nhưng canvas thay vì sticky-note).
+// Join bằng code, không cần login — dùng chung pattern với InteractiveBoard,
+// nhưng route join riêng (`/join/[code]` đã bị InteractiveBoard chiếm).
+model Whiteboard {
+  id   String @id @default(cuid())
+  code String @unique // 6-char join code (uppercase alphanumeric)
+
+  sessionId String?
+  session   ClassroomSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  ownerId String
+  owner   User   @relation("WhiteboardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title  String
+  status String @default("open") // "open" | "closed"
+
+  // C: Kiosk/triển lãm — set 1 lần lúc tạo (không đổi lại sau, giữ phạm vi
+  // gọn như document mode). Bật thì: client tự gọi reset khi im lặng quá
+  // lâu (không cần cron/BullMQ — kiosk là 1 tab luôn mở, tự theo dõi idle
+  // của chính nó là đủ, xem WhiteboardCanvas.tsx).
+  kioskMode Boolean @default(false)
+
+  // B: Annotate tài liệu — ảnh nền mỗi trang, thứ tự = thứ tự trang. Rỗng =
+  // bảng trắng tự do (Phase A, không đổi hành vi). Mỗi phần tử: { url }.
+  pages       Json @default("[]")
+  currentPage Int  @default(0) // trang GV đang chiếu — client theo dõi qua SSE `doc.page.changed`
+
+  // Elements Excalidraw đã reconcile, map theo trang: { "0": [...], "1": [...] }.
+  // Bảng trắng tự do chỉ dùng key "0" (1 trang ảo) — luôn cùng 1 shape cho cả
+  // 2 chế độ để khỏi rẽ nhánh khắp API. KHÔNG lưu từng nét riêng lẻ.
+  snapshot Json @default("{}")
+
+  createdAt DateTime  @default(now())
+  closedAt  DateTime?
+
+  @@index([ownerId, createdAt])
+  @@index([sessionId])
+  @@index([status, createdAt])
 }
 
 // Quick Grouping

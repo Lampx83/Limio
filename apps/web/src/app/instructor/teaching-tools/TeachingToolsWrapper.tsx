@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Cloud, Clock, Users, Shuffle, StickyNote, Gamepad2 } from "lucide-react";
+import { BarChart3, Cloud, Clock, Users, Shuffle, StickyNote, Gamepad2, PenTool } from "lucide-react";
 
-export type ToolType = "poll" | "wordcloud" | "timer" | "random-picker" | "grouping" | "board" | null;
+export type ToolType =
+  | "poll"
+  | "wordcloud"
+  | "timer"
+  | "random-picker"
+  | "grouping"
+  | "board"
+  | "whiteboard"
+  | null;
 
 interface TeachingToolsWrapperProps {
   onSelectTool: (tool: ToolType) => void;
@@ -36,6 +44,13 @@ const TOOLS = [
     icon: StickyNote,
     label: "Bảng Tương Tác",
     description: "Padlet — sinh viên dán note realtime",
+    category: "standalone",
+  },
+  {
+    id: "whiteboard",
+    icon: PenTool,
+    label: "Whiteboard",
+    description: "Vẽ tay tự do, đồng bộ realtime — dùng được cả offline/kiosk",
     category: "standalone",
   },
   {
