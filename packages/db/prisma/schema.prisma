@@ -14,7 +14,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [pgcrypto]
+  extensions = [pgcrypto, vector]
 }
 
 // =====================================================================
@@ -97,6 +97,10 @@ model User {
   // A7 Exam
   examAttempts             ExamAttempt[]
   examAssetsUploaded       ExamAsset[]              @relation("ExamAssetUploader")
+  // A6.1 — Vấn đáp AI: tài liệu GV upload cho giảng viên ảo.
+  oralExamMaterialsUploaded OralExamMaterial[]      @relation("OralExamMaterialUploader")
+  // A6.4 — GV duyệt/sửa điểm AI đề xuất cho buổi vấn đáp.
+  oralExamEvaluationsGraded OralExamEvaluation[]    @relation("OralExamEvaluationGrader")
   examAnswersGraded        ExamAnswer[]             @relation("ExamGrader")
   examGradeChanges         ExamGradeHistory[]       @relation("ExamGradeChanger")
   // A5.3.5 — Instructor → student messages during live exam.
@@ -2758,26 +2762,156 @@ model Exam {
   // A5.5 — User tạo đề này. Nullable cho exam legacy; backfill = primary
   // instructor của course. Tăng User.examsCreatedCount khi publish exam mới.
   createdById            String?
+  // A6.1 — Vấn đáp AI. Default `written` giữ nguyên hành vi cho mọi Exam có
+  // trước cột này — toàn bộ đang là thi viết. Không đổi qua lại sau khi tạo:
+  // đổi kind = tạo Exam mới (xem oral-materials.ts).
+  kind                   ExamKind            @default(written)
+  // A6.6 — chỉ áp dụng khi kind=oral.
+  answerMode             OralAnswerMode      @default(text)
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 
-  course       Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  createdBy    User?             @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  wizardConfig ExamWizardConfig?
-  blueprint    ExamBlueprint?
-  passages     ExamPassage[]
-  questions    ExamQuestion[]
-  attempts     ExamAttempt[]
-  assets       ExamAsset[]
-  messages     ExamMessage[]
-  candidates   ExamCandidate[]
-  schedules    ExamSession[]
-  sections     ExamSection[]
-  rooms        ExamRoom[]
+  course        Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy     User?              @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  wizardConfig  ExamWizardConfig?
+  blueprint     ExamBlueprint?
+  passages      ExamPassage[]
+  questions     ExamQuestion[]
+  attempts      ExamAttempt[]
+  assets        ExamAsset[]
+  messages      ExamMessage[]
+  candidates    ExamCandidate[]
+  schedules     ExamSession[]
+  sections      ExamSection[]
+  rooms         ExamRoom[]
+  oralMaterials OralExamMaterial[]
 
   @@index([courseId, status])
   @@index([status, openAt, closeAt])
   @@index([createdById])
+}
+
+enum ExamKind {
+  written
+  oral
+}
+
+// A6.6 — Vấn đáp AI: SV trả lời bằng gõ chữ hay giọng nói. Chỉ có ý nghĩa khi
+// kind=oral; mặc định text để đề cũ không đổi hành vi.
+enum OralAnswerMode {
+  text
+  voice
+}
+
+// =====================================================================
+// A6.1 — Vấn đáp AI: tài liệu GV upload để "giảng viên ảo" dựa vào khi hỏi.
+// Spec: chưa có trong SPEC.docx — bổ sung khi viết acceptance criteria đầy đủ.
+//
+// KHÔNG BAO GIỜ lộ cho sinh viên qua bất kỳ endpoint nào — chỉ AI (A6.3) đọc.
+// File lưu ở storage layer `private` (không phải `public` như ExamAsset),
+// đúng vì đây không phải nội dung hiển thị cho người học.
+// =====================================================================
+enum OralExamMaterialType {
+  document
+  topic_list
+  rubric
+}
+
+model OralExamMaterial {
+  id     String               @id @default(uuid())
+  examId String
+  type   OralExamMaterialType
+  title  String
+  // Null cho topic_list nhập tay — không có file đứng sau.
+  s3Key     String?
+  mimeType  String?
+  sizeBytes Int?
+  // Text thuần: trích từ file (pdf/docx/txt/md) khi type=document/rubric, hoặc
+  // chính nội dung GV gõ khi type=topic_list. Null nếu parse file thất bại
+  // (vd PDF scan không có text layer) — không suy đoán, để trống cho rõ ràng
+  // là chưa trích được gì, GV cần biết để xử lý (thay file khác).
+  extractedText String? @db.Text
+  orderIndex    Int
+  uploadedById  String
+  uploadedAt    DateTime @default(now())
+
+  exam       Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation("OralExamMaterialUploader", fields: [uploadedById], references: [id])
+  chunks     OralExamMaterialChunk[]
+
+  @@index([examId, orderIndex])
+}
+
+// A6.2 — mảnh nhỏ cắt ra từ OralExamMaterial.extractedText, kèm vector ngữ
+// nghĩa (OpenAI text-embedding-3-small, 1536 chiều) để "giảng viên ảo" (A6.3)
+// tìm đúng đoạn liên quan thay vì phải đọc nguyên tài liệu mỗi lượt hỏi.
+// `embedding` là Unsupported vì Prisma Client chưa có kiểu vector native —
+// đọc/ghi qua raw SQL (packages/core-feedback/src/oralExam/).
+model OralExamMaterialChunk {
+  id         String                       @id @default(uuid())
+  materialId String
+  chunkIndex Int
+  chunkText  String                       @db.Text
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime                     @default(now())
+
+  material OralExamMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId, chunkIndex])
+}
+
+// A6.3 — 1 lượt hỏi/đáp trong buổi vấn đáp AI. Gắn vào ExamAttempt (bảng đã
+// có, dùng chung với thi viết) chứ không phải bảng riêng — để màn hình GV
+// xem danh sách bài làm dùng chung được cho cả 2 loại đề.
+enum OralExamTurnRole {
+  examiner
+  student
+}
+
+model OralExamTurn {
+  id           String           @id @default(uuid())
+  attemptId    String
+  role         OralExamTurnRole
+  content      String           @db.Text
+  tokensInput  Int?
+  tokensOutput Int?
+  createdAt    DateTime         @default(now())
+
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId, createdAt])
+}
+
+// A6.4 — chấm điểm buổi vấn đáp. AI đề xuất, GV duyệt/sửa — điểm CHỈ có hiệu
+// lực (status != pending_review) sau khi GV xác nhận. Tách bạch rõ AI vs
+// người: `aiSuggestedScore` không bao giờ bị ghi đè bởi `instructorScore`,
+// hai cột riêng để sau này phân tích AI chấm lệch người bao nhiêu.
+enum OralExamEvaluationStatus {
+  pending_review
+  approved
+  overridden
+}
+
+model OralExamEvaluation {
+  id       String @id @default(uuid())
+  attemptId String @unique
+
+  aiSuggestedScore  Float?
+  // [{ topic: string, note: string }] — theo từng chủ đề/câu hỏi đã hỏi.
+  aiRubricBreakdown Json?
+  aiSummary         String? @db.Text
+
+  instructorScore Float?
+  instructorNotes String?                  @db.Text
+  status          OralExamEvaluationStatus @default(pending_review)
+  gradedAt        DateTime?
+  gradedById      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempt  ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  gradedBy User?       @relation("OralExamEvaluationGrader", fields: [gradedById], references: [id], onDelete: SetNull)
 }
 
 // =====================================================================
@@ -3005,6 +3139,8 @@ model ExamAttempt {
   incidents        ExamIncident[]
   messages         ExamMessage[]
   proctorSnapshots AttemptProctorSnapshot[]
+  oralTurns        OralExamTurn[]
+  oralEvaluation   OralExamEvaluation?
 
   // P0 single attempt per user per exam. Implemented as partial unique index
   // in raw SQL because Prisma doesn't model partial unique. See migration.

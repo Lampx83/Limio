@@ -54,10 +54,12 @@ export const UpdateExamQuestionInput = z.object({
 async function assertExamDraft(examId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, status: true },
+    select: { id: true, courseId: true, status: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.status === "archived") throw new ExamError("exam_not_draft");
+  // A6.1 — Vấn đáp AI không dùng ExamQuestion; luồng câu hỏi thuộc riêng thi viết.
+  if (exam.kind === "oral") throw new ExamError("exam_not_written");
   return exam;
 }
 

@@ -28,6 +28,10 @@ export const CreateExamInput = z
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
     purpose: z.enum(["assessment", "field_test"]).optional(),
+    // A6.1 — Vấn đáp AI. Bất biến sau khi tạo — đổi kind = tạo Exam mới.
+    kind: z.enum(["written", "oral"]).optional(),
+    // A6.6 — chỉ có ý nghĩa khi kind=oral.
+    answerMode: z.enum(["text", "voice"]).optional(),
   })
   .refine((d) => !d.openAt || !d.closeAt || d.openAt < d.closeAt, {
     message: "openAt must be before closeAt",
@@ -83,6 +87,8 @@ export async function createExam(
       showResultsAfterSubmit:
         d.showResultsAfterSubmit ?? (d.purpose === "field_test" ? false : true),
       purpose: d.purpose ?? "assessment",
+      kind: d.kind ?? "written",
+      answerMode: d.answerMode ?? "text",
     },
     select: { id: true },
   });
@@ -272,6 +278,7 @@ export async function publishExam(
     where: { id: examId },
     select: {
       id: true,
+      kind: true,
       openAt: true,
       closeAt: true,
       durationMin: true,
@@ -295,46 +302,55 @@ export async function publishExam(
           _count: { select: { items: true } },
         },
       },
+      oralMaterials: { select: { id: true } },
     },
   });
 
   const errors: string[] = [];
-  // Section random_from_bank (blueprint hoặc instructor add tay) cũng là content
-  // hợp lệ — không cần passage hay standalone question đi kèm.
-  const randomSections = full.sections.filter(
-    (s) => s.selectionMode === "random_from_bank",
-  );
-  const hasContent =
-    full.passages.length > 0 ||
-    full.questions.length > 0 ||
-    randomSections.length > 0;
-  if (!hasContent) {
-    errors.push("exam has no passages, standalone questions, or random sections");
-  }
-  for (const p of full.passages) {
-    if (p._count.questions === 0) {
-      errors.push(`passage ${p.id} has no questions`);
-    }
-  }
-  // Validate random_from_bank section có pool count > 0
-  for (const s of randomSections) {
-    const pf = s.poolFilter as { count?: number; pointsPerItem?: number } | null;
-    if (!pf || typeof pf.count !== "number" || pf.count <= 0) {
-      errors.push(`section ${s.id} có poolFilter rỗng hoặc count <= 0`);
-    }
-  }
   if (full.openAt >= full.closeAt) errors.push("openAt must be before closeAt");
   if (full.durationMin <= 0) errors.push("durationMin must be positive");
-  // totalPoints = standalone questions + ước lượng random sections (count × pointsPerItem || 1)
-  const standalonePoints = full.questions.reduce((sum, q) => sum + q.points, 0);
-  const randomPoints = randomSections.reduce((sum, s) => {
-    const pf = s.poolFilter as { count?: number; pointsPerItem?: number } | null;
-    const c = pf?.count ?? 0;
-    const pp = pf?.pointsPerItem ?? 1;
-    return sum + c * pp;
-  }, 0);
-  const totalPoints = standalonePoints + randomPoints;
-  if (totalPoints <= 0) errors.push("total points must be > 0");
+
+  // A6.1 — Vấn đáp AI không có passage/question/blueprint — nội dung của nó là
+  // OralExamMaterial. Điều kiện publish tương đương (§"exam has no content")
+  // là có ít nhất 1 tài liệu, không phải có câu hỏi.
+  let randomSections: typeof full.sections = [];
+  let totalPoints = 0;
+  if (full.kind === "oral") {
+    if (full.oralMaterials.length === 0) {
+      errors.push("oral exam has no material");
+    }
+  } else {
+    // Section random_from_bank (blueprint hoặc instructor add tay) cũng là content
+    // hợp lệ — không cần passage hay standalone question đi kèm.
+    randomSections = full.sections.filter((s) => s.selectionMode === "random_from_bank");
+    const hasContent =
+      full.passages.length > 0 || full.questions.length > 0 || randomSections.length > 0;
+    if (!hasContent) {
+      errors.push("exam has no passages, standalone questions, or random sections");
+    }
+    for (const p of full.passages) {
+      if (p._count.questions === 0) {
+        errors.push(`passage ${p.id} has no questions`);
+      }
+    }
+    // Validate random_from_bank section có pool count > 0
+    for (const s of randomSections) {
+      const pf = s.poolFilter as { count?: number; pointsPerItem?: number } | null;
+      if (!pf || typeof pf.count !== "number" || pf.count <= 0) {
+        errors.push(`section ${s.id} có poolFilter rỗng hoặc count <= 0`);
+      }
+    }
+    // totalPoints = standalone questions + ước lượng random sections (count × pointsPerItem || 1)
+    const standalonePoints = full.questions.reduce((sum, q) => sum + q.points, 0);
+    const randomPoints = randomSections.reduce((sum, s) => {
+      const pf = s.poolFilter as { count?: number; pointsPerItem?: number } | null;
+      const c = pf?.count ?? 0;
+      const pp = pf?.pointsPerItem ?? 1;
+      return sum + c * pp;
+    }, 0);
+    totalPoints = standalonePoints + randomPoints;
+    if (totalPoints <= 0) errors.push("total points must be > 0");
+  }
 
   if (errors.length > 0) {
     throw new ExamError("exam_not_publishable", { errors });

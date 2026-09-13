@@ -64,7 +64,12 @@ export class ExamError extends Error {
       | "round_requires_at_least_one_course"
       | "round_admin_already_exists"
       | "round_course_already_added"
-      | "forbidden",
+      | "forbidden"
+      // A6.1 — Vấn đáp AI
+      | "exam_not_oral"
+      | "exam_not_written"
+      | "material_not_found"
+      | "unsupported_material_type",
     public readonly details?: unknown,
   ) {
     super(code);

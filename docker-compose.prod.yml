@@ -40,7 +40,10 @@ x-web-env: &web-env
 
 services:
   postgres:
-    image: postgres:15
+    # A6.2 — pgvector/pgvector:pg15 = ảnh chính thức của postgres:15 gốc +
+    # extension "vector" cài sẵn. Tương thích ngược 100% với volume hiện có —
+    # chỉ thêm binary, không đổi format dữ liệu. Xem docker-compose.yml.
+    image: pgvector/pgvector:pg15
     restart: unless-stopped
     environment:
       POSTGRES_USER: feedbackme

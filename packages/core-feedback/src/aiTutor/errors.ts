@@ -12,7 +12,9 @@ export class AiTutorError extends Error {
       | "no_token_budget"
       | "lesson_not_found"
       | "validation_failed"
-      | "openai_error",
+      | "openai_error"
+      // A6.2
+      | "material_not_found",
     public readonly details?: unknown,
   ) {
     super(code);

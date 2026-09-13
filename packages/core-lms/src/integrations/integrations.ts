@@ -81,6 +81,11 @@ export const INTEGRATION_KEYS = [
   "stripe.secret",
   "vnpay.secret",
   "momo.secret",
+  // A6.6 — Vấn đáp bằng giọng nói. Vbee cần 2 secret (App-Id + Token, lấy ở
+  // studio.vbee.vn/apps), khác OpenAI chỉ 1 key — theo đúng quy ước
+  // "provider.secretName" đã dùng cho stripe/vnpay/momo ở trên.
+  "vbee.app_id",
+  "vbee.token",
 ] as const;
 export type IntegrationKey = (typeof INTEGRATION_KEYS)[number];
 

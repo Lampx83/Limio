@@ -22,6 +22,13 @@ async function cleanDb() {
     prisma.userRole.deleteMany(),
     prisma.authProvider.deleteMany(),
     prisma.learningEvent.deleteMany(),
+    // A6.3 — oralExamTurn.e2e.test.ts goes through publishExam(), which creates
+    // an ExamRound (independent of Exam, FK'd directly to Course — see
+    // core-lms/src/test/setup.ts's identical comment). Exam.deleteMany()
+    // cascades ExamAttempt/OralExamTurn/OralExamMaterial(+Chunk)/ExamQuestion
+    // etc., so no need to list those individually here.
+    prisma.exam.deleteMany(),
+    prisma.examRound.deleteMany(),
     prisma.answerResponse.deleteMany(),
     prisma.quizAttempt.deleteMany(),
     prisma.questionOption.deleteMany(),

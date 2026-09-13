@@ -137,7 +137,8 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.code === "cohort_not_found" ||
       err.code === "schedule_not_found" ||
       err.code === "section_not_found" ||
-      err.code === "round_not_found"
+      err.code === "round_not_found" ||
+      err.code === "material_not_found"
         ? 404
         : err.code === "attempt_belongs_to_other" ||
             err.code === "not_enrolled" ||
@@ -145,6 +146,8 @@ export function mapKnownError(err: unknown): NextResponse | null {
           ? 403
           : err.code === "exam_has_attempts" ||
               err.code === "exam_not_draft" ||
+              err.code === "exam_not_oral" ||
+              err.code === "exam_not_written" ||
               err.code === "attempt_already_submitted" ||
               err.code === "session_stale" ||
               err.code === "exam_not_open" ||

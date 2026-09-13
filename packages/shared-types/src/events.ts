@@ -56,6 +56,17 @@ export const LearningEventType = {
   ExamAudioPlayed: "exam.audio.played",
   ExamAudioCompleted: "exam.audio.completed",
   ExamPassageViewed: "exam.passage.viewed",
+  // A6.1 — Vấn đáp AI: tài liệu GV upload cho giảng viên ảo (chưa phải AI turn).
+  ExamOralMaterialUploaded: "exam.oral_material.uploaded",
+  ExamOralMaterialDeleted: "exam.oral_material.deleted",
+  // A6.2 — cắt + embed tài liệu cho pgvector search (RAG, xem A6.3).
+  ExamOralMaterialEmbedded: "exam.oral_material.embedded",
+  // A6.3 — 1 lượt hỏi/đáp trong buổi vấn đáp AI. `ended` trong payload phân
+  // biệt lượt bình thường với lượt kết thúc buổi thi.
+  ExamOralAttemptTurnRecorded: "exam.oral_attempt.turn_recorded",
+  // A6.4 — chấm điểm buổi vấn đáp: AI đề xuất, rồi GV duyệt/sửa.
+  ExamOralEvaluationGenerated: "exam.oral_evaluation.generated",
+  ExamOralEvaluationGraded: "exam.oral_evaluation.graded",
 
   // Feedback
   SkillStateUpdated: "skill.state.updated",
@@ -225,6 +236,45 @@ export interface EnrollmentCreatedPayload {
 export interface ExamCreatedPayload {
   examId: string;
   courseId: string;
+}
+
+// A6.1 — Vấn đáp AI
+export interface ExamOralMaterialUploadedPayload {
+  examId: string;
+  materialId: string;
+  type: "document" | "topic_list" | "rubric";
+}
+
+export interface ExamOralMaterialDeletedPayload {
+  examId: string;
+  materialId: string;
+}
+
+export interface ExamOralMaterialEmbeddedPayload {
+  examId: string;
+  materialId: string;
+  chunkCount: number;
+  tokensUsed: number;
+}
+
+export interface ExamOralAttemptTurnRecordedPayload {
+  examId: string;
+  attemptId: string;
+  questionsAsked: number;
+  ended: boolean;
+}
+
+export interface ExamOralEvaluationGeneratedPayload {
+  examId: string;
+  attemptId: string;
+  aiSuggestedScore: number | null;
+}
+
+export interface ExamOralEvaluationGradedPayload {
+  examId: string;
+  attemptId: string;
+  instructorScore: number;
+  status: "approved" | "overridden";
 }
 
 export interface ExamPublishedPayload {

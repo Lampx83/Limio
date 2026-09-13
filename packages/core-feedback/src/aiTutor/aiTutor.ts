@@ -59,7 +59,9 @@ export async function recordAiUsage(
 }
 
 /** Phạm vi gọi AI — quyết định cap nào được áp. */
-export type AiCapScope = "tutor" | "generator";
+// A6.3 — "oral_exam": lượt hỏi/đáp trong 1 buổi vấn đáp AI. Người gọi là
+// SINH VIÊN đang thi bắt buộc — khác "tutor"/"generator" (tự nguyện dùng AI).
+export type AiCapScope = "tutor" | "generator" | "oral_exam";
 
 /**
  * Trần ngày toàn hệ thống. Ưu tiên SiteSetting (đổi được lúc đang chạy, không
@@ -86,6 +88,8 @@ export const DEFAULT_MODEL = "gpt-4o-mini";
 const PRICE_PER_1K_INPUT: Record<string, number> = {
   "gpt-4o-mini": 0.00015,
   "gpt-4o": 0.0025,
+  // A6.2 — embeddings không có output token, giá tính hết vào input.
+  "text-embedding-3-small": 0.00002,
 };
 const PRICE_PER_1K_OUTPUT: Record<string, number> = {
   "gpt-4o-mini": 0.0006,
@@ -158,8 +162,14 @@ export async function assertWithinCaps(
     }
   }
 
-  // 3. Ví token của người gọi — hạn mức tháng cộng phần đã mua.
-  await assertHasTokenBudget(userId, db);
+  // 3. Ví token của người gọi — hạn mức tháng cộng phần đã mua. Bỏ qua cho
+  // "oral_exam": đây là thi bắt buộc — không thể để sinh viên hết ví cá nhân
+  // (vì lỡ hỏi AI Tutor nhiều) mà không thi được. Trần hệ thống ở bước 1 +
+  // trần cứng số câu hỏi/thời gian (application layer, runOralExamTurn) đã
+  // đủ chặn chi phí vượt tầm kiểm soát cho scope này.
+  if (scope !== "oral_exam") {
+    await assertHasTokenBudget(userId, db);
+  }
 }
 
 interface LessonContext {
