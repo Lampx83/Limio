@@ -32,7 +32,10 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        # pgvector/pgvector:pg15 = ảnh chính thức của postgres:15 gốc + extension
+        # "vector" cài sẵn — cần cho migration OralExamMaterialChunk.embedding
+        # (CREATE EXTENSION "vector"), đồng bộ với docker-compose.yml.
+        image: pgvector/pgvector:pg15
         env:
           POSTGRES_USER: feedbackme
           POSTGRES_PASSWORD: feedbackme
