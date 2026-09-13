@@ -1,7 +1,20 @@
+# KHÔNG đặt `container_name:` cố định cho postgres/redis (xem sự cố
+# 2026-09-13: container_name trùng giữa checkout gốc và mỗi `git worktree`
+# — worktree nào `docker compose up` sau cùng sẽ giành mất tên container,
+# volume rẽ nhánh âm thầm, dữ liệu "lùi thời gian" không báo lỗi gì).
+# Để mặc định, Compose tự đặt tên theo COMPOSE_PROJECT_NAME (= tên thư mục
+# checkout, khác nhau giữa main repo và mỗi worktree) — nên nếu 2 checkout
+# cùng cố `docker compose up`, cổng 5434/6379 sẽ báo lỗi "already allocated"
+# NGAY LẬP TỨC thay vì âm thầm phân nhánh dữ liệu. Đây là tín hiệu ĐÚNG:
+# chỉ 1 checkout (thường là repo gốc) được chạy Postgres/Redis dev; mọi
+# worktree/phiên khác dùng lại instance đang chạy qua localhost:5434/6379,
+# không tự `docker compose up`/`pnpm db:up` riêng. Xem CLAUDE.md §6.
 services:
   postgres:
-    image: postgres:15
-    container_name: feedbackme-postgres
+    # A6.2 — pgvector/pgvector:pg15 = ảnh chính thức của postgres:15 gốc +
+    # extension "vector" cài sẵn. Tương thích ngược 100% — chỉ thêm binary,
+    # không đổi format dữ liệu, volume cũ mount lại bình thường.
+    image: pgvector/pgvector:pg15
     restart: unless-stopped
     environment:
       POSTGRES_USER: feedbackme
@@ -19,7 +32,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: feedbackme-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:

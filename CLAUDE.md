@@ -156,6 +156,15 @@ Năm nguyên tắc dưới đây tổng hợp từ spec §6.1 (event-driven boun
 - Build theo Phase Roadmap (§8 spec). Không build P1/P2 trước khi xong P0 của phase đang làm.
 - Sau mỗi feature, pause để user review trước khi sang feature kế.
 
+### 6.1. Nhiều phiên Claude Code chạy song song — DB/Redis dev dùng chung
+
+Repo này thường có **nhiều phiên Claude Code chạy đồng thời** (nhiều cửa sổ, hoặc `git worktree` riêng cho từng agent/task). Tất cả cùng trỏ vào **một** Postgres + Redis dev duy nhất (`localhost:5434` / `:6379`, chạy từ checkout gốc qua `docker-compose.yml`).
+
+- **Chỉ checkout gốc được chạy `docker compose up` / `pnpm db:up` cho `postgres`/`redis`.** Nếu bạn đang ở trong một `git worktree` (thường ở `.claude/worktrees/<tên>/`), **không tự khởi động Postgres/Redis riêng** — Prisma/app của bạn dùng lại instance đang chạy sẵn qua `localhost:5434`/`:6379` (giống hệt checkout gốc, vì DATABASE_URL/REDIS_URL không đổi giữa các worktree).
+- Nếu `docker compose up` báo lỗi port đã bị chiếm (`address already in use`) khi bạn chạy trong 1 worktree — đó là **tín hiệu đúng**, không phải bug cần fix bằng cách đổi port: nghĩa là Postgres/Redis dev đã chạy sẵn ở nơi khác, cứ dùng luôn, đừng cố chạy thêm 1 bộ mới.
+- **Sự cố đã xảy ra (2026-09-13):** một worktree cũ từng đặt `container_name` trùng với checkout gốc trong `docker-compose.yml` (lúc đó chưa có cảnh báo này) → 2 project Compose giành nhau 1 tên container + 1 port, container nào lên sau "thắng" nhưng lại mount volume KHÁC (dữ liệu rẽ nhánh âm thầm, không báo lỗi). Hậu quả: dev DB "lùi thời gian" hàng giờ liền, phải phục hồi bằng tay (dump từ volume worktree cũ, restore đè). `docker-compose.yml` đã bỏ `container_name` cố định để lỗi này từ nay báo ngay lập tức (port conflict) thay vì âm thầm phân nhánh dữ liệu — xem comment đầu file đó.
+- Khi nghi ngờ dev DB "sai lạ" (thiếu bảng/cột đáng lẽ đã có, dữ liệu cũ bất thường): `docker ps -a`, `docker volume ls` — kiểm tra có đúng 1 container Postgres đang chạy, mount đúng volume `feedbackme_feedbackme-pg` hay không, trước khi kết luận là bug code.
+
 ## 7. Deployment (production — server 224)
 
 Production chạy **hoàn toàn bằng Docker** trên một server nội bộ (gọi tắt **server 224**). CI/CD qua GitHub Actions với **self-hosted runner cài ngay trên server 224** — runner build và `docker compose up` tại chỗ, không cần SSH/registry trung gian.
