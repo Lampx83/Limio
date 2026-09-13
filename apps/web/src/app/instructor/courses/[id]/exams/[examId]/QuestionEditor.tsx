@@ -49,6 +49,8 @@ interface Props {
   mode: "create" | "edit";
   examId: string;
   passageId: string | null;
+  /** Gán câu hỏi mới vào 1 "Phần" (ExamSection) khi đề đã chia nhiều phần. Chỉ áp dụng lúc tạo. */
+  sectionId?: string | null;
   questionId?: string;
   initial?: {
     type: string;
@@ -84,6 +86,7 @@ export default function QuestionEditor({
   mode,
   examId,
   passageId,
+  sectionId,
   questionId,
   initial,
   onClose,
@@ -175,6 +178,7 @@ export default function QuestionEditor({
       config: buildConfig(),
       skillIds: v.skills.map((s) => s.id),
     };
+    if (mode === "create" && sectionId) body.sectionId = sectionId;
     const url =
       mode === "create"
         ? `/api/exams/${examId}/questions`
@@ -190,6 +194,10 @@ export default function QuestionEditor({
       setError(typeof d?.error === "string" ? d.error : "save_failed");
       return;
     }
+    // Thêm vào 1 section có sẵn (khung "Phần N") làm itemCount của nó lệch
+    // khỏi "Chia đề thành nhiều phần" cho tới khi có sự kiện này.
+    if (mode === "create" && sectionId)
+      window.dispatchEvent(new Event("fbm:exam-sections-changed"));
     router.refresh();
     onClose();
   }

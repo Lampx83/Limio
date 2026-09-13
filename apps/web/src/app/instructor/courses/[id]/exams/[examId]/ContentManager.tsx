@@ -1,14 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Upload } from "lucide-react";
+import { BookOpen, MoreHorizontal, PenLine, Plus } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
 import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
 import ImportQuestionsModal from "./ImportQuestionsModal";
-import FromBankModal from "./FromBankModal";
+import BankPickerModal from "./BankPickerModal";
 
 interface Skill {
   id: string;
@@ -39,6 +39,18 @@ interface QuestionData {
   orderInPassage: number | null;
   /** Mã từ bank gốc (vd "KNM-0042") nếu câu được copy/import từ ngân hàng. */
   bankCode?: string | null;
+  /** Phần (ExamSection) câu hỏi này thuộc về — null = chưa gán, hiển thị dưới "Phần 1" ngầm định. */
+  sectionId?: string | null;
+}
+
+interface SectionSummary {
+  id: string;
+  title: string;
+  orderIndex: number;
+  selectionMode: "fixed" | "random_from_bank";
+  resolutionMode: "per_attempt" | "per_publish";
+  poolFilter: { count?: number } | null;
+  itemCount: number;
 }
 
 interface Props {
@@ -47,6 +59,9 @@ interface Props {
   passages: PassageData[];
   questions: QuestionData[];
 }
+
+const NEW_SECTION_HINT =
+  'Nếu muốn đề thi của bạn có các phần khác nhau chạy lần lượt như Phần 1 - Trắc nghiệm, Phần 2 - Tự luận hoặc Phần 1 - Listening, Phần 2 - Reading... thì hãy thêm section mới tại đây.';
 
 const TYPE_LABEL: Record<string, string> = {
   mcq: "MCQ",
@@ -61,8 +76,8 @@ type EditState =
   | { kind: "idle" }
   | { kind: "newPassage" }
   | { kind: "editPassage"; passageId: string }
-  | { kind: "newQuestion"; passageId: string | null }
-  | { kind: "fromBank"; passageId: string | null }
+  | { kind: "newQuestion"; passageId: string | null; sectionId?: string | null }
+  | { kind: "fromBank"; sectionId?: string | null }
   | { kind: "editQuestion"; questionId: string };
 
 export default function ContentManager({ examId, editable, passages, questions }: Props) {
@@ -70,6 +85,51 @@ export default function ContentManager({ examId, editable, passages, questions }
   const [edit, setEdit] = useState<EditState>({ kind: "idle" });
   const [working, setWorking] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  // "Phần" (ExamSection) — chỉ khi có ≥2 phần thì khu vực câu hỏi độc lập mới
+  // chuyển sang hiển thị dạng khung theo từng phần. 0-1 phần: giao diện y hệt
+  // trước đây, không ai thấy khái niệm "Phần" cả.
+  const [sections, setSections] = useState<SectionSummary[] | null>(null);
+  // Khung nào đang mở bộ chọn "Từ ngân hàng / Tự soạn" — key là sectionId
+  // thật, hoặc "implicit" cho khung Phần 1 ngầm định (câu hỏi chưa gán phần).
+  const [chooserFor, setChooserFor] = useState<string | null>(null);
+
+  const refreshSections = () => {
+    fetch(`/api/exams/${examId}/sections`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { sections: SectionSummary[] } | null) => setSections(j?.sections ?? []));
+  };
+  useEffect(() => {
+    refreshSections();
+    const onChange = () => refreshSections();
+    window.addEventListener("fbm:exam-sections-changed", onChange);
+    return () => window.removeEventListener("fbm:exam-sections-changed", onChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examId]);
+
+  const boxed = (sections?.length ?? 0) >= 2;
+
+  async function addSectionLightweight(showHint: boolean) {
+    const nextPosition = (sections?.length ?? 0) + 2; // vị trí 1 là khung ngầm định
+    const defaultTitle = `Phần ${nextPosition}`;
+    // 1 dialog vừa xác nhận vừa hỏi tên — vd "Phần 2 - Tự luận" thay vì tên
+    // đếm số vô nghĩa. Bỏ trống/Huỷ → không tạo gì cả.
+    const promptMsg = showHint ? `${NEW_SECTION_HINT}\n\nTên phần mới:` : "Tên phần mới:";
+    const title = window.prompt(promptMsg, defaultTitle);
+    if (title === null) return;
+    const r = await fetch(`/api/exams/${examId}/sections`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: title.trim() || defaultTitle, selectionMode: "fixed" }),
+    });
+    if (!r.ok) {
+      alert("Tạo phần thất bại");
+      return;
+    }
+    window.dispatchEvent(new Event("fbm:exam-sections-changed"));
+    refreshSections();
+  }
   /** Source index + scope captured at dragstart. Uses ref so it survives the
    *  drag lifecycle without re-renders (state would not update in time). */
   const dragRef = useRef<{ scope: string; from: number } | null>(null);
@@ -197,7 +257,13 @@ export default function ContentManager({ examId, editable, passages, questions }
     await api("DELETE", `/api/exam-questions/${questionId}`);
   }
 
-  function renderQuestionRow(q: QuestionData, list: QuestionData[], i: number, passageId: string | null) {
+  function renderQuestionRow(
+    q: QuestionData,
+    list: QuestionData[],
+    i: number,
+    passageId: string | null,
+    reorderable = true,
+  ) {
     if (edit.kind === "editQuestion" && edit.questionId === q.id) {
       return (
         <QuestionEditor
@@ -216,25 +282,24 @@ export default function ContentManager({ examId, editable, passages, questions }
         />
       );
     }
-    const dp = dragProps(
-      `q:${passageId ?? "standalone"}`,
-      i,
-      (from, to) =>
-        reorderByDrop(
-          list,
-          from,
-          to,
-          `/api/exams/${examId}/questions/reorder`,
-          "orderedQuestionIds",
-          { passageId },
-        ),
-    );
+    const dp = reorderable
+      ? dragProps(`q:${passageId ?? "standalone"}`, i, (from, to) =>
+          reorderByDrop(
+            list,
+            from,
+            to,
+            `/api/exams/${examId}/questions/reorder`,
+            "orderedQuestionIds",
+            { passageId },
+          ),
+        )
+      : ({} as ReturnType<typeof dragProps>);
     return (
       <div
         {...dp}
         className={`flex items-start gap-2 rounded border border-default bg-white px-3 py-2 text-sm ${dp.className ?? ""}`}
       >
-        {editable && (
+        {editable && reorderable && (
           <span className="cursor-grab text-faint" title="Kéo để sắp xếp">
             ⋮⋮
           </span>
@@ -262,24 +327,28 @@ export default function ContentManager({ examId, editable, passages, questions }
         )}
         {editable && (
           <>
-            <button
-              type="button"
-              disabled={working || i === 0}
-              onClick={() => reorderQuestionsInScope(passageId, list, i, -1)}
-              className="rounded border border-default px-1.5 py-0.5 text-xs disabled:opacity-30"
-              aria-label="Lên"
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              disabled={working || i === list.length - 1}
-              onClick={() => reorderQuestionsInScope(passageId, list, i, 1)}
-              className="rounded border border-default px-1.5 py-0.5 text-xs disabled:opacity-30"
-              aria-label="Xuống"
-            >
-              ↓
-            </button>
+            {reorderable && (
+              <>
+                <button
+                  type="button"
+                  disabled={working || i === 0}
+                  onClick={() => reorderQuestionsInScope(passageId, list, i, -1)}
+                  className="rounded border border-default px-1.5 py-0.5 text-xs disabled:opacity-30"
+                  aria-label="Lên"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  disabled={working || i === list.length - 1}
+                  onClick={() => reorderQuestionsInScope(passageId, list, i, 1)}
+                  className="rounded border border-default px-1.5 py-0.5 text-xs disabled:opacity-30"
+                  aria-label="Xuống"
+                >
+                  ↓
+                </button>
+              </>
+            )}
             <button
               type="button"
               onClick={() => setEdit({ kind: "editQuestion", questionId: q.id })}
@@ -300,6 +369,8 @@ export default function ContentManager({ examId, editable, passages, questions }
     );
   }
 
+  const showPassages = passages.length > 0 || edit.kind === "newPassage";
+
   return (
     <div className="space-y-6">
       <ImportQuestionsModal
@@ -308,19 +379,116 @@ export default function ContentManager({ examId, editable, passages, questions }
         onClose={() => setImportOpen(false)}
       />
 
+      {editable && edit.kind === "fromBank" && (
+        <BankPickerModal
+          examId={examId}
+          sectionId={edit.sectionId ?? null}
+          onClose={() => setEdit({ kind: "idle" })}
+        />
+      )}
+
+      {/* CTA chính (chỉ khi chưa chia phần — đã chia thì mỗi khung có CTA riêng) + menu phụ */}
       {editable && (
-        <div className="-mt-3 mb-1 flex flex-wrap justify-end gap-2 text-xs">
-          <button
-            type="button"
-            onClick={() => setImportOpen(true)}
-            className="rounded border border-default px-3 py-1 hover:bg-slate-50"
-          >
-            <Upload className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Import từ Excel
-          </button>
+        <div className="-mt-3 mb-1 flex flex-wrap items-center justify-between gap-2">
+          {!boxed && edit.kind === "idle" && !addMenuOpen && (
+            <button
+              type="button"
+              onClick={() => setAddMenuOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              <Plus className="h-4 w-4" /> Thêm câu hỏi
+            </button>
+          )}
+          {!boxed && addMenuOpen && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-faint">Lấy câu hỏi từ đâu?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  setEdit({ kind: "fromBank", sectionId: null });
+                }}
+                className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100"
+              >
+                <BookOpen className="h-4 w-4" /> Từ ngân hàng
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  setEdit({ kind: "newQuestion", passageId: null, sectionId: null });
+                }}
+                className="inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 hover:bg-emerald-100"
+              >
+                <PenLine className="h-4 w-4" /> Tự soạn
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddMenuOpen(false)}
+                className="text-sm text-faint hover:underline"
+              >
+                Huỷ
+              </button>
+            </div>
+          )}
+          {edit.kind === "idle" && !addMenuOpen && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMoreMenuOpen((v) => !v)}
+                aria-label="Thêm tuỳ chọn khác"
+                className="rounded border border-default p-1.5 text-slate-500 hover:bg-slate-50"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+              {moreMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMoreMenuOpen(false)} />
+                  <div className="absolute right-0 z-20 mt-1 w-48 rounded border border-default bg-white py-1 text-sm shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        setImportOpen(true);
+                      }}
+                      className="block w-full px-3 py-1.5 text-left hover:bg-slate-50"
+                    >
+                      Import từ Excel
+                    </button>
+                    {!showPassages && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMoreMenuOpen(false);
+                          setEdit({ kind: "newPassage" });
+                        }}
+                        className="block w-full px-3 py-1.5 text-left hover:bg-slate-50"
+                      >
+                        Thêm đoạn bài đọc (đọc hiểu)
+                      </button>
+                    )}
+                    {!boxed && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMoreMenuOpen(false);
+                          void addSectionLightweight(true);
+                        }}
+                        className="block w-full px-3 py-1.5 text-left hover:bg-slate-50"
+                      >
+                        + Section mới
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Passages */}
+      {/* Passages — chỉ hiện khi đã có đoạn, hoặc giáo viên chủ động thêm từ menu phụ */}
+      {showPassages && (
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-faint">
@@ -473,64 +641,182 @@ export default function ContentManager({ examId, editable, passages, questions }
           })}
         </ul>
       </section>
+      )}
 
-      {/* Standalone questions */}
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-faint">
-            Câu hỏi độc lập ({standalone.length})
-          </h3>
-          {editable && edit.kind === "idle" && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setEdit({ kind: "newQuestion", passageId: null })}
-                className="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white"
-              >
-                + Câu hỏi độc lập
-              </button>
-              <button
-                type="button"
-                onClick={() => setEdit({ kind: "fromBank", passageId: null })}
-                className="rounded border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100"
-              >
-                <BookOpen className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Từ bank
-              </button>
+      {/* Standalone questions — chưa chia phần: y hệt trước đây, 1 danh sách phẳng. */}
+      {!boxed && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-faint">
+              Câu hỏi độc lập ({standalone.length})
+            </h3>
+          </div>
+
+          {editable && edit.kind === "newQuestion" && edit.passageId === null && (
+            <div className="mb-3">
+              <QuestionEditor
+                mode="create"
+                examId={examId}
+                passageId={null}
+                onClose={() => setEdit({ kind: "idle" })}
+              />
             </div>
           )}
-        </div>
 
-        {editable && edit.kind === "fromBank" && (
-          <FromBankModal
-            examId={examId}
-            passageId={edit.passageId}
-            onClose={() => setEdit({ kind: "idle" })}
-          />
-        )}
+          {standalone.length === 0 && (
+            <p className="rounded border border-dashed border-default px-4 py-4 text-center text-sm text-faint">
+              Không có câu hỏi độc lập.
+            </p>
+          )}
 
-        {editable && edit.kind === "newQuestion" && edit.passageId === null && (
-          <div className="mb-3">
-            <QuestionEditor
-              mode="create"
-              examId={examId}
-              passageId={null}
-              onClose={() => setEdit({ kind: "idle" })}
-            />
+          <ul className="space-y-1.5">
+            {standalone.map((q, i) => (
+              <li key={q.id}>{renderQuestionRow(q, standalone, i, null)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Đã chia ≥2 phần — mỗi phần 1 khung riêng, có CTA "+ Thêm câu hỏi" của chính nó. */}
+      {boxed && (
+        <section>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-faint">
+            Câu hỏi độc lập
+          </h3>
+          <div className="space-y-3">
+            {(() => {
+              const sortedSections = [...(sections ?? [])].sort(
+                (a, b) => a.orderIndex - b.orderIndex,
+              );
+              const boxes: Array<{
+                key: string;
+                label: string;
+                section: SectionSummary | null;
+                list: QuestionData[];
+              }> = [
+                {
+                  key: "implicit",
+                  label: "Phần 1",
+                  section: null,
+                  list: standalone.filter((q) => !q.sectionId),
+                },
+                // Phần thật hiển thị đúng tên giáo viên đặt (vd "Phần 2 - Tự
+                // luận") — không ghép thêm số thứ tự để khỏi lặp "Phần 2 —
+                // Phần 2 - Tự luận".
+                ...sortedSections.map((s) => ({
+                  key: s.id,
+                  label: s.title,
+                  section: s,
+                  list: standalone.filter((q) => q.sectionId === s.id),
+                })),
+              ];
+              return boxes.map((box) => (
+                <div key={box.key} className="rounded border border-dashed border-default/70 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-slate-600">{box.label}</span>
+                    <span className="text-xs text-faint">{box.list.length} câu</span>
+                  </div>
+
+                  {box.section?.selectionMode === "random_from_bank" ? (
+                    <p className="text-xs text-faint">
+                      Rút ngẫu nhiên từ ngân hàng — xem/chỉnh trong &ldquo;Chia đề thành nhiều
+                      phần&rdquo; bên dưới.
+                    </p>
+                  ) : (
+                    <>
+                      {editable &&
+                        edit.kind === "newQuestion" &&
+                        edit.passageId === null &&
+                        edit.sectionId === (box.section?.id ?? null) && (
+                          <div className="mb-2">
+                            <QuestionEditor
+                              mode="create"
+                              examId={examId}
+                              passageId={null}
+                              sectionId={box.section?.id ?? null}
+                              onClose={() => setEdit({ kind: "idle" })}
+                            />
+                          </div>
+                        )}
+
+                      {box.list.length === 0 && edit.kind === "idle" && (
+                        <p className="rounded border border-dashed border-default px-3 py-3 text-center text-xs text-faint">
+                          Chưa có câu hỏi.
+                        </p>
+                      )}
+
+                      <ul className="space-y-1.5">
+                        {box.list.map((q, i) => (
+                          <li key={q.id}>{renderQuestionRow(q, box.list, i, null, false)}</li>
+                        ))}
+                      </ul>
+
+                      {editable && edit.kind === "idle" && chooserFor !== box.key && (
+                        <button
+                          type="button"
+                          onClick={() => setChooserFor(box.key)}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded border border-dashed border-emerald-400 px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Thêm câu hỏi
+                        </button>
+                      )}
+                      {editable && chooserFor === box.key && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-faint">Lấy câu hỏi từ đâu?</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setChooserFor(null);
+                              setEdit({ kind: "fromBank", sectionId: box.section?.id ?? null });
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100"
+                          >
+                            <BookOpen className="h-3.5 w-3.5" /> Từ ngân hàng
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setChooserFor(null);
+                              setEdit({
+                                kind: "newQuestion",
+                                passageId: null,
+                                sectionId: box.section?.id ?? null,
+                              });
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                          >
+                            <PenLine className="h-3.5 w-3.5" /> Tự soạn
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setChooserFor(null)}
+                            className="text-xs text-faint hover:underline"
+                          >
+                            Huỷ
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ));
+            })()}
           </div>
-        )}
 
-        {standalone.length === 0 && (
-          <p className="rounded border border-dashed border-default px-4 py-4 text-center text-sm text-faint">
-            Không có câu hỏi độc lập.
-          </p>
-        )}
-
-        <ul className="space-y-1.5">
-          {standalone.map((q, i) => (
-            <li key={q.id}>{renderQuestionRow(q, standalone, i, null)}</li>
-          ))}
-        </ul>
-      </section>
+          {editable && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => void addSectionLightweight(false)}
+                className="inline-flex items-center gap-1.5 rounded border border-dashed border-default px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
+              >
+                <Plus className="h-3.5 w-3.5" /> Section mới
+              </button>
+              <p className="mt-1 max-w-xl text-xs text-faint">{NEW_SECTION_HINT}</p>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

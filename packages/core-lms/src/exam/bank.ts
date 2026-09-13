@@ -1018,7 +1018,7 @@ export async function copyBankQuestionToExam(
   actorUserId: string,
   bankQuestionId: string,
   examId: string,
-  position?: { orderInExam?: number; passageId?: string | null },
+  position?: { orderInExam?: number; passageId?: string | null; sectionId?: string | null },
   db: PrismaClient = prisma,
 ): Promise<{ examQuestionId: string; versionNumber: number }> {
   const q = await db.bankQuestion.findUnique({
@@ -1066,6 +1066,20 @@ export async function copyBankQuestionToExam(
       where: { examId },
       _max: { orderInExam: true },
     }))._max.orderInExam ?? -1) + 1;
+
+  const sectionId = position?.sectionId ?? null;
+  if (sectionId) {
+    const section = await db.examSection.findUnique({
+      where: { id: sectionId },
+      select: { examId: true, selectionMode: true },
+    });
+    if (!section) throw new ExamError("section_not_found");
+    if (section.examId !== examId) throw new ExamError("course_mismatch");
+    // random_from_bank section quản lý item qua poolFilter/assemble — thêm
+    // tay vào đây sẽ lệch với materializedQuestionIds.
+    if (section.selectionMode !== "fixed")
+      throw new ExamError("validation_failed", "section_not_fixed");
+  }
 
   return (db as typeof prisma).$transaction(async (tx) => {
     // Snapshot current bank state as a new version (immutable record of what
@@ -1116,6 +1130,20 @@ export async function copyBankQuestionToExam(
         bankQuestionVersionId: version.id,
       },
     });
+
+    if (sectionId) {
+      const orderInSection =
+        ((
+          await tx.examSectionItem.aggregate({
+            where: { sectionId },
+            _max: { orderInSection: true },
+          })
+        )._max.orderInSection ?? -1) + 1;
+      await tx.examSectionItem.create({
+        data: { sectionId, examQuestionId: eq.id, orderInSection, points: q.points },
+      });
+    }
+
     return { examQuestionId: eq.id, versionNumber };
   });
 }

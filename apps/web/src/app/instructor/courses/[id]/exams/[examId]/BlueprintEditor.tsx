@@ -118,10 +118,12 @@ export default function BlueprintEditor({
   examId,
   lessonTree,
   initialBlueprint,
+  onDone,
 }: {
   examId: string;
   lessonTree: ModuleNode[];
   initialBlueprint: InitialBlueprint | null;
+  onDone?: () => void;
 }) {
   const allLessonIds = lessonTree.flatMap((m) => m.lessons.map((l) => l.id));
 
@@ -375,6 +377,9 @@ export default function BlueprintEditor({
   };
 
   // ── Assemble ─────────────────────────────────────────────────────────
+  // Tạo pool xong phải chốt luôn thành câu hỏi thật (giống RandomFromBankPanel.onChot)
+  // — để lại pool "random_from_bank" chưa chốt thì học viên không thấy được câu nào
+  // (màn thi chưa đọc resolutionMode kiểu sample-lúc-vào-thi).
   const handleAssemble = async () => {
     setAssembling(true);
     try {
@@ -384,15 +389,25 @@ export default function BlueprintEditor({
         setFlash({ ok: false, msg: j?.error ?? "Tạo pool thất bại." });
         return;
       }
-      const { replaced, totalCount: tc } = (await r.json()) as {
+      const { sectionId } = (await r.json()) as {
+        sectionId: string;
         replaced: boolean;
         totalCount: number;
       };
-      setFlash({
-        ok: true,
-        msg: `${replaced ? "Đã cập nhật" : "Đã tạo"} pool ngẫu nhiên · ${tc} câu hỏi.`,
+      const r2 = await fetch(`/api/exams/${examId}/sections/${sectionId}/import-preview`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
       });
-      setTimeout(() => setFlash(null), 5000);
+      if (!r2.ok) {
+        const j = (await r2.json().catch(() => null)) as { error?: string } | null;
+        setFlash({ ok: false, msg: j?.error ?? "Chốt câu hỏi thất bại." });
+        return;
+      }
+      const { imported } = (await r2.json()) as { imported: number };
+      setFlash({ ok: true, msg: `Đã thêm ${imported} câu vào đề.` });
+      window.dispatchEvent(new Event("fbm:exam-sections-changed"));
+      onDone?.();
     } finally {
       setAssembling(false);
     }
@@ -455,7 +470,7 @@ export default function BlueprintEditor({
       {/* Header row: title + mode tabs + actions */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">Blueprint (Bảng đặc trưng đề thi)</h2>
+          <h2 className="text-base font-semibold">Thiết kế đề theo ma trận đề thi</h2>
           <p className="mt-0.5 text-xs text-faint">
             Tổng: <strong className="text-slate-700">{totalCount}</strong> câu.
           </p>

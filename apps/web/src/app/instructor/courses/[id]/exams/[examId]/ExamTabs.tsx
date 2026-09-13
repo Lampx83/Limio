@@ -1,21 +1,18 @@
 import Link from "next/link";
-import {
-  BookOpen,
-  ChartBar,
-  Grid3x3,
-  Info,
-  type LucideIcon,
-} from "lucide-react";
+import { BookOpen, Info, type LucideIcon } from "lucide-react";
 
-// A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề:
-//   Tổng quan / Nội dung / Blueprint
-// Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
+// A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề: Tổng quan / Nội
+// dung. Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
 // chuyển sang "Tổ chức thi" (/instructor/exam-rounds/...).
-export type ExamTab = "overview" | "content" | "blueprint";
+//
+// Tab "Blueprint" cũ (2026-09) đã gộp vào modal "Từ ngân hàng" trong tab Nội
+// dung — thành lựa chọn nâng cao thứ 3 ("Thiết kế đề theo ma trận đề thi"),
+// không còn là tab riêng để đỡ một khái niệm mọc lên không giải thích.
+export type ExamTab = "overview" | "content";
 
 // Không còn tab "Kết quả": kết quả nói về AI ĐÃ LÀM, mà "ai" thuộc buổi thi
 // chứ không thuộc gói đề. Xem ở Tổ chức thi → từng lần thi.
-export const EXAM_TABS: ExamTab[] = ["overview", "content", "blueprint"];
+export const EXAM_TABS: ExamTab[] = ["overview", "content"];
 
 export function parseExamTab(raw: string | string[] | undefined): ExamTab {
   const v = Array.isArray(raw) ? raw[0] : raw;
@@ -25,7 +22,6 @@ export function parseExamTab(raw: string | string[] | undefined): ExamTab {
 const META: Array<{ key: ExamTab; label: string; Icon: LucideIcon }> = [
   { key: "overview", label: "Tổng quan", Icon: Info },
   { key: "content", label: "Nội dung", Icon: BookOpen },
-  { key: "blueprint", label: "Blueprint", Icon: Grid3x3 },
 ];
 
 export default function ExamTabs({

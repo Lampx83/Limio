@@ -11,7 +11,6 @@ import SectionsPanel from "./SectionsPanel";
 import CloneButton from "./CloneButton";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
-import BlueprintEditor from "./BlueprintEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +78,9 @@ export default async function EditExamPage({
           fromBank: {
             select: { bankQuestion: { select: { code: true } } },
           },
+          // Phần (ExamSection) câu hỏi này thuộc về, nếu đề đã chia nhiều
+          // phần — ContentManager dùng để nhóm hiển thị theo khung.
+          sectionItem: { select: { sectionId: true } },
         },
       },
     },
@@ -193,14 +195,12 @@ export default async function EditExamPage({
 
       {activeTab === "content" && (
         <>
-          <SectionsPanel examId={exam.id} />
-
-          <section className="mt-8 rounded border border-default bg-white p-5">
+          <section className="mt-6 rounded border border-default bg-white p-5">
             <h2 className="mb-1 text-base font-semibold">Nội dung bài thi</h2>
             <p className="mb-4 text-sm text-faint">
               {exam.status === "archived"
                 ? "Bài thi đã lưu trữ — nội dung khoá, không sửa được."
-                : "Thêm/sửa đoạn bài đọc và câu hỏi. Mỗi câu hỏi cần ≥ 1 skill trước khi publish."}
+                : "Thêm câu hỏi từ ngân hàng, hoặc tự soạn. Mỗi câu hỏi cần ≥ 1 skill trước khi publish."}
             </p>
             {isPublished && hasAttempts && (
               <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
@@ -236,6 +236,7 @@ export default async function EditExamPage({
                 orderInExam: q.orderInExam,
                 orderInPassage: q.orderInPassage,
                 bankCode: q.fromBank?.bankQuestion.code ?? null,
+                sectionId: q.sectionItem?.sectionId ?? null,
                 skills: q.skillTags.map((t) => ({
                   id: t.skill.id,
                   code: t.skill.code,
@@ -244,91 +245,10 @@ export default async function EditExamPage({
               }))}
             />
           </section>
+
+          <SectionsPanel examId={exam.id} />
         </>
       )}
-
-      {activeTab === "blueprint" && (
-        <BlueprintEditorLoader examId={exam.id} courseId={course.id} />
-      )}
     </main>
-  );
-}
-
-async function BlueprintEditorLoader({
-  examId,
-  courseId,
-}: {
-  examId: string;
-  courseId: string;
-}) {
-  const [modules, blueprintRow] = await Promise.all([
-    prisma.module.findMany({
-      where: { courseId },
-      orderBy: { orderIndex: "asc" },
-      select: {
-        id: true,
-        title: true,
-        lessons: {
-          orderBy: { orderIndex: "asc" },
-          select: { id: true, title: true },
-        },
-      },
-    }),
-    prisma.examBlueprint.findUnique({ where: { examId } }),
-  ]);
-
-  const lessonIds = modules.flatMap((m) => m.lessons.map((l) => l.id));
-  const bankCountsRaw =
-    lessonIds.length > 0
-      ? await prisma.$queryRaw<{ lessonId: string; cnt: bigint }[]>`
-          SELECT csm."contentId" AS "lessonId", COUNT(DISTINCT bq.id) AS cnt
-          FROM "ContentSkillMapping" csm
-          JOIN "BankQuestionSkillTag" bqst ON bqst."skillId" = csm."skillId"
-          JOIN "BankQuestion" bq ON bq.id = bqst."bankQuestionId" AND bq.status = 'published'
-          WHERE csm."contentType" = 'lesson'
-            AND csm."contentId" = ANY(${lessonIds})
-          GROUP BY csm."contentId"
-        `
-      : [];
-
-  const bankCountMap = Object.fromEntries(
-    bankCountsRaw.map((r) => [r.lessonId, Number(r.cnt)]),
-  );
-
-  const lessonTree = modules.map((m) => ({
-    id: m.id,
-    title: m.title,
-    lessons: m.lessons.map((l) => ({
-      id: l.id,
-      title: l.title,
-      bankCount: bankCountMap[l.id] ?? 0,
-    })),
-  }));
-
-  return (
-    <div className="mt-6">
-      <BlueprintEditor
-        examId={examId}
-        lessonTree={lessonTree}
-        initialBlueprint={
-          blueprintRow
-            ? {
-                mode:
-                  (blueprintRow as { mode?: string }).mode === "topic_only"
-                    ? "topic_only"
-                    : "skill_matrix",
-                lessonIds: blueprintRow.lessonIds,
-                cells: blueprintRow.cells as unknown as Array<{
-                  cognitiveLevel?: "remember_understand" | "apply" | "analyze_plus";
-                  difficulty?: number;
-                  topic?: string;
-                  count: number;
-                }>,
-                totalCount: blueprintRow.totalCount,
-              }
-            : null
-        }
-      />
-    </div>
   );
 }

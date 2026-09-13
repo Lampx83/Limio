@@ -17,6 +17,7 @@ export async function GET(req: Request) {
     difficulty: numList("difficulty"),
     skillIds: sp.getAll("skill"),
     bankIds: sp.getAll("bank"),
+    topics: sp.getAll("topic"),
     q: sp.get("q") ?? undefined,
     status: sp.getAll("status") as ("draft" | "published" | "archived")[],
     cursor: sp.get("cursor") ?? undefined,

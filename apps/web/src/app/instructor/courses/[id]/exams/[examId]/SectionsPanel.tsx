@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Layers } from "lucide-react";
+import { ChevronDown, ChevronRight, Layers } from "lucide-react";
 
 type Section = {
   id: string;
@@ -21,12 +21,12 @@ type Section = {
 type Bank = { id: string; name: string };
 
 const MODE_LABEL: Record<Section["selectionMode"], string> = {
-  fixed: "Cố định",
-  random_from_bank: "Random từ bank",
+  fixed: "Cố định (tự soạn/chọn tay)",
+  random_from_bank: "Rút ngẫu nhiên từ ngân hàng",
 };
 const RES_LABEL: Record<Section["resolutionMode"], string> = {
-  per_attempt: "Mỗi SV 1 đề khác",
-  per_publish: "Đề cố định sau publish",
+  per_attempt: "Mỗi học sinh 1 bộ khác nhau",
+  per_publish: "Cả lớp làm chung 1 đề cố định",
 };
 
 export default function SectionsPanel({ examId }: { examId: string }) {
@@ -35,6 +35,12 @@ export default function SectionsPanel({ examId }: { examId: string }) {
   const [showAdd, setShowAdd] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [previewingSectionId, setPreviewingSectionId] = useState<string | null>(null);
+  // Thu gọn mặc định — hầu hết đề thi chỉ dùng 1 phần và không cần đụng tới
+  // đây. Tự mở khi đề đã có sẵn ≥2 phần thật (không tính phần nháp do luồng
+  // "Từ ngân hàng > Rút ngẫu nhiên" ở tab trên tạo ngầm), để không giấu dữ
+  // liệu đã có từ trước.
+  const [open, setOpen] = useState(false);
+  const [autoOpened, setAutoOpened] = useState(false);
 
   const refresh = async () => {
     setErr(null);
@@ -42,15 +48,31 @@ export default function SectionsPanel({ examId }: { examId: string }) {
       fetch(`/api/exams/${examId}/sections`),
       fetch("/api/question-banks"),
     ]);
-    if (sRes.ok) setSections(((await sRes.json()) as { sections: Section[] }).sections);
+    if (sRes.ok) {
+      const list = ((await sRes.json()) as { sections: Section[] }).sections;
+      setSections(list);
+      if (!autoOpened && list.length > 1) {
+        setOpen(true);
+        setAutoOpened(true);
+      }
+    }
     if (bRes.ok) setBanks(((await bRes.json()) as { banks: Bank[] }).banks);
   };
   useEffect(() => {
     refresh();
+    // "Từ ngân hàng > Rút ngẫu nhiên" (BankPickerModal) tạo/chốt section ngầm
+    // từ bên ngoài panel này — router.refresh() làm mới cây Server Component
+    // nhưng không re-mount panel này nên state cũ (vd tóm tắt "Không dùng")
+    // bị lệch với DB cho tới khi có điều hướng thật. Nghe sự kiện này để
+    // đồng bộ lại ngay trong cùng phiên.
+    const onExternalChange = () => refresh();
+    window.addEventListener("fbm:exam-sections-changed", onExternalChange);
+    return () => window.removeEventListener("fbm:exam-sections-changed", onExternalChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId]);
 
   const onDelete = async (id: string) => {
-    if (!window.confirm("Xoá section?")) return;
+    if (!window.confirm("Xoá phần này?")) return;
     const r = await fetch(`/api/exam-sections/${id}`, { method: "DELETE" });
     if (!r.ok) {
       setErr(`HTTP ${r.status}`);
@@ -64,49 +86,80 @@ export default function SectionsPanel({ examId }: { examId: string }) {
       data-testid="sections-panel"
       className="mt-8 rounded border border-default bg-white p-5"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
+      >
         <div>
-          <h2 className="flex items-center gap-1.5 text-base font-semibold"><Layers className="h-4 w-4 shrink-0 text-slate-400" /> Sections</h2>
-          <p className="text-sm text-faint">
-            Chia bài thi thành phần. Phần &ldquo;random từ bank&rdquo; chọn N câu hỏi từ bank
-            mỗi lần SV vào thi (mỗi SV 1 bộ đề khác — decision #3/4).
-          </p>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold">
+            {open ? (
+              <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+            ) : (
+              <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+            )}
+            <Layers className="h-4 w-4 shrink-0 text-slate-400" /> Chia đề thành nhiều phần
+            <span className="font-normal text-faint">(nâng cao)</span>
+          </h2>
+          {!open && (
+            <p className="text-sm text-faint">
+              {sections === null
+                ? "Đang tải..."
+                : sections.length === 0
+                  ? "Không dùng — phần lớn đề thi không cần mục này."
+                  : sections.length === 1
+                    ? "1 phần đang dùng — bấm để xem chi tiết."
+                    : `${sections.length} phần đang dùng — bấm để xem chi tiết.`}
+            </p>
+          )}
+          {open && (
+            <p className="text-sm text-faint">
+              Dùng khi cần chia đề thành nhiều phần riêng (ví dụ Phần I trắc nghiệm, Phần II tự
+              luận), hoặc muốn tự cấu hình chi tiết cách rút ngẫu nhiên. Đa số đề thi không cần
+              mục này — nút &ldquo;+ Thêm câu hỏi&rdquo; ở trên đã đủ.
+            </p>
+          )}
         </div>
-        <button
-          onClick={() => setShowAdd((s) => !s)}
-          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-        >
-          {showAdd ? "Đóng" : "+ Thêm section"}
-        </button>
-      </div>
+      </button>
 
-      {showAdd && (
-        <AddSectionForm
-          examId={examId}
-          banks={banks}
-          onDone={async () => {
-            setShowAdd(false);
-            await refresh();
-          }}
-        />
-      )}
+      {open && (
+        <>
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={() => setShowAdd((s) => !s)}
+              className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              {showAdd ? "Đóng" : "+ Thêm phần"}
+            </button>
+          </div>
 
-      {err && (
-        <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
-          ⚠ {err}
-        </div>
-      )}
+          {showAdd && (
+            <AddSectionForm
+              examId={examId}
+              banks={banks}
+              onDone={async () => {
+                setShowAdd(false);
+                await refresh();
+              }}
+            />
+          )}
 
-      <ul className="mt-4 space-y-2">
-        {sections === null && (
-          <li className="text-center text-sm text-faint">Đang tải...</li>
-        )}
-        {sections && sections.length === 0 && (
-          <li className="rounded border border-dashed border-default p-6 text-center text-sm text-faint">
-            Chưa có section nào.
-          </li>
-        )}
-        {sections?.map((s) => (
+          {err && (
+            <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+              ⚠ {err}
+            </div>
+          )}
+
+          <ul className="mt-4 space-y-2">
+            {sections === null && (
+              <li className="text-center text-sm text-faint">Đang tải...</li>
+            )}
+            {sections && sections.length === 0 && (
+              <li className="rounded border border-dashed border-default p-6 text-center text-sm text-faint">
+                Chưa có phần nào.
+              </li>
+            )}
+            {sections?.map((s) => (
           <li
             key={s.id}
             data-testid={`section-row-${s.id}`}
@@ -121,7 +174,7 @@ export default function SectionsPanel({ examId }: { examId: string }) {
                 <div className="text-xs text-faint">
                   {MODE_LABEL[s.selectionMode]} · {RES_LABEL[s.resolutionMode]} ·{" "}
                   {s.selectionMode === "random_from_bank"
-                    ? `pool count=${s.poolFilter?.count ?? "?"}`
+                    ? `rút ${s.poolFilter?.count ?? "?"} câu/lượt`
                     : `${s.itemCount} câu`}
                 </div>
               </div>
@@ -142,8 +195,10 @@ export default function SectionsPanel({ examId }: { examId: string }) {
               </button>
             </div>
           </li>
-        ))}
-      </ul>
+            ))}
+          </ul>
+        </>
+      )}
 
       {previewingSectionId && (
         <PreviewPoolModal
@@ -522,25 +577,25 @@ function AddSectionForm({
       </label>
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
         <label>
-          <span className="block text-xs font-medium text-slate-600">Loại</span>
+          <span className="block text-xs font-medium text-slate-600">Cách lấy câu hỏi</span>
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as never)}
             className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
           >
-            <option value="fixed">Cố định (instructor pick câu)</option>
-            <option value="random_from_bank">Random từ bank</option>
+            <option value="fixed">Cố định (tự soạn/chọn tay sau khi tạo)</option>
+            <option value="random_from_bank">Rút ngẫu nhiên từ ngân hàng</option>
           </select>
         </label>
         <label>
-          <span className="block text-xs font-medium text-slate-600">Resolution</span>
+          <span className="block text-xs font-medium text-slate-600">Cách áp dụng</span>
           <select
             value={resolution}
             onChange={(e) => setResolution(e.target.value as never)}
             className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
           >
-            <option value="per_attempt">Mỗi SV 1 đề khác</option>
-            <option value="per_publish">Đề cố định sau publish</option>
+            <option value="per_attempt">Mỗi học sinh nhận bộ câu khác nhau</option>
+            <option value="per_publish">Cả lớp làm chung một đề cố định</option>
           </select>
         </label>
       </div>
@@ -548,14 +603,14 @@ function AddSectionForm({
       {mode === "random_from_bank" && (
         <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
           <label>
-            <span className="block text-xs font-medium text-slate-600">Bank nguồn</span>
+            <span className="block text-xs font-medium text-slate-600">Ngân hàng câu hỏi</span>
             <select
               value={bankId}
               onChange={(e) => setBankId(e.target.value)}
               required
               className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
             >
-              <option value="">Chọn bank...</option>
+              <option value="">Chọn ngân hàng...</option>
               {banks.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -575,7 +630,7 @@ function AddSectionForm({
             />
           </label>
           <label>
-            <span className="block text-xs font-medium text-slate-600">Độ khó (1-5, cách `,`)</span>
+            <span className="block text-xs font-medium text-slate-600">Độ khó (1-5, cách nhau bằng dấu phẩy)</span>
             <input
               type="text"
               value={difficulty}
@@ -599,7 +654,7 @@ function AddSectionForm({
           disabled={busy || !title.trim()}
           className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
-          {busy ? "..." : "Tạo section"}
+          {busy ? "..." : "Tạo phần"}
         </button>
       </div>
     </form>

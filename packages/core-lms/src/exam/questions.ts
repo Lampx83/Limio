@@ -32,6 +32,11 @@ export const CreateExamQuestionInput = z.object({
   config: z.unknown(),
   points: z.number().int().min(0).max(1_000).optional(),
   passageId: z.string().uuid().nullable().optional(),
+  // Gán câu hỏi vào 1 "khung" (ExamSection) khi đề đã chia nhiều phần — UI
+  // gọi đây là "Phần I/II..."; xem ContentManager.tsx. Section phải cùng
+  // examId và ở selectionMode="fixed" (section random_from_bank không nhận
+  // item thêm tay).
+  sectionId: z.string().uuid().nullable().optional(),
   evidenceSpan: evidenceSpanSchema.optional(),
   skillIds: z.array(z.string().uuid()).max(20).optional(),
 });
@@ -92,6 +97,23 @@ async function assertPassageInExam(
   if (p.examId !== examId) throw new ExamError("course_mismatch");
 }
 
+async function assertSectionInExam(
+  sectionId: string,
+  examId: string,
+  db: PrismaClient,
+) {
+  const s = await db.examSection.findUnique({
+    where: { id: sectionId },
+    select: { examId: true, selectionMode: true },
+  });
+  if (!s) throw new ExamError("section_not_found");
+  if (s.examId !== examId) throw new ExamError("course_mismatch");
+  // random_from_bank section quản lý item của nó qua poolFilter/assemble —
+  // thêm tay vào đây sẽ lệch với materializedQuestionIds.
+  if (s.selectionMode !== "fixed")
+    throw new ExamError("validation_failed", "section_not_fixed");
+}
+
 /** A7.3.1 / A7.3.2 — Create question (passage-bound or standalone). */
 export async function createExamQuestion(
   actorUserId: string,
@@ -110,6 +132,10 @@ export async function createExamQuestion(
   if (passageId) {
     await assertPassageInExam(passageId, examId, db);
   }
+  const sectionId = d.sectionId ?? null;
+  if (sectionId) {
+    await assertSectionInExam(sectionId, examId, db);
+  }
 
   const created = await (db as typeof prisma).$transaction(async (tx) => {
     // Append to end — orderInExam global, orderInPassage scoped.
@@ -117,6 +143,7 @@ export async function createExamQuestion(
     const orderInPassage = passageId
       ? await tx.examQuestion.count({ where: { passageId } })
       : null;
+    const points = d.points ?? 1;
 
     const q = await tx.examQuestion.create({
       data: {
@@ -128,7 +155,7 @@ export async function createExamQuestion(
         evidenceSpan: d.evidenceSpan
           ? (d.evidenceSpan as Prisma.InputJsonValue)
           : Prisma.JsonNull,
-        points: d.points ?? 1,
+        points,
         orderInExam,
         orderInPassage,
       },
@@ -141,6 +168,20 @@ export async function createExamQuestion(
         skipDuplicates: true,
       });
     }
+
+    if (sectionId) {
+      const orderInSection =
+        ((
+          await tx.examSectionItem.aggregate({
+            where: { sectionId },
+            _max: { orderInSection: true },
+          })
+        )._max.orderInSection ?? -1) + 1;
+      await tx.examSectionItem.create({
+        data: { sectionId, examQuestionId: q.id, orderInSection, points },
+      });
+    }
+
     return q;
   });
 

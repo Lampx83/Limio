@@ -28,6 +28,12 @@ import { pickPoolQuestions, PoolFilter } from "./sections";
 export const BlueprintModeSchema = z.enum(["skill_matrix", "topic_only"]);
 export type BlueprintMode = z.infer<typeof BlueprintModeSchema>;
 
+// Placeholder titles used to recognize a section as Blueprint-authored across
+// re-assembles — see assembleExamFromBlueprint's replace-not-accumulate logic
+// and importPreviewToExam's relabel-on-chốt logic below.
+const BLUEPRINT_DRAFT_TITLE = "Câu hỏi (Blueprint)";
+const BLUEPRINT_COMMITTED_TITLE = "Câu hỏi (đã chốt từ Blueprint)";
+
 /** skill_matrix cell: BLT × độ khó (existing shape). */
 export const SkillMatrixCellSchema = z.object({
   cognitiveLevel: z.enum(["remember_understand", "apply", "analyze_plus"]),
@@ -102,14 +108,84 @@ export async function getBlueprint(
   };
 }
 
+export interface BlueprintLessonNode {
+  id: string;
+  title: string;
+  bankCount: number;
+}
+export interface BlueprintModuleNode {
+  id: string;
+  title: string;
+  lessons: BlueprintLessonNode[];
+}
+
+/**
+ * Cây module → bài học kèm số câu hỏi bank đã publish cho mỗi bài, dùng để
+ * populate UI chọn bài học của "Thiết kế đề theo ma trận đề thi" (skill_matrix
+ * mode). Tách khỏi getBlueprint vì đây là dữ liệu SCOPE (đề có bài học nào),
+ * không phải dữ liệu đã lưu của blueprint.
+ */
+export async function getBlueprintLessonTree(
+  actorUserId: string,
+  examId: string,
+  db: PrismaClient = prisma,
+): Promise<BlueprintModuleNode[]> {
+  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  if (!exam) throw new ExamError("exam_not_found");
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+
+  const modules = await db.module.findMany({
+    where: { courseId: exam.courseId },
+    orderBy: { orderIndex: "asc" },
+    select: {
+      id: true,
+      title: true,
+      lessons: {
+        orderBy: { orderIndex: "asc" },
+        select: { id: true, title: true },
+      },
+    },
+  });
+
+  const lessonIds = modules.flatMap((m) => m.lessons.map((l) => l.id));
+  const bankCountsRaw =
+    lessonIds.length > 0
+      ? await db.$queryRaw<{ lessonId: string; cnt: bigint }[]>`
+          SELECT csm."contentId" AS "lessonId", COUNT(DISTINCT bq.id) AS cnt
+          FROM "ContentSkillMapping" csm
+          JOIN "BankQuestionSkillTag" bqst ON bqst."skillId" = csm."skillId"
+          JOIN "BankQuestion" bq ON bq.id = bqst."bankQuestionId" AND bq.status = 'published'
+          WHERE csm."contentType" = 'lesson'
+            AND csm."contentId" = ANY(${lessonIds})
+          GROUP BY csm."contentId"
+        `
+      : [];
+  const bankCountMap = Object.fromEntries(bankCountsRaw.map((r) => [r.lessonId, Number(r.cnt)]));
+
+  return modules.map((m) => ({
+    id: m.id,
+    title: m.title,
+    lessons: m.lessons.map((l) => ({
+      id: l.id,
+      title: l.title,
+      bankCount: bankCountMap[l.id] ?? 0,
+    })),
+  }));
+}
+
 export async function upsertBlueprint(
   actorUserId: string,
   examId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<BlueprintData> {
-  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { courseId: true, kind: true },
+  });
   if (!exam) throw new ExamError("exam_not_found");
+  // A6.1 — Blueprint kéo câu hỏi từ ngân hàng; vô nghĩa với vấn đáp AI.
+  if (exam.kind === "oral") throw new ExamError("exam_not_written");
   await assertCanEditCourse(actorUserId, exam.courseId, db);
 
   const parsed = UpsertBlueprintInput.safeParse(rawInput);
@@ -416,33 +492,61 @@ export async function assembleExamFromBlueprint(
     type: ALLOWED_TYPES,
   };
 
-  // Find existing random_from_bank section to replace, or create new.
-  const existing = await db.examSection.findFirst({
+  // Find existing random_from_bank section (chưa chốt) để cập nhật in-place,
+  // hoặc — nếu lần trước đã chốt rồi (section giờ là "fixed" mang câu hỏi
+  // thật) — xoá hẳn batch cũ trước khi tạo batch mới, để bấm lại nút này
+  // THAY THẾ chứ không cộng dồn section/câu hỏi qua từng lần bấm.
+  const existingDraft = await db.examSection.findFirst({
     where: { examId, selectionMode: "random_from_bank" },
     select: { id: true },
   });
 
-  let sectionId: string;
-  const replaced = existing !== null;
+  if (!existingDraft) {
+    const previousCommitted = await db.examSection.findFirst({
+      where: { examId, selectionMode: "fixed", title: BLUEPRINT_COMMITTED_TITLE },
+      select: { id: true },
+    });
+    if (previousCommitted) {
+      const items = await db.examSectionItem.findMany({
+        where: { sectionId: previousCommitted.id },
+        select: { examQuestionId: true },
+      });
+      const questionIds = items.map((i) => i.examQuestionId);
+      await db.$transaction([
+        db.examQuestionSkillTag.deleteMany({ where: { questionId: { in: questionIds } } }),
+        db.examQuestionFromBank.deleteMany({ where: { examQuestionId: { in: questionIds } } }),
+        db.examSectionItem.deleteMany({ where: { sectionId: previousCommitted.id } }),
+        db.examQuestion.deleteMany({ where: { id: { in: questionIds } } }),
+        db.examSection.delete({ where: { id: previousCommitted.id } }),
+      ]);
+    }
+  }
 
-  if (existing) {
+  let sectionId: string;
+  const replaced = existingDraft !== null;
+
+  if (existingDraft) {
     await db.examSection.update({
-      where: { id: existing.id },
+      where: { id: existingDraft.id },
       data: {
         poolFilter: poolFilter as never,
         // Re-label so instructor can see it was re-assembled.
-        title: "Câu hỏi (Blueprint)",
+        title: BLUEPRINT_DRAFT_TITLE,
       },
     });
-    sectionId = existing.id;
+    sectionId = existingDraft.id;
   } else {
     const created = await db.examSection.create({
       data: {
         examId,
-        title: "Câu hỏi (Blueprint)",
+        title: BLUEPRINT_DRAFT_TITLE,
         orderIndex: 0,
         selectionMode: "random_from_bank",
-        resolutionMode: "per_attempt",
+        // per_attempt bị bỏ khỏi UI (BankPickerModal) vì màn thi chưa đọc
+        // được section ngẫu nhiên dạng "sample lúc vào thi" — cùng lý do,
+        // pool từ blueprint cũng chỉ có per_publish là đường thật sự chốt
+        // được thành câu hỏi hiển thị cho học sinh (qua import-preview).
+        resolutionMode: "per_publish",
         poolFilter: poolFilter as never,
       },
       select: { id: true },
@@ -651,7 +755,7 @@ export async function importPreviewToExam(
 
   const section = await db.examSection.findFirst({
     where: { id: sectionId, examId },
-    select: { id: true, selectionMode: true, poolFilter: true },
+    select: { id: true, title: true, selectionMode: true, poolFilter: true },
   });
   if (!section) throw new ExamError("section_not_found");
   if (section.selectionMode !== "random_from_bank")
@@ -698,6 +802,14 @@ export async function importPreviewToExam(
 
   const skipped: { id: string; reason: string }[] = [];
 
+  // Chỉ đổi label sang "đã chốt từ Blueprint" khi section thực sự đến từ
+  // Blueprint (còn mang tên placeholder mặc định "Câu hỏi (Blueprint)").
+  // Section do SectionsPanel/BankPickerModal tạo mang tên do người dùng
+  // chọn (vd "Rút ngẫu nhiên từ ngân hàng", "Phần I — Trắc nghiệm") — giữ
+  // nguyên, không ghi đè thành nhãn Blueprint gây hiểu nhầm.
+  const nextTitle =
+    section.title === BLUEPRINT_DRAFT_TITLE ? BLUEPRINT_COMMITTED_TITLE : section.title;
+
   await (db as typeof prisma).$transaction(async (tx) => {
     // Đổi section thành fixed trước (defensive — nếu tx fail, schema vẫn nhất quán).
     await tx.examSection.update({
@@ -705,7 +817,7 @@ export async function importPreviewToExam(
       data: {
         selectionMode: "fixed",
         poolFilter: Prisma.JsonNull,
-        title: "Câu hỏi (đã chốt từ Blueprint)",
+        title: nextTitle,
       },
     });
 
