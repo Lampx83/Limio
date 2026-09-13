@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   useCallback,
@@ -9,7 +10,15 @@ import {
   type SVGProps,
 } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Check, Layers, Trash2 } from "lucide-react";
+import {
+  MoreVertical,
+  Check,
+  Layers,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+} from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
 import DateTime from "@/components/ui/DateTime";
@@ -46,6 +55,33 @@ interface SectionOption {
 }
 
 type Filter = "all" | Enrollment["status"];
+
+type SortKey = "name" | "section" | "status" | "enrolledAt" | "lastActivityAt";
+type SortDir = "asc" | "desc";
+
+/** Cột ngày mặc định sort mới nhất trước; cột chữ mặc định A→Z. */
+const DEFAULT_DIR: Record<SortKey, SortDir> = {
+  name: "asc",
+  section: "asc",
+  status: "asc",
+  enrolledAt: "desc",
+  lastActivityAt: "desc",
+};
+
+function sortValue(e: Enrollment, key: SortKey): string | number {
+  switch (key) {
+    case "name":
+      return (e.user.displayName ?? e.user.email).toLowerCase();
+    case "section":
+      return e.section.isDefault ? "" : e.section.name.toLowerCase();
+    case "status":
+      return STATUS_LABEL[e.status];
+    case "enrolledAt":
+      return new Date(e.enrolledAt).getTime();
+    case "lastActivityAt":
+      return e.lastActivityAt ? new Date(e.lastActivityAt).getTime() : 0;
+  }
+}
 
 /**
  * Danh sách học viên trả về TÊN lớp, còn ô chọn cần ID. Đối chiếu theo tên là
@@ -90,6 +126,28 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
   const [sections, setSections] = useState<SectionOption[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("enrolledAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(DEFAULT_DIR[key]);
+    }
+  }
+
+  const sortedEnrollments = useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...enrollments].sort((a, b) => {
+      const va = sortValue(a, sortKey);
+      const vb = sortValue(b, sortKey);
+      if (va < vb) return -1 * dir;
+      if (va > vb) return 1 * dir;
+      return 0;
+    });
+  }, [enrollments, sortKey, sortDir]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -293,17 +351,31 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
           <table className="w-full text-sm">
             <thead className="bg-[rgb(var(--surface-muted))/0.5] text-left text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
-                <th className="px-4 py-2">Học viên</th>
-                <th className="px-4 py-2">Lớp</th>
-                <th className="px-4 py-2">Trạng thái</th>
-                <th className="px-4 py-2 hidden sm:table-cell">Đăng ký</th>
-                <th className="px-4 py-2 hidden md:table-cell">Hoạt động gần nhất</th>
+                <SortableHeader label="Học viên" sortKey="name" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Lớp" sortKey="section" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableHeader label="Trạng thái" sortKey="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableHeader
+                  label="Đăng ký"
+                  sortKey="enrolledAt"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                  className="hidden sm:table-cell"
+                />
+                <SortableHeader
+                  label="Hoạt động gần nhất"
+                  sortKey="lastActivityAt"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                  className="hidden md:table-cell"
+                />
                 <th className="px-4 py-2 hidden lg:table-cell">v</th>
                 <th className="px-4 py-2 text-right">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-token">
-              {enrollments.map((e) => (
+              {sortedEnrollments.map((e) => (
                 <tr key={e.id} className="hover:bg-[rgb(var(--surface-muted))/0.3]">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
@@ -375,12 +447,45 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
             </tbody>
           </table>
           <p className="border-t border-token bg-[rgb(var(--surface-muted))/0.3] px-4 py-2 text-xs text-faint">
-            Hiển thị {enrollments.length} kết quả
-            {enrollments.length === 100 && " (giới hạn 100, dùng filter để thu hẹp)"}
+            Hiển thị {sortedEnrollments.length} kết quả
+            {sortedEnrollments.length === 100 && " (giới hạn 100, dùng filter để thu hẹp)"}
           </p>
         </div>
       )}
     </div>
+  );
+}
+
+function SortableHeader({
+  label,
+  sortKey,
+  current,
+  dir,
+  onSort,
+  className = "",
+}: {
+  label: string;
+  sortKey: SortKey;
+  current: SortKey;
+  dir: SortDir;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}) {
+  const active = sortKey === current;
+  const Icon = active ? (dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th className={`px-4 py-2 ${className}`}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-default ${
+          active ? "text-default" : ""
+        }`}
+      >
+        {label}
+        <Icon className={`h-3 w-3 shrink-0 ${active ? "" : "opacity-40"}`} aria-hidden />
+      </button>
+    </th>
   );
 }
 
