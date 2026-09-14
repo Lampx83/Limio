@@ -51,6 +51,7 @@ export default async function NewExamPage({
         <ExamMetaForm
           mode="create"
           courseId={course.id}
+          fixedKind="written"
           initial={{
             title: "",
             description: "",

@@ -40,6 +40,7 @@ export default async function ExamAttemptDrillDownPage({
           courseId: true,
           title: true,
           durationMin: true,
+          kind: true,
         },
       },
     },
@@ -49,6 +50,16 @@ export default async function ExamAttemptDrillDownPage({
 
   const ok = await canEditCourse(session.user.id, attempt.exam.courseId);
   if (!ok) redirect("/instructor/exams");
+
+  // A6.5 — Trang này (và các nút gia hạn/buộc nộp/gắn cờ trong
+  // AttemptDetailLive) giả định ExamQuestion/ExamAnswer — vấn đáp AI có màn
+  // xem hội thoại + chấm điểm riêng, không dùng các hành động này (đã chặn
+  // ở tầng core-lms nếu lỡ bấm, nhưng chặn cả ở đây để khỏi thấy nút vô nghĩa).
+  if (attempt.exam.kind === "oral") {
+    redirect(
+      `/instructor/courses/${params.id}/exams/${params.examId}/grading/${attempt.id}`,
+    );
+  }
 
   // Load questions ordered + answers + incidents + messages in parallel.
   const [questions, answers, incidents, messages] = await Promise.all([

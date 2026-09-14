@@ -31,6 +31,7 @@ async function loadAttemptForGrading(attemptId: string, db: PrismaClient) {
           id: true,
           courseId: true,
           showResultsAfterSubmit: true,
+          kind: true,
         },
       },
     },
@@ -463,6 +464,17 @@ export async function applyAutoGradingForAttempt(
   db: PrismaClient = prisma,
 ): Promise<ExamSubmitResult> {
   const attempt = await loadAttemptForGrading(attemptId, db);
+  // A6.5 — Vấn đáp AI có 0 ExamQuestion, nên "auto-grading" trên nó là vòng
+  // lặp rỗng: allGraded=true, autoScore=0 — âm thầm chấm 0 điểm một buổi vấn
+  // đáp mà điểm thật phải qua AI đề xuất + GV duyệt (oral-evaluation.ts).
+  // Chặn ở nguồn vì hàm này có nhiều đường tới (cron hết giờ, job hàng đợi,
+  // gradeStuckSubmittedAttempts) — chặn từng cái gọi thì dễ sót.
+  if (attempt.exam.kind === "oral") {
+    throw new ExamError("exam_not_written", {
+      reason: "oral_uses_own_grading",
+      message: "Đề vấn đáp AI chấm qua tab Chấm bài, không auto-grade theo câu hỏi.",
+    });
+  }
   if (attempt.status === "graded") {
     return {
       autoScore: attempt.score ?? 0,

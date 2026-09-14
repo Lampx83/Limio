@@ -578,7 +578,7 @@ export const BulkCreateExamSessionsInput = z
     // Áp cho MỌI ca tạo trong lượt này. Bỏ trống = theo gói đề.
     // Sửa lại từng ca sau bằng setSessionRevealPolicy.
     revealAnswers: z
-      .enum(["immediately", "never", "after_close"])
+      .enum(["immediately", "never", "after_close", "score_only"])
       .optional()
       .nullable(),
   })
@@ -610,13 +610,26 @@ export async function bulkCreateExamSessionsInRound(
 
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.courseId !== round.courseId)
     throw new ExamError("validation_failed", {
       reason: "exam_course_not_in_round",
     });
+  // A6.5 — "Tổ chức thi chính thức" (đợt/ca/phòng/mã dự thi) là hạ tầng cho
+  // thi viết multi-phòng; vấn đáp AI chưa có khái niệm phòng/giám thị nhiều
+  // người (còn nằm trong phạm vi A6.5 phần "chịu tải" chưa làm). Đề vấn đáp
+  // chỉ mở ca qua "Link thi nhanh" (xem shareExamLink) — chặn ở đây để không
+  // kéo theo ExamRoom/candidate CSV import và các màn kết quả/live của thi
+  // viết chưa từng biết tới exam.kind.
+  if (exam.kind === "oral") {
+    throw new ExamError("exam_not_written", {
+      reason: "oral_uses_quick_share",
+      message:
+        "Đề vấn đáp AI chưa hỗ trợ tổ chức thi nhiều phòng — dùng \"Tổ chức thi → Link thi nhanh\" để mở ca.",
+    });
+  }
 
   const now = new Date();
   const opensAt =
@@ -1341,12 +1354,21 @@ export async function addCandidatesToRoom(
       examId: true,
       sessionId: true,
       session: { select: { roundId: true } },
-      exam: { select: { assignedCodeSource: true } },
+      exam: { select: { assignedCodeSource: true, kind: true } },
     },
   });
   if (!room)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
   await assertCanEdit(actorUserId, room.session.roundId, db);
+  // A6.5 — cùng lý do với bulkCreateExamSessionsInRound: vấn đáp AI không có
+  // mã dự thi/candidate — code-access.ts đã chặn claim, nhưng chặn sớm ở đây
+  // để không sinh ra ExamCandidate "chết" (không ai claim được) trong DB.
+  if (room.exam.kind === "oral") {
+    throw new ExamError("exam_not_written", {
+      reason: "oral_has_no_candidates",
+      message: "Đề vấn đáp AI không dùng danh sách thí sinh/mã dự thi.",
+    });
+  }
 
   const parsed = AddRoomCandidatesInput.safeParse(rawInput);
   if (!parsed.success)

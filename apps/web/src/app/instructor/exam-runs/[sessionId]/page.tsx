@@ -40,11 +40,18 @@ export default async function ExamRunPage({
       status: true,
       durationOverrideMin: true,
       exam: {
-        select: { id: true, title: true, courseId: true, durationMin: true },
+        select: { id: true, title: true, courseId: true, durationMin: true, kind: true },
       },
     },
   });
   if (!run) notFound();
+
+  // A6.5 — ResultsPanel bên dưới giả định ExamQuestion/ExamAnswer (câu nào
+  // lớp sai nhiều, %điểm theo câu...) — vấn đáp AI không có gì trong số đó
+  // và có màn tương ứng riêng (live + chấm bài theo hội thoại).
+  if (run.exam.kind === "oral") {
+    redirect(`/instructor/courses/${run.exam.courseId}/exams/${run.exam.id}/live`);
+  }
 
   const durationMin = run.durationOverrideMin ?? run.exam.durationMin;
 

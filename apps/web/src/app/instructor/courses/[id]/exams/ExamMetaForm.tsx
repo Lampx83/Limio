@@ -38,6 +38,13 @@ interface Props {
   initial: InitialValues;
   /** When true, lock fields that publish-time validation forbids editing. */
   lockedFields?: ReadonlyArray<keyof InitialValues>;
+  /**
+   * mode="create" only — loại đề do ĐIỂM VÀO quyết định (menu "Đề thi" vs
+   * "Vấn đáp AI"), không còn cho GV chọn giữa chừng trong form: hai luồng
+   * giờ tách hẳn thành 2 menu riêng, lẫn lộn ở đây chỉ gây nhầm "đây cũng là
+   * 1 dạng đề thi bình thường".
+   */
+  fixedKind?: "written" | "oral";
 }
 
 export default function ExamMetaForm({
@@ -46,12 +53,13 @@ export default function ExamMetaForm({
   examId,
   initial,
   lockedFields,
+  fixedKind,
 }: Props) {
   const router = useRouter();
   const [v, setV] = useState<InitialValues>({
     ...initial,
     description: plainToRichHtml(initial.description),
-    kind: initial.kind ?? "written",
+    kind: mode === "create" ? (fixedKind ?? "written") : (initial.kind ?? "written"),
     answerMode: initial.answerMode ?? "text",
   });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "error">("idle");
@@ -129,28 +137,17 @@ export default function ExamMetaForm({
         />
       </div>
 
-      {mode === "create" && (
+      {mode === "create" && v.kind === "oral" && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField
-            label="Loại đề"
-            value={v.kind ?? "written"}
+            label="Trả lời bằng"
+            value={v.answerMode ?? "text"}
             options={[
-              { value: "written", label: "Thi viết — câu hỏi trắc nghiệm/tự luận" },
-              { value: "oral", label: "Vấn đáp AI — hỏi-đáp trực tiếp với AI giám khảo" },
+              { value: "text", label: "Nhắn tin" },
+              { value: "voice", label: "Giọng nói" },
             ]}
-            onChange={(s) => setV({ ...v, kind: s as "written" | "oral" })}
+            onChange={(s) => setV({ ...v, answerMode: s as "text" | "voice" })}
           />
-          {v.kind === "oral" && (
-            <SelectField
-              label="Trả lời bằng"
-              value={v.answerMode ?? "text"}
-              options={[
-                { value: "text", label: "Nhắn tin" },
-                { value: "voice", label: "Giọng nói" },
-              ]}
-              onChange={(s) => setV({ ...v, answerMode: s as "text" | "voice" })}
-            />
-          )}
         </div>
       )}
       {mode === "create" && v.kind === "oral" && (
@@ -158,8 +155,8 @@ export default function ExamMetaForm({
           Vấn đáp AI không có ngân hàng câu hỏi — sau khi tạo, bạn sẽ nộp tài
           liệu (đề cương, danh sách chủ đề…) ở tab "Tài liệu" để AI dựa vào đó
           hỏi sinh viên. Bài thi luôn bắt buộc toàn màn hình; điểm do AI gợi ý
-          và giảng viên duyệt/sửa thủ công, không tự động chấm. Loại đề và
-          cách trả lời không đổi được sau khi tạo.
+          và giảng viên duyệt/sửa thủ công, không tự động chấm. Cách trả lời
+          không đổi được sau khi tạo.
         </p>
       )}
 

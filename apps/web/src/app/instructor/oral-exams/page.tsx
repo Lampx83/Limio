@@ -64,7 +64,7 @@ export default async function OralExamsHubPage() {
           </p>
         </div>
         <Link
-          href="/instructor/exams/new"
+          href="/instructor/oral-exams/new"
           className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           + Tạo đề vấn đáp mới
@@ -84,9 +84,9 @@ export default async function OralExamsHubPage() {
           <EmptyState
             icon="🎙️"
             title="Chưa có đề vấn đáp nào"
-            description="Tạo đề mới, chọn Loại đề = Vấn đáp AI, rồi nộp tài liệu để AI dựa vào đó hỏi sinh viên."
+            description="Tạo đề mới rồi nộp tài liệu để AI dựa vào đó hỏi sinh viên."
             actions={[
-              { label: "+ Tạo đề vấn đáp mới", href: "/instructor/exams/new", variant: "primary" },
+              { label: "+ Tạo đề vấn đáp mới", href: "/instructor/oral-exams/new", variant: "primary" },
             ]}
           />
         </div>

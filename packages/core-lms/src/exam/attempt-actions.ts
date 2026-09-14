@@ -39,10 +39,24 @@ async function loadAttemptForAction(
       status: true,
       durationSec: true,
       startedAt: true,
-      exam: { select: { courseId: true } },
+      exam: { select: { courseId: true, kind: true } },
     },
   });
   if (!a) throw new ExamError("attempt_not_found");
+  // A6.5 — Vấn đáp AI có luồng nộp/kết thúc riêng qua runOralExamTurn (hết
+  // giờ/đủ câu) + submitOralEvaluation (GV duyệt điểm) — KHÔNG đi qua đây.
+  // Các hành động này (đặc biệt force-submit) sẽ kích enqueueAutoGrade, mà
+  // applyAutoGrading trên 0 ExamQuestion trả vacuously "allGraded: true,
+  // score: 0" — âm thầm chấm 0 điểm một buổi vấn đáp đang diễn ra thật. Chặn
+  // ở đây để mọi hành động (extend/force-submit/disqualify/reset-session)
+  // đều được bảo vệ cùng lúc, không phải sửa từng cái.
+  if (a.exam.kind === "oral") {
+    throw new ExamError("exam_not_written", {
+      reason: "oral_uses_own_lifecycle",
+      message:
+        "Đề vấn đáp AI không dùng hành động này — buổi vấn đáp tự kết thúc khi hết giờ/đủ câu hỏi, và điểm chốt ở tab Chấm bài.",
+    });
+  }
   return {
     id: a.id,
     examId: a.examId,

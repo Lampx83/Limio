@@ -92,8 +92,11 @@ export default async function ExamRoundDetailPage({
 
   // Exams available for sessions in this round: exams whose courseId matches
   // the round's course (PR2.11 — 1 round = 1 course).
+  // A6.5 — Vấn đáp AI chưa hỗ trợ đợt/ca/phòng nhiều người (mở qua "Link thi
+  // nhanh" riêng, xem bulkCreateExamSessionsInRound) — loại khỏi bộ chọn để
+  // GV khỏi chọn nhầm rồi gặp lỗi.
   const availableExams = await prisma.exam.findMany({
-    where: { courseId: round.course.courseId },
+    where: { courseId: round.course.courseId, kind: "written" },
     orderBy: { title: "asc" },
     select: {
       id: true,

@@ -32,7 +32,7 @@ interface ResolvedClosed {
 }
 interface ResolvedNotReady {
   state: "not_ready";
-  reason: "not_published" | "disabled" | "wrong_mode";
+  reason: "not_published" | "disabled" | "wrong_mode" | "oral_login_required";
   examTitle: string;
 }
 type Resolved =
@@ -68,6 +68,7 @@ async function resolveCode(code: string): Promise<Resolved | null> {
             title: true,
             status: true,
             proctoringLevel: true,
+            kind: true,
           },
         },
       },
@@ -76,6 +77,10 @@ async function resolveCode(code: string): Promise<Resolved | null> {
       const exam = session.exam;
       if (exam.status !== "published")
         return { state: "not_ready", reason: "not_published", examTitle: exam.title };
+      // A6.3 — Vấn đáp AI chỉ vào qua trang khoá học (đăng nhập), không qua
+      // mã dự thi — xem guard tương ứng trong claimByOpenCode.
+      if (exam.kind === "oral")
+        return { state: "not_ready", reason: "oral_login_required", examTitle: exam.title };
       // Cùng quy tắc với claimByOpenCode — nếu lệch nhau thì sinh ra cảnh
       // "landing báo mở nhưng vào lại báo đóng".
       const state = sessionOpenState(session, now);
@@ -103,11 +108,14 @@ async function resolveCode(code: string): Promise<Resolved | null> {
         openAt: true,
         closeAt: true,
         proctoringLevel: true,
+        kind: true,
       },
     });
     if (!exam) return null;
     if (exam.status !== "published")
       return { state: "not_ready", reason: "not_published", examTitle: exam.title };
+    if (exam.kind === "oral")
+      return { state: "not_ready", reason: "oral_login_required", examTitle: exam.title };
     if (exam.accessMode !== "open_code")
       return { state: "not_ready", reason: "wrong_mode", examTitle: exam.title };
     if (now < exam.openAt)
@@ -141,6 +149,7 @@ async function resolveCode(code: string): Promise<Resolved | null> {
             openAt: true,
             closeAt: true,
             proctoringLevel: true,
+            kind: true,
           },
         },
       },
@@ -150,6 +159,12 @@ async function resolveCode(code: string): Promise<Resolved | null> {
       return {
         state: "not_ready",
         reason: "disabled",
+        examTitle: candidate.exam.title,
+      };
+    if (candidate.exam.kind === "oral")
+      return {
+        state: "not_ready",
+        reason: "oral_login_required",
         examTitle: candidate.exam.title,
       };
     if (candidate.exam.status !== "published")
@@ -299,14 +314,16 @@ function NotReady({
   reason,
 }: {
   examTitle: string;
-  reason: "not_published" | "disabled" | "wrong_mode";
+  reason: "not_published" | "disabled" | "wrong_mode" | "oral_login_required";
 }) {
   const msg =
     reason === "disabled"
       ? "Mã thi của bạn đã bị giám thị khoá."
       : reason === "wrong_mode"
         ? "Mã không khớp với chế độ đề thi hiện tại."
-        : "Đề thi chưa được publish, vui lòng chờ giảng viên xác nhận.";
+        : reason === "oral_login_required"
+          ? "Đây là đề vấn đáp AI — đăng nhập và vào thi từ trang khoá học của bạn, không dùng mã này."
+          : "Đề thi chưa được publish, vui lòng chờ giảng viên xác nhận.";
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center px-6 py-10 text-center">
       <AlertCircle className="mx-auto h-16 w-16 text-amber-400" />

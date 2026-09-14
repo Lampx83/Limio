@@ -26,6 +26,7 @@ export default function NewExamForm({ courseId }: Props) {
       key={courseId}
       mode="create"
       courseId={courseId}
+      fixedKind="written"
       initial={{
         title: "",
         description: "",
