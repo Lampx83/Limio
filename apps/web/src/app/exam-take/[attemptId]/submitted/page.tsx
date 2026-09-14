@@ -13,10 +13,12 @@ export const dynamic = "force-dynamic";
 /**
  * A5.8 — Confirmation after a candidate submits their attempt.
  *
- * Behavior depends on the exam's `showResultsAfterSubmit` flag:
- *   - flag=true + fully graded → show score + per-question correctness inline
- *   - flag=true + still grading → show "đang chấm, refresh sau" with auto-refresh
- *   - flag=false                → just show "đã nộp" confirmation
+ * Behavior depends on the SESSION's reveal policy (xem reveal-policy.ts —
+ * ca thắng gói đề), qua hai cờ độc lập `showScore` / `showDetail`:
+ *   - still grading                → "đang chấm, refresh sau" với auto-refresh
+ *   - fully graded, !showScore     → chỉ xác nhận "đã nộp"
+ *   - fully graded, showScore only → điểm số cuối cùng, KHÔNG kèm đáp án
+ *   - fully graded, showDetail     → điểm + đáp án + giải thích từng câu
  *
  * The candidate cookie set during the attempt is still valid here, so we can
  * look up the result directly by attemptId — no need to make the candidate
@@ -76,12 +78,14 @@ export default async function ExamSubmittedPage({
     );
   }
 
-  // Status B — graded but instructor disabled detailed view. Just confirm
-  // receipt; tell the candidate to ask the teacher for the score.
-  if (result && !result.showDetail && !result.fullyGraded) {
+  // Status B — chưa chấm xong hẳn (vd. bị gắn cờ) — xác nhận chung, chưa có
+  // gì để hiện.
+  if (result && !result.fullyGraded) {
     return <Generic examTitle={result.examTitle} />;
   }
-  if (result && !result.showDetail) {
+
+  // Status C — đã chấm xong nhưng chính sách ca thi không cho xem điểm.
+  if (result && !result.showScore) {
     return (
       <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-10 text-center">
         <CheckCircle className="mx-auto h-16 w-16 text-emerald-500" />
@@ -102,16 +106,17 @@ export default async function ExamSubmittedPage({
     );
   }
 
-  // Status C — bài đã chấm xong và ca thi cho phép lộ đáp án.
+  // Status D — đã chấm xong và ca thi cho xem điểm. showDetail (đáp án từng
+  // câu) là một cờ RIÊNG — chính sách "score_only" cho xem điểm ở đây mà
+  // không kèm AnswerReview bên dưới.
   //
   // Thí sinh vào bằng mã xem được ĐÚNG thứ học viên đăng nhập xem: câu trả lời
   // của mình, đáp án đúng, và giải thích. Trước đây chỗ này chỉ có chấm xanh/đỏ
   // — biết mình sai câu nào mà không biết sai chỗ nào thì chưa gọi là chữa bài.
-  if (result && result.showDetail) {
-    const totalPoints = result.details?.reduce((s, d) => s + d.points, 0) ?? 0;
-    const review = await getExamAttemptReview(subject, params.attemptId).catch(
-      () => null,
-    );
+  if (result && result.showScore) {
+    const review = result.showDetail
+      ? await getExamAttemptReview(subject, params.attemptId).catch(() => null)
+      : null;
     return (
       <main className="mx-auto max-w-2xl px-6 py-10">
         <div className="text-center">
@@ -133,7 +138,7 @@ export default async function ExamSubmittedPage({
                 {result.score ?? 0}
                 <span className="text-base font-normal text-faint">
                   {" "}
-                  / {totalPoints}
+                  / {result.totalPoints}
                 </span>
               </div>
             </div>

@@ -44,9 +44,9 @@ export default function ClaimForm({
       const body: Record<string, unknown> = { code, _hp };
       if (mode === "open") {
         body.displayName = displayName.trim();
-        body.phone = phone.trim();
-        body.email = email.trim();
-        if (studentCode.trim()) body.studentCode = studentCode.trim();
+        body.studentCode = studentCode.trim();
+        if (phone.trim()) body.phone = phone.trim();
+        if (email.trim()) body.email = email.trim();
         if (cohortId) body.cohortId = cohortId;
         if (roomCode.trim()) body.roomCode = roomCode.trim().toUpperCase();
         // Always persist the raw cohortCode the candidate typed as metadata.class.
@@ -239,16 +239,15 @@ export default function ClaimForm({
           />
           <Field
             label="Email"
-            required
             value={email}
             onChange={setEmail}
             placeholder="ban@example.com"
             inputMode="email"
             maxLength={200}
+            hint="Không bắt buộc. Điền nếu muốn tra cứu lại điểm sau này."
           />
           <Field
             label="Số điện thoại"
-            required
             value={phone}
             onChange={setPhone}
             placeholder="09xxxxxxxx"
@@ -343,6 +342,7 @@ function humanizeError(code: string): string {
   const map: Record<string, string> = {
     invalid_code: "Mã thi không hợp lệ hoặc đã hết hạn.",
     candidate_name_required: "Vui lòng nhập họ tên.",
+    candidate_student_code_required: "Vui lòng nhập mã sinh viên.",
     candidate_phone_required: "Số điện thoại không hợp lệ (9-11 số).",
     candidate_email_required: "Email không hợp lệ.",
     exam_not_open: "Ca thi chưa mở.",
@@ -354,6 +354,8 @@ function humanizeError(code: string): string {
     rate_limited: "Quá nhiều lần thử. Vui lòng chờ vài phút rồi thử lại.",
     cohort_not_found: "Mã lớp không tồn tại. Kiểm tra lại với GV.",
     invalid_room_code: "Mã phòng thi không đúng. Kiểm tra lại với giám thị.",
+    exam_not_written:
+      "Đây là đề vấn đáp AI — đăng nhập và vào thi từ trang khoá học của bạn, không dùng mã này.",
   };
   return map[code] ?? `Lỗi: ${code}`;
 }

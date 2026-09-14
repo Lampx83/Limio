@@ -39,6 +39,7 @@ export class ExamError extends Error {
       | "candidate_email_required"
       | "candidate_phone_required"
       | "candidate_name_required"
+      | "candidate_student_code_required"
       | "result_not_found"
       | "result_not_yet_graded"
       | "candidate_not_found"

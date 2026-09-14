@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   canRevealAnswers,
   canRevealNow,
+  canRevealScore,
+  canRevealScoreNow,
   resolveRevealPolicy,
   type RevealSessionInput,
 } from "../reveal-policy";
@@ -99,6 +101,63 @@ describe("canRevealNow", () => {
     // Bài làm cũ có trước cột sessionId. Không biết lúc nào đóng thì chọn
     // hướng an toàn, thà giấu nhầm còn hơn lộ nhầm.
     expect(canRevealNow("after_close", null, NOW)).toBe(false);
+  });
+});
+
+describe("canRevealNow — score_only không lộ đáp án", () => {
+  it("score_only: không lộ chi tiết từng câu, kể cả ca đã đóng", () => {
+    expect(canRevealNow("score_only", scheduled({ status: "closed" }), NOW)).toBe(
+      false,
+    );
+  });
+});
+
+describe("canRevealScoreNow", () => {
+  it("immediately: lộ điểm ngay", () => {
+    expect(canRevealScoreNow("immediately", scheduled(), NOW)).toBe(true);
+  });
+
+  it("score_only: lộ điểm ngay, giống immediately", () => {
+    expect(canRevealScoreNow("score_only", scheduled(), NOW)).toBe(true);
+  });
+
+  it("never: không lộ điểm", () => {
+    expect(
+      canRevealScoreNow("never", scheduled({ status: "closed" }), NOW),
+    ).toBe(false);
+  });
+
+  it("after_close: theo đúng cổng sessionOpenState như canRevealNow", () => {
+    expect(canRevealScoreNow("after_close", scheduled(), NOW)).toBe(false);
+    expect(
+      canRevealScoreNow("after_close", manual({ status: "closed" }), NOW),
+    ).toBe(true);
+  });
+});
+
+describe("canRevealScore vs canRevealAnswers — hai cờ độc lập", () => {
+  it("score_only: điểm lộ, đáp án không — cùng một ca", () => {
+    const exam = { showResultsAfterSubmit: true };
+    const ca = scheduled({ revealAnswers: "score_only" });
+
+    expect(canRevealScore(ca, exam, NOW)).toBe(true);
+    expect(canRevealAnswers(ca, exam, NOW)).toBe(false);
+  });
+
+  it("immediately: cả điểm lẫn đáp án đều lộ", () => {
+    const exam = { showResultsAfterSubmit: true };
+    const ca = scheduled({ revealAnswers: "immediately" });
+
+    expect(canRevealScore(ca, exam, NOW)).toBe(true);
+    expect(canRevealAnswers(ca, exam, NOW)).toBe(true);
+  });
+
+  it("never: cả điểm lẫn đáp án đều không lộ", () => {
+    const exam = { showResultsAfterSubmit: true };
+    const ca = scheduled({ revealAnswers: "never" });
+
+    expect(canRevealScore(ca, exam, NOW)).toBe(false);
+    expect(canRevealAnswers(ca, exam, NOW)).toBe(false);
   });
 });
 

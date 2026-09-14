@@ -3,7 +3,9 @@
  *
  * `claimByOpenCode`     — Open mode: anyone with the exam's openCode can enter.
  *                         Each claim creates a fresh ExamCandidate + attempt.
- *                         Q1: phone + email required.
+ *                         Bắt buộc: họ tên + mã sinh viên (định danh chính —
+ *                         quét QR vào thi thường không có sẵn email/SĐT trong
+ *                         tay). Phone/email chỉ tuỳ chọn.
  * `claimByAssignedCode` — Assigned mode: each candidate has their own code.
  *                         1 candidate × 1 exam = 1 attempt (Q5 resume).
  *
@@ -85,9 +87,9 @@ export interface ClaimResult {
 
 interface OpenClaimInput {
   displayName: string;
-  phone: string;
-  email: string;
-  studentCode?: string;
+  studentCode: string;
+  phone?: string;
+  email?: string;
   class?: string;
   // PR2.12 — Resolved cohortId từ preview step (frontend đã verify mã lớp).
   cohortId?: string;
@@ -105,8 +107,23 @@ function normaliseName(raw: unknown): string {
   return n;
 }
 
-function normalisePhone(raw: unknown): string {
-  if (typeof raw !== "string") throw new ExamError("candidate_phone_required");
+/**
+ * MSSV là định danh bắt buộc thay cho email/SĐT — quét QR vào thi tại lớp,
+ * học sinh luôn nhớ MSSV, không phải lúc nào cũng nhớ hay có sẵn email/SĐT.
+ */
+function normaliseStudentCode(raw: unknown): string {
+  if (typeof raw !== "string") throw new ExamError("candidate_student_code_required");
+  const s = raw.trim();
+  if (s.length === 0) throw new ExamError("candidate_student_code_required");
+  return s.slice(0, 50);
+}
+
+/**
+ * Phone/email nay TUỲ CHỌN (xem đầu file). Bỏ trống → undefined, không chặn
+ * claim. Có nhập nhưng sai định dạng → vẫn từ chối, tránh rác dữ liệu.
+ */
+function normalisePhone(raw: unknown): string | undefined {
+  if (typeof raw !== "string" || raw.trim().length === 0) return undefined;
   // VN-friendly: digits only, 9-11 length.
   const digits = raw.replace(/[^0-9]/g, "");
   if (digits.length < 9 || digits.length > 11)
@@ -114,8 +131,8 @@ function normalisePhone(raw: unknown): string {
   return digits;
 }
 
-function normaliseEmail(raw: unknown): string {
-  if (typeof raw !== "string") throw new ExamError("candidate_email_required");
+function normaliseEmail(raw: unknown): string | undefined {
+  if (typeof raw !== "string" || raw.trim().length === 0) return undefined;
   const e = raw.trim().toLowerCase();
   // Minimal regex: local@domain.tld — full RFC is impractical at this layer.
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
@@ -169,6 +186,7 @@ export async function claimByOpenCode(
           shuffleQuestions: true,
           shuffleOptions: true,
           courseId: true,
+          kind: true,
         },
       },
     },
@@ -192,10 +210,23 @@ export async function claimByOpenCode(
         shuffleQuestions: true,
         shuffleOptions: true,
         courseId: true,
+        kind: true,
       },
     });
   }
   if (!exam) throw new ExamError("invalid_code");
+  // A6.3 — Vấn đáp AI KHÔNG đi qua đường thí sinh ẩn danh/mã dự thi: phạm vi
+  // hiện tại chỉ sinh viên đã đăng nhập + đã ghi danh (xem oral-attempts.ts).
+  // Không chặn ở đây thì code sẽ tạo ra 1 ExamAttempt "trần" rồi renderer cũ
+  // (exam-take/[attemptId] → ExamPlayer) hiện ra như thi viết 0 câu hỏi —
+  // đúng lỗi đã gặp khi mở buổi vấn đáp qua "Link thi nhanh" và share mã.
+  if (exam.kind === "oral") {
+    throw new ExamError("exam_not_written", {
+      reason: "oral_requires_login",
+      message:
+        "Đây là đề vấn đáp AI — sinh viên vào thi qua trang khoá học sau khi đăng nhập, không dùng mã này.",
+    });
+  }
   if (exam.accessMode !== "open_code" && !sessionMatch)
     throw new ExamError("access_mode_mismatch");
   if (exam.status !== "published") throw new ExamError("exam_not_open");
@@ -285,9 +316,9 @@ export async function claimByOpenCode(
           roomId: resolvedRoomId,
           displayName: input.displayName,
           metadata: {
-            phone: input.phone,
-            email: input.email,
-            ...(input.studentCode ? { studentCode: input.studentCode } : {}),
+            studentCode: input.studentCode,
+            ...(input.phone ? { phone: input.phone } : {}),
+            ...(input.email ? { email: input.email } : {}),
             ...(input.class ? { class: input.class } : {}),
           },
         },
@@ -360,12 +391,9 @@ function parseOpenInput(raw: unknown): OpenClaimInput {
   const r = raw as Record<string, unknown>;
   return {
     displayName: normaliseName(r.displayName),
+    studentCode: normaliseStudentCode(r.studentCode),
     phone: normalisePhone(r.phone),
     email: normaliseEmail(r.email),
-    studentCode:
-      typeof r.studentCode === "string" && r.studentCode.trim().length > 0
-        ? r.studentCode.trim().slice(0, 50)
-        : undefined,
     class:
       typeof r.class === "string" && r.class.trim().length > 0
         ? r.class.trim().slice(0, 100)
@@ -415,6 +443,7 @@ export async function claimByAssignedCode(
           shuffleQuestions: true,
           shuffleOptions: true,
           courseId: true,
+          kind: true,
         },
       },
     },
@@ -422,6 +451,16 @@ export async function claimByAssignedCode(
   if (!candidate) throw new ExamError("invalid_code");
   if (candidate.disabledAt) throw new ExamError("candidate_disabled");
   const exam = candidate.exam;
+  // A6.3 — cùng lý do với claimByOpenCode ở trên: vấn đáp AI không có khái
+  // niệm ExamCandidate/mã dự thi (chưa từng có UI tạo candidate cho oral,
+  // nên nhánh này thực ra chưa ai tới được — chặn cho chắc, không giả định).
+  if (exam.kind === "oral") {
+    throw new ExamError("exam_not_written", {
+      reason: "oral_requires_login",
+      message:
+        "Đây là đề vấn đáp AI — sinh viên vào thi qua trang khoá học sau khi đăng nhập, không dùng mã này.",
+    });
+  }
   if (exam.accessMode !== "assigned_code")
     throw new ExamError("access_mode_mismatch");
   if (exam.status !== "published") throw new ExamError("exam_not_open");

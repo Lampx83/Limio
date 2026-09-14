@@ -12,6 +12,7 @@ type Result = {
   score: number | null;
   scorePct: number | null;
   fullyGraded: boolean;
+  showScore: boolean;
   showDetail: boolean;
   details?: {
     prompt: string;
@@ -28,7 +29,7 @@ export default function ResultForm({
   code: string;
   mode: Mode;
 }) {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -42,7 +43,9 @@ export default function ResultForm({
       const res = await fetch("/api/public/exam/result-lookup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code, email: mode === "open" ? email.trim() : undefined }),
+        // Server chấp nhận cả email lẫn mã sinh viên — cả hai đều tuỳ chọn
+        // lúc vào thi (xem code-access.ts), nên không biết trước cái nào có.
+        body: JSON.stringify({ code, email: mode === "open" ? identifier.trim() : undefined }),
       });
       if (!res.ok) {
         const j = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -77,16 +80,15 @@ export default function ResultForm({
       {mode === "open" && (
         <label className="block">
           <span className="block text-xs font-medium text-slate-600">
-            Email đã đăng ký <span className="text-red-500">*</span>
+            Email hoặc mã sinh viên đã đăng ký <span className="text-red-500">*</span>
           </span>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             required
-            inputMode="email"
             maxLength={200}
-            placeholder="ban@example.com"
+            placeholder="ban@example.com hoặc K65-001"
             className="mt-1 w-full rounded border border-default px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
           />
         </label>
@@ -138,15 +140,21 @@ function ResultPanel({ r, onReset }: { r: Result; onReset: () => void }) {
           {statusLabel[r.status]}
         </div>
         {r.fullyGraded ? (
-          <>
-            <div className="mt-4 text-4xl font-bold text-slate-900">
-              {r.scorePct?.toFixed(0) ?? "—"}
-              <span className="text-xl text-faint">%</span>
+          r.showScore ? (
+            <>
+              <div className="mt-4 text-4xl font-bold text-slate-900">
+                {r.scorePct?.toFixed(0) ?? "—"}
+                <span className="text-xl text-faint">%</span>
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                Tổng điểm: <b>{r.score?.toFixed(2) ?? "—"}</b>
+              </div>
+            </>
+          ) : (
+            <div className="mt-3 text-sm text-faint">
+              Đã chấm xong. Giảng viên chưa cho xem điểm ở buổi thi này.
             </div>
-            <div className="mt-1 text-sm text-slate-600">
-              Tổng điểm: <b>{r.score?.toFixed(2) ?? "—"}</b>
-            </div>
-          </>
+          )
         ) : (
           <div className="mt-3 text-sm text-faint">
             Một số câu cần giám thị chấm tay. Vui lòng quay lại sau.
@@ -195,7 +203,7 @@ function humanize(code: string): string {
     invalid_code: "Mã thi không hợp lệ.",
     result_not_found: "Không tìm thấy kết quả. Kiểm tra mã/email.",
     result_not_yet_graded: "Bài thi của bạn đang được chấm. Vui lòng quay lại sau.",
-    candidate_email_required: "Vui lòng nhập email đúng định dạng.",
+    candidate_email_required: "Vui lòng nhập email hoặc mã sinh viên đã đăng ký.",
     rate_limited: "Quá nhiều lần tra cứu. Chờ vài phút rồi thử lại.",
   };
   return map[code] ?? `Lỗi: ${code}`;

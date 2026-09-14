@@ -14,6 +14,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
+import type { RevealPolicy } from "./reveal-policy";
 import { isSessionOpen, sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
 
@@ -417,7 +418,7 @@ export const CreateSessionInput = z
     durationOverrideMin: z.number().int().min(1).max(24 * 60).optional().nullable(),
     // Bỏ trống = theo gói đề. Xem reveal-policy.ts.
     revealAnswers: z
-      .enum(["immediately", "never", "after_close"])
+      .enum(["immediately", "never", "after_close", "score_only"])
       .optional()
       .nullable(),
     ipAllowlist: z.array(z.string().min(3).max(43)).max(50).optional(),
@@ -608,7 +609,7 @@ export async function setManualSessionOpen(
 export async function setSessionRevealPolicy(
   actorUserId: string,
   sessionId: string,
-  policy: "immediately" | "never" | "after_close" | null,
+  policy: RevealPolicy | null,
   db: PrismaClient = prisma,
 ): Promise<{ id: string; revealAnswers: string | null }> {
   const s = await db.examSession.findUnique({

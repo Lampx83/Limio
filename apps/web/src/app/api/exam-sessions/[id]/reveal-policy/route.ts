@@ -8,10 +8,10 @@ export const runtime = "nodejs";
 /**
  * Đổi chính sách lộ đáp án của một ca thi.
  *
- * Body: { policy: "immediately" | "never" | "after_close" | null }
+ * Body: { policy: "immediately" | "never" | "after_close" | "score_only" | null }
  * null = trả về kế thừa gói đề.
  */
-const ALLOWED = ["immediately", "never", "after_close"] as const;
+const ALLOWED = ["immediately", "never", "after_close", "score_only"] as const;
 type Policy = (typeof ALLOWED)[number];
 
 export async function POST(

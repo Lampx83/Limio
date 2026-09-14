@@ -16,7 +16,7 @@
 
 import { sessionOpenState, type SessionWindowInput } from "./session-window";
 
-export type RevealPolicy = "immediately" | "never" | "after_close";
+export type RevealPolicy = "immediately" | "never" | "after_close" | "score_only";
 
 /** Phần của ca thi mà quyết định này cần. Trùng khuôn `SessionWindowInput`. */
 export interface RevealSessionInput extends SessionWindowInput {
@@ -38,7 +38,10 @@ export function resolveRevealPolicy(
 }
 
 /**
- * Ngay lúc `now` này, bài đã nộp có được xem đáp án chưa.
+ * Ngay lúc `now` này, bài đã nộp có được xem ĐÁP ÁN (chi tiết từng câu) chưa.
+ *
+ * `score_only` trả false ở đây — nó cho xem điểm (`canRevealScoreNow` dưới)
+ * chứ không cho xem câu nào đúng/sai hay đáp án.
  *
  * `after_close` hỏi lại `sessionOpenState` thay vì tự so ngày — cùng một hàm
  * mà cổng vào thi đang dùng. Hai bên lệch nhau thì sinh ra đúng loại lỗi
@@ -53,6 +56,22 @@ export function canRevealNow(
   now: Date,
 ): boolean {
   if (policy === "immediately") return true;
+  if (policy === "never" || policy === "score_only") return false;
+  return session !== null && sessionOpenState(session, now) === "closed";
+}
+
+/**
+ * Ngay lúc `now` này, bài đã nộp có được xem ĐIỂM CUỐI CÙNG chưa (không nhất
+ * thiết kèm đáp án — xem `canRevealNow` cho phần đó).
+ *
+ * `score_only` lộ điểm ngay, giống `immediately`; `never` vẫn giấu tuyệt đối.
+ */
+export function canRevealScoreNow(
+  policy: RevealPolicy,
+  session: SessionWindowInput | null,
+  now: Date,
+): boolean {
+  if (policy === "immediately" || policy === "score_only") return true;
   if (policy === "never") return false;
   return session !== null && sessionOpenState(session, now) === "closed";
 }
@@ -66,11 +85,21 @@ export function canRevealAnswers(
   return canRevealNow(resolveRevealPolicy(session, exam), session, now);
 }
 
+/** Biến thể của `canRevealAnswers` cho riêng điểm số — xem `canRevealScoreNow`. */
+export function canRevealScore(
+  session: RevealSessionInput | null,
+  exam: { showResultsAfterSubmit: boolean },
+  now: Date,
+): boolean {
+  return canRevealScoreNow(resolveRevealPolicy(session, exam), session, now);
+}
+
 /** Nhãn tiếng Việt dùng chung cho mọi form tổ chức thi. */
 export const REVEAL_POLICY_LABELS: Record<RevealPolicy, string> = {
   immediately: "Hiện ngay sau khi nộp",
   never: "Không hiện",
   after_close: "Hiện sau khi đóng ca",
+  score_only: "Hiện điểm, không hiện đáp án",
 };
 
 /**

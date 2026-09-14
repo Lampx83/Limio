@@ -6,9 +6,10 @@ import { allow, clientIp } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 
 /**
- * A5.8 Q6 — Public result lookup. Candidate re-enters code (and email for
- * open mode) every time; no cookie-based public URL. Rate-limited 10/min/IP
- * to slow down brute-force enumeration of emails against a known openCode.
+ * A5.8 Q6 — Public result lookup. Candidate re-enters code (and `email` —
+ * accepts email HOẶC mã sinh viên, xem lookupCandidateResult — for open mode)
+ * every time; no cookie-based public URL. Rate-limited 10/min/IP to slow down
+ * brute-force enumeration against a known openCode.
  */
 export async function POST(req: Request) {
   const ip = clientIp(req);

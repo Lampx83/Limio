@@ -19,9 +19,9 @@ export const runtime = "nodejs";
 /**
  * A5.8 — Public entry for code-based exam access.
  *
- * Body: { code, _hp?, displayName?, phone?, email?, studentCode?, class? }
+ * Body: { code, _hp?, displayName?, studentCode?, phone?, email?, class? }
  *   - `code` is auto-detected as open_code (6 chars) or assigned_code (8 chars).
- *   - Open mode requires { displayName, phone, email } in the same body.
+ *   - Open mode requires { displayName, studentCode }; phone/email optional.
  *   - Assigned mode ignores form fields (candidate already in DB).
  *   - `_hp` is the honeypot — bots fill, humans don't.
  *

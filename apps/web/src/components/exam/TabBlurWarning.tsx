@@ -6,6 +6,13 @@ import { useEffect, useState } from "react";
  * Shows a warning overlay each time the learner returns to the tab after
  * losing focus. Increments a counter; instructor sees the same count via
  * ExamIncident rows.
+ *
+ * Chờ GRACE_MS rồi mới tính là rời tab, cùng khuôn với `fullscreen_exit` ở
+ * ExamPlayer (xem comment ở đó). Bấm "Vào toàn màn hình" trong FullscreenGate
+ * tự nó gây ra một nhịp `visibilitychange: hidden→visible` gần như tức thời
+ * trên nhiều trình duyệt (macOS đưa fullscreen sang Space riêng) — ghi ngay
+ * thì HỌC SINH VỪA BẤM NÚT VÀO THI ĐÃ BỊ GẮN CỜ "rời tab" cho chính thao tác
+ * bắt buộc để bắt đầu. Không debounce y hệt lỗi mà fullscreen_exit từng có.
  */
 export default function TabBlurWarning({
   onBlur,
@@ -16,19 +23,38 @@ export default function TabBlurWarning({
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    let wasHidden = false;
+    const GRACE_MS = 5_000;
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    let leftForReal = false;
+
     const onVis = () => {
       if (document.visibilityState === "hidden") {
-        wasHidden = true;
-        onBlur();
-      } else if (document.visibilityState === "visible" && wasHidden) {
-        wasHidden = false;
-        setCount((c) => c + 1);
-        setShow(true);
+        if (pending) return;
+        pending = setTimeout(() => {
+          pending = null;
+          leftForReal = true;
+          onBlur();
+        }, GRACE_MS);
+      } else if (document.visibilityState === "visible") {
+        if (pending) {
+          // Quay lại trong GRACE — chớp hình do fullscreen/thông báo hệ điều
+          // hành, không phải rời tab. Không ghi sự cố, không cảnh báo.
+          clearTimeout(pending);
+          pending = null;
+          return;
+        }
+        if (leftForReal) {
+          leftForReal = false;
+          setCount((c) => c + 1);
+          setShow(true);
+        }
       }
     };
     document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
+    return () => {
+      if (pending) clearTimeout(pending);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [onBlur]);
 
   if (!show) return null;

@@ -97,6 +97,7 @@ describe("khung giờ của ĐỀ không còn chặn ai", () => {
 
     const claim = await claimByOpenCode(r.code, {
       displayName: "Thí sinh",
+      studentCode: "SV-001",
       phone: "0900000011",
       email: `wr-c-${s.slug}@e.com`,
     });
@@ -123,6 +124,7 @@ describe("khung giờ của ĐỀ không còn chặn ai", () => {
     await expect(
       claimByOpenCode("LEGCY1", {
         displayName: "X",
+        studentCode: "SV-002",
         phone: "0900000012",
         email: `wr-lg-${s.slug}@e.com`,
       }),

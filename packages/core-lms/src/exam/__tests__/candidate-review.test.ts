@@ -63,6 +63,7 @@ async function setup(slug: string, reveal: "immediately" | "never") {
 async function takeExam(code: string, email: string) {
   const claim = await claimByOpenCode(code, {
     displayName: "Thí sinh",
+    studentCode: `SV-${email}`,
     phone: "0900000000",
     email,
   });

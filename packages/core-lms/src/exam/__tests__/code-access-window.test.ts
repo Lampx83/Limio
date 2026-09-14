@@ -91,6 +91,7 @@ describe("code-access — claim uses the ca thi (ExamSession) window, not the pa
 
     const r = await claimByOpenCode("OPENWN", {
       displayName: "SV",
+      studentCode: "SV-001",
       phone: "0900000000",
       email: "sv@e.com",
     });
@@ -123,6 +124,7 @@ describe("code-access — claim uses the ca thi (ExamSession) window, not the pa
     await expect(
       claimByOpenCode("OPENCL", {
         displayName: "SV",
+        studentCode: "SV-002",
         phone: "0900000000",
         email: "sv@e.com",
       }),
@@ -176,6 +178,7 @@ describe("ca thủ công — GV bấm mở/đóng", () => {
 
     const r = await claimByOpenCode("MANOP1", {
       displayName: "SV",
+      studentCode: "SV-003",
       phone: "0900000001",
       email: "sv-man1@e.com",
     });
@@ -199,6 +202,7 @@ describe("ca thủ công — GV bấm mở/đóng", () => {
     await expect(
       claimByOpenCode("MANCL1", {
         displayName: "SV2",
+        studentCode: "SV-004",
         phone: "0900000002",
         email: "sv-man2@e.com",
       }),
@@ -208,6 +212,7 @@ describe("ca thủ công — GV bấm mở/đóng", () => {
     await setManualSessionOpen(ownerId, id, true);
     const r = await claimByOpenCode("MANCL1", {
       displayName: "SV3",
+      studentCode: "SV-005",
       phone: "0900000003",
       email: "sv-man3@e.com",
     });

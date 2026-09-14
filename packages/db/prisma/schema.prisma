@@ -3600,16 +3600,21 @@ enum ExamSessionStatus {
 /// Nhồi hai trục vào một enum sẽ trộn "để làm gì" với "quy mô nào".
 /// Khi nào học sinh được xem đáp án + điểm chi tiết của bài đã nộp.
 ///
-/// Ba nấc vì nghề dạy thật có ba tình huống, không phải hai:
+/// Bốn nấc vì nghề dạy thật có bốn tình huống, không phải hai:
 ///   immediately  — ôn tập, kiểm tra nhanh, chữa ngay tại lớp.
 ///   never        — thử nghiệm câu hỏi; lộ đáp án là đốt câu hỏi.
 ///   after_close  — thi thật, nhưng vẫn muốn học sinh học lại từ đề sau khi
 ///                  cả ca đã nộp xong. Nếu chỉ có hai nấc thì nhóm này buộc
 ///                  phải chọn `never` rồi cuối buổi vào sửa tay.
+///   score_only   — điểm danh, khảo sát nhanh: cho biết điểm cuối cùng ngay,
+///                  nhưng KHÔNG hiện câu nào đúng/sai hay đáp án. Không đốt
+///                  câu hỏi như `immediately`, mà cũng không im lặng hoàn
+///                  toàn như `never`.
 enum ExamRevealPolicy {
   immediately
   never
   after_close
+  score_only
 }
 
 enum ExamSessionScale {

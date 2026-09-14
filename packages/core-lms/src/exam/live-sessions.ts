@@ -1,5 +1,6 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { isSessionOpen } from "./session-window";
+import type { RevealPolicy } from "./reveal-policy";
 
 /**
  * Các LẦN THI của một giảng viên — đang mở và gần đây.
@@ -32,7 +33,7 @@ export interface ExamRun {
   closesAt: string | null;
   durationMin: number;
   /** Null = ca này theo chính sách của gói đề. Xem reveal-policy.ts. */
-  revealAnswers: "immediately" | "never" | "after_close" | null;
+  revealAnswers: RevealPolicy | null;
   startedCount: number;
   submittedCount: number;
 }

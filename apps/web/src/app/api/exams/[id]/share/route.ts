@@ -44,7 +44,8 @@ export async function POST(
   const revealAnswers =
     body?.revealAnswers === "immediately" ||
     body?.revealAnswers === "never" ||
-    body?.revealAnswers === "after_close"
+    body?.revealAnswers === "after_close" ||
+    body?.revealAnswers === "score_only"
       ? body.revealAnswers
       : undefined;
   const purpose =

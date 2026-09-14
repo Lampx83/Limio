@@ -43,7 +43,7 @@ type Resolved =
 
 /**
  * A5.8 — Public claim landing. URL pattern:
- *   /exam/ABCD12     — open mode (6-char code, candidate types name + phone + email)
+ *   /exam/ABCD12     — open mode (6-char code, candidate types name + student code; phone/email optional)
  *   /exam/X65DMJZD   — assigned mode (8-char personal code, only confirm)
  *
  * Resolves the code to one of several states (ok / not yet started / closed /

@@ -83,6 +83,7 @@ describe("shareExamLink — mở buổi thi một nút", () => {
 
     const claim = await claimByOpenCode(r.code, {
       displayName: "Học sinh A",
+      studentCode: "SV-001",
       phone: "0900000009",
       email: "hs-a@e.com",
     });

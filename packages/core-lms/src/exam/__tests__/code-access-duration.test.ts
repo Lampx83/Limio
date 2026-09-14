@@ -116,6 +116,7 @@ describe("code-access — ca thi durationOverrideMin governs the countdown", () 
 
     const r = await claimByOpenCode("OPEN01", {
       displayName: "SV",
+      studentCode: "SV-001",
       phone: "0900000000",
       email: "sv@e.com",
     });

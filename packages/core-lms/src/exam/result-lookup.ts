@@ -3,18 +3,22 @@
  * time (no cookie-based public URL). 2 paths:
  *
  *   - assigned_code: code = candidate.accessCode → unique candidate → result.
- *   - open_code:     code = Exam.openCode → many candidates → also require
- *                    `email` from claim metadata to identify the specific row.
+ *   - open_code:     code = ExamSession.openCode (PR2.12, mã theo CA — đường
+ *                    Link thi nhanh dùng đường này) với Exam.openCode (mã cũ
+ *                    theo ĐỀ) là fallback cho dữ liệu từ trước PR2.12 → nhiều
+ *                    thí sinh cùng mã → cần thêm `identifier` (email HOẶC mã
+ *                    sinh viên từ metadata lúc claim) để xác định đúng người.
  *
- * Returns a sanitised view: scores + per-question correctness (only when
- * chính sách lộ đáp án của CA THI cho phép — xem reveal-policy.ts). Never
- * leaks other candidates' data.
+ * Returns a sanitised view: score (only when showScore) + per-question
+ * correctness (only when showDetail) — chính sách của CA THI quyết định từng
+ * cái độc lập, xem reveal-policy.ts. Never leaks other candidates' data.
  */
 
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { ExamError } from "./types";
 import {
   canRevealAnswers,
+  canRevealScore,
   REVEAL_SESSION_SELECT,
 } from "./reveal-policy";
 
@@ -23,9 +27,14 @@ export interface CandidateResult {
   candidateName: string;
   status: "submitted" | "auto_submitted" | "graded" | "flagged";
   submittedAt: string | null;
+  // null khi !showScore — không chỉ ẩn ở UI, mà ẩn ngay từ payload trả về.
   score: number | null;
   scorePct: number | null;
+  totalPoints: number;
   fullyGraded: boolean;
+  // Điểm cuối cùng (không kèm đáp án) xem được chưa — chính sách `score_only`
+  // và `immediately` bật cờ này mà không bật showDetail.
+  showScore: boolean;
   showDetail: boolean;
   // When showDetail is true: 1 entry per question this candidate answered.
   details?: { prompt: string; correct: boolean | null; points: number; awarded: number | null }[];
@@ -33,7 +42,9 @@ export interface CandidateResult {
 
 export async function lookupCandidateResult(
   rawCode: unknown,
-  rawEmail: unknown,
+  /** Email HOẶC mã sinh viên — cả hai đều tuỳ chọn lúc claim (xem code-access.ts),
+   * nên thử khớp cả hai thay vì chỉ email. */
+  rawIdentifier: unknown,
   db: PrismaClient = prisma,
 ): Promise<CandidateResult> {
   if (typeof rawCode !== "string" || rawCode.trim().length === 0)
@@ -72,21 +83,53 @@ export async function lookupCandidateResult(
     candidateName = cand.displayName;
     attemptId = cand.attempts[0]!.id;
   } else if (code.length === 6) {
-    // Open mode — openCode alone is ambiguous; require email from metadata
-    // to disambiguate. Email is mandatory at claim (Q1), so this works.
-    if (typeof rawEmail !== "string" || rawEmail.trim().length === 0)
+    // Open mode — openCode alone is ambiguous; require an identifier from
+    // claim metadata (email HOẶC mã sinh viên — cả hai tuỳ chọn lúc claim,
+    // xem code-access.ts) để phân biệt đúng người.
+    if (typeof rawIdentifier !== "string" || rawIdentifier.trim().length === 0)
       throw new ExamError("candidate_email_required");
-    const email = rawEmail.trim().toLowerCase();
-    const e = await db.exam.findUnique({
-      where: { openCode: code },
-      select: { id: true, title: true, showResultsAfterSubmit: true, accessMode: true },
-    });
-    if (!e || e.accessMode !== "open_code")
-      throw new ExamError("invalid_code");
+    const identifierRaw = rawIdentifier.trim();
+    const identifierEmail = identifierRaw.toLowerCase();
 
-    // Find candidate by metadata.email. JSON path filter in Postgres.
+    // PR2.12 — mã theo CA (ExamSession.openCode) trước; Exam.openCode là mã
+    // cũ theo ĐỀ, chỉ còn cho dữ liệu từ trước PR2.12. Thiếu nhánh session ở
+    // đây thì MỌI buổi mở qua "Link thi nhanh" (shareExamLink) đều báo
+    // invalid_code — session không set Exam.openCode.
+    const sessionMatch = await db.examSession.findFirst({
+      where: { openCode: code, accessMode: "open_code" },
+      select: {
+        id: true,
+        exam: {
+          select: { id: true, title: true, showResultsAfterSubmit: true, accessMode: true },
+        },
+      },
+    });
+    let e: { id: string; title: string; showResultsAfterSubmit: boolean } | null = null;
+    let sessionId: string | null = null;
+    if (sessionMatch) {
+      e = sessionMatch.exam;
+      sessionId = sessionMatch.id;
+    } else {
+      const legacy = await db.exam.findUnique({
+        where: { openCode: code },
+        select: { id: true, title: true, showResultsAfterSubmit: true, accessMode: true },
+      });
+      if (legacy && legacy.accessMode === "open_code") e = legacy;
+    }
+    if (!e) throw new ExamError("invalid_code");
+
+    // Khớp theo email HOẶC mã sinh viên — metadata.email/studentCode. Scope
+    // thêm theo sessionId khi biết (mã theo CA): cùng đề mở nhiều ca, ca sau
+    // không được lẫn thí sinh của ca trước dù trùng email/MSSV.
     const cand = await db.examCandidate.findFirst({
-      where: { examId: e.id, metadata: { path: ["email"], equals: email } },
+      where: {
+        examId: e.id,
+        ...(sessionId ? { sessionId } : {}),
+        OR: [
+          { metadata: { path: ["email"], equals: identifierEmail } },
+          { metadata: { path: ["studentCode"], equals: identifierRaw } },
+        ],
+      },
       select: {
         id: true,
         displayName: true,
@@ -139,8 +182,11 @@ export async function lookupCandidateResult(
 
   const fullyGraded = attempt.status === "graded";
   // Chính sách của CA THI, không phải của gói đề. Xem reveal-policy.ts.
+  const showScore =
+    fullyGraded && canRevealScore(attempt.session, exam!, new Date());
   const showDetail =
     fullyGraded && canRevealAnswers(attempt.session, exam!, new Date());
+  const totalPoints = attempt.answers.reduce((s, a) => s + a.question.points, 0);
   const details = showDetail
     ? attempt.answers.map((a) => {
         const awarded = a.manualScore ?? a.autoScore;
@@ -158,9 +204,11 @@ export async function lookupCandidateResult(
     candidateName: candidateName!,
     status: attempt.status as CandidateResult["status"],
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
-    score: attempt.score,
-    scorePct: attempt.scorePct,
+    score: showScore ? attempt.score : null,
+    scorePct: showScore ? attempt.scorePct : null,
+    totalPoints,
     fullyGraded,
+    showScore,
     showDetail,
     details,
   };
@@ -207,8 +255,11 @@ export async function getCandidateResultByAttemptId(
     throw new ExamError("result_not_yet_graded");
 
   const fullyGraded = attempt.status === "graded";
+  const showScore =
+    fullyGraded && canRevealScore(attempt.session, attempt.exam, new Date());
   const showDetail =
     fullyGraded && canRevealAnswers(attempt.session, attempt.exam, new Date());
+  const totalPoints = attempt.answers.reduce((s, a) => s + a.question.points, 0);
   const details = showDetail
     ? attempt.answers.map((a) => {
         const awarded = a.manualScore ?? a.autoScore;
@@ -227,9 +278,11 @@ export async function getCandidateResultByAttemptId(
       attempt.candidate?.displayName ?? attempt.candidateDisplayName ?? "Thí sinh",
     status: attempt.status as CandidateResult["status"],
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
-    score: attempt.score,
-    scorePct: attempt.scorePct,
+    score: showScore ? attempt.score : null,
+    scorePct: showScore ? attempt.scorePct : null,
+    totalPoints,
     fullyGraded,
+    showScore,
     showDetail,
     details,
   };
