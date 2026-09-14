@@ -7,6 +7,7 @@ import {
 } from "@feedbackme/core-feedback";
 import { getIntegrationSecret, IntegrationError } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
+import { recordAnswered, recordStatus } from "@/lib/exam-live-bus";
 
 export const runtime = "nodejs";
 
@@ -64,6 +65,14 @@ export async function POST(
           onDelta: (delta) => send("delta", delta),
         });
         send("done", { ended: result.ended, questionsAsked: result.questionsAsked });
+        // A6.5 — dashboard giám thị realtime. Best-effort, không chặn luồng
+        // thi nếu Redis lỗi (đã enqueue "done" cho SV rồi).
+        try {
+          await recordAnswered(params.attemptId, `q${result.questionsAsked}`);
+          if (result.ended) await recordStatus(params.attemptId, "submitted");
+        } catch {
+          // best-effort, xem comment ở trên
+        }
       } catch (e) {
         if (e instanceof AiTutorError) {
           send("error", { code: e.code, details: e.details });

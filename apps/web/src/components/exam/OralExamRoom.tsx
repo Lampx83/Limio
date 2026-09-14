@@ -171,6 +171,25 @@ export default function OralExamRoom({
     }
   }, [ended, router, submittedUrl]);
 
+  // A6.5 — Heartbeat cho dashboard giám thị realtime (cùng endpoint/nhịp thi
+  // viết đang dùng — generic theo attemptId, không cần sửa gì bên đó).
+  useEffect(() => {
+    let cancelled = false;
+    const ping = () => {
+      fetch(apiUrl(`/api/exam-attempts/${attemptId}/heartbeat`), {
+        method: "POST",
+      }).catch(() => undefined);
+    };
+    ping();
+    const t = setInterval(() => {
+      if (!cancelled) ping();
+    }, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [attemptId]);
+
   useEffect(() => {
     const t = setInterval(() => {
       const r = Math.max(

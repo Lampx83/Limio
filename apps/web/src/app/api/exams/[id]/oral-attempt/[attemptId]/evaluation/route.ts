@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOralEvaluation, submitOralEvaluation } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
+import { recordStatus } from "@/lib/exam-live-bus";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,8 @@ export async function PATCH(
   const body = await readJson(req);
   try {
     await submitOralEvaluation(userId, params.attemptId, body);
+    // Best-effort — dashboard giám thị thường không còn mở lúc chấm bài xong.
+    await recordStatus(params.attemptId, "graded").catch(() => undefined);
     return NextResponse.json({ ok: true });
   } catch (e) {
     const mapped = mapKnownError(e);

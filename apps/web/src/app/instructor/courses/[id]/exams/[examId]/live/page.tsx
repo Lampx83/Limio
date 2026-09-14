@@ -7,9 +7,11 @@ import {
   getRoomScope,
   liveCountsByRoom,
 } from "@feedbackme/core-lms";
+import { MAX_ORAL_QUESTIONS } from "@feedbackme/core-feedback";
 import RoomGrid, { type RoomCell } from "./RoomGrid";
 import { auth } from "@/lib/auth";
 import LiveDashboard from "./LiveDashboard";
+import OralLiveDashboard, { type OralAttemptLive } from "./OralLiveDashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -46,9 +48,74 @@ export default async function ExamLiveDashboardPage({
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, title: true, durationMin: true, accessMode: true },
+    select: { id: true, courseId: true, title: true, durationMin: true, accessMode: true, kind: true },
   });
   if (!exam || exam.courseId !== params.id) notFound();
+
+  // A6.5 — Vấn đáp AI: không có ExamQuestion/ExamRoom/multi-phòng, và chỉ
+  // giảng viên đăng nhập được xem (chưa có giám thị dùng mã cho vấn đáp) —
+  // nên tách hẳn nhánh, không kéo theo logic phòng/câu hỏi của thi viết.
+  if (exam.kind === "oral") {
+    if (!(await canEditCourse(session.user.id, exam.courseId))) {
+      redirect("/instructor/courses");
+    }
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const attempts = await prisma.examAttempt.findMany({
+      where: { examId: exam.id, startedAt: { gt: since } },
+      select: {
+        id: true,
+        status: true,
+        startedAt: true,
+        submittedAt: true,
+        durationSec: true,
+        lastHeartbeatAt: true,
+        user: { select: { displayName: true } },
+        _count: {
+          select: { incidents: { where: { type: { not: "network_lost" } } } },
+        },
+      },
+      orderBy: { startedAt: "asc" },
+    });
+    const initial: OralAttemptLive[] = attempts.map((a) => ({
+      attemptId: a.id,
+      userName: a.user?.displayName ?? null,
+      status: a.status,
+      startedAt: a.startedAt.getTime(),
+      expiresAt: a.startedAt.getTime() + a.durationSec * 1000,
+      submittedAt: a.submittedAt?.getTime() ?? null,
+      questionsAsked: 0,
+      totalQuestions: MAX_ORAL_QUESTIONS,
+      incidentCount: a._count.incidents,
+      lastSeenAt:
+        a.lastHeartbeatAt?.getTime() ?? a.submittedAt?.getTime() ?? a.startedAt.getTime(),
+    }));
+
+    return (
+      <main>
+        <Link
+          href={`/instructor/courses/${exam.courseId}/exams/${exam.id}`}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          ← Quay lại bài thi
+        </Link>
+        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <h1 className="flex items-center gap-2 text-2xl font-bold">
+              <Radio className="h-5 w-5 shrink-0 text-red-500" />
+              Live — {exam.title}
+            </h1>
+            <p className="mt-1 text-sm text-faint">
+              Theo dõi realtime buổi vấn đáp (24h gần nhất)
+            </p>
+          </div>
+          <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">
+            Thời lượng: {exam.durationMin} phút · Tối đa {MAX_ORAL_QUESTIONS} câu
+          </span>
+        </div>
+        <OralLiveDashboard courseId={exam.courseId} examId={exam.id} initial={initial} />
+      </main>
+    );
+  }
 
   const isInstructor = await canEditCourse(session.user.id, exam.courseId);
   const scope = isInstructor

@@ -24,6 +24,7 @@ import {
   CalendarCheck,
   Library,
   LayoutGrid,
+  Mic,
   type LucideIcon,
 } from "lucide-react";
 
@@ -92,6 +93,24 @@ const FULL_GROUPS: Group[] = [
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
       { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },
+    ],
+  },
+  {
+    // A6.5 — Vấn đáp AI tách khỏi "Kiểm tra đánh giá" (thi viết) thành nhóm
+    // riêng: soạn đề, mở ca thi, giám sát live, chấm điểm đều là quy trình
+    // khác hẳn thi viết (không câu hỏi/ngân hàng, chấm theo hội thoại chứ
+    // không theo từng câu), gộp chung dễ gây nhầm "đây cũng là 1 dạng đề thi
+    // bình thường" trong khi luồng vận hành hoàn toàn tách biệt.
+    id: "oral",
+    label: "Vấn đáp AI",
+    iconBg: "bg-amber-100 dark:bg-amber-950/40",
+    iconFg: "text-amber-600 dark:text-amber-300",
+    items: [
+      { label: "Phòng thi vấn đáp", href: "/instructor/oral-exams", icon: Mic },
+      // Trang mở ca thi dùng chung với thi viết (đã nhận diện được đề vấn
+      // đáp trong bộ chọn gói đề) — không tách riêng để tránh 2 màn hình
+      // "mở ca thi" làm giáo viên phân vân dùng cái nào.
+      { label: "Tổ chức thi", href: "/instructor/organize/quick", icon: CalendarCheck },
     ],
   },
   {
