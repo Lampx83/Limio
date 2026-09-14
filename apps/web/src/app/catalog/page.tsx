@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Home } from "lucide-react";
 import { listPublishedCourses, listCatalogSectionsForDisplay } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
@@ -57,6 +58,28 @@ export default async function CatalogPage({
     hasFilter ? Promise.resolve([]) : listCatalogSectionsForDisplay(),
   ]);
 
+  // Học viên đã ghi danh bấm vào khoá của mình từ Catalog thì phải rơi đúng
+  // trang mà menu "Khoá học của tôi" đã đưa họ tới (/learn/[slug]), thay vì
+  // dừng lại ở trang giới thiệu — 2 đường vào cùng 1 route.
+  const allCourseIds = new Set(
+    [...items, ...sections.flatMap((s) => s.courses)].map((c) => c.id),
+  );
+  const enrolledCourseIds =
+    session?.user?.id && allCourseIds.size > 0
+      ? new Set(
+          (
+            await prisma.enrollment.findMany({
+              where: {
+                userId: session.user.id,
+                courseId: { in: Array.from(allCourseIds) },
+                status: { notIn: ["dropped", "refunded"] },
+              },
+              select: { courseId: true },
+            })
+          ).map((e) => e.courseId),
+        )
+      : new Set<string>();
+
   // Build active-filter chips so user sees what's filtering even khi drawer đóng.
   const activeChips: Array<{ label: string; clearHref: string }> = [];
   const baseParams = (omit: keyof typeof searchParams) => {
@@ -79,23 +102,27 @@ export default async function CatalogPage({
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-24 lg:pb-12">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <span className="chip-brand">Catalog</span>
-          <h1 className="mt-3 h-display text-h1">Khám phá khóa học</h1>
-          <p className="mt-2 text-meta">
-            {items.length > 0
-              ? `${items.length} khóa học đang được cộng đồng theo học`
-              : "Chưa có khóa học nào được publish."}
-          </p>
+        <div className="flex items-start gap-3">
+          {session?.user?.id && (
+            <Link
+              href={isInstructor ? "/instructor/dashboard" : "/me/dashboard"}
+              aria-label={isInstructor ? "Về trang chủ giảng viên" : "Về trang chủ học viên"}
+              title={isInstructor ? "Trang chủ giảng viên" : "Trang chủ học viên"}
+              className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-[rgb(var(--text))] hover:bg-[rgb(var(--surface-muted))]"
+            >
+              <Home size={18} />
+            </Link>
+          )}
+          <div>
+            <span className="chip-brand">Catalog</span>
+            <h1 className="mt-3 h-display text-h1">Khám phá khóa học</h1>
+            <p className="mt-2 text-meta">
+              {items.length > 0
+                ? `${items.length} khóa học đang được cộng đồng theo học`
+                : "Chưa có khóa học nào được publish."}
+            </p>
+          </div>
         </div>
-        {session?.user?.id && (
-          <Link
-            href={isInstructor ? "/instructor/dashboard" : "/me/dashboard"}
-            className="btn-secondary btn-sm"
-          >
-            {isInstructor ? "Quay lại Workspace giảng viên →" : "Quay lại workspace học viên →"}
-          </Link>
-        )}
       </div>
 
       {/* Filters — collapsible on mobile via <details>, inline on lg+ */}
@@ -208,12 +235,21 @@ export default async function CatalogPage({
           {sections.map((section) => (
             <section key={section.id}>
               <h2 className="h-display text-h3">{section.title}</h2>
-              <CourseGrid courses={section.courses} paymentEnabled={paymentEnabled} />
+              <CourseGrid
+                courses={section.courses}
+                paymentEnabled={paymentEnabled}
+                enrolledCourseIds={enrolledCourseIds}
+              />
             </section>
           ))}
         </div>
       ) : (
-        <CourseGrid courses={items} paymentEnabled={paymentEnabled} className="mt-8" />
+        <CourseGrid
+          courses={items}
+          paymentEnabled={paymentEnabled}
+          enrolledCourseIds={enrolledCourseIds}
+          className="mt-8"
+        />
       )}
     </main>
   );
@@ -235,21 +271,29 @@ interface CourseCardData {
 function CourseGrid({
   courses,
   paymentEnabled,
+  enrolledCourseIds,
   className = "",
 }: {
   courses: CourseCardData[];
   paymentEnabled: boolean;
+  enrolledCourseIds: Set<string>;
   className?: string;
 }) {
   return (
     <ul className={`grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${className}`}>
-      {courses.map((c, idx) => (
+      {courses.map((c, idx) => {
+        const enrolled = enrolledCourseIds.has(c.id);
+        return (
         <li
           key={c.id}
           className="animate-fade-in-up"
           style={{ animationDelay: `${Math.min(idx * 40, 280)}ms` }}
         >
-          <Link href={`/catalog/${c.slug}`} className="card-hover group block h-full" prefetch={false}>
+          <Link
+            href={enrolled ? `/learn/${c.slug}` : `/catalog/${c.slug}`}
+            className="card-hover group block h-full"
+            prefetch={false}
+          >
             {/* cover-style header */}
             <div className="relative -m-5 mb-4 h-24 overflow-hidden rounded-t-xl bg-brand-gradient">
               <div
@@ -302,7 +346,9 @@ function CourseGrid({
             </div>
 
             <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
-              {paymentEnabled && !isFree(c.priceCents) ? (
+              {enrolled ? (
+                <span className="font-semibold text-success-600">✓ Đã ghi danh</span>
+              ) : paymentEnabled && !isFree(c.priceCents) ? (
                 <span className="font-semibold text-accent-600">
                   {formatPrice(c.priceCents!, c.currency)}
                 </span>
@@ -310,12 +356,13 @@ function CourseGrid({
                 <span className="font-semibold text-success-600">Miễn phí</span>
               )}
               <span className="ml-auto font-semibold text-brand-600 group-hover:text-brand-700">
-                Xem chi tiết →
+                {enrolled ? "Tiếp tục học →" : "Xem chi tiết →"}
               </span>
             </div>
           </Link>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }
