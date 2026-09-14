@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@feedbackme/db";
 import { autoSubmitExpiredAttemptsMarkOnly } from "@feedbackme/core-lms";
 import { enqueueAutoGrade } from "@/lib/queue/autoGradeJob";
 import { recordStatus } from "@/lib/exam-live-bus";
@@ -21,6 +22,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const r = await autoSubmitExpiredAttemptsMarkOnly();
+  // A6.4 — Vấn đáp AI không có ExamQuestion nên applyAutoGradingForAttempt từ
+  // chối thẳng exam.kind="oral" (chấm qua tab Chấm bài, không auto-grade theo
+  // câu). Enqueue job cho các attempt này chỉ tạo job lỗi lặp lại vô ích —
+  // tra kind trước để bỏ qua, không phải để chặn lỗi.
+  const oralAttemptIds =
+    r.attemptIds.length === 0
+      ? new Set<string>()
+      : new Set(
+          (
+            await prisma.examAttempt.findMany({
+              where: { id: { in: r.attemptIds }, exam: { kind: "oral" } },
+              select: { id: true },
+            })
+          ).map((a) => a.id),
+        );
   let queued = 0;
   let queueErrors = 0;
   for (const attemptId of r.attemptIds) {
@@ -37,6 +53,7 @@ export async function GET(req: Request) {
         err,
       );
     }
+    if (oralAttemptIds.has(attemptId)) continue;
     try {
       await enqueueAutoGrade(attemptId);
       queued++;

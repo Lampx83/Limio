@@ -80,6 +80,17 @@ describe("generateOralExamEvaluation (A6.4)", () => {
     ).rejects.toMatchObject({ code: "validation_failed", details: "attempt_not_ended" });
   });
 
+  it("accepts an attempt the timeout cron closed as auto_submitted", async () => {
+    const s = await setup("t1b");
+    await prisma.examAttempt.update({
+      where: { id: s.attemptId },
+      data: { status: "auto_submitted" },
+    });
+    const reply = JSON.stringify({ score: 55, summary: "OK", breakdown: [] });
+    const r = await generateOralExamEvaluation(s.ownerId, s.attemptId, scriptedChat(reply));
+    expect(r.aiSuggestedScore).toBe(55);
+  });
+
   it("parses a valid JSON reply into score + summary + breakdown", async () => {
     const s = await setup("t2");
     await prisma.examAttempt.update({ where: { id: s.attemptId }, data: { status: "submitted" } });

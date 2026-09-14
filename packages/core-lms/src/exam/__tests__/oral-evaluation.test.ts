@@ -111,6 +111,17 @@ describe("submitOralEvaluation (A6.4)", () => {
     });
   });
 
+  it("allows grading an attempt the timeout cron closed as auto_submitted", async () => {
+    const s = await setup("g5b");
+    await prisma.examAttempt.update({
+      where: { id: s.attemptId },
+      data: { status: "auto_submitted" },
+    });
+    await submitOralEvaluation(s.ownerId, s.attemptId, { score: 70 });
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: s.attemptId } });
+    expect(attempt.status).toBe("graded");
+  });
+
   it("rejects an outsider grading someone else's exam", async () => {
     const s = await setup("g6");
     const outsider = await registerUser(

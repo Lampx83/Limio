@@ -22,7 +22,13 @@ async function loadOralAttemptForGrading(attemptId: string, db: PrismaClient) {
   if (!attempt) throw new ExamError("attempt_not_found");
   if (attempt.exam.kind !== "oral") throw new ExamError("exam_not_oral");
   // "graded" cho phép GV sửa lại quyết định trước đó — không khoá vĩnh viễn.
-  if (attempt.status !== "submitted" && attempt.status !== "graded") {
+  // "auto_submitted" — cron hết giờ đóng buổi thi thay vì học viên tự kết
+  // thúc; vẫn là buổi đã xong, chấm được như "submitted".
+  if (
+    attempt.status !== "submitted" &&
+    attempt.status !== "auto_submitted" &&
+    attempt.status !== "graded"
+  ) {
     throw new ExamError("attempt_not_submitted");
   }
   return attempt;

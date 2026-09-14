@@ -44,7 +44,7 @@ export default async function GradingInboxPage({
       redirect("/instructor/courses");
     }
     const attempts = await prisma.examAttempt.findMany({
-      where: { examId: exam.id, status: { in: ["submitted", "graded"] } },
+      where: { examId: exam.id, status: { in: ["submitted", "auto_submitted", "graded"] } },
       select: {
         id: true,
         submittedAt: true,

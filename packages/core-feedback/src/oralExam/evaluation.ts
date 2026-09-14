@@ -95,7 +95,9 @@ export async function generateOralExamEvaluation(
   });
   if (!attempt) throw new AiTutorError("validation_failed", "attempt_not_found");
   if (attempt.exam.kind !== "oral") throw new AiTutorError("validation_failed", "not_oral_exam");
-  if (attempt.status !== "submitted") {
+  // "auto_submitted" — buổi thi bị cron đóng vì hết giờ mà học viên không tự
+  // kết thúc — vẫn là một buổi đã xong, chấm được như "submitted" bình thường.
+  if (attempt.status !== "submitted" && attempt.status !== "auto_submitted") {
     throw new AiTutorError("validation_failed", "attempt_not_ended");
   }
   if (attempt.oralEvaluation && attempt.oralEvaluation.status !== "pending_review") {
