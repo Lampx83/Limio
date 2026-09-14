@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-export default function CreatedBanner({ fallback }: { fallback: boolean }) {
+export default function CreatedBanner({
+  fallback,
+  hasContent,
+  kind = "written",
+}: {
+  fallback: boolean;
+  hasContent: boolean;
+  kind?: "written" | "oral";
+}) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -23,7 +31,11 @@ export default function CreatedBanner({ fallback }: { fallback: boolean }) {
           </p>
         )}
         <p className="mt-0.5 text-xs text-emerald-600">
-          Kiểm tra lại cấu hình, sau đó publish để học sinh có thể làm bài.
+          {kind === "oral"
+            ? "Đề vấn đáp chưa có tài liệu nào — nộp tài liệu (đề cương, danh sách chủ đề…) ở tab Tài liệu bên dưới, rồi publish."
+            : hasContent
+              ? "Hệ thống đã tự chọn sẵn câu hỏi bên dưới — xem lại, sửa nếu cần, rồi publish."
+              : "Đề chưa có câu hỏi nào — thêm câu hỏi bên dưới (từ ngân hàng hoặc tự soạn), rồi publish."}
         </p>
       </div>
       <button

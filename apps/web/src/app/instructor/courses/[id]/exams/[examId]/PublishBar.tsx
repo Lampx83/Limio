@@ -6,12 +6,10 @@ import { apiUrl } from "@/lib/apiUrl";
 
 interface Props {
   examId: string;
-  courseId: string;
   status: string;
-  hasAttempts: boolean;
 }
 
-export default function PublishBar({ examId, courseId, status, hasAttempts }: Props) {
+export default function PublishBar({ examId, status }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,28 +34,6 @@ export default function PublishBar({ examId, courseId, status, hasAttempts }: Pr
     router.refresh();
   }
 
-  async function remove() {
-    if (
-      !window.confirm(
-        hasAttempts
-          ? "Xoá bài thi này? Không cho phép khi đã có lượt thi."
-          : "Xoá bài thi này? Hành động không thể hoàn tác.",
-      )
-    ) {
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    const res = await fetch(apiUrl(`/api/exams/${examId}`), { method: "DELETE" });
-    setBusy(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(typeof data?.error === "string" ? data.error : "delete_failed");
-      return;
-    }
-    router.replace(`/instructor/courses/${courseId}/exams`);
-  }
-
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex flex-wrap gap-2">
@@ -69,16 +45,6 @@ export default function PublishBar({ examId, courseId, status, hasAttempts }: Pr
             className="rounded bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
           >
             {busy ? "Đang publish…" : "Publish"}
-          </button>
-        )}
-        {!hasAttempts && (
-          <button
-            type="button"
-            onClick={remove}
-            disabled={busy}
-            className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
-          >
-            Xoá
           </button>
         )}
       </div>

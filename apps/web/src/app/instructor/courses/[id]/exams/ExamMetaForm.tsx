@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
@@ -23,6 +24,11 @@ interface InitialValues {
   shuffleOptions: boolean;
   showResultsAfterSubmit: boolean;
   purpose: "assessment" | "field_test";
+  // A6.1/A6.6 — Bất biến sau khi tạo (đổi kind = tạo Exam mới), nên chỉ hiện
+  // ô chọn ở mode="create". Optional vì initial của mode="edit" (page.tsx cũ
+  // trước khi có oral) có thể chưa truyền.
+  kind?: "written" | "oral";
+  answerMode?: "text" | "voice";
 }
 
 interface Props {
@@ -45,9 +51,12 @@ export default function ExamMetaForm({
   const [v, setV] = useState<InitialValues>({
     ...initial,
     description: plainToRichHtml(initial.description),
+    kind: initial.kind ?? "written",
+    answerMode: initial.answerMode ?? "text",
   });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const isLocked = (k: keyof InitialValues) => lockedFields?.includes(k) ?? false;
 
@@ -69,6 +78,12 @@ export default function ExamMetaForm({
       showResultsAfterSubmit: v.showResultsAfterSubmit,
       purpose: v.purpose,
     };
+    // Bất biến sau khi tạo — UpdateExamInput không nhận 2 field này, nên chỉ
+    // gửi lúc create.
+    if (mode === "create") {
+      body.kind = v.kind;
+      body.answerMode = v.kind === "oral" ? v.answerMode : undefined;
+    }
     const url =
       mode === "create"
         ? `/api/courses/${courseId}/exams`
@@ -85,10 +100,17 @@ export default function ExamMetaForm({
       return;
     }
     setStatus("ok");
+    // Đưa thẳng vào tab tương ứng (Nội dung với thi viết, Tài liệu với vấn
+    // đáp) thay vì để GV tự đoán bước tiếp theo là gì — "Lưu" không còn là
+    // điểm dừng, mà là bước chuyển sang nhập nội dung.
+    const nextTab = v.kind === "oral" ? "materials" : "content";
     if (mode === "create") {
-      router.replace(`/instructor/courses/${courseId}/exams/${data.examId}`);
+      // replace — quay lại không nên rơi về form tạo đề đã submit rồi.
+      router.replace(
+        `/instructor/courses/${courseId}/exams/${data.examId}?created=1&tab=${nextTab}`,
+      );
     } else {
-      router.refresh();
+      router.push(`/instructor/courses/${courseId}/exams/${examId}?tab=${nextTab}`);
     }
   }
 
@@ -106,6 +128,40 @@ export default function ExamMetaForm({
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
         />
       </div>
+
+      {mode === "create" && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SelectField
+            label="Loại đề"
+            value={v.kind ?? "written"}
+            options={[
+              { value: "written", label: "Thi viết — câu hỏi trắc nghiệm/tự luận" },
+              { value: "oral", label: "Vấn đáp AI — hỏi-đáp trực tiếp với AI giám khảo" },
+            ]}
+            onChange={(s) => setV({ ...v, kind: s as "written" | "oral" })}
+          />
+          {v.kind === "oral" && (
+            <SelectField
+              label="Trả lời bằng"
+              value={v.answerMode ?? "text"}
+              options={[
+                { value: "text", label: "Nhắn tin" },
+                { value: "voice", label: "Giọng nói" },
+              ]}
+              onChange={(s) => setV({ ...v, answerMode: s as "text" | "voice" })}
+            />
+          )}
+        </div>
+      )}
+      {mode === "create" && v.kind === "oral" && (
+        <p className="banner-info px-3 py-2 text-caption">
+          Vấn đáp AI không có ngân hàng câu hỏi — sau khi tạo, bạn sẽ nộp tài
+          liệu (đề cương, danh sách chủ đề…) ở tab "Tài liệu" để AI dựa vào đó
+          hỏi sinh viên. Bài thi luôn bắt buộc toàn màn hình; điểm do AI gợi ý
+          và giảng viên duyệt/sửa thủ công, không tự động chấm. Loại đề và
+          cách trả lời không đổi được sau khi tạo.
+        </p>
+      )}
 
       <div>
         <label className="block text-sm font-medium" htmlFor="description">
@@ -140,96 +196,122 @@ export default function ExamMetaForm({
       {/* Đề thi chỉ giữ nội dung; window logistics thuộc ca thi. */}
 
       <div>
-        <SelectField
-          label="Mục đích"
-          value={v.purpose}
-          disabled={isLocked("purpose")}
-          options={[
-            { value: "assessment", label: "Đề thi thật — đo học sinh" },
-            { value: "field_test", label: "Đề thử nghiệm — đo câu hỏi" },
-          ]}
-          onChange={(s) => {
-            const purpose = s as InitialValues["purpose"];
-            // Chuyển sang đề thử nghiệm thì tắt luôn hiện đáp án: để bật là
-            // đốt câu hỏi, lớp sau không thử nghiệm sạch được nữa. GV vẫn bật
-            // lại được ngay bên dưới nếu cố ý.
-            setV({
-              ...v,
-              purpose,
-              showResultsAfterSubmit:
-                purpose === "field_test" ? false : v.showResultsAfterSubmit,
-            });
-          }}
-        />
-        {v.purpose === "field_test" && (
-          <p className="mt-1 banner-warning px-3 py-2 text-caption">
-            Đề thử nghiệm được phép chở câu hỏi chưa kết nạp vào ngân hàng, và
-            mặc định <strong>không hiện đáp án</strong> sau khi nộp. Điểm của đề này
-            không nên dùng làm điểm chính thức.
-          </p>
+        <button
+          type="button"
+          onClick={() => setAdvancedOpen((v) => !v)}
+          className="flex items-center gap-1 text-sm font-medium text-faint hover:text-default"
+        >
+          {advancedOpen ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+          Nâng cao — mục đích, chấm điểm, giám thị, trộn đề…
+        </button>
+
+        {advancedOpen && (
+          <div className="mt-3 space-y-5 rounded border border-default bg-slate-50 p-4">
+            <div>
+              <SelectField
+                label="Mục đích"
+                value={v.purpose}
+                disabled={isLocked("purpose")}
+                options={[
+                  { value: "assessment", label: "Đề thi thật — đo học sinh" },
+                  { value: "field_test", label: "Đề thử nghiệm — đo câu hỏi" },
+                ]}
+                onChange={(s) => {
+                  const purpose = s as InitialValues["purpose"];
+                  // Chuyển sang đề thử nghiệm thì tắt luôn hiện đáp án: để bật là
+                  // đốt câu hỏi, lớp sau không thử nghiệm sạch được nữa. GV vẫn bật
+                  // lại được ngay bên dưới nếu cố ý.
+                  setV({
+                    ...v,
+                    purpose,
+                    showResultsAfterSubmit:
+                      purpose === "field_test" ? false : v.showResultsAfterSubmit,
+                  });
+                }}
+              />
+              {v.purpose === "field_test" && (
+                <p className="mt-1 banner-warning px-3 py-2 text-caption">
+                  Đề thử nghiệm được phép chở câu hỏi chưa kết nạp vào ngân hàng, và
+                  mặc định <strong>không hiện đáp án</strong> sau khi nộp. Điểm của đề này
+                  không nên dùng làm điểm chính thức.
+                </p>
+              )}
+            </div>
+
+            {v.kind === "oral" ? (
+              // Vấn đáp AI: không có ExamQuestion nên trộn câu hỏi/đáp án vô
+              // nghĩa; chấm điểm luôn là AI gợi ý + GV duyệt tay (xem tab
+              // Chấm điểm), không theo gradingMode; giám thị luôn bắt buộc
+              // fullscreen (xem banner ở trên) nên không cần chọn mức độ.
+              <p className="banner-info px-3 py-2 text-caption">
+                Chấm điểm, giám thị và trộn đề không áp dụng cho vấn đáp AI —
+                xem giải thích ở banner phía trên.
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <SelectField
+                    label="Chấm điểm"
+                    value={v.gradingMode}
+                    disabled={isLocked("gradingMode")}
+                    options={[
+                      { value: "auto", label: "Tự động" },
+                      { value: "manual", label: "Tay" },
+                      { value: "hybrid", label: "Kết hợp" },
+                    ]}
+                    onChange={(s) => setV({ ...v, gradingMode: s as InitialValues["gradingMode"] })}
+                  />
+                  <SelectField
+                    label="Giám thị"
+                    value={v.proctoringLevel}
+                    disabled={isLocked("proctoringLevel")}
+                    options={[
+                      { value: "none", label: "Không" },
+                      { value: "basic", label: "Cơ bản (fullscreen + tab blur)" },
+                      { value: "strict", label: "Nghiêm ngặt (P1)" },
+                    ]}
+                    onChange={(s) => setV({ ...v, proctoringLevel: s as InitialValues["proctoringLevel"] })}
+                  />
+                </div>
+
+                <fieldset className="space-y-2 rounded border border-default bg-white p-3">
+                  <legend className="px-1 text-xs uppercase tracking-wide text-faint">
+                    Tuỳ chọn
+                  </legend>
+                  <Checkbox
+                    label="Trộn thứ tự câu hỏi"
+                    checked={v.shuffleQuestions}
+                    disabled={isLocked("shuffleQuestions")}
+                    onChange={(b) => setV({ ...v, shuffleQuestions: b })}
+                  />
+                  <Checkbox
+                    label="Trộn thứ tự đáp án (MCQ / MULTI)"
+                    checked={v.shuffleOptions}
+                    disabled={isLocked("shuffleOptions")}
+                    onChange={(b) => setV({ ...v, shuffleOptions: b })}
+                  />
+                  <Checkbox
+                    label="Hiện chi tiết kết quả cho thí sinh"
+                    checked={v.showResultsAfterSubmit}
+                    disabled={isLocked("showResultsAfterSubmit")}
+                    onChange={(b) => setV({ ...v, showResultsAfterSubmit: b })}
+                  />
+                </fieldset>
+              </>
+            )}
+          </div>
         )}
       </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <SelectField
-          label="Chấm điểm"
-          value={v.gradingMode}
-          disabled={isLocked("gradingMode")}
-          options={[
-            { value: "auto", label: "Tự động" },
-            { value: "manual", label: "Tay" },
-            { value: "hybrid", label: "Kết hợp" },
-          ]}
-          onChange={(s) => setV({ ...v, gradingMode: s as InitialValues["gradingMode"] })}
-        />
-        <SelectField
-          label="Giám thị"
-          value={v.proctoringLevel}
-          disabled={isLocked("proctoringLevel")}
-          options={[
-            { value: "none", label: "Không" },
-            { value: "basic", label: "Cơ bản (fullscreen + tab blur)" },
-            { value: "strict", label: "Nghiêm ngặt (P1)" },
-          ]}
-          onChange={(s) => setV({ ...v, proctoringLevel: s as InitialValues["proctoringLevel"] })}
-        />
-      </div>
-
-      <fieldset className="space-y-2 rounded border border-default p-3">
-        <legend className="px-1 text-xs uppercase tracking-wide text-faint">
-          Tuỳ chọn
-        </legend>
-        <Checkbox
-          label="Trộn thứ tự câu hỏi"
-          checked={v.shuffleQuestions}
-          disabled={isLocked("shuffleQuestions")}
-          onChange={(b) => setV({ ...v, shuffleQuestions: b })}
-        />
-        <Checkbox
-          label="Trộn thứ tự đáp án (MCQ / MULTI)"
-          checked={v.shuffleOptions}
-          disabled={isLocked("shuffleOptions")}
-          onChange={(b) => setV({ ...v, shuffleOptions: b })}
-        />
-        <Checkbox
-          label="Hiện chi tiết kết quả cho thí sinh"
-          checked={v.showResultsAfterSubmit}
-          disabled={isLocked("showResultsAfterSubmit")}
-          onChange={(b) => setV({ ...v, showResultsAfterSubmit: b })}
-        />
-      </fieldset>
 
       {error && (
         <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
           Lỗi: {error}
         </div>
       )}
-      {status === "ok" && mode === "edit" && (
-        <div className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
-          Đã lưu.
-        </div>
-      )}
-
       <div className="flex justify-end">
         <button
           type="submit"
@@ -240,7 +322,7 @@ export default function ExamMetaForm({
             ? "Đang lưu…"
             : mode === "create"
               ? "Tạo bài thi"
-              : "Lưu thay đổi"}
+              : "Tiếp tục"}
         </button>
       </div>
     </form>

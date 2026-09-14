@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Info, type LucideIcon } from "lucide-react";
+import { BookOpen, FileText, Info, type LucideIcon } from "lucide-react";
 
 // A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề: Tổng quan / Nội
 // dung. Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
@@ -8,40 +8,50 @@ import { BookOpen, Info, type LucideIcon } from "lucide-react";
 // Tab "Blueprint" cũ (2026-09) đã gộp vào modal "Từ ngân hàng" trong tab Nội
 // dung — thành lựa chọn nâng cao thứ 3 ("Thiết kế đề theo ma trận đề thi"),
 // không còn là tab riêng để đỡ một khái niệm mọc lên không giải thích.
-export type ExamTab = "overview" | "content";
+//
+// A6.1 — Vấn đáp AI không có ExamQuestion nên không dùng tab "Nội dung"; thay
+// bằng "Tài liệu" (materials) để GV nộp đề cương/danh sách chủ đề cho AI.
+// Một exam chỉ hiện MỘT trong hai tab content/materials tuỳ exam.kind.
+export type ExamTab = "overview" | "content" | "materials";
 
 // Không còn tab "Kết quả": kết quả nói về AI ĐÃ LÀM, mà "ai" thuộc buổi thi
 // chứ không thuộc gói đề. Xem ở Tổ chức thi → từng lần thi.
-export const EXAM_TABS: ExamTab[] = ["overview", "content"];
+export const EXAM_TABS: ExamTab[] = ["overview", "content", "materials"];
 
 export function parseExamTab(raw: string | string[] | undefined): ExamTab {
   const v = Array.isArray(raw) ? raw[0] : raw;
   return (EXAM_TABS as string[]).includes(v ?? "") ? (v as ExamTab) : "overview";
 }
 
-const META: Array<{ key: ExamTab; label: string; Icon: LucideIcon }> = [
-  { key: "overview", label: "Tổng quan", Icon: Info },
-  { key: "content", label: "Nội dung", Icon: BookOpen },
-];
+const META: Record<ExamTab, { label: string; Icon: LucideIcon }> = {
+  overview: { label: "Tổng quan", Icon: Info },
+  content: { label: "Nội dung", Icon: BookOpen },
+  materials: { label: "Tài liệu", Icon: FileText },
+};
 
 export default function ExamTabs({
   courseId,
   examId,
   active,
+  kind = "written",
   badges,
 }: {
   courseId: string;
   examId: string;
   active: ExamTab;
+  kind?: "written" | "oral";
   badges?: Partial<Record<ExamTab, number>>;
 }) {
+  const tabs: ExamTab[] =
+    kind === "oral" ? ["overview", "materials"] : ["overview", "content"];
   return (
     <nav
       role="tablist"
       aria-label="Exam editor tabs"
       className="flex gap-1 overflow-x-auto border-b border-token"
     >
-      {META.map((t) => {
+      {tabs.map((key) => {
+        const t = { key, ...META[key] };
         const isActive = t.key === active;
         const badge = badges?.[t.key];
         return (

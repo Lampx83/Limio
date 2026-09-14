@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { CalendarCheck } from "lucide-react";
 import { canEditCourse } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ExamMetaForm from "../ExamMetaForm";
 import PublishBar from "./PublishBar";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
-import CloneButton from "./CloneButton";
+import OralMaterialsPanel from "./OralMaterialsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
 
@@ -37,7 +36,7 @@ export default async function EditExamPage({
   params: { id: string; examId: string };
   searchParams: { tab?: string; created?: string; fallback?: string };
 }) {
-  const activeTab = parseExamTab(searchParams?.tab);
+  const requestedTab = parseExamTab(searchParams?.tab);
   const justCreated = searchParams?.created === "1";
   const fallbackUsed = searchParams?.fallback === "1";
   const session = await auth();
@@ -63,6 +62,7 @@ export default async function EditExamPage({
           passages: true,
           questions: true,
           attempts: true,
+          oralMaterials: true,
         },
       },
       passages: {
@@ -86,6 +86,21 @@ export default async function EditExamPage({
     },
   });
   if (!exam || exam.courseId !== course.id) notFound();
+
+  const hasContent =
+    exam.kind === "oral"
+      ? exam._count.oralMaterials > 0
+      : exam._count.passages > 0 || exam._count.questions > 0;
+
+  // A6.1 — exam.kind bất biến sau khi tạo: mỗi đề chỉ dùng MỘT trong hai tab
+  // content/materials. Tab không hợp lệ với kind hiện tại (vd link cũ còn
+  // ?tab=content trên một đề đã là oral) rơi về tab tương ứng, không lỗi.
+  const activeTab =
+    exam.kind === "oral" && requestedTab === "content"
+      ? "materials"
+      : exam.kind === "written" && requestedTab === "materials"
+        ? "content"
+        : requestedTab;
 
   const attemptCount = exam._count.attempts;
   const hasAttempts = attemptCount > 0;
@@ -115,7 +130,11 @@ export default async function EditExamPage({
         ← Bài thi
       </Link>
 
-      {justCreated && <div className="mt-4"><CreatedBanner fallback={fallbackUsed} /></div>}
+      {justCreated && (
+        <div className="mt-4">
+          <CreatedBanner fallback={fallbackUsed} hasContent={hasContent} kind={exam.kind} />
+        </div>
+      )}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -127,25 +146,19 @@ export default async function EditExamPage({
             </span>
           </div>
           <p className="mt-1 text-sm text-faint">
-            {exam._count.passages} đoạn · {exam._count.questions} câu hỏi · {attemptCount}{" "}
-            lượt thi
+            {exam.kind === "oral" ? (
+              <>{exam._count.oralMaterials} tài liệu</>
+            ) : (
+              <>
+                {exam._count.passages} đoạn · {exam._count.questions} câu hỏi
+              </>
+            )}{" "}
+            · {attemptCount} lượt thi
           </p>
         </div>
 
         <div className="flex items-start gap-2">
-          <Link
-            href={`/instructor/exam-rounds?examId=${exam.id}`}
-            className="inline-flex items-center gap-1.5 rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-          >
-            <CalendarCheck className="h-4 w-4 shrink-0" /> Tổ chức thi
-          </Link>
-          <CloneButton examId={exam.id} />
-          <PublishBar
-            examId={exam.id}
-            courseId={course.id}
-            status={exam.status}
-            hasAttempts={hasAttempts}
-          />
+          <PublishBar examId={exam.id} status={exam.status} />
         </div>
       </div>
 
@@ -161,6 +174,7 @@ export default async function EditExamPage({
           courseId={course.id}
           examId={exam.id}
           active={activeTab}
+          kind={exam.kind}
           badges={{
             content: exam.questions.filter((q) => q.skillTags.length === 0)
               .length,
@@ -188,7 +202,18 @@ export default async function EditExamPage({
               shuffleOptions: exam.shuffleOptions,
               showResultsAfterSubmit: exam.showResultsAfterSubmit,
               purpose: exam.purpose,
+              kind: exam.kind,
+              answerMode: exam.answerMode,
             }}
+          />
+        </div>
+      )}
+
+      {activeTab === "materials" && (
+        <div className="mt-6">
+          <OralMaterialsPanel
+            examId={exam.id}
+            editable={exam.status === "draft"}
           />
         </div>
       )}
