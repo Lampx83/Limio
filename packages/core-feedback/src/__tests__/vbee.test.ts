@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   splitForTts,
+  testVbeeCredentials,
   vbeeSpeechToText,
   vbeeTextToSpeech,
   VbeeError,
@@ -164,5 +165,37 @@ describe("vbeeSpeechToText (A6.6)", () => {
     await expect(
       vbeeSpeechToText(creds)(Buffer.from("x"), "audio/wav"),
     ).rejects.toMatchObject({ code: "stt_submit_failed" });
+  });
+});
+
+describe("testVbeeCredentials (A6.6)", () => {
+  const creds = { appId: "app-1", token: "tok-1" };
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns ok when the TTS call succeeds", async () => {
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => new Uint8Array([1]).buffer,
+      json: async () => ({}),
+    });
+    await expect(testVbeeCredentials(creds)).resolves.toEqual({ ok: true });
+  });
+
+  it("returns the Vbee error message when the credentials are rejected", async () => {
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValue(
+      jsonResponse({ error: { code: "UNAUTHORIZED", message: "invalid token" } }, false, 401),
+    );
+    const r = await testVbeeCredentials(creds);
+    expect(r).toMatchObject({ ok: false });
+    if (!r.ok) expect(r.error).toBe("invalid token");
   });
 });

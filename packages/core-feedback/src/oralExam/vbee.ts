@@ -102,6 +102,26 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Xác nhận cặp App-Id + Token còn dùng được — gọi TTS thật với một đoạn text
+ * cực ngắn, bỏ audio trả về (không phát ra ngoài). Dùng cho nút "Test key đã
+ * lưu" ở trang admin/integrations; không test STT vì cần file ghi âm thật.
+ */
+export async function testVbeeCredentials(
+  creds: VbeeCredentials,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await vbeeTextToSpeech(creds)("Test.");
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof VbeeError) {
+      const details = e.details as { error?: { message?: string } } | undefined;
+      return { ok: false, error: details?.error?.message ?? e.code };
+    }
+    return { ok: false, error: (e as Error).message ?? "unknown_error" };
+  }
+}
+
 /** Adapter thật gọi Vbee TTS (realtime/sync, ~500ms/đoạn). */
 export function vbeeTextToSpeech(
   creds: VbeeCredentials,
