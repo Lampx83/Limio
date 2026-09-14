@@ -27,8 +27,6 @@ interface Paper {
   title: string;
   courseId: string;
   courseTitle: string;
-  kind?: "written" | "oral";
-  /** Số câu hỏi (thi viết) hoặc số tài liệu (vấn đáp AI). */
   questionCount: number;
 }
 
@@ -161,34 +159,6 @@ export default function QuickExamForm({
   }
 
   if (result) {
-    // A6.3 — Vấn đáp AI không đi qua mã dự thi (xem code-access.ts) — link/mã
-    // ở đây trỏ vào /exam/CODE sẽ bị chặn với thông báo "đăng nhập vào qua
-    // trang khoá học". Đừng phát link/QR gây hiểu lầm; chỉ xác nhận đã mở.
-    if (paper?.kind === "oral") {
-      return (
-        <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-5">
-          <p className="text-sm font-medium text-emerald-900">Đã mở buổi vấn đáp.</p>
-          <p className="mt-2 text-sm text-emerald-800">
-            Không có mã hay link để phát — sinh viên đã ghi danh khoá học tự
-            vào thi từ trang khoá học của họ (mục Bài thi) sau khi đăng nhập.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Link
-              href="/instructor/organize"
-              className="text-sm text-emerald-900 underline underline-offset-2"
-            >
-              Mở buổi khác
-            </Link>
-            <Link
-              href={`/instructor/courses/${paper.courseId}/exams/${paper.id}/live`}
-              className="text-sm text-emerald-800 underline underline-offset-2"
-            >
-              Xem trực tiếp ai đang thi
-            </Link>
-          </div>
-        </div>
-      );
-    }
     // shareUrl, KHÔNG ghép tay với window.location.origin: production chạy
     // dưới một tiền tố đường dẫn nên ghép tay ra link thiếu tiền tố → 404.
     const fullUrl = shareUrl(result.path);
@@ -286,7 +256,7 @@ export default function QuickExamForm({
         >
           {papers.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.title} — {p.questionCount} {p.kind === "oral" ? "tài liệu" : "câu"}
+              {p.title} — {p.questionCount} câu
               {courses.length > 1 ? ` · ${p.courseTitle}` : ""}
             </option>
           ))}
@@ -312,40 +282,35 @@ export default function QuickExamForm({
         </span>
       </label>
 
-      {/* Vấn đáp AI không có đáp án tự động — điểm do GV duyệt thủ công ở tab
-          Chấm bài (xem oral-evaluation.ts), không có khái niệm "hiện đáp án"
-          để chọn ở đây. */}
-      {paper?.kind !== "oral" && (
-        <label className="block">
-          <span className="block text-sm font-medium">Hiện đáp án và kết quả</span>
-          <select
-            value={reveal}
-            onChange={(e) => setReveal(e.target.value as RevealPolicy)}
-            className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
-          >
-            <option value="immediately">Hiện ngay sau khi nộp</option>
-            <option value="score_only">Hiện điểm, không hiện đáp án</option>
-            <option value="after_close">Hiện sau khi đóng buổi thi</option>
-            <option value="never">Không hiện</option>
-          </select>
-          <span className="mt-1 block text-caption text-faint">
-            {reveal === "immediately"
-              ? "Học sinh xem được điểm từng câu và đáp án đúng ngay khi nộp."
-              : reveal === "score_only"
-                ? "Học sinh xem được điểm số cuối cùng ngay khi nộp, nhưng không thấy câu nào đúng/sai hay đáp án."
-                : reveal === "after_close"
-                  ? "Học sinh chỉ xem được sau khi bạn đóng buổi thi — cả lớp nộp xong mới lộ đề."
-                  : "Học sinh chỉ thấy đã nộp, không thấy điểm chi tiết hay đáp án."}
+      <label className="block">
+        <span className="block text-sm font-medium">Hiện đáp án và kết quả</span>
+        <select
+          value={reveal}
+          onChange={(e) => setReveal(e.target.value as RevealPolicy)}
+          className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+        >
+          <option value="immediately">Hiện ngay sau khi nộp</option>
+          <option value="score_only">Hiện điểm, không hiện đáp án</option>
+          <option value="after_close">Hiện sau khi đóng buổi thi</option>
+          <option value="never">Không hiện</option>
+        </select>
+        <span className="mt-1 block text-caption text-faint">
+          {reveal === "immediately"
+            ? "Học sinh xem được điểm từng câu và đáp án đúng ngay khi nộp."
+            : reveal === "score_only"
+              ? "Học sinh xem được điểm số cuối cùng ngay khi nộp, nhưng không thấy câu nào đúng/sai hay đáp án."
+              : reveal === "after_close"
+                ? "Học sinh chỉ xem được sau khi bạn đóng buổi thi — cả lớp nộp xong mới lộ đề."
+                : "Học sinh chỉ thấy đã nộp, không thấy điểm chi tiết hay đáp án."}
+        </span>
+        {/* score_only không lộ đáp án — không đốt câu hỏi như immediately/after_close. */}
+        {purpose === "field_test" && reveal !== "never" && reveal !== "score_only" && (
+          <span className="banner-warning mt-2 block px-3 py-2 text-caption">
+            Đề thử nghiệm mà lộ đáp án là đốt câu hỏi — đợt sau không dùng lại
+            được nữa.
           </span>
-          {/* score_only không lộ đáp án — không đốt câu hỏi như immediately/after_close. */}
-          {purpose === "field_test" && reveal !== "never" && reveal !== "score_only" && (
-            <span className="banner-warning mt-2 block px-3 py-2 text-caption">
-              Đề thử nghiệm mà lộ đáp án là đốt câu hỏi — đợt sau không dùng lại
-              được nữa.
-            </span>
-          )}
-        </label>
-      )}
+        )}
+      </label>
 
       {/* Chỉ là một liên kết, không phải ô nhập.
           Trước đây nó là hộp có viền trắng full-width, trông y hệt ba ô nhập

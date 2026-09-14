@@ -71,6 +71,10 @@ export async function listExamRuns(
         : {}),
       exam: {
         status: { not: "archived" },
+        // Vấn đáp AI có màn Live/Chấm bài riêng (xem OralSessionControl,
+        // /exams/[examId]/live) — không đi qua danh sách "lần thi" của thi
+        // viết dù ca của nó vô tình trùng scale với ca thi viết.
+        kind: "written",
         course: { instructors: { some: { userId: actorUserId } } },
       },
     },

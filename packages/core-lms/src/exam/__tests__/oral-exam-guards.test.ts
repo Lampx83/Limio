@@ -14,7 +14,6 @@ import {
   extendAttempt,
   forceSubmitAttemptMarkOnly,
   publishExam,
-  shareExamLink,
   startOralExamAttempt,
 } from "../";
 
@@ -62,7 +61,6 @@ async function setupOral(slug: string) {
 describe("Guard: hành động chấm/gia hạn của thi viết từ chối đề vấn đáp AI", () => {
   it("forceSubmitAttemptMarkOnly từ chối — tránh vòng auto-grade 0/0 câu hỏi", async () => {
     const s = await setupOral("fs1");
-    await shareExamLink(s.ownerId, s.examId);
     const { attemptId } = await startOralExamAttempt(s.learnerId, s.examId);
 
     await expect(
@@ -76,7 +74,6 @@ describe("Guard: hành động chấm/gia hạn của thi viết từ chối đ�
 
   it("disqualifyAttempt từ chối", async () => {
     const s = await setupOral("dq1");
-    await shareExamLink(s.ownerId, s.examId);
     const { attemptId } = await startOralExamAttempt(s.learnerId, s.examId);
 
     await expect(
@@ -86,7 +83,6 @@ describe("Guard: hành động chấm/gia hạn của thi viết từ chối đ�
 
   it("extendAttempt từ chối", async () => {
     const s = await setupOral("ext1");
-    await shareExamLink(s.ownerId, s.examId);
     const { attemptId } = await startOralExamAttempt(s.learnerId, s.examId);
 
     await expect(
@@ -98,7 +94,6 @@ describe("Guard: hành động chấm/gia hạn của thi viết từ chối đ�
 describe("Guard: applyAutoGradingForAttempt từ chối đề vấn đáp AI", () => {
   it("không âm thầm ghi score=0/graded khi attempt vấn đáp đã submitted", async () => {
     const s = await setupOral("ag1");
-    await shareExamLink(s.ownerId, s.examId);
     const { attemptId } = await startOralExamAttempt(s.learnerId, s.examId);
     // Mô phỏng trạng thái sau khi runOralExamTurn tự đóng buổi (hết giờ/đủ câu).
     await prisma.examAttempt.update({ where: { id: attemptId }, data: { status: "submitted" } });

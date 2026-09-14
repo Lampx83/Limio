@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse } from "@feedbackme/core-lms";
+import { canEditCourse, getOralSessionInfo } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ExamMetaForm from "../ExamMetaForm";
 import PublishBar from "./PublishBar";
+import OralSessionControl from "./OralSessionControl";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import OralMaterialsPanel from "./OralMaterialsPanel";
@@ -86,6 +87,9 @@ export default async function EditExamPage({
     },
   });
   if (!exam || exam.courseId !== course.id) notFound();
+
+  const oralSession =
+    exam.kind === "oral" ? await getOralSessionInfo(exam.id) : { open: false, joinCode: null };
 
   const hasContent =
     exam.kind === "oral"
@@ -174,9 +178,26 @@ export default async function EditExamPage({
               Chấm bài
             </Link>
           )}
-          <PublishBar examId={exam.id} status={exam.status} />
+          {exam.kind === "oral" ? (
+            <OralSessionControl
+              examId={exam.id}
+              examStatus={exam.status}
+              sessionOpen={oralSession.open}
+              joinCode={oralSession.joinCode}
+            />
+          ) : (
+            <PublishBar examId={exam.id} status={exam.status} />
+          )}
         </div>
       </div>
+
+      {exam.kind === "oral" && oralSession.open && (
+        <div className="mt-4 rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
+          Học viên đã ghi danh khoá học tự vào thi từ trang khoá học (mục Đề
+          thi) sau khi đăng nhập. Học viên khác (chưa ghi danh, lớp mời ngoài…)
+          đăng nhập rồi phát cho họ mã tham gia ở trên.
+        </div>
+      )}
 
       {isPublished && hasAttempts && (
         <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">

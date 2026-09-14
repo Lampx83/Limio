@@ -3507,6 +3507,14 @@ model ExamSession {
   // PR2.12 — Mã access 6 ký tự khi accessMode = open_code. Mỗi ca 1 mã
   // riêng để giảm rủi ro rò rỉ. Null cho các mode khác.
   openCode            String?
+  // A6.5 (rewrite) — mã THAM GIA riêng cho vấn đáp: SV đã đăng nhập tự nhập
+  // mã này để vào thẳng ca, bỏ qua Enrollment (hợp với lớp mời ngoài, không
+  // quản lý qua ghi danh). CỘT RIÊNG, không dùng chung `openCode` ở trên —
+  // openCode là cho ExamCandidate ẩn danh của thi viết (đăng nhập không đồng
+  // nghĩa đúng người, xem code-access.ts); gộp chung dễ khiến ca vấn đáp lỡ
+  // đi qua nhánh claim-by-code của thi viết. Null khi ca chưa từng mở qua
+  // đường mã tham gia (mọi ca vấn đáp trước bản rewrite này).
+  oralJoinCode        String?               @unique
   // PR1a giữ cohortId để tương thích ngược (cohort không còn ràng buộc bắt
   // buộc theo spec mới, nhưng PR1a không drop). PR1c sẽ xoá.
   // null = applies to whole course (any enrolled learner).

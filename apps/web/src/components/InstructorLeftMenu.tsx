@@ -101,16 +101,19 @@ const FULL_GROUPS: Group[] = [
     // khác hẳn thi viết (không câu hỏi/ngân hàng, chấm theo hội thoại chứ
     // không theo từng câu), gộp chung dễ gây nhầm "đây cũng là 1 dạng đề thi
     // bình thường" trong khi luồng vận hành hoàn toàn tách biệt.
+    //
+    // Chỉ MỘT mục: vấn đáp không có bước "Tổ chức thi" riêng như thi viết
+    // (không mã, không QR, không phòng) — nút "Mở buổi vấn đáp" nằm thẳng
+    // trên trang quản lý từng đề (xem OralSessionControl), đi qua "Phòng thi
+    // vấn đáp" là đủ. Có thêm mục thứ hai trùng tên "Tổ chức thi" ở đây từng
+    // khiến GV lẫn với mục cùng tên bên "Kiểm tra đánh giá", dù hai bên trỏ
+    // tới hai luồng hoàn toàn khác nhau.
     id: "oral",
     label: "Vấn đáp AI",
     iconBg: "bg-amber-100 dark:bg-amber-950/40",
     iconFg: "text-amber-600 dark:text-amber-300",
     items: [
       { label: "Phòng thi vấn đáp", href: "/instructor/oral-exams", icon: Mic },
-      // Trang mở ca thi dùng chung với thi viết (đã nhận diện được đề vấn
-      // đáp trong bộ chọn gói đề) — không tách riêng để tránh 2 màn hình
-      // "mở ca thi" làm giáo viên phân vân dùng cái nào.
-      { label: "Tổ chức thi", href: "/instructor/organize/quick", icon: CalendarCheck },
     ],
   },
   {

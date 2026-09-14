@@ -62,13 +62,24 @@ export async function shareExamLink(
       kind: true,
       openAt: true,
       closeAt: true,
-      _count: { select: { questions: true, oralMaterials: true } },
+      _count: { select: { questions: true } },
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
   await assertCanEditCourse(actorUserId, exam.courseId, db);
 
   if (exam.status === "archived") throw new ExamError("exam_not_draft");
+  // Vấn đáp AI không phát mã/QR cho thí sinh — nó dùng openOralExamSession
+  // (oral-attempts.ts), một hàm riêng không đụng gì tới ExamRound/ExamRoom/
+  // openCode. Gộp chung vào đây từng khiến quy trình phát mã (built cho thi
+  // viết) rò rỉ sang UI vấn đáp, dẫn tới sinh mã không ai dùng được — xem
+  // exam_not_written trong code-access.ts.
+  if (exam.kind === "oral") {
+    throw new ExamError("exam_not_written", {
+      reason: "oral_uses_own_flow",
+      message: "Đề vấn đáp AI không mở buổi qua đây — dùng nút Mở buổi vấn đáp ngay trên trang quản lý đề.",
+    });
+  }
   if (
     opts.timingMode === "scheduled" &&
     opts.opensAt &&
@@ -80,16 +91,7 @@ export async function shareExamLink(
       message: "Giờ mở phải trước giờ đóng.",
     });
   }
-  // A6.3 — Vấn đáp AI không có ExamQuestion; điều kiện tối thiểu để mở buổi
-  // thi là có tài liệu (giống điều kiện publishExam), không phải câu hỏi.
-  if (exam.kind === "oral") {
-    if (exam._count.oralMaterials === 0) {
-      throw new ExamError("validation_failed", {
-        reason: "no_materials",
-        message: "Thêm ít nhất một tài liệu trước khi mở buổi thi.",
-      });
-    }
-  } else if (exam._count.questions === 0) {
+  if (exam._count.questions === 0) {
     throw new ExamError("validation_failed", {
       reason: "no_questions",
       message: "Thêm ít nhất một câu hỏi trước khi mở buổi thi.",

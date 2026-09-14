@@ -5,10 +5,14 @@ import { createCourse } from "../../courses/courses";
 import { registerUser } from "../../auth/register";
 import { enrollInCourse } from "../../learning/enroll";
 import {
+  closeOralExamSession,
   createExam,
   createOralMaterialTopicList,
   ExamError,
+  joinOralSessionByCode,
+  openOralExamSession,
   publishExam,
+  resolveOralJoinCode,
   startOralExamAttempt,
 } from "../";
 
@@ -115,5 +119,263 @@ describe("startOralExamAttempt (A6.3)", () => {
     await expect(startOralExamAttempt(s.learnerId, s.examId)).rejects.toMatchObject({
       code: "attempt_already_submitted",
     });
+  });
+});
+
+describe("openOralExamSession / closeOralExamSession (A6.5 rewrite)", () => {
+  async function draftOralExamSetup(slug: string, opts: { withMaterial?: boolean } = {}) {
+    const owner = await registerUser(
+      { email: `os-o-${slug}@e.com`, password: "password1234", displayName: "O" },
+      BASE,
+    );
+    const course = await createCourse(owner.userId, {
+      title: `Course ${slug}`,
+      description: "x",
+      slug: `os-course-${slug}`,
+    });
+    await prisma.course.update({
+      where: { id: course.courseId },
+      data: { status: "published", publishedAt: new Date() },
+    });
+    const now = Date.now();
+    const { examId } = await createExam(owner.userId, course.courseId, {
+      title: "Vấn đáp",
+      durationMin: 20,
+      openAt: new Date(now - 60_000),
+      closeAt: new Date(now + 7 * 24 * 60 * 60_000),
+      kind: "oral",
+    });
+    if (opts.withMaterial !== false) {
+      await createOralMaterialTopicList(owner.userId, examId, {
+        title: "Chủ đề",
+        text: "Vòng lặp, đệ quy.",
+      });
+    }
+    const learner = await registerUser(
+      { email: `os-l-${slug}@e.com`, password: "password1234", displayName: "L" },
+      BASE,
+    );
+    await enrollInCourse(learner.userId, course.courseId);
+    return { ownerId: owner.userId, courseId: course.courseId, examId, learnerId: learner.userId };
+  }
+
+  it("publishes a draft exam and opens exactly one manual, code-free session", async () => {
+    const s = await draftOralExamSetup("open1");
+    const r = await openOralExamSession(s.ownerId, s.examId);
+    expect(r.published).toBe(true);
+    expect(r.reused).toBe(false);
+
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: s.examId } });
+    expect(exam.status).toBe("published");
+
+    const sessions = await prisma.examSession.findMany({ where: { examId: s.examId } });
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]!.id).toBe(r.sessionId);
+    expect(sessions[0]!.timingMode).toBe("manual");
+    expect(sessions[0]!.status).toBe("open");
+    expect(sessions[0]!.accessMode).toBe("authenticated");
+    expect(sessions[0]!.openCode).toBeNull();
+
+    // Học viên vào được ngay, không cần mã.
+    const attempt = await startOralExamAttempt(s.learnerId, s.examId);
+    expect(attempt.resumed).toBe(false);
+  });
+
+  it("is idempotent — calling again reuses the same session, no duplicate created", async () => {
+    const s = await draftOralExamSetup("open2");
+    const first = await openOralExamSession(s.ownerId, s.examId);
+    const second = await openOralExamSession(s.ownerId, s.examId);
+    expect(second.sessionId).toBe(first.sessionId);
+    expect(second.reused).toBe(true);
+    expect(second.published).toBe(false);
+
+    const count = await prisma.examSession.count({ where: { examId: s.examId } });
+    expect(count).toBe(1);
+  });
+
+  it("rejects a draft exam with no materials, without publishing it", async () => {
+    const s = await draftOralExamSetup("empty", { withMaterial: false });
+    await expect(openOralExamSession(s.ownerId, s.examId)).rejects.toMatchObject({
+      code: "exam_not_publishable",
+    });
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: s.examId } });
+    expect(exam.status).toBe("draft");
+  });
+
+  it("rejects a written exam", async () => {
+    const owner = await registerUser(
+      { email: "os-owner-written@e.com", password: "password1234", displayName: "O" },
+      BASE,
+    );
+    const course = await createCourse(owner.userId, {
+      title: "C written",
+      description: "x",
+      slug: "os-course-written",
+    });
+    const { examId } = await createExam(owner.userId, course.courseId, {
+      title: "Written",
+      durationMin: 20,
+    });
+    await expect(openOralExamSession(owner.userId, examId)).rejects.toMatchObject({
+      code: "exam_not_oral",
+    });
+  });
+
+  it("closeOralExamSession blocks new attempts but not the one in progress", async () => {
+    const s = await draftOralExamSetup("close1");
+    await openOralExamSession(s.ownerId, s.examId);
+    const attempt = await startOralExamAttempt(s.learnerId, s.examId);
+
+    await closeOralExamSession(s.ownerId, s.examId);
+    const session = await prisma.examSession.findFirstOrThrow({ where: { examId: s.examId } });
+    expect(session.status).toBe("closed");
+    expect(session.closedById).toBe(s.ownerId);
+
+    // Bài đang làm dở không bị đụng tới.
+    const stillInProgress = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: attempt.attemptId },
+    });
+    expect(stillInProgress.status).toBe("in_progress");
+
+    // Chỉ MỘT ca chi phối cả đề (không có ca mặc định thứ hai âm thầm còn mở
+    // — điểm khác biệt với thi viết) nên đóng ca này là chặn được thật.
+    const outsider = await registerUser(
+      { email: "os-outsider-close1@e.com", password: "password1234", displayName: "U2" },
+      BASE,
+    );
+    await enrollInCourse(outsider.userId, s.courseId);
+    await expect(startOralExamAttempt(outsider.userId, s.examId)).rejects.toMatchObject({
+      code: "exam_window_closed",
+    });
+  });
+
+  it("reopening after close reuses the same session row", async () => {
+    const s = await draftOralExamSetup("reopen1");
+    const first = await openOralExamSession(s.ownerId, s.examId);
+    await closeOralExamSession(s.ownerId, s.examId);
+    const second = await openOralExamSession(s.ownerId, s.examId);
+    expect(second.sessionId).toBe(first.sessionId);
+    expect(second.published).toBe(false);
+
+    const count = await prisma.examSession.count({ where: { examId: s.examId } });
+    expect(count).toBe(1);
+
+    const attempt = await startOralExamAttempt(s.learnerId, s.examId);
+    expect(attempt.resumed).toBe(false);
+  });
+
+  it("keeps the same join code across close/reopen", async () => {
+    const s = await draftOralExamSetup("stablecode1");
+    const first = await openOralExamSession(s.ownerId, s.examId);
+    await closeOralExamSession(s.ownerId, s.examId);
+    const second = await openOralExamSession(s.ownerId, s.examId);
+    expect(second.joinCode).toBe(first.joinCode);
+  });
+});
+
+describe("joinOralSessionByCode / resolveOralJoinCode (A6.5 rewrite)", () => {
+  async function draftOralExamSetup(slug: string) {
+    const owner = await registerUser(
+      { email: `jc-o-${slug}@e.com`, password: "password1234", displayName: "O" },
+      BASE,
+    );
+    const course = await createCourse(owner.userId, {
+      title: `Course ${slug}`,
+      description: "x",
+      slug: `jc-course-${slug}`,
+    });
+    await prisma.course.update({
+      where: { id: course.courseId },
+      data: { status: "published", publishedAt: new Date() },
+    });
+    const now = Date.now();
+    const { examId } = await createExam(owner.userId, course.courseId, {
+      title: "Vấn đáp",
+      durationMin: 20,
+      openAt: new Date(now - 60_000),
+      closeAt: new Date(now + 7 * 24 * 60 * 60_000),
+      kind: "oral",
+    });
+    await createOralMaterialTopicList(owner.userId, examId, {
+      title: "Chủ đề",
+      text: "Vòng lặp, đệ quy.",
+    });
+    return { ownerId: owner.userId, examId };
+  }
+
+  it("lets a logged-in user who is NOT enrolled join by code", async () => {
+    const s = await draftOralExamSetup("basic1");
+    const { joinCode } = await openOralExamSession(s.ownerId, s.examId);
+
+    const stranger = await registerUser(
+      { email: "jc-stranger-basic1@e.com", password: "password1234", displayName: "U" },
+      BASE,
+    );
+    // Không enrollInCourse — đúng điểm mà đường này khác startOralExamAttempt.
+    const info = await resolveOralJoinCode(joinCode);
+    expect(info?.examId).toBe(s.examId);
+    expect(info?.isOpen).toBe(true);
+
+    const r = await joinOralSessionByCode(stranger.userId, joinCode);
+    expect(r.resumed).toBe(false);
+    expect(r.examId).toBe(s.examId);
+
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: r.attemptId } });
+    expect(attempt.userId).toBe(stranger.userId);
+    expect(attempt.status).toBe("in_progress");
+  });
+
+  it("resumes the same attempt on a second join", async () => {
+    const s = await draftOralExamSetup("resume1");
+    const { joinCode } = await openOralExamSession(s.ownerId, s.examId);
+    const stranger = await registerUser(
+      { email: "jc-stranger-resume1@e.com", password: "password1234", displayName: "U" },
+      BASE,
+    );
+    const first = await joinOralSessionByCode(stranger.userId, joinCode);
+    const second = await joinOralSessionByCode(stranger.userId, joinCode);
+    expect(second.resumed).toBe(true);
+    expect(second.attemptId).toBe(first.attemptId);
+  });
+
+  it("rejects an unknown code", async () => {
+    await expect(joinOralSessionByCode("does-not-matter", "ZZZZZZ")).rejects.toMatchObject({
+      code: "invalid_code",
+    });
+    expect(await resolveOralJoinCode("ZZZZZZ")).toBeNull();
+  });
+
+  it("rejects once the session is closed", async () => {
+    const s = await draftOralExamSetup("closed1");
+    const { joinCode } = await openOralExamSession(s.ownerId, s.examId);
+    await closeOralExamSession(s.ownerId, s.examId);
+
+    const info = await resolveOralJoinCode(joinCode);
+    expect(info?.isOpen).toBe(false);
+
+    const stranger = await registerUser(
+      { email: "jc-stranger-closed1@e.com", password: "password1234", displayName: "U" },
+      BASE,
+    );
+    await expect(joinOralSessionByCode(stranger.userId, joinCode)).rejects.toMatchObject({
+      code: "exam_window_closed",
+    });
+  });
+
+  it("does not create a duplicate attempt for a user who already joined via the course page", async () => {
+    const s = await draftOralExamSetup("dup1");
+    const { joinCode } = await openOralExamSession(s.ownerId, s.examId);
+    const learner = await registerUser(
+      { email: "jc-learner-dup1@e.com", password: "password1234", displayName: "L" },
+      BASE,
+    );
+    await enrollInCourse(learner.userId, (await prisma.course.findFirstOrThrow({
+      where: { exams: { some: { id: s.examId } } },
+      select: { id: true },
+    })).id);
+    const viaCourse = await startOralExamAttempt(learner.userId, s.examId);
+    const viaCode = await joinOralSessionByCode(learner.userId, joinCode);
+    expect(viaCode.resumed).toBe(true);
+    expect(viaCode.attemptId).toBe(viaCourse.attemptId);
   });
 });
