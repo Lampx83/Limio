@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getRoomScope } from "@feedbackme/core-lms";
+import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 import RegradeAllButton from "./RegradeAllButton";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatDateTime } from "@/lib/datetime";
+import { StatusBadge } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +30,93 @@ export default async function GradingInboxPage({
   if (!course) notFound();
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, title: true, courseId: true },
+    select: { id: true, title: true, courseId: true, kind: true },
   });
   if (!exam || exam.courseId !== course.id) notFound();
+
+  // A6.4 — Vấn đáp AI chấm theo TỪNG LƯỢT THI (transcript hội thoại), không
+  // theo từng câu hỏi như thi viết — ExamAnswer không tồn tại cho oral. Bản
+  // này cũng chưa có khái niệm room-grader cho vấn đáp (chỉ SV đăng nhập +
+  // ghi danh, xem oral-attempts.ts) nên chỉ giảng viên thật mới chấm được.
+  if (exam.kind === "oral") {
+    if (!(await canEditCourse(session.user.id, course.id))) {
+      redirect("/instructor/courses");
+    }
+    const attempts = await prisma.examAttempt.findMany({
+      where: { examId: exam.id, status: { in: ["submitted", "graded"] } },
+      select: {
+        id: true,
+        submittedAt: true,
+        status: true,
+        user: { select: { displayName: true, email: true } },
+        oralEvaluation: {
+          select: { aiSuggestedScore: true, instructorScore: true, status: true },
+        },
+      },
+      orderBy: { submittedAt: "asc" },
+    });
+
+    return (
+      <main>
+        <Link
+          href={`/instructor/courses/${course.id}/exams/${exam.id}`}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          ← {exam.title}
+        </Link>
+        <h1 className="mt-3 text-2xl font-bold">Chấm vấn đáp</h1>
+        <p className="mt-1 text-sm text-faint">
+          Chỉ hiện các lượt thi đã kết thúc. AI chỉ đề xuất điểm — điểm chính
+          thức do bạn duyệt/sửa trong từng lượt.
+        </p>
+
+        {attempts.length === 0 ? (
+          <p className="mt-6 rounded border border-dashed border-default px-4 py-6 text-center text-sm text-faint">
+            Chưa có lượt vấn đáp nào kết thúc.
+          </p>
+        ) : (
+          <ul className="mt-6 space-y-2">
+            {attempts.map((a) => {
+              const ev = a.oralEvaluation;
+              const graded = a.status === "graded";
+              return (
+                <li key={a.id}>
+                  <Link
+                    href={`/instructor/courses/${course.id}/exams/${exam.id}/grading/${a.id}`}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-default bg-white p-4 hover:border-brand-400"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">
+                        {a.user?.displayName ?? "Sinh viên"}
+                      </p>
+                      <p className="text-caption text-faint">
+                        {a.user?.email}
+                        {a.submittedAt && ` · Nộp ${formatDateTime(a.submittedAt)}`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {ev?.aiSuggestedScore !== null && ev?.aiSuggestedScore !== undefined && !graded && (
+                        <span className="text-caption text-faint">
+                          AI gợi ý: {ev.aiSuggestedScore}
+                        </span>
+                      )}
+                      {graded ? (
+                        <StatusBadge tone="success">
+                          Đã chấm — {ev?.instructorScore}/100
+                        </StatusBadge>
+                      ) : (
+                        <StatusBadge tone="warning">Chờ chấm</StatusBadge>
+                      )}
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </main>
+    );
+  }
 
   // P1 — instructor-tier (incl. non-editing-teacher/teaching-assistant, via
   // getRoomScope's canGradeCourse check) OR room grader. Graders see only

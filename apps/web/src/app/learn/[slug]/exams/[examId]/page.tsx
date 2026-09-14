@@ -4,6 +4,7 @@ import {
   ExamError,
   isUserEnrolled,
   startExamAttempt,
+  startOralExamAttempt,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 
@@ -36,9 +37,39 @@ export default async function ExamLandingPage({
   // Server-side validation: exam must exist and belong to this course.
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, title: true, status: true },
+    select: { id: true, courseId: true, title: true, status: true, kind: true },
   });
   if (!exam || exam.courseId !== course.id) notFound();
+
+  // A6.3 — Vấn đáp AI không có ExamQuestion/shuffle/sessionToken query-param
+  // như thi viết, nên đi luồng bắt đầu riêng và runtime URL riêng (/oral/...).
+  if (exam.kind === "oral") {
+    try {
+      const r = await startOralExamAttempt(session.user.id, params.examId);
+      redirect(`/learn/${params.slug}/exams/${params.examId}/oral/${r.attemptId}`);
+    } catch (e) {
+      if (e instanceof ExamError) {
+        if (e.code === "attempt_already_submitted") {
+          const existing = await prisma.examAttempt.findFirst({
+            where: { examId: exam.id, userId: session.user.id },
+            select: { id: true },
+          });
+          if (existing) {
+            redirect(
+              `/learn/${params.slug}/exams/${params.examId}/oral/${existing.id}/submitted`,
+            );
+          }
+        }
+        return (
+          <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 text-center">
+            <h1 className="mb-4 text-2xl font-semibold">Không thể bắt đầu buổi vấn đáp</h1>
+            <p className="text-faint">{describeExamError(e.code)}</p>
+          </main>
+        );
+      }
+      throw e;
+    }
+  }
 
   try {
     const r = await startExamAttempt(session.user.id, params.examId);

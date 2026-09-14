@@ -27,13 +27,17 @@ export default async function OrganizeQuickPage() {
         courseId: { in: courses.map((c) => c.id) },
         status: { not: "archived" },
         purpose: "assessment",
-        questions: { some: {} },
+        // A6.3 — Vấn đáp AI không có ExamQuestion, nên "có nội dung để mở
+        // thi" nghĩa là có tài liệu thay vì có câu hỏi. Xem điều kiện tương
+        // ứng trong shareExamLink (quick-share.ts).
+        OR: [{ questions: { some: {} } }, { kind: "oral", oralMaterials: { some: {} } }],
       },
       select: {
         id: true,
         title: true,
         courseId: true,
-        _count: { select: { questions: true } },
+        kind: true,
+        _count: { select: { questions: true, oralMaterials: true } },
       },
       orderBy: { updatedAt: "desc" },
       take: 100,
@@ -68,7 +72,8 @@ export default async function OrganizeQuickPage() {
             title: p.title,
             courseId: p.courseId,
             courseTitle: courseTitleById.get(p.courseId) ?? "",
-            questionCount: p._count.questions,
+            kind: p.kind,
+            questionCount: p.kind === "oral" ? p._count.oralMaterials : p._count.questions,
           }))}
         />
       )}

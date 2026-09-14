@@ -6,6 +6,7 @@ import {
   claimByOpenCode,
   createExam,
   createExamQuestion,
+  createOralMaterialTopicList,
   shareExamLink,
 } from "../";
 
@@ -210,5 +211,58 @@ describe("thời lượng và giờ thuộc BUỔI THI, không thuộc gói đ�
         closesAt: new Date(Date.now() + 3600_000),
       }),
     ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+});
+
+// A6.3 — Vấn đáp AI không có ExamQuestion; điều kiện mở buổi thi dựa vào
+// tài liệu thay vì câu hỏi (xem nhánh exam.kind === "oral" trong quick-share.ts).
+describe("shareExamLink — vấn đáp AI", () => {
+  async function setupOral(slug: string, opts: { withMaterial?: boolean } = {}) {
+    const owner = await registerUser(
+      { email: `qs-oral-${slug}@e.com`, password: "password1234", displayName: "O" },
+      BASE,
+    );
+    const course = await createCourse(owner.userId, {
+      title: `C oral ${slug}`,
+      description: "x",
+      slug: `qs-oral-course-${slug}`,
+    });
+    await prisma.course.update({
+      where: { id: course.courseId },
+      data: { status: "published", publishedAt: new Date() },
+    });
+    const now = Date.now();
+    const { examId } = await createExam(owner.userId, course.courseId, {
+      title: `Đề vấn đáp ${slug}`,
+      durationMin: 15,
+      openAt: new Date(now - 60_000),
+      closeAt: new Date(now + 86_400_000),
+      kind: "oral",
+    });
+    if (opts.withMaterial !== false) {
+      await createOralMaterialTopicList(owner.userId, examId, {
+        title: "Chủ đề",
+        text: "1. Nguyên tắc UI\n2. Nguyên tắc UX",
+      });
+    }
+    return { ownerId: owner.userId, examId };
+  }
+
+  it("mở được buổi vấn đáp khi đã có tài liệu", async () => {
+    const s = await setupOral("basic");
+    const r = await shareExamLink(s.ownerId, s.examId);
+    expect(r.code).toMatch(/^[A-Z0-9]{6}$/);
+    expect(r.published).toBe(true);
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: s.examId } });
+    expect(exam.status).toBe("published");
+  });
+
+  it("từ chối đề vấn đáp chưa có tài liệu nào", async () => {
+    const s = await setupOral("empty", { withMaterial: false });
+    await expect(shareExamLink(s.ownerId, s.examId)).rejects.toMatchObject({
+      code: "validation_failed",
+    });
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: s.examId } });
+    expect(exam.status).toBe("draft");
   });
 });

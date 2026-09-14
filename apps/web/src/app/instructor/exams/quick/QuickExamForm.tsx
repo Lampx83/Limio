@@ -27,6 +27,8 @@ interface Paper {
   title: string;
   courseId: string;
   courseTitle: string;
+  kind?: "written" | "oral";
+  /** Số câu hỏi (thi viết) hoặc số tài liệu (vấn đáp AI). */
   questionCount: number;
 }
 
@@ -256,7 +258,7 @@ export default function QuickExamForm({
         >
           {papers.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.title} — {p.questionCount} câu
+              {p.title} — {p.questionCount} {p.kind === "oral" ? "tài liệu" : "câu"}
               {courses.length > 1 ? ` · ${p.courseTitle}` : ""}
             </option>
           ))}

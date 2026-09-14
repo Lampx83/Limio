@@ -158,6 +158,14 @@ export default async function EditExamPage({
         </div>
 
         <div className="flex items-start gap-2">
+          {exam.kind === "oral" && attemptCount > 0 && (
+            <Link
+              href={`/instructor/courses/${course.id}/exams/${exam.id}/grading`}
+              className="btn btn-secondary btn-sm"
+            >
+              Chấm bài
+            </Link>
+          )}
           <PublishBar examId={exam.id} status={exam.status} />
         </div>
       </div>

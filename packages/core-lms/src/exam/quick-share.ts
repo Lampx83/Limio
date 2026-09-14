@@ -59,9 +59,10 @@ export async function shareExamLink(
       courseId: true,
       status: true,
       purpose: true,
+      kind: true,
       openAt: true,
       closeAt: true,
-      _count: { select: { questions: true } },
+      _count: { select: { questions: true, oralMaterials: true } },
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
@@ -79,7 +80,16 @@ export async function shareExamLink(
       message: "Giờ mở phải trước giờ đóng.",
     });
   }
-  if (exam._count.questions === 0) {
+  // A6.3 — Vấn đáp AI không có ExamQuestion; điều kiện tối thiểu để mở buổi
+  // thi là có tài liệu (giống điều kiện publishExam), không phải câu hỏi.
+  if (exam.kind === "oral") {
+    if (exam._count.oralMaterials === 0) {
+      throw new ExamError("validation_failed", {
+        reason: "no_materials",
+        message: "Thêm ít nhất một tài liệu trước khi mở buổi thi.",
+      });
+    }
+  } else if (exam._count.questions === 0) {
     throw new ExamError("validation_failed", {
       reason: "no_questions",
       message: "Thêm ít nhất một câu hỏi trước khi mở buổi thi.",
