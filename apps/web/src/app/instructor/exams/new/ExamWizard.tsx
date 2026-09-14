@@ -55,37 +55,19 @@ export default function ExamWizard({ courses, initialCourseId, lessonTree, showU
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Tạo đề thi mới</h1>
-          <div className="mt-1 flex items-center gap-2">
-            <label className="text-sm text-faint">Khoá học:</label>
-            <select
-              value={state.courseId}
-              onChange={(e) => dispatch({ type: "SET_COURSE", courseId: e.target.value })}
-              className="rounded border border-default px-2 py-1 text-sm"
-            >
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Mode toggle */}
-        <div className="flex overflow-hidden rounded border border-default text-sm">
-          <button
-            onClick={() => toggleExpertMode(false)}
-            className={`px-3 py-1.5 ${!expertMode ? "bg-blue-600 text-white" : "hover:bg-surface"}`}
+      <div>
+        <h1 className="text-2xl font-bold">Tạo đề thi mới</h1>
+        <div className="mt-1 flex items-center gap-2">
+          <label className="text-sm text-faint">Khoá học:</label>
+          <select
+            value={state.courseId}
+            onChange={(e) => dispatch({ type: "SET_COURSE", courseId: e.target.value })}
+            className="rounded border border-default px-2 py-1 text-sm"
           >
-            Cơ bản
-          </button>
-          <button
-            onClick={() => toggleExpertMode(true)}
-            className={`px-3 py-1.5 ${expertMode ? "bg-blue-600 text-white" : "hover:bg-surface"}`}
-          >
-            Nâng cao
-          </button>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>{c.title}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -178,7 +160,7 @@ export default function ExamWizard({ courses, initialCourseId, lessonTree, showU
       // Clear session storage so next wizard starts fresh
       sessionStorage.removeItem("examWizardState");
       router.push(
-        `/instructor/courses/${state.courseId}/exams/${examId}?created=1${fallbackUsed ? "&fallback=1" : ""}`,
+        `/instructor/courses/${state.courseId}/exams/${examId}?created=1&tab=content${fallbackUsed ? "&fallback=1" : ""}`,
       );
     } finally {
       setSubmitting(false);

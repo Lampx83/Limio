@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Copy } from "lucide-react";
 
-export default function CloneButton({ examId }: { examId: string }) {
+export default function CloneButton({
+  examId,
+  courseId,
+}: {
+  examId: string;
+  courseId: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -30,8 +36,6 @@ export default function CloneButton({ examId }: { examId: string }) {
         return;
       }
       const j = (await r.json()) as { examId: string };
-      // Send instructor to the new draft. Need courseId from URL.
-      const courseId = window.location.pathname.split("/")[3];
       router.push(`/instructor/courses/${courseId}/exams/${j.examId}`);
     } finally {
       setBusy(false);

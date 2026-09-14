@@ -4,6 +4,9 @@ import { prisma } from "@feedbackme/db";
 import { canEditCourse } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
+import CloneButton from "./[examId]/CloneButton";
+import DeleteExamButton from "./DeleteExamButton";
+import OrganizeExamButton from "./OrganizeExamButton";
 
 export const dynamic = "force-dynamic";
 
@@ -112,7 +115,7 @@ export default async function InstructorExamsPage({
                     />
                   </div>
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <Link
                     href={`/instructor/courses/${course.id}/exams/${e.id}`}
                     className="rounded border border-default px-3 py-1.5 text-sm hover:bg-slate-50"
@@ -120,6 +123,9 @@ export default async function InstructorExamsPage({
                   >
                     Chỉnh sửa
                   </Link>
+                  <OrganizeExamButton examId={e.id} isDraft={e.status === "draft"} />
+                  <CloneButton examId={e.id} courseId={course.id} />
+                  <DeleteExamButton examId={e.id} hasAttempts={e._count.attempts > 0} />
                 </div>
               </div>
             </li>
