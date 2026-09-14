@@ -331,3 +331,23 @@ export async function joinOralSessionByCode(
   );
   return { attemptId, durationSec, resumed: false, examId };
 }
+
+/**
+ * Xoá hẳn một lượt vấn đáp (dọn dữ liệu test, hoặc mở lại lượt cho SV làm
+ * lại khi attemptPolicy=single đã chặn). Cascade sẵn trong schema xoá theo
+ * cả OralExamTurn + OralExamEvaluation — không mồ côi dữ liệu con.
+ */
+export async function deleteOralAttempt(
+  actorUserId: string,
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  const attempt = await db.examAttempt.findUnique({
+    where: { id: attemptId },
+    select: { exam: { select: { courseId: true, kind: true } } },
+  });
+  if (!attempt) throw new ExamError("attempt_not_found");
+  if (attempt.exam.kind !== "oral") throw new ExamError("exam_not_oral");
+  await assertCanEditCourse(actorUserId, attempt.exam.courseId, db);
+  await db.examAttempt.delete({ where: { id: attemptId } });
+}

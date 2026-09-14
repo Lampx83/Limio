@@ -12,7 +12,10 @@ import { recordAnswered, recordStatus } from "@/lib/exam-live-bus";
 export const runtime = "nodejs";
 
 /**
- * A6.3 — 1 lượt vấn đáp. Body: { message?: string } (bỏ trống cho lượt đầu).
+ * A6.3 — 1 lượt vấn đáp. Body: { message?: string, forceEnd?: boolean } (bỏ
+ * trống message cho lượt đầu). forceEnd = SV chủ động bấm "Kết thúc vấn đáp"
+ * (xem runOralExamTurn — trước đây không có đường nào để đóng buổi ngoài hết
+ * giờ/đủ câu hỏi).
  * SSE, cùng khuôn với /api/ai/tutor:
  *   event: delta data: "<text>"
  *   event: done  data: { ended, questionsAsked }
@@ -25,8 +28,11 @@ export async function POST(
   const userId = await requireUserId();
   if (!userId) return new Response("unauthorized", { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { message?: string } | null;
+  const body = (await req.json().catch(() => null)) as
+    | { message?: string; forceEnd?: boolean }
+    | null;
   const studentMessage = body?.message?.trim() || null;
+  const forceEnd = body?.forceEnd === true;
 
   let openaiKey: string;
   try {
@@ -60,6 +66,7 @@ export async function POST(
           attemptId: params.attemptId,
           studentUserId: userId,
           studentMessage,
+          forceEnd,
           computeChat: openAiChatCompute(openai),
           computeEmbed: openAiEmbedCompute(openai),
           onDelta: (delta) => send("delta", delta),

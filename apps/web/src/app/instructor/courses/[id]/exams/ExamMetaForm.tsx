@@ -29,6 +29,8 @@ interface InitialValues {
   // trước khi có oral) có thể chưa truyền.
   kind?: "written" | "oral";
   answerMode?: "text" | "voice";
+  /** A6.6 (UI) — hướng dẫn/thông báo hiện ở panel bên phải phòng vấn đáp. */
+  oralInstructionsHtml?: string;
 }
 
 interface Props {
@@ -61,6 +63,7 @@ export default function ExamMetaForm({
     description: plainToRichHtml(initial.description),
     kind: mode === "create" ? (fixedKind ?? "written") : (initial.kind ?? "written"),
     answerMode: initial.answerMode ?? "text",
+    oralInstructionsHtml: plainToRichHtml(initial.oralInstructionsHtml ?? ""),
   });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +94,11 @@ export default function ExamMetaForm({
     if (mode === "create") {
       body.kind = v.kind;
       body.answerMode = v.kind === "oral" ? v.answerMode : undefined;
+    }
+    // Ngược lại: chỉ có ý nghĩa sau khi đề đã tồn tại (soạn cùng lúc với tài
+    // liệu ở tab khác), nên chỉ gửi lúc edit.
+    if (mode === "edit" && v.kind === "oral") {
+      body.oralInstructionsHtml = v.oralInstructionsHtml || undefined;
     }
     const url =
       mode === "create"
@@ -171,6 +179,24 @@ export default function ExamMetaForm({
           />
         </div>
       </div>
+
+      {mode === "edit" && v.kind === "oral" && (
+        <div>
+          <label className="block text-sm font-medium">
+            Hướng dẫn hiện trong phòng vấn đáp (tuỳ chọn)
+          </label>
+          <p className="mt-0.5 text-caption text-faint">
+            Hiện ở khung bên phải phòng thi, cạnh AI giám khảo — cho phép chèn
+            ảnh. Bỏ trống thì hiện gợi ý mặc định.
+          </p>
+          <div className="mt-1">
+            <RichTextEditor
+              value={v.oralInstructionsHtml ?? ""}
+              onChange={(html) => setV({ ...v, oralInstructionsHtml: html })}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Thời lượng KHÔNG còn ở đây: nó thuộc buổi thi, không thuộc gói đề.
           Cùng một gói chạy 15 phút ở lớp này và 30 phút ở lớp kia là chuyện

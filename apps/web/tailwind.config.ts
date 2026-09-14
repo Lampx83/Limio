@@ -102,10 +102,41 @@ const config: Config = {
           "60%": { opacity: "1", transform: "scale(1.05) rotate(var(--note-rot, 0deg))" },
           "100%": { opacity: "1", transform: "scale(1) rotate(var(--note-rot, 0deg))" },
         },
+        // A6.6 — avatar giám khảo AI trong phòng vấn đáp (OralAiAvatar).
+        "avatar-bob": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
+        "avatar-blink": {
+          "0%, 92%, 100%": { transform: "scaleY(1)" },
+          "96%": { transform: "scaleY(0.1)" },
+        },
+        "avatar-talk-mouth": {
+          "0%, 100%": { transform: "scaleY(0.4)" },
+          "50%": { transform: "scaleY(1)" },
+        },
+        "avatar-listen-ring": {
+          "0%": { transform: "scale(0.9)", opacity: "0.7" },
+          "100%": { transform: "scale(1.6)", opacity: "0" },
+        },
+        "avatar-think-tilt": {
+          "0%, 100%": { transform: "rotate(-4deg)" },
+          "50%": { transform: "rotate(4deg)" },
+        },
+        "avatar-think-dot": {
+          "0%, 80%, 100%": { transform: "translateY(0)", opacity: "0.4" },
+          "40%": { transform: "translateY(-3px)", opacity: "1" },
+        },
       },
       animation: {
         "fade-in-up": "fade-in-up 0.4s ease-out both",
         "note-pop-in": "note-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "avatar-bob": "avatar-bob 3s ease-in-out infinite",
+        "avatar-blink": "avatar-blink 4.5s ease-in-out infinite",
+        "avatar-talk-mouth": "avatar-talk-mouth 0.35s ease-in-out infinite",
+        "avatar-listen-ring": "avatar-listen-ring 1.6s ease-out infinite",
+        "avatar-think-tilt": "avatar-think-tilt 1.2s ease-in-out infinite",
+        "avatar-think-dot": "avatar-think-dot 1.2s ease-in-out infinite",
       },
     },
   },

@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
+import DeleteOralAttemptButton from "@/components/exam/DeleteOralAttemptButton";
 import RegradeAllButton from "./RegradeAllButton";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
@@ -79,36 +80,37 @@ export default async function GradingInboxPage({
             {attempts.map((a) => {
               const ev = a.oralEvaluation;
               const graded = a.status === "graded";
+              const studentLabel = a.user?.displayName ?? a.user?.email ?? "Sinh viên";
               return (
-                <li key={a.id}>
+                <li
+                  key={a.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-default bg-white p-4 hover:border-brand-400"
+                >
                   <Link
                     href={`/instructor/courses/${course.id}/exams/${exam.id}/grading/${a.id}`}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-default bg-white p-4 hover:border-brand-400"
+                    className="min-w-0 flex-1"
                   >
-                    <div>
-                      <p className="text-sm font-medium">
-                        {a.user?.displayName ?? "Sinh viên"}
-                      </p>
-                      <p className="text-caption text-faint">
-                        {a.user?.email}
-                        {a.submittedAt && ` · Nộp ${formatDateTime(a.submittedAt)}`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {ev?.aiSuggestedScore !== null && ev?.aiSuggestedScore !== undefined && !graded && (
-                        <span className="text-caption text-faint">
-                          AI gợi ý: {ev.aiSuggestedScore}
-                        </span>
-                      )}
-                      {graded ? (
-                        <StatusBadge tone="success">
-                          Đã chấm — {ev?.instructorScore}/100
-                        </StatusBadge>
-                      ) : (
-                        <StatusBadge tone="warning">Chờ chấm</StatusBadge>
-                      )}
-                    </div>
+                    <p className="text-sm font-medium">{studentLabel}</p>
+                    <p className="text-caption text-faint">
+                      {a.user?.email}
+                      {a.submittedAt && ` · Nộp ${formatDateTime(a.submittedAt)}`}
+                    </p>
                   </Link>
+                  <div className="flex items-center gap-2">
+                    {ev?.aiSuggestedScore !== null && ev?.aiSuggestedScore !== undefined && !graded && (
+                      <span className="text-caption text-faint">
+                        AI gợi ý: {ev.aiSuggestedScore}
+                      </span>
+                    )}
+                    {graded ? (
+                      <StatusBadge tone="success">
+                        Đã chấm — {ev?.instructorScore}/100
+                      </StatusBadge>
+                    ) : (
+                      <StatusBadge tone="warning">Chờ chấm</StatusBadge>
+                    )}
+                    <DeleteOralAttemptButton attemptId={a.id} studentLabel={studentLabel} />
+                  </div>
                 </li>
               );
             })}

@@ -4,6 +4,7 @@ import { Mic } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import EmptyState from "@/components/ui/EmptyState";
+import DeleteOralExamButton from "@/components/exam/DeleteOralExamButton";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +138,7 @@ export default async function OralExamsHubPage() {
                         Chấm bài
                       </Link>
                     )}
+                    <DeleteOralExamButton examId={e.id} examTitle={e.title} />
                   </div>
                 </div>
               </li>

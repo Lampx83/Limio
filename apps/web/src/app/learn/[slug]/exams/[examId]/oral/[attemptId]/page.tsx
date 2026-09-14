@@ -42,6 +42,7 @@ export default async function OralExamRuntimePage({
       kind: true,
       answerMode: true,
       title: true,
+      oralInstructionsHtml: true,
       course: { select: { title: true } },
     },
   });
@@ -63,6 +64,8 @@ export default async function OralExamRuntimePage({
     serverNow: runtime.serverNow,
     initialTurns: turns,
     submittedUrl: `/learn/${params.slug}/exams/${params.examId}/oral/${params.attemptId}/submitted`,
+    exitUrl: `/learn/${params.slug}`,
+    instructionsHtml: exam.oralInstructionsHtml,
   };
 
   if (exam.answerMode === "voice") {

@@ -2768,6 +2768,10 @@ model Exam {
   kind                   ExamKind            @default(written)
   // A6.6 — chỉ áp dụng khi kind=oral.
   answerMode             OralAnswerMode      @default(text)
+  // A6.6 (UI) — hướng dẫn/thông báo do GV soạn, hiện ở panel bên phải phòng
+  // vấn đáp (richtext, cho phép chèn ảnh). Chỉ áp dụng khi kind=oral. Null =
+  // chưa soạn, panel hiện placeholder mặc định thay vì để trống trơn.
+  oralInstructionsHtml   String?             @db.Text
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 

@@ -74,6 +74,15 @@ export interface RunOralExamTurnInput {
   computeEmbed: EmbedComputeFn;
   model?: string;
   onDelta?: (delta: string) => void;
+  /**
+   * SV chủ động bấm "Kết thúc vấn đáp" — trước đây không có đường nào để
+   * đóng buổi ngoài hết giờ/đủ câu hỏi. Bug thật: SV gõ "tôi muốn kết thúc
+   * sớm" như một câu TRẢ LỜI, AI lịch sự đáp lại như thể đã xong, nhưng
+   * shouldClose (thuần theo thời gian/số câu) không hề biết — buổi thi kẹt
+   * in_progress mãi mãi dù cả hai bên tưởng đã kết thúc. forceEnd đi thẳng
+   * vào nhánh "isClosing" có sẵn, không cần message hợp lệ đi kèm.
+   */
+  forceEnd?: boolean;
 }
 
 export interface RunOralExamTurnResult {
@@ -126,7 +135,7 @@ export async function runOralExamTurn(
   const questionsAsked = turns.filter((t) => t.role === "examiner").length;
 
   if (turns.length === 0) {
-    if (input.studentMessage !== null) {
+    if (input.studentMessage !== null && !input.forceEnd) {
       throw new AiTutorError("validation_failed", "first_turn_must_be_empty");
     }
   } else {
@@ -134,7 +143,7 @@ export async function runOralExamTurn(
     if (lastTurn.role !== "examiner") {
       throw new AiTutorError("validation_failed", "wrong_turn_order");
     }
-    if (!input.studentMessage || !input.studentMessage.trim()) {
+    if (!input.forceEnd && (!input.studentMessage || !input.studentMessage.trim())) {
       throw new AiTutorError("validation_failed", "empty_message");
     }
   }
@@ -150,7 +159,7 @@ export async function runOralExamTurn(
 
   const elapsedSec = (Date.now() - attempt.startedAt.getTime()) / 1000;
   const timeUp = elapsedSec >= attempt.durationSec;
-  const shouldClose = timeUp || questionsAsked >= MAX_ORAL_QUESTIONS;
+  const shouldClose = Boolean(input.forceEnd) || timeUp || questionsAsked >= MAX_ORAL_QUESTIONS;
   const isLastQuestion = !shouldClose && questionsAsked + 1 >= MAX_ORAL_QUESTIONS;
 
   let contextChunks: string[] = [];

@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Timer } from "lucide-react";
+import { ArrowLeft, LogOut, Timer } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { usePacedReveal } from "@/hooks/usePacedReveal";
 import FullscreenGate from "./FullscreenGate";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
+import OralRoomSidePanel from "./OralRoomSidePanel";
+import type { OralAvatarState } from "./OralAiAvatar";
 
 const MAX_ORAL_QUESTIONS = 8; // giữ đồng bộ với packages/core-feedback/src/oralExam/examinerChat.ts
 
@@ -25,6 +28,11 @@ interface Props {
   serverNow: string;
   initialTurns: Turn[];
   submittedUrl: string;
+  /** Trang khoá học — nút "Thoát" quay lại đây. Bài làm vẫn ở nguyên trạng
+   * thái đang thi, resume được khi vào lại (không phải nộp bài). */
+  exitUrl: string;
+  /** Hướng dẫn/thông báo do GV soạn (richtext) — hiện ở panel bên phải. */
+  instructionsHtml: string | null;
 }
 
 const FRIENDLY_ERROR: Record<string, string> = {
@@ -43,6 +51,8 @@ export default function OralExamRoom({
   serverNow,
   initialTurns,
   submittedUrl,
+  exitUrl,
+  instructionsHtml,
 }: Props) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -51,11 +61,18 @@ export default function OralExamRoom({
   );
   const [ended, setEnded] = useState(false);
   const [streaming, setStreaming] = useState(false);
-  const [streamBuffer, setStreamBuffer] = useState("");
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const reveal = usePacedReveal();
   const kickedOff = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // { acc, doneData } của lượt SSE vừa đóng — chờ paced reveal lộ hết acc rồi
+  // mới thật sự chốt vào `turns` (xem effect bên dưới). Tách khỏi state vì
+  // đây là dữ liệu trung gian, không cần re-render riêng.
+  const finalizeRef = useRef<{
+    acc: string;
+    doneData: { ended: boolean; questionsAsked: number } | null;
+  } | null>(null);
   // Đọc trạng thái mới nhất bên trong interval hết giờ mà không phải liệt
   // kê turns/ended/input/streaming vào dependency array (tick lại mỗi giây).
   const liveRef = useRef({ turns, ended, input, streaming });
@@ -74,10 +91,11 @@ export default function OralExamRoom({
   );
 
   const sendTurn = useCallback(
-    async (message: string | null) => {
+    async (message: string | null, opts?: { forceEnd?: boolean }) => {
       setError(null);
       setStreaming(true);
-      setStreamBuffer("");
+      reveal.reset();
+      finalizeRef.current = null;
       if (message !== null) {
         setTurns((prev) => [...prev, { role: "student", content: message }]);
       }
@@ -90,7 +108,10 @@ export default function OralExamRoom({
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: message ?? undefined }),
+            body: JSON.stringify({
+              message: message ?? undefined,
+              forceEnd: opts?.forceEnd || undefined,
+            }),
           },
         );
         if (!res.ok || !res.body) {
@@ -119,7 +140,7 @@ export default function OralExamRoom({
             const data = dataLines.join("\n");
             if (event === "delta") {
               acc += data;
-              setStreamBuffer(acc);
+              reveal.push(acc);
             } else if (event === "done") {
               try {
                 doneData = JSON.parse(data);
@@ -140,18 +161,36 @@ export default function OralExamRoom({
         setError((e as Error).message || "stream_failed");
       }
 
+      // Không chốt vào `turns` ngay — nếu acc có nội dung, để paced reveal lộ
+      // hết rồi effect bên dưới mới chốt (giữ nhịp gõ đều, không phụ thuộc
+      // network xong nhanh hay chậm). acc rỗng (lỗi trước khi có delta nào)
+      // thì chốt ngay vì không có gì để lộ dần.
       if (acc) {
-        setTurns((prev) => [...prev, { role: "examiner", content: acc }]);
-      }
-      setStreamBuffer("");
-      setStreaming(false);
-      if (doneData) {
-        setQuestionsAsked(doneData.questionsAsked);
-        if (doneData.ended) setEnded(true);
+        finalizeRef.current = { acc, doneData };
+      } else {
+        setStreaming(false);
+        if (doneData) {
+          setQuestionsAsked(doneData.questionsAsked);
+          if (doneData.ended) setEnded(true);
+        }
       }
     },
-    [examId, attemptId],
+    [examId, attemptId, reveal],
   );
+
+  // Chốt lượt AI vào lịch sử NGAY KHI paced reveal lộ hết đoạn vừa nhận —
+  // tách khỏi thời điểm SSE đóng kết nối (xem sendTurn).
+  useEffect(() => {
+    const pending = finalizeRef.current;
+    if (!pending || reveal.revealed !== pending.acc) return;
+    setTurns((prev) => [...prev, { role: "examiner", content: pending.acc }]);
+    setStreaming(false);
+    if (pending.doneData) {
+      setQuestionsAsked(pending.doneData.questionsAsked);
+      if (pending.doneData.ended) setEnded(true);
+    }
+    finalizeRef.current = null;
+  }, [reveal.revealed]);
 
   // Lượt đầu tiên: AI đặt câu hỏi mở màn, KHÔNG có câu trả lời của sinh viên
   // đi kèm — runOralExamTurn yêu cầu message=null khi chưa có turn nào.
@@ -220,7 +259,7 @@ export default function OralExamRoom({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [turns, streamBuffer]);
+  }, [turns, reveal.revealed]);
 
   const logIncident = useCallback(
     async (type: string, payload?: Record<string, unknown>) => {
@@ -250,12 +289,31 @@ export default function OralExamRoom({
     void sendTurn(text);
   }
 
+  function endEarly() {
+    if (!canAnswer) return;
+    if (!confirm("Kết thúc buổi vấn đáp ngay bây giờ? Không thể tiếp tục sau khi kết thúc.")) {
+      return;
+    }
+    setInput("");
+    void sendTurn(null, { forceEnd: true });
+  }
+
   const minutes = Math.floor(remainingSec / 60);
   const seconds = remainingSec % 60;
   const timerDanger = remainingSec < 120;
 
+  const avatarState: OralAvatarState = ended
+    ? "idle"
+    : streaming
+      ? reveal.revealed
+        ? "talking"
+        : "thinking"
+      : input.trim().length > 0
+        ? "listening"
+        : "idle";
+
   return (
-    <div className="fixed inset-0 z-20 flex flex-col bg-[rgb(var(--surface-muted))]">
+    <div className="fixed inset-0 z-40 flex flex-col bg-[rgb(var(--surface-muted))]">
       <FullscreenGate examTitle={examTitle} onEnter={() => undefined} required />
       <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
       <MultiTabDetector
@@ -264,9 +322,24 @@ export default function OralExamRoom({
       />
 
       <header className="flex items-center justify-between gap-3 border-b border-token bg-[rgb(var(--surface))] px-4 py-3 sm:px-6">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{examTitle}</p>
-          <p className="truncate text-caption text-faint">{courseTitle}</p>
+        <div className="flex min-w-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Rời phòng vấn đáp? Bài làm vẫn giữ nguyên, quay lại sau để tiếp tục.")) {
+                router.push(exitUrl);
+              }
+            }}
+            className="shrink-0 rounded-full p-1.5 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-ink"
+            aria-label="Thoát phòng vấn đáp"
+            title="Thoát phòng vấn đáp"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{examTitle}</p>
+            <p className="truncate text-caption text-faint">{courseTitle}</p>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-caption text-faint">
@@ -283,69 +356,88 @@ export default function OralExamRoom({
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-        <div className="mx-auto max-w-2xl space-y-4">
-          {turns.length === 0 && !streaming && (
-            <p className="text-center text-sm text-faint">Đang chuẩn bị câu hỏi đầu tiên…</p>
-          )}
-          {turns.map((t, i) => (
-            <Bubble key={i} role={t.role} content={t.content} />
-          ))}
-          {streaming && streamBuffer && <Bubble role="examiner" content={streamBuffer} typing />}
-          {streaming && !streamBuffer && (
-            <div className="flex items-center gap-1.5 pl-1 text-xs italic text-faint">
-              <span className="inline-flex gap-0.5">
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "0ms" }} />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "150ms" }} />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "300ms" }} />
-              </span>
-              AI giám khảo đang soạn câu hỏi…
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+            <div className="mx-auto max-w-2xl space-y-4">
+              {turns.length === 0 && !streaming && (
+                <p className="text-center text-sm text-faint">Đang chuẩn bị câu hỏi đầu tiên…</p>
+              )}
+              {turns.map((t, i) => (
+                <Bubble key={i} role={t.role} content={t.content} />
+              ))}
+              {streaming && reveal.revealed && (
+                <Bubble role="examiner" content={reveal.revealed} typing />
+              )}
+              {streaming && !reveal.revealed && (
+                <div className="flex items-center gap-1.5 pl-1 text-xs italic text-faint">
+                  <span className="inline-flex gap-0.5">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "0ms" }} />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "150ms" }} />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "300ms" }} />
+                  </span>
+                  AI giám khảo đang soạn câu hỏi…
+                </div>
+              )}
+              {ended && (
+                <div className="banner-success px-4 py-3 text-sm">
+                  Buổi vấn đáp đã kết thúc. Đang chuyển sang trang xác nhận…
+                </div>
+              )}
+              {error && (
+                <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+                  {FRIENDLY_ERROR[error] ?? `Lỗi: ${error}`}
+                </div>
+              )}
             </div>
-          )}
-          {ended && (
-            <div className="banner-success px-4 py-3 text-sm">
-              Buổi vấn đáp đã kết thúc. Đang chuyển sang trang xác nhận…
-            </div>
-          )}
-          {error && (
-            <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
-              {FRIENDLY_ERROR[error] ?? `Lỗi: ${error}`}
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      <footer className="border-t border-token bg-[rgb(var(--surface))] p-3 sm:p-4">
-        <div className="mx-auto flex max-w-2xl gap-2">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                submit();
-              }
-            }}
-            disabled={!canAnswer}
-            rows={2}
-            placeholder={
-              ended
-                ? "Buổi vấn đáp đã kết thúc."
-                : canAnswer
-                  ? "Trả lời câu hỏi... (Enter = gửi · Shift+Enter = xuống dòng)"
-                  : "Đợi câu hỏi từ AI giám khảo…"
-            }
-            className="textarea flex-1 resize-none text-sm"
-          />
-          <button
-            onClick={submit}
-            disabled={!canAnswer || !input.trim()}
-            className="btn-sm self-stretch inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
-          >
-            Gửi
-          </button>
+          <footer className="border-t border-token bg-[rgb(var(--surface))] p-3 sm:p-4">
+            <div className="mx-auto flex max-w-2xl gap-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    submit();
+                  }
+                }}
+                disabled={!canAnswer}
+                rows={2}
+                placeholder={
+                  ended
+                    ? "Buổi vấn đáp đã kết thúc."
+                    : canAnswer
+                      ? "Trả lời câu hỏi... (Enter = gửi · Shift+Enter = xuống dòng)"
+                      : "Đợi câu hỏi từ AI giám khảo…"
+                }
+                className="textarea flex-1 resize-none text-sm"
+              />
+              <button
+                onClick={submit}
+                disabled={!canAnswer || !input.trim()}
+                className="btn-sm self-stretch inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+              >
+                Gửi
+              </button>
+            </div>
+            <div className="mx-auto mt-2 flex max-w-2xl justify-end">
+              <button
+                type="button"
+                onClick={endEarly}
+                disabled={!canAnswer}
+                className="inline-flex items-center gap-1.5 text-xs text-faint underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Kết thúc buổi vấn đáp
+              </button>
+            </div>
+          </footer>
         </div>
-      </footer>
+
+        <OralRoomSidePanel avatarState={avatarState} instructionsHtml={instructionsHtml} />
+      </div>
     </div>
   );
 }
@@ -365,7 +457,7 @@ function Bubble({
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
           isStudent
-            ? "bg-brand-gradient text-white"
+            ? "bg-sky-100 text-slate-800 dark:bg-sky-900/40 dark:text-sky-100"
             : "border border-token bg-[rgb(var(--surface))] text-[rgb(var(--text))]"
         }`}
       >

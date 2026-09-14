@@ -294,6 +294,62 @@ describe("runOralExamTurn (A6.3)", () => {
     ).rejects.toMatchObject({ code: "validation_failed", details: "not_oral_exam" });
   });
 
+  it("forceEnd closes the attempt immediately without a student answer", async () => {
+    const s = await setup("t11");
+    const { compute } = scriptedChat(["Câu hỏi 1?", "Cảm ơn bạn đã tham gia."]);
+    await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: null,
+      computeChat: compute,
+      computeEmbed: fakeEmbed(),
+    });
+
+    // Bug thật (production): SV gõ "tôi muốn kết thúc" như một câu TRẢ LỜI —
+    // shouldClose (thuần theo thời gian/số câu) không biết gì về việc đó,
+    // buổi thi kẹt in_progress mãi. forceEnd là lối thoát thật, không dựa vào
+    // suy đoán ý định từ nội dung câu trả lời.
+    const r = await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: null,
+      forceEnd: true,
+      computeChat: compute,
+      computeEmbed: fakeEmbed(),
+    });
+    expect(r.ended).toBe(true);
+    expect(r.assistantContent).toBe("Cảm ơn bạn đã tham gia.");
+    // questionsAsked không tăng thêm — lời kết không tính là một câu hỏi mới.
+    expect(r.questionsAsked).toBe(1);
+
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: s.attemptId } });
+    expect(attempt.status).toBe("submitted");
+
+    const turns = await prisma.oralExamTurn.findMany({
+      where: { attemptId: s.attemptId },
+      orderBy: { createdAt: "asc" },
+    });
+    // Không có turn "student" nào được ghi thêm — SV không gửi câu trả lời.
+    expect(turns.map((t) => t.role)).toEqual(["examiner", "examiner"]);
+  });
+
+  it("forceEnd bypasses the empty-message check even on the opening turn", async () => {
+    const s = await setup("t12");
+    const { compute } = scriptedChat(["Buổi vấn đáp kết thúc ngay từ đầu."]);
+    const r = await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: null,
+      forceEnd: true,
+      computeChat: compute,
+      computeEmbed: fakeEmbed(),
+    });
+    expect(r.ended).toBe(true);
+    expect(r.questionsAsked).toBe(0);
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: s.attemptId } });
+    expect(attempt.status).toBe("submitted");
+  });
+
   it("does not block on the student's personal token wallet (scope oral_exam)", async () => {
     const s = await setup("t10");
     // Rút cạn ví cá nhân — scope mặc định ("tutor") sẽ chặn ngay tại đây.

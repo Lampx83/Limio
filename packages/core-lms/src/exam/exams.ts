@@ -53,6 +53,10 @@ export const UpdateExamInput = z
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
     purpose: z.enum(["assessment", "field_test"]).optional(),
+    // A6.6 (UI) — hướng dẫn/thông báo richtext cho panel phòng vấn đáp. Thuần
+    // hiển thị, không ảnh hưởng tính công bằng — sửa được cả sau khi publish/
+    // có lượt thi, cùng nhóm với title/description/closeAt bên dưới.
+    oralInstructionsHtml: z.string().max(20_000).optional(),
   });
 
 /** A7.1.1 — Create exam in DRAFT status. */
@@ -238,7 +242,7 @@ export async function updateExam(
       (await db.examAttempt.count({ where: { examId } })) > 0;
     if (hasAttempts) {
       // Only title/description/closeAt allowed once attempts exist.
-      const allowed = new Set(["title", "description", "closeAt"]);
+      const allowed = new Set(["title", "description", "closeAt", "oralInstructionsHtml"]);
       const rejected = Object.keys(data).filter((k) => !allowed.has(k));
       if (rejected.length > 0) {
         throw new ExamError("exam_has_attempts", { fields: rejected });

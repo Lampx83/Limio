@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import ExamMetaForm from "../ExamMetaForm";
 import PublishBar from "./PublishBar";
 import OralSessionControl from "./OralSessionControl";
+import DeleteOralExamButton from "@/components/exam/DeleteOralExamButton";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import OralMaterialsPanel from "./OralMaterialsPanel";
@@ -188,6 +189,13 @@ export default async function EditExamPage({
           ) : (
             <PublishBar examId={exam.id} status={exam.status} />
           )}
+          {exam.kind === "oral" && (
+            <DeleteOralExamButton
+              examId={exam.id}
+              examTitle={exam.title}
+              redirectTo="/instructor/oral-exams"
+            />
+          )}
         </div>
       </div>
 
@@ -241,6 +249,7 @@ export default async function EditExamPage({
               purpose: exam.purpose,
               kind: exam.kind,
               answerMode: exam.answerMode,
+              oralInstructionsHtml: exam.oralInstructionsHtml ?? "",
             }}
           />
         </div>

@@ -8,6 +8,7 @@ import {
   closeOralExamSession,
   createExam,
   createOralMaterialTopicList,
+  deleteOralAttempt,
   ExamError,
   joinOralSessionByCode,
   openOralExamSession,
@@ -377,5 +378,58 @@ describe("joinOralSessionByCode / resolveOralJoinCode (A6.5 rewrite)", () => {
     const viaCode = await joinOralSessionByCode(learner.userId, joinCode);
     expect(viaCode.resumed).toBe(true);
     expect(viaCode.attemptId).toBe(viaCourse.attemptId);
+  });
+});
+
+describe("deleteOralAttempt (A6.5 rewrite)", () => {
+  it("lets the instructor delete a stuck/test attempt, cascading its turns", async () => {
+    const s = await publishedOralExamSetup("del1");
+    const { attemptId } = await startOralExamAttempt(s.learnerId, s.examId);
+    await prisma.oralExamTurn.create({
+      data: { attemptId, role: "examiner", content: "Q1" },
+    });
+
+    await deleteOralAttempt(s.ownerId, attemptId);
+
+    expect(await prisma.examAttempt.findUnique({ where: { id: attemptId } })).toBeNull();
+    expect(await prisma.oralExamTurn.count({ where: { attemptId } })).toBe(0);
+  });
+
+  it("rejects a learner who is not an instructor of the course", async () => {
+    const s = await publishedOralExamSetup("del2");
+    const { attemptId } = await startOralExamAttempt(s.learnerId, s.examId);
+    await expect(deleteOralAttempt(s.learnerId, attemptId)).rejects.toMatchObject({
+      code: "forbidden",
+    });
+    expect(await prisma.examAttempt.findUnique({ where: { id: attemptId } })).not.toBeNull();
+  });
+
+  it("rejects a written exam's attempt", async () => {
+    const owner = await registerUser(
+      { email: "del-owner-written@e.com", password: "password1234", displayName: "O" },
+      BASE,
+    );
+    const course = await createCourse(owner.userId, {
+      title: "C written del",
+      description: "x",
+      slug: "del-course-written",
+    });
+    const { examId } = await createExam(owner.userId, course.courseId, {
+      title: "Written",
+      durationMin: 20,
+    });
+    const attempt = await prisma.examAttempt.create({
+      data: { examId, userId: owner.userId, durationSec: 1200, sessionToken: "tok-del" },
+    });
+    await expect(deleteOralAttempt(owner.userId, attempt.id)).rejects.toMatchObject({
+      code: "exam_not_oral",
+    });
+  });
+
+  it("rejects an unknown attempt id", async () => {
+    const s = await publishedOralExamSetup("del3");
+    await expect(
+      deleteOralAttempt(s.ownerId, "00000000-0000-0000-0000-000000000000"),
+    ).rejects.toMatchObject({ code: "attempt_not_found" });
   });
 });
