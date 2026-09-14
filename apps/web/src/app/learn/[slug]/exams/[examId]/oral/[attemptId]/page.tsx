@@ -3,13 +3,16 @@ import { prisma } from "@feedbackme/db";
 import { getAttemptRuntime } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import OralExamRoom from "@/components/exam/OralExamRoom";
+import OralVoiceRoom from "@/components/exam/OralVoiceRoom";
 
 export const dynamic = "force-dynamic";
 
 /**
- * A6.3 — Phòng thi vấn đáp AI (chế độ text). Không dùng ExamPlayer: không có
+ * A6.3/A6.6 — Phòng thi vấn đáp AI. Không dùng ExamPlayer: không có
  * passages/questions/shuffleSnapshot, luồng là hội thoại tuần tự với
- * runOralExamTurn thay vì trả lời từng câu độc lập.
+ * runOralExamTurn thay vì trả lời từng câu độc lập. Hai giao diện cho cùng
+ * một attempt tuỳ exam.answerMode — cả hai đọc/ghi chung OralExamTurn nên
+ * chuyển đề giữa hai chế độ không mất lịch sử.
  */
 export default async function OralExamRuntimePage({
   params,
@@ -44,35 +47,26 @@ export default async function OralExamRuntimePage({
   });
   if (exam.kind !== "oral") notFound();
 
-  if (exam.answerMode === "voice") {
-    return (
-      <main className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <h1 className="mb-3 text-xl font-semibold">Đang phát triển</h1>
-        <p className="text-faint">
-          Vấn đáp bằng giọng nói chưa có giao diện — liên hệ giảng viên để đổi
-          đề sang chế độ nhắn tin, hoặc quay lại sau.
-        </p>
-      </main>
-    );
-  }
-
   const turns = await prisma.oralExamTurn.findMany({
     where: { attemptId: params.attemptId },
     orderBy: { createdAt: "asc" },
     select: { role: true, content: true },
   });
 
-  return (
-    <OralExamRoom
-      examId={params.examId}
-      attemptId={params.attemptId}
-      examTitle={exam.title}
-      courseTitle={exam.course.title}
-      startedAt={runtime.startedAt}
-      durationSec={runtime.durationSec}
-      serverNow={runtime.serverNow}
-      initialTurns={turns}
-      submittedUrl={`/learn/${params.slug}/exams/${params.examId}/oral/${params.attemptId}/submitted`}
-    />
-  );
+  const roomProps = {
+    examId: params.examId,
+    attemptId: params.attemptId,
+    examTitle: exam.title,
+    courseTitle: exam.course.title,
+    startedAt: runtime.startedAt,
+    durationSec: runtime.durationSec,
+    serverNow: runtime.serverNow,
+    initialTurns: turns,
+    submittedUrl: `/learn/${params.slug}/exams/${params.examId}/oral/${params.attemptId}/submitted`,
+  };
+
+  if (exam.answerMode === "voice") {
+    return <OralVoiceRoom {...roomProps} />;
+  }
+  return <OralExamRoom {...roomProps} />;
 }
