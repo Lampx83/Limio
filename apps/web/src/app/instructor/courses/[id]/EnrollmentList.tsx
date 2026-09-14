@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -348,6 +349,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))]">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[rgb(var(--surface-muted))/0.5] text-left text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
@@ -446,6 +448,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
               ))}
             </tbody>
           </table>
+          </div>
           <p className="border-t border-token bg-[rgb(var(--surface-muted))/0.3] px-4 py-2 text-xs text-faint">
             Hiển thị {sortedEnrollments.length} kết quả
             {sortedEnrollments.length === 100 && " (giới hạn 100, dùng filter để thu hẹp)"}
@@ -553,15 +556,32 @@ function EnrollmentActionsMenu({
   const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const btnRectRef = useRef<DOMRect | null>(null);
   const label = enrollment.user.displayName ?? enrollment.user.email;
 
   function openMenu() {
     const rect = btnRef.current?.getBoundingClientRect();
     if (rect) {
+      btnRectRef.current = rect;
       setPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
     }
     setOpen(true);
   }
+
+  // Menu có thể cao hơn khoảng trống còn lại dưới nút (hàng gần cuối bảng,
+  // menu "Gán lớp" dài vì nhiều lớp) — nếu vậy lật lên mở phía trên nút
+  // thay vì để nó tụt xuống dưới màn hình, nhìn như bị "che mất".
+  useLayoutEffect(() => {
+    if (!open || !pos || !menuRef.current || !btnRectRef.current) return;
+    const rect = btnRectRef.current;
+    const menuHeight = menuRef.current.offsetHeight;
+    const margin = 8;
+    const fitsBelow = rect.bottom + 4 + menuHeight <= window.innerHeight - margin;
+    const top = fitsBelow
+      ? rect.bottom + 4
+      : Math.max(margin, rect.top - menuHeight - 4);
+    if (top !== pos.top) setPos((p) => (p ? { ...p, top } : p));
+  }, [open, pos]);
 
   useEffect(() => {
     if (!open) return;
@@ -618,7 +638,7 @@ function EnrollmentActionsMenu({
             ref={menuRef}
             role="menu"
             style={{ top: pos.top, right: pos.right }}
-            className="fixed z-30 min-w-[220px] rounded-xl border border-token bg-[rgb(var(--surface))] py-1 shadow-2xl"
+            className="fixed z-30 max-h-[80vh] min-w-[220px] overflow-y-auto rounded-xl border border-token bg-[rgb(var(--surface))] py-1 shadow-2xl"
           >
             {sections.length > 0 && (
               <>
