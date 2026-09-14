@@ -102,13 +102,6 @@ export default async function NewExamHubPage({
         ← Quản lý đề thi
       </Link>
       <div className="mt-6">
-        {emptyBank && (
-          <div className="banner-info mb-4 rounded-lg border px-4 py-3 text-sm">
-            Khoá học chưa có ngân hàng câu hỏi. Hệ thống đã chuyển sang
-            <strong> chế độ Nâng cao</strong> — anh/chị có thể tạo đề thi rỗng
-            rồi thêm câu hỏi thủ công, hoặc nhập câu hỏi vào ngân hàng trước.
-          </div>
-        )}
         <ExamWizard
           courses={ownedCourses}
           initialCourseId={preselectedCourseId}

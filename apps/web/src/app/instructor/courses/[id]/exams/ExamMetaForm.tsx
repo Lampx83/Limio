@@ -321,7 +321,7 @@ export default function ExamMetaForm({
           {status === "saving"
             ? "Đang lưu…"
             : mode === "create"
-              ? "Tạo bài thi"
+              ? "Lưu và tiếp tục"
               : "Tiếp tục"}
         </button>
       </div>

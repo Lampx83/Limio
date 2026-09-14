@@ -116,7 +116,7 @@ export default function ExamWizard({ courses, initialCourseId, lessonTree, showU
     return (
       <div>
         {header}
-        <NewExamForm courses={courses} initialCourseId={state.courseId} />
+        <NewExamForm courseId={state.courseId} />
       </div>
     );
   }
