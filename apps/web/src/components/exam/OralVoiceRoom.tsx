@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Keyboard, LogOut, Mic, Square, Timer } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { usePacedReveal } from "@/hooks/usePacedReveal";
+import UserAvatar from "@/components/ui/UserAvatar";
 import FullscreenGate from "./FullscreenGate";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
@@ -33,6 +34,10 @@ interface Props {
   exitUrl: string;
   /** Hướng dẫn/thông báo do GV soạn (richtext) — hiện ở panel bên phải. */
   instructionsHtml: string | null;
+  /** Tên hiển thị của sinh viên — cho avatar tròn trong khung chat. */
+  studentName?: string | null;
+  /** Ảnh đại diện sinh viên; không có thì UserAvatar tự fallback initial. */
+  studentImageUrl?: string | null;
 }
 
 const FRIENDLY_ERROR: Record<string, string> = {
@@ -69,6 +74,8 @@ export default function OralVoiceRoom({
   submittedUrl,
   exitUrl,
   instructionsHtml,
+  studentName,
+  studentImageUrl,
 }: Props) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -479,8 +486,31 @@ export default function OralVoiceRoom({
                 <p className="text-center text-sm text-faint">Đang chuẩn bị câu hỏi đầu tiên…</p>
               )}
               {turns.map((t, i) => (
-                <Bubble key={i} role={t.role} content={t.content} />
+                <Bubble
+                  key={i}
+                  role={t.role}
+                  content={t.content}
+                  studentName={studentName}
+                  studentImageUrl={studentImageUrl}
+                />
               ))}
+              {recording && (
+                <div className="flex items-end justify-end gap-2">
+                  <div className="rounded-2xl bg-sky-100 px-4 py-2.5 shadow-sm dark:bg-sky-900/40">
+                    <span className="inline-flex gap-1" aria-hidden="true">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sky-500" style={{ animationDelay: "0ms" }} />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sky-500" style={{ animationDelay: "150ms" }} />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sky-500" style={{ animationDelay: "300ms" }} />
+                    </span>
+                  </div>
+                  <UserAvatar
+                    name={studentName}
+                    imageUrl={studentImageUrl}
+                    size="sm"
+                    className="shrink-0"
+                  />
+                </div>
+              )}
               {processing && reveal.revealed && (
                 <Bubble role="examiner" content={reveal.revealed} typing />
               )}
@@ -544,25 +574,45 @@ export default function OralVoiceRoom({
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 py-2">
-                  <button
-                    onClick={recording ? stopRecording : startRecording}
-                    disabled={!canAnswer && !recording}
-                    className={`flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                      recording ? "bg-red-600 hover:bg-red-700" : "bg-brand-600 hover:bg-brand-700"
-                    }`}
-                    aria-label={recording ? "Dừng ghi âm và gửi" : "Bắt đầu ghi âm câu trả lời"}
-                  >
-                    {recording ? <Square className="h-6 w-6" /> : <Mic className="h-7 w-7" />}
-                  </button>
-                  <p className="text-xs text-faint">
-                    {ended
-                      ? "Buổi vấn đáp đã kết thúc."
-                      : recording
-                        ? "Đang ghi âm — bấm lại để dừng và gửi câu trả lời."
+                  <div className="relative flex h-16 w-16 items-center justify-center">
+                    {recording && (
+                      <>
+                        <span className="absolute inset-0 rounded-full bg-red-400/40 animate-avatar-listen-ring" />
+                        <span
+                          className="absolute inset-0 rounded-full bg-red-400/40 animate-avatar-listen-ring"
+                          style={{ animationDelay: "0.8s" }}
+                        />
+                      </>
+                    )}
+                    <button
+                      onClick={recording ? stopRecording : startRecording}
+                      disabled={!canAnswer && !recording}
+                      className={`relative z-10 flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        recording ? "bg-red-600 hover:bg-red-700" : "bg-brand-600 hover:bg-brand-700"
+                      }`}
+                      aria-label={recording ? "Dừng ghi âm và gửi" : "Bắt đầu ghi âm câu trả lời"}
+                    >
+                      {recording ? <Square className="h-6 w-6" /> : <Mic className="h-7 w-7" />}
+                    </button>
+                  </div>
+                  {recording ? (
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-red-600">
+                      <span className="inline-flex gap-0.5" aria-hidden="true">
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-red-500" style={{ animationDelay: "0ms" }} />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-red-500" style={{ animationDelay: "150ms" }} />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-red-500" style={{ animationDelay: "300ms" }} />
+                      </span>
+                      Đang nghe — bấm lại để dừng và gửi câu trả lời.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-faint">
+                      {ended
+                        ? "Buổi vấn đáp đã kết thúc."
                         : canAnswer
                           ? "Bấm micro để trả lời."
                           : "Đợi câu hỏi từ AI giám khảo…"}
-                  </p>
+                    </p>
+                  )}
                 </div>
               )}
               <div className="flex items-center justify-center gap-4">
@@ -598,14 +648,25 @@ function Bubble({
   role,
   content,
   typing,
+  studentName,
+  studentImageUrl,
 }: {
   role: "student" | "examiner";
   content: string;
   typing?: boolean;
+  studentName?: string | null;
+  studentImageUrl?: string | null;
 }) {
   const isStudent = role === "student";
   return (
-    <div className={isStudent ? "flex justify-end" : "flex justify-start"}>
+    <div className={`flex items-end gap-2 ${isStudent ? "justify-end" : "justify-start"}`}>
+      {!isStudent && (
+        <img
+          src="/oral-avatar/idle-poster.png"
+          alt="AI giám khảo"
+          className="h-8 w-8 shrink-0 rounded-full object-cover shadow-sm"
+        />
+      )}
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
           isStudent
@@ -616,6 +677,9 @@ function Bubble({
         <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
         {typing && <span className="ml-1 animate-pulse text-brand-500">▌</span>}
       </div>
+      {isStudent && (
+        <UserAvatar name={studentName} imageUrl={studentImageUrl} size="sm" className="shrink-0" />
+      )}
     </div>
   );
 }

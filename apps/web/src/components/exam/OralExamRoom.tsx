@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, LogOut, Timer } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { usePacedReveal } from "@/hooks/usePacedReveal";
+import UserAvatar from "@/components/ui/UserAvatar";
 import FullscreenGate from "./FullscreenGate";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
@@ -33,6 +34,10 @@ interface Props {
   exitUrl: string;
   /** Hướng dẫn/thông báo do GV soạn (richtext) — hiện ở panel bên phải. */
   instructionsHtml: string | null;
+  /** Tên hiển thị của sinh viên — cho avatar tròn trong khung chat. */
+  studentName?: string | null;
+  /** Ảnh đại diện sinh viên; không có thì UserAvatar tự fallback initial. */
+  studentImageUrl?: string | null;
 }
 
 const FRIENDLY_ERROR: Record<string, string> = {
@@ -53,6 +58,8 @@ export default function OralExamRoom({
   submittedUrl,
   exitUrl,
   instructionsHtml,
+  studentName,
+  studentImageUrl,
 }: Props) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -364,7 +371,13 @@ export default function OralExamRoom({
                 <p className="text-center text-sm text-faint">Đang chuẩn bị câu hỏi đầu tiên…</p>
               )}
               {turns.map((t, i) => (
-                <Bubble key={i} role={t.role} content={t.content} />
+                <Bubble
+                  key={i}
+                  role={t.role}
+                  content={t.content}
+                  studentName={studentName}
+                  studentImageUrl={studentImageUrl}
+                />
               ))}
               {streaming && reveal.revealed && (
                 <Bubble role="examiner" content={reveal.revealed} typing />
@@ -446,14 +459,25 @@ function Bubble({
   role,
   content,
   typing,
+  studentName,
+  studentImageUrl,
 }: {
   role: "student" | "examiner";
   content: string;
   typing?: boolean;
+  studentName?: string | null;
+  studentImageUrl?: string | null;
 }) {
   const isStudent = role === "student";
   return (
-    <div className={isStudent ? "flex justify-end" : "flex justify-start"}>
+    <div className={`flex items-end gap-2 ${isStudent ? "justify-end" : "justify-start"}`}>
+      {!isStudent && (
+        <img
+          src="/oral-avatar/idle-poster.png"
+          alt="AI giám khảo"
+          className="h-8 w-8 shrink-0 rounded-full object-cover shadow-sm"
+        />
+      )}
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
           isStudent
@@ -464,6 +488,9 @@ function Bubble({
         <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
         {typing && <span className="ml-1 animate-pulse text-brand-500">▌</span>}
       </div>
+      {isStudent && (
+        <UserAvatar name={studentName} imageUrl={studentImageUrl} size="sm" className="shrink-0" />
+      )}
     </div>
   );
 }

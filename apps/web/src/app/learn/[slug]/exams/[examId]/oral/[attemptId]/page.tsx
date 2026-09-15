@@ -70,6 +70,8 @@ export default async function OralExamRuntimePage({
     // gộp làm nội dung panel phòng vấn đáp (richtext) — bọc qua
     // plainToRichHtml để hiện đúng, không vỡ layout với text nhiều dòng.
     instructionsHtml: exam.description ? plainToRichHtml(exam.description) : null,
+    studentName: session.user.name,
+    studentImageUrl: session.user.image,
   };
 
   if (exam.answerMode === "voice") {
