@@ -35,7 +35,7 @@ export const CreateExamInput = z
     // A6.6 — chỉ có ý nghĩa khi kind=oral.
     answerMode: z.enum(["text", "voice"]).optional(),
     // A6.3/A6.6 — chỉ có ý nghĩa khi kind=oral. Bất biến sau khi tạo.
-    language: z.enum(["vi", "en"]).optional(),
+    language: z.enum(["vi", "en", "zh"]).optional(),
     // A6.3 — chèn vào system prompt của AI giám khảo mỗi lượt hỏi. Text
     // thuần, không hiện cho SV.
     examinerInstructions: z.string().max(5_000).optional(),

@@ -5,6 +5,7 @@ import { ExamError, getOralEvaluation } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 import OralGradeForm from "./OralGradeForm";
+import OralRubricEditor from "../OralRubricEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function OralGradingDetailPage({
           id: true,
           title: true,
           courseId: true,
+          oralRubricText: true,
           course: { select: { title: true } },
         },
       },
@@ -76,7 +78,14 @@ export default async function OralGradingDetailPage({
         </p>
       </div>
 
-      <section className="mt-6 rounded border border-default bg-white p-5">
+      <div className="mt-6">
+        <OralRubricEditor
+          examId={params.examId}
+          initialRubric={attempt.exam.oralRubricText ?? ""}
+        />
+      </div>
+
+      <section className="mt-2 rounded border border-default bg-white p-5">
         <h2 className="mb-3 text-base font-semibold">Toàn bộ hội thoại</h2>
         {view.turns.length === 0 ? (
           <p className="text-sm text-faint">Chưa có lượt hỏi-đáp nào.</p>

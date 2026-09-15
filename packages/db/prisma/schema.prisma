@@ -2835,6 +2835,7 @@ enum OralAnswerMode {
 enum OralExamLanguage {
   vi
   en
+  zh
 }
 
 // =====================================================================

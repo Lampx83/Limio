@@ -42,7 +42,7 @@ interface InitialValues {
   kind?: "written" | "oral";
   answerMode?: "text" | "voice";
   /** A6.3/A6.6 — chỉ có ý nghĩa khi kind=oral, bất biến sau khi tạo. */
-  language?: "vi" | "en";
+  language?: "vi" | "en" | "zh";
   /** A6.3 (UI) — chèn vào system prompt AI giám khảo mỗi lượt hỏi. */
   examinerInstructions?: string;
 }
@@ -182,8 +182,9 @@ export default function ExamMetaForm({
             options={[
               { value: "vi", label: "Tiếng Việt" },
               { value: "en", label: "English" },
+              { value: "zh", label: "Tiếng Trung" },
             ]}
-            onChange={(s) => setV({ ...v, language: s as "vi" | "en" })}
+            onChange={(s) => setV({ ...v, language: s as "vi" | "en" | "zh" })}
           />
         </div>
       )}

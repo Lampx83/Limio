@@ -32,9 +32,10 @@ async function getOpeningChunks(examId: string, db: PrismaClient): Promise<strin
 // A6.3/A6.6 — khai báo tường minh thay vì để AI đoán từ câu trả lời SV: câu
 // hỏi MỞ MÀN chưa có câu trả lời nào để đoán, đã gặp lỗi trộn tiếng Anh/Việt
 // thật khi test (xem OralExamLanguage trong schema).
-const LANGUAGE_DIRECTIVE: Record<"vi" | "en", string> = {
+const LANGUAGE_DIRECTIVE: Record<"vi" | "en" | "zh", string> = {
   vi: "Hỏi và trả lời HOÀN TOÀN bằng tiếng Việt trong suốt buổi thi, kể cả câu hỏi mở màn — không chêm tiếng Anh.",
   en: "Ask and respond ENTIRELY in English throughout the exam, including the opening question — do not mix in Vietnamese.",
+  zh: "全程用中文提问和回答，包括开场的第一个问题——不要混用越南语或英语。",
 };
 
 function buildSystemPrompt(params: {
@@ -43,7 +44,7 @@ function buildSystemPrompt(params: {
   contextChunks: string[];
   isLastQuestion: boolean;
   isClosing: boolean;
-  language: "vi" | "en";
+  language: "vi" | "en" | "zh";
   /** GV tự soạn — chèn thêm, KHÔNG thay thế nguyên tắc cứng bên dưới. */
   examinerInstructions?: string | null;
 }): string {
