@@ -19,7 +19,6 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  ArrowLeftRight,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
@@ -131,79 +130,6 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
   const [sortKey, setSortKey] = useState<SortKey>("enrolledAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
-  // Bảng nhiều cột luôn cuộn ngang được, nhưng scrollbar mặc định của macOS chỉ
-  // hiện khi đang thao tác (chế độ "khi cuộn") — khiến bảng trông như bị cắt
-  // cụt mà không có gợi ý nào là còn xem được nữa. Thanh cuộn tự vẽ này +
-  // vệt mờ bên phải luôn hiện khi bảng còn tràn, mất đi khi đã cuộn hết.
-  const tableWrapRef = useRef<HTMLDivElement>(null);
-  const scrollTrackRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ dragging: boolean; startX: number; startScroll: number }>({
-    dragging: false,
-    startX: 0,
-    startScroll: 0,
-  });
-  const [scrollUI, setScrollUI] = useState({
-    overflow: false,
-    thumbWidthPct: 100,
-    thumbLeftPct: 0,
-    atEnd: true,
-  });
-
-  const updateScrollUI = useCallback(() => {
-    const el = tableWrapRef.current;
-    if (!el) return;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    if (maxScroll <= 2) {
-      setScrollUI({ overflow: false, thumbWidthPct: 100, thumbLeftPct: 0, atEnd: true });
-      return;
-    }
-    const ratio = Math.max(0.08, el.clientWidth / el.scrollWidth);
-    const pos = el.scrollLeft / maxScroll;
-    setScrollUI({
-      overflow: true,
-      thumbWidthPct: ratio * 100,
-      thumbLeftPct: pos * (100 - ratio * 100),
-      atEnd: el.scrollLeft >= maxScroll - 2,
-    });
-  }, []);
-
-  function onThumbMouseDown(e: React.MouseEvent) {
-    dragRef.current = { dragging: true, startX: e.clientX, startScroll: tableWrapRef.current?.scrollLeft ?? 0 };
-    e.preventDefault();
-  }
-
-  useEffect(() => {
-    function onMove(e: MouseEvent) {
-      if (!dragRef.current.dragging) return;
-      const el = tableWrapRef.current;
-      const track = scrollTrackRef.current;
-      if (!el || !track) return;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      const delta = ((e.clientX - dragRef.current.startX) / track.clientWidth) * el.scrollWidth;
-      el.scrollLeft = Math.min(maxScroll, Math.max(0, dragRef.current.startScroll + delta));
-    }
-    function onUp() {
-      dragRef.current.dragging = false;
-    }
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, []);
-
-  function onTrackClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (e.target !== e.currentTarget) return; // bấm đúng lên track, không phải thumb
-    const el = tableWrapRef.current;
-    const track = scrollTrackRef.current;
-    if (!el || !track) return;
-    const rect = track.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    el.scrollLeft = ratio * maxScroll;
-  }
-
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -223,15 +149,6 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
       return 0;
     });
   }, [enrollments, sortKey, sortDir]);
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(updateScrollUI);
-    window.addEventListener("resize", updateScrollUI);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", updateScrollUI);
-    };
-  }, [sortedEnrollments, updateScrollUI]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -432,19 +349,11 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))]">
-          <div className="relative">
-          <div className="overflow-x-auto" ref={tableWrapRef} onScroll={updateScrollUI}>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[rgb(var(--surface-muted))/0.5] text-left text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
-                <SortableHeader
-                  label="Học viên"
-                  sortKey="name"
-                  current={sortKey}
-                  dir={sortDir}
-                  onSort={toggleSort}
-                  className="sticky left-0 z-[3] border-r border-token bg-[rgb(var(--surface-muted))]"
-                />
+                <SortableHeader label="Học viên" sortKey="name" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortableHeader label="Lớp" sortKey="section" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortableHeader label="Trạng thái" sortKey="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortableHeader
@@ -469,8 +378,8 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
             </thead>
             <tbody className="divide-y divide-token">
               {sortedEnrollments.map((e) => (
-                <tr key={e.id} className="group hover:bg-[rgb(var(--surface-muted))/0.3]">
-                  <td className="sticky left-0 z-[1] border-r border-token bg-[rgb(var(--surface))] px-4 py-2.5 group-hover:bg-[rgb(var(--surface-muted))]">
+                <tr key={e.id} className="hover:bg-[rgb(var(--surface-muted))/0.3]">
+                  <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
                       {e.user.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -540,39 +449,9 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
             </tbody>
           </table>
           </div>
-          {scrollUI.overflow && (
-            <div
-              aria-hidden
-              className={`pointer-events-none absolute inset-y-0 right-0 w-9 bg-gradient-to-l from-[rgb(var(--surface))] to-transparent transition-opacity ${
-                scrollUI.atEnd ? "opacity-0" : "opacity-100"
-              }`}
-            />
-          )}
-          </div>
-          {scrollUI.overflow && (
-            <div className="flex items-center gap-2 border-t border-token bg-[rgb(var(--surface-muted))/0.3] px-3 py-1.5">
-              <ArrowLeftRight className="h-3 w-3 shrink-0 text-faint" aria-hidden />
-              <div
-                ref={scrollTrackRef}
-                onClick={onTrackClick}
-                className="relative h-1.5 flex-1 cursor-pointer rounded-full bg-[rgb(var(--border))]"
-              >
-                <div
-                  onMouseDown={onThumbMouseDown}
-                  style={{ width: `${scrollUI.thumbWidthPct}%`, left: `${scrollUI.thumbLeftPct}%` }}
-                  className="absolute top-0 h-1.5 cursor-grab rounded-full bg-brand-500/80 transition-colors hover:bg-brand-600 active:cursor-grabbing active:bg-brand-600"
-                />
-              </div>
-            </div>
-          )}
           <p className="border-t border-token bg-[rgb(var(--surface-muted))/0.3] px-4 py-2 text-xs text-faint">
             Hiển thị {sortedEnrollments.length} kết quả
             {sortedEnrollments.length === 100 && " (giới hạn 100, dùng filter để thu hẹp)"}
-            {scrollUI.overflow && (
-              <span className="ml-2 font-medium text-brand-700">
-                · còn cột bên phải — kéo thanh cuộn ở trên hoặc cuộn ngang trên bảng
-              </span>
-            )}
           </p>
         </div>
       )}
