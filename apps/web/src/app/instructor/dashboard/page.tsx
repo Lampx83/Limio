@@ -529,11 +529,7 @@ export default async function InstructorDashboard() {
               Chưa có hoạt động.
             </div>
           ) : (
-            <div className="relative mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
-              <div
-                className="absolute bottom-5 left-[35px] top-5 w-px bg-[rgb(var(--border))]"
-                aria-hidden
-              />
+            <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
               <ul className="space-y-4">
                 {recentActivityEvents.map((ev) => {
                   const label =
@@ -548,11 +544,11 @@ export default async function InstructorDashboard() {
                     : undefined;
                   const href = slug ? `/learn/${slug}` : "/instructor/enrollments";
                   return (
-                    <li key={ev.id.toString()} className="relative flex gap-3">
+                    <li key={ev.id.toString()} className="flex gap-3">
                       <UserAvatar
                         name={ev.user?.displayName}
                         size="sm"
-                        className="z-[1] shrink-0"
+                        className="shrink-0"
                       />
                       <Link href={href} className="min-w-0 flex-1">
                         <p className="line-clamp-2 text-sm">
