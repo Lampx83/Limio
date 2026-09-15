@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import { Sparkles, Wallet, MessageCircleQuestion } from "lucide-react";
 import {
   getTokenBudget,
   listActivePackages,
   listUserOrders,
+  resolveMonthlyAllowance,
 } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import { getSiteSetting } from "@/lib/site-settings";
@@ -15,15 +17,22 @@ export default async function AiTokensPage() {
   const userId = session?.user?.id;
   if (!userId) redirect("/signin?next=/me/ai-tokens");
 
-  const [budget, packages, orders, bankName, accountNumber, accountName] =
+  const [budget, allowance, packages, orders, bankName, accountNumber, accountName] =
     await Promise.all([
       getTokenBudget(userId),
+      resolveMonthlyAllowance(userId),
       listActivePackages(),
       listUserOrders(userId),
       getSiteSetting("ai.bank.name"),
       getSiteSetting("ai.bank.account_number"),
       getSiteSetting("ai.bank.account_name"),
     ]);
+
+  // Đã dùng = hạn mức tháng - còn lại. Hạn mức có thể đổi giữa tháng (admin
+  // sửa SiteSetting) nên chặn ở [0, 100] thay vì tin tưởng phép trừ tuyệt đối.
+  const usedThisMonth = Math.max(0, allowance - budget.monthlyRemaining);
+  const usedPercent =
+    allowance > 0 ? Math.min(100, Math.round((usedThisMonth / allowance) * 100)) : 0;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
@@ -34,20 +43,46 @@ export default async function AiTokensPage() {
       </p>
 
       <section className="card mt-6">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-3">
           <div>
-            <p className="text-caption">Còn lại tháng này</p>
-            <p className="text-h2">{budget.monthlyRemaining.toLocaleString("vi-VN")}</p>
-            <p className="text-caption">token</p>
+            <div className="flex items-center gap-1.5 text-caption">
+              <Sparkles size={14} aria-hidden />
+              Còn lại tháng này
+            </div>
+            <p className="text-h2 mt-1">
+              {budget.monthlyRemaining.toLocaleString("vi-VN")}
+            </p>
+            <p className="text-caption">/ {allowance.toLocaleString("vi-VN")} token</p>
+            <div
+              className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
+              role="progressbar"
+              aria-valuenow={usedPercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Phần trăm hạn mức tháng đã dùng"
+            >
+              <div
+                className="h-full rounded-full bg-[rgb(var(--brand))] transition-[width]"
+                style={{ width: `${usedPercent}%` }}
+              />
+            </div>
           </div>
           <div>
-            <p className="text-caption">Đã mua thêm</p>
-            <p className="text-h2">{budget.purchased.toLocaleString("vi-VN")}</p>
+            <div className="flex items-center gap-1.5 text-caption">
+              <Wallet size={14} aria-hidden />
+              Đã mua thêm
+            </div>
+            <p className="text-h2 mt-1">{budget.purchased.toLocaleString("vi-VN")}</p>
             <p className="text-caption">token — không mất khi sang tháng</p>
           </div>
           <div>
-            <p className="text-caption">Ước tính</p>
-            <p className="text-h2">{budget.estimatedTurns.toLocaleString("vi-VN")}</p>
+            <div className="flex items-center gap-1.5 text-caption">
+              <MessageCircleQuestion size={14} aria-hidden />
+              Ước tính
+            </div>
+            <p className="text-h2 mt-1">
+              {budget.estimatedTurns.toLocaleString("vi-VN")}
+            </p>
             <p className="text-caption">lượt hỏi còn lại</p>
           </div>
         </div>
