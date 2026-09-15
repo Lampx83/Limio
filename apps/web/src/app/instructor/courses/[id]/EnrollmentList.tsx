@@ -23,6 +23,7 @@ import {
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
 import DateTime from "@/components/ui/DateTime";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 interface Enrollment {
   id: string;
@@ -381,20 +382,11 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                 <tr key={e.id} className="hover:bg-[rgb(var(--surface-muted))/0.3]">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
-                      {e.user.avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={e.user.avatarUrl}
-                          alt=""
-                          className="h-8 w-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand-700">
-                          {(e.user.displayName ?? e.user.email)
-                            .slice(0, 1)
-                            .toUpperCase()}
-                        </span>
-                      )}
+                      <UserAvatar
+                        name={e.user.displayName ?? e.user.email}
+                        imageUrl={e.user.avatarUrl}
+                        size="sm"
+                      />
                       <div className="min-w-0">
                         <p className="truncate font-medium">
                           {e.user.displayName ?? "—"}
