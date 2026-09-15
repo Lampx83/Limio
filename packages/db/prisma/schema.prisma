@@ -2735,6 +2735,10 @@ model Exam {
   id                     String              @id @default(uuid())
   courseId               String
   title                  String
+  // A6.6 (UI) — với kind=oral, đây CŨNG là nội dung hiện ở panel bên phải
+  // phòng vấn đáp (richtext, cho phép chèn ảnh) — gộp làm 1 với mô tả chung,
+  // không tách riêng oralInstructionsHtml nữa (2 field trùng mục đích, GV dễ
+  // nhầm điền nhầm chỗ). Null/rỗng = panel hiện placeholder mặc định.
   description            String?             @db.Text
   durationMin            Int
   openAt                 DateTime
@@ -2773,10 +2777,6 @@ model Exam {
   kind                   ExamKind            @default(written)
   // A6.6 — chỉ áp dụng khi kind=oral.
   answerMode             OralAnswerMode      @default(text)
-  // A6.6 (UI) — hướng dẫn/thông báo do GV soạn, hiện ở panel bên phải phòng
-  // vấn đáp (richtext, cho phép chèn ảnh). Chỉ áp dụng khi kind=oral. Null =
-  // chưa soạn, panel hiện placeholder mặc định thay vì để trống trơn.
-  oralInstructionsHtml   String?             @db.Text
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 

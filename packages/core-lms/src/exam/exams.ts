@@ -14,7 +14,9 @@ const examProctoringLevel = z.enum(["none", "basic", "strict"]);
 export const CreateExamInput = z
   .object({
     title: z.string().min(1).max(200).trim(),
-    description: z.string().max(5_000).optional(),
+    // A6.6 (UI) — với kind=oral, đây CŨNG là nội dung hiện ở panel phòng vấn
+    // đáp (richtext, có thể chèn ảnh) — cần trần cao hơn mô tả thuần chữ.
+    description: z.string().max(20_000).optional(),
     durationMin: z.number().int().positive().max(24 * 60),
     // DI SẢN — không còn được dùng để chặn ai (ca thi là tầng duy nhất quyết
     // định giờ mở/đóng). Giữ lại vì cột còn NOT NULL trong DB; sẽ xoá ở đợt
@@ -42,7 +44,7 @@ export const CreateExamInput = z
 export const UpdateExamInput = z
   .object({
     title: z.string().min(1).max(200).trim().optional(),
-    description: z.string().max(5_000).optional(),
+    description: z.string().max(20_000).optional(),
     durationMin: z.number().int().positive().max(24 * 60).optional(),
     openAt: z.coerce.date().optional(),
     closeAt: z.coerce.date().optional(),
@@ -53,10 +55,6 @@ export const UpdateExamInput = z
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
     purpose: z.enum(["assessment", "field_test"]).optional(),
-    // A6.6 (UI) — hướng dẫn/thông báo richtext cho panel phòng vấn đáp. Thuần
-    // hiển thị, không ảnh hưởng tính công bằng — sửa được cả sau khi publish/
-    // có lượt thi, cùng nhóm với title/description/closeAt bên dưới.
-    oralInstructionsHtml: z.string().max(20_000).optional(),
   });
 
 /** A7.1.1 — Create exam in DRAFT status. */
@@ -242,7 +240,7 @@ export async function updateExam(
       (await db.examAttempt.count({ where: { examId } })) > 0;
     if (hasAttempts) {
       // Only title/description/closeAt allowed once attempts exist.
-      const allowed = new Set(["title", "description", "closeAt", "oralInstructionsHtml"]);
+      const allowed = new Set(["title", "description", "closeAt"]);
       const rejected = Object.keys(data).filter((k) => !allowed.has(k));
       if (rejected.length > 0) {
         throw new ExamError("exam_has_attempts", { fields: rejected });

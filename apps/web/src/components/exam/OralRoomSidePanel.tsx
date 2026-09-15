@@ -3,9 +3,10 @@ import OralAiAvatar, { type OralAvatarState } from "./OralAiAvatar";
 
 /**
  * A6.6 (UI) — panel bên phải phòng vấn đáp: avatar AI + hướng dẫn/thông báo
- * do GV soạn (richtext, có thể chèn ảnh — xem Exam.oralInstructionsHtml).
- * Ẩn dưới `lg` để dồn chỗ cho khung chat trên màn hình nhỏ — avatar/hướng
- * dẫn là nội dung hỗ trợ, không phải luồng thao tác chính.
+ * do GV soạn (richtext, có thể chèn ảnh — xem Exam.description, gộp chung
+ * với mô tả đề chứ không tách field riêng nữa). Ẩn dưới `lg` để dồn chỗ cho
+ * khung chat trên màn hình nhỏ — avatar/hướng dẫn là nội dung hỗ trợ, không
+ * phải luồng thao tác chính.
  */
 export default function OralRoomSidePanel({
   avatarState,

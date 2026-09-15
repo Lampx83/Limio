@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { getAttemptRuntime } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { plainToRichHtml } from "@/lib/richText";
 import OralExamRoom from "@/components/exam/OralExamRoom";
 import OralVoiceRoom from "@/components/exam/OralVoiceRoom";
 
@@ -42,7 +43,7 @@ export default async function OralExamRuntimePage({
       kind: true,
       answerMode: true,
       title: true,
-      oralInstructionsHtml: true,
+      description: true,
       course: { select: { title: true } },
     },
   });
@@ -65,7 +66,10 @@ export default async function OralExamRuntimePage({
     initialTurns: turns,
     submittedUrl: `/learn/${params.slug}/exams/${params.examId}/oral/${params.attemptId}/submitted`,
     exitUrl: `/learn/${params.slug}`,
-    instructionsHtml: exam.oralInstructionsHtml,
+    // A6.6 (UI) — description có thể còn là chữ thuần từ trước khi field này
+    // gộp làm nội dung panel phòng vấn đáp (richtext) — bọc qua
+    // plainToRichHtml để hiện đúng, không vỡ layout với text nhiều dòng.
+    instructionsHtml: exam.description ? plainToRichHtml(exam.description) : null,
   };
 
   if (exam.answerMode === "voice") {

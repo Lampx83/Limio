@@ -237,7 +237,6 @@ export default async function EditExamPage({
               purpose: exam.purpose,
               kind: exam.kind,
               answerMode: exam.answerMode,
-              oralInstructionsHtml: exam.oralInstructionsHtml ?? "",
             }}
           />
         </div>
