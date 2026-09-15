@@ -14,6 +14,13 @@ const STATE_VIDEO: Partial<Record<OralAvatarState, string>> = {
   idle: "/oral-avatar/idle.mp4",
   thinking: "/oral-avatar/thinking.mp4",
 };
+// Frame đầu của mỗi video — hiện ngay trong lúc video còn đang buffer lần
+// đầu (mạng SV chậm), tránh khung trống.
+const STATE_POSTER: Partial<Record<OralAvatarState, string>> = {
+  idle: "/oral-avatar/idle-poster.png",
+  thinking: "/oral-avatar/thinking-poster.png",
+};
+const ALL_VIDEO_SRCS = Object.values(STATE_VIDEO);
 
 /**
  * A6.6 (UI) — mặt AI giám khảo trong phòng vấn đáp. Ưu tiên video loop thật
@@ -46,6 +53,8 @@ export default function OralAiAvatar({
             key={videoSrc}
             className="h-20 w-20 rounded-full object-cover shadow-brand-glow"
             src={videoSrc}
+            poster={STATE_POSTER[state]}
+            preload="auto"
             autoPlay
             loop
             muted
@@ -89,6 +98,19 @@ export default function OralAiAvatar({
             </svg>
           </div>
         )}
+        {/* Preload sẵn các video state khác — để lúc đổi state (vd idle →
+            thinking giữa buổi thi) không phải chờ tải từ đầu, tránh khung
+            trống khi mạng SV chậm. Không hiển thị, không phát âm thanh. */}
+        {ALL_VIDEO_SRCS.filter((src) => src !== videoSrc).map((src) => (
+          <video
+            key={src}
+            src={src}
+            muted
+            preload="auto"
+            aria-hidden="true"
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+          />
+        ))}
       </div>
       <div className="flex items-center gap-1.5 text-caption text-faint">
         {state === "thinking" && (
