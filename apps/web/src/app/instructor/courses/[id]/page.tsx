@@ -199,7 +199,7 @@ export default async function InstructorCourseEditPage({
     })),
   }));
 
-  const useWideLayout = tab === "content";
+  const useWideLayout = true;
   const useSidebarLayout = tab === "content";
 
   const buildAssignmentHref = (next: { lesson?: string | null; filter?: string }) => {
