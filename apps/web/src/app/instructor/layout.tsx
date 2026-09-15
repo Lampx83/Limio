@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isInstructor, userIsAnyProctor } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
+import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 
 // Role membership (instructor / proctor) ít khi đổi → cache 60s per userId
 // để tránh chạy 2 query Prisma trên mọi navigation trong khu vực giảng viên.
@@ -52,13 +53,15 @@ export default async function InstructorLayout({
   }
 
   return (
-    <div className="flex w-full">
-      <InstructorLeftMenu isInstructor={hasInstructorRole} isProctor={isProctor} />
-      <div className="min-w-0 flex-1">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6">
-          {children}
+    <ActiveNavSectionProvider>
+      <div className="flex w-full">
+        <InstructorLeftMenu isInstructor={hasInstructorRole} isProctor={isProctor} />
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6">
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </ActiveNavSectionProvider>
   );
 }

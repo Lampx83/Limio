@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useActiveNavSectionOverride } from "@/lib/activeNavSection";
 import {
   LayoutDashboard,
   BookOpen,
@@ -162,6 +163,7 @@ export default function InstructorLeftMenu({
   isProctor?: boolean;
 }) {
   const pathname = usePathname();
+  const navOverride = useActiveNavSectionOverride();
   // Menu rút gọn chỉ cho người không dạy khoá nào mà được gán coi thi. Giảng
   // viên dùng menu đầy đủ — ở đó không còn mục giám sát riêng nữa.
   const GROUPS =
@@ -194,10 +196,12 @@ export default function InstructorLeftMenu({
   const isActive = (href?: string) => {
     if (!href) return false;
     // Course-scoped exam editor lives at /instructor/courses/<id>/exams/<examId>
-    // but conceptually belongs to "Đề thi" — highlight that item instead of
-    // "Khoá học của tôi", which would otherwise win on prefix match.
+    // and serves BOTH thi viết và vấn đáp AI ở cùng path pattern — chỉ
+    // exam.kind (server-side) mới phân biệt được. Trang/layout tương ứng tự
+    // báo item cần sáng qua SetActiveNavSection; nếu không có override nào
+    // (route khác, hoặc lỗi fetch kind), fallback về "Đề thi" như cũ.
     if (/^\/instructor\/courses\/[^/]+\/exams(\/|$)/.test(pathname)) {
-      return href === "/instructor/exams";
+      return href === (navOverride ?? "/instructor/exams");
     }
     if (href === "/instructor/dashboard") return pathname === href;
     return pathname === href || pathname.startsWith(href + "/");
