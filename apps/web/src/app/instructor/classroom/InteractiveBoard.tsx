@@ -5,7 +5,7 @@ import { copyText } from "@/lib/clipboard";
 import {
   StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
-  PanelLeftOpen, PanelLeftClose,
+  PanelLeftOpen, PanelLeftClose, LayoutGrid,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
@@ -16,6 +16,7 @@ import {
   rotationForNote,
   detectMediaKind,
   isValidAttachmentUrl,
+  groupNotesByColumn,
 } from "./boardNoteStyle";
 import NoteAttachment from "./NoteAttachment";
 
@@ -36,6 +37,7 @@ interface BoardNote {
   color: string | null;
   attachmentUrl: string | null;
   hidden: boolean;
+  column: string | null;
   createdAt: string;
 }
 
@@ -45,6 +47,7 @@ interface Board {
   title: string;
   prompt: string | null;
   status: string;
+  columns: string[];
   notes: BoardNote[];
 }
 
@@ -74,6 +77,9 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
+  // Grid theo nhóm — tùy chọn lúc tạo board, mặc định TẮT (masonry tự do như trước).
+  const [gridEnabled, setGridEnabled] = useState(false);
+  const [columnsInput, setColumnsInput] = useState<string[]>(["Nhóm 1", "Nhóm 2"]);
   const esRef = useRef<EventSource | null>(null);
 
   // Immersive: ẩn left sidebar của instructor layout khi board mở,
@@ -86,9 +92,15 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [noteContent, setNoteContent] = useState("");
   const [noteColor, setNoteColor] = useState<string | null>(null);
   const [noteAttachmentUrl, setNoteAttachmentUrl] = useState("");
+  const [noteGroupColumn, setNoteGroupColumn] = useState("");
   const [posting, setPosting] = useState(false);
   const [postInfo, setPostInfo] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+
+  // Panel quản lý cột (grid theo nhóm) trên board đang mở — GV bật/sửa/xoá cột giữa buổi.
+  const [columnsPanelOpen, setColumnsPanelOpen] = useState(false);
+  const [columnsDraft, setColumnsDraft] = useState<string[]>([]);
+  const [savingColumns, setSavingColumns] = useState(false);
 
   // Toggle body class để CSS ẩn left sidebar (xem globals.css)
   useEffect(() => {
@@ -166,12 +178,23 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       toast.error("Vui lòng nhập tiêu đề");
       return;
     }
+    const columns = gridEnabled
+      ? [...new Set(columnsInput.map((c) => c.trim()).filter(Boolean))]
+      : [];
+    if (gridEnabled && columns.length === 0) {
+      toast.error("Nhập ít nhất 1 nhóm hoặc tắt grid theo nhóm");
+      return;
+    }
     setIsCreating(true);
     try {
       const res = await fetch(apiUrl("/api/instructor/teaching-tools/boards"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), prompt: prompt.trim() || undefined }),
+        body: JSON.stringify({
+          title: title.trim(),
+          prompt: prompt.trim() || undefined,
+          columns,
+        }),
       });
       if (!res.ok) {
         toast.error((await res.json()).error || "Lỗi tạo board");
@@ -187,6 +210,8 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       setCurrent(await detail.json());
       setTitle("");
       setPrompt("");
+      setGridEnabled(false);
+      setColumnsInput(["Nhóm 1", "Nhóm 2"]);
       toast.success("Board tạo thành công");
     } catch {
       toast.error("Lỗi mạng");
@@ -205,6 +230,17 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [modalOpen]);
 
+  // Giữ noteGroupColumn hợp lệ theo danh sách cột hiện tại (mặc định cột đầu tiên).
+  useEffect(() => {
+    const cols = current?.columns ?? [];
+    if (cols.length === 0) {
+      if (noteGroupColumn !== "") setNoteGroupColumn("");
+    } else if (!cols.includes(noteGroupColumn)) {
+      setNoteGroupColumn(cols[0]!);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.columns]);
+
   const handlePostNote = async () => {
     if (!current) return;
     if (!instructorName.trim()) {
@@ -219,6 +255,10 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       setPostInfo("URL không hợp lệ (chỉ http/https)");
       return;
     }
+    if (current.columns.length > 0 && !noteGroupColumn) {
+      setPostInfo("Vui lòng chọn nhóm");
+      return;
+    }
     setPosting(true);
     setPostInfo(null);
     try {
@@ -230,6 +270,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           content: noteContent.trim() || "",
           ...(noteColor ? { color: noteColor } : {}),
           ...(noteAttachmentUrl.trim() ? { attachmentUrl: noteAttachmentUrl.trim() } : {}),
+          ...(current.columns.length > 0 ? { column: noteGroupColumn } : {}),
         }),
       });
       if (res.status === 429) {
@@ -305,25 +346,6 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     }
   };
 
-  const handleCloseBoard = async () => {
-    if (!current) return;
-    if (!confirm("Đóng board? Sinh viên sẽ không thể post note mới.")) return;
-    try {
-      const res = await fetch(apiUrl(`/api/instructor/teaching-tools/boards/${current.id}`), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "closed" }),
-      });
-      if (res.ok) {
-        const upd = await res.json();
-        setCurrent((b) => (b ? { ...b, status: upd.status } : b));
-        toast.success("Đã đóng board");
-      }
-    } catch {
-      toast.error("Lỗi mạng");
-    }
-  };
-
   // Xoá hết note hiện tại nhưng giữ nguyên board (id + code + title/prompt) —
   // dùng lại được cho lớp nhỏ tiếp theo mà không cần tạo board mới.
   const handleReset = async () => {
@@ -344,10 +366,85 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     }
   };
 
+  // Mở panel quản lý cột — nạp draft từ board hiện tại (hoặc 2 slot rỗng gợi ý nếu board
+  // chưa từng bật grid).
+  const openColumnsPanel = () => {
+    if (!current) return;
+    setColumnsDraft(current.columns.length > 0 ? [...current.columns] : ["", ""]);
+    setColumnsPanelOpen(true);
+  };
+
+  const handleSaveColumns = async () => {
+    if (!current) return;
+    const columns = [...new Set(columnsDraft.map((c) => c.trim()).filter(Boolean))];
+    setSavingColumns(true);
+    try {
+      const res = await fetch(apiUrl(`/api/instructor/teaching-tools/boards/${current.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ columns }),
+      });
+      if (!res.ok) {
+        toast.error("Lỗi lưu danh sách nhóm");
+        return;
+      }
+      setCurrent((b) => (b ? { ...b, columns } : b));
+      setColumnsPanelOpen(false);
+      toast.success(columns.length > 0 ? "Đã lưu danh sách nhóm" : "Đã tắt grid theo nhóm");
+    } catch {
+      toast.error("Lỗi mạng");
+    } finally {
+      setSavingColumns(false);
+    }
+  };
+
   // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
   const joinUrl = current ? shareUrl(`/join/${current.code}`) : null;
 
-  const NotesGrid = ({ notes }: { notes: BoardNote[] }) => {
+  // showColumnTag: hiện pill nhỏ ghi tên nhóm trên note — dùng khi board KHÔNG còn ở chế
+  // độ grid (cột đã tắt/xoá) nhưng note cũ vẫn giữ nhãn cột gốc, để không mất thông tin.
+  const NoteCard = ({ n, showColumnTag }: { n: BoardNote; showColumnTag?: boolean }) => {
+    const rot = rotationForNote(n.id);
+    return (
+      <div
+        className={`group relative rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:z-10 hover:!rotate-0 animate-note-pop-in mb-4 break-inside-avoid overflow-hidden ${n.hidden ? "opacity-40" : ""}`}
+        style={{
+          backgroundColor: n.color || "#FEF3C7",
+          transform: `rotate(${rot})`,
+          ["--note-rot" as string]: rot,
+        }}
+      >
+        {showColumnTag && n.column && (
+          <span className="inline-block text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-black/10 text-gray-800 mb-1.5">
+            {n.column}
+          </span>
+        )}
+        {n.attachmentUrl && <NoteAttachment url={n.attachmentUrl} />}
+        <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words leading-relaxed">
+          {n.content}
+        </p>
+        <p className="text-xs text-gray-700 mt-3 font-semibold tracking-wide">— {n.authorName}</p>
+        <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur rounded-md shadow-sm">
+          <button
+            onClick={() => handleToggleHidden(n)}
+            className="p-1.5 hover:bg-white rounded-md"
+            title={n.hidden ? "Hiện" : "Ẩn"}
+          >
+            {n.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+          <button
+            onClick={() => handleDeleteNote(n)}
+            className="p-1.5 hover:bg-white rounded-md text-red-600"
+            title="Xóa"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const NotesGrid = ({ notes, columns }: { notes: BoardNote[]; columns: string[] }) => {
     const visible = notes; // host thấy hết, kể cả hidden
     if (visible.length === 0) {
       return (
@@ -359,44 +456,36 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
         </div>
       );
     }
-    return (
-      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 px-2 pb-4 [column-fill:_balance]">
-        {visible.map((n) => {
-          const rot = rotationForNote(n.id);
-          return (
-            <div
-              key={n.id}
-              className={`group relative rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:z-10 hover:!rotate-0 animate-note-pop-in mb-4 break-inside-avoid overflow-hidden ${n.hidden ? "opacity-40" : ""}`}
-              style={{
-                backgroundColor: n.color || "#FEF3C7",
-                transform: `rotate(${rot})`,
-                ["--note-rot" as string]: rot,
-              }}
-            >
-              {n.attachmentUrl && <NoteAttachment url={n.attachmentUrl} />}
-              <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words leading-relaxed">
-                {n.content}
-              </p>
-              <p className="text-xs text-gray-700 mt-3 font-semibold tracking-wide">— {n.authorName}</p>
-              <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur rounded-md shadow-sm">
-                <button
-                  onClick={() => handleToggleHidden(n)}
-                  className="p-1.5 hover:bg-white rounded-md"
-                  title={n.hidden ? "Hiện" : "Ẩn"}
-                >
-                  {n.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
-                </button>
-                <button
-                  onClick={() => handleDeleteNote(n)}
-                  className="p-1.5 hover:bg-white rounded-md text-red-600"
-                  title="Xóa"
-                >
-                  <Trash2 size={14} />
-                </button>
+
+    // Grid theo nhóm — mỗi cột 1 dải dọc, cuộn ngang nếu nhiều nhóm.
+    if (columns.length > 0) {
+      const groups = groupNotesByColumn(visible, columns);
+      return (
+        <div className="flex gap-4 overflow-x-auto px-2 pb-4">
+          {groups.map((g) => (
+            <div key={g.label} className="w-72 shrink-0 flex flex-col">
+              <div className="flex items-center justify-between mb-2 px-1 sticky top-0">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300 truncate">
+                  {g.label}
+                </p>
+                <span className="text-[11px] font-mono text-gray-500 shrink-0 ml-2">{g.notes.length}</span>
+              </div>
+              <div className="flex flex-col">
+                {g.notes.map((n) => (
+                  <NoteCard key={n.id} n={n} />
+                ))}
               </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 px-2 pb-4 [column-fill:_balance]">
+        {visible.map((n) => (
+          <NoteCard key={n.id} n={n} showColumnTag />
+        ))}
       </div>
     );
   };
@@ -448,6 +537,14 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 {current.code}
               </button>
               <button
+                onClick={openColumnsPanel}
+                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                title="Bật/sửa grid theo nhóm"
+              >
+                <LayoutGrid size={14} />
+                {current.columns.length > 0 ? `${current.columns.length} nhóm` : "Nhóm"}
+              </button>
+              <button
                 onClick={() => setIsFullscreen((v) => !v)}
                 className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
               >
@@ -462,14 +559,6 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 <RotateCcw size={14} className={isResetting ? "animate-spin" : ""} />
                 {isResetting ? "..." : "Reset"}
               </button>
-              {current.status === "open" && (
-                <button
-                  onClick={handleCloseBoard}
-                  className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
-                >
-                  Đóng board
-                </button>
-              )}
               {onExit && (
                 <button
                   onClick={onExit}
@@ -489,7 +578,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
 
         {/* Masonry — đúng layout student */}
         <main className="max-w-6xl mx-auto p-4">
-          <NotesGrid notes={current.notes} />
+          <NotesGrid notes={current.notes} columns={current.columns} />
         </main>
 
         {/* FAB add note — instructor cũng dùng được để demo */}
@@ -569,6 +658,72 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           </div>
         )}
 
+        {/* Panel quản lý cột (grid theo nhóm) — bật/sửa/xoá cột ngay giữa buổi */}
+        {columnsPanelOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in-up"
+            onClick={(e) => { if (e.target === e.currentTarget) setColumnsPanelOpen(false); }}
+          >
+            <div className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 bg-white dark:bg-zinc-900 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <LayoutGrid size={18} /> Grid theo nhóm
+                </h2>
+                <button
+                  onClick={() => setColumnsPanelOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
+                  aria-label="Đóng"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-xs text-muted mb-4">
+                Bật để chia board thành các cột theo nhóm — học viên chọn đúng nhóm mình khi post.
+                Để trống hết (xoá sạch) để tắt, quay lại board tự do.
+              </p>
+              <div className="space-y-2">
+                {columnsDraft.map((label, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={label}
+                      onChange={(e) => {
+                        const next = [...columnsDraft];
+                        next[idx] = e.target.value;
+                        setColumnsDraft(next);
+                      }}
+                      placeholder={`Nhóm ${idx + 1}`}
+                      maxLength={30}
+                      className="flex-1 border border-gray-300 dark:border-gray-700 bg-transparent rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                    <button
+                      onClick={() => setColumnsDraft(columnsDraft.filter((_, i) => i !== idx))}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500"
+                      aria-label="Xoá cột"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setColumnsDraft([...columnsDraft, ""])}
+                disabled={columnsDraft.length >= 12}
+                className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 flex items-center gap-1 disabled:opacity-40"
+              >
+                <Plus size={12} /> Thêm nhóm
+              </button>
+              <button
+                onClick={handleSaveColumns}
+                disabled={savingColumns}
+                className="mt-5 w-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all"
+              >
+                {savingColumns ? "Đang lưu..." : "Lưu"}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Modal post note */}
         {modalOpen && current.status === "open" && (
           <div
@@ -599,6 +754,17 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                   maxLength={40}
                   className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
                 />
+                {current.columns.length > 0 && (
+                  <select
+                    value={noteGroupColumn}
+                    onChange={(e) => setNoteGroupColumn(e.target.value)}
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  >
+                    {current.columns.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                )}
                 <textarea
                   value={noteContent}
                   onChange={(e) => setNoteContent(e.target.value)}
@@ -725,6 +891,61 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
               className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
             />
           </div>
+
+          {/* Grid theo nhóm — tùy chọn, mặc định TẮT (masonry tự do như trước) */}
+          <div className="rounded-xl bg-white/50 backdrop-blur p-3.5 ring-1 ring-white/60">
+            <label className="flex items-center justify-between gap-2 cursor-pointer">
+              <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                <LayoutGrid size={14} /> Đăng theo nhóm (grid)
+              </span>
+              <input
+                type="checkbox"
+                checked={gridEnabled}
+                onChange={(e) => setGridEnabled(e.target.checked)}
+                className="w-4 h-4 accent-amber-500"
+              />
+            </label>
+            {gridEnabled && (
+              <div className="mt-3 space-y-2">
+                <p className="text-[11px] text-gray-600">
+                  Học viên sẽ chọn đúng nhóm mình khi post — mỗi nhóm hiện thành 1 cột riêng.
+                </p>
+                {columnsInput.map((label, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={label}
+                      onChange={(e) => {
+                        const next = [...columnsInput];
+                        next[idx] = e.target.value;
+                        setColumnsInput(next);
+                      }}
+                      placeholder={`Nhóm ${idx + 1}`}
+                      maxLength={30}
+                      className="flex-1 bg-white/70 border border-white/80 rounded-lg px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setColumnsInput(columnsInput.filter((_, i) => i !== idx))}
+                      className="p-1.5 rounded-lg hover:bg-white/60 text-gray-500"
+                      aria-label="Xoá nhóm"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setColumnsInput([...columnsInput, `Nhóm ${columnsInput.length + 1}`])}
+                  disabled={columnsInput.length >= 12}
+                  className="text-xs font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1 disabled:opacity-40"
+                >
+                  <Plus size={12} /> Thêm nhóm
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleCreate}
             disabled={isCreating}

@@ -39,7 +39,13 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     );
   }
 
-  let body: { authorName?: string; content?: string; color?: string; attachmentUrl?: string };
+  let body: {
+    authorName?: string;
+    content?: string;
+    color?: string;
+    attachmentUrl?: string;
+    column?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -54,6 +60,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
         content: z.string().min(1).max(500),
         color: z.string().optional(),
         attachmentUrl: z.string().max(2000).optional(),
+        column: z.string().max(30).optional(),
       })
       .parse(body);
   } catch {
@@ -67,11 +74,21 @@ export async function POST(req: Request, { params }: { params: { code: string } 
 
   const board = await prisma.interactiveBoard.findUnique({
     where: { code },
-    select: { id: true, status: true },
+    select: { id: true, status: true, columns: true },
   });
   if (!board) return Response.json({ error: "not_found" }, { status: 404 });
   if (board.status !== "open") {
     return Response.json({ error: "board_closed" }, { status: 403 });
+  }
+
+  // Board có bật grid theo nhóm → bắt buộc chọn đúng 1 cột đang tồn tại.
+  // Board không bật grid → bỏ qua field này (giữ hành vi cũ), không lưu rác vào column.
+  let column: string | null = null;
+  if (board.columns.length > 0) {
+    if (!parsed.column || !board.columns.includes(parsed.column)) {
+      return Response.json({ error: "invalid_column" }, { status: 400 });
+    }
+    column = parsed.column;
   }
 
   // Hard cap 2000 note/board để tránh DB phình.
@@ -92,6 +109,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
       content: parsed.content.trim(),
       color,
       attachmentUrl: parsed.attachmentUrl?.trim() || null,
+      column,
     },
     select: {
       id: true,
@@ -99,6 +117,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
       content: true,
       color: true,
       attachmentUrl: true,
+      column: true,
       createdAt: true,
     },
   });

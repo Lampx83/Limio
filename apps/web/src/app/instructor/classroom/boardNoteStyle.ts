@@ -81,3 +81,43 @@ export function isValidAttachmentUrl(url: string): boolean {
     return false;
   }
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Grid theo nhóm (columns) — dùng chung giữa host view (InteractiveBoard.tsx)
+// và student view (/join/[code]).
+// ──────────────────────────────────────────────────────────────────────────
+
+// Nhãn bucket cho note post trước khi board bật grid, hoặc note thuộc cột đã bị GV xoá
+// (note vẫn giữ nguyên `column` gốc — xem schema BoardNote.column — chỉ không còn khớp
+// danh sách cột đang active nên rơi vào đây thay vì bị mất).
+export const UNASSIGNED_COLUMN_LABEL = "Chưa phân nhóm";
+
+export interface BoardColumnGroup<T> {
+  label: string;
+  notes: T[];
+}
+
+// Gom note theo cột, giữ đúng thứ tự cột GV đã đặt; note không có cột (hoặc cột không
+// còn active) rơi vào bucket cuối `UNASSIGNED_COLUMN_LABEL`.
+export function groupNotesByColumn<T extends { column?: string | null }>(
+  notes: T[],
+  columns: string[],
+): BoardColumnGroup<T>[] {
+  const buckets = new Map<string, T[]>();
+  for (const label of columns) buckets.set(label, []);
+  const leftover: T[] = [];
+  for (const note of notes) {
+    if (!note.column) {
+      leftover.push(note);
+      continue;
+    }
+    if (!buckets.has(note.column)) buckets.set(note.column, []);
+    buckets.get(note.column)!.push(note);
+  }
+  const result: BoardColumnGroup<T>[] = [...buckets.entries()].map(([label, groupNotes]) => ({
+    label,
+    notes: groupNotes,
+  }));
+  if (leftover.length > 0) result.push({ label: UNASSIGNED_COLUMN_LABEL, notes: leftover });
+  return result;
+}

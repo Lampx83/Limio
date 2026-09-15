@@ -9,6 +9,7 @@ import {
   rotationForNote,
   detectMediaKind,
   isValidAttachmentUrl,
+  groupNotesByColumn,
 } from "@/app/instructor/classroom/boardNoteStyle";
 import NoteAttachment from "@/app/instructor/classroom/NoteAttachment";
 
@@ -18,6 +19,7 @@ interface BoardNote {
   content: string;
   color: string | null;
   attachmentUrl: string | null;
+  column: string | null;
   createdAt: string;
 }
 
@@ -27,10 +29,41 @@ interface Board {
   title: string;
   prompt: string | null;
   status: string;
+  columns: string[];
   notes: BoardNote[];
 }
 
 const STORAGE_KEY_NAME = "fbm-board-name";
+const STORAGE_KEY_GROUP_PREFIX = "fbm-board-group-";
+
+// showColumnTag: hiện pill nhỏ ghi tên nhóm — dùng khi board không còn ở chế độ grid
+// (cột đã tắt/xoá) nhưng note cũ vẫn giữ nhãn cột gốc.
+function NoteCard({ n, showColumnTag }: { n: BoardNote; showColumnTag?: boolean }) {
+  const rot = rotationForNote(n.id);
+  return (
+    <div
+      className="group rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:!rotate-0 animate-note-pop-in mb-4 break-inside-avoid overflow-hidden"
+      style={{
+        backgroundColor: n.color || "#FEF3C7",
+        transform: `rotate(${rot})`,
+        ["--note-rot" as string]: rot,
+      }}
+    >
+      {showColumnTag && n.column && (
+        <span className="inline-block text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-black/10 text-gray-800 mb-1.5">
+          {n.column}
+        </span>
+      )}
+      {n.attachmentUrl && <NoteAttachment url={n.attachmentUrl} />}
+      {n.content && (
+        <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words leading-relaxed">
+          {n.content}
+        </p>
+      )}
+      <p className="text-xs text-gray-700 mt-3 font-semibold tracking-wide">— {n.authorName}</p>
+    </div>
+  );
+}
 
 export default function JoinBoardPage() {
   const params = useParams<{ code: string }>();
@@ -45,6 +78,7 @@ export default function JoinBoardPage() {
   const [content, setContent] = useState("");
   const [color, setColor] = useState<string | null>(null);
   const [attachmentUrl, setAttachmentUrl] = useState("");
+  const [groupColumn, setGroupColumn] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const esRef = useRef<EventSource | null>(null);
@@ -56,6 +90,19 @@ export default function JoinBoardPage() {
       if (saved) setName(saved);
     }
   }, []);
+
+  // Restore nhóm đã chọn lần trước cho đúng board này — học viên tự biết nhóm mình,
+  // không có xác thực, chỉ nhớ giúp đỡ phải chọn lại mỗi lần post.
+  useEffect(() => {
+    if (!board || board.columns.length === 0 || typeof window === "undefined") return;
+    const saved = localStorage.getItem(STORAGE_KEY_GROUP_PREFIX + board.code);
+    if (saved && board.columns.includes(saved)) {
+      setGroupColumn(saved);
+    } else if (!board.columns.includes(groupColumn)) {
+      setGroupColumn(board.columns[0]!);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board?.code, board?.columns.join("|")]);
 
   // Initial snapshot
   useEffect(() => {
@@ -144,6 +191,10 @@ export default function JoinBoardPage() {
       setInfo("URL không hợp lệ (chỉ chấp nhận http/https)");
       return;
     }
+    if (board && board.columns.length > 0 && !groupColumn) {
+      setInfo("Vui lòng chọn nhóm của bạn");
+      return;
+    }
     setSubmitting(true);
     setInfo(null);
     try {
@@ -155,6 +206,7 @@ export default function JoinBoardPage() {
           content: content.trim() || "",
           ...(color ? { color } : {}),
           ...(attachmentUrl.trim() ? { attachmentUrl: attachmentUrl.trim() } : {}),
+          ...(board && board.columns.length > 0 ? { column: groupColumn } : {}),
         }),
       });
       if (res.status === 429) {
@@ -173,6 +225,9 @@ export default function JoinBoardPage() {
         return;
       }
       localStorage.setItem(STORAGE_KEY_NAME, name.trim());
+      if (board && board.columns.length > 0) {
+        localStorage.setItem(STORAGE_KEY_GROUP_PREFIX + board.code, groupColumn);
+      }
       setContent("");
       setAttachmentUrl("");
       setColor(null);
@@ -247,30 +302,25 @@ export default function JoinBoardPage() {
             <p className="text-6xl mb-3">📝</p>
             <p className="text-sm text-muted">Chưa có note nào — bấm <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-400 text-white font-bold mx-1">+</span> để đăng note đầu tiên!</p>
           </div>
+        ) : board.columns.length > 0 ? (
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {groupNotesByColumn(board.notes, board.columns).map((g) => (
+              <div key={g.label} className="w-72 shrink-0 flex flex-col">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300 truncate">
+                    {g.label}
+                  </p>
+                  <span className="text-[11px] font-mono text-gray-500 shrink-0 ml-2">{g.notes.length}</span>
+                </div>
+                <div className="flex flex-col">
+                  {g.notes.map((n) => <NoteCard key={n.id} n={n} />)}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 [column-fill:_balance]">
-            {board.notes.map((n) => {
-              const rot = rotationForNote(n.id);
-              return (
-                <div
-                  key={n.id}
-                  className="group rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:!rotate-0 animate-note-pop-in mb-4 break-inside-avoid overflow-hidden"
-                  style={{
-                    backgroundColor: n.color || "#FEF3C7",
-                    transform: `rotate(${rot})`,
-                    ["--note-rot" as string]: rot,
-                  }}
-                >
-                  {n.attachmentUrl && <NoteAttachment url={n.attachmentUrl} />}
-                  {n.content && (
-                    <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words leading-relaxed">
-                      {n.content}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-700 mt-3 font-semibold tracking-wide">— {n.authorName}</p>
-                </div>
-              );
-            })}
+            {board.notes.map((n) => <NoteCard key={n.id} n={n} showColumnTag />)}
           </div>
         )}
       </main>
@@ -322,6 +372,18 @@ export default function JoinBoardPage() {
                 maxLength={40}
                 className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
+
+              {board.columns.length > 0 && (
+                <select
+                  value={groupColumn}
+                  onChange={(e) => setGroupColumn(e.target.value)}
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  {board.columns.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              )}
 
               <textarea
                 value={content}

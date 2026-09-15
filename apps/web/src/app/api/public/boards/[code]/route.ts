@@ -12,6 +12,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
       title: true,
       prompt: true,
       status: true,
+      columns: true,
       createdAt: true,
       notes: {
         where: { hidden: false },
@@ -22,6 +23,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
           content: true,
           color: true,
           attachmentUrl: true,
+          column: true,
           createdAt: true,
         },
       },

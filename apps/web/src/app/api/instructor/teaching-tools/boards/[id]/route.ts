@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { normalizeBoardColumns } from "@/lib/board";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       title: true,
       prompt: true,
       status: true,
+      columns: true,
       createdAt: true,
       closedAt: true,
       notes: {
@@ -47,6 +49,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
           color: true,
           attachmentUrl: true,
           hidden: true,
+          column: true,
           createdAt: true,
         },
       },
@@ -55,7 +58,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   return Response.json(board);
 }
 
-// PATCH — close/reopen board
+// PATCH — close/reopen board, và/hoặc cập nhật danh sách cột (grid theo nhóm).
+// Đổi tên/xoá cột không đụng tới note đã có — note giữ nguyên nhãn cột gốc (xem schema).
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -71,14 +75,34 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   try {
     const body = await req.json();
-    const { status } = z.object({ status: z.enum(["open", "closed"]) }).parse(body);
+    const { status, columns } = z
+      .object({
+        status: z.enum(["open", "closed"]).optional(),
+        columns: z.array(z.string()).optional(),
+      })
+      .parse(body);
+    if (status === undefined && columns === undefined) {
+      return Response.json({ error: "Invalid request" }, { status: 400 });
+    }
+
+    let normalizedColumns: string[] | undefined;
+    if (columns !== undefined) {
+      const result = normalizeBoardColumns(columns);
+      if (result === null) {
+        return Response.json({ error: "invalid_columns" }, { status: 400 });
+      }
+      normalizedColumns = result;
+    }
+
     const updated = await prisma.interactiveBoard.update({
       where: { id: params.id },
       data: {
-        status,
-        closedAt: status === "closed" ? new Date() : null,
+        ...(status !== undefined
+          ? { status, closedAt: status === "closed" ? new Date() : null }
+          : {}),
+        ...(normalizedColumns !== undefined ? { columns: normalizedColumns } : {}),
       },
-      select: { id: true, status: true, closedAt: true },
+      select: { id: true, status: true, closedAt: true, columns: true },
     });
     return Response.json(updated);
   } catch {

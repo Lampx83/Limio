@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
-import { generateUniqueBoardCode } from "@/lib/board";
+import { generateUniqueBoardCode, normalizeBoardColumns } from "@/lib/board";
 
 export const runtime = "nodejs";
 
@@ -14,12 +14,22 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { title, prompt } = z
+    const { title, prompt, columns } = z
       .object({
         title: z.string().min(1).max(120),
         prompt: z.string().max(500).optional(),
+        columns: z.array(z.string()).optional(),
       })
       .parse(body);
+
+    let normalizedColumns: string[] = [];
+    if (columns) {
+      const result = normalizeBoardColumns(columns);
+      if (result === null) {
+        return Response.json({ error: "invalid_columns" }, { status: 400 });
+      }
+      normalizedColumns = result;
+    }
 
     const code = await generateUniqueBoardCode();
     const board = await prisma.interactiveBoard.create({
@@ -27,9 +37,10 @@ export async function POST(req: Request) {
         code,
         title: title.trim(),
         prompt: prompt?.trim() || null,
+        columns: normalizedColumns,
         ownerId: session.user.id,
       },
-      select: { id: true, code: true, title: true, prompt: true, status: true, createdAt: true },
+      select: { id: true, code: true, title: true, prompt: true, status: true, columns: true, createdAt: true },
     });
 
     return Response.json(board, { status: 201 });

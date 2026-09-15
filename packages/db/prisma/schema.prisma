@@ -360,7 +360,7 @@ model CourseInstructor {
   id        String   @id @default(uuid())
   courseId  String
   userId    String
-  role      String   @default("owner") // owner | co-instructor
+  role      String   @default("owner") // owner | co-instructor | non-editing-teacher | teaching-assistant (see core-lms/src/courses/authz.ts)
   createdAt DateTime @default(now())
 
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -2295,6 +2295,10 @@ model InteractiveBoard {
   prompt String? // Tùy chọn (vd. "Bạn học được gì hôm nay?")
   status String  @default("open") // "open" | "closed"
 
+  // Grid theo nhóm — tùy chọn, mặc định rỗng = board tự do (masonry, không cần chọn nhóm khi post).
+  // GV tự đặt nhãn cột (vd "Nhóm 1", "Nhóm 2"), không liên quan GroupingSession.
+  columns String[] @default([])
+
   notes BoardNote[]
 
   createdAt DateTime  @default(now())
@@ -2319,6 +2323,7 @@ model BoardNote {
   color         String? // Hex, optional (random pastel client-side)
   attachmentUrl String? // URL ảnh / video / audio / YouTube / link bất kỳ (https only)
   hidden        Boolean @default(false) // Instructor moderate
+  column        String? // Nhãn cột/nhóm lúc post (null nếu board không bật grid). Giữ nguyên khi cột bị đổi tên/xoá sau đó.
 
   createdAt DateTime @default(now())
 
