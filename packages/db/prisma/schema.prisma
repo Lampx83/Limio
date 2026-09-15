@@ -2777,6 +2777,21 @@ model Exam {
   kind                   ExamKind            @default(written)
   // A6.6 — chỉ áp dụng khi kind=oral.
   answerMode             OralAnswerMode      @default(text)
+  // A6.3/A6.6 — ngôn ngữ hỏi-đáp; xem enum OralExamLanguage. Bất biến sau khi
+  // tạo giống answerMode/kind — đổi ngôn ngữ giữa chừng buổi thi vô nghĩa.
+  language               OralExamLanguage    @default(vi)
+  // A6.3 (UI) — hướng dẫn phong cách/luật hỏi cho AI giám khảo (vd "không để
+  // SV dẫn dắt", "hỏi hết chủ đề này mới sang chủ đề khác"), chèn thêm vào
+  // system prompt mỗi lượt hỏi — xem examinerChat.ts buildSystemPrompt. Text
+  // thuần, không phải richtext (chỉ để nhét vào prompt, không hiện cho SV).
+  examinerInstructions   String?             @db.Text
+  // A6.4 (UI) — rubric chấm điểm GV tự gõ/sửa, dùng khi AI đề xuất điểm sau
+  // buổi thi. KHÔNG dùng cơ chế "tài liệu" (OralExamMaterial, khoá sau khi
+  // publish để công bằng câu hỏi) vì rubric chỉ ảnh hưởng cách CHẤM sau này,
+  // không ảnh hưởng câu hỏi SV nhận lúc thi — nên sửa được bất cứ lúc nào kể
+  // cả đề đã publish/có lượt thi. Thay thế OralExamMaterial.type=rubric cũ
+  // (không xoá dữ liệu material cũ, chỉ không dùng để chấm nữa).
+  oralRubricText         String?             @db.Text
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 
@@ -2810,6 +2825,16 @@ enum ExamKind {
 enum OralAnswerMode {
   text
   voice
+}
+
+// A6.3/A6.6 — Ngôn ngữ hỏi-đáp của buổi vấn đáp. Chỉ có ý nghĩa khi kind=oral.
+// Cần khai báo tường minh (không suy đoán từ câu trả lời của SV) vì câu hỏi
+// MỞ MÀN chưa có câu trả lời nào để AI dựa vào — thiếu cột này, câu hỏi đầu
+// dễ bị trộn tiếng Anh/Việt (đã gặp thật khi test), và STT (Whisper) cũng
+// cần biết trước ngôn ngữ để nhận dạng chính xác thay vì đoán.
+enum OralExamLanguage {
+  vi
+  en
 }
 
 // =====================================================================

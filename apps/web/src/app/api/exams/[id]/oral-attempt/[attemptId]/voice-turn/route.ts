@@ -42,7 +42,7 @@ export async function POST(
 
   const attempt = await prisma.examAttempt.findUnique({
     where: { id: params.attemptId },
-    select: { exam: { select: { answerMode: true, kind: true } } },
+    select: { exam: { select: { answerMode: true, kind: true, language: true } } },
   });
   if (!attempt) {
     return NextResponse.json({ error: "attempt_not_found" }, { status: 404 });
@@ -73,7 +73,10 @@ export async function POST(
   if (audioFile instanceof File) {
     const audioBuf = Buffer.from(await audioFile.arrayBuffer());
     try {
-      const sttResult = await openAiSpeechToText(openai)(audioBuf, audioFile.type || "audio/wav");
+      const sttResult = await openAiSpeechToText(openai, attempt.exam.language)(
+        audioBuf,
+        audioFile.type || "audio/wav",
+      );
       studentTranscript = sttResult.transcript.trim() || null;
     } catch (e) {
       if (e instanceof OpenAiVoiceError) {

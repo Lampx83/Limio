@@ -4,7 +4,6 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import {
   createCourse,
   createExam,
-  createOralMaterialDocument,
   createOralMaterialTopicList,
   enrollInCourse,
   publishExam,
@@ -45,13 +44,9 @@ async function setup(slug: string, opts: { withRubric?: boolean } = {}) {
   });
   await createOralMaterialTopicList(owner.userId, examId, { title: "Chủ đề", text: "x" });
   if (opts.withRubric) {
-    await createOralMaterialDocument(owner.userId, examId, {
-      type: "rubric",
-      title: "Rubric",
-      s3Key: "r.pdf",
-      mimeType: "application/pdf",
-      sizeBytes: 10,
-      extractedText: "5đ: nêu đúng định nghĩa. 5đ: cho ví dụ đúng.",
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { oralRubricText: "5đ: nêu đúng định nghĩa. 5đ: cho ví dụ đúng." },
     });
   }
   await publishExam(owner.userId, examId);
@@ -137,15 +132,25 @@ describe("generateOralExamEvaluation (A6.4)", () => {
     expect(seenPrompt).toContain("nêu đúng định nghĩa");
   });
 
-  it("rejects regenerating once the instructor has already graded", async () => {
+  it("allows regenerating after the instructor has already graded, without touching their locked-in score", async () => {
     const s = await setup("t5");
     await prisma.examAttempt.update({ where: { id: s.attemptId }, data: { status: "submitted" } });
     await prisma.oralExamEvaluation.create({
       data: { attemptId: s.attemptId, instructorScore: 90, status: "approved" },
     });
-    await expect(
-      generateOralExamEvaluation(s.ownerId, s.attemptId, scriptedChat("{}")),
-    ).rejects.toMatchObject({ code: "validation_failed", details: "already_graded" });
+    const r = await generateOralExamEvaluation(
+      s.ownerId,
+      s.attemptId,
+      scriptedChat(JSON.stringify({ score: 55, summary: "đề xuất mới sau khi sửa rubric" })),
+    );
+    expect(r.aiSuggestedScore).toBe(55);
+    const evaluation = await prisma.oralExamEvaluation.findUniqueOrThrow({
+      where: { attemptId: s.attemptId },
+    });
+    expect(evaluation.aiSuggestedScore).toBe(55);
+    // Điểm + trạng thái GV đã chốt không bị đụng vào — chỉ đề xuất AI đổi.
+    expect(evaluation.instructorScore).toBe(90);
+    expect(evaluation.status).toBe("approved");
   });
 
   it("records AiUsageLog and emits exam.oral_evaluation.generated", async () => {

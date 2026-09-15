@@ -29,6 +29,10 @@ interface InitialValues {
   // trước khi có oral) có thể chưa truyền.
   kind?: "written" | "oral";
   answerMode?: "text" | "voice";
+  /** A6.3/A6.6 — chỉ có ý nghĩa khi kind=oral, bất biến sau khi tạo. */
+  language?: "vi" | "en";
+  /** A6.3 (UI) — chèn vào system prompt AI giám khảo mỗi lượt hỏi. */
+  examinerInstructions?: string;
 }
 
 interface Props {
@@ -61,6 +65,8 @@ export default function ExamMetaForm({
     description: plainToRichHtml(initial.description),
     kind: mode === "create" ? (fixedKind ?? "written") : (initial.kind ?? "written"),
     answerMode: initial.answerMode ?? "text",
+    language: initial.language ?? "vi",
+    examinerInstructions: initial.examinerInstructions ?? "",
   });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -86,11 +92,15 @@ export default function ExamMetaForm({
       showResultsAfterSubmit: v.showResultsAfterSubmit,
       purpose: v.purpose,
     };
-    // Bất biến sau khi tạo — UpdateExamInput không nhận 2 field này, nên chỉ
+    if (v.kind === "oral") {
+      body.examinerInstructions = v.examinerInstructions || undefined;
+    }
+    // Bất biến sau khi tạo — UpdateExamInput không nhận 3 field này, nên chỉ
     // gửi lúc create.
     if (mode === "create") {
       body.kind = v.kind;
       body.answerMode = v.kind === "oral" ? v.answerMode : undefined;
+      body.language = v.kind === "oral" ? v.language : undefined;
     }
     const url =
       mode === "create"
@@ -143,10 +153,19 @@ export default function ExamMetaForm({
             label="Trả lời bằng"
             value={v.answerMode ?? "text"}
             options={[
-              { value: "text", label: "Nhắn tin" },
+              { value: "text", label: "Gõ văn bản" },
               { value: "voice", label: "Giọng nói" },
             ]}
             onChange={(s) => setV({ ...v, answerMode: s as "text" | "voice" })}
+          />
+          <SelectField
+            label="Ngôn ngữ hỏi-đáp"
+            value={v.language ?? "vi"}
+            options={[
+              { value: "vi", label: "Tiếng Việt" },
+              { value: "en", label: "English" },
+            ]}
+            onChange={(s) => setV({ ...v, language: s as "vi" | "en" })}
           />
         </div>
       )}
@@ -156,8 +175,29 @@ export default function ExamMetaForm({
           liệu (đề cương, danh sách chủ đề…) ở tab "Tài liệu" để AI dựa vào đó
           hỏi sinh viên. Bài thi luôn bắt buộc toàn màn hình; điểm do AI gợi ý
           và giảng viên duyệt/sửa thủ công, không tự động chấm. Cách trả lời
-          không đổi được sau khi tạo.
+          và ngôn ngữ không đổi được sau khi tạo.
         </p>
+      )}
+
+      {v.kind === "oral" && (
+        <div>
+          <label className="block text-sm font-medium">
+            Hướng dẫn phong cách hỏi cho AI giám khảo (tuỳ chọn)
+          </label>
+          <p className="mt-0.5 text-caption text-faint">
+            Chèn thêm vào chỉ dẫn của AI mỗi lượt hỏi — không hiện cho sinh
+            viên. Ví dụ: "Không để sinh viên dẫn dắt cuộc hội thoại", "Hỏi hết
+            câu hỏi thuộc chủ đề này rồi mới sang chủ đề khác theo đúng thứ tự
+            tài liệu".
+          </p>
+          <textarea
+            rows={3}
+            value={v.examinerInstructions ?? ""}
+            onChange={(e) => setV({ ...v, examinerInstructions: e.target.value })}
+            placeholder='Vd: "Giữ giọng nghiêm túc, không khen ngợi giữa chừng. Nếu sinh viên trả lời lạc đề, kéo lại đúng chủ đề đang hỏi."'
+            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+          />
+        </div>
       )}
 
       <div>

@@ -284,7 +284,6 @@ function UploadForm({
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<"document" | "rubric">("document");
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function onSubmit(e: React.FormEvent) {
@@ -299,7 +298,9 @@ function UploadForm({
     const form = new FormData();
     form.set("file", file);
     form.set("title", title.trim() || file.name);
-    form.set("type", type);
+    // A6.4 — "rubric" giờ là Exam.oralRubricText (ô nhập riêng ở trang Chấm
+    // bài), không còn là loại tài liệu upload — chỉ còn "document".
+    form.set("type", "document");
     const res = await fetch(apiUrl(`/api/exams/${examId}/oral-materials`), {
       method: "POST",
       body: form,
@@ -330,27 +331,6 @@ function UploadForm({
           placeholder="Vd: Đề cương chương 3"
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
         />
-      </div>
-      <div>
-        <span className="block text-sm font-medium">Loại</span>
-        <div className="mt-1 flex gap-4 text-sm">
-          <label className="flex items-center gap-1.5">
-            <input
-              type="radio"
-              checked={type === "document"}
-              onChange={() => setType("document")}
-            />
-            Tài liệu tham khảo
-          </label>
-          <label className="flex items-center gap-1.5">
-            <input
-              type="radio"
-              checked={type === "rubric"}
-              onChange={() => setType("rubric")}
-            />
-            Rubric chấm điểm
-          </label>
-        </div>
       </div>
       <div>
         <label className="block text-sm font-medium" htmlFor="material-file">

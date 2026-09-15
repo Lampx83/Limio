@@ -34,6 +34,13 @@ export const CreateExamInput = z
     kind: z.enum(["written", "oral"]).optional(),
     // A6.6 — chỉ có ý nghĩa khi kind=oral.
     answerMode: z.enum(["text", "voice"]).optional(),
+    // A6.3/A6.6 — chỉ có ý nghĩa khi kind=oral. Bất biến sau khi tạo.
+    language: z.enum(["vi", "en"]).optional(),
+    // A6.3 — chèn vào system prompt của AI giám khảo mỗi lượt hỏi. Text
+    // thuần, không hiện cho SV.
+    examinerInstructions: z.string().max(5_000).optional(),
+    // A6.4 — rubric GV tự gõ/sửa, dùng khi AI đề xuất điểm sau buổi thi.
+    oralRubricText: z.string().max(20_000).optional(),
   })
   .refine((d) => !d.openAt || !d.closeAt || d.openAt < d.closeAt, {
     message: "openAt must be before closeAt",
@@ -55,6 +62,11 @@ export const UpdateExamInput = z
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
     purpose: z.enum(["assessment", "field_test"]).optional(),
+    examinerInstructions: z.string().max(5_000).optional(),
+    // A6.4 — sửa được bất cứ lúc nào kể cả sau publish/có lượt thi (không
+    // ảnh hưởng câu hỏi SV nhận lúc thi, chỉ ảnh hưởng cách AI chấm sau đó)
+    // — cùng nhóm với title/description/closeAt trong `allowed` bên dưới.
+    oralRubricText: z.string().max(20_000).optional(),
   });
 
 /** A7.1.1 — Create exam in DRAFT status. */
@@ -91,6 +103,9 @@ export async function createExam(
       purpose: d.purpose ?? "assessment",
       kind: d.kind ?? "written",
       answerMode: d.answerMode ?? "text",
+      language: d.language ?? "vi",
+      examinerInstructions: d.examinerInstructions ?? null,
+      oralRubricText: d.oralRubricText ?? null,
     },
     select: { id: true },
   });
@@ -240,7 +255,9 @@ export async function updateExam(
       (await db.examAttempt.count({ where: { examId } })) > 0;
     if (hasAttempts) {
       // Only title/description/closeAt allowed once attempts exist.
-      const allowed = new Set(["title", "description", "closeAt"]);
+      // oralRubricText cũng được: chỉ ảnh hưởng cách CHẤM sau thi, không ảnh
+      // hưởng câu hỏi SV nhận lúc thi nên không cần khoá theo tính công bằng.
+      const allowed = new Set(["title", "description", "closeAt", "oralRubricText"]);
       const rejected = Object.keys(data).filter((k) => !allowed.has(k));
       if (rejected.length > 0) {
         throw new ExamError("exam_has_attempts", { fields: rejected });

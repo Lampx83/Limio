@@ -92,6 +92,20 @@ describe("createOralMaterialDocument (A6.1)", () => {
     expect(material.extractedText).toBe("Nội dung chương 1");
   });
 
+  it("rejects type=rubric — rubric is now Exam.oralRubricText, not an uploaded material", async () => {
+    const { ownerId, examId } = await newOralExam("d1b");
+    await expect(
+      createOralMaterialDocument(ownerId, examId, {
+        type: "rubric",
+        title: "Rubric",
+        s3Key: "r.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 10,
+        extractedText: "x",
+      }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
   it("second material appended at orderIndex=1", async () => {
     const { ownerId, examId } = await newOralExam("d2");
     await createOralMaterialDocument(ownerId, examId, {
@@ -103,7 +117,7 @@ describe("createOralMaterialDocument (A6.1)", () => {
       extractedText: "a",
     });
     const r2 = await createOralMaterialDocument(ownerId, examId, {
-      type: "rubric",
+      type: "document",
       title: "B",
       s3Key: "b.pdf",
       mimeType: "application/pdf",

@@ -116,6 +116,47 @@ describe("runOralExamTurn (A6.3)", () => {
     expect((ev!.payload as Record<string, unknown>).ended).toBe(false);
   });
 
+  it("uses the exam's configured language directive on the opening question, not inference", async () => {
+    const s = await setup("t1c");
+    await prisma.exam.update({ where: { id: s.examId }, data: { language: "en" } });
+    let seenPrompt = "";
+    const capture: ChatComputeFn = async (messages) => {
+      seenPrompt = messages[0]!.content;
+      return { content: "How does a for loop work?", inputTokens: 1, outputTokens: 1 };
+    };
+    await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: null,
+      computeChat: capture,
+      computeEmbed: fakeEmbed(),
+    });
+    expect(seenPrompt).toContain("Ask and respond ENTIRELY in English");
+    expect(seenPrompt).not.toContain("tiếng Việt");
+  });
+
+  it("chèn examinerInstructions của GV vào system prompt, không thay thế nguyên tắc cứng", async () => {
+    const s = await setup("t1d");
+    await prisma.exam.update({
+      where: { id: s.examId },
+      data: { examinerInstructions: "Không để sinh viên dẫn dắt cuộc hội thoại." },
+    });
+    let seenPrompt = "";
+    const capture: ChatComputeFn = async (messages) => {
+      seenPrompt = messages[0]!.content;
+      return { content: "Vòng lặp for hoạt động thế nào?", inputTokens: 1, outputTokens: 1 };
+    };
+    await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: null,
+      computeChat: capture,
+      computeEmbed: fakeEmbed(),
+    });
+    expect(seenPrompt).toContain("Không để sinh viên dẫn dắt cuộc hội thoại.");
+    expect(seenPrompt).toContain("Nguyên tắc:"); // 4 nguyên tắc cứng vẫn còn nguyên
+  });
+
   it("rejects a non-null studentMessage on the very first call", async () => {
     const s = await setup("t2");
     await expect(

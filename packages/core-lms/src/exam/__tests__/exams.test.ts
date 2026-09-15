@@ -6,6 +6,7 @@ import { registerUser } from "../../auth/register";
 import { CourseAuthzError } from "../../courses/authz";
 import {
   createExam,
+  createOralMaterialTopicList,
   deleteExam,
   ExamError,
   getExam,
@@ -58,6 +59,31 @@ describe("createExam (A7.1.1)", () => {
     expect(exam.attemptPolicy).toBe("single");
     expect(exam.gradingMode).toBe("hybrid");
     expect(exam.shuffleQuestions).toBe(true);
+  });
+
+  it("A6.3/A6.4 — creates an oral exam with language, examinerInstructions and oralRubricText", async () => {
+    const { ownerId, courseId } = await newOwner("c1b");
+    const r = await createExam(
+      ownerId,
+      courseId,
+      validExamInput({
+        kind: "oral",
+        language: "en",
+        examinerInstructions: "Không để sinh viên dẫn dắt.",
+        oralRubricText: "3đ khái niệm, 7đ ví dụ.",
+      }),
+    );
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: r.examId } });
+    expect(exam.language).toBe("en");
+    expect(exam.examinerInstructions).toBe("Không để sinh viên dẫn dắt.");
+    expect(exam.oralRubricText).toBe("3đ khái niệm, 7đ ví dụ.");
+  });
+
+  it("defaults language to vi when omitted", async () => {
+    const { ownerId, courseId } = await newOwner("c1c");
+    const r = await createExam(ownerId, courseId, validExamInput({ kind: "oral" }));
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: r.examId } });
+    expect(exam.language).toBe("vi");
   });
 
   it("emits exam.created event", async () => {
@@ -224,6 +250,20 @@ describe("updateExam (A7.1.3)", () => {
     await expect(
       updateExam(ownerId, examId, { durationMin: 30 }),
     ).rejects.toMatchObject({ code: "exam_has_attempts" });
+  });
+
+  it("A6.4 — allows editing oralRubricText even after publish/attempts (không ảnh hưởng câu hỏi SV nhận)", async () => {
+    const { ownerId, courseId } = await newOwner("u3");
+    const { examId } = await createExam(ownerId, courseId, validExamInput({ kind: "oral" }));
+    await createOralMaterialTopicList(ownerId, examId, { title: "Chủ đề", text: "x" });
+    await publishExam(ownerId, examId);
+    const learner = await newOutsider("u3");
+    await prisma.examAttempt.create({
+      data: { examId, userId: learner, durationSec: 3600 },
+    });
+    await updateExam(ownerId, examId, { oralRubricText: "Rubric sửa sau khi thi." });
+    const e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(e.oralRubricText).toBe("Rubric sửa sau khi thi.");
   });
 });
 

@@ -29,15 +29,32 @@ async function getOpeningChunks(examId: string, db: PrismaClient): Promise<strin
   return chunks.map((c) => c.chunkText);
 }
 
+// A6.3/A6.6 — khai báo tường minh thay vì để AI đoán từ câu trả lời SV: câu
+// hỏi MỞ MÀN chưa có câu trả lời nào để đoán, đã gặp lỗi trộn tiếng Anh/Việt
+// thật khi test (xem OralExamLanguage trong schema).
+const LANGUAGE_DIRECTIVE: Record<"vi" | "en", string> = {
+  vi: "Hỏi và trả lời HOÀN TOÀN bằng tiếng Việt trong suốt buổi thi, kể cả câu hỏi mở màn — không chêm tiếng Anh.",
+  en: "Ask and respond ENTIRELY in English throughout the exam, including the opening question — do not mix in Vietnamese.",
+};
+
 function buildSystemPrompt(params: {
   courseTitle: string;
   examTitle: string;
   contextChunks: string[];
   isLastQuestion: boolean;
   isClosing: boolean;
+  language: "vi" | "en";
+  /** GV tự soạn — chèn thêm, KHÔNG thay thế nguyên tắc cứng bên dưới. */
+  examinerInstructions?: string | null;
 }): string {
+  const extra = params.examinerInstructions?.trim()
+    ? `\n\nHướng dẫn thêm từ giảng viên (áp dụng cùng các nguyên tắc trên, không được mâu thuẫn):\n"""\n${params.examinerInstructions.trim()}\n"""`
+    : "";
+
   if (params.isClosing) {
     return `Bạn là giảng viên ảo đang chấm vấn đáp môn "${params.courseTitle}", đề "${params.examTitle}".
+
+${LANGUAGE_DIRECTIVE[params.language]}
 
 Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết ngắn gọn (2-3 câu): cảm ơn sinh viên, KHÔNG chấm điểm, KHÔNG tiết lộ đúng/sai, KHÔNG hứa hẹn kết quả — chỉ thông báo buổi vấn đáp đã hoàn tất.`;
   }
@@ -58,11 +75,11 @@ Nguyên tắc:
 1. Hỏi ĐÚNG 1 câu hỏi mỗi lượt, bám sát tài liệu trên.
 2. Đào sâu theo câu trả lời trước của sinh viên — hỏi follow-up thay vì hỏi câu độc lập không liên quan.
 3. KHÔNG đưa gợi ý, KHÔNG tiết lộ đáp án đúng, KHÔNG chấm điểm hay nhận xét đúng/sai trong lúc hỏi — đó là việc của bước chấm sau khi buổi thi kết thúc.
-4. Trả lời tiếng Việt nếu sinh viên dùng tiếng Việt; tiếng Anh nếu sinh viên dùng tiếng Anh.${
+4. ${LANGUAGE_DIRECTIVE[params.language]}${
     params.isLastQuestion
       ? "\n5. Đây là câu hỏi CUỐI CÙNG của buổi vấn đáp — hỏi sao cho sinh viên có thể trả lời trọn vẹn trong lượt này."
       : ""
-  }`;
+  }${extra}`;
 }
 
 export interface RunOralExamTurnInput {
@@ -112,6 +129,8 @@ export async function runOralExamTurn(
           kind: true,
           courseId: true,
           title: true,
+          language: true,
+          examinerInstructions: true,
           course: { select: { title: true } },
         },
       },
@@ -187,6 +206,8 @@ export async function runOralExamTurn(
     contextChunks,
     isLastQuestion,
     isClosing: shouldClose,
+    language: attempt.exam.language,
+    examinerInstructions: attempt.exam.examinerInstructions,
   });
 
   const history: ChatMessage[] = turns.map((t) => ({

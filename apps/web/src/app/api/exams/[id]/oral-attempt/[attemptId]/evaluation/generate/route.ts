@@ -15,7 +15,6 @@ const STATUS_BY_CODE: Record<string, number> = {
   attempt_not_found: 404,
   not_oral_exam: 409,
   attempt_not_ended: 409,
-  already_graded: 409,
 };
 
 /** A6.4 — GV bấm "Chấm bằng AI". Sinh điểm đề xuất, KHÔNG tự chốt điểm. */

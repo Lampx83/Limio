@@ -24,7 +24,6 @@ interface Props {
 
 const GENERATE_ERROR: Record<string, string> = {
   openai_not_configured: "Chưa cấu hình OpenAI. Vào Admin → Tích hợp để thêm khoá.",
-  already_graded: "Đã chốt điểm rồi — sửa điểm trực tiếp bên dưới nếu cần chấm lại.",
   attempt_not_ended: "Lượt thi chưa kết thúc.",
 };
 
@@ -120,24 +119,29 @@ export default function OralGradeForm({
       onSubmit={submit}
       className="space-y-3 rounded border-2 border-blue-300 bg-blue-50 p-4"
     >
-      {!graded && (
-        <div>
-          <button
-            type="button"
-            onClick={suggest}
-            disabled={suggesting}
-            className="rounded border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs text-violet-800 hover:bg-violet-100 disabled:opacity-50"
-          >
-            {suggesting ? (
-              "Đang phân tích hội thoại…"
-            ) : (
-              <>
-                <Bot className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Chấm bằng AI
-              </>
-            )}
-          </button>
-        </div>
-      )}
+      <div>
+        <button
+          type="button"
+          onClick={suggest}
+          disabled={suggesting}
+          className="rounded border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+        >
+          {suggesting ? (
+            "Đang phân tích hội thoại…"
+          ) : (
+            <>
+              <Bot className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
+              {graded ? "Chấm lại bằng AI" : "Chấm bằng AI"}
+            </>
+          )}
+        </button>
+        {graded && (
+          <p className="mt-1 text-xs text-faint">
+            Chỉ sinh đề xuất mới, không tự đổi điểm đã chốt — bạn tự quyết có
+            cập nhật lại theo đề xuất mới hay không.
+          </p>
+        )}
+      </div>
       {(summary || suggestedScore !== null) && (
         <div className="rounded border border-violet-300 bg-violet-50 p-3 text-xs text-violet-900">
           <p className="mb-1 font-medium">

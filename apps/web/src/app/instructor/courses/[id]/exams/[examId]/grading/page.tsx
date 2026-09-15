@@ -5,6 +5,7 @@ import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 import DeleteOralAttemptButton from "@/components/exam/DeleteOralAttemptButton";
+import OralRubricEditor from "./OralRubricEditor";
 import RegradeAllButton from "./RegradeAllButton";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
@@ -31,7 +32,7 @@ export default async function GradingInboxPage({
   if (!course) notFound();
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, title: true, courseId: true, kind: true },
+    select: { id: true, title: true, courseId: true, kind: true, oralRubricText: true },
   });
   if (!exam || exam.courseId !== course.id) notFound();
 
@@ -70,6 +71,10 @@ export default async function GradingInboxPage({
           Chỉ hiện các lượt thi đã kết thúc. AI chỉ đề xuất điểm — điểm chính
           thức do bạn duyệt/sửa trong từng lượt.
         </p>
+
+        <div className="mt-4">
+          <OralRubricEditor examId={exam.id} initialRubric={exam.oralRubricText ?? ""} />
+        </div>
 
         {attempts.length === 0 ? (
           <p className="mt-6 rounded border border-dashed border-default px-4 py-6 text-center text-sm text-faint">

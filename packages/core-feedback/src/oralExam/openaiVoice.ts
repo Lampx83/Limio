@@ -53,8 +53,12 @@ export function openAiTextToSpeech(
   };
 }
 
-/** Nhận file ghi âm câu trả lời của SV, trả về bản chữ qua OpenAI Whisper. */
-export function openAiSpeechToText(openai: OpenAI): SpeechToTextFn {
+/**
+ * Nhận file ghi âm câu trả lời của SV, trả về bản chữ qua OpenAI Whisper.
+ * `language` (ISO-639-1, vd "vi"/"en") khai báo tường minh theo ngôn ngữ đề
+ * thi thay vì để Whisper tự đoán — đoán sai dễ lẫn giữa các ngôn ngữ gần âm.
+ */
+export function openAiSpeechToText(openai: OpenAI, language: string = "vi"): SpeechToTextFn {
   return async (audio: Buffer, mimeType: string) => {
     try {
       const file = await toFile(audio, `answer.${extFromMime(mimeType)}`, {
@@ -63,7 +67,7 @@ export function openAiSpeechToText(openai: OpenAI): SpeechToTextFn {
       const result = await openai.audio.transcriptions.create({
         file,
         model: "whisper-1",
-        language: "vi",
+        language,
       });
       return { transcript: result.text ?? "" };
     } catch (e) {

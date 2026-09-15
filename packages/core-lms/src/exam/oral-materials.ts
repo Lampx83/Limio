@@ -18,7 +18,11 @@ export const MATERIAL_FILE_MIME_TYPES = [
 // 20MB — đủ cho đề cương/tài liệu tham khảo dạng text; không phải kho video/audio.
 export const MATERIAL_MAX_BYTES = 20 * 1024 * 1024;
 
-const materialFileType = z.enum(["document", "rubric"]);
+// A6.4 — "rubric" KHÔNG còn tạo được mới ở đây: rubric giờ là Exam.oralRubricText
+// (text GV tự gõ/sửa bất cứ lúc nào, xem exams.ts) thay vì tài liệu file khoá
+// theo trạng thái draft. Giá trị "rubric" cũ trong DB (OralExamMaterialType)
+// vẫn còn cho dữ liệu lịch sử, chỉ không nhận tạo mới qua đường này nữa.
+const materialFileType = z.enum(["document"]);
 
 async function assertExamOralAndEditable(
   examId: string,

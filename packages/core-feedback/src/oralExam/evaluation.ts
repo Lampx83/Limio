@@ -86,11 +86,11 @@ export async function generateOralExamEvaluation(
           kind: true,
           courseId: true,
           title: true,
+          oralRubricText: true,
           course: { select: { title: true } },
         },
       },
       oralTurns: { orderBy: { createdAt: "asc" } },
-      oralEvaluation: { select: { status: true } },
     },
   });
   if (!attempt) throw new AiTutorError("validation_failed", "attempt_not_found");
@@ -100,24 +100,17 @@ export async function generateOralExamEvaluation(
   if (attempt.status !== "submitted" && attempt.status !== "auto_submitted") {
     throw new AiTutorError("validation_failed", "attempt_not_ended");
   }
-  if (attempt.oralEvaluation && attempt.oralEvaluation.status !== "pending_review") {
-    // GV đã chốt điểm — sinh lại đề xuất AI ở đây sẽ vô nghĩa và dễ gây hiểu
-    // lầm là điểm vừa đổi. Muốn chấm lại thì GV tự sửa qua submitOralEvaluation.
-    throw new AiTutorError("validation_failed", "already_graded");
-  }
-
+  // Cho phép sinh lại đề xuất AI bất cứ lúc nào, kể cả sau khi GV đã chốt
+  // điểm (vd sau khi GV sửa lại rubric) — upsert bên dưới chỉ ghi đè
+  // aiSuggestedScore/aiSummary, KHÔNG đụng tới instructorScore/status GV đã
+  // chốt. GV tự quyết có cập nhật lại điểm theo đề xuất mới hay không qua
+  // submitOralEvaluation như cũ.
   await assertWithinCaps(actorUserId, db, "generator");
-
-  const rubricMaterial = await db.oralExamMaterial.findFirst({
-    where: { examId: attempt.exam.id, type: "rubric" },
-    orderBy: { orderIndex: "asc" },
-    select: { extractedText: true },
-  });
 
   const prompt = buildGradingPrompt({
     courseTitle: attempt.exam.course.title,
     examTitle: attempt.exam.title,
-    rubricText: rubricMaterial?.extractedText ?? null,
+    rubricText: attempt.exam.oralRubricText,
     transcript: attempt.oralTurns.map((t) => ({ role: t.role, content: t.content })),
   });
 
