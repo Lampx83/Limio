@@ -652,7 +652,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                   <button
                     onClick={handlePostNote}
                     disabled={posting}
-                    className="bg-gray-900 hover:bg-black text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                    className="bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
                   >
                     {posting ? "Đang gửi..." : "📌 Dán note"}
                   </button>
@@ -728,7 +728,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           <button
             onClick={handleCreate}
             disabled={isCreating}
-            className="w-full bg-gray-900 hover:bg-black text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all flex items-center justify-center gap-2"
           >
             {isCreating ? "Đang tạo..." : (<><StickyNote size={16} strokeWidth={2.4} /> Tạo Bảng</>)}
           </button>

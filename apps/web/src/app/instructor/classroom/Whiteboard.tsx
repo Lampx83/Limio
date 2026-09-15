@@ -533,7 +533,7 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
                 onClick={() => setMode("blank")}
                 className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold border transition-colors ${
                   mode === "blank"
-                    ? "bg-gray-900 text-white border-gray-900"
+                    ? "bg-gradient-to-br from-sky-500 to-teal-500 text-white border-transparent"
                     : "bg-white text-gray-700 border-sky-200 hover:border-sky-400"
                 }`}
               >
@@ -544,7 +544,7 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
                 onClick={() => setMode("document")}
                 className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold border transition-colors ${
                   mode === "document"
-                    ? "bg-gray-900 text-white border-gray-900"
+                    ? "bg-gradient-to-br from-sky-500 to-teal-500 text-white border-transparent"
                     : "bg-white text-gray-700 border-sky-200 hover:border-sky-400"
                 }`}
               >
@@ -648,7 +648,7 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
           <button
             onClick={handleCreate}
             disabled={isCreating || isUploading}
-            className="w-full bg-gray-900 hover:bg-black text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-br from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all flex items-center justify-center gap-2"
           >
             {isCreating ? "Đang tạo..." : (<><PenTool size={16} strokeWidth={2.4} /> Tạo Whiteboard</>)}
           </button>
