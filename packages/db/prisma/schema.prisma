@@ -508,6 +508,14 @@ model LessonEngagement {
   maxVideoPct  Int @default(0)
   /// Số lượt mở bài. Mở đi mở lại nhiều lần là một tín hiệu khác hẳn đọc một mạch.
   sessionCount Int @default(0)
+  /// Các đoạn video đã xem thật, hợp nhất — [[startSec,endSec], ...]. Khác
+  /// maxVideoPct: mốc cao nhất không phân biệt được "xem liền mạch" với "tua
+  /// tới cuối rồi tua lại xem đoạn đầu". Null khi bài không có video hoặc
+  /// chưa từng nhận nhịp nào mang theo range.
+  videoRanges Json?
+  /// Vị trí phát gần nhất (giây) tại nhịp gần nhất — "điểm dừng" để biết bỏ
+  /// dở ở đâu, khác với mốc cao nhất từng đạt.
+  lastVideoPositionSec Int?
 
   firstSeenAt DateTime @default(now())
   lastSeenAt  DateTime @updatedAt
