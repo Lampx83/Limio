@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiUrl, withBasePath } from "@/lib/apiUrl";
+import { toast } from "@/lib/toast";
 
 const ROLE_LABELS: Record<string, string> = {
   learner: "Học viên",
@@ -42,12 +43,21 @@ export default function RoleSwitcher({
       // Máy chủ từ chối (vai trò không thuộc tài khoản, phiên hết hạn) thì
       // đứng yên. Trước đây lỗi bị nuốt rồi vẫn điều hướng, nên người dùng
       // hạ cánh ở trang mới với vai trò cũ và tưởng menu bị hỏng.
+      //
+      // Báo lỗi ra ngoài thay vì im lặng return — im lặng khiến người dùng
+      // thấy "bấm không có phản ứng gì" và không có manh mối gì để báo lại.
       if (!res.ok) {
         setBusy(false);
+        toast.error(
+          res.status === 401
+            ? "Phiên đăng nhập đã hết hạn, hãy tải lại trang"
+            : "Không thể chuyển vai trò, thử lại sau",
+        );
         return;
       }
     } catch {
       setBusy(false);
+      toast.error("Không kết nối được máy chủ, thử lại sau");
       return;
     }
 
