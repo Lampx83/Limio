@@ -330,6 +330,10 @@ export async function previewBlueprintTopicOnly(
   examId: string,
   cells: TopicCell[],
   db: PrismaClient = prisma,
+  /** Thu hẹp về 1 (hoặc vài) ngân hàng cụ thể — GV chọn ở UI "Theo ma trận đề
+   *  thi". Bỏ trống = auto-scope mọi ngân hàng GV có quyền (hành vi cũ). Luôn
+   *  giao với resolveBankScope — id ngoài phạm vi bị bỏ qua, không leak. */
+  explicitBankIds?: string[],
 ): Promise<BlueprintPreviewResult> {
   const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
   if (!exam) throw new ExamError("exam_not_found");
@@ -338,7 +342,11 @@ export async function previewBlueprintTopicOnly(
   const activeCells = cells.filter((c) => c.count > 0);
   const totalRequested = activeCells.reduce((s, c) => s + c.count, 0);
 
-  const bankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+  const scopeBankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+  const bankIds =
+    explicitBankIds && explicitBankIds.length > 0
+      ? scopeBankIds.filter((id) => explicitBankIds.includes(id))
+      : scopeBankIds;
 
   if (bankIds.length === 0) {
     return {
@@ -393,12 +401,17 @@ export async function listTopicsInExamScope(
   actorUserId: string,
   examId: string,
   db: PrismaClient = prisma,
+  /** Thu hẹp về 1 ngân hàng cụ thể — xem ghi chú ở previewBlueprintTopicOnly. */
+  explicitBankId?: string,
 ): Promise<{ topic: string; count: number; publishedCount: number }[]> {
   const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
   if (!exam) throw new ExamError("exam_not_found");
   await assertCanEditCourse(actorUserId, exam.courseId, db);
 
-  const bankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+  const scopeBankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+  const bankIds = explicitBankId
+    ? scopeBankIds.filter((id) => id === explicitBankId)
+    : scopeBankIds;
   if (bankIds.length === 0) return [];
 
   // Discovery query: include cả draft + published để instructor thấy đủ chủ đề
@@ -467,7 +480,15 @@ export async function assembleExamFromBlueprint(
     throw new ExamError("validation_failed", "Blueprint has no cells with count > 0");
   }
 
-  const bankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+  const scopeBankIds = await resolveBankScope(exam.courseId, actorUserId, db);
+  const savedBankIds = (bp as { bankIds?: string[] }).bankIds ?? [];
+  // Blueprint topic_only đã lưu 1 ngân hàng cụ thể (GV chọn ở UI) → giữ đúng
+  // ngân hàng đó thay vì auto-scope lại toàn bộ; giao với resolveBankScope để
+  // không lỡ dùng 1 id GV không còn quyền (đổi vai trò sau khi lưu).
+  const bankIds =
+    savedBankIds.length > 0
+      ? scopeBankIds.filter((id) => savedBankIds.includes(id))
+      : scopeBankIds;
 
   // skillIds only relevant for skill_matrix mode. In topic mode we filter by
   // config.topic at the bucket level, so we don't constrain skillIds.

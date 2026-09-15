@@ -8,7 +8,6 @@ import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
 import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
 import ImportQuestionsModal from "./ImportQuestionsModal";
-import BankPickerModal from "./BankPickerModal";
 
 interface Skill {
   id: string;
@@ -55,6 +54,7 @@ interface SectionSummary {
 
 interface Props {
   examId: string;
+  courseId: string;
   editable: boolean;
   passages: PassageData[];
   questions: QuestionData[];
@@ -77,10 +77,9 @@ type EditState =
   | { kind: "newPassage" }
   | { kind: "editPassage"; passageId: string }
   | { kind: "newQuestion"; passageId: string | null; sectionId?: string | null }
-  | { kind: "fromBank"; sectionId?: string | null }
   | { kind: "editQuestion"; questionId: string };
 
-export default function ContentManager({ examId, editable, passages, questions }: Props) {
+export default function ContentManager({ examId, courseId, editable, passages, questions }: Props) {
   const router = useRouter();
   const [edit, setEdit] = useState<EditState>({ kind: "idle" });
   const [working, setWorking] = useState(false);
@@ -109,6 +108,13 @@ export default function ContentManager({ examId, editable, passages, questions }
   }, [examId]);
 
   const boxed = (sections?.length ?? 0) >= 2;
+
+  // "Từ ngân hàng" giờ là 1 chuỗi trang riêng (chọn phương thức → trang
+  // riêng cho từng cách), không còn mở modal tại chỗ.
+  function contentSourceHref(sectionId: string | null) {
+    const base = `/instructor/courses/${courseId}/exams/${examId}/content`;
+    return sectionId ? `${base}?sectionId=${sectionId}` : base;
+  }
 
   async function addSectionLightweight(showHint: boolean) {
     const nextPosition = (sections?.length ?? 0) + 2; // vị trí 1 là khung ngầm định
@@ -379,14 +385,6 @@ export default function ContentManager({ examId, editable, passages, questions }
         onClose={() => setImportOpen(false)}
       />
 
-      {editable && edit.kind === "fromBank" && (
-        <BankPickerModal
-          examId={examId}
-          sectionId={edit.sectionId ?? null}
-          onClose={() => setEdit({ kind: "idle" })}
-        />
-      )}
-
       {/* CTA chính (chỉ khi chưa chia phần — đã chia thì mỗi khung có CTA riêng) + menu phụ */}
       {editable && (
         <div className="-mt-3 mb-1 flex flex-wrap items-center justify-between gap-2">
@@ -406,7 +404,7 @@ export default function ContentManager({ examId, editable, passages, questions }
                 type="button"
                 onClick={() => {
                   setAddMenuOpen(false);
-                  setEdit({ kind: "fromBank", sectionId: null });
+                  router.push(contentSourceHref(null));
                 }}
                 className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100"
               >
@@ -767,7 +765,7 @@ export default function ContentManager({ examId, editable, passages, questions }
                             type="button"
                             onClick={() => {
                               setChooserFor(null);
-                              setEdit({ kind: "fromBank", sectionId: box.section?.id ?? null });
+                              router.push(contentSourceHref(box.section?.id ?? null));
                             }}
                             className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100"
                           >

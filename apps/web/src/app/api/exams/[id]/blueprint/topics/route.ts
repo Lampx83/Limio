@@ -10,13 +10,14 @@ export const runtime = "nodejs";
  * course, plus per-topic published-question count (for instructor visibility).
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const topics = await listTopicsInExamScope(userId, params.id);
+    const bankId = new URL(req.url).searchParams.get("bankId") ?? undefined;
+    const topics = await listTopicsInExamScope(userId, params.id, undefined, bankId);
     return NextResponse.json({ topics });
   } catch (e) {
     const mapped = mapKnownError(e);

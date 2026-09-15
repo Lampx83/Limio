@@ -282,6 +282,7 @@ export default async function EditExamPage({
             )}
             <ContentManager
               examId={exam.id}
+              courseId={course.id}
               editable={exam.status !== "archived"}
               passages={exam.passages.map((p) => ({
                 id: p.id,

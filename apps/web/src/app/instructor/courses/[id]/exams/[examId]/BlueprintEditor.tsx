@@ -27,9 +27,12 @@ interface InitialCell {
 interface InitialBlueprint {
   mode: Mode;
   lessonIds: string[];
+  bankIds?: string[];
   cells: InitialCell[];
   totalCount: number;
 }
+
+type Bank = { id: string; name: string };
 
 interface AvailabilityCell {
   cognitiveLevel?: CognitiveLevel;
@@ -182,15 +185,38 @@ export default function BlueprintEditor({
     return [];
   });
 
+  // ── Ngân hàng câu hỏi — GV chọn 1 ngân hàng cụ thể để thiết kế ma trận,
+  // thay vì auto-scope mọi ngân hàng GV có quyền trong khoá (hành vi cũ).
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [bankId, setBankId] = useState(() => initialBlueprint?.bankIds?.[0] ?? "");
+  useEffect(() => {
+    fetch("/api/question-banks")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { banks: Bank[] } | null) => {
+        if (!j) return;
+        setBanks(j.banks);
+        setBankId((cur) => cur || (j.banks.length === 1 ? j.banks[0]!.id : ""));
+      });
+  }, []);
+
+  const handleBankChange = (id: string) => {
+    setBankId(id);
+    // Đổi ngân hàng → chủ đề của ngân hàng cũ không còn ý nghĩa, reset lại.
+    setTopicRows([]);
+  };
+
   const [availableTopics, setAvailableTopics] = useState<TopicEntry[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
 
-  // Load distinct topics in scope on mount + when switching to topic mode.
+  // Load distinct topics in scope on mount + khi đổi mode/ngân hàng.
   useEffect(() => {
     if (mode !== "topic_only") return;
     let cancelled = false;
     setTopicsLoading(true);
-    fetch(`/api/exams/${examId}/blueprint/topics`)
+    const url = bankId
+      ? `/api/exams/${examId}/blueprint/topics?bankId=${bankId}`
+      : `/api/exams/${examId}/blueprint/topics`;
+    fetch(url)
       .then((r) => (r.ok ? r.json() : { topics: [] }))
       .then((j: { topics: TopicEntry[] }) => {
         if (!cancelled) setAvailableTopics(j.topics);
@@ -199,7 +225,25 @@ export default function BlueprintEditor({
     return () => {
       cancelled = true;
     };
-  }, [examId, mode]);
+  }, [examId, mode, bankId]);
+
+  // Mặc định đưa hết chủ đề có sẵn vào ma trận — GV bớt đi thay vì phải tự
+  // thêm từng chủ đề, đỡ 1 bước cho trường hợp phổ biến "rải đều mọi chủ đề".
+  // Không ghi đè nếu đã có dòng (từ blueprint đã lưu, hoặc GV đã tự chỉnh).
+  useEffect(() => {
+    if (mode !== "topic_only" || availableTopics.length === 0) return;
+    setTopicRows((rows) =>
+      rows.length > 0
+        ? rows
+        : availableTopics.map((t) => ({
+            id: nextTopicRowId(),
+            topic: t.topic,
+            m1: 0,
+            m2: 0,
+            m3: 0,
+          })),
+    );
+  }, [mode, availableTopics]);
 
   // ── Preview / save / assemble shared state ─────────────────────────────
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -274,7 +318,7 @@ export default function BlueprintEditor({
       const body =
         mode === "skill_matrix"
           ? { mode, lessonIds: [...selectedLessons], cells }
-          : { mode, cells };
+          : { mode, cells, bankIds: bankId ? [bankId] : undefined };
       const r = await fetch(`/api/exams/${examId}/blueprint/preview`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -284,7 +328,7 @@ export default function BlueprintEditor({
     } finally {
       setPreviewLoading(false);
     }
-  }, [examId, mode, selectedLessons, totalCount, buildCells]);
+  }, [examId, mode, selectedLessons, totalCount, buildCells, bankId]);
 
   useEffect(() => {
     if (previewTimer.current) clearTimeout(previewTimer.current);
@@ -339,8 +383,12 @@ export default function BlueprintEditor({
   const removeTopicRow = (id: string) => {
     setTopicRows((rows) => rows.filter((r) => r.id !== id));
   };
+  const removeTopicRowByTopic = (topic: string) => {
+    setTopicRows((rows) => rows.filter((r) => r.topic !== topic));
+  };
 
-  // Topics already used in rows (to grey out the "+ Quick-add" chip).
+  // Chủ đề đã có dòng trong ma trận — mặc định là TẤT CẢ (xem effect default
+  // all ở trên); GV bấm chip để bỏ bớt, không phải để thêm.
   const usedTopicSet = new Set(topicRows.map((r) => r.topic.trim()).filter(Boolean));
 
   // ── Save ─────────────────────────────────────────────────────────────
@@ -359,7 +407,7 @@ export default function BlueprintEditor({
       const body =
         mode === "skill_matrix"
           ? { mode, lessonIds: [...selectedLessons], cells }
-          : { mode, cells };
+          : { mode, cells, bankIds: bankId ? [bankId] : [] };
       const r = await fetch(`/api/exams/${examId}/blueprint`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -369,7 +417,7 @@ export default function BlueprintEditor({
         setFlash({ ok: false, msg: "Lưu thất bại." });
         return;
       }
-      setFlash({ ok: true, msg: "Đã lưu blueprint." });
+      setFlash({ ok: true, msg: "Đã lưu ma trận đề." });
       setTimeout(() => setFlash(null), 3000);
     } finally {
       setSaving(false);
@@ -421,7 +469,7 @@ export default function BlueprintEditor({
       (mode === "topic_only" && topicRows.length > 0);
     if (hasData) {
       const ok = window.confirm(
-        "Đổi chế độ sẽ làm mất dữ liệu blueprint hiện tại (chưa lưu thì mất luôn, đã lưu thì sẽ bị ghi đè khi bấm Lưu). Tiếp tục?",
+        "Đổi chế độ sẽ làm mất dữ liệu ma trận đề hiện tại (chưa lưu thì mất luôn, đã lưu thì sẽ bị ghi đè khi bấm Lưu). Tiếp tục?",
       );
       if (!ok) return;
     }
@@ -467,36 +515,59 @@ export default function BlueprintEditor({
 
   return (
     <div className="space-y-5">
-      {/* Header row: title + mode tabs + actions */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold">Thiết kế đề theo ma trận đề thi</h2>
-          <p className="mt-0.5 text-xs text-faint">
-            Tổng: <strong className="text-slate-700">{totalCount}</strong> câu.
-          </p>
+      <div>
+        <h2 className="text-base font-semibold">Thiết kế đề theo ma trận đề thi</h2>
+        <p className="mt-0.5 text-xs text-faint">
+          Tổng: <strong className="text-slate-700">{totalCount}</strong> câu.
+        </p>
+      </div>
+
+      {/* Ngân hàng câu hỏi — chọn trước, mọi thứ bên dưới (chủ đề, xem trước
+          khả dụng, tạo pool) đều bám theo đúng ngân hàng này. */}
+      {banks.length > 1 && (
+        <label className="block max-w-md">
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-faint">
+            Ngân hàng câu hỏi
+          </span>
+          <select
+            value={bankId}
+            onChange={(e) => handleBankChange(e.target.value)}
+            className="w-full rounded-lg border border-default bg-white px-4 py-2.5 text-sm font-medium"
+          >
+            <option value="">Tất cả ngân hàng</option>
+            {banks.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {/* Chế độ (radio) + hành động */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <ModeRadio active={mode === "skill_matrix"} onClick={() => switchMode("skill_matrix")}>
+            Bloom × Độ khó
+          </ModeRadio>
+          <ModeRadio active={mode === "topic_only"} onClick={() => switchMode("topic_only")}>
+            Theo chủ đề
+          </ModeRadio>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-default bg-slate-50 p-0.5">
-            <ModeTab active={mode === "skill_matrix"} onClick={() => switchMode("skill_matrix")}>
-              BLT × Độ khó
-            </ModeTab>
-            <ModeTab active={mode === "topic_only"} onClick={() => switchMode("topic_only")}>
-              Theo chủ đề
-            </ModeTab>
-          </div>
           <button
             onClick={handleSave}
             disabled={saving || totalCount === 0}
             className="rounded-md border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
           >
-            {saving ? "Đang lưu…" : "Lưu blueprint"}
+            {saving ? "Đang lưu…" : "Lưu ma trận đề"}
           </button>
           <button
             onClick={handleAssemble}
             disabled={assembling || totalCount === 0}
             className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
           >
-            {assembling ? "Đang tạo…" : "Tạo pool từ blueprint"}
+            {assembling ? "Đang tạo…" : "Tạo pool từ ma trận đề"}
           </button>
         </div>
       </div>
@@ -625,7 +696,7 @@ export default function BlueprintEditor({
             <PreviewSummary preview={preview} previewLoading={previewLoading} totalCount={totalCount} />
             <p className="mt-2 text-[11px] text-faint">
               Nhập số câu vào từng ô. Sau khi lưu, bấm{" "}
-              <strong>Tạo pool từ blueprint</strong> để tạo section ngẫu nhiên.
+              <strong>Tạo pool từ ma trận đề</strong> để tạo section ngẫu nhiên.
             </p>
           </div>
         </div>
@@ -634,56 +705,79 @@ export default function BlueprintEditor({
         // topic_only mode
         // ════════════════════════════════════════════════════════════════
         <div className="space-y-3">
-          {/* Quick-add chips from existing topics */}
+          {/* Chủ đề — panel dropdown 2 cột, cùng kiểu với "Chọn nhanh theo tiêu chí" */}
           {availableTopics.length > 0 && (
-            <div className="rounded-lg border border-default bg-slate-50 p-3">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Chủ đề có sẵn ({availableTopics.length})
-                </span>
-                <span className="text-xs text-faint">
-                  Click để thêm vào blueprint
-                </span>
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Chủ đề</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (usedTopicSet.size === availableTopics.length) {
+                      setTopicRows([]);
+                      return;
+                    }
+                    // Chỉ thêm dòng cho chủ đề còn thiếu — giữ nguyên số liệu
+                    // đã nhập ở các dòng đang có, không ghi đè về 0.
+                    setTopicRows((rows) => {
+                      const existing = new Set(rows.map((r) => r.topic));
+                      const additions = availableTopics
+                        .filter((t) => !existing.has(t.topic))
+                        .map((t) => ({ id: nextTopicRowId(), topic: t.topic, m1: 0, m2: 0, m3: 0 }));
+                      return [...rows, ...additions];
+                    });
+                  }}
+                  className="text-xs font-medium text-brand-700 hover:underline"
+                >
+                  {usedTopicSet.size === availableTopics.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                </button>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {availableTopics.map((t) => {
-                  const used = usedTopicSet.has(t.topic);
-                  const pub = t.publishedCount ?? t.count;
-                  const noPub = pub === 0;
-                  return (
-                    <button
-                      key={t.topic}
-                      disabled={used}
-                      onClick={() => addTopicRow(t.topic)}
-                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition ${
-                        used
-                          ? "cursor-not-allowed border-slate-200 bg-white text-slate-400"
-                          : noPub
-                          ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
-                          : "border-default bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50"
-                      }`}
-                      title={
-                        used
-                          ? "Đã thêm"
-                          : noPub
-                          ? `${t.count} câu nhưng 0 đã publish — sẽ không rút được khi tạo pool`
-                          : `${pub}/${t.count} câu đã publish`
-                      }
-                    >
-                      {used ? "✓ " : noPub ? "⚠ " : "+ "}
-                      {t.topic}
-                      <span className="text-[10px] text-faint">
-                        ({pub}
-                        {pub !== t.count ? `/${t.count}` : ""})
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="mt-1.5 overflow-hidden rounded-lg border border-default">
+                <div className="flex items-center justify-between border-b border-default bg-slate-50 px-3.5 py-2 text-xs text-faint">
+                  <span>
+                    {usedTopicSet.size}/{availableTopics.length} chủ đề đã chọn
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-x-2 p-2 sm:grid-cols-2">
+                  {availableTopics.map((t) => {
+                    const used = usedTopicSet.has(t.topic);
+                    const pub = t.publishedCount ?? t.count;
+                    const noPub = pub === 0;
+                    return (
+                      <label
+                        key={t.topic}
+                        className={`flex items-center gap-2.5 rounded px-2 py-1.5 text-sm ${
+                          noPub ? "text-amber-800" : "text-slate-800"
+                        }`}
+                        title={
+                          noPub
+                            ? `${t.count} câu nhưng 0 đã publish — sẽ không rút được khi tạo pool`
+                            : `${pub}/${t.count} câu đã publish`
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          checked={used}
+                          onChange={() =>
+                            used ? removeTopicRowByTopic(t.topic) : addTopicRow(t.topic)
+                          }
+                          className="h-[18px] w-[18px] shrink-0 accent-brand-600"
+                        />
+                        {noPub && <span aria-hidden>⚠</span>}
+                        {t.topic}
+                        <span className="text-xs text-faint">
+                          ({pub}
+                          {pub !== t.count ? `/${t.count}` : ""})
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               {availableTopics.some((t) => (t.publishedCount ?? t.count) === 0) && (
                 <p className="mt-2 text-[11px] text-amber-700">
-                  ⚠ Chủ đề màu vàng có câu nhưng chưa publish. Pool chỉ rút câu đã publish — hãy{" "}
-                  <strong>publish câu hỏi ở ngân hàng</strong> trước khi assemble đề.
+                  ⚠ Chủ đề đánh dấu vàng có câu nhưng chưa publish. Pool chỉ rút câu đã publish —
+                  hãy <strong>publish câu hỏi ở ngân hàng</strong> trước khi tạo pool.
                 </p>
               )}
             </div>
@@ -857,7 +951,7 @@ export default function BlueprintEditor({
   );
 }
 
-function ModeTab({
+function ModeRadio({
   active,
   onClick,
   children,
@@ -868,13 +962,23 @@ function ModeTab({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`rounded-md px-3 py-1 text-xs font-medium transition ${
+      role="radio"
+      aria-checked={active}
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
         active
-          ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-          : "text-slate-500 hover:text-slate-700"
+          ? "border-brand-600 bg-brand-50 text-slate-900"
+          : "border-default bg-white text-slate-500 hover:border-slate-300"
       }`}
     >
+      <span
+        className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border ${
+          active ? "border-brand-600" : "border-slate-400"
+        }`}
+      >
+        {active && <span className="h-1.5 w-1.5 rounded-full bg-brand-600" />}
+      </span>
       {children}
     </button>
   );

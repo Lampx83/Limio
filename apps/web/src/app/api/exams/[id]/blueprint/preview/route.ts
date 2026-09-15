@@ -20,6 +20,7 @@ const Body = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("topic_only"),
     cells: z.array(TopicCellSchema),
+    bankIds: z.array(z.string().uuid()).optional(),
   }),
 ]);
 
@@ -42,7 +43,13 @@ export async function POST(
             parsed.data.lessonIds,
             parsed.data.cells,
           )
-        : await previewBlueprintTopicOnly(userId, params.id, parsed.data.cells);
+        : await previewBlueprintTopicOnly(
+            userId,
+            params.id,
+            parsed.data.cells,
+            undefined,
+            parsed.data.bankIds,
+          );
     return NextResponse.json(result);
   } catch (e) {
     const mapped = mapKnownError(e);
