@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, ShoppingCart, X } from "lucide-react";
+import { Check, Clock, Copy, Landmark, ShoppingCart, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import DateTime from "@/components/ui/DateTime";
 import EmptyState from "@/components/ui/EmptyState";
@@ -58,6 +58,7 @@ export default function BuyTokensClient({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
 
   const bankReady = Boolean(bank.bankName && bank.accountNumber);
   const pending = orders.filter((o) => o.status === "pending");
@@ -110,56 +111,81 @@ export default function BuyTokensClient({
     setTimeout(() => setCopied(false), 1500);
   }
 
+  async function copyOrderCode(orderId: string, code: string) {
+    await navigator.clipboard.writeText(code);
+    setCopiedOrderId(orderId);
+    setTimeout(() => setCopiedOrderId((id) => (id === orderId ? null : id)), 1500);
+  }
+
   return (
     <>
       {pending.length > 0 && (
-        <section className="banner-info mt-6">
-          <p className="font-semibold">
-            Bạn có {pending.length} đơn đang chờ xác nhận
-          </p>
-          <p className="mt-1 text-sm">
-            Chuyển khoản đúng số tiền và ghi <strong>mã đơn</strong> vào nội
-            dung. Admin đối soát xong sẽ cộng token — thường trong ngày làm việc.
-          </p>
-          <ul className="mt-3 space-y-2">
+        <section className="mt-6 overflow-hidden rounded-xl border border-token">
+          <div className="flex items-start gap-3 bg-[rgb(var(--surface-info))] px-5 py-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface))]">
+              <Clock size={17} aria-hidden />
+            </span>
+            <div>
+              <p className="font-semibold">
+                Bạn có {pending.length} đơn đang chờ xác nhận
+              </p>
+              <p className="mt-0.5 text-sm">
+                Chuyển khoản đúng số tiền, ghi <strong>mã đơn</strong> vào nội
+                dung — admin đối soát xong sẽ cộng token, thường trong ngày
+                làm việc.
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t border-token bg-[rgb(var(--surface-muted))] px-5 py-3 text-sm">
+            {bankReady ? (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <Landmark size={15} className="shrink-0 text-[rgb(var(--text-muted))]" aria-hidden />
+                <span className="text-meta">Chuyển tới</span>
+                <span className="font-semibold">{bank.bankName}</span>
+                <span className="font-mono">{bank.accountNumber}</span>
+                {bank.accountName && (
+                  <span className="text-meta">({bank.accountName})</span>
+                )}
+              </div>
+            ) : (
+              <p className="text-meta">
+                Thông tin tài khoản nhận chưa được cấu hình — liên hệ admin
+                trước khi chuyển tiền.
+              </p>
+            )}
+          </div>
+
+          <ul className="divide-y divide-[rgb(var(--border))] border-t border-token">
             {pending.map((o) => (
               <li
                 key={o.id}
-                className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-sm"
+                className="flex flex-wrap items-center justify-between gap-3 bg-[rgb(var(--surface))] px-5 py-3"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium">{o.packageName}</span>
-                  <span className="font-semibold">{vnd(o.priceVnd)}</span>
+                <div>
+                  <p className="text-sm font-medium">{o.packageName}</p>
+                  <p className="text-caption">{vnd(o.priceVnd)}</p>
                 </div>
-                <p className="mt-1 flex flex-wrap items-center gap-1.5 text-meta">
-                  Nội dung chuyển khoản:{" "}
-                  <code className="rounded bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono font-semibold">
+                <div className="flex items-center gap-2">
+                  <code className="rounded-lg bg-[rgb(var(--surface-muted))] px-3 py-1.5 font-mono text-sm font-semibold tracking-wide">
                     {o.code}
                   </code>
                   <button
                     type="button"
-                    onClick={() => void copyCode(o.code)}
-                    className="rounded p-1 text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))]"
-                    aria-label="Sao chép mã đơn"
+                    onClick={() => void copyOrderCode(o.id, o.code)}
+                    className="btn-secondary btn-sm gap-1.5"
                   >
-                    <Copy size={13} />
+                    {copiedOrderId === o.id ? (
+                      <Check size={13} aria-hidden />
+                    ) : (
+                      <Copy size={13} aria-hidden />
+                    )}
+                    {copiedOrderId === o.id ? "Đã chép" : "Sao chép"}
                   </button>
-                </p>
+                </div>
               </li>
             ))}
           </ul>
-          {bankReady ? (
-            <p className="mt-3 text-sm">
-              Chuyển tới: <strong>{bank.bankName}</strong> —{" "}
-              <strong>{bank.accountNumber}</strong>
-              {bank.accountName ? ` (${bank.accountName})` : ""}
-            </p>
-          ) : (
-            <p className="mt-3 text-sm">
-              Thông tin tài khoản nhận chưa được cấu hình — liên hệ admin trước
-              khi chuyển tiền.
-            </p>
-          )}
         </section>
       )}
 
