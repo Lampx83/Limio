@@ -112,8 +112,17 @@ export async function startOralExamAttempt(
 export async function openOralExamSession(
   actorUserId: string,
   examId: string,
+  opts: { durationOverrideMin?: number | null } = {},
   db: PrismaClient = prisma,
 ): Promise<{ sessionId: string; joinCode: string; published: boolean; reused: boolean }> {
+  if (
+    opts.durationOverrideMin != null &&
+    (!Number.isInteger(opts.durationOverrideMin) ||
+      opts.durationOverrideMin <= 0 ||
+      opts.durationOverrideMin > 24 * 60)
+  ) {
+    throw new ExamError("validation_failed", { reason: "durationOverrideMin_invalid" });
+  }
   const exam = await db.exam.findUnique({
     where: { id: examId },
     select: { id: true, courseId: true, status: true, kind: true },
@@ -136,7 +145,13 @@ export async function openOralExamSession(
   const existing = await db.examSession.findFirst({
     where: { examId },
     orderBy: [{ opensAt: "asc" }, { createdAt: "asc" }],
-    select: { id: true, timingMode: true, status: true, oralJoinCode: true },
+    select: {
+      id: true,
+      timingMode: true,
+      status: true,
+      oralJoinCode: true,
+      durationOverrideMin: true,
+    },
   });
 
   if (!existing) {
@@ -154,6 +169,7 @@ export async function openOralExamSession(
             closesAt: null,
             scale: "simple",
             oralJoinCode: joinCode,
+            durationOverrideMin: opts.durationOverrideMin ?? null,
           },
           select: { id: true },
         });
@@ -182,17 +198,32 @@ export async function openOralExamSession(
     }
     if (!joinCode) throw new ExamError("validation_failed", { reason: "joinCode_collision" });
   }
-  if (!alreadyOpen || existing.oralJoinCode !== joinCode) {
+  const needsFieldUpdate = !alreadyOpen || existing.oralJoinCode !== joinCode;
+  // Cho sửa thời lượng ngay cả khi ca đang mở (không cần đóng/mở lại): chỉ
+  // ảnh hưởng các lượt thi BẮT ĐẦU SAU thời điểm này — durationSec được
+  // snapshot riêng vào từng ExamAttempt lúc bắt đầu (xem joinOralSessionByCode
+  // dưới), nên SV đang thi dở không bị đổi đồng hồ giữa chừng.
+  const durationChanged =
+    opts.durationOverrideMin !== undefined &&
+    opts.durationOverrideMin !== existing.durationOverrideMin;
+  if (needsFieldUpdate || durationChanged) {
     await db.examSession.update({
       where: { id: existing.id },
       data: {
-        timingMode: "manual",
-        status: "open",
-        accessMode: "authenticated",
-        openCode: null,
-        oralJoinCode: joinCode,
-        opensAt: new Date(),
-        closesAt: null,
+        ...(needsFieldUpdate
+          ? {
+              timingMode: "manual" as const,
+              status: "open" as const,
+              accessMode: "authenticated" as const,
+              openCode: null,
+              oralJoinCode: joinCode,
+              opensAt: new Date(),
+              closesAt: null,
+            }
+          : {}),
+        ...(opts.durationOverrideMin !== undefined
+          ? { durationOverrideMin: opts.durationOverrideMin }
+          : {}),
       },
     });
   }
@@ -222,12 +253,16 @@ export async function closeOralExamSession(
 export async function getOralSessionInfo(
   examId: string,
   db: PrismaClient = prisma,
-): Promise<{ open: boolean; joinCode: string | null }> {
+): Promise<{ open: boolean; joinCode: string | null; durationOverrideMin: number | null }> {
   const session = await db.examSession.findFirst({
     where: { examId, timingMode: "manual", status: "open" },
-    select: { oralJoinCode: true },
+    select: { oralJoinCode: true, durationOverrideMin: true },
   });
-  return { open: session !== null, joinCode: session?.oralJoinCode ?? null };
+  return {
+    open: session !== null,
+    joinCode: session?.oralJoinCode ?? null,
+    durationOverrideMin: session?.durationOverrideMin ?? null,
+  };
 }
 
 /**

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowDown,
+  ArrowRight,
   ArrowUp,
   FileText,
   List,
@@ -61,6 +62,7 @@ export default function OralMaterialsPanel({
   editable: boolean;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [materials, setMaterials] = useState<Material[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [addMode, setAddMode] = useState<"file" | "topics" | null>(null);
@@ -251,6 +253,17 @@ export default function OralMaterialsPanel({
           )}
         </div>
       )}
+
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => router.push(`${pathname}?tab=organize`)}
+          className="btn btn-primary btn-sm"
+        >
+          Tiếp tục
+          <ArrowRight size={14} className="ml-1.5 inline" />
+        </button>
+      </div>
     </section>
   );
 }

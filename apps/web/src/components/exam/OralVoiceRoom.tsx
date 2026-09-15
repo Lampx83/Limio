@@ -578,7 +578,7 @@ export default function OralVoiceRoom({
                   type="button"
                   onClick={endEarly}
                   disabled={!canAnswer}
-                  className="inline-flex items-center gap-1.5 text-xs text-faint underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--text-muted))] underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   Kết thúc buổi vấn đáp

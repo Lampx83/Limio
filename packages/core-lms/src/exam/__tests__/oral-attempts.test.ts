@@ -194,6 +194,37 @@ describe("openOralExamSession / closeOralExamSession (A6.5 rewrite)", () => {
     expect(count).toBe(1);
   });
 
+  it("accepts a durationOverrideMin and uses it instead of the exam's default duration", async () => {
+    const s = await draftOralExamSetup("dur1"); // draftOralExamSetup's exam durationMin default (20) đã set qua publishedOralExamSetup
+    await openOralExamSession(s.ownerId, s.examId, { durationOverrideMin: 45 });
+    const session = await prisma.examSession.findFirstOrThrow({ where: { examId: s.examId } });
+    expect(session.durationOverrideMin).toBe(45);
+
+    const attempt = await startOralExamAttempt(s.learnerId, s.examId);
+    expect(attempt.durationSec).toBe(45 * 60);
+  });
+
+  it("lets the instructor change durationOverrideMin on an already-open session without closing it", async () => {
+    const s = await draftOralExamSetup("dur2");
+    const first = await openOralExamSession(s.ownerId, s.examId, { durationOverrideMin: 30 });
+    const second = await openOralExamSession(s.ownerId, s.examId, { durationOverrideMin: 90 });
+    expect(second.sessionId).toBe(first.sessionId);
+    expect(second.reused).toBe(true);
+    const session = await prisma.examSession.findFirstOrThrow({ where: { examId: s.examId } });
+    expect(session.durationOverrideMin).toBe(90);
+    expect(session.status).toBe("open");
+  });
+
+  it("rejects a non-positive or too-large durationOverrideMin", async () => {
+    const s = await draftOralExamSetup("dur3");
+    await expect(
+      openOralExamSession(s.ownerId, s.examId, { durationOverrideMin: 0 }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+    await expect(
+      openOralExamSession(s.ownerId, s.examId, { durationOverrideMin: 25 * 60 }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
   it("rejects a draft exam with no materials, without publishing it", async () => {
     const s = await draftOralExamSetup("empty", { withMaterial: false });
     await expect(openOralExamSession(s.ownerId, s.examId)).rejects.toMatchObject({

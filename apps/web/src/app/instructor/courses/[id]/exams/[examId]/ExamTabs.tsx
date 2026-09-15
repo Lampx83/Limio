@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, FileText, Info, type LucideIcon } from "lucide-react";
+import { BookOpen, FileText, Info, UserCheck, type LucideIcon } from "lucide-react";
 
 // A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề: Tổng quan / Nội
 // dung. Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
@@ -12,11 +12,16 @@ import { BookOpen, FileText, Info, type LucideIcon } from "lucide-react";
 // A6.1 — Vấn đáp AI không có ExamQuestion nên không dùng tab "Nội dung"; thay
 // bằng "Tài liệu" (materials) để GV nộp đề cương/danh sách chủ đề cho AI.
 // Một exam chỉ hiện MỘT trong hai tab content/materials tuỳ exam.kind.
-export type ExamTab = "overview" | "content" | "materials";
+//
+// A6.5 (UI) — "organize" chỉ dành cho oral: gộp mở/đóng buổi + thời lượng +
+// mã tham gia (trước đây nằm rải trong header đề, xem OralSessionControl)
+// vào một tab riêng, là điểm đến của nút "Tiếp tục" ở cuối tab Tài liệu. Thi
+// viết KHÔNG có tab này — logistics của thi viết vẫn ở /exam-rounds riêng.
+export type ExamTab = "overview" | "content" | "materials" | "organize";
 
 // Không còn tab "Kết quả": kết quả nói về AI ĐÃ LÀM, mà "ai" thuộc buổi thi
-// chứ không thuộc gói đề. Xem ở Tổ chức thi → từng lần thi.
-export const EXAM_TABS: ExamTab[] = ["overview", "content", "materials"];
+// chứ không thuộc gói đề. Xem ở nút "Chấm bài" trên đầu trang.
+export const EXAM_TABS: ExamTab[] = ["overview", "content", "materials", "organize"];
 
 export function parseExamTab(raw: string | string[] | undefined): ExamTab {
   const v = Array.isArray(raw) ? raw[0] : raw;
@@ -27,6 +32,7 @@ const META: Record<ExamTab, { label: string; Icon: LucideIcon }> = {
   overview: { label: "Tổng quan", Icon: Info },
   content: { label: "Nội dung", Icon: BookOpen },
   materials: { label: "Tài liệu", Icon: FileText },
+  organize: { label: "Tổ chức thi", Icon: UserCheck },
 };
 
 export default function ExamTabs({
@@ -43,7 +49,7 @@ export default function ExamTabs({
   badges?: Partial<Record<ExamTab, number>>;
 }) {
   const tabs: ExamTab[] =
-    kind === "oral" ? ["overview", "materials"] : ["overview", "content"];
+    kind === "oral" ? ["overview", "materials", "organize"] : ["overview", "content"];
   return (
     <nav
       role="tablist"

@@ -90,7 +90,9 @@ export default async function EditExamPage({
   if (!exam || exam.courseId !== course.id) notFound();
 
   const oralSession =
-    exam.kind === "oral" ? await getOralSessionInfo(exam.id) : { open: false, joinCode: null };
+    exam.kind === "oral"
+      ? await getOralSessionInfo(exam.id)
+      : { open: false, joinCode: null, durationOverrideMin: null };
 
   const hasContent =
     exam.kind === "oral"
@@ -100,12 +102,15 @@ export default async function EditExamPage({
   // A6.1 — exam.kind bất biến sau khi tạo: mỗi đề chỉ dùng MỘT trong hai tab
   // content/materials. Tab không hợp lệ với kind hiện tại (vd link cũ còn
   // ?tab=content trên một đề đã là oral) rơi về tab tương ứng, không lỗi.
+  // "organize" chỉ tồn tại cho oral — thi viết rơi về overview thay vì lỗi.
   const activeTab =
     exam.kind === "oral" && requestedTab === "content"
       ? "materials"
       : exam.kind === "written" && requestedTab === "materials"
         ? "content"
-        : requestedTab;
+        : exam.kind === "written" && requestedTab === "organize"
+          ? "overview"
+          : requestedTab;
 
   const attemptCount = exam._count.attempts;
   const hasAttempts = attemptCount > 0;
@@ -179,16 +184,7 @@ export default async function EditExamPage({
               Chấm bài
             </Link>
           )}
-          {exam.kind === "oral" ? (
-            <OralSessionControl
-              examId={exam.id}
-              examStatus={exam.status}
-              sessionOpen={oralSession.open}
-              joinCode={oralSession.joinCode}
-            />
-          ) : (
-            <PublishBar examId={exam.id} status={exam.status} />
-          )}
+          {exam.kind === "written" && <PublishBar examId={exam.id} status={exam.status} />}
           {exam.kind === "oral" && (
             <DeleteOralExamButton
               examId={exam.id}
@@ -198,14 +194,6 @@ export default async function EditExamPage({
           )}
         </div>
       </div>
-
-      {exam.kind === "oral" && oralSession.open && (
-        <div className="mt-4 rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
-          Học viên đã ghi danh khoá học tự vào thi từ trang khoá học (mục Đề
-          thi) sau khi đăng nhập. Học viên khác (chưa ghi danh, lớp mời ngoài…)
-          đăng nhập rồi phát cho họ mã tham gia ở trên.
-        </div>
-      )}
 
       {isPublished && hasAttempts && (
         <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
@@ -261,6 +249,35 @@ export default async function EditExamPage({
             examId={exam.id}
             editable={exam.status === "draft"}
           />
+        </div>
+      )}
+
+      {activeTab === "organize" && (
+        <div className="mt-6 space-y-4">
+          <section className="rounded border border-default bg-white p-5">
+            <h2 className="mb-1 text-base font-semibold">Tổ chức buổi vấn đáp</h2>
+            <p className="mb-4 text-sm text-faint">
+              Mở buổi để học viên đã ghi danh tự vào thi, và phát mã tham gia
+              cho học viên khác (lớp mời ngoài, chưa ghi danh).
+            </p>
+            <OralSessionControl
+              examId={exam.id}
+              examStatus={exam.status}
+              sessionOpen={oralSession.open}
+              joinCode={oralSession.joinCode}
+              examDurationMin={exam.durationMin}
+              durationOverrideMin={oralSession.durationOverrideMin}
+              attemptCount={attemptCount}
+            />
+          </section>
+
+          {oralSession.open && (
+            <div className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
+              Học viên đã ghi danh khoá học tự vào thi từ trang khoá học (mục
+              Đề thi) sau khi đăng nhập. Học viên khác (chưa ghi danh, lớp mời
+              ngoài…) đăng nhập rồi nhập mã tham gia ở trên.
+            </div>
+          )}
         </div>
       )}
 
