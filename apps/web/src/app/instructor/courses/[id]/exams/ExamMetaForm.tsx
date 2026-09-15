@@ -11,6 +11,18 @@ const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
 });
 
+// A6.3 (UI) — mẫu gợi ý khi tạo đề vấn đáp mới, điền sẵn vào ô hướng dẫn cho
+// AI giám khảo (GV sửa/xoá tuỳ ý — đây chỉ là điểm khởi đầu, không phải giá
+// trị mặc định ẩn ở backend). Nhắm đúng vấn đề đã gặp: AI hỏi giống chatbot
+// chung chung hơn giám khảo thật, để SV dẫn dắt, hỏi nhảy lung tung chủ đề.
+const DEFAULT_EXAMINER_INSTRUCTIONS = `Giữ vai trò giám khảo nghiêm túc, chuyên nghiệp — không phải trợ lý trò chuyện thân mật. Không khen "tốt lắm", "chính xác" hay nhận xét đúng/sai giữa buổi.
+
+Luôn là người dẫn dắt cuộc hỏi-đáp: nếu sinh viên cố lái sang chủ đề khác, hỏi ngược lại giám khảo, hoặc trả lời lan man né tránh, hãy nhắc lại đúng trọng tâm câu hỏi thay vì đi theo hướng sinh viên đưa ra.
+
+Hỏi tuần tự theo đúng thứ tự tài liệu/chủ đề đã nộp: khai thác hết một chủ đề (2-3 câu đào sâu) rồi mới chuyển sang chủ đề tiếp theo, không nhảy qua lại giữa các chủ đề.
+
+Nếu sinh viên trả lời sai hoặc thiếu, không sửa hộ hay gợi ý đáp án — hỏi thêm 1 câu làm rõ, rồi chuyển tiếp nếu sinh viên vẫn không trả lời được.`;
+
 interface InitialValues {
   title: string;
   description: string;
@@ -60,13 +72,19 @@ export default function ExamMetaForm({
   fixedKind,
 }: Props) {
   const router = useRouter();
+  const resolvedKind = mode === "create" ? (fixedKind ?? "written") : (initial.kind ?? "written");
   const [v, setV] = useState<InitialValues>({
     ...initial,
     description: plainToRichHtml(initial.description),
-    kind: mode === "create" ? (fixedKind ?? "written") : (initial.kind ?? "written"),
+    kind: resolvedKind,
     answerMode: initial.answerMode ?? "text",
     language: initial.language ?? "vi",
-    examinerInstructions: initial.examinerInstructions ?? "",
+    // Chỉ điền mẫu gợi ý lúc TẠO MỚI — mode="edit" phải hiện đúng những gì đề
+    // đang có (kể cả rỗng), không tự chèn mẫu vào để khỏi gây hiểu lầm là GV
+    // đã từng lưu nội dung này.
+    examinerInstructions:
+      initial.examinerInstructions ??
+      (mode === "create" && resolvedKind === "oral" ? DEFAULT_EXAMINER_INSTRUCTIONS : ""),
   });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -186,15 +204,14 @@ export default function ExamMetaForm({
           </label>
           <p className="mt-0.5 text-caption text-faint">
             Chèn thêm vào chỉ dẫn của AI mỗi lượt hỏi — không hiện cho sinh
-            viên. Ví dụ: "Không để sinh viên dẫn dắt cuộc hội thoại", "Hỏi hết
-            câu hỏi thuộc chủ đề này rồi mới sang chủ đề khác theo đúng thứ tự
-            tài liệu".
+            viên. Đã điền sẵn 1 mẫu gợi ý, bạn sửa/xoá tuỳ ý — để trống thì
+            AI chỉ theo 4 nguyên tắc mặc định (hỏi từng câu, đào sâu, không
+            gợi ý đáp án, đúng ngôn ngữ đề).
           </p>
           <textarea
-            rows={3}
+            rows={7}
             value={v.examinerInstructions ?? ""}
             onChange={(e) => setV({ ...v, examinerInstructions: e.target.value })}
-            placeholder='Vd: "Giữ giọng nghiêm túc, không khen ngợi giữa chừng. Nếu sinh viên trả lời lạc đề, kéo lại đúng chủ đề đang hỏi."'
             className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
           />
         </div>
