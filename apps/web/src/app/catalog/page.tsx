@@ -102,26 +102,28 @@ export default async function CatalogPage({
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-24 lg:pb-12">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex items-start gap-3">
-          {session?.user?.id && (
-            <Link
-              href={isInstructor ? "/instructor/dashboard" : "/me/dashboard"}
-              aria-label={isInstructor ? "Về trang chủ giảng viên" : "Về trang chủ học viên"}
-              title={isInstructor ? "Trang chủ giảng viên" : "Trang chủ học viên"}
-              className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface))] text-[rgb(var(--text))] hover:bg-[rgb(var(--surface-muted))]"
-            >
-              <Home size={18} />
-            </Link>
-          )}
-          <div>
+        <div>
+          {session?.user?.id ? (
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-meta">
+              <Link
+                href={isInstructor ? "/instructor/dashboard" : "/me/dashboard"}
+                className="flex items-center gap-1.5 hover:text-[rgb(var(--text))]"
+              >
+                <Home size={13} />
+                Trang chủ
+              </Link>
+              <span aria-hidden="true">/</span>
+              <span className="text-[rgb(var(--text))]">Catalog</span>
+            </nav>
+          ) : (
             <span className="chip-brand">Catalog</span>
-            <h1 className="mt-3 h-display text-h1">Khám phá khóa học</h1>
-            <p className="mt-2 text-meta">
-              {items.length > 0
-                ? `${items.length} khóa học đang được cộng đồng theo học`
-                : "Chưa có khóa học nào được publish."}
-            </p>
-          </div>
+          )}
+          <h1 className="mt-3 h-display text-h1">Khám phá khóa học</h1>
+          <p className="mt-2 text-meta">
+            {items.length > 0
+              ? `${items.length} khóa học đang được cộng đồng theo học`
+              : "Chưa có khóa học nào được publish."}
+          </p>
         </div>
       </div>
 
