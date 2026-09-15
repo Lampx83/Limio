@@ -4,10 +4,10 @@ import {
   AiTutorError,
   openAiChatCompute,
   openAiEmbedCompute,
+  openAiSpeechToText,
+  openAiTextToSpeech,
+  OpenAiVoiceError,
   runOralExamTurn,
-  vbeeSpeechToText,
-  vbeeTextToSpeech,
-  VbeeError,
 } from "@feedbackme/core-feedback";
 import { getIntegrationSecret, IntegrationError } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
@@ -21,9 +21,14 @@ export const runtime = "nodejs";
  * chủ động bấm "Kết thúc vấn đáp" (bỏ qua audio, đi thẳng vào lời kết — xem
  * runOralExamTurn).
  *
- * KHÔNG dùng SSE như bản chữ: phải chờ nghe xong (Vbee STT) rồi mới hỏi tiếp
- * rồi mới tổng hợp giọng đọc — không có gì để stream từng ký tự, trả về 1
- * JSON sau khi xong toàn bộ.
+ * A6.6 (test tạm) — STT/TTS dùng OpenAI (Whisper + TTS API) thay Vbee: chỉ
+ * cần key OpenAI đã có sẵn cho phần chat, không phải trả phí thuê bao Vbee 1
+ * năm chỉ để thử luồng. Đổi lại sang Vbee (packages/core-feedback/src/oralExam/vbee.ts)
+ * khi cần giọng tiếng Việt chuyên biệt hơn.
+ *
+ * KHÔNG dùng SSE như bản chữ: phải chờ nghe xong (STT) rồi mới hỏi tiếp rồi
+ * mới tổng hợp giọng đọc — không có gì để stream từng ký tự, trả về 1 JSON
+ * sau khi xong toàn bộ.
  *
  * Response: { studentTranscript, assistantText, audioChunks (base64[],
  * phát nối tiếp theo thứ tự), contentType, ended, questionsAsked }
@@ -55,40 +60,6 @@ export async function POST(
   const forceEnd = form.get("forceEnd") === "1";
   const audioFile = forceEnd ? null : form.get("audio");
 
-  // Vbee optional ở đây: chỉ THỰC SỰ cần khi có audio để nhận dạng (STT), hay
-  // khi muốn đọc lời AI thành tiếng (TTS) — kết thúc buổi vẫn phải làm được
-  // dù chưa cấu hình Vbee, chỉ là không có audio đi kèm.
-  let creds: { appId: string; token: string } | null = null;
-  try {
-    const [appId, token] = await Promise.all([
-      getIntegrationSecret("vbee.app_id"),
-      getIntegrationSecret("vbee.token"),
-    ]);
-    creds = { appId, token };
-  } catch (e) {
-    if (!(e instanceof IntegrationError && e.code === "key_not_found")) throw e;
-  }
-
-  let studentTranscript: string | null = null;
-  if (audioFile instanceof File) {
-    if (!creds) {
-      return NextResponse.json({ error: "vbee_not_configured" }, { status: 503 });
-    }
-    const audioBuf = Buffer.from(await audioFile.arrayBuffer());
-    try {
-      const sttResult = await vbeeSpeechToText(creds)(audioBuf, audioFile.type || "audio/wav");
-      studentTranscript = sttResult.transcript.trim() || null;
-    } catch (e) {
-      if (e instanceof VbeeError) {
-        return NextResponse.json({ error: e.code, details: e.details }, { status: 502 });
-      }
-      throw e;
-    }
-    if (!studentTranscript) {
-      return NextResponse.json({ error: "empty_transcript" }, { status: 400 });
-    }
-  }
-
   const openaiKey = await getIntegrationSecret("openai").catch((e) => {
     if (e instanceof IntegrationError && e.code === "key_not_found") return null;
     throw e;
@@ -97,6 +68,23 @@ export async function POST(
     return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
   }
   const openai = new OpenAI({ apiKey: openaiKey });
+
+  let studentTranscript: string | null = null;
+  if (audioFile instanceof File) {
+    const audioBuf = Buffer.from(await audioFile.arrayBuffer());
+    try {
+      const sttResult = await openAiSpeechToText(openai)(audioBuf, audioFile.type || "audio/wav");
+      studentTranscript = sttResult.transcript.trim() || null;
+    } catch (e) {
+      if (e instanceof OpenAiVoiceError) {
+        return NextResponse.json({ error: e.code, details: e.details }, { status: 502 });
+      }
+      throw e;
+    }
+    if (!studentTranscript) {
+      return NextResponse.json({ error: "empty_transcript" }, { status: 400 });
+    }
+  }
 
   let turnResult;
   try {
@@ -117,17 +105,15 @@ export async function POST(
 
   let audioChunks: string[] = [];
   let contentType = "audio/mpeg";
-  if (creds) {
-    try {
-      const tts = await vbeeTextToSpeech(creds)(turnResult.assistantContent);
-      audioChunks = tts.audioChunks.map((b) => b.toString("base64"));
-      contentType = tts.contentType;
-    } catch (e) {
-      // Câu hỏi/lời kết vẫn đã lưu vào transcript ở runOralExamTurn — không
-      // mất gì nếu chỉ riêng bước đọc thành tiếng lỗi. Trả về không có audio,
-      // SV dùng bản chữ (assistantText) qua nút "chuyển sang gõ chữ".
-      if (!(e instanceof VbeeError)) throw e;
-    }
+  try {
+    const tts = await openAiTextToSpeech(openai)(turnResult.assistantContent);
+    audioChunks = tts.audioChunks.map((b) => b.toString("base64"));
+    contentType = tts.contentType;
+  } catch (e) {
+    // Câu hỏi/lời kết vẫn đã lưu vào transcript ở runOralExamTurn — không
+    // mất gì nếu chỉ riêng bước đọc thành tiếng lỗi. Trả về không có audio,
+    // SV dùng bản chữ (assistantText) qua nút "chuyển sang gõ chữ".
+    if (!(e instanceof OpenAiVoiceError)) throw e;
   }
 
   return NextResponse.json({
