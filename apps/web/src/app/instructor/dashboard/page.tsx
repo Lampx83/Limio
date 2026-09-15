@@ -1,11 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  BookOpen,
+  ClipboardList,
+  FileText,
+  HelpCircle,
+  ListChecks,
+  MessageSquare,
+  Tag,
+  UserX,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import {
   getInstructorSkillCoverage,
   userIsAnyProctor,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +30,12 @@ const ACTIVITY_FEED_HOURS = 72;
 const ACTIVITY_FEED_LIMIT = 12;
 
 type Priority = "high" | "med" | "low";
+type Category = "essay" | "forum" | "assignment" | "learner" | "skill";
 
 interface PriorityItem {
   id: string;
   priority: Priority;
+  category: Category;
   title: string;
   detail: string;
   href: string;
@@ -28,10 +43,56 @@ interface PriorityItem {
 }
 
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, med: 1, low: 2 };
-const PRIORITY_STYLES: Record<Priority, { chip: string; dot: string }> = {
-  high: { chip: "chip-danger", dot: "bg-danger-500" },
-  med: { chip: "chip-accent", dot: "bg-amber-500" },
-  low: { chip: "chip", dot: "bg-[rgb(var(--text-faint))]" },
+const TIER_LABEL: Record<Priority, string> = {
+  high: "Gấp",
+  med: "Trung bình",
+  low: "Có thể chờ",
+};
+// Tier styling drives color (urgency); category (CATEGORY_ICON below) drives
+// icon shape — kept separate so "94 lesson chưa tag" (low) and "30 học viên
+// im ắng" (med) read at a glance without matching text first.
+const PRIORITY_STYLES: Record<
+  Priority,
+  {
+    chip: string;
+    tierLabelColor: string;
+    bar: string;
+    cardBg: string;
+    iconBg: string;
+    iconFg: string;
+  }
+> = {
+  high: {
+    chip: "chip-danger",
+    tierLabelColor: "text-danger-700",
+    bar: "bg-danger-500",
+    cardBg: "bg-[rgb(var(--surface))]",
+    iconBg: "bg-danger-50",
+    iconFg: "text-danger-600",
+  },
+  med: {
+    chip: "chip-accent",
+    tierLabelColor: "text-accent-700",
+    bar: "bg-accent-500",
+    cardBg: "bg-[rgb(var(--surface))]",
+    iconBg: "bg-accent-50",
+    iconFg: "text-accent-600",
+  },
+  low: {
+    chip: "chip",
+    tierLabelColor: "text-faint",
+    bar: "bg-slate-300",
+    cardBg: "bg-[rgb(var(--surface-muted))]",
+    iconBg: "bg-[rgb(var(--surface))]",
+    iconFg: "text-muted",
+  },
+};
+const CATEGORY_ICON: Record<Category, LucideIcon> = {
+  essay: FileText,
+  forum: MessageSquare,
+  assignment: ClipboardList,
+  learner: UserX,
+  skill: Tag,
 };
 
 function greeting(): string {
@@ -116,7 +177,7 @@ export default async function InstructorDashboard() {
     pendingAssignmentsTotal,
     staleForumThreads,
     activeEnrollments,
-    recentActivityEvents,
+    courseStaff,
   ] = await Promise.all([
     prisma.answerResponse.count({
       where: {
@@ -157,24 +218,39 @@ export default async function InstructorDashboard() {
       where: { courseId: { in: courseIds }, status: "active" },
       select: { userId: true, courseId: true },
     }),
-    prisma.learningEvent.findMany({
-      where: {
-        courseId: { in: courseIds },
-        occurredAt: { gte: activityCutoff },
-      },
-      orderBy: { occurredAt: "desc" },
-      take: ACTIVITY_FEED_LIMIT,
-      select: {
-        id: true,
-        userId: true,
-        eventType: true,
-        occurredAt: true,
-        payload: true,
-        courseId: true,
-        user: { select: { displayName: true } },
-      },
+    prisma.courseInstructor.findMany({
+      where: { courseId: { in: courseIds } },
+      select: { userId: true },
     }),
   ]);
+
+  // "Hoạt động gần đây" is a learner-engagement feed (EVENT_LABEL below only
+  // translates learner-facing event types), so exclude anyone holding a
+  // CourseInstructor row on these courses at the query level — a demo/test
+  // account that is dual-registered as both instructor and learner on the
+  // same course (seen in dev data) is excluded too, since its events can't
+  // be told apart without per-event role context.
+  const courseStaffIds = courseStaff.map((s) => s.userId);
+  const recentActivityEvents = await prisma.learningEvent.findMany({
+    where: {
+      courseId: { in: courseIds },
+      occurredAt: { gte: activityCutoff },
+      ...(courseStaffIds.length > 0
+        ? { userId: { notIn: courseStaffIds } }
+        : {}),
+    },
+    orderBy: { occurredAt: "desc" },
+    take: ACTIVITY_FEED_LIMIT,
+    select: {
+      id: true,
+      userId: true,
+      eventType: true,
+      occurredAt: true,
+      payload: true,
+      courseId: true,
+      user: { select: { displayName: true } },
+    },
+  });
 
   // Stale learners — active enrollments with no event in last LEARNER_STALE_DAYS.
   let staleLearnerCount = 0;
@@ -207,6 +283,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "essays-stale",
       priority: "high",
+      category: "essay",
       title: `${staleEssays} essay đã chờ > ${ESSAY_STALE_HOURS}h`,
       detail: `Tổng ${pendingEssaysTotal} essay chờ chấm`,
       href: "/instructor/grade-essays",
@@ -216,6 +293,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "essays-pending",
       priority: "med",
+      category: "essay",
       title: `${pendingEssaysTotal} essay chờ chấm`,
       detail: "Chấm tay theo từng response",
       href: "/instructor/grade-essays",
@@ -226,6 +304,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "forum-stale",
       priority: "high",
+      category: "forum",
       title: `${staleForumThreads} thread forum > ${FORUM_STALE_HOURS}h chưa giải đáp`,
       detail: "Học viên đang chờ phản hồi từ bạn",
       href: "/instructor/forum?status=stale",
@@ -236,6 +315,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "assignments-stale",
       priority: "med",
+      category: "assignment",
       title: `${staleAssignments} assignment đã chờ > ${ASSIGNMENT_STALE_HOURS}h`,
       detail: `Tổng ${pendingAssignmentsTotal} chờ chấm`,
       href: "/instructor/assignments?view=pending",
@@ -245,6 +325,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "assignments-pending",
       priority: "low",
+      category: "assignment",
       title: `${pendingAssignmentsTotal} assignment chờ chấm`,
       detail: "Stream theo nộp sớm nhất",
       href: "/instructor/assignments?view=pending",
@@ -255,6 +336,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "learners-stale",
       priority: "med",
+      category: "learner",
       title: `${staleLearnerCount} học viên không hoạt động > ${LEARNER_STALE_DAYS} ngày`,
       detail: "Cân nhắc gửi reminder hoặc check-in",
       href: "/instructor/enrollments?status=stale",
@@ -265,6 +347,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "skill-lessons",
       priority: "low",
+      category: "skill",
       title: `${untaggedLiveLessons} lesson live chưa tag skill`,
       detail: "Cần tag để BKT track mastery cho học viên",
       href: "/instructor/skill-tagging",
@@ -275,6 +358,7 @@ export default async function InstructorDashboard() {
     items.push({
       id: "skill-questions",
       priority: "low",
+      category: "skill",
       title: `${untaggedLiveQuestions} question live chưa tag skill`,
       detail: "Câu hỏi chưa tag không feed vào BKT learner model",
       href: "/instructor/skill-tagging",
@@ -283,6 +367,9 @@ export default async function InstructorDashboard() {
   }
 
   items.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+  const tiers = (["high", "med", "low"] as const)
+    .map((priority) => ({ priority, items: items.filter((i) => i.priority === priority) }))
+    .filter((tier) => tier.items.length > 0);
 
   // ── Context line for greeting ─────────────────────────────────────────
   const highCount = items.filter((i) => i.priority === "high").length;
@@ -296,9 +383,12 @@ export default async function InstructorDashboard() {
     contextLine = `Mọi thứ đang ổn. ${totalLearners} học viên trên ${ownedCourses.length} khoá của bạn.`;
   }
 
-  // Activity feed deep links.
+  // Activity feed deep links + course tag.
   const courseSlugById = new Map(
     ownedCourses.map((c) => [c.id, c.slug] as const),
+  );
+  const courseTitleById = new Map(
+    ownedCourses.map((c) => [c.id, c.title] as const),
   );
 
   return (
@@ -317,6 +407,38 @@ export default async function InstructorDashboard() {
         <p className="mt-2 text-muted">{contextLine}</p>
       </header>
 
+      {/* Stat strip */}
+      <div className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+        <StatTile
+          icon={BookOpen}
+          iconBg="bg-[rgb(var(--brand-soft))]"
+          iconFg="text-brand-600"
+          value={ownedCourses.length}
+          label="Khoá học đang dạy"
+        />
+        <StatTile
+          icon={Users}
+          iconBg="bg-[rgb(var(--brand-soft))]"
+          iconFg="text-brand-600"
+          value={totalLearners}
+          label="Học viên"
+        />
+        <StatTile
+          icon={ListChecks}
+          iconBg="bg-accent-50"
+          iconFg="text-accent-600"
+          value={items.length}
+          label="Việc cần xử lý"
+        />
+        <StatTile
+          icon={UserX}
+          iconBg="bg-danger-50"
+          iconFg="text-danger-600"
+          value={staleLearnerCount}
+          label={`Học viên im ắng >${LEARNER_STALE_DAYS} ngày`}
+        />
+      </div>
+
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         {/* Priority queue */}
         <section className="lg:col-span-2">
@@ -332,46 +454,66 @@ export default async function InstructorDashboard() {
             </span>
           </header>
 
-          {items.length === 0 ? (
+          {tiers.length === 0 ? (
             <div className="mt-3 rounded-2xl border border-success-200 bg-success-50 p-8 text-center text-sm text-success-700">
               🎉 Bạn không có việc gì gấp. Tận hưởng nhé.
             </div>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {items.map((it) => {
-                const style = PRIORITY_STYLES[it.priority];
+            <div className="mt-3 space-y-6">
+              {tiers.map((tier) => {
+                const style = PRIORITY_STYLES[tier.priority];
                 return (
-                  <li key={it.id}>
-                    <Link
-                      href={it.href}
-                      className="card-hover flex items-start gap-3 rounded-xl border border-token p-4 transition-colors hover:border-brand-200"
-                      prefetch={false}
+                  <div key={tier.priority}>
+                    <p
+                      className={`mb-2 text-[11px] font-extrabold uppercase tracking-[0.1em] ${style.tierLabelColor}`}
                     >
-                      <span
-                        className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${style.dot}`}
-                        aria-hidden
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline gap-2">
-                          <p className="font-semibold">{it.title}</p>
-                          <span className={`${style.chip} text-[10px]`}>
-                            {it.priority === "high"
-                              ? "GẤP"
-                              : it.priority === "med"
-                                ? "MED"
-                                : "LOW"}
-                          </span>
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted">{it.detail}</p>
-                      </div>
-                      <span className="shrink-0 self-center text-sm text-faint">
-                        →
-                      </span>
-                    </Link>
-                  </li>
+                      {TIER_LABEL[tier.priority]} · {tier.items.length}
+                    </p>
+                    <ul className="space-y-2">
+                      {tier.items.map((it) => {
+                        const Icon = CATEGORY_ICON[it.category];
+                        return (
+                          <li key={it.id}>
+                            <Link
+                              href={it.href}
+                              className={`card-hover relative flex items-start gap-3.5 overflow-hidden rounded-2xl border border-token py-4 pl-5 pr-4 transition-colors hover:border-brand-200 ${style.cardBg}`}
+                              prefetch={false}
+                            >
+                              <span
+                                className={`absolute inset-y-0 left-0 w-1 ${style.bar}`}
+                                aria-hidden
+                              />
+                              <span
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${style.iconBg} ${style.iconFg}`}
+                                aria-hidden
+                              >
+                                <Icon size={19} strokeWidth={2} />
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-baseline gap-2 flex-wrap">
+                                  <p className="font-semibold">{it.title}</p>
+                                  <span className={`${style.chip} text-[10px] font-bold`}>
+                                    {tier.priority === "high"
+                                      ? "GẤP"
+                                      : tier.priority === "med"
+                                        ? "MED"
+                                        : "LOW"}
+                                  </span>
+                                </div>
+                                <p className="mt-0.5 text-xs text-muted">{it.detail}</p>
+                              </div>
+                              <span className="shrink-0 self-center text-sm text-faint">
+                                →
+                              </span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           )}
         </section>
 
@@ -387,40 +529,86 @@ export default async function InstructorDashboard() {
               Chưa có hoạt động.
             </div>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {recentActivityEvents.map((ev) => {
-                const label =
-                  EVENT_LABEL[ev.eventType]?.(
-                    ev.payload as Record<string, unknown>,
-                  ) ?? ev.eventType;
-                const slug = ev.courseId
-                  ? courseSlugById.get(ev.courseId)
-                  : undefined;
-                const href = slug ? `/learn/${slug}` : "/instructor/enrollments";
-                return (
-                  <li
-                    key={ev.id.toString()}
-                    className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-sm transition-colors hover:bg-[rgb(var(--surface-muted))]"
-                  >
-                    <Link href={href} className="block">
-                      <p className="line-clamp-2">
-                        <span className="font-medium">
-                          {ev.user?.displayName ?? "—"}
-                        </span>{" "}
-                        <span className="text-muted">{label}</span>
-                      </p>
-                      <p className="mt-0.5 text-xs text-faint">
-                        {formatAgo(ev.occurredAt)}
-                      </p>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="relative mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
+              <div
+                className="absolute bottom-5 left-[35px] top-5 w-px bg-[rgb(var(--border))]"
+                aria-hidden
+              />
+              <ul className="space-y-4">
+                {recentActivityEvents.map((ev) => {
+                  const label =
+                    EVENT_LABEL[ev.eventType]?.(
+                      ev.payload as Record<string, unknown>,
+                    ) ?? ev.eventType;
+                  const slug = ev.courseId
+                    ? courseSlugById.get(ev.courseId)
+                    : undefined;
+                  const courseTitle = ev.courseId
+                    ? courseTitleById.get(ev.courseId)
+                    : undefined;
+                  const href = slug ? `/learn/${slug}` : "/instructor/enrollments";
+                  return (
+                    <li key={ev.id.toString()} className="relative flex gap-3">
+                      <UserAvatar
+                        name={ev.user?.displayName}
+                        size="sm"
+                        className="z-[1] shrink-0"
+                      />
+                      <Link href={href} className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-sm">
+                          <span className="font-medium">
+                            {ev.user?.displayName ?? "—"}
+                          </span>{" "}
+                          <span className="text-muted">{label}</span>
+                        </p>
+                        {courseTitle && (
+                          <span className="chip-brand mt-1 inline-flex text-[11px]">
+                            {courseTitle}
+                          </span>
+                        )}
+                        <p className="mt-1 text-xs text-faint">
+                          {courseTitle ? "· " : ""}
+                          {formatAgo(ev.occurredAt)}
+                        </p>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </section>
       </div>
     </main>
+  );
+}
+
+function StatTile({
+  icon: Icon,
+  iconBg,
+  iconFg,
+  value,
+  label,
+}: {
+  icon: LucideIcon;
+  iconBg: string;
+  iconFg: string;
+  value: number;
+  label: string;
+}) {
+  return (
+    <div className="card flex items-center gap-3 p-4">
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] ${iconBg} ${iconFg}`}
+        aria-hidden
+      >
+        <Icon size={18} strokeWidth={2} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xl font-bold leading-none">{value}</p>
+        <p className="mt-0.5 truncate text-xs text-muted">{label}</p>
+      </div>
+    </div>
   );
 }
 
