@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Crown } from "lucide-react";
+import { Crown, Info, Trophy } from "lucide-react";
 import type { BoardResponse, Period } from "@feedbackme/core-gamification";
 import { UserAvatar } from "@/components/ui";
 
@@ -67,8 +67,13 @@ export default function CourseLeaderboardCard({
             );
           })}
         </div>
-        <Link href="/xp-guide" className="btn-pill shrink-0 py-1 text-xs">
-          💡 Cách tính điểm
+        <Link
+          href="/xp-guide"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface-muted))] text-muted transition-colors hover:text-brand-700"
+          aria-label="Cách tính điểm"
+          title="Cách tính điểm"
+        >
+          <Info className="h-4 w-4" aria-hidden />
         </Link>
       </div>
 
@@ -85,11 +90,21 @@ export default function CourseLeaderboardCard({
       )}
 
       {board.entries.length === 0 ? (
-        <p className="mt-3 text-sm text-faint">
-          {period === "weekly"
-            ? "Chưa ai có XP tuần này. Trở thành người đầu tiên!"
-            : "Chưa có học viên nào tích lũy XP."}
-        </p>
+        <div className="mt-4 flex flex-col items-center gap-2 py-4 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand-700">
+            <Trophy className="h-5 w-5" aria-hidden />
+          </span>
+          <p className="text-sm font-medium">
+            {period === "weekly"
+              ? "Chưa có ai ghi điểm tuần này"
+              : "Chưa có học viên nào tích lũy XP"}
+          </p>
+          <p className="text-xs text-faint">
+            {period === "weekly"
+              ? "Hoàn thành một bài học để trở thành người dẫn đầu đầu tiên."
+              : "Hãy là người đầu tiên xuất hiện trên bảng xếp hạng."}
+          </p>
+        </div>
       ) : (
         <ol className="mt-3 space-y-1.5 text-sm">
           {board.entries.map((e) => {

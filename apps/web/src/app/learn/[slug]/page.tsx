@@ -435,10 +435,14 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
                     className={`rounded-lg border p-2 text-center transition ${
                       isEarned
                         ? "border-accent-200 bg-accent-50"
-                        : "border-dashed border-token bg-[rgb(var(--surface-muted))] opacity-50 grayscale"
+                        : "border-token bg-[rgb(var(--surface-muted))]"
                     }`}
                   >
-                    <div className="text-xl">{b.emoji ?? ""}</div>
+                    {isEarned ? (
+                      <div className="text-xl">{b.emoji ?? ""}</div>
+                    ) : (
+                      <Lock className="mx-auto h-4 w-4 text-faint" aria-hidden />
+                    )}
                     <div className="mt-0.5 text-[10px] font-medium leading-tight">
                       {b.name}
                     </div>
