@@ -7,10 +7,19 @@ const STATE_LABEL: Record<OralAvatarState, string> = {
   listening: "Đang lắng nghe…",
 };
 
+// A6.6 (UI) — video loop thật cho từng state (quay/tạo sẵn 1 lần, phục vụ
+// như asset tĩnh — không sinh theo lượt nên không tốn thêm chi phí/độ trễ).
+// State nào chưa có video thì rơi về mặt SVG robot cũ bên dưới.
+const STATE_VIDEO: Partial<Record<OralAvatarState, string>> = {
+  idle: "/oral-avatar/idle.mp4",
+  thinking: "/oral-avatar/thinking.mp4",
+};
+
 /**
- * A6.6 (UI) — mặt AI giám khảo trong phòng vấn đáp. Vẽ bằng SVG + animation
- * CSS thuần (xem tailwind.config.ts `avatar-*`) — không cần asset ảnh, đổi
- * trạng thái tức thời theo state của phòng thi (đang hỏi/nghe/soạn câu).
+ * A6.6 (UI) — mặt AI giám khảo trong phòng vấn đáp. Ưu tiên video loop thật
+ * (STATE_VIDEO) nếu state đó đã có; chưa có thì rơi về SVG robot vẽ bằng
+ * animation CSS thuần (xem tailwind.config.ts `avatar-*`) — đổi trạng thái
+ * tức thời theo state của phòng thi (đang hỏi/nghe/soạn câu).
  */
 export default function OralAiAvatar({
   state,
@@ -19,6 +28,7 @@ export default function OralAiAvatar({
   state: OralAvatarState;
   className?: string;
 }) {
+  const videoSrc = STATE_VIDEO[state];
   return (
     <div className={`flex flex-col items-center gap-2 ${className ?? ""}`}>
       <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
@@ -31,42 +41,54 @@ export default function OralAiAvatar({
             />
           </>
         )}
-        <div
-          className={`flex h-20 w-20 items-center justify-center rounded-full bg-brand-gradient shadow-brand-glow ${
-            state === "idle" ? "animate-avatar-bob" : ""
-          } ${state === "thinking" ? "animate-avatar-think-tilt" : ""}`}
-        >
-          <svg viewBox="0 0 100 100" className="h-12 w-12" aria-hidden="true" focusable="false">
-            <ellipse
-              cx="32"
-              cy="42"
-              rx="7"
-              ry="9"
-              fill="white"
-              className="animate-avatar-blink"
-              style={{ transformBox: "fill-box", transformOrigin: "center" }}
-            />
-            <ellipse
-              cx="68"
-              cy="42"
-              rx="7"
-              ry="9"
-              fill="white"
-              className="animate-avatar-blink"
-              style={{ transformBox: "fill-box", transformOrigin: "center", animationDelay: "0.15s" }}
-            />
-            <rect
-              x="38"
-              y="62"
-              width="24"
-              height="12"
-              rx="6"
-              fill="white"
-              className={state === "talking" ? "animate-avatar-talk-mouth" : ""}
-              style={{ transformBox: "fill-box", transformOrigin: "bottom" }}
-            />
-          </svg>
-        </div>
+        {videoSrc ? (
+          <video
+            key={videoSrc}
+            className="h-20 w-20 rounded-full object-cover shadow-brand-glow"
+            src={videoSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <div
+            className={`flex h-20 w-20 items-center justify-center rounded-full bg-brand-gradient shadow-brand-glow ${
+              state === "idle" ? "animate-avatar-bob" : ""
+            } ${state === "thinking" ? "animate-avatar-think-tilt" : ""}`}
+          >
+            <svg viewBox="0 0 100 100" className="h-12 w-12" aria-hidden="true" focusable="false">
+              <ellipse
+                cx="32"
+                cy="42"
+                rx="7"
+                ry="9"
+                fill="white"
+                className="animate-avatar-blink"
+                style={{ transformBox: "fill-box", transformOrigin: "center" }}
+              />
+              <ellipse
+                cx="68"
+                cy="42"
+                rx="7"
+                ry="9"
+                fill="white"
+                className="animate-avatar-blink"
+                style={{ transformBox: "fill-box", transformOrigin: "center", animationDelay: "0.15s" }}
+              />
+              <rect
+                x="38"
+                y="62"
+                width="24"
+                height="12"
+                rx="6"
+                fill="white"
+                className={state === "talking" ? "animate-avatar-talk-mouth" : ""}
+                style={{ transformBox: "fill-box", transformOrigin: "bottom" }}
+              />
+            </svg>
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-1.5 text-caption text-faint">
         {state === "thinking" && (
