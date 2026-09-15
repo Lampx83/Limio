@@ -297,12 +297,8 @@ export default function JoinBoardPage() {
       )}
 
       <main className="max-w-6xl mx-auto p-4">
-        {board.notes.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-6xl mb-3">📝</p>
-            <p className="text-sm text-muted">Chưa có note nào — bấm <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-400 text-white font-bold mx-1">+</span> để đăng note đầu tiên!</p>
-          </div>
-        ) : board.columns.length > 0 ? (
+        {board.columns.length > 0 ? (
+          // Hiện đủ cột GV đã đặt ngay từ đầu (kể cả 0 note), không đợi có note đầu tiên.
           <div className="flex gap-4 overflow-x-auto pb-4">
             {groupNotesByColumn(board.notes, board.columns).map((g) => (
               <div key={g.label} className="w-72 shrink-0 flex flex-col">
@@ -313,10 +309,19 @@ export default function JoinBoardPage() {
                   <span className="text-[11px] font-mono text-gray-500 shrink-0 ml-2">{g.notes.length}</span>
                 </div>
                 <div className="flex flex-col">
-                  {g.notes.map((n) => <NoteCard key={n.id} n={n} />)}
+                  {g.notes.length === 0 ? (
+                    <p className="text-xs text-muted italic px-1">Chưa có note</p>
+                  ) : (
+                    g.notes.map((n) => <NoteCard key={n.id} n={n} />)
+                  )}
                 </div>
               </div>
             ))}
+          </div>
+        ) : board.notes.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-6xl mb-3">📝</p>
+            <p className="text-sm text-muted">Chưa có note nào — bấm <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-400 text-white font-bold mx-1">+</span> để đăng note đầu tiên!</p>
           </div>
         ) : (
           <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 [column-fill:_balance]">

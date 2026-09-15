@@ -446,18 +446,9 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
 
   const NotesGrid = ({ notes, columns }: { notes: BoardNote[]; columns: string[] }) => {
     const visible = notes; // host thấy hết, kể cả hidden
-    if (visible.length === 0) {
-      return (
-        <div className="text-center py-16">
-          <StickyNote size={56} className="mx-auto text-amber-300 mb-3" strokeWidth={1.5} />
-          <p className="text-muted text-sm">
-            Chưa có note nào. Sinh viên truy cập <code className="font-mono px-1.5 py-0.5 bg-accent-100 rounded">/join/{current?.code}</code> để post.
-          </p>
-        </div>
-      );
-    }
 
-    // Grid theo nhóm — mỗi cột 1 dải dọc, cuộn ngang nếu nhiều nhóm.
+    // Grid theo nhóm — hiện đủ cột GV đã đặt NGAY khi khởi tạo (kể cả 0 note),
+    // không đợi có note đầu tiên mới lộ ra. Mỗi cột 1 dải dọc, cuộn ngang nếu nhiều nhóm.
     if (columns.length > 0) {
       const groups = groupNotesByColumn(visible, columns);
       return (
@@ -471,12 +462,25 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 <span className="text-[11px] font-mono text-gray-500 shrink-0 ml-2">{g.notes.length}</span>
               </div>
               <div className="flex flex-col">
-                {g.notes.map((n) => (
-                  <NoteCard key={n.id} n={n} />
-                ))}
+                {g.notes.length === 0 ? (
+                  <p className="text-xs text-muted italic px-1">Chưa có note</p>
+                ) : (
+                  g.notes.map((n) => <NoteCard key={n.id} n={n} />)
+                )}
               </div>
             </div>
           ))}
+        </div>
+      );
+    }
+
+    if (visible.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <StickyNote size={56} className="mx-auto text-amber-300 mb-3" strokeWidth={1.5} />
+          <p className="text-muted text-sm">
+            Chưa có note nào. Sinh viên truy cập <code className="font-mono px-1.5 py-0.5 bg-accent-100 rounded">/join/{current?.code}</code> để post.
+          </p>
         </div>
       );
     }
