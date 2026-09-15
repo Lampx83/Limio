@@ -25,6 +25,7 @@ import {
   Library,
   LayoutGrid,
   Mic,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 
@@ -135,6 +136,7 @@ const FULL_GROUPS: Group[] = [
       { label: "AI Feedback Generator", href: "/instructor/feedback-generator", icon: Sparkles },
       { label: "Feedback Templates", href: "/instructor/feedback-templates", icon: FileText },
       { label: "Analytics & Báo cáo", href: "/instructor/analytics", icon: BarChart3 },
+      { label: "Token AI", href: "/me/ai-tokens", icon: Coins },
     ],
   },
 ];

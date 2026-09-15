@@ -16,6 +16,7 @@ import {
   BarChart3,
   ChevronRight,
   PlayCircle,
+  Coins,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -65,6 +66,7 @@ const GROUPS: Group[] = [
     id: "account",
     label: "Tài khoản",
     items: [
+      { label: "Token AI", href: "/me/ai-tokens", icon: Coins },
       { label: "Cài đặt", href: "/me/settings", icon: Settings },
     ],
   },
