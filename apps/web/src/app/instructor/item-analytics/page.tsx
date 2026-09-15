@@ -89,7 +89,8 @@ export default async function ItemAnalyticsPage({
       {tab === "exam" ? (
         <ExamTab
           userId={userId}
-          exams={exams}
+          // where: course.instructors đã lọc quan hệ course tồn tại — luôn non-null.
+          exams={exams.map((e) => ({ ...e, course: e.course! }))}
           examId={searchParams?.examId}
           expand={searchParams?.expand}
         />

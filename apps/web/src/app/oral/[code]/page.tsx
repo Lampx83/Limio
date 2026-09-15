@@ -25,13 +25,18 @@ export default async function OralJoinByCodePage({
   const info = await resolveOralJoinCode(code);
   if (!info) notFound();
 
+  // "none" — đề không gắn khoá học (đề độc lập): route /learn/[slug]/... không
+  // dùng slug để tra course ở đây (chỉ để build link điều hướng khác), nên
+  // sentinel này an toàn — không phải slug thật, không tra cứu.
+  const courseSlug = info.courseSlug ?? "none";
+
   if (!info.isOpen) {
     return (
       <main className="mx-auto max-w-md px-4 py-16 text-center">
         <h1 className="mb-2 text-xl font-semibold">Buổi vấn đáp đã đóng</h1>
         <p className="text-sm text-faint">
-          {info.examTitle} — {info.courseTitle}. Liên hệ giảng viên nếu bạn
-          cần vào lại.
+          {info.examTitle} — {info.courseTitle ?? "Đề độc lập"}. Liên hệ giảng
+          viên nếu bạn cần vào lại.
         </p>
       </main>
     );
@@ -39,7 +44,7 @@ export default async function OralJoinByCodePage({
 
   try {
     const r = await joinOralSessionByCode(session.user.id, code);
-    redirect(`/learn/${info.courseSlug}/exams/${r.examId}/oral/${r.attemptId}`);
+    redirect(`/learn/${courseSlug}/exams/${r.examId}/oral/${r.attemptId}`);
   } catch (e) {
     if (e instanceof ExamError) {
       if (e.code === "attempt_already_submitted") {
@@ -49,7 +54,7 @@ export default async function OralJoinByCodePage({
         });
         if (existing) {
           redirect(
-            `/learn/${info.courseSlug}/exams/${info.examId}/oral/${existing.id}/submitted`,
+            `/learn/${courseSlug}/exams/${info.examId}/oral/${existing.id}/submitted`,
           );
         }
       }

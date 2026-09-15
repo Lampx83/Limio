@@ -55,6 +55,11 @@ export async function POST(req: Request) {
     courseId = exam.courseId;
   }
 
+  // Đề không gắn khoá học không có Cohort/CourseSection nào để khớp.
+  if (!courseId) {
+    return NextResponse.json({ error: "cohort_not_found" }, { status: 404 });
+  }
+
   const cohort = await prisma.courseSection.findFirst({
     where: { courseId, code: cohortCode },
     select: {

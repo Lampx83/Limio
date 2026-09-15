@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   assertCanEditCourse,
+  assertCanEditExam,
   assertCanGradeCourse,
+  assertCanGradeExam,
   assertCanModerateLiveExam,
+  assertCanModerateLiveExamForExam,
   assertIsOwner,
   CourseAuthzError,
 } from "../authz";
 import { addCoInstructorByEmail } from "../instructors";
 import { createCourse } from "../courses";
 import { registerUser } from "../../auth/register";
+import { grantRole } from "../../auth/roles";
 
 const BASE = "http://localhost:3000";
 
@@ -82,6 +86,44 @@ describe("assertCanModerateLiveExam — nhóm D (can thiệp lúc thi + nhắn t
     await expect(assertCanModerateLiveExam(taId, courseId)).rejects.toThrow(
       CourseAuthzError,
     );
+  });
+});
+
+describe("assertCanEditExam/assertCanGradeExam/assertCanModerateLiveExamForExam — đề độc lập (courseId=null)", () => {
+  it("chỉ createdById (hoặc admin) qua được; người lạ bị forbidden", async () => {
+    const creatorId = await makeUser("creator-noexam@example.com");
+    const strangerId = await makeUser("stranger-noexam@example.com");
+    const adminId = await makeUser("admin-noexam@example.com");
+    await grantRole(adminId, { targetUserId: adminId, roleName: "admin" });
+
+    const exam = { courseId: null, createdById: creatorId };
+
+    await expect(assertCanEditExam(creatorId, exam)).resolves.toBeUndefined();
+    await expect(assertCanEditExam(strangerId, exam)).rejects.toThrow(CourseAuthzError);
+    await expect(assertCanEditExam(adminId, exam)).resolves.toBeUndefined();
+
+    await expect(assertCanGradeExam(creatorId, exam)).resolves.toBeUndefined();
+    await expect(assertCanGradeExam(strangerId, exam)).rejects.toThrow(CourseAuthzError);
+
+    await expect(
+      assertCanModerateLiveExamForExam(creatorId, exam),
+    ).resolves.toBeUndefined();
+    await expect(
+      assertCanModerateLiveExamForExam(strangerId, exam),
+    ).rejects.toThrow(CourseAuthzError);
+  });
+
+  it("đề có khoá học vẫn đi qua đúng logic role theo course (regression)", async () => {
+    const { ownerId, courseId, taId } = await makeCourseWithAllRoles("examwithcourse");
+    const examId = "00000000-0000-0000-0000-000000000000"; // not read by assertCanEditExam
+    void examId;
+    const exam = { courseId, createdById: null };
+
+    // Owner (course role) passes edit even though not createdById.
+    await expect(assertCanEditExam(ownerId, exam)).resolves.toBeUndefined();
+    // Teaching-assistant can grade but not edit — same as course-based behavior.
+    await expect(assertCanGradeExam(taId, exam)).resolves.toBeUndefined();
+    await expect(assertCanEditExam(taId, exam)).rejects.toThrow(CourseAuthzError);
   });
 });
 

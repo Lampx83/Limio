@@ -8,7 +8,7 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { generateOpenCode } from "./code-access";
 import { ExamError } from "./types";
@@ -42,6 +42,7 @@ export async function updateExamAccess(
     select: {
       id: true,
       courseId: true,
+      createdById: true,
       accessMode: true,
       openCode: true,
       openMaxAttempts: true,
@@ -50,7 +51,7 @@ export async function updateExamAccess(
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const parsed = UpdateExamAccessInput.safeParse(rawInput);
   if (!parsed.success)
@@ -153,10 +154,10 @@ export async function rotateOpenCode(
 ): Promise<{ openCode: string }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, accessMode: true },
+    select: { id: true, courseId: true, createdById: true, accessMode: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   if (exam.accessMode !== "open_code")
     throw new ExamError("access_mode_mismatch");
 

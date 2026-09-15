@@ -39,7 +39,8 @@ const LANGUAGE_DIRECTIVE: Record<"vi" | "en" | "zh", string> = {
 };
 
 function buildSystemPrompt(params: {
-  courseTitle: string;
+  /** null khi đề vấn đáp không gắn khoá học (đề độc lập). */
+  courseTitle: string | null;
   examTitle: string;
   contextChunks: string[];
   isLastQuestion: boolean;
@@ -51,9 +52,12 @@ function buildSystemPrompt(params: {
   const extra = params.examinerInstructions?.trim()
     ? `\n\nHướng dẫn thêm từ giảng viên (áp dụng cùng các nguyên tắc trên, không được mâu thuẫn):\n"""\n${params.examinerInstructions.trim()}\n"""`
     : "";
+  // Đề độc lập (không gắn khoá học) — bỏ hẳn cụm "môn X" thay vì hiện chuỗi
+  // rỗng/"null" gây hiểu lầm cho AI.
+  const courseClause = params.courseTitle ? ` môn "${params.courseTitle}",` : "";
 
   if (params.isClosing) {
-    return `Bạn là giảng viên ảo đang chấm vấn đáp môn "${params.courseTitle}", đề "${params.examTitle}".
+    return `Bạn là giảng viên ảo đang chấm vấn đáp${courseClause} đề "${params.examTitle}".
 
 ${LANGUAGE_DIRECTIVE[params.language]}
 
@@ -65,7 +69,7 @@ Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết ngắn gọn
       ? params.contextChunks.map((c, i) => `[Đoạn ${i + 1}]\n${c}`).join("\n\n")
       : "(không có tài liệu liên quan — hỏi dựa trên những gì sinh viên vừa trả lời)";
 
-  return `Bạn là giảng viên ảo đang hỏi vấn đáp môn "${params.courseTitle}", đề "${params.examTitle}".
+  return `Bạn là giảng viên ảo đang hỏi vấn đáp${courseClause} đề "${params.examTitle}".
 
 Tài liệu tham khảo cho câu hỏi (sinh viên KHÔNG thấy được đoạn này):
 """
@@ -202,7 +206,7 @@ export async function runOralExamTurn(
   }
 
   const systemPrompt = buildSystemPrompt({
-    courseTitle: attempt.exam.course.title,
+    courseTitle: attempt.exam.course?.title ?? null,
     examTitle: attempt.exam.title,
     contextChunks,
     isLastQuestion,

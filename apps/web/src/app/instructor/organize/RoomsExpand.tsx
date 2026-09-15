@@ -19,7 +19,7 @@ export default function RoomsExpand({
   examId,
 }: {
   sessionId: string;
-  courseId: string;
+  courseId: string | null;
   examId: string;
 }) {
   const [rooms, setRooms] = useState<OrganizerRoomRow[] | null>(null);
@@ -76,7 +76,7 @@ function RoomRow({
   examId,
 }: {
   r: OrganizerRoomRow;
-  courseId: string;
+  courseId: string | null;
   examId: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -121,7 +121,7 @@ function RoomRow({
           )}
         </button>
         <Link
-          href={`/instructor/courses/${courseId}/exams/${examId}/live?roomId=${r.roomId}`}
+          href={`/instructor/courses/${courseId ?? "none"}/exams/${examId}/live?roomId=${r.roomId}`}
           className="inline-flex items-center gap-1 rounded border border-default px-2 py-1 text-xs hover:bg-slate-50"
         >
           <Radio className="h-3 w-3 shrink-0 text-red-500" />

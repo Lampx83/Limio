@@ -1,6 +1,6 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import type { RevealPolicy } from "./reveal-policy";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { generateOpenCode } from "./code-access";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
 import { isSessionOpen } from "./session-window";
@@ -57,6 +57,7 @@ export async function shareExamLink(
     select: {
       id: true,
       courseId: true,
+      createdById: true,
       status: true,
       purpose: true,
       kind: true,
@@ -66,7 +67,7 @@ export async function shareExamLink(
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   if (exam.status === "archived") throw new ExamError("exam_not_draft");
   // Vấn đáp AI không phát mã/QR cho thí sinh — nó dùng openOralExamSession

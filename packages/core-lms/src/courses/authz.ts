@@ -109,6 +109,88 @@ export async function assertCanModerateLiveExam(
 }
 
 /**
+ * Đề không gắn khoá học (courseId = null) không có bảng CourseInstructor để
+ * tra role — chỉ người tạo đề (createdById) hoặc admin được sửa/chấm/can
+ * thiệp. Đề có khoá học vẫn đi qua đúng logic role theo course như cũ.
+ */
+async function ownerOrCourseRole(
+  userId: string,
+  exam: { courseId: string | null; createdById: string | null },
+  courseCheck: (userId: string, courseId: string, db: DbClient) => Promise<boolean>,
+  db: DbClient,
+): Promise<boolean> {
+  if (exam.courseId) return courseCheck(userId, exam.courseId, db);
+  if (exam.createdById === userId) return true;
+  return isAdmin(userId, db);
+}
+
+/** True if userId can edit this exam (course role, hoặc là người tạo/admin khi đề không gắn khoá học). */
+export async function canEditExam(
+  userId: string,
+  exam: { courseId: string | null; createdById: string | null },
+  db: DbClient = prisma,
+): Promise<boolean> {
+  return ownerOrCourseRole(userId, exam, canEditCourse, db);
+}
+
+/** True if userId can grade this exam (course role, hoặc là người tạo/admin khi đề không gắn khoá học). */
+export async function canGradeExam(
+  userId: string,
+  exam: { courseId: string | null; createdById: string | null },
+  db: DbClient = prisma,
+): Promise<boolean> {
+  return ownerOrCourseRole(userId, exam, canGradeCourse, db);
+}
+
+/** True if userId can moderate this exam live (course role, hoặc là người tạo/admin khi đề không gắn khoá học). */
+export async function canModerateLiveExamForExam(
+  userId: string,
+  exam: { courseId: string | null; createdById: string | null },
+  db: DbClient = prisma,
+): Promise<boolean> {
+  return ownerOrCourseRole(userId, exam, canModerateLiveExam, db);
+}
+
+/** Sửa nội dung đề (viết hoặc vấn đáp) — thay assertCanEditCourse khi thao tác trên 1 Exam cụ thể. */
+export async function assertCanEditExam(
+  userId: string,
+  exam: { courseId: string | null; createdById: string | null },
+  db: DbClient = prisma,
+): Promise<void> {
+  if (exam.courseId) {
+    await assertCanEditCourse(userId, exam.courseId, db);
+    return;
+  }
+  if (!(await canEditExam(userId, exam, db))) throw new CourseAuthzError("forbidden");
+}
+
+/** Chấm bài — thay assertCanGradeCourse khi thao tác trên 1 Exam cụ thể. */
+export async function assertCanGradeExam(
+  userId: string,
+  exam: { courseId: string | null; createdById: string | null },
+  db: DbClient = prisma,
+): Promise<void> {
+  if (exam.courseId) {
+    await assertCanGradeCourse(userId, exam.courseId, db);
+    return;
+  }
+  if (!(await canGradeExam(userId, exam, db))) throw new CourseAuthzError("forbidden");
+}
+
+/** Can thiệp lúc thi/nhắn tin — thay assertCanModerateLiveExam khi thao tác trên 1 Exam cụ thể. */
+export async function assertCanModerateLiveExamForExam(
+  userId: string,
+  exam: { courseId: string | null; createdById: string | null },
+  db: DbClient = prisma,
+): Promise<void> {
+  if (exam.courseId) {
+    await assertCanModerateLiveExam(userId, exam.courseId, db);
+    return;
+  }
+  if (!(await canModerateLiveExamForExam(userId, exam, db))) throw new CourseAuthzError("forbidden");
+}
+
+/**
  * True if userId is the `owner` CourseInstructor of the course, or a platform
  * admin. Stricter than `canEditCourse` — co-instructors can edit content but
  * not manage instructors / delete the course.

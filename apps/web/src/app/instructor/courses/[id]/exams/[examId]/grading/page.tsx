@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, getRoomScope } from "@feedbackme/core-lms";
+import { assertCanEditExam, CourseAuthzError, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 import DeleteOralAttemptButton from "@/components/exam/DeleteOralAttemptButton";
@@ -25,24 +25,31 @@ export default async function GradingInboxPage({
       `/signin?callbackUrl=/instructor/courses/${params.id}/exams/${params.examId}/grading`,
     );
   }
-  const course = await prisma.course.findUnique({
-    where: { id: params.id },
-    select: { id: true, title: true },
-  });
-  if (!course) notFound();
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, title: true, courseId: true, kind: true, oralRubricText: true },
+    select: {
+      id: true,
+      title: true,
+      courseId: true,
+      createdById: true,
+      kind: true,
+      oralRubricText: true,
+    },
   });
-  if (!exam || exam.courseId !== course.id) notFound();
+  if (!exam) notFound();
+  if ((exam.courseId ?? "none") !== params.id) notFound();
+  const courseSegment = exam.courseId ?? "none";
 
   // A6.4 — Vấn đáp AI chấm theo TỪNG LƯỢT THI (transcript hội thoại), không
   // theo từng câu hỏi như thi viết — ExamAnswer không tồn tại cho oral. Bản
   // này cũng chưa có khái niệm room-grader cho vấn đáp (chỉ SV đăng nhập +
   // ghi danh, xem oral-attempts.ts) nên chỉ giảng viên thật mới chấm được.
   if (exam.kind === "oral") {
-    if (!(await canEditCourse(session.user.id, course.id))) {
-      redirect("/instructor/courses");
+    try {
+      await assertCanEditExam(session.user.id, exam);
+    } catch (e) {
+      if (e instanceof CourseAuthzError) redirect("/instructor/courses");
+      throw e;
     }
     const attempts = await prisma.examAttempt.findMany({
       where: { examId: exam.id, status: { in: ["submitted", "auto_submitted", "graded"] } },
@@ -61,7 +68,7 @@ export default async function GradingInboxPage({
     return (
       <main>
         <Link
-          href={`/instructor/courses/${course.id}/exams/${exam.id}`}
+          href={`/instructor/courses/${courseSegment}/exams/${exam.id}`}
           className="text-sm text-blue-600 hover:underline"
         >
           ← {exam.title}
@@ -92,7 +99,7 @@ export default async function GradingInboxPage({
                   className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-default bg-white p-4 hover:border-brand-400"
                 >
                   <Link
-                    href={`/instructor/courses/${course.id}/exams/${exam.id}/grading/${a.id}`}
+                    href={`/instructor/courses/${courseSegment}/exams/${exam.id}/grading/${a.id}`}
                     className="min-w-0 flex-1"
                   >
                     <p className="text-sm font-medium">{studentLabel}</p>
@@ -178,7 +185,7 @@ export default async function GradingInboxPage({
   return (
     <main>
       <Link
-        href={`/instructor/courses/${course.id}/exams/${exam.id}`}
+        href={`/instructor/courses/${courseSegment}/exams/${exam.id}`}
         className="text-sm text-blue-600 hover:underline"
       >
         ← {exam.title}

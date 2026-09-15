@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
-import { assertCanEditCourse } from "@feedbackme/core-lms";
+import { assertCanEditExam } from "@feedbackme/core-lms";
 import { renderExamCodeEmail } from "@/lib/email";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
@@ -27,6 +27,7 @@ export async function GET(
       select: {
         id: true,
         courseId: true,
+        createdById: true,
         title: true,
         openAt: true,
         closeAt: true,
@@ -35,7 +36,7 @@ export async function GET(
     });
     if (!exam)
       return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
-    await assertCanEditCourse(userId, exam.courseId);
+    await assertCanEditExam(userId, exam);
 
     const rows = await prisma.examCandidate.findMany({
       where: {

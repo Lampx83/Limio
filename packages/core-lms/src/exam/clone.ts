@@ -17,7 +17,7 @@
 
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 export const CloneExamInput = z.object({
@@ -49,9 +49,9 @@ export async function cloneExam(
     },
   });
   if (!source) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, source.courseId, db);
+  await assertCanEditExam(actorUserId, source, db);
   const targetCourseId = parsed.data.targetCourseId ?? source.courseId;
-  if (targetCourseId !== source.courseId)
+  if (targetCourseId && targetCourseId !== source.courseId)
     await assertCanEditCourse(actorUserId, targetCourseId, db);
 
   return (db as typeof prisma).$transaction(async (tx) => {

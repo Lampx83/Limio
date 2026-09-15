@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma, type PrismaClient, type ExamAsset } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 export const IMAGE_MIME_TYPES = [
@@ -38,11 +38,11 @@ const RegisterImageInput = z.object({
 async function assertExamEditable(examId: string, actorUserId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, status: true },
+    select: { courseId: true, createdById: true, status: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   return exam;
 }
 

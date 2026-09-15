@@ -49,7 +49,8 @@ interface InitialValues {
 
 interface Props {
   mode: "create" | "edit";
-  courseId: string;
+  /** null = đề độc lập, không gắn khoá học nào. */
+  courseId: string | null;
   examId?: string;
   initial: InitialValues;
   /** When true, lock fields that publish-time validation forbids editing. */
@@ -122,7 +123,9 @@ export default function ExamMetaForm({
     }
     const url =
       mode === "create"
-        ? `/api/courses/${courseId}/exams`
+        ? courseId
+          ? `/api/courses/${courseId}/exams`
+          : "/api/exams"
         : `/api/exams/${examId}`;
     const res = await fetch(apiUrl(url), {
       method: mode === "create" ? "POST" : "PATCH",
@@ -140,13 +143,14 @@ export default function ExamMetaForm({
     // đáp) thay vì để GV tự đoán bước tiếp theo là gì — "Lưu" không còn là
     // điểm dừng, mà là bước chuyển sang nhập nội dung.
     const nextTab = v.kind === "oral" ? "materials" : "content";
+    const courseSegment = courseId ?? "none";
     if (mode === "create") {
       // replace — quay lại không nên rơi về form tạo đề đã submit rồi.
       router.replace(
-        `/instructor/courses/${courseId}/exams/${data.examId}?created=1&tab=${nextTab}`,
+        `/instructor/courses/${courseSegment}/exams/${data.examId}?created=1&tab=${nextTab}`,
       );
     } else {
-      router.push(`/instructor/courses/${courseId}/exams/${examId}?tab=${nextTab}`);
+      router.push(`/instructor/courses/${courseSegment}/exams/${examId}?tab=${nextTab}`);
     }
   }
 

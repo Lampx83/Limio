@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, regradeExamAttempts } from "@feedbackme/core-lms";
+import { canEditExam, regradeExamAttempts } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
@@ -22,10 +22,10 @@ export async function POST(
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.id },
-    select: { courseId: true },
+    select: { courseId: true, createdById: true },
   });
   if (!exam) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (!(await canEditCourse(userId, exam.courseId))) {
+  if (!(await canEditExam(userId, exam))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

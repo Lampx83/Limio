@@ -26,6 +26,7 @@
 
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { canGradeCourse } from "../courses/authz";
+import { isAdmin } from "../auth/roles";
 
 export interface RoomScope {
   // Instructor / admin — sees everything. Other fields ignored.
@@ -49,7 +50,7 @@ export async function getRoomScope(
 ): Promise<RoomScope & { hasAnyAccess: boolean }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, createdById: true },
   });
   if (!exam) {
     return {
@@ -60,8 +61,15 @@ export async function getRoomScope(
     };
   }
 
+  // Đề không gắn khoá học không có CourseInstructor để tra role — chỉ người
+  // tạo đề (hoặc admin) coi như "instructor" đầy đủ quyền, giống assertCanEditExam.
+  const isInstructorPromise = exam.courseId
+    ? canGradeCourse(userId, exam.courseId, db)
+    : exam.createdById === userId
+      ? Promise.resolve(true)
+      : isAdmin(userId, db);
   const [isInstructor, proctorRooms, graderRows] = await Promise.all([
-    canGradeCourse(userId, exam.courseId, db),
+    isInstructorPromise,
     db.examRoom.findMany({
       where: { examId, proctorUserId: userId },
       select: { id: true },

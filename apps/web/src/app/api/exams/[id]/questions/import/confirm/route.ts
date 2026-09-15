@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma, prisma, type ExamQuestionType } from "@feedbackme/db";
-import { canEditCourse, parseExamQuestionsXlsx } from "@feedbackme/core-lms";
+import { canEditExam, parseExamQuestionsXlsx } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -27,13 +27,14 @@ export async function POST(
     select: {
       id: true,
       courseId: true,
+      createdById: true,
       status: true,
       passages: { select: { id: true, title: true }, orderBy: { orderIndex: "asc" } },
       _count: { select: { attempts: true } },
     },
   });
   if (!exam) return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
-  if (!(await canEditCourse(userId, exam.courseId))) {
+  if (!(await canEditExam(userId, exam))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   if (exam.status === "published" && exam._count.attempts > 0) {

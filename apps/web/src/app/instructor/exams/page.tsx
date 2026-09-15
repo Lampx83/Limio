@@ -60,26 +60,28 @@ export default async function InstructorExamsHubPage() {
   const courseIds = ownedCourses.map((c) => c.id);
   const courseById = new Map(ownedCourses.map((c) => [c.id, c]));
 
-  const exams =
-    courseIds.length === 0
-      ? []
-      : await prisma.exam.findMany({
-          where: { courseId: { in: courseIds } },
-          orderBy: { updatedAt: "desc" },
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            durationMin: true,
-            openAt: true,
-            closeAt: true,
-            courseId: true,
-            updatedAt: true,
-            _count: {
-              select: { passages: true, questions: true, attempts: true },
-            },
-          },
-        });
+  const exams = await prisma.exam.findMany({
+    where: {
+      OR: [
+        ...(courseIds.length > 0 ? [{ courseId: { in: courseIds } }] : []),
+        { courseId: null, createdById: userId },
+      ],
+    },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      durationMin: true,
+      openAt: true,
+      closeAt: true,
+      courseId: true,
+      updatedAt: true,
+      _count: {
+        select: { passages: true, questions: true, attempts: true },
+      },
+    },
+  });
 
   // Pending-grade counts per exam — show badges to nudge instructor to grade.
   const pendingByExam = new Map<string, number>();
@@ -122,17 +124,29 @@ export default async function InstructorExamsHubPage() {
             {exams.length} bài thi · {draftCount} nháp · {publishedCount} đã publish
           </p>
         </div>
-        <Link
-          href="/instructor/exams/new"
-          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
-        >
-          + Tạo bài thi mới
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/instructor/exams/new/blank"
+            className="rounded border border-default px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            + Tạo đề không gắn khoá học
+          </Link>
+          <Link
+            href="/instructor/exams/new"
+            className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            + Tạo bài thi mới
+          </Link>
+        </div>
       </div>
 
       {ownedCourses.length === 0 && (
         <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
-          Bạn chưa phải instructor của khóa nào. Hãy{" "}
+          Bạn chưa phải instructor của khóa nào — vẫn tạo được đề{" "}
+          <Link href="/instructor/exams/new/blank" className="font-medium underline">
+            không gắn khoá học
+          </Link>
+          , hoặc{" "}
           <Link href="/instructor/courses/new" className="font-medium underline">
             tạo khóa đầu tiên
           </Link>
@@ -140,7 +154,7 @@ export default async function InstructorExamsHubPage() {
         </div>
       )}
 
-      {ownedCourses.length > 0 && exams.length === 0 && (
+      {exams.length === 0 && (
         <div className="mt-6 rounded-lg border border-dashed border-default p-8 text-center text-sm text-faint">
           Chưa có bài thi nào. Click "+ Tạo bài thi mới" để bắt đầu.
         </div>
@@ -149,7 +163,8 @@ export default async function InstructorExamsHubPage() {
       {exams.length > 0 && (
         <ul className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           {exams.map((e) => {
-            const course = courseById.get(e.courseId);
+            const courseSegment = e.courseId ?? "none";
+            const course = e.courseId ? courseById.get(e.courseId) : null;
             const pending = pendingByExam.get(e.id) ?? 0;
             const status = STATUS_META[e.status] ?? STATUS_META.draft!;
             return (
@@ -165,7 +180,7 @@ export default async function InstructorExamsHubPage() {
                 {/* Pending ribbon góc trên-phải */}
                 {pending > 0 && (
                   <Link
-                    href={`/instructor/courses/${e.courseId}/exams/${e.id}/grading`}
+                    href={`/instructor/courses/${courseSegment}/exams/${e.id}/grading`}
                     className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-amber-600"
                     title={`${pending} câu chờ chấm`}
                     prefetch={false}
@@ -179,7 +194,7 @@ export default async function InstructorExamsHubPage() {
                 <div className={`px-4 pl-5 sm:px-5 sm:pl-6 py-3 ${status.header}`}>
                   <div className="flex flex-wrap items-start gap-2 pr-24">
                     <Link
-                      href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
+                      href={`/instructor/courses/${courseSegment}/exams/${e.id}`}
                       className={`min-w-0 break-words text-base font-semibold transition group-hover:text-brand-700 ${status.title}`}
                       prefetch={false}
                     >
@@ -196,17 +211,24 @@ export default async function InstructorExamsHubPage() {
                     </span>
                   </div>
 
-                  {/* Course chip */}
-                  <Link
-                    href={`/instructor/courses/${e.courseId}`}
-                    className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600 transition hover:bg-white hover:text-slate-800"
-                    prefetch={false}
-                  >
-                    <BookOpen className="h-3 w-3" aria-hidden />
-                    <span className="max-w-[200px] truncate">
-                      {course?.title ?? "(course unknown)"}
+                  {/* Course chip — đề độc lập không có khoá học để trỏ tới */}
+                  {e.courseId ? (
+                    <Link
+                      href={`/instructor/courses/${e.courseId}`}
+                      className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600 transition hover:bg-white hover:text-slate-800"
+                      prefetch={false}
+                    >
+                      <BookOpen className="h-3 w-3" aria-hidden />
+                      <span className="max-w-[200px] truncate">
+                        {course?.title ?? "(course unknown)"}
+                      </span>
+                    </Link>
+                  ) : (
+                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600">
+                      <BookOpen className="h-3 w-3" aria-hidden />
+                      Đề độc lập
                     </span>
-                  </Link>
+                  )}
                 </div>
 
                 <div className="p-4 pl-5 sm:p-5 sm:pl-6">
@@ -246,7 +268,7 @@ export default async function InstructorExamsHubPage() {
                   {/* Action row */}
                   <div className="mt-4 flex items-center justify-end gap-2">
                     <Link
-                      href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
+                      href={`/instructor/courses/${courseSegment}/exams/${e.id}`}
                       className="inline-flex items-center gap-1.5 rounded-md border border-default bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
                       prefetch={false}
                     >
@@ -255,7 +277,7 @@ export default async function InstructorExamsHubPage() {
                     </Link>
                     {(pending > 0 || e._count.attempts > 0) && (
                       <Link
-                        href={`/instructor/courses/${e.courseId}/exams/${e.id}/grading`}
+                        href={`/instructor/courses/${courseSegment}/exams/${e.id}/grading`}
                         className="inline-flex items-center gap-1.5 rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-800 transition hover:bg-blue-100"
                         prefetch={false}
                       >
@@ -264,7 +286,7 @@ export default async function InstructorExamsHubPage() {
                       </Link>
                     )}
                     <Link
-                      href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
+                      href={`/instructor/courses/${courseSegment}/exams/${e.id}`}
                       className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
                       prefetch={false}
                     >

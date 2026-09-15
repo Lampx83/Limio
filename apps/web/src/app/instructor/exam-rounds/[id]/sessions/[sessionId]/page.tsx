@@ -78,6 +78,9 @@ export default async function ExamSessionDetailPage({
   // Validate that the session belongs to the round in the URL — guard against
   // hand-edited URLs pointing to a session of another round.
   if (detail.roundId !== params.id) notFound();
+  // Ca của đợt tự sinh cho đề độc lập (không gắn khoá học) — trang quản lý
+  // theo round/session này luôn giả định có course thật (xem exam-rounds/[id]).
+  if (!detail.courseId) notFound();
 
   const canEdit = await canEditExamRound(userId, detail.roundId);
   const roomsRaw = await listExamRoomsForSession(userId, params.sessionId);
@@ -235,7 +238,11 @@ export default async function ExamSessionDetailPage({
         />
         {activeTab === "overview" && (
           <SessionOverviewPanel
-            detail={detail}
+            detail={{
+              ...detail,
+              courseId: detail.courseId,
+              courseTitle: detail.courseTitle ?? "(Không tên)",
+            }}
             canEdit={canEdit}
             availableExams={availableExams}
           />

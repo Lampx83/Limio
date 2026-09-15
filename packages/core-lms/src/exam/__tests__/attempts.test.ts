@@ -180,6 +180,34 @@ describe("startExamAttempt (A7.4.1)", () => {
       code: "attempt_already_submitted",
     });
   });
+
+  it("đề độc lập (courseId=null) không dùng luồng enrollment — ném lỗi rõ ràng thay vì crash", async () => {
+    const creator = await registerUser(
+      { email: "s7-o@e.com", password: "password1234", displayName: "O" },
+      BASE,
+    );
+    const { createOralMaterialTopicList } = await import("../oral-materials");
+    const { grantRole } = await import("../../auth/roles");
+    await grantRole(creator.userId, { targetUserId: creator.userId, roleName: "instructor" });
+    const now = Date.now();
+    const { examId } = await createExam(creator.userId, null, {
+      title: "Vấn đáp độc lập",
+      durationMin: 30,
+      openAt: new Date(now - 60_000),
+      closeAt: new Date(now + 7 * 24 * 60 * 60_000),
+      kind: "oral",
+    });
+    await createOralMaterialTopicList(creator.userId, examId, { title: "T", text: "x" });
+    await publishExam(creator.userId, examId);
+
+    const learner = await registerUser(
+      { email: "s7-l@e.com", password: "password1234", displayName: "L" },
+      BASE,
+    );
+    await expect(startExamAttempt(learner.userId, examId)).rejects.toMatchObject({
+      code: "exam_not_open",
+    });
+  });
 });
 
 describe("getAttemptRuntime (A7.4.3)", () => {
@@ -357,7 +385,7 @@ describe("shuffle snapshot", () => {
       where: { id: examId },
       select: { courseId: true },
     });
-    await enrollInCourse(stranger.userId, course.courseId);
+    await enrollInCourse(stranger.userId, course.courseId!);
     const second = await startExamAttempt(stranger.userId, examId);
     const a2 = await prisma.examAttempt.findUniqueOrThrow({ where: { id: second.attemptId } });
     const snap2 = a2.shuffleSnapshot as { questionOrderByPassage: Record<string, string[]> };

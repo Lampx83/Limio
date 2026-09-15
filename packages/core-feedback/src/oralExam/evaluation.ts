@@ -13,7 +13,8 @@ interface RubricBreakdownItem {
 }
 
 function buildGradingPrompt(params: {
-  courseTitle: string;
+  /** null khi đề vấn đáp không gắn khoá học (đề độc lập). */
+  courseTitle: string | null;
   examTitle: string;
   rubricText: string | null;
   transcript: { role: "examiner" | "student"; content: string }[];
@@ -21,8 +22,9 @@ function buildGradingPrompt(params: {
   const transcriptText = params.transcript
     .map((t) => `${t.role === "examiner" ? "Giám khảo" : "Sinh viên"}: ${t.content}`)
     .join("\n\n");
+  const courseClause = params.courseTitle ? ` môn "${params.courseTitle}",` : "";
 
-  return `Bạn là giám khảo chấm lại 1 buổi vấn đáp môn "${params.courseTitle}", đề "${params.examTitle}" đã kết thúc.
+  return `Bạn là giám khảo chấm lại 1 buổi vấn đáp${courseClause} đề "${params.examTitle}" đã kết thúc.
 
 ${
     params.rubricText
@@ -108,7 +110,7 @@ export async function generateOralExamEvaluation(
   await assertWithinCaps(actorUserId, db, "generator");
 
   const prompt = buildGradingPrompt({
-    courseTitle: attempt.exam.course.title,
+    courseTitle: attempt.exam.course?.title ?? null,
     examTitle: attempt.exam.title,
     rubricText: attempt.exam.oralRubricText,
     transcript: attempt.oralTurns.map((t) => ({ role: t.role, content: t.content })),

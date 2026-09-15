@@ -152,9 +152,9 @@ export default async function ExamRoundsHubPage({
                   <td className="px-4 py-3">
                     <span
                       className="rounded-sm bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700"
-                      title={r.course.courseTitle}
+                      title={r.course.courseTitle ?? undefined}
                     >
-                      {r.course.courseTitle}
+                      {r.course.courseTitle ?? "Đề độc lập"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-faint">

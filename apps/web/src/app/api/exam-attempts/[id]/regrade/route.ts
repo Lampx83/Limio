@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   applyAutoGradingForAttempt,
-  canEditCourse,
+  canEditExam,
   ExamError,
 } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
@@ -27,11 +27,11 @@ export async function POST(
 
   const attempt = await prisma.examAttempt.findUnique({
     where: { id: params.id },
-    select: { exam: { select: { courseId: true } } },
+    select: { exam: { select: { courseId: true, createdById: true } } },
   });
   if (!attempt)
     return NextResponse.json({ error: "attempt_not_found" }, { status: 404 });
-  if (!(await canEditCourse(userId, attempt.exam.courseId)))
+  if (!(await canEditExam(userId, attempt.exam)))
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   try {

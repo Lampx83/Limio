@@ -73,6 +73,30 @@ export default async function ExamRoundDetailPage({
     throw e;
   }
 
+  // Đợt tự sinh (ensureDefaultRound) cho đề độc lập không gắn khoá học —
+  // toàn bộ trang này (cohort, danh sách đề trong course, ...) là tính năng
+  // "tổ chức thi theo đợt" vốn luôn cần 1 course thật (xem CreateExamRoundInput),
+  // nên đợt tự sinh không có trang quản lý riêng ở đây.
+  if (!round.course.courseId) {
+    return (
+      <main>
+        <Link
+          href="/instructor/exam-rounds"
+          className="text-sm text-blue-600 hover:underline"
+        >
+          ← Danh sách đợt thi
+        </Link>
+        <p className="mt-4 text-sm text-faint">
+          Đợt thi này không gắn khoá học (đợt tự sinh cho đề độc lập) — không
+          có trang quản lý riêng.
+        </p>
+      </main>
+    );
+  }
+
+  const courseId = round.course.courseId;
+  const courseTitle = round.course.courseTitle ?? "(Không tên)";
+  const courseSlug = round.course.courseSlug ?? "";
   const canEdit = await canEditExamRound(userId, params.id);
 
   // Data needed by tabs. We fetch sessions + assignable courses (for adding to
@@ -200,21 +224,32 @@ export default async function ExamRoundDetailPage({
 
       <div className="mt-6">
         {activeTab === "overview" && (
-          <OverviewPanel round={round} canEdit={canEdit} />
+          <OverviewPanel
+            round={{ ...round, course: { ...round.course, courseId, courseTitle, courseSlug } }}
+            canEdit={canEdit}
+          />
         )}
         {activeTab === "sessions" && (
           <SessionsPanel
             roundId={round.id}
-            sessions={sessions}
-            course={round.course}
-            availableExams={availableExamOptions}
+            sessions={sessions.map((s) => ({
+              ...s,
+              courseId: s.courseId ?? courseId,
+              courseTitle: s.courseTitle ?? courseTitle,
+            }))}
+            course={{ ...round.course, courseId, courseTitle, courseSlug }}
+            availableExams={availableExamOptions.map((e) => ({
+              ...e,
+              courseId: e.courseId ?? courseId,
+              courseTitle: e.courseTitle ?? courseTitle,
+            }))}
             canEdit={canEdit}
           />
         )}
         {activeTab === "cohorts" && (
           <CohortsPanel
             roundId={round.id}
-            courseId={round.course.courseId}
+            courseId={courseId}
             cohorts={cohorts}
             sessions={sessions.map((s) => ({
               id: s.id,

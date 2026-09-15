@@ -14,7 +14,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanModerateLiveExam } from "../courses/authz";
+import { assertCanModerateLiveExamForExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import {
   finalizeSubmission,
@@ -29,7 +29,16 @@ const MAX_EXTENSION_MIN = 30;
 async function loadAttemptForAction(
   attemptId: string,
   db: PrismaClient,
-): Promise<{ id: string; examId: string; userId: string | null; status: string; courseId: string; durationSec: number; startedAt: Date }> {
+): Promise<{
+  id: string;
+  examId: string;
+  userId: string | null;
+  status: string;
+  courseId: string | null;
+  createdById: string | null;
+  durationSec: number;
+  startedAt: Date;
+}> {
   const a = await db.examAttempt.findUnique({
     where: { id: attemptId },
     select: {
@@ -39,7 +48,7 @@ async function loadAttemptForAction(
       status: true,
       durationSec: true,
       startedAt: true,
-      exam: { select: { courseId: true, kind: true } },
+      exam: { select: { courseId: true, createdById: true, kind: true } },
     },
   });
   if (!a) throw new ExamError("attempt_not_found");
@@ -65,6 +74,7 @@ async function loadAttemptForAction(
     durationSec: a.durationSec,
     startedAt: a.startedAt,
     courseId: a.exam.courseId,
+    createdById: a.exam.createdById,
   };
 }
 
@@ -86,7 +96,7 @@ export async function extendAttempt(
     throw new ExamError("duration_extension_too_large", { max: MAX_EXTENSION_MIN });
   }
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, a, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const newDurationSec = a.durationSec + minutes * 60;
@@ -123,7 +133,7 @@ export async function forceSubmitAttempt(
 ): Promise<ExamSubmitResult> {
   const reason = requireReason(rawReason);
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, a, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const result = await finalizeSubmission(attemptId, "force_submitted", db);
@@ -158,7 +168,7 @@ export async function forceSubmitAttemptMarkOnly(
 ): Promise<MarkAttemptResult> {
   const reason = requireReason(rawReason);
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, a, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const result = await markAttemptSubmitted(attemptId, "force_submitted", db);
@@ -190,7 +200,7 @@ export async function resetAttemptSession(
   db: PrismaClient = prisma,
 ): Promise<{ sessionToken: string; resumeCount: number }> {
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, a, db);
   if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
 
   const newToken = randomUUID();
@@ -229,7 +239,7 @@ export async function disqualifyAttempt(
 ): Promise<{ status: "flagged" }> {
   const reason = requireReason(rawReason);
   const a = await loadAttemptForAction(attemptId, db);
-  await assertCanModerateLiveExam(actorUserId, a.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, a, db);
   if (a.status === "flagged") return { status: "flagged" };
 
   await db.examAttempt.update({

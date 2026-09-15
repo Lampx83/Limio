@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma, type OralExamEvaluation, type OralExamTurn, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { ExamError } from "./types";
 
@@ -15,7 +15,7 @@ async function loadOralAttemptForGrading(attemptId: string, db: PrismaClient) {
     select: {
       id: true,
       status: true,
-      exam: { select: { id: true, kind: true, courseId: true } },
+      exam: { select: { id: true, kind: true, courseId: true, createdById: true } },
       oralEvaluation: { select: { aiSuggestedScore: true } },
     },
   });
@@ -46,7 +46,7 @@ export async function getOralEvaluation(
   db: PrismaClient = prisma,
 ): Promise<OralAttemptGradingView> {
   const attempt = await loadOralAttemptForGrading(attemptId, db);
-  await assertCanEditCourse(actorUserId, attempt.exam.courseId, db);
+  await assertCanEditExam(actorUserId, attempt.exam, db);
   const [evaluation, turns] = await Promise.all([
     db.oralExamEvaluation.findUnique({ where: { attemptId } }),
     db.oralExamTurn.findMany({ where: { attemptId }, orderBy: { createdAt: "asc" } }),
@@ -71,7 +71,7 @@ export async function submitOralEvaluation(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const attempt = await loadOralAttemptForGrading(attemptId, db);
-  await assertCanEditCourse(actorUserId, attempt.exam.courseId, db);
+  await assertCanEditExam(actorUserId, attempt.exam, db);
   const parsed = SubmitOralEvaluationInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
   const { score, notes } = parsed.data;

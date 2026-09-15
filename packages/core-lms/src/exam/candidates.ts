@@ -15,7 +15,7 @@
 
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { generateAssignedCode } from "./code-access";
 import { ensureDefaultSession } from "./exam-rooms";
@@ -38,13 +38,13 @@ async function assertExamEditable(
   actorUserId: string,
   examId: string,
   db: PrismaClient,
-): Promise<{ id: string; courseId: string; assignedCodeSource: "random" | "student_code" }> {
+): Promise<{ id: string; courseId: string | null; createdById: string | null; assignedCodeSource: "random" | "student_code" }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, assignedCodeSource: true },
+    select: { id: true, courseId: true, createdById: true, assignedCodeSource: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   return exam;
 }
 
@@ -193,10 +193,15 @@ export async function updateCandidate(
 ): Promise<void> {
   const c = await db.examCandidate.findUnique({
     where: { id: candidateId },
-    select: { id: true, examId: true, displayName: true, exam: { select: { courseId: true } } },
+    select: {
+      id: true,
+      examId: true,
+      displayName: true,
+      exam: { select: { courseId: true, createdById: true } },
+    },
   });
   if (!c) throw new ExamError("candidate_not_found");
-  await assertCanEditCourse(actorUserId, c.exam.courseId, db);
+  await assertCanEditExam(actorUserId, c.exam, db);
 
   const data: { displayName?: string; metadata?: Record<string, unknown>; disabledAt?: Date | null } = {};
   if (patch.displayName !== undefined) data.displayName = normaliseName(patch.displayName);
@@ -240,12 +245,12 @@ export async function deleteCandidate(
     where: { id: candidateId },
     select: {
       id: true,
-      exam: { select: { courseId: true } },
+      exam: { select: { courseId: true, createdById: true } },
       _count: { select: { attempts: true } },
     },
   });
   if (!c) throw new ExamError("candidate_not_found");
-  await assertCanEditCourse(actorUserId, c.exam.courseId, db);
+  await assertCanEditExam(actorUserId, c.exam, db);
   if (c._count.attempts > 0) throw new ExamError("candidate_has_attempts");
   await db.examCandidate.delete({ where: { id: candidateId } });
 }
@@ -301,7 +306,7 @@ export async function exportCandidateData(
       createdAt: true,
       disabledAt: true,
       emailSentAt: true,
-      exam: { select: { id: true, title: true, courseId: true } },
+      exam: { select: { id: true, title: true, courseId: true, createdById: true } },
       attempts: {
         select: {
           id: true,
@@ -334,7 +339,7 @@ export async function exportCandidateData(
     },
   });
   if (!c) throw new ExamError("candidate_not_found");
-  await assertCanEditCourse(actorUserId, c.exam.courseId, db);
+  await assertCanEditExam(actorUserId, c.exam, db);
 
   // Audit events emitted by/for this candidate (Q7 — LearningEvent.candidateId).
   const events = await db.learningEvent.findMany({
@@ -384,6 +389,7 @@ export async function sendCodesToCandidates(
     select: {
       id: true,
       courseId: true,
+      createdById: true,
       title: true,
       openAt: true,
       closeAt: true,
@@ -393,8 +399,8 @@ export async function sendCodesToCandidates(
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
-  const organizationId = exam.course.organizationId ?? null;
+  await assertCanEditExam(actorUserId, exam, db);
+  const organizationId = exam.course?.organizationId ?? null;
 
   const rows = await db.examCandidate.findMany({
     where: { examId: exam.id, disabledAt: null, accessCode: { not: null } },

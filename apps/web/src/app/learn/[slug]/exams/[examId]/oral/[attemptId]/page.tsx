@@ -59,7 +59,7 @@ export default async function OralExamRuntimePage({
     examId: params.examId,
     attemptId: params.attemptId,
     examTitle: exam.title,
-    courseTitle: exam.course.title,
+    courseTitle: exam.course?.title ?? "Đề độc lập",
     startedAt: runtime.startedAt,
     durationSec: runtime.durationSec,
     serverNow: runtime.serverNow,

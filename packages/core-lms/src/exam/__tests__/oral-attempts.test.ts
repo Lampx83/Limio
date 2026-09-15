@@ -410,6 +410,37 @@ describe("joinOralSessionByCode / resolveOralJoinCode (A6.5 rewrite)", () => {
     expect(viaCode.resumed).toBe(true);
     expect(viaCode.attemptId).toBe(viaCourse.attemptId);
   });
+
+  it("đề độc lập (courseId=null) — resolveOralJoinCode trả courseTitle null thay vì throw", async () => {
+    const { grantRole } = await import("../../auth/roles");
+    const owner = await registerUser(
+      { email: "jc-o-noexam@e.com", password: "password1234", displayName: "O" },
+      BASE,
+    );
+    await grantRole(owner.userId, { targetUserId: owner.userId, roleName: "instructor" });
+    const now = Date.now();
+    const { examId } = await createExam(owner.userId, null, {
+      title: "Vấn đáp độc lập",
+      durationMin: 20,
+      openAt: new Date(now - 60_000),
+      closeAt: new Date(now + 7 * 24 * 60 * 60_000),
+      kind: "oral",
+    });
+    await createOralMaterialTopicList(owner.userId, examId, { title: "Chủ đề", text: "x" });
+    const { joinCode } = await openOralExamSession(owner.userId, examId);
+
+    const info = await resolveOralJoinCode(joinCode);
+    expect(info?.examId).toBe(examId);
+    expect(info?.courseTitle).toBeNull();
+    expect(info?.courseSlug).toBeNull();
+
+    const stranger = await registerUser(
+      { email: "jc-stranger-noexam@e.com", password: "password1234", displayName: "U" },
+      BASE,
+    );
+    const r = await joinOralSessionByCode(stranger.userId, joinCode);
+    expect(r.examId).toBe(examId);
+  });
 });
 
 describe("deleteOralAttempt (A6.5 rewrite)", () => {

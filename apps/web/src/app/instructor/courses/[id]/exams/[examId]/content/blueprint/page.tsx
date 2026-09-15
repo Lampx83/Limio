@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, getBlueprint, getBlueprintLessonTree } from "@feedbackme/core-lms";
+import { canEditExam, getBlueprint, getBlueprintLessonTree } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import BlueprintEditorClient from "./BlueprintEditorClient";
 
@@ -22,12 +22,31 @@ export default async function BlueprintPage({
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, kind: true },
+    select: { id: true, courseId: true, createdById: true, kind: true },
   });
-  if (!exam || exam.courseId !== params.id) notFound();
+  if (!exam || (exam.courseId ?? "none") !== params.id) notFound();
   if (exam.kind !== "written") notFound();
-  if (!(await canEditCourse(userId, exam.courseId))) {
+  if (!(await canEditExam(userId, exam))) {
     redirect("/instructor/courses");
+  }
+  // Lấy mẫu theo ma trận cần course thật (đọc lesson tree + ngân hàng câu
+  // hỏi của course) — đề độc lập không có course để lấy, xem blueprint.ts.
+  if (!exam.courseId) {
+    return (
+      <main>
+        <Link
+          href={`/instructor/courses/${params.id}/exams/${params.examId}/content`}
+          className="text-sm text-faint hover:text-brand-700"
+        >
+          ← Chọn phương thức khác
+        </Link>
+        <p className="mt-6 rounded border border-dashed border-default px-4 py-6 text-center text-sm text-faint">
+          Đề không gắn khoá học — không lấy mẫu theo ma trận được (cần khoá
+          học để lấy lesson tree/ngân hàng câu hỏi). Dùng "Chọn thủ công" để
+          tự soạn câu hỏi.
+        </p>
+      </main>
+    );
   }
 
   const [lessonTree, blueprint] = await Promise.all([

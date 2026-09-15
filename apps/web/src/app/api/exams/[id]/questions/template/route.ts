@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse } from "@feedbackme/core-lms";
+import { canEditExam } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -26,6 +26,7 @@ export async function GET(
       id: true,
       title: true,
       courseId: true,
+      createdById: true,
       passages: {
         orderBy: { orderIndex: "asc" },
         select: { id: true, title: true, orderIndex: true },
@@ -33,7 +34,7 @@ export async function GET(
     },
   });
   if (!exam) return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
-  if (!(await canEditCourse(userId, exam.courseId))) {
+  if (!(await canEditExam(userId, exam))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

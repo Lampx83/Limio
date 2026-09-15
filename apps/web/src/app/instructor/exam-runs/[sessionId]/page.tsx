@@ -80,7 +80,7 @@ export default async function ExamRunPage({
       <p className="mt-1 text-caption text-faint">
         Nội dung câu hỏi của gói đề này soạn ở{" "}
         <Link
-          href={`/instructor/courses/${run.exam.courseId}/exams/${run.exam.id}`}
+          href={`/instructor/courses/${run.exam.courseId ?? "none"}/exams/${run.exam.id}`}
           className="underline"
         >
           mục Đề thi
@@ -91,7 +91,7 @@ export default async function ExamRunPage({
       <div className="mt-6">
         <ResultsPanel
           examId={run.exam.id}
-          courseId={run.exam.courseId}
+          courseId={run.exam.courseId ?? "none"}
           lockedSessionId={run.id}
         />
       </div>

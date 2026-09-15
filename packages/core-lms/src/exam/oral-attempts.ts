@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { assertEligibleForExam } from "./cohorts";
 import { ensureDefaultRound } from "./exam-rooms";
 import { publishExam } from "./exams";
@@ -125,10 +125,10 @@ export async function openOralExamSession(
   }
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, status: true, kind: true },
+    select: { id: true, courseId: true, createdById: true, status: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
 
   const wasDraft = exam.status === "draft";
@@ -238,10 +238,10 @@ export async function closeOralExamSession(
 ): Promise<void> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, kind: true },
+    select: { courseId: true, createdById: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
   await db.examSession.updateMany({
     where: { examId, timingMode: "manual", status: "open" },
@@ -275,8 +275,9 @@ export async function resolveOralJoinCode(
 ): Promise<{
   examId: string;
   examTitle: string;
-  courseTitle: string;
-  courseSlug: string;
+  /** null khi đề không gắn khoá học (đề độc lập) — UI ẩn dòng "Khoá học". */
+  courseTitle: string | null;
+  courseSlug: string | null;
   isOpen: boolean;
 } | null> {
   const session = await db.examSession.findUnique({
@@ -300,8 +301,8 @@ export async function resolveOralJoinCode(
   return {
     examId: session.exam.id,
     examTitle: session.exam.title,
-    courseTitle: session.exam.course.title,
-    courseSlug: session.exam.course.slug,
+    courseTitle: session.exam.course?.title ?? null,
+    courseSlug: session.exam.course?.slug ?? null,
     isOpen: isSessionOpen(session, new Date()),
   };
 }
@@ -379,10 +380,10 @@ export async function deleteOralAttempt(
 ): Promise<void> {
   const attempt = await db.examAttempt.findUnique({
     where: { id: attemptId },
-    select: { exam: { select: { courseId: true, kind: true } } },
+    select: { exam: { select: { courseId: true, createdById: true, kind: true } } },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
   if (attempt.exam.kind !== "oral") throw new ExamError("exam_not_oral");
-  await assertCanEditCourse(actorUserId, attempt.exam.courseId, db);
+  await assertCanEditExam(actorUserId, attempt.exam, db);
   await db.examAttempt.delete({ where: { id: attemptId } });
 }

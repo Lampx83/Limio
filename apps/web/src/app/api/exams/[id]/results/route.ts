@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { formatDateTime } from "@/lib/datetime";
 import {
-  assertCanEditCourse,
+  assertCanEditExam,
   describeResponse,
   runAttemptWhere,
 } from "@feedbackme/core-lms";
@@ -34,13 +34,13 @@ export async function GET(
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.id },
-    select: { id: true, courseId: true, title: true },
+    select: { id: true, courseId: true, createdById: true, title: true },
   });
   if (!exam)
     return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
 
   try {
-    await assertCanEditCourse(userId, exam.courseId);
+    await assertCanEditExam(userId, exam);
   } catch (e) {
     const mapped = mapKnownError(e);
     if (mapped) return mapped;

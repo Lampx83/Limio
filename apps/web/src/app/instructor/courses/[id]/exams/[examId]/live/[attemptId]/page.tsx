@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, evaluateAttemptPatterns } from "@feedbackme/core-lms";
+import { canEditExam, evaluateAttemptPatterns } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import AttemptDetailLive from "./AttemptDetailLive";
 
@@ -38,6 +38,7 @@ export default async function ExamAttemptDrillDownPage({
         select: {
           id: true,
           courseId: true,
+          createdById: true,
           title: true,
           durationMin: true,
           kind: true,
@@ -46,9 +47,9 @@ export default async function ExamAttemptDrillDownPage({
     },
   });
   if (!attempt || attempt.examId !== params.examId) notFound();
-  if (attempt.exam.courseId !== params.id) notFound();
+  if ((attempt.exam.courseId ?? "none") !== params.id) notFound();
 
-  const ok = await canEditCourse(session.user.id, attempt.exam.courseId);
+  const ok = await canEditExam(session.user.id, attempt.exam);
   if (!ok) redirect("/instructor/exams");
 
   // A6.5 — Trang này (và các nút gia hạn/buộc nộp/gắn cờ trong
@@ -104,7 +105,7 @@ export default async function ExamAttemptDrillDownPage({
     <main>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Link
-          href={`/instructor/courses/${attempt.exam.courseId}/exams/${attempt.examId}/live`}
+          href={`/instructor/courses/${params.id}/exams/${attempt.examId}/live`}
           className="text-blue-600 hover:underline"
         >
           ← Live dashboard

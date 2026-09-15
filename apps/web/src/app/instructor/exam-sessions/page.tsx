@@ -84,9 +84,9 @@ export default async function ExamSessionsPage() {
     rows.push({
       roomId: r.id,
       examId: r.examId,
-      courseId: r.exam.courseId,
+      courseId: r.exam.courseId ?? "none",
       examTitle: r.exam.title,
-      courseTitle: r.exam.course.title,
+      courseTitle: r.exam.course?.title ?? "Đề độc lập",
       roomName: r.name,
       locationNote: r.locationNote,
       openAt: r.exam.openAt,
@@ -100,9 +100,9 @@ export default async function ExamSessionsPage() {
     rows.push({
       roomId: g.roomId,
       examId: g.room.examId,
-      courseId: g.room.exam.courseId,
+      courseId: g.room.exam.courseId ?? "none",
       examTitle: g.room.exam.title,
-      courseTitle: g.room.exam.course.title,
+      courseTitle: g.room.exam.course?.title ?? "Đề độc lập",
       roomName: g.room.name,
       locationNote: g.room.locationNote,
       openAt: g.room.exam.openAt,

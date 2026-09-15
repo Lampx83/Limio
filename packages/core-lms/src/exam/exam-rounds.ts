@@ -76,9 +76,9 @@ export const UpdateExamRoundInput = z
 // ============================================================================
 
 export interface ExamRoundCourseInfo {
-  courseId: string;
-  courseTitle: string;
-  courseSlug: string;
+  courseId: string | null;
+  courseTitle: string | null;
+  courseSlug: string | null;
 }
 
 export interface ExamRoundAdminInfo {
@@ -125,11 +125,15 @@ export async function canViewExamRound(
     select: {
       courseId: true,
       admins: { where: { userId }, select: { userId: true } },
+      // Đợt tự sinh (ensureDefaultRound) cho đề độc lập không có course —
+      // luôn đúng 1 exam/session, dùng để xác định người tạo đề làm chủ.
+      sessions: { take: 1, select: { exam: { select: { createdById: true } } } },
     },
   });
   if (!round) return false;
   if (round.admins.length > 0) return true;
-  return canEditCourse(userId, round.courseId, db);
+  if (round.courseId) return canEditCourse(userId, round.courseId, db);
+  return round.sessions[0]?.exam.createdById === userId;
 }
 
 /**
@@ -302,9 +306,9 @@ export async function listExamRounds(
     closesAt: r.closesAt.toISOString(),
     createdAt: r.createdAt.toISOString(),
     course: {
-      courseId: r.course.id,
-      courseTitle: r.course.title,
-      courseSlug: r.course.slug,
+      courseId: r.course?.id ?? null,
+      courseTitle: r.course?.title ?? null,
+      courseSlug: r.course?.slug ?? null,
     },
     sessionCount: r._count.sessions,
   }));
@@ -358,9 +362,9 @@ export async function getExamRound(
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
     course: {
-      courseId: r.course.id,
-      courseTitle: r.course.title,
-      courseSlug: r.course.slug,
+      courseId: r.course?.id ?? null,
+      courseTitle: r.course?.title ?? null,
+      courseSlug: r.course?.slug ?? null,
     },
     admins: r.admins.map((a) => ({
       userId: a.userId,
@@ -438,8 +442,8 @@ export interface ExamRoundSessionItem {
   examTitle: string;
   examAccessMode: string;
   openCode: string | null;
-  courseId: string;
-  courseTitle: string;
+  courseId: string | null;
+  courseTitle: string | null;
   roomCount: number;
 }
 
@@ -454,8 +458,8 @@ export interface ExamSessionDetail {
   examStatus: string;
   examOpenCode: string | null;
   examAssignedCodeSource: "random" | "student_code";
-  courseId: string;
-  courseTitle: string;
+  courseId: string | null;
+  courseTitle: string | null;
   code: string | null;
   title: string | null;
   status: "draft" | "open" | "closed" | "archived";
@@ -887,8 +891,8 @@ export async function getExamSession(
     // PR2.12 — Prefer per-session openCode; fallback to Exam.openCode legacy.
     examOpenCode: s.openCode ?? s.exam.openCode,
     examAssignedCodeSource: s.exam.assignedCodeSource,
-    courseId: s.exam.course.id,
-    courseTitle: s.exam.course.title,
+    courseId: s.exam.course?.id ?? null,
+    courseTitle: s.exam.course?.title ?? null,
     code: s.code,
     title: s.title,
     status: s.status,
@@ -945,8 +949,8 @@ export interface ExamRoomDetail {
   sessionClosesAt: string | null;
   roundId: string;
   roundTitle: string;
-  courseId: string;
-  courseTitle: string;
+  courseId: string | null;
+  courseTitle: string | null;
   examId: string;
   examTitle: string;
   examAccessMode: string;
@@ -1009,8 +1013,8 @@ export async function getExamRoom(
     sessionClosesAt: r.session.closesAt?.toISOString() ?? null,
     roundId: r.session.roundId,
     roundTitle: r.session.round.title,
-    courseId: r.exam.course.id,
-    courseTitle: r.exam.course.title,
+    courseId: r.exam.course?.id ?? null,
+    courseTitle: r.exam.course?.title ?? null,
     examId: r.examId,
     examTitle: r.exam.title,
     examAccessMode: r.session.accessMode,
@@ -1134,7 +1138,7 @@ export interface ProctorRoomItem {
   roundId: string;
   roundTitle: string;
   examTitle: string;
-  courseTitle: string;
+  courseTitle: string | null;
 }
 
 export async function listMyProctorRooms(
@@ -1188,7 +1192,7 @@ export async function listMyProctorRooms(
     roundId: r.session.round.id,
     roundTitle: r.session.round.title,
     examTitle: r.exam.title,
-    courseTitle: r.exam.course.title,
+    courseTitle: r.exam.course?.title ?? null,
   }));
 }
 
@@ -1230,7 +1234,7 @@ export async function inviteUserAsProctor(
   if (!room)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
   await assertCanEdit(actorUserId, room.session.roundId, db);
-  const organizationId = room.session.round.course.organizationId ?? null;
+  const organizationId = room.session.round.course?.organizationId ?? null;
 
   const normEmail = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normEmail))
@@ -1765,8 +1769,8 @@ export async function listExamSessionsForRound(
     examTitle: r.exam.title,
     examAccessMode: r.accessMode,
     openCode: r.openCode,
-    courseId: r.exam.course.id,
-    courseTitle: r.exam.course.title,
+    courseId: r.exam.course?.id ?? null,
+    courseTitle: r.exam.course?.title ?? null,
     roomCount: r._count.rooms,
   }));
 }

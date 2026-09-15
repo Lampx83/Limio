@@ -2733,7 +2733,10 @@ enum ExamIncidentType {
 
 model Exam {
   id                     String              @id @default(uuid())
-  courseId               String
+  // A7.x — nullable: đề có thể không gắn khoá học nào (đề độc lập, vào bằng
+  // mã/link mời). Khi null, createdById là chủ sở hữu duy nhất (xem CHECK
+  // constraint exam_courseid_or_createdby_check ở migration).
+  courseId               String?
   title                  String
   // A6.6 (UI) — với kind=oral, đây CŨNG là nội dung hiện ở panel bên phải
   // phòng vấn đáp (richtext, cho phép chèn ảnh) — gộp làm 1 với mô tả chung,
@@ -2795,7 +2798,7 @@ model Exam {
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 
-  course        Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course        Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdBy     User?              @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
   wizardConfig  ExamWizardConfig?
   blueprint     ExamBlueprint?
@@ -3679,7 +3682,9 @@ model ExamRound {
   // A5.3 PR2.11 — Mỗi đợt thi gắn với 1 học phần. Trước đây cross-course
   // qua bridge ExamRoundCourse; rollback để đơn giản hoá: tổ chức thi
   // song song nhiều môn = tạo nhiều đợt thi riêng.
-  courseId    String
+  // A7.x — nullable: đợt tự sinh (ensureDefaultRound) cho đề không gắn khoá
+  // học (đề độc lập) không có course nào để gắn — xem Exam.courseId.
+  courseId    String?
   // Code unique trong phạm vi course (vd "FINAL-HK1-2026") — không cần
   // global unique sau khi rollback cross-course.
   code        String
@@ -3691,7 +3696,7 @@ model ExamRound {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  course   Course           @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  course   Course?          @relation(fields: [courseId], references: [id], onDelete: Restrict)
   admins   ExamRoundAdmin[]
   sessions ExamSession[]
 

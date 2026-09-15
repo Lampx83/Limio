@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse } from "@feedbackme/core-lms";
+import { canEditExam } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ManualBankPicker from "./ManualBankPicker";
 
@@ -23,11 +23,11 @@ export default async function ManualBankPickerPage({
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, kind: true },
+    select: { id: true, courseId: true, createdById: true, kind: true },
   });
-  if (!exam || exam.courseId !== params.id) notFound();
+  if (!exam || (exam.courseId ?? "none") !== params.id) notFound();
   if (exam.kind !== "written") notFound();
-  if (!(await canEditCourse(session.user.id, exam.courseId))) {
+  if (!(await canEditExam(session.user.id, exam))) {
     redirect("/instructor/courses");
   }
 
@@ -59,7 +59,7 @@ export default async function ManualBankPickerPage({
 
       <ManualBankPicker
         examId={exam.id}
-        courseId={exam.courseId}
+        courseId={params.id}
         sectionId={sectionId}
         doneHref={doneHref}
       />

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { Radio } from "lucide-react";
 import {
-  canEditCourse,
+  canEditExam,
   getRoomScope,
   liveCountsByRoom,
 } from "@feedbackme/core-lms";
@@ -48,15 +48,23 @@ export default async function ExamLiveDashboardPage({
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, title: true, durationMin: true, accessMode: true, kind: true },
+    select: {
+      id: true,
+      courseId: true,
+      createdById: true,
+      title: true,
+      durationMin: true,
+      accessMode: true,
+      kind: true,
+    },
   });
-  if (!exam || exam.courseId !== params.id) notFound();
+  if (!exam || (exam.courseId ?? "none") !== params.id) notFound();
 
   // A6.5 — Vấn đáp AI: không có ExamQuestion/ExamRoom/multi-phòng, và chỉ
   // giảng viên đăng nhập được xem (chưa có giám thị dùng mã cho vấn đáp) —
   // nên tách hẳn nhánh, không kéo theo logic phòng/câu hỏi của thi viết.
   if (exam.kind === "oral") {
-    if (!(await canEditCourse(session.user.id, exam.courseId))) {
+    if (!(await canEditExam(session.user.id, exam))) {
       redirect("/instructor/courses");
     }
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -93,7 +101,7 @@ export default async function ExamLiveDashboardPage({
     return (
       <main>
         <Link
-          href={`/instructor/courses/${exam.courseId}/exams/${exam.id}`}
+          href={`/instructor/courses/${params.id}/exams/${exam.id}`}
           className="text-sm text-blue-600 hover:underline"
         >
           ← Quay lại bài thi
@@ -112,12 +120,12 @@ export default async function ExamLiveDashboardPage({
             Thời lượng: {exam.durationMin} phút · Tối đa {MAX_ORAL_QUESTIONS} câu
           </span>
         </div>
-        <OralLiveDashboard courseId={exam.courseId} examId={exam.id} initial={initial} />
+        <OralLiveDashboard courseId={params.id} examId={exam.id} initial={initial} />
       </main>
     );
   }
 
-  const isInstructor = await canEditCourse(session.user.id, exam.courseId);
+  const isInstructor = await canEditExam(session.user.id, exam);
   const scope = isInstructor
     ? null
     : await getRoomScope(session.user.id, exam.id);
@@ -321,7 +329,7 @@ export default async function ExamLiveDashboardPage({
   return (
     <main>
       <Link
-        href={run ? "/instructor/organize" : `/instructor/courses/${exam.courseId}/exams/${exam.id}`}
+        href={run ? "/instructor/organize" : `/instructor/courses/${params.id}/exams/${exam.id}`}
         className="text-sm text-blue-600 hover:underline"
       >
         {run ? "← Tổ chức thi" : "← Quay lại bài thi"}
@@ -354,7 +362,7 @@ export default async function ExamLiveDashboardPage({
 
       {tooMany && run ? (
         <RoomGrid
-          courseId={exam.courseId}
+          courseId={params.id}
           examId={exam.id}
           sessionId={run.id}
           rooms={roomCells}

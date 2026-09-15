@@ -70,7 +70,8 @@ export default async function GradeEssaysPage({
     else
       examGroupsMap.set(ex.id, {
         examId: ex.id,
-        courseId: ex.courseId,
+        // Query đã lọc attempt.exam.courseId trong courseIds (owned) — luôn có giá trị.
+        courseId: ex.courseId!,
         title: ex.title,
         count: 1,
       });

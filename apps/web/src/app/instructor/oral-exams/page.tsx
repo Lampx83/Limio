@@ -33,20 +33,23 @@ export default async function OralExamsHubPage() {
   const courseIds = ownedCourses.map((c) => c.id);
   const courseById = new Map(ownedCourses.map((c) => [c.id, c]));
 
-  const exams =
-    courseIds.length === 0
-      ? []
-      : await prisma.exam.findMany({
-          where: { courseId: { in: courseIds }, kind: "oral" },
-          orderBy: { updatedAt: "desc" },
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            courseId: true,
-            _count: { select: { oralMaterials: true, attempts: true } },
-          },
-        });
+  const exams = await prisma.exam.findMany({
+    where: {
+      kind: "oral",
+      OR: [
+        ...(courseIds.length > 0 ? [{ courseId: { in: courseIds } }] : []),
+        { courseId: null, createdById: userId },
+      ],
+    },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      courseId: true,
+      _count: { select: { oralMaterials: true, attempts: true } },
+    },
+  });
 
   return (
     <main>
@@ -72,15 +75,7 @@ export default async function OralExamsHubPage() {
         </Link>
       </div>
 
-      {ownedCourses.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
-          Bạn chưa phải giảng viên của khoá nào. Hãy{" "}
-          <Link href="/instructor/courses/new" className="font-medium underline">
-            tạo khoá đầu tiên
-          </Link>
-          .
-        </div>
-      ) : exams.length === 0 ? (
+      {exams.length === 0 ? (
         <div className="mt-6">
           <EmptyState
             icon="🎙️"
@@ -94,14 +89,15 @@ export default async function OralExamsHubPage() {
       ) : (
         <ul className="mt-6 space-y-3">
           {exams.map((e) => {
-            const course = courseById.get(e.courseId);
+            const courseSegment = e.courseId ?? "none";
+            const course = e.courseId ? courseById.get(e.courseId) : null;
             return (
               <li key={e.id} className="rounded-lg border border-default bg-white p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
+                        href={`/instructor/courses/${courseSegment}/exams/${e.id}`}
                         className="text-sm font-semibold hover:underline"
                       >
                         {e.title}
@@ -111,20 +107,20 @@ export default async function OralExamsHubPage() {
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-faint">
-                      {course?.title} · {e._count.oralMaterials} tài liệu ·{" "}
+                      {course?.title ?? "Đề độc lập"} · {e._count.oralMaterials} tài liệu ·{" "}
                       {e._count.attempts} lượt thi
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Link
-                      href={`/instructor/courses/${e.courseId}/exams/${e.id}`}
+                      href={`/instructor/courses/${courseSegment}/exams/${e.id}`}
                       className="rounded border border-default px-3 py-1 hover:bg-slate-50"
                     >
                       Quản lý
                     </Link>
                     {e.status === "published" && (
                       <Link
-                        href={`/instructor/courses/${e.courseId}/exams/${e.id}/live`}
+                        href={`/instructor/courses/${courseSegment}/exams/${e.id}/live`}
                         className="rounded border border-default px-3 py-1 hover:bg-slate-50"
                       >
                         Live
@@ -132,7 +128,7 @@ export default async function OralExamsHubPage() {
                     )}
                     {e._count.attempts > 0 && (
                       <Link
-                        href={`/instructor/courses/${e.courseId}/exams/${e.id}/grading`}
+                        href={`/instructor/courses/${courseSegment}/exams/${e.id}/grading`}
                         className="rounded border border-default px-3 py-1 hover:bg-slate-50"
                       >
                         Chấm bài

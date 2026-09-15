@@ -13,7 +13,7 @@
 
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanModerateLiveExam } from "../courses/authz";
+import { assertCanModerateLiveExamForExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { ExamError } from "./types";
 
@@ -42,11 +42,11 @@ export async function sendMessageToAttempt(
       status: true,
       examId: true,
       userId: true,
-      exam: { select: { courseId: true } },
+      exam: { select: { courseId: true, createdById: true } },
     },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
-  await assertCanModerateLiveExam(actorUserId, attempt.exam.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, attempt.exam, db);
   if (attempt.status !== "in_progress")
     throw new ExamError("attempt_not_in_progress");
 
@@ -88,10 +88,10 @@ export async function broadcastMessageToExam(
   const body = normaliseBody(rawBody);
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanModerateLiveExam(actorUserId, exam.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, exam, db);
 
   const msg = await db.examMessage.create({
     data: { examId, attemptId: null, fromUserId: actorUserId, body },

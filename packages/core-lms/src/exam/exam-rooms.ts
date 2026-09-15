@@ -11,7 +11,7 @@
 
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 // ============================================================================
@@ -115,10 +115,10 @@ export async function listExamRooms(
 ): Promise<ExamRoomListItem[]> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const rooms = await db.examRoom.findMany({
     where: { examId },
@@ -209,10 +209,10 @@ export async function createExamRoom(
 ): Promise<{ id: string }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const parsed = CreateExamRoomInput.safeParse(rawInput);
   if (!parsed.success)
@@ -279,14 +279,15 @@ export async function updateExamRoom(
       exam: {
         select: {
           courseId: true,
+          createdById: true,
           course: { select: { organizationId: true } },
         },
       },
     },
   });
   if (!room) throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanEditCourse(actorUserId, room.exam.courseId, db);
-  const organizationId = room.exam.course.organizationId ?? null;
+  await assertCanEditExam(actorUserId, room.exam, db);
+  const organizationId = room.exam.course?.organizationId ?? null;
 
   const parsed = UpdateExamRoomInput.safeParse(rawInput);
   if (!parsed.success)
@@ -382,10 +383,10 @@ export async function deleteExamRoom(
 ): Promise<void> {
   const room = await db.examRoom.findUnique({
     where: { id: roomId },
-    select: { exam: { select: { courseId: true } } },
+    select: { exam: { select: { courseId: true, createdById: true } } },
   });
   if (!room) return; // idempotent
-  await assertCanEditCourse(actorUserId, room.exam.courseId, db);
+  await assertCanEditExam(actorUserId, room.exam, db);
   // FK on candidate.roomId is SET NULL — candidates survive, just unassigned.
   await db.examRoom.delete({ where: { id: roomId } });
 }
@@ -406,11 +407,11 @@ export async function setRoomAsDefault(
     select: {
       sessionId: true,
       isDefault: true,
-      exam: { select: { courseId: true } },
+      exam: { select: { courseId: true, createdById: true } },
     },
   });
   if (!room) throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanEditCourse(actorUserId, room.exam.courseId, db);
+  await assertCanEditExam(actorUserId, room.exam, db);
   if (room.isDefault) return;
   await (db as typeof prisma).$transaction([
     db.examRoom.updateMany({
@@ -436,10 +437,10 @@ export async function assignCandidatesToRoom(
 ): Promise<{ assigned: number }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const parsed = AssignCandidatesInput.safeParse(rawInput);
   if (!parsed.success)
@@ -668,10 +669,10 @@ export async function bulkCreateExamRooms(
 ): Promise<{ created: number; roomIds: string[] }> {
   const session = await db.examSession.findUnique({
     where: { id: sessionId },
-    select: { examId: true, exam: { select: { courseId: true } } },
+    select: { examId: true, exam: { select: { courseId: true, createdById: true } } },
   });
   if (!session) throw new ExamError("schedule_not_found");
-  await assertCanEditCourse(actorUserId, session.exam.courseId, db);
+  await assertCanEditExam(actorUserId, session.exam, db);
 
   const parsed = BulkCreateExamRoomsInput.safeParse(rawInput);
   if (!parsed.success)

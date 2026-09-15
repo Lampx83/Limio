@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, getOralSessionInfo } from "@feedbackme/core-lms";
+import { assertCanEditExam, CourseAuthzError, getOralSessionInfo } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ExamMetaForm from "../ExamMetaForm";
 import PublishBar from "./PublishBar";
@@ -47,18 +47,10 @@ export default async function EditExamPage({
       `/signin?callbackUrl=/instructor/courses/${params.id}/exams/${params.examId}`,
     );
   }
-  const course = await prisma.course.findUnique({
-    where: { id: params.id },
-    select: { id: true, title: true },
-  });
-  if (!course) notFound();
-  if (!(await canEditCourse(session.user.id, course.id))) {
-    redirect("/instructor/courses");
-  }
-
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
     include: {
+      course: { select: { id: true, title: true } },
       _count: {
         select: {
           passages: true,
@@ -87,7 +79,17 @@ export default async function EditExamPage({
       },
     },
   });
-  if (!exam || exam.courseId !== course.id) notFound();
+  if (!exam) notFound();
+  // "none" khi đề không gắn khoá học — chặn URL đoán mò (courseId thật mà đi
+  // sai segment, hoặc ngược lại).
+  if ((exam.courseId ?? "none") !== params.id) notFound();
+  try {
+    await assertCanEditExam(session.user.id, exam);
+  } catch (e) {
+    if (e instanceof CourseAuthzError) redirect("/instructor/courses");
+    throw e;
+  }
+  const courseSegment = exam.courseId ?? "none";
 
   const oralSession =
     exam.kind === "oral"
@@ -134,7 +136,7 @@ export default async function EditExamPage({
   return (
     <main>
       <Link
-        href={`/instructor/courses/${course.id}/exams`}
+        href={exam.courseId ? `/instructor/courses/${exam.courseId}/exams` : exam.kind === "oral" ? "/instructor/oral-exams" : "/instructor/exams"}
         className="text-sm text-blue-600 hover:underline"
       >
         ← Bài thi
@@ -170,7 +172,7 @@ export default async function EditExamPage({
         <div className="flex items-start gap-2">
           {exam.kind === "oral" && isPublished && (
             <Link
-              href={`/instructor/courses/${course.id}/exams/${exam.id}/live`}
+              href={`/instructor/courses/${courseSegment}/exams/${exam.id}/live`}
               className="btn btn-secondary btn-sm"
             >
               Live
@@ -178,7 +180,7 @@ export default async function EditExamPage({
           )}
           {exam.kind === "oral" && attemptCount > 0 && (
             <Link
-              href={`/instructor/courses/${course.id}/exams/${exam.id}/grading`}
+              href={`/instructor/courses/${courseSegment}/exams/${exam.id}/grading`}
               className="btn btn-secondary btn-sm"
             >
               Chấm bài
@@ -204,7 +206,7 @@ export default async function EditExamPage({
 
       <div className="mt-6">
         <ExamTabs
-          courseId={course.id}
+          courseId={courseSegment}
           examId={exam.id}
           active={activeTab}
           kind={exam.kind}
@@ -219,7 +221,7 @@ export default async function EditExamPage({
         <div className="mt-6">
           <ExamMetaForm
             mode="edit"
-            courseId={course.id}
+            courseId={exam.courseId}
             examId={exam.id}
             lockedFields={lockedFields}
             initial={{
@@ -300,7 +302,7 @@ export default async function EditExamPage({
             )}
             <ContentManager
               examId={exam.id}
-              courseId={course.id}
+              courseId={courseSegment}
               editable={exam.status !== "archived"}
               passages={exam.passages.map((p) => ({
                 id: p.id,

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 const audioPolicy = z.enum(["free_replay", "limited_replay", "once_only"]);
@@ -49,7 +49,7 @@ export const UpdatePassageInput = z
 async function assertExamDraft(examId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, status: true },
+    select: { id: true, courseId: true, createdById: true, status: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.status === "archived") throw new ExamError("exam_not_draft");
@@ -59,7 +59,7 @@ async function assertExamDraft(examId: string, db: PrismaClient) {
 async function loadPassageWithCourse(passageId: string, db: PrismaClient) {
   const p = await db.examPassage.findUnique({
     where: { id: passageId },
-    select: { id: true, examId: true, exam: { select: { courseId: true, status: true } } },
+    select: { id: true, examId: true, exam: { select: { courseId: true, createdById: true, status: true } } },
   });
   if (!p) throw new ExamError("passage_not_found");
   return p;
@@ -73,7 +73,7 @@ export async function createPassage(
   db: PrismaClient = prisma,
 ): Promise<{ passageId: string }> {
   const exam = await assertExamDraft(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   const parsed = CreatePassageInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
   const d = parsed.data;
@@ -116,7 +116,7 @@ export async function updatePassage(
 ): Promise<void> {
   const p = await loadPassageWithCourse(passageId, db);
   if (p.exam.status === "archived") throw new ExamError("exam_not_draft");
-  await assertCanEditCourse(actorUserId, p.exam.courseId, db);
+  await assertCanEditExam(actorUserId, p.exam, db);
   const parsed = UpdatePassageInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
   const d = parsed.data;
@@ -168,7 +168,7 @@ export async function deletePassage(
 ): Promise<void> {
   const p = await loadPassageWithCourse(passageId, db);
   if (p.exam.status === "archived") throw new ExamError("exam_not_draft");
-  await assertCanEditCourse(actorUserId, p.exam.courseId, db);
+  await assertCanEditExam(actorUserId, p.exam, db);
   await db.examPassage.delete({ where: { id: passageId } });
 }
 
@@ -180,7 +180,7 @@ export async function reorderPassages(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const exam = await assertExamDraft(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   const existing = await db.examPassage.findMany({
     where: { examId },
     select: { id: true },

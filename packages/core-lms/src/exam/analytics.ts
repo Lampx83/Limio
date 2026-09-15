@@ -18,7 +18,7 @@
  */
 
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanModerateLiveExam, canModerateLiveExam } from "../courses/authz";
+import { assertCanModerateLiveExamForExam, canModerateLiveExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 const MIN_ATTEMPTS = 5;
@@ -415,7 +415,7 @@ export interface ItemAnalyticsRow {
 }
 
 export interface ExamItemAnalyticsResult {
-  exam: { id: string; title: string; courseId: string };
+  exam: { id: string; title: string; courseId: string | null };
   rows: ItemAnalyticsRow[];
 }
 
@@ -430,10 +430,10 @@ export async function listExamItemAnalytics(
 ): Promise<ExamItemAnalyticsResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, title: true, courseId: true },
+    select: { id: true, title: true, courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanModerateLiveExam(actorUserId, exam.courseId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, exam, db);
 
   const questions = await db.examQuestion.findMany({
     where: { examId },

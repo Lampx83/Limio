@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
-import { assertCanEditCourse, CourseAuthzError } from "@feedbackme/core-lms";
+import { assertCanEditExam, CourseAuthzError } from "@feedbackme/core-lms";
 import {
   AiTutorError,
   assertWithinCaps,
@@ -38,7 +38,7 @@ export async function POST(
       },
       attempt: {
         select: {
-          exam: { select: { courseId: true } },
+          exam: { select: { courseId: true, createdById: true } },
         },
       },
     },
@@ -46,7 +46,7 @@ export async function POST(
   if (!answer) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   try {
-    await assertCanEditCourse(userId, answer.attempt.exam.courseId);
+    await assertCanEditExam(userId, answer.attempt.exam);
   } catch (e) {
     if (e instanceof CourseAuthzError) {
       return NextResponse.json(

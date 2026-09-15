@@ -51,7 +51,7 @@ export default async function OralGradingDetailPage({
   if (
     !attempt ||
     attempt.exam.id !== params.examId ||
-    attempt.exam.courseId !== params.id
+    (attempt.exam.courseId ?? "none") !== params.id
   ) {
     notFound();
   }
@@ -73,7 +73,7 @@ export default async function OralGradingDetailPage({
           {attempt.user?.displayName ?? "Sinh viên"}
         </h1>
         <p className="mt-1 text-sm text-faint">
-          {attempt.exam.title} · {attempt.exam.course.title}
+          {attempt.exam.title} · {attempt.exam.course?.title ?? "Đề độc lập"}
           {attempt.submittedAt && ` · Nộp ${formatDateTime(attempt.submittedAt)}`}
         </p>
       </div>

@@ -69,8 +69,9 @@ export default async function OrganizeQuickPage() {
           papers={papers.map((p) => ({
             id: p.id,
             title: p.title,
-            courseId: p.courseId,
-            courseTitle: courseTitleById.get(p.courseId) ?? "",
+            // Query đã lọc courseId trong danh sách khoá sở hữu — luôn có giá trị.
+            courseId: p.courseId!,
+            courseTitle: courseTitleById.get(p.courseId!) ?? "",
             questionCount: p._count.questions,
           }))}
         />

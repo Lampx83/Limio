@@ -13,7 +13,8 @@ export default function ExamReadinessWarning({
   examAccessMode,
   examStatus,
 }: {
-  courseId: string;
+  /** null khi đề không gắn khoá học (đề độc lập). */
+  courseId: string | null;
   examId: string;
   examAccessMode: string;
   examStatus: string;
@@ -25,7 +26,7 @@ export default function ExamReadinessWarning({
   const notPublished = examStatus !== "published";
   if (!wrongMode && !notPublished) return null;
 
-  const fixLink = `/instructor/courses/${courseId}/exams/${examId}`;
+  const fixLink = `/instructor/courses/${courseId ?? "none"}/exams/${examId}`;
 
   return (
     <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">

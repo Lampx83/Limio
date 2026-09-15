@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { configSchemaForType } from "./schemas";
 import { ExamError } from "./types";
 
@@ -54,7 +54,7 @@ export const UpdateExamQuestionInput = z.object({
 async function assertExamDraft(examId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, status: true, kind: true },
+    select: { id: true, courseId: true, createdById: true, status: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.status === "archived") throw new ExamError("exam_not_draft");
@@ -70,7 +70,7 @@ async function loadQuestionWithCourse(questionId: string, db: PrismaClient) {
       id: true,
       examId: true,
       passageId: true,
-      exam: { select: { courseId: true, status: true } },
+      exam: { select: { courseId: true, createdById: true, status: true } },
     },
   });
   if (!q) throw new ExamError("validation_failed", "question_not_found");
@@ -124,7 +124,7 @@ export async function createExamQuestion(
   db: PrismaClient = prisma,
 ): Promise<{ questionId: string }> {
   const exam = await assertExamDraft(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   const parsed = CreateExamQuestionInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
   const d = parsed.data;
@@ -198,7 +198,7 @@ export async function updateExamQuestion(
 ): Promise<void> {
   const q = await loadQuestionWithCourse(questionId, db);
   if (q.exam.status === "archived") throw new ExamError("exam_not_draft");
-  await assertCanEditCourse(actorUserId, q.exam.courseId, db);
+  await assertCanEditExam(actorUserId, q.exam, db);
   const parsed = UpdateExamQuestionInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
   const d = parsed.data;
@@ -267,7 +267,7 @@ export async function deleteExamQuestion(
 ): Promise<void> {
   const q = await loadQuestionWithCourse(questionId, db);
   if (q.exam.status === "archived") throw new ExamError("exam_not_draft");
-  await assertCanEditCourse(actorUserId, q.exam.courseId, db);
+  await assertCanEditExam(actorUserId, q.exam, db);
   await db.examQuestion.delete({ where: { id: questionId } });
 }
 
@@ -287,7 +287,7 @@ export async function reorderExamQuestions(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const exam = await assertExamDraft(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const where = passageId
     ? { examId, passageId }

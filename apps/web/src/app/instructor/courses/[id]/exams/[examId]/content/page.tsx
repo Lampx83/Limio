@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse } from "@feedbackme/core-lms";
+import { canEditExam } from "@feedbackme/core-lms";
 import { BookOpen, ChevronRight, Dices, Grid3x3 } from "lucide-react";
 import { auth } from "@/lib/auth";
 
@@ -61,11 +61,11 @@ export default async function ContentSourceSelectPage({
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, title: true, kind: true },
+    select: { id: true, courseId: true, createdById: true, title: true, kind: true },
   });
-  if (!exam || exam.courseId !== params.id) notFound();
+  if (!exam || (exam.courseId ?? "none") !== params.id) notFound();
   if (exam.kind !== "written") notFound();
-  if (!(await canEditCourse(session.user.id, exam.courseId))) {
+  if (!(await canEditExam(session.user.id, exam))) {
     redirect("/instructor/courses");
   }
 

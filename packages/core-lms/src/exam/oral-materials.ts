@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma, type PrismaClient, type OralExamMaterial } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { ExamError } from "./types";
 
@@ -31,14 +31,14 @@ async function assertExamOralAndEditable(
 ) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, status: true, kind: true },
+    select: { courseId: true, createdById: true, status: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
   // Cùng bất biến với ExamAsset — sửa tài liệu sau publish có thể khiến sinh
   // viên thi cùng ca gặp nội dung khác nhau tuỳ lúc AI đọc lại tài liệu.
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   return exam;
 }
 
@@ -144,11 +144,11 @@ export async function listOralMaterials(
 ): Promise<OralExamMaterial[]> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, kind: true },
+    select: { courseId: true, createdById: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   return db.oralExamMaterial.findMany({
     where: { examId },
     orderBy: { orderIndex: "asc" },

@@ -17,7 +17,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 // ============================================================================
@@ -255,13 +255,13 @@ async function assertExamEditable(
   actorUserId: string,
   examId: string,
   db: PrismaClient,
-): Promise<{ id: string; courseId: string }> {
+): Promise<{ id: string; courseId: string | null; createdById: string | null }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   return exam;
 }
 
@@ -345,10 +345,10 @@ export async function updateSection(
 ): Promise<void> {
   const s = await db.examSection.findUnique({
     where: { id: sectionId },
-    select: { id: true, exam: { select: { courseId: true } } },
+    select: { id: true, exam: { select: { courseId: true, createdById: true } } },
   });
   if (!s) throw new ExamError("section_not_found");
-  await assertCanEditCourse(actorUserId, s.exam.courseId, db);
+  await assertCanEditExam(actorUserId, s.exam, db);
   const parsed = CreateSectionInput.partial().safeParse(rawInput);
   if (!parsed.success)
     throw new ExamError("validation_failed", parsed.error.flatten());
@@ -370,10 +370,10 @@ export async function deleteSection(
 ): Promise<void> {
   const s = await db.examSection.findUnique({
     where: { id: sectionId },
-    select: { id: true, orderIndex: true, exam: { select: { courseId: true } } },
+    select: { id: true, orderIndex: true, exam: { select: { courseId: true, createdById: true } } },
   });
   if (!s) throw new ExamError("section_not_found");
-  await assertCanEditCourse(actorUserId, s.exam.courseId, db);
+  await assertCanEditExam(actorUserId, s.exam, db);
   if (s.orderIndex === 0) {
     // Default "Main" section. Allow but warn — UI should confirm.
   }

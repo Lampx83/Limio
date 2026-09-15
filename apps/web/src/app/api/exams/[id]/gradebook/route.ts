@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { formatDateTime } from "@/lib/datetime";
-import { assertCanEditCourse } from "@feedbackme/core-lms";
+import { assertCanEditExam } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -33,12 +33,13 @@ export async function GET(
       id: true,
       title: true,
       courseId: true,
+      createdById: true,
       accessMode: true,
     },
   });
   if (!exam)
     return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
-  await assertCanEditCourse(userId, exam.courseId);
+  await assertCanEditExam(userId, exam);
 
   const url = new URL(req.url);
   const roomId = url.searchParams.get("roomId");

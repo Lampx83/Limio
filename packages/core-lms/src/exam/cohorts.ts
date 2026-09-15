@@ -11,7 +11,7 @@
 
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
 import type { RevealPolicy } from "./reveal-policy";
@@ -444,10 +444,10 @@ export async function createExamSession(
 ): Promise<{ id: string }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const parsed = CreateSessionInput.safeParse(rawInput);
   if (!parsed.success)
@@ -517,10 +517,10 @@ export async function listExamSessions(
 ): Promise<ExamSessionItem[]> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true },
+    select: { courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   const rows = await db.examSession.findMany({
     where: { examId },
     orderBy: { opensAt: "asc" },
@@ -574,11 +574,11 @@ export async function setManualSessionOpen(
     select: {
       id: true,
       timingMode: true,
-      exam: { select: { courseId: true } },
+      exam: { select: { courseId: true, createdById: true } },
     },
   });
   if (!s) throw new ExamError("schedule_not_found");
-  await assertCanEditCourse(actorUserId, s.exam.courseId, db);
+  await assertCanEditExam(actorUserId, s.exam, db);
   if (s.timingMode !== "manual") {
     throw new ExamError("validation_failed", {
       reason: "session_not_manual",
@@ -614,10 +614,10 @@ export async function setSessionRevealPolicy(
 ): Promise<{ id: string; revealAnswers: string | null }> {
   const s = await db.examSession.findUnique({
     where: { id: sessionId },
-    select: { id: true, exam: { select: { courseId: true } } },
+    select: { id: true, exam: { select: { courseId: true, createdById: true } } },
   });
   if (!s) throw new ExamError("schedule_not_found");
-  await assertCanEditCourse(actorUserId, s.exam.courseId, db);
+  await assertCanEditExam(actorUserId, s.exam, db);
 
   return db.examSession.update({
     where: { id: sessionId },
@@ -633,10 +633,10 @@ export async function deleteExamSession(
 ): Promise<void> {
   const s = await db.examSession.findUnique({
     where: { id: sessionId },
-    select: { exam: { select: { courseId: true } } },
+    select: { exam: { select: { courseId: true, createdById: true } } },
   });
   if (!s) throw new ExamError("schedule_not_found");
-  await assertCanEditCourse(actorUserId, s.exam.courseId, db);
+  await assertCanEditExam(actorUserId, s.exam, db);
   await db.examSession.delete({ where: { id: sessionId } });
 }
 
@@ -699,6 +699,16 @@ export async function assertEligibleForExam(
   if (exam.status !== "published") throw new ExamError("exam_not_open");
 
   const now = new Date();
+
+  // Đề không gắn khoá học không có enrollment để tra — luồng "học viên đã ghi
+  // danh tự vào" không áp dụng, phải luôn vào bằng mã/link mời (joinOralSessionByCode
+  // / claimByOpenCode / claimByAssignedCode), không đi qua đây.
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_open", {
+      reason: "no_course",
+      message: "Đề không gắn khoá học — dùng mã/link mời để vào thi.",
+    });
+  }
 
   // Enrollment is always required for User-mode access.
   const enrolled = await isUserEnrolled(userId, exam.courseId, db);

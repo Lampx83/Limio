@@ -55,7 +55,16 @@ export async function bulkImportRoundFull(
       course: { select: { organizationId: true } },
     },
   });
-  const organizationId = round.course.organizationId ?? null;
+  // Cohort/CohortExamClass đều bắt buộc gắn courseId — bulk-import cohort chỉ
+  // có ý nghĩa với đợt thi gắn khoá học (đợt tự sinh cho đề độc lập không
+  // dùng tính năng này).
+  if (!round.courseId) {
+    throw new ExamError("validation_failed", {
+      reason: "round_has_no_course",
+      message: "Đợt thi này không gắn khoá học — không nhập cohort hàng loạt được.",
+    });
+  }
+  const organizationId = round.course?.organizationId ?? null;
 
   // Pre-load all sessions in this round so we can resolve session codes
   // case-insensitive without N+1 queries.

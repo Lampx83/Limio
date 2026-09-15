@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { ExamStatus, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditCourse, assertCanEditExam, CourseAuthzError } from "../courses/authz";
+import { isInstructor } from "../auth/roles";
 import { emitEvent } from "../learning/events";
 import { ensureDefaultSession } from "./exam-rooms";
 import { ExamError } from "./types";
@@ -69,14 +70,27 @@ export const UpdateExamInput = z
     oralRubricText: z.string().max(20_000).optional(),
   });
 
-/** A7.1.1 — Create exam in DRAFT status. */
+/**
+ * A7.1.1 — Create exam in DRAFT status.
+ *
+ * `courseId: null` — đề độc lập, không gắn khoá học nào (vào bằng mã/link
+ * mời — xem CLAUDE.md/plan "bỏ ràng buộc courseId"). Không cần quyền edit
+ * trên course nào cả (không có course để xét) — chỉ cần user có role
+ * instructor (hoặc admin) ở tầng platform, vì `createdById` sẽ là chủ sở
+ * hữu DUY NHẤT của đề này (assertCanEditExam sau này chỉ cho đúng người
+ * này sửa/chấm).
+ */
 export async function createExam(
   actorUserId: string,
-  courseId: string,
+  courseId: string | null,
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<{ examId: string }> {
-  await assertCanEditCourse(actorUserId, courseId, db);
+  if (courseId) {
+    await assertCanEditCourse(actorUserId, courseId, db);
+  } else if (!(await isInstructor(actorUserId, db))) {
+    throw new CourseAuthzError("forbidden");
+  }
   const parsed = CreateExamInput.safeParse(rawInput);
   if (!parsed.success) {
     throw new ExamError("validation_failed", parsed.error.flatten());
@@ -85,6 +99,7 @@ export async function createExam(
   const exam = await db.exam.create({
     data: {
       courseId,
+      createdById: actorUserId,
       title: d.title,
       description: d.description ?? null,
       durationMin: d.durationMin,
@@ -225,6 +240,7 @@ async function loadExam(examId: string, db: PrismaClient) {
     select: {
       id: true,
       courseId: true,
+      createdById: true,
       status: true,
     },
   });
@@ -240,7 +256,7 @@ export async function updateExam(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const exam = await loadExam(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   const parsed = UpdateExamInput.safeParse(rawInput);
   if (!parsed.success) {
     throw new ExamError("validation_failed", parsed.error.flatten());
@@ -288,7 +304,7 @@ export async function publishExam(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const exam = await loadExam(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   if (exam.status !== "draft") {
     throw new ExamError("exam_not_draft");
   }
@@ -407,7 +423,7 @@ export async function getExam(
   db: PrismaClient = prisma,
 ): Promise<ExamWithRelations> {
   const exam = await loadExam(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   return db.exam.findUniqueOrThrow({
     where: { id: examId },
     include: {
@@ -477,7 +493,7 @@ export async function deleteExam(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const exam = await loadExam(examId, db);
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   if (exam.status === "published") {
     const hasAttempts =
       (await db.examAttempt.count({ where: { examId } })) > 0;

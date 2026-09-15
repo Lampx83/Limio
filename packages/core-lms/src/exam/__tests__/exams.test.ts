@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { createCourse } from "../../courses/courses";
 import { registerUser } from "../../auth/register";
+import { grantRole } from "../../auth/roles";
 import { CourseAuthzError } from "../../courses/authz";
 import {
   createExam,
@@ -121,6 +122,33 @@ describe("createExam (A7.1.1)", () => {
     const outsider = await newOutsider("c5");
     await expect(
       createExam(outsider, courseId, validExamInput()),
+    ).rejects.toBeInstanceOf(CourseAuthzError);
+  });
+});
+
+describe("createExam — đề độc lập (courseId = null)", () => {
+  it("creates with courseId null when actor has instructor role, sets createdById", async () => {
+    const u = await registerUser(
+      { email: "instr-noexam@e.com", password: "password1234", displayName: "I" },
+      BASE,
+    );
+    const admin = await registerUser(
+      { email: "admin-noexam2@e.com", password: "password1234", displayName: "A" },
+      BASE,
+    );
+    await grantRole(admin.userId, { targetUserId: admin.userId, roleName: "admin" });
+    await grantRole(admin.userId, { targetUserId: u.userId, roleName: "instructor" });
+
+    const r = await createExam(u.userId, null, validExamInput());
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { id: r.examId } });
+    expect(exam.courseId).toBeNull();
+    expect(exam.createdById).toBe(u.userId);
+  });
+
+  it("rejects courseId=null when actor has no instructor role", async () => {
+    const outsider = await newOutsider("noinstr");
+    await expect(
+      createExam(outsider, null, validExamInput()),
     ).rejects.toBeInstanceOf(CourseAuthzError);
   });
 });
@@ -264,6 +292,46 @@ describe("updateExam (A7.1.3)", () => {
     await updateExam(ownerId, examId, { oralRubricText: "Rubric sửa sau khi thi." });
     const e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
     expect(e.oralRubricText).toBe("Rubric sửa sau khi thi.");
+  });
+});
+
+describe("update/publish/get/delete — đề độc lập (courseId = null), chỉ createdById được thao tác", () => {
+  it("creator can update/publish/get/delete; stranger is forbidden", async () => {
+    const admin = await registerUser(
+      { email: "admin-noexam3@e.com", password: "password1234", displayName: "A" },
+      BASE,
+    );
+    await grantRole(admin.userId, { targetUserId: admin.userId, roleName: "admin" });
+    const creator = await registerUser(
+      { email: "creator-noexam3@e.com", password: "password1234", displayName: "C" },
+      BASE,
+    );
+    await grantRole(admin.userId, { targetUserId: creator.userId, roleName: "instructor" });
+    const stranger = await newOutsider("noexam3");
+
+    const { examId } = await createExam(
+      creator.userId,
+      null,
+      validExamInput({ kind: "oral" }),
+    );
+
+    await expect(
+      updateExam(stranger, examId, { title: "Hijacked" }),
+    ).rejects.toBeInstanceOf(CourseAuthzError);
+    await expect(updateExam(creator.userId, examId, { title: "Renamed" })).resolves.toBeUndefined();
+
+    await expect(getExam(stranger, examId)).rejects.toBeInstanceOf(CourseAuthzError);
+    const full = await getExam(creator.userId, examId);
+    expect(full.title).toBe("Renamed");
+
+    await createOralMaterialTopicList(creator.userId, examId, { title: "T", text: "x" });
+    await expect(publishExam(stranger, examId)).rejects.toBeInstanceOf(CourseAuthzError);
+    // Đề written (kind mặc định) — publishExam validate content khác oral;
+    // kiểm tra forbidden ở publishExam là đủ, không cần publish thành công ở đây.
+
+    await expect(deleteExam(stranger, examId)).rejects.toBeInstanceOf(CourseAuthzError);
+    await expect(deleteExam(creator.userId, examId)).resolves.toBeUndefined();
+    expect(await prisma.exam.findUnique({ where: { id: examId } })).toBeNull();
   });
 });
 

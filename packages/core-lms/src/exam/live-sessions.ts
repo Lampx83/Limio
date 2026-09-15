@@ -19,7 +19,7 @@ export interface ExamRun {
   isOpen: boolean;
   opensAt: string;
   examId: string;
-  courseId: string;
+  courseId: string | null;
   examTitle: string;
   /** Null khi lần thi không dùng mã dự thi chung (mã cấp riêng, hoặc ghi danh). */
   code: string | null;

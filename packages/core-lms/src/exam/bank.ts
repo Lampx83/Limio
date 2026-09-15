@@ -19,7 +19,7 @@
 
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse, canEditCourse } from "../courses/authz";
+import { assertCanEditCourse, assertCanEditExam, canEditCourse } from "../courses/authz";
 import { ExamError } from "./types";
 
 const BankVisibility = z.enum(["private", "course", "org"]);
@@ -1039,7 +1039,7 @@ export async function copyBankQuestionToExam(
 
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, status: true, purpose: true },
+    select: { id: true, courseId: true, createdById: true, status: true, purpose: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
 
@@ -1051,7 +1051,13 @@ export async function copyBankQuestionToExam(
   if (q.status === "archived") throw new ExamError("bank_question_not_publishable");
   if (q.status !== "published" && exam.purpose !== "field_test")
     throw new ExamError("bank_question_not_publishable");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_written", {
+      reason: "blueprint_requires_course",
+      message: "Thêm câu hỏi từ ngân hàng chỉ dùng cho đề gắn khoá học.",
+    });
+  }
   if (exam.status !== "draft") {
     // Published exam with attempts is frozen by `assertCanEditExam` elsewhere
     // — check attempts directly here for clarity.

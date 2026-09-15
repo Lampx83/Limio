@@ -15,7 +15,7 @@
  * check (canEditCourse) before invoking these functions.
  */
 import { prisma, type Prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "../exam/types";
 import { sendTemplatedEmail } from "./templates";
 
@@ -78,6 +78,7 @@ export async function createExamCodeBatch(
     select: {
       id: true,
       courseId: true,
+      createdById: true,
       title: true,
       openAt: true,
       closeAt: true,
@@ -86,9 +87,9 @@ export async function createExamCodeBatch(
     },
   });
   if (!exam) throw new DispatchError("exam_not_found");
-  await assertCanEditCourse(input.actorUserId, exam.courseId, db);
+  await assertCanEditExam(input.actorUserId, exam, db);
 
-  const organizationId = exam.course.organizationId ?? null;
+  const organizationId = exam.course?.organizationId ?? null;
 
   // Pull every active candidate with a code. Whether they have an email
   // (in metadata) determines if they make the cut for this batch.
@@ -427,10 +428,10 @@ async function assertActorCanEditBatch(
   if (batch.targetType === "exam") {
     const exam = await db.exam.findUnique({
       where: { id: batch.targetId },
-      select: { courseId: true },
+      select: { courseId: true, createdById: true },
     });
     if (!exam) throw new DispatchError("exam_not_found");
-    await assertCanEditCourse(actorUserId, exam.courseId, db);
+    await assertCanEditExam(actorUserId, exam, db);
     return;
   }
   // Unknown target type — refuse rather than silently allow.
@@ -464,10 +465,10 @@ export async function listBatchesForExam(
 ) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true },
+    select: { courseId: true, createdById: true },
   });
   if (!exam) throw new DispatchError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   return db.emailDispatchBatch.findMany({
     where: { targetType: "exam", targetId: examId },

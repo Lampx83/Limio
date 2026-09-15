@@ -37,6 +37,10 @@ export default async function PrintRoundRoomCodesPage({
   });
   if (!round) notFound();
   if (!(await canViewExamRound(userId, round.id))) notFound();
+  // Đợt tự sinh cho đề độc lập không gắn khoá học — tính năng in mã theo
+  // cohort/lớp thi (CohortExamClass) luôn cần course thật.
+  if (!round.course) notFound();
+  const course = round.course;
 
   // Mã lớp thi & mã lớp học: liên kết theo CohortExamClass.code = Room.name
   // (theo workflow bulk-import-full hiện tại). Lookup 1 lần cho cả round.
@@ -183,7 +187,7 @@ export default async function PrintRoundRoomCodesPage({
               {/* Header */}
               <header className="border-b-2 border-slate-300 pb-2">
                 <div className="text-[10px] uppercase tracking-wide text-slate-500">
-                  {round.course.title}
+                  {course.title}
                 </div>
                 <h1 className="mt-0.5 text-lg font-bold leading-tight">
                   {round.title}

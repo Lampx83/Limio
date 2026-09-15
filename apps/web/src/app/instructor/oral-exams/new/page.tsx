@@ -24,27 +24,12 @@ export default async function NewOralExamPage({
     orderBy: { updatedAt: "desc" },
   });
 
-  if (ownedCourses.length === 0) {
-    return (
-      <main className="text-center">
-        <h1 className="text-2xl font-bold">Tạo đề vấn đáp</h1>
-        <p className="mt-4 text-sm text-faint">
-          Bạn cần là giảng viên của một khoá học trước khi tạo đề vấn đáp.
-        </p>
-        <Link
-          href="/instructor/courses/new"
-          className="mt-6 inline-block rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
-        >
-          + Tạo khoá đầu tiên
-        </Link>
-      </main>
-    );
-  }
-
+  // Không còn chặn khi chưa sở hữu khoá nào — vẫn tạo được đề vấn đáp độc
+  // lập (không gắn khoá học), chỉ dropdown Khoá học sẽ chỉ có tuỳ chọn đó.
   const preselectedCourseId =
     searchParams?.courseId && ownedCourses.some((c) => c.id === searchParams.courseId)
       ? searchParams.courseId
-      : ownedCourses[0]!.id;
+      : (ownedCourses[0]?.id ?? "");
 
   return (
     <main>

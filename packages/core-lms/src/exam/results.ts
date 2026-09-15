@@ -1,5 +1,5 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 
 /**
@@ -95,6 +95,7 @@ export async function listExamResults(
     select: {
       id: true,
       courseId: true,
+      createdById: true,
       title: true,
       accessMode: true,
       questions: { select: { points: true } },
@@ -105,7 +106,7 @@ export async function listExamResults(
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const totalPoints = exam.questions.reduce((s, q) => s + q.points, 0);
 
@@ -194,7 +195,15 @@ export async function listExamResults(
   // thay vì bịa ra một con số sai.
   const seenUserIds = new Set(attempts.map((a) => a.userId).filter(Boolean));
   let notStartedRows: ExamResultRow[] = [];
-  if (exam.accessMode === "authenticated" && !filter.sessionId && !filter.roomId) {
+  // Đề không gắn khoá học không dùng accessMode=authenticated (xem
+  // assertEligibleForExam) nên exam.courseId luôn có giá trị ở nhánh này —
+  // guard courseId chỉ để TypeScript hài lòng, không phải logic mới.
+  if (
+    exam.accessMode === "authenticated" &&
+    exam.courseId &&
+    !filter.sessionId &&
+    !filter.roomId
+  ) {
     const enrolled = await db.enrollment.findMany({
       where: { courseId: exam.courseId },
       select: { user: { select: { id: true, displayName: true, email: true } } },

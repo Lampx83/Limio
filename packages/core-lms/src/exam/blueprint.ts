@@ -16,7 +16,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma, Prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 import { resolveSkillScope, resolveBankScope } from "./wizard";
 import { pickPoolQuestions, PoolFilter } from "./sections";
@@ -93,9 +93,9 @@ export async function getBlueprint(
   examId: string,
   db: PrismaClient = prisma,
 ): Promise<BlueprintData | null> {
-  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true, createdById: true } });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   const bp = await db.examBlueprint.findUnique({ where: { examId } });
   if (!bp) return null;
   return {
@@ -130,9 +130,15 @@ export async function getBlueprintLessonTree(
   examId: string,
   db: PrismaClient = prisma,
 ): Promise<BlueprintModuleNode[]> {
-  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true, createdById: true } });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_written", {
+      reason: "blueprint_requires_course",
+      message: "Chức năng lấy mẫu từ ngân hàng câu hỏi chỉ dùng cho đề gắn khoá học.",
+    });
+  }
 
   const modules = await db.module.findMany({
     where: { courseId: exam.courseId },
@@ -181,12 +187,18 @@ export async function upsertBlueprint(
 ): Promise<BlueprintData> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, kind: true },
+    select: { courseId: true, createdById: true, kind: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   // A6.1 — Blueprint kéo câu hỏi từ ngân hàng; vô nghĩa với vấn đáp AI.
   if (exam.kind === "oral") throw new ExamError("exam_not_written");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_written", {
+      reason: "blueprint_requires_course",
+      message: "Chức năng lấy mẫu từ ngân hàng câu hỏi chỉ dùng cho đề gắn khoá học.",
+    });
+  }
+  await assertCanEditExam(actorUserId, exam, db);
 
   const parsed = UpsertBlueprintInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
@@ -268,9 +280,18 @@ export async function previewBlueprint(
   cells: SkillMatrixCell[],
   db: PrismaClient = prisma,
 ): Promise<BlueprintPreviewResult> {
-  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { courseId: true, createdById: true },
+  });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_written", {
+      reason: "blueprint_requires_course",
+      message: "Chức năng lấy mẫu từ ngân hàng câu hỏi chỉ dùng cho đề gắn khoá học.",
+    });
+  }
 
   const activeCells = cells.filter((c) => c.count > 0);
   const totalRequested = activeCells.reduce((s, c) => s + c.count, 0);
@@ -335,9 +356,18 @@ export async function previewBlueprintTopicOnly(
    *  giao với resolveBankScope — id ngoài phạm vi bị bỏ qua, không leak. */
   explicitBankIds?: string[],
 ): Promise<BlueprintPreviewResult> {
-  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { courseId: true, createdById: true },
+  });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_written", {
+      reason: "blueprint_requires_course",
+      message: "Chức năng lấy mẫu từ ngân hàng câu hỏi chỉ dùng cho đề gắn khoá học.",
+    });
+  }
 
   const activeCells = cells.filter((c) => c.count > 0);
   const totalRequested = activeCells.reduce((s, c) => s + c.count, 0);
@@ -404,9 +434,18 @@ export async function listTopicsInExamScope(
   /** Thu hẹp về 1 ngân hàng cụ thể — xem ghi chú ở previewBlueprintTopicOnly. */
   explicitBankId?: string,
 ): Promise<{ topic: string; count: number; publishedCount: number }[]> {
-  const exam = await db.exam.findUnique({ where: { id: examId }, select: { courseId: true } });
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { courseId: true, createdById: true },
+  });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_written", {
+      reason: "blueprint_requires_course",
+      message: "Chức năng lấy mẫu từ ngân hàng câu hỏi chỉ dùng cho đề gắn khoá học.",
+    });
+  }
 
   const scopeBankIds = await resolveBankScope(exam.courseId, actorUserId, db);
   const bankIds = explicitBankId
@@ -464,11 +503,17 @@ export async function assembleExamFromBlueprint(
 ): Promise<AssembleBlueprintResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, status: true },
+    select: { courseId: true, createdById: true, status: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
+  if (!exam.courseId) {
+    throw new ExamError("exam_not_written", {
+      reason: "blueprint_requires_course",
+      message: "Chức năng lấy mẫu từ ngân hàng câu hỏi chỉ dùng cho đề gắn khoá học.",
+    });
+  }
 
   const bp = await db.examBlueprint.findUnique({ where: { examId } });
   if (!bp) throw new ExamError("exam_not_found"); // blueprint must exist first
@@ -647,10 +692,10 @@ export async function previewSectionPool(
 ): Promise<SectionPoolPreviewResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true },
+    select: { courseId: true, createdById: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
 
   const section = await db.examSection.findFirst({
     where: { id: sectionId, examId },
@@ -768,10 +813,10 @@ export async function importPreviewToExam(
 ): Promise<ImportPreviewResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, status: true },
+    select: { id: true, courseId: true, createdById: true, status: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  await assertCanEditExam(actorUserId, exam, db);
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");
 
   const section = await db.examSection.findFirst({
