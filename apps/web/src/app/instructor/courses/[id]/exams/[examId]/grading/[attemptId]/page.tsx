@@ -78,56 +78,55 @@ export default async function OralGradingDetailPage({
         </p>
       </div>
 
-      <div className="mt-6">
-        <OralRubricEditor
-          examId={params.examId}
-          initialRubric={attempt.exam.oralRubricText ?? ""}
-        />
-      </div>
-
-      <section className="mt-2 rounded border border-default bg-white p-5">
-        <h2 className="mb-3 text-base font-semibold">Toàn bộ hội thoại</h2>
-        {view.turns.length === 0 ? (
-          <p className="text-sm text-faint">Chưa có lượt hỏi-đáp nào.</p>
-        ) : (
-          <ul className="space-y-3">
-            {view.turns.map((t) => (
-              <li
-                key={t.id}
-                className={t.role === "examiner" ? "flex justify-start" : "flex justify-end"}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
-                    t.role === "examiner"
-                      ? "border border-token bg-slate-50"
-                      : "bg-brand-gradient text-white"
-                  }`}
+      <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+        <section className="min-w-0 flex-1 rounded border border-default bg-white p-5">
+          <h2 className="mb-3 text-base font-semibold">Toàn bộ hội thoại</h2>
+          {view.turns.length === 0 ? (
+            <p className="text-sm text-faint">Chưa có lượt hỏi-đáp nào.</p>
+          ) : (
+            <ul className="max-h-[640px] space-y-3 overflow-y-auto">
+              {view.turns.map((t) => (
+                <li
+                  key={t.id}
+                  className={t.role === "examiner" ? "flex justify-start" : "flex justify-end"}
                 >
-                  <p className="mb-0.5 text-caption font-medium opacity-70">
-                    {t.role === "examiner" ? "AI giám khảo" : "Sinh viên"}
-                  </p>
-                  <p className="whitespace-pre-wrap leading-relaxed">{t.content}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                      t.role === "examiner"
+                        ? "border border-token bg-[rgb(var(--surface))] text-[rgb(var(--text))]"
+                        : "bg-sky-100 text-slate-800 dark:bg-sky-900/40 dark:text-sky-100"
+                    }`}
+                  >
+                    <p className="mb-0.5 text-caption font-medium opacity-70">
+                      {t.role === "examiner" ? "AI giám khảo" : "Sinh viên"}
+                    </p>
+                    <p className="whitespace-pre-wrap leading-relaxed">{t.content}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      <div className="mt-6">
-        <OralGradeForm
-          examId={params.examId}
-          attemptId={params.attemptId}
-          aiSuggestedScore={view.evaluation?.aiSuggestedScore ?? null}
-          aiSummary={view.evaluation?.aiSummary ?? null}
-          aiRubricBreakdown={breakdown}
-          instructorScore={view.evaluation?.instructorScore ?? null}
-          instructorNotes={view.evaluation?.instructorNotes ?? ""}
-          graded={
-            view.evaluation?.status === "approved" ||
-            view.evaluation?.status === "overridden"
-          }
-        />
+        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:w-[360px] lg:flex-none">
+          <OralRubricEditor
+            examId={params.examId}
+            initialRubric={attempt.exam.oralRubricText ?? ""}
+          />
+          <OralGradeForm
+            examId={params.examId}
+            attemptId={params.attemptId}
+            aiSuggestedScore={view.evaluation?.aiSuggestedScore ?? null}
+            aiSummary={view.evaluation?.aiSummary ?? null}
+            aiRubricBreakdown={breakdown}
+            instructorScore={view.evaluation?.instructorScore ?? null}
+            instructorNotes={view.evaluation?.instructorNotes ?? ""}
+            graded={
+              view.evaluation?.status === "approved" ||
+              view.evaluation?.status === "overridden"
+            }
+          />
+        </div>
       </div>
     </main>
   );

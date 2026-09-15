@@ -24,12 +24,14 @@ export default async function NewOralExamPage({
     orderBy: { updatedAt: "desc" },
   });
 
-  // Không còn chặn khi chưa sở hữu khoá nào — vẫn tạo được đề vấn đáp độc
-  // lập (không gắn khoá học), chỉ dropdown Khoá học sẽ chỉ có tuỳ chọn đó.
+  // Mặc định "Không gắn khoá học" — tự chọn sẵn khoá đầu tiên (hành vi cũ)
+  // khiến GV tưởng đề bắt buộc phải gắn khoá, không để ý dropdown có tuỳ
+  // chọn "Không gắn khoá học". Chỉ tự điền khi có ?courseId= tường minh
+  // (vd link "Tạo đề vấn đáp" từ ngay trong 1 khoá học cụ thể).
   const preselectedCourseId =
     searchParams?.courseId && ownedCourses.some((c) => c.id === searchParams.courseId)
       ? searchParams.courseId
-      : (ownedCourses[0]?.id ?? "");
+      : "";
 
   return (
     <main>

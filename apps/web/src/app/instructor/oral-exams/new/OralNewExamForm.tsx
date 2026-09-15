@@ -31,7 +31,7 @@ export default function OralNewExamForm({
   return (
     <div className="space-y-4">
       <div className="rounded border border-default bg-white p-4">
-        <label className="block text-sm font-medium">Khoá học</label>
+        <label className="block text-sm font-medium">Khoá học (tuỳ chọn)</label>
         <select
           value={courseIdRaw}
           onChange={(e) => setCourseIdRaw(e.target.value)}
