@@ -121,3 +121,21 @@ export function groupNotesByColumn<T extends { column?: string | null }>(
   if (leftover.length > 0) result.push({ label: UNASSIGNED_COLUMN_LABEL, notes: leftover });
   return result;
 }
+
+// Header cột — đậm hơn 1 bậc so với BOARD_NOTE_COLORS (pastel -100) để tạo phân tầng:
+// thanh header nổi bật, note bên trong vẫn nhẹ nhàng như cũ.
+const BOARD_COLUMN_HEADER_COLORS = [
+  "#FDE68A", // amber-300
+  "#93C5FD", // blue-300
+  "#6EE7B7", // green-300
+  "#F9A8D4", // pink-300
+  "#C4B5FD", // purple-300
+  "#FDBA74", // orange-300
+] as const;
+
+// index = vị trí cột trong board.columns hiện tại; -1 (cột hệ thống — chưa phân nhóm /
+// đã bị GV xoá) → xám trung tính, không lẫn với màu GV đang dùng cho nhóm thật.
+export function columnHeaderColor(index: number): string {
+  if (index < 0) return "#E5E7EB"; // gray-200
+  return BOARD_COLUMN_HEADER_COLORS[index % BOARD_COLUMN_HEADER_COLORS.length]!;
+}

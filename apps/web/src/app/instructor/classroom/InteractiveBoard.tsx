@@ -17,6 +17,7 @@ import {
   detectMediaKind,
   isValidAttachmentUrl,
   groupNotesByColumn,
+  columnHeaderColor,
 } from "./boardNoteStyle";
 import NoteAttachment from "./NoteAttachment";
 
@@ -452,24 +453,35 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     if (columns.length > 0) {
       const groups = groupNotesByColumn(visible, columns);
       return (
-        <div className="flex gap-4 overflow-x-auto px-2 pb-4">
-          {groups.map((g) => (
-            <div key={g.label} className="w-72 shrink-0 flex flex-col">
-              <div className="flex items-center justify-between mb-2 px-1 sticky top-0">
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300 truncate">
-                  {g.label}
-                </p>
-                <span className="text-[11px] font-mono text-gray-500 shrink-0 ml-2">{g.notes.length}</span>
+        <div className="flex gap-4 overflow-x-auto px-2 pb-4 items-start">
+          {groups.map((g) => {
+            const color = columnHeaderColor(columns.indexOf(g.label));
+            return (
+              <div
+                key={g.label}
+                className="w-72 shrink-0 flex flex-col rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-sm bg-white/60 dark:bg-white/[0.03]"
+              >
+                <div
+                  className="flex items-center justify-between gap-2 px-3 py-2.5"
+                  style={{ backgroundColor: color }}
+                >
+                  <p className="text-sm font-bold text-gray-900 truncate">{g.label}</p>
+                  <span className="text-[11px] font-bold text-gray-800 bg-white/70 rounded-full px-2 py-0.5 shrink-0">
+                    {g.notes.length}
+                  </span>
+                </div>
+                <div className="flex-1 flex flex-col gap-0 p-3 min-h-[96px]">
+                  {g.notes.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center rounded-xl border-2 border-dashed border-black/10 dark:border-white/10 text-xs text-muted italic py-6">
+                      Chưa có note
+                    </div>
+                  ) : (
+                    g.notes.map((n) => <NoteCard key={n.id} n={n} />)
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col">
-                {g.notes.length === 0 ? (
-                  <p className="text-xs text-muted italic px-1">Chưa có note</p>
-                ) : (
-                  g.notes.map((n) => <NoteCard key={n.id} n={n} />)
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     }
@@ -750,49 +762,69 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
               </div>
 
               <div className="space-y-3">
-                <input
-                  type="text"
-                  value={instructorName}
-                  onChange={(e) => setInstructorName(e.target.value)}
-                  placeholder="Tên hiển thị"
-                  maxLength={40}
-                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                />
-                {current.columns.length > 0 && (
-                  <select
-                    value={noteGroupColumn}
-                    onChange={(e) => setNoteGroupColumn(e.target.value)}
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  >
-                    {current.columns.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                )}
-                <textarea
-                  value={noteContent}
-                  onChange={(e) => setNoteContent(e.target.value)}
-                  placeholder="Viết note (có thể bỏ trống nếu chỉ đính link)"
-                  maxLength={500}
-                  rows={3}
-                  autoFocus
-                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
-                />
-                <div className="relative">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Tên hiển thị
+                  </label>
                   <input
-                    type="url"
-                    value={noteAttachmentUrl}
-                    onChange={(e) => setNoteAttachmentUrl(e.target.value)}
-                    placeholder="Đính kèm URL: ảnh / video / audio / YouTube / link"
-                    maxLength={2000}
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    type="text"
+                    value={instructorName}
+                    onChange={(e) => setInstructorName(e.target.value)}
+                    placeholder="Vd. Giảng viên"
+                    maxLength={40}
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
                   />
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
-                    {previewKind === "image" ? <ImageIcon size={16} /> :
-                     previewKind === "video" || previewKind === "youtube" || previewKind === "vimeo" ? <Video size={16} /> :
-                     previewKind === "audio" ? <Music size={16} /> :
-                     <LinkIcon size={16} />}
-                  </span>
+                </div>
+                {current.columns.length > 0 && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      Thuộc nhóm
+                    </label>
+                    <select
+                      value={noteGroupColumn}
+                      onChange={(e) => setNoteGroupColumn(e.target.value)}
+                      className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    >
+                      {current.columns.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Nội dung
+                  </label>
+                  <textarea
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    placeholder="Viết note (có thể bỏ trống nếu chỉ đính link)"
+                    maxLength={500}
+                    rows={3}
+                    autoFocus
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Đính kèm <span className="text-gray-500 font-medium normal-case tracking-normal">(tùy chọn)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="url"
+                      value={noteAttachmentUrl}
+                      onChange={(e) => setNoteAttachmentUrl(e.target.value)}
+                      placeholder="Ảnh / video / audio / YouTube / link"
+                      maxLength={2000}
+                      className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
+                      {previewKind === "image" ? <ImageIcon size={16} /> :
+                       previewKind === "video" || previewKind === "youtube" || previewKind === "vimeo" ? <Video size={16} /> :
+                       previewKind === "audio" ? <Music size={16} /> :
+                       <LinkIcon size={16} />}
+                    </span>
+                  </div>
                   {previewKind && (
                     <p className="text-[11px] text-gray-700 mt-1 ml-1">
                       Sẽ hiển thị dạng: <span className="font-semibold">{previewKind === "youtube" ? "YouTube embed" : previewKind === "vimeo" ? "Vimeo embed" : previewKind === "image" ? "Ảnh" : previewKind === "video" ? "Video player" : previewKind === "audio" ? "Audio player" : "Link"}</span>
@@ -800,7 +832,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-gray-700 font-medium mr-1">Màu:</span>
+                  <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mr-1">Màu:</span>
                   {BOARD_NOTE_COLORS.map((c) => (
                     <button
                       key={c}
