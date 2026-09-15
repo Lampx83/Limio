@@ -99,10 +99,26 @@ export interface TokenBudget {
   periodKey: string;
   /** Ước lượng số lượt hỏi còn lại — để hiện cho người học thay vì con số token. */
   estimatedTurns: number;
+  /** Ước lượng số bài tự luận/short-answer còn chấm được bằng gợi ý điểm AI. */
+  estimatedGradableAnswers: number;
 }
 
 // Trung bình đo được trên prod: 24.092 token / 35 lượt.
-const AVG_TOKENS_PER_TURN = 700;
+export const AVG_TOKENS_PER_TURN = 700;
+
+// Chấm bài (suggest-grade) không có số đo thật trên prod như lượt hỏi — mỗi
+// bài dài ngắn khác nhau, và AiUsageLog gộp chung theo model/ngày nên không
+// tách được token của riêng tính năng này. Đây là SUY DIỄN từ cấu trúc prompt
+// (system + rubric + đề bài + JSON điểm/nhận xét ≤120 từ) cho MỘT bài làm giả
+// định — không phải đo thật. Đổi ASSUMED_ESSAY_WORDS nếu muốn ước lượng khác.
+export const ASSUMED_ESSAY_WORDS = 300;
+// Tokenizer GPT tách theo âm tiết có dấu nên tiếng Việt tốn nhiều token hơn
+// tiếng Anh trên mỗi từ — 1,5 token/từ là ước lượng an toàn (hơi cao).
+const VI_TOKENS_PER_WORD = 1.5;
+// Overhead cố định mỗi lượt chấm: system prompt + rubric + đề bài + JSON đầu ra.
+const GRADING_OVERHEAD_TOKENS = 400;
+export const AVG_TOKENS_PER_GRADING =
+  Math.round(ASSUMED_ESSAY_WORDS * VI_TOKENS_PER_WORD) + GRADING_OVERHEAD_TOKENS;
 
 function toBudget(row: {
   monthlyRemaining: number;
@@ -116,6 +132,7 @@ function toBudget(row: {
     total,
     periodKey: row.periodKey,
     estimatedTurns: Math.floor(total / AVG_TOKENS_PER_TURN),
+    estimatedGradableAnswers: Math.floor(total / AVG_TOKENS_PER_GRADING),
   };
 }
 

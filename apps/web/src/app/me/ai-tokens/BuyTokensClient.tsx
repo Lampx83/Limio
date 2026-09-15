@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Clock, Copy, Landmark, ShoppingCart, X } from "lucide-react";
+import { Check, Clock, Copy, Flame, Landmark, ShoppingCart, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import DateTime from "@/components/ui/DateTime";
 import EmptyState from "@/components/ui/EmptyState";
@@ -13,6 +13,9 @@ interface Pkg {
   name: string;
   tokens: number;
   priceVnd: number;
+  estimatedTurns: number;
+  estimatedGradableAnswers: number;
+  orderCount: number;
 }
 interface Order {
   id: string;
@@ -46,10 +49,12 @@ export default function BuyTokensClient({
   packages,
   orders: initialOrders,
   bank,
+  assumedEssayWords,
 }: {
   packages: Pkg[];
   orders: Order[];
   bank: Bank;
+  assumedEssayWords: number;
 }) {
   const router = useRouter();
   const [orders, setOrders] = useState(initialOrders);
@@ -70,6 +75,20 @@ export default function BuyTokensClient({
     const bestPkg = packages.find((x) => x.id === best)!;
     return p.tokens / p.priceVnd > bestPkg.tokens / bestPkg.priceVnd ? p.id : best;
   }, null);
+
+  // Gói nhiều đơn thật nhất (pending + paid) — chỉ gắn nhãn khi có ít nhất 1
+  // đơn thật, không bịa số liệu marketing lúc chưa ai mua gì.
+  const popularId = packages.reduce<string | null>((best, p) => {
+    if (p.orderCount === 0) return best;
+    if (!best) return p.id;
+    const bestPkg = packages.find((x) => x.id === best)!;
+    return p.orderCount > bestPkg.orderCount ? p.id : best;
+  }, null);
+
+  // Đơn giá của gói đầu tiên (thường là gói nhỏ nhất, đã sort theo sortOrder
+  // rồi giá) làm mốc để tính % rẻ hơn thật của các gói lớn hơn — không phải
+  // số giảm giá bịa ra như một khuyến mãi ảo.
+  const baseUnitPrice = packages[0] ? packages[0].priceVnd / packages[0].tokens : 0;
 
   async function confirmBuy() {
     if (!confirmPkg) return;
@@ -190,6 +209,11 @@ export default function BuyTokensClient({
       )}
 
       <h2 className="text-h3 mt-8">Các gói</h2>
+      <p className="mt-1 text-caption">
+        * "Bài chấm" là ước lượng tương đối, giả định bài làm ~
+        {assumedEssayWords} từ — số bài chấm được thực tế phụ thuộc độ dài bài
+        làm.
+      </p>
       {error && <p className="banner-danger mt-3 text-sm">{error}</p>}
       {packages.length === 0 ? (
         <EmptyState
@@ -199,39 +223,90 @@ export default function BuyTokensClient({
           description="Quay lại sau hoặc liên hệ admin nếu bạn cần thêm token gấp."
         />
       ) : (
-        <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-3 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {packages.map((p) => {
             const perThousand = (p.priceVnd / p.tokens) * 1000;
+            const unitPrice = p.priceVnd / p.tokens;
+            const savingsPercent =
+              baseUnitPrice > 0
+                ? Math.round((1 - unitPrice / baseUnitPrice) * 100)
+                : 0;
+            const isBestValue = p.id === bestValueId;
+            const isPopular = p.id === popularId;
+            const highlighted = isPopular || (isBestValue && !popularId);
+
             return (
               <li
                 key={p.id}
-                className={`card card-hover relative flex flex-col justify-between ${
-                  p.id === bestValueId ? "ring-2 ring-[rgb(var(--brand))]" : ""
+                className={`relative flex flex-col justify-between rounded-2xl border bg-[rgb(var(--surface))] pt-7 transition-shadow ${
+                  highlighted
+                    ? "border-[rgb(var(--brand))] shadow-lg"
+                    : "border-token shadow-card hover:shadow-lg"
                 }`}
               >
-                {p.id === bestValueId && (
-                  <span className="absolute -top-2.5 left-4 rounded-full bg-[rgb(var(--brand))] px-2.5 py-0.5 text-xs font-semibold text-white">
-                    Tiết kiệm nhất
+                {(isPopular || isBestValue) && (
+                  <span
+                    className={`absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-white ${
+                      isPopular ? "bg-[rgb(var(--brand))]" : "bg-[rgb(var(--accent))]"
+                    }`}
+                  >
+                    {isPopular ? "Được mua nhiều nhất" : "Tiết kiệm nhất"}
                   </span>
                 )}
-                <div>
+                {savingsPercent > 0 && (
+                  <span className="absolute right-4 top-4 rounded-full bg-[rgb(var(--surface-warning))] px-2 py-0.5 text-xs font-semibold text-[rgb(var(--accent))]">
+                    -{savingsPercent}% /token
+                  </span>
+                )}
+
+                <div className="px-5">
                   <p className="font-semibold">{p.name}</p>
-                  <p className="mt-2 text-h2">{p.tokens.toLocaleString("vi-VN")}</p>
-                  <p className="text-caption">token</p>
-                  <p className="text-h3 mt-3">{vnd(p.priceVnd)}</p>
+                  <p className="mt-3 flex items-baseline gap-1">
+                    <span className="text-h1">{vnd(p.priceVnd)}</span>
+                  </p>
                   <p className="text-caption">
                     ≈ {perThousand.toLocaleString("vi-VN", { maximumFractionDigits: 0 })}đ
                     / 1.000 token
                   </p>
+
+                  <div className="mt-4 space-y-2 rounded-xl bg-[rgb(var(--surface-muted))] p-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-meta">Token</span>
+                      <span className="font-semibold">
+                        {p.tokens.toLocaleString("vi-VN")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-meta">Ước tính</span>
+                      <span className="font-semibold">
+                        ≈ {p.estimatedTurns.toLocaleString("vi-VN")} lượt hỏi
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-meta">Chấm bài*</span>
+                      <span className="font-semibold">
+                        ≈ {p.estimatedGradableAnswers.toLocaleString("vi-VN")} bài
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setConfirmPkg(p)}
-                  className="btn-primary btn-sm mt-4 gap-1.5"
-                >
-                  <ShoppingCart size={14} aria-hidden />
-                  Đặt mua
-                </button>
+
+                <div className="mt-5 px-5 pb-5">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmPkg(p)}
+                    className={`w-full gap-1.5 ${highlighted ? "btn-primary" : "btn-secondary"}`}
+                  >
+                    <ShoppingCart size={14} aria-hidden />
+                    Đặt mua
+                  </button>
+                  {isPopular && (
+                    <p className="mt-2 flex items-center justify-center gap-1 text-caption">
+                      <Flame size={12} className="text-[rgb(var(--accent))]" aria-hidden />
+                      {p.orderCount} người đã mua gói này
+                    </p>
+                  )}
+                </div>
               </li>
             );
           })}

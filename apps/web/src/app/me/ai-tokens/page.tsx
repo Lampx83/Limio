@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { Sparkles, Wallet, MessageCircleQuestion } from "lucide-react";
 import {
+  ASSUMED_ESSAY_WORDS,
+  AVG_TOKENS_PER_GRADING,
+  AVG_TOKENS_PER_TURN,
+  countOrdersByPackage,
   getTokenBudget,
   listActivePackages,
   listUserOrders,
@@ -17,16 +21,25 @@ export default async function AiTokensPage() {
   const userId = session?.user?.id;
   if (!userId) redirect("/signin?next=/me/ai-tokens");
 
-  const [budget, allowance, packages, orders, bankName, accountNumber, accountName] =
-    await Promise.all([
-      getTokenBudget(userId),
-      resolveMonthlyAllowance(userId),
-      listActivePackages(),
-      listUserOrders(userId),
-      getSiteSetting("ai.bank.name"),
-      getSiteSetting("ai.bank.account_number"),
-      getSiteSetting("ai.bank.account_name"),
-    ]);
+  const [
+    budget,
+    allowance,
+    packages,
+    orders,
+    orderCounts,
+    bankName,
+    accountNumber,
+    accountName,
+  ] = await Promise.all([
+    getTokenBudget(userId),
+    resolveMonthlyAllowance(userId),
+    listActivePackages(),
+    listUserOrders(userId),
+    countOrdersByPackage(),
+    getSiteSetting("ai.bank.name"),
+    getSiteSetting("ai.bank.account_number"),
+    getSiteSetting("ai.bank.account_name"),
+  ]);
 
   // Đã dùng = hạn mức tháng - còn lại. Hạn mức có thể đổi giữa tháng (admin
   // sửa SiteSetting) nên chặn ở [0, 100] thay vì tin tưởng phép trừ tuyệt đối.
@@ -78,14 +91,22 @@ export default async function AiTokensPage() {
           <div>
             <div className="flex items-center gap-1.5 text-caption">
               <MessageCircleQuestion size={14} aria-hidden />
-              Ước tính
+              Ước tính còn dùng được
             </div>
             <p className="text-h2 mt-1">
               {budget.estimatedTurns.toLocaleString("vi-VN")}
             </p>
-            <p className="text-caption">lượt hỏi còn lại</p>
+            <p className="text-caption">lượt hỏi AI</p>
+            <p className="mt-2 font-semibold">
+              ≈ {budget.estimatedGradableAnswers.toLocaleString("vi-VN")}
+            </p>
+            <p className="text-caption">bài chấm (gợi ý điểm tự luận)</p>
           </div>
         </div>
+        <p className="mt-4 border-t border-token pt-3 text-caption">
+          * Ước lượng tương đối, giả định bài làm ~{ASSUMED_ESSAY_WORDS} từ —
+          số bài chấm được thực tế phụ thuộc độ dài bài làm.
+        </p>
       </section>
 
       <BuyTokensClient
@@ -94,6 +115,9 @@ export default async function AiTokensPage() {
           name: p.name,
           tokens: p.tokens,
           priceVnd: p.priceVnd,
+          estimatedTurns: Math.floor(p.tokens / AVG_TOKENS_PER_TURN),
+          estimatedGradableAnswers: Math.floor(p.tokens / AVG_TOKENS_PER_GRADING),
+          orderCount: orderCounts[p.id] ?? 0,
         }))}
         orders={orders.map((o) => ({
           id: o.id,
@@ -105,6 +129,7 @@ export default async function AiTokensPage() {
           createdAt: o.createdAt.toISOString(),
         }))}
         bank={{ bankName, accountNumber, accountName }}
+        assumedEssayWords={ASSUMED_ESSAY_WORDS}
       />
     </main>
   );

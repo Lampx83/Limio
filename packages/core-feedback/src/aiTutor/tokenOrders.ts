@@ -60,6 +60,21 @@ export async function listUserOrders(
   });
 }
 
+/**
+ * Số đơn thật (pending + paid, bỏ cancelled) theo từng gói — dùng để gắn nhãn
+ * "được mua nhiều nhất" bằng dữ liệu thật thay vì bịa số liệu marketing.
+ */
+export async function countOrdersByPackage(
+  db: PrismaClient = prisma,
+): Promise<Record<string, number>> {
+  const rows = await db.aiTokenOrder.groupBy({
+    by: ["packageId"],
+    where: { status: { in: ["pending", "paid"] } },
+    _count: { _all: true },
+  });
+  return Object.fromEntries(rows.map((r) => [r.packageId, r._count._all]));
+}
+
 export async function createTokenOrder(
   userId: string,
   packageId: string,
