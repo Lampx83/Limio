@@ -527,29 +527,39 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
             <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
               Chế độ
             </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setMode("blank")}
-                className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold border transition-colors ${
+            <div className="flex flex-col sm:flex-row gap-2">
+              <label
+                className={`flex-1 flex items-center gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
                   mode === "blank"
-                    ? "bg-gradient-to-br from-sky-500 to-teal-500 text-white border-transparent"
-                    : "bg-white text-gray-700 border-sky-200 hover:border-sky-400"
+                    ? "border-sky-400 bg-sky-50 ring-1 ring-sky-400"
+                    : "border-sky-200 bg-white hover:border-sky-400"
                 }`}
               >
-                Bảng trắng
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("document")}
-                className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold border transition-colors ${
+                <input
+                  type="radio"
+                  name="whiteboard-mode"
+                  checked={mode === "blank"}
+                  onChange={() => setMode("blank")}
+                  className="h-4 w-4 accent-sky-600"
+                />
+                <span className="text-sm font-semibold text-gray-800">Bảng trắng rỗng</span>
+              </label>
+              <label
+                className={`flex-1 flex items-center gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
                   mode === "document"
-                    ? "bg-gradient-to-br from-sky-500 to-teal-500 text-white border-transparent"
-                    : "bg-white text-gray-700 border-sky-200 hover:border-sky-400"
+                    ? "border-sky-400 bg-sky-50 ring-1 ring-sky-400"
+                    : "border-sky-200 bg-white hover:border-sky-400"
                 }`}
               >
-                Từ tài liệu
-              </button>
+                <input
+                  type="radio"
+                  name="whiteboard-mode"
+                  checked={mode === "document"}
+                  onChange={() => setMode("document")}
+                  className="h-4 w-4 accent-sky-600"
+                />
+                <span className="text-sm font-semibold text-gray-800">Bảng trắng kèm tài liệu</span>
+              </label>
             </div>
           </div>
 
