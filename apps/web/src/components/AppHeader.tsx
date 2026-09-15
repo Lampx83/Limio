@@ -107,7 +107,7 @@ export default async function AppHeader() {
               activeRole={activeRole}
             />
           ) : (
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Link href="/signin" className="btn-ghost btn-sm">
                 Đăng nhập
               </Link>
