@@ -91,7 +91,12 @@ jobs:
   docker-build:
     name: Verify Docker image builds
     runs-on: ubuntu-latest
-    needs: lint-typecheck-test
+    # Chỉ chạy trên PR để bắt lỗi Dockerfile trước khi merge. Bỏ qua khi push
+    # thẳng vào main: deploy.yml (self-hosted) build lại image THẬT ngay sau
+    # đó để roll out — build ở đây thêm lần nữa chỉ tốn thời gian mà không có
+    # thông tin mới, và trước đây còn `needs: lint-typecheck-test` khiến 2 job
+    # chạy nối đuôi thay vì song song, kéo CI lên ~12 phút cho mỗi push main.
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
