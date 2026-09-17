@@ -2307,6 +2307,11 @@ model InteractiveBoard {
   // GV tự đặt nhãn cột (vd "Nhóm 1", "Nhóm 2"), không liên quan GroupingSession.
   columns String[] @default([])
 
+  // Chặn học viên dán (paste) text vào ô nội dung khi viết/sửa note — chống copy đáp án
+  // từ nơi khác. Mặc định TẮT (cho phép dán như hành vi cũ). Chỉ áp dụng phía học viên
+  // (/join/[code]) — GV luôn dán được bình thường ở view của mình.
+  blockPaste Boolean @default(false)
+
   notes BoardNote[]
 
   createdAt DateTime  @default(now())

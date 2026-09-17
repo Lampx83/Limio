@@ -31,6 +31,7 @@ interface Board {
   prompt: string | null;
   status: string;
   columns: string[];
+  blockPaste: boolean;
   notes: BoardNote[];
 }
 
@@ -259,6 +260,14 @@ export default function JoinBoardPage() {
     setEditInfo(null);
   };
 
+  // Nút "+" ngay trong từng ô grid — chọn sẵn nhóm của cột đó rồi mở modal, song song
+  // với nút "+" tổng ở góc màn hình (nút tổng giữ nguyên nhóm đã chọn/nhớ trước đó).
+  const openComposeForColumn = (column: string) => {
+    setGroupColumn(column);
+    setModalOpen(true);
+    setInfo(null);
+  };
+
   const handleSaveEditNote = async () => {
     if (!editingNote) return;
     if (!editContent.trim() && !editAttachmentUrl.trim()) {
@@ -437,9 +446,21 @@ export default function JoinBoardPage() {
                     style={{ backgroundColor: color }}
                   >
                     <p className="text-sm font-bold text-gray-900 truncate">{g.label}</p>
-                    <span className="text-[11px] font-bold text-gray-800 bg-white/70 rounded-full px-2 py-0.5 shrink-0">
-                      {g.notes.length}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[11px] font-bold text-gray-800 bg-white/70 rounded-full px-2 py-0.5">
+                        {g.notes.length}
+                      </span>
+                      {board.status === "open" && board.columns.includes(g.label) && (
+                        <button
+                          onClick={() => openComposeForColumn(g.label)}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-md transition-all hover:scale-110 active:scale-95"
+                          title={`Thêm note vào ${g.label}`}
+                          aria-label={`Thêm note vào ${g.label}`}
+                        >
+                          <Plus size={18} strokeWidth={3} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="flex-1 flex flex-col gap-0 p-3 min-h-[96px]">
                     {g.notes.length === 0 ? (
@@ -516,12 +537,16 @@ export default function JoinBoardPage() {
                 <textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
+                  onPaste={board.blockPaste ? (e) => e.preventDefault() : undefined}
                   placeholder="Viết note (có thể bỏ trống nếu chỉ đính link)"
                   maxLength={500}
                   rows={3}
                   autoFocus
                   className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
                 />
+                {board.blockPaste && (
+                  <p className="text-[11px] text-gray-500 mt-1 ml-1">GV đã tắt dán — vui lòng tự gõ nội dung.</p>
+                )}
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
@@ -627,12 +652,16 @@ export default function JoinBoardPage() {
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
+                  onPaste={board.blockPaste ? (e) => e.preventDefault() : undefined}
                   placeholder="Viết note (có thể bỏ trống nếu chỉ đính link)"
                   maxLength={500}
                   rows={3}
                   autoFocus
                   className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
                 />
+                {board.blockPaste && (
+                  <p className="text-[11px] text-gray-500 mt-1 ml-1">GV đã tắt dán — vui lòng tự gõ nội dung.</p>
+                )}
               </div>
 
               <div>

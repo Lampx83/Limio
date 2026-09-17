@@ -38,6 +38,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       prompt: true,
       status: true,
       columns: true,
+      blockPaste: true,
       createdAt: true,
       closedAt: true,
       notes: {
@@ -75,13 +76,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   try {
     const body = await req.json();
-    const { status, columns } = z
+    const { status, columns, blockPaste } = z
       .object({
         status: z.enum(["open", "closed"]).optional(),
         columns: z.array(z.string()).optional(),
+        blockPaste: z.boolean().optional(),
       })
       .parse(body);
-    if (status === undefined && columns === undefined) {
+    if (status === undefined && columns === undefined && blockPaste === undefined) {
       return Response.json({ error: "Invalid request" }, { status: 400 });
     }
 
@@ -101,8 +103,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           ? { status, closedAt: status === "closed" ? new Date() : null }
           : {}),
         ...(normalizedColumns !== undefined ? { columns: normalizedColumns } : {}),
+        ...(blockPaste !== undefined ? { blockPaste } : {}),
       },
-      select: { id: true, status: true, closedAt: true, columns: true },
+      select: { id: true, status: true, closedAt: true, columns: true, blockPaste: true },
     });
     return Response.json(updated);
   } catch {

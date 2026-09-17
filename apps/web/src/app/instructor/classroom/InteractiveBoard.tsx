@@ -5,7 +5,7 @@ import { copyText } from "@/lib/clipboard";
 import {
   StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2, Pencil, Upload,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
-  PanelLeftOpen, PanelLeftClose, LayoutGrid,
+  PanelLeftOpen, PanelLeftClose, LayoutGrid, Clipboard, ClipboardX,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
@@ -51,6 +51,7 @@ interface Board {
   prompt: string | null;
   status: string;
   columns: string[];
+  blockPaste: boolean;
   notes: BoardNote[];
 }
 
@@ -83,6 +84,9 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   // Grid theo nhóm — tùy chọn lúc tạo board, mặc định TẮT (masonry tự do như trước).
   const [gridEnabled, setGridEnabled] = useState(false);
   const [columnsInput, setColumnsInput] = useState<string[]>(["Nhóm 1", "Nhóm 2"]);
+  // Chặn dán khi HV viết note — tùy chọn lúc tạo board, mặc định TẮT (cho phép dán như cũ).
+  const [blockPasteEnabled, setBlockPasteEnabled] = useState(false);
+  const [savingBlockPaste, setSavingBlockPaste] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
   // Immersive: ẩn left sidebar của instructor layout khi board mở,
@@ -213,6 +217,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           title: title.trim(),
           prompt: prompt.trim() || undefined,
           columns,
+          blockPaste: blockPasteEnabled,
         }),
       });
       if (!res.ok) {
@@ -231,6 +236,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
       setPrompt("");
       setGridEnabled(false);
       setColumnsInput(["Nhóm 1", "Nhóm 2"]);
+      setBlockPasteEnabled(false);
       toast.success("Board tạo thành công");
     } catch {
       toast.error("Lỗi mạng");
@@ -527,6 +533,30 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     }
   };
 
+  // Bật/tắt chặn dán ngay trên board đang mở — chỉ 1 boolean nên không cần modal riêng.
+  const handleToggleBlockPaste = async () => {
+    if (!current) return;
+    const next = !current.blockPaste;
+    setSavingBlockPaste(true);
+    try {
+      const res = await fetch(apiUrl(`/api/instructor/teaching-tools/boards/${current.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blockPaste: next }),
+      });
+      if (!res.ok) {
+        toast.error("Lỗi lưu cài đặt");
+        return;
+      }
+      setCurrent((b) => (b ? { ...b, blockPaste: next } : b));
+      toast.success(next ? "Đã chặn dán khi học viên viết note" : "Đã cho phép dán trở lại");
+    } catch {
+      toast.error("Lỗi mạng");
+    } finally {
+      setSavingBlockPaste(false);
+    }
+  };
+
   // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
   const joinUrl = current ? shareUrl(`/join/${current.code}`) : null;
 
@@ -694,6 +724,15 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
               >
                 <LayoutGrid size={14} />
                 {current.columns.length > 0 ? `${current.columns.length} nhóm` : "Nhóm"}
+              </button>
+              <button
+                onClick={handleToggleBlockPaste}
+                disabled={savingBlockPaste}
+                className={`rounded-lg backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 ${current.blockPaste ? "bg-red-500/40 hover:bg-red-500/50" : "bg-white/20 hover:bg-white/30"}`}
+                title={current.blockPaste ? "Đang chặn dán khi HV viết note — bấm để cho phép lại" : "Cho phép dán khi HV viết note — bấm để chặn"}
+              >
+                {current.blockPaste ? <ClipboardX size={14} /> : <Clipboard size={14} />}
+                {current.blockPaste ? "Đã chặn dán" : "Cho dán"}
               </button>
               <button
                 onClick={() => setIsFullscreen((v) => !v)}
@@ -1222,6 +1261,26 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                   <Plus size={12} /> Thêm nhóm
                 </button>
               </div>
+            )}
+          </div>
+
+          {/* Chặn dán — tùy chọn, mặc định TẮT (cho phép dán như bình thường) */}
+          <div className="rounded-xl bg-white/50 backdrop-blur p-3.5 ring-1 ring-white/60">
+            <label className="flex items-center justify-between gap-2 cursor-pointer">
+              <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                <ClipboardX size={14} /> Chặn dán khi HV viết note
+              </span>
+              <input
+                type="checkbox"
+                checked={blockPasteEnabled}
+                onChange={(e) => setBlockPasteEnabled(e.target.checked)}
+                className="w-4 h-4 accent-amber-500"
+              />
+            </label>
+            {blockPasteEnabled && (
+              <p className="mt-2 text-[11px] text-gray-600">
+                Học viên không dán (paste) được text vào ô nội dung khi đăng/sửa note — chỉ áp dụng phía học viên, GV vẫn dán bình thường.
+              </p>
             )}
           </div>
 

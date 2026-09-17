@@ -13,6 +13,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
       prompt: true,
       status: true,
       columns: true,
+      blockPaste: true,
       createdAt: true,
       notes: {
         where: { hidden: false },

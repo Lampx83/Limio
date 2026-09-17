@@ -14,11 +14,12 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { title, prompt, columns } = z
+    const { title, prompt, columns, blockPaste } = z
       .object({
         title: z.string().min(1).max(120),
         prompt: z.string().max(500).optional(),
         columns: z.array(z.string()).optional(),
+        blockPaste: z.boolean().optional(),
       })
       .parse(body);
 
@@ -38,9 +39,19 @@ export async function POST(req: Request) {
         title: title.trim(),
         prompt: prompt?.trim() || null,
         columns: normalizedColumns,
+        blockPaste: blockPaste ?? false,
         ownerId: session.user.id,
       },
-      select: { id: true, code: true, title: true, prompt: true, status: true, columns: true, createdAt: true },
+      select: {
+        id: true,
+        code: true,
+        title: true,
+        prompt: true,
+        status: true,
+        columns: true,
+        blockPaste: true,
+        createdAt: true,
+      },
     });
 
     return Response.json(board, { status: 201 });
