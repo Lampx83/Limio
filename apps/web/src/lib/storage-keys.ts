@@ -9,6 +9,7 @@
  *     lesson-media/pdfs/{yyyy}/{mm}/{filename}
  *     lesson-media/html/{yyyy}/{mm}/{filename}
  *     exam-assets/{yyyy}/{mm}/{filename}
+ *     board-attachments/{yyyy}/{mm}/{filename}
  *   private/                                         # auth-gated
  *     submissions/{yyyy}/{mm}/{filename}
  *   tmp/{yyyy-mm-dd}/{session}/{filename}            # auto-purge >24h
@@ -60,7 +61,8 @@ type DateShardedKind =
   | "submissions"
   | "proctor-snapshots"
   | "oral-exam-materials"
-  | "whiteboard-pages";
+  | "whiteboard-pages"
+  | "board-attachments";
 
 function dateSharded(
   layer: StorageLayer,
@@ -94,6 +96,10 @@ export function examAssetKey(date: Date, filename: string): StorageKey {
 /** B — Whiteboard annotate tài liệu: ảnh nền mỗi trang (public, guest xem không cần login). */
 export function whiteboardPageKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "whiteboard-pages", date, filename);
+}
+/** Padlet-style board: file GV upload trực tiếp cho note đính kèm (ảnh/pdf, ≤5MB). */
+export function boardAttachmentKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "board-attachments", date, filename);
 }
 export function submissionKey(date: Date, filename: string): StorageKey {
   return dateSharded("private", "submissions", date, filename);
@@ -148,6 +154,9 @@ export function examAssetKeyFromFilename(filename: string): StorageKey | null {
 }
 export function whiteboardPageKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "whiteboard-pages", filename);
+}
+export function boardAttachmentKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "board-attachments", filename);
 }
 export function submissionKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("private", "submissions", filename);

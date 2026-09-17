@@ -57,11 +57,17 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     parsed = z
       .object({
         authorName: z.string().min(1).max(40),
-        content: z.string().min(1).max(500),
+        // content có thể rỗng nếu note chỉ đính link (UI cho phép) — bắt buộc ít nhất
+        // 1 trong 2 (content/attachmentUrl) khác rỗng ở .refine bên dưới.
+        content: z.string().max(500),
         color: z.string().optional(),
         attachmentUrl: z.string().max(2000).optional(),
         column: z.string().max(30).optional(),
       })
+      .refine(
+        (data) => data.content.trim().length > 0 || !!data.attachmentUrl?.trim(),
+        { message: "content_or_attachment_required" },
+      )
       .parse(body);
   } catch {
     return Response.json({ error: "invalid_request" }, { status: 400 });

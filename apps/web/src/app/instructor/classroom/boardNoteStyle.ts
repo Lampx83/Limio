@@ -71,6 +71,18 @@ export function extractVimeoId(url: string): string | null {
   return m?.[1] ?? null;
 }
 
+// Upload file trực tiếp cho đính kèm — chỉ GV (xem route
+// /api/instructor/teaching-tools/boards/[id]/attachments). Học viên vẫn chỉ dán URL.
+export const BOARD_ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB — khớp quy ước avatar/exam-import
+export const BOARD_ATTACHMENT_MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "application/pdf": "pdf",
+};
+export const BOARD_ATTACHMENT_ACCEPT = Object.keys(BOARD_ATTACHMENT_MIME_TO_EXT).join(",");
+
 // Validate URL: chỉ chấp nhận http/https, max 2000 ký tự.
 export function isValidAttachmentUrl(url: string): boolean {
   if (url.length > 2000) return false;

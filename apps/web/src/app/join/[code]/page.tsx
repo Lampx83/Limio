@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { Plus, X, Link as LinkIcon, Image as ImageIcon, Video, Music } from "lucide-react";
+import { Plus, X, Pencil, Link as LinkIcon, Image as ImageIcon, Video, Music } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   BOARD_NOTE_COLORS,
@@ -36,14 +36,45 @@ interface Board {
 
 const STORAGE_KEY_NAME = "fbm-board-name";
 const STORAGE_KEY_GROUP_PREFIX = "fbm-board-group-";
+const STORAGE_KEY_MYNOTES_PREFIX = "fbm-board-mynotes-";
+const MAX_TRACKED_MY_NOTES = 200;
+
+// Note của "tôi" — nhận diện bằng id lưu ở localStorage của chính trình duyệt đã tạo note
+// đó (không xác thực server-side, cùng cơ chế trust-based với việc tự chọn nhóm lúc post).
+// Không giới hạn theo thời gian: sửa được bất cứ lúc nào trên chính máy đã đăng.
+function readMyNoteIds(code: string): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_MYNOTES_PREFIX + code);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function rememberMyNoteId(code: string, noteId: string) {
+  if (typeof window === "undefined") return;
+  const ids = [...readMyNoteIds(code), noteId].slice(-MAX_TRACKED_MY_NOTES);
+  localStorage.setItem(STORAGE_KEY_MYNOTES_PREFIX + code, JSON.stringify(ids));
+}
 
 // showColumnTag: hiện pill nhỏ ghi tên nhóm — dùng khi board không còn ở chế độ grid
 // (cột đã tắt/xoá) nhưng note cũ vẫn giữ nhãn cột gốc.
-function NoteCard({ n, showColumnTag }: { n: BoardNote; showColumnTag?: boolean }) {
+function NoteCard({
+  n,
+  showColumnTag,
+  canEdit,
+  onEdit,
+}: {
+  n: BoardNote;
+  showColumnTag?: boolean;
+  canEdit?: boolean;
+  onEdit?: (n: BoardNote) => void;
+}) {
   const rot = rotationForNote(n.id);
   return (
     <div
-      className="group rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:!rotate-0 animate-note-pop-in mb-4 break-inside-avoid overflow-hidden"
+      className="group relative rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 hover:scale-[1.03] hover:!rotate-0 animate-note-pop-in mb-4 break-inside-avoid overflow-hidden"
       style={{
         backgroundColor: n.color || "#FEF3C7",
         transform: `rotate(${rot})`,
@@ -62,6 +93,16 @@ function NoteCard({ n, showColumnTag }: { n: BoardNote; showColumnTag?: boolean 
         </p>
       )}
       <p className="text-xs text-gray-700 mt-3 font-semibold tracking-wide">— {n.authorName}</p>
+      {canEdit && onEdit && (
+        <button
+          onClick={() => onEdit(n)}
+          className="absolute top-1.5 right-1.5 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur rounded-md shadow-sm hover:bg-white"
+          title="Sửa note của bạn"
+          aria-label="Sửa note của bạn"
+        >
+          <Pencil size={14} />
+        </button>
+      )}
     </div>
   );
 }
@@ -82,7 +123,16 @@ export default function JoinBoardPage() {
   const [groupColumn, setGroupColumn] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [myNoteIds, setMyNoteIds] = useState<Set<string>>(new Set());
   const esRef = useRef<EventSource | null>(null);
+
+  // Modal sửa note — chỉ cho note "của tôi" (xem readMyNoteIds ở trên).
+  const [editingNote, setEditingNote] = useState<BoardNote | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editAttachmentUrl, setEditAttachmentUrl] = useState("");
+  const [editColor, setEditColor] = useState<string | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editInfo, setEditInfo] = useState<string | null>(null);
 
   // Restore name từ localStorage
   useEffect(() => {
@@ -91,6 +141,13 @@ export default function JoinBoardPage() {
       if (saved) setName(saved);
     }
   }, []);
+
+  // Nạp danh sách note "của tôi" trên board này (để hiện nút sửa) — riêng theo từng
+  // board.code vì cùng trình duyệt có thể join nhiều board khác nhau.
+  useEffect(() => {
+    if (!board) return;
+    setMyNoteIds(readMyNoteIds(board.code));
+  }, [board?.code]);
 
   // Restore nhóm đã chọn lần trước cho đúng board này — học viên tự biết nhóm mình,
   // không có xác thực, chỉ nhớ giúp đỡ phải chọn lại mỗi lần post.
@@ -148,6 +205,12 @@ export default function JoinBoardPage() {
             if (b.notes.some((n) => n.id === ev.note!.id)) return b;
             return { ...b, notes: [...b.notes, ev.note] };
           }
+          if (ev.type === "note.updated" && ev.note) {
+            return {
+              ...b,
+              notes: b.notes.map((n) => (n.id === ev.note!.id ? { ...n, ...ev.note } : n)),
+            };
+          }
           if (ev.type === "note.deleted" && ev.noteId) {
             return { ...b, notes: b.notes.filter((n) => n.id !== ev.noteId) };
           }
@@ -178,6 +241,62 @@ export default function JoinBoardPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [modalOpen]);
+
+  useEffect(() => {
+    if (!editingNote) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEditingNote(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editingNote]);
+
+  const openEditNote = (n: BoardNote) => {
+    setEditingNote(n);
+    setEditContent(n.content);
+    setEditAttachmentUrl(n.attachmentUrl || "");
+    setEditColor(n.color);
+    setEditInfo(null);
+  };
+
+  const handleSaveEditNote = async () => {
+    if (!editingNote) return;
+    if (!editContent.trim() && !editAttachmentUrl.trim()) {
+      setEditInfo("Nhập nội dung hoặc đính kèm link");
+      return;
+    }
+    if (editAttachmentUrl.trim() && !isValidAttachmentUrl(editAttachmentUrl.trim())) {
+      setEditInfo("URL không hợp lệ (chỉ http/https)");
+      return;
+    }
+    setEditSubmitting(true);
+    setEditInfo(null);
+    try {
+      const res = await fetch(apiUrl(`/api/public/boards/${code}/notes/${editingNote.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: editContent.trim(),
+          attachmentUrl: editAttachmentUrl.trim(),
+          ...(editColor ? { color: editColor } : {}),
+        }),
+      });
+      if (res.status === 429) {
+        setEditInfo("Bạn sửa quá nhanh — chờ vài giây rồi thử lại.");
+        return;
+      }
+      if (!res.ok) {
+        setEditInfo("Lỗi lưu note");
+        return;
+      }
+      setEditingNote(null);
+      // SSE sẽ broadcast event note.updated → cập nhật state
+    } catch {
+      setEditInfo("Lỗi mạng");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -225,9 +344,14 @@ export default function JoinBoardPage() {
         setInfo("Lỗi gửi note");
         return;
       }
+      const created = (await res.json()) as BoardNote;
       localStorage.setItem(STORAGE_KEY_NAME, name.trim());
       if (board && board.columns.length > 0) {
         localStorage.setItem(STORAGE_KEY_GROUP_PREFIX + board.code, groupColumn);
+      }
+      if (board) {
+        rememberMyNoteId(board.code, created.id);
+        setMyNoteIds((s) => new Set(s).add(created.id));
       }
       setContent("");
       setAttachmentUrl("");
@@ -323,7 +447,9 @@ export default function JoinBoardPage() {
                         Chưa có note
                       </div>
                     ) : (
-                      g.notes.map((n) => <NoteCard key={n.id} n={n} />)
+                      g.notes.map((n) => (
+                        <NoteCard key={n.id} n={n} canEdit={board.status === "open" && myNoteIds.has(n.id)} onEdit={openEditNote} />
+                      ))
                     )}
                   </div>
                 </div>
@@ -337,7 +463,9 @@ export default function JoinBoardPage() {
           </div>
         ) : (
           <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 [column-fill:_balance]">
-            {board.notes.map((n) => <NoteCard key={n.id} n={n} showColumnTag />)}
+            {board.notes.map((n) => (
+              <NoteCard key={n.id} n={n} showColumnTag canEdit={board.status === "open" && myNoteIds.has(n.id)} onEdit={openEditNote} />
+            ))}
           </div>
         )}
       </main>
@@ -355,6 +483,86 @@ export default function JoinBoardPage() {
         >
           <Plus size={32} strokeWidth={3} />
         </button>
+      )}
+
+      {/* Modal sửa note — chỉ cho note "của tôi" trên chính trình duyệt này */}
+      {editingNote && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in-up"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingNote(null); }}
+        >
+          <div
+            className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto"
+            style={{ backgroundColor: editColor || "#FEF3C7" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Pencil size={18} /> Sửa note
+              </h2>
+              <button
+                onClick={() => setEditingNote(null)}
+                className="p-1.5 rounded-lg hover:bg-white/40"
+                aria-label="Đóng"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Nội dung
+                </label>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  placeholder="Viết note (có thể bỏ trống nếu chỉ đính link)"
+                  maxLength={500}
+                  rows={3}
+                  autoFocus
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Đính kèm <span className="text-gray-500 font-medium normal-case tracking-normal">(tùy chọn)</span>
+                </label>
+                <input
+                  type="url"
+                  value={editAttachmentUrl}
+                  onChange={(e) => setEditAttachmentUrl(e.target.value)}
+                  placeholder="Ảnh / video / audio / YouTube / link"
+                  maxLength={2000}
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mr-1">Màu:</span>
+                {BOARD_NOTE_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setEditColor(c)}
+                    className={`w-7 h-7 rounded-full border-2 transition-transform ${editColor === c ? "border-gray-900 scale-110" : "border-white"} shadow`}
+                    style={{ backgroundColor: c }}
+                    aria-label={`Chọn màu ${c}`}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <p className="text-xs text-gray-700">{editContent.length}/500</p>
+                <button
+                  onClick={handleSaveEditNote}
+                  disabled={editSubmitting}
+                  className="bg-gray-900 hover:bg-black text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                >
+                  {editSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
+              </div>
+              {editInfo && <p className="text-sm text-gray-800 font-medium">{editInfo}</p>}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal */}

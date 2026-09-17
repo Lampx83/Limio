@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { copyText } from "@/lib/clipboard";
 import {
-  StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2,
+  StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2, Pencil, Upload,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
   PanelLeftOpen, PanelLeftClose, LayoutGrid,
 } from "lucide-react";
@@ -18,6 +18,8 @@ import {
   isValidAttachmentUrl,
   groupNotesByColumn,
   columnHeaderColor,
+  BOARD_ATTACHMENT_ACCEPT,
+  BOARD_ATTACHMENT_MAX_BYTES,
 } from "./boardNoteStyle";
 import NoteAttachment from "./NoteAttachment";
 
@@ -98,6 +100,16 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   const [postInfo, setPostInfo] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
 
+  // Modal sửa note — GV sửa được bất kỳ note nào (không chỉ note của mình).
+  const [editingNote, setEditingNote] = useState<BoardNote | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editAttachmentUrl, setEditAttachmentUrl] = useState("");
+  const [editColor, setEditColor] = useState<string | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editInfo, setEditInfo] = useState<string | null>(null);
+  // Dùng chung cho cả 2 modal (post/edit) — chỉ 1 modal mở tại 1 thời điểm.
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
   // Panel quản lý cột (grid theo nhóm) trên board đang mở — GV bật/sửa/xoá cột giữa buổi.
   const [columnsPanelOpen, setColumnsPanelOpen] = useState(false);
   const [columnsDraft, setColumnsDraft] = useState<string[]>([]);
@@ -140,6 +152,12 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           notes: b.notes.map((n) =>
             n.id === ev.noteId ? { ...n, hidden: ev.hidden ?? n.hidden } : n,
           ),
+        };
+      }
+      if (ev.type === "note.updated" && ev.note) {
+        return {
+          ...b,
+          notes: b.notes.map((n) => (n.id === ev.note!.id ? { ...n, ...ev.note } : n)),
         };
       }
       if (ev.type === "note.deleted" && ev.noteId) {
@@ -230,6 +248,15 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [modalOpen]);
+
+  useEffect(() => {
+    if (!editingNote) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEditingNote(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editingNote]);
 
   // Giữ noteGroupColumn hợp lệ theo danh sách cột hiện tại (mặc định cột đầu tiên).
   useEffect(() => {
@@ -347,6 +374,107 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     }
   };
 
+  const openEditNote = (note: BoardNote) => {
+    setEditingNote(note);
+    setEditContent(note.content);
+    setEditAttachmentUrl(note.attachmentUrl || "");
+    setEditColor(note.color);
+    setEditInfo(null);
+  };
+
+  const handleSaveEditNote = async () => {
+    if (!current || !editingNote) return;
+    if (!editContent.trim() && !editAttachmentUrl.trim()) {
+      setEditInfo("Nhập nội dung hoặc đính kèm link");
+      return;
+    }
+    if (editAttachmentUrl.trim() && !isValidAttachmentUrl(editAttachmentUrl.trim())) {
+      setEditInfo("URL không hợp lệ (chỉ http/https)");
+      return;
+    }
+    setEditSubmitting(true);
+    setEditInfo(null);
+    try {
+      const res = await fetch(
+        apiUrl(`/api/instructor/teaching-tools/boards/${current.id}/notes/${editingNote.id}`),
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: editContent.trim(),
+            attachmentUrl: editAttachmentUrl.trim(),
+            ...(editColor ? { color: editColor } : {}),
+          }),
+        },
+      );
+      if (!res.ok) {
+        setEditInfo("Lỗi lưu note");
+        return;
+      }
+      setEditingNote(null);
+      // SSE sẽ broadcast event note.updated → applyEvent cập nhật state
+    } catch {
+      setEditInfo("Lỗi mạng");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  // Upload file trực tiếp làm đính kèm (chỉ GV — học viên vẫn chỉ dán URL).
+  // Trả về URL TUYỆT ĐỐI (qua shareUrl) để khớp isValidAttachmentUrl (http/https)
+  // dùng chung ở cả note create/edit — dán URL ngoài hay upload nội bộ đều
+  // đi qua cùng 1 validation.
+  const uploadAttachmentFile = async (file: File): Promise<string> => {
+    if (!current) throw new Error("Chưa mở board");
+    if (file.size > BOARD_ATTACHMENT_MAX_BYTES) {
+      throw new Error(`File quá lớn — tối đa ${Math.round(BOARD_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`);
+    }
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(
+      apiUrl(`/api/instructor/teaching-tools/boards/${current.id}/attachments`),
+      { method: "POST", body: form },
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err.error === "file_too_large") {
+        throw new Error(`File quá lớn — tối đa ${Math.round(BOARD_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`);
+      }
+      if (err.error === "unsupported_media_type") {
+        throw new Error("Định dạng không hỗ trợ (chỉ ảnh hoặc PDF)");
+      }
+      throw new Error("Lỗi tải file lên");
+    }
+    const data = (await res.json()) as { url: string };
+    return shareUrl(data.url);
+  };
+
+  const handlePostAttachmentUpload = async (file: File | null) => {
+    if (!file) return;
+    setUploadingAttachment(true);
+    setPostInfo(null);
+    try {
+      setNoteAttachmentUrl(await uploadAttachmentFile(file));
+    } catch (err) {
+      setPostInfo(err instanceof Error ? err.message : "Lỗi tải file lên");
+    } finally {
+      setUploadingAttachment(false);
+    }
+  };
+
+  const handleEditAttachmentUpload = async (file: File | null) => {
+    if (!file) return;
+    setUploadingAttachment(true);
+    setEditInfo(null);
+    try {
+      setEditAttachmentUrl(await uploadAttachmentFile(file));
+    } catch (err) {
+      setEditInfo(err instanceof Error ? err.message : "Lỗi tải file lên");
+    } finally {
+      setUploadingAttachment(false);
+    }
+  };
+
   // Xoá hết note hiện tại nhưng giữ nguyên board (id + code + title/prompt) —
   // dùng lại được cho lớp nhỏ tiếp theo mà không cần tạo board mới.
   const handleReset = async () => {
@@ -426,6 +554,13 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
         </p>
         <p className="text-xs text-gray-700 mt-3 font-semibold tracking-wide">— {n.authorName}</p>
         <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur rounded-md shadow-sm">
+          <button
+            onClick={() => openEditNote(n)}
+            className="p-1.5 hover:bg-white rounded-md"
+            title="Sửa"
+          >
+            <Pencil size={14} />
+          </button>
           <button
             onClick={() => handleToggleHidden(n)}
             className="p-1.5 hover:bg-white rounded-md"
@@ -740,6 +875,100 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           </div>
         )}
 
+        {/* Modal sửa note — GV sửa nội dung/link/màu của bất kỳ note nào */}
+        {editingNote && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in-up"
+            onClick={(e) => { if (e.target === e.currentTarget) setEditingNote(null); }}
+          >
+            <div
+              className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto"
+              style={{ backgroundColor: editColor || "#FEF3C7" }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Pencil size={18} /> Sửa note
+                </h2>
+                <button
+                  onClick={() => setEditingNote(null)}
+                  className="p-1.5 rounded-lg hover:bg-white/40"
+                  aria-label="Đóng"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Nội dung
+                  </label>
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    placeholder="Viết note (có thể bỏ trống nếu chỉ đính link)"
+                    maxLength={500}
+                    rows={3}
+                    autoFocus
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Đính kèm <span className="text-gray-500 font-medium normal-case tracking-normal">(tùy chọn)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={editAttachmentUrl}
+                    onChange={(e) => setEditAttachmentUrl(e.target.value)}
+                    placeholder="Ảnh / video / audio / YouTube / link"
+                    maxLength={2000}
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  />
+                  <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 cursor-pointer">
+                    <input
+                      type="file"
+                      accept={BOARD_ATTACHMENT_ACCEPT}
+                      className="hidden"
+                      disabled={uploadingAttachment}
+                      onChange={(e) => {
+                        handleEditAttachmentUpload(e.target.files?.[0] ?? null);
+                        e.target.value = "";
+                      }}
+                    />
+                    <Upload size={12} />
+                    {uploadingAttachment ? "Đang tải lên..." : "hoặc tải ảnh/PDF lên (≤5MB)"}
+                  </label>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mr-1">Màu:</span>
+                  {BOARD_NOTE_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setEditColor(c)}
+                      className={`w-7 h-7 rounded-full border-2 transition-transform ${editColor === c ? "border-gray-900 scale-110" : "border-white"} shadow`}
+                      style={{ backgroundColor: c }}
+                      aria-label={`Chọn màu ${c}`}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <p className="text-xs text-gray-700">{editContent.length}/500</p>
+                  <button
+                    onClick={handleSaveEditNote}
+                    disabled={editSubmitting}
+                    className="bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                  >
+                    {editSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+                  </button>
+                </div>
+                {editInfo && <p className="text-sm text-gray-800 font-medium">{editInfo}</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modal post note */}
         {modalOpen && current.status === "open" && (
           <div
@@ -830,6 +1059,20 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                       Sẽ hiển thị dạng: <span className="font-semibold">{previewKind === "youtube" ? "YouTube embed" : previewKind === "vimeo" ? "Vimeo embed" : previewKind === "image" ? "Ảnh" : previewKind === "video" ? "Video player" : previewKind === "audio" ? "Audio player" : "Link"}</span>
                     </p>
                   )}
+                  <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 cursor-pointer">
+                    <input
+                      type="file"
+                      accept={BOARD_ATTACHMENT_ACCEPT}
+                      className="hidden"
+                      disabled={uploadingAttachment}
+                      onChange={(e) => {
+                        handlePostAttachmentUpload(e.target.files?.[0] ?? null);
+                        e.target.value = "";
+                      }}
+                    />
+                    <Upload size={12} />
+                    {uploadingAttachment ? "Đang tải lên..." : "hoặc tải ảnh/PDF lên (≤5MB)"}
+                  </label>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mr-1">Màu:</span>
