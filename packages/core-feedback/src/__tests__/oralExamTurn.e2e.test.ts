@@ -135,6 +135,35 @@ describe("runOralExamTurn (A6.3)", () => {
     expect(seenPrompt).not.toContain("tiếng Việt");
   });
 
+  it("chỉ nhắc chào hỏi + giới thiệu bản thân ở lượt đầu tiên, không lặp lại ở lượt sau", async () => {
+    const s = await setup("t1cc");
+    const prompts: string[] = [];
+    const capture: ChatComputeFn = async (messages) => {
+      prompts.push(messages[0]!.content);
+      return {
+        content: prompts.length === 1 ? "Xin chào! Vòng lặp for hoạt động thế nào?" : "Còn while thì sao?",
+        inputTokens: 1,
+        outputTokens: 1,
+      };
+    };
+    await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: null,
+      computeChat: capture,
+      computeEmbed: fakeEmbed(),
+    });
+    await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: "For lặp qua từng phần tử.",
+      computeChat: capture,
+      computeEmbed: fakeEmbed(),
+    });
+    expect(prompts[0]).toContain("chào hỏi và giới thiệu ngắn gọn bản thân");
+    expect(prompts[1]).not.toContain("chào hỏi và giới thiệu ngắn gọn bản thân");
+  });
+
   it("chèn examinerInstructions của GV vào system prompt, không thay thế nguyên tắc cứng", async () => {
     const s = await setup("t1d");
     await prisma.exam.update({

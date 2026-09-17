@@ -385,4 +385,17 @@ describe("deleteExam", () => {
       code: "exam_has_attempts",
     });
   });
+
+  it("cho phép xoá đề vấn đáp (oral) đã publish dù đã có SV trả lời — đặc thù riêng, không áp dụng cho đề viết", async () => {
+    const { ownerId, courseId } = await newOwner("d3");
+    const { examId } = await createExam(ownerId, courseId, validExamInput({ kind: "oral" }));
+    await createOralMaterialTopicList(ownerId, examId, { title: "Chủ đề", text: "x" });
+    await publishExam(ownerId, examId);
+    const learner = await newOutsider("d3");
+    await prisma.examAttempt.create({
+      data: { examId, userId: learner, durationSec: 3600 },
+    });
+    await deleteExam(ownerId, examId);
+    expect(await prisma.exam.findUnique({ where: { id: examId } })).toBeNull();
+  });
 });

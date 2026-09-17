@@ -43,6 +43,8 @@ function buildSystemPrompt(params: {
   courseTitle: string | null;
   examTitle: string;
   contextChunks: string[];
+  /** true khi đây là lượt hỏi đầu tiên — chưa có câu trả lời nào của SV. */
+  isFirstTurn: boolean;
   isLastQuestion: boolean;
   isClosing: boolean;
   language: "vi" | "en" | "zh";
@@ -80,11 +82,25 @@ Nguyên tắc:
 1. Hỏi ĐÚNG 1 câu hỏi mỗi lượt, bám sát tài liệu trên.
 2. Đào sâu theo câu trả lời trước của sinh viên — hỏi follow-up thay vì hỏi câu độc lập không liên quan.
 3. KHÔNG đưa gợi ý, KHÔNG tiết lộ đáp án đúng, KHÔNG chấm điểm hay nhận xét đúng/sai trong lúc hỏi — đó là việc của bước chấm sau khi buổi thi kết thúc.
-4. ${LANGUAGE_DIRECTIVE[params.language]}${
-    params.isLastQuestion
-      ? "\n5. Đây là câu hỏi CUỐI CÙNG của buổi vấn đáp — hỏi sao cho sinh viên có thể trả lời trọn vẹn trong lượt này."
-      : ""
-  }${extra}`;
+4. ${LANGUAGE_DIRECTIVE[params.language]}${buildExtraRules(params)}${extra}`;
+}
+
+// Quy tắc chỉ áp dụng cho 1 lượt cụ thể (mở màn / câu cuối) — tách riêng để
+// đánh số tiếp nối "Nguyên tắc" phía trên mà không hardcode số thứ tự trùng
+// nhau khi cả 2 điều kiện (hiếm khi, nhưng không loại trừ) cùng đúng.
+function buildExtraRules(params: { isFirstTurn: boolean; isLastQuestion: boolean }): string {
+  const rules: string[] = [];
+  if (params.isFirstTurn) {
+    rules.push(
+      "Đây là lượt ĐẦU TIÊN của buổi vấn đáp — trước khi hỏi, hãy mở đầu bằng một câu chào hỏi và giới thiệu ngắn gọn bản thân (là giảng viên ảo phụ trách buổi vấn đáp này), rồi mới đặt câu hỏi đầu tiên, trong CÙNG một lượt trả lời này.",
+    );
+  }
+  if (params.isLastQuestion) {
+    rules.push(
+      "Đây là câu hỏi CUỐI CÙNG của buổi vấn đáp — hỏi sao cho sinh viên có thể trả lời trọn vẹn trong lượt này.",
+    );
+  }
+  return rules.map((r, i) => `\n${5 + i}. ${r}`).join("");
 }
 
 export interface RunOralExamTurnInput {
@@ -209,6 +225,7 @@ export async function runOralExamTurn(
     courseTitle: attempt.exam.course?.title ?? null,
     examTitle: attempt.exam.title,
     contextChunks,
+    isFirstTurn: questionsAsked === 0,
     isLastQuestion,
     isClosing: shouldClose,
     language: attempt.exam.language,

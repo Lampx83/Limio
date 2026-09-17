@@ -242,6 +242,7 @@ async function loadExam(examId: string, db: PrismaClient) {
       courseId: true,
       createdById: true,
       status: true,
+      kind: true,
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
@@ -494,7 +495,12 @@ export async function deleteExam(
 ): Promise<void> {
   const exam = await loadExam(examId, db);
   await assertCanEditExam(actorUserId, exam, db);
-  if (exam.status === "published") {
+  // Vấn đáp AI (oral) không chặn xoá dù đã có SV trả lời — chỉ chặn đề thi
+  // viết (kind=written). Lượt thi vấn đáp luôn gắn userId thật (không đi qua
+  // ExamCandidate), nên xoá Exam chỉ cascade OralExamTurn/OralExamEvaluation
+  // — không đụng LearningEvent (bảng đó chỉ cascade qua ExamCandidate, thứ
+  // vấn đáp không dùng tới). FE tự xin xác nhận trước khi gọi API này.
+  if (exam.status === "published" && exam.kind !== "oral") {
     const hasAttempts =
       (await db.examAttempt.count({ where: { examId } })) > 0;
     if (hasAttempts) throw new ExamError("exam_has_attempts");

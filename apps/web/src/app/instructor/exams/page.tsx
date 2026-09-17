@@ -62,6 +62,7 @@ export default async function InstructorExamsHubPage() {
 
   const exams = await prisma.exam.findMany({
     where: {
+      kind: "written",
       OR: [
         ...(courseIds.length > 0 ? [{ courseId: { in: courseIds } }] : []),
         { courseId: null, createdById: userId },

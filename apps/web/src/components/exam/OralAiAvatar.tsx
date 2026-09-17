@@ -38,7 +38,7 @@ export default function OralAiAvatar({
   const videoSrc = STATE_VIDEO[state];
   return (
     <div className={`flex flex-col items-center gap-2 ${className ?? ""}`}>
-      <div className="relative flex h-48 w-48 shrink-0 items-center justify-center">
+      <div className="relative flex h-32 w-32 shrink-0 items-center justify-center sm:h-48 sm:w-48">
         {state === "listening" && (
           <>
             <span className="absolute inset-0 rounded-full bg-brand-400/40 animate-avatar-listen-ring" />
@@ -51,7 +51,7 @@ export default function OralAiAvatar({
         {videoSrc ? (
           <video
             key={videoSrc}
-            className="h-40 w-40 rounded-full object-cover shadow-brand-glow"
+            className="h-24 w-24 rounded-full object-cover shadow-brand-glow sm:h-40 sm:w-40"
             src={videoSrc}
             poster={STATE_POSTER[state]}
             preload="auto"
@@ -62,11 +62,11 @@ export default function OralAiAvatar({
           />
         ) : (
           <div
-            className={`flex h-40 w-40 items-center justify-center rounded-full bg-brand-gradient shadow-brand-glow ${
+            className={`flex h-24 w-24 items-center justify-center rounded-full bg-brand-gradient shadow-brand-glow sm:h-40 sm:w-40 ${
               state === "idle" ? "animate-avatar-bob" : ""
             } ${state === "thinking" ? "animate-avatar-think-tilt" : ""}`}
           >
-            <svg viewBox="0 0 100 100" className="h-24 w-24" aria-hidden="true" focusable="false">
+            <svg viewBox="0 0 100 100" className="h-12 w-12 sm:h-24 sm:w-24" aria-hidden="true" focusable="false">
               <ellipse
                 cx="32"
                 cy="42"

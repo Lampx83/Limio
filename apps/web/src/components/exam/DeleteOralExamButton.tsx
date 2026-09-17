@@ -6,8 +6,10 @@ import { Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 /**
- * Xoá đề vấn đáp. deleteExam (core-lms) tự chặn khi đề đã publish và có lượt
- * thi (exam_has_attempts) — nút này chỉ hiện lỗi ra, không tự bỏ qua guard.
+ * Xoá đề vấn đáp. Khác đề viết — deleteExam (core-lms) KHÔNG chặn khi đề
+ * vấn đáp đã publish và có lượt thi (đặc thù riêng cho kind=oral), chỉ cần
+ * người dùng xác nhận lại ở đây; xoá sẽ cuốn theo toàn bộ hội thoại/điểm AI
+ * đã chấm của các lượt đó, không thể hoàn tác.
  */
 export default function DeleteOralExamButton({
   examId,
@@ -23,20 +25,20 @@ export default function DeleteOralExamButton({
   const [error, setError] = useState<string | null>(null);
 
   async function onDelete() {
-    if (!confirm(`Xoá đề "${examTitle}"? Không thể hoàn tác.`)) return;
+    if (
+      !confirm(
+        `Xoá đề "${examTitle}"? Nếu đã có sinh viên vào thi, toàn bộ hội thoại và điểm đã chấm của họ cũng bị xoá theo. Không thể hoàn tác.`,
+      )
+    ) {
+      return;
+    }
     setBusy(true);
     setError(null);
     const res = await fetch(apiUrl(`/api/exams/${examId}`), { method: "DELETE" });
     setBusy(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(
-        d?.error === "exam_has_attempts"
-          ? "Đề đã publish và có lượt thi — không xoá được."
-          : typeof d?.error === "string"
-            ? d.error
-            : "Không xoá được.",
-      );
+      setError(typeof d?.error === "string" ? d.error : "Không xoá được.");
       return;
     }
     if (redirectTo) router.push(redirectTo);

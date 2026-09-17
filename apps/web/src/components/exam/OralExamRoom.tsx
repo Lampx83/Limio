@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LogOut, Timer } from "lucide-react";
+import { ArrowLeft, Info, LogOut, Timer, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { usePacedReveal } from "@/hooks/usePacedReveal";
 import UserAvatar from "@/components/ui/UserAvatar";
+import SafeHtml from "@/components/SafeHtml";
 import FullscreenGate from "./FullscreenGate";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
-import OralRoomSidePanel from "./OralRoomSidePanel";
-import type { OralAvatarState } from "./OralAiAvatar";
+import OralAiAvatar, { type OralAvatarState } from "./OralAiAvatar";
 
 const MAX_ORAL_QUESTIONS = 8; // giữ đồng bộ với packages/core-feedback/src/oralExam/examinerChat.ts
 
@@ -70,6 +70,7 @@ export default function OralExamRoom({
   const [streaming, setStreaming] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
   const reveal = usePacedReveal();
   const kickedOff = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -363,8 +364,30 @@ export default function OralExamRoom({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
+        {/* "Sân khấu" — avatar AI giám khảo ở giữa, phông nền có glow tạo cảm
+            giác đang đối diện trực tiếp (face-to-face) thay vì chỉ là 1 icon
+            phụ trong panel bên cạnh. Hiện ở mọi kích thước màn hình. */}
+        <div className="relative flex shrink-0 flex-col items-center justify-center gap-1.5 overflow-hidden border-b border-token bg-gradient-to-b from-brand-50 to-[rgb(var(--surface))] py-4 dark:from-slate-900 dark:to-[rgb(var(--surface))]">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="h-56 w-56 rounded-full bg-brand-300/30 blur-3xl dark:bg-brand-500/10 sm:h-80 sm:w-80" />
+          </div>
+          <div className="relative z-10">
+            <OralAiAvatar state={avatarState} />
+          </div>
+          {instructionsHtml && (
+            <button
+              type="button"
+              onClick={() => setShowInstructions(true)}
+              className="relative z-10 inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))]/90 px-3 py-1 text-xs font-medium text-faint hover:text-ink"
+            >
+              <Info className="h-3.5 w-3.5" />
+              Xem hướng dẫn
+            </button>
+          )}
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col">
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
             <div className="mx-auto max-w-2xl space-y-4">
               {turns.length === 0 && !streaming && (
@@ -448,9 +471,32 @@ export default function OralExamRoom({
             </div>
           </footer>
         </div>
-
-        <OralRoomSidePanel avatarState={avatarState} instructionsHtml={instructionsHtml} />
       </div>
+
+      {showInstructions && instructionsHtml && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowInstructions(false)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-lg bg-[rgb(var(--surface))] p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-semibold">Hướng dẫn</h2>
+              <button
+                type="button"
+                onClick={() => setShowInstructions(false)}
+                className="rounded p-1 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-ink"
+                aria-label="Đóng"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <SafeHtml html={instructionsHtml} className="prose prose-sm max-w-none dark:prose-invert" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
