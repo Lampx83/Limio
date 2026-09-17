@@ -71,6 +71,7 @@ export default function OralExamRoom({
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [pasteBlocked, setPasteBlocked] = useState(false);
   const reveal = usePacedReveal();
   const kickedOff = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -284,6 +285,18 @@ export default function OralExamRoom({
     [attemptId],
   );
 
+  // A6.6 — chặn dán vào ô trả lời (câu trả lời phải do SV tự gõ tại chỗ),
+  // khác ExamPlayer (thi viết) vốn chỉ GHI NHẬN lần dán để GV xem lại chứ
+  // không chặn — ở đây chặn hẳn vì vấn đáp là hội thoại tức thời, dán nội
+  // dung soạn sẵn (kể cả từ AI khác) mất hết ý nghĩa "tự trả lời trực tiếp".
+  function handlePasteBlock(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    e.preventDefault();
+    const text = e.clipboardData.getData("text");
+    logIncident("paste_blocked", { length: text.length });
+    setPasteBlocked(true);
+    setTimeout(() => setPasteBlocked(false), 2500);
+  }
+
   const canAnswer =
     !ended &&
     !streaming &&
@@ -439,6 +452,7 @@ export default function OralExamRoom({
                     submit();
                   }
                 }}
+                onPaste={handlePasteBlock}
                 disabled={!canAnswer}
                 rows={2}
                 placeholder={
@@ -458,6 +472,11 @@ export default function OralExamRoom({
                 Gửi
               </button>
             </div>
+            {pasteBlocked && (
+              <div className="mx-auto mt-1.5 max-w-2xl text-xs text-red-600">
+                Không thể dán nội dung vào ô trả lời — hãy tự gõ câu trả lời của bạn.
+              </div>
+            )}
             <div className="mx-auto mt-2 flex max-w-2xl justify-end">
               <button
                 type="button"

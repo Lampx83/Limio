@@ -90,6 +90,7 @@ export default function OralVoiceRoom({
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [pasteBlocked, setPasteBlocked] = useState(false);
   const reveal = usePacedReveal();
   const kickedOff = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -368,6 +369,16 @@ export default function OralVoiceRoom({
     [attemptId],
   );
 
+  // A6.6 — chặn dán vào ô gõ chữ (lối thoát khi mic hỏng) — cùng lý do với
+  // OralExamRoom: câu trả lời vấn đáp phải do SV tự gõ tại chỗ.
+  function handlePasteBlock(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    e.preventDefault();
+    const text = e.clipboardData.getData("text");
+    logIncident("paste_blocked", { length: text.length });
+    setPasteBlocked(true);
+    setTimeout(() => setPasteBlocked(false), 2500);
+  }
+
   const canAnswer =
     !ended && !processing && turns.length > 0 && turns[turns.length - 1]!.role === "examiner";
 
@@ -566,34 +577,42 @@ export default function OralVoiceRoom({
           <footer className="border-t border-token bg-[rgb(var(--surface))] p-3 sm:p-4">
             <div className="mx-auto flex max-w-2xl flex-col gap-2">
               {textFallback ? (
-                <div className="flex gap-2">
-                  <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        submitTyped();
+                <div>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          submitTyped();
+                        }
+                      }}
+                      onPaste={handlePasteBlock}
+                      disabled={!canAnswer}
+                      rows={2}
+                      placeholder={
+                        ended
+                          ? "Buổi vấn đáp đã kết thúc."
+                          : canAnswer
+                            ? "Trả lời câu hỏi... (Enter = gửi · Shift+Enter = xuống dòng)"
+                            : "Đợi câu hỏi từ AI giám khảo…"
                       }
-                    }}
-                    disabled={!canAnswer}
-                    rows={2}
-                    placeholder={
-                      ended
-                        ? "Buổi vấn đáp đã kết thúc."
-                        : canAnswer
-                          ? "Trả lời câu hỏi... (Enter = gửi · Shift+Enter = xuống dòng)"
-                          : "Đợi câu hỏi từ AI giám khảo…"
-                    }
-                    className="textarea flex-1 resize-none text-sm"
-                  />
-                  <button
-                    onClick={submitTyped}
-                    disabled={!canAnswer || !input.trim()}
-                    className="btn-sm self-stretch inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
-                  >
-                    Gửi
-                  </button>
+                      className="textarea flex-1 resize-none text-sm"
+                    />
+                    <button
+                      onClick={submitTyped}
+                      disabled={!canAnswer || !input.trim()}
+                      className="btn-sm self-stretch inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+                    >
+                      Gửi
+                    </button>
+                  </div>
+                  {pasteBlocked && (
+                    <p className="mt-1.5 text-xs text-red-600">
+                      Không thể dán nội dung vào ô trả lời — hãy tự gõ câu trả lời của bạn.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 py-2">
