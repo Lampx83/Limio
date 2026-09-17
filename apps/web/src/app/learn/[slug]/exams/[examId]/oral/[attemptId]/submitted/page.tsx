@@ -39,7 +39,13 @@ export default async function OralExamSubmittedPage({
   });
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
+    <main className="relative mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
+      <a
+        href={`/learn/${params.slug}`}
+        className="absolute left-4 top-4 text-sm text-blue-600 hover:underline sm:left-6 sm:top-6"
+      >
+        ← Khoá học
+      </a>
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">
         ✓
       </div>

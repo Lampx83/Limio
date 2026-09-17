@@ -38,6 +38,9 @@ export default async function OralJoinByCodePage({
           {info.examTitle} — {info.courseTitle ?? "Đề độc lập"}. Liên hệ giảng
           viên nếu bạn cần vào lại.
         </p>
+        <a href="/" className="mt-6 inline-block text-sm text-blue-600 hover:underline">
+          ← Trang chủ
+        </a>
       </main>
     );
   }
@@ -62,6 +65,9 @@ export default async function OralJoinByCodePage({
         <main className="mx-auto max-w-md px-4 py-16 text-center">
           <h1 className="mb-2 text-xl font-semibold">Không vào được buổi vấn đáp</h1>
           <p className="text-sm text-faint">{describeError(e.code)}</p>
+          <a href="/" className="mt-6 inline-block text-sm text-blue-600 hover:underline">
+            ← Trang chủ
+          </a>
         </main>
       );
     }
