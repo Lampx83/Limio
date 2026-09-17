@@ -4,7 +4,7 @@ import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
 
-type Status = "active" | "completed" | "dropped" | "refunded";
+type Status = "active" | "completed" | "dropped" | "refunded" | "expired";
 
 interface RosterEntry {
   enrollmentId: string;
@@ -39,6 +39,7 @@ const STATUS_LABEL: Record<Status, string> = {
   completed: "Đã hoàn thành",
   dropped: "Bỏ học",
   refunded: "Đã hoàn tiền",
+  expired: "Hết hạn truy cập",
 };
 
 const STATUS_CHIP: Record<Status, string> = {
@@ -46,6 +47,7 @@ const STATUS_CHIP: Record<Status, string> = {
   completed: "chip-brand",
   dropped: "chip-danger",
   refunded: "chip-accent",
+  expired: "chip-danger",
 };
 
 export default function SectionRosterClient({

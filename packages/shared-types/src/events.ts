@@ -26,6 +26,12 @@ export const LearningEventType = {
   ForumAnswered: "forum.answered",
   EnrollmentCreated: "enrollment.created",
   EnrollmentStatusChanged: "enrollment.status_changed",
+  // Bán khoá học có thời hạn (CourseAccessPlan) — mua lần đầu hoặc gia hạn.
+  EnrollmentAccessExtended: "enrollment.access.extended",
+  // Cron reaper phát hiện accessExpiresAt đã qua, chuyển status -> expired.
+  EnrollmentAccessExpired: "enrollment.access.expired",
+  // Cron nhắc hạn đã gửi email — chống gửi trùng qua accessExpiryReminderSentAt.
+  EnrollmentAccessReminderSent: "enrollment.access.reminder_sent",
   CourseCompleted: "course.completed",
   CourseInstructorAdded: "course.instructor.added",
   CourseInstructorRemoved: "course.instructor.removed",
@@ -231,6 +237,31 @@ export interface EnrollmentCreatedPayload {
   // A6 — CourseSection (invite-link) the enrollment landed in. Optional:
   // additive field, older EnrollmentCreated rows predate CourseSection.
   sectionId?: string;
+}
+
+/**
+ * Mua/gia hạn truy cập khoá học theo CourseAccessPlan. `newExpiresAt: null`
+ * nghĩa là gói vĩnh viễn — không phải "vẫn giữ hạn cũ".
+ */
+export interface EnrollmentAccessExtendedPayload {
+  enrollmentId: string;
+  courseId: string;
+  accessPlanId: string | null;
+  durationMonths: number | null;
+  previousExpiresAt: string | null;
+  newExpiresAt: string | null;
+}
+
+export interface EnrollmentAccessExpiredPayload {
+  enrollmentId: string;
+  courseId: string;
+  expiredAt: string;
+}
+
+export interface EnrollmentAccessReminderSentPayload {
+  enrollmentId: string;
+  courseId: string;
+  accessExpiresAt: string;
 }
 
 // =====================================================================

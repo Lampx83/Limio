@@ -312,6 +312,7 @@ model Course {
   cohortExamClasses CohortExamClass[]
   examRounds        ExamRound[]
   accessCodes       CourseAccessCode[]
+  accessPlans       CourseAccessPlan[]
   organization      Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   catalogSectionCourses CatalogSectionCourse[]
 
@@ -558,6 +559,10 @@ enum EnrollmentStatus {
   completed
   dropped
   refunded
+  // Truy cập đã hết hạn (CourseAccessPlan có durationMonths) — set bởi cron
+  // reaper, không phải tay. Khác "dropped"/"refunded": lịch sử học tập giữ
+  // nguyên, mua lại (extendEnrollmentAccess) là quay lại "active" ngay.
+  expired
 }
 
 model Enrollment {
@@ -576,6 +581,13 @@ model Enrollment {
   // A3 acceptance: resume position lưu mỗi 10s.
   lastLessonId    String?
   lastPositionSec Int?
+  // Hạn truy cập khi mua theo CourseAccessPlan có thời hạn (1 năm, 2 năm...).
+  // null = vĩnh viễn — mặc định, giữ nguyên hành vi của mọi enrollment trước
+  // tính năng này (không cần backfill dữ liệu cũ).
+  accessExpiresAt            DateTime?
+  // Chống gửi trùng email nhắc hạn (cron enrollment-access-reminder). Reset về
+  // null mỗi lần gia hạn để lần hết hạn kế tiếp lại được nhắc.
+  accessExpiryReminderSentAt DateTime?
 
   user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   course  Course        @relation(fields: [courseId], references: [id])
@@ -584,6 +596,8 @@ model Enrollment {
   @@unique([userId, courseId])
   @@index([userId, status])
   @@index([sectionId])
+  // Cron reaper (enrollment-access-expiry-check) quét theo cặp này mỗi ngày.
+  @@index([status, accessExpiresAt])
 }
 
 // A3 — Note attached to a lesson, optionally to a content item, optionally
@@ -2111,6 +2125,10 @@ model Order {
   id          String          @id @default(uuid())
   userId      String
   courseId    String
+  // Gói đã chọn lúc checkout (thời hạn truy cập). null = mua theo giá phẳng
+  // Course.priceCents cũ (vĩnh viễn) — đường trước khi có CourseAccessPlan,
+  // giữ nguyên để không phải migrate Order lịch sử.
+  accessPlanId String?
   // Locked at order time so price changes don't affect pending orders.
   amountCents Int
   currency    String          @default("USD")
@@ -2123,12 +2141,39 @@ model Order {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  accessPlan CourseAccessPlan? @relation(fields: [accessPlanId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
+}
+
+// =====================================================================
+// Gói bán khoá học theo thời hạn (1 năm, 2 năm, vĩnh viễn...) — thay cho giá
+// phẳng duy nhất Course.priceCents. Chỉ admin platform được tạo/sửa (không
+// phải instructor sở hữu khoá) vì đụng tới giá bán thật — xem CLAUDE.md.
+// =====================================================================
+
+model CourseAccessPlan {
+  id             String   @id @default(uuid())
+  courseId       String
+  label          String // "1 năm", "2 năm", "Vĩnh viễn"
+  // null = vĩnh viễn (không hết hạn). Dương = số tháng truy cập kể từ lúc mua.
+  durationMonths Int?
+  priceCents     Int
+  currency       String   @default("VND")
+  // Ẩn gói cũ khỏi checkout mà không xoá — Order lịch sử vẫn tham chiếu được.
+  isActive       Boolean  @default(true)
+  createdBy      String // admin userId — chi tiết actor nằm ở AuditLog
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([courseId, isActive])
 }
 
 // =====================================================================

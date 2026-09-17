@@ -61,7 +61,7 @@ export async function GET(
       }),
     ]);
 
-  const enroll = { total: 0, active: 0, completed: 0, dropped: 0, refunded: 0 };
+  const enroll = { total: 0, active: 0, completed: 0, dropped: 0, refunded: 0, expired: 0 };
   for (const g of enrollGroups) {
     enroll.total += g._count;
     enroll[g.status] = g._count;

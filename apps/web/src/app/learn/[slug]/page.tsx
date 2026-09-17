@@ -16,10 +16,17 @@ import { getAdaptiveNextLesson } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import { StickyMobileCTA } from "@/components/ui";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
+import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 
 export const dynamic = "force-dynamic";
 
-export default async function LearnCoursePage({ params }: { params: { slug: string } }) {
+export default async function LearnCoursePage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams?: { paid?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect(`/signin?callbackUrl=/learn/${params.slug}`);
 
@@ -35,6 +42,13 @@ export default async function LearnCoursePage({ params }: { params: { slug: stri
   if (!course) notFound();
 
   if (!(await isUserEnrolled(session.user.id, course.id))) {
+    // Vừa quay về từ Stripe checkout — webhook checkout.session.completed
+    // chạy song song với redirect, có thể chưa kịp tạo Enrollment. Đừng bounce
+    // thẳng về catalog?locked=1 (trông như thanh toán thất bại) — chờ vài
+    // giây và tự polling thay vì bắt học viên tự tải lại.
+    if (searchParams?.paid === "1") {
+      return <PaymentProcessingNotice slug={params.slug} />;
+    }
     redirect(`/catalog/${params.slug}?locked=1`);
   }
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { isFree } from "@/lib/formatPrice";
-import EnrollButton from "./EnrollButton";
+import EnrollButton, { type AccessPlanOption } from "./EnrollButton";
 
 /**
  * Nút hành động cho banner "Bạn chưa đăng ký khoá học này" trên trang catalog.
@@ -18,23 +18,28 @@ import EnrollButton from "./EnrollButton";
  * ghé qua chỉ cần đọc câu nhắc trước đã.
  */
 export default function EnrollNudgeAction({
+  courseId,
   slug,
   priceCents,
   currency,
   paymentEnabled,
+  accessPlans = [],
 }: {
+  courseId: string;
   slug: string;
   priceCents?: number | null;
   currency?: string;
   paymentEnabled?: boolean;
+  accessPlans?: AccessPlanOption[];
 }) {
   const [revealed, setRevealed] = useState(false);
-  const free = !paymentEnabled || isFree(priceCents);
+  const free = !paymentEnabled || (accessPlans.length === 0 && isFree(priceCents));
 
   // Khoá miễn phí: button gọn, nằm cùng dòng với câu nhắc.
   if (free) {
     return (
       <EnrollButton
+        courseId={courseId}
         slug={slug}
         alreadyEnrolled={false}
         priceCents={priceCents}
@@ -52,11 +57,13 @@ export default function EnrollNudgeAction({
     return (
       <div className="mt-1 w-full sm:w-80">
         <EnrollButton
+          courseId={courseId}
           slug={slug}
           alreadyEnrolled={false}
           priceCents={priceCents}
           currency={currency}
           paymentEnabled={paymentEnabled}
+          accessPlans={accessPlans}
         />
       </div>
     );

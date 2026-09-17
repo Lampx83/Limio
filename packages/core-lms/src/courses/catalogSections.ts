@@ -64,6 +64,14 @@ const COURSE_CARD_SELECT = {
   priceCents: true,
   currency: true,
   personalizationEnabled: true,
+  // Khoá bán theo CourseAccessPlan (1 năm/2 năm/vĩnh viễn) có thể không có
+  // priceCents phẳng — card cần biết "từ giá nào" thay vì hiện nhầm "Miễn phí".
+  accessPlans: {
+    where: { isActive: true },
+    orderBy: { priceCents: "asc" as const },
+    take: 1,
+    select: { priceCents: true, currency: true },
+  },
 } as const;
 
 export type CatalogSectionCourseCard = {
@@ -78,7 +86,15 @@ export type CatalogSectionCourseCard = {
   priceCents: number | null;
   currency: string;
   personalizationEnabled: boolean;
+  cheapestAccessPlan: { priceCents: number; currency: string } | null;
 };
+
+function toCourseCardData<T extends { accessPlans: { priceCents: number; currency: string }[] }>(
+  course: T,
+): Omit<T, "accessPlans"> & { cheapestAccessPlan: { priceCents: number; currency: string } | null } {
+  const { accessPlans, ...rest } = course;
+  return { ...rest, cheapestAccessPlan: accessPlans[0] ?? null };
+}
 
 export interface CatalogSectionWithCourses extends CatalogSectionRow {
   courses: CatalogSectionCourseCard[];
@@ -103,19 +119,21 @@ export async function listCatalogSectionsForDisplay(
   for (const s of sections) {
     const courses =
       s.type === "AUTO_RECENT"
-        ? await db.course.findMany({
-            where: { status: "published" },
-            orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
-            take: s.autoLimit ?? DEFAULT_AUTO_LIMIT,
-            select: COURSE_CARD_SELECT,
-          })
+        ? (
+            await db.course.findMany({
+              where: { status: "published" },
+              orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
+              take: s.autoLimit ?? DEFAULT_AUTO_LIMIT,
+              select: COURSE_CARD_SELECT,
+            })
+          ).map(toCourseCardData)
         : (
             await db.catalogSectionCourse.findMany({
               where: { sectionId: s.id, course: { status: "published" } },
               orderBy: { order: "asc" },
               select: { course: { select: COURSE_CARD_SELECT } },
             })
-          ).map((l) => l.course);
+          ).map((l) => toCourseCardData(l.course));
 
     if (courses.length === 0) continue;
     result.push({

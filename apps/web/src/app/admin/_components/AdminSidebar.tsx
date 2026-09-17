@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Coins,
   LayoutGrid,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -57,7 +58,10 @@ const GROUPS: Group[] = [
     label: "Catalog",
     iconBg: PINK_BG,
     iconFg: PINK_FG,
-    items: [{ label: "Section catalog", href: "/admin/catalog-sections", icon: LayoutGrid }],
+    items: [
+      { label: "Section catalog", href: "/admin/catalog-sections", icon: LayoutGrid },
+      { label: "Khoá học", href: "/admin/courses", icon: GraduationCap },
+    ],
   },
   {
     id: "integrations",

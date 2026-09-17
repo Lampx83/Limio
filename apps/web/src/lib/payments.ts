@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { prisma } from "@feedbackme/db";
-import { getIntegrationSecret, resolveDefaultSectionId } from "@feedbackme/core-lms";
+import { getIntegrationSecret, extendEnrollmentAccess } from "@feedbackme/core-lms";
 
 /**
  * Resolve Stripe client. Uses encrypted IntegrationCredential if set,
@@ -20,6 +20,12 @@ async function getStripe(): Promise<Stripe> {
 export interface CreateCheckoutInput {
   userId: string;
   courseId: string;
+  /**
+   * Gói truy cập có thời hạn đã chọn (CourseAccessPlan). Bỏ trống = đường cũ,
+   * mua theo giá phẳng `Course.priceCents` (vĩnh viễn) — giữ nguyên hành vi
+   * cho khoá học chưa có gói nào.
+   */
+  accessPlanId?: string;
   /** Where to redirect after success — typically `/learn/[slug]`. */
   successUrl: string;
   /** Where to redirect on cancel — typically the catalog page. */
@@ -38,16 +44,35 @@ export async function createCheckoutSession(input: CreateCheckoutInput) {
       slug: true,
     },
   });
-  if (!course.priceCents || course.priceCents <= 0) {
-    throw new Error("course_is_free");
+
+  let amountCents: number;
+  let currency: string;
+  let planLabel: string | null = null;
+  if (input.accessPlanId) {
+    const plan = await prisma.courseAccessPlan.findUniqueOrThrow({
+      where: { id: input.accessPlanId },
+    });
+    if (plan.courseId !== course.id || !plan.isActive) {
+      throw new Error("access_plan_not_found");
+    }
+    amountCents = plan.priceCents;
+    currency = plan.currency;
+    planLabel = plan.label;
+  } else {
+    if (!course.priceCents || course.priceCents <= 0) {
+      throw new Error("course_is_free");
+    }
+    amountCents = course.priceCents;
+    currency = course.currency;
   }
 
-  // Reuse pending order if one exists for the same (user, course) — avoids
-  // duplicate Stripe sessions when the user clicks twice.
+  // Reuse pending order if one exists for the same (user, course, plan) —
+  // avoids duplicate Stripe sessions when the user clicks twice.
   const existing = await prisma.order.findFirst({
     where: {
       userId: input.userId,
       courseId: input.courseId,
+      accessPlanId: input.accessPlanId ?? null,
       status: "pending",
     },
   });
@@ -66,27 +91,28 @@ export async function createCheckoutSession(input: CreateCheckoutInput) {
     line_items: [
       {
         price_data: {
-          currency: course.currency.toLowerCase(),
+          currency: currency.toLowerCase(),
           product_data: {
-            name: course.title,
+            name: planLabel ? `${course.title} — ${planLabel}` : course.title,
             description: course.description.slice(0, 200),
           },
-          unit_amount: course.priceCents,
+          unit_amount: amountCents,
         },
         quantity: 1,
       },
     ],
     success_url: input.successUrl,
     cancel_url: input.cancelUrl,
-    metadata: { courseId: course.id, userId: input.userId },
+    metadata: { courseId: course.id, userId: input.userId, accessPlanId: input.accessPlanId ?? "" },
   });
 
   const order = await prisma.order.create({
     data: {
       userId: input.userId,
       courseId: course.id,
-      amountCents: course.priceCents,
-      currency: course.currency,
+      accessPlanId: input.accessPlanId,
+      amountCents,
+      currency,
       provider: "stripe",
       status: "pending",
       providerRef: session.id,
@@ -112,24 +138,19 @@ export async function processStripeWebhook(event: Stripe.Event) {
         where: { id: order.id },
         data: { status: "paid", paidAt: new Date() },
       });
-      // Auto-enroll on payment. Look up current course version.
       const course = await tx.course.findUniqueOrThrow({
         where: { id: order.courseId },
-        select: { version: true },
+        select: { id: true, version: true },
       });
-      const sectionId = await resolveDefaultSectionId(order.courseId, tx as typeof prisma);
-      await tx.enrollment.upsert({
-        where: {
-          userId_courseId: { userId: order.userId, courseId: order.courseId },
-        },
-        create: {
-          userId: order.userId,
-          courseId: order.courseId,
-          sectionId,
-          courseVersion: course.version,
-        },
-        update: {},
-      });
+      const plan = order.accessPlanId
+        ? await tx.courseAccessPlan.findUniqueOrThrow({
+            where: { id: order.accessPlanId },
+            select: { id: true, durationMonths: true },
+          })
+        : { id: null, durationMonths: null };
+      // Cấp/gia hạn quyền truy cập — null durationMonths = vĩnh viễn, đúng
+      // hành vi cũ cho Order không gắn CourseAccessPlan.
+      await extendEnrollmentAccess(order.userId, course, plan, tx as typeof prisma);
     });
   } else if (event.type === "checkout.session.expired") {
     const sess = event.data.object as Stripe.Checkout.Session;

@@ -53,6 +53,7 @@ export async function GET(
     completed: 0,
     dropped: 0,
     refunded: 0,
+    expired: 0,
   };
   for (const g of grouped) {
     stats.total += g._count;

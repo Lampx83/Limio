@@ -248,7 +248,7 @@ export async function regenerateInviteCode(
 
 export interface SectionRosterEntry {
   enrollmentId: string;
-  status: "active" | "completed" | "dropped" | "refunded";
+  status: "active" | "completed" | "dropped" | "refunded" | "expired";
   enrolledAt: string;
   user: {
     id: string;

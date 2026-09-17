@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getCourseDetail, CourseError } from "@feedbackme/core-lms";
+import { getCourseDetail, CourseError, isUserEnrolled } from "@feedbackme/core-lms";
 import { getLeaderboard } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
-import EnrollButton from "@/components/EnrollButton";
+import EnrollButton, { type AccessPlanOption } from "@/components/EnrollButton";
 import EnrollNudgeAction from "@/components/EnrollNudgeAction";
 import SafeHtml from "@/components/SafeHtml";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
@@ -27,9 +27,10 @@ export default async function CourseDetailPage({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams?: { paywall?: string; locked?: string };
+  searchParams?: { paywall?: string; locked?: string; cancelled?: string };
 }) {
   const showPaywall = searchParams?.paywall === "1";
+  const showCancelled = searchParams?.cancelled === "1";
   const [session, paymentEnabled] = await Promise.all([auth(), getPaymentEnabled()]);
   let course;
   try {
@@ -52,15 +53,8 @@ export default async function CourseDetailPage({
   // Enrollment check + weekly/all-time leaderboard đều chỉ cần course.id/session,
   // không phụ thuộc nhau — chạy song song thay vì nối đuôi để rút ngắn thời gian
   // loading.tsx hiển thị khi chuyển trang từ catalog.
-  const [enrolled, weeklyLeaderboard, allTimeLeaderboard] = await Promise.all([
-    (async () => {
-      if (!session?.user?.id) return false;
-      const e = await prisma.enrollment.findUnique({
-        where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
-        select: { id: true, status: true },
-      });
-      return e !== null && e.status !== "dropped" && e.status !== "refunded";
-    })(),
+  const [enrolled, weeklyLeaderboard, allTimeLeaderboard, accessPlans] = await Promise.all([
+    session?.user?.id ? isUserEnrolled(session.user.id, course.id) : Promise.resolve(false),
     getLeaderboard({
       scope: "course",
       period: "weekly",
@@ -75,12 +69,23 @@ export default async function CourseDetailPage({
       viewerId: session?.user?.id ?? null,
       limit: 8,
     }),
+    paymentEnabled
+      ? prisma.courseAccessPlan.findMany({
+          where: { courseId: course.id, isActive: true },
+          orderBy: { priceCents: "asc" },
+          select: { id: true, label: true, durationMonths: true, priceCents: true, currency: true },
+        })
+      : Promise.resolve([] as AccessPlanOption[]),
   ]);
 
-  const priceLabel =
-    paymentEnabled && !isFree(course.priceCents)
-      ? formatPrice(course.priceCents!, course.currency)
-      : "Miễn phí";
+  const cheapestPlan = accessPlans[0];
+  const priceLabel = !paymentEnabled
+    ? "Miễn phí"
+    : cheapestPlan
+      ? `Từ ${formatPrice(cheapestPlan.priceCents, cheapestPlan.currency)}`
+      : !isFree(course.priceCents)
+        ? formatPrice(course.priceCents!, course.currency)
+        : "Miễn phí";
 
   // Banner "chưa đăng ký" trong section Nội dung khóa học đã có đủ message +
   // action (Đăng ký ngay / liên hệ giáo viên) — sidebar không lặp lại nút nữa.
@@ -101,6 +106,16 @@ export default async function CourseDetailPage({
             <p className="text-xs text-danger-600">
               Bài học này yêu cầu đăng ký khoá học. Mua khoá để truy cập toàn bộ nội dung.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Thanh toán Stripe bị huỷ giữa chừng — không phải lỗi, chỉ nhắc có thể thử lại */}
+      {showCancelled && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-token bg-base-50 px-5 py-4">
+          <div className="flex-1">
+            <p className="text-sm font-semibold">Thanh toán đã huỷ</p>
+            <p className="text-xs text-muted">Bạn có thể chọn lại gói và thử thanh toán bất cứ lúc nào.</p>
           </div>
         </div>
       )}
@@ -207,11 +222,13 @@ export default async function CourseDetailPage({
               <span className="text-sm text-muted">Cần link mời của lớp</span>
             ) : (
               <EnrollButton
+                courseId={course.id}
                 slug={params.slug}
                 alreadyEnrolled={enrolled}
                 priceCents={course.priceCents}
                 currency={course.currency}
                 paymentEnabled={paymentEnabled}
+                accessPlans={accessPlans}
               />
             )
           }
@@ -260,10 +277,12 @@ export default async function CourseDetailPage({
                 // hoạt, không cuộn trang xuống sidebar (sidebar còn ẩn trên
                 // mobile, cuộn-tới sẽ không tới đâu cả).
                 <EnrollNudgeAction
+                  courseId={course.id}
                   slug={params.slug}
                   priceCents={course.priceCents}
                   currency={course.currency}
                   paymentEnabled={paymentEnabled}
+                  accessPlans={accessPlans}
                 />
               )}
             </div>
@@ -382,9 +401,13 @@ export default async function CourseDetailPage({
               // khóa học đã đủ message + action rồi — không lặp lại nút ở
               // đây. Card này chỉ còn lý do tồn tại khi có gì để hiện: học
               // phí, hoặc nút đăng ký (đã enrolled, hoặc chưa có nudge ở trên).
-              ((paymentEnabled && !isFree(course.priceCents)) || !showEnrollNudge) && (
+              ((paymentEnabled && (accessPlans.length > 0 || !isFree(course.priceCents))) ||
+                !showEnrollNudge) && (
                 <div className="card scroll-mt-24" id="dang-ky">
-                  {paymentEnabled && !isFree(course.priceCents) && (
+                  {/* Có accessPlans: EnrollButton tự hiện giá từng gói trong
+                      picker — flat "Học phí" ở đây sẽ trùng lặp/gây hiểu nhầm
+                      là chỉ có 1 mức giá. */}
+                  {paymentEnabled && accessPlans.length === 0 && !isFree(course.priceCents) && (
                     <div className="mb-3">
                       <div className="text-xs uppercase tracking-wide text-faint">
                         Học phí
@@ -396,11 +419,13 @@ export default async function CourseDetailPage({
                   )}
                   {!showEnrollNudge && (
                     <EnrollButton
+                      courseId={course.id}
                       slug={params.slug}
                       alreadyEnrolled={enrolled}
                       priceCents={course.priceCents}
                       currency={course.currency}
                       paymentEnabled={paymentEnabled}
+                      accessPlans={accessPlans}
                     />
                   )}
                 </div>

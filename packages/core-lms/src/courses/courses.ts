@@ -399,13 +399,26 @@ export async function listPublishedCourses(
       currency: true,
       personalizationEnabled: true,
       publicAccess: true,
+      // Khoá bán theo CourseAccessPlan (1 năm/2 năm/vĩnh viễn) có thể không
+      // có priceCents phẳng nữa — catalog card cần biết "từ giá nào" thay vì
+      // hiện nhầm "Miễn phí".
+      accessPlans: {
+        where: { isActive: true },
+        orderBy: { priceCents: "asc" },
+        take: 1,
+        select: { priceCents: true, currency: true },
+      },
     },
   });
 
   const hasMore = items.length > q.limit;
   const trimmed = hasMore ? items.slice(0, q.limit) : items;
   const nextCursor = hasMore ? trimmed[trimmed.length - 1]!.id : null;
-  return { items: trimmed, nextCursor };
+  const mapped = trimmed.map(({ accessPlans, ...c }) => ({
+    ...c,
+    cheapestAccessPlan: accessPlans[0] ?? null,
+  }));
+  return { items: mapped, nextCursor };
 }
 
 /** Returns full course tree. Visibility: published OR (actor can edit). */

@@ -8,12 +8,12 @@ export const runtime = "nodejs";
 
 /**
  * Create a Stripe Checkout Session for a paid course.
- * Body: { courseId }
+ * Body: { courseId, accessPlanId? }
  */
 export async function POST(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const body = (await readJson(req)) as { courseId?: string } | null;
+  const body = (await readJson(req)) as { courseId?: string; accessPlanId?: string } | null;
   if (!body?.courseId) {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   }
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   if (course.status !== "published") {
     return NextResponse.json({ error: "course_not_enrollable" }, { status: 400 });
   }
-  if (!course.priceCents || course.priceCents <= 0) {
+  if (!body.accessPlanId && (!course.priceCents || course.priceCents <= 0)) {
     return NextResponse.json({ error: "course_is_free" }, { status: 400 });
   }
 
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
     const r = await createCheckoutSession({
       userId,
       courseId: body.courseId,
+      accessPlanId: body.accessPlanId,
       successUrl: `${origin}/learn/${course.slug}?paid=1`,
       cancelUrl: `${origin}/catalog/${course.slug}?cancelled=1`,
     });
@@ -45,6 +46,9 @@ export async function POST(req: Request) {
         { error: "stripe_not_configured" },
         { status: 503 },
       );
+    }
+    if (msg === "access_plan_not_found") {
+      return NextResponse.json({ error: "access_plan_not_found" }, { status: 400 });
     }
     return NextResponse.json({ error: "checkout_failed", details: msg }, { status: 500 });
   }

@@ -354,9 +354,15 @@ export async function isUserEnrolled(
 ): Promise<boolean> {
   const e = await db.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId } },
-    select: { id: true, status: true },
+    select: { id: true, status: true, accessExpiresAt: true },
   });
-  return e !== null && e.status !== "dropped" && e.status !== "refunded";
+  if (e === null || e.status === "dropped" || e.status === "refunded" || e.status === "expired") {
+    return false;
+  }
+  // Live-check: chặn ngay cả khi cron reaper (enrollment-access-expiry-check)
+  // chưa kịp chuyển status sang "expired" — không đợi tới 24h.
+  if (e.accessExpiresAt !== null && e.accessExpiresAt <= new Date()) return false;
+  return true;
 }
 
 export async function listEnrollmentsForUser(
@@ -364,7 +370,11 @@ export async function listEnrollmentsForUser(
   db: PrismaClient = prisma,
 ) {
   return db.enrollment.findMany({
-    where: { userId, status: { in: ["active", "completed"] } },
+    where: {
+      userId,
+      status: { in: ["active", "completed"] },
+      OR: [{ accessExpiresAt: null }, { accessExpiresAt: { gt: new Date() } }],
+    },
     orderBy: { enrolledAt: "desc" },
     include: {
       course: {

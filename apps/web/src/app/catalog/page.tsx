@@ -268,6 +268,7 @@ interface CourseCardData {
   personalizationEnabled: boolean;
   priceCents: number | null;
   currency: string;
+  cheapestAccessPlan: { priceCents: number; currency: string } | null;
 }
 
 function CourseGrid({
@@ -350,6 +351,10 @@ function CourseGrid({
             <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
               {enrolled ? (
                 <span className="font-semibold text-success-600">✓ Đã ghi danh</span>
+              ) : paymentEnabled && c.cheapestAccessPlan ? (
+                <span className="font-semibold text-accent-600">
+                  Từ {formatPrice(c.cheapestAccessPlan.priceCents, c.cheapestAccessPlan.currency)}
+                </span>
               ) : paymentEnabled && !isFree(c.priceCents) ? (
                 <span className="font-semibold text-accent-600">
                   {formatPrice(c.priceCents!, c.currency)}

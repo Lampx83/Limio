@@ -1,6 +1,7 @@
 export * from "./accessCode";
 export * from "./events";
 export * from "./enroll";
+export * from "./courseAccess";
 export * from "./lessons";
 export * from "./engagement";
 export * from "./progress";

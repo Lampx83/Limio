@@ -15,3 +15,8 @@
 # A5.4 — Nightly item-analytics rebuild. UPSERT per ExamQuestionStats /
 # BankQuestionStats row. Idempotent; target runtime ≤ 30s.
 0 2  * * *  /usr/local/bin/run.sh exam-analytics
+# Bán khoá học có thời hạn (CourseAccessPlan) — chuyển Enrollment quá hạn
+# sang expired. Chạy trước job nhắc hạn để không nhắc học viên đã hết hạn.
+10 0 * * *  /usr/local/bin/run.sh enrollment-access-expiry-check
+# Nhắc hạn qua email 7 ngày trước accessExpiresAt, best-effort.
+15 0 * * *  /usr/local/bin/run.sh enrollment-access-reminder
