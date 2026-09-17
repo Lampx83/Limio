@@ -1,5 +1,5 @@
 import { Prisma, prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { publish } from "@/lib/realtime/publisher";
 import { channelForWhiteboard } from "@/lib/whiteboard";
 import { clearSnapshotPage, type WhiteboardSnapshot } from "@/lib/whiteboardReconcile";
@@ -12,9 +12,9 @@ export const runtime = "nodejs";
 // page → xoá toàn bộ mọi trang (bảng trắng tự do luôn rơi vào nhánh này vì
 // chỉ có 1 trang ảo "0").
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const board = await prisma.whiteboard.findUnique({
@@ -24,7 +24,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!board) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
-  if (board.ownerId !== session.user.id) {
+  if (board.ownerId !== userId) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 

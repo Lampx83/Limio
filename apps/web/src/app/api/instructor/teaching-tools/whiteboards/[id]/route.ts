@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { publish } from "@/lib/realtime/publisher";
 import { channelForWhiteboard } from "@/lib/whiteboard";
 
@@ -18,11 +18,11 @@ async function authorizeOwner(boardId: string, userId: string) {
 
 // GET — host view: whiteboard + snapshot elements hiện tại
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorizeOwner(params.id, session.user.id);
+  const auth1 = await authorizeOwner(params.id, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },
@@ -49,11 +49,11 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
 // PATCH — close/reopen whiteboard
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorizeOwner(params.id, session.user.id);
+  const auth1 = await authorizeOwner(params.id, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },
@@ -89,11 +89,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
 // DELETE — xoá whiteboard
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorizeOwner(params.id, session.user.id);
+  const auth1 = await authorizeOwner(params.id, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },

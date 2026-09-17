@@ -1,11 +1,11 @@
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { canEditCourse } from "@feedbackme/core-lms";
 
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
   try {
     // Verify instructor can edit this course
-    const canEdit = await canEditCourse(session.user.id, courseId);
+    const canEdit = await canEditCourse(userId, courseId);
     if (!canEdit) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }

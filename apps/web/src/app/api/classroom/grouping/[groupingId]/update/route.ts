@@ -1,14 +1,27 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { authorizeGroupingOwner } from "@feedbackme/core-lms";
+import { requireFeature } from "@/lib/session";
 
 export async function PUT(
   req: Request,
   { params }: { params: { groupingId: string } }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const actorUserId = await requireFeature("teaching_tools.access");
+  if (!actorUserId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  // IDOR guard — teaching_tools.access chỉ xác nhận "là giảng viên nào đó",
+  // không xác nhận đây có phải giảng viên của ĐÚNG course chứa groupingId
+  // này hay không. Không check riêng thì 1 GV biết groupingId của course
+  // khác vẫn ghi đè được phân nhóm của người khác.
+  const authz = await authorizeGroupingOwner(params.groupingId, actorUserId);
+  if (!authz.ok) {
+    return Response.json(
+      { error: authz.error },
+      { status: authz.error === "not_found" ? 404 : 403 },
+    );
   }
 
   try {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createOralMaterialTopicList } from "@feedbackme/core-lms";
-import { requireUserId } from "@/lib/session";
+import { requireFeature } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { tryEmbedMaterial } from "@/lib/oralExamEmbed";
 
@@ -11,8 +11,8 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = await readJson(req);
   try {
     const r = await createOralMaterialTopicList(userId, params.id, body);

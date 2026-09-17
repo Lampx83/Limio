@@ -8,7 +8,7 @@ import {
   MATERIAL_FILE_MIME_TYPES,
   MATERIAL_MAX_BYTES,
 } from "@feedbackme/core-lms";
-import { requireUserId } from "@/lib/session";
+import { requireFeature } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 import { storageFor } from "@/lib/storage";
 import { oralExamMaterialKey } from "@/lib/storage-keys";
@@ -28,8 +28,8 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   try {
     const materials = await listOralMaterials(userId, params.id);
     return NextResponse.json({ materials });
@@ -48,8 +48,8 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   let form: FormData;
   try {

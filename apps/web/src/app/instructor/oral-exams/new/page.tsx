@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import OralNewExamForm from "./OralNewExamForm";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +14,8 @@ export default async function NewOralExamPage({
 }: {
   searchParams?: { courseId?: string };
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/oral-exams/new");
-  const userId = session.user.id;
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) redirect("/instructor/dashboard");
 
   const ownedCourses = await prisma.course.findMany({
     where: { instructors: { some: { userId } } },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { reorderOralMaterials } from "@feedbackme/core-lms";
-import { requireUserId } from "@/lib/session";
+import { requireFeature } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
@@ -10,8 +10,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = (await readJson(req)) as { orderedIds?: unknown };
   if (!Array.isArray(body.orderedIds) || !body.orderedIds.every((v) => typeof v === "string")) {
     return NextResponse.json(

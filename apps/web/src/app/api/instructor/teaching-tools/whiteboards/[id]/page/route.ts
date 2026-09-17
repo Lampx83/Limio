@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { publish } from "@/lib/realtime/publisher";
 import { channelForWhiteboard } from "@/lib/whiteboard";
 
@@ -10,9 +10,9 @@ export const runtime = "nodejs";
 // Mọi client đang mở (host + guest) theo trang này qua SSE `doc.page.changed`
 // — không có nav riêng cho guest, đảm bảo cả lớp luôn xem cùng 1 trang với GV.
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const board = await prisma.whiteboard.findUnique({
@@ -20,7 +20,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     select: { id: true, ownerId: true, pages: true },
   });
   if (!board) return Response.json({ error: "not_found" }, { status: 404 });
-  if (board.ownerId !== session.user.id) {
+  if (board.ownerId !== userId) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 

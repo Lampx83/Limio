@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { storageFor } from "@/lib/storage";
 import { boardAttachmentKey } from "@/lib/storage-keys";
 import {
@@ -13,9 +13,9 @@ export const runtime = "nodejs";
 // POST — GV upload file trực tiếp làm đính kèm note (ảnh/pdf, ≤5MB). Học viên
 // (public) vẫn chỉ dán URL — không có route tương đương ở /api/public/boards.
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const board = await prisma.interactiveBoard.findUnique({
@@ -23,7 +23,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     select: { id: true, ownerId: true },
   });
   if (!board) return Response.json({ error: "not_found" }, { status: 404 });
-  if (board.ownerId !== session.user.id) {
+  if (board.ownerId !== userId) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 

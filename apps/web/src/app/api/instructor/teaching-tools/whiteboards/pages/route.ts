@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { requireUserId } from "@/lib/session";
+import { requireFeature } from "@/lib/session";
 import { storageFor } from "@/lib/storage";
 import { whiteboardPageKey } from "@/lib/storage-keys";
 
@@ -19,8 +19,8 @@ const ALLOWED_MIME: Record<string, string> = {
 };
 
 export async function POST(req: Request) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   let form: FormData;
   try {

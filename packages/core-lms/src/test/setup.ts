@@ -52,6 +52,14 @@ async function cleanDb() {
     prisma.skillPrerequisite.deleteMany(),
     prisma.skill.deleteMany(),
     prisma.misconception.deleteMany(),
+    // D1 — cascades RoleFeatureOverride/UserFeatureOverride via featureKey FK.
+    prisma.featureFlag.deleteMany(),
+    // Classroom tools — ClassroomSession.lessonId is onDelete:SetNull (not
+    // Cascade), so deleting Lesson above does NOT clean these up; cascades
+    // to ClassroomRandomPick/ClassroomPoll(+Vote)/WordCloud(+Submission)/
+    // GroupingSession(+GroupMembership). InteractiveBoard/Whiteboard/
+    // TimerTemplate cascade from User below instead (ownerId onDelete:Cascade).
+    prisma.classroomSession.deleteMany(),
     prisma.user.deleteMany(),
   ]);
   for (const name of Object.values(RoleName)) {

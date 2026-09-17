@@ -1,4 +1,5 @@
-import { prisma } from "@feedbackme/db";
+import { prisma, type PrismaClient } from "@feedbackme/db";
+import { canEditCourse } from "./courses/authz";
 
 export interface StudentWithScore {
   userId: string;
@@ -93,4 +94,45 @@ export function balanceStudentsIntoGroups(
   });
 
   return groups;
+}
+
+export type GroupingAuthzResult =
+  | { ok: true; courseId: string }
+  | { ok: false; error: "not_found" | "forbidden" };
+
+/**
+ * IDOR guard cho GroupingSession — chain thật: GroupingSession -> session
+ * (ClassroomSession) -> lesson -> module -> courseId. Chỉ instructor có
+ * quyền edit course đó (hoặc admin, qua canEditCourse) mới xem/sửa được phân
+ * nhóm; trước bản vá này 2 route update/members hoàn toàn không check gì
+ * ngoài đăng nhập, nên 1 instructor biết groupingId của course khác vẫn
+ * xem được email học viên / ghi đè phân nhóm của người khác.
+ *
+ * `grouping/create` hiện luôn bắt buộc `lessonId` (không có nhánh
+ * "standalone" nào tạo GroupingSession thiếu lesson), nên
+ * `session.lesson === null` không nên xảy ra với dữ liệu hợp lệ — coi đó là
+ * not_found (fail-closed) thay vì đoán quyền sở hữu.
+ */
+export async function authorizeGroupingOwner(
+  groupingId: string,
+  userId: string,
+  db: PrismaClient = prisma,
+): Promise<GroupingAuthzResult> {
+  const grouping = await db.groupingSession.findUnique({
+    where: { id: groupingId },
+    select: {
+      session: {
+        select: {
+          lesson: { select: { module: { select: { courseId: true } } } },
+        },
+      },
+    },
+  });
+  if (!grouping || !grouping.session.lesson) {
+    return { ok: false, error: "not_found" };
+  }
+  const courseId = grouping.session.lesson.module.courseId;
+  const allowed = await canEditCourse(userId, courseId, db);
+  if (!allowed) return { ok: false, error: "forbidden" };
+  return { ok: true, courseId };
 }

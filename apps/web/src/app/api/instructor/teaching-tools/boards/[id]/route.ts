@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { normalizeBoardColumns } from "@/lib/board";
 
 export const runtime = "nodejs";
@@ -17,11 +17,11 @@ async function authorizeOwner(boardId: string, userId: string) {
 
 // GET — host view: board + notes (ẩn cả note hidden cho owner)
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorizeOwner(params.id, session.user.id);
+  const auth1 = await authorizeOwner(params.id, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },
@@ -62,11 +62,11 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 // PATCH — close/reopen board, và/hoặc cập nhật danh sách cột (grid theo nhóm).
 // Đổi tên/xoá cột không đụng tới note đã có — note giữ nguyên nhãn cột gốc (xem schema).
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorizeOwner(params.id, session.user.id);
+  const auth1 = await authorizeOwner(params.id, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },
@@ -115,11 +115,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
 // DELETE — xóa board (cascade xóa notes)
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorizeOwner(params.id, session.user.id);
+  const auth1 = await authorizeOwner(params.id, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },

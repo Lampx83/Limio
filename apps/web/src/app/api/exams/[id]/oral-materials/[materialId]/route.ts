@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteOralMaterial } from "@feedbackme/core-lms";
-import { requireUserId } from "@/lib/session";
+import { requireFeature } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 import { storageFor } from "@/lib/storage";
 import { oralExamMaterialKeyFromFilename } from "@/lib/storage-keys";
@@ -11,8 +11,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string; materialId: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   try {
     const deleted = await deleteOralMaterial(userId, params.materialId);
     if (deleted.s3Key) {

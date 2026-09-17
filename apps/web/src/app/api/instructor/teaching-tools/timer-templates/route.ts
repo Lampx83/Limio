@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import {
   createTimerTemplate,
@@ -23,11 +23,11 @@ const CreateTemplateSchema = z.object({
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await requireFeature("teaching_tools.access");
+    if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "forbidden" },
+        { status: 403 }
       );
     }
 
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     const template = await createTimerTemplate(
       {
-        userId: session.user.id,
+        userId,
         ...validation.data,
       },
       prisma
@@ -66,11 +66,11 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await requireFeature("teaching_tools.access");
+    if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "forbidden" },
+        { status: 403 }
       );
     }
 
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     const result = await getUserTimerTemplates(
-      session.user.id,
+      userId,
       { courseId, limit, offset },
       prisma
     );

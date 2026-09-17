@@ -12,7 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { formatDate } from "@/lib/datetime";
 import EmptyState from "@/components/ui/EmptyState";
 import DeleteOralExamButton from "@/components/exam/DeleteOralExamButton";
@@ -98,9 +98,8 @@ function formatRel(d: Date): string {
 /** A6.5 — Trang tổng quan riêng cho Vấn đáp AI, gom mọi đề vấn đáp của GV
  * qua các khoá học, kèm lối tắt tới Quản lý/Live/Chấm bài từng đề. */
 export default async function OralExamsHubPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/oral-exams");
-  const userId = session.user.id;
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) redirect("/instructor/dashboard");
 
   const ownedCourses = await prisma.course.findMany({
     where: { instructors: { some: { userId } } },

@@ -1,5 +1,5 @@
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { publish } from "@/lib/realtime/publisher";
 
 // Xoá toàn bộ phiếu bầu của 1 poll, giữ nguyên poll (id + câu hỏi + lựa chọn)
@@ -8,9 +8,9 @@ export async function POST(
   req: Request,
   { params }: { params: { pollId: string } }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
@@ -22,7 +22,7 @@ export async function POST(
     if (!poll) {
       return Response.json({ error: "Poll not found" }, { status: 404 });
     }
-    if (poll.createdById !== session.user.id) {
+    if (poll.createdById !== userId) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 

@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { Prisma, prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { generateUniqueWhiteboardCode } from "@/lib/whiteboard";
 
 export const runtime = "nodejs";
 
 // POST — instructor tạo whiteboard mới
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       data: {
         code,
         title: title.trim(),
-        ownerId: session.user.id,
+        ownerId: userId,
         pages: (pages ?? []).map((url) => ({ url })) as unknown as Prisma.InputJsonValue,
         kioskMode: kioskMode ?? false,
       },
@@ -58,13 +58,13 @@ export async function POST(req: Request) {
 
 // GET — list whiteboard của instructor (gần nhất trước, tối đa 50)
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const boards = await prisma.whiteboard.findMany({
-    where: { ownerId: session.user.id },
+    where: { ownerId: userId },
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {

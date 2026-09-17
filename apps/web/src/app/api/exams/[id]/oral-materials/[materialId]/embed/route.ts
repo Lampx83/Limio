@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { AiTutorError, embedMaterial, openAiEmbedCompute } from "@feedbackme/core-feedback";
 import { IntegrationError, getIntegrationSecret, listOralMaterials } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
-import { requireUserId } from "@/lib/session";
+import { requireFeature } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
@@ -17,8 +17,8 @@ export async function POST(
   _req: Request,
   { params }: { params: { id: string; materialId: string } },
 ) {
-  const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const userId = await requireFeature("ai_oral.access");
+  if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   try {
     // Tái dùng guard sẵn có (GV sở hữu course + exam kind=oral) thay vì viết

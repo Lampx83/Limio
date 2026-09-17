@@ -1,5 +1,5 @@
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { publish } from "@/lib/realtime/publisher";
 
 // Xoá toàn bộ submission của 1 word cloud, giữ nguyên cloud (id + prompt) để
@@ -8,9 +8,9 @@ export async function POST(
   req: Request,
   { params }: { params: { cloudId: string } }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
@@ -22,7 +22,7 @@ export async function POST(
     if (!wordCloud) {
       return Response.json({ error: "Word cloud not found" }, { status: 404 });
     }
-    if (wordCloud.createdById !== session.user.id) {
+    if (wordCloud.createdById !== userId) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 

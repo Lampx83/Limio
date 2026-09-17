@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import {
   getTimerTemplate,
@@ -27,17 +27,17 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await requireFeature("teaching_tools.access");
+    if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "forbidden" },
+        { status: 403 }
       );
     }
 
     const template = await getTimerTemplate(
       params.id,
-      session.user.id,
+      userId,
       prisma
     );
 
@@ -68,11 +68,11 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await requireFeature("teaching_tools.access");
+    if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "forbidden" },
+        { status: 403 }
       );
     }
 
@@ -88,7 +88,7 @@ export async function PATCH(
 
     const template = await updateTimerTemplate(
       params.id,
-      session.user.id,
+      userId,
       validation.data,
       prisma
     );
@@ -113,17 +113,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await requireFeature("teaching_tools.access");
+    if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "forbidden" },
+        { status: 403 }
       );
     }
 
     await deleteTimerTemplate(
       params.id,
-      session.user.id,
+      userId,
       prisma
     );
 

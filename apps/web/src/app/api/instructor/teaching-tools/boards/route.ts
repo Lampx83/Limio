@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { generateUniqueBoardCode, normalizeBoardColumns } from "@/lib/board";
 
 export const runtime = "nodejs";
 
 // POST — instructor tạo board mới
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         prompt: prompt?.trim() || null,
         columns: normalizedColumns,
         blockPaste: blockPaste ?? false,
-        ownerId: session.user.id,
+        ownerId: userId,
       },
       select: {
         id: true,
@@ -63,13 +63,13 @@ export async function POST(req: Request) {
 
 // GET — list board của instructor (gần nhất trước, tối đa 50)
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const boards = await prisma.interactiveBoard.findMany({
-    where: { ownerId: session.user.id },
+    where: { ownerId: userId },
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {

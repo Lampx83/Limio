@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { canEditCourse, calculateStudentSkillScores, balanceStudentsIntoGroups } from "@feedbackme/core-lms";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const actorUserId = await requireFeature("teaching_tools.access");
+  if (!actorUserId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     }
 
     // Verify instructor can edit this course
-    const canEdit = await canEditCourse(session.user.id, courseId);
+    const canEdit = await canEditCourse(actorUserId, courseId);
     if (!canEdit) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }

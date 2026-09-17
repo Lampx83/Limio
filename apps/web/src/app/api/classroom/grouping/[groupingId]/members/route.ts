@@ -1,13 +1,24 @@
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { authorizeGroupingOwner } from "@feedbackme/core-lms";
+import { requireFeature } from "@/lib/session";
 
 export async function GET(
   req: Request,
   { params }: { params: { groupingId: string } }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  // IDOR guard — xem mục comment tương ứng ở update/route.ts. Route này trả
+  // cả email học viên nên rò rỉ còn nặng hơn route update.
+  const authz = await authorizeGroupingOwner(params.groupingId, userId);
+  if (!authz.ok) {
+    return Response.json(
+      { error: authz.error },
+      { status: authz.error === "not_found" ? 404 : 403 },
+    );
   }
 
   try {

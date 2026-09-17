@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { publish } from "@/lib/realtime/publisher";
 import { channelForBoard } from "@/lib/board";
 import { BOARD_NOTE_COLORS, isValidAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
@@ -25,11 +25,11 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string; noteId: string } },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorize(params.id, params.noteId, session.user.id);
+  const auth1 = await authorize(params.id, params.noteId, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },
@@ -114,11 +114,11 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string; noteId: string } },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
-  const auth1 = await authorize(params.id, params.noteId, session.user.id);
+  const auth1 = await authorize(params.id, params.noteId, userId);
   if ("error" in auth1) {
     return Response.json(
       { error: auth1.error },

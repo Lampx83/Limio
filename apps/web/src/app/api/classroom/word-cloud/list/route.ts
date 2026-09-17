@@ -1,14 +1,14 @@
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const clouds = await prisma.wordCloud.findMany({
-    where: { createdById: session.user.id },
+    where: { createdById: userId },
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {

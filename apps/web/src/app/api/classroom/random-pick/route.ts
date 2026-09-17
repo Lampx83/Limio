@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { notFound } from "next/navigation";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     // Check if user is instructor for this course
     const instructor = await prisma.courseInstructor.findUnique({
       where: {
-        courseId_userId: { courseId, userId: session.user.id },
+        courseId_userId: { courseId, userId },
       },
     });
 

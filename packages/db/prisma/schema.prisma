@@ -154,6 +154,7 @@ model User {
   emailBatchesCreated    EmailDispatchBatch[]    @relation("EmailBatchCreator")
   emailBatchesApproved   EmailDispatchBatch[]    @relation("EmailBatchApprover")
   aiTokenOrders          AiTokenOrder[]
+  featureOverrides       UserFeatureOverride[]
 
   @@index([createdAt])
 }
@@ -172,10 +173,11 @@ model AuthProvider {
 }
 
 model Role {
-  id          String     @id @default(uuid())
-  name        String     @unique // "learner" | "instructor" | "admin" | "mentor"
-  description String?
-  userRoles   UserRole[]
+  id              String                @id @default(uuid())
+  name            String                @unique // "learner" | "instructor" | "admin" | "mentor"
+  description     String?
+  userRoles       UserRole[]
+  featureOverrides RoleFeatureOverride[]
 }
 
 // Role can be scoped per-course (A1 acceptance: "1 user là learner ở course A,
@@ -235,6 +237,94 @@ model AuditLog {
 
   @@index([action, occurredAt])
   @@index([targetUserId, occurredAt])
+}
+
+// =====================================================================
+// D1 — Feature permission (cross-cutting Integration layer, không thuộc
+// riêng module A/B/C nào). Bổ sung cho RBAC (Role/UserRole) sẵn có: role trả
+// lời "user này LÀ ai" (ranh giới chức năng), còn catalog này trả lời "user
+// này ĐƯỢC BẬT tính năng gì" (ranh giới governance/thương mại) — 2 trục độc
+// lập, cùng tồn tại song song với UserRole chứ không thay thế.
+//
+// Resolution: UserFeatureOverride > RoleFeatureOverride > FeatureFlag.default.
+// Đa role xung đột: OR cho boolean, MAX cho int (role nào cho phép nhiều
+// hơn thì thắng — nhất quán với isInstructor()-style check hiện có coi user
+// có bất kỳ scope nào của role đó là đủ).
+// =====================================================================
+
+enum FeatureGroup {
+  teaching_tools
+  lms
+  assessment
+  ai_oral
+  ai_tutor
+  tournament
+}
+
+enum FeatureValueType {
+  boolean
+  int
+  string_array
+}
+
+model FeatureFlag {
+  id           String           @id @default(uuid())
+  key          String           @unique
+  group        FeatureGroup
+  name         String
+  description  String
+  valueType    FeatureValueType
+  defaultValue Json
+  // Chuẩn bị cho thương mại hoá (bán theo gói/tier) — key nào KHÔNG sellable
+  // là gate chức năng/an toàn (vd chặn learner vào công cụ giảng dạy), không
+  // nên có nút "mua để mở khoá". Chưa có Subscription/Tier ở P0 — field này
+  // chỉ để catalog sẵn sàng, chưa được đọc ở đâu.
+  sellable     Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  roleOverrides RoleFeatureOverride[]
+  userOverrides UserFeatureOverride[]
+
+  @@index([group])
+}
+
+model RoleFeatureOverride {
+  id         String   @id @default(uuid())
+  roleId     String
+  featureKey String
+  value      Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  role    Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  feature FeatureFlag @relation(fields: [featureKey], references: [key], onDelete: Cascade)
+
+  @@unique([roleId, featureKey])
+}
+
+model UserFeatureOverride {
+  id         String   @id @default(uuid())
+  userId     String
+  featureKey String
+  value      Json
+  // Bắt buộc — override cấp cho 1 user cụ thể luôn cần lý do để trace lại
+  // sau này (support comp, dùng thử, xử lý sự cố...).
+  reason     String
+  grantedBy  String
+  // null = vĩnh viễn tới khi admin thu hồi tay. Chuẩn bị cho gói bán có hạn
+  // (dùng thử N ngày) — P0 chưa có UI đặt hạn, nhưng cột có sẵn để không
+  // phải migration phá vỡ dữ liệu sau này.
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feature FeatureFlag @relation(fields: [featureKey], references: [key], onDelete: Cascade)
+
+  @@unique([userId, featureKey])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // =====================================================================

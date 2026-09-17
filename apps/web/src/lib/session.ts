@@ -5,6 +5,7 @@ import {
   isAnyOrgAdmin,
   isInstructor,
   isOrgAdminOf,
+  isFeatureEnabled,
   getUserOrgId,
 } from "@feedbackme/core-lms";
 import { EXAM_SESSION_COOKIE, verifyExamSession } from "./exam-session";
@@ -25,6 +26,19 @@ export async function requireInstructor(): Promise<string | null> {
   const userId = await requireUserId();
   if (!userId) return null;
   const ok = await isInstructor(userId);
+  return ok ? userId : null;
+}
+
+/**
+ * D1 — gate theo feature key (teaching_tools.access, ai_oral.access...) thay
+ * vì role cứng. Cùng cách dùng như requireAdmin/requireInstructor: null vừa
+ * có nghĩa chưa đăng nhập vừa có nghĩa bị tắt tính năng — caller trả 403
+ * chung, không phân biệt (khớp quy ước hiện có của 2 hàm trên).
+ */
+export async function requireFeature(key: string): Promise<string | null> {
+  const userId = await requireUserId();
+  if (!userId) return null;
+  const ok = await isFeatureEnabled(userId, key);
   return ok ? userId : null;
 }
 

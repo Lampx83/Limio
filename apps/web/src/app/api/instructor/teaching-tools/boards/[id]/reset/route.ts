@@ -1,5 +1,5 @@
 import { prisma } from "@feedbackme/db";
-import { auth } from "@/lib/auth";
+import { requireFeature } from "@/lib/session";
 import { publish } from "@/lib/realtime/publisher";
 import { channelForBoard } from "@/lib/board";
 
@@ -8,9 +8,9 @@ export const runtime = "nodejs";
 // Xoá toàn bộ note của board, giữ nguyên board (id + code + title/prompt) để
 // giáo viên dạy nhiều lớp nhỏ dùng lại cùng 1 QR thay vì tạo board mới mỗi lớp.
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await requireFeature("teaching_tools.access");
+  if (!userId) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
   const board = await prisma.interactiveBoard.findUnique({
@@ -20,7 +20,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   if (!board) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
-  if (board.ownerId !== session.user.id) {
+  if (board.ownerId !== userId) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
