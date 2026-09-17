@@ -55,9 +55,9 @@ function LandingPage() {
               <span className="text-gradient">theo cách của bạn</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted">
-              Limio model hóa kiến thức thành skill graph, theo dõi mastery của
-              từng learner và đưa ra phản hồi đúng lúc — kèm gamification để
-              giữ động lực mỗi ngày. Tươi như chanh.
+              Limio biến kiến thức thành sơ đồ kỹ năng, theo dõi mức độ thành
+              thạo của từng người học và đưa ra phản hồi đúng lúc — cùng trò
+              chơi hoá (gamification) giữ lửa học mỗi ngày. Tươi như chanh.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link href="/catalog" className="btn-primary btn-lg">
@@ -67,9 +67,6 @@ function LandingPage() {
                 Tạo tài khoản miễn phí
               </Link>
             </div>
-            <p className="mt-4 text-xs text-faint">
-              Phase 0 scaffold · Auth · Course · Player · Quiz đang được build.
-            </p>
           </div>
 
           {/* Stats strip */}
@@ -97,8 +94,8 @@ function LandingPage() {
             Ba module, một trải nghiệm
           </h2>
           <p className="mt-3 text-muted">
-            LMS Core, Feedback Engine, Gamification — kết nối qua skill graph
-            và event stream, không coupling chặt.
+            LMS Core, Feedback Engine, Gamification — kết nối qua tag chủ đề
+            và dòng sự kiện (event stream), không coupling chặt.
           </p>
         </div>
 
@@ -114,7 +111,7 @@ function LandingPage() {
             tone="accent"
             badge="Feedback Engine"
             title="Hiểu từng learner"
-            desc="BKT learner model + skill graph cho biết bạn yếu chỗ nào, gợi ý lộ trình adaptive."
+            desc="BKT learner model + tag chủ đề cho biết bạn yếu chỗ nào, gợi ý lộ trình adaptive."
             bullets={[
               "Bayesian Knowledge Tracing",
               "Misconception detection",
