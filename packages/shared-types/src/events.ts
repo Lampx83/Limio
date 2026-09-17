@@ -30,6 +30,10 @@ export const LearningEventType = {
   CourseInstructorAdded: "course.instructor.added",
   CourseInstructorRemoved: "course.instructor.removed",
 
+  // Session — không gắn courseId (đăng nhập không thuộc một khoá cụ thể).
+  /** Đăng nhập thành công, mọi provider. Payload chỉ mang phân loại thô — xem SessionStartedPayload. */
+  SessionStarted: "session.started",
+
   // A7 Exam
   ExamCreated: "exam.created",
   ExamPublished: "exam.published",
@@ -394,4 +398,17 @@ export interface VideoCuepointPassedPayload {
   totalDurationMs?: number;
   /** How many submissions before all questions were correct (≥ 1). */
   attemptCount: number;
+}
+
+/**
+ * Emitted once per successful sign-in (mọi provider). Cố tình chỉ mang phân
+ * loại thô — không có User-Agent nguyên văn, không có IP — để trả lời được
+ * "sinh viên học lúc nào, từ thiết bị loại gì" mà không dựng thêm một nguồn
+ * fingerprinting mới. Xem privacy-by-default, CLAUDE.md §5.4.
+ */
+export interface SessionStartedPayload {
+  device: "mobile" | "tablet" | "desktop" | "unknown";
+  /** Tên họ trình duyệt thô — "Chrome" | "Safari" | "Firefox" | "Edge" | "Other" | "unknown". */
+  browser: string;
+  provider: "credentials" | "google" | "microsoft" | (string & {});
 }

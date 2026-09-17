@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
-import { assertCanEditCourse, CourseAuthzError, getCourseEngagement } from "@feedbackme/core-lms";
+import {
+  assertCanEditCourse,
+  CourseAuthzError,
+  getCourseEngagement,
+  videoRangesCoverageSec,
+} from "@feedbackme/core-lms";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { requireUserId } from "@/lib/session";
 import { csvResponse } from "@/lib/csvExport";
@@ -50,6 +55,9 @@ export async function GET(
         title: true,
         orderIndex: true,
         module: { select: { title: true, orderIndex: true } },
+        // Chỉ để tính % phủ thật (đoạn đã xem / độ dài) — không dùng type
+        // "video" nào khác nên không cần lọc thêm.
+        contentItems: { where: { type: "video" }, select: { payload: true }, take: 1 },
       },
       orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
     }),
@@ -75,6 +83,9 @@ export async function GET(
   for (const [uid, ref] of index) {
     for (const l of lessons) {
       const e = byPair.get(`${uid}:${l.id}`);
+      const durationSec = (l.contentItems[0]?.payload as { durationSec?: number } | undefined)
+        ?.durationSec;
+      const coverageSec = e?.videoRanges ? videoRangesCoverageSec(e.videoRanges) : 0;
       out.push({
         ...identityCols(ref),
         Module: l.module.title,
@@ -84,6 +95,14 @@ export async function GET(
         "Thời gian đọc (giây)": e?.activeSec ?? 0,
         "Cuộn sâu nhất (%)": e?.maxScrollPct ?? 0,
         "Xem video (%)": e?.maxVideoPct ?? 0,
+        // Khác cột trên: đo đoạn THẬT SỰ đã xem (đã gộp, không đếm hai lần
+        // đoạn xem lại), nên phân biệt được "xem liền một mạch" với "tua tới
+        // cuối". Rỗng khi bài không có video.
+        "Độ phủ video thực tế (%)":
+          durationSec && durationSec > 0
+            ? Math.round(Math.min(1, coverageSec / durationSec) * 100)
+            : "",
+        "Điểm dừng gần nhất (giây)": e?.lastVideoPositionSec ?? "",
         "Số lượt mở": e?.sessionCount ?? 0,
         "Số lượt hỏi trợ giảng AI": tutorTurns.get(`${uid}:${l.id}`) ?? 0,
         "Lần cuối vào": e?.lastSeenAt ?? "",

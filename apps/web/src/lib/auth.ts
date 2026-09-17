@@ -1,12 +1,15 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { prisma } from "@feedbackme/db";
+import { LearningEventType } from "@feedbackme/shared-types";
 import {
   IMPERSONATION_COOKIE,
+  categorizeUserAgent,
   decodeImpersonationCookie,
+  emitEvent,
   getRolesForUser,
   loginCredentials,
   loginOrLinkSso,
@@ -176,6 +179,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
       return session;
+    },
+  },
+  events: {
+    /**
+     * Ghi lại mỗi lần đăng nhập thành công — biết được sinh viên học lúc nào,
+     * bao nhiêu lần, dùng thiết bị gì, mà không lưu UA nguyên văn hay IP (xem
+     * `categorizeUserAgent`). Cố tình dùng `events`, không phải `callbacks`:
+     * callbacks có thể chặn/định hướng lại luồng đăng nhập, còn events là
+     * fire-and-forget — throw ở đây (hoặc DB chậm) không bao giờ được làm
+     * hỏng lượt đăng nhập của người dùng, nên vẫn bọc try/catch cho chắc.
+     *
+     * `user.id` ở đây là id nội bộ cuối cùng: với SSO, callback `signIn` ở
+     * trên đã ghi đè `user.id = result.id` trước khi luồng đi tới đây.
+     */
+    async signIn({ user, account }) {
+      if (!user.id) return;
+      try {
+        const ua = headers().get("user-agent");
+        const { device, browser } = categorizeUserAgent(ua);
+        await emitEvent(user.id, LearningEventType.SessionStarted, {
+          device,
+          browser,
+          provider: account?.provider ?? "unknown",
+        });
+      } catch {
+        // Nuốt lỗi — đây là đường ghi số liệu, không phải đường đăng nhập.
+      }
     },
   },
 });

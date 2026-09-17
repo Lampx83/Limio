@@ -26,6 +26,12 @@ async function cleanDb() {
     prisma.module.deleteMany(),
     prisma.courseInstructor.deleteMany(),
     prisma.enrollment.deleteMany(),
+    // ExamRound.courseId là Restrict, không Cascade — course.deleteMany() bên
+    // dưới sẽ vỡ nếu còn round nào trỏ tới. ExamSession trước vì
+    // ExamSession.roundId cũng Restrict; ExamRoundAdmin tự mất theo Cascade
+    // khi xoá round nên không cần xoá riêng.
+    prisma.examSession.deleteMany(),
+    prisma.examRound.deleteMany(),
     prisma.course.deleteMany(),
     prisma.skillPrerequisite.deleteMany(),
     prisma.skill.deleteMany(),
