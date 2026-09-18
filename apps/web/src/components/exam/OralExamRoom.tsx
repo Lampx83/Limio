@@ -67,6 +67,10 @@ export default function OralExamRoom({
     initialTurns.filter((t) => t.role === "examiner").length,
   );
   const [ended, setEnded] = useState(false);
+  // Sinh viên đang chủ động kết thúc (hoặc hết giờ) — tắt cờ chặn toàn màn
+  // hình từ đây, vì confirm()/điều hướng sau đó tự làm trình duyệt rớt khỏi
+  // toàn màn hình và FullscreenGate sẽ hiểu nhầm là thoát gian lận.
+  const [isEnding, setIsEnding] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -254,6 +258,7 @@ export default function OralExamRoom({
         // lượt mở màn còn đang chạy/lỗi — không có gì hợp lệ để gửi kèm).
         const live = liveRef.current;
         if (!live.ended && !live.streaming && live.turns.length > 0) {
+          setIsEnding(true);
           const finalMessage = live.input.trim() || "(Đã hết giờ, không kịp trả lời.)";
           setInput("");
           void sendTurn(finalMessage);
@@ -312,7 +317,11 @@ export default function OralExamRoom({
 
   function endEarly() {
     if (!canAnswer) return;
+    // Đặt cờ TRƯỚC confirm(): hộp thoại native của trình duyệt tự làm rớt
+    // toàn màn hình ngay khi mở, nên phải tắt guard trước khi nó kịp thấy.
+    setIsEnding(true);
     if (!confirm("Kết thúc buổi vấn đáp ngay bây giờ? Không thể tiếp tục sau khi kết thúc.")) {
+      setIsEnding(false);
       return;
     }
     setInput("");
@@ -335,7 +344,11 @@ export default function OralExamRoom({
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[rgb(var(--surface-muted))]">
-      <FullscreenGate examTitle={examTitle} onEnter={() => undefined} required />
+      <FullscreenGate
+        examTitle={examTitle}
+        onEnter={() => undefined}
+        required={!isEnding}
+      />
       <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
       <MultiTabDetector
         attemptId={attemptId}

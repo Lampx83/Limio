@@ -41,6 +41,9 @@ export default function FullscreenGate({
 
   useEffect(() => {
     if (required && fullscreenSupported()) setOpen(true);
+    // required tắt lúc đang mở (VD: sinh viên bấm "Kết thúc buổi vấn đáp")
+    // — đóng ngay, đừng để hộp thoại đứng chắn màn hình kết thúc.
+    else if (!required) setOpen(false);
   }, [required]);
 
   useEffect(() => {
