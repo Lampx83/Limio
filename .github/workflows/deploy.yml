@@ -10,14 +10,24 @@ on:
         required: false
         default: ""
 
-concurrency:
-  group: deploy-prod
-  cancel-in-progress: false
-
 jobs:
   deploy:
-    name: Build & deploy production stack
-    runs-on: [self-hosted, Linux]
+    name: Build & deploy production stack (${{ matrix.target.name }})
+    # Mỗi đích có runner riêng. Runner AWS đăng ký với --no-default-labels nên
+    # KHÔNG bao giờ nhận nhầm job của server 224 (và ngược lại).
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { name: server-224, runner: '["self-hosted","Linux"]', optional: false }
+          - { name: aws, runner: '["limio-aws"]', optional: true }
+    runs-on: ${{ fromJSON(matrix.target.runner) }}
+    # Đích phụ (AWS) hỏng không được chặn create-release của server 224.
+    continue-on-error: ${{ matrix.target.optional }}
+    # Hàng đợi riêng theo đích: deploy song song giữa 2 máy, tuần tự trong mỗi máy.
+    concurrency:
+      group: deploy-prod-${{ matrix.target.name }}
+      cancel-in-progress: false
     timeout-minutes: 45
 
     permissions:
