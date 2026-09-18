@@ -19,6 +19,9 @@ x-web-env: &web-env
   DATABASE_URL: postgresql://feedbackme:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@pgbouncer:6432/feedbackme?schema=public&pgbouncer=true&connection_limit=10&pool_timeout=10
   REDIS_URL: redis://redis:6379
   NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
+  # Origin công khai cho canonical / sitemap.xml / robots.txt / ảnh OG.
+  # Bỏ trống → lấy NEXTAUTH_URL (xem apps/web/src/lib/seo.ts).
+  SITE_URL: ${SITE_URL:-}
   # NextAuth v5 reads AUTH_SECRET (not NEXTAUTH_SECRET) in production.
   # We derive it from NEXTAUTH_SECRET so existing .env.prod files need no change.
   AUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET required}
@@ -117,6 +120,12 @@ services:
     image: feedbackme/migrate:${IMAGE_TAG:-latest}
     environment:
       DATABASE_URL: postgresql://feedbackme:${POSTGRES_PASSWORD}@postgres:5432/feedbackme?schema=public
+      # Dùng bởi seed-demo-users.ts (tự động mỗi deploy) và
+      # seed-demo-english-center.ts (chạy tay) — bắt buộc khi NODE_ENV=production,
+      # xem comment trong 2 file đó. Không đặt required (:?) ở đây vì service
+      # này còn được gọi trơn cho "prisma migrate deploy", không nên chặn
+      # migration chỉ vì thiếu biến của riêng bước seed demo.
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-}
     depends_on:
       postgres:
         condition: service_healthy

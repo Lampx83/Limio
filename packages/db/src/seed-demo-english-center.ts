@@ -63,6 +63,23 @@ const PASSWORD = "demo1234";
 const NOW = new Date();
 const DAY = 86_400_000;
 
+// admin@<DOMAIN> có role Admin thật — password không được nằm cứng trong
+// code (repo public). Bắt buộc set DEMO_ADMIN_PASSWORD khi NODE_ENV=production;
+// ngoài production fallback về PASSWORD như cũ để chạy demo/dev không cần setup.
+function adminPassword(): string {
+  const fromEnv = process.env.DEMO_ADMIN_PASSWORD;
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "DEMO_ADMIN_PASSWORD chưa được set. admin@" +
+        DOMAIN +
+        " có role Admin thật — không được seed bằng password cứng trong code " +
+        "(repo public). Set DEMO_ADMIN_PASSWORD rồi chạy lại.",
+    );
+  }
+  return PASSWORD;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function offset(days: number, hours = 0): Date {
@@ -79,8 +96,9 @@ async function ensureUser(
   email: string,
   displayName: string,
   roleNames: string[],
+  password: string = PASSWORD,
 ): Promise<string> {
-  const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  const passwordHash = await bcrypt.hash(password, 10);
   let u = await prisma.user.findUnique({ where: { email } });
   if (!u) {
     u = await prisma.user.create({
@@ -255,7 +273,7 @@ const ADMIN: SeedUser = {
 };
 
 async function seedUsers() {
-  const adminId = await ensureUser(ADMIN.email, ADMIN.name, ADMIN.roles);
+  const adminId = await ensureUser(ADMIN.email, ADMIN.name, ADMIN.roles, adminPassword());
   const instructorIds: Record<string, string> = {};
   for (const u of INSTRUCTORS) {
     instructorIds[u.email] = await ensureUser(u.email, u.name, u.roles);
@@ -1645,7 +1663,9 @@ async function seedHackathonVotes(studentIds: Record<string, string>) {
 
 async function main() {
   console.log("🌱  Seeding demo profile: Limio English & Soft Skills Center");
-  console.log("    Domain: @" + DOMAIN + "   Password: " + PASSWORD);
+  console.log(
+    "    Domain: @" + DOMAIN + "   Non-admin password: " + PASSWORD + " (admin: DEMO_ADMIN_PASSWORD, not logged)",
+  );
   console.log("    Now =", NOW.toISOString());
   console.log("─".repeat(70));
 
@@ -1703,7 +1723,9 @@ async function main() {
   console.log("✓ Feedback templates");
 
   console.log("─".repeat(70));
-  console.log("🎉 DONE. Demo accounts (password = " + PASSWORD + "):");
+  console.log(
+    "🎉 DONE. Demo accounts (instructor/student password = " + PASSWORD + "; admin password = DEMO_ADMIN_PASSWORD):",
+  );
   console.log("   ADMIN     " + ADMIN.email);
   for (const u of INSTRUCTORS) console.log("   INSTR     " + u.email);
   for (const u of STUDENTS.slice(0, 3))

@@ -5,7 +5,15 @@
  *   - charlie@feedbackme.dev (Learner mới, chưa enroll)
  *   - admin@feedbackme.dev   (Admin — full platform access)
  *
- * All passwords: password1234
+ * alice/bob/charlie password: password1234 (intentionally public demo creds,
+ * no elevated privilege — fine to hardcode).
+ *
+ * admin@feedbackme.dev password: DEMO_ADMIN_PASSWORD env var. This account
+ * has real Admin role, so its password must never live in tracked source
+ * (repo is public). In production (NODE_ENV=production) the var is
+ * required — the seed fails loudly rather than silently falling back to a
+ * hardcoded value. Outside production it falls back to password1234 so
+ * local/dev seeding keeps working without extra setup.
  *
  * Idempotent: safe to run repeatedly.
  *
@@ -19,10 +27,24 @@ import { seedDefaultSectionId } from "./seedHelpers";
 const prisma = new PrismaClient();
 const PASSWORD = "password1234";
 
+function adminPassword(): string {
+  const fromEnv = process.env.DEMO_ADMIN_PASSWORD;
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "DEMO_ADMIN_PASSWORD chưa được set. admin@feedbackme.dev có role Admin " +
+        "thật — không được seed bằng password cứng trong code (repo public). " +
+        "Set DEMO_ADMIN_PASSWORD trong .env.prod rồi deploy lại.",
+    );
+  }
+  return PASSWORD;
+}
+
 interface DemoUser {
   email: string;
   displayName: string;
   roles: string[];
+  password: string;
 }
 
 const USERS: DemoUser[] = [
@@ -30,28 +52,32 @@ const USERS: DemoUser[] = [
     email: "alice@feedbackme.dev",
     displayName: "Alice (Demo Instructor)",
     roles: [RoleName.Learner, RoleName.Instructor],
+    password: PASSWORD,
   },
   {
     email: "bob@feedbackme.dev",
     displayName: "Bob (Demo Learner — đang học)",
     roles: [RoleName.Learner],
+    password: PASSWORD,
   },
   {
     email: "charlie@feedbackme.dev",
     displayName: "Charlie (Demo Learner — mới)",
     roles: [RoleName.Learner],
+    password: PASSWORD,
   },
   {
     email: "admin@feedbackme.dev",
     displayName: "Admin (Demo)",
     roles: [RoleName.Learner, RoleName.Admin],
+    password: adminPassword(),
   },
 ];
 
 async function ensureUser(u: DemoUser): Promise<string> {
   // Always (re-)hash so running the seed on an existing DB resets demo passwords.
   // bcrypt is slow by design — 12 rounds is fine for a one-off seed script.
-  const passwordHash = await bcrypt.hash(PASSWORD, 12);
+  const passwordHash = await bcrypt.hash(u.password, 12);
 
   const existing = await prisma.user.findUnique({
     where: { email: u.email },
@@ -187,7 +213,9 @@ async function main() {
   }
   await ensureBobIsHalfwayThrough(ids["bob@feedbackme.dev"]!);
 
-  console.log("\nDemo accounts (password = password1234):");
+  console.log(
+    "\nDemo accounts (alice/bob/charlie password = password1234; admin password = DEMO_ADMIN_PASSWORD, not logged):",
+  );
   for (const u of USERS) {
     console.log(`  - ${u.email}  →  ${u.roles.join(" + ")}`);
   }
