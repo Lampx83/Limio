@@ -109,8 +109,11 @@ WORKDIR /app/packages/db
 # Run migrations, then idempotent seeds (upsert-based — safe to run every deploy).
 # Mission templates are required for the instructor tournament mission picker UI;
 # without them the picker renders empty and instructors can't author missions.
+# Feature flags (D1) are required by requireFeature() gates on ~31 instructor
+# routes; without them every gated route 500s with FeatureFlagError(unknown_key)
+# — happened for real on 2026-09-18, seed wasn't wired in yet.
 # Seed failures are non-fatal: migrations have already succeeded, web can boot.
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && (pnpm exec tsx src/seed-mission-templates.ts || echo 'WARN: mission-templates seed failed (non-fatal)')"]
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && (pnpm exec tsx src/seed-mission-templates.ts || echo 'WARN: mission-templates seed failed (non-fatal)') && (pnpm exec tsx src/seed-feature-flags.ts || echo 'WARN: feature-flags seed failed (non-fatal)')"]
 
 # ---------- runner (Next.js standalone) ----------
 FROM node:${NODE_VERSION} AS runner
