@@ -7,7 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 import { toast } from "@/lib/toast";
-import { BarChart3, Languages, Tag, Wallet, PencilLine, type LucideIcon } from "lucide-react";
+import { BarChart3, Languages, Tag, Wallet, PencilLine, Sparkles, BookOpen, type LucideIcon } from "lucide-react";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -38,6 +38,14 @@ const FACT_TONE: Record<string, { chip: string; icon: string }> = {
   violet: {
     chip: "bg-violet-50 dark:bg-violet-950/30",
     icon: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  },
+  pink: {
+    chip: "bg-pink-50 dark:bg-pink-950/30",
+    icon: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  },
+  slate: {
+    chip: "bg-slate-100 dark:bg-slate-800/40",
+    icon: "bg-slate-200 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300",
   },
   lime: {
     chip: "bg-lime-50 dark:bg-lime-950/30",
@@ -91,6 +99,9 @@ export default function CourseMetaForm({
       [Languages, "Ngôn ngữ", initial.language === "vi" ? "Tiếng Việt" : "English", "sky"],
       ...(initial.category ? ([[Tag, "Category", initial.category, "violet"]] as Array<[LucideIcon, string, string, string]>) : []),
       [Wallet, "Giá", priceDisplay, "lime"],
+      initial.personalizationEnabled
+        ? [Sparkles, "Chế độ", "AI Feedback", "pink"]
+        : [BookOpen, "Chế độ", "LMS thường", "slate"],
     ];
 
     return (
@@ -101,6 +112,13 @@ export default function CourseMetaForm({
             {facts.map(([Icon, k, v, tone]) => (
               <div
                 key={k}
+                title={
+                  k === "Chế độ"
+                    ? initial.personalizationEnabled
+                      ? "Có AI feedback theo skill: BKT, chẩn đoán, lộ trình thích ứng, huy hiệu kỹ năng. Đổi bằng nút Sửa."
+                      : "Chạy như LMS truyền thống, không có AI feedback. Đổi bằng nút Sửa."
+                    : undefined
+                }
                 className={`flex items-center gap-2 rounded-lg py-1 pl-1 pr-3 ${FACT_TONE[tone]!.chip}`}
               >
                 <span className={`flex h-7 w-7 items-center justify-center rounded-md ${FACT_TONE[tone]!.icon}`}>

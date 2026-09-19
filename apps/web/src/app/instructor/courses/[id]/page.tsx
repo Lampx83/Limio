@@ -19,6 +19,7 @@ import ModuleOverviewList from "./ModuleOverviewList";
 import AddModuleForm from "./AddModuleForm";
 import PublishControls from "./PublishControls";
 import DuplicateCourseButton from "./DuplicateCourseButton";
+import ArchiveCourseButton from "./ArchiveCourseButton";
 import DeleteCourseButton from "./DeleteCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
 import ImportStudentsButton from "./ImportStudentsButton";
@@ -146,10 +147,6 @@ export default async function InstructorCourseEditPage({
   const firstLessonId = course.modules[0]?.lessons[0]?.id;
 
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
-  const totalQuizzes = course.modules.reduce(
-    (s, m) => s + m.lessons.reduce((ls, l) => ls + l._count.quizzes, 0),
-    0,
-  );
 
   // Find selected lesson + parent module for split-pane editing
   let selectedLesson = null as any;
@@ -275,21 +272,6 @@ export default async function InstructorCourseEditPage({
             ← Khóa của tôi
           </Link>
           <div className="flex flex-wrap items-center gap-2">
-            {course.personalizationEnabled ? (
-              <span
-                className="chip-brand text-xs"
-                title="Course có AI feedback theo skill: BKT, diagnostic, adaptive path, skill badge"
-              >
-                🤖 AI Feedback
-              </span>
-            ) : (
-              <span
-                className="chip text-xs"
-                title="Course chạy như LMS truyền thống — không AI feedback. Có thể bật ở tab Tổng quan."
-              >
-                📚 Standard LMS
-              </span>
-            )}
             <PublishControls
               courseId={course.id}
               status={course.status}
@@ -320,17 +302,6 @@ export default async function InstructorCourseEditPage({
                 Trình chiếu khoá học
               </Link>
             )}
-        </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-faint">
-          <span className="font-mono">/{course.slug}</span>
-          <span aria-hidden>·</span>
-          <span>v{course.version}</span>
-          <span aria-hidden>·</span>
-          <span>{course.modules.length} modules</span>
-          <span aria-hidden>·</span>
-          <span>{totalLessons} bài</span>
-          <span aria-hidden>·</span>
-          <span>{totalQuizzes} quizzes</span>
         </div>
       </header>
 
@@ -419,6 +390,7 @@ export default async function InstructorCourseEditPage({
             <h2 className="mb-3 text-base font-semibold">Hành động khóa</h2>
             <div className="flex flex-wrap items-center gap-2">
               <DuplicateCourseButton courseId={course.id} />
+              {course.status === "published" && <ArchiveCourseButton courseId={course.id} />}
               {isOwner && (
                 <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
               )}

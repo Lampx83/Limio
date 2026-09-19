@@ -32,29 +32,13 @@ export default function PublishControls({
     }
   }
 
-  async function archive() {
-    if (!confirm("Archive course này? Không thể publish lại.")) return;
-    setBusy(true);
-    const res = await fetch(apiUrl(`/api/courses/${courseId}`), { method: "DELETE" });
-    setBusy(false);
-    if (res.ok) router.refresh();
-  }
-
   if (status === "archived") {
     return <span className="chip">Đã archived</span>;
   }
 
-  if (status === "published") {
-    return (
-      <button
-        onClick={archive}
-        disabled={busy}
-        className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-danger-100 bg-[rgb(var(--surface))] px-3 py-1.5 font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
-      >
-        Archive
-      </button>
-    );
-  }
+  // Khoá đã publish: nút Archive nằm ở "Hành động khóa" (tab Tổng quan) — hành
+  // động không hoàn tác thì không đặt ngay trên đầu trang.
+  if (status === "published") return null;
 
   const blocked = personalizationEnabled && untaggedLessons.length > 0;
   return (
