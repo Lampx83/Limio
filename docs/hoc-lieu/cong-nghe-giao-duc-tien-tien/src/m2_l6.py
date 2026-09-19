@@ -58,7 +58,7 @@ Nguyên tắc gộp lại: **mô hình sinh phương án và diễn đạt; bạ
 
 **Lớp 1 — Đối chiếu dữ kiện.** Lập danh sách mọi mệnh đề kiểm được trong bản thảo: số liệu, định nghĩa, tên riêng, đơn vị, năm, công thức, quan hệ nhân quả được khẳng định. Đối chiếu từng cái với nguồn gốc — sách giáo khoa, giáo trình, tài liệu chuyên ngành. Ghi vào biên bản: mệnh đề, nguồn, kết quả. Kinh nghiệm chung: **tỉ lệ sai không bằng không**, và chỗ sai thường là chi tiết nhỏ nghe rất hợp lý.
 
-**Lớp 2 — Rà theo mục tiêu và nguyên tắc thiết kế.** Ba câu hỏi cho mỗi trang: nó phục vụ mục tiêu nào; có chi tiết nào thú vị nhưng không phục vụ mục tiêu không (nguyên tắc mạch lạc, Bài 1.2); chú giải có đặt sát chi tiết nó mô tả không (nguyên tắc kề nhau và vấn đề chia chú ý trong AR, Bài 1.6).
+**Lớp 2 — Rà theo mục tiêu và nguyên tắc thiết kế.** Ba câu hỏi cho mỗi trang: nó phục vụ mục tiêu nào; có chi tiết nào thú vị nhưng không phục vụ mục tiêu không (nguyên tắc mạch lạc, Bài 1.2); chú giải có đặt sát chi tiết nó mô tả không (nguyên tắc kề nhau và vấn đề chia chú ý trong AR, Bài 1.7).
 
 **Lớp 3 — Thử với người đọc thật.** Đưa bản thảo cho **hai người thuộc đúng nhóm đối tượng** đọc, và hỏi ba câu: chỗ nào em phải đọc lại hai lần; chỗ nào em đoán được ý mà không cần đọc kỹ; nếu phải kể lại trang này cho bạn, em sẽ nói gì. Câu thứ ba là câu phát hiện được nhiều nhất, vì nó cho thấy cái gì thật sự đọng lại.
 

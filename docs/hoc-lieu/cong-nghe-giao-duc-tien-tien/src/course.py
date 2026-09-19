@@ -355,6 +355,24 @@ MISCONCEPTIONS = [
             "hạn, làm mẫu và cộng đồng chuyên môn."
         ),
     },
+    {
+        "code": "cngdtt.market-size-as-fact",
+        "name": "Coi ước tính quy mô thị trường là dữ kiện",
+        "description": (
+            "Trích một con số quy mô thị trường EdTech như sự thật đã được đo. Các hãng nghiên cứu định nghĩa "
+            "thị trường khác nhau nên ước tính cho cùng một năm có thể lệch nhau gần một nửa; con số trên báo "
+            "chí thường không nêu phương pháp và do bên có lợi ích đưa ra."
+        ),
+    },
+    {
+        "code": "cngdtt.ai-as-moat",
+        "name": "Tin rằng gắn AI là đủ tạo lợi thế cạnh tranh",
+        "description": (
+            "Cho rằng một sản phẩm giáo dục có tính năng AI thì sẽ trụ được. Khi các tập đoàn lớn đã đưa chế độ "
+            "học tập vào chatbot miễn phí, AI là mặt bằng chung chứ không phải hào phòng thủ; lợi thế nằm ở khâu "
+            "học tập sản phẩm chiếm giữ và thứ AI miễn phí không thay được."
+        ),
+    },
 ]
 
 FEEDBACK_TEMPLATES = [
@@ -678,6 +696,23 @@ FEEDBACK_TEMPLATES = [
             "Nếu sau tập huấn giáo viên vẫn không dùng, vấn đề thường nằm ở rào cản bậc hai chứ không ở kỹ "
             "năng. Hãy đầu tư vào làm mẫu trong chính lớp của họ, hỗ trợ khi có sự cố, và thời gian được "
             "phép thử mà không bị đánh giá."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.market-size-as-fact",
+        "body": (
+            "Trước khi dùng một con số quy mô thị trường, hỏi ba câu: ai đưa ra, định nghĩa thị trường gồm những "
+            "gì, và họ có lợi ích gì khi con số lớn. Chỉ so con số trong cùng một nguồn qua các năm, đừng so hai "
+            "hãng với nhau."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.ai-as-moat",
+        "body": (
+            "Hãy hỏi: nếu người học mở một chatbot miễn phí có chế độ học tập, sản phẩm này còn làm được gì mà "
+            "chatbot không làm được? Nếu câu trả lời chỉ là có AI, sản phẩm chưa có hào phòng thủ."
         ),
         "priority": 10,
     },

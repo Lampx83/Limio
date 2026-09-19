@@ -49,7 +49,7 @@ Ba nhiệm vụ nên xếp theo thứ tự: một nhiệm vụ mở sản phẩm
   <div style="min-width:34rem;display:flex;gap:.5rem">
     <div style="flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.5rem;overflow:hidden">
       <div style="background:rgba(13,148,136,.85);color:#fff;padding:.5rem;font-size:1.02rem;font-weight:600">Tự mở được không</div>
-      <div style="padding:.65rem;font-size:1.02rem;line-height:1.55">Có / không, trong 1 phút, không trợ giúp<br><span style="opacity:.75">Đây là tiêu chí đạt tối thiểu ở Bài 1.6</span></div>
+      <div style="padding:.65rem;font-size:1.02rem;line-height:1.55">Có / không, trong 1 phút, không trợ giúp<br><span style="opacity:.75">Đây là tiêu chí đạt tối thiểu ở Bài 1.7</span></div>
     </div>
     <div style="flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.5rem;overflow:hidden">
       <div style="background:rgba(37,99,235,.85);color:#fff;padding:.5rem;font-size:1.02rem;font-weight:600">Thời gian tới thành công đầu</div>

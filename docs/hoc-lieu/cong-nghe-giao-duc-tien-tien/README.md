@@ -17,14 +17,14 @@ python3 docs/hoc-lieu/cong-nghe-giao-duc-tien-tien/src/build.py --module 3   # m
 
 | # | Module | Nội dung | Bài |
 |---|---|---|---|
-| 1 | Nền tảng thẩm định | Bốn làn sóng công nghệ giáo dục; lý thuyết học tập; TPACK – SAMR – RAT – PICRAT; đọc effect size; bối cảnh pháp lý Việt Nam; hướng dẫn đồ án | 6 |
+| 1 | Nền tảng thẩm định | Bốn làn sóng công nghệ giáo dục; lý thuyết học tập; TPACK – SAMR – RAT – PICRAT; đọc effect size; bối cảnh pháp lý Việt Nam; toàn cảnh thị trường EdTech thế giới và Việt Nam; hướng dẫn đồ án | 7 |
 | 2 | AI tạo sinh | Cơ chế mô hình ngôn ngữ; thiết kế và kiểm thử lời nhắc; trợ giảng và hệ dạy học thông minh; sinh học liệu và chấm bài; liêm chính – thiên lệch – chính sách | 6 |
 | 3 | Học thích ứng | Thành phần tri thức và ma trận Q; BKT; DKT và giới hạn; lặp lại ngắt quãng; chính sách chọn bài kế tiếp | 6 |
 | 4 | Phân tích học tập | Vòng khép kín; nhật ký sự kiện và chuẩn xAPI; chỉ số không bị lách; bảng điều khiển và cảnh báo sớm; công bằng và quản trị dữ liệu | 6 |
 | 5 | Công nghệ nhập vai và triển khai | Phổ thực tại ảo cùng bằng chứng; thiết kế học liệu nhập vai; xưởng kỹ thuật AR; thử nghiệm với người học thật; triển khai; bảo vệ đồ án | 6 |
 
-**30 bài · 406 câu hỏi · 37 lỗi tư duy (`cngdtt.*`) + 37 mẫu phản hồi · 37 sơ đồ
-tự vẽ + 4 ảnh có giấy phép.**
+**31 bài · 420 câu hỏi · 39 lỗi tư duy (`cngdtt.*`) + 39 mẫu phản hồi · 45 sơ đồ
+tự vẽ + 8 ảnh có giấy phép.**
 
 ## Đồ án xuyên suốt: sách AR
 

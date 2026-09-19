@@ -34,7 +34,7 @@ Sáu nguyên tắc ở Bài 1.2 không mất hiệu lực khi chuyển sang môi
 
 **Chi tiết hấp dẫn lạc mục tiêu.** Trong học liệu phẳng, một hình trang trí chiếm một góc trang. Trong không gian ba chiều, một mô hình phụ sinh động chiếm cả trường nhìn và cả sự chú ý. Đây là lý do cạm bẫy này nặng hơn hẳn ở AR và VR — người học sẽ nhớ con khủng long biết gầm, không nhớ nguyên lý.
 
-**Chia chú ý giữa nhiều mặt phẳng.** Đã phân tích ở Bài 1.6: giấy, màn hình, tay giữ thiết bị. Với VR còn thêm điều khiển cầm tay. Mỗi lần người học phải chuyển giữa hai nguồn thông tin là một lần tải thừa.
+**Chia chú ý giữa nhiều mặt phẳng.** Đã phân tích ở Bài 1.7: giấy, màn hình, tay giữ thiết bị. Với VR còn thêm điều khiển cầm tay. Mỗi lần người học phải chuyển giữa hai nguồn thông tin là một lần tải thừa.
 
 **Tự do di chuyển không có hướng dẫn.** Tác tử là ưu điểm, nhưng tự do tuyệt đối trong môi trường mới khiến người học dành phần lớn thời gian để khám phá giao diện thay vì nội dung. Giải pháp không phải khoá tự do, mà là **đưa nhiệm vụ có mục tiêu rõ**: tìm bộ phận nào chịu trách nhiệm việc gì, đặt các bước theo đúng trình tự.
 

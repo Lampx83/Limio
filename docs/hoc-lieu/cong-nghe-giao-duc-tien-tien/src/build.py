@@ -3,7 +3,7 @@
 import json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import course, m1_l1, m1_l2, m1_l3, m1_l4, m1_l5, m1_l6
+import course, m1_l1, m1_l2, m1_l3, m1_l4, m1_l5, m1_l6, m1_l7
 import m2_l1, m2_l2, m2_l3, m2_l4, m2_l5, m2_l6
 import m3_l1, m3_l2, m3_l3, m3_l4, m3_l5, m3_l6
 import m4_l1, m4_l2, m4_l3, m4_l4, m4_l5, m4_l6
@@ -18,7 +18,7 @@ MODULES = [
             "hạ tầng Việt Nam mà mọi sản phẩm phải sống trong đó. Module khép lại bằng hồ sơ thẩm "
             "định và bản thử nghiệm kỹ thuật đầu tiên cho đồ án sách AR của học phần."
         ),
-        "lessons": [m.LESSON for m in (m1_l1, m1_l2, m1_l3, m1_l4, m1_l5, m1_l6)],
+        "lessons": [m.LESSON for m in (m1_l1, m1_l2, m1_l3, m1_l4, m1_l5, m1_l6, m1_l7)],
     },
     {
         "title": "Module 2 · AI tạo sinh trong dạy và học",

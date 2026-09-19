@@ -39,7 +39,7 @@ Cách phân loại được dùng rộng nhất xếp các công nghệ trên m�
 Ba khái niệm cần gọi đúng tên khi bàn về học liệu nhập vai:
 
 - **Hiện diện** — cảm giác đang thật sự ở trong môi trường ấy. Đây là thứ VR mạnh nhất, và cũng là thứ dễ nhầm với hiệu quả học tập nhất.
-- **Hiện thân** — người học dùng chính chuyển động cơ thể để tương tác: đi vòng quanh, cúi xuống, xoay đầu. Đây là lợi thế lý thuyết vững nhất của cả AR lẫn VR, đã nói ở Bài 1.6.
+- **Hiện thân** — người học dùng chính chuyển động cơ thể để tương tác: đi vòng quanh, cúi xuống, xoay đầu. Đây là lợi thế lý thuyết vững nhất của cả AR lẫn VR, đã nói ở Bài 1.7.
 - **Tác tử** — mức độ người học tự quyết định làm gì tiếp theo. Nhiều sản phẩm nhập vai thực chất là phim 360 độ: hiện diện cao, tác tử bằng không.
 
 > [!ghi-nho] Câu hỏi thẩm định gọn cho mọi sản phẩm nhập vai: **nó cho người học làm gì mà màn hình phẳng không cho làm được?** Nếu câu trả lời chỉ là *nhìn thấy rõ hơn*, đó là lý do yếu — video đã làm được, rẻ hơn nhiều.
@@ -49,7 +49,7 @@ Ba khái niệm cần gọi đúng tên khi bàn về học liệu nhập vai:
 | Nguồn | Phạm vi | Kết quả |
 |---|---|---|
 | Merchant và cộng sự (2014) | 67 nghiên cứu, hơn 8600 người học, K-12 và đại học | Trò chơi **0,51**; mô phỏng **0,41**; thế giới ảo **0,41** (mô hình hiệu ứng ngẫu nhiên) |
-| Garzón & Acevedo (2019) | 64 nghiên cứu về AR | Trung bình khoảng **0,68**, đã phân tích kỹ ở Bài 1.6 |
+| Garzón & Acevedo (2019) | 64 nghiên cứu về AR | Trung bình khoảng **0,68**, đã phân tích kỹ ở Bài 1.7 |
 | Các tổng hợp về vai trò sư phạm | AR và VR | Hiệu quả thay đổi mạnh theo cách tiếp cận sư phạm đi kèm, không theo mức độ tinh vi của công nghệ |
 
 Áp thang Kraft ở Bài 1.4: những con số này là lớn với can thiệp giáo dục, nên phải đi tìm nguyên nhân trước khi tin — thử nghiệm ngắn, bài đo do nhóm nghiên cứu soạn, nhóm đối chứng không có hoạt động tương đương. Bức tranh trung thực nhất có thể phát biểu như sau: **công nghệ nhập vai có tác dụng dương ở nhiều nghiên cứu, mức độ khiêm tốn hơn con số trung bình gợi ý, và phần lớn khác biệt đến từ hoạt động học đi kèm chứ không từ thiết bị.**

@@ -83,7 +83,7 @@ Danh sách bảy việc, làm trong một buổi:
 6. Nhờ một người chưa từng thấy sản phẩm tự mở, không hướng dẫn gì, bấm giờ.
 7. Rút phích mạng và kiểm xem trang giấy còn dạy được không.
 
-Việc 6 và 7 là hai việc phân biệt sản phẩm đã sẵn sàng với bản demo. Việc 6 chính là tiêu chí đạt tối thiểu đã nêu ở Bài 1.6.
+Việc 6 và 7 là hai việc phân biệt sản phẩm đã sẵn sàng với bản demo. Việc 6 chính là tiêu chí đạt tối thiểu đã nêu ở Bài 1.7.
 
 ## Luyện tập và tài liệu tham khảo
 
