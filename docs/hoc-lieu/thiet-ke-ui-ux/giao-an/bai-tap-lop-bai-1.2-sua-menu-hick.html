@@ -1,0 +1,123 @@
+<details style="margin:1.5rem 0; font-size:1.25rem; line-height:1.8; font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+
+  <!-- Bài tập tại lớp cho Bài 1.2, dùng đúng lúc đang giảng Mục 4 (Định luật
+       Hick). Cùng hệ màu SECTION_HUES/SECTION_TEXT_HUES với các học liệu khác
+       của khoá — xem bai-thuc-hanh-1.html để đối chiếu quy ước. Bọc trong
+       <details> đóng mặc định để không chắn nội dung lý thuyết — sinh viên tự
+       bấm mở khi tới lúc làm bài tập. -->
+
+  <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; background:rgba(217,150,40,.08); border-bottom:2px solid rgba(217,150,40,.38); border-radius:.5rem .5rem 0 0; padding:.7rem 1rem;">
+    <span style="font-size:1.42rem; font-weight:700; color:rgb(165,113,29);">▸ Bài tập tại lớp — Sửa cái menu này trong 5 phút</span>
+    <span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;background:rgba(217,150,40,.14);color:rgb(217,150,40);font-size:1rem;font-weight:600;white-space:nowrap">⏱ 10 phút · 👤 cá nhân/cặp</span>
+  </summary>
+
+  <div style="border:1px solid rgba(127,127,127,.32); border-top:none; border-radius:0 0 .5rem .5rem; padding:1.1rem 1.2rem;">
+
+  <p style="margin:.7rem 0;font-size:1.25rem"><strong>Dùng giữa Mục 4</strong> — ngay sau khi giảng xong Định luật Hick. Đây là bài tập "sửa" chứ không phải bài tập "soi" — sinh viên không chỉ ra đúng/sai mà phải tự tay tạo ra một bản tốt hơn, áp dụng ngay Định luật Hick vừa giảng.</p>
+
+  <!-- ============ MỤC TIÊU (objectives box — cố định xanh lam) ============ -->
+  <aside style="border-left:4px solid rgba(59,130,246,.55);background:rgba(59,130,246,.06);border-radius:0 .35rem .35rem 0;padding:.9rem 1.1rem;margin:1.1rem 0">
+    <div style="font-size:1rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgba(127,127,127,.95);margin:0 0 .4rem">Mục tiêu</div>
+    <ul style="margin:.3rem 0 0;padding-left:1.4rem;font-size:1.25rem;line-height:1.8">
+      <li style="margin:.2rem 0">Áp dụng được thao tác "phân tầng" của Định luật Hick — gom nhiều lựa chọn ngang hàng thành ít nhóm hơn — trên một menu thật, không phải trên lý thuyết.</li>
+      <li style="margin:.2rem 0">Tự đặt tên nhóm sao cho người dùng đoán được bên trong có gì, trước khi bấm vào.</li>
+    </ul>
+  </aside>
+
+  <!-- ============ ĐỀ BÀI: MENU XẤU ============ -->
+  <h2 style="font-size:1.7rem;margin:2.4rem 0 .9rem;padding-bottom:.45rem;border-bottom:2px solid rgba(217,150,40,.38);color:rgb(165,113,29)">Hiện trạng — một menu điều hướng thật xấu</h2>
+  <p style="margin:.7rem 0;font-size:1.25rem">Đây là thanh điều hướng bên trái của một hệ thống học tập — mười hai mục, xếp phẳng, không nhóm gì cả. Menu này có đủ tính năng cần thiết; vấn đề chỉ nằm ở cách bày ra.</p>
+
+  <div style="border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem 1.2rem;margin:.9rem 0;max-width:320px">
+    <div style="font-size:1rem;font-weight:600;color:rgba(127,127,127,.95);margin:0 0 .6rem;text-transform:uppercase;letter-spacing:.04em">Menu (12 mục, không nhóm)</div>
+    <div style="display:flex;flex-direction:column;gap:.35rem">
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">1 · Khoá học của tôi</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">2 · Bảng xếp hạng</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">3 · Chứng chỉ</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">4 · Thông báo</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">5 · Cài đặt tài khoản</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">6 · Trợ giúp</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">7 · Diễn đàn thảo luận</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">8 · Ghi chú của tôi</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">9 · Kỹ năng đã đạt</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">10 · Huy hiệu</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">11 · Giải đấu (Tournament)</div>
+      <div style="padding:.5rem .7rem;border:1px solid rgba(127,127,127,.3);border-radius:.35rem">12 · Đăng xuất</div>
+    </div>
+  </div>
+  <p style="margin:.5rem 0 0;font-size:1rem;color:rgba(127,127,127,.95)">Chiếu khung này lên màn hình, hoặc phát bản in — mười hai ô rời, có thể cắt rời để sinh viên xếp lại bằng tay nếu lớp thích thao tác vật lý hơn là viết.</p>
+
+  <!-- ============ LUẬT CHƠI ============ -->
+  <h2 style="font-size:1.7rem;margin:2.4rem 0 .9rem;padding-bottom:.45rem;border-bottom:2px solid rgba(217,150,40,.38);color:rgb(165,113,29)">Luật chơi</h2>
+  <ol style="margin:.7rem 0;padding-left:1.4rem;font-size:1.25rem;line-height:1.8">
+    <li style="margin:.3rem 0">Gom mười hai mục trên thành <strong>tối đa 4 nhóm</strong>.</li>
+    <li style="margin:.3rem 0">Mỗi nhóm chứa <strong>tối đa 4 mục</strong>.</li>
+    <li style="margin:.3rem 0"><strong>Không được xoá</strong> mục nào — cả mười hai mục phải có mặt ở đâu đó.</li>
+    <li style="margin:.3rem 0">Tự đặt tên cho mỗi nhóm, sao cho chỉ đọc tên nhóm là đoán được bên trong có gì.</li>
+  </ol>
+
+  <aside style="border-left:4px solid rgba(217,150,40,.6);background:rgba(217,150,40,.07);border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:1.1rem 0">
+    <div style="font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(217,150,40);margin:0 0 .3rem">Lưu ý</div>
+    <div style="font-size:1.25rem;line-height:1.8">Đây chính là phép "phân tầng" đã học: mười hai lựa chọn ngang hàng thành bốn nhóm, mỗi nhóm ba mục — người dùng chỉ còn phải chọn giữa bốn ở bước đầu, không phải mười hai.</div>
+  </aside>
+
+  <!-- ============ KHUNG LÀM BÀI ============ -->
+  <h2 style="font-size:1.7rem;margin:2.4rem 0 .9rem;padding-bottom:.45rem;border-bottom:2px solid rgba(217,150,40,.38);color:rgb(165,113,29)">Khung làm bài</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:1rem;margin:.9rem 0">
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="border-bottom:1px dashed rgba(127,127,127,.4);padding-bottom:.4rem;margin-bottom:.6rem"><strong>Nhóm 1 —</strong> tên nhóm: ______________</div>
+      <div style="font-size:1rem;color:rgba(127,127,127,.95);line-height:2.2">Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________</div>
+    </div>
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="border-bottom:1px dashed rgba(127,127,127,.4);padding-bottom:.4rem;margin-bottom:.6rem"><strong>Nhóm 2 —</strong> tên nhóm: ______________</div>
+      <div style="font-size:1rem;color:rgba(127,127,127,.95);line-height:2.2">Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________</div>
+    </div>
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="border-bottom:1px dashed rgba(127,127,127,.4);padding-bottom:.4rem;margin-bottom:.6rem"><strong>Nhóm 3 —</strong> tên nhóm: ______________</div>
+      <div style="font-size:1rem;color:rgba(127,127,127,.95);line-height:2.2">Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________</div>
+    </div>
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="border-bottom:1px dashed rgba(127,127,127,.4);padding-bottom:.4rem;margin-bottom:.6rem"><strong>Nhóm 4 —</strong> tên nhóm: ______________</div>
+      <div style="font-size:1rem;color:rgba(127,127,127,.95);line-height:2.2">Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________<br>Mục: ____________________</div>
+    </div>
+  </div>
+
+  <!-- ============ GỢI Ý ĐÁP ÁN (ẩn) ============ -->
+  <details style="margin:1.1rem 0; border:1px solid rgba(127,127,127,.3); border-radius:12px; overflow:hidden;">
+    <summary style="cursor:pointer; padding:12px 16px; font-size:1rem; font-weight:700; color:rgb(13,148,136); list-style:none;">▸ 👀 Làm xong rồi hẵng bấm — xem một cách nhóm gợi ý</summary>
+    <div style="padding:0 16px 16px">
+      <aside style="border-left:4px solid rgba(13,148,136,.6);background:rgba(13,148,136,.07);border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:.7rem 0 0">
+        <div style="font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(13,148,136);margin:0 0 .5rem">Ví dụ — không phải đáp án duy nhất</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;margin:.4rem 0 0">
+            <thead>
+              <tr>
+                <th style="padding:.5rem .55rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Nhóm</th>
+                <th style="padding:.5rem .55rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Gồm những mục nào</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding:.5rem .55rem;vertical-align:top;font-weight:600">Học tập</td><td style="padding:.5rem .55rem;vertical-align:top">Khoá học của tôi · Chứng chỉ · Kỹ năng đã đạt · Ghi chú của tôi</td></tr>
+              <tr><td style="padding:.5rem .55rem;vertical-align:top;font-weight:600">Thi đua &amp; thành tích</td><td style="padding:.5rem .55rem;vertical-align:top">Bảng xếp hạng · Huy hiệu · Giải đấu (Tournament)</td></tr>
+              <tr><td style="padding:.5rem .55rem;vertical-align:top;font-weight:600">Cộng đồng &amp; hỗ trợ</td><td style="padding:.5rem .55rem;vertical-align:top">Diễn đàn thảo luận · Trợ giúp · Thông báo</td></tr>
+              <tr><td style="padding:.5rem .55rem;vertical-align:top;font-weight:600">Tài khoản</td><td style="padding:.5rem .55rem;vertical-align:top">Cài đặt tài khoản · Đăng xuất</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:1rem;line-height:1.7;margin-top:.7rem">Nếu sinh viên nhóm khác đi — ví dụ tách "Thông báo" sang nhóm Tài khoản — vẫn chấp nhận được, miễn tên nhóm giải thích được vì sao mục đó ở đó.</div>
+      </aside>
+    </div>
+  </details>
+
+  <!-- ============ BÀI ĐẠT KHI ============ -->
+  <h2 style="font-size:1.7rem;margin:2.4rem 0 .9rem;padding-bottom:.45rem;border-bottom:2px solid rgba(217,150,40,.38);color:rgb(165,113,29)">Bài đạt khi</h2>
+  <ul style="margin:.7rem 0;padding-left:1.4rem;font-size:1.25rem;line-height:1.8">
+    <li style="margin:.2rem 0">Đủ mười hai mục, không thiếu, không thêm.</li>
+    <li style="margin:.2rem 0">Không quá 4 nhóm, mỗi nhóm không quá 4 mục.</li>
+    <li style="margin:.2rem 0">Tên nhóm đủ rõ để đoán được nội dung bên trong — không đặt tên kiểu "Khác", "Nhóm 1".</li>
+  </ul>
+
+  <p style="margin:.7rem 0;font-size:1.25rem">Hết giờ, gọi 2–3 cặp đọc nhanh cách nhóm của mình. Nếu hai cặp nhóm khác nhau mà cả hai đều hợp lý, đó là điểm đáng dừng lại bàn thêm: không có duy nhất một cách nhóm đúng, chỉ có cách giải thích được và cách không giải thích được.</p>
+
+  </div>
+</details>

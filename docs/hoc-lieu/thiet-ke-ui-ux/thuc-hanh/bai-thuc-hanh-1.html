@@ -1,0 +1,401 @@
+<div style="font-size:1.25rem; line-height:1.8; font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+
+  <!-- Ghi chú: toàn bộ màu sắc/kích thước dưới đây lấy đúng theo hệ thống
+       SECTION_HUES / SECTION_TEXT_HUES / TEXT / CAPTION / MUTED / RULE mà
+       import-course.ts dùng để dựng các bài học thật, để bài thực hành này
+       không lạc tông khi đứng cạnh Bài 1.1, 1.2... Không dùng nền màu đặc +
+       chữ trắng — chỉ dùng nền pha loãng (tint) + chữ màu đậm (textHue),
+       đúng quy ước của khoá. -->
+
+  <div style="display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1.2rem">
+    <span style="display:inline-block;padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(127,127,127,.32);font-size:1rem;color:rgba(127,127,127,.95)">⏱ 120 phút</span>
+    <span style="display:inline-block;padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(127,127,127,.32);font-size:1rem;color:rgba(127,127,127,.95)">👥 Làm việc theo cặp</span>
+    <span style="display:inline-block;padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(127,127,127,.32);font-size:1rem;color:rgba(127,127,127,.95)">💻 Điện thoại/laptop đã đăng nhập</span>
+    <span style="display:inline-block;padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(127,127,127,.32);font-size:1rem;color:rgba(127,127,127,.95)">📋 Phiếu audit + phiếu phỏng vấn</span>
+  </div>
+
+  <h1 style="font-size:1.7rem;margin:0 0 .9rem;padding-bottom:.45rem;border-bottom:2px solid rgba(139,92,246,.38);color:rgb(138,91,246)">Bài thực hành 1 — Chẩn đoán một giao diện thật</h1>
+
+  <p style="margin:.7rem 0;font-size:1.25rem">Các khối có tiêu đề màu bên dưới đều <strong>bấm được để mở/đóng</strong>. Các danh sách "Chuẩn bị" và "Sản phẩm nộp" tick được trực tiếp trên màn hình.</p>
+
+  <!-- ============ MỤC TIÊU (objectives box — cố định xanh lam) ============ -->
+  <aside style="border-left:4px solid rgba(59,130,246,.55);background:rgba(59,130,246,.06);border-radius:0 .35rem .35rem 0;padding:.9rem 1.1rem;margin:1.1rem 0">
+    <div style="font-size:1rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgba(127,127,127,.95);margin:0 0 .4rem">Mục tiêu bài học</div>
+    <ul style="margin:.3rem 0 0;padding-left:1.4rem;font-size:1.25rem;line-height:1.8">
+      <li style="margin:.2rem 0">Nhận diện được lỗi vi phạm nguyên tắc heuristic trên một giao diện có thật.</li>
+      <li style="margin:.2rem 0">Đánh giá được mức độ nghiêm trọng của một vấn đề khả dụng theo thang 4 mức.</li>
+      <li style="margin:.2rem 0">Xác nhận được một giả thuyết về lỗi giao diện bằng phỏng vấn người dùng thật, thay vì chỉ dựa vào cảm tính của chính mình.</li>
+    </ul>
+  </aside>
+
+  <!-- ============ CHUẨN BỊ ============ -->
+  <h3 style="font-size:1.42rem;margin:1.5rem 0 .4rem;padding-left:.75rem;border-left:3px solid rgba(219,90,140,.55);color:rgb(214,67,124)">Chuẩn bị trước khi vào buổi học</h3>
+  <div style="border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem 1.2rem;margin:.7rem 0">
+    <label style="display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;margin:.5rem 0;font-size:1.25rem">
+      <input type="checkbox" style="width:1.2rem;height:1.2rem;margin-top:.2rem;flex:0 0 auto">
+      <span>Mang laptop hoặc điện thoại đã đăng nhập tài khoản học tập của chính mình.</span>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;margin:.5rem 0;font-size:1.25rem">
+      <input type="checkbox" style="width:1.2rem;height:1.2rem;margin-top:.2rem;flex:0 0 auto">
+      <span>Xem qua hai phiếu ở cuối bài: <em>Phiếu heuristic audit</em> và <em>Phiếu log phỏng vấn</em> — điền trực tiếp trên máy hoặc in ra.</span>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;margin:.5rem 0;font-size:1.25rem">
+      <input type="checkbox" style="width:1.2rem;height:1.2rem;margin-top:.2rem;flex:0 0 auto">
+      <span>Ôn lại affordance / signifier (Bài 1.1) và các nguyên tắc Gestalt (Bài 1.2) — dùng để gọi tên vấn đề tìm được.</span>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;margin:.5rem 0 0;font-size:1.25rem">
+      <input type="checkbox" style="width:1.2rem;height:1.2rem;margin-top:.2rem;flex:0 0 auto">
+      <span>Ngồi đúng cặp đã được giảng viên công bố trước buổi học.</span>
+    </label>
+  </div>
+
+  <!-- ============ BƯỚC 0 — CHỌN MÀN HÌNH ============ -->
+  <h2 id="muc-buoc-0" style="font-size:1.7rem;margin:2.4rem 0 .9rem;padding-bottom:.45rem;border-bottom:2px solid rgba(219,90,140,.38);color:rgb(214,67,124)">Bước 0 — Chọn một màn hình để chẩn đoán</h2>
+  <p style="margin:.7rem 0;font-size:1.25rem">Mỗi cặp chọn <strong>đúng một</strong> trong bốn màn hình dưới đây — chính là màn hình các bạn đang dùng hằng ngày trong hệ thống học tập này. Không cần màn hình giả định, càng quen thuộc càng dễ phát hiện vấn đề thật.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:1rem;margin:.9rem 0">
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem">
+        <input type="radio" name="chon-man-hinh" id="mh1" style="width:1.1rem;height:1.1rem">
+        <label for="mh1" style="font-size:1rem;font-weight:600;cursor:pointer;color:rgb(40,118,245)">Chọn màn hình này</label>
+      </div>
+      <a href="/api/lesson-media/images/man-hinh-danh-sach-bai-hoc-full-1789095367202-fa5bc2b1.jpg" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none"><img src="/api/lesson-media/images/man-hinh-danh-sach-bai-hoc-1789095367159-36df5669.jpg" alt="Ảnh chụp trang danh sách bài học, khoá Thiết kế UI UX" style="width:100%;border-radius:.4rem;border:1px solid rgba(127,127,127,.32);margin-bottom:.7rem;display:block"><div style="text-align:center;font-size:.9rem;color:rgba(127,127,127,.95);margin:.2rem 0 .7rem">🔍 Bấm để phóng to</div></a>
+      <div style="min-width:2rem;width:2rem;height:2rem;border-radius:.5rem;background:rgba(59,130,246,.16);color:rgb(40,118,245);display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:.6rem">1</div>
+      <strong>Trang danh sách bài học</strong>
+      <p style="margin:.4rem 0 0;font-size:1rem;color:rgba(127,127,127,.95)">Mục lục các module/bài của khoá đang học.</p>
+    </div>
+
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem">
+        <input type="radio" name="chon-man-hinh" id="mh2" style="width:1.1rem;height:1.1rem">
+        <label for="mh2" style="font-size:1rem;font-weight:600;cursor:pointer;color:rgb(12,141,129)">Chọn màn hình này</label>
+      </div>
+      <a href="/api/lesson-media/images/man-hinh-lam-quiz-full-1789095367293-c9a160aa.jpg" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none"><img src="/api/lesson-media/images/man-hinh-lam-quiz-1789095367254-f71ff19d.jpg" alt="Ảnh chụp trang làm bài kiểm tra (quiz), khoá Thiết kế UI UX" style="width:100%;border-radius:.4rem;border:1px solid rgba(127,127,127,.32);margin-bottom:.7rem;display:block"><div style="text-align:center;font-size:.9rem;color:rgba(127,127,127,.95);margin:.2rem 0 .7rem">🔍 Bấm để phóng to</div></a>
+      <div style="min-width:2rem;width:2rem;height:2rem;border-radius:.5rem;background:rgba(13,148,136,.16);color:rgb(12,141,129);display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:.6rem">2</div>
+      <strong>Trang làm bài kiểm tra</strong>
+      <p style="margin:.4rem 0 0;font-size:1rem;color:rgba(127,127,127,.95)">Một quiz đang mở, từ lúc bắt đầu đến lúc nộp bài.</p>
+    </div>
+
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem">
+        <input type="radio" name="chon-man-hinh" id="mh3" style="width:1.1rem;height:1.1rem">
+        <label for="mh3" style="font-size:1rem;font-weight:600;cursor:pointer;color:rgb(165,113,29)">Chọn màn hình này</label>
+      </div>
+      <a href="/api/lesson-media/images/man-hinh-ket-qua-phan-hoi-full-1789095367381-d69380de.jpg" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none"><img src="/api/lesson-media/images/man-hinh-ket-qua-phan-hoi-1789095367343-3ca0c597.jpg" alt="Ảnh chụp trang xem điểm và phản hồi sau khi nộp bài, khoá Thiết kế UI UX" style="width:100%;border-radius:.4rem;border:1px solid rgba(127,127,127,.32);margin-bottom:.7rem;display:block"><div style="text-align:center;font-size:.9rem;color:rgba(127,127,127,.95);margin:.2rem 0 .7rem">🔍 Bấm để phóng to</div></a>
+      <div style="min-width:2rem;width:2rem;height:2rem;border-radius:.5rem;background:rgba(217,150,40,.16);color:rgb(165,113,29);display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:.6rem">3</div>
+      <strong>Trang xem điểm và phản hồi</strong>
+      <p style="margin:.4rem 0 0;font-size:1rem;color:rgba(127,127,127,.95)">Sau khi nộp bài, xem điểm và lời phản hồi.</p>
+    </div>
+
+    <div style="flex:1 1 220px;border:1px solid rgba(127,127,127,.32);border-radius:.5rem;padding:1rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem">
+        <input type="radio" name="chon-man-hinh" id="mh4" style="width:1.1rem;height:1.1rem">
+        <label for="mh4" style="font-size:1rem;font-weight:600;cursor:pointer;color:rgb(214,67,124)">Chọn màn hình này</label>
+      </div>
+      <a href="/api/lesson-media/images/man-hinh-dashboard-tien-do-full-1789095367470-e736df20.jpg" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none"><img src="/api/lesson-media/images/man-hinh-dashboard-tien-do-1789095367432-6ec1fb37.jpg" alt="Ảnh chụp trang dashboard tổng quan tiến độ, khoá Thiết kế UI UX" style="width:100%;border-radius:.4rem;border:1px solid rgba(127,127,127,.32);margin-bottom:.7rem;display:block"><div style="text-align:center;font-size:.9rem;color:rgba(127,127,127,.95);margin:.2rem 0 .7rem">🔍 Bấm để phóng to</div></a>
+      <div style="min-width:2rem;width:2rem;height:2rem;border-radius:.5rem;background:rgba(219,90,140,.16);color:rgb(214,67,124);display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:.6rem">4</div>
+      <strong>Trang tổng quan tiến độ</strong>
+      <p style="margin:.4rem 0 0;font-size:1rem;color:rgba(127,127,127,.95)">Màn hình hiện ra ngay khi vừa đăng nhập.</p>
+    </div>
+  </div>
+
+  <!-- ============ LỊCH TRÌNH ============ -->
+  <h2 id="muc-lich-trinh" style="font-size:1.7rem;margin:2.4rem 0 .9rem;padding-bottom:.45rem;border-bottom:2px solid rgba(219,90,140,.38);color:rgb(214,67,124)">Lịch trình 120 phút</h2>
+  <div style="overflow-x:auto">
+    <div style="display:flex;gap:.4rem;min-width:560px">
+      <div style="flex:0 0 12.5%;background:rgba(13,148,136,.16);color:rgb(12,141,129);border-radius:.5rem;padding:.6rem .4rem;text-align:center;font-weight:700;font-size:1rem">15'</div>
+      <div style="flex:0 0 37.5%;background:rgba(139,92,246,.16);color:rgb(138,91,246);border-radius:.5rem;padding:.6rem .4rem;text-align:center;font-weight:700;font-size:1rem">45'</div>
+      <div style="flex:0 0 25%;background:rgba(217,150,40,.16);color:rgb(165,113,29);border-radius:.5rem;padding:.6rem .4rem;text-align:center;font-weight:700;font-size:1rem">30'</div>
+      <div style="flex:0 0 25%;background:rgba(59,130,246,.16);color:rgb(40,118,245);border-radius:.5rem;padding:.6rem .4rem;text-align:center;font-weight:700;font-size:1rem">30'</div>
+    </div>
+    <div style="display:flex;min-width:560px;margin-top:.6rem">
+      <div style="flex:0 0 12.5%;padding-right:.4rem;font-size:1rem;color:rgba(127,127,127,.95)"><span style="display:inline-block;width:.6rem;height:.6rem;border-radius:.15rem;background:rgb(13,148,136);margin-right:.35rem"></span>Ôn heuristic</div>
+      <div style="flex:0 0 37.5%;padding-right:.4rem;font-size:1rem;color:rgba(127,127,127,.95)"><span style="display:inline-block;width:.6rem;height:.6rem;border-radius:.15rem;background:rgb(139,92,246);margin-right:.35rem"></span>Audit theo cặp</div>
+      <div style="flex:0 0 25%;padding-right:.4rem;font-size:1rem;color:rgba(127,127,127,.95)"><span style="display:inline-block;width:.6rem;height:.6rem;border-radius:.15rem;background:rgb(217,150,40);margin-right:.35rem"></span>Guerrilla test</div>
+      <div style="flex:0 0 25%;font-size:1rem;color:rgba(127,127,127,.95)"><span style="display:inline-block;width:.6rem;height:.6rem;border-radius:.15rem;background:rgb(59,130,246);margin-right:.35rem"></span>Tổng hợp báo cáo</div>
+    </div>
+  </div>
+  <p style="margin:.7rem 0;font-size:1rem;color:rgba(127,127,127,.95)">Mở lần lượt từng phần bên dưới khi đến giờ của phần đó — đỡ rối mắt vì thấy hết nội dung buổi học cùng lúc.</p>
+
+  <!-- ============ PHẦN 1 · teal (mở sẵn) ============ -->
+  <details open style="margin:1.5rem 0">
+    <summary style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;list-style:none;cursor:pointer;background:rgba(13,148,136,.08);border-bottom:2px solid rgba(13,148,136,.38);border-radius:.5rem .5rem 0 0;padding:.7rem 1rem">
+      <span style="font-size:1.42rem;font-weight:700;color:rgb(12,141,129)">▸ Phần 1 — Ôn nhanh 10 nguyên tắc heuristic</span>
+      <span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;background:rgba(13,148,136,.14);color:rgb(13,148,136);font-size:1rem;font-weight:600;white-space:nowrap">15 phút</span>
+    </summary>
+    <div style="border:1px solid rgba(127,127,127,.32);border-top:none;border-radius:0 0 .5rem .5rem;padding:1.1rem 1.2rem">
+      <p style="margin:.7rem 0;font-size:1.25rem">Đây là 10 nguyên tắc do Jakob Nielsen đề xuất năm 1994, vẫn là bộ khung dùng phổ biến nhất để đánh giá nhanh một giao diện. Đọc lướt qua bảng này — sẽ dùng lại liên tục ở Bước 2.</p>
+
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;margin:.7rem 0">
+          <thead>
+            <tr>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">#</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Nguyên tắc</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Nghĩa là gì</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Ví dụ trong hệ thống học tập</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">1</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Hiển thị trạng thái hệ thống</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Người dùng luôn biết hệ thống đang làm gì.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Thanh tiến độ khi đang tải bài nộp lên.</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">2</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Khớp với thế giới thực</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Dùng ngôn ngữ quen thuộc, không thuật ngữ kỹ thuật.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Gọi "Nộp bài" thay vì "Submit payload".</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">3</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Người dùng kiểm soát và tự do</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Có lối thoát rõ ràng khi làm sai.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Cho sửa lại bài trước khi nộp chính thức.</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">4</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Nhất quán và theo chuẩn</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Cùng một hành động luôn cho cùng một kết quả.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Nút "Tiếp theo" luôn nằm bên phải ở mọi bài học.</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">5</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Ngăn ngừa lỗi</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Thiết kế sao cho khó mắc lỗi ngay từ đầu.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Hỏi xác nhận trước khi nộp bài còn câu chưa trả lời.</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">6</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Nhận ra thay vì phải nhớ</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Đưa sẵn lựa chọn, không bắt phải nhớ lại.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Hiện lại đề bài ngay trong bảng đáp án.</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">7</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Linh hoạt và hiệu quả</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Có lối tắt cho người thành thạo, không làm rối người mới.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Phím tắt chuyển câu hỏi cho ai quen dùng bàn phím.</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">8</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Thẩm mỹ và tối giản</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Chỉ hiện thông tin thật sự cần thiết.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Không hiện nhiều cảnh báo không liên quan cùng lúc.</td></tr>
+            <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top">9</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Giúp nhận diện và khắc phục lỗi</strong></td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">Thông báo lỗi rõ ràng, kèm cách sửa.</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;line-height:1.7;vertical-align:top">"Bạn chưa trả lời câu 3, 5" thay vì "Error 400".</td></tr>
+            <tr><td style="padding:.55rem .6rem;font-size:1.25rem;line-height:1.7;vertical-align:top">10</td><td style="padding:.55rem .6rem;font-size:1.25rem;line-height:1.7;vertical-align:top"><strong>Trợ giúp và tài liệu</strong></td><td style="padding:.55rem .6rem;font-size:1rem;line-height:1.7;vertical-align:top">Có nơi tra cứu khi cần.</td><td style="padding:.55rem .6rem;font-size:1rem;line-height:1.7;vertical-align:top">Nút trợ giúp/FAQ ở góc trang.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside style="border-left:4px solid rgba(59,130,246,.6);background:rgba(59,130,246,.07);border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:1.1rem 0 0">
+        <div style="font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(59,130,246);margin:0 0 .3rem">Ghi nhớ — thang mức độ nghiêm trọng</div>
+        <div style="font-size:1.25rem;line-height:1.8">Dùng thang 0–4 của chính Nielsen để chấm mỗi vấn đề tìm được: <strong>0</strong> không phải vấn đề khả dụng · <strong>1</strong> thẩm mỹ nhẹ · <strong>2</strong> nhỏ, gây khó chịu · <strong>3</strong> lớn, cần sửa · <strong>4</strong> thảm hoạ khả dụng, chặn hoàn toàn.</div>
+      </aside>
+    </div>
+  </details>
+
+  <!-- ============ PHẦN 2 · purple ============ -->
+  <details style="margin:1.5rem 0">
+    <summary style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;list-style:none;cursor:pointer;background:rgba(139,92,246,.08);border-bottom:2px solid rgba(139,92,246,.38);border-radius:.5rem .5rem 0 0;padding:.7rem 1rem">
+      <span style="font-size:1.42rem;font-weight:700;color:rgb(138,91,246)">▸ Phần 2 — Heuristic audit theo cặp</span>
+      <span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;background:rgba(139,92,246,.14);color:rgb(139,92,246);font-size:1rem;font-weight:600;white-space:nowrap">45 phút</span>
+    </summary>
+    <div style="border:1px solid rgba(127,127,127,.32);border-top:none;border-radius:0 0 .5rem .5rem;padding:1.1rem 1.2rem">
+
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;margin:.5rem 0 1rem">
+        <div style="flex:1;min-width:220px;border-left:3px solid rgba(139,92,246,.55);padding:.2rem 0 .2rem .8rem">
+          <div style="font-weight:700;color:rgb(138,91,246)">Bước 1 · 5 phút</div>
+          <p style="margin:.4rem 0 0;font-size:1rem">Cả hai cùng mở màn hình đã chọn ở Bước 0. Một bạn thao tác trên máy, một bạn ghi chép — đổi vai ở giữa Bước 2.</p>
+        </div>
+        <div style="flex:1;min-width:220px;border-left:3px solid rgba(139,92,246,.55);padding:.2rem 0 .2rem .8rem">
+          <div style="font-weight:700;color:rgb(138,91,246)">Bước 2 · 30 phút</div>
+          <p style="margin:.4rem 0 0;font-size:1rem">Dò từng nguyên tắc trong 10 nguyên tắc ở Phần 1, tự hỏi "màn hình này có vi phạm nguyên tắc này không?". Mỗi lần tìm ra 1 vấn đề cụ thể, ghi ngay vào phiếu audit.</p>
+        </div>
+        <div style="flex:1;min-width:220px;border-left:3px solid rgba(139,92,246,.55);padding:.2rem 0 .2rem .8rem">
+          <div style="font-weight:700;color:rgb(138,91,246)">Bước 3 · 10 phút</div>
+          <p style="margin:.4rem 0 0;font-size:1rem">Trong các vấn đề đã tìm, chọn ra 4 vấn đề nghiêm trọng nhất — mang sang Phần 3 để xác nhận bằng phỏng vấn thật.</p>
+        </div>
+      </div>
+
+      <aside style="border-left:4px solid rgba(217,150,40,.6);background:rgba(217,150,40,.07);border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:1.1rem 0">
+        <div style="font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(217,150,40);margin:0 0 .3rem">Lưu ý</div>
+        <div style="font-size:1.25rem;line-height:1.8">Ghi vấn đề <strong>cụ thể</strong>, không ghi chung chung. "Giao diện xấu" không phải một phát hiện — "Nút Nộp bài và nút Câu tiếp theo cùng màu, cùng cỡ, dễ bấm nhầm" mới là một phát hiện dùng được.</div>
+      </aside>
+
+      <h3 style="font-size:1.42rem;margin:1.5rem 0 .4rem;padding-left:.75rem;border-left:3px solid rgba(139,92,246,.55);color:rgb(138,91,246)">Phiếu heuristic audit</h3>
+
+      <details style="margin:.7rem 0 1rem">
+        <summary style="cursor:pointer;list-style:none;font-size:1rem;font-weight:700;color:rgb(13,148,136)">▸ Chưa chắc điền thế nào? Bấm xem 1 dòng ví dụ đã điền</summary>
+        <aside style="border-left:4px solid rgba(13,148,136,.6);background:rgba(13,148,136,.07);border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:.7rem 0 0">
+          <div style="font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(13,148,136);margin:0 0 .3rem">Ví dụ</div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;margin:.4rem 0 0">
+              <thead>
+                <tr>
+                  <th style="padding:.5rem .55rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Vấn đề</th>
+                  <th style="padding:.5rem .55rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Nguyên tắc</th>
+                  <th style="padding:.5rem .55rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Mức độ</th>
+                  <th style="padding:.5rem .55rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(13,148,136,.10);border-bottom:2px solid rgba(13,148,136,.35)">Vị trí</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:.5rem .55rem;font-size:1rem;vertical-align:top">Nút "Nộp bài" và "Câu tiếp theo" cùng màu, cùng cỡ — dễ bấm nhầm.</td>
+                  <td style="padding:.5rem .55rem;font-size:1rem;vertical-align:top">4, 9</td>
+                  <td style="padding:.5rem .55rem;font-size:1rem;vertical-align:top">3</td>
+                  <td style="padding:.5rem .55rem;font-size:1rem;vertical-align:top">Cuối trang quiz</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </aside>
+      </details>
+
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;margin:.7rem 0">
+          <thead>
+            <tr>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(139,92,246,.10);border-bottom:2px solid rgba(139,92,246,.35)">#</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(139,92,246,.10);border-bottom:2px solid rgba(139,92,246,.35)">Vấn đề quan sát được</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(139,92,246,.10);border-bottom:2px solid rgba(139,92,246,.35)">Nguyên tắc vi phạm</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(139,92,246,.10);border-bottom:2px solid rgba(139,92,246,.35)">Mức độ (0–4)</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(139,92,246,.10);border-bottom:2px solid rgba(139,92,246,.35)">Vị trí / ảnh chụp</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">1</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td></tr>
+            <tr><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">2</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td></tr>
+            <tr><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">3</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td><td style="padding:.9rem .6rem;border-bottom:1px solid rgba(127,127,127,.32)">&nbsp;</td></tr>
+            <tr><td style="padding:.9rem .6rem">4</td><td style="padding:.9rem .6rem">&nbsp;</td><td style="padding:.9rem .6rem">&nbsp;</td><td style="padding:.9rem .6rem">&nbsp;</td><td style="padding:.9rem .6rem">&nbsp;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:.5rem 0 0;font-size:1rem;color:rgba(127,127,127,.95)">In bảng này ra, hoặc kẻ lại đúng 5 cột trên vào giấy trắng nếu không in được.</p>
+    </div>
+  </details>
+
+  <!-- ============ PHẦN 3 · amber ============ -->
+  <details style="margin:1.5rem 0">
+    <summary style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;list-style:none;cursor:pointer;background:rgba(217,150,40,.08);border-bottom:2px solid rgba(217,150,40,.38);border-radius:.5rem .5rem 0 0;padding:.7rem 1rem">
+      <span style="font-size:1.42rem;font-weight:700;color:rgb(165,113,29)">▸ Phần 3 — Guerrilla test</span>
+      <span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;background:rgba(217,150,40,.14);color:rgb(217,150,40);font-size:1rem;font-weight:600;white-space:nowrap">30 phút</span>
+    </summary>
+    <div style="border:1px solid rgba(127,127,127,.32);border-top:none;border-radius:0 0 .5rem .5rem;padding:1.1rem 1.2rem">
+      <p style="margin:.7rem 0;font-size:1.25rem">Guerrilla test là phỏng vấn nhanh, không cần lịch hẹn, không cần phòng lab — chỉ cần 5 phút và một người tiện có mặt. Ở đây: hai bạn học ở cặp khác trong lớp.</p>
+
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;margin:.5rem 0 1rem">
+        <div style="flex:1;min-width:220px;border-left:3px solid rgba(217,150,40,.55);padding:.2rem 0 .2rem .8rem">
+          <div style="font-weight:700;color:rgb(165,113,29)">1. Mời người tham gia</div>
+          <p style="margin:.4rem 0 0;font-size:1rem">Đi sang một cặp khác, mượn 1 bạn khoảng 5 phút. Đổi qua đổi lại giữa các cặp để không ai bị hỏi 2 lần.</p>
+        </div>
+        <div style="flex:1;min-width:220px;border-left:3px solid rgba(217,150,40,.55);padding:.2rem 0 .2rem .8rem">
+          <div style="font-weight:700;color:rgb(165,113,29)">2. Xin phép</div>
+          <p style="margin:.4rem 0 0;font-size:1rem">Đọc đúng câu mở đầu bên dưới trước khi bắt đầu, không được bỏ qua bước này.</p>
+        </div>
+        <div style="flex:1;min-width:220px;border-left:3px solid rgba(217,150,40,.55);padding:.2rem 0 .2rem .8rem">
+          <div style="font-weight:700;color:rgb(165,113,29)">3. Giao nhiệm vụ</div>
+          <p style="margin:.4rem 0 0;font-size:1rem">Đưa một việc cụ thể cần làm, gắn với đúng vấn đề đang nghi ngờ — không hỏi ý kiến chung chung.</p>
+        </div>
+        <div style="flex:1;min-width:220px;border-left:3px solid rgba(217,150,40,.55);padding:.2rem 0 .2rem .8rem">
+          <div style="font-weight:700;color:rgb(165,113,29)">4. Quan sát im lặng</div>
+          <p style="margin:.4rem 0 0;font-size:1rem">Không mách nước, không giải thích khi họ bối rối. Chỉ ghi lại những gì thấy và nghe được.</p>
+        </div>
+      </div>
+
+      <blockquote style="border-left:4px solid rgba(217,150,40,.5);background:rgba(217,150,40,.06);padding:.6rem .9rem;font-size:1.25rem;line-height:1.8;margin:1.1rem 0;font-style:italic">
+        "Mình đang làm bài thực hành đánh giá giao diện, không phải kiểm tra bạn. Mình sẽ nhờ bạn làm thử một việc trên hệ thống học tập, mình sẽ chỉ quan sát chứ không hướng dẫn. Không có câu trả lời đúng/sai, bạn có thể dừng bất cứ lúc nào. Mình chỉ dùng những gì quan sát được để làm báo cáo, không ghi tên bạn vào đó. Bạn đồng ý giúp mình khoảng 5 phút không?"
+      </blockquote>
+
+      <details style="margin:.7rem 0 1.1rem">
+        <summary style="cursor:pointer;list-style:none;font-size:1rem;font-weight:700;color:rgb(139,92,246)">▸ Xem mẹo giao nhiệm vụ (sai vs. đúng)</summary>
+        <aside style="border-left:4px solid rgba(139,92,246,.6);background:rgba(139,92,246,.07);border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:.7rem 0 0">
+          <div style="font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(139,92,246);margin:0 0 .3rem">Mẹo thực hành</div>
+          <div style="font-size:1.25rem;line-height:1.8">
+            Sai: <em>"Bạn thấy màn hình này thế nào?"</em> (hỏi ý kiến — không quan sát được hành vi thật).<br>
+            Đúng: <em>"Bạn hãy dùng màn hình này để nộp bài kiểm tra này giúp mình."</em> (nhiệm vụ cụ thể — quan sát được họ vấp ở đâu).
+          </div>
+        </aside>
+      </details>
+
+      <h3 style="font-size:1.42rem;margin:1.5rem 0 .4rem;padding-left:.75rem;border-left:3px solid rgba(217,150,40,.55);color:rgb(165,113,29)">3 câu hỏi sau khi họ làm xong nhiệm vụ</h3>
+      <ul style="margin:.7rem 0;padding-left:1.4rem;font-size:1.25rem;line-height:1.8">
+        <li style="margin:.2rem 0">"Lúc bấm vào [chỗ họ vừa bấm], bạn nghĩ điều gì sẽ xảy ra?"</li>
+        <li style="margin:.2rem 0">"Có bước nào bạn thấy phân vân, không chắc phải làm gì tiếp theo không?"</li>
+        <li style="margin:.2rem 0">"Nếu được đổi một chi tiết trên màn hình này, bạn sẽ đổi gì?"</li>
+      </ul>
+
+      <h3 style="font-size:1.42rem;margin:1.5rem 0 .4rem;padding-left:.75rem;border-left:3px solid rgba(217,150,40,.55);color:rgb(165,113,29)">Phiếu log phỏng vấn</h3>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;margin:.7rem 0">
+          <thead>
+            <tr>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(217,150,40,.10);border-bottom:2px solid rgba(217,150,40,.35)">Người tham gia</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(217,150,40,.10);border-bottom:2px solid rgba(217,150,40,.35)">Nhiệm vụ giao</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(217,150,40,.10);border-bottom:2px solid rgba(217,150,40,.35)">Hoàn thành?</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(217,150,40,.10);border-bottom:2px solid rgba(217,150,40,.35)">Thời gian</th>
+              <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(217,150,40,.10);border-bottom:2px solid rgba(217,150,40,.35)">Câu nói / phản ứng đáng chú ý</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:.7rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);vertical-align:top">Người 1</td>
+              <td style="padding:.7rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);vertical-align:top">&nbsp;</td>
+              <td style="padding:.7rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1rem;vertical-align:top">
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="hoanthanh1"> Có</label>
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;margin-top:.3rem"><input type="radio" name="hoanthanh1"> Không</label>
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;margin-top:.3rem"><input type="radio" name="hoanthanh1"> Loay hoay</label>
+              </td>
+              <td style="padding:.7rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);vertical-align:top">&nbsp;</td>
+              <td style="padding:.7rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);vertical-align:top">&nbsp;</td>
+            </tr>
+            <tr>
+              <td style="padding:.7rem .6rem;vertical-align:top">Người 2</td>
+              <td style="padding:.7rem .6rem;vertical-align:top">&nbsp;</td>
+              <td style="padding:.7rem .6rem;font-size:1rem;vertical-align:top">
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="hoanthanh2"> Có</label>
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;margin-top:.3rem"><input type="radio" name="hoanthanh2"> Không</label>
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;margin-top:.3rem"><input type="radio" name="hoanthanh2"> Loay hoay</label>
+              </td>
+              <td style="padding:.7rem .6rem;vertical-align:top">&nbsp;</td>
+              <td style="padding:.7rem .6rem;vertical-align:top">&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside style="border-left:4px solid rgba(217,150,40,.6);background:rgba(217,150,40,.07);border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:1.1rem 0 0">
+        <div style="font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:rgb(217,150,40);margin:0 0 .3rem">Cảnh báo đạo đức</div>
+        <div style="font-size:1.25rem;line-height:1.8">Người tham gia có quyền từ chối hoặc dừng giữa chừng — không ép. Không quay phim/chụp mặt người tham gia. Trong báo cáo nộp, không ghi tên người tham gia, chỉ ghi "Người 1", "Người 2".</div>
+      </aside>
+    </div>
+  </details>
+
+  <!-- ============ PHẦN 4 · blue ============ -->
+  <details style="margin:1.5rem 0">
+    <summary style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;list-style:none;cursor:pointer;background:rgba(59,130,246,.08);border-bottom:2px solid rgba(59,130,246,.38);border-radius:.5rem .5rem 0 0;padding:.7rem 1rem">
+      <span style="font-size:1.42rem;font-weight:700;color:rgb(40,118,245)">▸ Phần 4 — Tổng hợp thành báo cáo 1 trang</span>
+      <span style="display:inline-block;padding:.1rem .55rem;border-radius:999px;background:rgba(59,130,246,.14);color:rgb(59,130,246);font-size:1rem;font-weight:600;white-space:nowrap">30 phút</span>
+    </summary>
+    <div style="border:1px solid rgba(127,127,127,.32);border-top:none;border-radius:0 0 .5rem .5rem;padding:1.1rem 1.2rem">
+      <p style="margin:.7rem 0;font-size:1.25rem">Ghép kết quả Phần 2 (audit) và Phần 3 (phỏng vấn) thành một báo cáo theo đúng cấu trúc sau — mỗi phát hiện phải có bằng chứng từ người thật, không chỉ dựa vào quan sát riêng của cặp mình.</p>
+      <ol style="margin:.7rem 0;padding-left:1.4rem;font-size:1.25rem;line-height:1.8">
+        <li style="margin:.3rem 0"><strong>Màn hình đã chọn</strong> — tên màn hình + 1 ảnh chụp tổng thể.</li>
+        <li style="margin:.3rem 0"><strong>4 phát hiện</strong>, mỗi phát hiện gồm:
+          <ul style="margin:.4rem 0 0;padding-left:1.4rem">
+            <li style="margin:.15rem 0">Mô tả vấn đề</li>
+            <li style="margin:.15rem 0">Nguyên tắc heuristic vi phạm</li>
+            <li style="margin:.15rem 0">Mức độ nghiêm trọng (0–4)</li>
+            <li style="margin:.15rem 0">Bằng chứng từ phỏng vấn (trích lại phản ứng/câu nói quan sát được)</li>
+            <li style="margin:.15rem 0">Đề xuất sửa, viết trong 1 câu</li>
+          </ul>
+        </li>
+        <li style="margin:.3rem 0"><strong>Kết luận</strong> — nếu chỉ được chọn sửa 1 trong 4 vấn đề trước, chọn vấn đề nào và vì sao.</li>
+      </ol>
+    </div>
+  </details>
+
+  <!-- ============ SẢN PHẨM & CHẤM (summary box — cố định xanh lá) ============ -->
+  <aside style="border-left:4px solid rgba(34,139,110,.55);background:rgba(34,139,110,.06);border-radius:0 .35rem .35rem 0;padding:1rem 1.2rem;margin:1.5rem 0">
+    <div style="font-size:1rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgba(127,127,127,.95);margin:0 0 .5rem">Sản phẩm nộp và cách chấm</div>
+
+    <label style="display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;margin:.4rem 0;font-size:1.25rem">
+      <input type="checkbox" style="width:1.2rem;height:1.2rem;margin-top:.2rem;flex:0 0 auto">
+      <span>Phiếu heuristic audit đã điền</span>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;margin:.4rem 0;font-size:1.25rem">
+      <input type="checkbox" style="width:1.2rem;height:1.2rem;margin-top:.2rem;flex:0 0 auto">
+      <span>Báo cáo 1 trang theo đúng cấu trúc Phần 4</span>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;margin:.4rem 0 1rem;font-size:1.25rem">
+      <input type="checkbox" style="width:1.2rem;height:1.2rem;margin-top:.2rem;flex:0 0 auto">
+      <span>Ảnh chụp khoanh vùng 4 lỗi</span>
+    </label>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;margin:.7rem 0">
+        <thead>
+          <tr>
+            <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(34,139,110,.10);border-bottom:2px solid rgba(34,139,110,.35)">Tiêu chí</th>
+            <th style="padding:.55rem .6rem;text-align:left;font-size:1rem;font-weight:600;background:rgba(34,139,110,.10);border-bottom:2px solid rgba(34,139,110,.35)">Điểm</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem">Gọi đúng tên nguyên tắc heuristic bị vi phạm</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem">30</td></tr>
+          <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem">Mức độ nghiêm trọng hợp lý, có lý do</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem">20</td></tr>
+          <tr><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem">Có bằng chứng phỏng vấn người thật, không chỉ đoán</td><td style="padding:.55rem .6rem;border-bottom:1px solid rgba(127,127,127,.32);font-size:1.25rem">30</td></tr>
+          <tr><td style="padding:.55rem .6rem;font-size:1.25rem">Trình bày rõ ràng, đọc rời vẫn hiểu được</td><td style="padding:.55rem .6rem;font-size:1.25rem">20</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </aside>
+
+  <!-- ============ NGUỒN THAM KHẢO ============ -->
+  <h3 style="font-size:1.25rem;margin:1.5rem 0 .5rem">Nguồn tham khảo</h3>
+  <p style="margin:.4rem 0;font-size:1rem">Nielsen, J. (1994). <a href="https://www.nngroup.com/articles/ten-usability-heuristics/">10 Usability Heuristics for User Interface Design</a>. Nielsen Norman Group.</p>
+  <p style="margin:.4rem 0;font-size:1rem">Nielsen, J. (1995). <a href="https://www.nngroup.com/articles/how-to-rate-the-severity-of-usability-problems/">Severity Ratings for Usability Problems</a>. Nielsen Norman Group.</p>
+
+</div>
