@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Cloud, Clock, Users, Shuffle, StickyNote, Gamepad2, PenTool } from "lucide-react";
+import { BarChart3, Cloud, Clock, Users, Shuffle, StickyNote, Gamepad2, PenTool, ListChecks } from "lucide-react";
 
 export type ToolType =
   | "poll"
@@ -11,6 +11,7 @@ export type ToolType =
   | "grouping"
   | "board"
   | "whiteboard"
+  | "run-plan"
   | null;
 
 interface TeachingToolsWrapperProps {
@@ -60,6 +61,21 @@ const TOOLS = [
     description: "Quiz thi đấu real-time, chấm điểm theo tốc độ",
     category: "standalone",
     href: "/instructor/gameshow/new",
+  },
+  {
+    id: "activity-plans",
+    icon: ListChecks,
+    label: "Soạn kịch bản",
+    description: "Soạn trước chuỗi hoạt động tương tác cho 1 tiết",
+    category: "standalone",
+    href: "/instructor/teaching-tools/activity-plans",
+  },
+  {
+    id: "run-plan",
+    icon: ListChecks,
+    label: "Chạy kịch bản",
+    description: "Chạy kịch bản đã soạn — không cần vào 1 lesson cụ thể",
+    category: "student-list",
   },
   {
     id: "random-picker",

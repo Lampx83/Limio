@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { PenTool } from "lucide-react";
-import RandomPicker from "./RandomPicker";
-import QuickPoll from "./QuickPoll";
-import WordCloud from "./WordCloud";
-import GroupingTool from "./GroupingTool";
-import CountdownTimer from "./CountdownTimer";
 import Whiteboard from "./Whiteboard";
+import ActivityPlanRunner from "./ActivityPlanRunner";
 
 interface TeachingToolsDrawerProps {
   lessonId: string;
@@ -100,11 +96,14 @@ export default function TeachingToolsDrawer({
               <p className="text-xs text-muted">Vẽ tay đồng bộ, toàn màn hình</p>
             </div>
           </button>
-          <RandomPicker lessonId={lessonId} />
-          <QuickPoll lessonId={lessonId} />
-          <WordCloud lessonId={lessonId} />
-          <GroupingTool lessonId={lessonId} />
-          <CountdownTimer />
+
+          <ActivityPlanRunner
+            lessonId={lessonId}
+            onOpenWhiteboard={() => {
+              setWhiteboardOpen(true);
+              onClose();
+            }}
+          />
         </div>
       </div>
     </>

@@ -36,6 +36,10 @@ interface QuickPollProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
   onExit?: () => void;
+  // Điền sẵn khi mở từ 1 event trong kịch bản lớp học (Activity Plan) — vẫn
+  // là form thường, giáo viên bấm "Bắt đầu Poll" mới thực sự tạo.
+  initialQuestion?: string;
+  initialOptions?: string[];
 }
 
 interface PollHistoryItem {
@@ -46,7 +50,13 @@ interface PollHistoryItem {
   _count: { votes: number };
 }
 
-export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollProps) {
+export default function QuickPoll({
+  lessonId,
+  studentList,
+  onExit,
+  initialQuestion,
+  initialOptions,
+}: QuickPollProps) {
   const [currentPoll, setCurrentPoll] = useState<Poll | null>(null);
   const [results, setResults] = useState<PollResults | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -56,8 +66,8 @@ export default function QuickPoll({ lessonId, studentList, onExit }: QuickPollPr
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Form state
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", ""]);
+  const [question, setQuestion] = useState(initialQuestion ?? "");
+  const [options, setOptions] = useState(initialOptions?.length ? initialOptions : ["", ""]);
   const [votesByOption, setVotesByOption] = useState<Record<string, number>>({});
   const [isFullscreen, setIsFullscreen] = useState(false);
 

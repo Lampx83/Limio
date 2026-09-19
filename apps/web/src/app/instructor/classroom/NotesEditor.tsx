@@ -105,19 +105,33 @@ export default function NotesEditor({
   const changeFontSize = (size: number) => {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && selection.toString().length > 0) {
-      // If text is selected, apply size to selection
+      // If text is selected, apply size to selection. Strip any font-size
+      // already set on nested elements first — otherwise an inner span's
+      // inline style keeps overriding the new outer size and re-applying a
+      // different size silently does nothing.
       const range = selection.getRangeAt(0);
+      const fragment = range.extractContents();
+      const wrapper = document.createElement("div");
+      wrapper.appendChild(fragment);
+      wrapper.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
+        el.style.fontSize = "";
+        if (!el.getAttribute("style")) el.removeAttribute("style");
+      });
       const span = document.createElement("span");
       span.style.fontSize = `${size}px`;
-      span.appendChild(range.extractContents());
+      while (wrapper.firstChild) span.appendChild(wrapper.firstChild);
       range.insertNode(span);
+
+      selection.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      selection.addRange(newRange);
     } else {
       // If no selection, apply to whole paragraph or line
-      const span = document.createElement("span");
-      span.style.fontSize = `${size}px`;
       document.execCommand("insertHTML", false, `<span style="font-size: ${size}px;"></span>`);
     }
     editorRef.current?.focus();
+    if (editorRef.current) onChange(editorRef.current.innerHTML);
   };
 
   return (
@@ -134,12 +148,7 @@ export default function NotesEditor({
             defaultValue="16"
             onChange={(e) => {
               const size = parseInt(e.target.value) || 16;
-              document.execCommand("fontSize", false, "7");
-              const spans = editorRef.current?.querySelectorAll("span[style*='fontSize']");
-              spans?.forEach((span) => {
-                (span as HTMLElement).style.fontSize = `${size}px`;
-              });
-              editorRef.current?.focus();
+              changeFontSize(size);
             }}
             className="input text-xs w-16 px-2 py-1"
             title="Nhập kích thước chữ (px)"
@@ -150,6 +159,7 @@ export default function NotesEditor({
         {/* Quick Size Buttons */}
         <div className="flex gap-1">
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => changeFontSize(32)}
             className="btn-secondary btn-sm px-2 py-1 text-xs"
             title="32px"
@@ -157,6 +167,7 @@ export default function NotesEditor({
             32px
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => changeFontSize(48)}
             className="btn-secondary btn-sm px-2 py-1 text-xs"
             title="48px"
@@ -164,6 +175,7 @@ export default function NotesEditor({
             48px
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => changeFontSize(64)}
             className="btn-secondary btn-sm px-2 py-1 text-xs"
             title="64px - Lớn cho máy chiếu"
@@ -171,6 +183,7 @@ export default function NotesEditor({
             64px
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => changeFontSize(80)}
             className="btn-secondary btn-sm px-2 py-1 text-xs font-bold"
             title="80px - Cực lớn"
@@ -191,18 +204,21 @@ export default function NotesEditor({
           </button>
           <div className="absolute left-0 top-full mt-1 hidden group-hover:flex flex-col bg-white border border-gray-200 rounded shadow-lg z-10 dark:bg-gray-800 dark:border-gray-700">
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => insertHeading(1)}
               className="px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap text-3xl font-bold"
             >
               H1
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => insertHeading(2)}
               className="px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap text-2xl font-bold"
             >
               H2
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => insertHeading(3)}
               className="px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap text-xl font-bold"
             >
@@ -213,6 +229,7 @@ export default function NotesEditor({
 
         {/* Bullet List Button */}
         <button
+          onMouseDown={(e) => e.preventDefault()}
           onClick={insertBulletList}
           className="btn-secondary btn-sm inline-flex items-center gap-1 px-2 py-1.5"
           title="Bullet list"

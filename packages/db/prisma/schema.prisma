@@ -139,6 +139,10 @@ model User {
   ownedWhiteboards     Whiteboard[]          @relation("WhiteboardOwner")
   groupMemberships     GroupMembership[]
   timerTemplates       TimerTemplate[]
+  teachingActivityPlans TeachingActivityPlan[]
+  teachingActivityPlanCollaborations TeachingActivityPlanCollaborator[]
+  teachingActivityPlanSaves          TeachingActivityPlanSave[]
+  teachingActivityPlanLikes          TeachingActivityPlanLike[]
 
   // Gameshow
   gameSessionsHosted GameSession[]     @relation("GameSessionHost")
@@ -2575,6 +2579,106 @@ model TimerTemplate {
   @@index([isPublic])
 }
 
+// Loại công cụ lớp học 1 event trong "kịch bản" có thể chạy — khớp 6 tool đã
+// có sẵn ở apps/web/src/app/instructor/classroom/.
+enum ClassroomToolType {
+  random_picker
+  quick_poll
+  word_cloud
+  grouping_tool
+  countdown_timer
+  whiteboard
+}
+
+// Kịch bản lớp học — thư viện cá nhân của giáo viên (KHÔNG gắn Course/Lesson
+// nào), tái dùng cho bất kỳ buổi live nào.
+//
+// Chia sẻ (P1): isPublic = vào "chợ kịch bản" công khai; shareCode = link
+// riêng gửi tay cho ai đó (không cần công khai). Cả 2 đường đều dẫn tới hành
+// động "Sao chép về thư viện của tôi" (bản độc lập, không đồng bộ ngược) HOẶC
+// "Tham gia đồng biên soạn" (trở thành collaborator, sửa chung bản gốc,
+// đồng bộ real-time qua SSE topic `activity-plan:<planId>`).
+model TeachingActivityPlan {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  isPublic  Boolean  @default(false)
+  shareCode String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user          User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         TeachingActivityPlanItem[]
+  collaborators TeachingActivityPlanCollaborator[]
+  saves         TeachingActivityPlanSave[]
+  likes         TeachingActivityPlanLike[]
+
+  @@index([userId])
+  @@index([isPublic])
+}
+
+// Đồng biên soạn — user trong bảng này sửa được plan gốc (không phải bản
+// copy) y hệt chủ sở hữu, trừ các thao tác nhạy cảm (xoá plan, đổi
+// public/shareCode, quản lý danh sách collaborator) chỉ chủ sở hữu làm được.
+model TeachingActivityPlanCollaborator {
+  id        String   @id @default(uuid())
+  planId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  plan TeachingActivityPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, userId])
+  @@index([userId])
+}
+
+// Đánh dấu xem lại sau — KHÔNG copy vào thư viện để sửa, khác hẳn "copy".
+model TeachingActivityPlanSave {
+  id        String   @id @default(uuid())
+  planId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  plan TeachingActivityPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, userId])
+  @@index([userId])
+}
+
+model TeachingActivityPlanLike {
+  id        String   @id @default(uuid())
+  planId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  plan TeachingActivityPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, userId])
+  @@index([userId])
+}
+
+// 1 event trong kịch bản. orderIndex chỉ để hiển thị lúc soạn — lúc trình
+// chiếu trên lớp giáo viên chạy tuỳ ý, không ép theo thứ tự này.
+model TeachingActivityPlanItem {
+  id         String            @id @default(uuid())
+  planId     String
+  toolType   ClassroomToolType
+  label      String
+  // Config tối thiểu theo loại tool, vd { question, options } cho quick_poll,
+  // { prompt } cho word_cloud — xem packages/core-lms/src/teaching-tools/activity-plans.ts
+  config     Json?
+  orderIndex Int
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  plan TeachingActivityPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId, orderIndex])
+}
+
 // =====================================================================
 // Gameshow — Wayground/Kahoot-style live competitive quiz session.
 // Reuses Quiz/QuizQuestion (multiple_choice/true_false only) as question
@@ -4420,3 +4524,4 @@ model EmailDispatchItem {
   @@index([batchId, status])
   @@index([sourceType, sourceId])
 }
+

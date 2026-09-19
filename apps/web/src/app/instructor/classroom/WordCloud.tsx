@@ -38,6 +38,8 @@ interface WordCloudProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
   onExit?: () => void;
+  // Điền sẵn khi mở từ 1 event trong kịch bản lớp học (Activity Plan).
+  initialPrompt?: string;
 }
 
 const WORD_COLORS = [
@@ -47,7 +49,7 @@ const WORD_COLORS = [
   "from-pink-400 to-pink-500",
 ];
 
-export default function WordCloud({ lessonId, studentList, onExit }: WordCloudProps) {
+export default function WordCloud({ lessonId, studentList, onExit, initialPrompt }: WordCloudProps) {
   const [currentCloud, setCurrentCloud] = useState<WordCloud | null>(null);
   const [results, setResults] = useState<WordFrequencyResult | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -62,7 +64,7 @@ export default function WordCloud({ lessonId, studentList, onExit }: WordCloudPr
   const [submissionInput, setSubmissionInput] = useState("");
 
   // Form state
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(initialPrompt ?? "");
 
   const isStateless = !!studentList && !lessonId;
   const isStandalone = !lessonId && !studentList;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import TeachingToolsMenu from "../TeachingToolsMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,8 @@ export default async function ClassroomToolsPage({
           </p>
         </header>
       </main>
+
+      <TeachingToolsMenu lessonId={lesson.id} />
     </>
   );
 }

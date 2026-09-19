@@ -11,6 +11,7 @@ import RandomPicker from "../classroom/RandomPicker";
 import GroupingTool from "../classroom/GroupingTool";
 import InteractiveBoard from "../classroom/InteractiveBoard";
 import Whiteboard from "../classroom/Whiteboard";
+import ActivityPlanRunner from "../classroom/ActivityPlanRunner";
 import type { ToolType } from "./TeachingToolsWrapper";
 
 export interface StudentItem {
@@ -36,6 +37,7 @@ const VALID_TOOLS: ToolType[] = [
   "grouping",
   "board",
   "whiteboard",
+  "run-plan",
 ];
 
 export default function TeachingToolsClient({ courses }: TeachingToolsClientProps) {
@@ -102,6 +104,21 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
         >
           {(list) => (
             <GroupingTool studentList={list} onExit={() => setSelectedTool(null)} />
+          )}
+        </StudentListGate>
+      )}
+
+      {selectedTool === "run-plan" && (
+        <StudentListGate
+          courses={courses}
+          title="Chạy kịch bản — Chọn nguồn sinh viên"
+          description="Chọn danh sách sinh viên từ khóa học có sẵn hoặc nhập thủ công, rồi chọn kịch bản muốn chạy."
+        >
+          {(list) => (
+            <ActivityPlanRunner
+              studentList={list}
+              onOpenWhiteboard={() => setSelectedTool("whiteboard")}
+            />
           )}
         </StudentListGate>
       )}

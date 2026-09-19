@@ -22,6 +22,8 @@ const TIMER_PRESETS = [
 
 interface CountdownTimerProps {
   onExit?: () => void;
+  // Điền sẵn khi mở từ 1 event trong kịch bản lớp học (Activity Plan).
+  initialMinutes?: number;
 }
 
 type TimerState = "ready" | "running" | "paused" | "finished";
@@ -57,9 +59,9 @@ const STATE_STYLES: Record<TimerState, { ring: string; bg: string; text: string;
   },
 };
 
-export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
+export default function CountdownTimer({ onExit, initialMinutes }: CountdownTimerProps = {}) {
   const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(15);
+  const [minutes, setMinutes] = useState(initialMinutes ?? 15);
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [totalSeconds, setTotalSeconds] = useState(0);
@@ -335,8 +337,11 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
   })();
 
   // ── Fullscreen view ────────────────────────────────────────
-  if (isFullscreen) {
-    return (
+  // NOTE: both views share a single <audio> element rendered once at the end
+  // of this component (outside both branches below). Do not add another
+  // <audio> inside either branch — toggling fullscreen would then unmount the
+  // element that is currently playing and replace it with a fresh, silent one.
+  const fullscreenView = (
       <div
         ref={containerRef}
         className="fixed inset-0 z-50 flex flex-col bg-[rgb(var(--bg))] p-6"
@@ -406,13 +411,11 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
             </span>
           </div>
         </div>
-        <audio ref={audioRef} crossOrigin="anonymous" />
       </div>
-    );
-  }
+  );
 
   // ── Normal view ────────────────────────────────────────────
-  return (
+  const normalView = (
     <div ref={containerRef} className="space-y-3">
       {/* Compact toolbar: title + presets + steppers + music + actions */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2 shadow-card">
@@ -518,8 +521,13 @@ export default function CountdownTimer({ onExit }: CountdownTimerProps = {}) {
           />
         </div>
       </div>
-
-      <audio ref={audioRef} crossOrigin="anonymous" />
     </div>
+  );
+
+  return (
+    <>
+      {isFullscreen ? fullscreenView : normalView}
+      <audio ref={audioRef} crossOrigin="anonymous" />
+    </>
   );
 }

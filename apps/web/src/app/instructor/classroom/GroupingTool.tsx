@@ -26,6 +26,10 @@ interface GroupingToolProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
   onExit?: () => void;
+  // Điền sẵn khi mở từ 1 event trong kịch bản lớp học (Activity Plan).
+  initialMode?: GroupingMode;
+  initialGroupSize?: number;
+  initialNumGroups?: number;
 }
 
 type GroupingMode = "groupSize" | "numGroups";
@@ -34,10 +38,13 @@ export default function GroupingTool({
   lessonId,
   studentList,
   onExit,
+  initialMode,
+  initialGroupSize,
+  initialNumGroups,
 }: GroupingToolProps) {
-  const [mode, setMode] = useState<GroupingMode>("groupSize");
-  const [groupSize, setGroupSize] = useState(3);
-  const [numGroups, setNumGroups] = useState(3);
+  const [mode, setMode] = useState<GroupingMode>(initialMode ?? "groupSize");
+  const [groupSize, setGroupSize] = useState(initialGroupSize ?? 3);
+  const [numGroups, setNumGroups] = useState(initialNumGroups ?? 3);
   const [groups, setGroups] = useState<GroupInfo[] | null>(null);
   const [groupingId, setGroupingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
