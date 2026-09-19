@@ -60,7 +60,7 @@ export default async function AppHeader() {
             Lim<span className="text-pink-500">io</span>
           </span>
           <span className="hidden font-[family-name:var(--font-script)] text-[34px] font-semibold text-muted sm:inline">
-            — Learn your way
+            — {activeRole === "instructor" ? "Teach" : "Learn"} your way
           </span>
         </Link>
         </div>
