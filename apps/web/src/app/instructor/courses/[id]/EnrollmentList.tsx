@@ -368,7 +368,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                   current={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
-                  className="w-[140px]"
+                  className="w-[220px]"
                 />
                 <SortableHeader label="Trạng thái" sortKey="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortableHeader
@@ -413,16 +413,16 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                   </td>
                   {/* Lớp: chưa gán thì phải nhìn ra ngay, vì đó là việc cần
                       làm chứ không phải một trạng thái bình thường. Cắt ngắn
-                      tên lớp dài (mã lớp học phần + tên đầy đủ) để các cột
-                      sau (trạng thái, ngày, hoạt động) không bị đẩy khỏi màn
-                      hình — xem đủ tên qua tooltip khi rê chuột. */}
-                  <td className="max-w-[140px] px-4 py-2.5">
+                      tên lớp dài (mã lớp học phần + tên đầy đủ) xuống dòng khi
+                      hết chỗ, chữ nhỏ để đọc được cả tên mà không đẩy các cột
+                      sau (trạng thái, ngày, hoạt động) khỏi màn hình. */}
+                  <td className="max-w-[220px] px-4 py-2.5">
                     {e.section.isDefault ? (
                       <span className="chip-accent whitespace-nowrap text-xs">
                         chưa gán lớp
                       </span>
                     ) : (
-                      <span className="block truncate text-sm" title={e.section.name}>
+                      <span className="block break-words text-xs leading-snug" title={e.section.name}>
                         {e.section.name}
                       </span>
                     )}

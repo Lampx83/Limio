@@ -74,7 +74,7 @@ export default function UserAvatar({
         src={imageUrl}
         alt={label}
         title={label}
-        className={`${sizeCls} rounded-full object-cover ${className}`}
+        className={`${sizeCls} shrink-0 rounded-full object-cover ${className}`}
       />
     );
   }
@@ -84,7 +84,7 @@ export default function UserAvatar({
       role="img"
       aria-label={label}
       title={label}
-      className={`${sizeCls} ${color} ${className} inline-flex items-center justify-center rounded-full font-semibold text-white select-none`}
+      className={`${sizeCls} ${color} ${className} inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white select-none`}
     >
       {initial}
     </div>
