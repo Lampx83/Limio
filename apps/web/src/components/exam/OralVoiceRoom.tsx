@@ -441,18 +441,15 @@ export default function OralVoiceRoom({
   const seconds = remainingSec % 60;
   const timerDanger = remainingSec < 120;
 
-  const isListening = recording || (textFallback && input.trim().length > 0);
   const avatarState: OralAvatarState = ended
     ? "idle"
-    : isListening
-      ? "listening"
-      : processing
-        ? reveal.revealed
-          ? "talking"
-          : "thinking"
-        : speaking
-          ? "talking"
-          : "idle";
+    : processing
+      ? reveal.revealed
+        ? "talking"
+        : "thinking"
+      : speaking
+        ? "talking"
+        : "idle";
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[rgb(var(--surface-muted))]">

@@ -1,10 +1,9 @@
-export type OralAvatarState = "idle" | "thinking" | "talking" | "listening";
+export type OralAvatarState = "idle" | "thinking" | "talking";
 
 const STATE_LABEL: Record<OralAvatarState, string> = {
   idle: "Sẵn sàng",
   thinking: "Đang soạn câu hỏi…",
   talking: "Đang hỏi…",
-  listening: "Đang lắng nghe…",
 };
 
 // A6.6 (UI) — video loop thật cho từng state (quay/tạo sẵn 1 lần, phục vụ
@@ -13,12 +12,14 @@ const STATE_LABEL: Record<OralAvatarState, string> = {
 const STATE_VIDEO: Partial<Record<OralAvatarState, string>> = {
   idle: "/oral-avatar/idle.mp4",
   thinking: "/oral-avatar/thinking.mp4",
+  talking: "/oral-avatar/talking.mp4",
 };
 // Frame đầu của mỗi video — hiện ngay trong lúc video còn đang buffer lần
 // đầu (mạng SV chậm), tránh khung trống.
 const STATE_POSTER: Partial<Record<OralAvatarState, string>> = {
   idle: "/oral-avatar/idle-poster.png",
   thinking: "/oral-avatar/thinking-poster.png",
+  talking: "/oral-avatar/talking-poster.png",
 };
 const ALL_VIDEO_SRCS = Object.values(STATE_VIDEO);
 
@@ -39,15 +40,6 @@ export default function OralAiAvatar({
   return (
     <div className={`flex flex-col items-center gap-2 ${className ?? ""}`}>
       <div className="relative flex h-32 w-32 shrink-0 items-center justify-center sm:h-48 sm:w-48">
-        {state === "listening" && (
-          <>
-            <span className="absolute inset-0 rounded-full bg-brand-400/40 animate-avatar-listen-ring" />
-            <span
-              className="absolute inset-0 rounded-full bg-brand-400/40 animate-avatar-listen-ring"
-              style={{ animationDelay: "0.8s" }}
-            />
-          </>
-        )}
         {videoSrc ? (
           <video
             key={videoSrc}

@@ -338,9 +338,7 @@ export default function OralExamRoom({
       ? reveal.revealed
         ? "talking"
         : "thinking"
-      : input.trim().length > 0
-        ? "listening"
-        : "idle";
+      : "idle";
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[rgb(var(--surface-muted))]">
