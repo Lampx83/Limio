@@ -14,7 +14,7 @@ export default async function LimioLivePage() {
   return (
     <main className="space-y-8">
       <div className="border-b border-token pb-6">
-        <h1 className="bg-gradient-to-r from-pink-600 via-rose-500 to-orange-500 bg-clip-text text-3xl font-bold text-transparent">
+        <h1 className="bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 bg-clip-text text-3xl font-bold text-transparent">
           Limio-Live
         </h1>
         <p className="mt-2 text-muted">
