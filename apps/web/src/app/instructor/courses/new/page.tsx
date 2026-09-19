@@ -42,7 +42,12 @@ export default function NewCoursePage() {
       return;
     }
     if (res.ok) {
-      window.location.href = "/instructor/courses";
+      // Khung 3 module × 3 bài đã được dựng sẵn ở API — sang thẳng danh sách
+      // module để soạn tiếp, như "Lưu và tiếp tục" ở form thông tin khoá.
+      const created = (await res.json().catch(() => null)) as { courseId?: string } | null;
+      window.location.href = created?.courseId
+        ? `/instructor/courses/${created.courseId}?tab=content`
+        : "/instructor/courses";
     } else {
       const data = await res.json().catch(() => ({}));
       setStatus("error");
@@ -59,17 +64,19 @@ export default function NewCoursePage() {
         ← Khóa của tôi
       </Link>
 
-      <div className="mt-4">
-        <span className="chip-brand">Instructor</span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
-          Tạo khóa học mới
-        </h1>
-        <p className="mt-2 text-muted">
+      <div className="mt-3">
+        <h1 className="h-display text-h2">Tạo khóa học mới</h1>
+        <p className="mt-1 text-sm text-muted">
           Khởi tạo nháp — bạn có thể bổ sung module, lesson, quiz ở bước tiếp theo.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="mt-8 card space-y-5">
+      {/* Cùng khung, cùng thứ tự trường với form "Sửa" thông tin khoá ở tab
+          Tổng quan (CourseMetaForm) để tạo mới và chỉnh sửa trông như một. */}
+      <form onSubmit={onSubmit} className="mt-5 card space-y-4">
+        <header className="border-b border-token pb-3">
+          <h3 className="text-base font-semibold">Thông tin course</h3>
+        </header>
         <div>
           <label className="label" htmlFor="title">Tiêu đề</label>
           <input
@@ -130,10 +137,30 @@ export default function NewCoursePage() {
             />
           </div>
         </div>
+        <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={personalizationEnabled}
+              onChange={(e) => setPersonalizationEnabled(e.target.checked)}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <div className="min-w-0">
+              <span className="font-medium">Bật cá nhân hoá học tập (AI feedback theo skill)</span>
+              <p className="mt-1 text-xs text-muted">
+                Khi bật: mỗi bài học cần tag ít nhất 1 skill mới publish được;
+                learner nhận diagnostic feedback, adaptive path và skill badge.
+                Khi tắt (mặc định): course chạy như LMS truyền thống, publish không cần tag skill.
+                Có thể đổi sau trong cài đặt course.
+              </p>
+            </div>
+          </label>
+        </div>
         {/* Ai vào được khoá. Hỏi ngay lúc tạo vì đổi sau khi đã phát link thì
             những người vào rồi vẫn ở lại — chặn cửa không đuổi được ai. */}
-        <fieldset className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
-          <legend className="px-1 text-sm font-semibold">Ai vào được khoá này</legend>
+        <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+        <fieldset>
+          <legend className="text-sm font-semibold">Ai vào được khoá này</legend>
           <label className="flex cursor-pointer items-start gap-3 py-1.5">
             <input
               type="radio"
@@ -168,32 +195,14 @@ export default function NewCoursePage() {
             </span>
           </label>
         </fieldset>
-
-        <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={personalizationEnabled}
-              onChange={(e) => setPersonalizationEnabled(e.target.checked)}
-              className="mt-1 h-4 w-4 shrink-0"
-            />
-            <div className="min-w-0">
-              <span className="font-medium">Bật cá nhân hoá học tập (AI feedback theo skill)</span>
-              <p className="mt-1 text-xs text-muted">
-                Khi bật: mỗi bài học cần tag ít nhất 1 skill mới publish được;
-                learner nhận diagnostic feedback, adaptive path và skill badge.
-                Khi tắt (mặc định): course chạy như LMS truyền thống, publish không cần tag skill.
-                Có thể đổi sau trong cài đặt course.
-              </p>
-            </div>
-          </label>
         </div>
+
         {error && (
           <div className="rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">
             Lỗi: {error}
           </div>
         )}
-        <div className="flex items-center justify-end gap-3 border-t border-token pt-4">
+        <div className="flex justify-end gap-2 border-t border-token pt-4">
           <Link href="/instructor/courses" className="btn-ghost">
             Hủy
           </Link>
@@ -202,7 +211,7 @@ export default function NewCoursePage() {
             disabled={status === "submitting"}
             className="btn-primary"
           >
-            {status === "submitting" ? "Đang tạo..." : "Tạo khóa học"}
+            {status === "submitting" ? "Đang tạo..." : "Tạo và tiếp tục"}
           </button>
         </div>
       </form>
