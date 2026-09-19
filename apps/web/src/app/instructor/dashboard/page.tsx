@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import {
   BookOpen,
@@ -18,6 +19,7 @@ import {
   userIsAnyProctor,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import FeatureBlockedToast from "@/components/FeatureBlockedToast";
 import UserAvatar from "@/components/ui/UserAvatar";
 
 export const dynamic = "force-dynamic";
@@ -393,6 +395,10 @@ export default async function InstructorDashboard() {
 
   return (
     <main>
+      <Suspense fallback={null}>
+        <FeatureBlockedToast />
+      </Suspense>
+
       {/* Greeting */}
       <header>
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">

@@ -13,7 +13,7 @@ export default async function LiveDeckPresentPage({
   params: { deckId: string };
 }) {
   const userId = await requireFeature("limio_live.access");
-  if (!userId) redirect("/instructor/dashboard");
+  if (!userId) redirect("/instructor/dashboard?blocked=limio_live");
 
   // PresentDeck đọc ?view=audience qua useSearchParams — App Router bắt buộc
   // bọc Suspense cho client component dùng hook này.

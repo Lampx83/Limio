@@ -21,13 +21,22 @@ export default function LiveDeckList() {
   const [decks, setDecks] = useState<DeckSummary[] | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [justJumped, setJustJumped] = useState(false);
   const newTitleInputRef = useRef<HTMLInputElement>(null);
+  const createBoxRef = useRef<HTMLDivElement>(null);
 
-  // Nút "Tạo bài giảng mới" ở menu trái trỏ vào đây kèm ?new=1 — đưa thẳng
-  // focus vào ô nhập tên thay vì bắt GV tự tìm khung tạo trên trang danh sách.
+  // Nút "Tạo bài giảng mới" ở menu trái trỏ vào đây kèm ?new=1. Khi GV bấm
+  // link này TỪ CHÍNH trang danh sách (đã đứng sẵn ở đây), URL đổi
+  // (?new=1) nhưng khung tạo vốn đã nằm sẵn trên màn hình — chỉ focus lặng
+  // lẽ thì nhìn như "bấm không có gì xảy ra". Cuộn tới + nhấp nháy viền để
+  // luôn có phản hồi thấy được, dù đang ở đâu trên trang khi bấm.
   useEffect(() => {
     if (searchParams.get("new") === "1") {
+      createBoxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       newTitleInputRef.current?.focus();
+      setJustJumped(true);
+      const t = setTimeout(() => setJustJumped(false), 1200);
+      return () => clearTimeout(t);
     }
   }, [searchParams]);
 
@@ -74,7 +83,12 @@ export default function LiveDeckList() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card">
+      <div
+        ref={createBoxRef}
+        className={`rounded-2xl border bg-[rgb(var(--surface))] p-5 shadow-card transition-shadow ${
+          justJumped ? "border-brand-400 ring-4 ring-brand-200/60 dark:ring-brand-900/40" : "border-token"
+        }`}
+      >
         <label className="mb-1.5 block text-sm font-medium">Tạo bài giảng mới</label>
         <div className="flex gap-2">
           <input

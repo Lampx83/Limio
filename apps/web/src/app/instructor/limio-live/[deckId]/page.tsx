@@ -12,7 +12,7 @@ export default async function LiveDeckEditorPage({
   params: { deckId: string };
 }) {
   const userId = await requireFeature("limio_live.access");
-  if (!userId) redirect("/instructor/dashboard");
+  if (!userId) redirect("/instructor/dashboard?blocked=limio_live");
 
   // LiveDeckEditor tự vẽ header riêng (breadcrumb + nút Trình chiếu) và chiếm
   // full chiều cao 3 cột (rail trái/phải + preview giữa) — không bọc thêm

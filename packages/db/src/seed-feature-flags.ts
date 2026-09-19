@@ -32,9 +32,9 @@ const FLAGS: FlagSeed[] = [
     group: "limio_live",
     name: "Dùng Limio-Live",
     description:
-      "Soạn và trình chiếu bài giảng tương tác kiểu Nearpod. Tính năng mới — mặc định TẮT, bật dần theo giáo viên thí điểm trước khi mở đại trà.",
+      "Soạn và trình chiếu bài giảng tương tác kiểu Nearpod. Mở đại trà cho mọi giảng viên — cờ vẫn giữ lại để có thể khoá riêng 1 tài khoản khi cần (abuse, quá tải hạ tầng...).",
     valueType: "boolean",
-    defaultValue: false,
+    defaultValue: true,
     sellable: true,
   },
   // --- Công cụ giảng dạy ---

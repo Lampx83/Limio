@@ -9,7 +9,7 @@ export const metadata = {
 
 export default async function LimioLivePage() {
   const userId = await requireFeature("limio_live.access");
-  if (!userId) redirect("/instructor/dashboard");
+  if (!userId) redirect("/instructor/dashboard?blocked=limio_live");
 
   return (
     <main className="space-y-8">
