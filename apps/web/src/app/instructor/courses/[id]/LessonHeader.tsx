@@ -223,7 +223,6 @@ export default function LessonHeader({
           moduleId={moduleId}
           siblingLessonIds={siblingLessonIds}
           modules={modules}
-          courseSlug={courseSlug}
           hideUntaggedWarning={hideUntaggedWarning}
         />
         {description && (

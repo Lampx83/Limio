@@ -388,35 +388,6 @@
   }
 }
 
-/* ---------- View modes ----------
-   When a wrapper has data-view="preview", hide all editing affordances:
-   - <button> (edit, delete, add, drag handles, skill add, etc.)
-   - <form>   (open Add* forms, edit forms)
-   Keep elements explicitly marked with data-view-keep (e.g. the toggle itself,
-   <summary> which is for collapse/expand, links). */
-[data-view="preview"] button:not([data-view-keep]) {
-  display: none !important;
-}
-[data-view="preview"] form:not([data-view-keep]) {
-  display: none !important;
-}
-/* Explicit subtree swap: editor-only nodes hidden in preview, preview-only
-   nodes hidden by default and shown in preview. */
-.preview-only {
-  display: none;
-}
-[data-view="preview"] .editor-only {
-  display: none !important;
-}
-[data-view="preview"] .preview-only {
-  display: block !important;
-}
-/* SortableModulesWrapper renders an empty <li> wrapper with the drag handle
-   button on the left. When the button is hidden, collapse the gap. */
-[data-view="preview"] .group > li > div {
-  margin-left: 0 !important;
-}
-
 /* Padlet Board immersive mode — ẩn instructor left sidebar khi giảng viên
    đang mở 1 board, để toàn bộ width dành cho notes. InteractiveBoard set
    body.board-immersive khi mount + remove khi unmount.
@@ -939,6 +910,14 @@ main[data-stage="1"] #lesson-content img {
    nào thay vì bằng dấu ">". */
 body:has(main[data-stage="1"]) header,
 body:has(main[data-stage="1"]) footer {
+  display: none;
+}
+
+/* Giảng viên xem thử bài (?preview=1): chỉ còn tên bài + nội dung, nên ẩn cả
+   thanh tiêu đề và chân trang của site (nằm ngoài <main>). Tiêu đề của chính
+   bài là <header> nằm TRONG main nên phải loại ra khỏi luật này. */
+body:has(main[data-preview="1"]) header:not(main[data-preview="1"] header),
+body:has(main[data-preview="1"]) footer {
   display: none;
 }
 

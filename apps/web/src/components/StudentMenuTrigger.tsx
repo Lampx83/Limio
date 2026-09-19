@@ -21,6 +21,8 @@ export default function StudentMenuTrigger({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   if (!shouldShow(pathname)) return null;
+  // Giảng viên xem thử bài (?preview=1): trang chỉ còn tên bài + nội dung.
+  if (searchParams.get("preview") === "1") return null;
 
   const dispatch = () =>
     window.dispatchEvent(new CustomEvent(STUDENT_MENU_TOGGLE_EVENT));

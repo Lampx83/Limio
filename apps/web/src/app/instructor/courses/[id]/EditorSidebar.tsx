@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { FlaskConical, X, ListTree, Pencil } from "lucide-react";
-import { apiUrl } from "@/lib/apiUrl";
-import { toast } from "@/lib/toast";
+import { FlaskConical, X, ListTree } from "lucide-react";
 
 interface SidebarLesson {
   id: string;
@@ -206,109 +204,19 @@ export default function EditorSidebar({
   );
 }
 
-/**
- * Hàng tên module trong sidebar. Rê chuột hiện bút chì để đổi tên ngay tại chỗ
- * (Enter lưu, Esc hủy) — khỏi phải về tổng quan nội dung chỉ để sửa một cái tên.
- * Nằm trong <summary>, nên mọi thao tác trên bút chì/ô nhập phải chặn hành vi
- * gập/mở mặc định của <details>.
- */
 function ModuleSummary({ module: m, index }: { module: SidebarModule; index: number }) {
-  const router = useRouter();
-  const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(m.title);
-  const [busy, setBusy] = useState(false);
-  // Enter lưu xong thì ô nhập bị gỡ → onBlur bắn thêm một lần; cờ này chặn lưu đôi.
-  const saving = useRef(false);
-
-  async function save() {
-    if (saving.current) return;
-    const next = title.trim();
-    if (!next || next === m.title) {
-      setTitle(m.title);
-      setEditing(false);
-      return;
-    }
-    saving.current = true;
-    setBusy(true);
-    let ok = false;
-    try {
-      const res = await fetch(apiUrl(`/api/modules/${m.id}`), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: next }),
-      });
-      ok = res.ok;
-    } catch {
-      ok = false;
-    }
-    setBusy(false);
-    saving.current = false;
-    if (ok) {
-      setEditing(false);
-      toast.success("Đã đổi tên module");
-      router.refresh();
-    } else {
-      toast.error("Không đổi được tên module");
-    }
-  }
-
-  if (editing) {
-    return (
-      <summary
-        className="flex list-none items-center gap-2 rounded-lg px-3 py-1"
-        onClick={(e) => e.preventDefault()}
-      >
-        <span className="text-xs font-semibold text-muted">{index + 1}.</span>
-        <input
-          autoFocus
-          value={title}
-          disabled={busy}
-          maxLength={200}
-          onChange={(e) => setTitle(e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => {
-            // Chặn phím Space kích hoạt gập/mở của <summary> khi đang gõ.
-            e.stopPropagation();
-            if (e.key === "Enter") {
-              e.preventDefault();
-              save();
-            } else if (e.key === "Escape") {
-              e.preventDefault();
-              setTitle(m.title);
-              setEditing(false);
-            }
-          }}
-          onBlur={save}
-          aria-label="Tên module"
-          className="input !h-7 min-w-0 flex-1 !px-2 !py-0 text-sm font-medium normal-case tracking-normal"
-        />
-      </summary>
-    );
-  }
-
   return (
-    <summary className="group/mod flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted hover:bg-[rgb(var(--surface-muted))]">
+    <summary className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted hover:bg-[rgb(var(--surface-muted))]">
       <span className="text-faint transition-transform group-open:rotate-90">›</span>
       <span className="truncate" title={m.title}>
         {index + 1}. {m.title}
       </span>
       {m.isHidden && (
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-danger-500" title="Module ẩn" />
+        <span
+          className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-danger-500"
+          title="Module ẩn"
+        />
       )}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setTitle(m.title);
-          setEditing(true);
-        }}
-        title="Đổi tên module"
-        aria-label={`Đổi tên module ${m.title}`}
-        className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-faint opacity-0 transition-opacity hover:bg-brand-soft hover:text-brand-700 focus:opacity-100 group-hover/mod:opacity-100 max-md:opacity-100"
-      >
-        <Pencil className="h-3.5 w-3.5" aria-hidden />
-      </button>
     </summary>
   );
 }

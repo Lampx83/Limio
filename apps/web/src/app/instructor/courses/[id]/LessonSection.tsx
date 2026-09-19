@@ -1,11 +1,6 @@
-import Link from "next/link";
 import LessonHeader from "./LessonHeader";
 import SkillTagsEditor from "./SkillTagsEditor";
-import LessonContent from "@/components/LessonContent";
-import SafeHtml from "@/components/SafeHtml";
-import { plainToRichHtml } from "@/lib/richText";
 import ActivitySection from "./ActivitySection";
-import { formatDateTime } from "@/lib/datetime";
 
 interface Lesson {
   id: string;
@@ -158,107 +153,13 @@ export default function LessonSection({
           </SubSection>
         )}
 
-        <p className="preview-only banner-info text-sm" role="status">
-          Đang xem như học viên: đây là những gì học viên thấy, các nút sửa đã
-          ẩn. Bấm &ldquo;Thoát xem trước&rdquo; để quay lại soạn bài.
-        </p>
-
-        <div className="editor-only">
-          <ActivitySection
-            lessonId={lesson.id}
-            contentItems={lesson.contentItems}
-            quizzes={lesson.quizzes}
-            assignments={lesson.assignments}
-            activities={lesson.activities ?? []}
-          />
-        </div>
-
-        <div className="preview-only space-y-5">
-          <SubSection label={`Nội dung (${lesson.contentItems.length})`}>
-            {lesson.contentItems.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
-                Bài này chưa có nội dung.
-              </p>
-            ) : (
-              <LessonContent
-                items={lesson.contentItems.map((c) => ({
-                  id: c.id,
-                  type: c.type,
-                  payload: c.payload,
-                  orderIndex: c.orderIndex,
-                }))}
-                lessonId={lesson.id}
-              />
-            )}
-          </SubSection>
-
-          <SubSection label={`Quizzes (${lesson.quizzes.length})`}>
-            {lesson.quizzes.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
-                Bài này chưa có quiz.
-              </p>
-            ) : (
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {lesson.quizzes.map((q) => (
-                  <li key={q.id}>
-                    <Link
-                      href={`/learn/${courseSlug}/quizzes/${q.id}`}
-                      target="_blank"
-                      rel="noopener"
-                      className="card-hover group flex items-center justify-between gap-3"
-                      prefetch={false}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium transition-colors group-hover:text-brand-600">
-                          {q.title}
-                        </p>
-                        <p className="mt-1 text-xs text-faint">
-                          {q.questions.length} câu · diff {q.difficulty ?? "—"} ·
-                          pass {q.passThresholdPct}%
-                        </p>
-                      </div>
-                      <span className="text-brand-600">↗</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SubSection>
-
-          <SubSection label={`Assignments (${lesson.assignments.length})`}>
-            {lesson.assignments.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] px-3 py-3 text-center text-sm text-muted">
-                Bài này chưa có assignment.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {lesson.assignments.map((a) => (
-                  <li
-                    key={a.id}
-                    className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4"
-                  >
-                    <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-token pb-3">
-                      <p className="font-semibold">{a.title}</p>
-                      <span className="text-xs text-faint">
-                        max <span className="font-semibold">{a.maxScore}</span>đ
-                        {a.dueAt && (
-                          <>
-                            {" · hạn "}
-                            {formatDateTime(a.dueAt)}
-                          </>
-                        )}
-                      </span>
-                    </div>
-                    <SafeHtml
-                      html={plainToRichHtml(a.description)}
-                      className="prose prose-sm mt-3 max-w-none text-muted dark:prose-invert"
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SubSection>
-        </div>
+        <ActivitySection
+          lessonId={lesson.id}
+          contentItems={lesson.contentItems}
+          quizzes={lesson.quizzes}
+          assignments={lesson.assignments}
+          activities={lesson.activities ?? []}
+        />
       </div>
   );
 

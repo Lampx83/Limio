@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ChevronDown, AlertTriangle, Presentation, Lock } from "lucide-react";
+import { ChevronDown, AlertTriangle, Lock } from "lucide-react";
 import { isAutoLessonSkillCode } from "@feedbackme/shared-types";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillTagsEditor from "./SkillTagsEditor";
@@ -31,7 +30,6 @@ export default function LessonMetaBar({
   moduleId,
   siblingLessonIds,
   modules,
-  courseSlug,
   hideUntaggedWarning = false,
 }: {
   lessonId: string;
@@ -41,8 +39,6 @@ export default function LessonMetaBar({
   previewable: boolean;
   tags: Tag[];
   title?: string;
-  /** Có slug thì hiện nút mở thẳng chế độ giảng dạy của bài này. */
-  courseSlug?: string;
   moduleId?: string;
   siblingLessonIds?: string[];
   modules?: ModuleRef[];
@@ -121,21 +117,6 @@ export default function LessonMetaBar({
           <Lock className="h-3 w-3" aria-hidden />
           Đang khoá
         </span>
-      )}
-
-      {courseSlug && (
-        // Soạn xong là dạy được ngay, không phải tự dò đường sang trang học
-        // viên rồi thêm tay ?gv=1. Mở tab mới để trang soạn còn nguyên.
-        <Link
-          href={`/learn/${courseSlug}/lessons/${lessonId}?gv=1`}
-          target="_blank"
-          rel="noopener"
-          className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-2.5 py-0.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
-          title="Mở bài này ở chế độ giảng dạy (thanh giảng viên, ghi chú, màn chiếu) trong tab mới"
-        >
-          <Presentation className="h-3.5 w-3.5" aria-hidden />
-          Trình chiếu
-        </Link>
       )}
 
       {/* Skills cluster — hidden when course personalization is off and no tags */}

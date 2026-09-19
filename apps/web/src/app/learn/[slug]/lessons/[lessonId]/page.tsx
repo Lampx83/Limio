@@ -48,9 +48,11 @@ export default async function LessonPage({
    * `gv=1` bật chế độ giảng viên (hiện ghi chú), `stage=1` biến trang thành
    * màn chiếu: bỏ hết phần điều hướng, chỉ còn nội dung. Cả hai đều nằm trên
    * URL chứ không phải trong state, để cửa sổ trình chiếu mở ra bằng một
-   * đường dẫn là xong.
+   * đường dẫn là xong. `preview=1` (chỉ người dạy khoá) là giảng viên soạn bài
+   * xem thử: chỉ còn tên bài, nội dung, các tab Bài tập/Thảo luận và nút
+   * lên/xuống; bỏ mọi nút điều hướng/công cụ khác.
    */
-  searchParams?: { gv?: string; stage?: string };
+  searchParams?: { gv?: string; stage?: string; preview?: string };
 }) {
   const session = await auth();
   // May be null: courses with `publicAccess` are readable logged-out. Everything
@@ -128,6 +130,7 @@ export default async function LessonPage({
   if (lesson.module.isHidden && !canEdit) notFound();
   const teacherMode = canEdit && searchParams?.gv === "1";
   const stageMode = searchParams?.stage === "1";
+  const previewMode = canEdit && searchParams?.preview === "1";
 
   // B14 — khoá thì học viên vẫn biết bài này tồn tại (mục lục hiện tên kèm ổ
   // khoá), nhưng nội dung không được gửi xuống trình duyệt. Chặn ngay ở đây,
@@ -460,6 +463,7 @@ export default async function LessonPage({
       // Trạng thái ban đầu của công tắc ghi chú; sau đó TeacherBar tự đổi thuộc
       // tính này trên <html> để bật/tắt tức thì, không tải lại trang.
       data-gv={teacherMode ? "1" : undefined}
+      data-preview={previewMode ? "1" : undefined}
       className="mx-auto max-w-6xl px-4 py-6 lg:px-6"
     >
       {stageMode && <StageListener lessonId={lesson.id} />}
@@ -470,14 +474,16 @@ export default async function LessonPage({
         trăm hoàn thành chuyển xuống nằm ngay cạnh thanh tiến độ, vì đó chính
         là thứ chúng nói về.
       */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <Link
-          href={`/learn/${params.slug}`}
-          className="link inline-flex items-center gap-1 text-base font-medium"
-        >
-          ← {lesson.module.course.title}
-        </Link>
-      </div>
+      {!previewMode && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <Link
+            href={`/learn/${params.slug}`}
+            className="link inline-flex items-center gap-1 text-base font-medium"
+          >
+            ← {lesson.module.course.title}
+          </Link>
+        </div>
+      )}
 
       {/*
         Tiêu đề bài nằm trong panel riêng, và hai nút công cụ đứng ngay dưới nó:
@@ -495,30 +501,34 @@ export default async function LessonPage({
             className="prose mt-3 max-w-none text-base text-muted dark:prose-invert"
           />
         )}
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
-          <LessonContentToolbar
-            printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
-              teacherMode ? "?gv=1" : ""
-            }`}
-          />
-        </div>
+        {!previewMode && (
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
+            <LessonContentToolbar
+              printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
+                teacherMode ? "?gv=1" : ""
+              }`}
+            />
+          </div>
+        )}
         {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
             nhất từ video%/hoạt động done-total/đã cuộn hết — tự cập nhật
             theo dõi trực tiếp (video đang xem, đã cuộn tới đâu), nên phải
             là client component; xem LessonCompletionPrompt để biết công
             thức gộp. */}
-        <div className="mt-5">
-          <LessonCompletionPrompt
-            lessonId={lesson.id}
-            courseSlug={params.slug}
-            initiallyCompleted={completedEvent !== null}
-            autoComplete={autoCompleteConfig}
-          />
-        </div>
+        {!previewMode && (
+          <div className="mt-5">
+            <LessonCompletionPrompt
+              lessonId={lesson.id}
+              courseSlug={params.slug}
+              initiallyCompleted={completedEvent !== null}
+              autoComplete={autoCompleteConfig}
+            />
+          </div>
+        )}
       </header>
 
-      {skipSuggestion?.shouldSkip && (
+      {!previewMode && skipSuggestion?.shouldSkip && (
         <div className="mt-6">
           <SkipLessonBanner
             lessonId={lesson.id}
@@ -543,13 +553,13 @@ export default async function LessonPage({
         mình, hay người xem thử bản preview, không phải dữ liệu học tập; trộn
         vào là làm hỏng chính con số ta định dùng.
       */}
-      {enrollment && !stageMode && <LessonEngagementTracker lessonId={lesson.id} />}
+      {enrollment && !stageMode && !previewMode && <LessonEngagementTracker lessonId={lesson.id} />}
 
       {/* Bài học là trang dài nhất hệ thống có. Xếp tiếp vào cột nút nổi bên
           phải; ẩn khi đang chiếu, vì lúc đó cả lớp nhìn vào màn hình. */}
       {!stageMode && <ScrollEnds className="fixed bottom-[17rem] right-4 z-30" />}
 
-      {canEdit && !stageMode && (
+      {canEdit && !stageMode && !previewMode && (
         <TeacherBar
           lessonId={lesson.id}
           lessonTitle={lesson.title}
@@ -622,28 +632,32 @@ export default async function LessonPage({
         }}
       </LessonTabs>
 
-      <LessonNotesDrawer lessonId={lesson.id} />
+      {!previewMode && <LessonNotesDrawer lessonId={lesson.id} />}
 
       {/* Sentinel for scroll-to-end auto-complete tracker (text-only lessons). */}
       <div id="lesson-end-sentinel" aria-hidden className="h-px w-full" />
 
-      <LessonViewBeacon
-        lessonId={lesson.id}
-        initialResumeSec={
-          enrollment?.lastLessonId === lesson.id
-            ? enrollment.lastPositionSec ?? 0
-            : 0
-        }
-      />
+      {!previewMode && (
+        <LessonViewBeacon
+          lessonId={lesson.id}
+          initialResumeSec={
+            enrollment?.lastLessonId === lesson.id
+              ? enrollment.lastPositionSec ?? 0
+              : 0
+          }
+        />
+      )}
 
-      <LessonTocDrawer
-        slug={params.slug}
-        currentLessonId={lesson.id}
-        modules={progress.modules}
-        tooltipLabel={`Mục lục khoá · bài ${idx + 1}/${allLessons.length}`}
-      />
+      {!previewMode && (
+        <LessonTocDrawer
+          slug={params.slug}
+          currentLessonId={lesson.id}
+          modules={progress.modules}
+          tooltipLabel={`Mục lục khoá · bài ${idx + 1}/${allLessons.length}`}
+        />
+      )}
 
-      <AiTutorPanel lessonId={lesson.id} />
+      {!previewMode && <AiTutorPanel lessonId={lesson.id} />}
     </main>
   );
 }

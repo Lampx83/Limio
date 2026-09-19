@@ -9,7 +9,7 @@ import {
   canModerateLiveExam,
   isCourseOwner,
 } from "@feedbackme/core-lms";
-import { ChevronLeft, ChevronRight, Presentation } from "lucide-react";
+import { ArrowLeft, Presentation } from "lucide-react";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import AccessCodesPanel from "./AccessCodesPanel";
@@ -23,7 +23,7 @@ import ArchiveCourseButton from "./ArchiveCourseButton";
 import DeleteCourseButton from "./DeleteCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
 import ImportStudentsButton from "./ImportStudentsButton";
-import LessonViewToggle from "./LessonViewToggle";
+import PreviewAsLearnerButton from "./PreviewAsLearnerButton";
 import EditorSidebar from "./EditorSidebar";
 import EditorNavProgress from "./EditorNavProgress";
 import EditorTabs, { type EditorTab } from "./EditorTabs";
@@ -55,7 +55,6 @@ export default async function InstructorCourseEditPage({
   searchParams?: {
     lesson?: string;
     tab?: string;
-    lessonView?: string;
     assignmentLesson?: string;
     assignmentFilter?: string;
   };
@@ -71,8 +70,6 @@ export default async function InstructorCourseEditPage({
   const requestedTab: EditorTab = TAB_VALUES.includes(searchParams?.tab as EditorTab)
     ? (searchParams!.tab as EditorTab)
     : "overview";
-  const lessonView: "edit" | "preview" =
-    searchParams?.lessonView === "preview" ? "preview" : "edit";
   const selectedLessonId = searchParams?.lesson;
   // Auth và truy vấn khoá chạy song song — truy vấn chỉ cần params.id.
   // Cây module/bài ở đây CHỈ lấy phần nhẹ (đếm thay vì kéo hết quiz, câu hỏi,
@@ -224,16 +221,6 @@ export default async function InstructorCourseEditPage({
       assignmentCount: l._count.assignments,
     })),
   }));
-
-  const flatLessons = sidebarModules.flatMap((m) => m.lessons);
-  const activeFlatIdx = selectedLesson
-    ? flatLessons.findIndex((l) => l.id === selectedLesson.id)
-    : -1;
-  const prevLesson = activeFlatIdx > 0 ? flatLessons[activeFlatIdx - 1] : null;
-  const nextLesson =
-    activeFlatIdx !== -1 ? (flatLessons[activeFlatIdx + 1] ?? null) : null;
-  const lessonHref = (id: string) =>
-    `/instructor/courses/${course.id}?tab=content&lesson=${id}${lessonView === "preview" ? "&lessonView=preview" : ""}`;
 
   const useWideLayout = true;
 
@@ -425,8 +412,15 @@ export default async function InstructorCourseEditPage({
                  form sửa còn nguyên title/ORDER của bài trước, bấm Lưu là
                  ghi ORDER cũ, đụng unique (moduleId, orderIndex) → 500 câm. */
               <article key={selectedLesson.id} className="space-y-5">
+                <Link
+                  href={`/instructor/courses/${course.id}?tab=content`}
+                  prefetch={false}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline"
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden />
+                  Danh sách module
+                </Link>
                 <div
-                  data-view={lessonView}
                   className={`rounded-2xl border p-5 sm:p-6 ${
                     selectedLesson.isHidden
                       ? "border-danger-200 bg-danger-50/30"
@@ -445,34 +439,15 @@ export default async function InstructorCourseEditPage({
                       title: m.title,
                     }))}
                     hideUntaggedWarning={!course.personalizationEnabled}
-                    titleAside={<LessonViewToggle />}
+                    titleAside={
+                      <PreviewAsLearnerButton
+                        courseSlug={course.slug}
+                        lessonId={selectedLesson.id}
+                        hidden={selectedLesson.isHidden}
+                      />
+                    }
                   />
                 </div>
-                <nav className="flex items-center justify-between gap-3" aria-label="Chuyển bài">
-                  {prevLesson ? (
-                    <Link
-                      href={lessonHref(prevLesson.id)}
-                      prefetch={false}
-                      className="btn-secondary btn-sm inline-flex min-w-0 items-center gap-1"
-                    >
-                      <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
-                      <span className="truncate">Bài trước</span>
-                    </Link>
-                  ) : (
-                    <span />
-                  )}
-                  {nextLesson && (
-                    <Link
-                      href={lessonHref(nextLesson.id)}
-                      prefetch={false}
-                      className="btn-secondary btn-sm inline-flex min-w-0 items-center gap-1"
-                      title={nextLesson.title}
-                    >
-                      <span className="truncate">Bài kế · {nextLesson.title}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
-                    </Link>
-                  )}
-                </nav>
               </article>
             )}
 
