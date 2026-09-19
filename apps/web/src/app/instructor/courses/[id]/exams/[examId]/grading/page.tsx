@@ -10,6 +10,7 @@ import RegradeAllButton from "./RegradeAllButton";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatDateTime } from "@/lib/datetime";
+import { apiUrl } from "@/lib/apiUrl";
 import { StatusBadge } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -73,11 +74,31 @@ export default async function GradingInboxPage({
         >
           ← {exam.title}
         </Link>
-        <h1 className="mt-3 text-2xl font-bold">Chấm vấn đáp</h1>
-        <p className="mt-1 text-sm text-faint">
-          Chỉ hiện các lượt thi đã kết thúc. AI chỉ đề xuất điểm — điểm chính
-          thức do bạn duyệt/sửa trong từng lượt.
-        </p>
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold">Chấm vấn đáp</h1>
+            <p className="mt-1 text-sm text-faint">
+              Chỉ hiện các lượt thi đã kết thúc. AI chỉ đề xuất điểm — điểm
+              chính thức do bạn duyệt/sửa trong từng lượt.
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <a
+              href={apiUrl(`/api/exams/${exam.id}/oral-export/scores`)}
+              className="rounded border border-default px-3 py-1.5 text-xs font-medium hover:bg-slate-50"
+            >
+              Xuất điểm (Excel)
+            </a>
+            {attempts.length > 0 && (
+              <a
+                href={apiUrl(`/api/exams/${exam.id}/oral-export/pdf-batch`)}
+                className="rounded border border-default px-3 py-1.5 text-xs font-medium hover:bg-slate-50"
+              >
+                Xuất tất cả PDF (.zip)
+              </a>
+            )}
+          </div>
+        </div>
 
         <div className="mt-4">
           <OralRubricEditor examId={exam.id} initialRubric={exam.oralRubricText ?? ""} />

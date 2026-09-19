@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { ExamError, getOralEvaluation } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
+import { apiUrl } from "@/lib/apiUrl";
 import OralGradeForm from "./OralGradeForm";
 import OralRubricEditor from "../OralRubricEditor";
 
@@ -68,14 +69,24 @@ export default async function OralGradingDetailPage({
       >
         ← Danh sách chấm
       </Link>
-      <div className="mt-3">
-        <h1 className="text-2xl font-bold">
-          {attempt.user?.displayName ?? "Sinh viên"}
-        </h1>
-        <p className="mt-1 text-sm text-faint">
-          {attempt.exam.title} · {attempt.exam.course?.title ?? "Đề độc lập"}
-          {attempt.submittedAt && ` · Nộp ${formatDateTime(attempt.submittedAt)}`}
-        </p>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {attempt.user?.displayName ?? "Sinh viên"}
+          </h1>
+          <p className="mt-1 text-sm text-faint">
+            {attempt.exam.title} · {attempt.exam.course?.title ?? "Đề độc lập"}
+            {attempt.submittedAt && ` · Nộp ${formatDateTime(attempt.submittedAt)}`}
+          </p>
+        </div>
+        <a
+          href={apiUrl(
+            `/api/exams/${params.examId}/oral-attempt/${params.attemptId}/export-pdf`,
+          )}
+          className="shrink-0 rounded border border-default px-3 py-1.5 text-xs font-medium hover:bg-slate-50"
+        >
+          Xuất PDF
+        </a>
       </div>
 
       <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
