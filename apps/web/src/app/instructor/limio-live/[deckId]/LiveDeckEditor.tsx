@@ -37,6 +37,9 @@ import {
   ClipboardX,
   ZoomIn,
   ZoomOut,
+  Loader2,
+  Save,
+  Check,
   MonitorPlay,
   Play,
 } from "lucide-react";
@@ -44,6 +47,8 @@ import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 import BoardNotesView from "../BoardNotesView";
+import { contentKind } from "../slideKind";
+import SlideTypePicker, { type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { SLIDE_THEMES, slideThemeBg } from "../slideThemes";
@@ -67,26 +72,32 @@ interface Deck {
   slides: Slide[];
 }
 
-const SLIDE_TYPE_META: Record<
-  SlideType,
+const INTERACTIVE_META: Record<
+  Exclude<SlideType, "content">,
   { label: string; icon: typeof FileText; badge: string }
 > = {
-  content: {
-    label: "Nội dung",
-    icon: FileText,
-    badge: "bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))]",
-  },
   quiz: { label: "Trắc nghiệm", icon: ListChecks, badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
   poll: { label: "Thăm dò", icon: BarChart3, badge: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
   word_cloud: { label: "Word Cloud", icon: Cloud, badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
   collaborate_board: {
-    label: "Collaborate Board",
+    label: "Bảng cộng tác",
     icon: StickyNote,
     badge: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   },
 };
 
-const SLIDE_ORDER: SlideType[] = ["content", "quiz", "poll", "word_cloud", "collaborate_board"];
+// Nhãn/icon/màu hiển thị của 1 slide — slide "content" được hiển thị theo loại tài nguyên cụ thể.
+function slideMeta(slide: { type: SlideType; config: Record<string, any> }): {
+  label: string;
+  icon: typeof FileText;
+  badge: string;
+} {
+  if (slide.type === "content") {
+    const k = contentKind(slide.config);
+    return { ...k, badge: "bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300" };
+  }
+  return INTERACTIVE_META[slide.type];
+}
 
 const MAX_PDF_MB = 10;
 const MAX_PDF_PAGES = 30;
@@ -97,6 +108,7 @@ function slideSummary(slide: Slide): string {
     case "content":
       if (c.title) return c.title;
       if (c.resource) return `(${RESOURCE_TYPE_LABELS[c.resource.type as ResourceType]})`;
+      if (c.resourceKind) return `(${RESOURCE_TYPE_LABELS[c.resourceKind as ResourceType]})`;
       if (c.imageUrl) return "(Trang nhập từ PDF)";
       return "(chưa có tiêu đề)";
     case "quiz":
@@ -185,6 +197,51 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     }
   };
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  // Trạng thái lưu hiển thị cho GV đỡ lo: "Đang lưu…" (còn yêu cầu đang bay), "Chưa lưu" (đã gõ
+  // mà chưa rời ô/chưa gửi), "Đã lưu". Nút Lưu / Ctrl+S ép ghi ngay (blur ô đang gõ → onBlur commit).
+  const pendingRef = useRef(0);
+  const lastInputRef = useRef(0);
+  const [pending, setPending] = useState(0);
+  const [dirty, setDirty] = useState(false);
+  const trackSave = async <T,>(fn: () => Promise<T>): Promise<T> => {
+    pendingRef.current += 1;
+    setPending(pendingRef.current);
+    try {
+      return await fn();
+    } finally {
+      pendingRef.current -= 1;
+      setPending(pendingRef.current);
+    }
+  };
+  const flushSaves = async () => {
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    await new Promise((r) => setTimeout(r, 60));
+    while (pendingRef.current > 0) await new Promise((r) => setTimeout(r, 50));
+  };
+  const handleManualSave = async () => {
+    await flushSaves();
+    setDirty(false);
+    setLastSavedAt(new Date());
+    toast.success("Đã lưu bài giảng");
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleManualSave();
+      }
+    };
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirty || pendingRef.current > 0) e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty]);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(initialDeck?.slides[0]?.id ?? null);
   const [pickingType, setPickingType] = useState(false);
   const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null);
@@ -217,11 +274,13 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   const handleSaveTitle = async () => {
     if (!deck || !titleDraft.trim() || titleDraft === deck.title) return;
-    const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: titleDraft.trim() }),
-    });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: titleDraft.trim() }),
+      })
+    );
     if (!res.ok) { toast.error("Lưu tên thất bại"); return; }
     setDeck((prev) => (prev ? { ...prev, title: titleDraft.trim() } : prev));
     setLastSavedAt(new Date());
@@ -231,11 +290,13 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     if (!deck || deck.theme === theme) return;
     const prev = deck.theme;
     setDeck({ ...deck, theme });
-    const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme }),
-    });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme }),
+      })
+    );
     if (!res.ok) {
       toast.error("Lưu giao diện thất bại");
       setDeck((d) => (d ? { ...d, theme: prev } : d));
@@ -255,12 +316,14 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     } catch {
       /* bị chặn — trang trình chiếu sẽ gợi ý bấm để fullscreen */
     }
+    await flushSaves();
     const fromParam = from === "current" && selectedSlideId ? selectedSlideId : "start";
     router.push(`/instructor/limio-live/${deckId}/present?mode=slideshow&from=${fromParam}`);
   };
 
-  const handleStartPresenterView = () => {
+  const handleStartPresenterView = async () => {
     openAudienceWindow(deckId);
+    await flushSaves();
     router.push(`/instructor/limio-live/${deckId}/present?from=start`);
   };
 
@@ -288,12 +351,19 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     }
   };
 
-  const handleAddSlide = async (type: SlideType) => {
+  const handleAddSlide = async (choice: SlideChoice) => {
     setPickingType(false);
+    const type: SlideType = choice.type;
+    // Slide nội dung theo tài nguyên: nhớ loại đã chọn ở `resourceKind` (chưa có payload hợp lệ nên
+    // chưa thể ghi vào `resource` — server validate payload đầy đủ); editor mở đúng form nhập.
+    const config =
+      choice.type === "content" && choice.resourceKind
+        ? { title: "", subtitle: "", bullets: [], resourceKind: choice.resourceKind }
+        : defaultConfigFor(type);
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, config: defaultConfigFor(type) }),
+      body: JSON.stringify({ type, config }),
     });
     if (!res.ok) { toast.error("Thêm slide thất bại"); return; }
     const slide: Slide = await res.json();
@@ -395,15 +465,19 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setDeck((prev) =>
       prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, ...patch } : s)) } : prev
     );
-    const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
+    const startedAt = Date.now();
+    await trackSave(async () => {
+      const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) { toast.error("Lưu thất bại"); load(); return; }
+      const saved: Slide = await res.json();
+      setDeck((prev) => (prev ? { ...prev, slides: prev.slides.map((s) => (s.id === saved.id ? saved : s)) } : prev));
+      setLastSavedAt(new Date());
+      if (lastInputRef.current <= startedAt) setDirty(false);
     });
-    if (!res.ok) { toast.error("Lưu thất bại"); load(); return; }
-    const saved: Slide = await res.json();
-    setDeck((prev) => (prev ? { ...prev, slides: prev.slides.map((s) => (s.id === saved.id ? saved : s)) } : prev));
-    setLastSavedAt(new Date());
   };
 
   if (!deck) return <p className="text-sm text-muted">Đang tải...</p>;
@@ -411,7 +485,13 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   const selectedSlide = deck.slides.find((s) => s.id === selectedSlideId) ?? null;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden">
+    <div
+      className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
+      onInput={() => {
+        lastInputRef.current = Date.now();
+        setDirty(true);
+      }}
+    >
       {/* Header */}
       <div className="flex h-16 flex-shrink-0 items-center gap-2 border-b border-token bg-[rgb(var(--surface))] px-3 sm:gap-4 sm:px-6">
         <Link href="/instructor/limio-live" className="hidden text-sm text-muted hover:text-brand-600 sm:inline">
@@ -426,12 +506,35 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           className="min-w-0 max-w-[40vw] rounded-lg px-2 py-1.5 text-[15px] font-bold hover:bg-[rgb(var(--surface-muted))] focus:bg-[rgb(var(--surface-muted))] focus:outline-none sm:max-w-none"
           style={{ width: `${Math.max(titleDraft.length, 8)}ch` }}
         />
-        {lastSavedAt && (
-          <span className="hidden text-xs text-faint sm:inline">
-            Đã lưu ·{" "}
-            {lastSavedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        )}
+        <button
+          onClick={handleManualSave}
+          disabled={pending > 0}
+          title="Lưu ngay (Ctrl/Cmd + S) — mọi thay đổi cũng tự lưu khi bạn rời ô nhập"
+          className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition ${
+            dirty && pending === 0
+              ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
+              : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"
+          }`}
+        >
+          {pending > 0 ? (
+            <>
+              <Loader2 size={13} className="animate-spin" /> <span className="hidden sm:inline">Đang lưu…</span>
+            </>
+          ) : dirty ? (
+            <>
+              <Save size={13} /> <span className="hidden sm:inline">Chưa lưu · Lưu ngay</span>
+            </>
+          ) : (
+            <>
+              <Check size={13} className="text-brand-600" />
+              <span className="hidden sm:inline">
+                {lastSavedAt
+                  ? `Đã lưu ${lastSavedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
+                  : "Đã lưu"}
+              </span>
+            </>
+          )}
+        </button>
         <div className="flex-grow" />
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" role="radiogroup" aria-label="Giao diện slide">
           <span className="mr-1 hidden text-xs text-faint sm:inline">Giao diện</span>
@@ -529,7 +632,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               Đang xử lý PDF...{" "}
               {pdfProgress.total > 0 && `trang ${pdfProgress.current}/${pdfProgress.total}`}
             </div>
-          ) : !pickingType ? (
+          ) : (
             <div className="mb-3 flex items-center gap-1.5">
               <button
                 onClick={() => {
@@ -549,42 +652,6 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                 label="Thu gọn danh sách slide"
                 className={`hidden lg:flex ${slidesCollapsed ? "lg:hidden" : ""}`}
               />
-            </div>
-          ) : (
-            <div className="mb-3.5 rounded-xl border border-token bg-[rgb(var(--surface))] p-2">
-              <div className="grid grid-cols-1 gap-1">
-                {SLIDE_ORDER.map((type) => {
-                  const meta = SLIDE_TYPE_META[type];
-                  const Icon = meta.icon;
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => handleAddSlide(type)}
-                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm font-medium transition hover:bg-[rgb(var(--surface-muted))]"
-                    >
-                      <Icon size={14} /> {meta.label}
-                    </button>
-                  );
-                })}
-                <div className="my-1 h-px bg-token" />
-                <button
-                  onClick={() => pdfInputRef.current?.click()}
-                  className="flex items-start gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-[rgb(var(--surface-muted))]"
-                >
-                  <FileUp size={14} className="mt-0.5 shrink-0 text-brand-700" />
-                  <span>
-                    <span className="block text-sm font-medium text-brand-700">
-                      Tách PDF thành nhiều slide
-                    </span>
-                    <span className="block text-[11px] leading-snug text-faint">
-                      Mỗi trang PDF → 1 slide riêng, nối vào cuối bài giảng. Tối đa {MAX_PDF_PAGES} trang, {MAX_PDF_MB}MB.
-                    </span>
-                  </span>
-                </button>
-              </div>
-              <button onClick={() => setPickingType(false)} className="btn-text mt-1 w-full text-xs">
-                Huỷ
-              </button>
             </div>
           )}
 
@@ -610,6 +677,18 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
             </DndContext>
           )}
         </div>
+
+        {pickingType && (
+          <SlideTypePicker
+            onPick={handleAddSlide}
+            onImportPdf={() => {
+              setPickingType(false);
+              pdfInputRef.current?.click();
+            }}
+            onClose={() => setPickingType(false)}
+            pdfNote={`Mỗi trang PDF → 1 slide riêng, nối vào cuối bài giảng. Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB.`}
+          />
+        )}
 
         {/* Center — live WYSIWYG preview */}
         <div className="relative flex min-w-0 flex-1 flex-col">
@@ -708,7 +787,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               />
             </div>
             {(() => {
-              const meta = SLIDE_TYPE_META[selectedSlide.type];
+              const meta = slideMeta(selectedSlide);
               const Icon = meta.icon;
               const idx = deck.slides.findIndex((sl) => sl.id === selectedSlide.id);
               return (
@@ -760,7 +839,7 @@ const SlideThumb = memo(function SlideThumb({
   onSelect: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slide.id });
-  const meta = SLIDE_TYPE_META[slide.type];
+  const meta = slideMeta(slide);
   const Icon = meta.icon;
 
   return (
@@ -861,9 +940,8 @@ function ContentEditor({
   // (video/pdf/markdown/...) thay vì layout tiêu đề+ý+ảnh thường — xem
   // ResourceContent.tsx/ResourceEditor.tsx. Cùng payload shape với
   // contentSchemas.ts (packages/core-lms) để dùng chung validate.
-  const [pickingResource, setPickingResource] = useState(false);
   const [resource, setResource] = useState<{ type: ResourceType; payload: Record<string, any> } | null>(
-    config.resource ?? null
+    config.resource ?? (config.resourceKind ? { type: config.resourceKind as ResourceType, payload: {} } : null)
   );
 
   // Slide nhập từ PDF (mỗi trang → 1 slide, chỉ có ảnh, không tiêu đề/ý) —
@@ -885,7 +963,7 @@ function ContentEditor({
 
   const commitResource = (next: { type: ResourceType; payload: Record<string, any> } | null) => {
     setResource(next);
-    onSave({ config: { title, subtitle, bullets, ...(imageUrl.trim() ? { imageUrl: imageUrl.trim() } : {}), resource: next ?? undefined, ...(config.presenterNote ? { presenterNote: config.presenterNote } : {}) } });
+    onSave({ config: { title, subtitle, bullets, ...(imageUrl.trim() ? { imageUrl: imageUrl.trim() } : {}), resource: next ?? undefined, ...(next ? { resourceKind: next.type } : {}), ...(config.presenterNote ? { presenterNote: config.presenterNote } : {}) } });
   };
 
   if (resource) {
@@ -895,14 +973,6 @@ function ContentEditor({
           <span className="rounded-full bg-brand-100 px-2.5 py-1 text-xs font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
             {RESOURCE_TYPE_LABELS[resource.type]}
           </span>
-          <div className="flex gap-3">
-            <button onClick={() => setPickingResource(true)} className="text-xs font-medium text-brand-700 hover:underline">
-              Đổi loại tài nguyên
-            </button>
-            <button onClick={() => commitResource(null)} className="text-xs font-medium text-faint hover:text-red-600">
-              Quay lại nội dung thường
-            </button>
-          </div>
         </div>
         <div className="flex-grow overflow-y-auto">
           <ResourceAuthorForm
@@ -911,15 +981,6 @@ function ContentEditor({
             onChange={(payload) => commitResource({ type: resource.type, payload })}
           />
         </div>
-        {pickingResource && (
-          <ResourceTypePicker
-            onPick={(type) => {
-              setPickingResource(false);
-              commitResource({ type, payload: {} });
-            }}
-            onClose={() => setPickingResource(false)}
-          />
-        )}
       </div>
     );
   }
@@ -994,12 +1055,6 @@ function ContentEditor({
             + Thêm ý
           </button>
         )}
-        <button
-          onClick={() => setPickingResource(true)}
-          className="mt-2 w-fit rounded-full border border-token px-2.5 py-1 text-xs font-medium text-muted transition hover:border-brand-300 hover:text-brand-700"
-        >
-          Chèn tài nguyên (video, PDF, HTML...)
-        </button>
       </div>
       <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl bg-[#F1EFE6] p-4">
         {imageUrl ? (
@@ -1016,15 +1071,6 @@ function ContentEditor({
           className="w-full rounded-md border border-[#D8D4C4] bg-white/70 px-2 py-1 text-[11px] outline-none focus:ring-1 focus:ring-brand-400"
         />
       </div>
-      {pickingResource && (
-        <ResourceTypePicker
-          onPick={(type) => {
-            setPickingResource(false);
-            commitResource({ type, payload: {} });
-          }}
-          onClose={() => setPickingResource(false)}
-        />
-      )}
     </div>
   );
 }
@@ -1506,7 +1552,7 @@ function SettingsPanel({
       )}
       {slide.type === "content" && (
         <p className="px-1 text-[11px] leading-relaxed text-faint">
-          Slide nội dung không cần học viên phản hồi — chỉ hiển thị.
+          Slide này chỉ để trình bày — không cần học viên phản hồi.
         </p>
       )}
     </div>

@@ -10,6 +10,7 @@ import { toast } from "@/lib/toast";
 import { openAudienceWindow } from "@/lib/limioLiveWindow";
 import EmptyState from "@/components/ui/EmptyState";
 import ResourceContent from "../../ResourceContent";
+import { contentKind } from "../../slideKind";
 import { slideThemeBg } from "../../slideThemes";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
 
@@ -45,7 +46,7 @@ type Runtime =
   | { kind: "collaborate_board"; refId: string; code: string; joinPath: string };
 
 const TYPE_LABELS: Record<SlideType, string> = {
-  content: "Nội dung",
+  content: "Trình bày",
   quiz: "Trắc nghiệm",
   poll: "Thăm dò",
   word_cloud: "Word Cloud",
@@ -503,7 +504,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
           </span>
           <span className="min-w-0 flex-1 truncate text-sm text-muted">
             {deck.title}
-            {currentSlide ? ` · ${TYPE_LABELS[currentSlide.type]}` : ""}
+            {currentSlide ? ` · ${currentSlide.type === "content" ? contentKind(currentSlide.config).label : TYPE_LABELS[currentSlide.type]}` : ""}
           </span>
 
           {/* Cụm điều khiển 1 hàng: nút chức năng (icon, chữ hiện từ xl) | điều

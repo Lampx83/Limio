@@ -19,7 +19,7 @@ import { RESOURCE_TYPE_LABELS, type ResourceType } from "./ResourceContent";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), { ssr: false });
 
-const RESOURCE_TYPE_ICONS: Record<ResourceType, LucideIcon> = {
+export const RESOURCE_TYPE_ICONS: Record<ResourceType, LucideIcon> = {
   richtext: PenLine,
   markdown: Hash,
   video: Film,
@@ -30,7 +30,7 @@ const RESOURCE_TYPE_ICONS: Record<ResourceType, LucideIcon> = {
   html_block: Code2,
 };
 
-const RESOURCE_TYPE_HINTS: Record<ResourceType, string> = {
+export const RESOURCE_TYPE_HINTS: Record<ResourceType, string> = {
   richtext: "Soạn thảo trực quan — bold, list, link, heading",
   markdown: "Viết markdown thô — cho người quen cú pháp",
   video: "Dán link YouTube/Vimeo hoặc upload file",
@@ -41,7 +41,7 @@ const RESOURCE_TYPE_HINTS: Record<ResourceType, string> = {
   html_block: "Upload 1 file .html, mở trong tab riêng (sandbox)",
 };
 
-const RESOURCE_TYPES: ResourceType[] = [
+export const RESOURCE_TYPES: ResourceType[] = [
   "richtext",
   "markdown",
   "video",
