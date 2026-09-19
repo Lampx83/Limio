@@ -401,9 +401,9 @@ export default function JoinBoardPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-pink-50/60 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 pb-24">
       {/* Compact gradient header — nhỏ hơn bản trước để dành đất cho note */}
-      <header className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 text-white px-4 py-5">
+      <header className="relative bg-brand-gradient text-white px-4 py-5">
         <div className="absolute inset-0 opacity-30 mix-blend-overlay"
           style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
         <div className="relative max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
@@ -424,7 +424,7 @@ export default function JoinBoardPage() {
 
       {board.status !== "open" && (
         <div className="max-w-6xl mx-auto px-4 mt-4">
-          <div className="rounded-xl bg-amber-100 border border-amber-300 p-3 text-center text-sm text-amber-900">
+          <div className="rounded-xl bg-brand-100 border border-brand-300 p-3 text-center text-sm text-brand-900">
             🔒 Board này đã đóng. Bạn chỉ có thể xem note hiện có.
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function JoinBoardPage() {
                       {board.status === "open" && board.columns.includes(g.label) && (
                         <button
                           onClick={() => openComposeForColumn(g.label)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-md transition-all hover:scale-110 active:scale-95"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-gradient text-white shadow-md transition-all hover:scale-110 hover:shadow-brand-glow active:scale-95"
                           title={`Thêm note vào ${g.label}`}
                           aria-label={`Thêm note vào ${g.label}`}
                         >
@@ -480,7 +480,7 @@ export default function JoinBoardPage() {
         ) : board.notes.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-6xl mb-3">📝</p>
-            <p className="text-sm text-muted">Chưa có note nào — bấm <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-400 text-white font-bold mx-1">+</span> để đăng note đầu tiên!</p>
+            <p className="text-sm text-muted">Chưa có note nào — bấm <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-gradient text-white font-bold mx-1">+</span> để đăng note đầu tiên!</p>
           </div>
         ) : (
           <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 [column-fill:_balance]">
@@ -498,7 +498,7 @@ export default function JoinBoardPage() {
             setModalOpen(true);
             setInfo(null);
           }}
-          className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-2xl hover:shadow-amber-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+          className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-gradient text-white shadow-2xl hover:shadow-brand-glow flex items-center justify-center transition-all hover:scale-110 active:scale-95"
           title="Thêm note (N)"
           aria-label="Thêm note"
         >
@@ -513,7 +513,7 @@ export default function JoinBoardPage() {
           onClick={(e) => { if (e.target === e.currentTarget) setEditingNote(null); }}
         >
           <div
-            className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto"
+            className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-brand-200/60 max-h-[90vh] overflow-y-auto"
             style={{ backgroundColor: editColor || "#FEF3C7" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -542,7 +542,7 @@ export default function JoinBoardPage() {
                   maxLength={500}
                   rows={3}
                   autoFocus
-                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                 />
                 {board.blockPaste && (
                   <p className="text-[11px] text-gray-500 mt-1 ml-1">GV đã tắt dán — vui lòng tự gõ nội dung.</p>
@@ -558,7 +558,7 @@ export default function JoinBoardPage() {
                   onChange={(e) => setEditAttachmentUrl(e.target.value)}
                   placeholder="Ảnh / video / audio / YouTube / link"
                   maxLength={2000}
-                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -579,7 +579,7 @@ export default function JoinBoardPage() {
                 <button
                   onClick={handleSaveEditNote}
                   disabled={editSubmitting}
-                  className="bg-gray-900 hover:bg-black text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                  className="bg-brand-gradient hover:shadow-brand-glow text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all active:scale-[0.98]"
                 >
                   {editSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
@@ -599,7 +599,7 @@ export default function JoinBoardPage() {
           }}
         >
           <div
-            className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto"
+            className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-brand-200/60 max-h-[90vh] overflow-y-auto"
             style={{ backgroundColor: color || "#FEF3C7" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -624,7 +624,7 @@ export default function JoinBoardPage() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Vd. Nguyễn Văn A"
                   maxLength={40}
-                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
 
@@ -636,7 +636,7 @@ export default function JoinBoardPage() {
                   <select
                     value={groupColumn}
                     onChange={(e) => setGroupColumn(e.target.value)}
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   >
                     {board.columns.map((c) => (
                       <option key={c} value={c}>{c}</option>
@@ -657,7 +657,7 @@ export default function JoinBoardPage() {
                   maxLength={500}
                   rows={3}
                   autoFocus
-                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                  className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                 />
                 {board.blockPaste && (
                   <p className="text-[11px] text-gray-500 mt-1 ml-1">GV đã tắt dán — vui lòng tự gõ nội dung.</p>
@@ -675,7 +675,7 @@ export default function JoinBoardPage() {
                     onChange={(e) => setAttachmentUrl(e.target.value)}
                     placeholder="Ảnh / video / audio / YouTube / link"
                     maxLength={2000}
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
                     {previewKind === "image" ? <ImageIcon size={16} /> :
@@ -719,7 +719,7 @@ export default function JoinBoardPage() {
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="bg-gray-900 hover:bg-black text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                  className="bg-brand-gradient hover:shadow-brand-glow text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all active:scale-[0.98]"
                 >
                   {submitting ? "Đang gửi..." : "📌 Dán note"}
                 </button>

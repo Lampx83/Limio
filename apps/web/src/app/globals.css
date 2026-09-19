@@ -399,6 +399,17 @@ body.gameshow-immersive main.mx-auto {
   animation: gs-float 3s ease-in-out infinite;
 }
 
+/* Limio-Live Present + soạn bài giảng — cả 2 đều cần bề ngang rộng hơn
+   max-w-6xl mặc định (sân khấu tối lúc trình chiếu; 3 cột rail-preview-rail
+   lúc soạn), cùng kiểu "full-bleed" với gameshow-immersive/board-immersive ở
+   trên. Present còn tự ẩn sidebar qua InstructorLeftMenu (khớp path
+   /present) — trang soạn thì giữ nguyên sidebar, chỉ nới khung nội dung của
+   instructor/layout.tsx (1 <div> thường, KHÔNG phải <main>) ra full width. */
+body.limio-live-immersive .mx-auto.max-w-6xl.w-full {
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+
 @keyframes gs-glow-pulse {
   0%,
   100% {

@@ -33,9 +33,9 @@ export default async function LearnerWordCloudPage({
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 min-h-screen bg-gradient-to-br from-purple-50 to-purple-100/30">
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 min-h-screen bg-gradient-to-br from-brand-50 to-pink-50">
       <div className="mx-auto max-w-md">
-        <div className="rounded-2xl border-2 border-purple-200 bg-white p-6 shadow-lg">
+        <div className="rounded-2xl border-2 border-brand-200 bg-white p-6 shadow-lg">
           {/* Course & Lesson Info - only show if lesson exists */}
           {wordCloud.session.lesson && (
             <div className="mb-6 text-center text-xs text-muted">

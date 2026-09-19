@@ -14,7 +14,8 @@ interface FlagSeed {
     | "assessment"
     | "ai_oral"
     | "ai_tutor"
-    | "tournament";
+    | "tournament"
+    | "limio_live";
   name: string;
   description: string;
   valueType: "boolean" | "int" | "string_array";
@@ -25,6 +26,17 @@ interface FlagSeed {
 }
 
 const FLAGS: FlagSeed[] = [
+  // --- Limio-Live (module 4 — bài giảng tương tác) ---
+  {
+    key: "limio_live.access",
+    group: "limio_live",
+    name: "Dùng Limio-Live",
+    description:
+      "Soạn và trình chiếu bài giảng tương tác kiểu Nearpod. Tính năng mới — mặc định TẮT, bật dần theo giáo viên thí điểm trước khi mở đại trà.",
+    valueType: "boolean",
+    defaultValue: false,
+    sellable: true,
+  },
   // --- Công cụ giảng dạy ---
   {
     key: "teaching_tools.access",

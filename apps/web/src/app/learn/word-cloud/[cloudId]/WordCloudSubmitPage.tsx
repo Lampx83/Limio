@@ -20,11 +20,13 @@ interface WordFrequencyResult {
   wordFrequency: Record<string, number>;
 }
 
-const WORD_COLORS = [
-  "from-purple-400 to-purple-500",
+// Cùng hệ gradient thương hiệu Limio (lime → hồng) thay vì tím rời rạc như
+// trước — nhất quán với PresentDeck (giáo viên) và PollVotingPage.
+const WORD_GRADIENTS = [
+  "from-brand-500 to-pink-500",
   "from-blue-400 to-blue-500",
+  "from-purple-400 to-purple-500",
   "from-pink-400 to-pink-500",
-  "from-accent-400 to-accent-500",
 ];
 
 const CLIENT_ID_KEY = "wordcloud_client_id";
@@ -44,11 +46,7 @@ function getClientId(): string {
   }
 }
 
-export default function WordCloudSubmitPage({
-  wordCloud,
-}: {
-  wordCloud: WordCloud;
-}) {
+export default function WordCloudSubmitPage({ wordCloud }: { wordCloud: WordCloud }) {
   const [text, setText] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [results, setResults] = useState<WordFrequencyResult | null>(null);
@@ -60,7 +58,6 @@ export default function WordCloudSubmitPage({
       toast.error("Vui lòng nhập câu trả lời");
       return;
     }
-
     if (text.trim().length > 100) {
       toast.error("Câu trả lời không được vượt quá 100 ký tự");
       return;
@@ -68,14 +65,11 @@ export default function WordCloudSubmitPage({
 
     setIsLoading(true);
     try {
-      const res = await fetch(
-        `/api/classroom/word-cloud/${wordCloud.id}/submit`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: text.trim(), clientId }),
-        }
-      );
+      const res = await fetch(`/api/classroom/word-cloud/${wordCloud.id}/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.trim(), clientId }),
+      });
 
       if (!res.ok) {
         const error = await res.json();
@@ -84,16 +78,9 @@ export default function WordCloudSubmitPage({
       }
 
       setHasSubmitted(true);
-      toast.success("Gửi thành công!");
 
-      // Fetch results
-      const resultsRes = await fetch(
-        `/api/classroom/word-cloud/${wordCloud.id}/results`
-      );
-      if (resultsRes.ok) {
-        const data = await resultsRes.json();
-        setResults(data);
-      }
+      const resultsRes = await fetch(`/api/classroom/word-cloud/${wordCloud.id}/results`);
+      if (resultsRes.ok) setResults(await resultsRes.json());
     } catch (err) {
       console.error("[WordCloudSubmitPage]", err);
       toast.error("Lỗi mạng");
@@ -104,9 +91,7 @@ export default function WordCloudSubmitPage({
 
   const getWordSize = (frequency: number, maxFrequency: number) => {
     if (maxFrequency === 0) return 0.875;
-    const minSize = 0.875; // rem
-    const maxSize = 2.5;   // rem
-    return minSize + (frequency / maxFrequency) * (maxSize - minSize);
+    return 0.875 + (frequency / maxFrequency) * (2.5 - 0.875);
   };
 
   if (hasSubmitted && results) {
@@ -117,29 +102,30 @@ export default function WordCloudSubmitPage({
 
     return (
       <div className="space-y-6">
-        {/* Prompt */}
-        <div>
-          <h2 className="text-xl font-bold text-center text-purple-900">
-            {wordCloud.prompt}
-          </h2>
+        <h2 className="text-center text-xl font-bold text-brand-900">{wordCloud.prompt}</h2>
+
+        <div className="flex flex-col items-center gap-2 py-1">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand-glow animate-[note-pop-in_0.4s_ease-out]">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M4 12l5 5L20 6" />
+            </svg>
+          </div>
+          <p className="text-sm font-bold text-brand-700">Đã gửi câu trả lời của bạn!</p>
         </div>
 
-        {/* Confirmation */}
-        <p className="text-center text-sm text-purple-600 font-semibold">
-          ✓ Cảm ơn bạn đã gửi!
-        </p>
-
-        {/* Word Cloud Display */}
-        <div className="bg-purple-50 rounded-lg p-6 min-h-64 flex items-center justify-center">
-          <div className="flex flex-wrap gap-3 justify-center items-center">
+        <div className="flex min-h-64 items-center justify-center rounded-2xl bg-[rgb(var(--surface-muted))] p-6">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {sortedWords.length > 0 ? (
               sortedWords.map(([word, frequency], idx) => {
                 const fontSize = getWordSize(frequency, maxFrequency);
-                const colorClass = WORD_COLORS[idx % WORD_COLORS.length];
+                const gradient = WORD_GRADIENTS[idx % WORD_GRADIENTS.length];
+                const isMine = word.toLowerCase() === text.trim().toLowerCase();
                 return (
                   <span
                     key={word}
-                    className={`px-3 py-1.5 rounded-full text-white font-semibold bg-gradient-to-r ${colorClass} transition-transform hover:scale-110`}
+                    className={`rounded-full bg-gradient-to-r px-3 py-1.5 font-semibold text-white transition-transform hover:scale-110 ${gradient} ${
+                      isMine ? "ring-2 ring-offset-2 ring-brand-500" : ""
+                    }`}
                     style={{ fontSize: `${fontSize}rem` }}
                   >
                     {word}
@@ -147,56 +133,42 @@ export default function WordCloudSubmitPage({
                 );
               })
             ) : (
-              <p className="text-purple-400 text-sm">Chưa có gửi nào...</p>
+              <p className="text-sm text-muted">Chưa có gửi nào...</p>
             )}
           </div>
         </div>
 
-        {/* Results Summary */}
-        <p className="text-xs text-center text-purple-600">
+        <p className="text-center text-xs text-muted">
           Tổng cộng: <span className="font-semibold">{results.totalSubmissions}</span> gửi
         </p>
-
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Prompt */}
-      <div>
-        <h2 className="text-xl font-bold text-center text-purple-900">
-          {wordCloud.prompt}
-        </h2>
-      </div>
+      <h2 className="text-center text-xl font-bold text-brand-900">{wordCloud.prompt}</h2>
 
-      {/* Form */}
       <div className="space-y-3">
-        {/* Text Input */}
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           maxLength={100}
           placeholder="Nhập câu trả lời..."
-          className="input w-full"
+          autoFocus
+          className="input w-full text-center text-lg font-semibold"
         />
-
-        {/* Character Counter */}
-        <p className="text-xs text-right text-purple-600">
-          {text.length}/100
-        </p>
-
-        {/* Submit Button */}
+        <p className="text-right text-xs text-muted">{text.length}/100</p>
         <button
           onClick={handleSubmit}
           disabled={isLoading || !text.trim()}
-          className="btn-primary w-full"
+          className="btn-primary w-full py-3 text-base active:scale-[0.98]"
         >
-          {isLoading ? "Đang gửi..." : "Gửi"}
+          {isLoading ? "Đang gửi..." : "Gửi câu trả lời"}
         </button>
       </div>
-
     </div>
   );
 }

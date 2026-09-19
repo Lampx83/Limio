@@ -143,6 +143,8 @@ model User {
   teachingActivityPlanCollaborations TeachingActivityPlanCollaborator[]
   teachingActivityPlanSaves          TeachingActivityPlanSave[]
   teachingActivityPlanLikes          TeachingActivityPlanLike[]
+  liveDecks            LiveDeck[]
+  liveSessionsHosted   LiveSession[]
 
   // Gameshow
   gameSessionsHosted GameSession[]     @relation("GameSessionHost")
@@ -263,6 +265,7 @@ enum FeatureGroup {
   ai_oral
   ai_tutor
   tournament
+  limio_live
 }
 
 enum FeatureValueType {
@@ -2330,6 +2333,9 @@ model ClassroomSession {
   groupings   GroupingSession[]
   boards      InteractiveBoard[]
   whiteboards Whiteboard[]
+  // Limio-Live present runs that lazily created this session to back their
+  // poll/quiz/word_cloud slides (xem LiveSession).
+  liveSessions LiveSession[]
 
   createdAt DateTime @default(now())
 
@@ -4525,3 +4531,99 @@ model EmailDispatchItem {
   @@index([sourceType, sourceId])
 }
 
+// ── Limio-Live (module 4 — bài giảng tương tác kiểu Nearpod) ────────────────
+// Đợt 1: data model + soạn bài giảng (deck độc lập, thuộc về giáo viên, giống
+// TeachingActivityPlan — KHÔNG gắn Course/Lesson).
+// Đợt 2: runtime trình chiếu (LiveSession) — liên kết ClassroomPoll/WordCloud/
+// InteractiveBoard lúc trình chiếu, tái dùng nguyên hạ tầng QR/join/SSE của
+// các công cụ đó thay vì xây lại.
+
+enum LiveSlideType {
+  content
+  quiz
+  poll
+  word_cloud
+  collaborate_board
+}
+
+model LiveDeck {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slides   LiveSlide[]
+  sessions LiveSession[]
+
+  @@index([userId])
+}
+
+// orderIndex ở đây LÀ thứ tự trình chiếu thật (khác TeachingActivityPlanItem
+// — Limio-Live tuần tự, không "chạy tuỳ ý"). config theo từng loại:
+//   content: { title, subtitle, bullets: string[], imageUrl? }
+//   quiz: { question, options: [{ text, correct }] }
+//   poll: { question, options: [{ text }] }
+//   word_cloud: { prompt }
+//   collaborate_board: { prompt, mode: "free"|"grouped", columns?: string[],
+//                        allowViewOthers?: boolean, blockPaste?: boolean }
+// timerSeconds: đồng hồ tuỳ chọn, giáo viên tự bấm Bắt đầu lúc trình chiếu —
+// không tự chạy, không tự khoá gì khi hết giờ (xem acceptance criteria P0).
+model LiveSlide {
+  id           String        @id @default(uuid())
+  deckId       String
+  type         LiveSlideType
+  config       Json
+  timerSeconds Int?
+  orderIndex   Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  deck LiveDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  @@index([deckId, orderIndex])
+}
+
+// Một lượt trình chiếu (Present) của 1 LiveDeck. GV bấm "Trình chiếu" sẽ
+// resume phiên đang mở (endedAt=null) của chính họ nếu có — tránh mất kết quả
+// khi lỡ refresh trang; muốn làm lại từ đầu (lớp khác/buổi khác) thì phải
+// "Kết thúc" phiên cũ trước, vì mỗi lượt trình chiếu là 1 buổi độc lập, không
+// cộng dồn kết quả giữa các buổi.
+model LiveSession {
+  id     String @id @default(cuid())
+  deckId String
+  userId String
+
+  // ClassroomPoll/WordCloud cần sessionId — tạo lười (lazy) lúc slide tương
+  // tác đầu tiên của LƯỢT NÀY cần tới, dùng chung cho mọi slide poll/quiz/
+  // word_cloud trong cùng lượt trình chiếu.
+  classroomSessionId String?
+
+  // Map slideId -> id bản ghi runtime (ClassroomPoll cho quiz/poll, WordCloud,
+  // hoặc InteractiveBoard) — polymorphic theo LiveSlide.type, không có FK cứng
+  // vì có thể trỏ tới 1 trong 3 bảng khác nhau tuỳ loại slide (xem
+  // EmailDispatchBatch.targetType/targetId cho tiền lệ tương tự trong schema
+  // này). Content slide không cần entry.
+  slideRuntimeRefs Json @default("{}")
+
+  currentSlideId String?
+
+  // Trạng thái UI cần đồng bộ giữa cửa sổ người trình bày và cửa sổ chiếu lên
+  // màn hình (2 cửa sổ riêng — xem PresentDeck.tsx) — vd đồng hồ đếm giờ đã
+  // bấm Bắt đầu chưa (timerStartedAt: { [slideId]: epoch ms }), câu hỏi đã
+  // "Đóng" để lộ đáp án đúng chưa (revealed: { [slideId]: boolean }). Gộp 1
+  // JSON thay vì thêm cột riêng cho từng cờ — đều là cờ tạm thời của 1 lượt
+  // trình chiếu, không cần query riêng.
+  uiState Json @default("{}")
+
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  deck             LiveDeck          @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classroomSession ClassroomSession? @relation(fields: [classroomSessionId], references: [id], onDelete: SetNull)
+
+  @@index([deckId, userId, endedAt])
+  @@index([userId])
+}

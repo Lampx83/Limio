@@ -12,4 +12,6 @@ export * from "./integrations/index";
 export * from "./grouping";
 export * from "./teaching-tools/timer-templates";
 export * from "./teaching-tools/activity-plans";
+export * from "./live/decks";
+export * from "./live/present";
 export * from "./imports/index";

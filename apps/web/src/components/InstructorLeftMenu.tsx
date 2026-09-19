@@ -27,6 +27,9 @@ import {
   LayoutGrid,
   Mic,
   Coins,
+  Presentation,
+  Plus,
+  FolderOpen,
   type LucideIcon,
 } from "lucide-react";
 
@@ -44,6 +47,15 @@ type Group = {
   /** Tailwind classes for icon circle bg + fg. Áp dụng cho mọi item trong nhóm để menu không bị "rainbow". */
   iconBg: string;
   iconFg: string;
+  /** Nhãn nhỏ cạnh label nhóm — dùng cho tính năng mới ("Mới"), gate bằng feature flag riêng nên có thể không hiện với mọi GV. */
+  badge?: string;
+  /** Optional accent — dùng cho nhóm cần nổi bật riêng (vd Limio-Live, theo mockup thiết kế). Không set = dùng màu amber mặc định như mọi nhóm khác. */
+  accent?: {
+    badgeClass: string;
+    activeClass: string;
+    railClass: string;
+    boxClass: string;
+  };
 };
 
 const PROCTOR_ITEM: Item = {
@@ -70,6 +82,28 @@ const FULL_GROUPS: Group[] = [
       { label: "Tournament của tôi", href: "/instructor/tournaments", icon: Trophy },
       { label: "Công cụ giảng dạy", href: "/instructor/teaching-tools", icon: Wrench },
       { label: "Forum Q&A", href: "/instructor/forum", icon: MessageSquare },
+    ],
+  },
+  {
+    // Limio-Live gate bằng feature flag riêng (limio_live.access, mặc định
+    // TẮT — bật dần theo GV thí điểm), khác teaching_tools.access ở nhóm
+    // "Giảng dạy" phía trên. Vẫn hiện mục menu cho mọi giảng viên; GV chưa
+    // được bật sẽ bị requireFeature() redirect về dashboard khi bấm vào.
+    id: "limio-live",
+    label: "Limio-Live",
+    badge: "Mới",
+    iconBg: "bg-pink-100 dark:bg-pink-950/40",
+    iconFg: "text-pink-600 dark:text-pink-300",
+    accent: {
+      badgeClass: "bg-brand-700 text-white",
+      activeClass: "bg-pink-50 font-semibold text-pink-700 shadow-sm dark:bg-pink-950/40 dark:text-pink-200",
+      railClass: "bg-pink-500",
+      boxClass: "rounded-2xl border-2 border-pink-200 bg-pink-50/40 px-2 pb-2 pt-1 dark:border-pink-900/40 dark:bg-pink-950/10",
+    },
+    items: [
+      { label: "Bài giảng của tôi", href: "/instructor/limio-live", icon: Presentation },
+      { label: "Tạo bài giảng mới", href: "/instructor/limio-live?new=1", icon: Plus },
+      { label: "Thư viện mẫu", icon: FolderOpen, note: "Chợ chia sẻ mẫu bài giảng — đang phát triển (P2)" },
     ],
   },
   {
@@ -236,16 +270,29 @@ export default function InstructorLeftMenu({
 
       {GROUPS.map((g, idx) => {
         const isCollapsed = !!collapsed[g.id];
+        const prev = idx > 0 ? GROUPS[idx - 1] : null;
+        // Nhóm có accent riêng (vd Limio-Live) tự có khung viền — khỏi cần
+        // hairline chia nhóm ở trước/sau nó nữa, kẻo chồng viền nhìn rối.
+        const showDivider = idx > 0 && !g.accent && !prev?.accent;
         return (
-          <div key={g.id} className="px-3">
-            {idx > 0 && <div className="mx-1 my-2 h-px bg-token" />}
+          <div key={g.id} className={g.accent ? `mx-3 mb-1 mt-2 ${g.accent.boxClass}` : "px-3"}>
+            {showDivider && <div className="mx-1 my-2 h-px bg-token" />}
             <button
               type="button"
               onClick={() => toggle(g.id)}
               className="group flex w-full items-center gap-2 px-1 pt-3 pb-1.5 text-left"
             >
-              <span className="flex-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-400">
+              <span className="flex flex-1 items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-400">
                 {g.label}
+                {g.badge && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold normal-case tracking-normal text-white ${
+                      g.accent?.badgeClass ?? "bg-amber-500"
+                    }`}
+                  >
+                    {g.badge}
+                  </span>
+                )}
               </span>
               <ChevronRight
                 size={12}
@@ -289,13 +336,13 @@ export default function InstructorLeftMenu({
                         href={it.href}
                         className={`${baseRow} ${
                           active
-                            ? "bg-amber-50 font-semibold text-amber-700 shadow-sm dark:bg-amber-950/40 dark:text-amber-200"
+                            ? g.accent?.activeClass ?? "bg-amber-50 font-semibold text-amber-700 shadow-sm dark:bg-amber-950/40 dark:text-amber-200"
                             : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                         }`}
                         prefetch={false}
                       >
                         {active && (
-                          <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-amber-500" />
+                          <span className={`absolute inset-y-1 left-0 w-1 rounded-r-full ${g.accent?.railClass ?? "bg-amber-500"}`} />
                         )}
                         <span className={iconCircle}>
                           <Icon
@@ -324,26 +371,30 @@ export default function InstructorLeftMenu({
   const isCourseEditor = /^\/instructor\/courses\/[^/]+(?:\?|$)/.test(
     pathname,
   ) && !/^\/instructor\/courses\/new(?:\?|$)/.test(pathname);
+  // Trang trình chiếu Limio-Live — chiếu lên máy chiếu, sidebar chỉ tổ nội
+  // dung. Cùng cơ chế "ẩn + nút floating để mở lại" như course editor.
+  const isPresentMode = /^\/instructor\/limio-live\/[^/]+\/present(?:\/|\?|$)/.test(pathname);
+  const isImmersive = isCourseEditor || isPresentMode;
 
   return (
     <>
-      {/* Floating menu toggle — mobile mặc định; trên course editor cũng
-          hiện để GV có cách mở lại workspace menu. */}
+      {/* Floating menu toggle — mobile mặc định; trên course editor/present
+          cũng hiện để GV có cách mở lại workspace menu. */}
       <button
         type="button"
         onClick={() => setMobileOpen((v) => !v)}
         aria-label="Mở menu giảng viên"
         className={`fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg transition-transform hover:scale-105 ${
-          isCourseEditor ? "" : "lg:hidden"
+          isImmersive ? "" : "lg:hidden"
         }`}
       >
         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
       </button>
 
-      {/* Drawer — show via mobileOpen on mobile, also reused on course editor desktop */}
+      {/* Drawer — show via mobileOpen on mobile, also reused on course editor/present desktop */}
       {mobileOpen && (
         <div
-          className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm ${isCourseEditor ? "" : "lg:hidden"}`}
+          className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm ${isImmersive ? "" : "lg:hidden"}`}
           onClick={() => setMobileOpen(false)}
         >
           <aside
@@ -355,8 +406,8 @@ export default function InstructorLeftMenu({
         </div>
       )}
 
-      {/* Desktop sidebar — hidden on course editor */}
-      {!isCourseEditor && (
+      {/* Desktop sidebar — hidden on course editor/present */}
+      {!isImmersive && (
         <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] lg:block">
           {nav}
         </aside>

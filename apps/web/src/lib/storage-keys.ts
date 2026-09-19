@@ -62,7 +62,9 @@ type DateShardedKind =
   | "proctor-snapshots"
   | "oral-exam-materials"
   | "whiteboard-pages"
-  | "board-attachments";
+  | "board-attachments"
+  | "limio-live-slides"
+  | "limio-live-resources";
 
 function dateSharded(
   layer: StorageLayer,
@@ -100,6 +102,18 @@ export function whiteboardPageKey(date: Date, filename: string): StorageKey {
 /** Padlet-style board: file GV upload trực tiếp cho note đính kèm (ảnh/pdf, ≤5MB). */
 export function boardAttachmentKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "board-attachments", date, filename);
+}
+/** Limio-Live: PDF rasterize thành ảnh ngay trên client (pdfjs-dist), mỗi
+ * trang upload qua đây rồi tạo 1 slide "content" full-bleed — cùng cơ chế
+ * với whiteboardPageKey. */
+export function liveSlideImageKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "limio-live-slides", date, filename);
+}
+/** Limio-Live: slide "Nội dung" chèn 1 tài nguyên (video/pdf/file/html_block)
+ * — cùng nhóm payload với ContentItem của Lesson (contentSchemas.ts) nhưng
+ * lưu riêng vì slide không gắn Course/Lesson thật. */
+export function liveResourceKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "limio-live-resources", date, filename);
 }
 export function submissionKey(date: Date, filename: string): StorageKey {
   return dateSharded("private", "submissions", date, filename);
@@ -157,6 +171,12 @@ export function whiteboardPageKeyFromFilename(filename: string): StorageKey | nu
 }
 export function boardAttachmentKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "board-attachments", filename);
+}
+export function liveSlideImageKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "limio-live-slides", filename);
+}
+export function liveResourceKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "limio-live-resources", filename);
 }
 export function submissionKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("private", "submissions", filename);
