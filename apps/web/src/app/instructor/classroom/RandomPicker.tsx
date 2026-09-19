@@ -192,26 +192,26 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
           100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         @keyframes winnerGlow {
-          0%, 100% { text-shadow: 0 0 16px rgba(217,119,6,0.35), 0 0 32px rgba(217,119,6,0.2); }
-          50%      { text-shadow: 0 0 24px rgba(217,119,6,0.55), 0 0 48px rgba(217,119,6,0.3); }
+          0%, 100% { text-shadow: 0 0 16px rgba(101,163,13,0.25), 0 0 32px rgba(101,163,13,0.15); }
+          50%      { text-shadow: 0 0 24px rgba(101,163,13,0.4), 0 0 48px rgba(101,163,13,0.2); }
         }
         .winner-pop { animation: winnerPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .winner-glow { animation: winnerGlow 1.8s ease-in-out infinite; }
       `}</style>
       <div
-        className="winner-pop relative rounded-3xl bg-gradient-to-br from-yellow-300 via-orange-400 to-pink-500 p-2 shadow-2xl max-w-[90vw]"
+        className="winner-pop relative max-w-[90vw] rounded-3xl border border-token bg-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="rounded-[20px] bg-white px-12 py-10 text-center">
-          <p className="text-2xl md:text-3xl font-bold text-amber-600 uppercase tracking-[0.3em] mb-4">
-            🎉 Chúc mừng 🎉
+        <div className="px-12 py-10 text-center">
+          <p className="text-lg md:text-xl font-semibold text-brand-600 uppercase tracking-[0.3em] mb-4">
+            Chúc mừng
           </p>
-          <p className="winner-glow text-6xl md:text-8xl font-black text-gray-900 break-words leading-tight px-4">
+          <p className="winner-glow text-6xl md:text-8xl font-bold text-gray-900 break-words leading-tight px-4">
             {winnerPopup.displayName || winnerPopup.name}
           </p>
           <button
             onClick={() => setWinnerPopup(null)}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-400 hover:bg-amber-300 px-6 py-3 text-base font-bold text-gray-900 shadow-lg transition-transform hover:scale-105 active:scale-95"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition-colors"
           >
             Đóng
           </button>
@@ -226,22 +226,22 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
         {winnerPopupNode}
 
         {/* Fullscreen Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="tool-header border-b border-token pb-4">
           <div className="flex items-center gap-3">
-            <Shuffle size={32} className="text-brand-600" strokeWidth={1.5} />
-            <h3 className="text-2xl font-bold">Chọn Sinh Viên Ngẫu Nhiên</h3>
+            <span className="tool-icon"><Shuffle size={20} strokeWidth={1.75} /></span>
+            <h3 className="tool-title">Chọn Sinh Viên Ngẫu Nhiên</h3>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleReset}
-              className="btn-secondary text-sm"
+              className="tool-action"
               title="Reset"
             >
               ↺ Reset
             </button>
             <button
               onClick={() => setIsFullscreen(false)}
-              className="btn-secondary text-sm"
+              className="tool-action"
               title="Exit fullscreen"
             >
               ⛶ Thoát
@@ -249,7 +249,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
             {onExit && (
               <button
                 onClick={onExit}
-                className="btn-secondary text-sm"
+                className="tool-action"
                 title="Exit tool"
               >
                 ✕ Exit
@@ -262,18 +262,18 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
         <div className="flex-1">
           {wheelAvailable && (
             <div className="mb-4 flex flex-wrap items-center gap-4">
-              <div className="inline-flex rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-1">
+              <div className="tool-segmented">
                 <button
                   onClick={() => setTemplate("slot")}
                   disabled={isAnimating}
-                  className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${template === "slot" ? "bg-brand-600 text-white" : "text-muted hover:text-foreground"}`}
+                  aria-pressed={template === "slot"}
                 >
                   🎰 Máy quay
                 </button>
                 <button
                   onClick={() => setTemplate("wheel")}
                   disabled={isAnimating}
-                  className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${template === "wheel" ? "bg-brand-600 text-white" : "text-muted hover:text-foreground"}`}
+                  aria-pressed={template === "wheel"}
                 >
                   🎡 Vòng quay may mắn
                 </button>
@@ -304,7 +304,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
           )}
 
           {template === "wheel" && wheelAvailable ? (
-            <div className="rounded-xl bg-gradient-to-br from-brand-50/40 to-brand-100/20 p-8">
+            <div className="tool-stage p-8">
               {allPicked ? (
                 <div className="text-center py-16">
                   <p className="text-7xl mb-6">🎉</p>
@@ -324,7 +324,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
               )}
             </div>
           ) : allPicked ? (
-            <div className="rounded-xl bg-gradient-to-br from-brand-50/40 to-brand-100/20 p-8 text-center py-16">
+            <div className="tool-stage p-8 text-center py-16">
               <p className="text-7xl mb-6">🎉</p>
               <p className="text-2xl font-semibold mb-4">Đã quay hết {studentList!.length} sinh viên</p>
               <button onClick={resetPicked} className="btn-primary btn-lg mt-6">
@@ -366,19 +366,19 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
   }
 
   return (
-    <div className="rounded-2xl border-2 border-brand-200 bg-[rgb(var(--surface))] p-6 shadow-card relative">
+    <div className="tool-panel relative">
       {winnerPopupNode}
 
       {/* Header with Controls */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Shuffle size={24} className="text-brand-600" strokeWidth={1.5} />
-          <h3 className="text-lg font-bold">Chọn Sinh Viên Ngẫu Nhiên</h3>
+      <div className="tool-header">
+        <div className="flex items-center gap-3">
+          <span className="tool-icon"><Shuffle size={20} strokeWidth={1.75} /></span>
+          <h3 className="tool-title">Chọn Sinh Viên Ngẫu Nhiên</h3>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleReset}
-            className="btn-secondary btn-sm text-xs"
+            className="tool-action"
             title="Reset"
             disabled={!selectedStudent && pickHistory.length === 0 && !isAnimating}
           >
@@ -386,7 +386,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
           </button>
           <button
             onClick={() => setIsFullscreen(true)}
-            className="btn-secondary btn-sm text-xs"
+            className="tool-action"
             title="Fullscreen"
           >
             ⛶ Full
@@ -394,7 +394,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
           {onExit && (
             <button
               onClick={onExit}
-              className="btn-secondary btn-sm text-xs"
+              className="tool-action"
               title="Exit"
             >
               ✕ Exit
@@ -406,18 +406,18 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
       {/* Template selector + exclude toggle */}
       {wheelAvailable && (
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-1">
+          <div className="tool-segmented">
             <button
               onClick={() => setTemplate("slot")}
               disabled={isAnimating}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${template === "slot" ? "bg-brand-600 text-white" : "text-muted hover:text-foreground"}`}
+              aria-pressed={template === "slot"}
             >
               🎰 Máy quay
             </button>
             <button
               onClick={() => setTemplate("wheel")}
               disabled={isAnimating}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${template === "wheel" ? "bg-brand-600 text-white" : "text-muted hover:text-foreground"}`}
+              aria-pressed={template === "wheel"}
             >
               🎡 Vòng quay
             </button>
@@ -449,7 +449,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
 
       {/* Wheel template */}
       {template === "wheel" && wheelAvailable ? (
-        <div className="mt-2 rounded-xl bg-gradient-to-br from-brand-50/40 to-brand-100/20 p-6">
+        <div className="mt-2 tool-stage p-6">
           {allPicked ? (
             <div className="text-center py-12">
               <p className="text-5xl mb-4">🎉</p>
@@ -469,7 +469,7 @@ export default function RandomPicker({ lessonId, studentList, onExit }: RandomPi
           )}
         </div>
       ) : allPicked ? (
-        <div className="mt-2 rounded-xl bg-gradient-to-br from-brand-50/40 to-brand-100/20 p-6 text-center py-12">
+        <div className="mt-2 tool-stage p-6 text-center py-12">
           <p className="text-5xl mb-4">🎉</p>
           <p className="text-lg font-semibold mb-2">Đã quay hết {studentList!.length} sinh viên</p>
           <button onClick={resetPicked} className="btn-primary mt-4">

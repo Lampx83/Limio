@@ -9,7 +9,7 @@ import { apiUrl } from "@/lib/apiUrl";
 const GROUP_STYLE = {
   bg: "bg-brand-50 dark:bg-brand-900/20",
   border: "border-brand-200 dark:border-brand-800",
-  chip: "bg-brand-gradient",
+  chip: "bg-brand-600",
   text: "text-brand-700 dark:text-brand-300",
 };
 
@@ -308,13 +308,13 @@ export default function GroupingTool({
   // Show form if no groups created yet
   if (!groups || !groupingId) {
     return (
-      <div className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 sm:p-8 shadow-card">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-sm">
-            <Users size={22} strokeWidth={2} />
+      <div className="tool-panel">
+        <div className="tool-header !justify-start">
+          <div className="tool-icon">
+            <Users size={20} strokeWidth={1.75} />
           </div>
           <div>
-            <h3 className="text-xl font-bold">Chia nhóm</h3>
+            <h3 className="tool-title">Chia nhóm</h3>
             {totalStudents > 0 && (
               <p className="text-sm text-muted">
                 Sẵn sàng chia <span className="font-medium">{totalStudents}</span> sinh viên
@@ -327,27 +327,19 @@ export default function GroupingTool({
           {/* Mode toggle + stepper on the same row */}
           <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
             <div className="min-w-0">
-              <label className="mb-2 block text-sm font-medium text-muted">Cách chia</label>
-              <div className="inline-flex rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-1">
+              <label className="tool-section-label">Cách chia</label>
+              <div className="tool-segmented">
                 <button
                   type="button"
                   onClick={() => setMode("groupSize")}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    mode === "groupSize"
-                      ? "bg-[rgb(var(--surface))] text-brand-700 shadow-sm"
-                      : "text-muted hover:text-fg"
-                  }`}
+                  aria-pressed={mode === "groupSize"}
                 >
                   Số người / nhóm
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode("numGroups")}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    mode === "numGroups"
-                      ? "bg-[rgb(var(--surface))] text-brand-700 shadow-sm"
-                      : "text-muted hover:text-fg"
-                  }`}
+                  aria-pressed={mode === "numGroups"}
                 >
                   Tổng số nhóm
                 </button>
@@ -355,7 +347,7 @@ export default function GroupingTool({
             </div>
 
             <div className="min-w-0">
-              <label className="mb-2 block text-sm font-medium text-muted">
+              <label className="tool-section-label">
                 {mode === "groupSize" ? "Số người mỗi nhóm" : "Tổng số nhóm"}
               </label>
               <div className="flex items-center gap-3">
@@ -398,7 +390,7 @@ export default function GroupingTool({
           <button
             onClick={handleCreateGroups}
             disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:shadow-brand-glow disabled:opacity-50"
+            className="tool-cta"
           >
             <Shuffle size={16} />
             {isLoading ? "Đang tạo..." : "Tạo nhóm"}
@@ -412,17 +404,17 @@ export default function GroupingTool({
 
   const headerStats = (
     <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-sm">
-        <Users size={22} strokeWidth={2} />
+      <div className="tool-icon">
+        <Users size={20} strokeWidth={1.75} />
       </div>
       <div>
-        <h3 className="text-xl font-bold leading-tight">{groups.length} nhóm</h3>
+        <h3 className="tool-title">{groups.length} nhóm</h3>
         <p className="text-sm text-muted">{totalAssigned} sinh viên đã chia</p>
       </div>
     </div>
   );
 
-  const actionBtn = "inline-flex items-center gap-1.5 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm font-medium text-fg transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-50";
+  const actionBtn = "tool-action";
 
   const renderActions = (fullscreen: boolean) => (
     <div className="flex flex-wrap gap-2">
@@ -462,12 +454,12 @@ export default function GroupingTool({
             key={group.groupNum}
             onDragOver={handleDragOver}
             onDrop={() => handleDropOnGroup(group.groupNum)}
-            className={`rounded-2xl border ${GROUP_STYLE.border} ${GROUP_STYLE.bg} p-4 shadow-sm transition hover:shadow-md`}
+            className={`rounded-2xl border ${GROUP_STYLE.border} ${GROUP_STYLE.bg} p-4`}
           >
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-lg ${GROUP_STYLE.chip} text-sm font-bold text-white shadow-sm`}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg ${GROUP_STYLE.chip} text-sm font-bold text-white`}
                 >
                   {group.groupNum}
                 </div>
@@ -512,7 +504,7 @@ export default function GroupingTool({
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-[rgb(var(--bg))] p-6">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-token pb-4">
+        <div className="tool-header border-b border-token pb-4">
           {headerStats}
           {renderActions(true)}
         </div>
@@ -523,7 +515,7 @@ export default function GroupingTool({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
         {headerStats}
         {renderActions(false)}
       </div>

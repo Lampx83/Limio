@@ -12,7 +12,7 @@ const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
   {
     ssr: false,
-    loading: () => <div className="bg-white p-3 rounded-lg border border-token" style={{ width: 200, height: 200 }} />
+    loading: () => <div className="tool-qr" style={{ width: 200, height: 200 }} />
   }
 );
 
@@ -309,16 +309,16 @@ export default function QuickPoll({
     return (
       <div className="fixed inset-0 bg-[rgb(var(--surface))] flex flex-col p-6 z-50 overflow-y-auto">
         {/* Fullscreen Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="tool-header border-b border-token pb-4">
           <div className="flex items-center gap-3">
-            <BarChart3 size={32} className="text-blue-600" strokeWidth={1.5} />
-            <h3 className="text-2xl font-bold">Poll Đang Diễn Ra</h3>
+            <span className="tool-icon"><BarChart3 size={20} strokeWidth={1.75} /></span>
+            <h3 className="tool-title">Poll Đang Diễn Ra</h3>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="btn-secondary text-sm flex items-center gap-1"
+              className="tool-action"
               title="Làm mới kết quả"
             >
               <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
@@ -327,7 +327,7 @@ export default function QuickPoll({
             <button
               onClick={handleReset}
               disabled={isResetting}
-              className="btn-secondary text-sm flex items-center gap-1"
+              className="tool-action"
               title="Xoá toàn bộ phiếu, bắt đầu phiên mới"
             >
               <RotateCcw size={14} className={isResetting ? "animate-spin" : ""} />
@@ -335,7 +335,7 @@ export default function QuickPoll({
             </button>
             <button
               onClick={() => setIsFullscreen(false)}
-              className="btn-secondary text-sm"
+              className="tool-action"
               title="Exit fullscreen"
             >
               ⛶ Thoát
@@ -350,7 +350,7 @@ export default function QuickPoll({
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             {/* QR Code */}
             <div className="flex flex-col items-center gap-3">
-              <div className="bg-white p-3 rounded-lg border border-token">
+              <div className="tool-qr">
                 <QRCode
                   value={pollUrl}
                   size={200}
@@ -394,9 +394,9 @@ export default function QuickPoll({
                           {voteCount} ({percentage}%)
                         </span>
                       </div>
-                      <div className="h-8 bg-[rgb(var(--surface-muted))] rounded-lg overflow-hidden">
+                      <div className="tool-bar-track">
                         <div
-                          className="h-full bg-gradient-to-r from-accent-400 to-accent-500 transition-all"
+                          className="tool-bar-fill"
                           style={{ width: `${barWidth}%` }}
                         ></div>
                       </div>
@@ -437,9 +437,9 @@ export default function QuickPoll({
                         {voteCount} ({percentage}%)
                       </span>
                     </div>
-                    <div className="h-8 bg-[rgb(var(--surface-muted))] rounded-lg overflow-hidden">
+                    <div className="tool-bar-track">
                       <div
-                        className="h-full bg-gradient-to-r from-accent-400 to-accent-500 transition-all"
+                        className="tool-bar-fill"
                         style={{ width: `${barWidth}%` }}
                       ></div>
                     </div>
@@ -464,7 +464,7 @@ export default function QuickPoll({
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="btn-secondary w-full mt-6 flex items-center justify-center gap-2"
+          className="tool-action mt-6 w-full justify-center"
         >
           <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
           {isRefreshing ? "Đang tải..." : "Làm mới"}
@@ -488,18 +488,18 @@ export default function QuickPoll({
     const maxVotes = Math.max(...Object.values(displayResults.votesByOption), 1);
 
     return (
-      <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card">
+      <div className="tool-panel">
         {/* Header with Controls */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="tool-header">
           <div className="flex items-center gap-2">
-            <BarChart3 size={24} className="text-blue-600" strokeWidth={1.5} />
-            <h3 className="text-lg font-bold">Poll Đang Diễn Ra</h3>
+            <span className="tool-icon"><BarChart3 size={20} strokeWidth={1.75} /></span>
+            <h3 className="tool-title">Poll Đang Diễn Ra</h3>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="btn-secondary btn-sm text-xs flex items-center gap-1"
+              className="tool-action"
               title="Làm mới kết quả"
             >
               <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
@@ -508,7 +508,7 @@ export default function QuickPoll({
             <button
               onClick={handleReset}
               disabled={isResetting}
-              className="btn-secondary btn-sm text-xs flex items-center gap-1"
+              className="tool-action"
               title="Xoá toàn bộ phiếu, bắt đầu phiên mới"
             >
               <RotateCcw size={12} className={isResetting ? "animate-spin" : ""} />
@@ -516,7 +516,7 @@ export default function QuickPoll({
             </button>
             <button
               onClick={() => setIsFullscreen(true)}
-              className="btn-secondary btn-sm text-xs"
+              className="tool-action"
               title="Fullscreen"
             >
               ⛶ Full
@@ -524,7 +524,7 @@ export default function QuickPoll({
             {onExit && (
               <button
                 onClick={onExit}
-                className="btn-secondary btn-sm text-xs"
+                className="tool-action"
                 title="Exit"
               >
                 ✕ Exit
@@ -540,7 +540,7 @@ export default function QuickPoll({
         {/* QR Code Section - Show in normal view when available */}
         {pollUrl && (
           <div className="mb-6 flex justify-center">
-            <div className="bg-white p-3 rounded-lg border border-token">
+            <div className="tool-qr">
               <QRCode
                 value={pollUrl}
                 size={150}
@@ -569,9 +569,9 @@ export default function QuickPoll({
                     {voteCount} ({percentage}%)
                   </span>
                 </div>
-                <div className="h-8 bg-[rgb(var(--surface-muted))] rounded-lg overflow-hidden">
+                <div className="tool-bar-track">
                   <div
-                    className="h-full bg-gradient-to-r from-accent-400 to-accent-500 transition-all"
+                    className="tool-bar-fill"
                     style={{ width: `${barWidth}%` }}
                   ></div>
                 </div>
@@ -596,15 +596,15 @@ export default function QuickPoll({
   }
 
   return (
-    <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card">
+    <div className="tool-panel">
       <div className="flex items-center gap-2">
-        <BarChart3 size={24} className="text-blue-600" strokeWidth={1.5} />
-        <h3 className="text-lg font-bold">Tạo Poll</h3>
+        <span className="tool-icon"><BarChart3 size={20} strokeWidth={1.75} /></span>
+        <h3 className="tool-title">Tạo Poll</h3>
       </div>
 
       <div className="mt-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Câu hỏi</label>
+          <label className="tool-section-label">Câu hỏi</label>
           <input
             type="text"
             value={question}
@@ -615,7 +615,7 @@ export default function QuickPoll({
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Lựa chọn</label>
+          <label className="tool-section-label">Lựa chọn</label>
           <div className="space-y-2">
             {options.map((opt, idx) => (
               <div key={idx} className="flex gap-2">
@@ -665,7 +665,7 @@ export default function QuickPoll({
           <button
             onClick={loadHistory}
             disabled={isLoadingHistory}
-            className="btn-secondary btn-sm text-xs flex items-center gap-1"
+            className="tool-action"
           >
             <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
             {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
@@ -679,7 +679,7 @@ export default function QuickPoll({
             <button
               key={item.id}
               onClick={() => handleLoadPoll(item)}
-              className="w-full text-left rounded-lg border border-token p-3 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-colors"
+              className="tool-list-item"
             >
               <p className="text-sm font-medium truncate">{item.question}</p>
               <p className="text-xs text-muted mt-0.5">

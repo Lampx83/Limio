@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Gamepad2 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { ELIGIBLE_QUESTION_TYPES } from "@/lib/gameshow/constants";
@@ -63,11 +64,16 @@ export default async function NewGameshowPage() {
     .filter((s) => s.questionCount > 0);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-h2">Tạo Gameshow</h1>
-      <p className="text-meta mt-1.5">
-        Chọn nguồn câu hỏi. Học viên tham gia bằng mã, không cần đăng nhập.
-      </p>
+    <main className="w-full py-4">
+      <div className="flex items-center gap-3">
+        <span className="tool-icon"><Gamepad2 size={20} strokeWidth={1.75} /></span>
+        <div>
+          <h1 className="tool-title">Tạo Gameshow</h1>
+          <p className="tool-subtitle">
+            Chọn nguồn câu hỏi. Học viên tham gia bằng mã, không cần đăng nhập.
+          </p>
+        </div>
+      </div>
       <NewGameshowClient quizzes={eligible} questionSets={eligibleSets} />
     </main>
   );

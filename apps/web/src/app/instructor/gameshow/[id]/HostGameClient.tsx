@@ -274,7 +274,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
       <div className="gs-host-blob -left-24 -top-24 h-80 w-80 bg-cyan-300" aria-hidden="true" />
       <div className="gs-host-blob -right-20 top-1/3 h-96 w-96 bg-amber-300" aria-hidden="true" />
       <div className="gs-host-blob -bottom-24 left-1/4 h-80 w-80 bg-fuchsia-300" aria-hidden="true" />
-      <div className="mx-auto max-w-5xl">
+      <div className="w-full">
         <div className="flex items-center justify-between gap-2">
           <h1 className="gs-glass flex min-w-0 items-center gap-2.5 rounded-full py-2 pl-3 pr-5 text-lg font-bold sm:text-xl">
             <svg

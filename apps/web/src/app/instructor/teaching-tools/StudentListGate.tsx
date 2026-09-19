@@ -33,7 +33,7 @@ export default function StudentListGate({
   description,
   children,
 }: StudentListGateProps) {
-  const [mode, setMode] = useState<Mode>("course");
+  const [mode, setMode] = useState<Mode>("manual");
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
@@ -114,7 +114,7 @@ export default function StudentListGate({
   if (confirmed && canConfirm) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between rounded-lg border border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
+        <div className="flex items-center justify-between rounded-xl border border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
           <p className="text-sm">
             <span className="font-medium">{studentList.length} sinh viên</span>{" "}
             <span className="text-muted">
@@ -141,34 +141,26 @@ export default function StudentListGate({
   }
 
   return (
-    <div className="rounded-2xl border-2 border-accent-200 bg-[rgb(var(--surface))] p-6 shadow-card space-y-5">
+    <div className="tool-panel space-y-5">
       <div>
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description && <p className="mt-1 text-sm text-muted">{description}</p>}
+        <h2 className="tool-title">{title}</h2>
+        {description && <p className="tool-subtitle mt-1">{description}</p>}
       </div>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setMode("course")}
-          className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
-            mode === "course"
-              ? "border-brand-500 bg-brand-50 text-brand-700"
-              : "border-token text-muted hover:border-accent-300"
-          }`}
-        >
-          Chọn từ khóa học
-        </button>
+      <div className="tool-segmented">
         <button
           type="button"
           onClick={() => setMode("manual")}
-          className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
-            mode === "manual"
-              ? "border-brand-500 bg-brand-50 text-brand-700"
-              : "border-token text-muted hover:border-accent-300"
-          }`}
+          aria-pressed={mode === "manual"}
         >
           Nhập thủ công
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("course")}
+          aria-pressed={mode === "course"}
+        >
+          Chọn từ khóa học
         </button>
       </div>
 
@@ -218,7 +210,7 @@ export default function StudentListGate({
           type="button"
           onClick={() => setConfirmed(true)}
           disabled={!canConfirm}
-          className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Tiếp tục
         </button>

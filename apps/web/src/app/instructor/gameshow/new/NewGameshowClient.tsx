@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import StickyMobileCTA from "@/components/ui/StickyMobileCTA";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
 import { TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/gameshow/teams";
@@ -123,68 +124,78 @@ export default function NewGameshowClient({
     }
   };
 
-  const tabCls = (active: boolean) =>
-    `flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 ${
-      active
-        ? "bg-[rgb(var(--surface))] text-[rgb(var(--text))] shadow-sm"
-        : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
-    }`;
+  const selectedTitle =
+    tab === "quiz"
+      ? quizzes.find((q) => q.id === selectedQuiz)?.title
+      : questionSets.find((x) => x.id === selectedSet)?.title;
+  const selectedCount =
+    tab === "quiz"
+      ? quizzes.find((q) => q.id === selectedQuiz)?.questionCount
+      : questionSets.find((x) => x.id === selectedSet)?.questionCount;
 
-  const optionCls = (active: boolean) =>
-    `group flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-all duration-150 ${
+  // Thẻ chọn nguồn: cả thẻ là vùng bấm, tiêu đề xuống nhiều dòng thay vì
+  // bị cắt, số câu + dấu chọn nằm cùng một hàng cuối thẻ để mắt không phải
+  // chạy ngang cả màn hình rộng mới nối được tên với ô chọn.
+  const cardCls = (active: boolean) =>
+    `group relative flex min-h-[7rem] cursor-pointer flex-col justify-between gap-3 rounded-xl border p-4 transition-colors ${
       active
         ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.06)] ring-1 ring-[rgb(var(--brand)/0.35)]"
-        : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--brand)/0.4)] hover:bg-[rgb(var(--surface-muted))]"
+        : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--brand)/0.45)] hover:bg-[rgb(var(--surface-muted))]"
     }`;
 
-  return (
-    <div className="mt-8 space-y-6">
-      <div role="tablist" className="flex gap-1 rounded-xl bg-[rgb(var(--surface-muted))] p-1">
-        <button role="tab" aria-selected={tab === "question-set"} onClick={() => setTab("question-set")} className={tabCls(tab === "question-set")}>
-          Bộ câu hỏi tự soạn
-        </button>
-        <button role="tab" aria-selected={tab === "quiz"} onClick={() => setTab("quiz")} className={tabCls(tab === "quiz")}>
-          Quiz có sẵn
-        </button>
-      </div>
+  const gridCls = "grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
 
-      <section className="space-y-3">
+  const emptyCls =
+    "rounded-xl border border-dashed border-[rgb(var(--border))] p-8 text-center text-sm text-[rgb(var(--text-muted))]";
+
+  return (
+    <div className="mt-6 grid items-start gap-6 pb-20 lg:pb-0 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      {/* Cột trái: chọn nguồn câu hỏi */}
+      <div className="min-w-0 space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div role="tablist" className="tool-segmented">
+            <button role="tab" aria-selected={tab === "question-set"} aria-pressed={tab === "question-set"} onClick={() => setTab("question-set")}>
+              Bộ câu hỏi tự soạn
+            </button>
+            <button role="tab" aria-selected={tab === "quiz"} aria-pressed={tab === "quiz"} onClick={() => setTab("quiz")}>
+              Quiz có sẵn
+            </button>
+          </div>
+          {tab === "question-set" && questionSets.length > 0 && (
+            <Link href="/instructor/gameshow/question-sets/new" className="tool-action">
+              + Soạn bộ mới
+            </Link>
+          )}
+        </div>
+
         {tab === "question-set" ? (
           questionSets.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[rgb(var(--border))] p-8 text-center text-sm text-[rgb(var(--text-muted))]">
+            <div className={emptyCls}>
               Chưa có bộ câu hỏi nào.{" "}
               <Link href="/instructor/gameshow/question-sets/new" className="font-medium text-[rgb(var(--brand))] hover:underline">
                 Soạn bộ mới
               </Link>
             </div>
           ) : (
-            <>
-              <div className="space-y-2">
-                {questionSets.map((s) => (
-                  <label key={s.id} className={optionCls(selectedSet === s.id)}>
-                    <span className="min-w-0 truncate text-sm font-medium">{s.title}</span>
-                    <span className="flex items-center gap-3">
-                      <Count n={s.questionCount} />
-                      <Radio name="question-set" checked={selectedSet === s.id} onChange={() => setSelectedSet(s.id)} />
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <Link
-                href="/instructor/gameshow/question-sets/new"
-                className="inline-block text-sm font-medium text-[rgb(var(--brand))] hover:underline"
-              >
-                + Soạn bộ câu hỏi mới
-              </Link>
-            </>
+            <div className={gridCls}>
+              {questionSets.map((s) => (
+                <label key={s.id} className={cardCls(selectedSet === s.id)}>
+                  <span className="text-sm font-semibold leading-snug">{s.title}</span>
+                  <span className="flex items-center justify-between gap-3">
+                    <Count n={s.questionCount} />
+                    <Radio name="question-set" checked={selectedSet === s.id} onChange={() => setSelectedSet(s.id)} />
+                  </span>
+                </label>
+              ))}
+            </div>
           )
         ) : quizzes.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[rgb(var(--border))] p-8 text-center text-sm text-[rgb(var(--text-muted))]">
+          <div className={emptyCls}>
             Chưa có quiz nào có câu trắc nghiệm/đúng-sai. Tạo quiz với ít nhất 1 câu loại này trước.
           </div>
         ) : (
           <>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="flex flex-wrap items-center gap-2">
               <select
                 aria-label="Lọc theo khoá học"
                 value={courseFilter}
@@ -192,7 +203,7 @@ export default function NewGameshowClient({
                   setCourseFilter(e.target.value);
                   setLessonFilter("");
                 }}
-                className="select"
+                className="select !w-auto min-w-[14rem] max-w-full sm:max-w-sm"
               >
                 <option value="">Tất cả khoá học</option>
                 {courseOptions.map((c) => (
@@ -206,7 +217,7 @@ export default function NewGameshowClient({
                 value={lessonFilter}
                 onChange={(e) => setLessonFilter(e.target.value)}
                 disabled={!courseFilter}
-                className="select disabled:cursor-not-allowed disabled:opacity-60"
+                className="select !w-auto min-w-[14rem] max-w-full disabled:cursor-not-allowed disabled:opacity-60 sm:max-w-sm"
               >
                 <option value="">{courseFilter ? "Tất cả bài học" : "Chọn khoá học trước"}</option>
                 {lessonOptions.map((l) => (
@@ -215,25 +226,23 @@ export default function NewGameshowClient({
                   </option>
                 ))}
               </select>
+              <span className="text-caption ml-auto">{visibleQuizzes.length} quiz</span>
             </div>
-            <p className="text-caption">{visibleQuizzes.length} quiz</p>
             {visibleQuizzes.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[rgb(var(--border))] p-6 text-center text-sm text-[rgb(var(--text-muted))]">
-                Không có quiz nào khớp bộ lọc.
-              </div>
+              <div className={emptyCls}>Không có quiz nào khớp bộ lọc.</div>
             ) : (
-              <div className="max-h-[26rem] space-y-2 overflow-y-auto pr-1">
+              <div className={`${gridCls} lg:max-h-[calc(100vh-16rem)] overflow-y-auto pr-1`}>
                 {visibleQuizzes.map((q) => {
                   const trail = [!courseFilter && q.courseTitle, !lessonFilter && q.lessonTitle]
                     .filter(Boolean)
                     .join(" › ");
                   return (
-                    <label key={q.id} className={optionCls(selectedQuiz === q.id)}>
+                    <label key={q.id} className={cardCls(selectedQuiz === q.id)}>
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium">{q.title}</span>
-                        {trail && <span className="text-caption block truncate">{trail}</span>}
+                        <span className="block text-sm font-semibold leading-snug">{q.title}</span>
+                        {trail && <span className="text-caption mt-1 line-clamp-2 block">{trail}</span>}
                       </span>
-                      <span className="flex items-center gap-3">
+                      <span className="flex items-center justify-between gap-3">
                         <Count n={q.questionCount} />
                         <Radio name="quiz" checked={selectedQuiz === q.id} onChange={() => setSelectedQuiz(q.id)} />
                       </span>
@@ -244,55 +253,80 @@ export default function NewGameshowClient({
             )}
           </>
         )}
-      </section>
+      </div>
 
-      <section className="card !p-4">
-        <label className="flex cursor-pointer items-center justify-between gap-4">
-          <span>
-            <span className="block text-sm font-semibold">Chơi theo nhóm</span>
-            <span className="text-caption mt-0.5 block">
-              Học viên tự chọn đội lúc vào phòng, xếp hạng &amp; podium tính theo đội.
+      {/* Cột phải: cài đặt + nút tạo, dính khi cuộn danh sách dài */}
+      <aside className="space-y-4 lg:sticky lg:top-6">
+        <section className="tool-panel !p-4 space-y-1">
+          <p className="tool-section-label !mb-1">Đã chọn</p>
+          {selectedTitle ? (
+            <>
+              <p className="text-sm font-semibold leading-snug">{selectedTitle}</p>
+              <p className="text-caption">{selectedCount} câu hỏi</p>
+            </>
+          ) : (
+            <p className="text-caption">Chưa chọn nguồn câu hỏi</p>
+          )}
+        </section>
+
+        <section className="tool-panel !p-4">
+          <label className="flex cursor-pointer items-center justify-between gap-4">
+            <span>
+              <span className="block text-sm font-semibold">Chơi theo nhóm</span>
+              <span className="text-caption mt-0.5 block">
+                Học viên tự chọn đội lúc vào phòng, xếp hạng &amp; podium tính theo đội.
+              </span>
             </span>
-          </span>
-          <span className="relative inline-flex shrink-0">
-            <input
-              type="checkbox"
-              role="switch"
-              checked={teamMode}
-              onChange={(e) => setTeamMode(e.target.checked)}
-              className="peer sr-only"
-            />
-            <span className="h-6 w-11 rounded-full bg-[rgb(var(--border))] transition-colors peer-checked:bg-[rgb(var(--brand))] peer-focus-visible:ring-2 peer-focus-visible:ring-[rgb(var(--brand)/0.4)]" />
-            <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
-          </span>
-        </label>
-
-        {teamMode && (
-          <div className="mt-4 flex items-center gap-3 border-t border-[rgb(var(--border))] pt-4">
-            <label htmlFor="team-count" className="text-sm font-medium text-[rgb(var(--text-muted))]">
-              Số đội
-            </label>
-            <input
-              id="team-count"
-              type="range"
-              min={TEAM_COUNT_MIN}
-              max={TEAM_COUNT_MAX}
-              value={teamCount}
-              onChange={(e) => setTeamCount(Number(e.target.value))}
-              className="flex-1 accent-[rgb(var(--brand))]"
-            />
-            <span className="w-8 rounded-md bg-[rgb(var(--surface-muted))] py-0.5 text-center text-sm font-semibold">
-              {teamCount}
+            <span className="relative inline-flex shrink-0">
+              <input
+                type="checkbox"
+                role="switch"
+                checked={teamMode}
+                onChange={(e) => setTeamMode(e.target.checked)}
+                className="peer sr-only"
+              />
+              <span className="h-6 w-11 rounded-full bg-[rgb(var(--border))] transition-colors peer-checked:bg-[rgb(var(--brand))] peer-focus-visible:ring-2 peer-focus-visible:ring-[rgb(var(--brand)/0.4)]" />
+              <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
             </span>
-          </div>
-        )}
-      </section>
+          </label>
 
-      {err && <div className="banner-danger">{err}</div>}
+          {teamMode && (
+            <div className="mt-4 flex items-center gap-3 border-t border-[rgb(var(--border))] pt-4">
+              <label htmlFor="team-count" className="text-sm font-medium text-[rgb(var(--text-muted))]">
+                Số đội
+              </label>
+              <input
+                id="team-count"
+                type="range"
+                min={TEAM_COUNT_MIN}
+                max={TEAM_COUNT_MAX}
+                value={teamCount}
+                onChange={(e) => setTeamCount(Number(e.target.value))}
+                className="flex-1 accent-[rgb(var(--brand))]"
+              />
+              <span className="w-8 rounded-md bg-[rgb(var(--surface-muted))] py-0.5 text-center text-sm font-semibold">
+                {teamCount}
+              </span>
+            </div>
+          )}
+        </section>
 
-      <button onClick={onCreate} disabled={busy || !selected} className="btn-primary btn-lg w-full">
-        {busy ? "Đang tạo..." : "Tạo phiên"}
-      </button>
+        {err && <div className="banner-danger">{err}</div>}
+
+        <button onClick={onCreate} disabled={busy || !selected} className="tool-cta hidden lg:inline-flex">
+          {busy ? "Đang tạo..." : "Tạo phiên"}
+        </button>
+      </aside>
+
+      <StickyMobileCTA
+        primary={selectedTitle ?? "Chưa chọn nguồn câu hỏi"}
+        secondary={selectedTitle ? `${selectedCount} câu hỏi` : undefined}
+        action={
+          <button onClick={onCreate} disabled={busy || !selected} className="tool-cta !w-auto">
+            {busy ? "Đang tạo..." : "Tạo phiên"}
+          </button>
+        }
+      />
     </div>
   );
 }

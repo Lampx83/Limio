@@ -221,6 +221,83 @@
     @apply chip bg-danger-100 text-danger-700;
   }
 
+  /* ---------- Teaching-tool shell ----------
+     Quick Poll, Word Cloud, Gọi tên, Phân nhóm, Gameshow dùng chung bộ này
+     để cả 5 công cụ trông cùng một họ: phẳng (không đổ bóng, không viền dày),
+     một màu nhấn duy nhất (brand), tile icon và tiêu đề đặt cùng kiểu. */
+  .tool-panel {
+    @apply rounded-2xl border p-5 sm:p-7;
+    background-color: rgb(var(--surface));
+    border-color: rgb(var(--border));
+  }
+  .tool-header {
+    @apply mb-6 flex flex-wrap items-center justify-between gap-3;
+  }
+  .tool-icon {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl;
+    background-color: rgb(var(--brand-soft));
+    color: rgb(var(--brand));
+  }
+  .tool-title {
+    @apply text-lg font-semibold leading-tight;
+  }
+  .tool-subtitle {
+    @apply text-sm text-muted;
+  }
+  .tool-section-label {
+    @apply mb-2 block text-sm font-medium;
+    color: rgb(var(--text-muted));
+  }
+  .tool-action {
+    @apply inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: rgb(var(--surface));
+    border-color: rgb(var(--border));
+    color: rgb(var(--text));
+  }
+  .tool-action:hover:not(:disabled) {
+    background-color: rgb(var(--surface-muted));
+  }
+  .tool-cta {
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .tool-stage {
+    @apply rounded-xl;
+    background-color: rgb(var(--surface-muted));
+  }
+  .tool-bar-track {
+    @apply h-9 overflow-hidden rounded-lg;
+    background-color: rgb(var(--surface-muted));
+  }
+  .tool-bar-fill {
+    @apply h-full rounded-lg bg-brand-600 transition-all duration-500;
+  }
+  .tool-qr {
+    @apply inline-block rounded-xl border bg-white p-3;
+    border-color: rgb(var(--border));
+  }
+  .tool-list-item {
+    @apply w-full rounded-xl border p-3 text-left transition-colors;
+    border-color: rgb(var(--border));
+  }
+  .tool-list-item:hover {
+    background-color: rgb(var(--surface-muted));
+  }
+  .tool-segmented {
+    @apply inline-flex rounded-xl border p-1;
+    background-color: rgb(var(--surface-muted));
+    border-color: rgb(var(--border));
+  }
+  .tool-segmented > button {
+    @apply rounded-lg px-3 py-1.5 text-sm font-medium transition-colors;
+    color: rgb(var(--text-muted));
+  }
+  .tool-segmented > button[aria-pressed="true"],
+  .tool-segmented > button.is-active {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--text));
+    box-shadow: 0 0 0 1px rgb(var(--border));
+  }
+
   /* Brand text gradient — Watermelon: lime → pink */
   .text-gradient {
     @apply bg-clip-text text-transparent;

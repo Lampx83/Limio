@@ -12,7 +12,7 @@ const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
   {
     ssr: false,
-    loading: () => <div className="bg-white p-3 rounded-lg border border-token" style={{ width: 200, height: 200 }} />
+    loading: () => <div className="tool-qr" style={{ width: 200, height: 200 }} />
   }
 );
 
@@ -43,10 +43,10 @@ interface WordCloudProps {
 }
 
 const WORD_COLORS = [
-  "from-accent-400 to-accent-500",
-  "from-blue-400 to-blue-500",
-  "from-purple-400 to-purple-500",
-  "from-pink-400 to-pink-500",
+  "bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-200",
+  "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200",
+  "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+  "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
 ];
 
 export default function WordCloud({ lessonId, studentList, onExit, initialPrompt }: WordCloudProps) {
@@ -264,14 +264,14 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
     return results?.wordFrequency || {};
   };
 
-  const RefreshBtn = ({ size = 14, className = "btn-secondary btn-sm text-xs" }: { size?: number; className?: string }) => (
+  const RefreshBtn = ({ size = 14, className = "tool-action" }: { size?: number; className?: string }) => (
     <button onClick={handleRefresh} disabled={isRefreshing} className={`${className} flex items-center gap-1`} title="Làm mới kết quả">
       <RefreshCw size={size} className={isRefreshing ? "animate-spin" : ""} />
       {isRefreshing ? "..." : "Làm mới"}
     </button>
   );
 
-  const ResetBtn = ({ size = 14, className = "btn-secondary btn-sm text-xs" }: { size?: number; className?: string }) => (
+  const ResetBtn = ({ size = 14, className = "tool-action" }: { size?: number; className?: string }) => (
     <button onClick={handleReset} disabled={isResetting} className={`${className} flex items-center gap-1`} title="Xoá kết quả, bắt đầu phiên mới">
       <RotateCcw size={size} className={isResetting ? "animate-spin" : ""} />
       {isResetting ? "..." : "Reset"}
@@ -283,12 +283,12 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
     const sortedWords = Object.entries(wordFrequency).sort(([, a], [, b]) => b - a).slice(0, 50);
     return (
       <>
-        <div className="bg-[rgb(var(--surface-muted))] rounded-lg p-6 min-h-64 flex items-center justify-center">
+        <div className="bg-[rgb(var(--surface-muted))] rounded-xl p-6 min-h-64 flex items-center justify-center">
           <div className="flex flex-wrap gap-3 justify-center items-center">
             {sortedWords.length > 0 ? sortedWords.map(([word, freq], idx) => (
               <span
                 key={word}
-                className={`px-3 py-1.5 rounded-full text-white font-semibold bg-gradient-to-r ${WORD_COLORS[idx % WORD_COLORS.length]} transition-transform hover:scale-110`}
+                className={`px-3 py-1.5 rounded-full font-semibold ${WORD_COLORS[idx % WORD_COLORS.length]} transition-transform hover:scale-110`}
                 style={{ fontSize: `${getWordSize(freq, maxFrequency)}rem` }}
               >
                 {word}
@@ -312,15 +312,15 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
 
     return (
       <div className="fixed inset-0 bg-[rgb(var(--surface))] flex flex-col p-6 z-50 overflow-y-auto">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="tool-header border-b border-token pb-4">
           <div className="flex items-center gap-3">
-            <Cloud size={32} className="text-purple-600" strokeWidth={1.5} />
-            <h3 className="text-2xl font-bold">Word Cloud Đang Diễn Ra</h3>
+            <span className="tool-icon"><Cloud size={20} strokeWidth={1.75} /></span>
+            <h3 className="tool-title">Word Cloud Đang Diễn Ra</h3>
           </div>
           <div className="flex gap-2">
-            {!isStateless && <RefreshBtn size={14} className="btn-secondary text-sm" />}
-            <ResetBtn size={14} className="btn-secondary text-sm" />
-            <button onClick={() => setIsFullscreen(false)} className="btn-secondary text-sm">⛶ Thoát</button>
+            {!isStateless && <RefreshBtn size={14} className="tool-action" />}
+            <ResetBtn size={14} className="tool-action" />
+            <button onClick={() => setIsFullscreen(false)} className="tool-action">⛶ Thoát</button>
           </div>
         </div>
 
@@ -328,7 +328,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
           {cloudUrl ? (
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
               <div className="flex flex-col items-center gap-3">
-                <div className="bg-white p-3 rounded-lg border border-token">
+                <div className="tool-qr">
                   <QRCode value={cloudUrl} size={200} level="H" includeMargin />
                 </div>
                 <button
@@ -374,7 +374,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
         </div>
 
         {!isStateless && (
-          <RefreshBtn size={14} className="btn-secondary w-full mt-6 justify-center" />
+          <RefreshBtn size={14} className="tool-action mt-6 w-full justify-center" />
         )}
       </div>
     );
@@ -386,23 +386,23 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
     const totalSubmissions = isStateless ? submissions.length : (results?.totalSubmissions || 0);
 
     return (
-      <div className="rounded-2xl border-2 border-purple-200 bg-[rgb(var(--surface))] p-6 shadow-card">
-        <div className="flex items-center justify-between mb-4">
+      <div className="tool-panel">
+        <div className="tool-header">
           <div className="flex items-center gap-2">
-            <Cloud size={24} className="text-purple-600" strokeWidth={1.5} />
-            <h3 className="text-lg font-bold">Word Cloud Đang Diễn Ra</h3>
+            <span className="tool-icon"><Cloud size={20} strokeWidth={1.75} /></span>
+            <h3 className="tool-title">Word Cloud Đang Diễn Ra</h3>
           </div>
           <div className="flex gap-2">
             {!isStateless && <RefreshBtn />}
             <ResetBtn />
-            <button onClick={() => setIsFullscreen(true)} className="btn-secondary btn-sm text-xs">⛶ Full</button>
-            {onExit && <button onClick={onExit} className="btn-secondary btn-sm text-xs">✕ Exit</button>}
+            <button onClick={() => setIsFullscreen(true)} className="tool-action">⛶ Full</button>
+            {onExit && <button onClick={onExit} className="tool-action">✕ Exit</button>}
           </div>
         </div>
 
         {cloudUrl && (
           <div className="mb-6 flex justify-center">
-            <div className="bg-white p-3 rounded-lg border border-token">
+            <div className="tool-qr">
               <QRCode value={cloudUrl} size={150} level="H" includeMargin />
             </div>
           </div>
@@ -426,7 +426,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
         )}
 
         {!isStateless && (
-          <RefreshBtn size={14} className="btn-secondary w-full mt-6 justify-center" />
+          <RefreshBtn size={14} className="tool-action mt-6 w-full justify-center" />
         )}
       </div>
     );
@@ -434,15 +434,15 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
 
   // ── Create form ─────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl border-2 border-purple-200 bg-[rgb(var(--surface))] p-6 shadow-card">
+    <div className="tool-panel">
       <div className="flex items-center gap-2">
-        <Cloud size={24} className="text-purple-600" strokeWidth={1.5} />
-        <h3 className="text-lg font-bold">Tạo Word Cloud</h3>
+        <span className="tool-icon"><Cloud size={20} strokeWidth={1.75} /></span>
+        <h3 className="tool-title">Tạo Word Cloud</h3>
       </div>
 
       <div className="mt-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Câu hỏi</label>
+          <label className="tool-section-label">Câu hỏi</label>
           <input
             type="text"
             value={prompt}
@@ -467,7 +467,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
           <button
             onClick={loadHistory}
             disabled={isLoadingHistory}
-            className="btn-secondary btn-sm text-xs flex items-center gap-1"
+            className="tool-action"
           >
             <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
             {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
@@ -481,7 +481,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
             <button
               key={item.id}
               onClick={() => handleLoadCloud(item)}
-              className="w-full text-left rounded-lg border border-token p-3 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-colors"
+              className="tool-list-item"
             >
               <p className="text-sm font-medium truncate">{item.prompt}</p>
               <p className="text-xs text-muted mt-0.5">
