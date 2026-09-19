@@ -254,6 +254,71 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     openAudienceWindow(deckId);
   };
 
+  // ── Cuộn song song: presenter cuộn slide → màn chiếu cuộn theo. Hai cửa sổ cùng
+  // trình duyệt nên dùng BroadcastChannel (tức thì, không qua server/polling).
+  // Gửi TỈ LỆ cuộn (0..1) chứ không gửi px vì 2 cửa sổ khác kích thước; vùng cuộn
+  // được nhận diện bằng thứ tự trong danh sách phần tử cuộn được của khung slide.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const chanRef = useRef<BroadcastChannel | null>(null);
+  const pendingScrollRef = useRef<{ slideId: string; idx: number; ratio: number } | null>(null);
+  const currentSlideIdRef = useRef<string | null>(null);
+  currentSlideIdRef.current = currentSlideId;
+  const scrollRafRef = useRef(0);
+
+  const listScrollables = (root: HTMLElement) =>
+    [root, ...Array.from(root.querySelectorAll<HTMLElement>("*"))].filter(
+      (el) => el.scrollHeight > el.clientHeight + 1 && ["auto", "scroll"].includes(getComputedStyle(el).overflowY)
+    );
+
+  const applyPendingScroll = () => {
+    const m = pendingScrollRef.current;
+    const card = cardRef.current;
+    if (!m || !card || m.slideId !== currentSlideIdRef.current) return;
+    const el = listScrollables(card)[m.idx];
+    if (el) el.scrollTop = m.ratio * (el.scrollHeight - el.clientHeight);
+  };
+
+  useEffect(() => {
+    if (!sessionId || typeof BroadcastChannel === "undefined") return;
+    const ch = new BroadcastChannel(`limio-live-${sessionId}`);
+    chanRef.current = ch;
+    if (mode === "audience") {
+      ch.onmessage = (e) => {
+        if (e.data?.type !== "scroll") return;
+        pendingScrollRef.current = e.data;
+        applyPendingScroll();
+      };
+    }
+    return () => {
+      ch.close();
+      chanRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, mode]);
+
+  // Slide mới vừa hiện ở màn chiếu (poll trễ hơn tin nhắn cuộn) → áp lại vị trí đang chờ.
+  useEffect(() => {
+    if (mode !== "audience") return;
+    const t = setTimeout(applyPendingScroll, 80);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSlideId, runtime, loadingSlide]);
+
+  const handleCardScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (mode !== "presenter" || !chanRef.current || !currentSlide || scrollRafRef.current) return;
+    const el = e.target as HTMLElement;
+    const slideId = currentSlide.id;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = 0;
+      const card = cardRef.current;
+      if (!card) return;
+      const idx = listScrollables(card).indexOf(el);
+      const max = el.scrollHeight - el.clientHeight;
+      if (idx < 0 || max <= 0) return;
+      chanRef.current?.postMessage({ type: "scroll", slideId, idx, ratio: el.scrollTop / max });
+    });
+  };
+
   const slides = deck?.slides ?? [];
   const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
   const currentSlide = currentIndex >= 0 ? slides[currentIndex] : null;
@@ -467,6 +532,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
           ) : (
             <div
               key={currentSlide.id}
+              ref={cardRef}
+              onScrollCapture={handleCardScroll}
               style={{ background: slideThemeBg(deck.theme) }}
               className={`box-border flex min-h-0 w-full flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
