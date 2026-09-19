@@ -20,42 +20,42 @@ export default async function QuestionSetsPage() {
   });
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
+    <main className="w-full py-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">📝 Bộ câu hỏi Gameshow</h1>
-          <p className="mt-1 text-sm text-faint">
+          <h1 className="text-h2">Bộ câu hỏi Gameshow</h1>
+          <p className="text-meta mt-1.5">
             Soạn câu hỏi trực tiếp cho Gameshow — không cần Quiz có sẵn.
           </p>
         </div>
         <Link
           href="/instructor/gameshow/question-sets/new"
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="btn-primary"
         >
           + Bộ mới
         </Link>
       </div>
 
       {sets.length === 0 ? (
-        <div className="mt-6 rounded border border-dashed border-default p-6 text-center text-sm text-faint">
+        <div className="mt-6 rounded-xl border border-dashed border-[rgb(var(--border))] p-8 text-center text-sm text-[rgb(var(--text-muted))]">
           Chưa có bộ câu hỏi nào.
         </div>
       ) : (
-        <ul className="mt-6 space-y-2">
+        <ul className="mt-8 space-y-2">
           {sets.map((s) => (
             <li key={s.id}>
               <Link
                 href={`/instructor/gameshow/question-sets/${s.id}`}
-                className="flex items-center justify-between rounded border border-default bg-white p-4 hover:border-blue-400 hover:bg-blue-50"
+                className="group flex items-center justify-between rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-5 py-4 transition-all duration-150 hover:border-[rgb(var(--brand)/0.5)] hover:bg-[rgb(var(--brand)/0.05)] hover:shadow-sm"
                 prefetch={false}
               >
                 <div>
                   <p className="text-sm font-semibold">{s.title}</p>
-                  <p className="mt-0.5 text-xs text-faint">
+                  <p className="text-caption mt-0.5">
                     {s._count.items} câu hỏi · cập nhật {formatDateTime(s.updatedAt)}
                   </p>
                 </div>
-                <span className="text-sm text-blue-600">Sửa →</span>
+                <span className="text-sm font-medium text-[rgb(var(--brand))]">Sửa</span>
               </Link>
             </li>
           ))}

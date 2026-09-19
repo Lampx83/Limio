@@ -32,9 +32,9 @@ export default function NewQuestionSetPage() {
   };
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
-      <h1 className="text-2xl font-bold">📝 Bộ câu hỏi mới</h1>
-      <p className="mt-1 text-sm text-faint">Đặt tên trước, thêm câu hỏi ở bước sau.</p>
+    <main className="w-full py-4">
+      <h1 className="text-h2">Bộ câu hỏi mới</h1>
+      <p className="text-meta mt-1.5">Đặt tên trước, thêm câu hỏi ở bước sau.</p>
 
       <input
         type="text"
@@ -42,22 +42,22 @@ export default function NewQuestionSetPage() {
         onChange={(e) => setTitle(e.target.value)}
         maxLength={200}
         placeholder="Vd: Ôn tập chương 1 — Đại số"
-        className="mt-6 w-full rounded border border-default px-3 py-2.5 text-sm"
+        className="input mt-8 py-2.5"
         autoFocus
       />
 
       {err && (
-        <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
-          ⚠ {err}
+        <div className="banner-danger mt-3">
+          {err}
         </div>
       )}
 
       <button
         onClick={onCreate}
         disabled={busy || !title.trim()}
-        className="mt-4 rounded bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+        className="btn-primary mt-4"
       >
-        {busy ? "Đang tạo..." : "Tạo & Soạn câu hỏi →"}
+        {busy ? "Đang tạo..." : "Tạo & soạn câu hỏi"}
       </button>
     </main>
   );

@@ -131,29 +131,29 @@ export default function QuestionSetEditorClient({ setId }: { setId: string }) {
   };
 
   if (!loaded) {
-    return <main className="mx-auto max-w-2xl px-4 py-8 text-sm text-faint">Đang tải...</main>;
+    return <main className="w-full py-4 text-meta">Đang tải...</main>;
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
+    <main className="w-full py-4">
       <Link
         href="/instructor/gameshow/question-sets"
-        className="text-sm text-blue-600 hover:underline"
+        className="text-sm font-medium text-[rgb(var(--brand))] hover:underline"
       >
         ← Bộ câu hỏi
       </Link>
-      <h1 className="mt-2 text-2xl font-bold">📝 {title}</h1>
-      <p className="mt-1 text-sm text-faint">{items.length} câu hỏi</p>
+      <h1 className="text-h2 mt-3">{title}</h1>
+      <p className="text-meta mt-1.5">{items.length} câu hỏi</p>
 
       {err && (
-        <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
-          ⚠ {err}
+        <div className="banner-danger mt-3">
+          {err}
         </div>
       )}
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-8 space-y-3">
         {items.map((it, i) => (
-          <div key={it.id} className="rounded border border-default bg-white p-4">
+          <div key={it.id} className="card !p-4">
             {editingId === it.id ? (
               <QuestionForm
                 initial={it}
@@ -165,18 +165,23 @@ export default function QuestionSetEditorClient({ setId }: { setId: string }) {
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <span className="text-xs font-medium text-faint">
-                      Câu {i + 1} · {it.type === "mcq" ? "Trắc nghiệm" : "Đúng/Sai"} ·{" "}
-                      {it.timeLimitSec}s
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-[rgb(var(--text-muted))]">
+                      <span className="rounded-full bg-[rgb(var(--brand)/0.12)] px-2.5 py-0.5 font-semibold text-[rgb(var(--brand))]">
+                        Câu {i + 1}
+                      </span>
+                      {it.type === "mcq" ? "Trắc nghiệm" : "Đúng/Sai"} · {it.timeLimitSec}s
                     </span>
-                    <p className="mt-1 text-sm font-semibold">{it.prompt}</p>
+                    <p className="mt-2 text-sm font-semibold">{it.prompt}</p>
                     <ul className="mt-2 space-y-1">
                       {it.options.map((o) => (
                         <li
                           key={o.id}
-                          className={`text-xs ${o.isCorrect ? "font-semibold text-green-700" : "text-faint"}`}
+                          className={`flex items-center gap-2 text-xs ${o.isCorrect ? "font-semibold text-emerald-600" : "text-[rgb(var(--text-muted))]"}`}
                         >
-                          {o.isCorrect ? "✅" : "◻"} {o.label}
+                          <span
+                            className={`h-1.5 w-1.5 flex-none rounded-full ${o.isCorrect ? "bg-emerald-500" : "bg-[rgb(var(--border))]"}`}
+                          />
+                          {o.label}
                         </li>
                       ))}
                     </ul>
@@ -186,27 +191,27 @@ export default function QuestionSetEditorClient({ setId }: { setId: string }) {
                       <button
                         onClick={() => onMove(it.id, "up")}
                         disabled={busy || i === 0}
-                        className="rounded border border-default bg-white px-2 py-1 text-xs disabled:opacity-30"
+                        className="btn-secondary btn-sm !px-2.5"
                       >
                         ↑
                       </button>
                       <button
                         onClick={() => onMove(it.id, "down")}
                         disabled={busy || i === items.length - 1}
-                        className="rounded border border-default bg-white px-2 py-1 text-xs disabled:opacity-30"
+                        className="btn-secondary btn-sm !px-2.5"
                       >
                         ↓
                       </button>
                     </div>
                     <button
                       onClick={() => setEditingId(it.id)}
-                      className="rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
+                      className="btn-secondary btn-sm"
                     >
                       Sửa
                     </button>
                     <button
                       onClick={() => onDelete(it.id)}
-                      className="rounded border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-800 hover:bg-red-100"
+                      className="btn-sm btn inline-flex text-[rgb(var(--danger))] hover:bg-[rgb(var(--surface-danger))]"
                     >
                       Xoá
                     </button>
@@ -219,13 +224,13 @@ export default function QuestionSetEditorClient({ setId }: { setId: string }) {
       </div>
 
       {showAddForm ? (
-        <div className="mt-4 rounded border border-blue-300 bg-blue-50/40 p-4">
+        <div className="mt-4 rounded-xl border border-[rgb(var(--brand)/0.4)] bg-[rgb(var(--brand)/0.05)] p-5">
           <QuestionForm busy={busy} onCancel={() => setShowAddForm(false)} onSave={onAdd} />
         </div>
       ) : (
         <button
           onClick={() => setShowAddForm(true)}
-          className="mt-4 w-full rounded border border-dashed border-blue-400 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 hover:bg-blue-100"
+          className="mt-4 w-full rounded-xl border border-dashed border-[rgb(var(--brand)/0.5)] bg-[rgb(var(--brand)/0.05)] px-4 py-3.5 text-sm font-semibold text-[rgb(var(--brand))] transition-colors hover:bg-[rgb(var(--brand)/0.1)]"
         >
           + Thêm câu hỏi
         </button>
@@ -297,18 +302,14 @@ function QuestionForm({
         <button
           type="button"
           onClick={() => onChangeType("mcq")}
-          className={`rounded px-3 py-1.5 text-xs font-medium ${
-            type === "mcq" ? "bg-blue-600 text-white" : "border border-default bg-white"
-          }`}
+          className={type === "mcq" ? "btn-primary btn-sm" : "btn-secondary btn-sm"}
         >
           Trắc nghiệm
         </button>
         <button
           type="button"
           onClick={() => onChangeType("true_false")}
-          className={`rounded px-3 py-1.5 text-xs font-medium ${
-            type === "true_false" ? "bg-blue-600 text-white" : "border border-default bg-white"
-          }`}
+          className={type === "true_false" ? "btn-primary btn-sm" : "btn-secondary btn-sm"}
         >
           Đúng / Sai
         </button>
@@ -320,11 +321,11 @@ function QuestionForm({
         maxLength={2000}
         rows={2}
         placeholder="Nội dung câu hỏi"
-        className="w-full rounded border border-default px-3 py-2 text-sm"
+        className="textarea"
       />
 
       <div>
-        <label className="block text-xs font-medium text-slate-600">
+        <label className="label text-xs">
           Thời gian trả lời: {timeLimitSec}s
         </label>
         <input
@@ -334,7 +335,7 @@ function QuestionForm({
           step={5}
           value={timeLimitSec}
           onChange={(e) => setTimeLimitSec(Number(e.target.value))}
-          className="mt-1 w-full"
+          className="mt-2 w-full accent-[rgb(var(--brand))]"
         />
       </div>
 
@@ -347,6 +348,7 @@ function QuestionForm({
               checked={o.isCorrect}
               onChange={() => setCorrect(i)}
               title="Đánh dấu đáp án đúng"
+              className="h-4 w-4 accent-[rgb(var(--brand))]"
             />
             <input
               type="text"
@@ -355,13 +357,13 @@ function QuestionForm({
               disabled={type === "true_false"}
               maxLength={200}
               placeholder={`Đáp án ${i + 1}`}
-              className="flex-1 rounded border border-default px-2 py-1.5 text-sm disabled:bg-slate-50"
+              className="input flex-1 disabled:opacity-60"
             />
             {type === "mcq" && options.length > 2 && (
               <button
                 type="button"
                 onClick={() => removeOption(i)}
-                className="text-xs text-red-600 hover:underline"
+                className="text-xs font-medium text-[rgb(var(--danger))] hover:underline"
               >
                 Xoá
               </button>
@@ -372,7 +374,7 @@ function QuestionForm({
           <button
             type="button"
             onClick={addOption}
-            className="text-xs font-medium text-blue-600 hover:underline"
+            className="text-xs font-semibold text-[rgb(var(--brand))] hover:underline"
           >
             + Thêm đáp án
           </button>
@@ -384,7 +386,7 @@ function QuestionForm({
           type="button"
           onClick={onCancel}
           disabled={busy}
-          className="rounded border border-default bg-white px-3 py-1.5 text-xs hover:bg-slate-50"
+          className="btn-secondary btn-sm"
         >
           Huỷ
         </button>
@@ -392,7 +394,7 @@ function QuestionForm({
           type="button"
           onClick={() => onSave({ type, prompt: prompt.trim(), timeLimitSec, options })}
           disabled={busy || !valid}
-          className="rounded bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary btn-sm"
         >
           Lưu
         </button>
