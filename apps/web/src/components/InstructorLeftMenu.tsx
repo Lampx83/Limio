@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useActiveNavSectionOverride } from "@/lib/activeNavSection";
 import PanelToggle from "@/components/ui/PanelToggle";
@@ -264,10 +264,15 @@ export default function InstructorLeftMenu({
 }) {
   const pathname = usePathname();
   const navOverride = useActiveNavSectionOverride();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Bấm module → rail + cột tên mục đổi NGAY (lạc quan), không đợi route mới tải xong;
+  // pathname đổi (kể cả bị redirect về chỗ khác) thì bỏ trạng thái chờ, lấy theo URL thật.
+  const [pendingModuleId, setPendingModuleId] = useState<string | null>(null);
 
   useEffect(() => {
     setMobileOpen(false);
+    setPendingModuleId(null);
   }, [pathname]);
 
   // Cột tên mục của module gấp/mở được (rail icon luôn hiện). Trang soạn
@@ -334,7 +339,7 @@ export default function InstructorLeftMenu({
     );
   }
 
-  const activeModuleId = resolveActiveModuleId(pathname, navOverride);
+  const activeModuleId = pendingModuleId ?? resolveActiveModuleId(pathname, navOverride);
   const activeModule = MODULES.find((m) => m.id === activeModuleId) ?? null;
 
   // Trang course editor `/instructor/courses/{id}` đã có nhiều layer
@@ -348,11 +353,13 @@ export default function InstructorLeftMenu({
   const isImmersive = isCourseEditor || isPresentMode;
 
   const rail = (
-    <ModuleRail activeModuleId={activeModuleId} />
+    <ModuleRail activeModuleId={activeModuleId} onSelect={setPendingModuleId} onHover={(href) => router.prefetch(href)} />
   );
   const railDesktop = (
     <ModuleRail
       activeModuleId={activeModuleId}
+      onSelect={setPendingModuleId}
+      onHover={(href) => router.prefetch(href)}
       footer={
         activeModule ? (
           <PanelToggle
@@ -400,11 +407,11 @@ export default function InstructorLeftMenu({
       {/* Drawer — show via mobileOpen on mobile, also reused on course editor/present desktop */}
       {mobileOpen && (
         <div
-          className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm ${isImmersive ? "" : "lg:hidden"}`}
+          className={`fixed inset-0 z-40 animate-overlay-in bg-black/40 backdrop-blur-sm ${isImmersive ? "" : "lg:hidden"}`}
           onClick={() => setMobileOpen(false)}
         >
           <aside
-            className="absolute left-0 top-0 flex h-full w-80 border-r border-token bg-[rgb(var(--surface))] shadow-2xl"
+            className="absolute left-0 top-0 flex h-full w-80 animate-drawer-in-left border-r border-token bg-[rgb(var(--surface))] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {rail}
@@ -419,7 +426,17 @@ export default function InstructorLeftMenu({
       {!isImmersive && (
         <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 lg:flex">
           {railDesktop}
-          {!sidebarCollapsed && sidebarContent}
+          {/* Cột tên mục thu/mở bằng chuyển động bề ngang (không gỡ khỏi DOM → mượt). */}
+          {activeModule && (
+            <div
+              className={`shrink-0 overflow-hidden transition-[width,opacity,visibility] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+                sidebarCollapsed ? "invisible w-0 opacity-0" : "w-56 opacity-100"
+              }`}
+              aria-hidden={sidebarCollapsed}
+            >
+              <div key={activeModuleId} className="flex h-full w-56 animate-nav-swap-in">{sidebarContent}</div>
+            </div>
+          )}
         </aside>
       )}
     </>
@@ -438,7 +455,17 @@ const NEUTRAL_COLORS: ModuleColors = {
 // ── Rail — cột icon dọc luôn hiện, "Trang chủ" ghim riêng phía trên rồi tới
 // 6 module. Đây là điều hướng THẬT (Link), không phải state client — F5 hay
 // deep-link vào thẳng 1 trang vẫn tự sáng đúng icon nhờ resolveActiveModuleId.
-function ModuleRail({ activeModuleId, footer }: { activeModuleId: string; footer?: React.ReactNode }) {
+function ModuleRail({
+  activeModuleId,
+  footer,
+  onSelect,
+  onHover,
+}: {
+  activeModuleId: string;
+  footer?: React.ReactNode;
+  onSelect: (id: string) => void;
+  onHover: (href: string) => void;
+}) {
   return (
     <div className="flex w-16 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] py-4">
       <RailButton
@@ -447,6 +474,8 @@ function ModuleRail({ activeModuleId, footer }: { activeModuleId: string; footer
         icon={LayoutDashboard}
         isActive={activeModuleId === "home"}
         railClass="bg-[rgb(var(--text))]"
+        onSelect={() => onSelect("home")}
+        onHover={onHover}
       />
       <div className="my-1 h-px w-8 bg-token" />
       {MODULES.map((m) => (
@@ -459,6 +488,8 @@ function ModuleRail({ activeModuleId, footer }: { activeModuleId: string; footer
           isActive={activeModuleId === m.id}
           railClass={m.colors.rail}
           premium={m.premium}
+          onSelect={() => onSelect(m.id)}
+          onHover={onHover}
         />
       ))}
       {footer && <div className="mt-auto pt-3">{footer}</div>}
@@ -474,6 +505,8 @@ function RailButton({
   isActive,
   railClass,
   premium,
+  onSelect,
+  onHover,
 }: {
   href: string;
   label: string;
@@ -482,10 +515,15 @@ function RailButton({
   isActive: boolean;
   railClass: string;
   premium?: boolean;
+  onSelect: () => void;
+  onHover: (href: string) => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onSelect}
+      onMouseEnter={() => onHover(href)}
+      onFocus={() => onHover(href)}
       title={premium ? `${label} — Premium` : label}
       aria-label={premium ? `${label} — Premium` : label}
       aria-current={isActive ? "page" : undefined}
@@ -495,7 +533,7 @@ function RailButton({
       {/* Đơn sắc lúc chưa chọn — chỉ module đang active mới lên màu riêng,
           tránh rail lúc nào cũng "sặc sỡ" cả 6 màu cùng lúc. */}
       <span
-        className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${
+        className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-200 ${
           isActive ? `${railClass} shadow-sm` : "group-hover:bg-[rgb(var(--surface))]"
         }`}
       >

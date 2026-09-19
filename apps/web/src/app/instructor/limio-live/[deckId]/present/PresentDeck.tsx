@@ -569,7 +569,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         {showSidebar && currentSlide && (
           <>
           {/* Dưới lg cột phải là ngăn kéo gấp gọn (QR/thống kê/ghi chú). */}
-          {sideOpen && <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSideOpen(false)} aria-hidden />}
+          {sideOpen && <div className="fixed inset-0 z-30 animate-overlay-in bg-black/30 lg:hidden" onClick={() => setSideOpen(false)} aria-hidden />}
           <button
             onClick={() => setSideOpen(true)}
             className="fixed bottom-4 right-4 z-20 rounded-full bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-semibold shadow-lg ring-1 ring-black/10 lg:hidden"
@@ -658,8 +658,8 @@ function JoinCorner({ joinPath, code }: { joinPath: string; code?: string }) {
 
 function JoinEnlarged({ url, code, onClose }: { url: string; code?: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-6" onClick={onClose}>
-      <div className="rounded-3xl bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[120] flex animate-overlay-in items-center justify-center bg-black/60 p-6" onClick={onClose}>
+      <div className="animate-dialog-in rounded-3xl bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <QRCode value={url} size={Math.min(460, typeof window !== "undefined" ? window.innerHeight - 300 : 400)} level="M" />
         {code && (
           <>

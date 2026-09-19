@@ -490,7 +490,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
       <div className="relative flex min-h-0 flex-1">
         {/* Left rail — slide list */}
         {slidesOpen && (
-          <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSlidesOpen(false)} aria-hidden />
+          <div className="fixed inset-0 z-30 animate-overlay-in bg-black/30 lg:hidden" onClick={() => setSlidesOpen(false)} aria-hidden />
         )}
         <button
           onClick={() => setSlidesOpen(true)}
@@ -501,7 +501,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         <div
           className={`fixed bottom-0 left-0 top-16 z-40 w-56 max-w-[85vw] flex-shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] p-3 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
             slidesOpen ? "translate-x-0" : "-translate-x-full"
-          } ${slidesCollapsed ? "lg:w-[60px] lg:px-2" : ""}`}
+          } lg:transition-[width,padding] lg:duration-300 lg:ease-[cubic-bezier(0.2,0.8,0.2,1)] lg:overflow-x-hidden ${slidesCollapsed ? "lg:w-[60px] lg:px-2" : "lg:w-56"}`}
         >
           <input
             ref={pdfInputRef}
@@ -676,7 +676,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           <>
           {/* Dưới lg cột phải thành ngăn kéo: mặc định gấp, bấm nút nổi để kéo ra. */}
           {settingsOpen && (
-            <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSettingsOpen(false)} aria-hidden />
+            <div className="fixed inset-0 z-30 animate-overlay-in bg-black/30 lg:hidden" onClick={() => setSettingsOpen(false)} aria-hidden />
           )}
           <button
             onClick={() => {
@@ -690,8 +690,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           <div
             className={`fixed bottom-0 right-0 top-16 z-40 w-[300px] max-w-[88vw] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
               settingsOpen ? "translate-x-0" : "translate-x-full"
-            } ${railCollapsed ? "lg:hidden" : ""}`}
+            } lg:overflow-x-hidden lg:transition-[width,padding,opacity,visibility] lg:duration-300 lg:ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+              railCollapsed ? "lg:pointer-events-none lg:invisible lg:w-0 lg:border-l-0 lg:p-0 lg:opacity-0" : "lg:w-[300px]"
+            }`}
           >
+            <div className="lg:w-[260px]">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wide text-faint">Cài đặt slide</span>
               <PanelToggle
@@ -732,6 +735,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
             >
               <Trash2 size={13} /> Xoá slide này
             </button>
+            </div>
           </div>
           </>
         )}

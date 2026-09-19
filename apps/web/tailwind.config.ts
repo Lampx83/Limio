@@ -97,6 +97,16 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "overlay-in": { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+        "nav-swap-in": {
+          "0%": { opacity: "0", transform: "translateX(-8px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "dialog-in": {
+          "0%": { opacity: "0", transform: "translateY(8px) scale(0.96)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "drawer-in-left": { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(0)" } },
         "note-pop-in": {
           "0%": { opacity: "0", transform: "scale(0.7) rotate(var(--note-rot, 0deg))" },
           "60%": { opacity: "1", transform: "scale(1.05) rotate(var(--note-rot, 0deg))" },
@@ -130,6 +140,10 @@ const config: Config = {
       },
       animation: {
         "fade-in-up": "fade-in-up 0.4s ease-out both",
+        "overlay-in": "overlay-in 0.2s ease-out both",
+        "nav-swap-in": "nav-swap-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both",
+        "dialog-in": "dialog-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both",
+        "drawer-in-left": "drawer-in-left 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both",
         "note-pop-in": "note-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both",
         "avatar-bob": "avatar-bob 3s ease-in-out infinite",
         "avatar-blink": "avatar-blink 4.5s ease-in-out infinite",

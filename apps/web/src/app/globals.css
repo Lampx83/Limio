@@ -881,3 +881,13 @@ body[data-stage-timer] main[data-stage="1"] .sticky {
     max-height: calc(100vh - 4rem);
   }
 }
+
+/* Hiệu ứng mở/đóng hộp thoại & ngăn kéo — tắt khi người dùng chọn giảm chuyển động. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-overlay-in,
+  .animate-dialog-in,
+  .animate-nav-swap-in,
+  .animate-drawer-in-left {
+    animation: none !important;
+  }
+}
