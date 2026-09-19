@@ -287,7 +287,7 @@ export default async function InstructorCourseEditPage({
                 title="Mở khoá học ở chế độ giảng dạy (thanh giảng viên, ghi chú, màn chiếu) trong tab mới"
               >
                 <Presentation className="h-4 w-4" aria-hidden />
-                Trình chiếu khoá học
+                Trình chiếu
               </Link>
             )}
         </div>

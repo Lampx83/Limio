@@ -454,6 +454,18 @@ export default async function LessonPage({
       orderIndex: c.orderIndex,
     }));
 
+  // Mục lục nổi "Trong bài này" (LessonSectionNav) chỉ hiện khi bài có từ 2 thẻ
+  // h2 có id trở lên — cùng ngưỡng với chính component đó. Tính sẵn ở máy chủ
+  // để chỉ chừa cột cho nó khi nó thật sự sẽ hiện: chừa cột vô điều kiện thì
+  // bài không có mục lục bị đẩy lệch vào 16rem so với tiêu đề bài. Không thể chờ
+  // client quyết (nav mount sau khi nội dung được làm sạch) vì cột hiện ra muộn
+  // sẽ làm cả bài giật sang phải.
+  const sectionCount = visibleItems.reduce(
+    (n, c) => n + (JSON.stringify(c.payload ?? "").match(/<h2\b[^>]*?\bid=/gi)?.length ?? 0),
+    0,
+  );
+  const hasSectionNav = sectionCount >= 2;
+
   return (
     <main
       // `data-stage` bật bộ CSS biến trang thành màn chiếu: giấu mọi thứ trừ
@@ -464,7 +476,10 @@ export default async function LessonPage({
       // tính này trên <html> để bật/tắt tức thì, không tải lại trang.
       data-gv={teacherMode ? "1" : undefined}
       data-preview={previewMode ? "1" : undefined}
-      className="mx-auto max-w-6xl px-4 py-6 lg:px-6"
+      // w-full: <main> là item của một flex column (layout gốc) và có mx-auto, nên
+      // không có w-full thì nó co theo nội dung — bài ngắn/không mục lục hẹp hơn
+      // hẳn bài có mục lục, chuyển bài qua lại thì độ rộng trang nhảy.
+      className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"
     >
       {stageMode && <StageListener lessonId={lesson.id} />}
       {/*
@@ -575,15 +590,14 @@ export default async function LessonPage({
           cách nhảy giữa các mục — đúng lúc cần nhất. */}
       <div
         id="lesson-stage"
-        className="mt-8 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8"
+        className={`mt-8 ${hasSectionNav ? "xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8" : ""}`}
       >
-        <LessonSectionNav containerId="lesson-content" />
-        {/* col-start-2 cố định: bài < 2 mục thì LessonSectionNav trả về null
-            (không chiếm ô grid nào), và nếu không ghim cột thì div này — vốn
-            là item thứ 2 trên nguồn nhưng giờ thành item DUY NHẤT — bị grid
-            auto-placement đẩy vào cột 1 (16rem, chỗ của mục lục) thay vì cột
-            nội dung (1fr), khiến cả bài co lại còn ~256px. */}
-        <div className="xl:col-start-2">
+        {hasSectionNav && <LessonSectionNav containerId="lesson-content" />}
+        {/* col-start-2 cố định khi có mục lục: bài có grid 2 cột mà nav mount muộn
+            (sau khi SafeHtml làm sạch nội dung) thì item duy nhất còn lại sẽ bị
+            auto-placement đẩy vào cột 1 (16rem). Bài không có mục lục thì không
+            dùng grid, nội dung thẳng hàng với tiêu đề. */}
+        <div className={hasSectionNav ? "xl:col-start-2" : undefined}>
         {/* Trên màn chiếu, tên bài phải luôn nhìn thấy: người vào muộn hoặc ngẩng
             lên giữa chừng cần biết đang học bài nào mà không phải hỏi. Dính theo
             mép trên vì cuộn tới mục 4 thì tiêu đề bài đã trôi mất từ lâu. */}
