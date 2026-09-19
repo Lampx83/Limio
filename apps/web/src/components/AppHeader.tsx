@@ -51,15 +51,15 @@ export default async function AppHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-token bg-[rgb(var(--surface)/0.85)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.7)]">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+      <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2 shrink-0">
         <StudentMenuTrigger variant="header" />
         <Link href="/" className="group flex items-baseline gap-2.5 shrink-0">
-          <LimeSliceIcon className="h-9 w-9 shrink-0 self-center transition-transform group-hover:scale-105 group-hover:rotate-12" />
-          <span className="text-lg font-bold tracking-tight">
+          <LimeSliceIcon className="h-14 w-14 shrink-0 self-center transition-transform group-hover:scale-105 group-hover:rotate-12" />
+          <span className="text-4xl font-bold tracking-tight">
             Lim<span className="text-pink-500">io</span>
           </span>
-          <span className="hidden text-sm font-medium italic text-muted sm:inline">
+          <span className="hidden font-[family-name:var(--font-script)] text-[34px] font-semibold text-muted sm:inline">
             — Learn your way
           </span>
         </Link>

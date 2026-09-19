@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Caveat } from "next/font/google";
 import "./globals.css";
 import AppHeader from "@/components/AppHeader";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
@@ -12,6 +12,14 @@ const inter = Inter({
   subsets: ["latin", "vietnamese"],
   display: "swap",
   variable: "--font-inter",
+});
+
+// Chữ viết tay cho tagline "Learn your way" ở header.
+const caveat = Caveat({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["600"],
+  variable: "--font-script",
 });
 
 // Root layout chứa Footer (gọi getSiteSettings → Prisma). Force-dynamic để
@@ -50,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={inter.variable} suppressHydrationWarning>
+    <html lang="vi" className={`${inter.variable} ${caveat.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
