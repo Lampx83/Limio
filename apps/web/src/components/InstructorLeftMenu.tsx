@@ -508,6 +508,8 @@ function ModuleRail({
         href="/instructor/dashboard"
         label="Trang chủ"
         icon={LayoutDashboard}
+        iconSize={28}
+        hero
         isActive={activeModuleId === "home"}
         railClass="bg-brand-600"
         description="Tổng quan việc cần xử lý"
@@ -540,6 +542,7 @@ function RailButton({
   label,
   icon: Icon,
   iconSize = 23,
+  hero,
   isActive,
   railClass,
   premium,
@@ -551,6 +554,8 @@ function RailButton({
   label: string;
   icon: LucideIcon;
   iconSize?: number;
+  /** Nút Trang chủ: to hơn và bo góc lớn hơn để tách khỏi 6 module bên dưới. */
+  hero?: boolean;
   isActive: boolean;
   railClass: string;
   premium?: boolean;
@@ -558,6 +563,7 @@ function RailButton({
   onSelect: () => void;
   onHover: (href: string) => void;
 }) {
+  const box = hero ? "h-14 w-14 rounded-2xl" : "h-12 w-12 rounded-xl";
   // Bấm module → tooltip biến mất ngay (không kẹt lại đè lên cột tên mục), hiện lại khi rê chuột ra rồi vào.
   const [tipHidden, setTipHidden] = useState(false);
   return (
@@ -575,14 +581,18 @@ function RailButton({
         aria-label={premium ? `${label} — Premium` : label}
         aria-current={isActive ? "page" : undefined}
         prefetch={false}
-        className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-transform hover:scale-105"
+        className={`group relative flex items-center justify-center transition-transform hover:scale-105 ${box}`}
       >
         {/* Đơn sắc lúc chưa chọn — chỉ module đang active mới lên màu riêng,
             tránh rail lúc nào cũng "sặc sỡ" cả 6 màu cùng lúc. */}
         <span
-          className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-200 ${
-            isActive ? `${railClass} shadow-sm` : "group-hover:bg-[rgb(var(--surface))]"
-          }`}
+          className={`flex items-center justify-center transition-colors duration-200 ${box} ${
+            isActive
+              ? `${railClass} shadow-sm`
+              : hero
+                ? "bg-[rgb(var(--surface))] shadow-sm ring-1 ring-[rgb(var(--border))]"
+                : "group-hover:bg-[rgb(var(--surface))]"
+          } ${hero && isActive ? "shadow-md" : ""}`}
         >
           <Icon size={iconSize} className={isActive ? "text-white" : "text-[rgb(var(--text-muted))]"} strokeWidth={isActive ? 2.25 : 2} />
         </span>
