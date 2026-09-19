@@ -4550,6 +4550,8 @@ model LiveDeck {
   id        String   @id @default(uuid())
   userId    String
   title     String
+  // Giao diện slide cho cả bài giảng — id trong limio-live/slideThemes.ts.
+  theme     String   @default("white")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

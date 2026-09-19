@@ -5,7 +5,8 @@ import { getLiveDeck, updateLiveDeck, deleteLiveDeck } from "@feedbackme/core-lm
 import { z } from "zod";
 
 const UpdateDeckSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100),
+  title: z.string().min(1, "Title is required").max(100).optional(),
+  theme: z.enum(["white", "cream", "mint", "sky", "blush", "brand"]).optional(),
 });
 
 /**

@@ -9,6 +9,8 @@ import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
 import EmptyState from "@/components/ui/EmptyState";
 import ResourceContent from "../../ResourceContent";
+import { slideThemeBg } from "../../slideThemes";
+import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -31,6 +33,7 @@ interface Slide {
 interface Deck {
   id: string;
   title: string;
+  theme?: string;
   slides: Slide[];
 }
 
@@ -257,6 +260,23 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, currentIndex, slides.length, sessionId]);
 
+  // Ẩn điều khiển xoá hẳn thanh trên cùng nên cần đường về không cần nút:
+  // phím H, hoặc rê chuột vào dải mép dưới màn hình (xem hover zone bên dưới).
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+      if (e.key === "h" || e.key === "H") setChromeHidden((v) => !v);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const hideControls = () => {
+    setChromeHidden(true);
+    toast.info("Đã ẩn điều khiển — nhấn H hoặc rê chuột xuống sát mép dưới để hiện lại");
+  };
+
   const handleEnd = async () => {
     if (!sessionId) return;
     if (!confirm("Kết thúc buổi trình chiếu này? Bạn vẫn có thể xem lại kết quả sau.")) return;
@@ -303,19 +323,29 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     );
   }
 
+  // Focus mode = fullscreen thật HOẶC đã ẩn điều khiển: bỏ header Limio, bỏ
+  // sidebar (QR/ghi chú), slide chiếm hết màn hình; chỉ còn thanh điều khiển
+  // mảnh (trừ khi cũng ẩn nốt).
+  const focus = isFullscreen || chromeHidden;
   const hasSidebar = !!currentSlide && currentSlide.type !== "content";
   const presenterNote =
     mode === "presenter" && currentSlide?.type === "content"
       ? String(currentSlide.config?.presenterNote ?? "").trim()
       : "";
+  const showSidebar = !focus && (hasSidebar || !!presenterNote) && !!currentSlide;
 
   return (
-    <div className="relative flex min-h-[calc(100vh-4rem)] flex-col bg-[rgb(var(--surface-muted))] font-sans text-[rgb(var(--text))]">
-      {/* Header — cùng tông sáng với canvas soạn bài (LiveDeckEditor), không
-          còn nền tối "sân khấu" kiểu theater mode nữa. Ẩn hẳn khi bật
-          "Ẩn điều khiển" (chromeHidden) — chỉ còn slide, điều hướng bằng phím. */}
+    <div
+      className={`flex flex-col bg-[rgb(var(--surface-muted))] font-sans text-[rgb(var(--text))] ${
+        focus ? "fixed inset-0 z-[100]" : "relative h-[calc(100vh-4rem)]"
+      }`}
+    >
       {!chromeHidden && (
-        <header className="flex min-h-16 flex-shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-token bg-[rgb(var(--surface))] px-6 py-2.5">
+        <header
+          className={`flex flex-shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-token bg-[rgb(var(--surface))] px-6 ${
+            focus ? "min-h-12 py-1.5" : "min-h-16 py-2.5"
+          }`}
+        >
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-bold tracking-wide text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
             <span className="h-2 w-2 rounded-full bg-brand-500" />
             {mode === "presenter" ? "ĐANG TRÌNH CHIẾU" : "MÀN HÌNH CHIẾU"}
@@ -338,10 +368,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               <button onClick={handleOpenAudienceWindow} className="btn-secondary flex items-center gap-1.5 text-[13px]">
                 <Monitor size={14} /> Mở màn hình chiếu
               </button>
-              <button
-                onClick={() => setChromeHidden(true)}
-                className="btn-secondary flex items-center gap-1.5 text-[13px]"
-              >
+              <button onClick={hideControls} className="btn-secondary flex items-center gap-1.5 text-[13px]">
                 <EyeOff size={14} /> Ẩn điều khiển
               </button>
               <div className="flex items-center gap-2">
@@ -375,14 +402,17 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
       <main className="flex min-h-0 flex-1">
-        <div className="flex flex-1 items-center justify-center p-9">
+        <div className={`flex min-w-0 flex-1 items-stretch justify-center ${focus ? "p-2" : "p-5"}`}>
           {loadingSlide || !currentSlide ? (
-            <p className="text-sm text-muted">Đang tải slide...</p>
+            <p className="self-center text-sm text-muted">Đang tải slide...</p>
           ) : (
             <div
               key={currentSlide.id}
-              className={`box-border flex h-[600px] w-full flex-col rounded-[20px] bg-white text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.12)] ${
-                (hasSidebar || presenterNote) && !chromeHidden ? "max-w-[920px] p-14" : "max-w-[1040px] overflow-hidden p-0"
+              style={{ background: slideThemeBg(deck.theme) }}
+              className={`box-border flex min-h-0 w-full flex-col text-[#20241F] ${
+                focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
+              } ${currentSlide.type === "content" ? "p-0" : "p-12"} ${
+                currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
               <SlideStage
@@ -398,8 +428,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
           )}
         </div>
 
-        {!chromeHidden && (hasSidebar || presenterNote) && currentSlide && (
-          <aside className="w-[300px] flex-shrink-0 border-l border-token bg-[rgb(var(--surface))] p-5">
+        {showSidebar && currentSlide && (
+          <aside className="w-[300px] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5">
             {hasSidebar ? (
               <FeedbackSidebar key={currentSlide.id} slide={currentSlide} runtime={runtime} />
             ) : (
@@ -409,16 +439,63 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         )}
       </main>
 
-      {chromeHidden && (
-        <button
-          onClick={() => setChromeHidden(false)}
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-2 text-xs font-medium text-white opacity-30 transition hover:opacity-100"
-          aria-label="Hiện điều khiển"
-        >
-          <Eye size={14} /> Hiện điều khiển
-        </button>
+      {focus && hasSidebar && runtime && runtime.kind !== "content" && (
+        <JoinCorner key={currentSlide?.id} joinPath={runtime.joinPath} />
       )}
+
+      {chromeHidden && <RevealZone onReveal={() => setChromeHidden(false)} />}
     </div>
+  );
+}
+
+// Focus mode bỏ cột bên phải nhưng học viên vẫn cần QR để vào slide: thu nhỏ
+// thành thẻ ở góc dưới phải, bấm để phóng to cho cả lớp quét.
+function JoinCorner({ joinPath }: { joinPath: string }) {
+  const [big, setBig] = useState(false);
+  const url = shareUrl(joinPath);
+  return (
+    <>
+      <button
+        onClick={() => setBig(true)}
+        className="fixed bottom-6 right-6 z-[105] flex items-center gap-2 rounded-xl bg-white p-2 shadow-lg ring-1 ring-black/10 transition hover:shadow-xl"
+        title="Phóng to mã QR"
+        aria-label="Phóng to mã QR tham gia"
+      >
+        <QRCode value={url} size={72} level="M" />
+        <Maximize2 size={14} className="text-[#6B7268]" />
+      </button>
+      {big && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-6"
+          onClick={() => setBig(false)}
+        >
+          <div className="rounded-3xl bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <QRCode value={url} size={Math.min(460, typeof window !== "undefined" ? window.innerHeight - 220 : 400)} level="M" />
+            <p className="mt-4 max-w-[460px] break-all text-lg font-semibold text-[#20241F]">{url}</p>
+            <button onClick={() => setBig(false)} className="btn-secondary mt-4 text-sm">
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Dải mép dưới vô hình: rê chuột vào ~300ms thì hiện lại điều khiển — đường về
+// không cần nút nào nằm trên slide (khi đã ẩn thì màn chiếu sạch hoàn toàn).
+function RevealZone({ onReveal }: { onReveal: () => void }) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return (
+    <div
+      className="fixed inset-x-0 bottom-0 z-[110] h-3"
+      onMouseEnter={() => {
+        timer.current = setTimeout(onReveal, 300);
+      }}
+      onMouseLeave={() => {
+        if (timer.current) clearTimeout(timer.current);
+      }}
+    />
   );
 }
 
@@ -442,6 +519,7 @@ function SlideStage({
   onToggleReveal: () => void;
 }) {
   const config = slide.config ?? {};
+  const scrolls = slide.type === "word_cloud" || slide.type === "collaborate_board";
 
   if (slide.type === "content") {
     return (
@@ -456,9 +534,9 @@ function SlideStage({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className={`flex flex-col ${scrolls ? "shrink-0" : "min-h-0 flex-1"}`}>
       {slide.timerSeconds != null && (
-        <div className="mb-5">
+        <div className="mb-6">
           <SlideTimer seconds={slide.timerSeconds} startedAt={timerStartedAt} editable={editable} onStart={onStartTimer} />
         </div>
       )}
@@ -529,15 +607,15 @@ function SlideTimer({
   const label = state === "ready" ? "Sẵn sàng" : state === "running" ? "Đang chạy" : "Hết giờ";
 
   return (
-    <div className={`inline-flex items-center gap-3 rounded-xl border-2 px-4 py-2 ${style}`}>
-      <Clock size={16} />
-      <span className="text-xs font-bold uppercase tracking-wide">{label}</span>
-      <span className="font-mono text-2xl font-bold leading-none">
+    <div className={`inline-flex items-center gap-4 rounded-2xl border-2 px-6 py-3 ${style}`}>
+      <Clock size={28} />
+      <span className="text-base font-bold uppercase tracking-wide">{label}</span>
+      <span className="font-mono text-5xl font-bold leading-none">
         {mm}:{ss}
       </span>
       {state === "ready" && editable && (
-        <button onClick={onStart} className="btn-primary btn-sm flex items-center gap-1">
-          <Play size={12} /> Bắt đầu
+        <button onClick={onStart} className="btn-primary flex items-center gap-1.5 text-base">
+          <Play size={16} /> Bắt đầu
         </button>
       )}
     </div>
@@ -559,21 +637,28 @@ function ContentSlideView({
 }) {
   const bullets: string[] = config.bullets ?? [];
 
+  // Đồng hồ là sticker nổi ở chân slide (không chiếm chỗ của nội dung); vùng
+  // nội dung cuộn riêng nên học liệu dài vẫn giữ nguyên bề ngang, chỉ cuộn dọc.
+  const timerSticker =
+    timerSeconds != null ? (
+      <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
+        <div className="pointer-events-auto rounded-2xl bg-white/90 shadow-lg backdrop-blur">
+          <SlideTimer seconds={timerSeconds} startedAt={timerStartedAt} editable={editable} onStart={onStartTimer} />
+        </div>
+      </div>
+    ) : null;
+
   // Slide "Nội dung" chèn 1 tài nguyên (video/pdf/markdown/...) — ưu tiên
   // trước cả layout thường lẫn full-bleed ảnh PDF nhập (xem LiveDeckEditor).
   if (config.resource) {
     return (
-      <div className="relative flex h-full flex-col overflow-y-auto p-10">
-        {timerSeconds != null && (
-          <div className="mb-4">
-            <SlideTimer seconds={timerSeconds} startedAt={timerStartedAt} editable={editable} onStart={onStartTimer} />
-          </div>
-        )}
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-3xl">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div className="min-h-0 flex-1 overflow-y-auto p-10 pb-28">
+          <div className="mx-auto w-full max-w-6xl">
             <ResourceContent type={config.resource.type} payload={config.resource.payload} />
           </div>
         </div>
+        {timerSticker}
       </div>
     );
   }
@@ -583,28 +668,21 @@ function ContentSlideView({
   const isImportedPage = !config.title && !config.subtitle && !bullets.length && !!config.imageUrl;
   if (isImportedPage) {
     return (
-      <div className="relative flex h-full items-center justify-center bg-[#F1EFE6]">
-        {timerSeconds != null && (
-          <div className="absolute left-4 top-4">
-            <SlideTimer seconds={timerSeconds} startedAt={timerStartedAt} editable={editable} onStart={onStartTimer} />
-          </div>
-        )}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center bg-[#F1EFE6]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={config.imageUrl} alt="" className="max-h-full max-w-full object-contain" />
+        {timerSticker}
       </div>
     );
   }
 
   return (
-    <div className="flex h-full">
-      <div className="flex flex-[1.1] flex-col justify-center gap-5 p-14">
-        {timerSeconds != null && (
-          <SlideTimer seconds={timerSeconds} startedAt={timerStartedAt} editable={editable} onStart={onStartTimer} />
-        )}
-        <h1 className="text-[38px] font-extrabold leading-tight">{config.title}</h1>
-        {config.subtitle && <p className="text-lg text-[#6B7268]">{config.subtitle}</p>}
+    <div className="relative flex min-h-0 flex-1">
+      <div className="flex flex-[1.1] flex-col justify-center gap-7 overflow-y-auto p-16 pb-28">
+        <h1 className="text-[64px] font-extrabold leading-[1.1]">{config.title}</h1>
+        {config.subtitle && <p className="text-[32px] leading-snug text-[#6B7268]">{config.subtitle}</p>}
         {bullets.length > 0 && (
-          <ul className="list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-[#3A3F38]">
+          <ul className="list-disc space-y-3 pl-8 text-[30px] leading-snug text-[#3A3F38]">
             {bullets.map((b, idx) => (
               <li key={idx}>{b}</li>
             ))}
@@ -616,9 +694,10 @@ function ContentSlideView({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={config.imageUrl} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="text-xs text-[#9AA090]">Ảnh/sơ đồ minh hoạ</span>
+          <span className="text-lg text-[#9AA090]">Ảnh/sơ đồ minh hoạ</span>
         )}
       </div>
+      {timerSticker}
     </div>
   );
 }
@@ -854,12 +933,12 @@ function QuestionSlideView({
 
   return (
     <>
-      <div className="mb-6 flex items-center gap-3">
-        <h2 className="flex-grow text-[26px] font-bold leading-tight">{question}</h2>
+      <div className="mb-8 flex items-center gap-4">
+        <h2 className="flex-grow text-[48px] font-bold leading-tight">{question}</h2>
         {isQuiz && correctIndex >= 0 && showToggle && (
           <button
             onClick={onToggleReveal}
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ${
+            className={`shrink-0 rounded-full px-5 py-2 text-lg font-bold transition ${
               revealed ? "bg-red-100 text-red-700" : "bg-[rgb(var(--surface-muted))] text-[#6B7268] hover:bg-red-50"
             }`}
           >
@@ -867,13 +946,13 @@ function QuestionSlideView({
           </button>
         )}
         {!isQuiz && (
-          <span className="shrink-0 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+          <span className="shrink-0 rounded-full bg-blue-100 px-5 py-2 text-lg font-bold text-blue-700">
             Không có đáp án đúng/sai
           </span>
         )}
       </div>
 
-      <div className="flex flex-col gap-2.5 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col justify-center gap-4 overflow-y-auto">
         {options.map((opt, idx) => {
           const count = votesByOption[String(idx)] || 0;
           const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
@@ -881,21 +960,28 @@ function QuestionSlideView({
           return (
             <div
               key={idx}
-              className={`flex items-center gap-3 rounded-xl border-[1.5px] px-4 py-3.5 ${
-                isCorrect ? "border-green-300 bg-green-50" : "border-[#E3E0D3] bg-white"
+              className={`relative flex items-center gap-5 overflow-hidden rounded-2xl border-2 px-6 py-5 ${
+                isCorrect ? "border-green-400 bg-green-50" : "border-[#E3E0D3] bg-white"
               }`}
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F1EFE6] text-xs font-bold text-[#6B7268]">
+              <div
+                className={`absolute inset-y-0 left-0 transition-[width] duration-500 ease-out ${
+                  isCorrect ? "bg-green-300/60" : "bg-brand-gradient opacity-25"
+                }`}
+                style={{ width: `${pct}%` }}
+                aria-hidden
+              />
+              <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F1EFE6] text-xl font-bold text-[#6B7268]">
                 {letters[idx]}
               </span>
-              <span className="flex-grow text-[15px] font-semibold">{opt}</span>
+              <span className="relative flex-grow text-[32px] font-semibold leading-snug">{opt}</span>
               {isCorrect && (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2.5">
+                <svg className="relative" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2.5">
                   <path d="M4 12l5 5L20 6" />
                 </svg>
               )}
               <span
-                className={`w-16 shrink-0 text-right text-[13px] font-bold ${
+                className={`relative w-40 shrink-0 text-right text-[28px] font-bold ${
                   isCorrect ? "text-green-700" : "text-[#6B7268]"
                 }`}
               >
@@ -944,31 +1030,29 @@ function WordCloudSlideView({ prompt, refId }: { prompt: string; refId: string }
 
   return (
     <>
-      <h2 className="mb-5 text-[26px] font-bold leading-tight">{prompt}</h2>
-      <div className="flex flex-grow flex-wrap items-center justify-center gap-3 overflow-y-auto rounded-2xl bg-[#F7F6F1] p-8">
+      <h2 className="mb-6 text-[48px] font-bold leading-tight">{prompt}</h2>
+      <div className="flex min-h-[50vh] flex-wrap content-center items-center justify-center gap-5 rounded-2xl bg-[#F7F6F1] p-10">
         {sorted.length > 0 ? (
           sorted.map(([word, f], idx) => (
             <span
               key={word}
-              className={`rounded-full bg-gradient-to-r px-3.5 py-1.5 font-bold text-white ${gradients[idx % gradients.length]}`}
-              style={{ fontSize: `${0.9 + (f / max) * (2.2 - 0.9)}rem` }}
+              className={`rounded-full bg-gradient-to-r px-6 py-3 font-bold text-white ${gradients[idx % gradients.length]}`}
+              style={{ fontSize: `${1.8 + (f / max) * (4.4 - 1.8)}rem` }}
             >
               {word}
             </span>
           ))
         ) : (
-          <p className="text-sm text-faint">Chưa có câu trả lời nào...</p>
+          <p className="text-2xl text-faint">Chưa có câu trả lời nào...</p>
         )}
       </div>
     </>
   );
 }
 
-const STICKY_COLORS = ["#FEF3C7", "#DBEAFE", "#FCE7F3", "#DCFCE7", "#EDE9FE", "#FED7AA"];
-
 function BoardSlideView({ prompt, code }: { prompt: string; code: string }) {
-  const [notes, setNotes] = useState<Array<{ id: string; authorName: string; content: string }>>([]);
-  const seenIds = useRef(new Set<string>());
+  const [notes, setNotes] = useState<BoardViewNote[]>([]);
+  const [columns, setColumns] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -976,20 +1060,27 @@ function BoardSlideView({ prompt, code }: { prompt: string; code: string }) {
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
-        const list = d.notes ?? [];
-        list.forEach((n: { id: string }) => seenIds.current.add(n.id));
-        setNotes(list);
+        setNotes(d.notes ?? []);
+        setColumns(d.columns ?? []);
       })
       .catch(() => {});
 
     const es = new EventSource(apiUrl(`/api/public/boards/${code}/stream`));
     es.onmessage = (e) => {
       try {
-        const ev = JSON.parse(e.data);
-        if (ev.type === "note.created" && !seenIds.current.has(ev.note.id)) {
-          seenIds.current.add(ev.note.id);
-          setNotes((prev) => [...prev, ev.note]);
-        }
+        const ev = JSON.parse(e.data) as { type?: string; note?: BoardViewNote; noteId?: string; hidden?: boolean };
+        setNotes((prev) => {
+          if (ev.type === "note.created" && ev.note) {
+            return prev.some((n) => n.id === ev.note!.id) ? prev : [...prev, ev.note];
+          }
+          if (ev.type === "note.updated" && ev.note) {
+            return prev.map((n) => (n.id === ev.note!.id ? { ...n, ...ev.note } : n));
+          }
+          if (ev.type === "note.deleted" && ev.noteId) return prev.filter((n) => n.id !== ev.noteId);
+          if (ev.type === "note.moderated" && ev.noteId && ev.hidden) return prev.filter((n) => n.id !== ev.noteId);
+          if (ev.type === "board.reset") return [];
+          return prev;
+        });
       } catch {
         /* ignore */
       }
@@ -1000,35 +1091,12 @@ function BoardSlideView({ prompt, code }: { prompt: string; code: string }) {
     };
   }, [code]);
 
-  const MAX_VISIBLE = 11;
-  const visible = notes.slice(0, MAX_VISIBLE);
-  const overflow = notes.length - visible.length;
-
   return (
     <>
-      <h2 className="mb-1 text-[22px] font-bold leading-tight">{prompt}</h2>
-      <p className="mb-4 text-[13.5px] text-[#6B7268]">Mỗi bạn dán 1 ghi chú — giống bảng Padlet</p>
-      <div className="grid flex-grow auto-rows-min grid-cols-4 gap-3 overflow-y-auto">
-        {visible.map((n, idx) => (
-          <div
-            key={n.id}
-            className="rounded-[10px] p-3 text-[13px] leading-snug shadow-[0_2px_6px_rgba(32,36,31,0.08)]"
-            style={{ background: STICKY_COLORS[idx % STICKY_COLORS.length] }}
-          >
-            <p className="mb-1 truncate text-[10px] font-bold text-black/50">{n.authorName}</p>
-            {n.content}
-          </div>
-        ))}
-        {overflow > 0 && (
-          <div className="flex items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-[#D8D4C4] bg-[#FCFBF7] text-[12px] text-faint">
-            + {overflow} ghi chú khác
-          </div>
-        )}
-        {notes.length === 0 && (
-          <div className="col-span-4 flex items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-[#D8D4C4] bg-[#FCFBF7] py-10 text-[13px] text-faint">
-            Chưa có ghi chú nào...
-          </div>
-        )}
+      <h2 className="mb-2 text-[44px] font-bold leading-tight">{prompt}</h2>
+      <p className="mb-5 text-xl text-[#6B7268]">Mỗi bạn dán 1 ghi chú — giống bảng Padlet</p>
+      <div>
+        <BoardNotesView notes={notes} columns={columns} />
       </div>
     </>
   );

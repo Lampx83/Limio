@@ -28,10 +28,15 @@ import {
   Clock,
   Presentation,
   FileUp,
+  LayoutGrid,
+  X,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
+import BoardNotesView from "../BoardNotesView";
+import { SLIDE_THEMES, slideThemeBg } from "../slideThemes";
+import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
 
 type SlideType = "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board";
@@ -47,6 +52,7 @@ interface Slide {
 interface Deck {
   id: string;
   title: string;
+  theme?: string;
   slides: Slide[];
 }
 
@@ -147,6 +153,23 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
     });
     if (!res.ok) { toast.error("Lưu tên thất bại"); return; }
     setDeck((prev) => (prev ? { ...prev, title: titleDraft.trim() } : prev));
+    setLastSavedAt(new Date());
+  };
+
+  const handleSetTheme = async (theme: string) => {
+    if (!deck || deck.theme === theme) return;
+    const prev = deck.theme;
+    setDeck({ ...deck, theme });
+    const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme }),
+    });
+    if (!res.ok) {
+      toast.error("Lưu giao diện thất bại");
+      setDeck((d) => (d ? { ...d, theme: prev } : d));
+      return;
+    }
     setLastSavedAt(new Date());
   };
 
@@ -314,6 +337,22 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
           </span>
         )}
         <div className="flex-grow" />
+        <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Giao diện slide">
+          <span className="mr-1 text-xs text-faint">Giao diện</span>
+          {SLIDE_THEMES.map((t) => (
+            <button
+              key={t.id}
+              role="radio"
+              aria-checked={(deck.theme ?? "white") === t.id}
+              title={t.label}
+              onClick={() => handleSetTheme(t.id)}
+              className={`h-6 w-6 rounded-full border transition ${
+                (deck.theme ?? "white") === t.id ? "ring-2 ring-brand-500 ring-offset-2" : "border-token hover:scale-110"
+              }`}
+              style={{ background: t.swatch }}
+            />
+          ))}
+        </div>
         <Link
           href={`/instructor/limio-live/${deckId}/present`}
           className="btn flex items-center gap-2 bg-brand-gradient px-4 text-sm font-semibold text-white shadow-sm hover:shadow-brand-glow"
@@ -408,7 +447,8 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
           {selectedSlide ? (
             <div
               key={selectedSlide.id}
-              className="box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] bg-white p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)]"
+              className="box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)]"
+              style={{ background: slideThemeBg(deck.theme) }}
             >
               <SlideCenterEditor slide={selectedSlide} onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)} />
             </div>
@@ -864,9 +904,12 @@ function BoardEditor({
   onSave: (patch: { config: Record<string, any> }) => void;
 }) {
   const [prompt, setPrompt] = useState(config.prompt ?? "");
+  const grouped = config.mode === "grouped";
+  const cols: string[] = (config.columns ?? []).filter((c: string) => c.trim());
 
   return (
     <div className="flex h-full flex-col">
+      {config.title && <p className="mb-1 text-xs font-bold uppercase tracking-wider text-faint">{config.title}</p>}
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
@@ -875,15 +918,19 @@ function BoardEditor({
         rows={2}
         className={`${bareInputClass} mb-4 text-[22px] font-bold leading-snug`}
       />
-      <div className="grid flex-grow grid-cols-4 gap-2.5 content-start">
-        {SAMPLE_STICKY.map((s, idx) => (
-          <div key={idx} className="rounded-[10px] p-3 text-xs text-black/50" style={{ background: s.bg }}>
-            {s.text}
-          </div>
-        ))}
-        <div className="flex items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-[#D8D4C4] bg-[#FCFBF7] text-[11px] text-[#9AA090]">
-          Học viên đăng ghi chú vào đây
-        </div>
+      <div className="min-h-0 flex-1">
+        <BoardNotesView
+          scale="editor"
+          columns={grouped ? cols : []}
+          notes={
+            grouped
+              ? cols.flatMap((c, i) => [
+                  { id: `sample-${i}-a`, authorName: "Học viên", content: SAMPLE_STICKY[i % 3]!.text, color: SAMPLE_STICKY[i % 3]!.bg, column: c },
+                ])
+              : SAMPLE_STICKY.map((s, i) => ({ id: `sample-${i}`, authorName: "Học viên", content: s.text, color: s.bg }))
+          }
+          emptyText="Học viên đăng ghi chú vào đây"
+        />
       </div>
     </div>
   );
@@ -905,7 +952,10 @@ function SettingsPanel({
   );
 
   const [boardMode, setBoardMode] = useState<"free" | "grouped">(config.mode ?? "free");
-  const [columnsText, setColumnsText] = useState((config.columns ?? []).join(", "));
+  const [columnList, setColumnList] = useState<string[]>(
+    (config.columns ?? []).length > 0 ? [...config.columns] : ["Nhóm 1", "Nhóm 2"]
+  );
+  const [boardTitle, setBoardTitle] = useState(config.title ?? "");
   const [allowViewOthers, setAllowViewOthers] = useState(config.allowViewOthers ?? true);
   const [blockPaste, setBlockPaste] = useState(config.blockPaste ?? false);
   const [presenterNote, setPresenterNote] = useState(config.presenterNote ?? "");
@@ -918,12 +968,14 @@ function SettingsPanel({
     onSave({ config: { ...config, presenterNote: presenterNote.trim() || undefined } });
   };
 
-  const commitBoard = (patch: Partial<{ mode: "free" | "grouped"; columns: string; allowViewOthers: boolean; blockPaste: boolean }>) => {
+  const commitBoard = (patch: Partial<{ mode: "free" | "grouped"; columns: string[]; title: string; allowViewOthers: boolean; blockPaste: boolean }>) => {
     const mode = patch.mode ?? boardMode;
-    const cols = (patch.columns ?? columnsText).split(",").map((c: string) => c.trim()).filter(Boolean);
+    const cols = [...new Set((patch.columns ?? columnList).map((c: string) => c.trim()).filter(Boolean))];
+    const title = (patch.title ?? boardTitle).trim();
     onSave({
       config: {
         ...config,
+        title: title || undefined,
         mode,
         ...(mode === "grouped" ? { columns: cols } : {}),
         allowViewOthers: patch.allowViewOthers ?? allowViewOthers,
@@ -970,35 +1022,83 @@ function SettingsPanel({
       {slide.type === "collaborate_board" && (
         <>
           <div>
-            <p className="mb-2 text-sm font-medium">Cách hiển thị</p>
-            <div className="mb-2 inline-flex rounded-lg border border-token p-0.5">
-              <button
-                onClick={() => {
-                  setBoardMode("free");
-                  commitBoard({ mode: "free" });
-                }}
-                className={`rounded-md px-2.5 py-1 text-xs ${boardMode === "free" ? "bg-brand-100 text-brand-700 dark:bg-brand-900/30" : ""}`}
-              >
-                Tự do
-              </button>
-              <button
-                onClick={() => {
-                  setBoardMode("grouped");
-                  commitBoard({ mode: "grouped" });
-                }}
-                className={`rounded-md px-2.5 py-1 text-xs ${boardMode === "grouped" ? "bg-brand-100 text-brand-700 dark:bg-brand-900/30" : ""}`}
-              >
-                Chia theo cột
-              </button>
-            </div>
-            {boardMode === "grouped" && (
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">Tiêu đề bảng</label>
+            <input
+              value={boardTitle}
+              onChange={(e) => setBoardTitle(e.target.value)}
+              onBlur={() => commitBoard({})}
+              placeholder="Vd. Bảng ý tưởng nhóm"
+              maxLength={120}
+              className="input w-full text-sm"
+            />
+          </div>
+          <div className="rounded-xl bg-amber-50/70 p-3 ring-1 ring-amber-200/70 dark:bg-amber-900/10 dark:ring-amber-900/40">
+            <label className="flex cursor-pointer items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
+                <LayoutGrid size={14} /> Đăng theo nhóm (grid)
+              </span>
               <input
-                value={columnsText}
-                onChange={(e) => setColumnsText(e.target.value)}
-                onBlur={() => commitBoard({})}
-                placeholder="Tên cột, cách nhau bằng dấu phẩy"
-                className="input w-full text-xs"
+                type="checkbox"
+                checked={boardMode === "grouped"}
+                onChange={(e) => {
+                  const m = e.target.checked ? "grouped" : "free";
+                  setBoardMode(m);
+                  commitBoard({ mode: m });
+                }}
+                className="h-4 w-4 accent-amber-500"
               />
+            </label>
+            {boardMode === "grouped" && (
+              <div className="mt-3 space-y-2">
+                <p className="text-[11px] text-muted">
+                  Học viên chọn đúng nhóm khi đăng — mỗi nhóm hiện thành 1 cột riêng.
+                </p>
+                {columnList.map((label, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span
+                      className="h-6 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: columnHeaderColor(idx) }}
+                      aria-hidden
+                    />
+                    <input
+                      value={label}
+                      onChange={(e) => {
+                        const next = [...columnList];
+                        next[idx] = e.target.value;
+                        setColumnList(next);
+                      }}
+                      onBlur={() => commitBoard({})}
+                      placeholder={`Nhóm ${idx + 1}`}
+                      maxLength={30}
+                      className="input flex-1 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = columnList.filter((_, i) => i !== idx);
+                        setColumnList(next);
+                        commitBoard({ columns: next });
+                      }}
+                      className="rounded-lg p-1.5 text-faint hover:bg-black/5"
+                      aria-label="Xoá nhóm"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  disabled={columnList.length >= 12}
+                  onClick={() => {
+                    const next = [...columnList, `Nhóm ${columnList.length + 1}`];
+                    setColumnList(next);
+                    commitBoard({ columns: next });
+                  }}
+                  className="flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 disabled:opacity-40 dark:text-amber-400"
+                >
+                  <Plus size={12} /> Thêm nhóm
+                </button>
+              </div>
             )}
           </div>
           <label className="flex items-center justify-between gap-3 border-t border-token pt-3 text-sm">

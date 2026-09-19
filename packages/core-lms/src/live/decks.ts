@@ -71,20 +71,23 @@ export async function getLiveDeck(
 export async function updateLiveDeck(
   deckId: string,
   userId: string,
-  updates: { title: string },
+  updates: { title?: string; theme?: string },
   db: PrismaClient
 ): Promise<LiveDeck> {
   const existing = await db.liveDeck.findUnique({ where: { id: deckId } });
   if (!existing || existing.userId !== userId) {
     throw new Error("Not authorized to update this deck");
   }
-  if (!updates.title.trim()) {
+  if (updates.title !== undefined && !updates.title.trim()) {
     throw new Error("Title is required");
   }
 
   return db.liveDeck.update({
     where: { id: deckId },
-    data: { title: updates.title.trim() },
+    data: {
+      ...(updates.title !== undefined ? { title: updates.title.trim() } : {}),
+      ...(updates.theme !== undefined ? { theme: updates.theme } : {}),
+    },
   });
 }
 
