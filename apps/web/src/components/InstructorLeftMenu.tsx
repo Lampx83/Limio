@@ -24,7 +24,6 @@ import {
   Menu,
   X,
   Loader2,
-  ChevronDown,
   CalendarCheck,
   Library,
   LayoutGrid,
@@ -161,10 +160,10 @@ const MODULES: ModuleDef[] = [
       { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: Cloud, section: "Công cụ brainstorming" },
       { label: "Bảng tương tác", href: "/instructor/teaching-tools?tool=board", icon: StickyNote, section: "Công cụ brainstorming" },
       { label: "Whiteboard", href: "/instructor/teaching-tools?tool=whiteboard", icon: PenTool, section: "Công cụ brainstorming" },
-      { label: "Đếm ngược", href: "/instructor/teaching-tools?tool=timer", icon: Clock, section: "Công cụ điều hành lớp học" },
-      { label: "Chọn ngẫu nhiên", href: "/instructor/teaching-tools?tool=random-picker", icon: Shuffle, section: "Công cụ điều hành lớp học" },
-      { label: "Phân nhóm", href: "/instructor/teaching-tools?tool=grouping", icon: Users, section: "Công cụ điều hành lớp học" },
-      { label: "Gameshow", href: "/instructor/gameshow/new", icon: Gamepad2, section: "Công cụ điều hành lớp học" },
+      { label: "Đếm ngược", href: "/instructor/teaching-tools?tool=timer", icon: Clock, section: "Điều hành lớp học" },
+      { label: "Gọi tên", href: "/instructor/teaching-tools?tool=random-picker", icon: Shuffle, section: "Điều hành lớp học" },
+      { label: "Phân nhóm", href: "/instructor/teaching-tools?tool=grouping", icon: Users, section: "Điều hành lớp học" },
+      { label: "Gameshow", href: "/instructor/gameshow/new", icon: Gamepad2, section: "Điều hành lớp học" },
       { label: "Template", icon: Library, note: "Mẫu thiết kế sư phạm — đang phát triển", section: "Thiết kế sư phạm" },
       { label: "Soạn kịch bản", icon: ListChecks, note: "Soạn kịch bản hoạt động — đang phát triển", section: "Thiết kế sư phạm" },
     ],
@@ -411,8 +410,8 @@ function InstructorLeftMenuInner({
   );
   const sidebarContent = activeModule ? (
     <div className="w-56 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] px-3 py-5">
-      <div className="mb-3 flex items-center gap-1.5 px-1">
-        <p className={`text-[11px] font-extrabold uppercase tracking-[0.14em] ${activeModule.colors.headerText}`}>
+      <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 px-1">
+        <p className={`text-[19px] font-extrabold leading-tight tracking-tight ${activeModule.colors.headerText}`}>
           {activeModule.label}
         </p>
         {activeModule.premium && (
@@ -504,7 +503,7 @@ function ModuleRail({
   onHover: (href: string) => void;
 }) {
   return (
-    <div className="flex w-16 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] py-4 lg:overflow-visible">
+    <div className="flex w-16 shrink-0 flex-col items-center gap-3 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] py-5 lg:overflow-visible">
       <RailButton
         href="/instructor/dashboard"
         label="Trang chủ"
@@ -515,7 +514,7 @@ function ModuleRail({
         onSelect={() => onSelect("home")}
         onHover={onHover}
       />
-      <div className="my-1 h-px w-8 bg-token" />
+      <div className="my-1.5 h-px w-8 bg-token" />
       {MODULES.map((m) => (
         <RailButton
           key={m.id}
@@ -608,9 +607,7 @@ function ItemList({
   pendingHref: string | null;
   onNavigate: (href: string) => void;
 }) {
-  // Gom theo nhóm (giữ thứ tự xuất hiện). Module dài (>9 mục, vd Limio-Live) thì chỉ mở
-  // nhóm đầu + nhóm đang chứa trang hiện tại, các nhóm khác gấp lại cho đỡ rối; module
-  // ngắn mở hết. Người dùng gấp/mở từng nhóm bằng tiêu đề nhóm.
+  // Gom theo nhóm (giữ thứ tự xuất hiện); tiêu đề nhóm chỉ là nhãn — luôn hiện hết, không gấp được.
   const groups: Array<{ section: string | null; items: Item[] }> = [];
   for (const it of items) {
     const sec = it.section ?? null;
@@ -618,71 +615,25 @@ function ItemList({
     if (last && last.section === sec) last.items.push(it);
     else groups.push({ section: sec, items: [it] });
   }
-  const collapsible = items.length > 9 && groups.filter((g) => g.section).length > 1;
-  const activeSection = items.find((it) => it.href && isActive(it.href))?.section ?? null;
-
-  const [open, setOpen] = useState<Set<string>>(() => {
-    const init = new Set<string>();
-    groups.forEach((g, i) => {
-      if (g.section && (!collapsible || i === 0 || g.section === activeSection)) init.add(g.section);
-    });
-    return init;
-  });
-  // Điều hướng sang trang thuộc nhóm đang gấp (vd từ URL/menu khác) → tự mở nhóm đó.
-  useEffect(() => {
-    if (activeSection) setOpen((prev) => (prev.has(activeSection) ? prev : new Set(prev).add(activeSection)));
-  }, [activeSection]);
-
-  const toggle = (sec: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (next.has(sec)) next.delete(sec);
-      else next.add(sec);
-      return next;
-    });
 
   return (
-    <div className="space-y-1">
-      {groups.map((g, gi) => {
-        const isOpen = !g.section || !collapsible || open.has(g.section);
-        const list = (
-          <ul className="space-y-0.5">
+    <div className="space-y-3">
+      {groups.map((g, gi) => (
+        <section key={g.section ?? gi}>
+          {g.section && (
+            <p className="mb-1 mt-3 px-1.5 text-xs font-extrabold uppercase tracking-wide text-[rgb(var(--text-muted))] first:mt-0">
+              {g.section}
+            </p>
+          )}
+          <ul className="space-y-1.5">
             {g.items.map((it) => (
               <li key={it.label}>
                 <ItemRow item={it} active={isActive(it.href)} colors={colors} pending={!!it.href && it.href === pendingHref} onNavigate={onNavigate} />
               </li>
             ))}
           </ul>
-        );
-        if (!g.section) return <div key={gi}>{list}</div>;
-        return (
-          <section key={g.section}>
-            {collapsible ? (
-              <button
-                type="button"
-                onClick={() => toggle(g.section!)}
-                aria-expanded={isOpen}
-                className="mt-2 flex w-full items-center gap-1 rounded-lg px-1.5 py-1 text-left text-[10px] font-bold uppercase tracking-wide text-faint transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-              >
-                <span className="flex-1">{g.section}</span>
-                <span className="rounded-full bg-[rgb(var(--surface-muted))] px-1.5 py-px text-[9px] font-semibold normal-case tracking-normal">
-                  {g.items.length}
-                </span>
-                <ChevronDown size={12} className={`transition-transform duration-200 ${isOpen ? "" : "-rotate-90"}`} />
-              </button>
-            ) : (
-              <p className="mb-1 mt-3 px-1.5 text-[10px] font-bold uppercase tracking-wide text-faint">{g.section}</p>
-            )}
-            <div
-              className={`grid transition-[grid-template-rows,opacity,visibility] duration-200 ease-out ${
-                isOpen ? "grid-rows-[1fr] opacity-100" : "invisible grid-rows-[0fr] opacity-0"
-              }`}
-            >
-              <div className="overflow-hidden">{list}</div>
-            </div>
-          </section>
-        );
-      })}
+        </section>
+      ))}
     </div>
   );
 }
@@ -701,7 +652,7 @@ function ItemRow({
   onNavigate: (href: string) => void;
 }) {
   const Icon = item.icon;
-  const baseRow = "group/item relative flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1 text-sm transition-colors";
+  const baseRow = "group/item relative flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1.5 text-sm transition-colors";
   const iconCircle = `flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${colors.itemIconBg}`;
 
   if (!item.href) {
