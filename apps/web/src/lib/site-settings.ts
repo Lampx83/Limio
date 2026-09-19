@@ -11,8 +11,7 @@ export async function getPaymentEnabled(): Promise<boolean> {
   return val === "true";
 }
 
-export const DEFAULT_FOOTER_TEXT =
-  "Thiết kế và phát triển bởi Cô giáo Huyền, Khoa Khoa học và Công nghệ Giáo dục, Đại học Bách Khoa Hà Nội";
+export const DEFAULT_FOOTER_TEXT = "Đây là dòng footer sẽ hiện ở trang chủ...";
 
 export async function getFooterSettings(): Promise<{ text: string; enabled: boolean }> {
   const [text, enabled] = await Promise.all([
@@ -21,7 +20,9 @@ export async function getFooterSettings(): Promise<{ text: string; enabled: bool
   ]);
   return {
     text: text ?? DEFAULT_FOOTER_TEXT,
-    enabled: enabled !== "false",
+    // Mặc định TẮT — admin phải chủ động bật ở /admin/settings mới hiện
+    // footer, tránh hiện credit line chưa được duyệt ngay từ lúc cài đặt.
+    enabled: enabled === "true",
   };
 }
 
