@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Lock } from "lucide-react";
 import { prisma } from "@feedbackme/db";
-import { getCourseProgress, isUserEnrolled } from "@feedbackme/core-lms";
+import { canEditCourse, getCourseProgress, isUserEnrolled } from "@feedbackme/core-lms";
 import {
   getClearedChampionsLeaderboard,
   getCourseXpProgress,
@@ -25,7 +25,7 @@ export default async function LearnCoursePage({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams?: { paid?: string };
+  searchParams?: { paid?: string; preview?: string };
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect(`/signin?callbackUrl=/learn/${params.slug}`);
@@ -40,6 +40,40 @@ export default async function LearnCoursePage({
     },
   });
   if (!course) notFound();
+
+  // Giảng viên xem thử trang khoá như học viên thấy (?preview=1): chỉ người dạy
+  // khoá, không cần ghi danh, và không đụng dữ liệu học tập của ai (XP, chuỗi
+  // ngày, bảng xếp hạng đều gắn với một học viên cụ thể nên bỏ hẳn).
+  if (searchParams?.preview === "1" && (await canEditCourse(session.user.id, course.id))) {
+    return (
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6">
+        <Link
+          href={`/instructor/courses/${course.id}?tab=content`}
+          className="link inline-flex items-center gap-1 text-sm"
+        >
+          ← Quay lại soạn khoá
+        </Link>
+        <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
+          <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
+          <div className="relative">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
+              {course.level} · {course.language}
+            </span>
+            <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">{course.title}</h1>
+          </div>
+        </header>
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold">Lộ trình học</h2>
+          <ModuleList
+            modules={course.modules}
+            slug={params.slug}
+            completedSet={new Set()}
+            lessonQuery="?preview=1"
+          />
+        </section>
+      </main>
+    );
+  }
 
   if (!(await isUserEnrolled(session.user.id, course.id))) {
     // Vừa quay về từ Stripe checkout — webhook checkout.session.completed
@@ -219,115 +253,11 @@ export default async function LearnCoursePage({
                 bài đã hoàn thành
               </span>
             </div>
-            <ol className="mt-4 space-y-4">
-              {course.modules
-                .filter((m) => !m.isHidden)
-                .map((m) => {
-                  const visibleLessons = m.lessons.filter((l) => !l.isHidden);
-                  const done = visibleLessons.filter((l) =>
-                    completedSet.has(l.id)
-                  ).length;
-
-                  const pct =
-                    visibleLessons.length > 0
-                      ? Math.round((done / visibleLessons.length) * 100)
-                      : 0;
-                  return (
-                    <li key={m.id} className="card">
-                    <header className="border-b border-token pb-3">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <h3 className="font-semibold">
-                          <span className="mr-2 text-faint">Module</span>
-                          {m.title}
-                        </h3>
-                        <span className="text-xs text-faint tabular-nums">
-                          {done}/{visibleLessons.length} ·{" "}
-                          <span className={pct === 100 ? "text-success-600 font-semibold" : ""}>
-                            {pct}%
-                          </span>
-                        </span>
-                      </div>
-                      <div
-                        className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
-                        role="progressbar"
-                        aria-valuenow={pct}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                      >
-                        <div
-                          className={`h-full rounded-full transition-all ${
-                            pct === 100
-                              ? "bg-success-500"
-                              : "bg-gradient-to-r from-brand-500 to-brand-600"
-                          }`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </header>
-                    <ol className="mt-3 space-y-1.5">
-                      {m.lessons.map((l, li) => {
-                        if (l.isHidden) return null;
-
-                        const completed = completedSet.has(l.id);
-                        const locked = m.isLocked || l.isLocked;
-
-                        // B14 — khoá thì vẫn thấy tên bài (để biết lộ trình còn
-                        // gì) nhưng không phải liên kết: bấm vào rồi mới bị chặn
-                        // chỉ làm người học tưởng mình bấm hỏng.
-                        if (locked) {
-                          return (
-                            <li key={l.id}>
-                              <div
-                                className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-1.5 text-faint"
-                                title="Nội dung đang khoá — giảng viên sẽ mở sau"
-                              >
-                                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))]">
-                                  <Lock className="h-3 w-3" aria-hidden />
-                                </span>
-                                <span className="flex-1 text-sm">{l.title}</span>
-                                <span className="text-[10px] uppercase tracking-wide">
-                                  Đang khoá
-                                </span>
-                              </div>
-                            </li>
-                          );
-                        }
-
-                        return (
-                          <li key={l.id}>
-                            <Link
-                              href={`/learn/${params.slug}/lessons/${l.id}`}
-                              className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-[rgb(var(--surface-muted))]"
-                              prefetch={false}
-                            >
-                              <span
-                                className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                                  completed
-                                    ? "bg-success-500 text-white"
-                                    : "bg-[rgb(var(--surface-muted))] text-muted"
-                                }`}
-                              >
-                                {completed ? "✓" : li + 1}
-                              </span>
-                              <span
-                                className={`flex-1 text-sm transition-colors group-hover:text-brand-600 ${
-                                  completed ? "text-muted line-through" : ""
-                                }`}
-                              >
-                                {l.title}
-                              </span>
-                              <span className="text-xs text-faint opacity-0 transition-opacity group-hover:opacity-100">
-                                →
-                              </span>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </li>
-                );
-              })}
-            </ol>
+            <ModuleList
+              modules={course.modules}
+              slug={params.slug}
+              completedSet={completedSet}
+            />
           </section>
 
           {isComplete && (
@@ -483,6 +413,143 @@ export default async function LearnCoursePage({
         />
       )}
     </main>
+  );
+}
+
+type ModuleForList = {
+  id: string;
+  title: string;
+  isHidden: boolean;
+  isLocked: boolean;
+  lessons: Array<{ id: string; title: string; isHidden: boolean; isLocked: boolean }>;
+};
+
+/**
+ * Danh sách module + bài của khoá — dùng chung cho trang học viên thật và bản
+ * xem trước của giảng viên (`preview=1`, `lessonQuery` để các bài mở tiếp ở chế
+ * độ xem trước).
+ */
+function ModuleList({
+  modules,
+  slug,
+  completedSet,
+  lessonQuery = "",
+}: {
+  modules: ModuleForList[];
+  slug: string;
+  completedSet: Set<string>;
+  lessonQuery?: string;
+}) {
+  return (
+    <ol className="mt-4 space-y-4">
+              {modules
+                .filter((m) => !m.isHidden)
+                .map((m) => {
+                  const visibleLessons = m.lessons.filter((l) => !l.isHidden);
+                  const done = visibleLessons.filter((l) =>
+                    completedSet.has(l.id)
+                  ).length;
+
+                  const pct =
+                    visibleLessons.length > 0
+                      ? Math.round((done / visibleLessons.length) * 100)
+                      : 0;
+                  return (
+                    <li key={m.id} className="card">
+                    <header className="border-b border-token pb-3">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h3 className="font-semibold">
+                          <span className="mr-2 text-faint">Module</span>
+                          {m.title}
+                        </h3>
+                        <span className="text-xs text-faint tabular-nums">
+                          {done}/{visibleLessons.length} ·{" "}
+                          <span className={pct === 100 ? "text-success-600 font-semibold" : ""}>
+                            {pct}%
+                          </span>
+                        </span>
+                      </div>
+                      <div
+                        className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            pct === 100
+                              ? "bg-success-500"
+                              : "bg-gradient-to-r from-brand-500 to-brand-600"
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </header>
+                    <ol className="mt-3 space-y-1.5">
+                      {m.lessons.map((l, li) => {
+                        if (l.isHidden) return null;
+
+                        const completed = completedSet.has(l.id);
+                        const locked = m.isLocked || l.isLocked;
+
+                        // B14 — khoá thì vẫn thấy tên bài (để biết lộ trình còn
+                        // gì) nhưng không phải liên kết: bấm vào rồi mới bị chặn
+                        // chỉ làm người học tưởng mình bấm hỏng.
+                        if (locked) {
+                          return (
+                            <li key={l.id}>
+                              <div
+                                className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-1.5 text-faint"
+                                title="Nội dung đang khoá — giảng viên sẽ mở sau"
+                              >
+                                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))]">
+                                  <Lock className="h-3 w-3" aria-hidden />
+                                </span>
+                                <span className="flex-1 text-sm">{l.title}</span>
+                                <span className="text-[10px] uppercase tracking-wide">
+                                  Đang khoá
+                                </span>
+                              </div>
+                            </li>
+                          );
+                        }
+
+                        return (
+                          <li key={l.id}>
+                            <Link
+                              href={`/learn/${slug}/lessons/${l.id}${lessonQuery}`}
+                              className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                              prefetch={false}
+                            >
+                              <span
+                                className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                                  completed
+                                    ? "bg-success-500 text-white"
+                                    : "bg-[rgb(var(--surface-muted))] text-muted"
+                                }`}
+                              >
+                                {completed ? "✓" : li + 1}
+                              </span>
+                              <span
+                                className={`flex-1 text-sm transition-colors group-hover:text-brand-600 ${
+                                  completed ? "text-muted line-through" : ""
+                                }`}
+                              >
+                                {l.title}
+                              </span>
+                              <span className="text-xs text-faint opacity-0 transition-opacity group-hover:opacity-100">
+                                →
+                              </span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </li>
+                );
+              })}
+            </ol>
   );
 }
 

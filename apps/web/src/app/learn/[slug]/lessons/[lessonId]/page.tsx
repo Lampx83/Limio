@@ -499,6 +499,14 @@ export default async function LessonPage({
           </Link>
         </div>
       )}
+      {previewMode && (
+        <Link
+          href={`/learn/${params.slug}?preview=1`}
+          className="link inline-flex items-center gap-1 text-sm font-medium"
+        >
+          ← Về trang khoá học
+        </Link>
+      )}
 
       {/*
         Tiêu đề bài nằm trong panel riêng, và hai nút công cụ đứng ngay dưới nó:

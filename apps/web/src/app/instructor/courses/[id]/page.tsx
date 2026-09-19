@@ -9,7 +9,7 @@ import {
   canModerateLiveExam,
   isCourseOwner,
 } from "@feedbackme/core-lms";
-import { ArrowLeft, Presentation } from "lucide-react";
+import { ArrowLeft, Eye, Presentation } from "lucide-react";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import AccessCodesPanel from "./AccessCodesPanel";
@@ -453,11 +453,26 @@ export default async function InstructorCourseEditPage({
 
             {!selectedLesson && (
               <section>
-                <div className="flex items-baseline justify-between">
-                  <h2 className="text-xl font-semibold">Modules</h2>
-                  <span className="text-sm text-muted">
-                    {course.modules.length} modules · {totalLessons} bài
-                  </span>
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <div className="flex items-baseline gap-3">
+                    <h2 className="text-xl font-semibold">Modules</h2>
+                    <span className="text-sm text-muted">
+                      {course.modules.length} modules · {totalLessons} bài
+                    </span>
+                  </div>
+                  {/* Mở trang khoá học đúng như học viên thấy ở "Khoá học của tôi"
+                      → khoá, ở tab mới; trang soạn còn nguyên. */}
+                  <Link
+                    href={`/learn/${course.slug}?preview=1`}
+                    target="_blank"
+                    rel="noopener"
+                    prefetch={false}
+                    title="Xem khoá học đúng như học viên thấy, trong tab mới"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-sm font-medium transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+                  >
+                    <Eye className="h-4 w-4" aria-hidden />
+                    Xem trước
+                  </Link>
                 </div>
 
                 {course.modules.length === 0 ? (
