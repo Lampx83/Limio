@@ -605,13 +605,14 @@ function ContentEditor({
       subtitle: patch.subtitle ?? subtitle,
       bullets: (patch.bullets ?? bullets).map((b) => b.trim()).filter(Boolean),
       ...((patch.imageUrl ?? imageUrl).trim() ? { imageUrl: (patch.imageUrl ?? imageUrl).trim() } : {}),
+      ...(config.presenterNote ? { presenterNote: config.presenterNote } : {}),
     };
     onSave({ config: next });
   };
 
   const commitResource = (next: { type: ResourceType; payload: Record<string, any> } | null) => {
     setResource(next);
-    onSave({ config: { title, subtitle, bullets, ...(imageUrl.trim() ? { imageUrl: imageUrl.trim() } : {}), resource: next ?? undefined } });
+    onSave({ config: { title, subtitle, bullets, ...(imageUrl.trim() ? { imageUrl: imageUrl.trim() } : {}), resource: next ?? undefined, ...(config.presenterNote ? { presenterNote: config.presenterNote } : {}) } });
   };
 
   if (resource) {
@@ -775,6 +776,7 @@ function QuestionEditor({
     const opts = patch.options ?? options;
     onSave({
       config: {
+        ...(config.presenterNote ? { presenterNote: config.presenterNote } : {}),
         question: q.trim(),
         options:
           type === "quiz"
@@ -878,7 +880,7 @@ function WordCloudEditor({
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        onBlur={() => onSave({ config: { prompt: prompt.trim() } })}
+        onBlur={() => onSave({ config: { ...config, prompt: prompt.trim() } })}
         placeholder="Nhập câu hỏi / prompt cho Word Cloud..."
         rows={2}
         className={`${bareInputClass} mb-5 text-[24px] font-bold leading-snug`}
@@ -1133,19 +1135,6 @@ function SettingsPanel({
           <p className="text-xs leading-relaxed text-muted">
             Slide nội dung không cần học viên phản hồi — chỉ hiển thị.
           </p>
-          <div className="rounded-xl border border-token p-3">
-            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
-              <StickyNote size={13} className="text-muted" /> Ghi chú cho người trình chiếu
-            </label>
-            <textarea
-              value={presenterNote}
-              onChange={(e) => setPresenterNote(e.target.value)}
-              onBlur={commitPresenterNote}
-              placeholder="Chỉ bạn thấy — không hiện lên màn chiếu..."
-              rows={4}
-              className="input w-full text-xs"
-            />
-          </div>
         </>
       )}
       {(slide.type === "quiz" || slide.type === "poll") && (
@@ -1153,6 +1142,20 @@ function SettingsPanel({
           Bình chọn luôn ẩn danh — học viên không cần đăng nhập để tham gia.
         </p>
       )}
+      <div className="rounded-xl border border-token p-3">
+        <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
+          <StickyNote size={13} className="text-muted" /> Ghi chú cho người trình chiếu
+        </label>
+        <textarea
+          value={presenterNote}
+          onChange={(e) => setPresenterNote(e.target.value)}
+          onBlur={commitPresenterNote}
+          placeholder="Chỉ bạn thấy — không hiện lên màn chiếu..."
+          rows={4}
+          className="input w-full text-xs"
+        />
+      </div>
+
     </div>
   );
 }

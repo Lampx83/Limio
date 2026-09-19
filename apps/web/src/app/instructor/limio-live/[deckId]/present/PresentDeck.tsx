@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, EyeOff, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, EyeOff, Eye, StickyNote } from "lucide-react";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
@@ -226,7 +226,20 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   };
 
   const handleOpenAudienceWindow = () => {
-    window.open(`${pathname}?view=audience`, "_blank", "noopener,noreferrer");
+    // Có features "popup" + kích thước thì trình duyệt mở cửa sổ độc lập (không
+    // thanh tab) để kéo sang màn chiếu; tên cố định để bấm lại chỉ đưa cửa sổ cũ
+    // lên thay vì đẻ thêm cửa sổ.
+    const w = Math.min(1280, window.screen.availWidth);
+    const h = Math.min(720, window.screen.availHeight);
+    const left = Math.max(0, Math.round((window.screen.availWidth - w) / 2));
+    const top = Math.max(0, Math.round((window.screen.availHeight - h) / 2));
+    const win = window.open(
+      `${pathname}?view=audience`,
+      "limio-live-audience",
+      `popup=yes,width=${w},height=${h},left=${left},top=${top}`
+    );
+    if (!win) toast.error("Trình duyệt chặn cửa sổ bật lên — cho phép popup cho trang này rồi bấm lại");
+    else win.focus?.();
   };
 
   const slides = deck?.slides ?? [];
@@ -329,9 +342,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const focus = isFullscreen || chromeHidden;
   const hasSidebar = !!currentSlide && currentSlide.type !== "content";
   const presenterNote =
-    mode === "presenter" && currentSlide?.type === "content"
-      ? String(currentSlide.config?.presenterNote ?? "").trim()
-      : "";
+    mode === "presenter" && currentSlide ? String(currentSlide.config?.presenterNote ?? "").trim() : "";
   const showSidebar = !focus && (hasSidebar || !!presenterNote) && !!currentSlide;
 
   return (
@@ -430,14 +441,17 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
         {showSidebar && currentSlide && (
           <aside className="w-[300px] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5">
-            {hasSidebar ? (
-              <FeedbackSidebar key={currentSlide.id} slide={currentSlide} runtime={runtime} />
-            ) : (
-              <PresenterNotesPanel key={currentSlide.id} note={presenterNote} />
+            {hasSidebar && <FeedbackSidebar key={currentSlide.id} slide={currentSlide} runtime={runtime} />}
+            {presenterNote && (
+              <div className={hasSidebar ? "mt-6" : ""}>
+                <PresenterNotesPanel key={currentSlide.id} note={presenterNote} />
+              </div>
             )}
           </aside>
         )}
       </main>
+
+      {focus && presenterNote && <PresenterNoteCorner key={currentSlide?.id} note={presenterNote} />}
 
       {focus && hasSidebar && runtime && runtime.kind !== "content" && (
         <JoinCorner key={currentSlide?.id} joinPath={runtime.joinPath} />
@@ -479,6 +493,36 @@ function JoinCorner({ joinPath }: { joinPath: string }) {
         </div>
       )}
     </>
+  );
+}
+
+// Focus mode bỏ cột phải nên ghi chú của presenter nổi ở góc dưới trái; thu gọn
+// được để khỏi che slide. Chỉ render ở cửa sổ presenter (presenterNote rỗng ở
+// cửa sổ audience) nên không lọt lên màn chiếu.
+function PresenterNoteCorner({ note }: { note: string }) {
+  const [open, setOpen] = useState(true);
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 left-6 z-[105] flex items-center gap-1.5 rounded-full bg-amber-100 px-3.5 py-2 text-sm font-semibold text-amber-900 shadow-lg ring-1 ring-amber-300"
+      >
+        <StickyNote size={15} /> Ghi chú
+      </button>
+    );
+  }
+  return (
+    <div className="fixed bottom-6 left-6 z-[105] w-80 max-w-[calc(100vw-3rem)] rounded-2xl bg-amber-50 shadow-xl ring-1 ring-amber-300">
+      <div className="flex items-center justify-between gap-2 px-4 pt-3 text-[11px] font-bold uppercase tracking-wide text-amber-800">
+        <span>Ghi chú — không hiện lên màn chiếu</span>
+        <button onClick={() => setOpen(false)} className="rounded p-0.5 hover:bg-amber-100" aria-label="Thu gọn ghi chú">
+          <Minimize2 size={14} />
+        </button>
+      </div>
+      <div className="max-h-[40vh] overflow-y-auto whitespace-pre-wrap px-4 pb-4 pt-2 text-[15px] leading-relaxed text-[#20241F]">
+        {note}
+      </div>
+    </div>
   );
 }
 
