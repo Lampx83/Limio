@@ -11,7 +11,7 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { generateSectionInviteCode } from "../exam/code-access";
-import { assertCanEditCourse } from "./authz";
+import { assertCanEditCourse, assertCanGradeCourse } from "./authz";
 import { CourseError } from "./courses";
 import { logAudit } from "../auth/audit";
 import { getCourseProgress } from "../learning/progress";
@@ -60,7 +60,7 @@ export async function createCourseSection(
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<CourseSectionItem> {
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertCanGradeCourse(actorUserId, courseId, db);
   const parsed = CreateCourseSectionInput.safeParse(rawInput);
   if (!parsed.success) throw new CourseError("validation_failed", parsed.error.flatten());
 
@@ -106,7 +106,7 @@ export async function countUnassignedLearners(
   courseId: string,
   db: PrismaClient = prisma,
 ): Promise<number> {
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertCanGradeCourse(actorUserId, courseId, db);
   const def = await db.courseSection.findFirst({
     where: { courseId, isDefault: true },
     select: { id: true },
@@ -123,7 +123,7 @@ export async function listCourseSections(
   courseId: string,
   db: PrismaClient = prisma,
 ): Promise<CourseSectionItem[]> {
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertCanGradeCourse(actorUserId, courseId, db);
   const rows = await db.courseSection.findMany({
     where: { courseId, isDefault: false },
     orderBy: { createdAt: "asc" },
@@ -141,7 +141,7 @@ export async function listCourseSections(
   }));
 }
 
-async function assertCanEditSection(
+async function assertCanManageSection(
   actorUserId: string,
   sectionId: string,
   db: PrismaClient,
@@ -156,7 +156,7 @@ async function assertCanEditSection(
     select: { id: true, courseId: true, isDefault: true, feedbackVariant: true },
   });
   if (!section) throw new CourseError("section_not_found");
-  await assertCanEditCourse(actorUserId, section.courseId, db);
+  await assertCanGradeCourse(actorUserId, section.courseId, db);
   return section;
 }
 
@@ -166,7 +166,7 @@ export async function updateCourseSection(
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<void> {
-  const section = await assertCanEditSection(actorUserId, sectionId, db);
+  const section = await assertCanManageSection(actorUserId, sectionId, db);
   if (section.isDefault) throw new CourseError("section_not_found");
   const parsed = UpdateCourseSectionInput.safeParse(rawInput);
   if (!parsed.success) throw new CourseError("validation_failed", parsed.error.flatten());
@@ -221,7 +221,7 @@ export async function deleteCourseSection(
   sectionId: string,
   db: PrismaClient = prisma,
 ): Promise<void> {
-  const section = await assertCanEditSection(actorUserId, sectionId, db);
+  const section = await assertCanManageSection(actorUserId, sectionId, db);
   if (section.isDefault) throw new CourseError("section_not_found");
 
   const activeCount = await db.enrollment.count({
@@ -238,7 +238,7 @@ export async function regenerateInviteCode(
   sectionId: string,
   db: PrismaClient = prisma,
 ): Promise<{ inviteCode: string }> {
-  const section = await assertCanEditSection(actorUserId, sectionId, db);
+  const section = await assertCanManageSection(actorUserId, sectionId, db);
   if (section.isDefault) throw new CourseError("section_not_found");
 
   const inviteCode = await createUniqueInviteCode(db);
@@ -280,7 +280,7 @@ export async function getSectionRoster(
   sectionId: string,
   db: PrismaClient = prisma,
 ): Promise<SectionRoster> {
-  const section = await assertCanEditSection(actorUserId, sectionId, db);
+  const section = await assertCanManageSection(actorUserId, sectionId, db);
 
   const [sectionRow, course, enrollments, otherSections] = await Promise.all([
     db.courseSection.findUniqueOrThrow({

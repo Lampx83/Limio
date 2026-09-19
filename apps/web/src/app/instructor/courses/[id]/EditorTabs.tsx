@@ -6,6 +6,7 @@ import {
   School,
   ClipboardList,
   BarChart3,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,14 +38,18 @@ const TABS: Array<{ key: EditorTab; label: string; icon: LucideIcon }> = [
   { key: "analytics", label: "Phân tích", icon: BarChart3 },
 ];
 
+const LOCKED_TAB_MESSAGE = "Nội dung đang bị khóa, bạn không có quyền chỉnh sửa";
+
 export default function EditorTabs({
   courseId,
   active,
   hiddenTabs = [],
+  lockedTabs = [],
 }: {
   courseId: string;
   active: EditorTab;
   hiddenTabs?: EditorTab[];
+  lockedTabs?: EditorTab[];
 }) {
   return (
     <nav
@@ -54,7 +59,28 @@ export default function EditorTabs({
     >
       {TABS.filter((t) => !hiddenTabs.includes(t.key)).map((t) => {
         const isActive = t.key === active;
+        const isLocked = lockedTabs.includes(t.key);
         const Icon = t.icon;
+
+        if (isLocked) {
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={false}
+              aria-disabled="true"
+              disabled
+              title={LOCKED_TAB_MESSAGE}
+              className="-mb-px inline-flex shrink-0 cursor-not-allowed items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 border-transparent px-4 py-2.5 text-base font-medium text-muted opacity-60"
+            >
+              <Icon className="h-5 w-5 shrink-0" aria-hidden />
+              <span>{t.label}</span>
+              <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            </button>
+          );
+        }
+
         return (
           <Link
             key={t.key}

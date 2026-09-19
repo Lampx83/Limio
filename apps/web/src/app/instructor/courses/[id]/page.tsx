@@ -140,14 +140,19 @@ export default async function InstructorCourseEditPage({
   // reports) — same role tier as the live-moderate check.
   const canViewAnalytics = await canModerateLiveExam(userId, course.id);
   const hiddenTabs: EditorTab[] = [
-    ...(!canEdit ? (["content", "sections"] as const) : []),
     ...(!canViewAnalytics ? (["analytics"] as const) : []),
   ];
-  // Requesting a hidden tab falls back to overview — content editor isn't
-  // read-only-safe yet (forms would render but every save 403s server-side).
-  const tab: EditorTab = hiddenTabs.includes(requestedTab)
-    ? "overview"
-    : requestedTab;
+  // Content stays visible but locked (not hidden) for non-editing-teacher/
+  // teaching-assistant, so they can see it exists and why it's off-limits.
+  // "Lớp học" is NOT locked here — section management runs on
+  // assertCanGradeCourse, not assertCanEditCourse, so both roles can use it.
+  const lockedTabs: EditorTab[] = [...(!canEdit ? (["content"] as const) : [])];
+  // Requesting a hidden/locked tab falls back to overview — content editor
+  // isn't read-only-safe yet (forms would render but every save 403s server-side).
+  const tab: EditorTab =
+    hiddenTabs.includes(requestedTab) || lockedTabs.includes(requestedTab)
+      ? "overview"
+      : requestedTab;
 
   const untaggedLessonIds = course.modules.flatMap((m) =>
     m.lessons
@@ -303,7 +308,12 @@ export default async function InstructorCourseEditPage({
       </header>
 
       <div className="mt-6">
-        <EditorTabs courseId={course.id} active={tab} hiddenTabs={hiddenTabs} />
+        <EditorTabs
+          courseId={course.id}
+          active={tab}
+          hiddenTabs={hiddenTabs}
+          lockedTabs={lockedTabs}
+        />
       </div>
 
       {/* TAB: Tổng quan */}
