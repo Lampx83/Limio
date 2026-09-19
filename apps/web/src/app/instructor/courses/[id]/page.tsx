@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import ScrollEnds from "@/components/ScrollEnds";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -22,6 +23,7 @@ import DeleteCourseButton from "./DeleteCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
 import ImportStudentsButton from "./ImportStudentsButton";
 import LessonTopBar from "./LessonTopBar";
+import EditorNavProgress from "./EditorNavProgress";
 import EditorTabs, { type EditorTab } from "./EditorTabs";
 import EnrollmentList from "./EnrollmentList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
@@ -70,73 +72,56 @@ export default async function InstructorCourseEditPage({
   const lessonView: "edit" | "preview" =
     searchParams?.lessonView === "preview" ? "preview" : "edit";
   const selectedLessonId = searchParams?.lesson;
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect(`/signin?callbackUrl=/instructor/courses/${params.id}`);
-  }
-  const userId = session.user.id;
-
-  const course = await prisma.course.findUnique({
-    where: { id: params.id },
-    include: {
-      modules: {
-        orderBy: { orderIndex: "asc" },
-        include: {
-          lessons: {
-            orderBy: { orderIndex: "asc" },
-            include: {
-              contentItems: { orderBy: { orderIndex: "asc" } },
-              skillTags: { include: { skill: true } },
-              assignments: { orderBy: { createdAt: "asc" } },
-              quizzes: {
-                orderBy: { createdAt: "asc" },
-                include: {
-                  questions: {
-                    orderBy: { orderIndex: "asc" },
-                    include: {
-                      options: {
-                        orderBy: { orderIndex: "asc" },
-                        include: { misconception: true },
-                      },
-                      skillTags: { include: { skill: true } },
-                    },
-                  },
-                },
-              },
-              // Unified ordering layer — drives ActivitySection's cross-type
-              // drag-drop. Each row references one of contentItem/quiz/assignment;
-              // we don't re-include the nested entity data (already loaded above)
-              // — ActivitySection joins by id on the client.
-              activities: {
-                orderBy: { orderIndex: "asc" },
-                select: {
-                  id: true,
-                  kind: true,
-                  orderIndex: true,
-                  contentItemId: true,
-                  quizId: true,
-                  assignmentId: true,
+  // Auth và truy vấn khoá chạy song song — truy vấn chỉ cần params.id.
+  // Cây module/bài ở đây CHỈ lấy phần nhẹ (đếm thay vì kéo hết quiz, câu hỏi,
+  // đáp án của mọi bài): mỗi lần đổi bài trước đây tải cả khoá ~270KB. Dữ liệu
+  // đầy đủ chỉ lấy cho đúng bài đang mở (xem `selectedLesson` bên dưới).
+  const [session, course] = await Promise.all([
+    auth(),
+    prisma.course.findUnique({
+      where: { id: params.id },
+      include: {
+        modules: {
+          orderBy: { orderIndex: "asc" },
+          include: {
+            lessons: {
+              orderBy: { orderIndex: "asc" },
+              select: {
+                id: true,
+                title: true,
+                orderIndex: true,
+                isHidden: true,
+                isLocked: true,
+                skillTags: { select: { id: true } },
+                _count: {
+                  select: { contentItems: true, quizzes: true, assignments: true },
                 },
               },
             },
           },
         },
       },
-    },
-  });
+    }),
+  ]);
+  if (!session?.user?.id) {
+    redirect(`/signin?callbackUrl=/instructor/courses/${params.id}`);
+  }
+  const userId = session.user.id;
   if (!course) notFound();
 
   // canGradeCourse is the broadest instructor-tier check (all 4 roles) — lets
   // non-editing-teacher/teaching-assistant reach the page at all (they need
   // "Học viên" for grading context). Content-edit UI is separately gated by
   // canEdit below.
-  const canAccess = await canGradeCourse(userId, course.id);
+  const [canAccess, canEdit, isOwner, canViewAnalytics] = await Promise.all([
+    canGradeCourse(userId, course.id),
+    canEditCourse(userId, course.id),
+    isCourseOwner(userId, course.id),
+    // Analytics is hidden from teaching-assistant (grade-only role, no course
+    // reports) — same role tier as the live-moderate check.
+    canModerateLiveExam(userId, course.id),
+  ]);
   if (!canAccess) redirect("/instructor/courses");
-  const canEdit = await canEditCourse(userId, course.id);
-  const isOwner = await isCourseOwner(userId, course.id);
-  // Analytics is hidden from teaching-assistant (grade-only role, no course
-  // reports) — same role tier as the live-moderate check.
-  const canViewAnalytics = await canModerateLiveExam(userId, course.id);
   const hiddenTabs: EditorTab[] = [
     ...(!canViewAnalytics ? (["analytics"] as const) : []),
   ];
@@ -162,7 +147,7 @@ export default async function InstructorCourseEditPage({
 
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
   const totalQuizzes = course.modules.reduce(
-    (s, m) => s + m.lessons.reduce((ls, l) => ls + l.quizzes.length, 0),
+    (s, m) => s + m.lessons.reduce((ls, l) => ls + l._count.quizzes, 0),
     0,
   );
 
@@ -175,10 +160,50 @@ export default async function InstructorCourseEditPage({
       const idx = m.lessons.findIndex((l) => l.id === selectedLessonId);
       if (idx !== -1) {
         selectedModule = m;
-        selectedLesson = m.lessons[idx];
         selectedLessonOrder = idx + 1;
         break;
       }
+    }
+    // Chỉ bài đang mở mới cần dữ liệu đầy đủ. Tìm trong cây của khoá này trước
+    // rồi mới truy vấn, nên id của khoá khác không đọc được qua đường này.
+    if (selectedModule && tab === "content") {
+      selectedLesson = await prisma.lesson.findUnique({
+        where: { id: selectedLessonId },
+        include: {
+          contentItems: { orderBy: { orderIndex: "asc" } },
+          skillTags: { include: { skill: true } },
+          assignments: { orderBy: { createdAt: "asc" } },
+          quizzes: {
+            orderBy: { createdAt: "asc" },
+            include: {
+              questions: {
+                orderBy: { orderIndex: "asc" },
+                include: {
+                  options: {
+                    orderBy: { orderIndex: "asc" },
+                    include: { misconception: true },
+                  },
+                  skillTags: { include: { skill: true } },
+                },
+              },
+            },
+          },
+          // Unified ordering layer — drives ActivitySection's cross-type
+          // drag-drop; ActivitySection joins by id on the client.
+          activities: {
+            orderBy: { orderIndex: "asc" },
+            select: {
+              id: true,
+              kind: true,
+              orderIndex: true,
+              contentItemId: true,
+              quizId: true,
+              assignmentId: true,
+            },
+          },
+        },
+      });
+      if (!selectedLesson) selectedModule = null;
     }
   }
 
@@ -196,9 +221,9 @@ export default async function InstructorCourseEditPage({
       isHidden: l.isHidden,
       isLocked: l.isLocked,
       noSkill: course.personalizationEnabled && l.skillTags.length === 0,
-      contentCount: l.contentItems.length,
-      quizCount: l.quizzes.length,
-      assignmentCount: l.assignments.length,
+      contentCount: l._count.contentItems,
+      quizCount: l._count.quizzes,
+      assignmentCount: l._count.assignments,
     })),
   }));
 
@@ -230,6 +255,9 @@ export default async function InstructorCourseEditPage({
     {/* Trang soạn khoá dài không kém trang bài học — nhất là khi mở một bài có
         hai chục khối nội dung. Góc dưới bên phải ở đây đang trống. */}
     <ScrollEnds className="fixed bottom-20 right-4 z-30 lg:bottom-4" />
+    <Suspense fallback={null}>
+      <EditorNavProgress />
+    </Suspense>
     <main
       className={
         useWideLayout
@@ -402,7 +430,7 @@ export default async function InstructorCourseEditPage({
 
       {/* TAB: Nội dung */}
       {tab === "content" && (
-        <div className="mt-6">
+        <div className="mt-6" data-editor-body>
           <div className="min-w-0 flex-1">
             {selectedLesson && selectedModule && (
               /* key: pane sửa bài học giữ nguyên vị trí trong cây khi đổi
