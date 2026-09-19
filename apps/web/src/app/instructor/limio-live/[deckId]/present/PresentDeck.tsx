@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, EyeOff, Eye, StickyNote } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, StickyNote, ZoomIn, ZoomOut } from "lucide-react";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
@@ -54,6 +54,7 @@ const TYPE_LABELS: Record<SlideType, string> = {
 interface UiState {
   timerStartedAt?: Record<string, number>;
   revealed?: Record<string, boolean>;
+  zoom?: number;
 }
 
 export default function PresentDeck({ deckId }: { deckId: string }) {
@@ -71,7 +72,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const [loadingSlide, setLoadingSlide] = useState(true);
   const [ending, setEnding] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [chromeHidden, setChromeHidden] = useState(false);
+  const [sideOpen, setSideOpen] = useState(false);
 
   // Full-bleed sân khấu tối — nới khung main.mx-auto của instructor layout ra
   // hết viewport, cùng cơ chế với board-immersive/gameshow-immersive.
@@ -225,10 +226,20 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     patchUiState({ revealed: { ...current, [slideId]: !current[slideId] } });
   };
 
-  const handleOpenAudienceWindow = () => {
-    // Có features "popup" + kích thước thì trình duyệt mở cửa sổ độc lập (không
-    // thanh tab) để kéo sang màn chiếu; tên cố định để bấm lại chỉ đưa cửa sổ cũ
-    // lên thay vì đẻ thêm cửa sổ.
+  // Popup mở đồng bộ trong cú click (không bị chặn popup), rồi — nếu trình duyệt
+  // hỗ trợ Window Management API (Chrome/Edge) — hỏi quyền 1 lần và dời popup
+  // sang màn hình KHÁC màn hình presenter. Lệnh fullscreen thì không làm hộ
+  // được (phải có cú click ngay trong cửa sổ đó) nên cửa sổ màn chiếu tự hiện
+  // gợi ý "bấm để fullscreen".
+  // Zoom nội dung slide (chữ + bố cục) do presenter chỉnh, ghi vào uiState để
+  // cửa sổ màn chiếu hiển thị cùng tỉ lệ.
+  const zoom = uiState.zoom ?? 1;
+  const setZoom = (z: number) => {
+    const next = Math.min(2, Math.max(0.5, Math.round(z * 10) / 10));
+    if (next !== zoom) patchUiState({ zoom: next });
+  };
+
+  const handleOpenAudienceWindow = async () => {
     const w = Math.min(1280, window.screen.availWidth);
     const h = Math.min(720, window.screen.availHeight);
     const left = Math.max(0, Math.round((window.screen.availWidth - w) / 2));
@@ -238,8 +249,25 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       "limio-live-audience",
       `popup=yes,width=${w},height=${h},left=${left},top=${top}`
     );
-    if (!win) toast.error("Trình duyệt chặn cửa sổ bật lên — cho phép popup cho trang này rồi bấm lại");
-    else win.focus?.();
+    if (!win) {
+      toast.error("Trình duyệt chặn cửa sổ bật lên — cho phép popup cho trang này rồi bấm lại");
+      return;
+    }
+    win.focus?.();
+
+    const getScreenDetails = (window as any).getScreenDetails as undefined | (() => Promise<any>);
+    if (!getScreenDetails) return;
+    try {
+      const details = await getScreenDetails.call(window);
+      const other = (details.screens as any[]).find((sc) => sc !== details.currentScreen);
+      if (!other) return;
+      win.moveTo(other.availLeft, other.availTop);
+      win.resizeTo(other.availWidth, other.availHeight);
+      win.focus?.();
+      toast.info("Đã đưa màn chiếu sang màn hình thứ hai — bấm vào cửa sổ đó để fullscreen");
+    } catch {
+      /* người dùng từ chối quyền hoặc trình duyệt không cho — popup ở lại vị trí mặc định */
+    }
   };
 
   const slides = deck?.slides ?? [];
@@ -273,22 +301,20 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, currentIndex, slides.length, sessionId]);
 
-  // Ẩn điều khiển xoá hẳn thanh trên cùng nên cần đường về không cần nút:
-  // phím H, hoặc rê chuột vào dải mép dưới màn hình (xem hover zone bên dưới).
+  // Phím tắt: F fullscreen, +/-/0 zoom (presenter).
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
-      if (e.key === "h" || e.key === "H") setChromeHidden((v) => !v);
+      if (e.key === "f" || e.key === "F") toggleFullscreen();
+      else if (mode === "presenter" && (e.key === "+" || e.key === "=")) setZoom(zoom + 0.1);
+      else if (mode === "presenter" && (e.key === "-" || e.key === "_")) setZoom(zoom - 0.1);
+      else if (mode === "presenter" && e.key === "0") setZoom(1);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  const hideControls = () => {
-    setChromeHidden(true);
-    toast.info("Đã ẩn điều khiển — nhấn H hoặc rê chuột xuống sát mép dưới để hiện lại");
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, zoom, sessionId]);
 
   const handleEnd = async () => {
     if (!sessionId) return;
@@ -339,7 +365,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   // Focus mode = fullscreen thật HOẶC đã ẩn điều khiển: bỏ header Limio, bỏ
   // sidebar (QR/ghi chú), slide chiếm hết màn hình; chỉ còn thanh điều khiển
   // mảnh (trừ khi cũng ẩn nốt).
-  const focus = isFullscreen || chromeHidden;
+  const focus = isFullscreen;
   const hasSidebar = !!currentSlide && currentSlide.type !== "content";
   const presenterNote =
     mode === "presenter" && currentSlide ? String(currentSlide.config?.presenterNote ?? "").trim() : "";
@@ -347,67 +373,98 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
   return (
     <div
+      onClick={() => {
+        if (mode === "audience" && !document.fullscreenElement) toggleFullscreen();
+      }}
       className={`flex flex-col bg-[rgb(var(--surface-muted))] font-sans text-[rgb(var(--text))] ${
         focus ? "fixed inset-0 z-[100]" : "relative h-[calc(100vh-4rem)]"
       }`}
     >
-      {!chromeHidden && (
+      {(
         <header
-          className={`flex flex-shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-token bg-[rgb(var(--surface))] px-6 ${
-            focus ? "min-h-12 py-1.5" : "min-h-16 py-2.5"
+          className={`flex flex-shrink-0 flex-nowrap items-center gap-3 border-b border-token bg-[rgb(var(--surface))] px-4 ${
+            focus ? "h-12" : "h-14"
           }`}
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-bold tracking-wide text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-bold tracking-wide text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
             <span className="h-2 w-2 rounded-full bg-brand-500" />
             {mode === "presenter" ? "ĐANG TRÌNH CHIẾU" : "MÀN HÌNH CHIẾU"}
           </span>
-          <span className="min-w-0 truncate text-sm text-muted">
-            {deck.title} · Slide {currentIndex >= 0 ? currentIndex + 1 : "-"}/{slides.length}
+          <span className="min-w-0 flex-1 truncate text-sm text-muted">
+            {deck.title}
             {currentSlide ? ` · ${TYPE_LABELS[currentSlide.type]}` : ""}
           </span>
-          <div className="flex-grow" />
-          <button
-            onClick={toggleFullscreen}
-            className="btn-secondary flex items-center gap-1.5 text-[13px]"
-            aria-label={isFullscreen ? "Thoát fullscreen" : "Fullscreen"}
-          >
-            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-            {isFullscreen ? "Thoát fullscreen" : "Fullscreen"}
-          </button>
-          {mode === "presenter" && (
-            <>
-              <button onClick={handleOpenAudienceWindow} className="btn-secondary flex items-center gap-1.5 text-[13px]">
-                <Monitor size={14} /> Mở màn hình chiếu
-              </button>
-              <button onClick={hideControls} className="btn-secondary flex items-center gap-1.5 text-[13px]">
-                <EyeOff size={14} /> Ẩn điều khiển
-              </button>
-              <div className="flex items-center gap-2">
+
+          {/* Cụm điều khiển 1 hàng: nút chức năng (icon, chữ hiện từ xl) | điều
+              hướng slide | Kết thúc. Nhóm trong 1 viên thuốc để không tràn dòng. */}
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] p-1">
+            <ToolbarButton
+              onClick={toggleFullscreen}
+              label={isFullscreen ? "Thoát fullscreen" : "Fullscreen"}
+              icon={isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            />
+            {mode === "presenter" && (
+              <>
+                <ToolbarButton onClick={handleOpenAudienceWindow} label="Mở màn hình chiếu" icon={<Monitor size={15} />} />
+                <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/15" aria-hidden />
+                <button
+                  onClick={() => setZoom(zoom - 0.1)}
+                  disabled={zoom <= 0.5}
+                  className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-[rgb(var(--surface))] disabled:opacity-30"
+                  aria-label="Thu nhỏ"
+                  title="Thu nhỏ (−)"
+                >
+                  <ZoomOut size={16} />
+                </button>
+                <button
+                  onClick={() => setZoom(1)}
+                  className="min-w-[2.75rem] rounded-full px-1 text-center text-[12px] font-semibold tabular-nums hover:bg-[rgb(var(--surface))]"
+                  title="Về 100% (0)"
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+                <button
+                  onClick={() => setZoom(zoom + 0.1)}
+                  disabled={zoom >= 2}
+                  className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-[rgb(var(--surface))] disabled:opacity-30"
+                  aria-label="Phóng to"
+                  title="Phóng to (+)"
+                >
+                  <ZoomIn size={16} />
+                </button>
+                <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/15" aria-hidden />
                 <button
                   onClick={goPrev}
                   disabled={currentIndex <= 0}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))] transition hover:bg-[rgb(var(--surface))] disabled:opacity-30"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[rgb(var(--text))] transition hover:bg-[rgb(var(--surface))] disabled:opacity-30"
                   aria-label="Slide trước"
+                  title="Slide trước (←)"
                 >
                   <ChevronLeft size={18} />
                 </button>
+                <span className="min-w-[3.25rem] text-center text-[13px] font-semibold tabular-nums">
+                  {currentIndex >= 0 ? currentIndex + 1 : "-"}/{slides.length}
+                </span>
                 <button
                   onClick={goNext}
                   disabled={currentIndex < 0 || currentIndex >= slides.length - 1}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gradient text-white shadow-sm transition hover:shadow-brand-glow disabled:opacity-30"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-gradient text-white shadow-sm transition hover:shadow-brand-glow disabled:opacity-30"
                   aria-label="Slide tiếp"
+                  title="Slide tiếp (→)"
                 >
                   <ChevronRight size={18} />
                 </button>
-              </div>
-              <button
-                onClick={handleEnd}
-                disabled={ending}
-                className="rounded-lg border border-red-200 bg-[rgb(var(--surface))] px-3.5 py-2 text-[13px] font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-900/20"
-              >
-                Kết thúc
-              </button>
-            </>
+              </>
+            )}
+          </div>
+          {mode === "presenter" && (
+            <button
+              onClick={handleEnd}
+              disabled={ending}
+              className="shrink-0 rounded-full border border-red-200 px-3.5 py-1.5 text-[13px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900/40 dark:hover:bg-red-900/20"
+            >
+              Kết thúc
+            </button>
           )}
         </header>
       )}
@@ -426,6 +483,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
+              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom }}>
               <SlideStage
                 slide={currentSlide}
                 runtime={runtime}
@@ -435,12 +493,29 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 revealed={!!uiState.revealed?.[currentSlide.id]}
                 onToggleReveal={() => handleToggleReveal(currentSlide.id)}
               />
+              </div>
             </div>
           )}
         </div>
 
         {showSidebar && currentSlide && (
-          <aside className="w-[300px] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5">
+          <>
+          {/* Dưới lg cột phải là ngăn kéo gấp gọn (QR/thống kê/ghi chú). */}
+          {sideOpen && <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSideOpen(false)} aria-hidden />}
+          <button
+            onClick={() => setSideOpen(true)}
+            className="fixed bottom-4 right-4 z-20 rounded-full bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-semibold shadow-lg ring-1 ring-black/10 lg:hidden"
+          >
+            QR &amp; ghi chú
+          </button>
+          <aside
+            className={`fixed bottom-0 right-0 top-16 z-40 w-[300px] max-w-[88vw] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
+              sideOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <button onClick={() => setSideOpen(false)} className="mb-3 text-xs font-medium text-muted lg:hidden">
+              ✕ Gấp gọn
+            </button>
             {hasSidebar && <FeedbackSidebar key={currentSlide.id} slide={currentSlide} runtime={runtime} />}
             {presenterNote && (
               <div className={hasSidebar ? "mt-6" : ""}>
@@ -448,23 +523,41 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               </div>
             )}
           </aside>
+          </>
         )}
       </main>
 
-      {focus && presenterNote && <PresenterNoteCorner key={currentSlide?.id} note={presenterNote} />}
-
       {focus && hasSidebar && runtime && runtime.kind !== "content" && (
-        <JoinCorner key={currentSlide?.id} joinPath={runtime.joinPath} />
+        <JoinCorner key={currentSlide?.id} joinPath={runtime.joinPath} code={runtime.kind === "collaborate_board" ? runtime.code : undefined} />
       )}
 
-      {chromeHidden && <RevealZone onReveal={() => setChromeHidden(false)} />}
+      {mode === "audience" && !isFullscreen && (
+        <div className="pointer-events-none fixed bottom-5 left-1/2 z-[105] -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-sm font-medium text-white shadow-lg">
+          Bấm vào đây hoặc nhấn F để fullscreen
+        </div>
+      )}
+
     </div>
+  );
+}
+
+function ToolbarButton({ onClick, label, icon }: { onClick: () => void; label: string; icon: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium text-[rgb(var(--text))] transition hover:bg-[rgb(var(--surface))]"
+    >
+      {icon}
+      <span className="hidden xl:inline">{label.replace(" (H)", "")}</span>
+    </button>
   );
 }
 
 // Focus mode bỏ cột bên phải nhưng học viên vẫn cần QR để vào slide: thu nhỏ
 // thành thẻ ở góc dưới phải, bấm để phóng to cho cả lớp quét.
-function JoinCorner({ joinPath }: { joinPath: string }) {
+function JoinCorner({ joinPath, code }: { joinPath: string; code?: string }) {
   const [big, setBig] = useState(false);
   const url = shareUrl(joinPath);
   return (
@@ -476,70 +569,31 @@ function JoinCorner({ joinPath }: { joinPath: string }) {
         aria-label="Phóng to mã QR tham gia"
       >
         <QRCode value={url} size={72} level="M" />
+        {code && <span className="px-1 font-mono text-lg font-bold tracking-widest text-[#20241F]">{code}</span>}
         <Maximize2 size={14} className="text-[#6B7268]" />
       </button>
-      {big && (
-        <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-6"
-          onClick={() => setBig(false)}
-        >
-          <div className="rounded-3xl bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <QRCode value={url} size={Math.min(460, typeof window !== "undefined" ? window.innerHeight - 220 : 400)} level="M" />
-            <p className="mt-4 max-w-[460px] break-all text-lg font-semibold text-[#20241F]">{url}</p>
-            <button onClick={() => setBig(false)} className="btn-secondary mt-4 text-sm">
-              Đóng
-            </button>
-          </div>
-        </div>
-      )}
+      {big && <JoinEnlarged url={url} code={code} onClose={() => setBig(false)} />}
     </>
   );
 }
 
-// Focus mode bỏ cột phải nên ghi chú của presenter nổi ở góc dưới trái; thu gọn
-// được để khỏi che slide. Chỉ render ở cửa sổ presenter (presenterNote rỗng ở
-// cửa sổ audience) nên không lọt lên màn chiếu.
-function PresenterNoteCorner({ note }: { note: string }) {
-  const [open, setOpen] = useState(true);
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-[105] flex items-center gap-1.5 rounded-full bg-amber-100 px-3.5 py-2 text-sm font-semibold text-amber-900 shadow-lg ring-1 ring-amber-300"
-      >
-        <StickyNote size={15} /> Ghi chú
-      </button>
-    );
-  }
+function JoinEnlarged({ url, code, onClose }: { url: string; code?: string; onClose: () => void }) {
   return (
-    <div className="fixed bottom-6 left-6 z-[105] w-80 max-w-[calc(100vw-3rem)] rounded-2xl bg-amber-50 shadow-xl ring-1 ring-amber-300">
-      <div className="flex items-center justify-between gap-2 px-4 pt-3 text-[11px] font-bold uppercase tracking-wide text-amber-800">
-        <span>Ghi chú — không hiện lên màn chiếu</span>
-        <button onClick={() => setOpen(false)} className="rounded p-0.5 hover:bg-amber-100" aria-label="Thu gọn ghi chú">
-          <Minimize2 size={14} />
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-6" onClick={onClose}>
+      <div className="rounded-3xl bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <QRCode value={url} size={Math.min(460, typeof window !== "undefined" ? window.innerHeight - 300 : 400)} level="M" />
+        {code && (
+          <>
+            <p className="mt-5 text-xs font-bold uppercase tracking-wide text-[#6B7268]">Mã tham gia</p>
+            <p className="font-mono text-5xl font-extrabold tracking-[0.25em] text-[#20241F]">{code}</p>
+          </>
+        )}
+        <p className="mt-4 max-w-[460px] break-all text-lg font-semibold text-[#20241F]">{url}</p>
+        <button onClick={onClose} className="btn-secondary mt-4 text-sm">
+          Đóng
         </button>
       </div>
-      <div className="max-h-[40vh] overflow-y-auto whitespace-pre-wrap px-4 pb-4 pt-2 text-[15px] leading-relaxed text-[#20241F]">
-        {note}
-      </div>
     </div>
-  );
-}
-
-// Dải mép dưới vô hình: rê chuột vào ~300ms thì hiện lại điều khiển — đường về
-// không cần nút nào nằm trên slide (khi đã ẩn thì màn chiếu sạch hoàn toàn).
-function RevealZone({ onReveal }: { onReveal: () => void }) {
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  return (
-    <div
-      className="fixed inset-x-0 bottom-0 z-[110] h-3"
-      onMouseEnter={() => {
-        timer.current = setTimeout(onReveal, 300);
-      }}
-      onMouseLeave={() => {
-        if (timer.current) clearTimeout(timer.current);
-      }}
-    />
   );
 }
 
@@ -712,9 +766,12 @@ function ContentSlideView({
   const isImportedPage = !config.title && !config.subtitle && !bullets.length && !!config.imageUrl;
   if (isImportedPage) {
     return (
-      <div className="relative flex min-h-0 flex-1 items-center justify-center bg-[#F1EFE6]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={config.imageUrl} alt="" className="max-h-full max-w-full object-contain" />
+      <div className="relative flex min-h-0 flex-1 flex-col bg-[#F1EFE6]">
+        {/* Trang PDF dài: ưu tiên bề ngang (chữ đủ to để đọc), chiều dọc cuộn chuột. */}
+        <div className="min-h-0 flex-1 overflow-y-auto pb-24">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={config.imageUrl} alt="" className="mx-auto block h-auto w-full max-w-[1600px]" />
+        </div>
         {timerSticker}
       </div>
     );
@@ -756,7 +813,7 @@ function FeedbackSidebar({ slide, runtime }: { slide: Slide; runtime: Runtime | 
       <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">
         Tham gia slide này
       </div>
-      <JoinBox joinPath={runtime.joinPath} />
+      <JoinBox joinPath={runtime.joinPath} code={runtime.kind === "collaborate_board" ? runtime.code : undefined} />
 
       <div className="mt-5 text-[11px] font-bold uppercase tracking-wide text-faint">
         Phản hồi
@@ -786,27 +843,46 @@ function PresenterNotesPanel({ note }: { note: string }) {
   );
 }
 
-function JoinBox({ joinPath }: { joinPath: string }) {
+function JoinBox({ joinPath, code }: { joinPath: string; code?: string }) {
   const url = shareUrl(joinPath);
+  const [big, setBig] = useState(false);
   const handleCopy = async () => {
     const ok = await copyText(url);
     if (ok) toast.success("Đã copy link!");
     else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
   };
   return (
-    <button
-      onClick={handleCopy}
-      className="flex w-full items-center gap-3 rounded-2xl border border-[#E3E0D3] bg-[#F7F6F1] p-3 text-left transition hover:border-brand-400"
-      title="Copy link"
-    >
-      <div className="flex-shrink-0 rounded-lg bg-white p-1.5">
-        <QRCode value={url} size={64} level="M" />
+    <div className="rounded-2xl border border-[#E3E0D3] bg-[#F7F6F1] p-3">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setBig(true)}
+          className="group relative flex-shrink-0 rounded-lg bg-white p-1.5 transition hover:ring-2 hover:ring-brand-400"
+          title="Phóng to mã QR"
+          aria-label="Phóng to mã QR"
+        >
+          <QRCode value={url} size={72} level="M" />
+          <span className="absolute right-1 top-1 rounded bg-black/60 p-0.5 text-white opacity-0 transition group-hover:opacity-100">
+            <Maximize2 size={11} />
+          </span>
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="text-[9px] uppercase tracking-wide text-[#8A9088]">Mã tham gia</div>
+          {code ? (
+            <div className="font-mono text-2xl font-extrabold leading-tight tracking-widest text-[#20241F]">{code}</div>
+          ) : (
+            <div className="text-[13px] font-semibold text-[#20241F]">Quét QR để vào</div>
+          )}
+        </div>
       </div>
-      <div className="min-w-0">
-        <div className="text-[9px] uppercase tracking-wide text-[#8A9088]">Quét QR hoặc bấm link</div>
-        <div className="mt-0.5 truncate text-[13px] font-semibold text-[#20241F]">Bấm để copy link</div>
-      </div>
-    </button>
+      <button
+        onClick={handleCopy}
+        className="mt-2.5 w-full break-all rounded-lg bg-white px-2.5 py-1.5 text-left text-[11.5px] text-[#3A3F38] transition hover:ring-1 hover:ring-brand-400"
+        title="Bấm để copy link"
+      >
+        {url}
+      </button>
+      {big && <JoinEnlarged url={url} code={code} onClose={() => setBig(false)} />}
+    </div>
   );
 }
 

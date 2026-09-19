@@ -30,6 +30,9 @@ import {
   FileUp,
   LayoutGrid,
   X,
+  SlidersHorizontal,
+  Eye,
+  ClipboardX,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
@@ -117,6 +120,8 @@ function defaultConfigFor(type: SlideType): Record<string, any> {
 export default function LiveDeckEditor({ deckId }: { deckId: string }) {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [titleDraft, setTitleDraft] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [slidesOpen, setSlidesOpen] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(null);
   const [pickingType, setPickingType] = useState(false);
@@ -317,28 +322,28 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex h-16 flex-shrink-0 items-center gap-4 border-b border-token bg-[rgb(var(--surface))] px-6">
-        <Link href="/instructor/limio-live" className="text-sm text-muted hover:text-brand-600">
+      <div className="flex h-16 flex-shrink-0 items-center gap-2 border-b border-token bg-[rgb(var(--surface))] px-3 sm:gap-4 sm:px-6">
+        <Link href="/instructor/limio-live" className="hidden text-sm text-muted hover:text-brand-600 sm:inline">
           Limio-Live
         </Link>
-        <span className="text-token">/</span>
+        <span className="hidden text-token sm:inline">/</span>
         <input
           value={titleDraft}
           onChange={(e) => setTitleDraft(e.target.value)}
           onBlur={handleSaveTitle}
           onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-          className="rounded-lg px-2 py-1.5 text-[15px] font-bold hover:bg-[rgb(var(--surface-muted))] focus:bg-[rgb(var(--surface-muted))] focus:outline-none"
+          className="min-w-0 max-w-[40vw] rounded-lg px-2 py-1.5 text-[15px] font-bold hover:bg-[rgb(var(--surface-muted))] focus:bg-[rgb(var(--surface-muted))] focus:outline-none sm:max-w-none"
           style={{ width: `${Math.max(titleDraft.length, 8)}ch` }}
         />
         {lastSavedAt && (
-          <span className="text-xs text-faint">
+          <span className="hidden text-xs text-faint sm:inline">
             Đã lưu ·{" "}
             {lastSavedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
           </span>
         )}
         <div className="flex-grow" />
-        <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Giao diện slide">
-          <span className="mr-1 text-xs text-faint">Giao diện</span>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" role="radiogroup" aria-label="Giao diện slide">
+          <span className="mr-1 hidden text-xs text-faint sm:inline">Giao diện</span>
           {SLIDE_THEMES.map((t) => (
             <button
               key={t.id}
@@ -346,7 +351,7 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
               aria-checked={(deck.theme ?? "white") === t.id}
               title={t.label}
               onClick={() => handleSetTheme(t.id)}
-              className={`h-6 w-6 rounded-full border transition ${
+              className={`h-5 w-5 rounded-full border transition sm:h-6 sm:w-6 ${
                 (deck.theme ?? "white") === t.id ? "ring-2 ring-brand-500 ring-offset-2" : "border-token hover:scale-110"
               }`}
               style={{ background: t.swatch }}
@@ -355,15 +360,28 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
         </div>
         <Link
           href={`/instructor/limio-live/${deckId}/present`}
-          className="btn flex items-center gap-2 bg-brand-gradient px-4 text-sm font-semibold text-white shadow-sm hover:shadow-brand-glow"
+          className="btn flex items-center gap-2 bg-brand-gradient px-3 text-sm sm:px-4 font-semibold text-white shadow-sm hover:shadow-brand-glow"
         >
-          <Presentation size={15} /> Trình chiếu
+          <Presentation size={15} /> <span className="hidden sm:inline">Trình chiếu</span>
         </Link>
       </div>
 
       <div className="flex min-h-0 flex-1">
         {/* Left rail — slide list */}
-        <div className="w-64 flex-shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] p-4">
+        {slidesOpen && (
+          <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSlidesOpen(false)} aria-hidden />
+        )}
+        <button
+          onClick={() => setSlidesOpen(true)}
+          className="fixed bottom-4 left-20 z-20 flex items-center gap-1.5 rounded-full bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-semibold shadow-lg ring-1 ring-black/10 lg:hidden"
+        >
+          Slide ({deck.slides.length})
+        </button>
+        <div
+          className={`fixed bottom-0 left-0 top-16 z-40 w-64 max-w-[85vw] flex-shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] p-4 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
+            slidesOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
           <input
             ref={pdfInputRef}
             type="file"
@@ -434,7 +452,10 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
                     slide={slide}
                     index={idx}
                     isActive={slide.id === selectedSlideId}
-                    onSelect={() => setSelectedSlideId(slide.id)}
+                    onSelect={() => {
+                      setSelectedSlideId(slide.id);
+                      setSlidesOpen(false);
+                    }}
                   />
                 ))}
               </SortableContext>
@@ -459,26 +480,44 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
 
         {/* Right rail — type legend + settings */}
         {selectedSlide && (
-          <div className="w-[300px] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5">
-            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted">Loại slide</p>
-            <div className="mb-6 grid grid-cols-2 gap-2">
-              {SLIDE_ORDER.map((type) => {
-                const meta = SLIDE_TYPE_META[type];
-                const isCurrent = type === selectedSlide.type;
-                return (
-                  <div
-                    key={type}
-                    className={`rounded-lg px-2 py-2.5 text-center text-xs font-semibold ${
-                      isCurrent ? meta.badge : "border border-token text-faint"
-                    }`}
-                  >
-                    {meta.label}
+          <>
+          {/* Dưới lg cột phải thành ngăn kéo: mặc định gấp, bấm nút nổi để kéo ra. */}
+          {settingsOpen && (
+            <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setSettingsOpen(false)} aria-hidden />
+          )}
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="fixed bottom-4 right-4 z-20 flex items-center gap-1.5 rounded-full bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-semibold shadow-lg ring-1 ring-black/10 lg:hidden"
+          >
+            <SlidersHorizontal size={15} /> Cài đặt
+          </button>
+          <div
+            className={`fixed bottom-0 right-0 top-16 z-40 w-[300px] max-w-[88vw] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
+              settingsOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <button
+              onClick={() => setSettingsOpen(false)}
+              className="mb-3 flex items-center gap-1 text-xs font-medium text-muted lg:hidden"
+            >
+              <X size={14} /> Gấp gọn
+            </button>
+            {(() => {
+              const meta = SLIDE_TYPE_META[selectedSlide.type];
+              const Icon = meta.icon;
+              const idx = deck.slides.findIndex((sl) => sl.id === selectedSlide.id);
+              return (
+                <div className="mb-5 flex items-center gap-3">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${meta.badge}`}>
+                    <Icon size={20} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-faint">Slide {idx + 1}</p>
+                    <p className="truncate text-[15px] font-bold leading-tight">{meta.label}</p>
                   </div>
-                );
-              })}
-            </div>
-
-            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted">Cài đặt</p>
+                </div>
+              );
+            })()}
             <SettingsPanel
               key={selectedSlide.id}
               slide={selectedSlide}
@@ -487,11 +526,12 @@ export default function LiveDeckEditor({ deckId }: { deckId: string }) {
 
             <button
               onClick={() => handleDeleteSlide(selectedSlide.id)}
-              className="btn-text btn-danger mt-8 flex w-full items-center justify-center gap-1.5 text-xs"
+              className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-900/20"
             >
               <Trash2 size={13} /> Xoá slide này
             </button>
           </div>
+          </>
         )}
       </div>
     </div>
@@ -567,6 +607,19 @@ function SlideCenterEditor({
     return <QuestionEditor type={slide.type} config={config} onSave={onSave} />;
   if (slide.type === "word_cloud") return <WordCloudEditor config={config} onSave={onSave} />;
   return <BoardEditor config={config} onSave={onSave} />;
+}
+
+// Ô nhập tự giãn theo nội dung (không cuộn trong ô, không chồng lên phần bên
+// dưới): đo scrollHeight mỗi lần đổi giá trị.
+function AutoTextarea({ value, className, ...rest }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return <textarea ref={ref} value={value} rows={1} className={`${className ?? ""} overflow-hidden`} {...rest} />;
 }
 
 const bareInputClass =
@@ -791,13 +844,12 @@ function QuestionEditor({
 
   return (
     <div className="flex h-full flex-col">
-      <textarea
+      <AutoTextarea
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         onBlur={() => commit({})}
         placeholder="Nhập câu hỏi..."
-        rows={2}
-        className={`${bareInputClass} mb-5 text-[24px] font-bold leading-snug`}
+        className={`${bareInputClass} mb-5 shrink-0 text-[20px] font-bold leading-snug`}
       />
       <div className="flex flex-col gap-2">
         {options.map((opt, idx) => (
@@ -877,13 +929,12 @@ function WordCloudEditor({
 
   return (
     <div className="flex h-full flex-col">
-      <textarea
+      <AutoTextarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         onBlur={() => onSave({ config: { ...config, prompt: prompt.trim() } })}
         placeholder="Nhập câu hỏi / prompt cho Word Cloud..."
-        rows={2}
-        className={`${bareInputClass} mb-5 text-[24px] font-bold leading-snug`}
+        className={`${bareInputClass} mb-5 text-[22px] font-bold leading-snug`}
       />
       <div className="flex flex-grow items-center justify-center rounded-2xl bg-[#F7F6F1] p-8 text-sm text-[#9AA090]">
         Cụm từ học viên gửi sẽ hiện ở đây khi trình chiếu.
@@ -912,13 +963,12 @@ function BoardEditor({
   return (
     <div className="flex h-full flex-col">
       {config.title && <p className="mb-1 text-xs font-bold uppercase tracking-wider text-faint">{config.title}</p>}
-      <textarea
+      <AutoTextarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         onBlur={() => onSave({ config: { ...config, prompt: prompt.trim() } })}
         placeholder="Nhập câu hỏi / hướng dẫn cho bảng cộng tác..."
-        rows={2}
-        className={`${bareInputClass} mb-4 text-[22px] font-bold leading-snug`}
+        className={`${bareInputClass} mb-4 text-[20px] font-bold leading-snug`}
       />
       <div className="min-h-0 flex-1">
         <BoardNotesView
@@ -939,6 +989,56 @@ function BoardEditor({
 }
 
 // ── Right rail settings ──────────────────────────────────────────────────
+
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+        checked ? "bg-brand-500" : "bg-black/15 dark:bg-white/20"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`}
+      />
+    </button>
+  );
+}
+
+// Thẻ cài đặt thống nhất: ô icon + tiêu đề (+ công tắc bên phải) + nội dung mở rộng.
+function SettingCard({
+  icon,
+  title,
+  hint,
+  toggle,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint?: string;
+  toggle?: { checked: boolean; onChange: (v: boolean) => void };
+  children?: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-3.5 shadow-[0_1px_2px_rgba(32,36,31,0.04)]">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--surface-muted))] text-muted">
+          {icon}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-semibold leading-tight">{title}</p>
+          {hint && <p className="mt-0.5 text-[11px] leading-snug text-faint">{hint}</p>}
+        </div>
+        {toggle && <Toggle checked={toggle.checked} onChange={toggle.onChange} label={title} />}
+      </div>
+      {children && <div className="mt-3">{children}</div>}
+    </section>
+  );
+}
 
 function SettingsPanel({
   slide,
@@ -987,44 +1087,60 @@ function SettingsPanel({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-token p-3">
-        <label className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5 text-sm font-medium">
-            <Clock size={13} className="text-muted" /> Giới hạn thời gian
-          </span>
-          <input
-            type="checkbox"
-            checked={timerEnabled}
-            onChange={(e) => {
-              setTimerEnabled(e.target.checked);
-              commitTimer(e.target.checked, timerMinutes);
-            }}
-            className="h-5 w-5 accent-brand-600"
-          />
-        </label>
+    <div className="space-y-3">
+      <SettingCard
+        icon={<Clock size={15} />}
+        title="Giới hạn thời gian"
+        hint={timerEnabled ? undefined : "GV tự bấm Bắt đầu lúc trình chiếu"}
+        toggle={{
+          checked: timerEnabled,
+          onChange: (v) => {
+            setTimerEnabled(v);
+            commitTimer(v, timerMinutes);
+          },
+        }}
+      >
         {timerEnabled && (
-          <div className="mt-2.5 flex items-center gap-2">
-            <input
-              type="number"
-              min={1}
-              value={timerMinutes}
-              onChange={(e) => {
-                const v = Math.max(1, parseInt(e.target.value) || 1);
-                setTimerMinutes(v);
-                commitTimer(true, v);
-              }}
-              className="input w-20"
-            />
-            <span className="text-xs text-muted">phút — GV tự bấm Bắt đầu lúc trình chiếu</span>
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-1.5">
+              {[1, 3, 5, 10, 15].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setTimerMinutes(m);
+                    commitTimer(true, m);
+                  }}
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                    timerMinutes === m
+                      ? "bg-brand-500 text-white"
+                      : "bg-[rgb(var(--surface-muted))] text-muted hover:text-[rgb(var(--text))]"
+                  }`}
+                >
+                  {m}p
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                value={timerMinutes}
+                onChange={(e) => {
+                  const v = Math.max(1, parseInt(e.target.value) || 1);
+                  setTimerMinutes(v);
+                  commitTimer(true, v);
+                }}
+                className="input w-20"
+              />
+              <span className="text-xs text-muted">phút · GV tự bấm Bắt đầu</span>
+            </div>
           </div>
         )}
-      </div>
+      </SettingCard>
 
       {slide.type === "collaborate_board" && (
         <>
-          <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">Tiêu đề bảng</label>
+          <SettingCard icon={<StickyNote size={15} />} title="Tiêu đề bảng">
             <input
               value={boardTitle}
               onChange={(e) => setBoardTitle(e.target.value)}
@@ -1033,28 +1149,23 @@ function SettingsPanel({
               maxLength={120}
               className="input w-full text-sm"
             />
-          </div>
-          <div className="rounded-xl bg-amber-50/70 p-3 ring-1 ring-amber-200/70 dark:bg-amber-900/10 dark:ring-amber-900/40">
-            <label className="flex cursor-pointer items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
-                <LayoutGrid size={14} /> Đăng theo nhóm (grid)
-              </span>
-              <input
-                type="checkbox"
-                checked={boardMode === "grouped"}
-                onChange={(e) => {
-                  const m = e.target.checked ? "grouped" : "free";
-                  setBoardMode(m);
-                  commitBoard({ mode: m });
-                }}
-                className="h-4 w-4 accent-amber-500"
-              />
-            </label>
+          </SettingCard>
+
+          <SettingCard
+            icon={<LayoutGrid size={15} />}
+            title="Đăng theo nhóm (grid)"
+            hint="Mỗi nhóm hiện thành 1 cột riêng"
+            toggle={{
+              checked: boardMode === "grouped",
+              onChange: (v) => {
+                const m = v ? "grouped" : "free";
+                setBoardMode(m);
+                commitBoard({ mode: m });
+              },
+            }}
+          >
             {boardMode === "grouped" && (
-              <div className="mt-3 space-y-2">
-                <p className="text-[11px] text-muted">
-                  Học viên chọn đúng nhóm khi đăng — mỗi nhóm hiện thành 1 cột riêng.
-                </p>
+              <div className="space-y-2">
                 {columnList.map((label, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <span
@@ -1096,66 +1207,66 @@ function SettingsPanel({
                     setColumnList(next);
                     commitBoard({ columns: next });
                   }}
-                  className="flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 disabled:opacity-40 dark:text-amber-400"
+                  className="flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline disabled:opacity-40"
                 >
                   <Plus size={12} /> Thêm nhóm
                 </button>
               </div>
             )}
-          </div>
-          <label className="flex items-center justify-between gap-3 border-t border-token pt-3 text-sm">
-            <span>Xem ghi chú của nhau</span>
-            <input
-              type="checkbox"
-              checked={allowViewOthers}
-              onChange={(e) => {
-                setAllowViewOthers(e.target.checked);
-                commitBoard({ allowViewOthers: e.target.checked });
-              }}
-              className="h-5 w-5 accent-brand-600"
-            />
-          </label>
-          <label className="flex items-center justify-between gap-3 border-t border-token pt-3 text-sm">
-            <span>Chặn dán (chống copy)</span>
-            <input
-              type="checkbox"
-              checked={blockPaste}
-              onChange={(e) => {
-                setBlockPaste(e.target.checked);
-                commitBoard({ blockPaste: e.target.checked });
-              }}
-              className="h-5 w-5 accent-brand-600"
-            />
-          </label>
+          </SettingCard>
+
+          <SettingCard
+            icon={<Eye size={15} />}
+            title="Xem ghi chú của nhau"
+            hint="Học viên thấy ghi chú của bạn học"
+            toggle={{
+              checked: allowViewOthers,
+              onChange: (v) => {
+                setAllowViewOthers(v);
+                commitBoard({ allowViewOthers: v });
+              },
+            }}
+          />
+          <SettingCard
+            icon={<ClipboardX size={15} />}
+            title="Chặn dán (chống copy)"
+            hint="Học viên không dán được vào ô ghi chú"
+            toggle={{
+              checked: blockPaste,
+              onChange: (v) => {
+                setBlockPaste(v);
+                commitBoard({ blockPaste: v });
+              },
+            }}
+          />
         </>
       )}
 
-      {slide.type === "content" && (
-        <>
-          <p className="text-xs leading-relaxed text-muted">
-            Slide nội dung không cần học viên phản hồi — chỉ hiển thị.
-          </p>
-        </>
-      )}
-      {(slide.type === "quiz" || slide.type === "poll") && (
-        <p className="text-xs leading-relaxed text-muted">
-          Bình chọn luôn ẩn danh — học viên không cần đăng nhập để tham gia.
-        </p>
-      )}
-      <div className="rounded-xl border border-token p-3">
-        <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
-          <StickyNote size={13} className="text-muted" /> Ghi chú cho người trình chiếu
-        </label>
+      <SettingCard
+        icon={<StickyNote size={15} />}
+        title="Ghi chú cho người trình chiếu"
+        hint="Chỉ bạn thấy — không hiện lên màn chiếu"
+      >
         <textarea
           value={presenterNote}
           onChange={(e) => setPresenterNote(e.target.value)}
           onBlur={commitPresenterNote}
-          placeholder="Chỉ bạn thấy — không hiện lên màn chiếu..."
+          placeholder="Nhắc bản thân điều cần nói..."
           rows={4}
           className="input w-full text-xs"
         />
-      </div>
+      </SettingCard>
 
+      {(slide.type === "quiz" || slide.type === "poll") && (
+        <p className="px-1 text-[11px] leading-relaxed text-faint">
+          Bình chọn luôn ẩn danh — học viên không cần đăng nhập để tham gia.
+        </p>
+      )}
+      {slide.type === "content" && (
+        <p className="px-1 text-[11px] leading-relaxed text-faint">
+          Slide nội dung không cần học viên phản hồi — chỉ hiển thị.
+        </p>
+      )}
     </div>
   );
 }
