@@ -144,8 +144,18 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         setEndedAt(session.endedAt ?? null);
 
         if (mode === "presenter") {
-          if (session.currentSlideId) {
-            await visitSlide(session.id, session.currentSlideId);
+          // ?from=start | <slideId> (nút "Từ đầu"/"Từ slide hiện tại" ở editor): nhảy tới
+          // slide đó thay vì resume chỗ cũ; xong dọn tham số để F5 không nhảy lại.
+          const from = searchParams.get("from");
+          const fromId = from === "start" ? deckData.slides[0]?.id : deckData.slides.find((sl) => sl.id === from)?.id;
+          if (from) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("from");
+            window.history.replaceState(null, "", url.toString());
+          }
+          const target = fromId ?? session.currentSlideId;
+          if (target) {
+            await visitSlide(session.id, target);
           } else {
             setLoadingSlide(false);
           }

@@ -38,12 +38,14 @@ import {
   ZoomIn,
   ZoomOut,
   MonitorPlay,
+  Play,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 import BoardNotesView from "../BoardNotesView";
 import PanelToggle from "@/components/ui/PanelToggle";
+import Tooltip from "@/components/ui/Tooltip";
 import { SLIDE_THEMES, slideThemeBg } from "../slideThemes";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
@@ -242,23 +244,24 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
-  // "Trình chiếu" (kiểu PowerPoint): vào fullscreen NGAY trong cú click rồi điều
-  // hướng SPA — fullscreen sống sót qua điều hướng client nên trang trình chiếu
-  // hiện luôn toàn màn hình, không ghi chú.
-  const handleStartSlideshow = async () => {
+  // 3 nút giống thanh Slide Show của PowerPoint:
+  //  - Từ đầu / Từ slide hiện tại: vào fullscreen NGAY trong cú click rồi điều
+  //    hướng SPA (fullscreen sống sót qua điều hướng client) — không ghi chú.
+  //  - Presenter view: mở cửa sổ màn chiếu (popup, gọi đồng bộ trong click) rồi
+  //    vào trang presenter — có ghi chú, không fullscreen.
+  const startSlideshow = async (from: "start" | "current") => {
     try {
       await document.documentElement.requestFullscreen();
     } catch {
       /* bị chặn — trang trình chiếu sẽ gợi ý bấm để fullscreen */
     }
-    router.push(`/instructor/limio-live/${deckId}/present?mode=slideshow`);
+    const fromParam = from === "current" && selectedSlideId ? selectedSlideId : "start";
+    router.push(`/instructor/limio-live/${deckId}/present?mode=slideshow&from=${fromParam}`);
   };
 
-  // "Presenter view": mở cửa sổ màn chiếu (popup, cần gọi đồng bộ trong click)
-  // rồi vào trang presenter — có ghi chú, không fullscreen.
   const handleStartPresenterView = () => {
     openAudienceWindow(deckId);
-    router.push(`/instructor/limio-live/${deckId}/present`);
+    router.push(`/instructor/limio-live/${deckId}/present?from=start`);
   };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -446,20 +449,42 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
             />
           ))}
         </div>
-        <button
-          onClick={handleStartPresenterView}
-          className="btn-secondary flex items-center gap-2 px-3 text-sm font-semibold"
-          title="Mở màn chiếu ở cửa sổ riêng, bạn xem ghi chú ở cửa sổ này"
+        {/* 3 lệnh trình chiếu gom 1 khối phân đoạn (giống thanh Slide Show của PowerPoint):
+            "Từ đầu" là lệnh chính (tô đặc), 2 lệnh còn lại nền trong, cùng cỡ. */}
+        <div
+          className="flex shrink-0 items-center gap-1 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-1"
+          role="group"
+          aria-label="Trình chiếu"
         >
-          <MonitorPlay size={15} /> <span className="hidden md:inline">Presenter view</span>
-        </button>
-        <button
-          onClick={handleStartSlideshow}
-          className="btn flex items-center gap-2 bg-brand-gradient px-3 text-sm font-semibold text-white shadow-sm hover:shadow-brand-glow sm:px-4"
-          title="Trình chiếu toàn màn hình (không ghi chú)"
-        >
-          <Presentation size={15} /> <span className="hidden sm:inline">Trình chiếu</span>
-        </button>
+          <Tooltip label="Trình chiếu từ đầu" description="Toàn màn hình, bắt đầu từ slide 1, không hiện Note.">
+            <button
+              onClick={() => startSlideshow("start")}
+              className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 bg-brand-600 text-white shadow-sm hover:bg-brand-700"
+              aria-label="Trình chiếu từ đầu"
+            >
+              <Play size={15} className="fill-current" /> <span className="hidden xl:inline">Từ đầu</span>
+            </button>
+          </Tooltip>
+          <Tooltip label="Trình chiếu từ slide này" description="Toàn màn hình, bắt đầu từ slide đang chọn, không hiện Note.">
+            <button
+              onClick={() => startSlideshow("current")}
+              disabled={!selectedSlideId}
+              className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 text-[rgb(var(--text))] hover:bg-[rgb(var(--surface))] hover:shadow-sm disabled:opacity-40"
+              aria-label="Trình chiếu từ slide này"
+            >
+              <Presentation size={15} className="text-brand-700 dark:text-brand-300" /> <span className="hidden xl:inline">Từ slide này</span>
+            </button>
+          </Tooltip>
+          <Tooltip label="Presenter view" description="Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này." align="end">
+            <button
+              onClick={handleStartPresenterView}
+              className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 text-[rgb(var(--text))] hover:bg-[rgb(var(--surface))] hover:shadow-sm"
+              aria-label="Presenter view"
+            >
+              <MonitorPlay size={15} className="text-brand-700 dark:text-brand-300" /> <span className="hidden xl:inline">Presenter view</span>
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       <div className="relative flex min-h-0 flex-1">
@@ -592,10 +617,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
             {selectedSlide ? (
               <div
                 key={selectedSlide.id}
-                className="m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)]"
+                className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
+                  selectedSlide.timerSeconds != null ? "pb-28" : ""
+                }`}
                 style={{ background: slideThemeBg(deck.theme), zoom: editorZoom }}
               >
                 <SlideCenterEditor slide={selectedSlide} onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)} />
+                {selectedSlide.timerSeconds != null && (
+                  <TimerSticker seconds={selectedSlide.timerSeconds} />
+                )}
               </div>
             ) : (
               <p className="m-auto text-sm text-muted">Chưa có slide nào — bấm "+ Thêm slide" bên trái.</p>
@@ -1176,22 +1206,44 @@ function BoardEditor({
 
 // ── Right rail settings ──────────────────────────────────────────────────
 
+// Xem trước đồng hồ trên slide (giống sticker lúc trình chiếu, trạng thái "Sẵn sàng").
+function TimerSticker({ seconds }: { seconds: number }) {
+  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
+      <div className="inline-flex items-center gap-3 rounded-2xl border-2 border-[#E3E0D3] bg-white/90 px-5 py-2 text-[#3A3F38] shadow-lg backdrop-blur">
+        <Clock size={22} />
+        <span className="text-sm font-bold uppercase tracking-wide">Timer</span>
+        <span className="font-mono text-4xl font-bold leading-none">
+          {mm}:{ss}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-        checked ? "bg-brand-500" : "bg-black/15 dark:bg-white/20"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`}
-      />
-    </button>
+    <span className="flex shrink-0 items-center gap-2">
+      <span className={`w-6 text-right text-[11px] font-bold uppercase tracking-wide ${checked ? "text-brand-700 dark:text-brand-300" : "text-faint"}`}>
+        {checked ? "Bật" : "Tắt"}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+          checked ? "bg-brand-500" : "bg-black/15 dark:bg-white/20"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`}
+        />
+      </button>
+    </span>
   );
 }
 
@@ -1276,8 +1328,8 @@ function SettingsPanel({
     <div className="space-y-3">
       <SettingCard
         icon={<Clock size={15} />}
-        title="Giới hạn thời gian"
-        hint={timerEnabled ? undefined : "GV tự bấm Bắt đầu lúc trình chiếu"}
+        title="Timer"
+        hint={timerEnabled ? undefined : "Đồng hồ đếm ngược hiện trên slide"}
         toggle={{
           checked: timerEnabled,
           onChange: (v) => {
@@ -1430,8 +1482,8 @@ function SettingsPanel({
 
       <SettingCard
         icon={<StickyNote size={15} />}
-        title="Ghi chú cho người trình chiếu"
-        hint="Chỉ bạn thấy — không hiện lên màn chiếu"
+        title="Note"
+        hint="Chỉ hiện cho diễn giả ở chế độ presenter-view"
       >
         <textarea
           value={presenterNote}
