@@ -13,20 +13,16 @@ import {
   Eye,
   FlaskConical,
   ClipboardList,
-  Tag,
   MessageSquare,
   Trophy,
   Users,
   Brain,
-  Sparkles,
-  FileText,
   BarChart3,
   Menu,
   X,
   Loader2,
   CalendarCheck,
   Library,
-  LayoutGrid,
   Mic,
   Coins,
   Presentation,
@@ -99,12 +95,12 @@ const MODULES: ModuleDef[] = [
     icon: GraduationCap,
     iconSize: 27,
     colors: {
-      rail: "bg-amber-500",
-      itemActiveBg: "bg-amber-50 dark:bg-amber-950/40",
-      itemActiveText: "text-amber-700 dark:text-amber-200",
-      itemIconBg: "bg-amber-100 dark:bg-amber-950/40",
-      itemIconFg: "text-amber-600 dark:text-amber-300",
-      headerText: "text-amber-700 dark:text-amber-400",
+      rail: "bg-lime-600",
+      itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
+      itemActiveText: "text-lime-700 dark:text-lime-200",
+      itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
+      itemIconFg: "text-lime-600 dark:text-lime-300",
+      headerText: "text-lime-700 dark:text-lime-400",
     },
     matchPrefixes: [
       "/instructor/courses",
@@ -119,18 +115,10 @@ const MODULES: ModuleDef[] = [
     ],
     items: [
       { label: "Khoá học của tôi", href: "/instructor/courses", icon: BookOpen, section: "Giảng dạy" },
-      // Catalog là trang công khai, đặt ngay dưới "Khoá học của tôi" vì hai mục
-      // trả lời cùng một câu hỏi ở hai phạm vi: khoá tôi phụ trách, và mọi khoá
-      // đang mở. Giảng viên còn dùng nó để xem khoá mình hiện ra sao với người
-      // học trước khi publish.
-      { label: "Catalog khoá học", href: "/catalog", icon: LayoutGrid, section: "Giảng dạy" },
-      { label: "Đánh giá Assignment", href: "/instructor/assignments", icon: ClipboardList, section: "Giảng dạy" },
-      { label: "Skill tagging", href: "/instructor/skill-tagging", icon: Tag, section: "Giảng dạy" },
+      { label: "Assignment", href: "/instructor/assignments", icon: ClipboardList, section: "Giảng dạy" },
       { label: "Forum Q&A", href: "/instructor/forum", icon: MessageSquare, section: "Giảng dạy" },
       { label: "Enrollments", href: "/instructor/enrollments", icon: Users, section: "Học viên" },
       { label: "Learner Insights (BKT)", href: "/instructor/learner-insights", icon: Brain, section: "Học viên" },
-      { label: "AI Feedback Generator", href: "/instructor/feedback-generator", icon: Sparkles, section: "AI hỗ trợ" },
-      { label: "Feedback Templates", href: "/instructor/feedback-templates", icon: FileText, section: "AI hỗ trợ" },
     ],
   },
   {
@@ -143,12 +131,12 @@ const MODULES: ModuleDef[] = [
     icon: Presentation,
     premium: true,
     colors: {
-      rail: "bg-gradient-to-br from-pink-400 to-pink-600",
-      itemActiveBg: "bg-pink-50 dark:bg-pink-950/40",
-      itemActiveText: "text-pink-700 dark:text-pink-200",
-      itemIconBg: "bg-pink-100 dark:bg-pink-950/40",
-      itemIconFg: "text-pink-600 dark:text-pink-300",
-      headerText: "text-pink-700 dark:text-pink-400",
+      rail: "bg-lime-600",
+      itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
+      itemActiveText: "text-lime-700 dark:text-lime-200",
+      itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
+      itemIconFg: "text-lime-600 dark:text-lime-300",
+      headerText: "text-lime-700 dark:text-lime-400",
     },
     matchPrefixes: ["/instructor/limio-live", "/instructor/teaching-tools", "/instructor/gameshow"],
     items: [
@@ -180,12 +168,12 @@ const MODULES: ModuleDef[] = [
     icon: Bot,
     premium: true,
     colors: {
-      rail: "bg-gradient-to-br from-violet-400 to-violet-600",
-      itemActiveBg: "bg-violet-50 dark:bg-violet-950/40",
-      itemActiveText: "text-violet-700 dark:text-violet-200",
-      itemIconBg: "bg-violet-100 dark:bg-violet-950/40",
-      itemIconFg: "text-violet-600 dark:text-violet-300",
-      headerText: "text-violet-700 dark:text-violet-400",
+      rail: "bg-lime-600",
+      itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
+      itemActiveText: "text-lime-700 dark:text-lime-200",
+      itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
+      itemIconFg: "text-lime-600 dark:text-lime-300",
+      headerText: "text-lime-700 dark:text-lime-400",
     },
     matchPrefixes: ["/instructor/oral-exams"],
     items: [{ label: "Phòng thi vấn đáp", href: "/instructor/oral-exams", icon: Mic }],
@@ -195,12 +183,12 @@ const MODULES: ModuleDef[] = [
     label: "Kiểm tra đánh giá",
     icon: ClipboardList,
     colors: {
-      rail: "bg-blue-500",
-      itemActiveBg: "bg-blue-50 dark:bg-blue-950/40",
-      itemActiveText: "text-blue-700 dark:text-blue-200",
-      itemIconBg: "bg-blue-100 dark:bg-blue-950/40",
-      itemIconFg: "text-blue-600 dark:text-blue-300",
-      headerText: "text-blue-700 dark:text-blue-400",
+      rail: "bg-lime-600",
+      itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
+      itemActiveText: "text-lime-700 dark:text-lime-200",
+      itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
+      itemIconFg: "text-lime-600 dark:text-lime-300",
+      headerText: "text-lime-700 dark:text-lime-400",
     },
     // "Giám sát phòng thi" ĐÃ BỎ khỏi menu này: giám thị nay vào bằng mã ở
     // /giam-thi, không cần tài khoản.
@@ -218,12 +206,12 @@ const MODULES: ModuleDef[] = [
     label: "Tournament",
     icon: Trophy,
     colors: {
-      rail: "bg-orange-500",
-      itemActiveBg: "bg-orange-50 dark:bg-orange-950/40",
-      itemActiveText: "text-orange-700 dark:text-orange-200",
-      itemIconBg: "bg-orange-100 dark:bg-orange-950/40",
-      itemIconFg: "text-orange-600 dark:text-orange-300",
-      headerText: "text-orange-700 dark:text-orange-400",
+      rail: "bg-lime-600",
+      itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
+      itemActiveText: "text-lime-700 dark:text-lime-200",
+      itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
+      itemIconFg: "text-lime-600 dark:text-lime-300",
+      headerText: "text-lime-700 dark:text-lime-400",
     },
     matchPrefixes: ["/instructor/tournaments"],
     items: [{ label: "Tournament của tôi", href: "/instructor/tournaments", icon: Trophy }],
@@ -233,12 +221,12 @@ const MODULES: ModuleDef[] = [
     label: "Phân tích và Báo cáo",
     icon: BarChart3,
     colors: {
-      rail: "bg-teal-500",
-      itemActiveBg: "bg-teal-50 dark:bg-teal-950/40",
-      itemActiveText: "text-teal-700 dark:text-teal-200",
-      itemIconBg: "bg-teal-100 dark:bg-teal-950/40",
-      itemIconFg: "text-teal-600 dark:text-teal-300",
-      headerText: "text-teal-700 dark:text-teal-400",
+      rail: "bg-lime-600",
+      itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
+      itemActiveText: "text-lime-700 dark:text-lime-200",
+      itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
+      itemIconFg: "text-lime-600 dark:text-lime-300",
+      headerText: "text-lime-700 dark:text-lime-400",
     },
     matchPrefixes: ["/instructor/analytics", "/me/ai-tokens"],
     items: [
@@ -354,7 +342,7 @@ function InstructorLeftMenuInner({
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Mở menu giảng viên"
-          className="fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg transition-transform hover:scale-105 lg:hidden"
+          className="fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-lime-600 text-white shadow-lg transition-transform hover:scale-105 lg:hidden"
         >
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
@@ -409,7 +397,7 @@ function InstructorLeftMenuInner({
     />
   );
   const sidebarContent = activeModule ? (
-    <div className="w-56 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] px-3 py-5">
+    <div className="w-56 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] py-5 pl-5 pr-3">
       <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 px-1">
         <p className={`text-[19px] font-extrabold leading-tight tracking-tight ${activeModule.colors.headerText}`}>
           {activeModule.label}
@@ -433,7 +421,7 @@ function InstructorLeftMenuInner({
         type="button"
         onClick={() => setMobileOpen((v) => !v)}
         aria-label="Mở menu giảng viên"
-        className={`fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg transition-transform hover:scale-105 ${
+        className={`fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-lime-600 text-white shadow-lg transition-transform hover:scale-105 ${
           isImmersive ? "" : "lg:hidden"
         }`}
       >
@@ -480,12 +468,12 @@ function InstructorLeftMenuInner({
 }
 
 const NEUTRAL_COLORS: ModuleColors = {
-  rail: "bg-amber-500",
-  itemActiveBg: "bg-amber-50 dark:bg-amber-950/40",
-  itemActiveText: "text-amber-700 dark:text-amber-200",
-  itemIconBg: "bg-amber-100 dark:bg-amber-950/40",
-  itemIconFg: "text-amber-600 dark:text-amber-300",
-  headerText: "text-amber-700 dark:text-amber-400",
+  rail: "bg-lime-600",
+  itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
+  itemActiveText: "text-lime-700 dark:text-lime-200",
+  itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
+  itemIconFg: "text-lime-600 dark:text-lime-300",
+  headerText: "text-lime-700 dark:text-lime-400",
 };
 
 // ── Rail — cột icon dọc luôn hiện, "Trang chủ" ghim riêng phía trên rồi tới
@@ -594,7 +582,7 @@ function RailButton({
                 : "group-hover:bg-[rgb(var(--surface))]"
           } ${hero && isActive ? "shadow-md" : ""}`}
         >
-          <Icon size={iconSize} className={isActive ? "text-white" : "text-[rgb(var(--text-muted))]"} strokeWidth={isActive ? 2.25 : 2} />
+          <Icon size={iconSize} className={isActive ? "text-white" : "text-[rgb(var(--text-muted))]"} strokeWidth={isActive ? 1.75 : 1.5} />
         </span>
         {premium && (
           // Huy hiệu vàng cố định (cùng tông pill "Premium" ở sidebar) — không
@@ -634,15 +622,15 @@ function ItemList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-8">
       {groups.map((g, gi) => (
         <section key={g.section ?? gi}>
           {g.section && (
-            <p className="mb-1 mt-3 px-1.5 text-xs font-extrabold uppercase tracking-wide text-[rgb(var(--text-muted))] first:mt-0">
+            <p className="mb-2.5 px-1.5 text-xs font-extrabold uppercase tracking-wide text-[rgb(var(--text-muted))]">
               {g.section}
             </p>
           )}
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {g.items.map((it) => (
               <li key={it.label}>
                 <ItemRow item={it} active={isActive(it.href)} colors={colors} pending={!!it.href && it.href === pendingHref} onNavigate={onNavigate} />
