@@ -14,20 +14,40 @@ export async function POST(
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  // Rate limit: 1 vote/5s/IP per poll. Chống spam click.
+  let parsedBody: { choice: string; clientId?: string };
+  try {
+    parsedBody = z
+      .object({ choice: z.string(), clientId: z.string().min(8).max(64).optional() })
+      .parse(await req.json());
+  } catch {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+  const { choice, clientId } = parsedBody;
+
+  // Rate limit chính: 1 vote/5s theo THIẾT BỊ (clientId sinh ở client); client cũ không gửi thì
+  // rơi về IP. Theo IP thì cả lớp chung wifi/NAT chỉ được 1 vote mỗi 5 giây.
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const rl = await rateLimit(`poll:${params.pollId}:${ip}`, 1, 5_000);
+  const rl = await rateLimit(
+    clientId ? `poll:${params.pollId}:client:${clientId}` : `poll:${params.pollId}:${ip}`,
+    1,
+    5_000,
+  );
   if (!rl.ok) {
     return Response.json(
       { error: "rate_limited", resetMs: rl.resetMs },
       { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } },
     );
   }
+  // Lưới an toàn thô theo IP chống script tự đổi clientId — ngưỡng đủ rộng cho cả lớp lớn cùng NAT.
+  const ipRl = await rateLimit(`poll:${params.pollId}:ip-burst:${ip}`, 300, 10_000);
+  if (!ipRl.ok) {
+    return Response.json(
+      { error: "rate_limited", resetMs: ipRl.resetMs },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(ipRl.resetMs / 1000)) } },
+    );
+  }
 
   try {
-    const body = await req.json();
-    const { choice } = z.object({ choice: z.string() }).parse(body);
-
     const poll = await prisma.classroomPoll.findUnique({
       where: { id: params.pollId },
       select: { id: true, options: true },

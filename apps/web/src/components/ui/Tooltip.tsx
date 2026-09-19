@@ -7,12 +7,15 @@ export default function Tooltip({
   description,
   align = "center",
   side = "bottom",
+  suppressed = false,
   children,
 }: {
   label: string;
   description?: string;
   align?: "center" | "end";
   side?: "bottom" | "right";
+  /** Ép ẩn (vd ngay sau khi bấm) dù đang hover/focus — hết hover thì component cha bỏ cờ này. */
+  suppressed?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -21,6 +24,8 @@ export default function Tooltip({
       <span
         role="tooltip"
         className={`pointer-events-none absolute z-50 w-max max-w-[240px] rounded-lg bg-[#20241F] px-3 py-2 text-left text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
+          suppressed ? "!opacity-0" : ""
+        } ${
           side === "right"
             ? "left-full top-1/2 ml-2 -translate-y-1/2"
             : `top-full mt-2 ${align === "end" ? "right-0" : "left-1/2 -translate-x-1/2"}`

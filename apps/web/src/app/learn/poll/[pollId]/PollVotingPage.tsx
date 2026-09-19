@@ -1,5 +1,6 @@
 "use client";
 
+import { getClientId } from "@/lib/clientId";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
@@ -57,7 +58,7 @@ export default function PollVotingPage({ poll }: { poll: Poll }) {
       const res = await fetch(apiUrl(`/api/classroom/quick-poll/${poll.id}/vote`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ choice: idx.toString() }),
+        body: JSON.stringify({ choice: idx.toString(), clientId: getClientId() }),
       });
 
       if (!res.ok) {

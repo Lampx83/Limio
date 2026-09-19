@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { publish } from "@/lib/realtime/publisher";
 import { rateLimit } from "@/lib/realtime/rateLimit";
+import { peekClientId } from "@/lib/realtime/clientKey";
 import { channelForBoard } from "@/lib/board";
 import { BOARD_NOTE_COLORS, isValidAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
 
@@ -20,7 +21,8 @@ export async function PATCH(
   const code = params.code.toUpperCase();
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const rl = await rateLimit(`board:${code}:edit:${ip}`, 1, 3_000);
+  const clientId = await peekClientId(req);
+  const rl = await rateLimit(clientId ? `board:${code}:edit:client:${clientId}` : `board:${code}:edit:${ip}`, 1, 3_000);
   if (!rl.ok) {
     return Response.json(
       { error: "rate_limited", resetMs: rl.resetMs },

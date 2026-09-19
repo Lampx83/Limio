@@ -1,5 +1,6 @@
 "use client";
 
+import { getClientId } from "@/lib/clientId";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Plus, X, Pencil, Link as LinkIcon, Image as ImageIcon, Video, Music } from "lucide-react";
@@ -286,6 +287,7 @@ export default function JoinBoardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: editContent.trim(),
+          clientId: getClientId(),
           attachmentUrl: editAttachmentUrl.trim(),
           ...(editColor ? { color: editColor } : {}),
         }),
@@ -333,6 +335,7 @@ export default function JoinBoardPage() {
         body: JSON.stringify({
           authorName: name.trim(),
           content: content.trim() || "",
+          clientId: getClientId(),
           ...(color ? { color } : {}),
           ...(attachmentUrl.trim() ? { attachmentUrl: attachmentUrl.trim() } : {}),
           ...(board && board.columns.length > 0 ? { column: groupColumn } : {}),

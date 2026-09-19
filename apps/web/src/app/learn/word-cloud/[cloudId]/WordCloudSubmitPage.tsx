@@ -1,5 +1,6 @@
 "use client";
 
+import { getClientId } from "@/lib/clientId";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 
@@ -28,23 +29,6 @@ const WORD_GRADIENTS = [
   "from-purple-400 to-purple-500",
   "from-pink-400 to-pink-500",
 ];
-
-const CLIENT_ID_KEY = "wordcloud_client_id";
-
-// Định danh ẩn danh ổn định theo thiết bị — dùng để server rate-limit đúng
-// người gửi thay vì theo IP (cả lớp dùng chung wifi sẽ ra cùng 1 IP).
-function getClientId(): string {
-  try {
-    let id = localStorage.getItem(CLIENT_ID_KEY);
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem(CLIENT_ID_KEY, id);
-    }
-    return id;
-  } catch {
-    return crypto.randomUUID();
-  }
-}
 
 export default function WordCloudSubmitPage({ wordCloud }: { wordCloud: WordCloud }) {
   const [text, setText] = useState("");

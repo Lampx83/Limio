@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { publish } from "@/lib/realtime/publisher";
 import { rateLimit } from "@/lib/realtime/rateLimit";
+import { peekClientId } from "@/lib/realtime/clientKey";
 import { channelForBoard } from "@/lib/board";
 import { isValidAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
 
@@ -22,16 +23,26 @@ const COLOR_SET = new Set(COLORS);
 export async function POST(req: Request, { params }: { params: { code: string } }) {
   const code = params.code.toUpperCase();
 
-  // Rate limit: 1 note/5s/IP/board + 100 notes/phút/board (chống cả 2 chiều).
+  // Rate limit: 1 note/5s theo THIẾT BỊ (clientId; client cũ → IP) + trần theo IP và theo bảng.
+  // Theo IP thì cả lớp chung wifi/NAT chỉ post được 1 note mỗi 5 giây.
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const rlIp = await rateLimit(`board:${code}:ip:${ip}`, 1, 5_000);
+  const clientId = await peekClientId(req);
+  const rlIp = await rateLimit(
+    clientId ? `board:${code}:client:${clientId}` : `board:${code}:ip:${ip}`,
+    1,
+    5_000,
+  );
   if (!rlIp.ok) {
     return Response.json(
       { error: "rate_limited", resetMs: rlIp.resetMs },
       { status: 429, headers: { "Retry-After": String(Math.ceil(rlIp.resetMs / 1000)) } },
     );
   }
-  const rlBoard = await rateLimit(`board:${code}:board`, 100, 60_000);
+  const rlIpBurst = await rateLimit(`board:${code}:ip-burst:${ip}`, 300, 60_000);
+  if (!rlIpBurst.ok) {
+    return Response.json({ error: "rate_limited", resetMs: rlIpBurst.resetMs }, { status: 429 });
+  }
+  const rlBoard = await rateLimit(`board:${code}:board`, 300, 60_000);
   if (!rlBoard.ok) {
     return Response.json(
       { error: "board_throttled", resetMs: rlBoard.resetMs },

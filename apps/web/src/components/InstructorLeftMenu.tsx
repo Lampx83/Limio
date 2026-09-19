@@ -558,11 +558,18 @@ function RailButton({
   onSelect: () => void;
   onHover: (href: string) => void;
 }) {
+  // Bấm module → tooltip biến mất ngay (không kẹt lại đè lên cột tên mục), hiện lại khi rê chuột ra rồi vào.
+  const [tipHidden, setTipHidden] = useState(false);
   return (
-    <Tooltip label={label} description={description} side="right">
+    <Tooltip label={label} description={description} side="right" suppressed={tipHidden}>
       <Link
         href={href}
-        onClick={onSelect}
+        onClick={(e) => {
+        setTipHidden(true);
+        (e.currentTarget as HTMLElement).blur();
+        onSelect();
+      }}
+      onMouseLeave={() => setTipHidden(false)}
         onMouseEnter={() => onHover(href)}
         onFocus={() => onHover(href)}
         aria-label={premium ? `${label} — Premium` : label}
