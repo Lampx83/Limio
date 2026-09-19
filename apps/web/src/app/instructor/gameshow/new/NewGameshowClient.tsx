@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
-import { TEAM_COUNT_MAX, TEAM_COUNT_MIN, TEAM_PRESETS } from "@/lib/gameshow/teams";
+import { TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/gameshow/teams";
 
 type QuizOption = {
   id: string;
   title: string;
+  courseId: string;
   courseTitle: string;
+  lessonId: string | null;
+  lessonTitle: string | null;
+  lessonOrder: number | null;
   questionCount: number;
 };
 
@@ -21,6 +25,26 @@ type QuestionSetOption = {
 
 type SourceTab = "quiz" | "question-set";
 
+function Radio({ checked, name, onChange }: { checked: boolean; name: string; onChange: () => void }) {
+  return (
+    <input
+      type="radio"
+      name={name}
+      checked={checked}
+      onChange={onChange}
+      className="h-4 w-4 shrink-0 accent-[rgb(var(--brand))]"
+    />
+  );
+}
+
+function Count({ n }: { n: number }) {
+  return (
+    <span className="shrink-0 rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs font-medium text-[rgb(var(--text-muted))]">
+      {n} câu
+    </span>
+  );
+}
+
 export default function NewGameshowClient({
   quizzes,
   questionSets,
@@ -31,6 +55,41 @@ export default function NewGameshowClient({
   const router = useRouter();
   const [tab, setTab] = useState<SourceTab>(questionSets.length > 0 ? "question-set" : "quiz");
   const [selectedQuiz, setSelectedQuiz] = useState<string>(quizzes[0]?.id ?? "");
+  const [courseFilter, setCourseFilter] = useState<string>("");
+  const [lessonFilter, setLessonFilter] = useState<string>("");
+
+  const courseOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const q of quizzes) if (!m.has(q.courseId)) m.set(q.courseId, q.courseTitle);
+    return [...m.entries()].map(([id, title]) => ({ id, title }));
+  }, [quizzes]);
+
+  const lessonOptions = useMemo(() => {
+    if (!courseFilter) return [];
+    const m = new Map<string, { title: string; order: number }>();
+    let hasStandalone = false;
+    for (const q of quizzes) {
+      if (q.courseId !== courseFilter) continue;
+      if (q.lessonId) m.set(q.lessonId, { title: q.lessonTitle ?? "", order: q.lessonOrder ?? 0 });
+      else hasStandalone = true;
+    }
+    const list = [...m.entries()]
+      .sort((a, b) => a[1].order - b[1].order)
+      .map(([id, v]) => ({ id, title: v.title }));
+    if (hasStandalone) list.push({ id: "__none", title: "Quiz độc lập (không gắn bài)" });
+    return list;
+  }, [quizzes, courseFilter]);
+
+  const visibleQuizzes = useMemo(
+    () =>
+      quizzes.filter((q) => {
+        if (courseFilter && q.courseId !== courseFilter) return false;
+        if (lessonFilter === "__none") return !q.lessonId;
+        if (lessonFilter && q.lessonId !== lessonFilter) return false;
+        return true;
+      }),
+    [quizzes, courseFilter, lessonFilter],
+  );
   const [selectedSet, setSelectedSet] = useState<string>(questionSets[0]?.id ?? "");
   const [teamMode, setTeamMode] = useState(false);
   const [teamCount, setTeamCount] = useState(4);
@@ -64,37 +123,37 @@ export default function NewGameshowClient({
     }
   };
 
+  const tabCls = (active: boolean) =>
+    `flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 ${
+      active
+        ? "bg-[rgb(var(--surface))] text-[rgb(var(--text))] shadow-sm"
+        : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
+    }`;
+
+  const optionCls = (active: boolean) =>
+    `group flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-all duration-150 ${
+      active
+        ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.06)] ring-1 ring-[rgb(var(--brand)/0.35)]"
+        : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--brand)/0.4)] hover:bg-[rgb(var(--surface-muted))]"
+    }`;
+
   return (
-    <div className="mt-6">
-      <div className="flex gap-2 border-b border-default">
-        <button
-          onClick={() => setTab("question-set")}
-          className={`px-4 py-2 text-sm font-medium ${
-            tab === "question-set"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-faint hover:text-slate-700"
-          }`}
-        >
+    <div className="mt-8 space-y-6">
+      <div role="tablist" className="flex gap-1 rounded-xl bg-[rgb(var(--surface-muted))] p-1">
+        <button role="tab" aria-selected={tab === "question-set"} onClick={() => setTab("question-set")} className={tabCls(tab === "question-set")}>
           Bộ câu hỏi tự soạn
         </button>
-        <button
-          onClick={() => setTab("quiz")}
-          className={`px-4 py-2 text-sm font-medium ${
-            tab === "quiz"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-faint hover:text-slate-700"
-          }`}
-        >
+        <button role="tab" aria-selected={tab === "quiz"} onClick={() => setTab("quiz")} className={tabCls(tab === "quiz")}>
           Quiz có sẵn
         </button>
       </div>
 
-      <div className="mt-4 space-y-4">
+      <section className="space-y-3">
         {tab === "question-set" ? (
           questionSets.length === 0 ? (
-            <div className="rounded border border-dashed border-default p-6 text-center text-sm text-faint">
+            <div className="rounded-xl border border-dashed border-[rgb(var(--border))] p-8 text-center text-sm text-[rgb(var(--text-muted))]">
               Chưa có bộ câu hỏi nào.{" "}
-              <Link href="/instructor/gameshow/question-sets/new" className="text-blue-600 underline">
+              <Link href="/instructor/gameshow/question-sets/new" className="font-medium text-[rgb(var(--brand))] hover:underline">
                 Soạn bộ mới
               </Link>
             </div>
@@ -102,113 +161,138 @@ export default function NewGameshowClient({
             <>
               <div className="space-y-2">
                 {questionSets.map((s) => (
-                  <label
-                    key={s.id}
-                    className={`flex cursor-pointer items-center justify-between rounded border p-3 ${
-                      selectedSet === s.id ? "border-blue-500 bg-blue-50" : "border-default bg-white"
-                    }`}
-                  >
-                    <span>
-                      <span className="block text-sm font-medium">{s.title}</span>
-                      <span className="block text-xs text-faint">{s.questionCount} câu hỏi</span>
+                  <label key={s.id} className={optionCls(selectedSet === s.id)}>
+                    <span className="min-w-0 truncate text-sm font-medium">{s.title}</span>
+                    <span className="flex items-center gap-3">
+                      <Count n={s.questionCount} />
+                      <Radio name="question-set" checked={selectedSet === s.id} onChange={() => setSelectedSet(s.id)} />
                     </span>
-                    <input
-                      type="radio"
-                      name="question-set"
-                      checked={selectedSet === s.id}
-                      onChange={() => setSelectedSet(s.id)}
-                    />
                   </label>
                 ))}
               </div>
               <Link
                 href="/instructor/gameshow/question-sets/new"
-                className="block text-xs text-blue-600 hover:underline"
+                className="inline-block text-sm font-medium text-[rgb(var(--brand))] hover:underline"
               >
                 + Soạn bộ câu hỏi mới
               </Link>
             </>
           )
         ) : quizzes.length === 0 ? (
-          <div className="rounded border border-dashed border-default p-6 text-center text-sm text-faint">
+          <div className="rounded-xl border border-dashed border-[rgb(var(--border))] p-8 text-center text-sm text-[rgb(var(--text-muted))]">
             Chưa có quiz nào có câu trắc nghiệm/đúng-sai. Tạo quiz với ít nhất 1 câu loại này trước.
           </div>
         ) : (
-          <div className="space-y-2">
-            {quizzes.map((q) => (
-              <label
-                key={q.id}
-                className={`flex cursor-pointer items-center justify-between rounded border p-3 ${
-                  selectedQuiz === q.id ? "border-blue-500 bg-blue-50" : "border-default bg-white"
-                }`}
+          <>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                aria-label="Lọc theo khoá học"
+                value={courseFilter}
+                onChange={(e) => {
+                  setCourseFilter(e.target.value);
+                  setLessonFilter("");
+                }}
+                className="select"
               >
-                <span>
-                  <span className="block text-sm font-medium">{q.title}</span>
-                  <span className="block text-xs text-faint">
-                    {q.courseTitle} · {q.questionCount} câu hỏi
-                  </span>
-                </span>
-                <input
-                  type="radio"
-                  name="quiz"
-                  checked={selectedQuiz === q.id}
-                  onChange={() => setSelectedQuiz(q.id)}
-                />
-              </label>
-            ))}
-          </div>
+                <option value="">Tất cả khoá học</option>
+                {courseOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Lọc theo bài học"
+                value={lessonFilter}
+                onChange={(e) => setLessonFilter(e.target.value)}
+                disabled={!courseFilter}
+                className="select disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">{courseFilter ? "Tất cả bài học" : "Chọn khoá học trước"}</option>
+                {lessonOptions.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="text-caption">{visibleQuizzes.length} quiz</p>
+            {visibleQuizzes.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[rgb(var(--border))] p-6 text-center text-sm text-[rgb(var(--text-muted))]">
+                Không có quiz nào khớp bộ lọc.
+              </div>
+            ) : (
+              <div className="max-h-[26rem] space-y-2 overflow-y-auto pr-1">
+                {visibleQuizzes.map((q) => {
+                  const trail = [!courseFilter && q.courseTitle, !lessonFilter && q.lessonTitle]
+                    .filter(Boolean)
+                    .join(" › ");
+                  return (
+                    <label key={q.id} className={optionCls(selectedQuiz === q.id)}>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{q.title}</span>
+                        {trail && <span className="text-caption block truncate">{trail}</span>}
+                      </span>
+                      <span className="flex items-center gap-3">
+                        <Count n={q.questionCount} />
+                        <Radio name="quiz" checked={selectedQuiz === q.id} onChange={() => setSelectedQuiz(q.id)} />
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
+      </section>
 
-        <div className="rounded border border-default bg-white p-3">
-          <label className="flex cursor-pointer items-center justify-between">
-            <span>
-              <span className="block text-sm font-medium">👥 Chơi theo nhóm</span>
-              <span className="block text-xs text-faint">
-                Học viên tự chọn đội lúc vào phòng, xếp hạng &amp; podium tính theo đội.
-              </span>
+      <section className="card !p-4">
+        <label className="flex cursor-pointer items-center justify-between gap-4">
+          <span>
+            <span className="block text-sm font-semibold">Chơi theo nhóm</span>
+            <span className="text-caption mt-0.5 block">
+              Học viên tự chọn đội lúc vào phòng, xếp hạng &amp; podium tính theo đội.
             </span>
+          </span>
+          <span className="relative inline-flex shrink-0">
             <input
               type="checkbox"
+              role="switch"
               checked={teamMode}
               onChange={(e) => setTeamMode(e.target.checked)}
-              className="h-5 w-5"
+              className="peer sr-only"
             />
-          </label>
+            <span className="h-6 w-11 rounded-full bg-[rgb(var(--border))] transition-colors peer-checked:bg-[rgb(var(--brand))] peer-focus-visible:ring-2 peer-focus-visible:ring-[rgb(var(--brand)/0.4)]" />
+            <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+          </span>
+        </label>
 
-          {teamMode && (
-            <div className="mt-3 flex items-center gap-3 border-t border-default pt-3">
-              <label htmlFor="team-count" className="text-xs font-medium text-slate-600">
-                Số đội
-              </label>
-              <input
-                id="team-count"
-                type="range"
-                min={TEAM_COUNT_MIN}
-                max={TEAM_COUNT_MAX}
-                value={teamCount}
-                onChange={(e) => setTeamCount(Number(e.target.value))}
-                className="flex-1"
-              />
-              <span className="w-6 text-center text-sm font-semibold">{teamCount}</span>
-              <span className="text-lg">{TEAM_PRESETS[teamCount - 1]?.emoji}</span>
-            </div>
-          )}
-        </div>
-
-        {err && (
-          <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
-            ⚠ {err}
+        {teamMode && (
+          <div className="mt-4 flex items-center gap-3 border-t border-[rgb(var(--border))] pt-4">
+            <label htmlFor="team-count" className="text-sm font-medium text-[rgb(var(--text-muted))]">
+              Số đội
+            </label>
+            <input
+              id="team-count"
+              type="range"
+              min={TEAM_COUNT_MIN}
+              max={TEAM_COUNT_MAX}
+              value={teamCount}
+              onChange={(e) => setTeamCount(Number(e.target.value))}
+              className="flex-1 accent-[rgb(var(--brand))]"
+            />
+            <span className="w-8 rounded-md bg-[rgb(var(--surface-muted))] py-0.5 text-center text-sm font-semibold">
+              {teamCount}
+            </span>
           </div>
         )}
+      </section>
 
-        <button
-          onClick={onCreate}
-          disabled={busy || !selected}
-          className="w-full rounded bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {busy ? "Đang tạo..." : "🚀 Tạo phiên"}
-        </button>
-      </div>
+      {err && <div className="banner-danger">{err}</div>}
+
+      <button onClick={onCreate} disabled={busy || !selected} className="btn-primary btn-lg w-full">
+        {busy ? "Đang tạo..." : "Tạo phiên"}
+      </button>
     </div>
   );
 }

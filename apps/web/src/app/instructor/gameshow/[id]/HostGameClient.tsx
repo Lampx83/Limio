@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { Baloo_2 } from "next/font/google";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { AVATARS } from "@/lib/gameshow/avatars";
 import { computeTeamStandings, emojiForColorKey, teamColorClasses } from "@/lib/gameshow/teams";
@@ -16,7 +17,11 @@ import { CircularTimer } from "@/components/gameshow/CircularTimer";
 import { Podium } from "@/components/gameshow/Podium";
 import { OptionCard, OPTION_LETTERS } from "@/components/gameshow/OptionCard";
 import { RankBadge, initials, avatarGradient } from "@/components/gameshow/RankBadge";
-import { BarChart3, ChevronUp, ChevronDown, Minus, Flame, Check, Trophy } from "lucide-react";
+import { BarChart3, ChevronUp, ChevronDown, Minus, Flame, Check, Trophy, Play, Users } from "lucide-react";
+
+// Font bo tròn, vui mắt, có subset tiếng Việt — chỉ dùng cho tên người chơi
+// trên màn host (chiếu lên máy chiếu nên cần to, dễ nhận, có cá tính).
+const playerNameFont = Baloo_2({ subsets: ["vietnamese", "latin"], weight: ["700", "800"] });
 
 const QRCode = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeSVG), {
   ssr: false,
@@ -252,7 +257,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
 
   if (!snap) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-gray-950 to-pink-950 text-sm text-white/70">
+      <div className="gs-host-bg flex min-h-screen items-center justify-center text-sm font-medium text-white/90">
         Đang tải...
       </div>
     );
@@ -265,14 +270,17 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
   const sorted = [...participants].sort((a, b) => b.totalScore - a.totalScore);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-900 via-gray-950 to-pink-950 px-4 py-6 text-white sm:px-8">
+    <div className="gs-host-bg min-h-screen overflow-hidden px-4 py-6 text-white sm:px-8">
+      <div className="gs-host-blob -left-24 -top-24 h-80 w-80 bg-cyan-300" aria-hidden="true" />
+      <div className="gs-host-blob -right-20 top-1/3 h-96 w-96 bg-amber-300" aria-hidden="true" />
+      <div className="gs-host-blob -bottom-24 left-1/4 h-80 w-80 bg-fuchsia-300" aria-hidden="true" />
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="flex min-w-0 items-center gap-2 text-lg font-bold sm:text-xl">
+          <h1 className="gs-glass flex min-w-0 items-center gap-2.5 rounded-full py-2 pl-3 pr-5 text-lg font-bold sm:text-xl">
             <svg
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="h-5 w-5 flex-none text-pink-300 sm:h-6 sm:w-6"
+              className="h-5 w-5 flex-none text-amber-200 sm:h-6 sm:w-6"
               aria-hidden="true"
             >
               <path d="M7.5 4.5h9a6 6 0 0 1 5.94 6.85l-.82 5.4a3 3 0 0 1-5.4 1.22L15 15.5H9l-1.22 2.47a3 3 0 0 1-5.4-1.22l-.82-5.4A6 6 0 0 1 7.5 4.5Z" />
@@ -290,11 +298,12 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
                 onClick={onStart}
                 disabled={busy || sorted.length === 0}
                 style={{ ["--gs-btn-shadow" as string]: "#b45309" }}
-                className={`gs-btn-3d rounded-2xl bg-gradient-to-b from-amber-400 to-orange-500 px-6 py-3 text-base font-black text-indigo-950 disabled:opacity-40 sm:text-lg ${
+                className={`gs-btn-3d inline-flex items-center gap-2 rounded-2xl bg-gradient-to-b from-yellow-300 to-amber-400 px-6 py-3 text-base font-black text-indigo-950 disabled:opacity-40 sm:text-lg ${
                   sorted.length > 0 ? "gs-glow-pulse" : ""
                 }`}
               >
-                ▶ BẮT ĐẦU ({sorted.length})
+                <Play className="h-5 w-5" fill="currentColor" aria-hidden="true" />
+                BẮT ĐẦU ({sorted.length})
               </button>
             )}
             {snap.status !== "ended" && (
@@ -303,7 +312,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
                   if (window.confirm("Kết thúc phiên gameshow?")) onEnd();
                 }}
                 disabled={busy}
-                className="flex-none rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/20"
+                className="gs-glass flex-none rounded-full px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/30"
               >
                 Kết thúc sớm
               </button>
@@ -312,8 +321,8 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
         </div>
 
         {err && (
-          <div className="mt-3 rounded-lg border border-red-400/40 bg-red-500/20 px-3 py-2 text-sm text-red-100">
-            ⚠ {err}
+          <div className="mt-3 rounded-xl border border-white/30 bg-red-600/70 px-4 py-2.5 text-sm font-medium text-white backdrop-blur">
+            {err}
           </div>
         )}
 
@@ -335,7 +344,7 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
           <div className="relative">
             {showSplash && (
               <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-                <span className="gs-splash-in rounded-3xl bg-black/60 px-10 py-6 text-4xl font-black tracking-tight sm:text-6xl">
+                <span className="gs-splash-in rounded-3xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 px-10 py-6 text-4xl font-black tracking-tight shadow-2xl ring-4 ring-white/40 sm:text-6xl">
                   Câu {snap.currentQuestionIndex + 1}
                 </span>
               </div>
@@ -355,9 +364,9 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
         )}
 
         {snap.status === "ended" && (
-          <div className="mt-6 rounded-3xl bg-white/10 p-6 text-center shadow-2xl backdrop-blur-sm sm:p-10">
+          <div className="gs-glass mt-6 rounded-3xl p-6 text-center sm:p-10">
             <h2 className="flex items-center justify-center gap-2 text-2xl font-black sm:text-3xl">
-              <Trophy className="h-7 w-7 flex-none text-amber-400 sm:h-8 sm:w-8" aria-hidden="true" />
+              <Trophy className="h-7 w-7 flex-none text-amber-300 sm:h-8 sm:w-8" aria-hidden="true" />
               Kết thúc!
             </h2>
             <div className="mt-8">
@@ -369,8 +378,8 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
             </div>
             <a
               href="/instructor/gameshow"
-              className="gs-btn-3d mt-8 inline-block rounded-2xl bg-white/15 px-6 py-3 text-sm font-bold text-white hover:bg-white/25"
-              style={{ ["--gs-btn-shadow" as string]: "#00000066" }}
+              className="gs-btn-3d mt-8 inline-block rounded-2xl bg-white px-6 py-3 text-sm font-bold text-fuchsia-700 hover:bg-white/90"
+              style={{ ["--gs-btn-shadow" as string]: "#701a75" }}
             >
               ← Về danh sách Gameshow
             </a>
@@ -416,10 +425,10 @@ function LobbyView({
   return (
     <div className="mt-6 space-y-4">
       {/* Thanh vào phòng — hướng dẫn | mã PIN + copy | QR, ngang hàng kiểu Kahoot */}
-      <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-5 text-indigo-950 shadow-2xl sm:flex-row sm:justify-center sm:gap-6">
+      <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-5 text-indigo-950 shadow-[0_20px_50px_-15px_rgb(60_10_100/0.6)] sm:flex-row sm:justify-center sm:gap-8 sm:p-6">
         <div className="text-center sm:text-left">
           <p className="text-xs font-medium text-slate-400">Học viên tham gia tại</p>
-          <p className="max-w-[16rem] truncate text-sm font-semibold text-indigo-700">{joinUrl}</p>
+          <p className="max-w-[16rem] truncate text-sm font-semibold text-fuchsia-700">{joinUrl}</p>
           <p className="mt-0.5 text-xs text-slate-400">hoặc quét mã QR bên cạnh</p>
         </div>
 
@@ -432,7 +441,7 @@ function LobbyView({
           <button
             onClick={onCopyPin}
             title="Bấm để copy"
-            className="gs-glow-pulse group relative rounded-xl bg-indigo-50 px-6 py-2 text-4xl font-black tracking-[0.2em] text-indigo-900 transition-transform hover:scale-105 sm:text-5xl"
+            className="gs-glow-pulse group relative rounded-2xl bg-gradient-to-br from-indigo-50 to-fuchsia-50 px-6 py-2 text-4xl font-black tracking-[0.2em] text-indigo-900 ring-1 ring-fuchsia-200 transition-transform hover:scale-105 sm:text-5xl"
           >
             {code}
             <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs text-white opacity-0 shadow transition-opacity group-hover:opacity-100">
@@ -452,17 +461,18 @@ function LobbyView({
       </div>
 
       {/* "Màn hình" lớp học — hiện học viên vào real-time, giống chiếu lên máy chiếu */}
-      <div className="relative overflow-hidden rounded-3xl border-4 border-white/15 bg-gradient-to-br from-brand-800/70 to-pink-900/70 p-6 shadow-2xl sm:p-10">
+      <div className="gs-glass relative overflow-hidden rounded-3xl p-6 sm:p-10">
         <div className="flex justify-center">
           <span
             key={participants.length}
-            className="gs-bounce-in inline-flex items-center gap-1.5 rounded-full bg-black/30 px-4 py-1.5 text-sm font-bold text-amber-300 shadow"
+            className="gs-bounce-in inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-sm font-bold text-fuchsia-700 shadow-lg"
           >
-            🔥 {participants.length} người sẵn sàng
+            <Users className="h-4 w-4" aria-hidden="true" />
+            {participants.length} người sẵn sàng
           </span>
         </div>
 
-        <p className="mt-3 text-center text-sm font-medium text-white/60">
+        <p className="mt-3 text-center text-sm font-medium text-white/85">
           {participants.length === 0
             ? "Đang chờ học viên tham gia..."
             : "Học viên đã vào phòng — sẵn sàng khi bạn bấm Bắt đầu"}
@@ -473,7 +483,7 @@ function LobbyView({
             {teamStandings.map((t) => {
               const colors = teamColorClasses(t.colorKey);
               return (
-                <div key={t.teamId} className="rounded-xl bg-white/10 p-3">
+                <div key={t.teamId} className="rounded-2xl bg-white/15 p-3 ring-1 ring-white/25">
                   <p
                     className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${colors.bg} ${colors.text}`}
                   >
@@ -484,9 +494,9 @@ function LobbyView({
                       <span
                         key={m.participantId}
                         style={{ animationDelay: `${Math.min(i, 20) * 40}ms`, transform: `rotate(${tiltForId(m.participantId)}deg)` }}
-                        className="group/chip gs-pop-in relative flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium"
+                        className={`group/chip gs-pop-in relative flex items-center gap-2 rounded-full bg-white/25 px-3 py-1.5 text-2xl font-extrabold leading-none ${playerNameFont.className}`}
                       >
-                        <Avatar avatarKey={m.avatarKey} size="text-sm" />
+                        <Avatar avatarKey={m.avatarKey} size="text-2xl" />
                         {m.displayName}
                         <KickButton
                           participantId={m.participantId}
@@ -496,7 +506,7 @@ function LobbyView({
                       </span>
                     ))}
                     {t.members.length === 0 && (
-                      <span className="text-xs text-white/30">Chưa có ai</span>
+                      <span className="text-xs text-white/60">Chưa có ai</span>
                     )}
                   </div>
                 </div>
@@ -504,14 +514,14 @@ function LobbyView({
             })}
           </div>
         ) : (
-          <div className="mt-6 flex min-h-[6rem] flex-wrap items-center justify-center gap-2">
+          <div className="mt-8 flex min-h-[6rem] flex-wrap items-center justify-center gap-x-4 gap-y-5">
             {participants.map((p, i) => (
               <span
                 key={p.participantId}
                 style={{ animationDelay: `${Math.min(i, 20) * 40}ms`, transform: `rotate(${tiltForId(p.participantId)}deg)` }}
-                className="group/chip gs-pop-in relative flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium transition-transform hover:scale-105 hover:rotate-0"
+                className={`group/chip gs-pop-in relative flex items-center gap-3 rounded-full bg-white/25 px-5 py-2.5 text-3xl font-extrabold leading-none tracking-wide shadow-md transition-transform hover:scale-105 hover:rotate-0 sm:text-4xl ${playerNameFont.className}`}
               >
-                <Avatar avatarKey={p.avatarKey} size="text-lg" />
+                <Avatar avatarKey={p.avatarKey} size="text-4xl" />
                 <span>{p.displayName}</span>
                 <KickButton
                   participantId={p.participantId}
@@ -521,7 +531,7 @@ function LobbyView({
               </span>
             ))}
             {participants.length === 0 && (
-              <span className="text-sm text-white/40">Chưa có ai tham gia...</span>
+              <span className="text-sm text-white/70">Chưa có ai tham gia...</span>
             )}
           </div>
         )}
@@ -547,7 +557,7 @@ function KickButton({
       }}
       disabled={busy}
       title="Đá khỏi phòng"
-      className="ml-0.5 flex h-4 w-4 flex-none items-center justify-center rounded-full bg-black/30 text-[10px] text-white/70 opacity-0 transition-opacity hover:bg-red-500 hover:text-white group-hover/chip:opacity-100 disabled:opacity-30"
+      className="ml-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full bg-black/30 text-xs text-white/70 opacity-0 transition-opacity hover:bg-red-500 hover:text-white group-hover/chip:opacity-100 disabled:opacity-30"
     >
       ✕
     </button>
@@ -612,7 +622,7 @@ function PlayView({
 
   return (
     <div className="mt-6 flex flex-col gap-4 lg:flex-row">
-      <div className="flex-1 rounded-3xl bg-white/95 p-6 text-slate-900 shadow-2xl">
+      <div className="flex-1 rounded-3xl bg-white/95 p-6 text-slate-900 shadow-[0_20px_50px_-15px_rgb(60_10_100/0.6)] ring-1 ring-white">
         <div className="flex items-center justify-between gap-3">
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
             Câu {snap.currentQuestionIndex + 1}/{snap.questions.length}
@@ -620,7 +630,7 @@ function PlayView({
           {snap.status === "running" && (
             <CircularTimer remainingMs={remainingMs} totalMs={snap.timeLimitMs} size={72} strokeWidth={6} />
           )}
-          <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700">
+          <span className="rounded-full bg-fuchsia-100 px-3 py-1 text-sm font-bold text-fuchsia-700">
             {answeredCount}/{participants.length} đã trả lời
           </span>
         </div>
@@ -649,7 +659,7 @@ function PlayView({
               onClick={onReveal}
               disabled={busy}
               style={{ ["--gs-btn-shadow" as string]: "#3730a3" }}
-              className="gs-btn-3d rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white disabled:opacity-50"
+              className="gs-btn-3d rounded-2xl bg-gradient-to-b from-indigo-500 to-violet-600 px-6 py-3 text-sm font-bold text-white disabled:opacity-50"
             >
               Xem đáp án
             </button>
@@ -659,11 +669,11 @@ function PlayView({
               onClick={onNext}
               disabled={busy}
               style={{ ["--gs-btn-shadow" as string]: "#b45309" }}
-              className="gs-btn-3d rounded-2xl bg-gradient-to-b from-amber-400 to-orange-500 px-6 py-3 text-sm font-black text-indigo-950"
+              className="gs-btn-3d rounded-2xl bg-gradient-to-b from-yellow-300 to-amber-400 px-6 py-3 text-sm font-black text-indigo-950"
             >
               {snap.currentQuestionIndex + 1 >= snap.questions.length
                 ? "Xem kết quả cuối"
-                : "Câu tiếp theo →"}
+                : "Câu tiếp theo"}
             </button>
           )}
         </div>
@@ -682,14 +692,14 @@ function PlayView({
 }
 
 function RankDelta({ delta }: { delta: number | undefined }) {
-  if (!delta) return <Minus className="h-3.5 w-3.5 flex-none text-white/20" aria-hidden="true" />;
+  if (!delta) return <Minus className="h-3.5 w-3.5 flex-none text-white/50" aria-hidden="true" />;
   return delta > 0 ? (
-    <span className="flex flex-none items-center gap-0.5 text-[10px] font-bold text-emerald-400">
+    <span className="flex flex-none items-center gap-0.5 text-[10px] font-bold text-emerald-200">
       <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
       {delta}
     </span>
   ) : (
-    <span className="flex flex-none items-center gap-0.5 text-[10px] font-bold text-red-400">
+    <span className="flex flex-none items-center gap-0.5 text-[10px] font-bold text-rose-100">
       <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
       {Math.abs(delta)}
     </span>
@@ -723,7 +733,7 @@ function LeaderboardRow({
   return (
     <li
       data-flip-id={flipId}
-      className={`relative flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm backdrop-blur-md ${
+      className={`relative flex items-center gap-2.5 rounded-xl border border-white/25 bg-white/20 px-3 py-2.5 text-sm shadow-sm backdrop-blur-md ${
         delta ? "gs-row-flash" : ""
       }`}
     >
@@ -739,7 +749,7 @@ function LeaderboardRow({
       <span className="min-w-0 flex-1 truncate font-semibold text-white">{name}</span>
 
       {!!streak && streak >= 2 && (
-        <span className="flex flex-none items-center gap-0.5 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-[10px] font-bold text-orange-300">
+        <span className="flex flex-none items-center gap-0.5 rounded-full bg-orange-500/40 px-1.5 py-0.5 text-[10px] font-bold text-orange-50">
           <Flame className="h-3 w-3" aria-hidden="true" />
           {streak}x
         </span>
@@ -752,12 +762,12 @@ function LeaderboardRow({
         />
       )}
       {liveStatus === "submitted" && (
-        <Check className="h-3.5 w-3.5 flex-none text-blue-400" aria-label="Đã nộp" />
+        <Check className="h-3.5 w-3.5 flex-none text-white" aria-label="Đã nộp" />
       )}
 
       <RankDelta delta={delta} />
 
-      <span className="relative flex-none font-black tabular-nums text-amber-300">
+      <span className="relative flex-none font-black tabular-nums text-yellow-200">
         {shownScore}
         {scoreDelta && (
           <span
@@ -806,13 +816,13 @@ function LiveLeaderboard({
   const total = teamModeEnabled ? teamStandings.length : participants.length;
 
   return (
-    <aside className="w-full flex-none rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-md lg:w-80">
+    <aside className="gs-glass w-full flex-none rounded-3xl p-4 lg:w-80">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white/80">
-          <BarChart3 className="h-4 w-4 flex-none text-brand-400" aria-hidden="true" />
+        <h3 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white">
+          <BarChart3 className="h-4 w-4 flex-none text-amber-200" aria-hidden="true" />
           Bảng xếp hạng
         </h3>
-        <span className="flex-none rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/70">
+        <span className="flex-none rounded-full bg-white/25 px-2.5 py-1 text-[11px] font-bold text-white">
           {answeredCount}/{total}
         </span>
       </div>
@@ -845,7 +855,7 @@ function LiveLeaderboard({
                 }
               />
             ))}
-        {total === 0 && <li className="text-xs text-white/40">Chưa có dữ liệu</li>}
+        {total === 0 && <li className="text-xs text-white/70">Chưa có dữ liệu</li>}
       </ol>
     </aside>
   );

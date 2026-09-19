@@ -410,6 +410,46 @@ body.limio-live-immersive .mx-auto.max-w-6xl.w-full {
   padding: 0 !important;
 }
 
+/* Nền host gameshow — gradient tươi sáng trôi chậm + vài đốm sáng mờ. Chữ
+   trắng vẫn đọc tốt vì dải màu giữ ở tông đậm-vừa (indigo → fuchsia → rose). */
+@keyframes gs-host-drift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.gs-host-bg {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(120deg, #4f46e5 0%, #9333ea 28%, #db2777 58%, #f97316 100%);
+  background-size: 220% 220%;
+  animation: gs-host-drift 24s ease-in-out infinite;
+}
+.gs-host-blob {
+  position: absolute;
+  z-index: -1;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.gs-glass {
+  background: rgb(255 255 255 / 0.16);
+  border: 1px solid rgb(255 255 255 / 0.28);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 40px -12px rgb(30 10 80 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-host-bg {
+    animation: none;
+  }
+}
+
 @keyframes gs-glow-pulse {
   0%,
   100% {

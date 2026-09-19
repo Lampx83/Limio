@@ -29,6 +29,7 @@ export default async function NewGameshowPage() {
         id: true,
         title: true,
         courseId: true,
+        lesson: { select: { id: true, title: true, orderIndex: true, module: { select: { orderIndex: true } } } },
         questions: { select: { type: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -46,7 +47,11 @@ export default async function NewGameshowPage() {
     .map((q) => ({
       id: q.id,
       title: q.title,
+      courseId: q.courseId ?? "",
       courseTitle: (q.courseId && courseTitleById.get(q.courseId)) ?? "—",
+      lessonId: q.lesson?.id ?? null,
+      lessonTitle: q.lesson?.title ?? null,
+      lessonOrder: q.lesson ? q.lesson.module.orderIndex * 10000 + q.lesson.orderIndex : null,
       questionCount: q.questions.filter((qq) =>
         (ELIGIBLE_QUESTION_TYPES as readonly string[]).includes(qq.type),
       ).length,
@@ -58,9 +63,9 @@ export default async function NewGameshowPage() {
     .filter((s) => s.questionCount > 0);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-2xl font-bold">🎮 Tạo Gameshow</h1>
-      <p className="mt-1 text-sm text-faint">
+    <main className="mx-auto max-w-2xl px-4 py-10">
+      <h1 className="text-h2">Tạo Gameshow</h1>
+      <p className="text-meta mt-1.5">
         Chọn nguồn câu hỏi. Học viên tham gia bằng mã, không cần đăng nhập.
       </p>
       <NewGameshowClient quizzes={eligible} questionSets={eligibleSets} />
