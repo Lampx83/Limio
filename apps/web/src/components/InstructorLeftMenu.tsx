@@ -14,7 +14,6 @@ import {
   FlaskConical,
   ClipboardList,
   Tag,
-  Wrench,
   MessageSquare,
   Trophy,
   Users,
@@ -25,6 +24,7 @@ import {
   Menu,
   X,
   Loader2,
+  ChevronDown,
   CalendarCheck,
   Library,
   LayoutGrid,
@@ -153,24 +153,20 @@ const MODULES: ModuleDef[] = [
     },
     matchPrefixes: ["/instructor/limio-live", "/instructor/teaching-tools", "/instructor/gameshow"],
     items: [
-      { label: "Bài giảng của tôi", href: "/instructor/limio-live", icon: Presentation, section: "Bài giảng" },
-      { label: "Tạo bài giảng mới", href: "/instructor/limio-live?new=1", icon: Plus, section: "Bài giảng" },
-      { label: "Thư viện mẫu", icon: FolderOpen, note: "Chợ chia sẻ mẫu bài giảng — đang phát triển (P2)", section: "Bài giảng" },
-      // Quick poll, word cloud, đếm giờ, kịch bản lớp học... đều là công cụ
-      // chạy trực tiếp trên lớp — cùng bản chất "live" với Limio-Live, không
-      // phải nội dung/khoá học tĩnh của LMS.
-      // Mỗi công cụ 1 dòng menu (mở thẳng qua ?tool=...), thay cho 1 dòng "Công cụ giảng dạy" chung.
-      { label: "Tất cả công cụ", href: "/instructor/teaching-tools", icon: Wrench, section: "Công cụ live" },
-      { label: "Quick Poll", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Cả lớp tham gia" },
-      { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: Cloud, section: "Cả lớp tham gia" },
-      { label: "Đếm ngược", href: "/instructor/teaching-tools?tool=timer", icon: Clock, section: "Cả lớp tham gia" },
-      { label: "Bảng tương tác", href: "/instructor/teaching-tools?tool=board", icon: StickyNote, section: "Cả lớp tham gia" },
-      { label: "Whiteboard", href: "/instructor/teaching-tools?tool=whiteboard", icon: PenTool, section: "Cả lớp tham gia" },
-      { label: "Gameshow", href: "/instructor/gameshow/new", icon: Gamepad2, section: "Cả lớp tham gia" },
-      { label: "Soạn kịch bản", href: "/instructor/teaching-tools/activity-plans", icon: ListChecks, section: "Cả lớp tham gia" },
-      { label: "Chạy kịch bản", href: "/instructor/teaching-tools?tool=run-plan", icon: ListChecks, section: "Theo danh sách lớp" },
-      { label: "Chọn ngẫu nhiên", href: "/instructor/teaching-tools?tool=random-picker", icon: Shuffle, section: "Theo danh sách lớp" },
-      { label: "Phân nhóm", href: "/instructor/teaching-tools?tool=grouping", icon: Users, section: "Theo danh sách lớp" },
+      { label: "Bài giảng của tôi", href: "/instructor/limio-live", icon: Presentation, section: "Bài giảng tương tác" },
+      { label: "Tạo bài giảng mới", href: "/instructor/limio-live?new=1", icon: Plus, section: "Bài giảng tương tác" },
+      { label: "Thư viện mẫu", icon: FolderOpen, note: "Chợ chia sẻ mẫu bài giảng — đang phát triển (P2)", section: "Bài giảng tương tác" },
+      // Mỗi công cụ 1 dòng menu (mở thẳng qua ?tool=...), gom theo mục đích, ≤5 mục/nhóm.
+      { label: "Quick Poll", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Công cụ brainstorming" },
+      { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: Cloud, section: "Công cụ brainstorming" },
+      { label: "Bảng tương tác", href: "/instructor/teaching-tools?tool=board", icon: StickyNote, section: "Công cụ brainstorming" },
+      { label: "Whiteboard", href: "/instructor/teaching-tools?tool=whiteboard", icon: PenTool, section: "Công cụ brainstorming" },
+      { label: "Đếm ngược", href: "/instructor/teaching-tools?tool=timer", icon: Clock, section: "Công cụ điều hành lớp học" },
+      { label: "Chọn ngẫu nhiên", href: "/instructor/teaching-tools?tool=random-picker", icon: Shuffle, section: "Công cụ điều hành lớp học" },
+      { label: "Phân nhóm", href: "/instructor/teaching-tools?tool=grouping", icon: Users, section: "Công cụ điều hành lớp học" },
+      { label: "Gameshow", href: "/instructor/gameshow/new", icon: Gamepad2, section: "Công cụ điều hành lớp học" },
+      { label: "Template", icon: Library, note: "Mẫu thiết kế sư phạm — đang phát triển", section: "Thiết kế sư phạm" },
+      { label: "Soạn kịch bản", icon: ListChecks, note: "Soạn kịch bản hoạt động — đang phát triển", section: "Thiết kế sư phạm" },
     ],
   },
   {
@@ -342,7 +338,6 @@ function InstructorLeftMenuInner({
       const [base, query] = href.split("?");
       return pathname === base && new URLSearchParams(query).get("tool") === searchParams.get("tool");
     }
-    if (href === "/instructor/teaching-tools") return pathname === href && !searchParams.get("tool");
     if (/^\/instructor\/courses\/[^/]+\/exams(\/|$)/.test(pathname)) {
       return href === (navOverride ?? "/instructor/exams");
     }
@@ -613,22 +608,82 @@ function ItemList({
   pendingHref: string | null;
   onNavigate: (href: string) => void;
 }) {
+  // Gom theo nhóm (giữ thứ tự xuất hiện). Module dài (>9 mục, vd Limio-Live) thì chỉ mở
+  // nhóm đầu + nhóm đang chứa trang hiện tại, các nhóm khác gấp lại cho đỡ rối; module
+  // ngắn mở hết. Người dùng gấp/mở từng nhóm bằng tiêu đề nhóm.
+  const groups: Array<{ section: string | null; items: Item[] }> = [];
+  for (const it of items) {
+    const sec = it.section ?? null;
+    const last = groups[groups.length - 1];
+    if (last && last.section === sec) last.items.push(it);
+    else groups.push({ section: sec, items: [it] });
+  }
+  const collapsible = items.length > 9 && groups.filter((g) => g.section).length > 1;
+  const activeSection = items.find((it) => it.href && isActive(it.href))?.section ?? null;
+
+  const [open, setOpen] = useState<Set<string>>(() => {
+    const init = new Set<string>();
+    groups.forEach((g, i) => {
+      if (g.section && (!collapsible || i === 0 || g.section === activeSection)) init.add(g.section);
+    });
+    return init;
+  });
+  // Điều hướng sang trang thuộc nhóm đang gấp (vd từ URL/menu khác) → tự mở nhóm đó.
+  useEffect(() => {
+    if (activeSection) setOpen((prev) => (prev.has(activeSection) ? prev : new Set(prev).add(activeSection)));
+  }, [activeSection]);
+
+  const toggle = (sec: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(sec)) next.delete(sec);
+      else next.add(sec);
+      return next;
+    });
+
   return (
-    <ul className="space-y-0.5">
-      {items.map((it, idx) => {
-        const showSection = it.section && it.section !== items[idx - 1]?.section;
+    <div className="space-y-1">
+      {groups.map((g, gi) => {
+        const isOpen = !g.section || !collapsible || open.has(g.section);
+        const list = (
+          <ul className="space-y-0.5">
+            {g.items.map((it) => (
+              <li key={it.label}>
+                <ItemRow item={it} active={isActive(it.href)} colors={colors} pending={!!it.href && it.href === pendingHref} onNavigate={onNavigate} />
+              </li>
+            ))}
+          </ul>
+        );
+        if (!g.section) return <div key={gi}>{list}</div>;
         return (
-          <li key={it.label}>
-            {showSection && (
-              <p className={`mb-1 mt-3 px-1.5 text-[10px] font-bold uppercase tracking-wide text-faint first:mt-0`}>
-                {it.section}
-              </p>
+          <section key={g.section}>
+            {collapsible ? (
+              <button
+                type="button"
+                onClick={() => toggle(g.section!)}
+                aria-expanded={isOpen}
+                className="mt-2 flex w-full items-center gap-1 rounded-lg px-1.5 py-1 text-left text-[10px] font-bold uppercase tracking-wide text-faint transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+              >
+                <span className="flex-1">{g.section}</span>
+                <span className="rounded-full bg-[rgb(var(--surface-muted))] px-1.5 py-px text-[9px] font-semibold normal-case tracking-normal">
+                  {g.items.length}
+                </span>
+                <ChevronDown size={12} className={`transition-transform duration-200 ${isOpen ? "" : "-rotate-90"}`} />
+              </button>
+            ) : (
+              <p className="mb-1 mt-3 px-1.5 text-[10px] font-bold uppercase tracking-wide text-faint">{g.section}</p>
             )}
-            <ItemRow item={it} active={isActive(it.href)} colors={colors} pending={!!it.href && it.href === pendingHref} onNavigate={onNavigate} />
-          </li>
+            <div
+              className={`grid transition-[grid-template-rows,opacity,visibility] duration-200 ease-out ${
+                isOpen ? "grid-rows-[1fr] opacity-100" : "invisible grid-rows-[0fr] opacity-0"
+              }`}
+            >
+              <div className="overflow-hidden">{list}</div>
+            </div>
+          </section>
         );
       })}
-    </ul>
+    </div>
   );
 }
 
