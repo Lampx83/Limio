@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { FlaskConical, Search, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import { Search, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import ModuleOverviewCard, { type OverviewLesson } from "./ModuleOverviewCard";
 
 interface OverviewModule {
@@ -78,12 +77,6 @@ export default function ModuleOverviewList({
         >
           <ChevronsUpDown className="h-4 w-4" aria-hidden /> Mở hết
         </button>
-        <Link
-          href={`/instructor/courses/${courseId}/exams`}
-          className="btn-secondary btn-sm inline-flex items-center gap-1.5"
-        >
-          <FlaskConical className="h-4 w-4" aria-hidden /> Bài thi
-        </Link>
       </div>
 
       {visible.length === 0 && (

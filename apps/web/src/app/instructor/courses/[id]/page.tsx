@@ -121,8 +121,14 @@ export default async function InstructorCourseEditPage({
     canModerateLiveExam(userId, course.id),
   ]);
   if (!canAccess) redirect("/instructor/courses");
+  // Học viên / Lớp học / Assignment / Phân tích chỉ có nghĩa khi khoá đã mở cho
+  // người học: khoá nháp chưa có ai ghi danh, chưa có bài nộp hay dữ liệu học
+  // tập. Khoá đã lưu trữ (từng publish) vẫn giữ để còn tra lại danh sách và điểm.
   const hiddenTabs: EditorTab[] = [
     ...(!canViewAnalytics ? (["analytics"] as const) : []),
+    ...(course.status === "draft"
+      ? (["students", "sections", "assignments", "analytics"] as const)
+      : []),
   ];
   // Content stays visible but locked (not hidden) for non-editing-teacher/
   // teaching-assistant, so they can see it exists and why it's off-limits.
