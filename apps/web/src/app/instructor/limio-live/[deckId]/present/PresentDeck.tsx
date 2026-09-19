@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, StickyNote, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, StickyNote, ZoomIn, ZoomOut, QrCode } from "lucide-react";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
@@ -75,6 +75,11 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const [loadingSlide, setLoadingSlide] = useState(true);
   const [ending, setEnding] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Fullscreen API bị trình duyệt từ chối (webview nhúng, chính sách, thiếu cử chỉ) → không
+  // để thông báo phủ màn chiếu mãi mãi: đổi sang hướng dẫn thủ công và cho bấm để đóng.
+  const [fsBlocked, setFsBlocked] = useState(false);
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
+  const fsToastedRef = useRef(false);
   const [sideOpen, setSideOpen] = useState(false);
 
   // Full-bleed sân khấu tối — nới khung main.mx-auto của instructor layout ra
@@ -90,10 +95,20 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   // khiển" = gỡ header/aside, chỉ còn slide — 3 lựa chọn này KHÔNG loại trừ
   // nhau, GV tự bật/tắt tuỳ tình huống thay vì phải chọn trước 1 màn hình mode.
   useEffect(() => {
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    // Ngoài Fullscreen API còn nhận diện toàn màn hình do người dùng tự bật (F11 /
+    // Ctrl+Cmd+F): cửa sổ phủ kín cả màn hình thì innerSize == screenSize.
+    const onFsChange = () =>
+      setIsFullscreen(
+        !!document.fullscreenElement ||
+          (window.innerWidth >= window.screen.width - 1 && window.innerHeight >= window.screen.height - 1)
+      );
     onFsChange(); // vào từ editor bằng SPA-navigation: fullscreen đã bật sẵn, sẽ không có sự kiện đổi
     document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
+    window.addEventListener("resize", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      window.removeEventListener("resize", onFsChange);
+    };
   }, []);
 
   // Slideshow: thoát fullscreen (Esc) = kết thúc trình chiếu, quay lại soạn —
@@ -113,7 +128,12 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       document.exitFullscreen().catch(() => {});
     } else {
       document.documentElement.requestFullscreen().catch(() => {
-        toast.error("Trình duyệt chặn fullscreen — thử bấm lại");
+        // Chỉ báo 1 lần (bấm nhiều lần không được xếp chồng nhiều thông báo giống nhau).
+        if (!fsToastedRef.current) {
+          fsToastedRef.current = true;
+          toast.error("Trình duyệt không cho fullscreen tự động — dùng F11 (Windows) hoặc Ctrl+Cmd+F (Mac)");
+        }
+        setFsBlocked(true);
       });
     }
   };
@@ -294,6 +314,10 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     chanRef.current = ch;
     if (mode === "audience") {
       ch.onmessage = (e) => {
+        if (e.data?.type === "qr") {
+          setQrRemote(!!e.data.open);
+          return;
+        }
         if (e.data?.type !== "scroll") return;
         pendingScrollRef.current = e.data;
         applyPendingScroll();
@@ -332,6 +356,24 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const slides = deck?.slides ?? [];
   const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
   const currentSlide = currentIndex >= 0 ? slides[currentIndex] : null;
+
+  // QR phóng to: presenter bấm nút/phím Q → màn chiếu (cửa sổ khác) hiện QR lớn toàn màn hình,
+  // không cần chạm chuột vào màn chiếu. Reset khi đổi slide.
+  const [qrBig, setQrBig] = useState(false);
+  const [qrRemote, setQrRemote] = useState(false);
+  const canQr = !!currentSlide && currentSlide.type !== "content" && !!runtime && runtime.kind !== "content";
+  const toggleQr = () => {
+    if (mode !== "presenter" || !canQr) return;
+    const next = !qrBig;
+    setQrBig(next);
+    chanRef.current?.postMessage({ type: "qr", open: next });
+  };
+  useEffect(() => {
+    setQrBig(false);
+    setQrRemote(false);
+    if (mode === "presenter") chanRef.current?.postMessage({ type: "qr", open: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSlideId]);
 
   const goNext = () => {
     if (!sessionId || currentIndex < 0) return;
@@ -374,6 +416,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       else if (mode === "presenter" && (e.key === "+" || e.key === "=")) setZoom(zoom + 0.1);
       else if (mode === "presenter" && (e.key === "-" || e.key === "_")) setZoom(zoom - 0.1);
       else if (mode === "presenter" && e.key === "0") setZoom(1);
+      else if (mode === "presenter" && (e.key === "q" || e.key === "Q")) toggleQr();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -438,6 +481,10 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   return (
     <div
       onClick={() => {
+        if (mode === "audience" && fsBlocked) {
+          setOverlayDismissed(true);
+          return;
+        }
         if ((mode === "audience" || slideshow) && !document.fullscreenElement) toggleFullscreen();
       }}
       className={`flex flex-col bg-[rgb(var(--surface-muted))] font-sans text-[rgb(var(--text))] ${
@@ -469,6 +516,9 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             />
             {mode === "presenter" && (
               <>
+                {canQr && focus && (
+                  <ToolbarButton onClick={toggleQr} active={qrBig} label="Bật/ẩn QR trên màn chiếu (Q)" icon={<QrCode size={15} />} />
+                )}
                 {!slideshow && (
                   <ToolbarButton onClick={handleOpenAudienceWindow} label="Mở màn hình chiếu" icon={<Monitor size={15} />} />
                 )}
@@ -584,7 +634,15 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             <button onClick={() => setSideOpen(false)} className="mb-3 text-xs font-medium text-muted lg:hidden">
               ✕ Gấp gọn
             </button>
-            {hasSidebar && <FeedbackSidebar key={currentSlide.id} slide={currentSlide} runtime={runtime} />}
+            {hasSidebar && (
+              <FeedbackSidebar
+                key={currentSlide.id}
+                slide={currentSlide}
+                runtime={runtime}
+                qrOnScreen={qrBig}
+                onToggleQr={mode === "presenter" ? toggleQr : undefined}
+              />
+            )}
             {presenterNote && (
               <div className={hasSidebar ? "mt-6" : ""}>
                 <PresenterNotesPanel key={currentSlide.id} note={presenterNote} />
@@ -595,18 +653,37 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         )}
       </main>
 
-      {focus && hasSidebar && runtime && runtime.kind !== "content" && (
-        <JoinCorner key={currentSlide?.id} joinPath={runtime.joinPath} code={runtime.kind === "collaborate_board" ? runtime.code : undefined} />
+
+      {canQr && runtime && ((mode === "audience" && qrRemote) || (slideshow && qrBig)) && (
+        <JoinEnlarged
+          url={shareUrl(runtime.joinPath)}
+          code={runtime.kind === "collaborate_board" ? runtime.code : undefined}
+          onClose={() => {
+            setQrRemote(false);
+            setQrBig(false);
+          }}
+        />
       )}
 
-      {mode === "audience" && !isFullscreen && (
+      {mode === "audience" && !isFullscreen && !overlayDismissed && (
         <div className="pointer-events-none fixed inset-0 z-[130] flex items-center justify-center bg-[#20241F]/50 p-10 text-center">
           <div className="max-w-4xl [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]">
             <Monitor size={72} className="mx-auto mb-6 text-white/80" />
-            <p className="text-[40px] font-bold leading-snug text-white">
-              Hãy kéo màn hình này sang màn chiếu ở chế độ extended window, rồi bấm chuột vào bất cứ đâu trong màn hình này để tự động fullscreen.
-            </p>
-            <p className="mt-6 text-xl text-white/60">Hoặc nhấn phím F.</p>
+            {fsBlocked ? (
+              <>
+                <p className="text-[36px] font-bold leading-snug text-white">
+                  Trình duyệt không cho fullscreen tự động. Hãy nhấn F11 (Windows) hoặc Ctrl + Cmd + F (Mac) để phóng toàn màn hình.
+                </p>
+                <p className="mt-6 text-xl text-white/70">Bấm chuột vào đây để đóng thông báo này.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-[40px] font-bold leading-snug text-white">
+                  Hãy kéo màn hình này sang màn chiếu ở chế độ extended window, rồi bấm chuột vào bất cứ đâu trong màn hình này để tự động fullscreen.
+                </p>
+                <p className="mt-6 text-xl text-white/60">Hoặc nhấn phím F.</p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -620,45 +697,38 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   );
 }
 
-function ToolbarButton({ onClick, label, icon }: { onClick: () => void; label: string; icon: React.ReactNode }) {
+function ToolbarButton({
+  onClick,
+  label,
+  icon,
+  active = false,
+}: {
+  onClick: () => void;
+  label: string;
+  icon: React.ReactNode;
+  active?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
       title={label}
       aria-label={label}
-      className="flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium text-[rgb(var(--text))] transition hover:bg-[rgb(var(--surface))]"
+      aria-pressed={active}
+      className={`flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium transition ${
+        active ? "bg-brand-600 text-white shadow-sm" : "text-[rgb(var(--text))] hover:bg-[rgb(var(--surface))]"
+      }`}
     >
       {icon}
-      <span className="hidden xl:inline">{label.replace(" (H)", "")}</span>
+      <span className="hidden xl:inline">{label.replace(/ \([A-Z]\)$/, "")}</span>
     </button>
   );
 }
 
 // Focus mode bỏ cột bên phải nhưng học viên vẫn cần QR để vào slide: thu nhỏ
 // thành thẻ ở góc dưới phải, bấm để phóng to cho cả lớp quét.
-function JoinCorner({ joinPath, code }: { joinPath: string; code?: string }) {
-  const [big, setBig] = useState(false);
-  const url = shareUrl(joinPath);
-  return (
-    <>
-      <button
-        onClick={() => setBig(true)}
-        className="fixed bottom-6 right-6 z-[105] flex items-center gap-2 rounded-xl bg-white p-2 shadow-lg ring-1 ring-black/10 transition hover:shadow-xl"
-        title="Phóng to mã QR"
-        aria-label="Phóng to mã QR tham gia"
-      >
-        <QRCode value={url} size={72} level="M" />
-        {code && <span className="px-1 font-mono text-lg font-bold tracking-widest text-[#20241F]">{code}</span>}
-        <Maximize2 size={14} className="text-[#6B7268]" />
-      </button>
-      {big && <JoinEnlarged url={url} code={code} onClose={() => setBig(false)} />}
-    </>
-  );
-}
-
 function JoinEnlarged({ url, code, onClose }: { url: string; code?: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[120] flex animate-overlay-in items-center justify-center bg-black/60 p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-[140] flex animate-overlay-in items-center justify-center bg-black/60 p-6" onClick={onClose}>
       <div className="animate-dialog-in rounded-3xl bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <QRCode value={url} size={Math.min(460, typeof window !== "undefined" ? window.innerHeight - 300 : 400)} level="M" />
         {code && (
@@ -884,7 +954,17 @@ function ContentSlideView({
 
 // ── Right sidebar — join box + live feedback ───────────────────────────────
 
-function FeedbackSidebar({ slide, runtime }: { slide: Slide; runtime: Runtime | null }) {
+function FeedbackSidebar({
+  slide,
+  runtime,
+  qrOnScreen,
+  onToggleQr,
+}: {
+  slide: Slide;
+  runtime: Runtime | null;
+  qrOnScreen?: boolean;
+  onToggleQr?: () => void;
+}) {
   if (!runtime || runtime.kind === "content") return null;
 
   return (
@@ -892,7 +972,12 @@ function FeedbackSidebar({ slide, runtime }: { slide: Slide; runtime: Runtime | 
       <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">
         Tham gia slide này
       </div>
-      <JoinBox joinPath={runtime.joinPath} code={runtime.kind === "collaborate_board" ? runtime.code : undefined} />
+      <JoinBox
+        joinPath={runtime.joinPath}
+        code={runtime.kind === "collaborate_board" ? runtime.code : undefined}
+        qrOnScreen={qrOnScreen}
+        onToggleQr={onToggleQr}
+      />
 
       <div className="mt-5 text-[11px] font-bold uppercase tracking-wide text-faint">
         Phản hồi
@@ -922,7 +1007,17 @@ function PresenterNotesPanel({ note }: { note: string }) {
   );
 }
 
-function JoinBox({ joinPath, code }: { joinPath: string; code?: string }) {
+function JoinBox({
+  joinPath,
+  code,
+  qrOnScreen,
+  onToggleQr,
+}: {
+  joinPath: string;
+  code?: string;
+  qrOnScreen?: boolean;
+  onToggleQr?: () => void;
+}) {
   const url = shareUrl(joinPath);
   const [big, setBig] = useState(false);
   const handleCopy = async () => {
@@ -960,6 +1055,20 @@ function JoinBox({ joinPath, code }: { joinPath: string; code?: string }) {
       >
         {url}
       </button>
+      {onToggleQr && (
+        <button
+          onClick={onToggleQr}
+          aria-pressed={!!qrOnScreen}
+          className={`mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+            qrOnScreen
+              ? "border border-red-200 bg-white text-red-600 hover:bg-red-50"
+              : "bg-brand-600 text-white shadow-sm hover:bg-brand-700"
+          }`}
+        >
+          <QrCode size={16} />
+          {qrOnScreen ? "Đóng QR trên màn chiếu" : "Hiện QR trên màn chiếu"}
+        </button>
+      )}
       {big && <JoinEnlarged url={url} code={code} onClose={() => setBig(false)} />}
     </div>
   );

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { useActiveNavSectionOverride } from "@/lib/activeNavSection";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
@@ -35,6 +35,13 @@ import {
   FolderOpen,
   Crown,
   Bot,
+  Cloud,
+  Clock,
+  PenTool,
+  Gamepad2,
+  ListChecks,
+  Shuffle,
+  StickyNote,
   type LucideIcon,
 } from "lucide-react";
 
@@ -144,7 +151,7 @@ const MODULES: ModuleDef[] = [
       itemIconFg: "text-pink-600 dark:text-pink-300",
       headerText: "text-pink-700 dark:text-pink-400",
     },
-    matchPrefixes: ["/instructor/limio-live", "/instructor/teaching-tools"],
+    matchPrefixes: ["/instructor/limio-live", "/instructor/teaching-tools", "/instructor/gameshow"],
     items: [
       { label: "Bài giảng của tôi", href: "/instructor/limio-live", icon: Presentation, section: "Bài giảng" },
       { label: "Tạo bài giảng mới", href: "/instructor/limio-live?new=1", icon: Plus, section: "Bài giảng" },
@@ -152,7 +159,18 @@ const MODULES: ModuleDef[] = [
       // Quick poll, word cloud, đếm giờ, kịch bản lớp học... đều là công cụ
       // chạy trực tiếp trên lớp — cùng bản chất "live" với Limio-Live, không
       // phải nội dung/khoá học tĩnh của LMS.
-      { label: "Công cụ giảng dạy", href: "/instructor/teaching-tools", icon: Wrench, section: "Công cụ live" },
+      // Mỗi công cụ 1 dòng menu (mở thẳng qua ?tool=...), thay cho 1 dòng "Công cụ giảng dạy" chung.
+      { label: "Tất cả công cụ", href: "/instructor/teaching-tools", icon: Wrench, section: "Công cụ live" },
+      { label: "Quick Poll", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Cả lớp tham gia" },
+      { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: Cloud, section: "Cả lớp tham gia" },
+      { label: "Đếm ngược", href: "/instructor/teaching-tools?tool=timer", icon: Clock, section: "Cả lớp tham gia" },
+      { label: "Bảng tương tác", href: "/instructor/teaching-tools?tool=board", icon: StickyNote, section: "Cả lớp tham gia" },
+      { label: "Whiteboard", href: "/instructor/teaching-tools?tool=whiteboard", icon: PenTool, section: "Cả lớp tham gia" },
+      { label: "Gameshow", href: "/instructor/gameshow/new", icon: Gamepad2, section: "Cả lớp tham gia" },
+      { label: "Soạn kịch bản", href: "/instructor/teaching-tools/activity-plans", icon: ListChecks, section: "Cả lớp tham gia" },
+      { label: "Chạy kịch bản", href: "/instructor/teaching-tools?tool=run-plan", icon: ListChecks, section: "Theo danh sách lớp" },
+      { label: "Chọn ngẫu nhiên", href: "/instructor/teaching-tools?tool=random-picker", icon: Shuffle, section: "Theo danh sách lớp" },
+      { label: "Phân nhóm", href: "/instructor/teaching-tools?tool=grouping", icon: Users, section: "Theo danh sách lớp" },
     ],
   },
   {
@@ -257,7 +275,16 @@ function resolveActiveModuleId(pathname: string, navOverride: string | null): st
 // Slim menu for users who are ONLY proctors (no course-instructor binding).
 const PROCTOR_ONLY_ITEMS: Item[] = [PROCTOR_ITEM];
 
-export default function InstructorLeftMenu({
+// useSearchParams cần Suspense (Next 14) — bọc ở đây để 2 layout dùng chung khỏi phải tự bọc.
+export default function InstructorLeftMenu(props: { isInstructor?: boolean; isProctor?: boolean }) {
+  return (
+    <Suspense fallback={null}>
+      <InstructorLeftMenuInner {...props} />
+    </Suspense>
+  );
+}
+
+function InstructorLeftMenuInner({
   isInstructor = true,
   isProctor = false,
 }: {
@@ -265,6 +292,7 @@ export default function InstructorLeftMenu({
   isProctor?: boolean;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const navOverride = useActiveNavSectionOverride();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -279,7 +307,7 @@ export default function InstructorLeftMenu({
     setMobileOpen(false);
     setPendingModuleId(null);
     setPendingHref(null);
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   // Cột tên mục của module gấp/mở được (rail icon luôn hiện). Trang soạn
   // Limio-Live cần bề ngang nhất nên mặc định gấp và nhớ lựa chọn riêng.
@@ -308,6 +336,13 @@ export default function InstructorLeftMenu({
   const isActive = (href?: string) => {
     if (!href) return false;
     if (pendingHref) return href === pendingHref;
+    // Mục có ?tool=... (công cụ giảng dạy): sáng khi đúng path + đúng tool; mục gốc
+    // /instructor/teaching-tools chỉ sáng khi CHƯA chọn công cụ nào.
+    if (href.includes("?tool=")) {
+      const [base, query] = href.split("?");
+      return pathname === base && new URLSearchParams(query).get("tool") === searchParams.get("tool");
+    }
+    if (href === "/instructor/teaching-tools") return pathname === href && !searchParams.get("tool");
     if (/^\/instructor\/courses\/[^/]+\/exams(\/|$)/.test(pathname)) {
       return href === (navOverride ?? "/instructor/exams");
     }

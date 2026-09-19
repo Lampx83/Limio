@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TeachingToolsWrapper from "./TeachingToolsWrapper";
 import StudentListGate from "./StudentListGate";
@@ -48,6 +48,12 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
   const [selectedTool, setSelectedToolState] = useState<ToolType>(
     initialTool && VALID_TOOLS.includes(initialTool) ? initialTool : null,
   );
+
+  // Chọn công cụ từ menu trái (đổi ?tool= trên URL khi trang đã mở) → đồng bộ lại state.
+  useEffect(() => {
+    const t = searchParams.get("tool") as ToolType | null;
+    setSelectedToolState(t && VALID_TOOLS.includes(t) ? t : null);
+  }, [searchParams]);
 
   const setSelectedTool = useCallback(
     (tool: ToolType) => {
