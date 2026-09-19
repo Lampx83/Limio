@@ -9,8 +9,8 @@
   --surface: 255 255 255;       /* cards, modals */
   --surface-muted: 244 244 248; /* alt rows, chips */
   --border: 226 226 232;        /* hairlines */
-  --text: 17 24 39;             /* slate-900 */
-  --text-muted: 100 110 130;    /* secondary copy */
+  --text: 3 7 18;               /* gray-950 — đậm hơn slate-900 cũ */
+  --text-muted: 71 80 98;       /* secondary copy — đậm hơn cũ (100 110 130) */
   --text-faint: 148 158 178;    /* placeholder, captions */
 
   --brand: 101 163 13;          /* lime-600 */
@@ -46,6 +46,7 @@
 
 @layer base {
   html {
+    font-size: 106.25%; /* 17px — tăng nhẹ toàn bộ cỡ chữ (rem) */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
