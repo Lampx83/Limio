@@ -21,6 +21,7 @@
     "seed:mission-templates": "node --env-file=.env --import tsx src/seed-mission-templates.ts",
     "seed:email-templates": "node --env-file=.env --import tsx src/seed-email-templates.ts",
     "seed:demo-english-center": "node --env-file=.env --import tsx src/seed-demo-english-center.ts",
+    "seed:limio-live-demo": "node --env-file=.env --import tsx src/seed-limio-live-demo.ts",
     "seed:feature-flags": "node --env-file=.env --import tsx src/seed-feature-flags.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"

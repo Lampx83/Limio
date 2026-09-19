@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useActiveNavSectionOverride } from "@/lib/activeNavSection";
+import PanelToggle from "@/components/ui/PanelToggle";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -269,6 +270,30 @@ export default function InstructorLeftMenu({
     setMobileOpen(false);
   }, [pathname]);
 
+  // Cột tên mục của module gấp/mở được (rail icon luôn hiện). Trang soạn
+  // Limio-Live cần bề ngang nhất nên mặc định gấp và nhớ lựa chọn riêng.
+  const isLiveEditor =
+    /^\/instructor\/limio-live\/[^/]+(?:\?|$)/.test(pathname) && !/^\/instructor\/limio-live\/[^/]+\/present/.test(pathname);
+  const collapseKey = isLiveEditor ? "nav.sidebar.collapsed.editor" : "nav.sidebar.collapsed";
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isLiveEditor);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(collapseKey);
+      setSidebarCollapsed(v === null ? isLiveEditor : v === "1");
+    } catch {
+      setSidebarCollapsed(isLiveEditor);
+    }
+  }, [collapseKey, isLiveEditor]);
+  const toggleSidebar = () => {
+    const next = !sidebarCollapsed;
+    setSidebarCollapsed(next);
+    try {
+      localStorage.setItem(collapseKey, next ? "1" : "0");
+    } catch {
+      /* không lưu được thì thôi */
+    }
+  };
+
   const isActive = (href?: string) => {
     if (!href) return false;
     if (/^\/instructor\/courses\/[^/]+\/exams(\/|$)/.test(pathname)) {
@@ -325,6 +350,21 @@ export default function InstructorLeftMenu({
   const rail = (
     <ModuleRail activeModuleId={activeModuleId} />
   );
+  const railDesktop = (
+    <ModuleRail
+      activeModuleId={activeModuleId}
+      footer={
+        activeModule ? (
+          <PanelToggle
+            side="left"
+            collapsed={sidebarCollapsed}
+            onClick={toggleSidebar}
+            label={sidebarCollapsed ? "Mở rộng menu module" : "Thu gọn menu module"}
+          />
+        ) : null
+      }
+    />
+  );
   const sidebarContent = activeModule ? (
     <div className="w-56 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] px-3 py-5">
       <div className="mb-3 flex items-center gap-1.5 px-1">
@@ -378,8 +418,8 @@ export default function InstructorLeftMenu({
           sub-nav riêng, nhường chỗ cho nội dung). */}
       {!isImmersive && (
         <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 lg:flex">
-          {rail}
-          {sidebarContent}
+          {railDesktop}
+          {!sidebarCollapsed && sidebarContent}
         </aside>
       )}
     </>
@@ -398,7 +438,7 @@ const NEUTRAL_COLORS: ModuleColors = {
 // ── Rail — cột icon dọc luôn hiện, "Trang chủ" ghim riêng phía trên rồi tới
 // 6 module. Đây là điều hướng THẬT (Link), không phải state client — F5 hay
 // deep-link vào thẳng 1 trang vẫn tự sáng đúng icon nhờ resolveActiveModuleId.
-function ModuleRail({ activeModuleId }: { activeModuleId: string }) {
+function ModuleRail({ activeModuleId, footer }: { activeModuleId: string; footer?: React.ReactNode }) {
   return (
     <div className="flex w-16 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] py-4">
       <RailButton
@@ -421,6 +461,7 @@ function ModuleRail({ activeModuleId }: { activeModuleId: string }) {
           premium={m.premium}
         />
       ))}
+      {footer && <div className="mt-auto pt-3">{footer}</div>}
     </div>
   );
 }

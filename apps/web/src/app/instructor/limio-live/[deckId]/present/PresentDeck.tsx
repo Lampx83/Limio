@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, StickyNote, ZoomIn, ZoomOut } from "lucide-react";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
+import { openAudienceWindow } from "@/lib/limioLiveWindow";
 import EmptyState from "@/components/ui/EmptyState";
 import ResourceContent from "../../ResourceContent";
 import { slideThemeBg } from "../../slideThemes";
@@ -59,9 +60,11 @@ interface UiState {
 
 export default function PresentDeck({ deckId }: { deckId: string }) {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const mode: "presenter" | "audience" = searchParams.get("view") === "audience" ? "audience" : "presenter";
+  // ?mode=slideshow = "Trình chiếu" kiểu PowerPoint: fullscreen, KHÔNG ghi chú, không
+  // cửa sổ phụ. Mặc định (không tham số) = Presenter view: có ghi chú, không fullscreen.
+  const slideshow = mode === "presenter" && searchParams.get("mode") === "slideshow";
 
   const [deck, setDeck] = useState<Deck | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -88,9 +91,22 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   // nhau, GV tự bật/tắt tuỳ tình huống thay vì phải chọn trước 1 màn hình mode.
   useEffect(() => {
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    onFsChange(); // vào từ editor bằng SPA-navigation: fullscreen đã bật sẵn, sẽ không có sự kiện đổi
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
+
+  // Slideshow: thoát fullscreen (Esc) = kết thúc trình chiếu, quay lại soạn —
+  // đúng thói quen PowerPoint. Chỉ áp dụng khi đã từng vào fullscreen được.
+  const enteredFsRef = useRef(false);
+  useEffect(() => {
+    if (isFullscreen) enteredFsRef.current = true;
+    else if (slideshow && enteredFsRef.current) {
+      enteredFsRef.current = false;
+      router.push(`/instructor/limio-live/${deckId}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullscreen]);
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
@@ -226,11 +242,6 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     patchUiState({ revealed: { ...current, [slideId]: !current[slideId] } });
   };
 
-  // Popup mở đồng bộ trong cú click (không bị chặn popup), rồi — nếu trình duyệt
-  // hỗ trợ Window Management API (Chrome/Edge) — hỏi quyền 1 lần và dời popup
-  // sang màn hình KHÁC màn hình presenter. Lệnh fullscreen thì không làm hộ
-  // được (phải có cú click ngay trong cửa sổ đó) nên cửa sổ màn chiếu tự hiện
-  // gợi ý "bấm để fullscreen".
   // Zoom nội dung slide (chữ + bố cục) do presenter chỉnh, ghi vào uiState để
   // cửa sổ màn chiếu hiển thị cùng tỉ lệ.
   const zoom = uiState.zoom ?? 1;
@@ -239,35 +250,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     if (next !== zoom) patchUiState({ zoom: next });
   };
 
-  const handleOpenAudienceWindow = async () => {
-    const w = Math.min(1280, window.screen.availWidth);
-    const h = Math.min(720, window.screen.availHeight);
-    const left = Math.max(0, Math.round((window.screen.availWidth - w) / 2));
-    const top = Math.max(0, Math.round((window.screen.availHeight - h) / 2));
-    const win = window.open(
-      `${pathname}?view=audience`,
-      "limio-live-audience",
-      `popup=yes,width=${w},height=${h},left=${left},top=${top}`
-    );
-    if (!win) {
-      toast.error("Trình duyệt chặn cửa sổ bật lên — cho phép popup cho trang này rồi bấm lại");
-      return;
-    }
-    win.focus?.();
-
-    const getScreenDetails = (window as any).getScreenDetails as undefined | (() => Promise<any>);
-    if (!getScreenDetails) return;
-    try {
-      const details = await getScreenDetails.call(window);
-      const other = (details.screens as any[]).find((sc) => sc !== details.currentScreen);
-      if (!other) return;
-      win.moveTo(other.availLeft, other.availTop);
-      win.resizeTo(other.availWidth, other.availHeight);
-      win.focus?.();
-      toast.info("Đã đưa màn chiếu sang màn hình thứ hai — bấm vào cửa sổ đó để fullscreen");
-    } catch {
-      /* người dùng từ chối quyền hoặc trình duyệt không cho — popup ở lại vị trí mặc định */
-    }
+  const handleOpenAudienceWindow = () => {
+    openAudienceWindow(deckId);
   };
 
   const slides = deck?.slides ?? [];
@@ -293,8 +277,13 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
-      if (e.key === "ArrowRight") goNext();
-      else if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+        e.preventDefault();
+        goNext();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        goPrev();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -365,16 +354,16 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   // Focus mode = fullscreen thật HOẶC đã ẩn điều khiển: bỏ header Limio, bỏ
   // sidebar (QR/ghi chú), slide chiếm hết màn hình; chỉ còn thanh điều khiển
   // mảnh (trừ khi cũng ẩn nốt).
-  const focus = isFullscreen;
+  const focus = isFullscreen || slideshow;
   const hasSidebar = !!currentSlide && currentSlide.type !== "content";
   const presenterNote =
-    mode === "presenter" && currentSlide ? String(currentSlide.config?.presenterNote ?? "").trim() : "";
+    mode === "presenter" && !slideshow && currentSlide ? String(currentSlide.config?.presenterNote ?? "").trim() : "";
   const showSidebar = !focus && (hasSidebar || !!presenterNote) && !!currentSlide;
 
   return (
     <div
       onClick={() => {
-        if (mode === "audience" && !document.fullscreenElement) toggleFullscreen();
+        if ((mode === "audience" || slideshow) && !document.fullscreenElement) toggleFullscreen();
       }}
       className={`flex flex-col bg-[rgb(var(--surface-muted))] font-sans text-[rgb(var(--text))] ${
         focus ? "fixed inset-0 z-[100]" : "relative h-[calc(100vh-4rem)]"
@@ -405,7 +394,9 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             />
             {mode === "presenter" && (
               <>
-                <ToolbarButton onClick={handleOpenAudienceWindow} label="Mở màn hình chiếu" icon={<Monitor size={15} />} />
+                {!slideshow && (
+                  <ToolbarButton onClick={handleOpenAudienceWindow} label="Mở màn hình chiếu" icon={<Monitor size={15} />} />
+                )}
                 <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/15" aria-hidden />
                 <button
                   onClick={() => setZoom(zoom - 0.1)}
@@ -532,6 +523,17 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
       {mode === "audience" && !isFullscreen && (
+        <div className="pointer-events-none fixed inset-0 z-[130] flex items-center justify-center bg-[#20241F]/50 p-10 text-center">
+          <div className="max-w-4xl [text-shadow:0_2px_14px_rgba(0,0,0,0.7)]">
+            <Monitor size={72} className="mx-auto mb-6 text-white/80" />
+            <p className="text-[40px] font-bold leading-snug text-white">
+              Hãy kéo màn hình này sang màn chiếu ở chế độ extended window, rồi bấm chuột vào bất cứ đâu trong màn hình này để tự động fullscreen.
+            </p>
+            <p className="mt-6 text-xl text-white/60">Hoặc nhấn phím F.</p>
+          </div>
+        </div>
+      )}
+      {slideshow && !isFullscreen && (
         <div className="pointer-events-none fixed bottom-5 left-1/2 z-[105] -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-sm font-medium text-white shadow-lg">
           Bấm vào đây hoặc nhấn F để fullscreen
         </div>
