@@ -22,7 +22,9 @@ export interface RegisterResult {
   verificationUrl: string;
 }
 
-const BCRYPT_COST = 12;
+// Mặc định 12 (~350ms/hash, bcryptjs thuần JS). Vitest đặt BCRYPT_COST=4 vì test
+// tạo hàng trăm user; production không set biến này nên luôn dùng 12.
+const bcryptCost = () => Number(process.env.BCRYPT_COST) || 12;
 
 export class RegisterError extends Error {
   constructor(public readonly code: "email_taken" | "validation_failed", message: string) {
@@ -50,7 +52,7 @@ export async function registerUser(
     throw new RegisterError("email_taken", "Email đã được đăng ký");
   }
 
-  const passwordHash = await bcrypt.hash(input.password, BCRYPT_COST);
+  const passwordHash = await bcrypt.hash(input.password, bcryptCost());
   const learnerRole = await db.role.findUniqueOrThrow({ where: { name: RoleName.Learner } });
 
   const { userId, raw } = await db.$transaction(async (tx) => {

@@ -6,6 +6,7 @@ loadEnv({ path: path.resolve(import.meta.dirname, ".env.test") });
 
 export default defineConfig({
   test: {
+    env: { BCRYPT_COST: "4" },
     setupFiles: ["./src/test/setup.ts"],
     globalSetup: ["./src/test/global-setup.ts"],
     sequence: { concurrent: false },

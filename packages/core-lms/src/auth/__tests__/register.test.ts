@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { prisma } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { RegisterError, registerUser } from "../register";
@@ -64,11 +64,14 @@ describe("registerUser", () => {
   });
 
   it("hashes password with bcrypt cost ≥10 (a 12-cost hash starts with $2a$12$ or $2b$12$)", async () => {
+    // Suite chạy với BCRYPT_COST=4 cho nhanh; ở đây gỡ ra để kiểm mặc định production.
+    vi.stubEnv("BCRYPT_COST", "");
     const result = await registerUser(
       { email: "dan@example.com", password: "password1234", displayName: "Dan" },
       BASE_URL,
     );
     const user = await prisma.user.findUniqueOrThrow({ where: { id: result.userId } });
+    vi.unstubAllEnvs();
     expect(user.passwordHash).toMatch(/^\$2[ab]\$1[02]\$/);
   });
 });

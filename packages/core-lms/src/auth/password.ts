@@ -10,7 +10,9 @@ export const ChangePasswordInput = z.object({
 });
 export type ChangePasswordInput = z.infer<typeof ChangePasswordInput>;
 
-const BCRYPT_COST = 12;
+// Mặc định 12 (~350ms/hash, bcryptjs thuần JS). Vitest đặt BCRYPT_COST=4 vì test
+// tạo hàng trăm user; production không set biến này nên luôn dùng 12.
+const bcryptCost = () => Number(process.env.BCRYPT_COST) || 12;
 
 export class ChangePasswordError extends Error {
   constructor(
@@ -56,7 +58,7 @@ export async function changePassword(
   const sameAsOld = await bcrypt.compare(newPassword, user.passwordHash);
   if (sameAsOld) throw new ChangePasswordError("same_as_current");
 
-  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST);
+  const passwordHash = await bcrypt.hash(newPassword, bcryptCost());
   await db.user.update({
     where: { id: userId },
     data: { passwordHash },
