@@ -8,21 +8,20 @@ import {
   canModerateLiveExam,
   isCourseOwner,
 } from "@feedbackme/core-lms";
-import { Presentation } from "lucide-react";
+import { ChevronLeft, ChevronRight, Presentation } from "lucide-react";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import AccessCodesPanel from "./AccessCodesPanel";
 import LessonSection from "./LessonSection";
 import ModuleSection from "./ModuleSection";
-import ModuleOverviewCard from "./ModuleOverviewCard";
+import ModuleOverviewList from "./ModuleOverviewList";
 import AddModuleForm from "./AddModuleForm";
 import PublishControls from "./PublishControls";
 import DuplicateCourseButton from "./DuplicateCourseButton";
 import DeleteCourseButton from "./DeleteCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
-import LessonViewToggle from "./LessonViewToggle";
 import ImportStudentsButton from "./ImportStudentsButton";
-import EditorSidebar from "./EditorSidebar";
+import LessonTopBar from "./LessonTopBar";
 import EditorTabs, { type EditorTab } from "./EditorTabs";
 import EnrollmentList from "./EnrollmentList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
@@ -203,8 +202,17 @@ export default async function InstructorCourseEditPage({
     })),
   }));
 
+  const flatLessons = sidebarModules.flatMap((m) => m.lessons);
+  const activeFlatIdx = selectedLesson
+    ? flatLessons.findIndex((l) => l.id === selectedLesson.id)
+    : -1;
+  const prevLesson = activeFlatIdx > 0 ? flatLessons[activeFlatIdx - 1] : null;
+  const nextLesson =
+    activeFlatIdx !== -1 ? (flatLessons[activeFlatIdx + 1] ?? null) : null;
+  const lessonHref = (id: string) =>
+    `/instructor/courses/${course.id}?tab=content&lesson=${id}${lessonView === "preview" ? "&lessonView=preview" : ""}`;
+
   const useWideLayout = true;
-  const useSidebarLayout = tab === "content";
 
   const buildAssignmentHref = (next: { lesson?: string | null; filter?: string }) => {
     const params = new URLSearchParams();
@@ -394,16 +402,7 @@ export default async function InstructorCourseEditPage({
 
       {/* TAB: Nội dung */}
       {tab === "content" && (
-        <div className={useSidebarLayout ? "mt-6 lg:flex lg:gap-6" : "mt-6"}>
-          {useSidebarLayout && (
-            <EditorSidebar
-              courseId={course.id}
-              modules={sidebarModules}
-              activeLessonId={selectedLessonId}
-              view="edit"
-            />
-          )}
-
+        <div className="mt-6">
           <div className="min-w-0 flex-1">
             {selectedLesson && selectedModule && (
               /* key: pane sửa bài học giữ nguyên vị trí trong cây khi đổi
@@ -411,23 +410,11 @@ export default async function InstructorCourseEditPage({
                  form sửa còn nguyên title/ORDER của bài trước, bấm Lưu là
                  ghi ORDER cũ, đụng unique (moduleId, orderIndex) → 500 câm. */
               <article key={selectedLesson.id} className="space-y-5">
-                <div className="flex items-center justify-between gap-3">
-                  <nav className="flex min-w-0 items-center gap-2 text-sm text-muted">
-                    <Link
-                      href={`/instructor/courses/${course.id}?tab=content`}
-                      className="link shrink-0"
-                    >
-                      Tổng quan nội dung
-                    </Link>
-                    <span className="text-faint">›</span>
-                    <span className="truncate">{selectedModule.title}</span>
-                    <span className="text-faint">›</span>
-                    <span className="font-medium text-default truncate">
-                      {selectedLesson.title}
-                    </span>
-                  </nav>
-                  <LessonViewToggle />
-                </div>
+                <LessonTopBar
+                  courseId={course.id}
+                  modules={sidebarModules}
+                  activeLessonId={selectedLesson.id}
+                />
                 <div
                   data-view={lessonView}
                   className={`rounded-2xl border-2 p-6 ${
@@ -450,6 +437,31 @@ export default async function InstructorCourseEditPage({
                     hideUntaggedWarning={!course.personalizationEnabled}
                   />
                 </div>
+                <nav className="flex items-center justify-between gap-3" aria-label="Chuyển bài">
+                  {prevLesson ? (
+                    <Link
+                      href={lessonHref(prevLesson.id)}
+                      prefetch={false}
+                      className="btn-secondary btn-sm inline-flex min-w-0 items-center gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+                      <span className="truncate">Bài trước</span>
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                  {nextLesson && (
+                    <Link
+                      href={lessonHref(nextLesson.id)}
+                      prefetch={false}
+                      className="btn-secondary btn-sm inline-flex min-w-0 items-center gap-1"
+                      title={nextLesson.title}
+                    >
+                      <span className="truncate">Bài kế · {nextLesson.title}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+                    </Link>
+                  )}
+                </nav>
               </article>
             )}
 
@@ -476,26 +488,18 @@ export default async function InstructorCourseEditPage({
                     </p>
                   </div>
                 ) : (
-                  <div className="mt-4 space-y-4">
-                    {course.modules.map((m, i) => {
-                      const sidebarModule = sidebarModules[i];
-                      if (!sidebarModule) return null;
-                      return (
-                        <ModuleOverviewCard
-                          key={m.id}
-                          courseId={course.id}
-                          module={{
-                            id: m.id,
-                            title: m.title,
-                            orderIndex: m.orderIndex,
-                            isHidden: m.isHidden,
-                            isLocked: m.isLocked,
-                            lessons: sidebarModule.lessons,
-                          }}
-                          order={i + 1}
-                        />
-                      );
-                    })}
+                  <div className="mt-4">
+                    <ModuleOverviewList
+                      courseId={course.id}
+                      modules={course.modules.map((m, i) => ({
+                        id: m.id,
+                        title: m.title,
+                        orderIndex: m.orderIndex,
+                        isHidden: m.isHidden,
+                        isLocked: m.isLocked,
+                        lessons: sidebarModules[i]!.lessons,
+                      }))}
+                    />
                   </div>
                 )}
 

@@ -12,6 +12,7 @@ export default function ModuleHeader({
   orderIndex,
   isHidden: initialIsHidden,
   isLocked: initialIsLocked,
+  lessonCount,
 }: {
   moduleId: string;
   title: string;
@@ -19,6 +20,7 @@ export default function ModuleHeader({
   orderIndex: number;
   isHidden: boolean;
   isLocked: boolean;
+  lessonCount?: number;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -115,14 +117,22 @@ export default function ModuleHeader({
   }
 
   return (
-    <div className="group flex items-center justify-between gap-3 p-4">
-      <h3 className="flex items-baseline gap-3">
-        <span className="rounded-md bg-brand-soft px-2 py-0.5 text-sm font-bold text-brand-700">
-          Module {order}
+    <div className="group flex items-center justify-between gap-3 py-2 pr-3">
+      <h3 className="flex min-w-0 items-center gap-2.5">
+        <span
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold ${
+            isHidden ? "bg-danger-50 text-danger-700" : "bg-brand-soft text-brand-700"
+          }`}
+        >
+          {order}
         </span>
-        <span className="text-lg font-bold">{title}</span>
+        <span className="truncate text-base font-semibold">{title}</span>
+        {isHidden && <span className="chip-danger shrink-0 text-xs">Đang ẩn</span>}
+        {typeof lessonCount === "number" && (
+          <span className="shrink-0 text-xs font-normal text-muted">{lessonCount} bài</span>
+        )}
       </h3>
-      <div className="flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5 opacity-60 transition-opacity group-hover:opacity-100">
+      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-lg:opacity-100">
         <button
           type="button"
           onClick={toggleHidden}
