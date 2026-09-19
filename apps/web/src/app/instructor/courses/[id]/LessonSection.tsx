@@ -101,6 +101,7 @@ export default function LessonSection({
   siblingLessonIds,
   modules,
   hideUntaggedWarning = false,
+  titleAside,
 }: {
   lesson: Lesson;
   order: number;
@@ -110,6 +111,7 @@ export default function LessonSection({
   siblingLessonIds?: string[];
   modules?: Array<{ id: string; title: string }>;
   hideUntaggedWarning?: boolean;
+  titleAside?: React.ReactNode;
 }) {
   const noSkill = lesson.skillTags.length === 0;
   const hiddenContent = lesson.contentItems.filter(c => c.isHidden).length;
@@ -140,6 +142,7 @@ export default function LessonSection({
           modules={modules}
           courseSlug={courseSlug}
           hideUntaggedWarning={hideUntaggedWarning}
+          titleAside={titleAside}
         />
 
         {!flat && !(hideUntaggedWarning && noSkill) && (
@@ -154,6 +157,11 @@ export default function LessonSection({
             />
           </SubSection>
         )}
+
+        <p className="preview-only banner-info text-sm" role="status">
+          Đang xem như học viên: đây là những gì học viên thấy, các nút sửa đã
+          ẩn. Bấm &ldquo;Thoát xem trước&rdquo; để quay lại soạn bài.
+        </p>
 
         <div className="editor-only">
           <ActivitySection

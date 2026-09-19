@@ -42,6 +42,7 @@ export default function LessonHeader({
   modules,
   courseSlug,
   hideUntaggedWarning = false,
+  titleAside,
 }: {
   lessonId: string;
   title: string;
@@ -59,6 +60,8 @@ export default function LessonHeader({
   modules?: ModuleRef[];
   courseSlug?: string;
   hideUntaggedWarning?: boolean;
+  /** Góc phải hàng tiêu đề (ở trang sửa bài: công tắc Sửa/Xem trước). */
+  titleAside?: React.ReactNode;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -194,7 +197,21 @@ export default function LessonHeader({
   if (showTitle) {
     return (
       <header className="space-y-1.5">
-        <h2 className="text-2xl font-bold leading-tight">{title}</h2>
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+          <div className="flex min-w-[14rem] flex-1 items-start gap-2">
+            <h2 className="min-w-0 text-2xl font-bold leading-tight">{title}</h2>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              title="Sửa tên và mô tả bài"
+              aria-label="Sửa tên và mô tả bài"
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-brand-soft hover:text-brand-700"
+            >
+              <Pencil className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
+          {titleAside}
+        </div>
         <LessonMetaBar
           lessonId={lessonId}
           order={order}
@@ -203,7 +220,6 @@ export default function LessonHeader({
           previewable={previewable}
           tags={tags}
           title={title}
-          onEdit={() => setEditing(true)}
           moduleId={moduleId}
           siblingLessonIds={siblingLessonIds}
           modules={modules}

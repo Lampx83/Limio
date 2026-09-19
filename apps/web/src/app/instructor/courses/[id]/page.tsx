@@ -23,7 +23,8 @@ import ArchiveCourseButton from "./ArchiveCourseButton";
 import DeleteCourseButton from "./DeleteCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
 import ImportStudentsButton from "./ImportStudentsButton";
-import LessonTopBar from "./LessonTopBar";
+import LessonViewToggle from "./LessonViewToggle";
+import EditorSidebar from "./EditorSidebar";
 import EditorNavProgress from "./EditorNavProgress";
 import EditorTabs, { type EditorTab } from "./EditorTabs";
 import EnrollmentList from "./EnrollmentList";
@@ -402,7 +403,21 @@ export default async function InstructorCourseEditPage({
 
       {/* TAB: Nội dung */}
       {tab === "content" && (
-        <div className="mt-6" data-editor-body>
+        <div
+          className={selectedLesson && selectedModule ? "mt-6 md:flex md:gap-5 lg:gap-6" : "mt-6"}
+          data-editor-body
+        >
+          {/* Sidebar outline chỉ hiện khi đang sửa một bài: tổng quan nội dung
+              đã là danh sách đầy đủ nên không cần thêm một bản nữa. */}
+          {selectedLesson && selectedModule && (
+            <EditorSidebar
+              courseId={course.id}
+              modules={sidebarModules}
+              activeLessonId={selectedLesson.id}
+              view="edit"
+            />
+          )}
+
           <div className="min-w-0 flex-1">
             {selectedLesson && selectedModule && (
               /* key: pane sửa bài học giữ nguyên vị trí trong cây khi đổi
@@ -410,11 +425,6 @@ export default async function InstructorCourseEditPage({
                  form sửa còn nguyên title/ORDER của bài trước, bấm Lưu là
                  ghi ORDER cũ, đụng unique (moduleId, orderIndex) → 500 câm. */
               <article key={selectedLesson.id} className="space-y-5">
-                <LessonTopBar
-                  courseId={course.id}
-                  modules={sidebarModules}
-                  activeLessonId={selectedLesson.id}
-                />
                 <div
                   data-view={lessonView}
                   className={`rounded-2xl border p-5 sm:p-6 ${
@@ -435,6 +445,7 @@ export default async function InstructorCourseEditPage({
                       title: m.title,
                     }))}
                     hideUntaggedWarning={!course.personalizationEnabled}
+                    titleAside={<LessonViewToggle />}
                   />
                 </div>
                 <nav className="flex items-center justify-between gap-3" aria-label="Chuyển bài">

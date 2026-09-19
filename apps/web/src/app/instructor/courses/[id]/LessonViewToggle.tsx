@@ -1,56 +1,49 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Eye, X } from "lucide-react";
 
-type LessonView = "edit" | "preview";
-
+/**
+ * Nút vào/thoát chế độ xem trước của bài. Là NÚT có động từ chứ không phải
+ * công tắc: "Xem như học viên" để vào, "Thoát xem trước" để quay lại soạn bài.
+ * Trạng thái nằm trong URL (`lessonView=preview`) nên tải lại trang hay gửi
+ * link vẫn giữ nguyên chế độ.
+ */
 export default function LessonViewToggle() {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
-  const current: LessonView =
-    search.get("lessonView") === "preview" ? "preview" : "edit";
+  const previewing = search.get("lessonView") === "preview";
 
-  function setView(next: LessonView) {
-    if (next === current) return;
+  function go() {
     const params = new URLSearchParams(search.toString());
-    if (next === "preview") params.set("lessonView", "preview");
-    else params.delete("lessonView");
+    if (previewing) params.delete("lessonView");
+    else params.set("lessonView", "preview");
     router.replace(`${pathname}?${params.toString()}`);
   }
 
-  const items: Array<{ value: LessonView; label: string }> = [
-    { value: "edit", label: "Sửa" },
-    { value: "preview", label: "Xem trước" },
-  ];
-
   return (
-    <div
-      role="radiogroup"
-      aria-label="Chế độ xem bài học"
+    <button
+      type="button"
       data-view-keep
-      className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5"
+      onClick={go}
+      title={
+        previewing
+          ? "Quay lại chế độ soạn bài"
+          : "Xem bài đúng như học viên sẽ thấy (các nút sửa sẽ ẩn)"
+      }
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+        previewing
+          ? "border-lime-600 bg-lime-600 text-white hover:bg-lime-700"
+          : "border-token bg-[rgb(var(--surface))] text-[rgb(var(--text))] hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+      }`}
     >
-      {items.map((it) => {
-        const active = current === it.value;
-        return (
-          <button
-            key={it.value}
-            type="button"
-            role="radio"
-            data-view-keep
-            aria-checked={active}
-            onClick={() => setView(it.value)}
-            className={`inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-              active
-                ? "bg-brand-gradient text-white shadow-sm"
-                : "text-muted hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-            }`}
-          >
-            {it.label}
-          </button>
-        );
-      })}
-    </div>
+      {previewing ? (
+        <X className="h-4 w-4" aria-hidden />
+      ) : (
+        <Eye className="h-4 w-4" aria-hidden />
+      )}
+      {previewing ? "Thoát xem trước" : "Xem như học viên"}
+    </button>
   );
 }

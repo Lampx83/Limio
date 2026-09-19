@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type ComponentType, type SVGProps } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Pencil,
   MoreVertical,
   Copy,
   ArrowUp,
@@ -11,10 +10,6 @@ import {
   Shuffle,
   ChevronRight,
   Trash2,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
@@ -26,7 +21,6 @@ interface ModuleRef {
 export default function LessonActionMenu({
   lessonId,
   title,
-  onEdit,
   moduleId,
   siblingLessonIds,
   modules,
@@ -39,7 +33,6 @@ export default function LessonActionMenu({
 }: {
   lessonId: string;
   title: string;
-  onEdit: () => void;
   /** Current parent module id — used to filter "move to" target list. */
   moduleId?: string;
   /** Ordered ids of lessons in current module — used for up/down. */
@@ -154,23 +147,14 @@ export default function LessonActionMenu({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={onEdit}
-        className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
-        title="Sửa lesson (tiêu đề, mô tả, order)"
-        aria-label="Sửa lesson"
-      >
-        <Pencil className="h-4 w-4" aria-hidden />
-      </button>
       <div ref={ref} className="relative">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           disabled={busy}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-default disabled:opacity-50"
-          title="Hành động khác (duplicate, di chuyển, xoá)"
-          aria-label="Menu hành động"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-default disabled:opacity-50"
+          title="Thêm hành động: sửa tên, ẩn/khoá, di chuyển, xoá"
+          aria-label="Thêm hành động"
           aria-haspopup="menu"
           aria-expanded={open}
         >
@@ -179,50 +163,42 @@ export default function LessonActionMenu({
         {open && (
           <div
             role="menu"
-            className="absolute right-0 top-full z-30 mt-1 min-w-[240px] rounded-xl border border-token bg-[rgb(var(--surface))] py-1 shadow-2xl"
+            className="fixed inset-x-4 bottom-4 z-50 max-h-[75vh] overflow-y-auto rounded-xl border border-token bg-[rgb(var(--surface))] py-1 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:z-30 sm:mt-1 sm:max-h-none sm:w-72 sm:overflow-visible"
           >
-            {onToggleHidden && (
-              <MenuItem
-                Icon={isHidden ? EyeOff : Eye}
-                label={isHidden ? "Đang ẩn với học viên" : "Đang hiện với học viên"}
-                hint={isHidden ? "Bấm để hiện" : "Bấm để ẩn"}
-                onClick={() => {
-                  onToggleHidden();
-                  close();
-                }}
-                tone={isHidden ? "danger" : undefined}
-              />
-            )}
-            {onToggleLocked && (
-              <MenuItem
-                Icon={isLocked ? Lock : Unlock}
-                label={isLocked ? "Đang khoá nội dung" : "Nội dung đang mở"}
-                hint={isLocked ? "Bấm để mở" : "Bấm để khoá"}
-                onClick={() => {
-                  onToggleLocked();
-                  close();
-                }}
-              />
-            )}
-            {onTogglePreviewable && (
-              <MenuItem
-                Icon={previewable ? Eye : EyeOff}
-                label={
-                  previewable
-                    ? "Người chưa ghi danh xem thử được"
-                    : "Chỉ học viên đã ghi danh xem được"
-                }
-                hint={previewable ? "Bấm để tắt xem thử" : "Bấm để mở xem thử"}
-                onClick={() => {
-                  onTogglePreviewable();
-                  close();
-                }}
-              />
-            )}
             {(onToggleHidden || onToggleLocked || onTogglePreviewable) && (
-              <div role="separator" className="my-1 border-t border-token" />
+              <>
+                <p className="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                  Hiển thị với học viên
+                </p>
+                {onToggleHidden && (
+                  <MenuSwitch
+                    label="Hiện bài này"
+                    desc="Tắt để ẩn hoàn toàn khỏi học viên"
+                    checked={!isHidden}
+                    onChange={onToggleHidden}
+                  />
+                )}
+                {onToggleLocked && (
+                  <MenuSwitch
+                    label="Khoá nội dung"
+                    desc="Học viên thấy tên bài nhưng chưa mở được"
+                    checked={!!isLocked}
+                    onChange={onToggleLocked}
+                    disabled={isHidden}
+                  />
+                )}
+                {onTogglePreviewable && (
+                  <MenuSwitch
+                    label="Cho xem thử"
+                    desc="Người chưa ghi danh cũng xem được bài này"
+                    checked={!!previewable}
+                    onChange={onTogglePreviewable}
+                  />
+                )}
+                <div role="separator" className="my-1 border-t border-token" />
+              </>
             )}
-            <MenuItem Icon={Copy} label="Duplicate lesson" onClick={duplicate} />
+            <MenuItem Icon={Copy} label="Nhân bản bài" onClick={duplicate} />
             {siblingLessonIds && (
               <>
                 <MenuItem
@@ -277,7 +253,7 @@ export default function LessonActionMenu({
             <div role="separator" className="my-1 border-t border-token" />
             <MenuItem
               Icon={Trash2}
-              label="Xóa lesson"
+              label="Xóa bài học"
               onClick={remove}
               danger
             />
@@ -322,6 +298,48 @@ function MenuItem({
       <Icon className="h-4 w-4 shrink-0" aria-hidden />
       <span className="flex-1">{label}</span>
       {hint && <span className="text-xs text-faint">{hint}</span>}
+    </button>
+  );
+}
+
+function MenuSwitch({
+  label,
+  desc,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  desc: string;
+  checked: boolean;
+  onChange: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitemcheckbox"
+      aria-checked={checked}
+      onClick={onChange}
+      disabled={disabled}
+      className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm">{label}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-muted">{desc}</span>
+      </span>
+      <span
+        aria-hidden
+        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+          checked ? "bg-lime-600" : "bg-slate-300 dark:bg-slate-600"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${
+            checked ? "left-[18px]" : "left-0.5"
+          }`}
+        />
+      </span>
     </button>
   );
 }

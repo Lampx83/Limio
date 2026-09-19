@@ -28,7 +28,6 @@ export default function LessonMetaBar({
   previewable: initialPreviewable,
   tags,
   title,
-  onEdit,
   moduleId,
   siblingLessonIds,
   modules,
@@ -42,7 +41,6 @@ export default function LessonMetaBar({
   previewable: boolean;
   tags: Tag[];
   title?: string;
-  onEdit?: () => void;
   /** Có slug thì hiện nút mở thẳng chế độ giảng dạy của bài này. */
   courseSlug?: string;
   moduleId?: string;
@@ -182,12 +180,10 @@ export default function LessonMetaBar({
       </div>
       )}
 
-      {onEdit && (
-        <div className="ml-auto inline-flex items-center gap-1">
-          <LessonActionMenu
+      <div className="ml-auto inline-flex items-center gap-1">
+        <LessonActionMenu
             lessonId={lessonId}
             title={title ?? ""}
-            onEdit={onEdit}
             moduleId={moduleId}
             siblingLessonIds={siblingLessonIds}
             modules={modules}
@@ -199,7 +195,6 @@ export default function LessonMetaBar({
             onTogglePreviewable={togglePreviewable}
           />
         </div>
-      )}
     </div>
   );
 }

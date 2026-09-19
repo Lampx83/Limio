@@ -181,12 +181,10 @@ export default function CourseMetaForm({
     });
     setBusy(false);
     if (res.ok) {
-      // Trước đây lưu xong thu gọn form về thẻ tóm tắt — bản thân việc thu
-      // gọn LÀ tín hiệu "đã lưu". Giữ form mở lại (dễ sửa tiếp, dễ soi đúng
-      // cái vừa đổi) thì tín hiệu đó mất, nên phải nói ra bằng toast — không
-      // thì lưu thành công và lưu thất bại trông giống hệt nhau.
+      // Chuyển trang mất tín hiệu "form thu gọn = đã lưu", nên vẫn báo bằng toast.
       toast.success("Đã lưu thay đổi");
-      router.refresh();
+      // "Lưu và tiếp tục": thông tin khoá xong thì sang luôn danh sách module.
+      router.push(`/instructor/courses/${courseId}?tab=content`);
     } else {
       const data = await res.json().catch(() => ({}));
       toast.error("Lưu thất bại", {
@@ -399,7 +397,7 @@ export default function CourseMetaForm({
           Hủy
         </button>
         <button type="submit" disabled={busy} className="btn-primary">
-          {busy ? "Đang lưu..." : "Lưu thay đổi"}
+          {busy ? "Đang lưu..." : "Lưu và tiếp tục"}
         </button>
       </div>
     </form>

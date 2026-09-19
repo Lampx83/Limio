@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { FlaskConical, X, ListTree } from "lucide-react";
+import { FlaskConical, X, ListTree, Pencil } from "lucide-react";
+import { apiUrl } from "@/lib/apiUrl";
+import { toast } from "@/lib/toast";
 
 interface SidebarLesson {
   id: string;
@@ -97,20 +99,7 @@ export default function EditorSidebar({
           );
           return (
             <details key={m.id} open={moduleHasActive || mi < 3} className="group">
-              <summary className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted hover:bg-[rgb(var(--surface-muted))]">
-                <span className="text-faint group-open:rotate-90 transition-transform">
-                  ›
-                </span>
-                <span className="truncate">
-                  {mi + 1}. {m.title}
-                </span>
-                {m.isHidden && (
-                  <span
-                    className="ml-auto h-1.5 w-1.5 rounded-full bg-danger-500"
-                    title="Module ẩn"
-                  />
-                )}
-              </summary>
+              <ModuleSummary module={m} index={mi} />
               <ul className="mt-0.5 space-y-0.5 pl-4">
                 {m.lessons.length === 0 && (
                   <li className="px-3 py-1.5 text-xs text-faint">— chưa có bài</li>
@@ -126,7 +115,7 @@ export default function EditorSidebar({
                         prefetch={false}
                         className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors ${
                           active
-                            ? "bg-pink-50 font-medium text-pink-500 dark:bg-pink-500/10"
+                            ? "bg-brand-soft font-medium text-brand-700"
                             : "text-default hover:bg-[rgb(var(--surface-muted))]"
                         }`}
                       >
@@ -161,12 +150,12 @@ export default function EditorSidebar({
   return (
     <>
       {/* Desktop: inline sticky sidebar */}
-      <aside className="sticky top-4 hidden max-h-[calc(100vh-2rem)] w-64 flex-shrink-0 self-start overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 text-sm lg:block">
+      <aside className="sticky top-4 hidden max-h-[calc(100vh-2rem)] w-56 flex-shrink-0 self-start overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 text-sm md:block lg:w-64">
         {tree}
       </aside>
 
       {/*
-        Dưới `lg` thì sidebar thu thành ngăn kéo, và đây là nút mở nó.
+        Dưới `md` (768px) thì sidebar thu thành ngăn kéo, và đây là nút mở nó.
 
         Trước đây nút này là một thanh ngang chiếm hết bề rộng, dính trên đỉnh
         và ghi lại đúng tên bài mà breadcrumb ngay bên dưới đã ghi — hai dòng
@@ -179,14 +168,14 @@ export default function EditorSidebar({
         onClick={() => setDrawerOpen(true)}
         title={`Mở menu nội dung — đang xem: ${triggerLabel}`}
         aria-label="Mở menu nội dung khoá"
-        className="fixed bottom-4 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-brand-600 shadow-lg transition-transform hover:scale-105 lg:hidden"
+        className="fixed bottom-4 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-brand-600 shadow-lg transition-transform hover:scale-105 md:hidden"
       >
         <ListTree className="h-5 w-5" aria-hidden />
       </button>
 
       {/* Mobile: drawer overlay */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-40 flex lg:hidden" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-40 flex md:hidden" role="dialog" aria-modal="true">
           {/* Backdrop */}
           <button
             type="button"
@@ -214,5 +203,112 @@ export default function EditorSidebar({
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Hàng tên module trong sidebar. Rê chuột hiện bút chì để đổi tên ngay tại chỗ
+ * (Enter lưu, Esc hủy) — khỏi phải về tổng quan nội dung chỉ để sửa một cái tên.
+ * Nằm trong <summary>, nên mọi thao tác trên bút chì/ô nhập phải chặn hành vi
+ * gập/mở mặc định của <details>.
+ */
+function ModuleSummary({ module: m, index }: { module: SidebarModule; index: number }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(m.title);
+  const [busy, setBusy] = useState(false);
+  // Enter lưu xong thì ô nhập bị gỡ → onBlur bắn thêm một lần; cờ này chặn lưu đôi.
+  const saving = useRef(false);
+
+  async function save() {
+    if (saving.current) return;
+    const next = title.trim();
+    if (!next || next === m.title) {
+      setTitle(m.title);
+      setEditing(false);
+      return;
+    }
+    saving.current = true;
+    setBusy(true);
+    let ok = false;
+    try {
+      const res = await fetch(apiUrl(`/api/modules/${m.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: next }),
+      });
+      ok = res.ok;
+    } catch {
+      ok = false;
+    }
+    setBusy(false);
+    saving.current = false;
+    if (ok) {
+      setEditing(false);
+      toast.success("Đã đổi tên module");
+      router.refresh();
+    } else {
+      toast.error("Không đổi được tên module");
+    }
+  }
+
+  if (editing) {
+    return (
+      <summary
+        className="flex list-none items-center gap-2 rounded-lg px-3 py-1"
+        onClick={(e) => e.preventDefault()}
+      >
+        <span className="text-xs font-semibold text-muted">{index + 1}.</span>
+        <input
+          autoFocus
+          value={title}
+          disabled={busy}
+          maxLength={200}
+          onChange={(e) => setTitle(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            // Chặn phím Space kích hoạt gập/mở của <summary> khi đang gõ.
+            e.stopPropagation();
+            if (e.key === "Enter") {
+              e.preventDefault();
+              save();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              setTitle(m.title);
+              setEditing(false);
+            }
+          }}
+          onBlur={save}
+          aria-label="Tên module"
+          className="input !h-7 min-w-0 flex-1 !px-2 !py-0 text-sm font-medium normal-case tracking-normal"
+        />
+      </summary>
+    );
+  }
+
+  return (
+    <summary className="group/mod flex cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted hover:bg-[rgb(var(--surface-muted))]">
+      <span className="text-faint transition-transform group-open:rotate-90">›</span>
+      <span className="truncate" title={m.title}>
+        {index + 1}. {m.title}
+      </span>
+      {m.isHidden && (
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-danger-500" title="Module ẩn" />
+      )}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setTitle(m.title);
+          setEditing(true);
+        }}
+        title="Đổi tên module"
+        aria-label={`Đổi tên module ${m.title}`}
+        className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-faint opacity-0 transition-opacity hover:bg-brand-soft hover:text-brand-700 focus:opacity-100 group-hover/mod:opacity-100 max-md:opacity-100"
+      >
+        <Pencil className="h-3.5 w-3.5" aria-hidden />
+      </button>
+    </summary>
   );
 }
