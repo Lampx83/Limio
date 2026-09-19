@@ -655,7 +655,16 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       </main>
 
 
-      {canQr && runtime && ((mode === "audience" && qrRemote) || (slideshow && qrBig)) && (
+      {slideshow && canQr && runtime && (
+        <SlideshowQr
+          url={shareUrl(runtime.joinPath)}
+          code={runtime.kind === "collaborate_board" ? runtime.code : undefined}
+          big={qrBig}
+          onToggle={() => setQrBig((v) => !v)}
+        />
+      )}
+
+      {canQr && runtime && mode === "audience" && qrRemote && (
         <JoinEnlarged
           url={shareUrl(runtime.joinPath)}
           code={runtime.kind === "collaborate_board" ? runtime.code : undefined}
@@ -727,18 +736,43 @@ function ToolbarButton({
 
 // Focus mode bỏ cột bên phải nhưng học viên vẫn cần QR để vào slide: thu nhỏ
 // thành thẻ ở góc dưới phải, bấm để phóng to cho cả lớp quét.
-function JoinEnlarged({ url, code, onClose }: { url: string; code?: string; onClose: () => void }) {
+// Chế độ Trình chiếu (Từ đầu / Từ slide này — 1 cửa sổ): QR nằm ở góc dưới phải cho slide có học
+// viên tham gia; bấm vào (hoặc phím Q) để phóng to, bấm lần nữa để thu nhỏ.
+function SlideshowQr({ url, code, big, onToggle }: { url: string; code?: string; big: boolean; onToggle: () => void }) {
+  if (big) return <JoinEnlarged url={url} code={code} onClose={onToggle} />;
   return (
-    <div className="fixed inset-0 z-[140] flex animate-overlay-in items-center justify-center bg-black/60 p-6" onClick={onClose}>
-      <div className="animate-dialog-in rounded-3xl bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <QRCode value={url} size={Math.min(460, typeof window !== "undefined" ? window.innerHeight - 300 : 400)} level="M" />
+    <button
+      onClick={onToggle}
+      aria-label="Phóng to mã QR"
+      title="Bấm để phóng to (Q)"
+      className="fixed bottom-6 right-6 z-[105] flex flex-col items-center gap-2 rounded-2xl bg-white p-3 shadow-2xl ring-1 ring-black/10 transition hover:shadow-xl"
+    >
+      <QRCode value={url} size={104} level="M" />
+      {code && <span className="font-mono text-base font-extrabold leading-none tracking-[0.2em] text-[#20241F]">{code}</span>}
+    </button>
+  );
+}
+
+// QR phóng to = popup giữa màn hình: nền mờ nhẹ và khung trong suốt 50% để vẫn thấy nội dung slide
+// bên dưới; riêng ô chứa mã QR luôn nền trắng đặc để máy quét đọc được.
+function JoinEnlarged({ url, code, onClose }: { url: string; code?: string; onClose: () => void }) {
+  const qrSize = Math.min(380, typeof window !== "undefined" ? window.innerHeight - 260 : 340);
+  return (
+    <div className="fixed inset-0 z-[140] flex animate-overlay-in items-center justify-center bg-black/25 p-6" onClick={onClose}>
+      <div
+        className="animate-dialog-in rounded-3xl bg-white/50 p-5 text-center shadow-2xl ring-1 ring-white/60 backdrop-blur-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto w-fit rounded-2xl bg-white p-3 shadow-sm">
+          <QRCode value={url} size={qrSize} level="M" />
+        </div>
         {code && (
           <>
-            <p className="mt-5 text-xs font-bold uppercase tracking-wide text-[#6B7268]">Mã tham gia</p>
+            <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#20241F]/70">Mã tham gia</p>
             <p className="font-mono text-5xl font-extrabold tracking-[0.25em] text-[#20241F]">{code}</p>
           </>
         )}
-        <p className="mt-4 max-w-[460px] break-all text-lg font-semibold text-[#20241F]">{url}</p>
+        <p className="mt-3 max-w-[420px] break-all text-base font-semibold text-[#20241F]">{url}</p>
         <button onClick={onClose} className="btn-secondary mt-4 text-sm">
           Đóng
         </button>
