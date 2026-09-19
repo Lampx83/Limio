@@ -6,11 +6,13 @@ export default function Tooltip({
   label,
   description,
   align = "center",
+  side = "bottom",
   children,
 }: {
   label: string;
   description?: string;
   align?: "center" | "end";
+  side?: "bottom" | "right";
   children: React.ReactNode;
 }) {
   return (
@@ -18,8 +20,10 @@ export default function Tooltip({
       {children}
       <span
         role="tooltip"
-        className={`pointer-events-none absolute top-full z-50 mt-2 w-max max-w-[240px] rounded-lg bg-[#20241F] px-3 py-2 text-left text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
-          align === "end" ? "right-0" : "left-1/2 -translate-x-1/2"
+        className={`pointer-events-none absolute z-50 w-max max-w-[240px] rounded-lg bg-[#20241F] px-3 py-2 text-left text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 ${
+          side === "right"
+            ? "left-full top-1/2 ml-2 -translate-y-1/2"
+            : `top-full mt-2 ${align === "end" ? "right-0" : "left-1/2 -translate-x-1/2"}`
         }`}
       >
         <span className="block text-xs font-semibold leading-tight">{label}</span>

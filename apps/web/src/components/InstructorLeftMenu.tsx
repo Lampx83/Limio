@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useActiveNavSectionOverride } from "@/lib/activeNavSection";
 import PanelToggle from "@/components/ui/PanelToggle";
+import Tooltip from "@/components/ui/Tooltip";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -23,6 +24,7 @@ import {
   BarChart3,
   Menu,
   X,
+  Loader2,
   CalendarCheck,
   Library,
   LayoutGrid,
@@ -269,10 +271,14 @@ export default function InstructorLeftMenu({
   // Bấm module → rail + cột tên mục đổi NGAY (lạc quan), không đợi route mới tải xong;
   // pathname đổi (kể cả bị redirect về chỗ khác) thì bỏ trạng thái chờ, lấy theo URL thật.
   const [pendingModuleId, setPendingModuleId] = useState<string | null>(null);
+  // Tương tự cho mục trong cột tên mục: sáng ngay + quay spinner tới khi trang mới sẵn sàng
+  // (trang nặng như Công cụ giảng dạy có thể mất vài giây, trước đây bấm xong không thấy gì).
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
     setMobileOpen(false);
     setPendingModuleId(null);
+    setPendingHref(null);
   }, [pathname]);
 
   // Cột tên mục của module gấp/mở được (rail icon luôn hiện). Trang soạn
@@ -301,6 +307,7 @@ export default function InstructorLeftMenu({
 
   const isActive = (href?: string) => {
     if (!href) return false;
+    if (pendingHref) return href === pendingHref;
     if (/^\/instructor\/courses\/[^/]+\/exams(\/|$)/.test(pathname)) {
       return href === (navOverride ?? "/instructor/exams");
     }
@@ -328,12 +335,12 @@ export default function InstructorLeftMenu({
               className="absolute left-0 top-0 h-full w-72 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] p-3 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <ItemList items={PROCTOR_ONLY_ITEMS} isActive={isActive} colors={NEUTRAL_COLORS} />
+              <ItemList items={PROCTOR_ONLY_ITEMS} isActive={isActive} colors={NEUTRAL_COLORS} pendingHref={pendingHref} onNavigate={setPendingHref} />
             </aside>
           </div>
         )}
         <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] p-3 lg:block">
-          <ItemList items={PROCTOR_ONLY_ITEMS} isActive={isActive} colors={NEUTRAL_COLORS} />
+          <ItemList items={PROCTOR_ONLY_ITEMS} isActive={isActive} colors={NEUTRAL_COLORS} pendingHref={pendingHref} onNavigate={setPendingHref} />
         </aside>
       </>
     );
@@ -385,7 +392,7 @@ export default function InstructorLeftMenu({
           </span>
         )}
       </div>
-      <ItemList items={activeModule.items} isActive={isActive} colors={activeModule.colors} />
+      <ItemList items={activeModule.items} isActive={isActive} colors={activeModule.colors} pendingHref={pendingHref} onNavigate={setPendingHref} />
     </div>
   ) : null;
 
@@ -467,13 +474,14 @@ function ModuleRail({
   onHover: (href: string) => void;
 }) {
   return (
-    <div className="flex w-16 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] py-4">
+    <div className="flex w-16 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r border-token bg-[rgb(var(--surface-muted))] py-4 lg:overflow-visible">
       <RailButton
         href="/instructor/dashboard"
         label="Trang chủ"
         icon={LayoutDashboard}
         isActive={activeModuleId === "home"}
-        railClass="bg-[rgb(var(--text))]"
+        railClass="bg-brand-600"
+        description="Tổng quan việc cần xử lý"
         onSelect={() => onSelect("home")}
         onHover={onHover}
       />
@@ -488,6 +496,7 @@ function ModuleRail({
           isActive={activeModuleId === m.id}
           railClass={m.colors.rail}
           premium={m.premium}
+          description={m.premium ? "Tính năng Premium" : undefined}
           onSelect={() => onSelect(m.id)}
           onHover={onHover}
         />
@@ -505,6 +514,7 @@ function RailButton({
   isActive,
   railClass,
   premium,
+  description,
   onSelect,
   onHover,
 }: {
@@ -515,39 +525,41 @@ function RailButton({
   isActive: boolean;
   railClass: string;
   premium?: boolean;
+  description?: string;
   onSelect: () => void;
   onHover: (href: string) => void;
 }) {
   return (
-    <Link
-      href={href}
-      onClick={onSelect}
-      onMouseEnter={() => onHover(href)}
-      onFocus={() => onHover(href)}
-      title={premium ? `${label} — Premium` : label}
-      aria-label={premium ? `${label} — Premium` : label}
-      aria-current={isActive ? "page" : undefined}
-      prefetch={false}
-      className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-transform hover:scale-105"
-    >
-      {/* Đơn sắc lúc chưa chọn — chỉ module đang active mới lên màu riêng,
-          tránh rail lúc nào cũng "sặc sỡ" cả 6 màu cùng lúc. */}
-      <span
-        className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-200 ${
-          isActive ? `${railClass} shadow-sm` : "group-hover:bg-[rgb(var(--surface))]"
-        }`}
+    <Tooltip label={label} description={description} side="right">
+      <Link
+        href={href}
+        onClick={onSelect}
+        onMouseEnter={() => onHover(href)}
+        onFocus={() => onHover(href)}
+        aria-label={premium ? `${label} — Premium` : label}
+        aria-current={isActive ? "page" : undefined}
+        prefetch={false}
+        className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-transform hover:scale-105"
       >
-        <Icon size={iconSize} className={isActive ? "text-white" : "text-[rgb(var(--text-muted))]"} strokeWidth={isActive ? 2.25 : 2} />
-      </span>
-      {premium && (
-        // Huy hiệu vàng cố định (cùng tông pill "Premium" ở sidebar) — không
-        // dùng gradient brand vì nó xung đột với màu riêng của từng module
-        // (hồng Limio-Live, tím Vấn đáp AI). Vàng đứng riêng nên hợp cả hai.
-        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-sm ring-2 ring-[rgb(var(--surface-muted))]">
-          <Crown size={10} className="text-amber-950" fill="currentColor" strokeWidth={2} />
+        {/* Đơn sắc lúc chưa chọn — chỉ module đang active mới lên màu riêng,
+            tránh rail lúc nào cũng "sặc sỡ" cả 6 màu cùng lúc. */}
+        <span
+          className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-200 ${
+            isActive ? `${railClass} shadow-sm` : "group-hover:bg-[rgb(var(--surface))]"
+          }`}
+        >
+          <Icon size={iconSize} className={isActive ? "text-white" : "text-[rgb(var(--text-muted))]"} strokeWidth={isActive ? 2.25 : 2} />
         </span>
-      )}
-    </Link>
+        {premium && (
+          // Huy hiệu vàng cố định (cùng tông pill "Premium" ở sidebar) — không
+          // dùng gradient brand vì nó xung đột với màu riêng của từng module
+          // (hồng Limio-Live, tím Vấn đáp AI). Vàng đứng riêng nên hợp cả hai.
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-sm ring-2 ring-[rgb(var(--surface-muted))]">
+            <Crown size={10} className="text-amber-950" fill="currentColor" strokeWidth={2} />
+          </span>
+        )}
+      </Link>
+    </Tooltip>
   );
 }
 
@@ -557,10 +569,14 @@ function ItemList({
   items,
   isActive,
   colors,
+  pendingHref,
+  onNavigate,
 }: {
   items: Item[];
   isActive: (href?: string) => boolean;
   colors: ModuleColors;
+  pendingHref: string | null;
+  onNavigate: (href: string) => void;
 }) {
   return (
     <ul className="space-y-0.5">
@@ -573,7 +589,7 @@ function ItemList({
                 {it.section}
               </p>
             )}
-            <ItemRow item={it} active={isActive(it.href)} colors={colors} />
+            <ItemRow item={it} active={isActive(it.href)} colors={colors} pending={!!it.href && it.href === pendingHref} onNavigate={onNavigate} />
           </li>
         );
       })}
@@ -581,7 +597,19 @@ function ItemList({
   );
 }
 
-function ItemRow({ item, active, colors }: { item: Item; active: boolean; colors: ModuleColors }) {
+function ItemRow({
+  item,
+  active,
+  colors,
+  pending,
+  onNavigate,
+}: {
+  item: Item;
+  active: boolean;
+  colors: ModuleColors;
+  pending: boolean;
+  onNavigate: (href: string) => void;
+}) {
   const Icon = item.icon;
   const baseRow = "group/item relative flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1 text-sm transition-colors";
   const iconCircle = `flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${colors.itemIconBg}`;
@@ -606,6 +634,8 @@ function ItemRow({ item, active, colors }: { item: Item; active: boolean; colors
   return (
     <Link
       href={item.href}
+      onClick={() => onNavigate(item.href!)}
+      aria-busy={pending}
       className={`${baseRow} ${
         active ? `${colors.itemActiveBg} ${colors.itemActiveText} font-semibold shadow-sm` : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
       }`}
@@ -613,7 +643,11 @@ function ItemRow({ item, active, colors }: { item: Item; active: boolean; colors
     >
       {active && <span className={`absolute inset-y-1 left-0 w-1 rounded-r-full ${colors.rail}`} />}
       <span className={iconCircle}>
-        <Icon size={14} className={colors.itemIconFg} strokeWidth={active ? 2.5 : 2} />
+        {pending ? (
+          <Loader2 size={14} className={`${colors.itemIconFg} animate-spin`} />
+        ) : (
+          <Icon size={14} className={colors.itemIconFg} strokeWidth={active ? 2.5 : 2} />
+        )}
       </span>
       <span className="flex-1 truncate">{item.label}</span>
     </Link>
