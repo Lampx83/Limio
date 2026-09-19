@@ -58,12 +58,12 @@ export default function LessonTopBar({
   const hrefFor = (id: string) => `${base}?tab=content&lesson=${id}${preview}`;
 
   let activeNumber = "";
-  let activeTitle = "";
+  let activeModuleTitle = "";
   modules.forEach((m, mi) =>
     m.lessons.forEach((l, li) => {
       if (l.id === activeLessonId) {
         activeNumber = `${mi + 1}.${li + 1}`;
-        activeTitle = l.title;
+        activeModuleTitle = m.title;
       }
     }),
   );
@@ -89,8 +89,9 @@ export default function LessonTopBar({
           title="Chọn bài khác"
           className="flex max-w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[rgb(var(--surface-muted))]"
         >
-          <span className="text-sm text-muted">{activeNumber}</span>
-          <span className="truncate text-base font-semibold">{activeTitle}</span>
+          <span className="hidden truncate text-sm text-muted sm:inline">{activeModuleTitle}</span>
+          <span className="hidden text-faint sm:inline" aria-hidden>›</span>
+          <span className="shrink-0 text-sm font-semibold">Bài {activeNumber}</span>
           <ChevronDown className="h-4 w-4 shrink-0 text-muted" aria-hidden />
         </button>
 

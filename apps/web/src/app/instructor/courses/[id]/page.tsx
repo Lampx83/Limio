@@ -417,7 +417,7 @@ export default async function InstructorCourseEditPage({
                 />
                 <div
                   data-view={lessonView}
-                  className={`rounded-2xl border-2 p-6 ${
+                  className={`rounded-2xl border p-5 sm:p-6 ${
                     selectedLesson.isHidden
                       ? "border-danger-200 bg-danger-50/30"
                       : "border-token bg-[rgb(var(--surface))]"

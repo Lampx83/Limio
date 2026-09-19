@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, AlertTriangle, Presentation, Lock } from "lucide-react";
+import { isAutoLessonSkillCode } from "@feedbackme/shared-types";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillTagsEditor from "./SkillTagsEditor";
 import LessonActionMenu from "./LessonActionMenu";
@@ -104,66 +105,40 @@ export default function LessonMetaBar({
   const noSkill = tags.length === 0;
   const showSkillsCluster = !(noSkill && hideUntaggedWarning);
 
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
-      {typeof order === "number" && (
-        <span className="text-faint">Lesson {order}</span>
-      )}
+  const manualCodes = tags.filter((t) => !isAutoLessonSkillCode(t.code)).map((t) => t.code);
 
-      {onEdit && (
-        <>
-          <Sep />
-          <div className="inline-flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
-            <LessonActionMenu
-              lessonId={lessonId}
-              title={title ?? ""}
-              onEdit={onEdit}
-              moduleId={moduleId}
-              siblingLessonIds={siblingLessonIds}
-              modules={modules}
-              isHidden={isHidden}
-              isLocked={isLocked}
-              previewable={previewable}
-              onToggleHidden={toggleHidden}
-              onToggleLocked={toggleLocked}
-              onTogglePreviewable={togglePreviewable}
-            />
-          </div>
-        </>
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+      {isHidden && (
+        <span className="chip-danger" title="Bài đang ẩn với học viên">
+          Đang ẩn
+        </span>
       )}
 
       {isLocked && !isHidden && (
-        <>
-          <Sep />
-          <span
-            className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 font-medium text-accent-700"
-            title="Học viên thấy tên bài kèm ổ khoá, nhưng không mở được nội dung"
-          >
-            <Lock className="h-3 w-3" aria-hidden />
-            Đang khoá
-          </span>
-        </>
+        <span
+          className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 font-medium text-accent-700"
+          title="Học viên thấy tên bài kèm ổ khoá, nhưng không mở được nội dung"
+        >
+          <Lock className="h-3 w-3" aria-hidden />
+          Đang khoá
+        </span>
       )}
 
       {courseSlug && (
-        <>
-          <Sep />
-          {/* Soạn xong là dạy được ngay, không phải tự dò đường sang trang học
-              viên rồi thêm tay ?gv=1. Mở tab mới để trang soạn còn nguyên. */}
-          <Link
-            href={`/learn/${courseSlug}/lessons/${lessonId}?gv=1`}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-2.5 py-0.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
-            title="Mở bài này ở chế độ giảng dạy (thanh giảng viên, ghi chú, màn chiếu) trong tab mới"
-          >
-            <Presentation className="h-3.5 w-3.5" aria-hidden />
-            Trình chiếu
-          </Link>
-        </>
+        // Soạn xong là dạy được ngay, không phải tự dò đường sang trang học
+        // viên rồi thêm tay ?gv=1. Mở tab mới để trang soạn còn nguyên.
+        <Link
+          href={`/learn/${courseSlug}/lessons/${lessonId}?gv=1`}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-2.5 py-0.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
+          title="Mở bài này ở chế độ giảng dạy (thanh giảng viên, ghi chú, màn chiếu) trong tab mới"
+        >
+          <Presentation className="h-3.5 w-3.5" aria-hidden />
+          Trình chiếu
+        </Link>
       )}
-
-      {showSkillsCluster && <Sep />}
 
       {/* Skills cluster — hidden when course personalization is off and no tags */}
       {showSkillsCluster && (
@@ -188,13 +163,12 @@ export default function LessonMetaBar({
           ) : (
             <>
               <span>{tags.length} skill{tags.length > 1 ? "s" : ""}</span>
-              <span className="hidden sm:inline text-faint">
-                {tags
-                  .slice(0, 2)
-                  .map((t) => t.code)
-                  .join(" · ")}
-                {tags.length > 2 && ` +${tags.length - 2}`}
-              </span>
+              {manualCodes.length > 0 && (
+                <span className="hidden sm:inline text-faint">
+                  {manualCodes.slice(0, 2).join(" · ")}
+                  {manualCodes.length > 2 && ` +${manualCodes.length - 2}`}
+                </span>
+              )}
             </>
           )}
           <ChevronDown className="h-3.5 w-3.5 text-faint" aria-hidden />
@@ -207,10 +181,25 @@ export default function LessonMetaBar({
         )}
       </div>
       )}
+
+      {onEdit && (
+        <div className="ml-auto inline-flex items-center gap-1">
+          <LessonActionMenu
+            lessonId={lessonId}
+            title={title ?? ""}
+            onEdit={onEdit}
+            moduleId={moduleId}
+            siblingLessonIds={siblingLessonIds}
+            modules={modules}
+            isHidden={isHidden}
+            isLocked={isLocked}
+            previewable={previewable}
+            onToggleHidden={toggleHidden}
+            onToggleLocked={toggleLocked}
+            onTogglePreviewable={togglePreviewable}
+          />
+        </div>
+      )}
     </div>
   );
-}
-
-function Sep() {
-  return <span aria-hidden className="text-faint">·</span>;
 }

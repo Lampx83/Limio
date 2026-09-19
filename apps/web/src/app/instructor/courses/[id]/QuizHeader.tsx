@@ -79,7 +79,7 @@ export function QuizActionButtons({
   }
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
+    <div className="inline-flex items-center gap-1 rounded-lg p-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-lg:opacity-100">
       <button
         type="button"
         onClick={toggleHidden}

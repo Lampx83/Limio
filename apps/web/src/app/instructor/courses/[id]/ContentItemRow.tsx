@@ -124,10 +124,6 @@ export default function ContentItemRow({ item }: { item: Item }) {
 
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2.5 transition-colors hover:border-brand-200">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-sm font-mono font-semibold text-faint tabular-nums">
-        {item.orderIndex}
-      </span>
-
       {/* Visual: thumbnail for video items, emoji for others */}
       {videoMeta?.thumbnailUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -157,7 +153,7 @@ export default function ContentItemRow({ item }: { item: Item }) {
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 rounded-lg border border-token bg-surface-2/50 p-0.5">
+      <div className="flex shrink-0 items-center gap-1 rounded-lg p-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-lg:opacity-100">
         <button
           type="button"
           onClick={toggleHidden}
