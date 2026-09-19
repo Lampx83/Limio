@@ -37,6 +37,17 @@ const ASSIGNABLE_ROLES: Array<{ value: string; label: string; hint: string }> = 
   },
 ];
 
+const AVATAR_TONES = [
+  "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+];
+
+function avatarTone(name: string): string {
+  const code = name.trim().toUpperCase().charCodeAt(0) || 0;
+  return AVATAR_TONES[code % AVATAR_TONES.length]!;
+}
+
 export default function InstructorsSection({
   courseId,
   isOwner,
@@ -155,11 +166,21 @@ export default function InstructorsSection({
           {rows.map((r) => (
             <li
               key={r.userId}
-              className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
+              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2.5"
             >
-              <div>
-                <p className="text-sm font-medium">{r.displayName || r.email}</p>
-                <p className="text-xs text-muted">{r.email}</p>
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                    r.role === "owner" ? "bg-lime-600 text-white" : avatarTone(r.displayName || r.email)
+                  }`}
+                  aria-hidden
+                >
+                  {(r.displayName || r.email).trim().charAt(0).toUpperCase()}
+                </span>
+                <p className="min-w-0 truncate text-sm">
+                  <span className="font-medium">{r.displayName || r.email}</span>
+                  {r.displayName && <span className="ml-2 text-xs text-muted">{r.email}</span>}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <span className={r.role === "owner" ? "chip-brand" : "chip"}>

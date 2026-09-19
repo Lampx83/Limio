@@ -72,9 +72,9 @@ export default function EditorTabs({
               aria-disabled="true"
               disabled
               title={LOCKED_TAB_MESSAGE}
-              className="-mb-px inline-flex shrink-0 cursor-not-allowed items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 border-transparent px-4 py-2.5 text-base font-medium text-muted opacity-60"
+              className="-mb-px inline-flex shrink-0 cursor-not-allowed items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 border-transparent px-3.5 py-2 text-sm font-medium text-muted opacity-60"
             >
-              <Icon className="h-5 w-5 shrink-0" aria-hidden />
+              <Icon className="h-4 w-4 shrink-0" aria-hidden />
               <span>{t.label}</span>
               <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
             </button>
@@ -88,14 +88,14 @@ export default function EditorTabs({
             aria-selected={isActive}
             href={`/instructor/courses/${courseId}?tab=${t.key}`}
             prefetch={false}
-            className={`-mb-px inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-4 py-2.5 text-base font-medium transition-all duration-150 ${
+            className={`-mb-px inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-3.5 py-2 text-sm font-medium transition-all duration-150 ${
               isActive
                 ? "border-brand-600 bg-[rgb(var(--brand-soft))] font-semibold text-brand-700 shadow-sm"
                 : "border-transparent text-muted hover:border-token hover:bg-[rgb(var(--surface-muted))] hover:text-default"
             }`}
           >
             <Icon
-              className={`h-5 w-5 shrink-0 transition-colors ${isActive ? "text-brand-600" : ""}`}
+              className={`h-4 w-4 shrink-0 transition-colors ${isActive ? "text-brand-600" : ""}`}
               aria-hidden
             />
             <span>{t.label}</span>

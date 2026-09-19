@@ -7,6 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 import { toast } from "@/lib/toast";
+import { BarChart3, Languages, Tag, Wallet, PencilLine, type LucideIcon } from "lucide-react";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -25,6 +26,25 @@ interface Initial {
   enrollMode: "open" | "invite_only";
 }
 
+const FACT_TONE: Record<string, { chip: string; icon: string }> = {
+  amber: {
+    chip: "bg-amber-50 dark:bg-amber-950/30",
+    icon: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  },
+  sky: {
+    chip: "bg-sky-50 dark:bg-sky-950/30",
+    icon: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  },
+  violet: {
+    chip: "bg-violet-50 dark:bg-violet-950/30",
+    icon: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  },
+  lime: {
+    chip: "bg-lime-50 dark:bg-lime-950/30",
+    icon: "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
+  },
+};
+
 export default function CourseMetaForm({
   courseId,
   initial,
@@ -34,6 +54,7 @@ export default function CourseMetaForm({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(plainToRichHtml(initial.description));
   const [level, setLevel] = useState(initial.level);
@@ -64,42 +85,58 @@ export default function CourseMetaForm({
         ? "Miễn phí"
         : `${Number(initial.priceCents).toLocaleString("vi-VN")} ${initial.currency || "VND"}`;
 
+    const longDesc = initial.description.length > 280;
+    const facts: Array<[LucideIcon, string, string, string]> = [
+      [BarChart3, "Level", LEVEL_LABEL[initial.level] ?? initial.level, "amber"],
+      [Languages, "Ngôn ngữ", initial.language === "vi" ? "Tiếng Việt" : "English", "sky"],
+      ...(initial.category ? ([[Tag, "Category", initial.category, "violet"]] as Array<[LucideIcon, string, string, string]>) : []),
+      [Wallet, "Giá", priceDisplay, "lime"],
+    ];
+
     return (
-      <div className="card space-y-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold leading-snug">{initial.title}</h3>
-            {initial.description && (
-              <SafeHtml
-                html={plainToRichHtml(initial.description)}
-                className="prose prose-sm mt-2 max-w-none text-muted dark:prose-invert"
-              />
-            )}
-          </div>
-          <button onClick={() => setOpen(true)} className="btn-secondary btn-sm shrink-0">
+      <div className="card relative overflow-hidden !p-4 pl-5">
+        <span className="absolute inset-y-0 left-0 w-1 bg-lime-500" aria-hidden />
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <dl className="flex flex-wrap items-center gap-2">
+            {facts.map(([Icon, k, v, tone]) => (
+              <div
+                key={k}
+                className={`flex items-center gap-2 rounded-lg py-1 pl-1 pr-3 ${FACT_TONE[tone]!.chip}`}
+              >
+                <span className={`flex h-7 w-7 items-center justify-center rounded-md ${FACT_TONE[tone]!.icon}`}>
+                  <Icon className="h-4 w-4" aria-hidden />
+                </span>
+                <div className="leading-tight">
+                  <dt className="text-[10px] font-medium uppercase tracking-wide text-faint">{k}</dt>
+                  <dd className="text-sm font-semibold">{v}</dd>
+                </div>
+              </div>
+            ))}
+          </dl>
+          <button onClick={() => setOpen(true)} className="btn-secondary btn-sm inline-flex shrink-0 items-center gap-1.5">
+            <PencilLine className="h-3.5 w-3.5" aria-hidden />
             Sửa
           </button>
         </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-token pt-4 text-sm sm:grid-cols-4">
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-faint">Level</dt>
-            <dd className="mt-0.5 font-medium">{LEVEL_LABEL[initial.level] ?? initial.level}</dd>
+        {initial.description && (
+          <div className="mt-3 border-t border-token pt-3">
+            <SafeHtml
+              html={plainToRichHtml(initial.description)}
+              className={`prose prose-sm max-w-none text-muted dark:prose-invert ${
+                longDesc && !descExpanded ? "line-clamp-3" : ""
+              }`}
+            />
+            {longDesc && (
+              <button
+                type="button"
+                onClick={() => setDescExpanded((v) => !v)}
+                className="link mt-1 text-xs font-medium"
+              >
+                {descExpanded ? "Thu gọn" : "Xem thêm"}
+              </button>
+            )}
           </div>
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-faint">Ngôn ngữ</dt>
-            <dd className="mt-0.5 font-medium">{initial.language === "vi" ? "Tiếng Việt" : "English"}</dd>
-          </div>
-          {initial.category && (
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-faint">Category</dt>
-              <dd className="mt-0.5 font-medium">{initial.category}</dd>
-            </div>
-          )}
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-faint">Giá</dt>
-            <dd className="mt-0.5 font-medium">{priceDisplay}</dd>
-          </div>
-        </dl>
+        )}
       </div>
     );
   }

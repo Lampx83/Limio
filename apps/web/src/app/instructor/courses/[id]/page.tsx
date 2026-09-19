@@ -29,7 +29,6 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
 import CourseAssignmentsBrowser from "../../assignments/CourseAssignmentsBrowser";
-import { ShareCard } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -226,26 +225,19 @@ export default async function InstructorCourseEditPage({
     <main
       className={
         useWideLayout
-          ? "mx-auto max-w-7xl px-6 py-10"
-          : "mx-auto max-w-5xl px-6 py-10"
+          ? "mx-auto max-w-7xl px-6 py-6"
+          : "mx-auto max-w-5xl px-6 py-6"
       }
     >
-      <Link
-        href="/instructor/courses"
-        className="link inline-flex items-center gap-1 text-sm"
-      >
-        ← Khóa của tôi
-      </Link>
-
       {/* Header — always visible across tabs */}
-      <header className="mt-4 space-y-3">
+      <header>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <div className="flex items-center gap-2">
-            <span className="chip-brand">Editor</span>
-            <span className={STATUS_TONE[course.status] ?? "chip"}>
-              {STATUS_LABEL[course.status] ?? course.status}
-            </span>
-          </div>
+          <Link
+            href="/instructor/courses"
+            className="link inline-flex items-center gap-1 text-sm"
+          >
+            ← Khóa của tôi
+          </Link>
           <div className="flex flex-wrap items-center gap-2">
             {course.personalizationEnabled ? (
               <span
@@ -271,11 +263,13 @@ export default async function InstructorCourseEditPage({
           </div>
         </div>
 
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="h-display text-3xl font-bold leading-tight sm:text-4xl">
-              {course.title}
-            </h1>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="h-display text-2xl font-bold leading-tight sm:text-3xl">
+            {course.title}
+          </h1>
+          <span className={STATUS_TONE[course.status] ?? "chip"}>
+            {STATUS_LABEL[course.status] ?? course.status}
+          </span>
             {/* Trình chiếu khoá học — mở ngay bài đầu tiên ở chế độ giảng dạy
                 trong tab mới, để trang soạn còn nguyên. */}
             {firstLessonId && (
@@ -290,24 +284,21 @@ export default async function InstructorCourseEditPage({
                 Trình chiếu khoá học
               </Link>
             )}
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-faint">
-            <code className="rounded bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono">
-              /{course.slug}
-            </code>
-            <span>·</span>
-            <span>v{course.version}</span>
-            <span>·</span>
-            <span>{course.modules.length} modules</span>
-            <span>·</span>
-            <span>{totalLessons} bài</span>
-            <span>·</span>
-            <span>{totalQuizzes} quizzes</span>
-          </div>
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-faint">
+          <span className="font-mono">/{course.slug}</span>
+          <span aria-hidden>·</span>
+          <span>v{course.version}</span>
+          <span aria-hidden>·</span>
+          <span>{course.modules.length} modules</span>
+          <span aria-hidden>·</span>
+          <span>{totalLessons} bài</span>
+          <span aria-hidden>·</span>
+          <span>{totalQuizzes} quizzes</span>
         </div>
       </header>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <EditorTabs
           courseId={course.id}
           active={tab}
@@ -318,18 +309,7 @@ export default async function InstructorCourseEditPage({
 
       {/* TAB: Tổng quan */}
       {tab === "overview" && (
-        <div className="mt-8 space-y-8">
-          {/* Chỉ khoá đã publish mới có link đưa ra ngoài — /catalog/<slug> của
-              khoá nháp thì người nhận mở ra không thấy gì. */}
-          {course.status === "published" && (
-            <ShareCard
-              path={`/catalog/${course.slug}`}
-              label="Link giới thiệu khoá học"
-              hint="Gửi cho người chưa có tài khoản cũng mở được — họ xem giới thiệu khoá rồi tự đăng ký."
-              fileName={course.slug}
-            />
-          )}
-
+        <div className="mt-5 space-y-6">
           {course.personalizationEnabled && untaggedLessonIds.length > 0 && (
             <div className="banner-warning">
               <span className="text-xl shrink-0" aria-hidden>⚠️</span>
@@ -390,10 +370,10 @@ export default async function InstructorCourseEditPage({
             )}
 
           <section>
-            <h2 className="mb-3 text-base font-semibold">Giảng viên</h2>
-            <p className="mb-3 text-sm text-muted">
-              Đồng giảng viên có toàn quyền sửa nội dung khóa như chủ khóa.
-              Chỉ chủ khóa mới thêm/gỡ được đồng giảng viên.
+            <h2 className="text-base font-semibold">Giảng viên</h2>
+            <p className="mb-3 mt-0.5 text-xs text-muted">
+              Đồng giảng viên có toàn quyền sửa nội dung như chủ khóa; chỉ chủ
+              khóa mới thêm/gỡ được.
             </p>
             <InstructorsSection courseId={course.id} isOwner={isOwner} />
           </section>
