@@ -122,6 +122,11 @@ export default function OralGradeForm({
           AI đề xuất
         </p>
         {suggestedScore !== null && (
+          <p className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+            Đã lưu điểm AI tạm — học viên chưa xem được
+          </p>
+        )}
+        {suggestedScore !== null && (
           <p className="mb-1.5 text-sm font-semibold">
             {suggestedScore} / 100 — kiểm tra trước khi chốt:
           </p>

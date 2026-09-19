@@ -354,8 +354,22 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
           <table className="w-full text-sm">
             <thead className="bg-[rgb(var(--surface-muted))/0.5] text-left text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
-                <SortableHeader label="Học viên" sortKey="name" current={sortKey} dir={sortDir} onSort={toggleSort} />
-                <SortableHeader label="Lớp" sortKey="section" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortableHeader
+                  label="Học viên"
+                  sortKey="name"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                  className="w-[200px]"
+                />
+                <SortableHeader
+                  label="Lớp"
+                  sortKey="section"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                  className="w-[140px]"
+                />
                 <SortableHeader label="Trạng thái" sortKey="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortableHeader
                   label="Đăng ký"
@@ -380,7 +394,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
             <tbody className="divide-y divide-token">
               {sortedEnrollments.map((e) => (
                 <tr key={e.id} className="hover:bg-[rgb(var(--surface-muted))/0.3]">
-                  <td className="px-4 py-2.5">
+                  <td className="max-w-[200px] px-4 py-2.5">
                     <div className="flex items-center gap-3">
                       <UserAvatar
                         name={e.user.displayName ?? e.user.email}
@@ -388,24 +402,29 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                         size="sm"
                       />
                       <div className="min-w-0">
-                        <p className="truncate font-medium">
+                        <p className="truncate font-medium" title={e.user.displayName ?? undefined}>
                           {e.user.displayName ?? "—"}
                         </p>
-                        <p className="truncate text-xs text-muted">
+                        <p className="truncate text-xs text-muted" title={e.user.email}>
                           {e.user.email}
                         </p>
                       </div>
                     </div>
                   </td>
                   {/* Lớp: chưa gán thì phải nhìn ra ngay, vì đó là việc cần
-                      làm chứ không phải một trạng thái bình thường. */}
-                  <td className="px-4 py-2.5">
+                      làm chứ không phải một trạng thái bình thường. Cắt ngắn
+                      tên lớp dài (mã lớp học phần + tên đầy đủ) để các cột
+                      sau (trạng thái, ngày, hoạt động) không bị đẩy khỏi màn
+                      hình — xem đủ tên qua tooltip khi rê chuột. */}
+                  <td className="max-w-[140px] px-4 py-2.5">
                     {e.section.isDefault ? (
                       <span className="chip-accent whitespace-nowrap text-xs">
                         chưa gán lớp
                       </span>
                     ) : (
-                      <span className="whitespace-nowrap text-sm">{e.section.name}</span>
+                      <span className="block truncate text-sm" title={e.section.name}>
+                        {e.section.name}
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">

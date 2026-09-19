@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "@/lib/toast";
 import { formatPrice, isFree } from "@/lib/formatPrice";
 import { apiUrl } from "@/lib/apiUrl";
@@ -69,12 +70,12 @@ export default function EnrollButton({
 
   if (alreadyEnrolled) {
     return (
-      <a
+      <Link
         href={`/learn/${slug}`}
         className="inline-flex items-center gap-2 rounded-xl bg-success-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:scale-[1.02] hover:bg-success-700"
       >
         Tiếp tục học
-      </a>
+      </Link>
     );
   }
 
