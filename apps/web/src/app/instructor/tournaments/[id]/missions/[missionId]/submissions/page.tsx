@@ -18,6 +18,7 @@ import {
 } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
+import { safeHref, safeHttpUrl } from "@/lib/safeUrl";
 import ReviewerManager from "./ReviewerManager";
 import MissionGradeForm from "./MissionGradeForm";
 import AutoAssignReviewersButton from "./AutoAssignReviewersButton";
@@ -388,11 +389,11 @@ export default async function MissionSubmissionsPage({
                   </p>
                 )}
 
-                {(payload.repoUrl || payload.slidesUrl || payload.demoVideoUrl) && (
+                {(safeHref(payload.repoUrl) || safeHttpUrl(payload.slidesUrl) || safeHttpUrl(payload.demoVideoUrl)) && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {payload.repoUrl && (
+                    {safeHref(payload.repoUrl) && (
                       <a
-                        href={payload.repoUrl}
+                        href={safeHref(payload.repoUrl) ?? undefined}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
@@ -401,9 +402,9 @@ export default async function MissionSubmissionsPage({
                         Mã nguồn
                       </a>
                     )}
-                    {payload.slidesUrl && (
+                    {safeHttpUrl(payload.slidesUrl) && (
                       <a
-                        href={payload.slidesUrl}
+                        href={safeHttpUrl(payload.slidesUrl) ?? undefined}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
@@ -412,9 +413,9 @@ export default async function MissionSubmissionsPage({
                         Slide
                       </a>
                     )}
-                    {payload.demoVideoUrl && (
+                    {safeHttpUrl(payload.demoVideoUrl) && (
                       <a
-                        href={payload.demoVideoUrl}
+                        href={safeHttpUrl(payload.demoVideoUrl) ?? undefined}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"

@@ -69,6 +69,8 @@ const DETAIL_MESSAGES: Record<string, string> = {
   only_active_or_published_tournaments_can_be_ended:
     "Chỉ kết thúc được đấu trường đang diễn ra hoặc đã công bố.",
   empty: "Tệp rỗng.",
+  invalid_url: "Liên kết không hợp lệ. Chỉ nhận liên kết bắt đầu bằng http:// hoặc https://.",
+  payload_too_large: "Nội dung nộp quá dài. Hãy rút gọn rồi nộp lại.",
 };
 
 const GENERIC = "Có lỗi xảy ra, thử lại sau.";

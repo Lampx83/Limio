@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
+import { safeHttpUrl } from "@/lib/safeUrl";
 import { readJson } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
@@ -90,6 +91,14 @@ export async function PATCH(
   }
 
   const data = parsed.data;
+
+  // Liên kết ngoài của nhiệm vụ phải là http/https (hiển thị thành liên kết cho học viên bấm).
+  {
+    const cp = data.contentPayload as { url?: unknown } | null | undefined;
+    if (cp && typeof cp === "object" && cp.url !== undefined && cp.url !== null && cp.url !== "" && !safeHttpUrl(cp.url)) {
+      return NextResponse.json({ error: "validation_failed", details: "invalid_url" }, { status: 400 });
+    }
+  }
 
   // Validate prerequisite belongs to the same tournament and is not self-referential
   if (data.prerequisiteId) {

@@ -7,6 +7,7 @@ import { showcaseAccess, canVoteInShowcase, normalizeShowcaseMode } from "@feedb
 import { auth } from "@/lib/auth";
 import VoteButton from "./VoteButton";
 import { formatDateTime } from "@/lib/datetime";
+import { safeHref, safeHttpUrl } from "@/lib/safeUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -356,7 +357,11 @@ export default async function ShowcasePage({
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {flat.map((f) => {
             const team = f.team;
-            const thumb = youtubeThumbnail(f.payload.demoVideoUrl);
+            // Đường dẫn do học viên nhập: chỉ dùng làm liên kết khi là http/https (chặn javascript:...).
+            const demoHref = safeHttpUrl(f.payload.demoVideoUrl);
+            const repoHref = safeHref(f.payload.repoUrl);
+            const slidesHref = safeHttpUrl(f.payload.slidesUrl);
+            const thumb = youtubeThumbnail(demoHref ?? undefined);
             return (
               <article
                 key={f.submissionId}
@@ -374,7 +379,7 @@ export default async function ShowcasePage({
                 {/* Thumbnail or gradient header */}
                 {thumb ? (
                   <a
-                    href={f.payload.demoVideoUrl}
+                    href={demoHref ?? undefined}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group relative block aspect-video overflow-hidden bg-slate-900"
@@ -432,9 +437,9 @@ export default async function ShowcasePage({
                   )}
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {f.payload.repoUrl && (
+                    {repoHref && (
                       <a
-                        href={f.payload.repoUrl}
+                        href={repoHref}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
@@ -443,9 +448,9 @@ export default async function ShowcasePage({
                         Repo
                       </a>
                     )}
-                    {f.payload.slidesUrl && (
+                    {slidesHref && (
                       <a
-                        href={f.payload.slidesUrl}
+                        href={slidesHref}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
@@ -454,9 +459,9 @@ export default async function ShowcasePage({
                         Slides
                       </a>
                     )}
-                    {f.payload.demoVideoUrl && !thumb && (
+                    {demoHref && !thumb && (
                       <a
-                        href={f.payload.demoVideoUrl}
+                        href={demoHref}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"

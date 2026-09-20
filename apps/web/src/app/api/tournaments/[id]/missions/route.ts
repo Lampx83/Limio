@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
 import { requireUserId } from "@/lib/session";
+import { safeHttpUrl } from "@/lib/safeUrl";
 import { readJson } from "@/lib/apiHelpers";
 
 export const runtime = "nodejs";
@@ -128,6 +129,14 @@ export async function POST(
       { error: "validation_failed", details: parsed.error.flatten() },
       { status: 400 },
     );
+  }
+
+  // Liên kết ngoài của nhiệm vụ phải là http/https (hiển thị thành liên kết cho học viên bấm).
+  {
+    const cp = parsed.data.contentPayload as { url?: unknown } | null | undefined;
+    if (cp && typeof cp === "object" && cp.url !== undefined && cp.url !== null && cp.url !== "" && !safeHttpUrl(cp.url)) {
+      return NextResponse.json({ error: "validation_failed", details: "invalid_url" }, { status: 400 });
+    }
   }
 
   // Validate prerequisite belongs to this tournament

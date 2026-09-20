@@ -3,6 +3,11 @@ import { z } from "zod";
 import { submitMission, CustomMissionError } from "@feedbackme/core-gamification";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
+import { sanitizeUrlFields } from "@/lib/safeUrl";
+
+// Trường chứa đường dẫn trong payload bài nộp (mã nguồn, slide, video demo, liên kết cho kiểm tra tự động).
+const URL_FIELDS = ["repoUrl", "slidesUrl", "demoVideoUrl", "url"] as const;
+const MAX_PAYLOAD_CHARS = 100_000;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,11 +32,22 @@ export async function POST(
       { status: 400 },
     );
   }
+  // Chỉ nhận liên kết http/https (chặn javascript:, data:...) và giới hạn dung lượng payload.
+  if (JSON.stringify(parsed.data.payload).length > MAX_PAYLOAD_CHARS) {
+    return NextResponse.json({ error: "validation_failed", details: "payload_too_large" }, { status: 400 });
+  }
+  const cleaned = sanitizeUrlFields(parsed.data.payload, URL_FIELDS);
+  if (!cleaned.ok) {
+    return NextResponse.json(
+      { error: "validation_failed", details: "invalid_url", field: cleaned.field },
+      { status: 400 },
+    );
+  }
   try {
     const r = await submitMission({
       missionId: params.id,
       userId,
-      payload: parsed.data.payload as never,
+      payload: cleaned.value as never,
       elapsedMsSinceOpen: parsed.data.elapsedMsSinceOpen,
     });
     return NextResponse.json({ ok: true, ...r });

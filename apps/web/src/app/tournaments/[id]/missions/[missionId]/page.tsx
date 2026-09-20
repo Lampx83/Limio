@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import MissionSubmitForm from "./MissionSubmitForm";
 import { formatDateTime } from "@/lib/datetime";
+import { safeHttpUrl } from "@/lib/safeUrl";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 
@@ -116,14 +117,14 @@ export default async function MissionDetailPage({
       </div>
 
       {/* External URL appears first (the action point) */}
-      {content?.url && (
+      {safeHttpUrl(content?.url) && (
         <a
-          href={content.url}
+          href={safeHttpUrl(content?.url) ?? undefined}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-4 inline-flex items-center gap-2 rounded-xl border border-brand-300 bg-brand-soft px-4 py-2 text-sm font-medium text-brand-800 hover:bg-brand-100"
         >
-          🔗 Mở liên kết: {content.url}
+          Mở liên kết: {safeHttpUrl(content?.url)}
         </a>
       )}
 
