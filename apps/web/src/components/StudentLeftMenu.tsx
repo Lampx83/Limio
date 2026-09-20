@@ -58,7 +58,7 @@ const GROUPS: Group[] = [
     label: "Khám phá",
     items: [
       { label: "Catalog khoá học", href: "/catalog", icon: Compass },
-      { label: "Tournament", href: "/tournaments", icon: Trophy },
+      { label: "Đấu trường", href: "/tournaments", icon: Trophy },
       { label: "Bảng xếp hạng", href: "/leaderboard", icon: BarChart3 },
     ],
   },

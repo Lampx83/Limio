@@ -23,7 +23,6 @@ import {
   Loader2,
   CalendarCheck,
   Library,
-  Mic,
   Coins,
   Presentation,
   FolderOpen,
@@ -36,8 +35,25 @@ import {
   ListChecks,
   Shuffle,
   StickyNote,
+  createLucideIcon,
   type LucideIcon,
 } from "lucide-react";
+
+/** Điểm "A+" khoanh tròn bằng nét bút — icon module Kiểm tra đánh giá (lucide không có sẵn hình này). */
+const GradeAPlus = createLucideIcon("GradeAPlus", [
+  ["path", { d: "M4.6 17 8 7.2 11.4 17", key: "a-legs" }],
+  ["path", { d: "M5.8 13.7h4.4", key: "a-bar" }],
+  ["path", { d: "M17 9.6v4.8", key: "plus-v" }],
+  ["path", { d: "M14.6 12h4.8", key: "plus-h" }],
+  // Vòng khoanh tay: hơi lệch, hai đầu nét chồng lên nhau như khi thầy cô khoanh điểm.
+  [
+    "path",
+    {
+      d: "M3.4 7.6C6.2 3.6 16.6 3 20.6 7c2.8 2.8 1.8 9.4-3 12.4-4.8 3-12 1.6-14.2-4C1.4 12.2 2.8 8.4 6 5",
+      key: "circle",
+    },
+  ],
+]);
 
 type Item = {
   label: string;
@@ -171,12 +187,13 @@ const MODULES: ModuleDef[] = [
       headerText: "text-lime-700 dark:text-lime-400",
     },
     matchPrefixes: ["/instructor/oral-exams"],
-    items: [{ label: "Phòng thi vấn đáp", href: "/instructor/oral-exams", icon: Mic }],
+    items: [{ label: "Phòng vấn đáp", href: "/instructor/oral-exams", icon: Bot }],
   },
   {
     id: "exam",
     label: "Kiểm tra đánh giá",
-    icon: ClipboardList,
+    icon: GradeAPlus,
+    iconSize: 28,
     colors: {
       rail: "bg-lime-600",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
@@ -198,7 +215,7 @@ const MODULES: ModuleDef[] = [
   },
   {
     id: "tournament",
-    label: "Tournament",
+    label: "Đấu trường",
     icon: Trophy,
     colors: {
       rail: "bg-lime-600",
@@ -209,7 +226,7 @@ const MODULES: ModuleDef[] = [
       headerText: "text-lime-700 dark:text-lime-400",
     },
     matchPrefixes: ["/instructor/tournaments"],
-    items: [{ label: "Tournament của tôi", href: "/instructor/tournaments", icon: Trophy }],
+    items: [{ label: "Đấu trường của tôi", href: "/instructor/tournaments", icon: Trophy }],
   },
   {
     id: "analytics",
