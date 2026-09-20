@@ -16,8 +16,8 @@ export default async function LimioLivePage() {
       <div className="border-b border-token pb-6">
         <h1 className="text-2xl font-bold">Limio-Live</h1>
         <p className="mt-2 text-muted">
-          Bài giảng của riêng bạn — trộn slide trình bày (văn bản, video, PDF...) với slide tương tác (trắc nghiệm, thăm dò,
-          word cloud, bảng cộng tác) rồi trình chiếu tuần tự trên lớp.
+          Bộ công cụ dạy học trực tiếp trên lớp: soạn bài giảng tương tác, tạo hoạt động nhanh (vote, word cloud, Padlet,
+          whiteboard) và điều hành lớp học (đếm ngược, gọi tên, phân nhóm, gameshow). Sinh viên tham gia ngay bằng điện thoại.
         </p>
       </div>
 
