@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { useEffect, useRef, useState } from "react";
 import RoleSwitcher from "./RoleSwitcher";
+import { useEffectiveRole } from "./useEffectiveRole";
 
 const ROLE_BADGES: Record<string, { label: string; className: string }> = {
   learner:    { label: "Học viên",   className: "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300" },
@@ -19,7 +20,7 @@ export default function UserMenu({
   email,
   avatarUrl,
   roles,
-  activeRole,
+  activeRole: cookieRole,
 }: {
   name: string;
   email: string;
@@ -29,6 +30,7 @@ export default function UserMenu({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const activeRole = useEffectiveRole(cookieRole, roles);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {

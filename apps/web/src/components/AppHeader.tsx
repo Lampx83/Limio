@@ -54,7 +54,7 @@ export default async function AppHeader() {
           <span className="text-4xl font-bold tracking-tight">
             Lim<span className="text-pink-500">io</span>
           </span>
-          <HeaderTagline activeRole={activeRole} />
+          <HeaderTagline activeRole={activeRole} roles={roles} />
         </Link>
         </div>
 
