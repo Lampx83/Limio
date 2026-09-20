@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, type ComponentType } from "react";
-import { BarChart3, Brush, FileUp, ListChecks, PenLine, X, type LucideIcon, type LucideProps } from "lucide-react";
+import { BarChart3, Brush, PenTool, FileUp, ListChecks, PenLine, X, type LucideIcon, type LucideProps } from "lucide-react";
 import { RESOURCE_TYPES, RESOURCE_TYPE_HINTS, RESOURCE_TYPE_ICONS } from "../ResourceEditor";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 
 export type SlideChoice =
   | { type: "content"; resourceKind?: ResourceType }
-  | { type: "quiz" | "poll" | "word_cloud" }
+  | { type: "quiz" | "poll" | "word_cloud" | "whiteboard" }
   // "Draw-it": cùng loại slide Dán Note nhưng mode "drawing" — học viên vẽ 1 hình rồi đăng lên bảng.
   | { type: "collaborate_board"; mode?: "drawing" };
 
@@ -77,12 +77,13 @@ const INTERACTIVE_TILES: Tile[] = [
   { key: "word_cloud", label: "Word Cloud", hint: "Thu thập từ khoá thành đám mây chữ", icon: WordCloudIcon, choice: { type: "word_cloud" } },
   { key: "collaborate_board", label: "Dán Note", hint: "Học viên dán ghi chú lên bảng chung", icon: CollabBoardIcon, choice: { type: "collaborate_board" } },
   { key: "draw", label: "Draw-it (vẽ)", hint: "Mỗi học viên tự vẽ 1 hình rồi đăng lên bảng chung", icon: Brush, choice: { type: "collaborate_board", mode: "drawing" } },
+  { key: "whiteboard", label: "Whiteboard", hint: "Cả lớp cùng vẽ lên một khung, tên người vẽ hiện cạnh nét vẽ", icon: PenTool, choice: { type: "whiteboard" } },
 ];
 
 // Một lưới phẳng duy nhất: mọi loại slide (tài nguyên + tương tác + tách PDF) ngang hàng nhau, cùng một kiểu thẻ.
 
 // Loại hay dùng — xếp lên đầu theo thứ tự này, các loại còn lại nối tiếp phía sau.
-const POPULAR_KEYS = ["poll", "quiz", "word_cloud", "collaborate_board", "draw", "video", "pdf-split", "text"];
+const POPULAR_KEYS = ["poll", "quiz", "word_cloud", "collaborate_board", "draw", "whiteboard", "video", "pdf-split", "text"];
 
 export default function SlideTypePicker({
   onPick,

@@ -35,6 +35,7 @@ import {
   Eye,
   EyeOff,
   Brush,
+  PenTool,
   ClipboardX,
   ZoomIn,
   ZoomOut,
@@ -56,7 +57,7 @@ import { SLIDE_THEMES, slideThemeBg } from "../slideThemes";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
 
-type SlideType = "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board";
+type SlideType = "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board" | "whiteboard";
 
 interface Slide {
   id: string;
@@ -80,6 +81,7 @@ const INTERACTIVE_META: Record<
   quiz: { label: "Trắc nghiệm", icon: ListChecks, badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
   poll: { label: "Vote", icon: BarChart3, badge: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
   word_cloud: { label: "Word Cloud", icon: WordCloudIcon, badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
+  whiteboard: { label: "Whiteboard", icon: PenTool, badge: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300" },
   collaborate_board: {
     label: "Dán Note",
     icon: CollabBoardIcon,
@@ -121,6 +123,8 @@ function slideSummary(slide: Slide): string {
     case "word_cloud":
     case "collaborate_board":
       return c.prompt || "(chưa có prompt)";
+    case "whiteboard":
+      return c.title || "(Whiteboard)";
     default:
       return "";
   }
@@ -138,6 +142,8 @@ function defaultConfigFor(type: SlideType): Record<string, any> {
       return { prompt: "" };
     case "collaborate_board":
       return { prompt: "", mode: "free", allowViewOthers: true, blockPaste: false };
+    case "whiteboard":
+      return { title: "" };
   }
 }
 
@@ -948,6 +954,7 @@ function SlideCenterEditor({
   if (slide.type === "quiz" || slide.type === "poll")
     return <QuestionEditor type={slide.type} config={config} onSave={onSave} />;
   if (slide.type === "word_cloud") return <WordCloudEditor config={config} onSave={onSave} />;
+  if (slide.type === "whiteboard") return <WhiteboardSlideEditor config={config} onSave={onSave} />;
   return <BoardEditor config={config} onSave={onSave} />;
 }
 
@@ -1247,6 +1254,32 @@ function WordCloudEditor({
       />
       <div className="flex flex-grow items-center justify-center rounded-2xl bg-[#F7F6F1] p-8 text-sm text-[#9AA090]">
         Cụm từ học viên gửi sẽ hiện ở đây khi trình chiếu.
+      </div>
+    </div>
+  );
+}
+
+function WhiteboardSlideEditor({
+  config,
+  onSave,
+}: {
+  config: Record<string, any>;
+  onSave: (patch: { config: Record<string, any> }) => void;
+}) {
+  const [title, setTitle] = useState(config.title ?? "");
+
+  return (
+    <div className="flex h-full flex-col">
+      <AutoTextarea
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onBlur={() => onSave({ config: { ...config, title: title.trim() } })}
+        placeholder="Đề bài / yêu cầu vẽ (tuỳ chọn)..."
+        className={`${bareInputClass} mb-5 text-[22px] font-bold leading-snug`}
+      />
+      <div className="flex flex-grow flex-col items-center justify-center gap-2 rounded-2xl bg-[#F7F6F1] p-8 text-center text-sm text-[#9AA090]">
+        <PenTool size={28} />
+        Khi trình chiếu, cả lớp cùng vẽ lên một khung trắng. Tên người vẽ hiện cạnh nét vẽ.
       </div>
     </div>
   );

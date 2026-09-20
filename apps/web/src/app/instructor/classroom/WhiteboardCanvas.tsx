@@ -67,6 +67,11 @@ const BG_ELEMENT_ID = "whiteboard-bg";
 
 interface WhiteboardCanvasProps {
   code: string;
+  // Tên người đang vẽ — ghi vào customData.authorName của mọi nét mới (server giữ nguyên, các thiết bị khác
+  // nhận qua SSE). Không truyền = không gắn tên (hành vi cũ).
+  authorName?: string;
+  // Hiện nhãn tên người vẽ trên từng nét — bật ở màn hình giáo viên/chiếu, tắt ở máy học viên.
+  showAuthors?: boolean;
   onReady?: (api: ExcalidrawImperativeAPI) => void;
   onStatusLoaded?: (status: string, title: string) => void;
   onPageInfo?: (currentPage: number, totalPages: number) => void;
@@ -140,8 +145,42 @@ function buildBackgroundElement(fileId: string, width: number, height: number): 
   };
 }
 
+// Nhãn tên: 1 nhãn/nét, nhưng bỏ nhãn nào nằm sát nhãn đã có của CÙNG người (nét dài/nhiều nét liền nhau
+// chỉ hiện 1 tên) — đủ để biết ai vẽ đâu mà không phủ kín canvas.
+const AUTHOR_TAG_MERGE_PX = 70;
+interface AuthorTag {
+  key: string;
+  name: string;
+  left: number;
+  top: number;
+}
+function authorColor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+  return `hsl(${h} 65% 38%)`;
+}
+function computeAuthorTags(
+  elements: readonly unknown[],
+  appState: { scrollX: number; scrollY: number; zoom: { value: number } },
+): AuthorTag[] {
+  const z = appState.zoom.value;
+  const tags: AuthorTag[] = [];
+  for (const raw of elements) {
+    const el = raw as WhiteboardElement & { x?: number; y?: number; customData?: { authorName?: string } };
+    const name = el.customData?.authorName;
+    if (!name || el.isDeleted || el.id === BG_ELEMENT_ID || typeof el.x !== "number" || typeof el.y !== "number") continue;
+    const left = (el.x + appState.scrollX) * z;
+    const top = (el.y + appState.scrollY) * z - 18;
+    if (tags.some((t) => t.name === name && Math.hypot(t.left - left, t.top - top) < AUTHOR_TAG_MERGE_PX)) continue;
+    tags.push({ key: el.id, name, left, top });
+  }
+  return tags;
+}
+
 export default function WhiteboardCanvas({
   code,
+  authorName,
+  showAuthors,
   onReady,
   onStatusLoaded,
   onPageInfo,
@@ -150,6 +189,14 @@ export default function WhiteboardCanvas({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [authorTags, setAuthorTags] = useState<AuthorTag[]>([]);
+  const authorNameRef = useRef(authorName);
+  const showAuthorsRef = useRef(showAuthors);
+  const tagFrameRef = useRef<number | null>(null);
+  useEffect(() => {
+    authorNameRef.current = authorName;
+    showAuthorsRef.current = showAuthors;
+  });
   const apiRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const esRef = useRef<EventSource | null>(null);
 
@@ -462,7 +509,16 @@ export default function WhiteboardCanvas({
   }, [code, ready, resetIdleTimer]);
 
   const handleChange = useCallback(
-    (elements: readonly unknown[]) => {
+    (elements: readonly unknown[], appState: { scrollX: number; scrollY: number; zoom: { value: number } }) => {
+      if (showAuthorsRef.current) {
+        // rAF: onChange bắn liên tục khi kéo nét — gộp về 1 lần tính/khung hình.
+        if (tagFrameRef.current === null) {
+          tagFrameRef.current = requestAnimationFrame(() => {
+            tagFrameRef.current = null;
+            setAuthorTags(computeAuthorTags(elements, appState));
+          });
+        }
+      }
       if (applyingRemoteRef.current || readOnly) return;
       // Hàng đợi đang rỗng → lô mới bắt đầu từ đây, chốt luôn trang hiện tại
       // cho cả lô (xem scheduleFlush).
@@ -475,7 +531,13 @@ export default function WhiteboardCanvas({
         const lastSent = lastSentRef.current.get(el.id);
         const known = pending ? Math.max(pending.version, lastSent ?? -1) : lastSent;
         if (known === undefined || el.version > known) {
-          pendingRef.current.set(el.id, el);
+          // Gắn tên người vẽ vào bản gửi đi (nét của người khác đã có sẵn tên nên không bị ghi đè).
+          const name = authorNameRef.current;
+          const cd = el.customData as { authorName?: string } | undefined;
+          pendingRef.current.set(
+            el.id,
+            name && !cd?.authorName ? { ...el, customData: { ...(cd ?? {}), authorName: name } } : el,
+          );
           changed = true;
         }
       }
@@ -512,6 +574,19 @@ export default function WhiteboardCanvas({
         excalidrawAPI={handleExcalidrawApi}
         onChange={handleChange}
       />
+      {showAuthors && (
+        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden>
+          {authorTags.map((t) => (
+            <span
+              key={t.key}
+              className="absolute whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold text-white shadow"
+              style={{ left: t.left, top: t.top, backgroundColor: authorColor(t.name) }}
+            >
+              {t.name}
+            </span>
+          ))}
+        </div>
+      )}
       {isOffline && (
         // Góc phải dưới — tránh toolbar Excalidraw (giữa trên + giữa dưới) và
         // khung QR (trái dưới).

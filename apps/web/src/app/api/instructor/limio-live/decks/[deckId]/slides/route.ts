@@ -6,7 +6,7 @@ import { validateContentSlideConfig } from "@/lib/limioLiveResource";
 import { z } from "zod";
 
 const CreateSlideSchema = z.object({
-  type: z.enum(["content", "quiz", "poll", "word_cloud", "collaborate_board"]),
+  type: z.enum(["content", "quiz", "poll", "word_cloud", "collaborate_board", "whiteboard"]),
   config: z.unknown().default({}),
   timerSeconds: z.number().int().positive().nullable().optional(),
 });

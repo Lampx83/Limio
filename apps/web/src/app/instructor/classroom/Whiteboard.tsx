@@ -415,6 +415,8 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
           <WhiteboardCanvas
             key={current.id}
             code={current.code}
+            authorName="Giáo viên"
+            showAuthors
             onReady={setExcalidrawApi}
             onStatusLoaded={(status) => setCurrent((c) => (c ? { ...c, status } : c))}
             onPageInfo={(page, total) => {

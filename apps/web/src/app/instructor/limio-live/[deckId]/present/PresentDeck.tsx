@@ -22,7 +22,10 @@ const QRCode = dynamic(
   }
 );
 
-type SlideType = "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board";
+// Excalidraw nặng, cần window — chỉ tải khi slide Whiteboard được chiếu.
+const WhiteboardCanvas = dynamic(() => import("@/app/instructor/classroom/WhiteboardCanvas"), { ssr: false });
+
+type SlideType = "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board" | "whiteboard";
 
 interface Slide {
   id: string;
@@ -43,7 +46,7 @@ type Runtime =
   | { kind: "content" }
   | { kind: "poll" | "quiz"; refId: string; joinPath: string }
   | { kind: "word_cloud"; refId: string; joinPath: string }
-  | { kind: "collaborate_board"; refId: string; code: string; joinPath: string };
+  | { kind: "collaborate_board" | "whiteboard"; refId: string; code: string; joinPath: string };
 
 const TYPE_LABELS: Record<SlideType, string> = {
   content: "Trình bày",
@@ -51,6 +54,7 @@ const TYPE_LABELS: Record<SlideType, string> = {
   poll: "Vote",
   word_cloud: "Word Cloud",
   collaborate_board: "Dán Note",
+  whiteboard: "Whiteboard",
 };
 
 interface UiState {
@@ -600,7 +604,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               style={{ background: slideThemeBg(deck.theme) }}
               className={`box-border flex min-h-0 w-full flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
-              } ${currentSlide.type === "content" ? "p-0" : "p-12"} ${
+              } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
@@ -660,7 +664,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       {slideshow && canQr && runtime && (
         <SlideshowQr
           url={shareUrl(runtime.joinPath)}
-          code={runtime.kind === "collaborate_board" ? runtime.code : undefined}
+          code={runtime.kind === "collaborate_board" || runtime.kind === "whiteboard" ? runtime.code : undefined}
           big={qrBig}
           onToggle={() => setQrBig((v) => !v)}
         />
@@ -669,7 +673,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       {canQr && runtime && mode === "audience" && qrRemote && (
         <JoinEnlarged
           url={shareUrl(runtime.joinPath)}
-          code={runtime.kind === "collaborate_board" ? runtime.code : undefined}
+          code={runtime.kind === "collaborate_board" || runtime.kind === "whiteboard" ? runtime.code : undefined}
           onClose={() => {
             setQrRemote(false);
             setQrBig(false);
@@ -849,6 +853,12 @@ function SlideStage({
       {slide.type === "collaborate_board" && runtime?.kind === "collaborate_board" && (
         <BoardSlideView prompt={config.prompt} code={runtime.code} />
       )}
+
+      {slide.type === "whiteboard" && runtime?.kind === "whiteboard" && (
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-black/10 bg-white">
+          <WhiteboardCanvas code={runtime.code} authorName="Giáo viên" showAuthors />
+        </div>
+      )}
     </div>
   );
 }
@@ -1011,7 +1021,7 @@ function FeedbackSidebar({
       </div>
       <JoinBox
         joinPath={runtime.joinPath}
-        code={runtime.kind === "collaborate_board" ? runtime.code : undefined}
+        code={runtime.kind === "collaborate_board" || runtime.kind === "whiteboard" ? runtime.code : undefined}
         qrOnScreen={qrOnScreen}
         onToggleQr={onToggleQr}
       />
@@ -1024,6 +1034,11 @@ function FeedbackSidebar({
       )}
       {runtime.kind === "word_cloud" && <LiveWordCloudStats refId={runtime.refId} />}
       {runtime.kind === "collaborate_board" && <LiveBoardStats code={runtime.code} />}
+      {runtime.kind === "whiteboard" && (
+        <p className="text-xs leading-relaxed text-muted">
+          Cả lớp cùng vẽ lên một khung. Tên người vẽ hiện cạnh nét vẽ.
+        </p>
+      )}
     </div>
   );
 }

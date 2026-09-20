@@ -4551,6 +4551,8 @@ enum LiveSlideType {
   poll
   word_cloud
   collaborate_board
+  // Bảng trắng vẽ chung: cả lớp cùng vẽ lên 1 khung Excalidraw (model Whiteboard), khác Draw-it (mỗi người 1 hình).
+  whiteboard
 }
 
 model LiveDeck {

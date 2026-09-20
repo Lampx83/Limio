@@ -4,6 +4,7 @@ import { prisma, LiveSession } from "@feedbackme/db";
 import { goToSlide, ensureClassroomSession, recordSlideRuntimeRef } from "@feedbackme/core-lms";
 import { generateUniqueBoardCode, normalizeBoardColumns } from "@/lib/board";
 import { describeRuntime, type Runtime } from "@/lib/limioLiveRuntime";
+import { generateUniqueWhiteboardCode } from "@/lib/whiteboard";
 
 /**
  * POST /api/instructor/limio-live/decks/[deckId]/present/[sessionId]/slides/[slideId]
@@ -69,6 +70,17 @@ export async function POST(
       });
       refId = wordCloud.id;
       runtime = { kind: "word_cloud", refId, joinPath: `/learn/word-cloud/${refId}` };
+    } else if (slide.type === "whiteboard") {
+      const code = await generateUniqueWhiteboardCode();
+      const wb = await prisma.whiteboard.create({
+        data: {
+          code,
+          ownerId: userId,
+          title: (config.title || "Whiteboard").slice(0, 120),
+        },
+      });
+      refId = wb.id;
+      runtime = { kind: "whiteboard", refId, code: wb.code, joinPath: `/whiteboard/${wb.code}` };
     } else {
       // collaborate_board
       const columns =

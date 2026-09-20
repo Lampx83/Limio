@@ -3,7 +3,7 @@ import { prisma, LiveSlideType } from "@feedbackme/db";
 export type Runtime =
   | { kind: "content" }
   | { kind: "poll" | "quiz" | "word_cloud"; refId: string; joinPath: string }
-  | { kind: "collaborate_board"; refId: string; code: string; joinPath: string };
+  | { kind: "collaborate_board" | "whiteboard"; refId: string; code: string; joinPath: string };
 
 /**
  * Describe the student-facing runtime (join path, code...) backing an
@@ -17,6 +17,11 @@ export async function describeRuntime(type: LiveSlideType, refId: string): Promi
   }
   if (type === "word_cloud") {
     return { kind: "word_cloud", refId, joinPath: `/learn/word-cloud/${refId}` };
+  }
+  if (type === "whiteboard") {
+    const wb = await prisma.whiteboard.findUnique({ where: { id: refId }, select: { code: true } });
+    if (!wb) throw new Error("Linked whiteboard no longer exists");
+    return { kind: "whiteboard", refId, code: wb.code, joinPath: `/whiteboard/${wb.code}` };
   }
   // collaborate_board
   const board = await prisma.interactiveBoard.findUnique({
