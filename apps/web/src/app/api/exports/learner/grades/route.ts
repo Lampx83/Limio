@@ -6,7 +6,7 @@ import { csvResponse } from "@/lib/csvExport";
 export const runtime = "nodejs";
 
 /**
- * Export learner's grades across all courses: quiz attempts (passed/score)
+ * Export learner's grades across all courses: quiz attempts (score)
  * + assignment submissions (graded score). One row per attempt/submission.
  */
 export async function GET() {
@@ -21,7 +21,6 @@ export async function GET() {
         quiz: {
           select: {
             title: true,
-            passThresholdPct: true,
             courseId: true,
           },
         },
@@ -71,8 +70,6 @@ export async function GET() {
       courseTitle: a.quiz.courseId ? courseMap.get(a.quiz.courseId) ?? "" : "",
       itemTitle: a.quiz.title,
       scorePct: a.scorePct ?? 0,
-      passed: a.passed ?? false,
-      passThresholdPct: a.quiz.passThresholdPct,
       submittedAt: a.submittedAt,
     });
   }

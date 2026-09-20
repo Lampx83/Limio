@@ -6,6 +6,8 @@ import { resolveFeedbackVariant } from "./variant";
 export const SKIP_MASTERY_THRESHOLD = 0.85;
 /** Number of consecutive failed attempts that triggers a remedial inject. */
 export const REMEDIAL_FAIL_STREAK = 2;
+/** Điểm dưới mức này coi là "làm chưa tốt" khi xét gợi ý học lại. Nội bộ, không hiển thị cho học viên. */
+export const REMEDIAL_LOW_SCORE_PCT = 50;
 
 export interface SkipSuggestion {
   shouldSkip: boolean;
@@ -95,7 +97,7 @@ export interface RemedialSuggestion {
  * surface a remedial lesson tagged with their weakest skill from that quiz.
  *
  * "2 in a row" = the learner's last `REMEDIAL_FAIL_STREAK` SUBMITTED attempts
- * for `quizId` all have `passed=false`. We deliberately ignore in_progress
+ * for `quizId` all scored below `REMEDIAL_LOW_SCORE_PCT`. We deliberately ignore in_progress
  * and abandoned attempts.
  */
 export async function getRemedialSuggestion(
@@ -107,11 +109,11 @@ export async function getRemedialSuggestion(
     where: { userId, quizId, status: "submitted" },
     orderBy: { submittedAt: "desc" },
     take: REMEDIAL_FAIL_STREAK,
-    select: { passed: true },
+    select: { scorePct: true },
   });
   if (
     recent.length < REMEDIAL_FAIL_STREAK ||
-    recent.some((a) => a.passed !== false)
+    recent.some((a) => a.scorePct === null || a.scorePct >= REMEDIAL_LOW_SCORE_PCT)
   ) {
     return { shouldShow: false, reason: "no_fail_streak" };
   }

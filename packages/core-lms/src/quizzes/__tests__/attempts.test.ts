@@ -208,7 +208,7 @@ describe("getAttemptForLearner — isSingleAnswer + không lộ đáp án đúng
 });
 
 describe("submitAnswer + submitAttempt", () => {
-  it("grades all 3 question types end-to-end + sets passed", async () => {
+  it("grades all 3 question types end-to-end", async () => {
     const { learnerId, quizId, questionIds } = await setup("a5");
     const att = await startAttempt(learnerId, quizId);
 
@@ -235,12 +235,12 @@ describe("submitAnswer + submitAttempt", () => {
     const result = await submitAttempt(learnerId, att.attemptId);
     // 4 / 4 points → 100%
     expect(result.scorePct).toBe(100);
-    expect(result.passed).toBe(true);
+    expect(result.isFirstPass).toBe(true);
     expect(result.expired).toBe(false);
     expect(result.correctCount).toBe(3);
   });
 
-  it("partial credit + fail when below pass threshold", async () => {
+  it("score is 0% when every answer is wrong", async () => {
     const { learnerId, quizId, questionIds } = await setup("a6");
     const att = await startAttempt(learnerId, quizId);
     const wrong = await getOptionId(questionIds[0]!, "3");
@@ -255,7 +255,6 @@ describe("submitAnswer + submitAttempt", () => {
     // Q2 unanswered
     const result = await submitAttempt(learnerId, att.attemptId);
     expect(result.scorePct).toBe(0);
-    expect(result.passed).toBe(false);
     expect(result.correctCount).toBe(0);
   });
 

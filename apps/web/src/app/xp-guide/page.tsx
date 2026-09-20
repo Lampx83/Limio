@@ -29,14 +29,14 @@ const rows: Row[] = [
     cap: `Tối đa ${DAILY_CAPS["lesson.completed"]} lần/ngày`,
   },
   {
-    action: "Vượt qua quiz — lần đầu tiên",
-    xp: `${QUIZ_FIRST_TRY_BASE_XP} × độ khó (1–5)`,
+    action: "Nộp quiz — lần đầu tiên",
+    xp: `${QUIZ_FIRST_TRY_BASE_XP} × độ khó (1–5) × điểm (%)`,
     cap: `Tối đa ${DAILY_CAPS["quiz.passed.first_try"]} lần/ngày`,
     note: "Nhân thêm hệ số 0,5–1,5 tuỳ mức thành thạo kỹ năng của câu hỏi (xem bên dưới).",
   },
   {
-    action: "Vượt qua quiz — làm lại",
-    xp: `${QUIZ_RETRY_BASE_XP} × độ khó (1–5)`,
+    action: "Nộp quiz — làm lại",
+    xp: `${QUIZ_RETRY_BASE_XP} × độ khó (1–5) × điểm (%)`,
     cap: `Tối đa ${DAILY_CAPS["quiz.passed.retry"]} lần/ngày`,
     note: "Cùng hệ số thành thạo như lần đầu.",
   },

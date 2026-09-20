@@ -22,7 +22,6 @@ type AttemptRow = {
   startedAt: string;
   submittedAt: string | null;
   scorePct: number | null;
-  passed: boolean | null;
   attemptIndex: number;
   responseCount: number;
   durationMs: number | null;
@@ -32,7 +31,6 @@ type ListResponse = {
   quiz: {
     id: string;
     title: string;
-    passThresholdPct: number;
     totalQuestions: number;
     lessonTitle: string | null;
     moduleTitle: string | null;
@@ -50,7 +48,6 @@ type ListResponse = {
 
 type SortKey = "user" | "status" | "scorePct" | "attemptIndex" | "submittedAt";
 type StatusFilter = "all" | "submitted" | "in_progress" | "abandoned";
-type PassFilter = "all" | "passed" | "failed" | "ungraded";
 
 const STATUS_LABEL: Record<AttemptRow["status"], string> = {
   in_progress: "Đang làm",
@@ -90,7 +87,6 @@ export default function QuizResultsClient({
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [passFilter, setPassFilter] = useState<PassFilter>("all");
   const [sortKey, setSortKey] = useState<SortKey>("submittedAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [drawerAttemptId, setDrawerAttemptId] = useState<string | null>(null);
@@ -122,9 +118,6 @@ export default function QuizResultsClient({
     const s = search.trim().toLowerCase();
     let out = data.attempts.filter((a) => {
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
-      if (passFilter === "passed" && a.passed !== true) return false;
-      if (passFilter === "failed" && a.passed !== false) return false;
-      if (passFilter === "ungraded" && a.passed !== null) return false;
       if (s) {
         const hay =
           (a.user.displayName ?? "").toLowerCase() +
@@ -159,7 +152,7 @@ export default function QuizResultsClient({
       }
     });
     return out;
-  }, [data, search, statusFilter, passFilter, sortKey, sortDir]);
+  }, [data, search, statusFilter, sortKey, sortDir]);
 
   if (loading) {
     return (
@@ -180,7 +173,6 @@ export default function QuizResultsClient({
     <>
       <StatsCards
         stats={data.stats}
-        passThresholdPct={data.quiz.passThresholdPct}
         totalQuestions={data.quiz.totalQuestions}
       />
 
@@ -205,16 +197,6 @@ export default function QuizResultsClient({
           <option value="in_progress">Đang làm</option>
           <option value="abandoned">Bỏ giữa chừng</option>
         </select>
-        <select
-          value={passFilter}
-          onChange={(e) => setPassFilter(e.target.value as PassFilter)}
-          className="input"
-        >
-          <option value="all">Mọi kết quả</option>
-          <option value="passed">Đạt</option>
-          <option value="failed">Chưa đạt</option>
-          <option value="ungraded">Chưa có kết quả</option>
-        </select>
         <span className="ml-auto text-sm text-muted">
           {filtered.length} / {data.attempts.length} lượt
         </span>
@@ -228,9 +210,6 @@ export default function QuizResultsClient({
               <Th k="user" label="Sinh viên" sortKey={sortKey} sortDir={sortDir} onSort={setSortKey} flipDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))} />
               <Th k="status" label="Trạng thái" sortKey={sortKey} sortDir={sortDir} onSort={setSortKey} flipDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))} />
               <Th k="scorePct" label="Điểm" sortKey={sortKey} sortDir={sortDir} onSort={setSortKey} flipDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))} align="right" />
-              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-faint">
-                Đạt
-              </th>
               <Th k="attemptIndex" label="Lần" sortKey={sortKey} sortDir={sortDir} onSort={setSortKey} flipDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))} align="center" />
               <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-faint">
                 Thời gian làm
@@ -267,21 +246,6 @@ export default function QuizResultsClient({
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums">
                     {a.scorePct == null ? "—" : `${a.scorePct.toFixed(1)}%`}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    {a.passed === true ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-600">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Đạt
-                      </span>
-                    ) : a.passed === false ? (
-                      <span className="inline-flex items-center gap-1 text-rose-600">
-                        <XCircle className="h-4 w-4" />
-                        Chưa
-                      </span>
-                    ) : (
-                      <span className="text-faint">—</span>
-                    )}
                   </td>
                   <td className="px-3 py-2.5 text-center tabular-nums">
                     {a.attemptIndex}
@@ -353,11 +317,9 @@ function Th({
 
 function StatsCards({
   stats,
-  passThresholdPct,
   totalQuestions,
 }: {
   stats: ListResponse["stats"];
-  passThresholdPct: number;
   totalQuestions: number;
 }) {
   const cards = [
@@ -368,13 +330,6 @@ function StatsCards({
     {
       label: "Sinh viên đã làm",
       value: String(stats.uniqueLearners),
-    },
-    {
-      label: `Tỉ lệ đạt (≥${passThresholdPct}%)`,
-      value:
-        stats.passRate == null
-          ? "—"
-          : `${(stats.passRate * 100).toFixed(0)}%`,
     },
     {
       label: "Điểm TB",
@@ -393,7 +348,7 @@ function StatsCards({
     },
   ];
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {cards.map((c) => (
         <div
           key={c.label}
@@ -565,16 +520,6 @@ function AttemptDetail({ data }: { data: DetailResponse }) {
               ({earnedPoints}/{totalPoints})
             </span>
           </span>
-          {data.attempt.passed === true && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Đạt
-            </span>
-          )}
-          {data.attempt.passed === false && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs text-rose-700">
-              <XCircle className="h-3.5 w-3.5" /> Chưa đạt
-            </span>
-          )}
           <span className="text-muted">
             Nộp: {formatDate(data.attempt.submittedAt)}
           </span>

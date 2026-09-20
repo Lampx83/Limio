@@ -17,7 +17,6 @@ export default function AddQuizForm({
   const [open, setOpen] = useState(embedded);
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState(1);
-  const [passThresholdPct, setPassThresholdPct] = useState(70);
   const [requireConfidence, setRequireConfidence] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -46,7 +45,6 @@ export default function AddQuizForm({
       body: JSON.stringify({
         title,
         difficulty,
-        passThresholdPct,
         requireConfidence,
       }),
     });
@@ -80,17 +78,6 @@ export default function AddQuizForm({
             max={5}
             value={difficulty}
             onChange={(e) => setDifficulty(Number(e.target.value))}
-            className="input w-16"
-          />
-        </label>
-        <label className="flex items-center gap-2">
-          <span className="text-muted">Pass %</span>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            value={passThresholdPct}
-            onChange={(e) => setPassThresholdPct(Number(e.target.value))}
             className="input w-16"
           />
         </label>

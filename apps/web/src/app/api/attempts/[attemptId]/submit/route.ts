@@ -47,7 +47,6 @@ export async function POST(
         courseId: result.courseId,
         attemptId: result.attemptId,
         quizId: result.quizId,
-        passed: result.passed,
         difficulty: result.difficulty,
         isFirstPass: result.isFirstPass,
         elapsedSec: result.elapsedSec,

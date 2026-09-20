@@ -305,7 +305,6 @@ export async function POST(
           description: "Tournament mission quiz",
           isHidden: true,
           tournamentMissionId: m.id,
-          passThresholdPct: Math.round((parsed.data.passThreshold ?? 0.7) * 100),
         },
       });
     }

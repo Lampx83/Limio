@@ -38,10 +38,10 @@ export async function GET(
         _count: true,
       }),
       prisma.lesson.count({ where: { module: { courseId } } }),
-      prisma.quizAttempt.groupBy({
-        by: ["passed"],
+      prisma.quizAttempt.aggregate({
         where: { quiz: { courseId }, status: "submitted" },
         _count: true,
+        _avg: { scorePct: true },
       }),
       prisma.learningEvent.findMany({
         where: {
@@ -96,16 +96,11 @@ export async function GET(
     }
   }
 
-  // Quiz pass rate (passed / submitted).
-  let quizSubmitted = 0;
-  let quizPassed = 0;
-  for (const g of quizSubmittedAgg) {
-    quizSubmitted += g._count;
-    if (g.passed) quizPassed += g._count;
-  }
-  const quizPassRatePct =
-    quizSubmitted > 0
-      ? Math.round((quizPassed / quizSubmitted) * 1000) / 10
+  // Quiz: lượt nộp + điểm TB.
+  const quizSubmitted = quizSubmittedAgg._count;
+  const quizAvgScorePct =
+    quizSubmittedAgg._avg.scorePct !== null
+      ? Math.round(quizSubmittedAgg._avg.scorePct * 10) / 10
       : null;
 
   return NextResponse.json({
@@ -114,8 +109,7 @@ export async function GET(
     avgLessonCompletionPct,
     quiz: {
       submitted: quizSubmitted,
-      passed: quizPassed,
-      passRatePct: quizPassRatePct,
+      avgScorePct: quizAvgScorePct,
     },
     activeLearners7d: activeLearnerRows.length,
   });

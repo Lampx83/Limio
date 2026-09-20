@@ -51,11 +51,7 @@ export default async function ResultPage({
   }
 
   const correctCount = result.items.filter((i) => i.isCorrect).length;
-  const passed = result.attempt.passed ?? false;
-
-  const remedial = passed
-    ? null
-    : await getRemedialSuggestion(userId, result.attempt.quizId);
+  const remedial = await getRemedialSuggestion(userId, result.attempt.quizId);
 
   const xpEvent = await prisma.learningEvent.findFirst({
     where: {
@@ -179,18 +175,11 @@ export default async function ResultPage({
 
       {/* Hero score */}
       <section
-        className={`relative mt-6 overflow-hidden rounded-2xl p-8 text-white shadow-card-hover ${
-          passed
-            ? "bg-gradient-to-br from-success-500 via-emerald-600 to-success-700"
-            : "bg-gradient-to-br from-accent-500 via-accent-600 to-accent-700"
-        }`}
+        className="relative mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 p-8 text-white shadow-card-hover"
       >
         <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/15 blur-3xl" aria-hidden />
         <div className="absolute -bottom-16 -left-12 h-56 w-56 rounded-full bg-white/10 blur-3xl" aria-hidden />
         <div className="relative">
-          <p className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur">
-            {passed ? "✓ Đạt yêu cầu" : "✗ Chưa đạt"}
-          </p>
           {greetName && (
             <p className="mt-3 text-lg font-semibold">Chào {greetName},</p>
           )}

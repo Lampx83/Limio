@@ -57,7 +57,6 @@ describe("createCuepointQuiz", () => {
     const quiz = await prisma.quiz.findUniqueOrThrow({ where: { id: r.quizId } });
     expect(quiz.cuepointOnly).toBe(true);
     expect(quiz.isHidden).toBe(true);
-    expect(quiz.passThresholdPct).toBe(100);
     expect(quiz.title).toBe("Cuepoint @ 01:30");
     expect(quiz.lessonId).toBe(lessonId);
 

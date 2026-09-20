@@ -11,7 +11,6 @@ interface Quiz {
   id: string;
   title: string;
   difficulty: number | null;
-  passThresholdPct: number;
   requireConfidence: boolean;
   timeLimitSec: number | null;
   maxAttempts: number | null;
@@ -59,8 +58,7 @@ export default function QuizSection({
         <span className="text-lg" aria-hidden></span>
         <span className="text-sm font-semibold">{quiz.title}</span>
         <span className="ml-auto text-sm text-muted">
-          {quiz.questions.length} câu · diff {quiz.difficulty ?? "—"} · pass{" "}
-          {quiz.passThresholdPct}%
+          {quiz.questions.length} câu · diff {quiz.difficulty ?? "—"}
         </span>
         <QuizActionButtons quiz={quiz} onEdit={() => setEditing(true)} />
         <span className="text-xs text-faint opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden>

@@ -9,7 +9,6 @@ interface Quiz {
   id: string;
   title: string;
   difficulty: number | null;
-  passThresholdPct: number;
   requireConfidence: boolean;
   timeLimitSec: number | null;
   maxAttempts: number | null;
@@ -129,7 +128,6 @@ export function QuizEditForm({
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState(quiz.title);
   const [difficulty, setDifficulty] = useState(quiz.difficulty ?? 1);
-  const [passThresholdPct, setPassThresholdPct] = useState(quiz.passThresholdPct);
   const [requireConfidence, setRequireConfidence] = useState(quiz.requireConfidence);
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(quiz.timeLimitSec !== null);
   const [timeLimitMin, setTimeLimitMin] = useState(
@@ -146,7 +144,6 @@ export function QuizEditForm({
       body: JSON.stringify({
         title,
         difficulty,
-        passThresholdPct,
         requireConfidence,
         timeLimitSec,
       }),
@@ -175,17 +172,6 @@ export function QuizEditForm({
             max={5}
             value={difficulty}
             onChange={(e) => setDifficulty(Number(e.target.value))}
-            className="input w-16"
-          />
-        </label>
-        <label className="flex items-center gap-2">
-          <span className="text-xs text-muted">Pass %</span>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            value={passThresholdPct}
-            onChange={(e) => setPassThresholdPct(Number(e.target.value))}
             className="input w-16"
           />
         </label>

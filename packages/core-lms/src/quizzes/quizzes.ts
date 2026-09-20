@@ -8,7 +8,6 @@ export const CreateQuizInput = z.object({
   title: z.string().min(1).max(200).trim(),
   description: z.string().max(5_000).optional(),
   difficulty: z.number().int().min(1).max(5).optional(),
-  passThresholdPct: z.number().int().min(0).max(100).optional(),
   // null = tắt giới hạn thời gian; số dương = số giây (tối đa 24h).
   timeLimitSec: z.number().int().positive().max(86_400).nullable().optional(),
   maxAttempts: z.number().int().positive().max(100).optional(),
@@ -54,7 +53,6 @@ export async function createQuiz(
         title: parsed.data.title,
         description: parsed.data.description ?? null,
         difficulty: parsed.data.difficulty ?? null,
-        passThresholdPct: parsed.data.passThresholdPct ?? 70,
         timeLimitSec: parsed.data.timeLimitSec ?? null,
         maxAttempts: parsed.data.maxAttempts ?? null,
         randomizeOrder: parsed.data.randomizeOrder ?? false,

@@ -183,7 +183,8 @@ export interface QuizSubmittedPayload {
   quizId: string;
   attemptId: string;
   scorePct: number;
-  passed: boolean;
+  /** Chỉ có ở event cũ (trước khi bỏ ngưỡng đạt của quiz); event mới không ghi. */
+  passed?: boolean;
 }
 
 export interface QuizQuestionAnsweredPayload {

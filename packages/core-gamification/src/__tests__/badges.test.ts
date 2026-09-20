@@ -89,24 +89,24 @@ describe("checkQuizStartedBadges (AC-C3.3)", () => {
 });
 
 describe("checkQuizSubmittedBadges", () => {
-  it("AC-C3.4: awards first_win when passed", async () => {
+  it("AC-C3.4: awards first_win on any submission", async () => {
     const userId = await newUser();
     const courseId = await newCourse();
     const r = await checkQuizSubmittedBadges({
       userId, courseId, quizId: "Q1", attemptId: "A1",
-      passed: true, scorePct: 80,
+      scorePct: 80,
     });
     expect(r.awarded.map((a) => a.badgeCode)).toContain("first_win");
   });
 
-  it("does NOT award first_win when failed", async () => {
+  it("awards first_win even at a low score (no pass threshold)", async () => {
     const userId = await newUser();
     const courseId = await newCourse();
     const r = await checkQuizSubmittedBadges({
       userId, courseId, quizId: "Q1", attemptId: "A1",
-      passed: false, scorePct: 40,
+      scorePct: 40,
     });
-    expect(r.awarded.map((a) => a.badgeCode)).not.toContain("first_win");
+    expect(r.awarded.map((a) => a.badgeCode)).toContain("first_win");
   });
 
   it("AC-C3.5: awards perfect_score at 100%", async () => {
@@ -114,7 +114,7 @@ describe("checkQuizSubmittedBadges", () => {
     const courseId = await newCourse();
     const r = await checkQuizSubmittedBadges({
       userId, courseId, quizId: "Q1", attemptId: "A1",
-      passed: true, scorePct: 100,
+      scorePct: 100,
     });
     expect(r.awarded.map((a) => a.badgeCode).sort()).toEqual(["first_win", "perfect_score"]);
   });
@@ -124,7 +124,7 @@ describe("checkQuizSubmittedBadges", () => {
     const courseId = await newCourse();
     const r = await checkQuizSubmittedBadges({
       userId, courseId, quizId: "Q1", attemptId: "A1",
-      passed: true, scorePct: 99.5,
+      scorePct: 99.5,
     });
     expect(r.awarded.map((a) => a.badgeCode)).not.toContain("perfect_score");
   });
@@ -169,7 +169,7 @@ describe("integration via handlers", () => {
     const courseId = await newCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "A1", quizId: "Q1",
-      passed: true, difficulty: 1, isFirstPass: true, elapsedSec: 30, scorePct: 100,
+      difficulty: 1, isFirstPass: true, elapsedSec: 30, scorePct: 100,
     });
     expect(r.xp?.amountGranted).toBe(50);
     expect(r.badges.awarded.map((a) => a.badgeCode).sort()).toEqual([

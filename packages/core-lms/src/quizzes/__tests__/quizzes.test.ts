@@ -28,7 +28,6 @@ describe("createQuiz", () => {
     const quiz = await prisma.quiz.findUniqueOrThrow({ where: { id: r.quizId } });
     expect(quiz.courseId).toBe(courseId);
     expect(quiz.lessonId).toBeNull();
-    expect(quiz.passThresholdPct).toBe(70);
     expect(quiz.requireConfidence).toBe(true);
   });
 
@@ -63,10 +62,10 @@ describe("updateQuiz / deleteQuiz", () => {
   it("update changes fields", async () => {
     const { ownerId, courseId } = await newOwner("q5");
     const r = await createQuiz(ownerId, { courseId }, { title: "X" });
-    await updateQuiz(ownerId, r.quizId, { title: "Y", passThresholdPct: 80 });
+    await updateQuiz(ownerId, r.quizId, { title: "Y", difficulty: 3 });
     const q = await prisma.quiz.findUniqueOrThrow({ where: { id: r.quizId } });
     expect(q.title).toBe("Y");
-    expect(q.passThresholdPct).toBe(80);
+    expect(q.difficulty).toBe(3);
   });
 
   it("delete removes quiz + cascade questions", async () => {

@@ -137,7 +137,6 @@ export interface LearnerSafeQuiz {
   id: string;
   title: string;
   description: string | null;
-  passThresholdPct: number;
   requireConfidence: boolean;
   questions: LearnerSafeQuestion[];
 }
@@ -152,7 +151,6 @@ export async function getLearnerSafeQuiz(
       id: true,
       title: true,
       description: true,
-      passThresholdPct: true,
       requireConfidence: true,
       questions: {
         orderBy: { orderIndex: "asc" },

@@ -9,7 +9,7 @@ export const runtime = "nodejs";
  * GET /api/instructor/courses/[courseId]/quizzes/[quizId]/results
  *
  * Returns:
- *   - quiz metadata (title, passThresholdPct, lesson/module, totalQuestions)
+ *   - quiz metadata (title, lesson/module, totalQuestions)
  *   - stats (totalAttempts, submittedCount, passRate, avgScorePct, avgDurationMs)
  *   - attempts: list of QuizAttempt with user info, status, score, attempt-index
  *
@@ -40,7 +40,6 @@ export async function GET(
     select: {
       id: true,
       title: true,
-      passThresholdPct: true,
       courseId: true,
       lesson: {
         select: { title: true, module: { select: { title: true } } },
@@ -77,7 +76,6 @@ export async function GET(
       startedAt: a.startedAt,
       submittedAt: a.submittedAt,
       scorePct: a.scorePct,
-      passed: a.passed,
       attemptIndex: n,
       responseCount: a._count.responses,
       durationMs,
@@ -86,7 +84,6 @@ export async function GET(
 
   // Stats — derived from submitted attempts only.
   const submitted = enriched.filter((a) => a.status === "submitted");
-  const passed = submitted.filter((a) => a.passed === true);
   const avgScore =
     submitted.length > 0
       ? submitted.reduce((s, a) => s + (a.scorePct ?? 0), 0) / submitted.length
@@ -109,7 +106,6 @@ export async function GET(
     quiz: {
       id: quiz.id,
       title: quiz.title,
-      passThresholdPct: quiz.passThresholdPct,
       totalQuestions: quiz._count.questions,
       lessonTitle: quiz.lesson?.title ?? null,
       moduleTitle: quiz.lesson?.module.title ?? null,
@@ -118,8 +114,6 @@ export async function GET(
       totalAttempts: enriched.length,
       submittedCount: submitted.length,
       uniqueLearners: seenByUser.size,
-      passRate:
-        submitted.length > 0 ? passed.length / submitted.length : null,
       avgScorePct: avgScore,
       avgDurationMs: avgDuration,
     },

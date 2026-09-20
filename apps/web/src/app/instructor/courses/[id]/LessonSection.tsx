@@ -57,7 +57,6 @@ interface Lesson {
     id: string;
     title: string;
     difficulty: number | null;
-    passThresholdPct: number;
     requireConfidence: boolean;
     timeLimitSec: number | null;
     maxAttempts: number | null;

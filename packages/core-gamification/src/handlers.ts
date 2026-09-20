@@ -119,10 +119,9 @@ export interface QuizSubmittedInput {
   courseId: string;
   attemptId: string;
   quizId: string;
-  passed: boolean;
   /** 1-5; null treated as 1. */
   difficulty: number | null;
-  /** Whether this is the user's first ever passed attempt for this quiz. */
+  /** Whether this is the user's first ever submitted attempt for this quiz. */
   isFirstPass: boolean;
   /** Time spent on the attempt, used for anti-farm speed-run check. */
   elapsedSec: number;
@@ -157,8 +156,8 @@ export function adaptiveMultiplier(avgMastery: number | null): number {
 }
 
 /**
- * XP rules: failed → null xp; speed-run → 0-amount audit row; otherwise per spec table.
- * Badges: `first_win` if passed, `perfect_score` if 100%. Both idempotent.
+ * XP rules: speed-run → 0-amount audit row; otherwise per spec table.
+ * Badges: `first_win` on any submission, `perfect_score` if 100%. Both idempotent.
  *
  * D3: when `avgMastery` is provided, base XP is multiplied per spec §6.3 and
  * the storedReason gets `.adaptive` suffix when multiplier ≠ 1.0.
@@ -171,9 +170,7 @@ export async function onQuizSubmitted(
   const multiplier = adaptiveMultiplier(avgMastery);
 
   let xp: AwardResult | null = null;
-  if (!input.passed) {
-    xp = null;
-  } else if (input.elapsedSec < SPEED_RUN_THRESHOLD_SEC) {
+  if (input.elapsedSec < SPEED_RUN_THRESHOLD_SEC) {
     xp = await awardXp(
       {
         userId: input.userId,
@@ -188,26 +185,32 @@ export async function onQuizSubmitted(
     const difficulty = input.difficulty ?? 1;
     const baseAmount =
       (input.isFirstPass ? QUIZ_FIRST_TRY_BASE_XP : QUIZ_RETRY_BASE_XP) * difficulty;
-    const amount = Math.round(baseAmount * multiplier);
+    // Quiz không còn ngưỡng đạt: XP tỉ lệ với điểm thay vì cấp phẳng khi đạt.
+    const amount = Math.round(baseAmount * multiplier * (input.scorePct / 100));
     // Reason stays in the canonical {first_try, retry} bucket so the daily cap
     // counts adaptive grants together with normal ones. The multiplier is
     // already reflected in `amount` and re-emitted via the xp.awarded payload.
     const reason = input.isFirstPass ? "quiz.passed.first_try" : "quiz.passed.retry";
-    xp = await awardXp(
-      {
-        userId: input.userId,
-        courseId: input.courseId,
-        amount,
-        reason,
-        sourceId: input.attemptId,
-        extraEventPayload: {
-          baseAmount,
-          adaptiveMultiplier: multiplier,
-          avgMastery,
-        },
-      },
-      db,
-    );
+    // Điểm quá thấp làm số tiền về 0: không ghi giao dịch rỗng.
+    xp =
+      amount > 0
+        ? await awardXp(
+            {
+              userId: input.userId,
+              courseId: input.courseId,
+              amount,
+              reason,
+              sourceId: input.attemptId,
+              extraEventPayload: {
+                baseAmount,
+                adaptiveMultiplier: multiplier,
+                avgMastery,
+                scorePct: input.scorePct,
+              },
+            },
+            db,
+          )
+        : null;
   }
 
   const badges = await checkQuizSubmittedBadges(
@@ -216,7 +219,6 @@ export async function onQuizSubmitted(
       courseId: input.courseId,
       quizId: input.quizId,
       attemptId: input.attemptId,
-      passed: input.passed,
       scorePct: input.scorePct,
     },
     db,
@@ -224,15 +226,15 @@ export async function onQuizSubmitted(
 
   const streak = await recordActivity(input.userId, input.courseId, db);
 
-  if (input.passed) {
-    await recordQuestProgress(
-      input.userId,
-      "pass_quizzes",
-      input.courseId,
-      1,
-      db,
-    );
-  }
+  // Khoá quest giữ tên `pass_quizzes` (định nghĩa quest nằm trong DB) nhưng
+  // nay tính mỗi lượt nộp quiz.
+  await recordQuestProgress(
+    input.userId,
+    "pass_quizzes",
+    input.courseId,
+    1,
+    db,
+  );
 
   return { xp, badges, streak, adaptiveMultiplier: multiplier, avgMastery };
 }

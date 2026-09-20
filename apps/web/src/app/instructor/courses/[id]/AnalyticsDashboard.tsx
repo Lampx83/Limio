@@ -17,8 +17,7 @@ interface Summary {
   avgLessonCompletionPct: number;
   quiz: {
     submitted: number;
-    passed: number;
-    passRatePct: number | null;
+    avgScorePct: number | null;
   };
   activeLearners7d: number;
 }
@@ -170,13 +169,13 @@ export default function AnalyticsDashboard({
             />
             <SummaryCard
               icon="❓"
-              label="Quiz pass rate"
+              label="Điểm quiz TB"
               value={
-                summary.quiz.passRatePct !== null
-                  ? `${summary.quiz.passRatePct}%`
+                summary.quiz.avgScorePct !== null
+                  ? `${summary.quiz.avgScorePct}%`
                   : "—"
               }
-              hint={`${summary.quiz.passed}/${summary.quiz.submitted} attempt`}
+              hint={`${summary.quiz.submitted} lượt nộp`}
             />
             <SummaryCard
               icon="🔥"
@@ -273,7 +272,6 @@ export default function AnalyticsDashboard({
 interface QuizListItem {
   id: string;
   title: string;
-  passThresholdPct: number;
   moduleTitle: string | null;
   lessonTitle: string | null;
   attemptCount: number;
@@ -372,7 +370,6 @@ function QuizResultsSection({ courseId }: { courseId: string }) {
           {selected && (
             <div className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
               <Meta label="Số câu" value={selected.questionCount} />
-              <Meta label="Ngưỡng đạt" value={`${selected.passThresholdPct}%`} />
               <Meta label="Tổng lượt làm" value={selected.attemptCount} />
               <Meta
                 label="Trạng thái"

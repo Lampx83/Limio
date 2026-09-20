@@ -37,29 +37,48 @@ describe("onLessonCompleted", () => {
 });
 
 describe("onQuizSubmitted", () => {
-  it("AC-C1.2: first pass + difficulty 2 → 100 XP", async () => {
+  it("AC-C1.2: first submit + difficulty 2 + 100% → 100 XP", async () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "A1", quizId: "Q1",
-      passed: true, difficulty: 2, isFirstPass: true, elapsedSec: 60, scorePct: 80,
+      difficulty: 2, isFirstPass: true, elapsedSec: 60, scorePct: 100,
     });
-    expect(r.xp?.amountGranted).toBe(100); // 50 × 2
+    expect(r.xp?.amountGranted).toBe(100); // 50 × 2 × 100%
+
   });
 
-  it("AC-C1.3: retry pass + difficulty 2 → 40 XP", async () => {
+  it("XP scales with score: first submit + difficulty 2 + 80% → 80 XP", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    const r = await onQuizSubmitted({
+      userId, courseId, attemptId: "A1b", quizId: "Q1",
+      difficulty: 2, isFirstPass: true, elapsedSec: 60, scorePct: 80,
+    });
+    expect(r.xp?.amountGranted).toBe(80); // 50 × 2 × 0.8
+  });
+
+  it("AC-C1.3: retry + difficulty 2 + 100% → 40 XP", async () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "A2", quizId: "Q1",
-      passed: true, difficulty: 2, isFirstPass: false, elapsedSec: 60, scorePct: 80,
+      difficulty: 2, isFirstPass: false, elapsedSec: 60, scorePct: 100,
     });
-    expect(r.xp?.amountGranted).toBe(40); // 20 × 2
+    expect(r.xp?.amountGranted).toBe(40); // 20 × 2 × 100%
   });
 
-  it("AC-C1.4: failed quiz returns null XP (no XP)", async () => {
+  it("AC-C1.4: low score still earns proportional XP (no pass threshold)", async () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "A3", quizId: "Q1",
-      passed: false, difficulty: 1, isFirstPass: false, elapsedSec: 60, scorePct: 40,
+      difficulty: 1, isFirstPass: false, elapsedSec: 60, scorePct: 40,
+    });
+    expect(r.xp?.amountGranted).toBe(8); // 20 × 1 × 0.4
+  });
+
+  it("0% score → no XP row at all", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    const r = await onQuizSubmitted({
+      userId, courseId, attemptId: "A3b", quizId: "Q1",
+      difficulty: 1, isFirstPass: false, elapsedSec: 60, scorePct: 0,
     });
     expect(r.xp).toBeNull();
   });
@@ -68,7 +87,7 @@ describe("onQuizSubmitted", () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "A4", quizId: "Q1",
-      passed: true, difficulty: 1, isFirstPass: true, elapsedSec: 5, scorePct: 80,
+      difficulty: 1, isFirstPass: true, elapsedSec: 5, scorePct: 80,
     });
     expect(r.xp?.amountGranted).toBe(0);
     const tx = await prisma.xpTransaction.findFirst({
@@ -82,7 +101,7 @@ describe("onQuizSubmitted", () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "A5", quizId: "Q1",
-      passed: true, difficulty: null, isFirstPass: true, elapsedSec: 60, scorePct: 80,
+      difficulty: null, isFirstPass: true, elapsedSec: 60, scorePct: 100,
     });
     expect(r.xp?.amountGranted).toBe(50);
   });

@@ -51,8 +51,8 @@ async function getLessonCourseId(
  * `QuizQuestion` — it shows up in the course Question Bank with a "Cuepoint"
  * badge and can be cloned into other quizzes later.
  *
- * `passThresholdPct` is forced to 100 so the player only resumes on a
- * perfect answer (cuepoints gate playback).
+ * The player only resumes on a perfect answer (cuepoints gate playback);
+ * that gate lives in inline grading, not on the quiz row.
  */
 export async function createCuepointQuiz(
   actorUserId: string,
@@ -84,7 +84,6 @@ export async function createCuepointQuiz(
         courseId,
         lessonId,
         title: `Cuepoint @ ${formatTimestamp(parsed.data.atSec)}`,
-        passThresholdPct: 100,
         isHidden: true,
         cuepointOnly: true,
         requireConfidence: false,

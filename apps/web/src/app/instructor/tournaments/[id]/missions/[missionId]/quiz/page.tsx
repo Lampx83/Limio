@@ -76,8 +76,7 @@ export default async function TournamentMissionQuizEditorPage({
         Quiz: {mission.title}
       </h1>
       <p className="mt-1 text-sm text-muted">
-        {mission.quiz.questions.length} câu hỏi · pass ngưỡng{" "}
-        {mission.quiz.passThresholdPct}%
+        {mission.quiz.questions.length} câu hỏi
       </p>
 
       {/* Question list */}

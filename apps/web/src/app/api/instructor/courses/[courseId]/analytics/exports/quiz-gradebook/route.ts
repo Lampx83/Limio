@@ -46,7 +46,6 @@ export async function GET(
       quiz: {
         select: {
           title: true,
-          passThresholdPct: true,
           lesson: {
             select: {
               title: true,
@@ -68,8 +67,6 @@ export async function GET(
     Quiz: a.quiz.title,
     "Trạng thái": STATUS_LABEL[a.status] ?? a.status,
     "Điểm (%)": a.scorePct ?? "",
-    "Ngưỡng đạt (%)": a.quiz.passThresholdPct,
-    "Kết quả": a.passed === null ? "" : a.passed ? "Đạt" : "Chưa đạt",
     "Số câu trả lời": a._count.responses,
     "Bắt đầu lúc": a.startedAt,
     "Nộp lúc": a.submittedAt,

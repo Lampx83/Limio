@@ -26,7 +26,6 @@ export async function GET(
     select: {
       id: true,
       title: true,
-      passThresholdPct: true,
       _count: { select: { questions: true } },
     },
   });
@@ -34,7 +33,6 @@ export async function GET(
     quizzes: quizzes.map((q) => ({
       id: q.id,
       title: q.title,
-      passThresholdPct: q.passThresholdPct,
       questionCount: q._count.questions,
     })),
   });

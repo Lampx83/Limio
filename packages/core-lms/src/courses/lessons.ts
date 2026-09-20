@@ -286,7 +286,6 @@ export async function duplicateLesson(
           courseId: q.courseId,
           title: q.title,
           difficulty: q.difficulty,
-          passThresholdPct: q.passThresholdPct,
           requireConfidence: q.requireConfidence,
           timeLimitSec: q.timeLimitSec,
           maxAttempts: q.maxAttempts,

@@ -37,7 +37,6 @@ export async function GET(
     select: {
       id: true,
       title: true,
-      passThresholdPct: true,
       lesson: {
         select: {
           title: true,
@@ -58,7 +57,6 @@ export async function GET(
     quizzes: quizzes.map((q) => ({
       id: q.id,
       title: q.title,
-      passThresholdPct: q.passThresholdPct,
       moduleTitle: q.lesson?.module.title ?? null,
       lessonTitle: q.lesson?.title ?? null,
       attemptCount: q._count.attempts,

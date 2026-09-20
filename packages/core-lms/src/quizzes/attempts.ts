@@ -86,7 +86,6 @@ interface QuizForAttempt {
   courseId: string | null;
   maxAttempts: number | null;
   timeLimitSec: number | null;
-  passThresholdPct: number;
   requireConfidence: boolean;
 }
 
@@ -98,7 +97,6 @@ async function loadQuiz(quizId: string, db: PrismaClient): Promise<QuizForAttemp
       courseId: true,
       maxAttempts: true,
       timeLimitSec: true,
-      passThresholdPct: true,
       requireConfidence: true,
     },
   });
@@ -292,13 +290,12 @@ export interface SubmitResult {
   /** Courses this quiz lives under — null only if quiz somehow had no courseId (legacy data). */
   courseId: string | null;
   scorePct: number;
-  passed: boolean;
   expired: boolean;
   /** Seconds spent on this attempt (submitted - started). */
   elapsedSec: number;
   /** Quiz difficulty 1-5, or null if instructor didn't set it. */
   difficulty: number | null;
-  /** True if this is the user's first ever PASSED attempt for this quiz. */
+  /** True if this is the user's first ever submitted attempt for this quiz. */
   isFirstPass: boolean;
   totalQuestions: number;
   correctCount: number;
@@ -374,16 +371,13 @@ export async function submitAttempt(
   }, 0);
   const scorePct =
     totalPoints === 0 ? 0 : Math.round((earnedPoints / totalPoints) * 1000) / 10; // 1 decimal
-  const passed = scorePct >= quiz.passThresholdPct;
 
   // Detect "first pass" before persisting the new submission, so we don't
-  // count this attempt itself as a prior pass.
-  const priorPassedCount = passed
-    ? await db.quizAttempt.count({
-        where: { userId, quizId: quiz.id, status: "submitted", passed: true },
-      })
-    : 0;
-  const isFirstPass = passed && priorPassedCount === 0;
+  // count this attempt itself as a prior submission.
+  const priorSubmittedCount = await db.quizAttempt.count({
+    where: { userId, quizId: quiz.id, status: "submitted" },
+  });
+  const isFirstPass = priorSubmittedCount === 0;
 
   await db.quizAttempt.update({
     where: { id: attemptId },
@@ -391,7 +385,6 @@ export async function submitAttempt(
       status: "submitted",
       submittedAt,
       scorePct,
-      passed,
     },
   });
 
@@ -408,7 +401,6 @@ export async function submitAttempt(
       quizId: quiz.id,
       attemptId,
       scorePct,
-      passed,
       expired,
       isFirstPass,
     },
@@ -421,7 +413,6 @@ export async function submitAttempt(
     quizId: quiz.id,
     courseId: quiz.courseId,
     scorePct,
-    passed,
     expired,
     elapsedSec,
     difficulty: quizFull.difficulty,
@@ -681,7 +672,6 @@ export async function getAttemptResultAsInstructor(
       startedAt: attempt.startedAt,
       submittedAt: attempt.submittedAt,
       scorePct: attempt.scorePct,
-      passed: attempt.passed,
       user: attempt.user,
     },
     items,
@@ -741,7 +731,7 @@ async function recomputeAttemptScore(attemptId: string, db: PrismaClient) {
   if (!attempt || attempt.status !== "submitted") return;
   const quiz = await db.quiz.findUnique({
     where: { id: attempt.quizId },
-    select: { passThresholdPct: true },
+    select: { id: true },
   });
   if (!quiz) return;
   const [questions, responses] = await Promise.all([
@@ -770,9 +760,8 @@ async function recomputeAttemptScore(attemptId: string, db: PrismaClient) {
   }, 0);
   const scorePct =
     totalPoints === 0 ? 0 : Math.round((earnedPoints / totalPoints) * 1000) / 10;
-  const passed = scorePct >= quiz.passThresholdPct;
   await db.quizAttempt.update({
     where: { id: attemptId },
-    data: { scorePct, passed },
+    data: { scorePct },
   });
 }

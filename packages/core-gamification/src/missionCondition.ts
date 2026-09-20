@@ -113,13 +113,13 @@ export async function checkMissionCondition(
     }
 
     // ── quiz_passed_count ────────────────────────────────────────────────
-    // Source: QuizAttempt. Uses the indexed (userId, quizId) columns.
+    // Source: QuizAttempt. Uses the indexed (userId, quizId) columns. Quiz không còn ngưỡng đạt:
+    // "passed" nghĩa là đã nộp bài.
     case ConditionType.QuizPassedCount: {
       current = await db.quizAttempt.count({
         where: {
           userId,
           status: "submitted",
-          passed: true,
           ...(scopedCourseId ? { quiz: { courseId: scopedCourseId } } : {}),
         },
       });
@@ -135,7 +135,6 @@ export async function checkMissionCondition(
         where: {
           userId,
           status: "submitted",
-          passed: true,
           scorePct: { gte: minScore },
           ...(scopedCourseId ? { quiz: { courseId: scopedCourseId } } : {}),
         },
@@ -166,7 +165,6 @@ export async function checkMissionCondition(
         where: {
           userId,
           status: "submitted",
-          passed: true,
           scorePct: { gte: 100 },
           ...(scopedCourseId ? { quiz: { courseId: scopedCourseId } } : {}),
         },

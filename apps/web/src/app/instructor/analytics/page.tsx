@@ -80,10 +80,10 @@ export default async function InstructorAnalyticsPage({
       where: { assignment: { lesson: { module: { courseId: selectedId } } } },
       _count: true,
     }),
-    prisma.quizAttempt.groupBy({
-      by: ["passed"],
+    prisma.quizAttempt.aggregate({
       where: { quiz: { courseId: selectedId }, status: "submitted" },
       _count: true,
+      _avg: { scorePct: true },
     }),
     prisma.learningEvent.findMany({
       where: {
@@ -130,15 +130,12 @@ export default async function InstructorAnalyticsPage({
     (enroll as Record<string, number>)[g.status] = g._count;
   }
 
-  // Quiz pass rate
-  let quizSubmitted = 0;
-  let quizPassed = 0;
-  for (const g of quizAttemptsAgg) {
-    quizSubmitted += g._count;
-    if (g.passed) quizPassed += g._count;
-  }
-  const quizPassRatePct =
-    quizSubmitted > 0 ? Math.round((quizPassed / quizSubmitted) * 1000) / 10 : null;
+  // Quiz: lượt nộp + điểm TB (quiz không còn ngưỡng đạt)
+  const quizSubmitted = quizAttemptsAgg._count;
+  const quizAvgScorePct =
+    quizAttemptsAgg._avg.scorePct !== null
+      ? Math.round(quizAttemptsAgg._avg.scorePct * 10) / 10
+      : null;
 
   // Assignment status totals
   const assignmentStatus = { submitted: 0, graded: 0 };
@@ -248,20 +245,10 @@ export default async function InstructorAnalyticsPage({
           tone="brand"
         />
         <Kpi
-          label="Quiz pass rate"
-          value={
-            quizPassRatePct !== null ? `${quizPassRatePct}%` : "—"
-          }
-          sub={`${quizPassed}/${quizSubmitted} attempts`}
-          tone={
-            quizPassRatePct === null
-              ? "brand"
-              : quizPassRatePct >= 70
-                ? "success"
-                : quizPassRatePct >= 40
-                  ? "accent"
-                  : "danger"
-          }
+          label="Điểm quiz TB"
+          value={quizAvgScorePct !== null ? `${quizAvgScorePct}%` : "—"}
+          sub={`${quizSubmitted} lượt nộp`}
+          tone="brand"
         />
         <Kpi
           label={`AI cost ${TREND_DAYS}d`}

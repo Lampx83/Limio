@@ -50,7 +50,7 @@ describe("onQuizSubmitted with D3 multiplier", () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "a1", quizId: "q1",
-      passed: true, difficulty: 1, isFirstPass: true, elapsedSec: 60, scorePct: 90,
+      difficulty: 1, isFirstPass: true, elapsedSec: 60, scorePct: 100,
       avgMastery: 0.9,
     });
     expect(r.adaptiveMultiplier).toBe(0.5);
@@ -62,7 +62,7 @@ describe("onQuizSubmitted with D3 multiplier", () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "a2", quizId: "q1",
-      passed: true, difficulty: 1, isFirstPass: true, elapsedSec: 60, scorePct: 90,
+      difficulty: 1, isFirstPass: true, elapsedSec: 60, scorePct: 100,
       avgMastery: 0.2,
     });
     expect(r.adaptiveMultiplier).toBe(1.5);
@@ -73,7 +73,7 @@ describe("onQuizSubmitted with D3 multiplier", () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "a3", quizId: "q1",
-      passed: true, difficulty: 1, isFirstPass: true, elapsedSec: 60, scorePct: 90,
+      difficulty: 1, isFirstPass: true, elapsedSec: 60, scorePct: 100,
       avgMastery: null,
     });
     expect(r.adaptiveMultiplier).toBe(1.0);
@@ -84,7 +84,7 @@ describe("onQuizSubmitted with D3 multiplier", () => {
     const { userId, courseId } = await makeUserCourse();
     await onQuizSubmitted({
       userId, courseId, attemptId: "a4", quizId: "q1",
-      passed: true, difficulty: 2, isFirstPass: true, elapsedSec: 60, scorePct: 90,
+      difficulty: 2, isFirstPass: true, elapsedSec: 60, scorePct: 100,
       avgMastery: 0.7,
     });
     const ev = await prisma.learningEvent.findFirstOrThrow({
@@ -101,7 +101,7 @@ describe("onQuizSubmitted with D3 multiplier", () => {
     const { userId, courseId } = await makeUserCourse();
     const r = await onQuizSubmitted({
       userId, courseId, attemptId: "a5", quizId: "q1",
-      passed: true, difficulty: 1, isFirstPass: true, elapsedSec: 5, scorePct: 90,
+      difficulty: 1, isFirstPass: true, elapsedSec: 5, scorePct: 100,
       avgMastery: 0.2,
     });
     expect(r.xp?.amountGranted).toBe(0);

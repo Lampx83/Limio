@@ -132,7 +132,7 @@ async function failAttempt(f: Fixture): Promise<string> {
     });
   }
   const result = await submitAttempt(f.learnerId, attempt.attemptId);
-  expect(result.passed).toBe(false);
+  expect(result.scorePct).toBe(0);
   return attempt.attemptId;
 }
 

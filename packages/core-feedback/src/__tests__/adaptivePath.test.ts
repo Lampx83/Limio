@@ -146,6 +146,7 @@ async function remedialSetup(slug: string): Promise<RemedialSetup> {
 
 async function recordSubmittedAttempt(
   s: RemedialSetup,
+  /** true → điểm cao (không tính là làm chưa tốt); false → điểm thấp. */
   passed: boolean,
   whenAgoMs = 0,
 ) {
@@ -155,7 +156,6 @@ async function recordSubmittedAttempt(
       userId: s.userId,
       status: "submitted",
       submittedAt: new Date(Date.now() - whenAgoMs),
-      passed,
       scorePct: passed ? 90 : 30,
     },
   });

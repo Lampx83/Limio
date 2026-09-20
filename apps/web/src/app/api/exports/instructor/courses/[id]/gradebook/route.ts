@@ -53,7 +53,7 @@ export async function GET(
       },
       orderBy: { submittedAt: "desc" },
       include: {
-        quiz: { select: { title: true, passThresholdPct: true } },
+        quiz: { select: { title: true } },
       },
     }),
     prisma.assignmentSubmission.findMany({
@@ -85,8 +85,6 @@ export async function GET(
       "Loại": ITEM_TYPE.quiz,
       "Tiêu đề": a.quiz.title,
       "Điểm (%)": a.scorePct ?? 0,
-      "Ngưỡng đạt (%)": a.quiz.passThresholdPct,
-      "Kết quả": a.passed ? "Đạt" : "Chưa đạt",
       "Nộp lúc": a.submittedAt,
     });
   }

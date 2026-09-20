@@ -617,7 +617,6 @@ export async function duplicateCourse(
               title: q.title,
               description: q.description,
               difficulty: q.difficulty,
-              passThresholdPct: q.passThresholdPct,
               timeLimitSec: q.timeLimitSec,
               maxAttempts: q.maxAttempts,
               randomizeOrder: q.randomizeOrder,

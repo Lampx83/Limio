@@ -167,22 +167,19 @@ export async function checkQuizSubmittedBadges(
     courseId: string;
     quizId: string;
     attemptId: string;
-    passed: boolean;
     scorePct: number;
   },
   db: PrismaClient = prisma,
 ): Promise<BadgeCheckResult> {
   const awards: AwardBadgeResult[] = [];
-  if (input.passed) {
-    awards.push(
-      await tryAwardBadge(
-        input.userId,
-        "first_win",
-        { courseId: input.courseId, quizId: input.quizId, attemptId: input.attemptId },
-        db,
-      ),
-    );
-  }
+  awards.push(
+    await tryAwardBadge(
+      input.userId,
+      "first_win",
+      { courseId: input.courseId, quizId: input.quizId, attemptId: input.attemptId },
+      db,
+    ),
+  );
   if (input.scorePct >= 100) {
     awards.push(
       await tryAwardBadge(
