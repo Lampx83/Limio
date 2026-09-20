@@ -3,9 +3,7 @@ import { redirect } from "next/navigation";
 import {
   BookOpen,
   Users,
-  FlaskConical,
   CalendarClock,
-  Eye,
   ChevronRight,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
@@ -53,9 +51,8 @@ export default async function InstructorCoursesPage() {
       slug: true,
       title: true,
       status: true,
-      version: true,
-      updatedAt: true,
-      _count: { select: { enrollments: true, modules: true, exams: true } },
+            updatedAt: true,
+      _count: { select: { enrollments: true, modules: true } },
     },
   });
 
@@ -121,16 +118,10 @@ export default async function InstructorCoursesPage() {
                     </span>
                   </div>
 
-                  {/* Slug · version · ngày cập nhật — 1 dòng chữ, không khung */}
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-faint">
-                    <span className="truncate font-mono">/{c.slug}</span>
-                    <span aria-hidden>·</span>
-                    <span className="font-mono">v{c.version}</span>
-                    <span aria-hidden>·</span>
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarClock className="h-3 w-3" aria-hidden />
-                      {formatDate(c.updatedAt)}
-                    </span>
+                  {/* Ngày cập nhật gần nhất (updatedAt) — danh sách cũng sắp theo ngày này */}
+                  <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-faint">
+                    <CalendarClock className="h-3 w-3" aria-hidden />
+                    Cập nhật {formatDate(c.updatedAt)}
                   </p>
 
                   {/* Số liệu + hành động chung 1 hàng */}
@@ -138,18 +129,8 @@ export default async function InstructorCoursesPage() {
                     <div className="flex items-center gap-4 text-sm">
                       <Stat icon={BookOpen} label="Module" value={c._count.modules} />
                       <Stat icon={Users} label="Học viên" value={c._count.enrollments} />
-                      <Stat icon={FlaskConical} label="Bài thi" value={c._count.exams} />
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Link
-                        href={`/catalog/${c.slug}`}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-default bg-white text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
-                        title="Xem dưới góc nhìn học viên"
-                        aria-label="Learner view"
-                        prefetch={false}
-                      >
-                        <Eye className="h-4 w-4" aria-hidden />
-                      </Link>
                       <Link
                         href={`/instructor/courses/${c.id}`}
                         className="inline-flex h-8 items-center gap-1 rounded-md bg-brand-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
