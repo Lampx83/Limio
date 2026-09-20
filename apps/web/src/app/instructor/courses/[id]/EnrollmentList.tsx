@@ -120,6 +120,26 @@ const STATUS_DOT: Record<Enrollment["status"], string> = {
 };
 
 export default function EnrollmentList({ courseId }: { courseId: string }) {
+  const [wrapEl, setWrapEl] = useState<HTMLDivElement | null>(null);
+  // Cột "Đăng ký" ẩn dưới 640px, "Hoạt động gần nhất" ẩn dưới 768px như trước.
+  const showEnrolled = useMediaMin(640);
+  const showActivity = useMediaMin(768);
+  const visibleCols: ColumnId[] = [
+    "name",
+    "section",
+    "status",
+    ...(showEnrolled ? (["enrolledAt"] as const) : []),
+    ...(showActivity ? (["lastActivityAt"] as const) : []),
+    "actions",
+  ];
+  const { widths, startResize, reset: resetWidth, isManual } = useColumnWidths(wrapEl, visibleCols);
+  const tableWidth =
+    widths.name +
+    widths.section +
+    widths.status +
+    widths.actions +
+    (showEnrolled ? widths.enrolledAt : 0) +
+    (showActivity ? widths.lastActivityAt : 0);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -350,8 +370,25 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))]">
-          <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <div ref={setWrapEl} className="overflow-x-auto">
+          <table
+            className="text-sm"
+            // Tự co: luôn 100% khung (không để bảng tự phình làm sai phép đo bề rộng
+            // khung). Thủ công: đúng tổng độ rộng người dùng đã kéo.
+            style={{
+              tableLayout: "fixed",
+              width: isManual ? tableWidth : "100%",
+              minWidth: isManual ? "100%" : undefined,
+            }}
+          >
+            <colgroup>
+              <col style={{ width: widths.name }} />
+              <col style={{ width: widths.section }} />
+              <col style={{ width: widths.status }} />
+              {showEnrolled && <col style={{ width: widths.enrolledAt }} />}
+              {showActivity && <col style={{ width: widths.lastActivityAt }} />}
+              <col style={{ width: widths.actions }} />
+            </colgroup>
             <thead className="bg-[rgb(var(--surface-muted))/0.5] text-left text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
                 <SortableHeader
@@ -360,7 +397,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                   current={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
-                  className="w-[200px]"
+                  handle={<ResizeHandle id="name" onStart={startResize} onReset={resetWidth} />}
                 />
                 <SortableHeader
                   label="Lớp"
@@ -368,33 +405,46 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                   current={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
-                  className="w-[220px]"
+                  handle={<ResizeHandle id="section" onStart={startResize} onReset={resetWidth} />}
                 />
-                <SortableHeader label="Trạng thái" sortKey="status" current={sortKey} dir={sortDir} onSort={toggleSort} />
                 <SortableHeader
-                  label="Đăng ký"
-                  sortKey="enrolledAt"
+                  label="Trạng thái"
+                  sortKey="status"
                   current={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
-                  className="hidden sm:table-cell"
+                  handle={<ResizeHandle id="status" onStart={startResize} onReset={resetWidth} />}
                 />
-                <SortableHeader
-                  label="Hoạt động gần nhất"
-                  sortKey="lastActivityAt"
-                  current={sortKey}
-                  dir={sortDir}
-                  onSort={toggleSort}
-                  className="hidden md:table-cell"
-                />
-                <th className="px-4 py-2 hidden lg:table-cell">v</th>
-                <th className="px-4 py-2 text-right">Hành động</th>
+                {showEnrolled && (
+                  <SortableHeader
+                    label="Đăng ký"
+                    sortKey="enrolledAt"
+                    current={sortKey}
+                    dir={sortDir}
+                    onSort={toggleSort}
+                    handle={<ResizeHandle id="enrolledAt" onStart={startResize} onReset={resetWidth} />}
+                  />
+                )}
+                {showActivity && (
+                  <SortableHeader
+                    label="Hoạt động gần nhất"
+                    sortKey="lastActivityAt"
+                    current={sortKey}
+                    dir={sortDir}
+                    onSort={toggleSort}
+                    handle={<ResizeHandle id="lastActivityAt" onStart={startResize} onReset={resetWidth} />}
+                  />
+                )}
+                <th className="relative px-4 py-2 text-right">
+                  Hành động
+                  <ResizeHandle id="actions" onStart={startResize} onReset={resetWidth} />
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-token">
               {sortedEnrollments.map((e) => (
                 <tr key={e.id} className="hover:bg-[rgb(var(--surface-muted))/0.3]">
-                  <td className="max-w-[200px] px-4 py-2.5">
+                  <td className="overflow-hidden px-4 py-2.5">
                     <div className="flex items-center gap-3">
                       <UserAvatar
                         name={e.user.displayName ?? e.user.email}
@@ -416,7 +466,7 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                       tên lớp dài (mã lớp học phần + tên đầy đủ) xuống dòng khi
                       hết chỗ, chữ nhỏ để đọc được cả tên mà không đẩy các cột
                       sau (trạng thái, ngày, hoạt động) khỏi màn hình. */}
-                  <td className="max-w-[220px] px-4 py-2.5">
+                  <td className="overflow-hidden px-4 py-2.5">
                     {e.section.isDefault ? (
                       <span className="chip-accent whitespace-nowrap text-xs">
                         chưa gán lớp
@@ -432,19 +482,20 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                       {STATUS_LABEL[e.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 hidden sm:table-cell text-xs text-muted">
+                  {showEnrolled && (
+                  <td className="overflow-hidden px-4 py-2.5 text-xs text-muted">
                     {formatDate(e.enrolledAt)}
                   </td>
-                  <td className="px-4 py-2.5 hidden md:table-cell text-xs text-muted">
+                  )}
+                  {showActivity && (
+                  <td className="overflow-hidden px-4 py-2.5 text-xs text-muted">
                     {e.lastActivityAt ? (
                       <DateTime value={e.lastActivityAt} format="relative" />
                     ) : (
                       <span className="text-faint">chưa có hoạt động</span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 hidden lg:table-cell text-xs text-faint">
-                    v{e.courseVersion}
-                  </td>
+                  )}
                   <td className="px-4 py-2.5 text-right">
                     <EnrollmentActionsMenu
                       enrollment={e}
@@ -470,6 +521,164 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
   );
 }
 
+// Cột của bảng học viên: người dùng kéo mép phải tiêu đề cột để đổi độ rộng
+// (nhớ theo trình duyệt), bấm đúp vào mép để tự co lại cho vừa khung.
+const COLUMNS = [
+  { id: "name", w: 230, min: 140 },
+  { id: "section", w: 190, min: 120 },
+  { id: "status", w: 120, min: 90 },
+  { id: "enrolledAt", w: 120, min: 90 },
+  { id: "lastActivityAt", w: 150, min: 110 },
+  { id: "actions", w: 90, min: 80 },
+] as const;
+type ColumnId = (typeof COLUMNS)[number]["id"];
+const COL_STORAGE_KEY = "fbm.enrollmentTable.colWidths";
+
+function defaultWidths(): Record<ColumnId, number> {
+  return Object.fromEntries(COLUMNS.map((c) => [c.id, c.w])) as Record<ColumnId, number>;
+}
+
+function useMediaMin(px: number): boolean {
+  const [ok, setOk] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${px}px)`);
+    const on = () => setOk(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [px]);
+  return ok;
+}
+
+/**
+ * Chia đều `containerW` cho các cột đang hiện theo tỉ lệ độ rộng mặc định, cột
+ * nào nhỏ hơn mức tối thiểu thì ghim ở mức tối thiểu rồi chia lại phần còn lại.
+ * Đây là độ rộng "tự co" khi người dùng chưa tự chỉnh.
+ */
+function fitWidths(containerW: number, visible: ColumnId[]): Record<ColumnId, number> {
+  const out = defaultWidths();
+  if (containerW <= 0) return out;
+  let free = COLUMNS.filter((c) => visible.includes(c.id));
+  let remaining = containerW;
+  for (let pass = 0; pass < COLUMNS.length; pass++) {
+    const total = free.reduce((sum, c) => sum + c.w, 0);
+    if (total === 0) break;
+    const tooSmall = free.filter((c) => (remaining * c.w) / total < c.min);
+    if (tooSmall.length === 0) break;
+    for (const c of tooSmall) {
+      out[c.id] = c.min;
+      remaining -= c.min;
+    }
+    free = free.filter((c) => !tooSmall.includes(c));
+  }
+  const total = free.reduce((sum, c) => sum + c.w, 0);
+  for (const c of free) out[c.id] = Math.floor((remaining * c.w) / total);
+  return out;
+}
+
+/**
+ * Độ rộng cột: mặc định TỰ CO cho vừa khung (theo bề rộng thật của bảng). Khi
+ * người dùng kéo một cột thì chuyển sang độ rộng thủ công cho cả bảng, nhớ theo
+ * trình duyệt; bấm đúp vào thanh kéo để quay về tự co.
+ */
+function useColumnWidths(wrap: HTMLElement | null, visible: ColumnId[]) {
+  const [containerW, setContainerW] = useState(0);
+  const [manual, setManual] = useState<Record<ColumnId, number> | null>(null);
+
+  useLayoutEffect(() => {
+    if (!wrap) return;
+    setContainerW(wrap.clientWidth);
+    const ro = new ResizeObserver(() => setContainerW(wrap.clientWidth));
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [wrap]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COL_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as Partial<Record<ColumnId, number>>;
+      const next = defaultWidths();
+      let ok = true;
+      for (const c of COLUMNS) {
+        const v = saved[c.id];
+        if (typeof v === "number" && v >= c.min && v <= 800) next[c.id] = v;
+        else ok = false;
+      }
+      if (ok) setManual(next);
+    } catch {
+      /* không đọc được thì để tự co */
+    }
+  }, []);
+
+  const widths = manual ?? fitWidths(containerW, visible);
+
+  const startResize = (id: ColumnId, e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const col = COLUMNS.find((c) => c.id === id)!;
+    const base = { ...widths };
+    const startX = e.clientX;
+    const startW = base[id];
+    let latest: Record<ColumnId, number> = base;
+    const move = (ev: PointerEvent) => {
+      const w = Math.min(800, Math.max(col.min, startW + ev.clientX - startX));
+      latest = { ...base, [id]: w };
+      setManual(latest);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      try {
+        localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(latest));
+      } catch {
+        /* không lưu được thì thôi */
+      }
+    };
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
+  const reset = () => {
+    setManual(null);
+    try {
+      localStorage.removeItem(COL_STORAGE_KEY);
+    } catch {
+      /* bỏ qua */
+    }
+  };
+
+  return { widths, startResize, reset, isManual: manual !== null };
+}
+
+function ResizeHandle({
+  id,
+  onStart,
+  onReset,
+}: {
+  id: ColumnId;
+  onStart: (id: ColumnId, e: React.PointerEvent) => void;
+  onReset: () => void;
+}) {
+  return (
+    <span
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Kéo để đổi độ rộng cột, bấm đúp để tự co lại cho vừa khung"
+      title="Kéo để đổi độ rộng cột · bấm đúp để tự co lại cho vừa khung"
+      onPointerDown={(e) => onStart(id, e)}
+      onDoubleClick={onReset}
+      className="group/rs absolute right-0 top-0 z-10 flex h-full w-3 cursor-col-resize touch-none items-center justify-center"
+    >
+      <span className="h-4 w-px bg-[rgb(var(--border))] transition-colors group-hover/rs:h-full group-hover/rs:bg-brand-500" />
+    </span>
+  );
+}
+
 function SortableHeader({
   label,
   sortKey,
@@ -477,6 +686,7 @@ function SortableHeader({
   dir,
   onSort,
   className = "",
+  handle,
 }: {
   label: string;
   sortKey: SortKey;
@@ -484,11 +694,12 @@ function SortableHeader({
   dir: SortDir;
   onSort: (key: SortKey) => void;
   className?: string;
+  handle?: React.ReactNode;
 }) {
   const active = sortKey === current;
   const Icon = active ? (dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
   return (
-    <th className={`px-4 py-2 ${className}`}>
+    <th className={`relative px-4 py-2 ${className}`}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
@@ -499,6 +710,7 @@ function SortableHeader({
         {label}
         <Icon className={`h-3 w-3 shrink-0 ${active ? "" : "opacity-40"}`} aria-hidden />
       </button>
+      {handle}
     </th>
   );
 }
