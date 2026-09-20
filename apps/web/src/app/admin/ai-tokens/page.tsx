@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { listOrdersForAdmin } from "@feedbackme/core-feedback";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getAiTokensPageLocked } from "@/lib/site-settings";
+import AiTokensPageLockCard from "./AiTokensPageLockCard";
 import AdminTokensClient from "./AdminTokensClient";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +23,7 @@ export default async function AdminAiTokensPage({
   )
     ? (searchParams.status as "pending" | "paid" | "cancelled" | "all")
     : "pending";
-  const orders = await listOrdersForAdmin(status);
+  const [orders, pageLocked] = await Promise.all([listOrdersForAdmin(status), getAiTokensPageLocked()]);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:px-6">
@@ -30,6 +32,8 @@ export default async function AdminAiTokensPage({
         Người học đặt đơn rồi chuyển khoản kèm mã. Đối chiếu sao kê, thấy đúng
         số tiền và đúng mã thì xác nhận — token được cộng ngay.
       </p>
+
+      <AiTokensPageLockCard initialLocked={pageLocked} />
 
       <AdminTokensClient
         status={status}

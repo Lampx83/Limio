@@ -7,6 +7,8 @@ import Toaster from "@/components/Toaster";
 import { Providers } from "@/components/Providers";
 import Footer from "@/components/Footer";
 import FooterGate from "@/components/FooterGate";
+import { AiTokensPageProvider } from "@/components/AiTokensPageContext";
+import { getAiTokensPageLocked } from "@/lib/site-settings";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -52,11 +54,13 @@ const NO_FLASH_SCRIPT = `
 })();
 `.trim();
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const aiTokensPageUnlocked = !(await getAiTokensPageLocked().catch(() => true));
+
   return (
     <html lang="vi" className={`${inter.variable} ${caveat.variable}`} suppressHydrationWarning>
       <head>
@@ -64,6 +68,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-screen flex-col">
         <Providers>
+          <AiTokensPageProvider unlocked={aiTokensPageUnlocked}>
           <ImpersonationBanner />
           <div data-print-hide>
             <AppHeader />
@@ -73,6 +78,7 @@ export default function RootLayout({
             <Footer />
           </FooterGate>
           <Toaster />
+          </AiTokensPageProvider>
         </Providers>
       </body>
     </html>

@@ -49,6 +49,16 @@ export async function getAiBankSettings(): Promise<AiBankSettings> {
   };
 }
 
+export const AI_TOKENS_PAGE_LOCKED_KEY = "ai.tokens_page.locked";
+
+/**
+ * Trang Token AI của người dùng đang khoá? Mặc định KHOÁ (chưa có giá trị) —
+ * admin phải chủ động mở ở /admin/ai-tokens.
+ */
+export async function getAiTokensPageLocked(): Promise<boolean> {
+  return (await getSiteSetting(AI_TOKENS_PAGE_LOCKED_KEY)) !== "false";
+}
+
 export async function setSiteSetting(key: string, value: string): Promise<void> {
   await prisma.siteSetting.upsert({
     where: { key },

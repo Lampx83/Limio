@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Sparkles, Wallet, MessageCircleQuestion } from "lucide-react";
 import {
   ASSUMED_ESSAY_WORDS,
@@ -10,7 +10,7 @@ import {
   resolveMonthlyAllowance,
 } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
-import { getSiteSetting } from "@/lib/site-settings";
+import { getAiTokensPageLocked, getSiteSetting } from "@/lib/site-settings";
 import BuyTokensClient from "./BuyTokensClient";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +19,7 @@ export default async function AiTokensPage() {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) redirect("/signin?next=/me/ai-tokens");
+  if (await getAiTokensPageLocked()) notFound();
 
   const [budget, allowance, packages, orders, bankName, accountNumber, accountName] =
     await Promise.all([

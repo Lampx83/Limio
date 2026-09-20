@@ -20,6 +20,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
 
 export const STUDENT_MENU_TOGGLE_EVENT = "fbm:student-menu:toggle";
 
@@ -83,6 +84,7 @@ export default function StudentLeftMenu({
   badges?: Record<string, { count: number; tone?: "warn" | "danger" }>;
   continueTo?: { href: string; title: string } | null;
 }) {
+  const tokensUnlocked = useAiTokensPageUnlocked();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -160,7 +162,10 @@ export default function StudentLeftMenu({
         </div>
       )}
 
-      {GROUPS.map((g, idx) => {
+      {GROUPS.map((group, idx) => {
+        const g = tokensUnlocked
+          ? group
+          : { ...group, items: group.items.filter((it) => it.href !== AI_TOKENS_HREF) };
         const isCollapsed = !!collapsed[g.id];
         return (
           <div key={g.id} className="px-3">

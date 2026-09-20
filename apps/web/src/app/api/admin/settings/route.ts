@@ -17,6 +17,8 @@ const ALLOWED_KEYS = [
   "ai.monthly_tokens.learner",
   "ai.monthly_tokens.instructor",
   "ai.tokens_per_day_global",
+  // "true"/"false": khoá trang Token AI của người dùng (mặc định khoá).
+  "ai.tokens_page.locked",
 ] as const;
 type AllowedKey = (typeof ALLOWED_KEYS)[number];
 

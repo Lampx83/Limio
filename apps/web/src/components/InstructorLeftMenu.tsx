@@ -39,6 +39,7 @@ import {
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
+import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
 
 /** Điểm "A+" khoanh tròn bằng nét bút — icon module Kiểm tra đánh giá (lucide không có sẵn hình này). */
 const GradeAPlus = createLucideIcon("GradeAPlus", [
@@ -301,6 +302,7 @@ function InstructorLeftMenuInner({
   isInstructor?: boolean;
   isProctor?: boolean;
 }) {
+  const tokensUnlocked = useAiTokensPageUnlocked();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const navOverride = useActiveNavSectionOverride();
@@ -391,7 +393,11 @@ function InstructorLeftMenuInner({
   }
 
   const activeModuleId = pendingModuleId ?? resolveActiveModuleId(pathname, navOverride);
-  const activeModule = MODULES.find((m) => m.id === activeModuleId) ?? null;
+  const foundModule = MODULES.find((m) => m.id === activeModuleId) ?? null;
+  const activeModule =
+    foundModule && !tokensUnlocked
+      ? { ...foundModule, items: foundModule.items.filter((it) => it.href !== AI_TOKENS_HREF) }
+      : foundModule;
 
   // Trang course editor `/instructor/courses/{id}` đã có nhiều layer
   // navigation (tab, EditorSidebar, breadcrumb) → ẩn workspace menu để đỡ
