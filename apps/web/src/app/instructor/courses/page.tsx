@@ -106,10 +106,10 @@ export default async function InstructorCoursesPage() {
                     <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                       {c.personalizationEnabled && (
                         <span
-                          className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2 py-0.5 text-[11px] font-medium text-pink-700"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-purple-700"
                           title="Khoá bật cá nhân hoá: AI feedback theo skill (BKT, chẩn đoán, lộ trình thích ứng, huy hiệu kỹ năng)"
                         >
-                          <Sparkles className="h-3 w-3" aria-hidden />
+                          <Sparkles className="h-3.5 w-3.5" aria-hidden />
                           AI feedback
                         </span>
                       )}
