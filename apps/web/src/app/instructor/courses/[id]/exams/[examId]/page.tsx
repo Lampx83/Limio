@@ -22,7 +22,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-slate-100 text-slate-700",
-  published: "bg-emerald-100 text-emerald-800",
+  published: "bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-200",
   archived: "bg-amber-100 text-amber-800",
 };
 
@@ -139,7 +139,7 @@ export default async function EditExamPage({
     <main>
       <Link
         href={exam.courseId ? `/instructor/courses/${exam.courseId}/exams` : exam.kind === "oral" ? "/instructor/oral-exams" : "/instructor/exams"}
-        className="text-sm text-blue-600 hover:underline"
+        className="text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300"
       >
         ← Bài thi
       </Link>

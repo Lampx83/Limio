@@ -69,7 +69,7 @@ export default function ExamTabs({
             scroll={false}
             className={`-mb-px inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               isActive
-                ? "border-amber-600 text-amber-700"
+                ? "border-lime-600 text-lime-700 dark:border-lime-400 dark:text-lime-300"
                 : "border-transparent text-muted hover:border-token hover:text-default"
             }`}
             prefetch={false}

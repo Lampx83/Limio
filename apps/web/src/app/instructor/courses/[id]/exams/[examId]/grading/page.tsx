@@ -70,7 +70,7 @@ export default async function GradingInboxPage({
       <main>
         <Link
           href={`/instructor/courses/${courseSegment}/exams/${exam.id}`}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300"
         >
           ← {exam.title}
         </Link>
@@ -207,7 +207,7 @@ export default async function GradingInboxPage({
     <main>
       <Link
         href={`/instructor/courses/${courseSegment}/exams/${exam.id}`}
-        className="text-sm text-blue-600 hover:underline"
+        className="text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300"
       >
         ← {exam.title}
       </Link>

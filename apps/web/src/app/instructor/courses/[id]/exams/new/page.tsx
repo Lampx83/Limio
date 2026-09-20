@@ -37,7 +37,7 @@ export default async function NewExamPage({
     <main>
       <Link
         href={`/instructor/courses/${course.id}/exams`}
-        className="text-sm text-blue-600 hover:underline"
+        className="text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300"
       >
         ← Bài thi
       </Link>
