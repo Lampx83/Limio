@@ -181,15 +181,21 @@ export default async function MissionSubmissionsPage({
       <header className="mt-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">
-            {mission.verifyMode}
+            {mission.verifyMode
+              ? {
+                  AUTO_GRADE: "Làm bài kiểm tra",
+                  AUTO_CHECK: "Nộp liên kết hoặc tệp",
+                  PEER_REVIEW: "Chấm chéo",
+                  MANUAL_REVIEW: "Bạn chấm",
+                }[mission.verifyMode]
+              : "Tự tính theo việc học"}
             {isCollective && " · Nộp theo nhóm"}
           </p>
           <h1 className="mt-1 text-2xl font-bold">
             {mission.title}
           </h1>
           <p className="mt-1 text-sm text-muted">
-            {mission.submissions.length} submission
-            {mission.submissions.length !== 1 ? "s" : ""}
+            {mission.submissions.length} bài nộp
           </p>
         </div>
         {mission.verifyMode === "PEER_REVIEW" && (
@@ -297,7 +303,10 @@ export default async function MissionSubmissionsPage({
       {mission.submissions.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-token py-16 text-center">
           <div className="text-4xl">📭</div>
-          <p className="mt-3 font-medium">Chưa có submission nào</p>
+          <p className="mt-3 font-medium">Chưa có bài nộp nào</p>
+          {mission.submissionDeadline && (
+            <p className="mt-1 text-sm text-muted">Hạn nộp: {formatDateTime(mission.submissionDeadline)}</p>
+          )}
         </div>
       ) : (
         <ul className="mt-6 space-y-3">
@@ -322,7 +331,9 @@ export default async function MissionSubmissionsPage({
                 ? "Đạt"
                 : s.status === "failed"
                   ? "Chưa đạt"
-                  : "Chờ chấm";
+                  : s.status === "disqualified"
+                    ? "Bị loại"
+                    : "Chờ chấm";
 
             return (
               <li
@@ -387,7 +398,7 @@ export default async function MissionSubmissionsPage({
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
                       >
                         <Code2 size={12} />
-                        Repo
+                        Mã nguồn
                       </a>
                     )}
                     {payload.slidesUrl && (
@@ -398,7 +409,7 @@ export default async function MissionSubmissionsPage({
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
                       >
                         <Presentation size={12} />
-                        Slides
+                        Slide
                       </a>
                     )}
                     {payload.demoVideoUrl && (
@@ -409,7 +420,7 @@ export default async function MissionSubmissionsPage({
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
                       >
                         <Video size={12} />
-                        Demo
+                        Video demo
                       </a>
                     )}
                   </div>
@@ -448,7 +459,7 @@ export default async function MissionSubmissionsPage({
                       targetCount={mission.peerReviewerCount ?? 3}
                     />
                   ) : (
-                    <span className="text-faint">Auto-graded</span>
+                    <span className="text-faint">Hệ thống tự chấm</span>
                   )}
                 </footer>
 

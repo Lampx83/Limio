@@ -50,7 +50,7 @@ export default function TournamentInfoSummary({ data, note }: { data: InfoSummar
             "Cá nhân"
           ),
         )}
-        {row("XP thưởng", data.prizeXp > 0 ? `${data.prizeXp.toLocaleString("vi-VN")} XP` : "Không có")}
+        {row("XP thưởng", <>{data.prizeXp > 0 ? `${data.prizeXp.toLocaleString("vi-VN")} XP` : "Không có"} <span className="text-muted">(chỉnh ở tab Giải thưởng)</span></>)}
         {row(
           "Đăng ký khi giải đang diễn ra",
           data.allowLateRegistration ? "Cho phép, người chơi vào được đến lúc kết thúc" : "Không, khoá danh sách khi giải bắt đầu",

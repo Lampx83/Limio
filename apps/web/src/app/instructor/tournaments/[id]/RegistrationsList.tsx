@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { Download, Users, Crown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Download, Users, Crown, Search } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
 
 export type Registration = {
@@ -38,15 +38,26 @@ export default function RegistrationsList({
   tournamentTitle: string;
 }) {
   const isTeamBased = teamSize > 1;
+  const [q, setQ] = useState("");
+  const query = q.trim().toLowerCase();
+  const shown = useMemo(
+    () =>
+      query
+        ? registrations.filter((r) =>
+            [r.user.displayName, r.user.email, r.teamName ?? ""].some((v) => v.toLowerCase().includes(query)),
+          )
+        : registrations,
+    [registrations, query],
+  );
 
   // Group by teamId when team-based; otherwise a single "All" bucket.
   const groups = useMemo(() => {
     if (!isTeamBased) {
-      return [{ teamId: null as string | null, items: registrations }];
+      return [{ teamId: null as string | null, items: shown }];
     }
     const map = new Map<string, Registration[]>();
     const solo: Registration[] = [];
-    for (const r of registrations) {
+    for (const r of shown) {
       if (!r.teamId) {
         solo.push(r);
         continue;
@@ -60,7 +71,7 @@ export default function RegistrationsList({
       .map(([teamId, items]) => ({ teamId: teamId as string | null, items }));
     if (solo.length) teamGroups.push({ teamId: null, items: solo });
     return teamGroups;
-  }, [registrations, isTeamBased]);
+  }, [shown, isTeamBased]);
 
   const downloadCsv = () => {
     const headers = isTeamBased
@@ -69,9 +80,9 @@ export default function RegistrationsList({
     const rows = registrations.map((r) => {
       const status = r.disqualifiedAt
         ? `Bị loại (${formatDate(r.disqualifiedAt)})`
-        : "Active";
+        : "Đang tham gia";
       const nameWithRole = r.isCaptain
-        ? `${r.user.displayName} (Captain)`
+        ? `${r.user.displayName} (Đội trưởng)`
         : r.user.displayName;
       const base = [
         nameWithRole,
@@ -136,6 +147,22 @@ export default function RegistrationsList({
         </button>
       </div>
 
+      <div className="relative mb-4 max-w-sm">
+        <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={isTeamBased ? "Tìm theo tên, email hoặc tên đội" : "Tìm theo tên hoặc email"}
+          aria-label="Tìm trong danh sách đăng ký"
+          className="input w-full pl-9"
+        />
+      </div>
+      {shown.length === 0 && (
+        <p className="rounded-xl border border-dashed border-token py-8 text-center text-sm text-muted">
+          Không có ai khớp với "{q.trim()}".
+        </p>
+      )}
       <div className="space-y-6">
         {groups.map((g) => (
           <div key={g.teamId ?? "_solo"}>
@@ -184,7 +211,7 @@ export default function RegistrationsList({
                                 <Crown
                                   size={12}
                                   className="shrink-0 text-amber-500"
-                                  aria-label="Captain"
+                                  aria-label="Đội trưởng"
                                 />
                               )}
                               {r.user.displayName}
@@ -202,7 +229,7 @@ export default function RegistrationsList({
                             </span>
                           ) : (
                             <span className="inline-flex items-center rounded-full bg-success-50 px-2 py-0.5 text-[11px] font-semibold text-success-700">
-                              Active
+                              Đang tham gia
                             </span>
                           )}
                         </td>

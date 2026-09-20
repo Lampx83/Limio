@@ -25,8 +25,7 @@ export default async function NewTournamentPage() {
     return (
       <main>
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
-          Bạn không phải instructor của khóa nào. Chỉ instructor hoặc admin
-          mới tạo được đấu trường.
+          Bạn chưa phụ trách khoá học nào. Chỉ giảng viên của một khoá học hoặc quản trị viên mới tạo được đấu trường.
         </div>
       </main>
     );
@@ -35,10 +34,10 @@ export default async function NewTournamentPage() {
   return (
     <main>
       <Link
-        href="/instructor/courses"
+        href="/instructor/tournaments"
         className="link inline-flex items-center gap-1 text-sm"
       >
-        ← Khóa của tôi
+        ← Đấu trường
       </Link>
 
       <div className="mt-4">
@@ -47,8 +46,7 @@ export default async function NewTournamentPage() {
           Tạo đấu trường mới
         </h1>
         <p className="mt-2 text-muted">
-          Phase 3 stub — chỉ tạo bản nháp. Mission, ranking, prize sẽ ship ở các
-          phase tiếp theo.
+          Điền thông tin cơ bản. Đấu trường được lưu ở dạng nháp, học viên chỉ thấy khi bạn công bố.
         </p>
       </div>
 

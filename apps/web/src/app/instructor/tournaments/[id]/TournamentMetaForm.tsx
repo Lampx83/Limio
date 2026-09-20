@@ -35,7 +35,6 @@ export default function TournamentMetaForm({
   const [description, setDescription] = useState(plainToRichHtml(initial.description));
   const [startsAt, setStartsAt] = useState(toDateTimeInputValue(initial.startsAt));
   const [endsAt, setEndsAt] = useState(toDateTimeInputValue(initial.endsAt));
-  const [prizeXp, setPrizeXp] = useState(String(initial.prizeXp));
   const [allowLateRegistration, setAllowLateRegistration] = useState(
     initial.allowLateRegistration,
   );
@@ -62,7 +61,6 @@ export default function TournamentMetaForm({
         description,
         startsAt: fromDateTimeInputValue(startsAt),
         endsAt: fromDateTimeInputValue(endsAt),
-        prizeXp: parseInt(prizeXp, 10) || 0,
         allowLateRegistration,
       }),
     });
@@ -132,23 +130,6 @@ export default function TournamentMetaForm({
             className="input mt-1.5"
           />
         </div>
-      </div>
-
-      <div className="max-w-xs">
-        <label className="label" htmlFor="tm-prize">
-          XP thưởng
-        </label>
-        <input
-          id="tm-prize"
-          type="number"
-          min={0}
-          value={prizeXp}
-          onChange={(e) => setPrizeXp(e.target.value)}
-          className="input mt-1.5"
-        />
-        <p className="mt-1 text-xs text-faint">
-          Tổng XP chia cho những người đứng đầu. Chia theo hạng ở tab Giải thưởng.
-        </p>
       </div>
 
       <div>

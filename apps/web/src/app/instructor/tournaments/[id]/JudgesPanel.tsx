@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Gavel, UserPlus, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 type Judge = {
   id: string;
@@ -12,8 +13,8 @@ type Judge = {
 };
 
 const ERROR_LABEL: Record<string, string> = {
-  user_not_found: "Không tìm thấy user với email này.",
-  already_judge: "User này đã là giám khảo.",
+  user_not_found: "Không tìm thấy tài khoản nào với email này.",
+  already_judge: "Người này đã là giám khảo.",
   validation_failed: "Email không hợp lệ.",
   forbidden: "Bạn không có quyền chỉnh sửa.",
 };
@@ -28,12 +29,19 @@ export default function JudgesPanel({ tournamentId }: { tournamentId: string }) 
 
   async function load() {
     setLoading(true);
-    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/judges`));
-    if (res.ok) {
-      const d = await res.json();
-      setJudges(d.judges);
+    try {
+      const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/judges`));
+      if (res.ok) {
+        const d = await res.json();
+        setJudges(d.judges);
+      } else {
+        setError("Không tải được danh sách giám khảo.");
+      }
+    } catch {
+      setError(tournamentErrorMessage({ error: "network_error" }));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -45,19 +53,24 @@ export default function JudgesPanel({ tournamentId }: { tournamentId: string }) 
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/judges`), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim() }),
-    });
-    setBusy(false);
-    if (res.ok) {
-      setEmail("");
-      await load();
-      router.refresh();
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setError(ERROR_LABEL[body.error] ?? body.error);
+    try {
+      const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/judges`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (res.ok) {
+        setEmail("");
+        await load();
+        router.refresh();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(ERROR_LABEL[body.error] ?? tournamentErrorMessage(body, "Chưa thêm được giám khảo."));
+      }
+    } catch {
+      setError(tournamentErrorMessage({ error: "network_error" }));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -65,14 +78,22 @@ export default function JudgesPanel({ tournamentId }: { tournamentId: string }) 
     if (!confirm(`Xoá "${name}" khỏi danh sách giám khảo?`)) return;
     setBusy(true);
     setError(null);
-    const res = await fetch(
-      apiUrl(`/api/tournaments/${tournamentId}/judges?userId=${userId}`),
-      { method: "DELETE" },
-    );
-    setBusy(false);
-    if (res.ok) {
-      await load();
-      router.refresh();
+    try {
+      const res = await fetch(
+        apiUrl(`/api/tournaments/${tournamentId}/judges?userId=${userId}`),
+        { method: "DELETE" },
+      );
+      if (res.ok) {
+        await load();
+        router.refresh();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(tournamentErrorMessage(body, "Chưa xoá được giám khảo."));
+      }
+    } catch {
+      setError(tournamentErrorMessage({ error: "network_error" }));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -80,11 +101,11 @@ export default function JudgesPanel({ tournamentId }: { tournamentId: string }) 
     <div>
       <div className="flex items-center gap-2">
         <Gavel size={18} className="text-violet-600" />
-        <h3 className="text-base font-semibold">Giám khảo hackathon</h3>
+        <h3 className="text-base font-semibold">Giám khảo</h3>
       </div>
       <p className="mt-1 text-xs text-muted">
-        Khi đấu trường có giám khảo + mission nộp theo nhóm (PEER_REVIEW), hệ
-        thống tự assign mọi giám khảo chấm mỗi đội — thay vì peer chia ngẫu nhiên.
+        Không bắt buộc. Nếu đấu trường có giám khảo và có nhiệm vụ chấm chéo nộp theo đội, hệ thống giao
+        cho mọi giám khảo chấm bài của từng đội, thay vì để các đội chấm chéo ngẫu nhiên cho nhau.
       </p>
 
       <form onSubmit={addJudge} className="mt-4 flex flex-wrap items-center gap-2">
@@ -129,7 +150,7 @@ export default function JudgesPanel({ tournamentId }: { tournamentId: string }) 
                   type="button"
                   onClick={() => removeJudge(j.user.id, j.user.displayName)}
                   disabled={busy}
-                  title="Xoá khỏi giám khảo"
+                  title="Bỏ khỏi danh sách giám khảo" aria-label="Bỏ khỏi danh sách giám khảo"
                   className="rounded p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                 >
                   <Trash2 size={14} />

@@ -9,7 +9,6 @@ import TournamentPrizeForm from "./TournamentPrizeForm";
 import TournamentSetupChecklist from "./TournamentSetupChecklist";
 import TournamentInfoSummary, { type InfoSummaryData } from "./TournamentInfoSummary";
 import { buildSetupSteps, type SetupTab } from "@/lib/tournamentSetup";
-import { prizeXpForPercent } from "@feedbackme/core-gamification";
 
 interface Tab {
   id: string;
@@ -126,7 +125,7 @@ export default function InstructorTournamentTabs({
               note={
                 canEdit
                   ? status === "published"
-                    ? "Đấu trường đã công bố. Bạn vẫn sửa được tiêu đề, mô tả, thời gian và XP thưởng. Số người mỗi đội thì không đổi được."
+                    ? "Đấu trường đã công bố. Bạn vẫn sửa được tiêu đề, mô tả và thời gian; XP thưởng chỉnh ở tab Giải thưởng. Số người mỗi đội thì không đổi được."
                     : undefined
                   : status === "active"
                     ? "Đấu trường đang diễn ra nên không sửa được thông tin."
@@ -172,75 +171,16 @@ export default function InstructorTournamentTabs({
 
         {/* Prize Tab */}
         {activeTab === "prize" && (
-          <div className="space-y-6">
-            <div className="card">
-              <h3 className="text-lg font-semibold">Tổng giải thưởng</h3>
-              <p className="mt-4 text-3xl font-bold text-accent-600">
-                {prizeXp.toLocaleString()} XP
-              </p>
-            </div>
-
-            {prizeDistribution && typeof prizeDistribution === "object" ? (
+          <div className="space-y-4">
+            {!courseId ? (
               <div className="card">
-                <h3 className="text-lg font-semibold">Phân phối theo hạng</h3>
-                <dl className="mt-4 space-y-3">
-                  {Object.entries(prizeDistribution as Record<string, number>)
-                    .sort(([a], [b]) => Number(a) - Number(b))
-                    .map(([place, pct]) => {
-                      const xp = prizeXpForPercent(prizeXp, pct);
-                      const medals: Record<number, string> = {
-                        1: "🥇",
-                        2: "🥈",
-                        3: "🥉",
-                      };
-                      const rankLabels: Record<number, string> = {
-                        1: "Hạng Vàng",
-                        2: "Hạng Bạc",
-                        3: "Hạng Đồng",
-                      };
-                      return (
-                        <div
-                          key={place}
-                          className="flex items-center justify-between gap-2 border-b border-token pb-3 last:border-0"
-                        >
-                          <dt className="font-medium">
-                            <span className="mr-2">
-                              {medals[Number(place)] ?? "🎖️"}
-                            </span>
-                            <span>
-                              {rankLabels[Number(place)] ?? `Hạng ${place}`}
-                            </span>
-                          </dt>
-                          <dd className="text-right">
-                            <span className="font-bold text-accent-600">
-                              {xp} XP
-                            </span>
-                            <span className="text-xs text-muted ml-2">
-                              ({pct}%)
-                            </span>
-                          </dd>
-                        </div>
-                      );
-                    })}
-                </dl>
+                <h3 className="text-base font-semibold">Giải thưởng</h3>
+                <p className="mt-2 text-sm text-muted">
+                  Đấu trường toàn hệ thống hiện chưa trao XP thưởng vì XP luôn cộng vào một khoá học cụ thể.
+                  Gắn đấu trường với một khoá học nếu muốn có thưởng.
+                </p>
               </div>
             ) : (
-              canEdit &&
-              prizeXp > 0 && (
-                <div className="card border-2 border-dashed border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20">
-                  <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-300">
-                    Chưa chia tỷ lệ giải thưởng
-                  </h3>
-                  <p className="mt-2 text-sm text-amber-700 dark:text-amber-400">
-                    {prizeXp.toLocaleString()} XP sẽ <strong>không được trao cho
-                    ai</strong> khi giải kết thúc nếu chưa thiết lập tỷ lệ chia
-                    theo hạng. Hãy thiết lập ngay bên dưới.
-                  </p>
-                </div>
-              )
-            )}
-
-            {canEdit && prizeXp > 0 && (
               <TournamentPrizeForm
                 tournamentId={tournamentId}
                 prizeXp={prizeXp}
@@ -249,6 +189,8 @@ export default function InstructorTournamentTabs({
                     ? (prizeDistribution as Record<string, number>)
                     : null
                 }
+                teamSize={teamSize}
+                canEdit={canEdit}
               />
             )}
           </div>
