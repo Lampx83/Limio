@@ -31,7 +31,7 @@ import EnrollmentList from "./EnrollmentList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
-import CourseAssignmentsBrowser from "../../assignments/CourseAssignmentsBrowser";
+import CourseGradeOverview from "../../assignments/CourseGradeOverview";
 
 export const dynamic = "force-dynamic";
 
@@ -121,7 +121,7 @@ export default async function InstructorCourseEditPage({
     canModerateLiveExam(userId, course.id),
   ]);
   if (!canAccess) redirect("/instructor/courses");
-  // Học viên / Lớp học / Assignment / Phân tích chỉ có nghĩa khi khoá đã mở cho
+  // Học viên / Lớp học / Grade / Phân tích chỉ có nghĩa khi khoá đã mở cho
   // người học: khoá nháp chưa có ai ghi danh, chưa có bài nộp hay dữ liệu học
   // tập. Khoá đã lưu trữ (từng publish) vẫn giữ để còn tra lại danh sách và điểm.
   const hiddenTabs: EditorTab[] = [
@@ -229,17 +229,6 @@ export default async function InstructorCourseEditPage({
   }));
 
   const useWideLayout = true;
-
-  const buildAssignmentHref = (next: { lesson?: string | null; filter?: string }) => {
-    const params = new URLSearchParams();
-    params.set("tab", "assignments");
-    const l =
-      next.lesson === undefined ? (searchParams?.assignmentLesson ?? null) : next.lesson;
-    if (l) params.set("assignmentLesson", l);
-    const f = next.filter ?? searchParams?.assignmentFilter ?? "all";
-    if (f && f !== "all") params.set("assignmentFilter", f);
-    return `/instructor/courses/${course.id}?${params.toString()}`;
-  };
 
   return (
     <>
@@ -552,15 +541,15 @@ export default async function InstructorCourseEditPage({
         </div>
       )}
 
-      {/* TAB: Assignment — danh sách bài học (theo module) → assignment của
+      {/* TAB: Grade — danh sách bài học (theo module) → assignment + quiz của
           bài học đó, dùng chung component với trang /instructor/assignments. */}
       {tab === "assignments" && (
-        <CourseAssignmentsBrowser
+        <CourseGradeOverview
           courseId={course.id}
-          courseTitle={course.title}
-          requestedLessonId={searchParams?.assignmentLesson ?? null}
           filter={searchParams?.assignmentFilter ?? "all"}
-          buildHref={buildAssignmentHref}
+          buildHref={(f) =>
+            `/instructor/courses/${course.id}?tab=assignments${f === "all" ? "" : `&assignmentFilter=${f}`}`
+          }
         />
       )}
 

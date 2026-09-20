@@ -4,7 +4,7 @@ import {
   BookOpen,
   Users,
   School,
-  ClipboardList,
+  GraduationCap,
   BarChart3,
   Lock,
   type LucideIcon,
@@ -34,7 +34,7 @@ const TABS: Array<{ key: EditorTab; label: string; icon: LucideIcon }> = [
   { key: "content", label: "Nội dung", icon: BookOpen },
   { key: "students", label: "Học viên", icon: Users },
   { key: "sections", label: "Lớp học", icon: School },
-  { key: "assignments", label: "Assignment", icon: ClipboardList },
+  { key: "assignments", label: "Grade", icon: GraduationCap },
   { key: "analytics", label: "Phân tích", icon: BarChart3 },
 ];
 

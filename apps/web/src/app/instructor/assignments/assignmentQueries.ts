@@ -40,3 +40,59 @@ export async function loadAssignmentsWithCounts(moduleIds: string[]) {
     counts: countsByAssignment.get(a.id) ?? { pending: 0, graded: 0, total: 0 },
   }));
 }
+
+export type QuizStats = {
+  attempts: number;
+  students: number;
+  avgScorePct: number | null;
+};
+
+/**
+ * Quiz gắn với bài học trong các module đã cho, kèm thống kê lượt nộp.
+ * Bỏ quiz cuepoint (1 câu trong video) và quiz thuộc nhiệm vụ tournament —
+ * cả hai không hiện trong danh sách quiz của khoá.
+ */
+export async function loadQuizzesWithStats(moduleIds: string[]) {
+  const quizzes = await prisma.quiz.findMany({
+    where: {
+      lessonId: { not: null },
+      lesson: { moduleId: { in: moduleIds } },
+      cuepointOnly: false,
+      tournamentMissionId: null,
+    },
+    select: {
+      id: true,
+      courseId: true,
+      title: true,
+      isHidden: true,
+      lessonId: true,
+      createdAt: true,
+      _count: { select: { questions: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const attempts = await prisma.quizAttempt.findMany({
+    where: { quizId: { in: quizzes.map((q) => q.id) }, status: "submitted" },
+    select: { quizId: true, userId: true, scorePct: true },
+  });
+  const byQuiz = new Map<string, typeof attempts>();
+  for (const a of attempts) {
+    const list = byQuiz.get(a.quizId);
+    if (list) list.push(a);
+    else byQuiz.set(a.quizId, [a]);
+  }
+
+  return quizzes.map((q) => {
+    const list = byQuiz.get(q.id) ?? [];
+    const scored = list.filter((a) => a.scorePct != null);
+    const stats: QuizStats = {
+      attempts: list.length,
+      students: new Set(list.map((a) => a.userId)).size,
+      avgScorePct: scored.length
+        ? scored.reduce((sum, a) => sum + (a.scorePct ?? 0), 0) / scored.length
+        : null,
+    };
+    return { ...q, stats };
+  });
+}
