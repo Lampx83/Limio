@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { copyText } from "@/lib/clipboard";
-import { Cloud, RefreshCw, RotateCcw } from "lucide-react";
+import { RefreshCw, RotateCcw } from "lucide-react";
+import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
@@ -314,7 +315,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
       <div className="fixed inset-0 bg-[rgb(var(--surface))] flex flex-col p-6 z-50 overflow-y-auto">
         <div className="tool-header border-b border-token pb-4">
           <div className="flex items-center gap-3">
-            <span className="tool-icon"><Cloud size={20} strokeWidth={1.75} /></span>
+            <span className="tool-icon"><WordCloudIcon size={22} strokeWidth={1.75} /></span>
             <h3 className="tool-title">Word Cloud Đang Diễn Ra</h3>
           </div>
           <div className="flex gap-2">
@@ -389,7 +390,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
       <div className="tool-panel">
         <div className="tool-header">
           <div className="flex items-center gap-2">
-            <span className="tool-icon"><Cloud size={20} strokeWidth={1.75} /></span>
+            <span className="tool-icon"><WordCloudIcon size={22} strokeWidth={1.75} /></span>
             <h3 className="tool-title">Word Cloud Đang Diễn Ra</h3>
           </div>
           <div className="flex gap-2">
@@ -436,7 +437,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
   return (
     <div className="tool-panel">
       <div className="flex items-center gap-2">
-        <span className="tool-icon"><Cloud size={20} strokeWidth={1.75} /></span>
+        <span className="tool-icon"><WordCloudIcon size={22} strokeWidth={1.75} /></span>
         <h3 className="tool-title">Tạo Word Cloud</h3>
       </div>
 
