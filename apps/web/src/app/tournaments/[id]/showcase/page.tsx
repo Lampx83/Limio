@@ -8,6 +8,13 @@ import { auth } from "@/lib/auth";
 import VoteButton from "./VoteButton";
 import { formatDateTime } from "@/lib/datetime";
 import { safeHref, safeHttpUrl } from "@/lib/safeUrl";
+import {
+  paginate,
+  showcaseScoreLabel,
+  showcaseStatus,
+  showcaseTeamLabel,
+  topVotedSubmissionIds,
+} from "@/lib/tournamentShowcase";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +28,8 @@ type HackathonPayload = {
 };
 
 type SortKey = "recent" | "votes" | "score" | "mission";
+
+const PAGE_SIZE = 24;
 
 // Extract YouTube video ID from common URL formats so we can build a thumbnail.
 function youtubeThumbnail(url: string | undefined): string | null {
@@ -47,7 +56,7 @@ export default async function ShowcasePage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { sort?: string; mission?: string };
+  searchParams: { sort?: string; mission?: string; page?: string };
 }) {
   const session = await auth();
   const userId = session?.user?.id;
@@ -91,6 +100,7 @@ export default async function ShowcasePage({
       // MANUAL_REVIEW (GV chấm) → bài nộp nằm ở AssignmentSubmission.
       assignment: {
         select: {
+          maxScore: true,
           submissions: {
             select: {
               id: true,
@@ -130,16 +140,16 @@ export default async function ShowcasePage({
   );
   const myVoteByMission = new Map(myVotes.map((v) => [v.missionId, v.submissionId]));
 
-  // Top voted per mission — drives 🏆 badge.
-  const topVotedBySubmission = new Set<string>();
-  for (const m of missions) {
-    let best: { id: string; count: number } | null = null;
-    for (const s of m.submissions) {
-      const c = voteCountBySubmission.get(s.id) ?? 0;
-      if (c > 0 && (!best || c > best.count)) best = { id: s.id, count: c };
-    }
-    if (best) topVotedBySubmission.add(best.id);
-  }
+  // Nhãn "nhiều phiếu nhất": dẫn đầu duy nhất trong nhiệm vụ và có ít nhất 2 phiếu.
+  const topVotedBySubmission = topVotedSubmissionIds(
+    missions.flatMap((m) =>
+      m.submissions.map((s) => ({
+        missionId: m.id,
+        submissionId: s.id,
+        votes: voteCountBySubmission.get(s.id) ?? 0,
+      })),
+    ),
+  );
 
   const captainIds = missions.flatMap((m) => [
     ...m.submissions.map((s) => s.userId),
@@ -176,8 +186,10 @@ export default async function ShowcasePage({
       missionTitle: m.title,
       missionOrder: m.orderIndex,
       missionPoints: m.points,
+      kind: "mission" as "mission" | "assignment",
       status: s.status as string,
-      finalScore: s.finalScore as number | null,
+      scoreLabel: showcaseScoreLabel({ kind: "mission", finalScore: s.finalScore, score: null, maxScore: null }),
+      sortScore: s.finalScore as number | null,
       submittedAt: s.submittedAt,
       captain: s.user,
       team: teamByUser.get(s.userId) ?? null,
@@ -193,8 +205,17 @@ export default async function ShowcasePage({
       missionTitle: m.title,
       missionOrder: m.orderIndex,
       missionPoints: m.points,
+      kind: "assignment" as "mission" | "assignment",
       status: s.status as string,
-      finalScore: s.score != null ? s.score / 100 : null,
+      scoreLabel: showcaseScoreLabel({
+        kind: "assignment",
+        finalScore: null,
+        score: s.score,
+        maxScore: m.assignment?.maxScore ?? null,
+      }),
+      // Chuẩn hoá về 0..1 theo thang thật của bài tập để sắp xếp chung với điểm chấm chéo.
+      sortScore:
+        s.score != null && m.assignment?.maxScore ? s.score / m.assignment.maxScore : (null as number | null),
       submittedAt: s.submittedAt,
       captain: s.user,
       team: teamByUser.get(s.userId) ?? null,
@@ -221,7 +242,7 @@ export default async function ShowcasePage({
       flat = flat.sort((a, b) => b.voteCount - a.voteCount);
       break;
     case "score":
-      flat = flat.sort((a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0));
+      flat = flat.sort((a, b) => (b.sortScore ?? 0) - (a.sortScore ?? 0));
       break;
     case "mission":
       flat = flat.sort(
@@ -237,17 +258,19 @@ export default async function ShowcasePage({
 
   const sortLabels: Record<SortKey, string> = {
     recent: "Mới nhất",
-    votes: "Nhiều ❤️ nhất",
+    votes: "Nhiều phiếu nhất",
     score: "Điểm cao nhất",
-    mission: "Theo mission",
+    mission: "Theo nhiệm vụ",
   };
+  const paged = paginate(flat, Number(searchParams.page), PAGE_SIZE);
   const base = `/tournaments/${params.id}/showcase`;
-  const buildUrl = (next: Partial<{ sort: SortKey; mission: string }>) => {
+  const buildUrl = (next: Partial<{ sort: SortKey; mission: string; page: number }>) => {
     const params = new URLSearchParams();
     const s = next.sort ?? sort;
     const m = next.mission ?? missionFilter;
     if (s !== "recent") params.set("sort", s);
     if (m !== "all") params.set("mission", m);
+    if (next.page && next.page > 1) params.set("page", String(next.page));
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
   };
@@ -263,12 +286,12 @@ export default async function ShowcasePage({
       <header className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="h-display text-3xl font-bold sm:text-4xl">
-            🎤 Showcase — {tournament.title}
+            Bài nộp của các đội: {tournament.title}
           </h1>
           <p className="mt-2 text-sm text-muted">
             {all.length === 0
-              ? "Chưa có đội nào nộp project."
-              : `${all.length} project từ ${new Set(all.map((f) => f.team?.id).filter(Boolean)).size} đội`}
+              ? "Chưa có đội nào nộp bài."
+              : `${all.length} bài nộp từ ${new Set(all.map((f) => f.captain.id)).size} đội`}
           </p>
         </div>
         {all.length > 0 && (
@@ -312,6 +335,15 @@ export default async function ShowcasePage({
         </div>
       )}
 
+      {access.scope === "all" && all.some((f) => f.votable) && tournament.status !== "draft" && (
+        <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] px-4 py-3 text-sm text-muted">
+          <span className="font-medium text-[rgb(var(--text))]">Cách bình chọn:</span> mỗi người chơi có 1 phiếu cho mỗi
+          nhiệm vụ và đổi phiếu được bất cứ lúc nào. Bạn không bình chọn được cho đội của mình.
+          {canVote ? "" : " Chỉ người chơi của giải mới bình chọn được."} Số phiếu để mọi người cùng xem, chưa tính vào
+          điểm xếp hạng hay XP thưởng.
+        </div>
+      )}
+
       {/* Mission filter chips — only when >1 COLLECTIVE mission */}
       {missions.length > 1 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
@@ -323,7 +355,7 @@ export default async function ShowcasePage({
                 : "border-token hover:bg-[rgb(var(--surface-muted))]"
             }`}
           >
-            Tất cả mission
+            Tất cả nhiệm vụ
           </Link>
           {missions.map((m) => (
             <Link
@@ -344,8 +376,7 @@ export default async function ShowcasePage({
 
       {flat.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-token py-16 text-center">
-          <div className="text-4xl">🚧</div>
-          <p className="mt-3 font-medium">
+                    <p className="mt-3 font-medium">
             {all.length === 0
               ? access.scope === "own_team_only"
                 ? "Đội bạn chưa nộp bài"
@@ -355,7 +386,7 @@ export default async function ShowcasePage({
         </div>
       ) : (
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {flat.map((f) => {
+          {paged.items.map((f) => {
             const team = f.team;
             // Đường dẫn do học viên nhập: chỉ dùng làm liên kết khi là http/https (chặn javascript:...).
             const demoHref = safeHttpUrl(f.payload.demoVideoUrl);
@@ -372,7 +403,7 @@ export default async function ShowcasePage({
                 {f.isTopVoted && (
                   <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-md">
                     <Trophy size={11} strokeWidth={2.5} />
-                    Top voted
+                    Nhiều phiếu nhất
                   </span>
                 )}
 
@@ -388,7 +419,7 @@ export default async function ShowcasePage({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={thumb}
-                      alt={`Demo của ${team?.name ?? "đội"}`}
+                      alt={`Video demo của ${showcaseTeamLabel({ teamName: team?.name ?? null, captainName: f.captain.displayName, teamSize: tournament.teamSize })}`}
                       className="h-full w-full object-cover transition-transform group-hover:scale-105"
                       loading="lazy"
                     />
@@ -413,7 +444,7 @@ export default async function ShowcasePage({
                     </p>
                   )}
                   <h2 className="mt-1 text-lg font-bold leading-tight">
-                    {team?.name ?? "Solo"}
+                    {showcaseTeamLabel({ teamName: team?.name ?? null, captainName: f.captain.displayName, teamSize: tournament.teamSize })}
                   </h2>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
                     <Crown size={12} />
@@ -445,7 +476,7 @@ export default async function ShowcasePage({
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
                       >
                         <Code2 size={12} />
-                        Repo
+                        Mã nguồn
                       </a>
                     )}
                     {slidesHref && (
@@ -456,7 +487,7 @@ export default async function ShowcasePage({
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
                       >
                         <Presentation size={12} />
-                        Slides
+                        Slide
                       </a>
                     )}
                     {demoHref && !thumb && (
@@ -467,7 +498,7 @@ export default async function ShowcasePage({
                         className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
                       >
                         <Video size={12} />
-                        Demo
+                        Video demo
                       </a>
                     )}
                   </div>
@@ -475,21 +506,27 @@ export default async function ShowcasePage({
 
                 <footer className="flex items-center justify-between gap-2 border-t border-token bg-[rgb(var(--surface-muted))/0.5] px-4 py-2 text-[11px]">
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 font-semibold ${
-                        f.status === "passed"
-                          ? "bg-success-50 text-success-700"
-                          : f.status === "failed"
-                            ? "bg-danger-50 text-danger-700"
-                            : "bg-amber-50 text-amber-700"
-                      }`}
-                    >
-                      {f.status === "passed"
-                        ? "✓ Đạt"
-                        : f.status === "failed"
-                          ? "Chưa đạt"
-                          : "Chờ chấm"}
-                    </span>
+                    {(() => {
+                      const st = showcaseStatus(f.kind, f.status);
+                      return (
+                        <span
+                          className={`rounded-full px-2 py-0.5 font-semibold ${
+                            st.tone === "ok"
+                              ? "bg-success-50 text-success-700"
+                              : st.tone === "bad"
+                                ? "bg-danger-50 text-danger-700"
+                                : "bg-amber-50 text-amber-700"
+                          }`}
+                        >
+                          {st.label}
+                        </span>
+                      );
+                    })()}
+                    {f.scoreLabel && (
+                      <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 font-semibold tabular-nums">
+                        Điểm {f.scoreLabel}
+                      </span>
+                    )}
                     {f.votable && (
                       <VoteButton
                         tournamentId={params.id}
@@ -514,6 +551,28 @@ export default async function ShowcasePage({
             );
           })}
         </div>
+      )}
+
+      {paged.pages > 1 && (
+        <nav className="mt-6 flex items-center justify-center gap-3 text-sm" aria-label="Phân trang">
+          {paged.page > 1 ? (
+            <Link href={buildUrl({ page: paged.page - 1 })} className="btn-secondary btn-sm" prefetch={false}>
+              Trang trước
+            </Link>
+          ) : (
+            <span className="btn-secondary btn-sm pointer-events-none opacity-40">Trang trước</span>
+          )}
+          <span className="text-muted">
+            Trang {paged.page} / {paged.pages} ({paged.total} bài)
+          </span>
+          {paged.page < paged.pages ? (
+            <Link href={buildUrl({ page: paged.page + 1 })} className="btn-secondary btn-sm" prefetch={false}>
+              Trang sau
+            </Link>
+          ) : (
+            <span className="btn-secondary btn-sm pointer-events-none opacity-40">Trang sau</span>
+          )}
+        </nav>
       )}
     </main>
   );
