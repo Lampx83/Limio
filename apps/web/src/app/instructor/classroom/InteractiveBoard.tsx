@@ -22,6 +22,7 @@ import {
   BOARD_ATTACHMENT_MAX_BYTES,
 } from "./boardNoteStyle";
 import NoteAttachment from "./NoteAttachment";
+import { LimeSliceIcon, WatermelonSliceIcon } from "@/components/BrandIcons";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -654,7 +655,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     if (visible.length === 0) {
       return (
         <div className="text-center py-16">
-          <StickyNote size={56} className="mx-auto text-amber-300 mb-3" strokeWidth={1.5} />
+          <StickyNote size={56} className="mx-auto text-brand-300 mb-3" strokeWidth={1.5} />
           <p className="text-muted text-sm">
             Chưa có note nào. Sinh viên truy cập <code className="font-mono px-1.5 py-0.5 bg-accent-100 rounded">/join/{current?.code}</code> để post.
           </p>
@@ -675,15 +676,24 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
   if (current) {
     const visibleCount = current.notes.filter((n) => !n.hidden).length;
     const wrapper = isFullscreen
-      ? "fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900"
-      : "relative rounded-2xl overflow-hidden border border-amber-200/60 bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 shadow-card pb-24";
+      ? "fixed inset-0 z-50 isolate overflow-y-auto bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900"
+      : "relative isolate rounded-2xl overflow-hidden border border-brand-200/60 bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900 shadow-card pb-24";
     const previewKind = noteAttachmentUrl.trim() && isValidAttachmentUrl(noteAttachmentUrl.trim())
       ? detectMediaKind(noteAttachmentUrl.trim())
       : null;
     return (
       <div className={wrapper} data-board="container">
+        {/* Trái cây trang trí như trang chủ Limio — nằm sau nội dung, không bắt chuột */}
+        <LimeSliceIcon
+          className="pointer-events-none absolute -left-4 top-32 -z-10 hidden h-28 w-28 -rotate-12 opacity-50 drop-shadow-xl md:block lg:left-6 lg:h-36 lg:w-36"
+          aria-hidden
+        />
+        <WatermelonSliceIcon
+          className="pointer-events-none absolute -right-4 bottom-32 -z-10 hidden h-32 w-32 rotate-12 opacity-50 drop-shadow-xl md:block lg:right-6 lg:h-40 lg:w-40"
+          aria-hidden
+        />
         {/* Compact gradient banner — giống student /join page */}
-        <header className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 text-white px-4 py-5">
+        <header className="relative bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 text-white px-4 py-5">
           <div className="absolute inset-0 opacity-30 mix-blend-overlay"
             style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
           <div className="relative max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
@@ -778,7 +788,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
               setModalOpen(true);
               setPostInfo(null);
             }}
-            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white shadow-2xl hover:shadow-amber-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
+            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-2xl hover:shadow-brand-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
             title="Thêm note"
             aria-label="Thêm note"
           >
@@ -791,7 +801,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
             (vd. lớp đông, học viên ngồi xa). */}
         {qrPanelOpen && joinUrl && (
           <div
-            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 left-6 z-40 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-amber-200 animate-fade-in-up`}
+            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 left-6 z-40 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-brand-200 animate-fade-in-up`}
           >
             <button
               onClick={() => setQrPanelOpen(false)}
@@ -808,7 +818,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
             >
               <QRCode value={joinUrl} size={110} level="H" includeMargin />
             </button>
-            <p className="text-sm font-extrabold font-mono tracking-[0.15em] text-amber-700">{current.code}</p>
+            <p className="text-sm font-extrabold font-mono tracking-[0.15em] text-brand-700">{current.code}</p>
           </div>
         )}
 
@@ -827,12 +837,12 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 <X size={20} />
               </button>
               <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-2">Quét để tham gia</p>
-              <div className="inline-block bg-white p-4 rounded-xl ring-2 ring-amber-200">
+              <div className="inline-block bg-white p-4 rounded-xl ring-2 ring-brand-200">
                 <QRCode value={joinUrl} size={280} level="H" includeMargin />
               </div>
-              <p className="mt-4 text-4xl font-extrabold font-mono tracking-[0.3em] text-amber-700">{current.code}</p>
+              <p className="mt-4 text-4xl font-extrabold font-mono tracking-[0.3em] text-brand-700">{current.code}</p>
               <p className="mt-2 text-sm text-gray-600">
-                Hoặc truy cập: <code className="font-mono px-1.5 py-0.5 bg-amber-50 rounded">/join/{current.code}</code>
+                Hoặc truy cập: <code className="font-mono px-1.5 py-0.5 bg-brand-50 rounded">/join/{current.code}</code>
               </p>
               <button
                 onClick={async () => {
@@ -840,7 +850,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                   if (ok) toast.success("Đã copy link");
                   else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
                 }}
-                className="mt-3 text-sm text-amber-600 hover:text-amber-700 font-medium underline"
+                className="mt-3 text-sm text-brand-600 hover:text-brand-700 font-medium underline"
               >
                 Copy link tham gia
               </button>
@@ -854,7 +864,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in-up"
             onClick={(e) => { if (e.target === e.currentTarget) setColumnsPanelOpen(false); }}
           >
-            <div className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 bg-white dark:bg-zinc-900 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto">
+            <div className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 bg-white dark:bg-zinc-900 ring-1 ring-brand-200/60 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <LayoutGrid size={18} /> Grid theo nhóm
@@ -884,7 +894,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                       }}
                       placeholder={`Nhóm ${idx + 1}`}
                       maxLength={30}
-                      className="flex-1 border border-gray-300 dark:border-gray-700 bg-transparent rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="flex-1 border border-gray-300 dark:border-gray-700 bg-transparent rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                     <button
                       onClick={() => setColumnsDraft(columnsDraft.filter((_, i) => i !== idx))}
@@ -899,14 +909,14 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
               <button
                 onClick={() => setColumnsDraft([...columnsDraft, ""])}
                 disabled={columnsDraft.length >= 12}
-                className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 flex items-center gap-1 disabled:opacity-40"
+                className="mt-2 text-xs font-semibold text-brand-700 dark:text-brand-500 hover:text-brand-800 flex items-center gap-1 disabled:opacity-40"
               >
                 <Plus size={12} /> Thêm nhóm
               </button>
               <button
                 onClick={handleSaveColumns}
                 disabled={savingColumns}
-                className="mt-5 w-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all"
+                className="mt-5 w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all"
               >
                 {savingColumns ? "Đang lưu..." : "Lưu"}
               </button>
@@ -921,7 +931,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
             onClick={(e) => { if (e.target === e.currentTarget) setEditingNote(null); }}
           >
             <div
-              className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto"
+              className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-brand-200/60 max-h-[90vh] overflow-y-auto"
               style={{ backgroundColor: editColor || "#FEF3C7" }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -949,7 +959,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                     maxLength={500}
                     rows={3}
                     autoFocus
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                   />
                 </div>
                 <div>
@@ -962,9 +972,9 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                     onChange={(e) => setEditAttachmentUrl(e.target.value)}
                     placeholder="Ảnh / video / audio / YouTube / link"
                     maxLength={2000}
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
-                  <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 cursor-pointer">
+                  <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800 cursor-pointer">
                     <input
                       type="file"
                       accept={BOARD_ATTACHMENT_ACCEPT}
@@ -997,7 +1007,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                   <button
                     onClick={handleSaveEditNote}
                     disabled={editSubmitting}
-                    className="bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                    className="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
                   >
                     {editSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
                   </button>
@@ -1015,7 +1025,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
             onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}
           >
             <div
-              className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-amber-200/60 max-h-[90vh] overflow-y-auto"
+              className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 ring-1 ring-brand-200/60 max-h-[90vh] overflow-y-auto"
               style={{ backgroundColor: noteColor || "#FEF3C7" }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -1040,7 +1050,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                     onChange={(e) => setInstructorName(e.target.value)}
                     placeholder="Vd. Giảng viên"
                     maxLength={40}
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
                 {current.columns.length > 0 && (
@@ -1051,7 +1061,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                     <select
                       value={noteGroupColumn}
                       onChange={(e) => setNoteGroupColumn(e.target.value)}
-                      className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
                       {current.columns.map((c) => (
                         <option key={c} value={c}>{c}</option>
@@ -1070,7 +1080,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                     maxLength={500}
                     rows={3}
                     autoFocus
-                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                    className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                   />
                 </div>
                 <div>
@@ -1084,7 +1094,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                       onChange={(e) => setNoteAttachmentUrl(e.target.value)}
                       placeholder="Ảnh / video / audio / YouTube / link"
                       maxLength={2000}
-                      className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
                       {previewKind === "image" ? <ImageIcon size={16} /> :
@@ -1098,7 +1108,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                       Sẽ hiển thị dạng: <span className="font-semibold">{previewKind === "youtube" ? "YouTube embed" : previewKind === "vimeo" ? "Vimeo embed" : previewKind === "image" ? "Ảnh" : previewKind === "video" ? "Video player" : previewKind === "audio" ? "Audio player" : "Link"}</span>
                     </p>
                   )}
-                  <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 cursor-pointer">
+                  <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800 cursor-pointer">
                     <input
                       type="file"
                       accept={BOARD_ATTACHMENT_ACCEPT}
@@ -1136,7 +1146,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                   <button
                     onClick={handlePostNote}
                     disabled={posting}
-                    className="bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
+                    className="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all"
                   >
                     {posting ? "Đang gửi..." : "📌 Dán note"}
                   </button>
@@ -1150,192 +1160,174 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     );
   }
 
-  // ── Create form — đồng bộ design với board view ──────────────────────────
+  // ── Create form — vẫn giữ cảm giác Padlet (tờ note hơi nghiêng, băng dính, note
+  // pastel) nhưng đổi sang tông lime của bộ style `tool-*` cho hài hoà với Vote /
+  // Word Cloud, thay cho gradient cam-hồng trước đây.
   return (
-    <div className="rounded-2xl overflow-hidden border border-amber-200/60 bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 shadow-card">
-      {/* Gradient banner — giống board view */}
-      <header className="relative bg-gradient-to-br from-amber-300 via-orange-300 to-pink-300 text-white px-6 py-6">
-        <div className="absolute inset-0 opacity-30 mix-blend-overlay"
-          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
-        <div className="relative flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/30 backdrop-blur rounded-xl p-2.5">
-              <StickyNote size={28} strokeWidth={2} />
+    <div className="tool-panel rounded-none">
+      <div className="tool-header">
+        <div className="flex items-center gap-2">
+          <span className="tool-icon"><StickyNote size={20} strokeWidth={1.75} /></span>
+          <h3 className="tool-title">Tạo bảng mới</h3>
+        </div>
+        {onExit && (
+          <button onClick={onExit} className="tool-action">
+            ✕ Thoát
+          </button>
+        )}
+      </div>
+
+      {/* Tờ note: giấy lime nhạt, nghiêng nhẹ, có mảnh băng dính ở mép trên */}
+      <div
+        className="relative mt-2 space-y-4 bg-brand-50 p-5 shadow-md ring-1 ring-brand-200 dark:bg-brand-900/30 dark:ring-brand-800/60"
+        style={{ transform: "rotate(-0.3deg)" }}
+      >
+        <span
+          className="absolute -top-2.5 left-1/2 h-5 w-20 -translate-x-1/2 rotate-2 rounded-sm bg-brand-200/80 shadow-sm dark:bg-brand-700/50"
+          aria-hidden
+        />
+
+        <div>
+          <label className="tool-section-label">Tiêu đề</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Vd. Phản hồi buổi học hôm nay"
+            maxLength={120}
+            className="input w-full"
+          />
+        </div>
+        <div>
+          <label className="tool-section-label">
+            Câu hỏi gợi ý <span className="font-normal text-faint">(tùy chọn)</span>
+          </label>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Vd. Điều bạn nhớ nhất từ buổi học?"
+            maxLength={500}
+            rows={3}
+            className="input w-full resize-none"
+          />
+        </div>
+
+        {/* Grid theo nhóm — tùy chọn, mặc định TẮT (masonry tự do như trước) */}
+        <div className="rounded-xl bg-white/70 p-3.5 ring-1 ring-brand-200/70 dark:bg-white/5">
+          <label className="flex cursor-pointer items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-sm font-medium">
+              <LayoutGrid size={14} className="text-brand-700" /> Đăng theo nhóm (grid)
+            </span>
+            <input
+              type="checkbox"
+              checked={gridEnabled}
+              onChange={(e) => setGridEnabled(e.target.checked)}
+              className="h-4 w-4 accent-brand-600"
+            />
+          </label>
+          {gridEnabled && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-muted">
+                Học viên sẽ chọn đúng nhóm mình khi post — mỗi nhóm hiện thành 1 cột riêng.
+              </p>
+              {columnsInput.map((label, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={label}
+                    onChange={(e) => {
+                      const next = [...columnsInput];
+                      next[idx] = e.target.value;
+                      setColumnsInput(next);
+                    }}
+                    placeholder={`Nhóm ${idx + 1}`}
+                    maxLength={30}
+                    className="input flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setColumnsInput(columnsInput.filter((_, i) => i !== idx))}
+                    className="rounded-lg p-1.5 text-faint transition-colors hover:bg-white/70"
+                    aria-label="Xoá nhóm"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setColumnsInput([...columnsInput, `Nhóm ${columnsInput.length + 1}`])}
+                disabled={columnsInput.length >= 12}
+                className="flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800 disabled:opacity-40"
+              >
+                <Plus size={12} /> Thêm nhóm
+              </button>
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90">Bảng tương tác</p>
-              <h2 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm">Tạo bảng mới</h2>
-            </div>
-          </div>
-          {onExit && (
-            <button
-              onClick={onExit}
-              className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors shrink-0"
-            >
-              ✕ Exit
-            </button>
           )}
         </div>
-      </header>
 
-      {/* Body — pastel + inputs trên nền sticky-note màu kem */}
-      <div className="p-5 sm:p-6 space-y-5">
-        <div className="rounded-2xl bg-[#FEF3C7] p-5 shadow-md ring-1 ring-amber-200/60 space-y-4"
-          style={{ transform: "rotate(-0.3deg)" }}
-        >
-          <div>
-            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-              Tiêu đề
-            </label>
+        {/* Chặn dán — tùy chọn, mặc định TẮT (cho phép dán như bình thường) */}
+        <div className="rounded-xl bg-white/70 p-3.5 ring-1 ring-brand-200/70 dark:bg-white/5">
+          <label className="flex cursor-pointer items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-sm font-medium">
+              <ClipboardX size={14} className="text-brand-700" /> Chặn dán khi HV viết note
+            </span>
             <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Vd. Phản hồi buổi học hôm nay"
-              maxLength={120}
-              className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              type="checkbox"
+              checked={blockPasteEnabled}
+              onChange={(e) => setBlockPasteEnabled(e.target.checked)}
+              className="h-4 w-4 accent-brand-600"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-              Câu hỏi gợi ý <span className="text-gray-600 font-medium normal-case tracking-normal">(tùy chọn)</span>
-            </label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Vd. Điều bạn nhớ nhất từ buổi học?"
-              maxLength={500}
-              rows={3}
-              className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
-            />
-          </div>
+          </label>
+          {blockPasteEnabled && (
+            <p className="mt-2 text-xs text-muted">
+              Học viên không dán (paste) được text vào ô nội dung khi đăng/sửa note — chỉ áp dụng phía học viên, GV vẫn dán bình thường.
+            </p>
+          )}
+        </div>
 
-          {/* Grid theo nhóm — tùy chọn, mặc định TẮT (masonry tự do như trước) */}
-          <div className="rounded-xl bg-white/50 backdrop-blur p-3.5 ring-1 ring-white/60">
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
-                <LayoutGrid size={14} /> Đăng theo nhóm (grid)
-              </span>
-              <input
-                type="checkbox"
-                checked={gridEnabled}
-                onChange={(e) => setGridEnabled(e.target.checked)}
-                className="w-4 h-4 accent-amber-500"
-              />
-            </label>
-            {gridEnabled && (
-              <div className="mt-3 space-y-2">
-                <p className="text-[11px] text-gray-600">
-                  Học viên sẽ chọn đúng nhóm mình khi post — mỗi nhóm hiện thành 1 cột riêng.
-                </p>
-                {columnsInput.map((label, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={label}
-                      onChange={(e) => {
-                        const next = [...columnsInput];
-                        next[idx] = e.target.value;
-                        setColumnsInput(next);
-                      }}
-                      placeholder={`Nhóm ${idx + 1}`}
-                      maxLength={30}
-                      className="flex-1 bg-white/70 border border-white/80 rounded-lg px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setColumnsInput(columnsInput.filter((_, i) => i !== idx))}
-                      className="p-1.5 rounded-lg hover:bg-white/60 text-gray-500"
-                      aria-label="Xoá nhóm"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setColumnsInput([...columnsInput, `Nhóm ${columnsInput.length + 1}`])}
-                  disabled={columnsInput.length >= 12}
-                  className="text-xs font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1 disabled:opacity-40"
-                >
-                  <Plus size={12} /> Thêm nhóm
-                </button>
-              </div>
-            )}
-          </div>
+        <button onClick={handleCreate} disabled={isCreating} className="btn-primary w-full">
+          {isCreating ? "Đang tạo..." : "Tạo Bảng"}
+        </button>
+      </div>
 
-          {/* Chặn dán — tùy chọn, mặc định TẮT (cho phép dán như bình thường) */}
-          <div className="rounded-xl bg-white/50 backdrop-blur p-3.5 ring-1 ring-white/60">
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
-                <ClipboardX size={14} /> Chặn dán khi HV viết note
-              </span>
-              <input
-                type="checkbox"
-                checked={blockPasteEnabled}
-                onChange={(e) => setBlockPasteEnabled(e.target.checked)}
-                className="w-4 h-4 accent-amber-500"
-              />
-            </label>
-            {blockPasteEnabled && (
-              <p className="mt-2 text-[11px] text-gray-600">
-                Học viên không dán (paste) được text vào ô nội dung khi đăng/sửa note — chỉ áp dụng phía học viên, GV vẫn dán bình thường.
-              </p>
-            )}
-          </div>
-
-          <button
-            onClick={handleCreate}
-            disabled={isCreating}
-            className="w-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold py-2.5 rounded-lg shadow disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-          >
-            {isCreating ? "Đang tạo..." : (<><StickyNote size={16} strokeWidth={2.4} /> Tạo Bảng</>)}
+      {/* History — mỗi bảng cũ là một tờ note pastel (tông dịu, cùng họ với lime) */}
+      <div className="mt-6 border-t border-token pt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-muted">Bảng đã tạo trước đây</p>
+          <button onClick={loadHistory} disabled={isLoadingHistory} className="tool-action">
+            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
+            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
           </button>
         </div>
-
-        {/* History section */}
-        <div className="pt-1">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-800 dark:text-gray-200">📋 Board đã tạo</p>
-            <button
-              onClick={loadHistory}
-              disabled={isLoadingHistory}
-              className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-amber-100/50 dark:hover:bg-amber-900/20 transition-colors"
-            >
-              <RefreshCw size={12} className={isLoadingHistory ? "animate-spin" : ""} />
-              {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-            </button>
-          </div>
-          {history.length === 0 && !isLoadingHistory && (
-            <div className="text-center py-6 rounded-xl bg-white/40 dark:bg-black/10 border border-dashed border-amber-200/60">
-              <p className="text-xs text-muted">Bấm "Tải lịch sử" để xem board cũ</p>
-            </div>
-          )}
-          <div className="grid gap-2.5 sm:grid-cols-2 max-h-72 overflow-y-auto pr-1">
-            {history.map((item, idx) => {
-              const bgColors = ["#FEF3C7", "#DBEAFE", "#D1FAE5", "#FCE7F3", "#E9D5FF", "#FED7AA"];
-              const bg = bgColors[idx % bgColors.length];
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleLoadBoard(item)}
-                  className="text-left rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] ring-1 ring-black/5"
-                  style={{ backgroundColor: bg }}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-sm font-bold text-gray-900 truncate">{item.title}</p>
-                    <span className="text-[11px] font-mono font-bold text-gray-800 bg-white/60 px-2 py-0.5 rounded-md shrink-0">
-                      {item.code}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-gray-700 font-medium">
-                    {item._count.notes} note · {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                    {item.status === "closed" && " · 🔒 Đã đóng"}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
+        {history.length === 0 && !isLoadingHistory && (
+          <p className="py-2 text-center text-xs text-muted">Bấm "Tải lịch sử" để xem các bảng cũ</p>
+        )}
+        <div className="grid max-h-72 gap-3 overflow-y-auto p-1 sm:grid-cols-2">
+          {history.map((item, idx) => {
+            const noteColors = ["#F7FEE7", "#ECFCCB", "#E0F2FE", "#D1FAE5", "#FEF9C3", "#EDE9FE"];
+            const bg = noteColors[idx % noteColors.length];
+            const tilt = idx % 2 === 0 ? -0.5 : 0.5;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleLoadBoard(item)}
+                className="rounded-xl p-3.5 text-left shadow-sm ring-1 ring-black/5 transition-all hover:scale-[1.02] hover:shadow-md"
+                style={{ backgroundColor: bg, transform: `rotate(${tilt}deg)` }}
+              >
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="truncate text-sm font-semibold text-gray-900">{item.title}</p>
+                  <span className="shrink-0 rounded-md bg-white/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-800">
+                    {item.code}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-700">
+                  {item._count.notes} note · {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  {item.status === "closed" && " · 🔒 Đã đóng"}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

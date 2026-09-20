@@ -484,57 +484,42 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
     );
   }
 
-  // ── Create form ──────────────────────────────────────────────────────────
+  // ── Create form — cùng bộ style `tool-*` với Vote / Word Cloud ─────────────
   return (
-    <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-card">
-      <header className="relative bg-gradient-to-br from-pink-600 via-rose-600 to-pink-700 text-white px-6 py-6">
-        <div className="relative flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/30 backdrop-blur rounded-xl p-2.5">
-              <PenTool size={28} strokeWidth={2} />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90">Whiteboard</p>
-              <h2 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm">Tạo bảng vẽ mới</h2>
-            </div>
-          </div>
-          {onExit && (
-            <button
-              onClick={onExit}
-              className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors shrink-0"
-            >
-              ✕ Exit
-            </button>
-          )}
+    <div className="tool-panel rounded-none">
+      <div className="tool-header">
+        <div className="flex items-center gap-2">
+          <span className="tool-icon"><PenTool size={20} strokeWidth={1.75} /></span>
+          <h3 className="tool-title">Tạo bảng vẽ mới</h3>
         </div>
-      </header>
+        {onExit && (
+          <button onClick={onExit} className="tool-action">
+            ✕ Thoát
+          </button>
+        )}
+      </div>
 
-      <div className="p-5 sm:p-6 space-y-5">
-        <div className="rounded-2xl bg-slate-50 dark:bg-zinc-800/60 p-5 shadow-sm ring-1 ring-slate-200 dark:ring-zinc-700 space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1.5">
-              Tiêu đề
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Vd. Sơ đồ tư duy buổi học hôm nay"
-              maxLength={120}
-              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-            />
-          </div>
+      <div className="space-y-4">
+        <div>
+          <label className="tool-section-label">Tiêu đề</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Vd. Sơ đồ tư duy buổi học hôm nay"
+            maxLength={120}
+            className="input w-full"
+          />
+        </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1.5">
-              Chế độ
-            </label>
-            <div className="flex flex-col sm:flex-row gap-2">
+        <div>
+          <label className="tool-section-label">Chế độ</label>
+          <div className="flex flex-col gap-2 sm:flex-row">
               <label
-                className={`flex-1 flex items-center gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                className={`flex flex-1 cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-colors ${
                   mode === "blank"
-                    ? "border-pink-600 bg-pink-50 ring-1 ring-pink-600"
-                    : "border-slate-300 bg-white hover:border-pink-400"
+                    ? "border-brand-600 bg-[rgb(var(--brand-soft))] ring-1 ring-brand-600"
+                    : "border-token hover:border-brand-400"
                 }`}
               >
                 <input
@@ -542,15 +527,15 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
                   name="whiteboard-mode"
                   checked={mode === "blank"}
                   onChange={() => setMode("blank")}
-                  className="h-4 w-4 accent-pink-600"
+                  className="h-4 w-4 accent-brand-600"
                 />
-                <span className="text-sm font-semibold text-gray-900">Bảng trắng rỗng</span>
+                <span className="text-sm font-medium">Bảng trắng rỗng</span>
               </label>
               <label
-                className={`flex-1 flex items-center gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                className={`flex flex-1 cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-colors ${
                   mode === "document"
-                    ? "border-pink-600 bg-pink-50 ring-1 ring-pink-600"
-                    : "border-slate-300 bg-white hover:border-pink-400"
+                    ? "border-brand-600 bg-[rgb(var(--brand-soft))] ring-1 ring-brand-600"
+                    : "border-token hover:border-brand-400"
                 }`}
               >
                 <input
@@ -558,152 +543,140 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
                   name="whiteboard-mode"
                   checked={mode === "document"}
                   onChange={() => setMode("document")}
-                  className="h-4 w-4 accent-pink-600"
+                  className="h-4 w-4 accent-brand-600"
                 />
-                <span className="text-sm font-semibold text-gray-900">Bảng trắng kèm tài liệu</span>
+                <span className="text-sm font-medium">Bảng trắng kèm tài liệu</span>
               </label>
-            </div>
           </div>
-
-          <label className="flex items-center gap-2.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5 cursor-pointer hover:border-pink-400 transition-colors">
-            <input
-              type="checkbox"
-              checked={kioskMode}
-              onChange={(e) => setKioskMode(e.target.checked)}
-              className="h-4 w-4 accent-pink-600"
-            />
-            <span className="text-sm font-medium text-gray-900">
-              Chế độ Kiosk / Triển lãm
-              <span className="block text-xs font-normal text-gray-600">
-                Tự xoá bảng sau {"3 phút"} không ai vẽ — dùng cho màn hình đứng ở booth, không có GV túc trực
-              </span>
-            </span>
-          </label>
-
-          {mode === "document" && (
-            <div className="rounded-xl bg-white border border-slate-300 p-3 space-y-3">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => imageInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white py-2 text-xs font-semibold text-gray-800 hover:border-pink-400 hover:text-pink-700 disabled:opacity-50"
-                >
-                  <FileImage size={14} /> Tải ảnh (nhiều trang)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => pdfInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white py-2 text-xs font-semibold text-gray-800 hover:border-pink-400 hover:text-pink-700 disabled:opacity-50"
-                >
-                  <FileText size={14} /> Tải PDF
-                </button>
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  multiple
-                  hidden
-                  onChange={(e) => {
-                    if (e.target.files?.length) handleImageFilesSelected(e.target.files);
-                    e.target.value = "";
-                  }}
-                />
-                <input
-                  ref={pdfInputRef}
-                  type="file"
-                  accept="application/pdf"
-                  hidden
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handlePdfFileSelected(file);
-                    e.target.value = "";
-                  }}
-                />
-              </div>
-
-              {isUploading && (
-                <p className="text-xs text-pink-800 font-semibold">
-                  Đang xử lý trang {uploadProgress?.current ?? "…"}/{uploadProgress?.total ?? "…"}...
-                </p>
-              )}
-
-              {uploadedPages.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-xs font-semibold text-gray-800">{uploadedPages.length} trang đã tải</p>
-                    <button
-                      type="button"
-                      onClick={() => setUploadedPages([])}
-                      className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1"
-                    >
-                      <Trash2 size={12} /> Xoá hết
-                    </button>
-                  </div>
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {uploadedPages.map((url, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={url}
-                        src={url}
-                        alt={`Trang ${i + 1}`}
-                        className="h-16 w-auto rounded border border-slate-300 shrink-0"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <button
-            onClick={handleCreate}
-            disabled={isCreating || isUploading}
-            className="w-full bg-gradient-to-br from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-semibold py-2.5 rounded-lg shadow-md disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-          >
-            {isCreating ? "Đang tạo..." : (<><PenTool size={16} strokeWidth={2.4} /> Tạo Whiteboard</>)}
-          </button>
         </div>
 
-        <div className="pt-1">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">📋 Whiteboard đã tạo</p>
-            <button
-              onClick={loadHistory}
-              disabled={isLoadingHistory}
-              className="text-xs font-semibold text-pink-700 dark:text-pink-400 hover:text-pink-900 dark:hover:text-pink-200 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-pink-100 dark:hover:bg-pink-900/20 transition-colors"
-            >
-              <RefreshCw size={12} className={isLoadingHistory ? "animate-spin" : ""} />
-              {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-            </button>
-          </div>
-          {history.length === 0 && !isLoadingHistory && (
-            <div className="text-center py-6 rounded-xl bg-slate-50 dark:bg-black/10 border border-dashed border-slate-300">
-              <p className="text-xs text-gray-600">Bấm &quot;Tải lịch sử&quot; để xem whiteboard cũ</p>
-            </div>
-          )}
-          <div className="grid gap-2.5 sm:grid-cols-2 max-h-72 overflow-y-auto pr-1">
-            {history.map((item) => (
+        <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-token p-3.5 transition-colors hover:border-brand-400">
+          <input
+            type="checkbox"
+            checked={kioskMode}
+            onChange={(e) => setKioskMode(e.target.checked)}
+            className="h-4 w-4 accent-brand-600"
+          />
+          <span className="text-sm font-medium">
+            Chế độ Kiosk / Triển lãm
+            <span className="block text-xs font-normal text-muted">
+              Tự xoá bảng sau {"3 phút"} không ai vẽ — dùng cho màn hình đứng ở booth, không có GV túc trực
+            </span>
+          </span>
+        </label>
+
+        {mode === "document" && (
+          <div className="space-y-3 rounded-xl border border-token p-3.5">
+            <div className="flex gap-2">
               <button
-                key={item.id}
-                onClick={() => handleLoadBoard(item)}
-                className="text-left rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] ring-1 ring-slate-200 hover:ring-pink-300 bg-white"
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={isUploading}
+                className="tool-action flex-1 justify-center"
               >
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <p className="text-sm font-bold text-gray-900 truncate">{item.title}</p>
-                  <span className="text-[11px] font-mono font-bold text-pink-800 bg-pink-50 px-2 py-0.5 rounded-md shrink-0">
-                    {item.code}
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-700 font-medium">
-                  {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                  {item.kioskMode && " · 🖥 Kiosk"}
-                  {item.status === "closed" && " · 🔒 Đã đóng"}
-                </p>
+                <FileImage size={14} /> Tải ảnh (nhiều trang)
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => pdfInputRef.current?.click()}
+                disabled={isUploading}
+                className="tool-action flex-1 justify-center"
+              >
+                <FileText size={14} /> Tải PDF
+              </button>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                hidden
+                onChange={(e) => {
+                  if (e.target.files?.length) handleImageFilesSelected(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={pdfInputRef}
+                type="file"
+                accept="application/pdf"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handlePdfFileSelected(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            {isUploading && (
+              <p className="text-xs font-medium text-brand-700">
+                Đang xử lý trang {uploadProgress?.current ?? "…"}/{uploadProgress?.total ?? "…"}...
+              </p>
+            )}
+
+            {uploadedPages.length > 0 && (
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <p className="text-xs font-medium">{uploadedPages.length} trang đã tải</p>
+                  <button
+                    type="button"
+                    onClick={() => setUploadedPages([])}
+                    className="flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 size={12} /> Xoá hết
+                  </button>
+                </div>
+                <div className="flex gap-1.5 overflow-x-auto pb-1">
+                  {uploadedPages.map((url, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={url}
+                      src={url}
+                      alt={`Trang ${i + 1}`}
+                      className="h-16 w-auto shrink-0 rounded border border-token"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+        )}
+
+        <button
+          onClick={handleCreate}
+          disabled={isCreating || isUploading}
+          className="btn-primary w-full"
+        >
+          {isCreating ? "Đang tạo..." : "Tạo Whiteboard"}
+        </button>
+      </div>
+
+      {/* History */}
+      <div className="mt-6 border-t border-token pt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-muted">Whiteboard đã tạo trước đây</p>
+          <button onClick={loadHistory} disabled={isLoadingHistory} className="tool-action">
+            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
+            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
+          </button>
+        </div>
+        {history.length === 0 && !isLoadingHistory && (
+          <p className="py-2 text-center text-xs text-muted">Bấm &quot;Tải lịch sử&quot; để xem các whiteboard cũ</p>
+        )}
+        <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
+          {history.map((item) => (
+            <button key={item.id} onClick={() => handleLoadBoard(item)} className="tool-list-item">
+              <div className="mb-0.5 flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-medium">{item.title}</p>
+                <span className="chip shrink-0 font-mono text-[11px]">{item.code}</span>
+              </div>
+              <p className="text-xs text-muted">
+                {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                {item.kioskMode && " · 🖥 Kiosk"}
+                {item.status === "closed" && " · 🔒 Đã đóng"}
+              </p>
+            </button>
+          ))}
         </div>
       </div>
     </div>
