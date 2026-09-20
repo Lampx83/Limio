@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import AdaptiveTextField from "@/components/AdaptiveTextField";
+import SkillTagPicker from "@/components/SkillTagPicker";
+import MatchingPairsEditor from "@/components/MatchingPairsEditor";
+import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 
-const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
-  ssr: false,
-});
 
 interface OptionDraft {
   label: string;
@@ -66,9 +66,12 @@ const TYPE_LABEL: Record<string, string> = {
 export default function EditQuestionForm({
   question,
   onClose,
+  hideCancel = false,
 }: {
   question: Question;
   onClose: () => void;
+  /** Trình soạn toàn trang sửa tại chỗ, không có trạng thái "đóng" để quay về. */
+  hideCancel?: boolean;
 }) {
   const router = useRouter();
   const type = question.type;
@@ -200,31 +203,21 @@ export default function EditQuestionForm({
       className="space-y-4 rounded-xl border border-brand-200 bg-[rgb(var(--surface-muted))] p-4"
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-token pb-3">
-        <span className="chip">{TYPE_LABEL[type] ?? type}</span>
-        <span className="text-sm font-semibold text-muted">Chỉnh sửa câu hỏi</span>
-        <label className="ml-auto flex items-center gap-1.5 text-xs text-faint">
-          Điểm
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={points}
-            onChange={(e) => setPoints(Number(e.target.value))}
-            className="input w-16"
-          />
-        </label>
-      </div>
+      <QuestionFormHeader
+        typeLabel={TYPE_LABEL[type] ?? type}
+        points={points}
+        onPoints={setPoints}
+      />
 
       {/* Prompt */}
       <div>
-        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+        <span className={FIELD_LABEL}>
           Câu hỏi
         </span>
-        <RichTextEditor
+        <AdaptiveTextField
           value={prompt}
           onChange={setPrompt}
-          placeholder="Câu hỏi... (có thể chèn ảnh qua nút 🖼️ trên toolbar)"
+          placeholder="Nhập câu hỏi"
           minHeight={80}
         />
       </div>
@@ -240,7 +233,7 @@ export default function EditQuestionForm({
       {type === "numerical" && (
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+            <span className={FIELD_LABEL}>
               Đáp án (số)
             </span>
             <input
@@ -253,8 +246,8 @@ export default function EditQuestionForm({
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-              Tolerance
+            <span className={FIELD_LABEL}>
+              Sai số cho phép
             </span>
             <input
               type="number"
@@ -268,26 +261,32 @@ export default function EditQuestionForm({
         </div>
       )}
 
-      {/* Options list */}
-      {hasOptions && (
+      {type === "matching" && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Options ({options.length})
+          <p className={FIELD_LABEL}>Các cặp ghép ({Math.floor(options.length / 2)})</p>
+          <MatchingPairsEditor options={options} onChange={setOptions} />
+        </div>
+      )}
+
+      {/* Options list */}
+      {hasOptions && type !== "matching" && (
+        <div>
+          <p className={FIELD_LABEL}>
+            Đáp án ({options.length})
           </p>
-          <p className="mt-0.5 text-xs text-faint">
+          <p className="-mt-1 mb-2 text-xs text-faint">
             {type === "mcq" && "Đánh dấu câu đúng (checkbox)"}
             {type === "true_false" && "Chọn đáp án đúng (radio)"}
             {type === "fill_in" && "Mỗi label = đáp án chấp nhận được"}
             {type === "short_answer" && "Labels = exact match (case-insensitive)"}
             {type === "ordering" && "Thứ tự đúng = thứ tự bạn nhập"}
-            {type === "matching" && "Mỗi pairKey phải có 1 left + 1 right"}
           </p>
           <ul className="mt-2 space-y-2">
             {options.map((o, i) => {
               // Rich text labels (with image support) only for option-based
               // types. See AddQuestionForm for rationale.
               const useRichLabel =
-                type === "mcq" || type === "matching" || type === "ordering";
+                type === "mcq" || type === "ordering";
               return (
                 <li
                   key={i}
@@ -308,39 +307,6 @@ export default function EditQuestionForm({
                       />
                     )}
 
-                    {/* Matching side + pairKey */}
-                    {type === "matching" && (
-                      <>
-                        <select
-                          value={o.extra?.side ?? "left"}
-                          onChange={(e) =>
-                            setOption(i, {
-                              extra: {
-                                side: e.target.value as "left" | "right",
-                                pairKey: o.extra?.pairKey ?? "p1",
-                              },
-                            })
-                          }
-                          className="select w-14 px-1.5 text-xs"
-                        >
-                          <option value="left">L</option>
-                          <option value="right">R</option>
-                        </select>
-                        <input
-                          value={o.extra?.pairKey ?? ""}
-                          onChange={(e) =>
-                            setOption(i, {
-                              extra: {
-                                side: o.extra?.side ?? "left",
-                                pairKey: e.target.value,
-                              },
-                            })
-                          }
-                          placeholder="pairKey"
-                          className="input w-20 text-xs"
-                        />
-                      </>
-                    )}
 
                     {/* Plain label inline (fill_in / short_answer / true_false) */}
                     {!useRichLabel && (
@@ -370,7 +336,7 @@ export default function EditQuestionForm({
                         className="select max-w-[160px] text-xs"
                         title="Misconception"
                       >
-                        <option value="">no misconception</option>
+                        <option value="">Không gắn quan niệm sai</option>
                         {misconceptions.map((m) => (
                           <option key={m.id} value={m.id}>
                             {m.code}
@@ -393,10 +359,10 @@ export default function EditQuestionForm({
                   </div>
                   {useRichLabel && (
                     <div className="mt-2">
-                      <RichTextEditor
+                      <AdaptiveTextField
                         value={o.label}
                         onChange={(html) => setOption(i, { label: html })}
-                        placeholder={`Đáp án ${i + 1}... (có thể chèn ảnh qua nút 🖼️)`}
+                        placeholder={`Đáp án ${i + 1}`}
                         minHeight={48}
                       />
                     </div>
@@ -407,7 +373,7 @@ export default function EditQuestionForm({
           </ul>
           {type !== "true_false" && (
             <button type="button" onClick={addOption} className="link mt-2 text-xs">
-              + Thêm option
+              + Thêm đáp án
             </button>
           )}
         </div>
@@ -416,8 +382,8 @@ export default function EditQuestionForm({
       {/* Short-answer regex */}
       {type === "short_answer" && (
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Regex chấp nhận thêm (mỗi dòng 1 pattern, optional)
+          <span className={FIELD_LABEL}>
+            Regex chấp nhận thêm (mỗi dòng 1 mẫu, không bắt buộc)
           </span>
           <textarea
             value={acceptedRegexes}
@@ -430,43 +396,31 @@ export default function EditQuestionForm({
       )}
 
       {/* Explanation */}
-      <RichTextEditor
-        value={explanation}
-        onChange={setExplanation}
-        placeholder="Giải thích (hiện trên result page, optional)"
-        minHeight={100}
-      />
+      <div>
+        <span className={FIELD_LABEL}>
+          Giải thích <span className="font-normal normal-case text-faint">(không bắt buộc)</span>
+        </span>
+        <p className="-mt-1 mb-2 text-xs text-faint">
+          Hiện cho học viên ở trang kết quả, sau khi làm xong.
+        </p>
+        <div className="mt-2">
+          <AdaptiveTextField
+            value={explanation}
+            onChange={setExplanation}
+            placeholder="Vì sao đáp án này đúng"
+            minHeight={100}
+          />
+        </div>
+      </div>
 
       {/* Skills */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-faint">Tag skills</p>
-        {skills.length === 0 ? (
-          <p className="mt-1 text-xs text-faint">Chưa có skill nào trong hệ thống.</p>
-        ) : (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {skills.map((s) => {
-              const picked = pickedSkillIds.includes(s.id);
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() =>
-                    setPickedSkillIds((curr) =>
-                      picked ? curr.filter((id) => id !== s.id) : [...curr, s.id],
-                    )
-                  }
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                    picked
-                      ? "bg-brand-600 text-white"
-                      : "border border-token bg-[rgb(var(--surface))] text-muted hover:border-brand-300 hover:text-brand-700"
-                  }`}
-                >
-                  {s.code}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <p className={FIELD_LABEL}>Chủ đề</p>
+        <SkillTagPicker
+          skills={skills}
+          picked={pickedSkillIds}
+          onChange={setPickedSkillIds}
+        />
       </div>
 
       {/* Actions */}
@@ -474,9 +428,11 @@ export default function EditQuestionForm({
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
-        <button type="button" onClick={onClose} className="btn-secondary btn-sm">
-          Hủy
-        </button>
+        {!hideCancel && (
+          <button type="button" onClick={onClose} className="btn-secondary btn-sm">
+            Hủy
+          </button>
+        )}
         {error && <span className="text-xs text-danger-600">Lỗi: {error}</span>}
       </div>
     </form>

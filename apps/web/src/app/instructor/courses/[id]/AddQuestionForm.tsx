@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import AdaptiveTextField from "@/components/AdaptiveTextField";
+import SkillTagPicker from "@/components/SkillTagPicker";
+import MatchingPairsEditor from "@/components/MatchingPairsEditor";
+import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
 import QuestionTypePicker from "./QuestionTypePicker";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 
-const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
-  ssr: false,
-});
 
 type QuestionType =
   | "mcq"
@@ -97,16 +97,27 @@ const TYPE_LABEL: Record<QuestionType, string> = {
 export default function AddQuestionForm({
   quizId,
   nextOrderIndex,
+  startOpen = false,
+  onCreated,
+  onExit,
 }: {
   quizId: string;
   nextOrderIndex: number;
+  /** Trình soạn toàn trang: mở thẳng bộ chọn loại, không qua nút "+ Thêm câu hỏi". */
+  startOpen?: boolean;
+  /** Gọi sau khi tạo xong (thay cho việc đóng form) — để trang cha mở lại bộ chọn cho câu kế tiếp. */
+  onCreated?: () => void;
+  /** Gọi khi người dùng thoát khỏi bộ chọn/form mà không tạo (mũi tên quay lại, Hủy). */
+  onExit?: () => void;
 }) {
   const router = useRouter();
   // Three-stage flow:
   //   "closed"  → "+ Thêm câu hỏi" button only
   //   "picking" → visual type cards
   //   "editing" → full form with chosen type
-  const [stage, setStage] = useState<"closed" | "picking" | "editing">("closed");
+  const [stage, setStage] = useState<"closed" | "picking" | "editing">(
+    startOpen ? "picking" : "closed",
+  );
   const [importOpen, setImportOpen] = useState(false);
   const [type, setType] = useState<QuestionType>("mcq");
   const [prompt, setPrompt] = useState("");
@@ -234,8 +245,9 @@ export default function AddQuestionForm({
     setBusy(false);
     if (res.ok) {
       reset();
-      setStage("closed");
       router.refresh();
+      if (onCreated) onCreated();
+      else setStage("closed");
     } else {
       const d = await res.json().catch(() => ({}));
       setError(JSON.stringify(d.error ?? d) ?? "create_failed");
@@ -280,7 +292,7 @@ export default function AddQuestionForm({
           changeType(t);
           setStage("editing");
         }}
-        onCancel={() => setStage("closed")}
+        onCancel={() => (onExit ? onExit() : setStage("closed"))}
       />
     );
   }
@@ -292,47 +304,21 @@ export default function AddQuestionForm({
     >
       {/* Type badge + back link + points. Type can still be changed by
           going back to the picker — keeps the visual flow consistent. */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-1 min-w-[200px] items-end gap-2">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-              Loại câu hỏi
-            </span>
-            <div className="mt-1 inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 text-sm font-semibold text-brand-700">
-              {TYPE_LABEL[type]}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setStage("picking")}
-            className="rounded border border-token bg-white px-2 py-1 text-xs text-muted hover:bg-slate-50"
-          >
-            Đổi loại
-          </button>
-        </div>
-        <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Điểm
-          </span>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={points}
-            onChange={(e) => setPoints(Number(e.target.value))}
-            className="input mt-1 w-20"
-          />
-        </label>
-      </div>
+      <QuestionFormHeader
+        typeLabel={TYPE_LABEL[type]}
+        points={points}
+        onPoints={setPoints}
+        onChangeType={() => setStage("picking")}
+      />
 
       <div>
-        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+        <span className={FIELD_LABEL}>
           Câu hỏi
         </span>
-        <RichTextEditor
+        <AdaptiveTextField
           value={prompt}
           onChange={setPrompt}
-          placeholder="Câu hỏi... (có thể chèn ảnh qua nút 🖼️ trên toolbar)"
+          placeholder="Nhập câu hỏi"
           minHeight={80}
         />
       </div>
@@ -347,7 +333,7 @@ export default function AddQuestionForm({
       {type === "numerical" && (
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+            <span className={FIELD_LABEL}>
               Đáp án (số)
             </span>
             <input
@@ -360,8 +346,8 @@ export default function AddQuestionForm({
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-              Tolerance
+            <span className={FIELD_LABEL}>
+              Sai số cho phép
             </span>
             <input
               type="number"
@@ -386,24 +372,29 @@ export default function AddQuestionForm({
         </div>
       )}
 
+      {type === "matching" && (
+        <div>
+          <p className={FIELD_LABEL}>Các cặp ghép ({Math.floor(options.length / 2)})</p>
+          <MatchingPairsEditor options={options} onChange={setOptions} />
+        </div>
+      )}
+
       {(type === "mcq" ||
         type === "true_false" ||
         type === "fill_in" ||
         type === "short_answer" ||
         type === "ordering" ||
-        type === "matching" ||
         type === "drag_drop_fill") && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-            {type === "drag_drop_fill" ? `Token (${options.length})` : `Options (${options.length})`}
+          <p className={FIELD_LABEL}>
+            {type === "drag_drop_fill" ? `Token (${options.length})` : `Đáp án (${options.length})`}
           </p>
-          <p className="mt-0.5 text-xs text-faint">
+          <p className="-mt-1 mb-2 text-xs text-faint">
             {type === "mcq" && "Đánh dấu nhiều câu đúng nếu cần"}
             {type === "true_false" && "Chọn đáp án đúng (radio)"}
             {type === "fill_in" && "Mỗi label = đáp án chấp nhận được"}
             {type === "short_answer" && "Labels = exact match (case-insensitive)"}
             {type === "ordering" && "Thứ tự đúng = thứ tự bạn nhập"}
-            {type === "matching" && "Mỗi pairKey phải có 1 left + 1 right"}
             {type === "drag_drop_fill" && "Token có 'Vào ô số' = N sẽ là đáp án đúng cho ô [[N]]"}
           </p>
           <ul className="mt-2 space-y-2">
@@ -414,7 +405,6 @@ export default function AddQuestionForm({
               // plain. True/false labels are fixed semantic markers.
               const useRichLabel =
                 type === "mcq" ||
-                type === "matching" ||
                 type === "ordering" ||
                 type === "drag_drop_fill";
               return (
@@ -434,38 +424,6 @@ export default function AddQuestionForm({
                         }}
                         className="h-4 w-4 accent-success-600"
                       />
-                    )}
-                    {type === "matching" && (
-                      <>
-                        <select
-                          value={o.extra?.side ?? "left"}
-                          onChange={(e) =>
-                            setOption(i, {
-                              extra: {
-                                side: e.target.value as "left" | "right",
-                                pairKey: o.extra?.pairKey ?? "p1",
-                              },
-                            })
-                          }
-                          className="select w-14 px-1.5 text-xs"
-                        >
-                          <option value="left">L</option>
-                          <option value="right">R</option>
-                        </select>
-                        <input
-                          value={o.extra?.pairKey ?? ""}
-                          onChange={(e) =>
-                            setOption(i, {
-                              extra: {
-                                side: o.extra?.side ?? "left",
-                                pairKey: e.target.value,
-                              },
-                            })
-                          }
-                          placeholder="pairKey"
-                          className="input w-20 text-xs"
-                        />
-                      </>
                     )}
                     {type === "drag_drop_fill" && (
                       <label className="flex items-center gap-1 text-xs text-faint">
@@ -516,7 +474,7 @@ export default function AddQuestionForm({
                         className="select max-w-[160px] text-xs"
                         title="Misconception"
                       >
-                        <option value="">no misconception</option>
+                        <option value="">Không gắn quan niệm sai</option>
                         {misconceptions.map((m) => (
                           <option key={m.id} value={m.id}>
                             {m.code}
@@ -537,10 +495,10 @@ export default function AddQuestionForm({
                   </div>
                   {useRichLabel && (
                     <div className="mt-2">
-                      <RichTextEditor
+                      <AdaptiveTextField
                         value={o.label}
                         onChange={(html) => setOption(i, { label: html })}
-                        placeholder={`Đáp án ${i + 1}... (có thể chèn ảnh qua nút 🖼️)`}
+                        placeholder={`Đáp án ${i + 1}`}
                         minHeight={48}
                       />
                     </div>
@@ -552,12 +510,12 @@ export default function AddQuestionForm({
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
             {type !== "true_false" && (
               <button type="button" onClick={addOption} className="link">
-                + Thêm option
+                + Thêm đáp án
               </button>
             )}
             {(type === "mcq" || type === "true_false") && (
               <button type="button" onClick={createMisconception} className="link">
-                + Tạo misconception mới
+                + Tạo quan niệm sai mới
               </button>
             )}
           </div>
@@ -566,8 +524,8 @@ export default function AddQuestionForm({
 
       {type === "short_answer" && (
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Regex chấp nhận thêm (mỗi dòng 1 pattern, optional)
+          <span className={FIELD_LABEL}>
+            Regex chấp nhận thêm (mỗi dòng 1 mẫu, không bắt buộc)
           </span>
           <textarea
             value={acceptedRegexes}
@@ -579,40 +537,32 @@ export default function AddQuestionForm({
         </label>
       )}
 
-      <RichTextEditor
-        value={explanation}
-        onChange={setExplanation}
-        placeholder="Giải thích (hiện trên result page, optional)"
-        minHeight={100}
-      />
+      <div>
+        <span className={FIELD_LABEL}>
+          Giải thích <span className="font-normal normal-case text-faint">(không bắt buộc)</span>
+        </span>
+        <p className="-mt-1 mb-2 text-xs text-faint">
+          Hiện cho học viên ở trang kết quả, sau khi làm xong.
+        </p>
+        <div className="mt-2">
+          <AdaptiveTextField
+            value={explanation}
+            onChange={setExplanation}
+            placeholder="Vì sao đáp án này đúng"
+            minHeight={100}
+          />
+        </div>
+      </div>
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Tag skills
+        <p className={FIELD_LABEL}>
+          Chủ đề
         </p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {skills.map((s) => {
-            const picked = pickedSkillIds.includes(s.id);
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() =>
-                  setPickedSkillIds((curr) =>
-                    picked ? curr.filter((id) => id !== s.id) : [...curr, s.id],
-                  )
-                }
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                  picked
-                    ? "bg-brand-600 text-white"
-                    : "border border-token bg-[rgb(var(--surface))] text-muted hover:border-brand-300 hover:text-brand-700"
-                }`}
-              >
-                {s.code}
-              </button>
-            );
-          })}
-        </div>
+        <SkillTagPicker
+          skills={skills}
+          picked={pickedSkillIds}
+          onChange={setPickedSkillIds}
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-token pt-3">
@@ -623,7 +573,8 @@ export default function AddQuestionForm({
           type="button"
           onClick={() => {
             reset();
-            setStage("closed");
+            if (onExit) onExit();
+            else setStage("closed");
           }}
           className="btn-secondary btn-sm"
         >

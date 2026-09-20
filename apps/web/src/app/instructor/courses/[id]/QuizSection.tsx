@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { QuizActionButtons, QuizEditForm } from "./QuizHeader";
 import QuestionRow from "./QuestionRow";
 import AddQuestionForm from "./AddQuestionForm";
@@ -47,6 +49,7 @@ export default function QuizSection({
   lessonId: string;
 }) {
   const [editing, setEditing] = useState(false);
+  const pathname = usePathname();
 
   return (
     <details className={`group overflow-hidden rounded-xl border transition-colors ${
@@ -60,6 +63,13 @@ export default function QuizSection({
         <span className="ml-auto text-sm text-muted">
           {quiz.questions.length} câu · diff {quiz.difficulty ?? "—"}
         </span>
+        <Link
+          href={`${pathname}/quizzes/${quiz.id}/edit`}
+          onClick={(e) => e.stopPropagation()}
+          className="rounded-md border border-token px-2 py-1 text-xs font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+        >
+          Mở trình soạn
+        </Link>
         <QuizActionButtons quiz={quiz} onEdit={() => setEditing(true)} />
         <span className="text-xs text-faint opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden>
           ▾

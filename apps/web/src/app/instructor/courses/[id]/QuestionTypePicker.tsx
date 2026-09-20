@@ -35,7 +35,7 @@ interface TypeCard {
 // shape without taking up too much room.
 function PreviewBox({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-3 rounded-lg border border-token bg-white px-3 py-2.5 text-xs text-slate-700">
+    <div className="mt-3 min-w-0 overflow-hidden rounded-lg border border-token bg-white px-3 py-2.5 text-xs text-slate-700">
       {children}
     </div>
   );
@@ -133,10 +133,10 @@ const TYPE_CARDS: TypeCard[] = [
     preview: (
       <PreviewBox>
         <div className="text-faint">Sắp xếp theo thứ tự đúng:</div>
-        <div className="mt-1.5 flex items-center gap-1">
+        <div className="mt-1.5 flex flex-wrap items-center gap-1">
           {[1, 2, 3].map((n) => (
             <div key={n} className="flex items-center gap-1">
-              <div className="flex flex-1 items-center gap-1 rounded border border-token bg-white px-1.5 py-0.5">
+              <div className="flex items-center gap-1 whitespace-nowrap rounded border border-token bg-white px-1.5 py-0.5">
                 <span className="font-mono text-[9px] font-bold text-success-700">
                   {n}.
                 </span>
@@ -257,7 +257,7 @@ export default function QuestionTypePicker({
             key={c.type}
             type="button"
             onClick={() => onPick(c.type)}
-            className="group cursor-pointer rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md"
+            className="group flex cursor-pointer flex-col items-stretch justify-start rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md"
           >
             <div className="text-sm font-semibold text-slate-900 group-hover:text-brand-700">
               {c.title}

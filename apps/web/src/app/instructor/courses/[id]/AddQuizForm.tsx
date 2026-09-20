@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 
@@ -11,9 +11,11 @@ export default function AddQuizForm({
 }: {
   lessonId: string;
   embedded?: boolean;
+  /** Đóng modal sau khi tạo xong (không còn nút Hủy). */
   onCancel?: () => void;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(embedded);
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState(1);
@@ -48,12 +50,14 @@ export default function AddQuizForm({
         requireConfidence,
       }),
     });
-    setBusy(false);
     if (res.ok) {
+      const { quizId } = (await res.json()) as { quizId: string };
       setTitle("");
       close();
-      router.refresh();
+      // Sang thẳng trang soạn quiz để nhập câu hỏi.
+      router.push(`${pathname}/quizzes/${quizId}/edit`);
     }
+    setBusy(false);
   }
 
   return (
@@ -94,13 +98,6 @@ export default function AddQuizForm({
       <div className="flex gap-2">
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "..." : "Tạo quiz"}
-        </button>
-        <button
-          type="button"
-          onClick={close}
-          className="btn-secondary btn-sm"
-        >
-          Hủy
         </button>
       </div>
     </form>
