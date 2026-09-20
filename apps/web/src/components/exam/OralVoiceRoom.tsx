@@ -12,7 +12,6 @@ import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
 import OralAiAvatar, { type OralAvatarState } from "./OralAiAvatar";
 
-const MAX_ORAL_QUESTIONS = 8; // giữ đồng bộ với packages/core-feedback/src/oralExam/examinerChat.ts
 
 interface Turn {
   role: "student" | "examiner";
@@ -38,6 +37,12 @@ interface Props {
   studentName?: string | null;
   /** Ảnh đại diện sinh viên; không có thì UserAvatar tự fallback initial. */
   studentImageUrl?: string | null;
+  /**
+   * Giáo viên thử vấn đáp: cùng giao diện phòng thật nhưng KHÔNG có lượt thi — hội thoại đi qua
+   * /oral-preview/(voice-)turn (client gửi kèm lịch sử, server không lưu gì), tắt heartbeat/ghi sự cố/phát hiện
+   * nhiều tab, kết thúc thì quay về exitUrl thay vì trang "đã nộp".
+   */
+  preview?: boolean;
 }
 
 const FRIENDLY_ERROR: Record<string, string> = {
@@ -76,6 +81,7 @@ export default function OralVoiceRoom({
   instructionsHtml,
   studentName,
   studentImageUrl,
+  preview = false,
 }: Props) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -97,6 +103,7 @@ export default function OralVoiceRoom({
   const [pasteBlocked, setPasteBlocked] = useState(false);
   const reveal = usePacedReveal();
   const kickedOff = useRef(false);
+  const [started, setStarted] = useState(!preview);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -181,8 +188,14 @@ export default function OralVoiceRoom({
         const form = new FormData();
         if (audioBlob) form.append("audio", audioBlob, "answer.webm");
         if (opts?.forceEnd) form.append("forceEnd", "1");
+        // Bản thử không lưu hội thoại ở server nên phải gửi kèm lịch sử TRƯỚC lượt này.
+        if (preview) form.append("history", JSON.stringify(liveRef.current.turns));
         const res = await fetch(
-          apiUrl(`/api/exams/${examId}/oral-attempt/${attemptId}/voice-turn`),
+          apiUrl(
+            preview
+              ? `/api/exams/${examId}/oral-preview/voice-turn`
+              : `/api/exams/${examId}/oral-attempt/${attemptId}/voice-turn`,
+          ),
           { method: "POST", body: form },
         );
         const data = await res.json().catch(() => ({}));
@@ -217,7 +230,7 @@ export default function OralVoiceRoom({
         setProcessing(false);
       }
     },
-    [examId, attemptId, playAudioChunks, reveal],
+    [examId, attemptId, playAudioChunks, reveal, preview],
   );
 
   // Lượt bằng chữ (lối thoát khi mic/TTS hỏng) — SSE, cùng khuôn OralExamRoom.
@@ -226,18 +239,27 @@ export default function OralVoiceRoom({
       setError(null);
       setProcessing(true);
       reveal.reset();
+      const historyBefore = liveRef.current.turns;
       if (message) setTurns((prev) => [...prev, { role: "student", content: message }]);
       let acc = "";
       let doneData: { ended: boolean; questionsAsked: number } | null = null;
       try {
-        const res = await fetch(apiUrl(`/api/exams/${examId}/oral-attempt/${attemptId}/turn`), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: message ?? undefined,
-            forceEnd: opts?.forceEnd || undefined,
-          }),
-        });
+        const res = await fetch(
+          apiUrl(
+            preview
+              ? `/api/exams/${examId}/oral-preview/turn`
+              : `/api/exams/${examId}/oral-attempt/${attemptId}/turn`,
+          ),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: message ?? undefined,
+              forceEnd: opts?.forceEnd || undefined,
+              ...(preview ? { history: historyBefore } : {}),
+            }),
+          },
+        );
         if (!res.ok || !res.body) {
           const d = await res.json().catch(() => ({}));
           setError(typeof d?.error === "string" ? d.error : "stream_failed");
@@ -298,26 +320,29 @@ export default function OralVoiceRoom({
         setProcessing(false);
       }
     },
-    [examId, attemptId, reveal],
+    [examId, attemptId, reveal, preview],
   );
 
   useEffect(() => {
+    // Bản thử chờ giáo viên bấm "Vào toàn màn hình & bắt đầu" rồi mới gọi AI (không tốn token khi chỉ mở trang).
+    if (!started) return;
     if (kickedOff.current) return;
     if (initialTurns.length === 0) {
       kickedOff.current = true;
       void sendVoiceTurn(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [started]);
 
   useEffect(() => {
     if (ended) {
-      const t = setTimeout(() => router.push(submittedUrl), 3_000);
+      const t = setTimeout(() => router.push(preview ? exitUrl : submittedUrl), 3_000);
       return () => clearTimeout(t);
     }
-  }, [ended, router, submittedUrl]);
+  }, [ended, router, submittedUrl, exitUrl, preview]);
 
   useEffect(() => {
+    if (preview) return; // bản thử không có lượt thi để báo nhịp
     let cancelled = false;
     const ping = () => {
       fetch(apiUrl(`/api/exam-attempts/${attemptId}/heartbeat`), { method: "POST" }).catch(
@@ -332,7 +357,7 @@ export default function OralVoiceRoom({
       cancelled = true;
       clearInterval(t);
     };
-  }, [attemptId]);
+  }, [attemptId, preview]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -345,7 +370,8 @@ export default function OralVoiceRoom({
           setIsEnding(true);
           const finalMessage = live.input.trim() || "(Đã hết giờ, không kịp trả lời.)";
           setInput("");
-          void sendTextTurn(finalMessage);
+          // Bản thử không có đồng hồ phía server — chủ động báo hết giờ bằng forceEnd.
+          void sendTextTurn(finalMessage, preview ? { forceEnd: true } : undefined);
         }
       }
     }, 1_000);
@@ -361,6 +387,7 @@ export default function OralVoiceRoom({
 
   const logIncident = useCallback(
     async (type: string, payload?: Record<string, unknown>) => {
+      if (preview) return; // bản thử: không ghi sự cố vì không có lượt thi
       try {
         await fetch(apiUrl(`/api/exam-attempts/${attemptId}/incidents`), {
           method: "POST",
@@ -371,7 +398,7 @@ export default function OralVoiceRoom({
         // Best-effort — mất mạng tự nó đã là 1 dấu hiệu, không cần báo lỗi ở đây.
       }
     },
-    [attemptId],
+    [attemptId, preview],
   );
 
   // A6.6 — chặn dán vào ô gõ chữ (lối thoát khi mic hỏng) — cùng lý do với
@@ -455,14 +482,17 @@ export default function OralVoiceRoom({
     <div className="fixed inset-0 z-40 flex flex-col bg-[rgb(var(--surface-muted))]">
       <FullscreenGate
         examTitle={examTitle}
-        onEnter={() => undefined}
+        onEnter={() => setStarted(true)}
         required={!isEnding}
+        preview={preview}
       />
       <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
-      <MultiTabDetector
-        attemptId={attemptId}
-        onConflict={(peerTabId) => logIncident("multi_tab", { peerTabId })}
-      />
+      {!preview && (
+        <MultiTabDetector
+          attemptId={attemptId}
+          onConflict={(peerTabId) => logIncident("multi_tab", { peerTabId })}
+        />
+      )}
       <audio ref={audioRef} className="hidden" />
 
       <header className="flex items-center justify-between gap-3 border-b border-token bg-[rgb(var(--surface))] px-4 py-3 sm:px-6">
@@ -470,7 +500,7 @@ export default function OralVoiceRoom({
           <button
             type="button"
             onClick={() => {
-              if (confirm("Rời phòng vấn đáp? Bài làm vẫn giữ nguyên, quay lại sau để tiếp tục.")) {
+              if (confirm(preview ? "Thoát bản thử? Hội thoại thử sẽ mất." : "Rời phòng vấn đáp? Bài làm vẫn giữ nguyên, quay lại sau để tiếp tục.")) {
                 router.push(exitUrl);
               }
             }}
@@ -486,9 +516,11 @@ export default function OralVoiceRoom({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          <span className="text-caption text-faint">
-            Câu {Math.min(questionsAsked, MAX_ORAL_QUESTIONS)}/{MAX_ORAL_QUESTIONS}
-          </span>
+          {preview && (
+            <span className="rounded-full bg-lime-100 px-2.5 py-1 text-xs font-semibold text-lime-800 dark:bg-lime-900/40 dark:text-lime-200">
+              Bản thử · không lưu
+            </span>
+          )}
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium tabular-nums ${
               timerDanger ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-700"
@@ -578,7 +610,7 @@ export default function OralVoiceRoom({
               )}
               {error && (
                 <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
-                  {FRIENDLY_ERROR[error] ?? `Lỗi: ${error}`}
+                  {preview && error === "openai_not_configured" ? "Hệ thống chưa cấu hình khoá OpenAI nên AI chưa hỏi được — thêm khoá ở phần tích hợp của quản trị rồi thử lại." : (FRIENDLY_ERROR[error] ?? `Lỗi: ${error}`)}
                 </div>
               )}
             </div>

@@ -27,12 +27,15 @@ export default function FullscreenGate({
   examTitle,
   onEnter,
   required,
+  preview = false,
 }: {
   examTitle: string;
   /** Called right after fullscreen request resolves (success or failure). */
   onEnter: () => void;
   /** When false (e.g. proctoringLevel=none), the gate is bypassed. */
   required: boolean;
+  /** Giáo viên thử — giữ nguyên giao diện nhưng không hứa "ghi lại" vì bản thử không ghi gì. */
+  preview?: boolean;
 }) {
   // Bắt đầu đóng, rồi mới mở nếu máy làm được — dò tính năng phải chạy phía
   // client, không phải lúc render trên server.
@@ -41,9 +44,13 @@ export default function FullscreenGate({
 
   useEffect(() => {
     if (required && fullscreenSupported()) setOpen(true);
+    // Máy không có API toàn màn hình (iPhone/iPad cũ): không có gì để bấm, nên báo "vào" luôn để phần bắt đầu
+    // buổi (vd bản thử vấn đáp chờ tín hiệu này) không đứng chờ một nút không bao giờ hiện.
+    else if (required) onEnter();
     // required tắt lúc đang mở (VD: sinh viên bấm "Kết thúc buổi vấn đáp")
     // — đóng ngay, đừng để hộp thoại đứng chắn màn hình kết thúc.
     else if (!required) setOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [required]);
 
   useEffect(() => {
@@ -85,7 +92,12 @@ export default function FullscreenGate({
 
   const requestFs = async () => {
     try {
-      await document.documentElement.requestFullscreen();
+      // Không chờ vô hạn: ở một số môi trường (khung trình duyệt nhúng, iframe bị chặn) lời hứa này không bao giờ
+      // hoàn tất cũng không báo lỗi — chờ mãi thì nút "bấm mà không phản ứng gì". Quá 1,5 giây coi như đã xử lý.
+      await Promise.race([
+        document.documentElement.requestFullscreen(),
+        new Promise<void>((resolve) => setTimeout(resolve, 1_500)),
+      ]);
     } catch {
       // Some browsers reject silently; close gate anyway so the user can take
       // the exam — incidents already flag exits server-side.
@@ -101,18 +113,21 @@ export default function FullscreenGate({
         {exited ? (
           <p className="mb-4 text-sm text-red-700">
             Bài thi đang không ở chế độ toàn màn hình. Vui lòng quay lại để
-            tiếp tục làm bài — rời quá lâu sẽ được ghi vào nhật ký buổi thi.
+            tiếp tục làm bài{preview ? "." : " — rời quá lâu sẽ được ghi vào nhật ký buổi thi."}
           </p>
         ) : (
           <p className="mb-4 text-sm text-faint">
             Bài thi yêu cầu chế độ toàn màn hình. Nhấn nút bên dưới để bắt
-            đầu. Việc rời tab hoặc thoát chế độ toàn màn hình sẽ được ghi lại.
+            đầu.{" "}
+            {preview
+              ? "Đây là bản thử — việc rời tab hay thoát toàn màn hình không bị ghi lại."
+              : "Việc rời tab hoặc thoát chế độ toàn màn hình sẽ được ghi lại."}
           </p>
         )}
         <button
           type="button"
           onClick={requestFs}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+          className="rounded bg-lime-600 px-4 py-2 text-sm font-medium text-white hover:bg-lime-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
         >
           {exited ? "Quay lại toàn màn hình" : "Vào toàn màn hình & bắt đầu"}
         </button>
