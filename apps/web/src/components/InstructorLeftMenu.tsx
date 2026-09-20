@@ -619,14 +619,6 @@ function RailButton({
         >
           <Icon size={iconSize} className={isActive ? "text-white" : "text-[rgb(var(--text-muted))]"} strokeWidth={isActive ? 1.75 : 1.5} />
         </span>
-        {premium && (
-          // Huy hiệu vàng cố định (cùng tông pill "Premium" ở sidebar) — không
-          // dùng gradient brand vì nó xung đột với màu riêng của từng module
-          // (hồng Limio-Live, tím Vấn đáp AI). Vàng đứng riêng nên hợp cả hai.
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-sm ring-2 ring-[rgb(var(--surface-muted))]">
-            <Crown size={10} className="text-amber-950" fill="currentColor" strokeWidth={2} />
-          </span>
-        )}
       </Link>
     </Tooltip>
   );
