@@ -94,6 +94,8 @@ type ModuleDef = {
   /** Module dự tính thu phí (Limio-Live, Vấn đáp AI) — icon rail có viền vàng
    * + huy hiệu crown, sidebar có pill "Premium" cạnh tên module. */
   premium?: boolean;
+  /** Mô tả ngắn 1 dòng dưới tên module ở sidebar (và trong tooltip của icon rail). */
+  tagline?: string;
   colors: ModuleColors;
   /** Path prefix để tự nhận diện module đang active từ URL — rail là điều
    * hướng thật (Link), không phải state client thuần, nên F5/deep-link vẫn
@@ -150,6 +152,7 @@ const MODULES: ModuleDef[] = [
     // requireFeature() redirect về dashboard khi bấm vào.
     id: "limio-live",
     label: "Limio-Live",
+    tagline: "Dạy học trực tiếp",
     icon: Presentation,
     premium: true,
     colors: {
@@ -437,6 +440,9 @@ function InstructorLeftMenuInner({
             Premium
           </span>
         )}
+        {activeModule.tagline && (
+          <p className="basis-full text-[14px] font-medium leading-tight text-muted">{activeModule.tagline}</p>
+        )}
       </div>
       <ItemList items={activeModule.items} isActive={isActive} colors={activeModule.colors} pendingHref={pendingHref} onNavigate={setPendingHref} />
     </div>
@@ -544,7 +550,7 @@ function ModuleRail({
           isActive={activeModuleId === m.id}
           railClass={m.colors.rail}
           premium={m.premium}
-          description={m.premium ? "Tính năng Premium" : undefined}
+          description={m.tagline ?? (m.premium ? "Tính năng Premium" : undefined)}
           onSelect={() => onSelect(m.id)}
           onHover={onHover}
         />
