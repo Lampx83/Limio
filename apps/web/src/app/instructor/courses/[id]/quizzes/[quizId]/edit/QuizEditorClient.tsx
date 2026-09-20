@@ -148,13 +148,15 @@ export default function QuizEditorClient({
               lessonId={lessonId}
               nextOrderIndex={quiz.questions.length}
               open={false}
-              onOpenChange={(o) => o && setTool("ai")}
+              pressed={tool === "ai"}
+              onOpenChange={(o) => setTool(o ? "ai" : null)}
             />
           )}
           <BulkImportQuestions
             quizId={quiz.id}
             open={false}
-            onOpenChange={(o) => o && setTool("import")}
+            pressed={tool === "import"}
+            onOpenChange={(o) => setTool(o ? "import" : null)}
           />
         </div>
 

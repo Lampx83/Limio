@@ -10,11 +10,14 @@ export default function BulkImportQuestions({
   quizId,
   open: openProp,
   onOpenChange,
+  pressed,
 }: {
   quizId: string;
   /** Điều khiển từ ngoài (trang soạn quiz đặt panel vào vùng giữa); bỏ trống = tự quản lý. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Ép trạng thái "đang chọn" của nút (khi panel hiện ở chỗ khác); bỏ trống = theo open. */
+  pressed?: boolean;
 }) {
   const router = useRouter();
   const [openState, setOpenState] = useState(false);
@@ -65,17 +68,25 @@ export default function BulkImportQuestions({
     setResult(null);
   }
 
-  if (!open) {
-    return (
-      <button onClick={() => setOpen(true)} className="btn-secondary btn-sm inline-flex items-center gap-1.5">
-        <FileSpreadsheet className="h-4 w-4 text-brand-600" aria-hidden />
-        Nhập câu hỏi từ Excel
-      </button>
-    );
-  }
+  const isPressed = pressed ?? open;
+  const toggle = (
+    <button
+      type="button"
+      onClick={() => setOpen(!isPressed)}
+      aria-pressed={isPressed}
+      className={`${isPressed ? "btn-primary" : "btn-secondary"} btn-sm inline-flex items-center gap-1.5`}
+    >
+      <FileSpreadsheet className={`h-4 w-4 ${isPressed ? "text-white" : "text-brand-600"}`} aria-hidden />
+      Nhập câu hỏi từ Excel
+    </button>
+  );
+
+  if (!open) return toggle;
 
   return (
-    <div className="w-full text-sm">
+    <>
+      {openProp === undefined && toggle}
+    <div className="order-last w-full text-sm">
       <div className="flex items-center justify-between">
         <p className="text-base font-semibold">Nhập nhiều câu hỏi từ file Excel</p>
         <button
@@ -158,6 +169,7 @@ export default function BulkImportQuestions({
         </div>
       )}
     </div>
+    </>
   );
 }
 

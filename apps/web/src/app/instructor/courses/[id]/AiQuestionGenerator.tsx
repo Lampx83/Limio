@@ -49,6 +49,7 @@ export default function AiQuestionGenerator({
   nextOrderIndex,
   open: openProp,
   onOpenChange,
+  pressed,
 }: {
   quizId: string;
   lessonId: string;
@@ -56,6 +57,8 @@ export default function AiQuestionGenerator({
   /** Điều khiển từ ngoài (trang soạn quiz đặt panel vào vùng giữa); bỏ trống = tự quản lý. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Ép trạng thái "đang chọn" của nút (khi panel hiện ở chỗ khác); bỏ trống = theo open. */
+  pressed?: boolean;
 }) {
   const router = useRouter();
   const [openState, setOpenState] = useState(false);
@@ -124,20 +127,25 @@ export default function AiQuestionGenerator({
     }
   }
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="btn-secondary btn-sm inline-flex items-center gap-1.5"
-      >
-        <Sparkles className="h-4 w-4 text-brand-600" aria-hidden />
-        Tạo câu hỏi bằng AI
-      </button>
-    );
-  }
+  const isPressed = pressed ?? open;
+  const toggle = (
+    <button
+      type="button"
+      onClick={() => setOpen(!isPressed)}
+      aria-pressed={isPressed}
+      className={`${isPressed ? "btn-primary" : "btn-secondary"} btn-sm inline-flex items-center gap-1.5`}
+    >
+      <Sparkles className={`h-4 w-4 ${isPressed ? "text-white" : "text-brand-600"}`} aria-hidden />
+      Tạo câu hỏi bằng AI
+    </button>
+  );
+
+  if (!open) return toggle;
 
   return (
-    <div className="w-full text-sm">
+    <>
+      {openProp === undefined && toggle}
+    <div className="order-last w-full text-sm">
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-2 text-base font-semibold"><Sparkles className="h-4 w-4 text-brand-600" aria-hidden />Tạo câu hỏi bằng AI</p>
         <button
@@ -245,5 +253,6 @@ export default function AiQuestionGenerator({
         </ul>
       )}
     </div>
+    </>
   );
 }
