@@ -29,6 +29,7 @@ export {
 export * from "./handlers";
 export * from "./quests";
 export * from "./tournament";
+export * from "./tournamentRules";
 export * from "./missionCondition";
 export * from "./customMissions";
 export * from "./customMissionsRuntime";

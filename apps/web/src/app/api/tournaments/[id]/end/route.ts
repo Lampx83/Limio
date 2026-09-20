@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
+import { endTournament } from "@feedbackme/core-gamification";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -37,18 +38,10 @@ export async function POST(
     );
   }
 
-  const updated = await prisma.tournament.update({
-    where: { id: params.id },
-    data: {
-      status: "ended",
-      endsAt: new Date(),
-    },
-    select: {
-      id: true,
-      status: true,
-      endsAt: true,
-    },
-  });
+  const result = await endTournament(params.id);
 
-  return NextResponse.json({ tournament: updated });
+  return NextResponse.json({
+    tournament: { id: params.id, status: result.status, endsAt: result.endsAt },
+    prizesAwarded: result.prizesAwarded,
+  });
 }

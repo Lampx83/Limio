@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { prizeXpForPercent } from "@feedbackme/core-gamification";
 
 const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 const RANK_LABELS: Record<number, string> = {
@@ -97,7 +98,7 @@ export default function TournamentPrizeForm({
       <div className="space-y-3">
         {pcts.map((pct, idx) => {
           const rank = idx + 1;
-          const xp = Math.round(((Number(pct) || 0) / 100) * prizeXp);
+          const xp = prizeXpForPercent(prizeXp, Number(pct) || 0);
           return (
             <div key={idx} className="flex items-center gap-3">
               <span className="flex w-32 shrink-0 items-center gap-1.5 text-sm font-medium">

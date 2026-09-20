@@ -27,6 +27,7 @@ import {
   type RubricCriterion,
   type ReviewerScoreEntry,
 } from "./customMissions";
+import { isTournamentOpenForSubmission } from "./tournamentRules";
 
 export class CustomMissionError extends Error {
   constructor(
@@ -35,6 +36,7 @@ export class CustomMissionError extends Error {
       | "submission_not_found"
       | "not_registered"
       | "past_deadline"
+      | "tournament_not_open"
       | "speed_run_blocked"
       | "resubmit_blocked"
       | "verify_mode_mismatch"
@@ -93,6 +95,12 @@ export async function submitMission(
     },
   });
   if (!reg) throw new CustomMissionError("not_registered");
+
+  // Chỉ nhận bài khi giải đã công bố/đang diễn ra và trong khoảng thời gian của giải
+  // (hạn nộp của mission có thể dài hơn giải, nên phải kiểm riêng).
+  if (!isTournamentOpenForSubmission(mission.tournament, new Date())) {
+    throw new CustomMissionError("tournament_not_open");
+  }
 
   // Team COLLECTIVE submission: only captain can submit. Stored under
   // captain.userId so member view derives status from captain's submission.

@@ -2,6 +2,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { awardXp } from "./xp";
 import { checkMissionCondition } from "./missionCondition";
+import { planTournamentEnd, prizeXpForPercent } from "./tournamentRules";
 
 /**
  * conditionType nào KHÔNG hợp lệ khi tournament là team-based (teamSize > 1).
@@ -522,7 +523,8 @@ export async function recomputeRanking(
   const t = await db.tournament.findUnique({
     where: { id: tournamentId },
     include: {
-      registrations: { select: { userId: true, teamId: true } },
+      // Người bị loại (disqualifiedAt) không được xếp hạng và không nhận thưởng.
+      registrations: { where: { disqualifiedAt: null }, select: { userId: true, teamId: true } },
       missions: { select: { id: true, points: true } },
     },
   });
@@ -639,7 +641,7 @@ export async function distributePrizes(
   for (const r of rankings) {
     const pct = dist[String(r.rank)];
     if (typeof pct !== "number" || pct <= 0) continue;
-    const xp = Math.floor((t.prizeXp * pct) / 100);
+    const xp = prizeXpForPercent(t.prizeXp, pct);
     if (xp <= 0) continue;
     if (r.userId) {
       await awardXp(
@@ -689,6 +691,46 @@ export async function distributePrizes(
   });
 
   return { awarded };
+}
+
+/**
+ * Kết thúc thủ công (nút "Kết thúc sớm" / "Hủy đấu trường"). Trước đây chỉ đổi status nên
+ * thưởng không bao giờ được trao (cron chỉ xử lý giải active). Giờ đi cùng đường với cron:
+ * giải đã bắt đầu thì chốt hạng + trao thưởng; giải chưa bắt đầu (huỷ) thì không trao gì.
+ */
+export async function endTournament(
+  tournamentId: string,
+  db: PrismaClient = prisma,
+): Promise<{ status: "ended"; endsAt: Date; prizesAwarded: number }> {
+  const t = await db.tournament.findUnique({ where: { id: tournamentId } });
+  if (!t) throw new TournamentError("tournament_not_found");
+  const plan = planTournamentEnd(t, new Date());
+  if (!plan.ok) throw new TournamentError("validation_failed");
+
+  const updated = await db.tournament.update({
+    where: { id: tournamentId },
+    data: { status: "ended", endsAt: plan.endsAt },
+    select: { endsAt: true, creatorId: true },
+  });
+
+  let prizesAwarded = 0;
+  if (plan.awardPrizes) {
+    await recomputeRanking(tournamentId, db);
+    try {
+      prizesAwarded = (await distributePrizes(tournamentId, db)).awarded;
+    } catch {
+      // best-effort như cron; sự kiện TournamentEnded bên dưới vẫn được ghi
+    }
+  }
+  await db.learningEvent.create({
+    data: {
+      userId: updated.creatorId,
+      eventType: LearningEventType.TournamentEnded,
+      payload: { tournamentId, manual: true, cancelledBeforeStart: !plan.awardPrizes } as Prisma.InputJsonValue,
+      courseId: t.courseId ?? null,
+    },
+  });
+  return { status: "ended", endsAt: updated.endsAt, prizesAwarded };
 }
 
 /**

@@ -6,6 +6,7 @@ import TournamentMissionManager from "./TournamentMissionManager";
 import RegistrationsList, { type Registration } from "./RegistrationsList";
 import JudgesPanel from "./JudgesPanel";
 import TournamentPrizeForm from "./TournamentPrizeForm";
+import { prizeXpForPercent } from "@feedbackme/core-gamification";
 
 interface Tab {
   id: string;
@@ -143,7 +144,7 @@ export default function InstructorTournamentTabs({
                   {Object.entries(prizeDistribution as Record<string, number>)
                     .sort(([a], [b]) => Number(a) - Number(b))
                     .map(([place, pct]) => {
-                      const xp = Math.round((pct / 100) * prizeXp);
+                      const xp = prizeXpForPercent(prizeXp, pct);
                       const medals: Record<number, string> = {
                         1: "🥇",
                         2: "🥈",

@@ -13,6 +13,7 @@
  *   E05 — conditionValue ≤ total available content in the course
  *   E06 — No circular prerequisite chain
  *   E07 — prizeDistribution percentages sum ≤ 100
+ *   E08 — có Prize XP nhưng chưa chia tỷ lệ theo hạng (không ai được trao thưởng)
  *   W01 — prizeDistribution sum < 100 (unclaimed XP)
  *   W02 — conditionValue > 80% of available content (high bar warning)
  *   W03 — streak_days used without courseId (cannot be verified platform-wide)
@@ -22,7 +23,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
-import { ConditionType } from "@feedbackme/core-gamification";
+import { ConditionType, prizeSetupIssue } from "@feedbackme/core-gamification";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -131,6 +132,14 @@ export async function GET(
       missionId: cycleId,
       missionTitle: m?.title,
       message: `Nhiệm vụ "${m?.title ?? cycleId}" tạo vòng lặp prerequisite (A → B → A). Vui lòng kiểm tra lại chuỗi điều kiện.`,
+    });
+  }
+
+  // ── E08: có Prize XP mà chưa chia tỷ lệ ───────────────────────────────
+  if (prizeSetupIssue(tournament) === "distribution_missing") {
+    errors.push({
+      code: "E08",
+      message: `Đã đặt ${tournament.prizeXp.toLocaleString()} XP thưởng nhưng chưa chia tỷ lệ theo hạng — sẽ không ai nhận được thưởng. Vào tab Giải thưởng để chia.`,
     });
   }
 

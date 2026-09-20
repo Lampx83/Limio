@@ -35,6 +35,7 @@ import {
   isMissionTeamCompatible,
   calcAggregateScore,
   calcMedian,
+  prizeXpForPercent,
 } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
@@ -895,7 +896,7 @@ export default async function TournamentDetailPage({
                   )
                     .sort(([a], [b]) => Number(a) - Number(b))
                     .map(([place, pct]) => {
-                      const xp = Math.round((pct / 100) * tournament.prizeXp);
+                      const xp = prizeXpForPercent(tournament.prizeXp, pct);
                       const placeNum = Number(place);
                       return (
                         <li

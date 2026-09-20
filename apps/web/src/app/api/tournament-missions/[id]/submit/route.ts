@@ -42,7 +42,7 @@ export async function POST(
           ? 404
           : e.code === "not_registered" || e.code === "team_submission_captain_only"
             ? 403
-            : e.code === "past_deadline" || e.code === "resubmit_blocked"
+            : e.code === "past_deadline" || e.code === "resubmit_blocked" || e.code === "tournament_not_open"
               ? 409
               : e.code === "speed_run_blocked"
                 ? 429

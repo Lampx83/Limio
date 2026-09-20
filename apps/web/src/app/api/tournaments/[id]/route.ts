@@ -4,6 +4,7 @@ import { Prisma, prisma } from "@feedbackme/db";
 import { isAdmin } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
+import { canPatchTournament, prizeSetupIssue } from "@feedbackme/core-gamification";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
+  const viewerId = await requireUserId();
   const tournament = await prisma.tournament.findUnique({
     where: { id: params.id },
     select: {
@@ -47,6 +49,13 @@ export async function GET(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  // Giải nháp chỉ người tạo / admin xem được. Trả 404 (không phải 403) để không lộ việc mã có tồn tại.
+  if (tournament.status === "draft") {
+    const allowed =
+      !!viewerId && (tournament.creatorId === viewerId || (await isAdmin(viewerId)));
+    if (!allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
   return NextResponse.json({ tournament });
 }
 
@@ -75,7 +84,16 @@ export async function PATCH(
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: params.id },
-    select: { id: true, creatorId: true, status: true, startsAt: true, endsAt: true },
+    select: {
+      id: true,
+      creatorId: true,
+      status: true,
+      startsAt: true,
+      endsAt: true,
+      prizeXp: true,
+      prizeDistribution: true,
+      _count: { select: { registrations: true, missions: true } },
+    },
   });
   if (!tournament) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -95,12 +113,46 @@ export async function PATCH(
 
   const data = parsed.data;
 
+  // Khoá theo trạng thái / số người đăng ký (xem canPatchTournament).
+  const check = canPatchTournament(
+    { status: tournament.status, registrationCount: tournament._count.registrations },
+    Object.keys(data).filter((k) => (data as Record<string, unknown>)[k] !== undefined),
+  );
+  if (!check.ok) {
+    return NextResponse.json(
+      { error: "validation_failed", details: check.reason },
+      { status: 409 },
+    );
+  }
+
   // Cannot change status if already published (or further)
   if (data.status === "published" && tournament.status !== "draft") {
     return NextResponse.json(
       { error: "validation_failed", details: "status_already_published" },
       { status: 400 },
     );
+  }
+
+  // Công bố phải qua kiểm tra ở máy chủ, không chỉ ở nút bấm: có ít nhất 1 nhiệm vụ và
+  // đã chia tỷ lệ giải thưởng nếu có Prize XP.
+  if (data.status === "published") {
+    if (tournament._count.missions === 0) {
+      return NextResponse.json(
+        { error: "validation_failed", details: "no_missions" },
+        { status: 400 },
+      );
+    }
+    const prizeIssue = prizeSetupIssue({
+      prizeXp: data.prizeXp ?? tournament.prizeXp,
+      prizeDistribution:
+        data.prizeDistribution !== undefined ? data.prizeDistribution : tournament.prizeDistribution,
+    });
+    if (prizeIssue) {
+      return NextResponse.json(
+        { error: "validation_failed", details: `prize_${prizeIssue}` },
+        { status: 400 },
+      );
+    }
   }
 
   // Validate endsAt > startsAt using merged values
