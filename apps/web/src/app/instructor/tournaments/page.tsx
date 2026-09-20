@@ -19,7 +19,7 @@ const STATUS_TONE: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "Nháp",
-  published: "Đã publish",
+  published: "Đã công bố",
   active: "Đang diễn ra",
   ended: "Đã kết thúc",
 };

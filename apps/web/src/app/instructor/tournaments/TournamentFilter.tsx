@@ -28,7 +28,7 @@ export default function TournamentFilter() {
         {[
           { value: "all", label: "Tất cả" },
           { value: "draft", label: "Nháp" },
-          { value: "published", label: "Đã publish" },
+          { value: "published", label: "Đã công bố" },
           { value: "active", label: "Đang diễn ra" },
           { value: "ended", label: "Đã kết thúc" },
         ].map((option) => (

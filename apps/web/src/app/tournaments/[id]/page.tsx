@@ -37,6 +37,7 @@ import {
   calcMedian,
   prizeXpForPercent,
 } from "@feedbackme/core-gamification";
+import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
 import TournamentTeamPanel from "./TournamentTeamPanel";
@@ -115,7 +116,13 @@ export default async function TournamentDetailPage({
   });
 
   if (!tournament) notFound();
-  if (tournament.status === "draft") redirect("/tournaments");
+  // Bản nháp: chỉ người tạo/admin xem thử được ("Xem như học viên"); người khác về danh sách.
+  const isDraftPreview = tournament.status === "draft";
+  if (isDraftPreview) {
+    const uid = session?.user?.id;
+    const canPreview = !!uid && (tournament.creatorId === uid || (await isAdmin(uid)));
+    if (!canPreview) redirect("/tournaments");
+  }
 
   // Check if current user is registered. For team tournaments we also pull
   // team + roster so the right-rail panel can render team UI.
@@ -355,6 +362,15 @@ export default async function TournamentDetailPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      {isDraftPreview && (
+        <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+          Đây là bản xem thử. Đấu trường còn ở dạng nháp nên học viên chưa thấy trang này. Quay lại{" "}
+          <Link href={`/instructor/tournaments/${tournament.id}`} className="font-semibold underline">
+            trang quản lý
+          </Link>{" "}
+          để tiếp tục thiết lập và công bố.
+        </div>
+      )}
       {/* ── HERO BANNER ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className={`absolute inset-0 bg-gradient-to-br ${heroGradient}`} />

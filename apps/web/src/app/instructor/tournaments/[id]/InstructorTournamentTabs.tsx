@@ -6,6 +6,9 @@ import TournamentMissionManager from "./TournamentMissionManager";
 import RegistrationsList, { type Registration } from "./RegistrationsList";
 import JudgesPanel from "./JudgesPanel";
 import TournamentPrizeForm from "./TournamentPrizeForm";
+import TournamentSetupChecklist from "./TournamentSetupChecklist";
+import TournamentInfoSummary, { type InfoSummaryData } from "./TournamentInfoSummary";
+import { buildSetupSteps, type SetupTab } from "@/lib/tournamentSetup";
 import { prizeXpForPercent } from "@feedbackme/core-gamification";
 
 interface Tab {
@@ -37,6 +40,8 @@ export default function InstructorTournamentTabs({
   teamSize,
   tournamentTitle,
   pendingCounts,
+  judgeCount,
+  courseTitle,
 }: {
   tournamentId: string;
   status: string;
@@ -51,10 +56,33 @@ export default function InstructorTournamentTabs({
   teamSize: number;
   tournamentTitle: string;
   pendingCounts: Record<string, number>;
+  judgeCount: number;
+  courseTitle: string | null;
 }) {
   const [activeTab, setActiveTab] = useState("basic");
 
   const showLeaderboard = status === "active" || status === "ended";
+  const setup = buildSetupSteps({
+    status,
+    title: initial.title,
+    description: initial.description,
+    startsAt: new Date(initial.startsAt),
+    endsAt: new Date(initial.endsAt),
+    missionCount: missions.length,
+    prizeXp,
+    prizeDistribution,
+    judgeCount,
+  });
+  const summary: InfoSummaryData = {
+    title: initial.title,
+    description: initial.description,
+    startsAt: initial.startsAt,
+    endsAt: initial.endsAt,
+    prizeXp: initial.prizeXp,
+    allowLateRegistration: initial.allowLateRegistration,
+    teamSize,
+    courseTitle,
+  };
   const visibleTabs = TABS.filter((tab) => {
     if (tab.id === "leaderboard" && !showLeaderboard) return false;
     return true;
@@ -62,6 +90,12 @@ export default function InstructorTournamentTabs({
 
   return (
     <div className="mt-8">
+      {status === "draft" && (
+        <div className="mb-6">
+          <TournamentSetupChecklist steps={setup.steps} onGoTab={(tab: SetupTab) => setActiveTab(tab)} />
+        </div>
+      )}
+
       {/* Tab buttons */}
       <div className="flex gap-0.5 border-b border-token overflow-x-auto">
         {visibleTabs.map((tab) => (
@@ -85,17 +119,25 @@ export default function InstructorTournamentTabs({
       {/* Tab content */}
       <div className="mt-6">
         {/* Basic Info Tab */}
-        {activeTab === "basic" && canEdit && (
-          <div>
-            <TournamentMetaForm tournamentId={tournamentId} initial={initial} />
-          </div>
-        )}
-
-        {activeTab === "basic" && !canEdit && (
-          <div className="rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-6">
-            <p className="text-sm text-muted">
-              Không thể chỉnh sửa đấu trường sau khi publish. Liên hệ admin nếu cần thay đổi.
-            </p>
+        {activeTab === "basic" && (
+          <div className="space-y-4">
+            <TournamentInfoSummary
+              data={summary}
+              note={
+                canEdit
+                  ? status === "published"
+                    ? "Đấu trường đã công bố. Bạn vẫn sửa được tiêu đề, mô tả, thời gian và XP thưởng. Số người mỗi đội thì không đổi được."
+                    : undefined
+                  : status === "active"
+                    ? "Đấu trường đang diễn ra nên không sửa được thông tin."
+                    : "Đấu trường đã kết thúc nên không sửa được thông tin."
+              }
+            />
+            {canEdit && (
+              <div>
+                <TournamentMetaForm tournamentId={tournamentId} initial={initial} />
+              </div>
+            )}
           </div>
         )}
 

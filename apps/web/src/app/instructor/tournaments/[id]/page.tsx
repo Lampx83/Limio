@@ -19,7 +19,7 @@ const STATUS_TONE: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "Nháp",
-  published: "Đã publish",
+  published: "Đã công bố",
   active: "Đang diễn ra",
   ended: "Đã kết thúc",
 };
@@ -153,6 +153,8 @@ export default async function TournamentDetailPage({
   const pendingCounts: Record<string, number> = {};
   for (const g of pendingGroups) pendingCounts[g.missionId] = g._count._all;
 
+  const judgeCount = await prisma.tournamentJudge.count({ where: { tournamentId: tournament.id } });
+
   return (
     <main>
       {/* Back link */}
@@ -160,7 +162,7 @@ export default async function TournamentDetailPage({
         href="/instructor/tournaments"
         className="link inline-flex items-center gap-1 text-sm"
       >
-        ← Tournaments
+        ← Đấu trường
       </Link>
 
       {/* A. Header */}
@@ -170,7 +172,7 @@ export default async function TournamentDetailPage({
             {tournament.title}
           </h1>
           <p className="mt-1 text-sm text-muted">
-            {tournament.course ? tournament.course.title : "Platform-wide"}
+            {tournament.course ? tournament.course.title : "Toàn hệ thống"}
           </p>
         </div>
         <span className={STATUS_TONE[tournament.status] ?? "chip"}>
@@ -186,7 +188,7 @@ export default async function TournamentDetailPage({
         </div>
         <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-center">
           <p className="text-2xl font-bold">{tournament.missions.length}</p>
-          <p className="mt-1 text-xs text-muted">Missions</p>
+          <p className="mt-1 text-xs text-muted">Nhiệm vụ</p>
         </div>
         <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-center">
           <p className="text-lg font-semibold">{timeRelative(tournament)}</p>
@@ -194,7 +196,7 @@ export default async function TournamentDetailPage({
         </div>
         <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-center">
           <p className="text-2xl font-bold">{tournament.prizeXp.toLocaleString()}</p>
-          <p className="mt-1 text-xs text-muted">Prize XP</p>
+          <p className="mt-1 text-xs text-muted">XP thưởng</p>
         </div>
       </div>
 
@@ -228,7 +230,7 @@ export default async function TournamentDetailPage({
         </section>
       )}
 
-      {/* E. Tab interface — Basic Info, Missions, Prize, Leaderboard */}
+      {/* E. Danh sách thiết lập (khi nháp) + các tab */}
       <InstructorTournamentTabs
         tournamentId={tournament.id}
         status={tournament.status}
@@ -248,6 +250,8 @@ export default async function TournamentDetailPage({
         teamSize={tournament.teamSize}
         tournamentTitle={tournament.title}
         pendingCounts={pendingCounts}
+        judgeCount={judgeCount}
+        courseTitle={tournament.course?.title ?? null}
         registrations={tournament.registrations.map((r) => ({
           id: r.id,
           registeredAt: r.registeredAt.toISOString(),

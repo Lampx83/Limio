@@ -44,8 +44,8 @@ export default function TournamentMetaForm({
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="link text-sm">
-        Sửa thông tin đấu trường
+      <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
+        Sửa thông tin
       </button>
     );
   }
@@ -136,7 +136,7 @@ export default function TournamentMetaForm({
 
       <div className="max-w-xs">
         <label className="label" htmlFor="tm-prize">
-          Prize XP
+          XP thưởng
         </label>
         <input
           id="tm-prize"
@@ -147,7 +147,7 @@ export default function TournamentMetaForm({
           className="input mt-1.5"
         />
         <p className="mt-1 text-xs text-faint">
-          Tổng XP phân phối cho top finishers.
+          Tổng XP chia cho những người đứng đầu. Chia theo hạng ở tab Giải thưởng.
         </p>
       </div>
 
@@ -164,8 +164,8 @@ export default function TournamentMetaForm({
               Cho phép đăng ký khi đấu trường đang diễn ra
             </span>
             <p className="mt-0.5 text-xs text-muted">
-              Bật → người chơi vẫn có thể tham gia sau startsAt. Tắt → khóa
-              danh sách tại thời điểm bắt đầu.
+              Bật: người chơi vẫn vào được sau khi giải bắt đầu, đến lúc kết thúc.
+              Tắt: khoá danh sách ngay khi giải bắt đầu.
             </p>
           </div>
         </label>

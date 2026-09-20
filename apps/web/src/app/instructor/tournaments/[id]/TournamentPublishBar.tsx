@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 import { apiUrl } from "@/lib/apiUrl";
 import { tournamentErrorMessage } from "@/lib/tournamentText";
 
@@ -50,7 +51,7 @@ function IssueList({
     <ul className={`space-y-1.5 ${s.wrapper}`}>
       {items.map((issue) => (
         <li key={`${issue.code}-${issue.missionId ?? "global"}`} className="flex items-start gap-2 text-xs">
-          <span className={s.badge}>{issue.code}</span>
+          <span className={s.badge} aria-hidden>{variant === "error" ? "Cần sửa" : "Lưu ý"}</span>
           <span className={s.text}>{issue.message}</span>
         </li>
       ))}
@@ -151,6 +152,11 @@ export default function TournamentPublishBar({
   }
 
   async function endEarly() {
+    const message =
+      status === "active"
+        ? "Kết thúc đấu trường ngay bây giờ?\n\nBảng xếp hạng được chốt ở thời điểm này và XP thưởng được trao cho những người đứng đầu. Không thể hoàn tác."
+        : `Huỷ đấu trường này?${registrationCount > 0 ? `\n\n${registrationCount} người đã đăng ký sẽ không thể tham gia và không ai nhận thưởng.` : ""}\n\nKhông thể hoàn tác.`;
+    if (!window.confirm(message)) return;
     setBusy(true);
     setError(null);
     const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/end`), {
@@ -198,9 +204,9 @@ export default function TournamentPublishBar({
         {/* Main bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-token bg-[rgb(var(--surface-muted))] px-5 py-4">
           <div>
-            <p className="text-sm font-medium">Đấu trường chưa publish</p>
+            <p className="text-sm font-medium">Đấu trường đang ở dạng nháp</p>
             <p className="mt-0.5 text-xs text-muted">
-              Publish để cho phép learner đăng ký. Cron tự flip sang active khi đến giờ bắt đầu.
+              Học viên chưa thấy đấu trường này. Công bố để mở đăng ký; đến giờ bắt đầu hệ thống tự chuyển sang đang diễn ra.
             </p>
             {error && (
               <p className="mt-1 text-xs text-danger-600">{error}</p>
@@ -234,7 +240,7 @@ export default function TournamentPublishBar({
                   disabled={busy}
                   className="btn-sm inline-flex items-center justify-center rounded-lg bg-warning-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-warning-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {busy ? "Đang publish..." : "Vẫn publish"}
+                  {busy ? "Đang công bố…" : "Vẫn công bố"}
                 </button>
               </div>
             ) : (
@@ -244,13 +250,21 @@ export default function TournamentPublishBar({
                 className="btn-sm inline-flex items-center justify-center rounded-lg bg-success-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-success-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {validating
-                  ? "Đang kiểm tra..."
+                  ? "Đang kiểm tra…"
                   : busy
-                    ? "Đang publish..."
-                    : "Publish"}
+                    ? "Đang công bố…"
+                    : "Công bố"}
               </button>
             )}
 
+            <Link
+              href={`/tournaments/${tournamentId}`}
+              target="_blank"
+              className="btn-sm inline-flex items-center justify-center rounded-lg border border-token px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgb(var(--surface))]"
+              title="Mở trang học viên sẽ thấy (chỉ bạn xem được khi còn nháp)"
+            >
+              Xem như học viên
+            </Link>
             <button
               onClick={deleteTournament}
               disabled={busy}
@@ -267,14 +281,14 @@ export default function TournamentPublishBar({
             {validateResult.valid && validateResult.warnings.length === 0 && (
               <div className="flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-800">
                 <span>✅</span>
-                <span>Không có lỗi — đang publish…</span>
+                <span>Mọi thứ hợp lệ, đang công bố…</span>
               </div>
             )}
 
             {validateResult.errors.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-danger-700">
-                  {validateResult.errors.length} lỗi phải sửa trước khi publish:
+                  {validateResult.errors.length} lỗi cần sửa trước khi công bố:
                 </p>
                 <IssueList items={validateResult.errors} variant="error" />
               </div>
@@ -283,7 +297,7 @@ export default function TournamentPublishBar({
             {validateResult.warnings.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-warning-700">
-                  {validateResult.warnings.length} cảnh báo (không bắt buộc sửa):
+                  {validateResult.warnings.length} lưu ý (không bắt buộc sửa):
                 </p>
                 <IssueList items={validateResult.warnings} variant="warning" />
               </div>
@@ -294,7 +308,7 @@ export default function TournamentPublishBar({
         {/* Static hint when missionCount = 0 and no validate result yet */}
         {missionCount === 0 && !validateResult && (
           <p className="text-xs text-warning-700">
-            ⚠ Cần có ít nhất 1 mission trước khi publish.
+            ⚠ Cần có ít nhất 1 nhiệm vụ trước khi công bố.
           </p>
         )}
       </div>
@@ -308,10 +322,10 @@ export default function TournamentPublishBar({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent-200 bg-accent-50 px-5 py-4">
         <div className="flex-1">
           <p className="text-sm font-medium text-accent-800">
-            Đã publish — đang chờ bắt đầu
+            Đã công bố, đang chờ đến giờ bắt đầu
           </p>
           <p className="mt-0.5 text-xs text-accent-700">
-            Cron sẽ tự động flip sang active khi đến giờ bắt đầu.
+            Đến giờ bắt đầu, hệ thống tự chuyển sang đang diễn ra (trễ tối đa 5 phút).
             {registrationCount > 0 && (
               <> {registrationCount} người đã đăng ký.</>
             )}
@@ -325,9 +339,9 @@ export default function TournamentPublishBar({
             onClick={endEarly}
             disabled={busy}
             className="btn-sm inline-flex items-center justify-center rounded-lg bg-warning-600 px-4 py-2 font-medium text-white transition-all hover:bg-warning-700 disabled:cursor-not-allowed disabled:opacity-50"
-            title="Hủy đấu trường trước khi bắt đầu"
+            title="Huỷ đấu trường trước khi bắt đầu"
           >
-            {busy ? "Đang hủy..." : "Hủy đấu trường"}
+            {busy ? "Đang huỷ…" : "Huỷ đấu trường"}
           </button>
           <span className="chip-accent">Chờ bắt đầu</span>
         </div>
@@ -343,7 +357,7 @@ export default function TournamentPublishBar({
         <div className="flex-1">
           <p className="text-sm font-medium text-success-800">Đang diễn ra</p>
           <p className="mt-0.5 text-xs text-success-700">
-            Đấu trường đang hoạt động. Không thể hoàn tác.
+            Đấu trường đang diễn ra. Bạn có thể kết thúc sớm khi cần.
             {registrationCount > 0 && (
               <> {registrationCount} người tham gia.</>
             )}
@@ -356,9 +370,9 @@ export default function TournamentPublishBar({
           onClick={endEarly}
           disabled={busy}
           className="btn-sm inline-flex items-center justify-center rounded-lg bg-danger-600 px-4 py-2 font-medium text-white transition-all hover:bg-danger-700 disabled:cursor-not-allowed disabled:opacity-50"
-          title="Kết thúc đấu trường sớm trước deadline"
+          title="Kết thúc đấu trường trước giờ dự kiến"
         >
-          {busy ? "Đang kết thúc..." : "Kết thúc sớm"}
+          {busy ? "Đang kết thúc…" : "Kết thúc sớm"}
         </button>
       </div>
     );
@@ -372,7 +386,7 @@ export default function TournamentPublishBar({
         <div>
           <p className="text-sm font-medium">Đấu trường đã kết thúc</p>
           <p className="mt-0.5 text-xs text-muted">
-            {registrationCount} người tham gia · {missionCount} missions. Giải thưởng đã được phân phối tự động.
+            {registrationCount} người tham gia · {missionCount} nhiệm vụ. Xem kết quả ở tab Bảng xếp hạng.
           </p>
         </div>
         <span className="chip">Đã kết thúc</span>
