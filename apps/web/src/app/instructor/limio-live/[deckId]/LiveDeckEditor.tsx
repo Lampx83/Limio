@@ -690,6 +690,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               pdfInputRef.current?.click();
             }}
             onClose={() => setPickingType(false)}
+            pdfLimit={`Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB`}
             pdfNote={`Mỗi trang PDF → 1 slide riêng, nối vào cuối bài giảng. Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB.`}
           />
         )}

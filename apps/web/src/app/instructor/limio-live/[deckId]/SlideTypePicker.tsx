@@ -45,6 +45,7 @@ interface Tile {
   key: string;
   label: string;
   hint: string;
+  sub?: string;
   icon: LucideIcon | ComponentType<LucideProps>;
   choice: SlideChoice;
 }
@@ -84,11 +85,13 @@ export default function SlideTypePicker({
   onImportPdf,
   onClose,
   pdfNote,
+  pdfLimit,
 }: {
   onPick: (choice: SlideChoice) => void;
   onImportPdf: () => void;
   onClose: () => void;
   pdfNote: string;
+  pdfLimit: string;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -100,6 +103,7 @@ export default function SlideTypePicker({
     key: "pdf-split",
     label: "PDF",
     hint: pdfNote,
+    sub: pdfLimit,
     icon: FileUp,
     choice: { type: "content" },
   };
@@ -142,6 +146,7 @@ export default function SlideTypePicker({
                   <Icon size={26} />
                 </span>
                 <span className="text-sm font-semibold leading-tight text-[rgb(var(--text))]">{t.label}</span>
+                {t.sub && <span className="-mt-1 text-[11px] leading-tight text-faint">{t.sub}</span>}
               </button>
             );
           })}
