@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import StudentListGate from "./StudentListGate";
+import PickerTemplateChooser from "./PickerTemplateChooser";
 import QuickPoll from "../classroom/QuickPoll";
 import WordCloud from "../classroom/WordCloud";
 import CountdownTimer from "../classroom/CountdownTimer";
@@ -108,26 +109,7 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
 
       {selectedTool === "random-picker" && (
         pickerTemplate === null ? (
-          <div className="mx-auto max-w-2xl">
-            <h2 className="text-h2">Chọn Ngẫu Nhiên — Chọn kiểu quay</h2>
-            <p className="mt-1 text-body text-muted">Chọn hiệu ứng gọi tên, sau đó bạn sẽ nhập danh sách sinh viên.</p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {([
-                ["wheel", "🎡", "Vòng quay may mắn", "Wheel of Names — tên chia thành các múi, kim chỉ vào người trúng."],
-                ["slot", "🎰", "Thanh quay casino", "Máy quay dọc kiểu slot — tên chạy nhanh rồi dừng lại."],
-              ] as const).map(([key, icon, label, desc]) => (
-                <button
-                  key={key}
-                  onClick={() => setPickerTemplate(key)}
-                  className="rounded-2xl border border-token bg-white p-6 text-left transition hover:border-brand-500 hover:shadow-md"
-                >
-                  <span className="text-5xl">{icon}</span>
-                  <span className="mt-3 block text-h4 font-semibold">{label}</span>
-                  <span className="mt-1 block text-meta text-muted">{desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <PickerTemplateChooser onSelect={setPickerTemplate} />
         ) : (
           <StudentListGate
             courses={courses}
