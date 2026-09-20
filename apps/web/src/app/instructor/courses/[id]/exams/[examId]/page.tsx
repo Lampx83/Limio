@@ -130,6 +130,8 @@ export default async function EditExamPage({
           "shuffleQuestions",
           "shuffleOptions",
           "showResultsAfterSubmit",
+          "answerMode",
+          "language",
         ] as const)
       : [];
 
@@ -223,6 +225,7 @@ export default async function EditExamPage({
             mode="edit"
             courseId={exam.courseId}
             examId={exam.id}
+            courseLabel={exam.course?.title ?? null}
             lockedFields={lockedFields}
             initial={{
               title: exam.title,

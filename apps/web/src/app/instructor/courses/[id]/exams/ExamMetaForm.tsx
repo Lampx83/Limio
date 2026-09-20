@@ -62,6 +62,8 @@ interface Props {
    * 1 dạng đề thi bình thường".
    */
   fixedKind?: "written" | "oral";
+  /** mode="edit" only — tên khoá học đề đang gắn (null = đề độc lập), hiện dạng chỉ đọc. */
+  courseLabel?: string | null;
 }
 
 export default function ExamMetaForm({
@@ -70,6 +72,7 @@ export default function ExamMetaForm({
   examId,
   initial,
   lockedFields,
+  courseLabel,
   fixedKind,
 }: Props) {
   const router = useRouter();
@@ -113,13 +116,13 @@ export default function ExamMetaForm({
     };
     if (v.kind === "oral") {
       body.examinerInstructions = v.examinerInstructions || undefined;
+      // Sửa được cả lúc tạo lẫn sau đó (khoá khi đã có lượt thi — gửi trường bị khoá sẽ bị server từ chối).
+      if (!isLocked("answerMode")) body.answerMode = v.answerMode;
+      if (!isLocked("language")) body.language = v.language;
     }
-    // Bất biến sau khi tạo — UpdateExamInput không nhận 3 field này, nên chỉ
-    // gửi lúc create.
+    // Loại đề bất biến sau khi tạo (đổi kind = tạo Exam mới), nên chỉ gửi lúc create.
     if (mode === "create") {
       body.kind = v.kind;
-      body.answerMode = v.kind === "oral" ? v.answerMode : undefined;
-      body.language = v.kind === "oral" ? v.language : undefined;
     }
     const url =
       mode === "create"
@@ -169,11 +172,12 @@ export default function ExamMetaForm({
         />
       </div>
 
-      {mode === "create" && v.kind === "oral" && (
+      {v.kind === "oral" && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField
             label="Trả lời bằng"
             value={v.answerMode ?? "text"}
+            disabled={isLocked("answerMode")}
             options={[
               { value: "text", label: "Gõ văn bản" },
               { value: "voice", label: "Giọng nói" },
@@ -183,6 +187,7 @@ export default function ExamMetaForm({
           <SelectField
             label="Ngôn ngữ hỏi-đáp"
             value={v.language ?? "vi"}
+            disabled={isLocked("language")}
             options={[
               { value: "vi", label: "Tiếng Việt" },
               { value: "en", label: "English" },
@@ -192,13 +197,19 @@ export default function ExamMetaForm({
           />
         </div>
       )}
+      {mode === "edit" && courseLabel !== undefined && (
+        <p className="text-sm text-faint">
+          Khoá học: <span className="font-medium text-[rgb(var(--text))]">{courseLabel ?? "Không gắn khoá học (đề độc lập)"}</span>
+          {" "}— không đổi được sau khi tạo (ca thi và bố cục đã gắn với khoá này).
+        </p>
+      )}
       {mode === "create" && v.kind === "oral" && (
         <p className="banner-info px-3 py-2 text-caption">
           Vấn đáp AI không có ngân hàng câu hỏi — sau khi tạo, bạn sẽ nộp tài
           liệu (đề cương, danh sách chủ đề…) ở tab "Tài liệu" để AI dựa vào đó
           hỏi sinh viên. Bài thi luôn bắt buộc toàn màn hình; điểm do AI gợi ý
           và giảng viên duyệt/sửa thủ công, không tự động chấm. Cách trả lời
-          và ngôn ngữ không đổi được sau khi tạo.
+          và ngôn ngữ đổi được cho tới khi có sinh viên vào thi.
         </p>
       )}
 

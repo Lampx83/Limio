@@ -63,6 +63,10 @@ export const UpdateExamInput = z
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
     purpose: z.enum(["assessment", "field_test"]).optional(),
+    // A6.6 — chỉ có ý nghĩa khi kind=oral. Đổi được cho tới khi có lượt thi (xem `allowed` bên dưới:
+    // đổi cách trả lời/ngôn ngữ giữa chừng sẽ làm các lượt thi không cùng điều kiện).
+    answerMode: z.enum(["text", "voice"]).optional(),
+    language: z.enum(["vi", "en", "zh"]).optional(),
     examinerInstructions: z.string().max(5_000).optional(),
     // A6.4 — sửa được bất cứ lúc nào kể cả sau publish/có lượt thi (không
     // ảnh hưởng câu hỏi SV nhận lúc thi, chỉ ảnh hưởng cách AI chấm sau đó)
@@ -266,6 +270,11 @@ export async function updateExam(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined),
   );
   if (Object.keys(data).length === 0) return;
+
+  // answerMode/language chỉ thuộc đề vấn đáp — đề viết không có khái niệm này.
+  if (exam.kind !== "oral" && ("answerMode" in data || "language" in data)) {
+    throw new ExamError("validation_failed", "answerMode/language chỉ áp dụng cho đề vấn đáp");
+  }
 
   if (exam.status === "published") {
     const hasAttempts =

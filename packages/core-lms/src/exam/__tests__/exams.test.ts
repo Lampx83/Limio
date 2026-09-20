@@ -293,6 +293,52 @@ describe("updateExam (A7.1.3)", () => {
     const e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
     expect(e.oralRubricText).toBe("Rubric sửa sau khi thi.");
   });
+
+  it("A6.6 — đề vấn đáp đổi được answerMode và language khi chưa có lượt thi", async () => {
+    const { ownerId, courseId } = await newOwner("u4");
+    const { examId } = await createExam(
+      ownerId,
+      courseId,
+      validExamInput({ kind: "oral", answerMode: "text", language: "vi" }),
+    );
+    await updateExam(ownerId, examId, { answerMode: "voice", language: "en" });
+    const e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(e.answerMode).toBe("voice");
+    expect(e.language).toBe("en");
+  });
+
+  it("A6.6 — đã publish nhưng chưa ai thi vẫn đổi được answerMode/language", async () => {
+    const { ownerId, courseId } = await newOwner("u5");
+    const { examId } = await createExam(ownerId, courseId, validExamInput({ kind: "oral" }));
+    await createOralMaterialTopicList(ownerId, examId, { title: "Chủ đề", text: "x" });
+    await publishExam(ownerId, examId);
+    await updateExam(ownerId, examId, { language: "zh" });
+    const e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(e.language).toBe("zh");
+  });
+
+  it("A6.6 — khoá answerMode/language khi đã có lượt thi (giữ các lượt thi cùng điều kiện)", async () => {
+    const { ownerId, courseId } = await newOwner("u6");
+    const { examId } = await createExam(ownerId, courseId, validExamInput({ kind: "oral" }));
+    await createOralMaterialTopicList(ownerId, examId, { title: "Chủ đề", text: "x" });
+    await publishExam(ownerId, examId);
+    const learner = await newOutsider("u6");
+    await prisma.examAttempt.create({ data: { examId, userId: learner, durationSec: 3600 } });
+    await expect(updateExam(ownerId, examId, { answerMode: "voice" })).rejects.toMatchObject({
+      code: "exam_has_attempts",
+    });
+    await expect(updateExam(ownerId, examId, { language: "en" })).rejects.toMatchObject({
+      code: "exam_has_attempts",
+    });
+  });
+
+  it("A6.6 — đề viết không nhận answerMode/language", async () => {
+    const { ownerId, courseId } = await newOwner("u7");
+    const { examId } = await createExam(ownerId, courseId, validExamInput());
+    await expect(updateExam(ownerId, examId, { answerMode: "voice" })).rejects.toMatchObject({
+      code: "validation_failed",
+    });
+  });
 });
 
 describe("update/publish/get/delete — đề độc lập (courseId = null), chỉ createdById được thao tác", () => {
