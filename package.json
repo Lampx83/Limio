@@ -34,7 +34,9 @@
     "layout:lesson": "pnpm --filter @feedbackme/core-lms layout:lesson",
     "layout:lesson:prod": "pnpm --filter @feedbackme/core-lms layout:lesson:prod",
     "import:deck": "pnpm --filter @feedbackme/core-lms import:deck",
-    "import:deck:prod": "pnpm --filter @feedbackme/core-lms import:deck:prod"
+    "import:deck:prod": "pnpm --filter @feedbackme/core-lms import:deck:prod",
+    "import:oral": "pnpm --filter @feedbackme/core-lms import:oral",
+    "import:oral:prod": "pnpm --filter @feedbackme/core-lms import:oral:prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -23,7 +23,9 @@
     "layout:lesson": "node --env-file=../db/.env --import tsx scripts/layout-lesson.ts",
     "layout:lesson:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/layout-lesson.ts",
     "import:deck": "node --env-file=../db/.env --import tsx scripts/import-live-deck.ts",
-    "import:deck:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-live-deck.ts"
+    "import:deck:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-live-deck.ts",
+    "import:oral": "node --env-file=../db/.env --import tsx scripts/import-oral-exam.ts",
+    "import:oral:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-oral-exam.ts"
   },
   "dependencies": {
     "@feedbackme/db": "workspace:*",
