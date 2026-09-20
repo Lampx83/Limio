@@ -4,6 +4,7 @@ import {
   BookOpen,
   Users,
   CalendarClock,
+  Sparkles,
   ChevronRight,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
@@ -51,7 +52,8 @@ export default async function InstructorCoursesPage() {
       slug: true,
       title: true,
       status: true,
-            updatedAt: true,
+      personalizationEnabled: true,
+      updatedAt: true,
       _count: { select: { enrollments: true, modules: true } },
     },
   });
@@ -69,15 +71,6 @@ export default async function InstructorCoursesPage() {
           </p>
         </div>
         <nav className="flex flex-wrap items-center gap-2">
-          <Link href="/instructor/feedback-templates" className="btn-secondary btn-sm">
-            Feedback templates
-          </Link>
-          <Link
-            href="/instructor/feedback-generator"
-            className="btn-sm inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
-          >
-            AI feedback gen
-          </Link>
           <Link href="/instructor/courses/new" className="btn-primary btn-sm">
             + Tạo khóa học
           </Link>
@@ -110,12 +103,23 @@ export default async function InstructorCoursesPage() {
                     >
                       {c.title}
                     </Link>
-                    <span
-                      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${status.chip}`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} aria-hidden />
-                      {status.label}
-                    </span>
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                      {c.personalizationEnabled && (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2 py-0.5 text-[11px] font-medium text-pink-700"
+                          title="Khoá bật cá nhân hoá: AI feedback theo skill (BKT, chẩn đoán, lộ trình thích ứng, huy hiệu kỹ năng)"
+                        >
+                          <Sparkles className="h-3 w-3" aria-hidden />
+                          AI feedback
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${status.chip}`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} aria-hidden />
+                        {status.label}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Ngày cập nhật gần nhất (updatedAt) — danh sách cũng sắp theo ngày này */}
