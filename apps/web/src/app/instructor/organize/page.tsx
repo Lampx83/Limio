@@ -28,10 +28,7 @@ export default async function OrganizePage() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
-      <h1 className="flex items-center gap-2 text-2xl font-bold">
-        <CalendarCheck className="h-6 w-6 shrink-0 text-amber-600" />
-        Tổ chức thi
-      </h1>
+      <h1 className="text-2xl font-bold">Tổ chức thi</h1>
       <p className="mt-1 text-body text-faint">
         Bạn định tổ chức kiểu gì? Chọn xong hệ thống lo phần còn lại.
       </p>
@@ -48,7 +45,7 @@ export default async function OrganizePage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <OptionCard
             href="/instructor/organize/quick"
-            icon={<Zap className="h-5 w-5 shrink-0 text-emerald-600" />}
+            icon={<Zap className="h-5 w-5" aria-hidden />}
             title="Link thi nhanh"
             blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp."
             detail="Chọn gói đề, đặt thời lượng. Mở ngay, đóng khi bạn bấm."
@@ -56,14 +53,14 @@ export default async function OrganizePage() {
           />
           <OptionCard
             href="/instructor/organize/field-test"
-            icon={<FlaskConical className="h-5 w-5 shrink-0 text-blue-600" />}
+            icon={<FlaskConical className="h-5 w-5" aria-hidden />}
             title="Thử nghiệm câu hỏi"
             blurb="Đo chất lượng câu trước khi kết nạp vào ngân hàng."
             detail="Chở được câu chưa kết nạp. Không hiện đáp án, để không đốt câu hỏi."
           />
           <OptionCard
             href="/instructor/organize/formal"
-            icon={<CalendarCheck className="h-5 w-5 shrink-0 text-amber-600" />}
+            icon={<CalendarCheck className="h-5 w-5" aria-hidden />}
             title="Kỳ thi chính thức"
             blurb="Nhiều ca, nhiều phòng, có giám thị."
             detail="Chia ca, xếp phòng, cấp mã từng thí sinh, in phiếu."
@@ -108,12 +105,14 @@ function OptionCard({
   return (
     <Link
       href={href}
-      className={`group flex flex-col rounded-lg border bg-white p-4 transition-shadow hover:shadow-md ${
-        lead ? "border-emerald-400" : "border-default"
+      className={`group flex flex-col rounded-xl border bg-white p-4 shadow-sm transition hover:shadow-md ${
+        lead ? "border-brand-400" : "border-default"
       }`}
     >
-      {icon}
-      <h2 className="mt-2 flex items-center gap-1.5 text-base font-semibold">
+      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+        {icon}
+      </span>
+      <h2 className="mt-3 flex items-center gap-1.5 text-base font-semibold">
         {title}
         {/* Mũi tên là dấu hiệu duy nhất còn lại rằng thẻ bấm được. Nó nhích
             khi rê chuột nên không cần viền nút để trông "bấm được". */}
