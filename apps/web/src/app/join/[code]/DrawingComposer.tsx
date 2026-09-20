@@ -16,6 +16,15 @@ const Excalidraw = dynamicImport(
 
 const MAX_EXPORT_PX = 1400;
 
+const DEFAULT_COLOR = "#1e1e1e";
+const DEFAULT_WIDTH = 2;
+const PEN_COLORS = ["#1e1e1e", "#e03131", "#f08c00", "#2f9e44", "#1971c2", "#9c36b5", "#f783ac", "#868e96"];
+const PEN_WIDTHS = [
+  { label: "Mảnh", value: 1, dot: 6 },
+  { label: "Vừa", value: 2, dot: 12 },
+  { label: "Đậm", value: 4, dot: 20 },
+];
+
 export interface PostedDrawing {
   noteId: string;
   name: string;
@@ -23,7 +32,9 @@ export interface PostedDrawing {
 
 /**
  * Khung vẽ Draw-it của học viên: vẽ riêng 1 hình → xuất PNG → tải lên → đăng thành note ảnh.
- * Mỗi học viên 1 hình: nếu đã có note của mình (existingNoteId) thì cập nhật note đó thay vì tạo mới.
+ * Một thiết bị đăng được nhiều hình: mặc định luôn tạo note mới. Chỉ khi học viên bấm sửa 1 hình cụ thể
+ * (existingNoteId) mới cập nhật note đó thay vì tạo mới.
+ * Mở ra là chọn sẵn bút + có thanh màu lớn ngay trên khung vẽ (palette gốc của Excalidraw quá nhỏ trên điện thoại).
  */
 export default function DrawingComposer({
   code,
@@ -42,6 +53,19 @@ export default function DrawingComposer({
   const [name, setName] = useState(initialName);
   const [submitting, setSubmitting] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [color, setColor] = useState(DEFAULT_COLOR);
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+
+  const pickColor = (c: string) => {
+    setColor(c);
+    apiRef.current?.updateScene({ appState: { currentItemStrokeColor: c } });
+    apiRef.current?.setActiveTool({ type: "freedraw" });
+  };
+  const pickWidth = (w: number) => {
+    setWidth(w);
+    apiRef.current?.updateScene({ appState: { currentItemStrokeWidth: w } });
+    apiRef.current?.setActiveTool({ type: "freedraw" });
+  };
 
   const handleSubmit = async () => {
     const api = apiRef.current;
@@ -139,18 +163,58 @@ export default function DrawingComposer({
         </button>
       </div>
 
+      <div className="flex items-center gap-2 overflow-x-auto border-b border-gray-200 bg-gray-50 px-3 py-2">
+        {PEN_COLORS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => pickColor(c)}
+            aria-label={`Màu ${c}`}
+            aria-pressed={color === c}
+            style={{ backgroundColor: c }}
+            className={`h-10 w-10 shrink-0 rounded-full border-2 border-white shadow transition-transform ${
+              color === c ? "scale-110 ring-4 ring-brand-500" : "ring-1 ring-gray-300"
+            }`}
+          />
+        ))}
+        <span className="mx-1 h-8 w-px shrink-0 bg-gray-300" />
+        {PEN_WIDTHS.map((w) => (
+          <button
+            key={w.value}
+            type="button"
+            onClick={() => pickWidth(w.value)}
+            aria-label={`Nét ${w.label}`}
+            aria-pressed={width === w.value}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+              width === w.value ? "bg-brand-100 ring-2 ring-brand-500" : "bg-white ring-1 ring-gray-300"
+            }`}
+          >
+            <span className="rounded-full bg-gray-900" style={{ width: w.dot, height: w.dot }} />
+          </button>
+        ))}
+      </div>
+
       <div className="min-h-0 flex-1">
         <Excalidraw
-          initialData={{ elements: [], appState: { viewBackgroundColor: "#ffffff" } }}
+          initialData={{
+            elements: [],
+            appState: {
+              viewBackgroundColor: "#ffffff",
+              activeTool: { type: "freedraw", customType: null, locked: false, lastActiveTool: null },
+              currentItemStrokeColor: DEFAULT_COLOR,
+              currentItemStrokeWidth: DEFAULT_WIDTH,
+            },
+          }}
           excalidrawAPI={(api) => {
             apiRef.current = api;
+            api.setActiveTool({ type: "freedraw" });
           }}
           UIOptions={{ canvasActions: { loadScene: false, saveToActiveFile: false, export: false } }}
         />
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-gray-200 px-3 py-2">
-        <p className="min-w-0 truncate text-sm font-medium text-gray-700">{info ?? (existingNoteId ? "Đăng lại sẽ thay hình cũ của bạn." : "Vẽ xong bấm Đăng hình.")}</p>
+        <p className="min-w-0 truncate text-sm font-medium text-gray-700">{info ?? (existingNoteId ? "Đăng lại sẽ thay hình cũ này của bạn." : "Vẽ xong bấm Đăng hình — bạn có thể đăng nhiều hình.")}</p>
         <button
           onClick={handleSubmit}
           disabled={submitting}

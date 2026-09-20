@@ -120,6 +120,8 @@ export default function JoinBoardPage() {
 
   // Form state — chỉ hiện khi modal open
   const [modalOpen, setModalOpen] = useState(false);
+  // Draw-it: id hình đang sửa (null = vẽ hình mới; 1 thiết bị đăng được nhiều hình).
+  const [editingDrawingId, setEditingDrawingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [color, setColor] = useState<string | null>(null);
@@ -259,6 +261,7 @@ export default function JoinBoardPage() {
   const openEditNote = (n: BoardNote) => {
     // Board Draw-it: note là hình vẽ nên "sửa" = mở lại khung vẽ (đăng lại sẽ thay hình cũ), không có form chữ.
     if (board?.drawingMode) {
+      setEditingDrawingId(n.id);
       setModalOpen(true);
       setInfo(null);
       return;
@@ -274,6 +277,7 @@ export default function JoinBoardPage() {
   // với nút "+" tổng ở góc màn hình (nút tổng giữ nguyên nhóm đã chọn/nhớ trước đó).
   const openComposeForColumn = (column: string) => {
     setGroupColumn(column);
+    setEditingDrawingId(null);
     setModalOpen(true);
     setInfo(null);
   };
@@ -507,6 +511,7 @@ export default function JoinBoardPage() {
       {board.status === "open" && (
         <button
           onClick={() => {
+            setEditingDrawingId(null);
             setModalOpen(true);
             setInfo(null);
           }}
@@ -607,7 +612,7 @@ export default function JoinBoardPage() {
         <DrawingComposer
           code={code}
           initialName={name}
-          existingNoteId={board.notes.find((n) => myNoteIds.has(n.id))?.id ?? null}
+          existingNoteId={editingDrawingId && myNoteIds.has(editingDrawingId) ? editingDrawingId : null}
           onClose={() => setModalOpen(false)}
           onPosted={({ noteId, name: postedName }) => {
             localStorage.setItem(STORAGE_KEY_NAME, postedName);
