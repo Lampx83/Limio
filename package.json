@@ -32,7 +32,9 @@
     "order:blocks": "pnpm --filter @feedbackme/core-lms order:blocks",
     "order:blocks:prod": "pnpm --filter @feedbackme/core-lms order:blocks:prod",
     "layout:lesson": "pnpm --filter @feedbackme/core-lms layout:lesson",
-    "layout:lesson:prod": "pnpm --filter @feedbackme/core-lms layout:lesson:prod"
+    "layout:lesson:prod": "pnpm --filter @feedbackme/core-lms layout:lesson:prod",
+    "import:deck": "pnpm --filter @feedbackme/core-lms import:deck",
+    "import:deck:prod": "pnpm --filter @feedbackme/core-lms import:deck:prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

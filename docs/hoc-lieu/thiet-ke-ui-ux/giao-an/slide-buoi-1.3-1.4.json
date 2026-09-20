@@ -1,0 +1,650 @@
+{
+ "title": "Buổi 1.3 + 1.4 · Quy trình và con người trong thiết kế (120 phút) — bản 2",
+ "theme": "cream",
+ "slides": [
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#1D4ED8;margin:0 0 .4rem\">Thiết kế không đi thẳng — và không đi một mình</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Bài 1.3 Quy trình thiết kế · Bài 1.4 Nhà thiết kế làm việc cùng ai</div><div style=\"margin-top:1.2rem\"><span style=\"display:inline-block;padding:.15rem .8rem;border-radius:999px;background:rgba(40,118,245,0.16);color:#1D4ED8;font-size:1.25rem;font-weight:700;margin-right:.5rem\">120 phút</span><span style=\"display:inline-block;padding:.15rem .8rem;border-radius:999px;background:rgba(12,141,129,0.16);color:#0B6E64;font-size:1.25rem;font-weight:700;margin-right:.5rem\">Hơn một nửa là các bạn tự làm</span><span style=\"display:inline-block;padding:.15rem .8rem;border-radius:999px;background:rgba(214,158,46,0.16);color:#8A5A0B;font-size:1.25rem;font-weight:700;margin-right:.5rem\">Mang theo điện thoại</span></div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 0–1 · khoảng 1 phút\n\nLỜI GIẢNG\nChào cả lớp. Hôm nay ta học hai bài trong một buổi. Bài 1.3 nói về việc thiết kế đi từng bước như thế nào. Bài 1.4 nói về những người cùng làm với mình, và cách thuyết phục họ. Hai bài này nối nhau: bài đầu cho các bạn bằng chứng, bài sau dạy mang bằng chứng ấy vào một cuộc họp.\n\nĐiều cần biết trước: hơn một nửa thời gian là các bạn tự làm, cá nhân và theo nhóm. Điện thoại hôm nay là công cụ học, xin đừng cất đi.\n\nLƯU Ý\nNhắc lớp chia nhóm 3 người ngay từ bây giờ (quay sang hai bạn gần nhất). Nhóm giữ nguyên cả buổi."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#1D4ED8;margin:0 0 .4rem\">Buổi học đi thế nào</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Nghe ít, làm nhiều</div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.35rem;border-bottom:3px solid rgb(40,118,245)\">Phút</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.35rem;border-bottom:3px solid rgb(40,118,245)\">Việc chính</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.35rem;border-bottom:3px solid rgb(40,118,245)\">Ai làm</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;font-weight:700;\">0–20</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">Khởi động và Bài 1.3: quy trình thiết kế</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">Cả lớp nghe, có một câu khởi động</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;font-weight:700;\">20–53</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\"><b>Nói – Làm – Đoán</b> (cá nhân) rồi <b>Hồ sơ vụ án</b> (nhóm 3)</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\"><b>Các bạn làm</b></td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;font-weight:700;\">53–58</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">Nghỉ giải lao</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">—</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;font-weight:700;\">58–73</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">Bài 1.4: làm việc cùng ai</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">Cả lớp nghe, có một câu kiểm tra nhanh</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;font-weight:700;\">73–103</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\"><b>Dịch phản hồi</b> (cá nhân) rồi <b>Họp có luật</b> (nhóm 3)</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\"><b>Các bạn làm</b></td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;font-weight:700;\">103–120</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">Tổng kết, thẻ hồi cố, bài về nhà</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.35rem;\">Cả lớp</td></tr></tbody></table></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 1–2 · khoảng 1 phút\n\nLỜI GIẢNG\nĐây là lịch của buổi học. Hai khối in đậm là phần các bạn làm: tổng cộng khoảng một giờ. Và có một điểm hay: các hoạt động nối với nhau thành một câu chuyện. Ở hoạt động hai, nhóm sẽ viết một câu phát biểu vấn đề. Đến hoạt động ba và bốn, chính câu đó sẽ được đem ra để nghe phản hồi và bảo vệ trước một cuộc họp giả lập. Vì vậy các bạn nhớ giữ lại sản phẩm của nhóm mình."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#0B6E64;margin:0 0 .4rem\">Cuối buổi, bạn làm được gì?</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Bốn việc quan sát được — không phải “hiểu về…”</div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(12,141,129);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">1</div><div><b>Xếp một hoạt động vào đúng giai đoạn của quy trình</b><br><span style=\"color:#5B6472;font-size:1.4rem\">và nêu ra thứ giao ra ở giai đoạn đó</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(12,141,129);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">2</div><div><b>Phân biệt điều người dùng nói, làm và đoán</b><br><span style=\"color:#5B6472;font-size:1.4rem\">và biết tin vào cái nào khi chúng mâu thuẫn</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(12,141,129);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">3</div><div><b>Chuyển một phản hồi dạng giải pháp thành câu hỏi về vấn đề</b><br><span style=\"color:#5B6472;font-size:1.4rem\">ví dụ: “thêm nút này đi” thành “anh chị đang lo điều gì?”</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(12,141,129);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">4</div><div><b>Bảo vệ một quyết định bằng ba câu</b><br><span style=\"color:#5B6472;font-size:1.4rem\">người dùng nào, bằng chứng nào, đánh đổi gì</span></div></div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 2–3 · khoảng 1 phút\n\nLỜI GIẢNG\nBốn mục tiêu, và để ý chữ đầu mỗi dòng: xếp, phân biệt, chuyển, bảo vệ. Đều là động từ mà người khác nhìn thấy được. Không có chữ “hiểu” hay “nắm được”, vì hiểu là chuyện trong đầu, không ai kiểm tra được. Đây cũng chính là cách viết một mục tiêu học tập tốt. Cuối buổi, mình sẽ hỏi các bạn từng mục một.\n\nLƯU Ý\nKhông giải thích dài. Chỉ vào từng động từ."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "word_cloud",
+   "config": {
+    "prompt": "Trong một dự án nhóm bạn từng làm: bước nào đã bị bỏ qua vì hết thời gian? (1–2 từ)",
+    "presenterNote": "⏱ Phút thứ 3–5 · khoảng 2 phút\n\nLỜI GIẢNG\nKhởi động hai phút. Các bạn nghĩ tới một dự án nhóm đã làm, có thể là bài tập lớn, có thể là đồ án. Bước nào cả nhóm đã bỏ qua vì hết giờ? Gõ một hoặc hai từ.\n\nSau khi kết quả hiện ra, chỉ vào từ to nhất. Thường sẽ là “nghiên cứu”, “thử nghiệm”, “hỏi người dùng”. Nói: đó chính là những bước hôm nay ta sẽ xem vì sao không nên bỏ.\n\nHỎI LỚP\nVì sao các bạn thường bỏ những bước này trước tiên?\n\nLƯU Ý\nĐưa mã QR lên cho lớp vào. Nếu lớp vào chậm, cho thêm 1 phút."
+   },
+   "timerSeconds": 120
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Hai nhóm, một đề</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Tình huống minh hoạ, các con số là giả định</div><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.6rem\">Khoa nhận phản ánh: <b>“Sinh viên nộp bài trễ nhiều quá.”</b> Hai nhóm sinh viên được giao xử lý.</div><div style=\"display:flex;gap:1.2rem;flex-wrap:wrap\"><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Nhóm A</b><br>Nghĩ ngay: “chắc các em quên hạn”. Làm tính năng nhắc hạn, phát hành cho cả khoa.<br><b>Bốn tuần sau:</b> tỉ lệ nộp trễ không đổi, khiếu nại điểm còn tăng.</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Nhóm B</b><br>Dành hai ngày đầu để hỏi sinh viên và xem nhật ký hệ thống. Thấy 4 trong 6 em tưởng đã nộp, thật ra mới <b>lưu nháp</b>.<br><b>Kết luận:</b> các em không quên, các em tin là đã xong.</div></div></div><div style=\"font-size:1.6rem;margin-top:.4rem\"><b>Cùng nguồn lực, cùng tay nghề.</b> Khác nhau ở chỗ nào?</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 5–8 · khoảng 3 phút\n\nLỜI GIẢNG\nĐây là câu chuyện xuyên suốt buổi học, xin các bạn nhớ nó. Khoa phản ánh sinh viên nộp bài trễ. Có hai nhóm nhận việc.\n\nNhóm A nghĩ ngay ra lý do: các em quên hạn. Họ làm nhắc hạn, phát hành cho cả khoa. Bốn tuần sau, không có gì thay đổi. Nhóm B thì khác: hai ngày đầu họ chưa vẽ gì cả, chỉ đi hỏi và xem nhật ký. Họ phát hiện ra bốn trên sáu em tưởng mình đã nộp, thật ra mới lưu nháp. Nhắc hạn không giúp được những em này.\n\nCon số ở đây là giả định để minh hoạ, đừng ghi lại như số thật.\n\nHỎI LỚP\nCùng nguồn lực, cùng tay nghề, hai nhóm khác nhau ở chỗ nào? (Chờ 2–3 bạn trả lời, rồi chốt: nhóm B đi hết hai bước đầu trước khi vẽ.)\n\nLƯU Ý\nKhông tiết lộ đáp án ngay, để lớp tự nói ra."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#A32020;margin:0 0 .4rem\">Sửa muộn thì đắt</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Cột càng cao là công sức phải bỏ đi càng nhiều</div><div style=\"display:flex;align-items:flex-end;gap:1rem;margin:1rem 0;flex-wrap:wrap\"><div style=\"flex:1;min-width:150px;text-align:center\"><div style=\"height:40px;background:rgba(34,139,110,.4);border-radius:.4rem\"></div><div style=\"font-size:1.35rem;margin-top:.5rem;line-height:1.35\">Phác trên giấy<br><b>nửa buổi</b></div></div><div style=\"flex:1;min-width:150px;text-align:center\"><div style=\"height:80px;background:rgba(34,139,110,.5);border-radius:.4rem\"></div><div style=\"font-size:1.35rem;margin-top:.5rem;line-height:1.35\">Khung màn hình<br><b>1–2 ngày</b></div></div><div style=\"flex:1;min-width:150px;text-align:center\"><div style=\"height:150px;background:rgba(214,158,46,.55);border-radius:.4rem\"></div><div style=\"font-size:1.35rem;margin-top:.5rem;line-height:1.35\">Giao diện hoàn chỉnh<br><b>1 tuần</b></div></div><div style=\"flex:1;min-width:150px;text-align:center\"><div style=\"height:240px;background:rgba(197,48,48,.55);border-radius:.4rem\"></div><div style=\"font-size:1.35rem;margin-top:.5rem;line-height:1.35\">Đã lập trình xong<br><b>nhiều tuần</b></div></div></div><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.7rem;font-weight:700\">Làm sai cho nhanh và rẻ, ở giai đoạn mà bỏ đi không tiếc.</div><div style=\"font-size:1.15rem;color:#5B6472\">Đây là quy luật kinh nghiệm trong ngành phần mềm (Boehm, 1981). Mức chênh khác nhau theo từng dự án; điều đáng giữ là hướng của nó.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 8–9 · khoảng 1–2 phút\n\nLỜI GIẢNG\nVì sao hai nhóm trên lại quan trọng? Vì sửa sai càng muộn càng đắt. Phác trên giấy mất nửa buổi. Khi đã lập trình xong thì mất nhiều tuần. Nên nguyên tắc của nghề là: hãy sai cho thật nhanh và thật rẻ, ở giai đoạn mà bỏ đi không tiếc.\n\nCần nói thật một điều: đường cong này là quy luật kinh nghiệm, mức chênh cụ thể thay đổi theo dự án, và có nhóm làm việc linh hoạt cho rằng nó thoải hơn. Nhưng hướng của nó thì ai cũng đồng ý: phát hiện sớm luôn rẻ hơn."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "Bốn nhịp: mở ra, thu lại — hai lần",
+    "subtitle": "",
+    "bullets": [
+     "Nhịp 1–2 hỏi: ta có đang giải đúng VẤN ĐỀ không?",
+     "Nhịp 3–4 hỏi: ta có đang giải nó đúng CÁCH không?",
+     "Đảo thứ tự = giải rất giỏi một vấn đề không có thật"
+    ],
+    "imageUrl": "/api/lesson-media/images/wm-double-diamond-process-1788696000000-da88689d.jpg",
+    "presenterNote": "⏱ Phút thứ 9–12 · khoảng 3 phút\n\nLỜI GIẢNG\nĐây là mô hình Kim cương đôi của Design Council bên Anh. Hai hình thoi nối nhau. Mỗi hình thoi có hai nửa: nửa đầu mở ra, nghĩ nhiều hướng; nửa sau thu lại, chọn và chốt.\n\nBốn nhịp là: Khám phá, Xác định, Phát triển, Bàn giao. Nhìn vào nhóm B. Khám phá: họ phỏng vấn, xem nhật ký. Xác định: họ chốt được một vấn đề, là các em không phân biệt lưu nháp với đã nộp. Phát triển: họ phác nhiều cách xác nhận và thử với năm em. Bàn giao: họ chốt một cách, giao cho lập trình, rồi đo lại.\n\nHai nhịp đầu trả lời câu hỏi giải đúng vấn đề chưa. Hai nhịp sau trả lời giải đúng cách chưa. Nhóm A nhảy thẳng vào nhịp ba mà chưa qua nhịp một và hai.\n\nHỎI LỚP\nNhóm A đã bỏ những nhịp nào?\n\nLƯU Ý\nNguồn ảnh: Olga Carreras Montoto, CC BY 4.0, Wikimedia Commons (ghi ở slide cuối)."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#5B3A9E;margin:0 0 .4rem\">Một câu phát biểu vấn đề tốt trông thế nào</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Nhịp thứ hai kết thúc bằng đúng MỘT câu</div><div style=\"background:rgba(124,77,200,0.12);border-left:8px solid rgb(124,77,200);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.6rem\"><b>[Nhóm người dùng nào]</b> gặp khó khăn khi <b>[làm việc gì]</b> vì <b>[lý do]</b>, dẫn đến <b>[hậu quả]</b>.</div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(124,77,200,0.2);color:#5B3A9E;font-size:1.3rem;border-bottom:3px solid rgb(124,77,200)\">Chưa tốt</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(124,77,200,0.2);color:#5B3A9E;font-size:1.3rem;border-bottom:3px solid rgb(124,77,200)\">Vì sao</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(124,77,200,0.2);color:#5B3A9E;font-size:1.3rem;border-bottom:3px solid rgb(124,77,200)\">Viết lại</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">“Cần một ứng dụng nhắc hạn nộp bài.”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Đây là <b>giải pháp</b>, không phải vấn đề</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">“Sinh viên năm nhất nộp trễ vì không phân biệt được lưu nháp với đã nộp, dẫn đến khiếu nại điểm.”</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">“Sinh viên không hứng thú với khoá học.”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Mơ hồ, không quan sát được</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">“Người học đi làm thêm bỏ khoá sau tuần 3 vì bài giảng dài 40 phút không xem dở được trên điện thoại.”</td></tr></tbody></table></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 12–15 · khoảng 3 phút\n\nLỜI GIẢNG\nCuối nhịp thứ hai, nhóm phải chốt ra đúng một câu phát biểu vấn đề. Có một khung để viết: nhóm người dùng nào, gặp khó khăn khi làm việc gì, vì lý do gì, dẫn đến hậu quả gì.\n\nHai ví dụ chưa tốt trên bảng. Câu đầu là giải pháp trá hình: cần một ứng dụng nhắc hạn. Nó đã nhảy qua vấn đề. Câu thứ hai thì mơ hồ, nghe như nhận xét chứ không quan sát được. Cột bên phải là cách viết lại.\n\nGhi nhớ dấu hiệu nhận ra giải pháp trá hình: nếu câu có chữ cần làm, cần thêm, cần một cái gì đó, thì gần như chắc chắn là giải pháp.\n\nHỎI LỚP\nCâu nào dưới đây có chữ báo hiệu giải pháp? Các bạn vừa thấy chữ nào?\n\nLƯU Ý\nChính khung này sẽ dùng ở Hoạt động 2 (nhóm 3 viết câu vấn đề). Nhấn mạnh: chỉ MỘT câu."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#1D4ED8;margin:0 0 .4rem\">Sáu giai đoạn trên lịch làm việc thật</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Mỗi giai đoạn phải giao ra một thứ cụ thể</div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.3rem;border-bottom:3px solid rgb(40,118,245)\">Giai đoạn</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.3rem;border-bottom:3px solid rgb(40,118,245)\">Việc chính</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.3rem;border-bottom:3px solid rgb(40,118,245)\">Thứ giao ra</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.3rem;border-bottom:3px solid rgb(40,118,245)\">Thuộc nhịp</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">1 · Hiểu</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Nhu cầu người học <b>và</b> mục tiêu của tổ chức</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Câu hỏi nghiên cứu, tiêu chí thành công</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Khám phá</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">2 · Nghiên cứu</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Phỏng vấn, khảo sát, quan sát</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Bản ghi, trích dẫn nguyên văn</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Khám phá</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">3 · Phân tích</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Gom nhóm dữ liệu, viết câu vấn đề</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Câu phát biểu vấn đề</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Xác định</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">4 · Thiết kế</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Khung màn hình, bản mẫu, thử với người dùng</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Bản mẫu bấm được</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Phát triển</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">5 · Triển khai</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Giao cho lập trình, chạy thử một lớp</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Bản đặc tả, bản chạy thử</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Bàn giao</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">6 · Đánh giá</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Đo, sửa, <b>đo lại</b></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Số liệu sau phát hành</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Bàn giao → về giai đoạn 1</td></tr></tbody></table></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 15–18 · khoảng 3 phút\n\nLỜI GIẢNG\nBốn nhịp cho biết ta đang ở đâu trong cách nghĩ. Nhưng trên lịch làm việc thật, người ta chia nhỏ hơn: sáu giai đoạn. Cột cuối cho biết mỗi giai đoạn thuộc nhịp nào.\n\nCó ba điều. Một, giai đoạn sáu không phải điểm kết. Nó nối ngược về giai đoạn một, vì đo xong thì lại có vấn đề mới. Hai, trong thực tế các giai đoạn chồng lên nhau, nhiều nhóm làm theo vòng hai tuần. Ba, đừng lẫn hai chữ gần nhau: chữ Phát triển ở nhịp ba là phát triển giải pháp, còn giai đoạn năm gọi là Triển khai, nghĩa là đưa cho lập trình làm.\n\nBây giờ nhìn lại nhóm B, mỗi dòng của câu chuyện đều nằm ở một giai đoạn trong bảng này.\n\nLƯU Ý\nNếu hết giờ, chỉ đọc cột 1 và cột 3. Các em có bảng đầy đủ trong bài đọc trên Limio."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Giai đoạn “Hiểu” có hai vế</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Vế thứ hai là vế hay bị cắt</div><div style=\"display:flex;gap:1.2rem;flex-wrap:wrap\"><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Vế người học</b><ul style=\"margin:.4rem 0;padding-left:2rem;font-size:1.55rem;line-height:1.5\"><li style=\"margin:.35rem 0\">Họ đang vướng ở đâu?</li><li style=\"margin:.35rem 0\">Vấn đề nào đáng giải nhất?</li></ul></div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Vế tổ chức</b><ul style=\"margin:.4rem 0;padding-left:2rem;font-size:1.55rem;line-height:1.5\"><li style=\"margin:.35rem 0\">Việc này phục vụ mục tiêu nào của khoa?</li><li style=\"margin:.35rem 0\">Ai bảo vệ sản phẩm khi hết ngân sách?</li></ul></div></div></div><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\">Bỏ vế thứ hai: sản phẩm có thể rất tốt cho người học mà vẫn chết yểu, vì không ai trong tổ chức thấy nó là việc của mình.</div><div style=\"font-size:1.4rem;color:#5B6472\">Nhóm B hỏi khoa ngay từ đầu, và biết mục tiêu thật là giảm khiếu nại điểm — không phải “làm ứng dụng đẹp hơn”.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 18–20 · khoảng 2 phút\n\nLỜI GIẢNG\nGiai đoạn một, Hiểu, có hai vế. Vế người học thì ai cũng nhớ: họ vướng ở đâu. Vế tổ chức thì hay bị quên: việc này phục vụ mục tiêu nào của khoa hay trường, và ai sẽ bảo vệ sản phẩm khi hết ngân sách.\n\nNhóm B đã hỏi khoa ngay từ đầu, và biết mục tiêu thật là giảm khiếu nại điểm. Chứ không phải làm ứng dụng đẹp hơn. Nếu nhận đề là làm ứng dụng đẹp hơn, cả vòng sau sẽ sai hướng.\n\nHỎI LỚP\nĐề bài “làm ứng dụng đẹp hơn” thuộc vế nào? (Không thuộc vế nào: nó là giải pháp, không phải vấn đề.)"
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Hoạt động 1 · Nói – Làm – Đoán</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Cá nhân · 8 phút · dùng điện thoại</div><div style=\"font-size:1.7rem\">Sẽ hiện <b>5 câu</b> trích từ nghiên cứu người dùng. Với mỗi câu, chọn:</div><div style=\"display:flex;gap:1.2rem;flex-wrap:wrap\"><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(40,118,245,0.12);border-left:8px solid rgb(40,118,245);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>NÓI</b><br>Ý kiến, cảm nhận, hoặc lời kể của người dùng</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>LÀM</b><br>Hành vi quan sát được, hoặc có trong nhật ký hệ thống</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>ĐOÁN</b><br>Dự định, điều “sẽ làm” trong tương lai</div></div></div><div style=\"margin-top:.8rem;color:#5B6472\">Mỗi câu 1 phút. Chọn theo trực giác, rồi ta bàn.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 20–21 · khoảng 1 phút\n\nLỜI GIẢNG\nĐây là hoạt động cá nhân đầu tiên, dùng điện thoại. Khi nghiên cứu, ta thu về ba loại thông tin và độ tin cậy của chúng khác nhau.\n\nNói: ý kiến, cảm nhận, cả lời kể về việc mình làm. Làm: hành vi quan sát được hoặc có trong nhật ký. Đoán: dự định về tương lai.\n\nSắp có năm câu trích. Mỗi câu các bạn có một phút để bấm chọn. Đừng nghĩ quá lâu, chọn theo trực giác.\n\nLƯU Ý\nKhông tiết lộ chỗ bẫy ở câu 4. Bật QR để lớp vào từng câu."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "poll",
+   "config": {
+    "question": "Câu 1/5 — “Em thấy ứng dụng này khá dễ dùng.”  Đây là điều người ta NÓI, LÀM hay ĐOÁN?",
+    "options": [
+     {
+      "text": "NÓI"
+     },
+     {
+      "text": "LÀM"
+     },
+     {
+      "text": "ĐOÁN"
+     }
+    ],
+    "presenterNote": "⏱ Phút thứ 21–22 · khoảng 1 phút\n\nLỜI GIẢNG\nĐọc to câu 1, chờ khoảng một phút cho lớp bấm. Khi kết quả hiện, đáp án là: NÓI — đây là cảm nhận.\n\nHỏi một bạn chọn khác số đông vì sao, rồi chuyển câu."
+   },
+   "timerSeconds": 60
+  },
+  {
+   "type": "poll",
+   "config": {
+    "question": "Câu 2/5 — [Nhật ký hệ thống] Sinh viên A mở trang nộp bài 4 lần trong 10 phút, không bấm nút Nộp.  Đây là điều người ta NÓI, LÀM hay ĐOÁN?",
+    "options": [
+     {
+      "text": "NÓI"
+     },
+     {
+      "text": "LÀM"
+     },
+     {
+      "text": "ĐOÁN"
+     }
+    ],
+    "presenterNote": "⏱ Phút thứ 22–23 · khoảng 1 phút\n\nLỜI GIẢNG\nĐọc to câu 2, chờ khoảng một phút cho lớp bấm. Khi kết quả hiện, đáp án là: LÀM — hành vi có ghi lại.\n\nHỏi một bạn chọn khác số đông vì sao, rồi chuyển câu.\n\nHỎI LỚP\nBạn nào chọn khác số đông? Vì sao bạn nghĩ vậy?"
+   },
+   "timerSeconds": 60
+  },
+  {
+   "type": "poll",
+   "config": {
+    "question": "Câu 3/5 — “Nếu có thông báo nhắc hạn thì em sẽ nộp sớm hơn.”  Đây là điều người ta NÓI, LÀM hay ĐOÁN?",
+    "options": [
+     {
+      "text": "NÓI"
+     },
+     {
+      "text": "LÀM"
+     },
+     {
+      "text": "ĐOÁN"
+     }
+    ],
+    "presenterNote": "⏱ Phút thứ 23–24 · khoảng 1 phút\n\nLỜI GIẢNG\nĐọc to câu 3, chờ khoảng một phút cho lớp bấm. Khi kết quả hiện, đáp án là: ĐOÁN — dự định tương lai. Người ta hay đoán sai về chính mình.\n\nHỏi một bạn chọn khác số đông vì sao, rồi chuyển câu."
+   },
+   "timerSeconds": 60
+  },
+  {
+   "type": "poll",
+   "config": {
+    "question": "Câu 4/5 — “Em toàn nộp bài lúc 11 giờ đêm.”  Đây là điều người ta NÓI, LÀM hay ĐOÁN?",
+    "options": [
+     {
+      "text": "NÓI"
+     },
+     {
+      "text": "LÀM"
+     },
+     {
+      "text": "ĐOÁN"
+     }
+    ],
+    "presenterNote": "⏱ Phút thứ 24–25 · khoảng 1 phút\n\nLỜI GIẢNG\nĐọc to câu 4, chờ khoảng một phút cho lớp bấm. Khi kết quả hiện, đáp án là: NÓI — dù nội dung nói về việc mình làm. Đây vẫn là lời kể, cần đối chiếu nhật ký hệ thống.\n\nĐây là câu bẫy. Khoảng một nửa lớp sẽ chọn LÀM vì câu nói về hành động. Nhưng đó là lời kể của sinh viên, chưa phải điều ta quan sát được. Giữ sự ngạc nhiên đó cho slide kế tiếp.\n\nHỎI LỚP\nBạn nào chọn khác số đông? Vì sao bạn nghĩ vậy?"
+   },
+   "timerSeconds": 60
+  },
+  {
+   "type": "poll",
+   "config": {
+    "question": "Câu 5/5 — [Quan sát] Em mất 90 giây tìm hạn nộp, lướt qua ba tab rồi quay sang hỏi bạn bên cạnh.  Đây là điều người ta NÓI, LÀM hay ĐOÁN?",
+    "options": [
+     {
+      "text": "NÓI"
+     },
+     {
+      "text": "LÀM"
+     },
+     {
+      "text": "ĐOÁN"
+     }
+    ],
+    "presenterNote": "⏱ Phút thứ 25–26 · khoảng 1 phút\n\nLỜI GIẢNG\nĐọc to câu 5, chờ khoảng một phút cho lớp bấm. Khi kết quả hiện, đáp án là: LÀM — quan sát trực tiếp.\n\nHỏi một bạn chọn khác số đông vì sao, rồi chuyển câu."
+   },
+   "timerSeconds": 60
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#0B6E64;margin:0 0 .4rem\">Rút ra: khi mâu thuẫn, tin điều người ta LÀM</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Lời kể về việc mình làm vẫn chỉ là lời kể</div><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\">“Em toàn nộp bài lúc 11 giờ đêm” — cần đối chiếu nhật ký hệ thống trước khi tin.</div><div style=\"background:rgba(40,118,245,0.12);border-left:8px solid rgb(40,118,245);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\">“Em sẽ dùng nếu có thông báo” — là dự đoán. Thử bằng bản mẫu rẻ, đừng đầu tư ngay.</div><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\">Quan sát người ta dùng thật là nguồn hiếm và tốn công nhất, nhưng là nguồn duy nhất cho biết họ <b>làm</b> gì.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 26–28 · khoảng 2 phút\n\nLỜI GIẢNG\nVậy rút ra điều gì? Khi lời nói và hành vi mâu thuẫn, hãy tin điều người ta làm. Câu số bốn là ví dụ: sinh viên nói mình toàn nộp lúc mười một giờ đêm. Đó là lời kể. Muốn tin thì phải đối chiếu với nhật ký hệ thống.\n\nCòn dự đoán, như em sẽ dùng nếu có thông báo, thì chỉ là giả thuyết. Cách kiểm chứng rẻ nhất là làm bản mẫu và thử, không phải đầu tư luôn.\n\nBây giờ ta dùng đúng cách phân biệt này cho một việc lớn hơn, theo nhóm.\n\nLƯU Ý\nChuyển sang Hoạt động 2, nhắc lớp về nhóm 3 người đã chia."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Hoạt động 2 · Hồ sơ vụ án</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Nhóm 3 người · 25 phút: 10 phút bảng · 5 phút đọc kết quả và viết · 5 phút đăng · 5 phút phản biện</div><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.6rem\"><b>Tình huống giả định:</b> Sau học kỳ đầu, <b>40% sinh viên</b> bỏ dở một khoá học trực tuyến của khoa. Khoa nhờ nhóm bạn “làm cho khoá học hấp dẫn hơn”.</div><div style=\"font-weight:700;margin:.6rem 0 .3rem;font-size:1.6rem\">Bước 1 (10 phút) — kẻ bảng ba cột trên giấy</div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.4rem;border-bottom:3px solid rgb(40,118,245)\">Điều ĐÃ biết (có bằng chứng)</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.4rem;border-bottom:3px solid rgb(40,118,245)\">Điều CHƯA biết</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.4rem;border-bottom:3px solid rgb(40,118,245)\">Hỏi ai — bằng cách nào?</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.4rem;\">…</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.4rem;\">…</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.4rem;\">phỏng vấn / nhật ký / quan sát</td></tr></tbody></table><div style=\"color:#5B6472;font-size:1.4rem\">Đừng viết giải pháp. Chỉ ghi những gì các bạn biết và chưa biết.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 28–38 · khoảng 10 phút\n\nLỜI GIẢNG\nHoạt động hai là hoạt động nhóm chính của bài 1.3. Tình huống giả định: bốn mươi phần trăm sinh viên bỏ dở một khoá học trực tuyến của khoa, và khoa nhờ nhóm mình làm cho khoá học hấp dẫn hơn.\n\nBước một, mười phút, các bạn kẻ một bảng ba cột trên giấy: điều đã biết có bằng chứng; điều chưa biết; và muốn biết thì hỏi ai, bằng cách nào. Các bạn chưa có dữ liệu gì, nên cột đã biết sẽ rất ngắn. Đó là điều tốt: nó cho thấy ta còn thiếu những gì.\n\nĐây chính là nhịp Khám phá. Đừng viết giải pháp.\n\nHỎI LỚP\n(Đi quanh các nhóm) Đó là điều các bạn BIẾT hay ĐOÁN? Ai trong khoa quan tâm đến con số 40% này, và vì sao?\n\nLƯU Ý\nBấm giờ 10 phút. Lỗi hay gặp: nhóm viết giải pháp vào cột đã biết."
+   },
+   "timerSeconds": 600
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#5B3A9E;margin:0 0 .4rem\">Kết quả nghiên cứu khoa vừa gửi</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Dữ liệu giả định, dùng để tập — đừng ghi lại như số thật</div><div style=\"font-size:1.4rem;color:#5B6472;margin-bottom:.3rem\">Nhiệm vụ (5 phút): đọc, <u>gạch chân điều thuộc LÀM</u>, rồi viết <b>đúng một</b> câu phát biểu vấn đề theo khung.</div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(124,77,200,0.2);color:#5B3A9E;font-size:1.25rem;border-bottom:3px solid rgb(124,77,200)\">Loại</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(124,77,200,0.2);color:#5B3A9E;font-size:1.25rem;border-bottom:3px solid rgb(124,77,200)\">Nội dung</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><span style=\"display:inline-block;padding:0 .55rem;border-radius:.4rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-weight:800;font-size:1.05rem;margin-right:.4rem\">NÓI</span></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“Video dài 45 phút, em xem trên điện thoại, đang xem có tin nhắn là mất chỗ.” (sinh viên đi làm thêm)</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><span style=\"display:inline-block;padding:0 .55rem;border-radius:.4rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-weight:800;font-size:1.05rem;margin-right:.4rem\">NÓI</span></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“Em không biết mình đã học tới đâu nên vào lại là xem từ đầu.”</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><span style=\"display:inline-block;padding:0 .55rem;border-radius:.4rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-weight:800;font-size:1.05rem;margin-right:.4rem\">NÓI</span></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“Bài kiểm tra cuối tuần đóng lúc 23:59, em đi làm về là hết giờ.”</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><span style=\"display:inline-block;padding:0 .55rem;border-radius:.4rem;background:rgba(214,158,46,0.2);color:#8A5A0B;font-weight:800;font-size:1.05rem;margin-right:.4rem\">ĐOÁN</span></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“Nếu có nhóm học chung thì em sẽ theo tiếp.”</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><span style=\"display:inline-block;padding:0 .55rem;border-radius:.4rem;background:rgba(12,141,129,0.2);color:#0B6E64;font-weight:800;font-size:1.05rem;margin-right:.4rem\">LÀM</span></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Nhật ký: <b>62%</b> người bỏ dở dừng ở tuần 3–4.</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><span style=\"display:inline-block;padding:0 .55rem;border-radius:.4rem;background:rgba(12,141,129,0.2);color:#0B6E64;font-weight:800;font-size:1.05rem;margin-right:.4rem\">LÀM</span></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Nhật ký: video dài trên 30 phút — <b>71%</b> lượt xem dừng trước nửa video.</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><span style=\"display:inline-block;padding:0 .55rem;border-radius:.4rem;background:rgba(12,141,129,0.2);color:#0B6E64;font-weight:800;font-size:1.05rem;margin-right:.4rem\">LÀM</span></td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Nhật ký: <b>38%</b> bài kiểm tra được nộp trong 30 phút cuối trước hạn.</td></tr></tbody></table></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 38–43 · khoảng 5 phút\n\nLỜI GIẢNG\nBây giờ, coi như khoa gửi lại kết quả nghiên cứu. Đây là dữ liệu giả định. Có bảy dòng: bốn dòng là lời của sinh viên, ba dòng là nhật ký hệ thống. Cột bên trái cho biết mỗi dòng thuộc loại nào: nói, làm hay đoán.\n\nNhiệm vụ của nhóm trong năm phút: đọc, gạch chân những dòng thuộc LÀM, vì đó là bằng chứng mạnh nhất, rồi viết đúng một câu phát biểu vấn đề theo khung ở slide trước. Gợi ý: nhìn xem các dòng gạch chân chỉ về cùng một chỗ nào.\n\nĐừng viết giải pháp. Các bạn sẽ dùng chính câu này và các dòng bằng chứng này cho hai hoạt động cuối.\n\nHỎI LỚP\n(Đi quanh) Ba dòng nhật ký nói lên điều gì chung? (Bài giảng dài, hạn cứng, người học đi làm thêm.)\n\nLƯU Ý\nCho nhóm giữ lại tờ giấy: các dòng gạch chân sẽ làm bằng chứng ở Hoạt động 4."
+   },
+   "timerSeconds": 300
+  },
+  {
+   "type": "collaborate_board",
+   "config": {
+    "prompt": "Câu phát biểu vấn đề của nhóm — bắt đầu bằng tên nhóm, ví dụ: “Nhóm 3: Sinh viên đi làm thêm…”",
+    "mode": "free",
+    "allowViewOthers": true,
+    "blockPaste": false,
+    "presenterNote": "⏱ Phút thứ 43–48 · khoảng 5 phút\n\nLỜI GIẢNG\nMỗi nhóm đăng đúng một ghi chú lên bảng, bắt đầu bằng tên nhóm. Chỉ một câu thôi, theo khung.\n\nSau khi các câu hiện lên, đọc to ba đến bốn câu. Chọn một câu tốt và một câu là giải pháp trá hình để so sánh.\n\nHỎI LỚP\nNhóm nào có chữ “cần” hoặc “nên làm” trong câu?\n\nLƯU Ý\nGhi nhớ nhóm nào có câu tốt để mời lên đọc biên bản ở cuối buổi."
+   },
+   "timerSeconds": 300
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#5B3A9E;margin:0 0 .4rem\">Phản biện chéo: câu vấn đề này đã đủ chắc chưa?</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Chọn 2 câu trên bảng, cả lớp cùng kiểm</div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(124,77,200);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">1</div><div><b>Có nói rõ AI đang vướng không?</b><br><span style=\"color:#5B6472;font-size:1.4rem\">“Sinh viên” chung chung chưa đủ. Nhóm nào, ở thời điểm nào?</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(124,77,200);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">2</div><div><b>Đây là vấn đề hay đã là giải pháp?</b><br><span style=\"color:#5B6472;font-size:1.4rem\">Có chữ “cần làm”, “nên thêm” là dấu hiệu giải pháp.</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(124,77,200);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">3</div><div><b>Còn giả định nào chưa kiểm chứng?</b><br><span style=\"color:#5B6472;font-size:1.4rem\">Chỉ ra một điều nhóm coi là đúng nhưng chưa có bằng chứng.</span></div></div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 48–53 · khoảng 5 phút\n\nLỜI GIẢNG\nBây giờ cả lớp cùng phản biện. Ta chọn hai câu trên bảng và kiểm từng câu qua ba tiêu chí: có nói rõ ai đang vướng không; đây là vấn đề hay đã là giải pháp; còn giả định nào chưa được kiểm chứng.\n\nMục đích không phải chấm điểm nhóm. Mục đích là nhìn thấy những giả định mà chính người viết không nhận ra. Ví dụ, câu viết là sinh viên bỏ dở vì bài giảng dài. Còn giả định nào ẩn? Có thể là giả định rằng nếu rút ngắn thì họ sẽ quay lại.\n\nHỎI LỚP\nCâu này giả định điều gì mà ta chưa biết chắc?\n\nLƯU Ý\nNếu hết giờ, chỉ làm một câu. Giữ nguyên đủ 5 phút nghỉ sau đó."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#0B6E64;margin:0 0 .4rem\">Nghỉ giải lao</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">5 phút</div><div style=\"font-size:2rem;color:#5B6472\">Sau nghỉ: Bài 1.4 — bạn có bằng chứng rồi, giờ mang nó vào một cuộc họp.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 53–58 · khoảng 5 phút\n\nLỜI GIẢNG\nNghỉ năm phút. Nhắc: sau nghỉ, các nhóm vẫn ngồi nhóm cũ và giữ lại tờ giấy của Hoạt động 2, vì ta sẽ dùng lại.\n\nLƯU Ý\nBấm đồng hồ."
+   },
+   "timerSeconds": 300
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#1D4ED8;margin:0 0 .4rem\">Bạn đã có bằng chứng. Giờ thì sao?</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Nhưng thiết kế hiếm khi do một người quyết</div><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.7rem\">Ở Bài 1.3, nhóm B có một câu vấn đề và bằng chứng từ người thật.</div><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.7rem\">Muốn làm ra sản phẩm, họ phải thuyết phục những người <b>không đồng ý</b> — và những người ấy đo thành công bằng thứ khác họ.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 58–59 · khoảng 1 phút\n\nLỜI GIẢNG\nChào mừng quay lại. Nhớ nhóm B: họ có một câu vấn đề và bằng chứng từ người thật. Nhưng thiết kế hiếm khi do một người quyết. Muốn làm ra sản phẩm, nhóm B phải đem bằng chứng ấy vào một cuộc họp có những người không đồng ý với họ. Và những người ấy đo thành công bằng thứ khác.\n\nBài 1.4 dạy ba việc: biết những ai ngồi quanh bàn, nghe phản hồi của họ, và bảo vệ quyết định của mình."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#1D4ED8;margin:0 0 .4rem\">Ai ở quanh bàn, và họ đo thành công bằng gì</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Mỗi vai một thước đo — nên họ va nhau ở chỗ bạn phải chọn</div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.3rem;border-bottom:3px solid rgb(40,118,245)\">Vai</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.3rem;border-bottom:3px solid rgb(40,118,245)\">Đo thành công bằng</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(40,118,245,0.2);color:#1D4ED8;font-size:1.3rem;border-bottom:3px solid rgb(40,118,245)\">Cần ở bạn</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Quản lý sản phẩm</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Chỉ số mục tiêu, tiến độ</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Bằng chứng: việc này đáng làm trước</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Giảng viên / chuyên gia nội dung</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Người học học được nội dung</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Chỗ để nội dung không bị cắt vụn</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Lập trình viên</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Chạy đúng, đúng hạn</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Đủ trạng thái, quy tắc co giãn</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Kiểm thử</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Ít lỗi lọt ra ngoài</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Mô tả rõ hành vi đúng</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Hỗ trợ người học</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Ít phải trả lời cùng một câu</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Nhãn và thông báo dễ hiểu</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Đại diện nhà trường</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Khớp mục tiêu của khoa</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Vì sao làm việc này bây giờ</td></tr></tbody></table></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 59–62 · khoảng 3 phút\n\nLỜI GIẢNG\nĐây là những người thường ngồi quanh nhà thiết kế. Nhìn cột giữa: mỗi người đo thành công bằng một thước khác nhau. Quản lý sản phẩm đo bằng chỉ số. Giảng viên đo bằng việc người học có học được không. Lập trình viên đo bằng chạy đúng và đúng hạn.\n\nCho nên họ va nhau ở đúng chỗ nhà thiết kế phải chọn. Không ai sai theo thước đo của mình. Cột phải cho biết mỗi vai cần gì ở nhà thiết kế, để bạn chuẩn bị đúng thứ thay vì gửi chung một file cho tất cả.\n\nTrong nhóm nhỏ, những vai này thường do vài người kiêm nhiệm, có khi là chính bạn. Còn vai nhà thiết kế trải nghiệm học tập và con đường vào nghề, các bạn sẽ học ở Bài 7.4.\n\nHỎI LỚP\nTrong đồ án của các bạn, ai đang đóng những vai này?\n\nLƯU Ý\nDòng giảng viên/chuyên gia nội dung là dòng riêng của sản phẩm giáo dục, nhấn mạnh."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Một thiết kế, bốn cách chấm</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Tình huống minh hoạ: menu của hệ thống học tập có 9 mục</div><div style=\"display:flex;gap:1.2rem;flex-wrap:wrap\"><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(40,118,245,0.12);border-left:8px solid rgb(40,118,245);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Giảng viên</b><br>“Mục nào cũng cần, đừng bỏ.”</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Quản lý sản phẩm</b><br>“Chỉ hai chức năng đem lại số liệu. Giữ 4 mục thôi.”</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Lập trình viên</b><br>“Mục Báo cáo tốn ba tuần.”</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Nghiên cứu viên</b><br>“5 trên 5 sinh viên không tìm thấy mục Tài nguyên, vì tên gọi.”</div></div></div><div style=\"background:rgba(124,77,200,0.12);border-left:8px solid rgb(124,77,200);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.5rem\">Không ai sai. Việc của nhà thiết kế: biến bốn ý kiến thành <b>một câu hỏi trả lời được</b> — “Sinh viên tìm được việc mình cần trong bao nhiêu giây, ở bản 9 mục và bản 5 mục?”</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 62–64 · khoảng 2 phút\n\nLỜI GIẢNG\nMột ví dụ cụ thể: menu của hệ thống học tập có chín mục. Bốn người, bốn ý kiến. Giảng viên muốn giữ hết. Quản lý sản phẩm muốn chỉ bốn mục. Lập trình viên nói mục Báo cáo tốn ba tuần. Nghiên cứu viên thì nói năm trên năm sinh viên không tìm thấy mục Tài nguyên vì tên gọi.\n\nAi sai? Không ai. Mỗi người đúng theo thước đo của mình. Nhà thiết kế không chọn phe. Việc của nhà thiết kế là biến bốn ý kiến ấy thành một câu hỏi có thể trả lời bằng cách đo: sinh viên tìm thấy việc mình cần trong bao nhiêu giây, ở bản chín mục và ở bản năm mục.\n\nHỎI LỚP\nNhắc lại từ buổi trước: ở Bài 1.2 mình đã nói đến việc nhiều lựa chọn thì chậm hơn. Điều đó giúp ích thế nào ở đây?"
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#0B6E64;margin:0 0 .4rem\">Ai chốt? Và chốt dựa vào đâu?</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Nhà thiết kế thường đề xuất và bảo vệ — hiếm khi là người chốt</div><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.6rem\">Câu nên hỏi ngay từ đầu dự án: <b>“Nếu ta bất đồng, ai là người chốt?”</b></div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(12,141,129,0.2);color:#0B6E64;font-size:1.25rem;border-bottom:3px solid rgb(12,141,129)\">Bậc</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(12,141,129,0.2);color:#0B6E64;font-size:1.25rem;border-bottom:3px solid rgb(12,141,129)\">Ví dụ</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(12,141,129,0.2);color:#0B6E64;font-size:1.25rem;border-bottom:3px solid rgb(12,141,129)\">Dùng thế nào</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;font-weight:700;\">1 · Ý kiến, gu</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“Tôi thấy thế đẹp hơn”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Để gợi câu hỏi, không để chốt</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;font-weight:700;\">2 · Một trường hợp</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“Em từng bỏ một ứng dụng vì thế”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Mở hướng kiểm tra</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;font-weight:700;\">3 · Chuẩn đã kiểm chứng</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Tỉ lệ tương phản, bộ nguyên tắc khả dụng</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Mạnh khi tình huống giống</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;font-weight:700;\">4 · Quan sát người thật</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“Thử với 5 em, 3 em vấp ở bước này”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\"><b>Mạnh: đây là điều người ta LÀM</b></td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;font-weight:700;\">5 · Số liệu hệ thống</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">“18% bỏ dở ở bước này”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.25rem;\">Cho biết quy mô, chưa cho biết lý do</td></tr></tbody></table></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 64–67 · khoảng 3 phút\n\nLỜI GIẢNG\nKhi ý kiến va nhau, ai chốt? Thường là quản lý sản phẩm hoặc trưởng nhóm, không phải nhà thiết kế. Nhà thiết kế đề xuất và bảo vệ. Cho nên câu hỏi đầu tiên nên hỏi ngay từ đầu dự án là: nếu ta bất đồng, ai là người chốt?\n\nVà người chốt cần thứ gì? Bằng chứng. Nhưng bằng chứng có mạnh yếu. Đây là thang năm bậc. Bậc một là ý kiến, gu. Bậc hai là một trường hợp. Bậc ba là chuẩn đã kiểm chứng. Bậc bốn là quan sát người thật làm. Bậc năm là số liệu hệ thống.\n\nNối với hoạt động vừa rồi: bậc bốn chính là điều người ta làm, còn bậc một, hai gần với nói và đoán. Không ai phải chờ đủ bậc năm mới được nói. Điều quan trọng là nói ra mình đang đứng ở bậc nào.\n\nHỎI LỚP\nBa dòng nhật ký trong phiếu dữ kiện của nhóm mình thuộc bậc nào?\n\nLƯU Ý\nĐáp án: bậc 5, số liệu hệ thống. Ghép với phỏng vấn (bậc 4) thì có cả lý do lẫn quy mô."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#5B3A9E;margin:0 0 .4rem\">Nghe phản hồi: từ giải pháp về vấn đề</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Phản hồi thường đến dưới dạng giải pháp</div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(124,77,200);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">1</div><div><b>Hỏi</b><br><span style=\"color:#5B6472;font-size:1.4rem\">tìm vấn đề đằng sau: “Anh chị lo điều gì nếu không có nút đó?”</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(124,77,200);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">2</div><div><b>Nhắc lại</b><br><span style=\"color:#5B6472;font-size:1.4rem\">nói lại bằng lời mình: “Vậy điều anh chị lo là… đúng không ạ?”</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(124,77,200);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">3</div><div><b>Chốt</b><br><span style=\"color:#5B6472;font-size:1.4rem\">viết thành câu “Làm sao để…”</span></div></div><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.4rem\"><b>“Thêm nút Tải về đi”</b> → sinh viên mất bài học khi mạng ký túc xá chập chờn → <b>“Làm sao để sinh viên vẫn học được khi mạng chập chờn?”</b><br>Câu chốt mở ra nhiều giải pháp hơn nút ban đầu: tải trước, nén video, chế độ đọc chữ.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 67–69 · khoảng 2 phút\n\nLỜI GIẢNG\nPhản hồi thường đến dưới dạng giải pháp: thêm nút này, làm giống ứng dụng kia. Trong khi thứ ta cần là vấn đề đằng sau. Có ba bước.\n\nMột: hỏi. Anh chị lo điều gì xảy ra nếu không có nút đó? Hai: nhắc lại bằng lời mình và xin xác nhận, để chắc là hiểu đúng. Ba: chốt thành câu bắt đầu bằng làm sao để. Đây chính là dạng câu hỏi của câu phát biểu vấn đề mà ta viết ở Hoạt động 2.\n\nVí dụ: thêm nút Tải về. Hỏi ra là mạng ký túc xá chập chờn. Chốt thành: làm sao để sinh viên vẫn học được khi mạng chập chờn. Câu này mở ra nhiều cách hơn cái nút ban đầu.\n\nHỎI LỚP\nNgoài nút Tải về, còn cách giải nào khác cho câu hỏi làm sao để sinh viên vẫn học được khi mạng chập chờn?\n\nLƯU Ý\nNgay sau đây các bạn sẽ tự làm chính kỹ năng này (Hoạt động 3)."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#0B6E64;margin:0 0 .4rem\">Bảo vệ một quyết định bằng ba câu</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Cuộc họp bàn về đánh đổi, không bàn về gu</div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(12,141,129);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">1</div><div><b>Người dùng nào, đang cố làm gì?</b></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(12,141,129);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">2</div><div><b>Bằng chứng nào cho thấy phương án này giúp họ?</b><br><span style=\"color:#5B6472;font-size:1.4rem\">nói rõ đang ở bậc nào</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(12,141,129);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">3</div><div><b>Đánh đổi là gì?</b><br><span style=\"color:#5B6472;font-size:1.4rem\">phương án nào cũng có cái mất — nói ra trước</span></div></div><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\">“Tôi thấy thế đẹp hơn” không sai, nhưng không tranh luận được: cuộc họp thành ra ai nói to hơn.</div><div style=\"background:rgba(40,118,245,0.12);border-left:8px solid rgb(40,118,245);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Khi chưa có bằng chứng:</b> “Tôi chưa có bằng chứng cho phương án này. Cách thử rẻ nhất là… trong ba ngày.”</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 69–71 · khoảng 2 phút\n\nLỜI GIẢNG\nSau khi hiểu vấn đề, ta bảo vệ phương án của mình bằng ba câu. Một: người dùng nào, đang cố làm gì. Hai: bằng chứng nào cho thấy phương án này giúp họ, và nói rõ đang ở bậc nào. Ba: đánh đổi là gì, vì phương án nào cũng có cái mất, nói ra trước thì cuộc họp bàn về đánh đổi, giấu đi thì cuộc họp bàn về gu.\n\nCòn khi chưa có bằng chứng? Ba câu vẫn dùng được. Câu hai đổi thành: tôi chưa có bằng chứng, và cách thử rẻ nhất là làm thế này trong ba ngày. Nói thật về khoảng trống thuyết phục hơn là giả vờ đã có.\n\nLƯU Ý\nNếu hết giờ, bỏ khung 'Khi chưa có bằng chứng', mình sẽ nhắc lại ở phần tổng kết."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#1D4ED8;margin:0 0 .4rem\">Nhóm B gặp khoa</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Tình huống minh hoạ, nối tiếp Bài 1.3 (số liệu giả định)</div><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Khoa:</b> “Cứ làm chức năng nhắc hạn đi, nhanh mà.”</div><div style=\"background:rgba(40,118,245,0.12);border-left:8px solid rgb(40,118,245);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Nhóm B (hỏi):</b> “Thầy cô mong nhắc hạn giải quyết điều gì ạ?” — <b>Khoa:</b> “Giảm sinh viên nộp trễ.”</div><div style=\"background:rgba(124,77,200,0.12);border-left:8px solid rgb(124,77,200);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Nhóm B (nhắc lại và chốt):</b> “Vậy mục tiêu là giảm nộp trễ. Câu hỏi của tụi em là: <i>làm sao để sinh viên biết bài mình đã thực sự được nộp?</i>”</div><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.35rem\"><b>Nhóm B (ba câu):</b> <i>Người dùng:</i> sinh viên năm nhất, nộp bài trên điện thoại. <i>Bằng chứng:</i> phỏng vấn 6 em, 4 em tưởng đã nộp (bậc 4); nhật ký có nhiều lượt lưu nháp không kèm lượt nộp (bậc 5). <i>Đánh đổi:</i> màn hình xác nhận mất ba ngày; nhắc hạn để vòng sau — nếu bốn tuần nữa vẫn trễ vì quên hạn thì làm.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 71–72 · khoảng 2 phút\n\nLỜI GIẢNG\nBây giờ ghép cả hai bài lại. Nhóm B đến gặp khoa. Khoa nói: cứ làm chức năng nhắc hạn đi. Nhóm B không cãi. Họ hỏi: thầy cô mong nhắc hạn giải quyết điều gì? Khoa nói: giảm nộp trễ. Nhóm B nhắc lại và chốt: làm sao để sinh viên biết bài mình đã thực sự được nộp.\n\nRồi ba câu. Người dùng là sinh viên năm nhất. Bằng chứng là kết quả phỏng vấn và nhật ký hệ thống, đó là bậc bốn và năm, những bậc mạnh. Đánh đổi: làm màn hình xác nhận trước, nhắc hạn để vòng sau. Nếu bốn tuần nữa vẫn còn trễ vì quên hạn, ta mới làm nhắc hạn.\n\nCó hai điều đáng thấy: kết quả Bài 1.3 chính là nguyên liệu ở đây. Và giai đoạn sáu của Bài 1.3, đo lại, chính là chỗ nhắc hạn tìm được chỗ của nó.\n\nHỎI LỚP\nNhóm B thuyết phục được khoa nhờ điều gì? (Họ không thắng tranh luận, họ đổi chủ đề cuộc họp từ 'ai thấy thế nào' sang 'ta biết gì'.)"
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "quiz",
+   "config": {
+    "question": "Trưởng bộ môn nói: “Tôi không thích màn hình này lắm.” Phản ứng nào hữu ích nhất?",
+    "options": [
+     {
+      "text": "Đổi ngay màu và bố cục theo ý trưởng bộ môn",
+      "correct": false
+     },
+     {
+      "text": "Hỏi: “Chỗ nào thầy cô thấy sinh viên sẽ khó nhìn hoặc khó tìm?”",
+      "correct": true
+     },
+     {
+      "text": "Giải thích vì sao thiết kế hiện tại là đúng",
+      "correct": false
+     },
+     {
+      "text": "Hỏi ý kiến thêm ba người khác rồi lấy số đông",
+      "correct": false
+     }
+    ],
+    "presenterNote": "⏱ Phút thứ 72–73 · khoảng 1 phút\n\nLỜI GIẢNG\nKiểm tra nhanh, không tính điểm. Chờ khoảng một phút. Đáp án đúng là B: hỏi để tìm ra lo ngại cụ thể đằng sau câu không thích. Đó chính là bước Hỏi vừa học.\n\nHỎI LỚP\nAi chọn A? Vì sao? (Thường là vì ngại mất lòng người có chức vụ.)"
+   },
+   "timerSeconds": 90
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Hoạt động 3 · Dịch phản hồi</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Cá nhân · 10 phút — dùng câu vấn đề của nhóm bạn ở Hoạt động 2</div><div style=\"font-size:1.55rem;margin-bottom:.4rem\">Có bốn phản hồi mà nhóm bạn có thể nhận về cho câu vấn đề của mình. Chọn <b>một</b>. Viết <b>hai dòng</b>:</div><div style=\"display:flex;gap:1.2rem;flex-wrap:wrap\"><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(40,118,245,0.12);border-left:8px solid rgb(40,118,245);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>1.</b> “Cứ làm ứng dụng nhắc nhở đi.”</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>2.</b> “Thêm video ngắn vào mọi bài đi.”</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(214,158,46,0.12);border-left:8px solid rgb(214,158,46);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>3.</b> “Cho sinh viên nộp tự do, khỏi cần hạn.”</div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>4.</b> “Làm giao diện đẹp hơn là được.”</div></div></div><div style=\"background:rgba(124,77,200,0.12);border-left:8px solid rgb(124,77,200);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.35rem\"><b>Dòng 1 — câu HỎI LẠI</b> để tìm vấn đề đằng sau (mở, không hỏi có/không, không gợi đáp án).<br><b>Dòng 2 — câu CHỐT</b> bắt đầu bằng “Làm sao để…”</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 73–79 · khoảng 6 phút\n\nLỜI GIẢNG\nHoạt động ba là cá nhân. Có bốn phản hồi mà nhóm mình có thể nhận về cho câu vấn đề. Mỗi bạn chọn một, và viết hai dòng: một câu hỏi lại để tìm vấn đề đằng sau, và một câu chốt bắt đầu bằng làm sao để.\n\nMột câu hỏi lại tốt có ba đặc điểm: mở, tức không hỏi có hay không; không gợi sẵn đáp án; và trả lời được bằng một sự việc cụ thể. Bạn nào xong sớm thì làm thêm một phản hồi khác.\n\nHỎI LỚP\n(Đi quanh) Câu hỏi của bạn có gợi sẵn đáp án không? Thử hỏi lại bằng chữ 'điều gì'.\n\nLƯU Ý\nBấm giờ 6 phút, sau đó chuyển sang bảng để đăng."
+   },
+   "timerSeconds": 360
+  },
+  {
+   "type": "collaborate_board",
+   "config": {
+    "prompt": "Đăng câu chốt của bạn — ghi số phản hồi ở đầu, ví dụ: “2 — Làm sao để người học hiểu khái niệm khó khi chỉ có chữ?”",
+    "mode": "free",
+    "allowViewOthers": true,
+    "blockPaste": false,
+    "presenterNote": "⏱ Phút thứ 79–83 · khoảng 4 phút\n\nLỜI GIẢNG\nBây giờ đăng câu chốt của bạn lên bảng. Ghi số phản hồi ở đầu để cả lớp dễ đọc.\n\nSau đó đọc ba đến bốn ghi chú. Chọn một câu hay, và một câu vẫn là giải pháp trá hình hoặc câu hỏi có hay không.\n\nHỎI LỚP\nCâu nào nghe như đã có sẵn đáp án? Câu nào mở ra nhiều cách giải nhất?"
+   },
+   "timerSeconds": 240
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Hoạt động 4 · Họp có luật</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Nhóm 3 người · 16 phút họp + 4 phút đăng lên bảng</div><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;font-size:1.5rem\"><b>Quyết định cần chốt:</b> nhóm bạn bảo vệ <b>một giải pháp</b> cho <b>câu vấn đề đã viết ở Hoạt động 2</b>, dùng các dòng LÀM trong phiếu dữ kiện làm bằng chứng.</div><div style=\"display:flex;gap:1.2rem;flex-wrap:wrap\"><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(12,141,129,0.12);border-left:8px solid rgb(12,141,129);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Nhà thiết kế</b><br>Đề xuất và bảo vệ bằng đúng <b>ba câu</b></div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(197,48,48,0.12);border-left:8px solid rgb(197,48,48);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Người phản đối</b><br>Rút một thẻ vai. Mọi phản đối phải có dạng <b>“Tôi lo rằng… vì…”</b></div></div><div style=\"flex:1;min-width:16rem\"><div style=\"background:rgba(40,118,245,0.12);border-left:8px solid rgb(40,118,245);border-radius:.6rem;padding:.8rem 1.2rem;margin:.6rem 0;\"><b>Thư ký</b><br>Ghi biên bản 5 dòng</div></div></div><div style=\"font-size:1.35rem;margin-top:.4rem\"><b>Ba vòng, mỗi vòng 5 phút, đổi vai sau mỗi vòng.</b> Nhà thiết kế thắng vòng đó khi nói ra được lo ngại thật của người phản đối bằng một câu, <u>trước khi</u> bảo vệ phương án.</div><div style=\"font-size:1.25rem;color:#5B6472;margin-top:.3rem\">Biên bản 5 dòng: (1) quyết định · (2) ba câu của bên đề xuất · (3) lo ngại chính · (4) bằng chứng còn thiếu · (5) việc kiểm chứng tiếp theo.</div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 83–99 · khoảng 16 phút\n\nLỜI GIẢNG\nHoạt động bốn là hoạt động nhóm chính của Bài 1.4. Mỗi nhóm có ba vai. Nhà thiết kế đề xuất một giải pháp cho câu vấn đề mà nhóm đã viết ở Hoạt động hai. Bằng chứng lấy từ các dòng làm ở phiếu dữ kiện. Người phản đối rút một thẻ vai, xem trong slide kế tiếp. Thư ký ghi biên bản năm dòng.\n\nLuật của người phản đối: mọi phản đối phải có dạng: tôi lo rằng, vì. Điều này để phản đối trở thành thông tin, không thành đối đầu.\n\nĐiểm thắng của nhà thiết kế: trước khi bảo vệ, hãy hỏi để tìm ra điều người phản đối thật sự lo. Nếu nói ra được lo ngại thật bằng một câu, bạn thắng vòng đó.\n\nBa vòng, mỗi vòng năm phút, sau mỗi vòng đổi vai.\n\nHỎI LỚP\n(Đi quanh) Bạn đã hỏi người phản đối lo điều gì chưa, hay đã bảo vệ luôn?\n\nLƯU Ý\nBấm 16 phút. Nhắc đổi vai sau mỗi 5 phút (bài đọc để mỗi vòng 7 phút khi có đủ 25 phút; buổi chung này rút còn 5 phút mỗi vòng). Để slide thẻ vai chiếu song song nếu cần."
+   },
+   "timerSeconds": 960
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#A32020;margin:0 0 .4rem\">Thẻ vai của người phản đối</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Rút một thẻ, chỉ mình bạn biết điều bên phải</div><table style=\"border-collapse:collapse;width:100%;margin:.5rem 0\"><thead><tr><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(197,48,48,0.2);color:#A32020;font-size:1.3rem;border-bottom:3px solid rgb(197,48,48)\">Thẻ vai</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(197,48,48,0.2);color:#A32020;font-size:1.3rem;border-bottom:3px solid rgb(197,48,48)\">Bề ngoài bạn nói</th><th style=\"text-align:left;padding:.55rem .8rem;background:rgba(197,48,48,0.2);color:#A32020;font-size:1.3rem;border-bottom:3px solid rgb(197,48,48)\">Điều bạn thật sự lo (chỉ nói khi được hỏi đúng)</th></tr></thead><tbody><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Quản lý sản phẩm</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">“Sao lại bỏ tính năng nổi bật của mình?”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Quý này cần số “lượt dùng tính năng X” để báo cáo lãnh đạo</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Giảng viên</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">“Thêm phần trắc nghiệm vào mỗi trang đi.”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Sợ sinh viên đọc lướt và không biết mình đã hiểu chưa</td></tr><tr><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;font-weight:700;\">Lập trình viên</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">“Cái này phức tạp quá, không kịp đâu.”</td><td style=\"padding:.5rem .8rem;border-bottom:1px solid rgba(127,127,127,.3);vertical-align:top;font-size:1.3rem;\">Chưa rõ khi mất mạng thì hiển thị gì, sợ phải làm lại</td></tr></tbody></table></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Song song · (chiếu suốt hoạt động 4)\n\nLỜI GIẢNG\nSlide này để tham khảo. Mỗi người phản đối rút một thẻ, chỉ mình biết cột bên phải, và chỉ tiết lộ khi nhà thiết kế hỏi đúng.\n\nHọc viên tự chọn thẻ hoặc bốc thăm. Nếu nhóm muốn, có thể tự tạo thẻ mới từ câu vấn đề của mình.\n\nLƯU Ý\nKhông cần giảng. Chỉ để chiếu."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "collaborate_board",
+   "config": {
+    "prompt": "Đăng MỘT câu phản đối hay nhất nhóm nghe được — đúng dạng: “Tôi lo rằng… vì…”",
+    "mode": "free",
+    "allowViewOthers": true,
+    "blockPaste": false,
+    "presenterNote": "⏱ Phút thứ 99–103 · khoảng 4 phút\n\nLỜI GIẢNG\nBây giờ mỗi nhóm đăng một câu phản đối hay nhất mà nhóm nghe được, đúng dạng: tôi lo rằng, vì.\n\nĐọc ba đến bốn câu. Chọn một câu nghe như gu, kiểu tôi không thích, để hỏi lớp: câu này giúp ta quyết định được gì? Đó là chỗ khác nhau giữa phản đối tốt và gu cá nhân.\n\nHỎI LỚP\nCâu nào giúp nhóm quyết định? Câu nào chỉ là cảm nhận?"
+   },
+   "timerSeconds": 240
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#1D4ED8;margin:0 0 .4rem\">Ba điều mang về</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Từ hai bài, một câu chuyện</div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(40,118,245);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">1</div><div><b>Quy trình là những nhịp có điểm kiểm chứng</b><br><span style=\"color:#5B6472;font-size:1.4rem\">mỗi nhịp có ít nhất một chỗ hỏi người dùng thật</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(40,118,245);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">2</div><div><b>Tin vào điều người ta LÀM</b><br><span style=\"color:#5B6472;font-size:1.4rem\">lời nói và dự đoán chỉ là giả thuyết cần kiểm chứng</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(40,118,245);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">3</div><div><b>Cuộc họp bàn về đánh đổi, không bàn về gu</b><br><span style=\"color:#5B6472;font-size:1.4rem\">người dùng nào — bằng chứng nào — đánh đổi gì</span></div></div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 103–109 · khoảng 6 phút\n\nLỜI GIẢNG\nTrước khi tổng kết, mời hai nhóm lên đọc biên bản năm dòng của mình, mỗi nhóm khoảng một phút rưỡi. Chọn nhóm có câu phản đối hay hoặc nhóm bảo vệ tốt bằng dòng làm.\n\nSau đó, ba điều mang về. Một: quy trình tốt là những nhịp mà mỗi nhịp có chỗ hỏi người thật. Hai: tin vào điều người ta làm, lời nói và dự đoán chỉ là giả thuyết. Ba: cuộc họp là để bàn đánh đổi, không bàn gu.\n\nVà nhìn lại bốn mục tiêu ở đầu buổi. Ai làm được rồi thì giơ tay.\n\nHỎI LỚP\nNhìn lại bốn mục tiêu đầu buổi: việc nào bạn thấy mình làm được rồi, việc nào còn lúng túng?"
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "word_cloud",
+   "config": {
+    "prompt": "Một điều bạn sẽ làm KHÁC trong dự án nhóm tuần tới (1–3 từ)",
+    "presenterNote": "⏱ Phút thứ 109–113 · khoảng 4 phút\n\nLỜI GIẢNG\nThẻ hồi cố cuối buổi. Mỗi bạn gõ một điều sẽ làm khác trong dự án nhóm tuần tới, một đến ba từ.\n\nSau khi kết quả hiện ra, đọc từ to nhất và hỏi một bạn giải thích. Cái này cũng là một kiểu đo lại chính buổi học, đúng như giai đoạn sáu của quy trình.\n\nHỎI LỚP\nBạn nào gõ từ này? Bạn sẽ làm khác thế nào?"
+   },
+   "timerSeconds": 240
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#8A5A0B;margin:0 0 .4rem\">Bài về nhà và chuẩn bị cho buổi thực hành</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Bài 1.6 · Chẩn đoán một giao diện thật</div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(214,158,46);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">1</div><div><b>Bài 1.3 — nửa trang</b><br><span style=\"color:#5B6472;font-size:1.4rem\">Chọn một tính năng bạn thấy vô dụng. Nếu nhóm làm ra nó đi đủ nhịp Khám phá và Xác định, họ đã có thể phát hiện điều gì?</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(214,158,46);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">2</div><div><b>Bài 1.4 — ghi lại một cuộc tranh luận thiết kế</b><br><span style=\"color:#5B6472;font-size:1.4rem\">Mỗi bên dựa vào cảm nhận hay bằng chứng? Một câu hỏi nào có thể kết thúc sớm hơn?</span></div></div><div style=\"display:flex;gap:.9rem;align-items:flex-start;margin:.55rem 0\"><div style=\"flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:rgb(214,158,46);color:#fff;font-weight:800;font-size:1.5rem;display:flex;align-items:center;justify-content:center\">3</div><div><b>Trước buổi thực hành Bài 1.6</b><br><span style=\"color:#5B6472;font-size:1.4rem\">Mang laptop hoặc điện thoại đã đăng nhập hệ thống học tập. Đọc lướt Phần 1 của Bài 1.6 (bảng 10 nguyên tắc khả dụng)</span></div></div></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ Phút thứ 113–116 · khoảng 3 phút\n\nLỜI GIẢNG\nBài về nhà có hai phần. Từ bài 1.3: viết nửa trang về một tính năng bạn thấy vô dụng. Từ bài 1.4: ghi lại một cuộc tranh luận thiết kế bạn từng chứng kiến, và phân tích xem mỗi bên dựa vào cảm nhận hay bằng chứng. Cả hai có mẫu nộp và bài đã làm sẵn trong bài đọc trên Limio.\n\nBuổi thực hành Bài 1.6 sẽ dùng chính hai điều hôm nay: giao nhiệm vụ cho người thử chứ không hỏi ý kiến, và viết phát hiện có bằng chứng. Nhớ mang laptop hoặc điện thoại đã đăng nhập.\n\nLƯU Ý\nNhắc hạn nộp trên Limio. Còn khoảng 4 phút đệm cho câu hỏi."
+   },
+   "timerSeconds": null
+  },
+  {
+   "type": "content",
+   "config": {
+    "title": "",
+    "subtitle": "",
+    "bullets": [],
+    "resource": {
+     "type": "richtext",
+     "payload": {
+      "html": "<div style=\"font-size:1.7rem;line-height:1.5;color:#1F2937;font-family:Inter,ui-sans-serif,system-ui,sans-serif\"><div style=\"font-size:3rem;font-weight:800;line-height:1.15;color:#5B3A9E;margin:0 0 .4rem\">Nguồn ảnh và tài liệu</div><div style=\"font-size:1.6rem;color:#5B6472;margin:0 0 1.1rem\">Dùng cho buổi giảng nội bộ</div><ul style=\"margin:.4rem 0;padding-left:2rem;font-size:1.4rem;line-height:1.5\"><li style=\"margin:.35rem 0\">Sơ đồ Kim cương đôi: Design Council. Ảnh Double-diamond-process — Olga Carreras Montoto, CC BY 4.0 (Wikimedia Commons).</li><li style=\"margin:.35rem 0\">Design Council, <i>Framework for Innovation</i> (Kim cương đôi).</li><li style=\"margin:.35rem 0\">Barry Boehm, <i>Software Engineering Economics</i>, 1981.</li><li style=\"margin:.35rem 0\">Nielsen Norman Group: <i>UX Research Cheat Sheet</i>, <i>Interviewing Users</i>.</li><li style=\"margin:.35rem 0\">Erika Hall, <i>Just Enough Research</i>, 2013 · Tom Greever, <i>Articulating Design Decisions</i>, 2020.</li><li style=\"margin:.35rem 0\">Các số liệu ở slide ví dụ và phiếu dữ kiện là <b>giả định để tập</b>, không phải dữ liệu thật.</li></ul></div>"
+     }
+    },
+    "resourceKind": "richtext",
+    "presenterNote": "⏱ — · dự phòng\n\nLỜI GIẢNG\nSlide dự phòng, không cần chiếu. Nếu có bạn hỏi nguồn, chỉ vào đây."
+   },
+   "timerSeconds": null
+  }
+ ]
+}
