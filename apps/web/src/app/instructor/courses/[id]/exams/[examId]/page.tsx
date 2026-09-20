@@ -173,6 +173,15 @@ export default async function EditExamPage({
         </div>
 
         <div className="flex items-start gap-2">
+          {exam.kind === "oral" && (
+            <Link
+              href={`/instructor/courses/${courseSegment}/exams/${exam.id}/preview`}
+              className="btn btn-secondary btn-sm"
+              prefetch={false}
+            >
+              Thử vấn đáp
+            </Link>
+          )}
           {exam.kind === "oral" && isPublished && (
             <Link
               href={`/instructor/courses/${courseSegment}/exams/${exam.id}/live`}

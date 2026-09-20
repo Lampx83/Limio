@@ -296,3 +296,120 @@ export async function runOralExamTurn(
 
   return { assistantContent: chatResult.content, ended: shouldClose, questionsAsked: finalQuestionsAsked };
 }
+
+export interface RunOralExamPreviewTurnInput {
+  examId: string;
+  /** Giáo viên đang thử — chỉ để tính hạn mức/token AI của họ; KHÔNG có ExamAttempt nào. */
+  teacherUserId: string;
+  /** Hội thoại đã diễn ra, do TRÌNH DUYỆT giữ (bản thử không lưu gì vào DB). */
+  history: ReadonlyArray<{ role: "examiner" | "student"; content: string }>;
+  /** null CHỈ hợp lệ khi history rỗng (lượt mở màn). */
+  studentMessage: string | null;
+  computeChat: ChatComputeFn;
+  computeEmbed: EmbedComputeFn;
+  model?: string;
+  onDelta?: (delta: string) => void;
+  forceEnd?: boolean;
+}
+
+/**
+ * "Thử vấn đáp" của giáo viên trước khi mở phiên. Cùng prompt, cùng cách lấy đoạn tài liệu và cùng quy tắc
+ * kết thúc (đủ MAX_ORAL_QUESTIONS hoặc forceEnd) như runOralExamTurn để bản thử phản ánh đúng buổi thật —
+ * nhưng KHÔNG ghi ExamAttempt/OralExamTurn/LearningEvent và không đổi trạng thái gì. Không giới hạn theo thời
+ * gian: bản thử không có đồng hồ. Vẫn qua assertWithinCaps + recordAiUsage nên TÍNH vào hạn mức token AI của
+ * giáo viên (mỗi lượt hỏi thử gọi AI thật).
+ */
+export async function runOralExamPreviewTurn(
+  input: RunOralExamPreviewTurnInput,
+  db: PrismaClient = prisma,
+): Promise<RunOralExamTurnResult> {
+  const exam = await db.exam.findUnique({
+    where: { id: input.examId },
+    select: {
+      id: true,
+      kind: true,
+      title: true,
+      language: true,
+      examinerInstructions: true,
+      course: { select: { title: true } },
+    },
+  });
+  if (!exam) throw new AiTutorError("validation_failed", "exam_not_found");
+  if (exam.kind !== "oral") throw new AiTutorError("validation_failed", "not_oral_exam");
+
+  const questionsAsked = input.history.filter((t) => t.role === "examiner").length;
+  if (input.history.length === 0) {
+    if (input.studentMessage !== null && !input.forceEnd) {
+      throw new AiTutorError("validation_failed", "first_turn_must_be_empty");
+    }
+  } else {
+    if (input.history[input.history.length - 1]!.role !== "examiner") {
+      throw new AiTutorError("validation_failed", "wrong_turn_order");
+    }
+    if (!input.forceEnd && (!input.studentMessage || !input.studentMessage.trim())) {
+      throw new AiTutorError("validation_failed", "empty_message");
+    }
+  }
+
+  await assertWithinCaps(input.teacherUserId, db, "oral_exam");
+
+  const trimmedAnswer = input.studentMessage?.trim() ?? null;
+  const shouldClose = Boolean(input.forceEnd) || questionsAsked >= MAX_ORAL_QUESTIONS;
+  const isLastQuestion = !shouldClose && questionsAsked + 1 >= MAX_ORAL_QUESTIONS;
+
+  let contextChunks: string[] = [];
+  let embedTokens = 0;
+  if (!shouldClose) {
+    if (questionsAsked === 0) {
+      contextChunks = await getOpeningChunks(exam.id, db);
+    } else {
+      const embedResult = await input.computeEmbed([trimmedAnswer!]);
+      embedTokens = embedResult.tokensUsed;
+      contextChunks = (
+        await searchMaterialChunks(exam.id, embedResult.embeddings[0]!, CONTEXT_CHUNK_COUNT, db)
+      ).map((c) => c.chunkText);
+    }
+  }
+
+  const systemPrompt = buildSystemPrompt({
+    courseTitle: exam.course?.title ?? null,
+    examTitle: exam.title,
+    contextChunks,
+    isFirstTurn: questionsAsked === 0,
+    isLastQuestion,
+    isClosing: shouldClose,
+    language: exam.language,
+    examinerInstructions: exam.examinerInstructions,
+  });
+
+  const history: ChatMessage[] = input.history.map((t) => ({
+    role: t.role === "examiner" ? "assistant" : "user",
+    content: t.content,
+  }));
+  if (trimmedAnswer) history.push({ role: "user", content: trimmedAnswer });
+
+  let chatResult;
+  try {
+    chatResult = await input.computeChat([{ role: "system", content: systemPrompt }, ...history], input.onDelta);
+  } catch (e) {
+    throw new AiTutorError("openai_error", (e as Error).message);
+  }
+  if (!chatResult.content) throw new AiTutorError("openai_error", "empty_response");
+
+  if (embedTokens > 0) {
+    await recordAiUsage(input.teacherUserId, DEFAULT_EMBEDDING_MODEL, embedTokens, 0, db);
+  }
+  await recordAiUsage(
+    input.teacherUserId,
+    input.model ?? DEFAULT_EXAMINER_MODEL,
+    chatResult.inputTokens,
+    chatResult.outputTokens,
+    db,
+  );
+
+  return {
+    assistantContent: chatResult.content,
+    ended: shouldClose,
+    questionsAsked: shouldClose ? questionsAsked : questionsAsked + 1,
+  };
+}
