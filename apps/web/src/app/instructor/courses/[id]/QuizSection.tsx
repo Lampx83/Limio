@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { QuizActionButtons, QuizEditForm } from "./QuizHeader";
+import { QuizActionButtons } from "./QuizHeader";
 import QuestionRow from "./QuestionRow";
 import AddQuestionForm from "./AddQuestionForm";
 import AiQuestionGenerator from "./AiQuestionGenerator";
@@ -48,7 +48,6 @@ export default function QuizSection({
   quiz: Quiz;
   lessonId: string;
 }) {
-  const [editing, setEditing] = useState(false);
   const pathname = usePathname();
 
   return (
@@ -66,20 +65,17 @@ export default function QuizSection({
         <Link
           href={`${pathname}/quizzes/${quiz.id}/edit`}
           onClick={(e) => e.stopPropagation()}
-          className="rounded-md border border-token px-2 py-1 text-xs font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+          className="inline-flex items-center gap-1 rounded-md border border-token px-2 py-1 text-xs font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
         >
           Mở trình soạn
+          <ExternalLink className="h-3 w-3" aria-hidden />
         </Link>
-        <QuizActionButtons quiz={quiz} onEdit={() => setEditing(true)} />
+        <QuizActionButtons quiz={quiz} />
         <span className="text-xs text-faint opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden>
           ▾
         </span>
       </summary>
       <div className="border-t border-token px-4 py-3 space-y-3">
-        {editing && (
-          <QuizEditForm quiz={quiz} onClose={() => setEditing(false)} />
-        )}
-
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">
             Câu hỏi ({quiz.questions.length})

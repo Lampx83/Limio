@@ -85,6 +85,8 @@ export default function QuizEditorClient({
   );
   const [addKey, setAddKey] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Công cụ nhập hàng loạt / AI mở ở vùng giữa, thay cho form soạn (không chen lên đầu trang).
+  const [tool, setTool] = useState<null | "import" | "ai">(null);
 
   const totalPoints = quiz.questions.reduce((a, q) => a + q.points, 0);
   const current = quiz.questions.find((q) => q.id === selected) ?? null;
@@ -110,7 +112,7 @@ export default function QuizEditorClient({
             )}
           </div>
           {quiz.isHidden && <span className="chip">Đang ẩn</span>}
-          <QuizActionButtons quiz={quiz} onEdit={() => setSettingsOpen(true)} />
+          <QuizActionButtons quiz={quiz} />
         </header>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-token bg-[rgb(var(--surface-muted))] px-4 py-2.5 text-sm text-muted">
@@ -139,6 +141,23 @@ export default function QuizEditorClient({
           </div>
         )}
 
+        <div className="flex flex-wrap items-center gap-2 border-b border-token px-4 py-2.5">
+          {lessonId && (
+            <AiQuestionGenerator
+              quizId={quiz.id}
+              lessonId={lessonId}
+              nextOrderIndex={quiz.questions.length}
+              open={false}
+              onOpenChange={(o) => o && setTool("ai")}
+            />
+          )}
+          <BulkImportQuestions
+            quizId={quiz.id}
+            open={false}
+            onOpenChange={(o) => o && setTool("import")}
+          />
+        </div>
+
         <div className="grid min-h-[560px] lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="border-b border-token bg-[rgb(var(--surface-muted))] p-3 lg:sticky lg:top-4 lg:self-start lg:border-b-0 lg:border-r lg:min-h-[560px]">
             <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-faint">
@@ -146,12 +165,15 @@ export default function QuizEditorClient({
             </p>
             <ol className="space-y-1">
               {quiz.questions.map((q, i) => {
-                const on = q.id === selected;
+                const on = tool === null && q.id === selected;
                 return (
                   <li key={q.id}>
                     <button
                       type="button"
-                      onClick={() => setSelected(q.id)}
+                      onClick={() => {
+                        setTool(null);
+                        setSelected(q.id);
+                      }}
                       className={`flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors ${
                         on
                           ? "border-brand-400 bg-[rgb(var(--surface))] shadow-sm"
@@ -169,7 +191,7 @@ export default function QuizEditorClient({
                   </li>
                 );
               })}
-              {selected === "new" && (
+              {tool === null && selected === "new" && (
                 <li className="flex items-center gap-2 rounded-lg border border-brand-400 bg-[rgb(var(--surface))] px-2.5 py-2 text-sm font-medium text-default shadow-sm">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold tabular-nums text-white">{quiz.questions.length + 1}</span>
                   Câu mới…
@@ -179,6 +201,7 @@ export default function QuizEditorClient({
             <button
               type="button"
               onClick={() => {
+                setTool(null);
                 setAddKey((k) => k + 1);
                 setSelected("new");
               }}
@@ -189,7 +212,17 @@ export default function QuizEditorClient({
           </aside>
 
           <main className="min-w-0 bg-[rgb(var(--surface))] p-5 md:p-6 [&>div]:!m-0 [&>div]:!border-0 [&>div]:!bg-transparent [&>div]:!p-0 [&>form]:!border-0 [&>form]:!bg-transparent [&>form]:!p-0">
-            {selected === "new" || !current ? (
+            {tool === "import" ? (
+              <BulkImportQuestions quizId={quiz.id} open onOpenChange={(o) => !o && setTool(null)} />
+            ) : tool === "ai" && lessonId ? (
+              <AiQuestionGenerator
+                quizId={quiz.id}
+                lessonId={lessonId}
+                nextOrderIndex={quiz.questions.length}
+                open
+                onOpenChange={(o) => !o && setTool(null)}
+              />
+            ) : selected === "new" || !current ? (
               <AddQuestionForm
                 key={addKey}
                 quizId={quiz.id}
@@ -211,20 +244,6 @@ export default function QuizEditorClient({
             )}
           </main>
         </div>
-
-        <footer className="flex flex-wrap items-center gap-2 border-t border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
-          {lessonId && (
-            <AiQuestionGenerator
-              quizId={quiz.id}
-              lessonId={lessonId}
-              nextOrderIndex={quiz.questions.length}
-            />
-          )}
-          <BulkImportQuestions quizId={quiz.id} />
-          <Link href={`/instructor/courses/${courseId}/quizzes/${quiz.id}/results`} className="ml-auto btn-secondary btn-sm">
-            Xem kết quả
-          </Link>
-        </footer>
       </div>
     </div>
   );

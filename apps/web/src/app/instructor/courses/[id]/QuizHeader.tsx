@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface Quiz {
@@ -16,13 +16,7 @@ interface Quiz {
 }
 
 /** Compact button group (eye / edit / delete) for the quiz section header. */
-export function QuizActionButtons({
-  quiz,
-  onEdit,
-}: {
-  quiz: Quiz;
-  onEdit: () => void;
-}) {
+export function QuizActionButtons({ quiz }: { quiz: Quiz }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [isHidden, setIsHidden] = useState(quiz.isHidden);
@@ -71,12 +65,6 @@ export function QuizActionButtons({
     }
   }
 
-  function handleEdit(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    onEdit();
-  }
-
   return (
     <div className="inline-flex items-center gap-1 rounded-lg p-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-lg:opacity-100">
       <button
@@ -92,15 +80,6 @@ export function QuizActionButtons({
         aria-pressed={isHidden}
       >
         {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-      </button>
-      <button
-        type="button"
-        onClick={handleEdit}
-        className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
-        title="Sửa quiz (tiêu đề, difficulty, pass %)"
-        aria-label="Sửa quiz"
-      >
-        <Pencil className="h-4 w-4" />
       </button>
       <button
         type="button"
