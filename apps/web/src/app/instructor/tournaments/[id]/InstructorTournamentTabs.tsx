@@ -16,7 +16,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: "basic", label: "Thông tin cơ bản" },
-  { id: "missions", label: "Missions" },
+  { id: "missions", label: "Nhiệm vụ" },
   { id: "registrations", label: "Đăng ký" },
   { id: "judges", label: "Giám khảo" },
   { id: "prize", label: "Giải thưởng" },
@@ -109,6 +109,7 @@ export default function InstructorTournamentTabs({
               courseId={courseId}
               teamSize={teamSize}
               pendingCounts={pendingCounts}
+              tournamentWindow={{ startsAt: initial.startsAt, endsAt: initial.endsAt }}
             />
           </div>
         )}
