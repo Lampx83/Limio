@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { BookOpen, Trash2 } from "lucide-react";
+import { BookOpen, FileQuestion, Trash2 } from "lucide-react";
 
 type Bank = {
   id: string;
@@ -19,10 +19,11 @@ type Bank = {
 
 type Course = { id: string; title: string };
 
-const VIS_LABEL: Record<Bank["visibility"], string> = {
-  private: "Riêng tư",
-  course: "Theo khoá",
-  org: "Tổ chức",
+// Màu chỉ báo phạm vi chia sẻ (thanh cạnh trái + chấm nhỏ); phần còn lại trung tính.
+const VIS_META: Record<Bank["visibility"], { label: string; rail: string; dot: string }> = {
+  private: { label: "Riêng tư", rail: "bg-slate-300", dot: "bg-slate-400" },
+  course: { label: "Theo khoá", rail: "bg-brand-500", dot: "bg-brand-500" },
+  org: { label: "Tổ chức", rail: "bg-sky-500", dot: "bg-sky-500" },
 };
 
 export default function BankListClient({
@@ -67,11 +68,17 @@ export default function BankListClient({
   };
 
   return (
-    <div className="mt-6">
-      <div className="flex justify-end">
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Ngân hàng câu hỏi</h1>
+          <p className="mt-1 text-sm text-faint">
+            {banks.length} bank · câu hỏi tái sử dụng cross-exam
+          </p>
+        </div>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           {showForm ? "Đóng" : "+ Tạo bank mới"}
         </button>
@@ -135,48 +142,60 @@ export default function BankListClient({
       )}
 
       {banks.length > 0 && (
-        <ul data-testid="bank-list" className="mt-6 space-y-2">
-          {banks.map((b) => (
-            <li key={b.id} className="relative">
-              <Link
-                href={`/instructor/question-banks/${b.id}`}
-                className="block rounded border border-default bg-white p-4 pr-12 hover:bg-slate-50"
-                prefetch={false}
+        <ul data-testid="bank-list" className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {banks.map((b) => {
+            const vis = VIS_META[b.visibility];
+            return (
+              <li
+                key={b.id}
+                className="group relative overflow-hidden rounded-xl border border-default bg-white shadow-sm transition hover:shadow-md"
               >
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-base font-semibold">{b.name}</h2>
-                  <div className="flex gap-2 text-xs">
-                    <span className="rounded bg-slate-100 px-2 py-0.5 text-slate-700">
-                      {VIS_LABEL[b.visibility]}
+                <span className={`absolute inset-y-0 left-0 w-1 ${vis.rail}`} aria-hidden />
+                <Link
+                  href={`/instructor/question-banks/${b.id}`}
+                  className="block p-4 pl-5 pr-12"
+                  prefetch={false}
+                >
+                  <h2 className="break-words text-base font-semibold leading-snug text-slate-900 transition group-hover:text-brand-700">
+                    {b.name}
+                  </h2>
+                  {b.courseTitle ? (
+                    <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                      <BookOpen className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      <span className="truncate">{b.courseTitle}</span>
+                    </p>
+                  ) : null}
+                  {b.description && (
+                    <p className="mt-2 line-clamp-2 text-sm text-slate-600">{b.description}</p>
+                  )}
+                  <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1.5">
+                      <FileQuestion className="h-3.5 w-3.5" aria-hidden />
+                      <b className="font-semibold text-slate-700">{b.questionCount}</b> câu hỏi
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className={`h-1.5 w-1.5 rounded-full ${vis.dot}`} aria-hidden />
+                      {vis.label}
                     </span>
                     {!b.isOwner && (
-                      <span className="rounded bg-amber-100 px-2 py-0.5 text-amber-800">
-                        Chia sẻ
-                      </span>
+                      <span className="font-medium text-amber-700">Chia sẻ</span>
                     )}
-                  </div>
-                </div>
-                <div className="mt-1 text-xs text-faint">
-                  {b.questionCount} câu hỏi
-                  {b.courseTitle ? <> · <BookOpen className="inline h-3 w-3 align-text-bottom text-slate-400" /> {b.courseTitle}</> : ""}
-                </div>
-                {b.description && (
-                  <p className="mt-2 text-sm text-slate-600">{b.description}</p>
+                  </p>
+                </Link>
+                {/* Delete button — only owner sees it. Positioned absolute to
+                    avoid being part of the <Link> click area. */}
+                {b.isOwner && (
+                  <DeleteBankButton
+                    bankId={b.id}
+                    bankName={b.name}
+                    onDeleted={() =>
+                      setBanks((curr) => curr.filter((x) => x.id !== b.id))
+                    }
+                  />
                 )}
-              </Link>
-              {/* Delete button — only owner sees it. Positioned absolute to
-                  avoid being part of the <Link> click area. */}
-              {b.isOwner && (
-                <DeleteBankButton
-                  bankId={b.id}
-                  bankName={b.name}
-                  onDeleted={() =>
-                    setBanks((curr) => curr.filter((x) => x.id !== b.id))
-                  }
-                />
-              )}
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -243,7 +262,7 @@ function DeleteBankButton({
       disabled={busy}
       aria-label={`Xoá ${bankName}`}
       title="Xoá ngân hàng"
-      className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded text-faint hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
     >
       <Trash2 className="h-4 w-4" />
     </button>
