@@ -52,6 +52,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "invalid_form_data" }, { status: 400 });
   }
   const forceEnd = form.get("forceEnd") === "1";
+  const rawTopicId = form.get("topicId");
+  const topicId = typeof rawTopicId === "string" && rawTopicId ? rawTopicId : null;
   const audioFile = forceEnd ? null : form.get("audio");
 
   let rawHistory: unknown = [];
@@ -102,6 +104,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       history,
       studentMessage: studentTranscript,
       forceEnd,
+      topicId,
       computeChat: openAiChatCompute(openai),
       computeEmbed: openAiEmbedCompute(openai),
     });

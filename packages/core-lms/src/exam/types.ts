@@ -71,7 +71,9 @@ export class ExamError extends Error {
       | "exam_not_oral"
       | "exam_not_written"
       | "material_not_found"
-      | "unsupported_material_type",
+      | "unsupported_material_type"
+      // A6.7 — chủ đề giao cho từng sinh viên
+      | "topic_not_found",
     public readonly details?: unknown,
   ) {
     super(code);

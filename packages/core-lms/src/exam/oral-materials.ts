@@ -136,12 +136,20 @@ export async function createOralMaterialTopicList(
   return { materialId: material.id };
 }
 
+/**
+ * Tài liệu kèm số đoạn đã nhúng vector. `chunkCount = 0` với tài liệu CÓ chữ
+ * nghĩa là AI chưa lấy được đoạn nào của nó khi hỏi — cần để giao diện nói cho
+ * GV biết (trước đây việc này vô hình: upload mà OpenAI lỗi/thiếu khoá thì chỉ
+ * thấy tài liệu nằm đó như bình thường).
+ */
+export type OralMaterialWithChunkCount = OralExamMaterial & { chunkCount: number };
+
 /** Danh sách tài liệu theo orderIndex. Ném exam_not_oral nếu exam là thi viết. */
 export async function listOralMaterials(
   actorUserId: string,
   examId: string,
   db: PrismaClient = prisma,
-): Promise<OralExamMaterial[]> {
+): Promise<OralMaterialWithChunkCount[]> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
     select: { courseId: true, createdById: true, kind: true },
@@ -149,10 +157,12 @@ export async function listOralMaterials(
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
   await assertCanEditExam(actorUserId, exam, db);
-  return db.oralExamMaterial.findMany({
+  const rows = await db.oralExamMaterial.findMany({
     where: { examId },
     orderBy: { orderIndex: "asc" },
+    include: { _count: { select: { chunks: true } } },
   });
+  return rows.map(({ _count, ...m }) => ({ ...m, chunkCount: _count.chunks }));
 }
 
 /** Sắp lại thứ tự — orderedIds phải là hoán vị đầy đủ của tài liệu hiện có. */

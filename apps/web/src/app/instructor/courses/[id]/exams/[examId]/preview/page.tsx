@@ -16,8 +16,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function OralExamPreviewPage({
   params,
+  searchParams,
 }: {
   params: { id: string; examId: string };
+  searchParams?: { topic?: string };
 }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -46,6 +48,17 @@ export default async function OralExamPreviewPage({
     throw e;
   }
 
+  // A6.7 — bản thử không có lượt thi nên không có chủ đề "được giao": GV chọn chủ đề để thử (mặc định
+  // ngẫu nhiên). Chọn ở SERVER, cố định cho cả buổi thử — nếu để mỗi lượt tự chọn lại thì AI đổi chủ đề giữa chừng.
+  const topics = await prisma.oralExamTopic.findMany({
+    where: { examId: exam.id },
+    orderBy: { orderIndex: "asc" },
+    select: { id: true, title: true },
+  });
+  const chosenTopic =
+    topics.find((t) => t.id === searchParams?.topic) ??
+    (topics.length > 0 ? topics[Math.floor(Math.random() * topics.length)]! : null);
+
   const back = `/instructor/courses/${params.id}/exams/${exam.id}?tab=materials`;
   const now = new Date().toISOString();
   const roomProps = {
@@ -63,7 +76,29 @@ export default async function OralExamPreviewPage({
     studentName: session.user.name,
     studentImageUrl: session.user.image,
     preview: true,
+    previewTopicId: chosenTopic?.id ?? null,
   };
 
-  return exam.answerMode === "voice" ? <OralVoiceRoom {...roomProps} /> : <OralExamRoom {...roomProps} />;
+  const room = exam.answerMode === "voice" ? <OralVoiceRoom {...roomProps} /> : <OralExamRoom {...roomProps} />;
+  if (topics.length === 0) return room;
+
+  const base = `/instructor/courses/${params.id}/exams/${exam.id}/preview`;
+  return (
+    <>
+      <div className="border-b border-default bg-slate-50 px-4 py-2 text-sm">
+        <span className="font-medium">Đang thử với chủ đề: {chosenTopic!.title}</span>
+        <span className="text-faint"> · sinh viên thật sẽ được giao ngẫu nhiên, chia đều. Đổi chủ đề để thử lại từ đầu:</span>
+        <span className="ml-2 inline-flex flex-wrap gap-x-3 gap-y-1">
+          {topics.map((t) =>
+            t.id === chosenTopic!.id ? null : (
+              <a key={t.id} href={`${base}?topic=${t.id}`} className="underline underline-offset-2">
+                {t.title}
+              </a>
+            ),
+          )}
+        </span>
+      </div>
+      {room}
+    </>
+  );
 }

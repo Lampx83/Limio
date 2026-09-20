@@ -138,7 +138,8 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.code === "schedule_not_found" ||
       err.code === "section_not_found" ||
       err.code === "round_not_found" ||
-      err.code === "material_not_found"
+      err.code === "material_not_found" ||
+      err.code === "topic_not_found"
         ? 404
         : err.code === "attempt_belongs_to_other" ||
             err.code === "not_enrolled" ||

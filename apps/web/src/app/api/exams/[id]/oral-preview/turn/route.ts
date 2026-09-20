@@ -47,6 +47,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     history?: unknown;
     message?: string;
     forceEnd?: boolean;
+    topicId?: unknown;
   } | null;
   const rawHistory = Array.isArray(body?.history) ? body!.history : [];
   if (rawHistory.length > MAX_HISTORY) {
@@ -60,6 +61,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     history.push({ role: t.role, content: t.content.slice(0, MAX_TEXT) });
   }
   const studentMessage = body?.message?.trim().slice(0, MAX_TEXT) || null;
+  // A6.7 — chủ đề thử: chỉ nhận chuỗi; runOralExamPreviewTurn kiểm chủ đề có thuộc đề này không.
+  const topicId = typeof body?.topicId === "string" && body.topicId ? body.topicId : null;
 
   let openaiKey: string;
   try {
@@ -88,6 +91,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           history,
           studentMessage,
           forceEnd: body?.forceEnd === true,
+          topicId,
           computeChat: openAiChatCompute(openai),
           computeEmbed: openAiEmbedCompute(openai),
           onDelta: (delta) => send("delta", delta),

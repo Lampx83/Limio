@@ -25,6 +25,8 @@ interface Material {
   sizeBytes: number | null;
   extractedText: string | null;
   orderIndex: number;
+  /** Số đoạn đã nhúng vector (0 = AI chưa lấy được đoạn nào của tài liệu này). */
+  chunkCount: number;
 }
 
 const TYPE_LABEL: Record<MaterialType, string> = {
@@ -52,6 +54,9 @@ const FRIENDLY_ERROR: Record<string, string> = {
   invalid_type: "Loại tài liệu không hợp lệ.",
   unsupported_media_type: "Định dạng file không hỗ trợ — chỉ nhận PDF, .docx, .txt, .md.",
   file_too_large: "File quá lớn — tối đa 20MB.",
+  openai_not_configured: "Máy chủ chưa cấu hình khoá OpenAI nên chưa nhúng được tài liệu.",
+  global_token_cap: "Hôm nay hệ thống đã hết hạn mức token AI — thử nhúng lại vào ngày mai.",
+  openai_error: "OpenAI báo lỗi khi nhúng tài liệu — thử lại sau ít phút.",
 };
 
 export default function OralMaterialsPanel({
@@ -67,6 +72,7 @@ export default function OralMaterialsPanel({
   const [err, setErr] = useState<string | null>(null);
   const [addMode, setAddMode] = useState<"file" | "topics" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [embeddingId, setEmbeddingId] = useState<string | null>(null);
 
   const refresh = async () => {
     const res = await fetch(apiUrl(`/api/exams/${examId}/oral-materials`));
@@ -95,6 +101,24 @@ export default function OralMaterialsPanel({
     router.refresh();
   }
 
+  // Nhúng (hoặc nhúng lại) 1 tài liệu — route đã có từ A6.2 nhưng trước đây không có nút nào gọi nó.
+  async function handleEmbed(id: string) {
+    setErr(null);
+    setEmbeddingId(id);
+    try {
+      const res = await fetch(apiUrl(`/api/exams/${examId}/oral-materials/${id}/embed`), {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setErr(FRIENDLY_ERROR[data.error ?? ""] ?? `Nhúng thất bại (${data.error ?? res.status}).`);
+      }
+    } finally {
+      setEmbeddingId(null);
+      await refresh();
+    }
+  }
+
   async function handleMove(index: number, dir: -1 | 1) {
     if (!materials) return;
     const target = index + dir;
@@ -119,7 +143,9 @@ export default function OralMaterialsPanel({
       <p className="mb-4 text-sm text-faint">
         AI dựa vào các tài liệu này để đặt câu hỏi cho sinh viên — sinh viên
         không bao giờ nhìn thấy nội dung ở đây. Nộp đề cương, danh sách chủ
-        đề, hoặc rubric chấm điểm.
+        đề, hoặc rubric chấm điểm. Lượt mở màn chỉ lấy vài đoạn đầu của{" "}
+        <strong>tài liệu đứng đầu danh sách</strong>; từ lượt sau AI tìm đoạn
+        theo nội dung câu trả lời của sinh viên.
       </p>
 
       {!editable && (
@@ -160,6 +186,29 @@ export default function OralMaterialsPanel({
                     {TYPE_LABEL[m.type]}
                     {m.sizeBytes !== null && ` · ${formatSize(m.sizeBytes)}`}
                   </p>
+                  {!parseFailed && m.extractedText && (
+                    <p
+                      className={`mt-1 text-caption ${
+                        m.chunkCount > 0 ? "text-emerald-700" : "font-medium text-amber-700"
+                      }`}
+                    >
+                      {m.chunkCount > 0
+                        ? `Đã nhúng · ${m.chunkCount} đoạn — AI tìm được đoạn liên quan khi hỏi.`
+                        : "Chưa nhúng — AI chưa lấy được đoạn nào của tài liệu này khi hỏi, chỉ dựa vào hướng dẫn giám khảo."}{" "}
+                      <button
+                        type="button"
+                        onClick={() => handleEmbed(m.id)}
+                        disabled={embeddingId === m.id}
+                        className="underline underline-offset-2 disabled:opacity-50"
+                      >
+                        {embeddingId === m.id
+                          ? "Đang nhúng…"
+                          : m.chunkCount > 0
+                            ? "Nhúng lại"
+                            : "Nhúng ngay"}
+                      </button>
+                    </p>
+                  )}
                   {parseFailed && (
                     <p className="mt-1 banner-danger px-0 py-0 text-caption">
                       Không đọc được nội dung file này — AI sẽ bỏ qua. Thử xoá

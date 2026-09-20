@@ -43,6 +43,11 @@ interface Props {
    * kết thúc thì quay về exitUrl thay vì trang "đã nộp".
    */
   preview?: boolean;
+  /**
+   * A6.7 — chủ đề đang thử (bản thử không có lượt thi nên không có chủ đề được giao). Chỉ có nghĩa khi
+   * preview=true; trang Thử giữ cố định cho cả buổi và mỗi lượt gửi lại.
+   */
+  previewTopicId?: string | null;
 }
 
 const FRIENDLY_ERROR: Record<string, string> = {
@@ -66,6 +71,7 @@ export default function OralExamRoom({
   studentName,
   studentImageUrl,
   preview = false,
+  previewTopicId = null,
 }: Props) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -137,7 +143,7 @@ export default function OralExamRoom({
             body: JSON.stringify({
               message: message ?? undefined,
               forceEnd: opts?.forceEnd || undefined,
-              ...(preview ? { history: historyBefore } : {}),
+              ...(preview ? { history: historyBefore, topicId: previewTopicId ?? undefined } : {}),
             }),
           },
         );

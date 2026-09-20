@@ -11,6 +11,10 @@
  *
  * Chỉ THÊM đề mới; trùng tiêu đề trong cùng khoá thì dừng.
  *
+ * `oralWarmup: true` bật pha khởi động (chào + làm quen trước câu hỏi đầu). `topics` là các chủ đề hệ
+ * thống giao cho từng sinh viên (chia đều) — chỉ chạy được khi DB đã có migration
+ * 20260921090000_oral_topics_warmup (trên prod: sau khi deploy).
+ *
  * Giới hạn (do CreateExamInput): examinerInstructions ≤ 5.000 ký tự,
  * oralRubricText ≤ 20.000, description ≤ 20.000; mỗi tài liệu chủ đề ≤ 50.000.
  *
@@ -25,6 +29,7 @@ import { prisma } from "@feedbackme/db";
 import { z } from "zod";
 import { createExam } from "../src/exam/exams";
 import { createOralMaterialTopicList } from "../src/exam/oral-materials";
+import { createOralTopic, MAX_ORAL_TOPICS } from "../src/exam/oral-topics";
 import { isFeatureEnabled } from "../src/auth/permissions";
 
 function arg(name: string): string | undefined {
@@ -43,6 +48,11 @@ const Spec = z.object({
   maxAttempts: z.number().int().min(2).max(10).optional(),
   examinerInstructions: z.string().max(5_000).optional(),
   oralRubricText: z.string().max(20_000).optional(),
+  oralWarmup: z.boolean().default(false),
+  topics: z
+    .array(z.object({ title: z.string().trim().min(1).max(200), brief: z.string().trim().min(1).max(4_000) }))
+    .max(MAX_ORAL_TOPICS)
+    .default([]),
   materials: z
     .array(z.object({ type: z.literal("topic_list"), title: z.string().min(1).max(200), text: z.string().min(1).max(50_000) }))
     .min(1),
@@ -84,7 +94,7 @@ async function main() {
   console.log(`Khoá: ${course?.title ?? "(không thấy)"} · Chủ: ${owner ? `${owner.displayName} <${ownerEmail}>` : "(không thấy)"}`);
   console.log(`${spec.durationMin} phút · ${spec.language} · trả lời ${spec.answerMode} · ${spec.attemptPolicy}${spec.maxAttempts ? ` (tối đa ${spec.maxAttempts})` : ""}`);
   console.log(
-    `Hướng dẫn giám khảo ${spec.examinerInstructions?.length ?? 0}/5000 · rubric ${spec.oralRubricText?.length ?? 0}/20000 · tài liệu ${spec.materials.length}`,
+    `Hướng dẫn giám khảo ${spec.examinerInstructions?.length ?? 0}/5000 · rubric ${spec.oralRubricText?.length ?? 0}/20000 · tài liệu ${spec.materials.length} · chủ đề ${spec.topics.length} · khởi động ${spec.oralWarmup ? "bật" : "tắt"}`,
   );
   console.log(`Quyền ai_oral.access của chủ đề: ${feature === null ? "không kiểm được" : feature ? "có" : "KHÔNG (không mở được trang vấn đáp)"}`);
 
@@ -110,11 +120,15 @@ async function main() {
     proctoringLevel: "none",
     examinerInstructions: spec.examinerInstructions,
     oralRubricText: spec.oralRubricText,
+    oralWarmup: spec.oralWarmup,
   });
+  for (const t of spec.topics) {
+    await createOralTopic(owner!.id, examId, t);
+  }
   for (const m of spec.materials) {
     await createOralMaterialTopicList(owner!.id, examId, { title: m.title, text: m.text });
   }
-  console.log(`\nĐã tạo đề ${examId} (draft) với ${spec.materials.length} tài liệu.`);
+  console.log(`\nĐã tạo đề ${examId} (draft) với ${spec.materials.length} tài liệu, ${spec.topics.length} chủ đề.`);
   console.log(`Mở: /instructor/courses/${course!.id}/exams/${examId}`);
 }
 

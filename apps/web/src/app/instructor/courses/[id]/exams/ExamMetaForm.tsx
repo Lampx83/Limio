@@ -15,13 +15,20 @@ const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
 // AI giám khảo (GV sửa/xoá tuỳ ý — đây chỉ là điểm khởi đầu, không phải giá
 // trị mặc định ẩn ở backend). Nhắm đúng vấn đề đã gặp: AI hỏi giống chatbot
 // chung chung hơn giám khảo thật, để SV dẫn dắt, hỏi nhảy lung tung chủ đề.
-const DEFAULT_EXAMINER_INSTRUCTIONS = `Giữ vai trò giám khảo nghiêm túc, chuyên nghiệp — không phải trợ lý trò chuyện thân mật. Không khen "tốt lắm", "chính xác" hay nhận xét đúng/sai giữa buổi.
+// Lưu ý: lượt ĐẦU TIÊN hệ thống luôn tự chào và giới thiệu (xem examinerChat.ts),
+// nên mẫu này không được bảo AI "đừng trò chuyện" — sẽ mâu thuẫn với lời chào đó.
+const DEFAULT_EXAMINER_INSTRUCTIONS = `Giữ vai trò giám khảo chuyên nghiệp: lịch sự, bình tĩnh, giọng thân thiện vừa đủ để sinh viên bớt căng thẳng, nhưng không trò chuyện xã giao dài dòng. Không khen "tốt lắm", "chính xác" hay nhận xét đúng/sai giữa buổi.
 
 Luôn là người dẫn dắt cuộc hỏi-đáp: nếu sinh viên cố lái sang chủ đề khác, hỏi ngược lại giám khảo, hoặc trả lời lan man né tránh, hãy nhắc lại đúng trọng tâm câu hỏi thay vì đi theo hướng sinh viên đưa ra.
 
 Hỏi tuần tự theo đúng thứ tự tài liệu/chủ đề đã nộp: khai thác hết một chủ đề (2-3 câu đào sâu) rồi mới chuyển sang chủ đề tiếp theo, không nhảy qua lại giữa các chủ đề.
 
 Nếu sinh viên trả lời sai hoặc thiếu, không sửa hộ hay gợi ý đáp án — hỏi thêm 1 câu làm rõ, rồi chuyển tiếp nếu sinh viên vẫn không trả lời được.`;
+
+// Trần của ô hướng dẫn — phải khớp CreateExamInput/UpdateExamInput.examinerInstructions
+// (packages/core-lms/src/exam/exams.ts). Hiện ra để GV không phải đoán, và bị chặn
+// từ lúc gõ thay vì chỉ biết khi lưu bị từ chối.
+const EXAMINER_INSTRUCTIONS_MAX = 5_000;
 
 interface InitialValues {
   title: string;
@@ -47,6 +54,8 @@ interface InitialValues {
   language?: "vi" | "en" | "zh";
   /** A6.3 (UI) — chèn vào system prompt AI giám khảo mỗi lượt hỏi. */
   examinerInstructions?: string;
+  /** A6.7 — pha khởi động (chào + làm quen) tách riêng trước câu kiến thức đầu tiên. */
+  oralWarmup?: boolean;
 }
 
 interface Props {
@@ -122,6 +131,8 @@ export default function ExamMetaForm({
     };
     if (v.kind === "oral") {
       body.examinerInstructions = v.examinerInstructions || undefined;
+      // Khoá khi đã có lượt thi (đổi giữa chừng làm các lượt thi không cùng điều kiện).
+      if (!isLocked("oralWarmup")) body.oralWarmup = v.oralWarmup ?? false;
       // Sửa được cả lúc tạo lẫn sau đó (khoá khi đã có lượt thi — gửi trường bị khoá sẽ bị server từ chối).
       if (!isLocked("answerMode")) body.answerMode = v.answerMode;
       if (!isLocked("language")) body.language = v.language;
@@ -218,15 +229,28 @@ export default function ExamMetaForm({
           <p className="mt-0.5 text-caption text-faint">
             Chèn thêm vào chỉ dẫn của AI mỗi lượt hỏi — không hiện cho sinh
             viên. Đã điền sẵn 1 mẫu gợi ý, bạn sửa/xoá tuỳ ý — để trống thì
-            AI chỉ theo 4 nguyên tắc mặc định (hỏi từng câu, đào sâu, không
-            gợi ý đáp án, đúng ngôn ngữ đề).
+            AI chỉ theo các nguyên tắc mặc định của hệ thống: hỏi từng câu, đào
+            sâu theo câu trả lời trước, không gợi ý đáp án, đúng ngôn ngữ đề, và
+            ở lượt đầu tiên luôn tự chào và giới thiệu ngắn.
           </p>
           <textarea
             rows={7}
+            maxLength={EXAMINER_INSTRUCTIONS_MAX}
             value={v.examinerInstructions ?? ""}
             onChange={(e) => setV({ ...v, examinerInstructions: e.target.value })}
             className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
           />
+          <p
+            className={`mt-1 text-right text-caption ${
+              (v.examinerInstructions ?? "").length >= EXAMINER_INSTRUCTIONS_MAX * 0.9
+                ? "font-medium text-amber-700"
+                : "text-faint"
+            }`}
+            aria-live="polite"
+          >
+            {(v.examinerInstructions ?? "").length.toLocaleString("vi-VN")} /{" "}
+            {EXAMINER_INSTRUCTIONS_MAX.toLocaleString("vi-VN")} ký tự
+          </p>
         </div>
       )}
 
@@ -248,10 +272,56 @@ export default function ExamMetaForm({
         </div>
       </div>
 
-      {/* Thời lượng KHÔNG còn ở đây: nó thuộc buổi thi, không thuộc gói đề.
-          Cùng một gói chạy 15 phút ở lớp này và 30 phút ở lớp kia là chuyện
-          bình thường, nên con số đó được chọn lúc mở buổi thi (Tổ chức thi →
-          Link thi nhanh). Exam.durationMin chỉ còn là giá trị mặc định gợi ý. */}
+      {/* Thời lượng thật thuộc buổi thi, không thuộc gói đề: cùng một gói chạy
+          15 phút ở lớp này và 30 phút ở lớp kia là chuyện bình thường, nên con
+          số được chọn lúc mở buổi (Tổ chức thi → Link thi nhanh; với vấn đáp là
+          nút "Mở buổi vấn đáp"). Exam.durationMin chỉ là giá trị điền sẵn — nên
+          đề viết không hỏi ở đây; đề vấn đáp thì HIỆN nó ngay bên dưới, vì nút
+          "Mở buổi vấn đáp" lấy đúng số này làm mặc định và trước đây nó nằm ẩn
+          với giá trị 60 do form tạo mới điền ngầm. */}
+      {v.kind === "oral" && (
+        <label className="flex items-start gap-2.5 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={v.oralWarmup ?? false}
+            disabled={isLocked("oralWarmup")}
+            onChange={(e) => setV({ ...v, oralWarmup: e.target.checked })}
+          />
+          <span>
+            <span className="font-medium">Có pha khởi động trước khi hỏi</span>
+            <span className="mt-0.5 block text-caption text-faint">
+              Lượt đầu AI chỉ chào, giới thiệu và hỏi một câu làm quen (chưa hỏi kiến thức); câu kiến
+              thức đầu tiên đến ở lượt sau, kèm chủ đề của sinh viên. Pha này vẫn tính vào thời lượng.
+              Tắt: AI chào rồi hỏi luôn trong cùng lượt. Nếu bật, đừng tự dặn lời chào/khởi động lần nữa
+              trong ô hướng dẫn ở trên.
+            </span>
+          </span>
+        </label>
+      )}
+
+      {v.kind === "oral" && (
+        <div>
+          <label className="block text-sm font-medium" htmlFor="durationMin">
+            Thời lượng mặc định mỗi lượt (phút)
+          </label>
+          <input
+            id="durationMin"
+            type="number"
+            min={1}
+            max={24 * 60}
+            value={v.durationMin}
+            disabled={isLocked("durationMin")}
+            onChange={(e) => setV({ ...v, durationMin: Number(e.target.value) })}
+            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm disabled:bg-slate-50 sm:w-40"
+          />
+          <p className="mt-1 text-caption text-faint">
+            Đây là số phút điền sẵn khi bạn bấm &quot;Mở buổi vấn đáp&quot; — mỗi buổi vẫn đổi
+            được lại lúc mở. Nếu phần mô tả bên dưới có ghi số phút, nhớ cho khớp.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectField
           label={v.kind === "oral" ? "Số lượt vấn đáp" : "Số lượt thi"}

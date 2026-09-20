@@ -7,6 +7,7 @@ import { assertEligibleForExam } from "./cohorts";
 import { ensureDefaultRound } from "./exam-rooms";
 import { publishExam } from "./exams";
 import { isSessionOpen } from "./session-window";
+import { pickOralTopicForAttempt } from "./oral-topics";
 import { ExamError } from "./types";
 
 // Alphabet không có ký tự dễ nhầm (0/O, 1/I/l) — cùng tiêu chí với code-access.ts
@@ -43,6 +44,24 @@ export function decideOralStart(
   if (policy !== "multi") return "already_submitted";
   if (attempts.length >= maxAttempts) return "limit_reached";
   return retake ? "create" : "already_submitted";
+}
+
+// A6.7 — ghi lại "lượt thi này được giao chủ đề nào" để rebuild/đối chiếu về sau (event là nguồn sự thật).
+async function emitTopicAssigned(
+  userId: string,
+  examId: string,
+  attemptId: string,
+  topicId: string,
+  courseId: string | null,
+  db: PrismaClient,
+) {
+  await emitEvent(
+    userId,
+    LearningEventType.ExamOralTopicAssigned,
+    { examId, attemptId, topicId },
+    { courseId, eventKey: `exam.oral_topic.assigned:${attemptId}` },
+    db,
+  );
 }
 
 /** Số lượt còn lại của 1 SV với 1 đề vấn đáp — dùng cho nút "Thi lại" và dòng "Lượt x/y". */
@@ -123,6 +142,7 @@ export async function startOralExamAttempt(
 
   const attemptId = randomUUID();
   const durationSec = eligibility.durationSec;
+  const oralTopicId = await pickOralTopicForAttempt(examId, userId, db);
   await db.examAttempt.create({
     data: {
       id: attemptId,
@@ -131,6 +151,7 @@ export async function startOralExamAttempt(
       durationSec,
       sessionToken: randomUUID(),
       sessionId: eligibility.scheduleId,
+      oralTopicId,
     },
   });
   await emitEvent(
@@ -140,6 +161,7 @@ export async function startOralExamAttempt(
     { courseId: exam.courseId, eventKey: `exam.started:${attemptId}` },
     db,
   );
+  if (oralTopicId) await emitTopicAssigned(userId, examId, attemptId, oralTopicId, exam.courseId, db);
   return { attemptId, durationSec, resumed: false };
 }
 
@@ -419,6 +441,7 @@ export async function joinOralSessionByCode(
 
   const attemptId = randomUUID();
   const durationSec = (session.durationOverrideMin ?? session.exam.durationMin) * 60;
+  const oralTopicId = await pickOralTopicForAttempt(examId, userId, db);
   await db.examAttempt.create({
     data: {
       id: attemptId,
@@ -427,6 +450,7 @@ export async function joinOralSessionByCode(
       durationSec,
       sessionToken: randomUUID(),
       sessionId: session.id,
+      oralTopicId,
     },
   });
   await emitEvent(
@@ -436,6 +460,9 @@ export async function joinOralSessionByCode(
     { courseId: session.exam.courseId, eventKey: `exam.started:${attemptId}` },
     db,
   );
+  if (oralTopicId) {
+    await emitTopicAssigned(userId, examId, attemptId, oralTopicId, session.exam.courseId, db);
+  }
   return { attemptId, durationSec, resumed: false, examId };
 }
 

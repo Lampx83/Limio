@@ -43,6 +43,8 @@ interface Props {
    * nhiều tab, kết thúc thì quay về exitUrl thay vì trang "đã nộp".
    */
   preview?: boolean;
+  /** A6.7 — chủ đề đang thử; xem OralExamRoom. */
+  previewTopicId?: string | null;
 }
 
 const FRIENDLY_ERROR: Record<string, string> = {
@@ -82,6 +84,7 @@ export default function OralVoiceRoom({
   studentName,
   studentImageUrl,
   preview = false,
+  previewTopicId = null,
 }: Props) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -190,6 +193,7 @@ export default function OralVoiceRoom({
         if (opts?.forceEnd) form.append("forceEnd", "1");
         // Bản thử không lưu hội thoại ở server nên phải gửi kèm lịch sử TRƯỚC lượt này.
         if (preview) form.append("history", JSON.stringify(liveRef.current.turns));
+        if (preview && previewTopicId) form.append("topicId", previewTopicId);
         const res = await fetch(
           apiUrl(
             preview
@@ -256,7 +260,7 @@ export default function OralVoiceRoom({
             body: JSON.stringify({
               message: message ?? undefined,
               forceEnd: opts?.forceEnd || undefined,
-              ...(preview ? { history: historyBefore } : {}),
+              ...(preview ? { history: historyBefore, topicId: previewTopicId ?? undefined } : {}),
             }),
           },
         );

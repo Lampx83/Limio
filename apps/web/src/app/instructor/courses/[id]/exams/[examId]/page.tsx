@@ -10,6 +10,7 @@ import DeleteOralExamButton from "@/components/exam/DeleteOralExamButton";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import OralMaterialsPanel from "./OralMaterialsPanel";
+import OralTopicsPanel from "./OralTopicsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
 
@@ -131,6 +132,7 @@ export default async function EditExamPage({
           "shuffleQuestions",
           "shuffleOptions",
           "showResultsAfterSubmit",
+          "oralWarmup",
           "answerMode",
           "language",
         ] as const)
@@ -255,6 +257,7 @@ export default async function EditExamPage({
               answerMode: exam.answerMode,
               language: exam.language,
               examinerInstructions: exam.examinerInstructions ?? "",
+              oralWarmup: exam.oralWarmup,
             }}
           />
         </div>
@@ -262,6 +265,7 @@ export default async function EditExamPage({
 
       {activeTab === "materials" && (
         <div className="mt-6">
+          <OralTopicsPanel examId={exam.id} editable={exam.status === "draft"} />
           <OralMaterialsPanel
             examId={exam.id}
             editable={exam.status === "draft"}

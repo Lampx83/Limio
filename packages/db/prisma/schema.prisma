@@ -3059,6 +3059,10 @@ model Exam {
   // system prompt mỗi lượt hỏi — xem examinerChat.ts buildSystemPrompt. Text
   // thuần, không phải richtext (chỉ để nhét vào prompt, không hiện cho SV).
   examinerInstructions   String?             @db.Text
+  // A6.7 — bật thì buổi vấn đáp có PHA KHỞI ĐỘNG tách riêng: lượt AI đầu chỉ chào,
+  // giới thiệu và hỏi một câu làm quen (không hỏi kiến thức); câu kiến thức đầu tiên
+  // đến ở lượt sau. Tắt (mặc định) = hành vi cũ: chào rồi hỏi luôn trong cùng lượt.
+  oralWarmup             Boolean             @default(false)
   // A6.4 (UI) — rubric chấm điểm GV tự gõ/sửa, dùng khi AI đề xuất điểm sau
   // buổi thi. KHÔNG dùng cơ chế "tài liệu" (OralExamMaterial, khoá sau khi
   // publish để công bằng câu hỏi) vì rubric chỉ ảnh hưởng cách CHẤM sau này,
@@ -3083,6 +3087,7 @@ model Exam {
   sections      ExamSection[]
   rooms         ExamRoom[]
   oralMaterials OralExamMaterial[]
+  oralTopics    OralExamTopic[]
 
   @@index([courseId, status])
   @@index([status, openAt, closeAt])
@@ -3167,6 +3172,25 @@ model OralExamMaterialChunk {
   material OralExamMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
   @@index([materialId, chunkIndex])
+}
+
+// A6.7 — Chủ đề (tình huống) giao cho từng sinh viên trong đề vấn đáp AI. Khi sinh viên
+// bắt đầu lượt thi, hệ thống GIAO một chủ đề (chia đều, xem oral-topics.ts) và AI giám
+// khảo chỉ hỏi trong chủ đề đó — thay cho việc nhờ AI tự ánh xạ theo dữ kiện gõ trong
+// hướng dẫn (dễ sai, và không kiểm chứng được). `brief` là phần AI đọc; sinh viên chỉ
+// được nghe tiêu đề + mô tả từ chính AI. Khoá sau khi publish như tài liệu (công bằng).
+model OralExamTopic {
+  id         String   @id @default(uuid())
+  examId     String
+  title      String
+  brief      String   @db.Text
+  orderIndex Int
+  createdAt  DateTime @default(now())
+
+  exam     Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  attempts ExamAttempt[]
+
+  @@index([examId, orderIndex])
 }
 
 // A6.3 — 1 lượt hỏi/đáp trong buổi vấn đáp AI. Gắn vào ExamAttempt (bảng đã
@@ -3450,11 +3474,16 @@ model ExamAttempt {
   proctorSnapshots AttemptProctorSnapshot[]
   oralTurns        OralExamTurn[]
   oralEvaluation   OralExamEvaluation?
+  // A6.7 — chủ đề hệ thống giao cho lượt vấn đáp này (null = đề không có chủ đề riêng,
+  // cả lớp hỏi chung theo tài liệu). SetNull: xoá chủ đề không được kéo bài làm đi theo.
+  oralTopicId      String?
+  oralTopic        OralExamTopic?           @relation(fields: [oralTopicId], references: [id], onDelete: SetNull)
 
   // P0 single attempt per user per exam. Implemented as partial unique index
   // in raw SQL because Prisma doesn't model partial unique. See migration.
   @@index([examId, status])
   @@index([sessionId])
+  @@index([oralTopicId])
   @@index([userId, submittedAt])
   // Hot index for autosubmit job (A7.5.2) — find in-progress attempts past deadline.
   @@index([status, startedAt])

@@ -40,6 +40,7 @@ export * from "./bulk-import-full";
 export * from "./wizard";
 export * from "./blueprint";
 export * from "./oral-materials";
+export * from "./oral-topics";
 export * from "./oral-material-extract";
 export * from "./oral-attempts";
 export * from "./oral-evaluation";

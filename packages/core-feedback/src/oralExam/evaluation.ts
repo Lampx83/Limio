@@ -17,6 +17,9 @@ function buildGradingPrompt(params: {
   courseTitle: string | null;
   examTitle: string;
   rubricText: string | null;
+  /** Chủ đề hệ thống giao cho sinh viên này (null = đề không chia chủ đề). Người chấm phải biết để
+   * đánh giá đúng phạm vi — mỗi sinh viên một chủ đề nên câu trả lời chỉ so được với chủ đề của chính họ. */
+  topic?: { title: string; brief: string } | null;
   transcript: { role: "examiner" | "student"; content: string }[];
 }): string {
   const transcriptText = params.transcript
@@ -29,6 +32,10 @@ function buildGradingPrompt(params: {
 ${
     params.rubricText
       ? `Rubric chấm điểm GV cung cấp:\n"""\n${params.rubricText}\n"""\n\n`
+      : ""
+  }${
+    params.topic
+      ? `Chủ đề được giao cho sinh viên này (chấm câu trả lời theo phạm vi chủ đề này):\n"""\n${params.topic.title}\n${params.topic.brief}\n"""\n\n`
       : ""
   }Toàn bộ hội thoại:
 """
@@ -93,6 +100,7 @@ export async function generateOralExamEvaluation(
         },
       },
       oralTurns: { orderBy: { createdAt: "asc" } },
+      oralTopic: { select: { title: true, brief: true } },
     },
   });
   if (!attempt) throw new AiTutorError("validation_failed", "attempt_not_found");
@@ -113,6 +121,7 @@ export async function generateOralExamEvaluation(
     courseTitle: attempt.exam.course?.title ?? null,
     examTitle: attempt.exam.title,
     rubricText: attempt.exam.oralRubricText,
+    topic: attempt.oralTopic,
     transcript: attempt.oralTurns.map((t) => ({ role: t.role, content: t.content })),
   });
 

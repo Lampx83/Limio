@@ -71,6 +71,11 @@ export const LearningEventType = {
   ExamOralMaterialDeleted: "exam.oral_material.deleted",
   // A6.2 — cắt + embed tài liệu cho pgvector search (RAG, xem A6.3).
   ExamOralMaterialEmbedded: "exam.oral_material.embedded",
+  // A6.7 — chủ đề giao cho từng sinh viên: GV thêm/xoá chủ đề, và hệ thống GIAO một
+  // chủ đề khi sinh viên bắt đầu lượt thi (để rebuild được "ai nhận chủ đề nào").
+  ExamOralTopicCreated: "exam.oral_topic.created",
+  ExamOralTopicDeleted: "exam.oral_topic.deleted",
+  ExamOralTopicAssigned: "exam.oral_topic.assigned",
   // A6.3 — 1 lượt hỏi/đáp trong buổi vấn đáp AI. `ended` trong payload phân
   // biệt lượt bình thường với lượt kết thúc buổi thi.
   ExamOralAttemptTurnRecorded: "exam.oral_attempt.turn_recorded",
@@ -291,6 +296,22 @@ export interface ExamOralMaterialEmbeddedPayload {
   materialId: string;
   chunkCount: number;
   tokensUsed: number;
+}
+
+export interface ExamOralTopicCreatedPayload {
+  examId: string;
+  topicId: string;
+}
+
+export interface ExamOralTopicDeletedPayload {
+  examId: string;
+  topicId: string;
+}
+
+export interface ExamOralTopicAssignedPayload {
+  examId: string;
+  attemptId: string;
+  topicId: string;
 }
 
 export interface ExamOralAttemptTurnRecordedPayload {

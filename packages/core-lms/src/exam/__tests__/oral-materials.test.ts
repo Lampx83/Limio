@@ -234,6 +234,22 @@ describe("listOralMaterials (A6.1)", () => {
     expect(list.map((m) => m.title)).toEqual(["A", "B"]);
   });
 
+  it("reports chunkCount so the UI can tell embedded from not-embedded materials", async () => {
+    const { ownerId, examId } = await newOralExam("l3");
+    const a = await createOralMaterialTopicList(ownerId, examId, { title: "A", text: "a" });
+    const b = await createOralMaterialTopicList(ownerId, examId, { title: "B", text: "b" });
+    // Chỉ cần dòng chunk tồn tại — embedding nullable, không gọi OpenAI trong test.
+    await prisma.oralExamMaterialChunk.createMany({
+      data: [
+        { materialId: b.materialId, chunkIndex: 0, chunkText: "b0" },
+        { materialId: b.materialId, chunkIndex: 1, chunkText: "b1" },
+      ],
+    });
+    const list = await listOralMaterials(ownerId, examId);
+    expect(list.find((m) => m.id === a.materialId)!.chunkCount).toBe(0);
+    expect(list.find((m) => m.id === b.materialId)!.chunkCount).toBe(2);
+  });
+
   it("rejects listing on a written exam with exam_not_oral", async () => {
     const { ownerId, courseId } = await newOwner("l2");
     const { examId } = await createExam(ownerId, courseId, baseExamInput());
