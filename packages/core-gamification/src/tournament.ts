@@ -2,7 +2,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { awardXp } from "./xp";
 import { checkMissionCondition } from "./missionCondition";
-import { planTournamentEnd, prizeXpForPercent } from "./tournamentRules";
+import { planTournamentEnd, prizeXpForPercent, sortRankEntries } from "./tournamentRules";
 
 /**
  * conditionType nào KHÔNG hợp lệ khi tournament là team-based (teamSize > 1).
@@ -541,10 +541,11 @@ export async function recomputeRanking(
       eventType: LearningEventType.TournamentMissionCompleted,
       eventKey: { startsWith: "tournament.mission.completed:" },
     },
-    select: { userId: true, payload: true },
+    select: { userId: true, payload: true, occurredAt: true },
   });
 
   const pointsByUser = new Map<string, number>();
+  const lastAtByUser = new Map<string, Date>();
   for (const e of events) {
     const p = e.payload as { tournamentId?: string; missionId?: string; points?: number } | null;
     if (!p?.missionId || !missionIds.includes(p.missionId)) continue;
@@ -552,16 +553,23 @@ export async function recomputeRanking(
     if (!e.userId) continue;
     const inc = typeof p.points === "number" ? p.points : 0;
     pointsByUser.set(e.userId, (pointsByUser.get(e.userId) ?? 0) + inc);
+    if (inc > 0) {
+      const prev = lastAtByUser.get(e.userId);
+      if (!prev || e.occurredAt > prev) lastAtByUser.set(e.userId, e.occurredAt);
+    }
   }
 
   // Solo: one row per user. Team: aggregate per teamId.
   const teamSize = t.teamSize;
   if (teamSize === 1) {
-    const sorted = [...t.registrations].map((r) => ({
-      userId: r.userId,
-      points: pointsByUser.get(r.userId) ?? 0,
-    }));
-    sorted.sort((a, b) => b.points - a.points);
+    const sorted = sortRankEntries(
+      t.registrations.map((r) => ({
+        key: r.userId,
+        userId: r.userId,
+        points: pointsByUser.get(r.userId) ?? 0,
+        lastAt: lastAtByUser.get(r.userId) ?? null,
+      })),
+    );
     await db.$transaction(async (tx) => {
       // Wipe + reinsert. Tournament rankings are small.
       await tx.tournamentRanking.deleteMany({ where: { tournamentId } });
@@ -578,13 +586,22 @@ export async function recomputeRanking(
     });
   } else {
     const byTeam = new Map<string, number>();
+    const teamLastAt = new Map<string, Date>();
     for (const r of t.registrations) {
       if (!r.teamId) continue;
       byTeam.set(r.teamId, (byTeam.get(r.teamId) ?? 0) + (pointsByUser.get(r.userId) ?? 0));
+      const at = lastAtByUser.get(r.userId);
+      const prev = teamLastAt.get(r.teamId);
+      if (at && (!prev || at > prev)) teamLastAt.set(r.teamId, at);
     }
-    const sorted = Array.from(byTeam.entries())
-      .map(([teamId, points]) => ({ teamId, points }))
-      .sort((a, b) => b.points - a.points);
+    const sorted = sortRankEntries(
+      Array.from(byTeam.entries()).map(([teamId, points]) => ({
+        key: teamId,
+        teamId,
+        points,
+        lastAt: teamLastAt.get(teamId) ?? null,
+      })),
+    );
     await db.$transaction(async (tx) => {
       await tx.tournamentRanking.deleteMany({ where: { tournamentId } });
       for (let i = 0; i < sorted.length; i++) {

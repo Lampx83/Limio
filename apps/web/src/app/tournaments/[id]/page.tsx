@@ -55,12 +55,9 @@ const STATUS_LABEL: Record<string, string> = {
   ended: "Đã kết thúc",
 };
 
+// Có cả giờ: giải kết thúc lúc 23:59 và 00:00 là hai chuyện khác nhau với người chơi.
 function formatDate(d: Date) {
-  return formatVN(d, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  return formatDateTime(d);
 }
 
 function formatRelativeTime(d: Date, now: Date): string {
@@ -344,6 +341,49 @@ export default async function TournamentDetailPage({
       })
     : null;
 
+  // ── Việc tiếp theo cho người chơi (đang diễn ra) ──
+  const isCaptain = !!registration?.team && registration.team.captainId === uid;
+  const nextMission =
+    isRegistered && isActive
+      ? (tournament.missions.find((m) => {
+          const actionable = !!m.missionType && m.missionType !== "COURSE_LINKED";
+          if (!actionable) return false;
+          if (lockedFor(m)) return false;
+          if (statusFor(m) !== null) return false;
+          if (m.submissionDeadline && now >= m.submissionDeadline) return false;
+          // Nhiệm vụ nộp chung theo đội: chỉ đội trưởng nộp được.
+          if (m.isTeamSubmission && tournament.teamSize > 1 && !isCaptain) return false;
+          return true;
+        }) ?? null)
+      : null;
+
+  // Chỉ giải gắn với khoá học mới trao XP (giải toàn hệ thống chưa có thưởng).
+  const showPrize = tournament.prizeXp > 0 && !!tournament.courseId;
+
+  // XP thưởng người xem đã nhận (chỉ có sau khi giải kết thúc và đã trao thưởng).
+  const prizeReceived =
+    isRegistered && isEnded && showPrize && uid
+      ? ((
+          await prisma.xpTransaction.aggregate({
+            where: {
+              userId: uid,
+              reason: "tournament.prize",
+              sourceId: { startsWith: `tournament:${params.id}:` },
+            },
+            _sum: { amount: true },
+          })
+        )._sum.amount ?? 0)
+      : 0;
+  const myTeamId = registration?.team?.id ?? null;
+  const prizeDist =
+    tournament.prizeDistribution && typeof tournament.prizeDistribution === "object"
+      ? (tournament.prizeDistribution as Record<string, number>)
+      : null;
+  const expectedPrizeXp =
+    showPrize && prizeDist && myRanking
+      ? prizeXpForPercent(tournament.prizeXp, prizeDist[String(myRanking.rank)] ?? 0)
+      : 0;
+
   // Time label for info bar
   let timeLabel: string;
   if (isEnded) {
@@ -461,13 +501,13 @@ export default async function TournamentDetailPage({
           {/* Stat strip */}
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <HeroStat icon={<Users className="h-4 w-4" />} value={tournament._count.registrations} label="Người chơi" />
-            <HeroStat icon={<Target className="h-4 w-4" />} value={tournament.missions.length} label="Missions" />
+            <HeroStat icon={<Target className="h-4 w-4" />} value={tournament.missions.length} label="Nhiệm vụ" />
             <HeroStat icon={<Clock className="h-4 w-4" />} value={timeLabel} label="Thời gian" small />
             <HeroStat
               icon={<Gem className="h-4 w-4" />}
-              value={tournament.prizeXp > 0 ? `${tournament.prizeXp}` : "—"}
+              value={showPrize ? `${tournament.prizeXp}` : "—"}
               label="XP thưởng"
-              highlight={tournament.prizeXp > 0}
+              highlight={showPrize}
             />
           </div>
 
@@ -497,6 +537,21 @@ export default async function TournamentDetailPage({
         teamCount={registration?.team?.registrations.length ?? null}
         myRank={myRanking?.rank ?? null}
         myPoints={myRanking?.totalPoints ?? null}
+        totalRanked={tournament.rankings.length}
+        startsAt={tournament.startsAt}
+        endsAt={tournament.endsAt}
+        now={now}
+        isActive={isActive}
+        joinCode={registration?.team?.joinCode ?? null}
+        isCaptain={isCaptain}
+        nextMission={
+          nextMission
+            ? { id: nextMission.id, title: nextMission.title, deadline: nextMission.submissionDeadline }
+            : null
+        }
+        hasMissions={tournament.missions.length > 0}
+        expectedPrizeXp={expectedPrizeXp}
+        prizeReceived={prizeReceived}
       />
       <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
         {/* Left column */}
@@ -604,7 +659,16 @@ export default async function TournamentDetailPage({
                           </h3>
                           <div className="flex items-center gap-1.5">
                             {isRegistered && (
-                              <MissionStatusChip status={mStatus} locked={mLocked} />
+                              <MissionStatusChip
+                                status={mStatus}
+                                locked={mLocked}
+                                expired={
+                                  actionable &&
+                                  !mStatus &&
+                                  !!mission.submissionDeadline &&
+                                  now >= mission.submissionDeadline
+                                }
+                              />
                             )}
                             <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-2.5 py-1 text-xs font-black text-amber-900 ring-1 ring-amber-500/40">
                               <Gem
@@ -625,7 +689,7 @@ export default async function TournamentDetailPage({
                         )}
                         {mission.prerequisiteId && (
                           <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
-                            <Lock className="h-3 w-3" /> Yêu cầu hoàn thành mission trước
+                            <Lock className="h-3 w-3" /> Cần xong nhiệm vụ đứng trước{(() => { const pre = tournament.missions.find((x) => x.id === mission.prerequisiteId); return pre ? `: ${pre.title}` : ""; })()}
                           </p>
                         )}
                         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -633,7 +697,7 @@ export default async function TournamentDetailPage({
                             <>
                               {mission.verifyMode === "PEER_REVIEW" && (
                                 <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[11px] font-bold uppercase text-orange-800 dark:bg-orange-950/50 dark:text-orange-300">
-                                  Peer review
+                                  Chấm chéo
                                 </span>
                               )}
                               {mission.submissionDeadline && (
@@ -641,10 +705,15 @@ export default async function TournamentDetailPage({
                                   Hạn: {formatDateTime(mission.submissionDeadline)}
                                 </span>
                               )}
+                              {mission.isTeamSubmission && tournament.teamSize > 1 && (
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                  Cả đội nộp chung, chỉ đội trưởng bấm nộp
+                                </span>
+                              )}
                             </>
                           ) : (
                             <span className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-[11px] font-bold uppercase text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
-                              Tự động tính theo học tập
+                              Tự tính theo việc học
                             </span>
                           )}
 
@@ -674,7 +743,7 @@ export default async function TournamentDetailPage({
                             ) : mLocked ? (
                               <span
                                 className="ml-auto inline-flex cursor-not-allowed items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-400 dark:bg-slate-700 dark:text-slate-500"
-                                title="Cần hoàn thành mission trước"
+                                title="Cần xong nhiệm vụ đứng trước"
                               >
                                 <Lock className="h-3.5 w-3.5" /> Khoá
                               </span>
@@ -684,7 +753,7 @@ export default async function TournamentDetailPage({
                                 className="ml-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:scale-105"
                                 prefetch={false}
                               >
-                                {mStatus ? "Xem nhiệm vụ" : "Làm nhiệm vụ"} <ArrowRight className="h-3.5 w-3.5" />
+                                {mStatus || (mission.isTeamSubmission && tournament.teamSize > 1 && !isCaptain) ? "Xem nhiệm vụ" : "Làm nhiệm vụ"} <ArrowRight className="h-3.5 w-3.5" />
                               </Link>
                             )
                           )}
@@ -703,7 +772,7 @@ export default async function TournamentDetailPage({
             <section id="leaderboard" className="scroll-mt-24">
               <h2 className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white">
                 <Trophy className="h-6 w-6 text-amber-500" />
-                Bảng xếp hạng
+                {isEnded ? "Kết quả chung cuộc" : "Bảng xếp hạng"}
                 <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
                   (Top 20)
                 </span>
@@ -716,8 +785,13 @@ export default async function TournamentDetailPage({
                 <div className="mt-4 rounded-2xl border-2 border-dashed border-orange-300 bg-white p-8 text-center text-sm text-slate-600 dark:border-orange-700 dark:bg-slate-800 dark:text-slate-400">
                   <Users className="mx-auto h-10 w-10 text-orange-400" strokeWidth={1.5} />
                   <p className="mt-2 font-semibold">
-                    Đấu trường đang chờ người chơi đầu tiên!
+                    {tournament._count.registrations > 0
+                      ? "Chưa ai có điểm."
+                      : "Đấu trường đang chờ người chơi đầu tiên!"}
                   </p>
+                  {tournament._count.registrations > 0 && (
+                    <p className="mt-1 text-xs">Bảng sẽ cập nhật mỗi khi có nhiệm vụ được chấm.</p>
+                  )}
                 </div>
               ) : (
                 <>
@@ -728,6 +802,7 @@ export default async function TournamentDetailPage({
                       userMap={userMap}
                       teamMap={teamMap}
                       currentUserId={session?.user?.id}
+                      currentTeamId={myTeamId}
                     />
                   )}
 
@@ -741,7 +816,7 @@ export default async function TournamentDetailPage({
                               Hạng
                             </th>
                             <th className="px-4 py-3 text-left font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                              Người chơi
+                              {tournament.teamSize > 1 ? "Đội" : "Người chơi"}
                             </th>
                             <th className="px-4 py-3 text-right font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                               Điểm
@@ -752,7 +827,8 @@ export default async function TournamentDetailPage({
                           {tournament.rankings.slice(3).map((entry) => {
                             const displayName = rankName(entry);
                             const isMe =
-                              entry.userId != null && entry.userId === session?.user?.id;
+                              (entry.userId != null && entry.userId === session?.user?.id) ||
+                              (entry.teamId != null && entry.teamId === myTeamId);
 
                             return (
                               <tr
@@ -777,7 +853,7 @@ export default async function TournamentDetailPage({
                                     {displayName}
                                     {isMe && (
                                       <span className="ml-1.5 text-xs font-medium text-slate-500">
-                                        (bạn)
+                                        {entry.teamId ? "(đội của bạn)" : "(bạn)"}
                                       </span>
                                     )}
                                   </span>
@@ -864,7 +940,7 @@ export default async function TournamentDetailPage({
                 <dd className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
                   {tournament.teamSize > 1 ? (
                     <>
-                      <Users className="h-4 w-4" /> Đội ({tournament.teamSize})
+                      <Users className="h-4 w-4" /> Đội, tối đa {tournament.teamSize} người
                     </>
                   ) : (
                     <>
@@ -874,7 +950,7 @@ export default async function TournamentDetailPage({
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-slate-500 dark:text-slate-400">Missions</dt>
+                <dt className="text-slate-500 dark:text-slate-400">Nhiệm vụ</dt>
                 <dd className="font-bold tabular-nums text-slate-900 dark:text-white">
                   {tournament.missions.length}
                 </dd>
@@ -885,7 +961,7 @@ export default async function TournamentDetailPage({
                   {tournament._count.registrations}
                 </dd>
               </div>
-              {tournament.prizeXp > 0 && (
+              {showPrize && (
                 <div className="flex justify-between gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
                   <dt className="inline-flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
                     <Gem className="h-4 w-4" /> Tổng giải
@@ -899,13 +975,19 @@ export default async function TournamentDetailPage({
           </div>
 
           {/* Prize distribution */}
-          {tournament.prizeXp > 0 &&
+          {showPrize &&
             tournament.prizeDistribution != null &&
             typeof tournament.prizeDistribution === "object" && (
               <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-md dark:border-amber-700 dark:from-amber-950/40 dark:to-orange-950/40">
                 <h2 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
-                  <Award className="h-3.5 w-3.5" /> Phân phối giải
+                  <Award className="h-3.5 w-3.5" /> Giải thưởng
                 </h2>
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+                  {tournament.teamSize > 1
+                    ? "Mỗi thành viên của đội nhận đủ số XP của hạng đó."
+                    : "XP chia theo hạng, cộng vào tài khoản khi giải kết thúc."}{" "}
+                  Bằng điểm thì đội/người hoàn thành sớm hơn xếp trên.
+                </p>
                 <ul className="mt-3 space-y-2">
                   {Object.entries(
                     tournament.prizeDistribution as Record<string, number>,
@@ -960,6 +1042,17 @@ function StatusBanner({
   teamCount,
   myRank,
   myPoints,
+  totalRanked,
+  startsAt,
+  endsAt,
+  now,
+  isActive,
+  joinCode,
+  isCaptain,
+  nextMission,
+  hasMissions,
+  expectedPrizeXp,
+  prizeReceived,
 }: {
   tournamentId: string;
   isLoggedIn: boolean;
@@ -972,15 +1065,31 @@ function StatusBanner({
   teamCount: number | null;
   myRank: number | null;
   myPoints: number | null;
+  totalRanked: number;
+  startsAt: Date;
+  endsAt: Date;
+  now: Date;
+  isActive: boolean;
+  joinCode: string | null;
+  isCaptain: boolean;
+  nextMission: { id: string; title: string; deadline: Date | null } | null;
+  hasMissions: boolean;
+  /** XP thưởng mà hạng hiện tại của người xem được nhận (0 nếu không có thưởng). */
+  expectedPrizeXp: number;
+  /** XP thưởng đã thực sự cộng vào tài khoản. */
+  prizeReceived: number;
 }) {
   const base =
     "mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 p-4 shadow-sm";
+  const cta =
+    "inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:scale-105";
 
-  // Standing summary shown when registered + has a ranking row.
+  const who = teamSize > 1 ? "Đội bạn" : "Bạn";
   const standing =
     myRank != null ? (
       <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-sm font-bold text-slate-800 dark:bg-black/20 dark:text-slate-100">
-        <Trophy className="h-4 w-4 text-amber-500" /> Hạng #{myRank}
+        <Trophy className="h-4 w-4 text-amber-500" /> {who} hạng #{myRank}
+        {totalRanked > 0 && <span className="font-normal text-slate-500">/ {totalRanked}</span>}
         <span className="text-slate-400">·</span> {myPoints ?? 0} điểm
       </span>
     ) : null;
@@ -989,12 +1098,9 @@ function StatusBanner({
     return (
       <div className={`${base} border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 dark:border-amber-700 dark:from-amber-950/30 dark:to-orange-950/20`}>
         <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-          🎟️ Đăng nhập để đăng ký và nhận nhiệm vụ.
+          Đăng nhập để đăng ký và nhận nhiệm vụ.
         </p>
-        <a
-          href={`/signin?callbackUrl=/tournaments/${tournamentId}`}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:scale-105"
-        >
+        <a href={`/signin?callbackUrl=/tournaments/${tournamentId}`} className={cta}>
           <LogIn className="h-4 w-4" /> Đăng nhập
         </a>
       </div>
@@ -1002,29 +1108,84 @@ function StatusBanner({
   }
 
   if (isRegistered) {
+    const notStarted = !isActive && !isEnded;
+    const teamLine =
+      teamSize > 1 && teamName ? (
+        <p className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+          Đội <span className="font-bold">{teamName}</span> · {teamCount ?? 0}/{teamSize} thành viên
+          {teamCount != null && teamCount < teamSize && (
+            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+              Còn thiếu {teamSize - teamCount}
+            </span>
+          )}
+        </p>
+      ) : null;
+
+    let title: string;
+    let detail: React.ReactNode = null;
+    let action: React.ReactNode = null;
+
+    if (isEnded) {
+      title = "Đấu trường đã kết thúc";
+      detail =
+        prizeReceived > 0 ? (
+          <>Bạn đã nhận <span className="font-black">{prizeReceived} XP</span> thưởng, đã cộng vào tài khoản.</>
+        ) : expectedPrizeXp > 0 ? (
+          <>{who} được {expectedPrizeXp} XP thưởng, đang được xử lý và sẽ cộng vào tài khoản.</>
+        ) : (
+          "Xem kết quả chung cuộc bên dưới."
+        );
+    } else if (notStarted) {
+      title = `Bạn đã ghi danh. Giải bắt đầu ${formatRelativeTime(startsAt, now)}`;
+      detail = (
+        <>
+          Bắt đầu lúc {formatDateTime(startsAt)}.
+          {teamSize > 1 && joinCode && teamCount != null && teamCount < teamSize && (
+            <> Gửi mã đội <span className="font-black tracking-widest">{joinCode}</span> cho bạn bè để họ vào đội.</>
+          )}
+        </>
+      );
+    } else if (nextMission) {
+      title = `Việc tiếp theo: ${nextMission.title}`;
+      detail = nextMission.deadline ? (
+        <>
+          Hạn nộp {formatDateTime(nextMission.deadline)}, còn {formatRelativeTime(nextMission.deadline, now).replace(" nữa", "")}.
+        </>
+      ) : (
+        "Nhiệm vụ này chưa đặt hạn nộp."
+      );
+      action = (
+        <Link href={`/tournaments/${tournamentId}/missions/${nextMission.id}`} className={cta} prefetch={false}>
+          Làm nhiệm vụ <ArrowRight className="h-4 w-4" />
+        </Link>
+      );
+    } else if (hasMissions) {
+      title = "Bạn không còn nhiệm vụ nào cần làm lúc này";
+      detail = (
+        <>
+          Kết thúc {formatDateTime(endsAt)}, còn {formatRelativeTime(endsAt, now).replace(" nữa", "")}.
+          {teamSize > 1 && !isCaptain && " Nhiệm vụ nộp chung do đội trưởng nộp."}
+        </>
+      );
+    } else {
+      title = "Đấu trường đang diễn ra";
+      detail = "Chưa có nhiệm vụ nào được mở.";
+    }
+
     return (
       <div className={`${base} border-emerald-300 bg-gradient-to-r from-emerald-50 to-teal-50 dark:border-emerald-700 dark:from-emerald-950/30 dark:to-teal-950/20`}>
         <div className="min-w-0">
           <p className="inline-flex items-center gap-1.5 text-sm font-black text-emerald-700 dark:text-emerald-400">
             <CheckCircle2 className="h-4 w-4" />
-            {isEnded ? "Đấu trường đã kết thúc" : "Bạn đã ghi danh"}
+            {title}
           </p>
-          {teamSize > 1 && teamName ? (
-            <p className="mt-0.5 text-sm font-medium text-slate-700 dark:text-slate-200">
-              Đội <span className="font-bold">{teamName}</span> · {teamCount ?? 0}/{teamSize} thành viên
-              {teamCount != null && teamCount < teamSize && (
-                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-                  Còn thiếu {teamSize - teamCount}
-                </span>
-              )}
-            </p>
-          ) : (
-            <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
-              {isEnded ? "Xem kết quả chung cuộc bên dưới." : "Hoàn thành nhiệm vụ để leo bảng xếp hạng!"}
-            </p>
-          )}
+          {detail && <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{detail}</p>}
+          {teamLine}
         </div>
-        {standing}
+        <div className="flex flex-wrap items-center gap-2">
+          {standing}
+          {action}
+        </div>
       </div>
     );
   }
@@ -1032,13 +1193,15 @@ function StatusBanner({
   if (canRegister) {
     return (
       <div className={`${base} border-rose-300 bg-gradient-to-r from-rose-50 via-orange-50 to-amber-50 dark:border-rose-700 dark:from-rose-950/30 dark:via-orange-950/20 dark:to-amber-950/20`}>
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-          🔥 Bạn <span className="font-black text-rose-700 dark:text-rose-400">chưa đăng ký</span> — đăng ký để mở khoá nhiệm vụ.
-        </p>
-        <a
-          href="#register-panel"
-          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-4 py-2 text-sm font-bold text-white shadow transition hover:scale-105"
-        >
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Bạn <span className="font-black text-rose-700 dark:text-rose-400">chưa đăng ký</span>. Đăng ký để mở khoá nhiệm vụ.
+          </p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            Bắt đầu {formatDateTime(startsAt)}, kết thúc {formatDateTime(endsAt)}.
+          </p>
+        </div>
+        <a href="#register-panel" className={cta}>
           Đăng ký ngay <ArrowRight className="h-4 w-4" />
         </a>
       </div>
@@ -1049,7 +1212,7 @@ function StatusBanner({
     return (
       <div className={`${base} border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800`}>
         <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
-          <Eye className="h-4 w-4" /> Đấu trường đã bắt đầu — bạn đang ở chế độ xem, không nộp bài được.
+          <Eye className="h-4 w-4" /> Đấu trường đã bắt đầu và đã đóng đăng ký, bạn đang ở chế độ xem, không nộp bài được.
         </p>
       </div>
     );
@@ -1059,7 +1222,7 @@ function StatusBanner({
     return (
       <div className={`${base} border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800`}>
         <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
-          🏁 Đấu trường đã kết thúc — xem kết quả bên dưới.
+          Đấu trường đã kết thúc. Xem kết quả bên dưới.
         </p>
       </div>
     );
@@ -1074,9 +1237,11 @@ function StatusBanner({
 function MissionStatusChip({
   status,
   locked,
+  expired = false,
 }: {
   status: "pending" | "passed" | "failed" | "disqualified" | null;
   locked: boolean;
+  expired?: boolean;
 }) {
   const cls = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold";
   if (locked) {
@@ -1112,6 +1277,13 @@ function MissionStatusChip({
         </span>
       );
     default:
+      if (expired) {
+        return (
+          <span className={`${cls} bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300`}>
+            <XCircle className="h-3 w-3" /> Hết hạn, chưa nộp
+          </span>
+        );
+      }
       return (
         <span className={`${cls} bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400`}>
           <Circle className="h-3 w-3" /> Chưa làm
@@ -1167,6 +1339,7 @@ function Podium({
   userMap,
   teamMap,
   currentUserId,
+  currentTeamId = null,
 }: {
   rankings: Array<{
     id: string;
@@ -1178,6 +1351,7 @@ function Podium({
   userMap: Map<string, { displayName: string }>;
   teamMap: Map<string, string>;
   currentUserId?: string;
+  currentTeamId?: string | null;
 }) {
   // Arrange visually: 2nd left, 1st center (elevated), 3rd right
   const byRank: Record<number, (typeof rankings)[number] | undefined> = {
@@ -1193,6 +1367,7 @@ function Podium({
         userMap={userMap}
         teamMap={teamMap}
         currentUserId={currentUserId}
+        currentTeamId={currentTeamId}
         rank={2}
         height="h-32 sm:h-36"
         gradient="from-slate-300 to-slate-400"
@@ -1202,6 +1377,7 @@ function Podium({
         userMap={userMap}
         teamMap={teamMap}
         currentUserId={currentUserId}
+        currentTeamId={currentTeamId}
         rank={1}
         height="h-40 sm:h-48"
         gradient="from-yellow-400 to-amber-500"
@@ -1212,6 +1388,7 @@ function Podium({
         userMap={userMap}
         teamMap={teamMap}
         currentUserId={currentUserId}
+        currentTeamId={currentTeamId}
         rank={3}
         height="h-28 sm:h-32"
         gradient="from-orange-400 to-amber-600"
@@ -1225,6 +1402,7 @@ function PodiumSlot({
   userMap,
   teamMap,
   currentUserId,
+  currentTeamId = null,
   rank,
   height,
   gradient,
@@ -1234,6 +1412,7 @@ function PodiumSlot({
   userMap: Map<string, { displayName: string }>;
   teamMap: Map<string, string>;
   currentUserId?: string;
+  currentTeamId?: string | null;
   rank: number;
   height: string;
   gradient: string;
@@ -1253,7 +1432,9 @@ function PodiumSlot({
     (entry.userId ? userMap.get(entry.userId)?.displayName : null) ??
     (entry.teamId ? teamMap.get(entry.teamId) : null) ??
     "—";
-  const isMe = entry.userId != null && entry.userId === currentUserId;
+  const isMe =
+    (entry.userId != null && entry.userId === currentUserId) ||
+    (entry.teamId != null && entry.teamId === currentTeamId);
 
   return (
     <div
@@ -1271,7 +1452,7 @@ function PodiumSlot({
       <RankMedal rank={rank} className="h-9 w-9 drop-shadow-md" />
       <p className="mt-1 line-clamp-2 text-xs font-bold text-slate-900 sm:text-sm">
         {displayName}
-        {isMe && <span className="ml-1 opacity-80">(bạn)</span>}
+        {isMe && <span className="ml-1 opacity-80">{entry.teamId ? "(đội của bạn)" : "(bạn)"}</span>}
       </p>
       <p className="mt-0.5 rounded-full bg-white/70 px-2 py-0.5 text-xs font-black tabular-nums text-slate-900">
         {entry.totalPoints} pts

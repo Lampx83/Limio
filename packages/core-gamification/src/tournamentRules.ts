@@ -71,3 +71,26 @@ export function prizeSetupIssue(t: {
   const sum = values.reduce((a, b) => a + b, 0);
   return sum > 100 ? "sum_over_100" : null;
 }
+
+export type RankEntry = { key: string; points: number; lastAt: Date | null };
+
+/**
+ * Thứ tự xếp hạng: điểm cao hơn xếp trên; bằng điểm thì đạt được mức điểm đó SỚM hơn xếp trên
+ * (lastAt = lúc hoàn thành nhiệm vụ gần nhất đóng góp điểm); vẫn bằng thì theo key cho ổn định.
+ * Trước đây chỉ sắp theo điểm nên hai đội bằng điểm nhận hạng khác nhau theo thứ tự ngẫu nhiên,
+ * kéo theo phần thưởng hạng 1/2/3 cũng ngẫu nhiên.
+ */
+export function sortRankEntries<T extends RankEntry>(entries: T[]): T[] {
+  return [...entries].sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (a.lastAt && b.lastAt) {
+      const d = a.lastAt.getTime() - b.lastAt.getTime();
+      if (d !== 0) return d;
+    } else if (a.lastAt) {
+      return -1;
+    } else if (b.lastAt) {
+      return 1;
+    }
+    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
+  });
+}

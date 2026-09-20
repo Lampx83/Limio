@@ -216,11 +216,16 @@ export default function TournamentTeamPanel({
                     <Crown
                       size={12}
                       className="shrink-0 text-amber-500"
-                      aria-label="Captain"
+                      aria-label="Đội trưởng"
                     />
                   )}
                   <span className="truncate font-medium">
                     {m.user.displayName}
+                    {memberIsCaptain && (
+                      <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                        Đội trưởng
+                      </span>
+                    )}
                     {isMe && (
                       <span className="ml-1 text-xs font-normal text-emerald-600">
                         (bạn)
@@ -245,10 +250,20 @@ export default function TournamentTeamPanel({
         </ul>
 
         {/* Join code share — only show before tournament locks */}
+        <p className="mt-3 text-xs text-emerald-800/80 dark:text-emerald-300/80">
+          {isCaptain
+            ? isLocked
+              ? "Bạn là đội trưởng: bạn nộp bài chung cho những nhiệm vụ nộp theo đội. Đội đã khoá thành viên vì giải đã bắt đầu."
+              : "Bạn là đội trưởng: bạn nộp bài chung cho những nhiệm vụ nộp theo đội, và loại bớt thành viên cho đến lúc giải bắt đầu."
+            : isLocked
+              ? "Đội đã khoá thành viên vì giải đã bắt đầu. Bài nộp chung do đội trưởng nộp."
+              : "Bài nộp chung do đội trưởng nộp. Bạn có thể rời đội cho đến lúc giải bắt đầu."}
+        </p>
+
         {!isLocked && (
           <div className="mt-4 rounded-xl border border-emerald-200 bg-white p-3 dark:border-emerald-800 dark:bg-slate-900">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-              Mã mời bạn vào đội
+              Mã đội, gửi cho bạn bè để họ vào đội
             </p>
             <div className="mt-1.5 flex items-center justify-between gap-2">
               <code className="text-xl font-bold tracking-[0.2em] text-emerald-800 dark:text-emerald-300">

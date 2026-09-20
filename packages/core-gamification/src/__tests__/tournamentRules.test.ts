@@ -5,6 +5,7 @@ import {
   planTournamentEnd,
   prizeSetupIssue,
   prizeXpForPercent,
+  sortRankEntries,
 } from "../tournamentRules";
 
 const T0 = new Date("2026-06-01T08:00:00Z");
@@ -99,5 +100,51 @@ describe("prizeSetupIssue", () => {
     expect(prizeSetupIssue({ prizeXp: 500, prizeDistribution: { "1": 60, "2": 50 } })).toBe("sum_over_100");
     expect(prizeSetupIssue({ prizeXp: 500, prizeDistribution: { "1": 50, "2": 30, "3": 20 } })).toBeNull();
     expect(prizeSetupIssue({ prizeXp: 500, prizeDistribution: { "1": 50 } })).toBeNull();
+  });
+});
+
+describe("sortRankEntries", () => {
+  const d = (h: number) => new Date(`2026-10-02T0${h}:00:00Z`);
+
+  it("điểm cao hơn xếp trên", () => {
+    const r = sortRankEntries([
+      { key: "a", points: 100, lastAt: d(1) },
+      { key: "b", points: 250, lastAt: d(5) },
+    ]);
+    expect(r.map((x) => x.key)).toEqual(["b", "a"]);
+  });
+
+  it("bằng điểm: đạt điểm đó sớm hơn xếp trên", () => {
+    const r = sortRankEntries([
+      { key: "late", points: 200, lastAt: d(5) },
+      { key: "early", points: 200, lastAt: d(2) },
+    ]);
+    expect(r.map((x) => x.key)).toEqual(["early", "late"]);
+  });
+
+  it("bằng điểm và chưa có ai làm gì (0 điểm): thứ tự theo key, ổn định", () => {
+    const r = sortRankEntries([
+      { key: "c", points: 0, lastAt: null },
+      { key: "a", points: 0, lastAt: null },
+      { key: "b", points: 0, lastAt: null },
+    ]);
+    expect(r.map((x) => x.key)).toEqual(["a", "b", "c"]);
+  });
+
+  it("có mốc thời gian xếp trên không có mốc khi bằng điểm", () => {
+    const r = sortRankEntries([
+      { key: "x", points: 50, lastAt: null },
+      { key: "y", points: 50, lastAt: d(3) },
+    ]);
+    expect(r.map((x) => x.key)).toEqual(["y", "x"]);
+  });
+
+  it("không đổi mảng gốc", () => {
+    const input = [
+      { key: "b", points: 1, lastAt: null },
+      { key: "a", points: 2, lastAt: null },
+    ];
+    sortRankEntries(input);
+    expect(input[0]!.key).toBe("b");
   });
 });

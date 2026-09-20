@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
 import { tournamentErrorMessage } from "@/lib/tournamentText";
 import AssignmentSubmitForm from "@/components/AssignmentSubmitForm";
+import { FILE_TYPES } from "@/lib/tournamentMissionForm";
 
 type VerifyMode = "AUTO_GRADE" | "AUTO_CHECK" | "PEER_REVIEW" | "MANUAL_REVIEW";
 
@@ -51,13 +52,13 @@ export default function MissionSubmitForm({
   if (verifyMode === "AUTO_GRADE") {
     return (
       <div className="text-sm text-muted">
-        Mission này dùng quiz tự chấm.{" "}
+        Nhiệm vụ này là bài kiểm tra tự chấm.{" "}
         {quizId ? (
           <a href={`/quizzes/${quizId}/attempt?missionId=${missionId}`} className="link">
-            Bắt đầu làm quiz →
+            Bắt đầu làm bài →
           </a>
         ) : (
-          <span className="text-warning-700">Giảng viên chưa tạo câu hỏi.</span>
+          <span className="text-warning-700">Giảng viên chưa thêm câu hỏi nên bạn chưa làm được.</span>
         )}
       </div>
     );
@@ -67,14 +68,14 @@ export default function MissionSubmitForm({
     if (!assignmentId) {
       return (
         <p className="text-sm text-warning-700">
-          Giảng viên chưa cấu hình Assignment cho mission này.
+          Giảng viên chưa thiết lập xong phần nộp bài cho nhiệm vụ này.
         </p>
       );
     }
     return (
       <div>
         <p className="mb-3 text-xs text-muted">
-          Mission này do giảng viên chấm tay. Nộp bài qua form bên dưới:
+          Giảng viên sẽ chấm bài của bạn. Nộp bài ở form bên dưới:
         </p>
         <AssignmentSubmitForm assignmentId={assignmentId} />
       </div>
@@ -112,7 +113,7 @@ export default function MissionSubmitForm({
         className="space-y-3"
       >
         <div>
-          <label className="label text-xs">Đường dẫn proof (nếu rule URL pattern)</label>
+          <label className="label text-xs">Liên kết bài làm (nếu nhiệm vụ yêu cầu nộp liên kết)</label>
           <input
             type="url"
             value={url}
@@ -122,13 +123,19 @@ export default function MissionSubmitForm({
           />
         </div>
         <div>
-          <label className="label text-xs">MIME type (nếu rule file_format)</label>
-          <input
+          <label className="label text-xs">Loại tệp bài làm (nếu nhiệm vụ yêu cầu nộp tệp)</label>
+          <select
             value={fileMime}
             onChange={(e) => setFileMime(e.target.value)}
-            placeholder="application/pdf"
-            className="input mt-1 text-sm"
-          />
+            className="select mt-1 text-sm"
+          >
+            <option value="">Không nộp tệp</option>
+            {FILE_TYPES.map((t) => (
+              <option key={t.id} value={t.mime[0]}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
         {error && <p className="text-sm text-danger-600">{error}</p>}
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
@@ -162,7 +169,7 @@ export default function MissionSubmitForm({
         className="space-y-3"
       >
         <p className="rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
-          🎤 Hackathon mode — nộp 4 artifact của đội. Tất cả đều optional, càng đầy đủ càng dễ chấm.
+          Nộp bài của đội gồm 4 phần (mã nguồn, slide, video demo, mô tả). Phần nào cũng không bắt buộc, càng đầy đủ càng dễ chấm.
         </p>
         <div>
           <label className="label text-xs">🔗 Repo code</label>

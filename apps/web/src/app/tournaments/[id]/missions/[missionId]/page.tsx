@@ -4,6 +4,8 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import MissionSubmitForm from "./MissionSubmitForm";
 import { formatDateTime } from "@/lib/datetime";
+import SafeHtml from "@/components/SafeHtml";
+import { plainToRichHtml } from "@/lib/richText";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +16,7 @@ export default async function MissionDetailPage({
 }) {
   const session = await auth();
   const userId = session?.user?.id;
-  if (!userId) redirect(`/login?next=/tournaments/${params.id}/missions/${params.missionId}`);
+  if (!userId) redirect(`/signin?callbackUrl=/tournaments/${params.id}/missions/${params.missionId}`);
 
   const mission = await prisma.tournamentMission.findFirst({
     where: { id: params.missionId, tournamentId: params.id },
@@ -99,10 +101,10 @@ export default async function MissionDetailPage({
         {mission.verifyMode && (
           <span className="chip">
             {{
-              AUTO_GRADE:    "Tự chấm (quiz)",
-              AUTO_CHECK:    "Tự kiểm tra",
-              PEER_REVIEW:   "Bạn học chấm",
-              MANUAL_REVIEW: "GV chấm",
+              AUTO_GRADE:    "Làm bài kiểm tra",
+              AUTO_CHECK:    "Nộp liên kết hoặc tệp",
+              PEER_REVIEW:   "Chấm chéo",
+              MANUAL_REVIEW: "Giảng viên chấm",
             }[mission.verifyMode]}
           </span>
         )}
@@ -127,9 +129,9 @@ export default async function MissionDetailPage({
 
       {/* Description / nội dung — rich-text HTML */}
       {mission.description && (
-        <div
+        <SafeHtml
+          html={plainToRichHtml(mission.description)}
           className="prose prose-2xl mt-4 max-w-none dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: mission.description }}
         />
       )}
 
@@ -144,12 +146,12 @@ export default async function MissionDetailPage({
       {isCollective && registered?.team && (
         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="font-semibold text-emerald-700 dark:text-emerald-300">
-            🤝 Mission nộp theo nhóm — đội {registered.team.name}
+            Nhiệm vụ nộp theo nhóm, đội {registered.team.name}
           </p>
           <p className="mt-0.5 text-emerald-700/80 dark:text-emerald-300/80">
             {isCaptain
-              ? "Bạn là captain — chỉ bạn nộp 1 lần đại diện cả đội. Kết quả sẽ tính cho mọi thành viên."
-              : "Chỉ captain mới được nộp bài. Bạn sẽ tự động được tính hoàn thành khi captain nộp."}
+              ? "Bạn là đội trưởng: chỉ bạn nộp, một lần đại diện cả đội. Kết quả tính cho mọi thành viên."
+              : "Chỉ đội trưởng được nộp bài. Bạn được tính hoàn thành khi đội trưởng nộp."}
           </p>
         </div>
       )}
@@ -164,7 +166,7 @@ export default async function MissionDetailPage({
             </Link>
           </div>
         ) : !mission.verifyMode ? (
-          <p className="text-sm text-muted">Mission COURSE_LINKED — auto-tracked theo hành vi học.</p>
+          <p className="text-sm text-muted">Nhiệm vụ này tự được ghi nhận khi bạn hoàn thành phần việc học tương ứng trong khoá. Bạn không cần nộp gì.</p>
         ) : isCollective && !isCaptain ? (
           submission ? (
             <SubmissionStatusBlock
@@ -178,7 +180,7 @@ export default async function MissionDetailPage({
             />
           ) : (
             <p className="text-sm text-muted">
-              Captain của đội chưa nộp bài. Quay lại sau khi captain nộp xong.
+              Đội trưởng chưa nộp bài. Quay lại sau khi đội trưởng nộp xong.
             </p>
           )
         ) : (
