@@ -26,7 +26,6 @@ import {
   Mic,
   Coins,
   Presentation,
-  Plus,
   FolderOpen,
   Crown,
   Bot,
@@ -138,13 +137,12 @@ const MODULES: ModuleDef[] = [
     matchPrefixes: ["/instructor/limio-live", "/instructor/teaching-tools", "/instructor/gameshow"],
     items: [
       { label: "Bài giảng của tôi", href: "/instructor/limio-live", icon: Presentation, section: "Bài giảng tương tác" },
-      { label: "Tạo bài giảng mới", href: "/instructor/limio-live?new=1", icon: Plus, section: "Bài giảng tương tác" },
       { label: "Thư viện mẫu", icon: FolderOpen, note: "Chợ chia sẻ mẫu bài giảng — đang phát triển (P2)", section: "Bài giảng tương tác" },
       // Mỗi công cụ 1 dòng menu (mở thẳng qua ?tool=...), gom theo mục đích, ≤5 mục/nhóm.
-      { label: "Quick Poll", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Công cụ brainstorming" },
-      { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: Cloud, section: "Công cụ brainstorming" },
-      { label: "Bảng tương tác", href: "/instructor/teaching-tools?tool=board", icon: StickyNote, section: "Công cụ brainstorming" },
-      { label: "Whiteboard", href: "/instructor/teaching-tools?tool=whiteboard", icon: PenTool, section: "Công cụ brainstorming" },
+      { label: "Quick Poll", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Brainstorming" },
+      { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: Cloud, section: "Brainstorming" },
+      { label: "Padlet", href: "/instructor/teaching-tools?tool=board", icon: StickyNote, section: "Brainstorming" },
+      { label: "Whiteboard", href: "/instructor/teaching-tools?tool=whiteboard", icon: PenTool, section: "Brainstorming" },
       { label: "Đếm ngược", href: "/instructor/teaching-tools?tool=timer", icon: Clock, section: "Điều hành lớp học" },
       { label: "Gọi tên", href: "/instructor/teaching-tools?tool=random-picker", icon: Shuffle, section: "Điều hành lớp học" },
       { label: "Phân nhóm", href: "/instructor/teaching-tools?tool=grouping", icon: Users, section: "Điều hành lớp học" },
@@ -396,7 +394,13 @@ function InstructorLeftMenuInner({
   );
   const sidebarContent = activeModule ? (
     <div className="w-56 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] py-5 pl-5 pr-3">
-      <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 px-1">
+      {/* Module chia section (vd Limio-Live): chừa thêm khoảng trắng giữa tên
+          module và nhãn section đầu tiên để hai tầng tiêu đề không dính nhau. */}
+      <div
+        className={`flex flex-wrap items-center gap-x-2 gap-y-1 px-1 ${
+          activeModule.items.some((it) => it.section) ? "mb-8" : "mb-4"
+        }`}
+      >
         <p className={`text-[19px] font-extrabold leading-tight tracking-tight ${activeModule.colors.headerText}`}>
           {activeModule.label}
         </p>

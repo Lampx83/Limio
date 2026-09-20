@@ -21,24 +21,24 @@ export default function LiveDeckList() {
   const [decks, setDecks] = useState<DeckSummary[] | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const [justJumped, setJustJumped] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const newTitleInputRef = useRef<HTMLInputElement>(null);
-  const createBoxRef = useRef<HTMLDivElement>(null);
 
-  // Nút "Tạo bài giảng mới" ở menu trái trỏ vào đây kèm ?new=1. Khi GV bấm
-  // link này TỪ CHÍNH trang danh sách (đã đứng sẵn ở đây), URL đổi
-  // (?new=1) nhưng khung tạo vốn đã nằm sẵn trên màn hình — chỉ focus lặng
-  // lẽ thì nhìn như "bấm không có gì xảy ra". Cuộn tới + nhấp nháy viền để
-  // luôn có phản hồi thấy được, dù đang ở đâu trên trang khi bấm.
+  // Link cũ "?new=1" (menu trái trước đây) vẫn mở luôn form tạo.
   useEffect(() => {
-    if (searchParams.get("new") === "1") {
-      createBoxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      newTitleInputRef.current?.focus();
-      setJustJumped(true);
-      const t = setTimeout(() => setJustJumped(false), 1200);
-      return () => clearTimeout(t);
-    }
+    if (searchParams.get("new") === "1") setFormOpen(true);
   }, [searchParams]);
+
+  // Mở form: focus vào ô tên; Esc để đóng.
+  useEffect(() => {
+    if (!formOpen) return;
+    newTitleInputRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isCreating) setFormOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [formOpen, isCreating]);
 
   const load = async () => {
     try {
@@ -55,7 +55,8 @@ export default function LiveDeckList() {
     load();
   }, []);
 
-  const handleCreate = async () => {
+  const handleCreate = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!newTitle.trim()) { toast.error("Nhập tên bài giảng"); return; }
     setIsCreating(true);
     try {
@@ -83,28 +84,65 @@ export default function LiveDeckList() {
 
   return (
     <div className="space-y-6">
-      <div
-        ref={createBoxRef}
-        className={`rounded-2xl border bg-[rgb(var(--surface))] p-5 shadow-card transition-shadow ${
-          justJumped ? "border-brand-400 ring-4 ring-brand-200/60 dark:ring-brand-900/40" : "border-token"
-        }`}
-      >
-        <label className="mb-1.5 block text-sm font-medium">Tạo bài giảng mới</label>
-        <div className="flex gap-2">
-          <input
-            ref={newTitleInputRef}
-            type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-            placeholder="Vd: Bài 3 — Quang hợp"
-            className="input flex-1"
-          />
-          <button onClick={handleCreate} disabled={isCreating} className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> {isCreating ? "Đang tạo..." : "Tạo"}
-          </button>
-        </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            setNewTitle("");
+            setFormOpen(true);
+          }}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus size={16} /> Tạo bài giảng
+        </button>
       </div>
+
+      {formOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !isCreating) setFormOpen(false);
+          }}
+        >
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="new-deck-title"
+            onSubmit={handleCreate}
+            className="w-full max-w-md rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-2xl"
+          >
+            <h2 id="new-deck-title" className="text-lg font-semibold">
+              Tạo bài giảng
+            </h2>
+            <label className="mt-4 block text-sm font-medium" htmlFor="new-deck-input">
+              Tên bài giảng
+            </label>
+            <input
+              id="new-deck-input"
+              ref={newTitleInputRef}
+              type="text"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Vd: Bài 3 — Quang hợp"
+              maxLength={200}
+              className="input mt-1.5"
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setFormOpen(false)}
+                disabled={isCreating}
+                className="btn-ghost"
+              >
+                Hủy
+              </button>
+              <button type="submit" disabled={isCreating} className="btn-primary">
+                {isCreating ? "Đang tạo..." : "Tạo bài giảng"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {decks === null ? (
         <p className="text-sm text-muted">Đang tải...</p>
@@ -112,7 +150,7 @@ export default function LiveDeckList() {
         <EmptyState
           icon={<Presentation size={40} className="mx-auto" />}
           title="Chưa có bài giảng nào"
-          description="Tạo bài giảng đầu tiên ở khung phía trên."
+          description="Bấm “Tạo bài giảng” để bắt đầu."
         />
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
