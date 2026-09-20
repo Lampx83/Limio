@@ -119,6 +119,7 @@ const MODULES: ModuleDef[] = [
   {
     id: "lms",
     label: "LMS",
+    tagline: "Bài giảng Elearning",
     icon: GraduationCap,
     iconSize: 27,
     colors: {
