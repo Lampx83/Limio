@@ -9,7 +9,7 @@ import {
 } from "@feedbackme/core-lms";
 import { AiTutorError } from "../aiTutor/errors";
 import { embedMaterial } from "../oralExam/materialEmbeddings";
-import { MAX_ORAL_QUESTIONS, runOralExamPreviewTurn } from "../oralExam/examinerChat";
+import { runOralExamPreviewTurn } from "../oralExam/examinerChat";
 import type { ChatComputeFn, ChatMessage } from "../oralExam/chat";
 import type { EmbedComputeFn } from "../oralExam/embeddings";
 
@@ -139,7 +139,7 @@ describe("runOralExamPreviewTurn — GV thử vấn đáp không ghi DB", () => 
     expect(await counts(s.examId, s.ownerId)).toEqual({ attempts: 0, turns: 0, events: 0 });
   });
 
-  it("forceEnd và đủ MAX_ORAL_QUESTIONS đều kết thúc bằng lời kết", async () => {
+  it("forceEnd kết thúc bằng lời kết; không có trần số câu nên nhiều câu vẫn hỏi tiếp", async () => {
     const s = await draftOralSetup("p4");
     const { compute, calls } = spyChat("Cảm ơn bạn, buổi vấn đáp đã hoàn tất.");
     const forced = await runOralExamPreviewTurn({
@@ -154,19 +154,22 @@ describe("runOralExamPreviewTurn — GV thử vấn đáp không ghi DB", () => 
     expect(forced.ended).toBe(true);
     expect(calls[0]![0]!.content).toContain("đến lúc kết thúc");
 
-    const history = Array.from({ length: MAX_ORAL_QUESTIONS * 2 }, (_, i) => ({
-      role: i % 2 === 0 ? ("examiner" as const) : ("student" as const),
-      content: `t${i}`,
-    }));
-    const full = await runOralExamPreviewTurn({
+    // 15 câu đã hỏi (nhiều hơn trần 8 cũ) — vẫn hỏi tiếp, không tự đóng.
+    const long: { role: "examiner" | "student"; content: string }[] = [];
+    for (let i = 0; i < 15; i++) {
+      long.push({ role: "examiner", content: `Q${i}` });
+      if (i < 14) long.push({ role: "student", content: `A${i}` });
+    }
+    const more = await runOralExamPreviewTurn({
       examId: s.examId,
       teacherUserId: s.ownerId,
-      history: [...history.slice(0, -1), { role: "examiner", content: "câu cuối" }].slice(0, MAX_ORAL_QUESTIONS * 2 - 1),
-      studentMessage: "trả lời cuối",
+      history: long,
+      studentMessage: "trả lời",
       computeChat: compute,
       computeEmbed: fakeEmbed(),
     });
-    expect(full.questionsAsked).toBe(MAX_ORAL_QUESTIONS);
+    expect(more.ended).toBe(false);
+    expect(more.questionsAsked).toBe(16);
   });
 
   it("từ chối đề viết và thứ tự lượt sai", async () => {

@@ -7,7 +7,6 @@ import {
   getRoomScope,
   liveCountsByRoom,
 } from "@feedbackme/core-lms";
-import { MAX_ORAL_QUESTIONS } from "@feedbackme/core-feedback";
 import RoomGrid, { type RoomCell } from "./RoomGrid";
 import { auth } from "@/lib/auth";
 import LiveDashboard from "./LiveDashboard";
@@ -92,7 +91,7 @@ export default async function ExamLiveDashboardPage({
       expiresAt: a.startedAt.getTime() + a.durationSec * 1000,
       submittedAt: a.submittedAt?.getTime() ?? null,
       questionsAsked: 0,
-      totalQuestions: MAX_ORAL_QUESTIONS,
+      totalQuestions: 0, // vấn đáp không giới hạn số câu
       incidentCount: a._count.incidents,
       lastSeenAt:
         a.lastHeartbeatAt?.getTime() ?? a.submittedAt?.getTime() ?? a.startedAt.getTime(),
@@ -117,7 +116,7 @@ export default async function ExamLiveDashboardPage({
             </p>
           </div>
           <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">
-            Thời lượng: {exam.durationMin} phút · Tối đa {MAX_ORAL_QUESTIONS} câu
+            Thời lượng: {exam.durationMin} phút
           </span>
         </div>
         <OralLiveDashboard courseId={params.id} examId={exam.id} initial={initial} />

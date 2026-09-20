@@ -17,7 +17,7 @@ import {
 import { assertWithinCaps } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { embedMaterial } from "../oralExam/materialEmbeddings";
-import { MAX_ORAL_QUESTIONS, runOralExamTurn } from "../oralExam/examinerChat";
+import { runOralExamTurn } from "../oralExam/examinerChat";
 import type { ChatComputeFn } from "../oralExam/chat";
 import type { EmbedComputeFn } from "../oralExam/embeddings";
 
@@ -246,33 +246,33 @@ describe("runOralExamTurn (A6.3)", () => {
     ).rejects.toMatchObject({ code: "validation_failed", details: "wrong_turn_order" });
   });
 
-  it("ends the exam once the hard question cap is reached", async () => {
+  it("không có trần số câu hỏi: hỏi tiếp dù đã qua 8 câu cũ, chỉ kết thúc khi hết giờ/forceEnd", async () => {
     const s = await setup("t5");
-    // Seed thẳng đủ MAX_ORAL_QUESTIONS câu hỏi qua DB cho nhanh, CHƯA trả lời
-    // câu cuối — test tự trả lời câu cuối đó để kích hoạt việc kết thúc.
-    for (let i = 0; i < MAX_ORAL_QUESTIONS; i++) {
+    // Trước đây trần cứng 8 câu sẽ đóng buổi ở đây. Seed 12 câu hỏi đã trả lời, còn thời gian.
+    const QUESTIONS = 12;
+    for (let i = 0; i < QUESTIONS; i++) {
       await prisma.oralExamTurn.create({
         data: { attemptId: s.attemptId, role: "examiner", content: `Q${i}` },
       });
-      if (i < MAX_ORAL_QUESTIONS - 1) {
+      if (i < QUESTIONS - 1) {
         await prisma.oralExamTurn.create({
           data: { attemptId: s.attemptId, role: "student", content: `A${i}` },
         });
       }
     }
-    const { compute } = scriptedChat(["Lời kết buổi vấn đáp."]);
+    const { compute } = scriptedChat(["Câu hỏi tiếp theo?"]);
     const r = await runOralExamTurn({
       attemptId: s.attemptId,
       studentUserId: s.learnerId,
-      studentMessage: `A${MAX_ORAL_QUESTIONS - 1}`,
+      studentMessage: `A${QUESTIONS - 1}`,
       computeChat: compute,
       computeEmbed: fakeEmbed(),
     });
-    expect(r.ended).toBe(true);
-    expect(r.questionsAsked).toBe(MAX_ORAL_QUESTIONS);
+    expect(r.ended).toBe(false);
+    expect(r.questionsAsked).toBe(QUESTIONS + 1);
 
     const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: s.attemptId } });
-    expect(attempt.status).toBe("submitted");
+    expect(attempt.status).toBe("in_progress");
   });
 
   it("ends the exam once time is up, even on the opening turn", async () => {

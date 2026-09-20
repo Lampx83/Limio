@@ -16,7 +16,7 @@ import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
 
-const MAX_HISTORY = 40;
+const MAX_HISTORY = 400; // không giới hạn số câu hỏi — trần này chỉ chặn request bất thường
 const MAX_TEXT = 4_000;
 
 /**

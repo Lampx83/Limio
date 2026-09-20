@@ -6,10 +6,9 @@ import { DEFAULT_EXAMINER_MODEL, type ChatComputeFn, type ChatMessage } from "./
 import { DEFAULT_EMBEDDING_MODEL, type EmbedComputeFn } from "./embeddings";
 import { searchMaterialChunks } from "./materialEmbeddings";
 
-// A6.3 — giới hạn cứng: dừng buổi vấn đáp khi hết giờ (Exam/ExamAttempt
-// durationSec, đã có sẵn) HOẶC đủ số câu hỏi này, cái nào tới trước. Chưa
-// cho GV cấu hình — thêm khi có nhu cầu thật, không đoán trước (YAGNI).
-export const MAX_ORAL_QUESTIONS = 8;
+// Buổi vấn đáp KHÔNG giới hạn số câu hỏi — chỉ kết thúc khi hết giờ (ExamAttempt.durationSec) hoặc sinh viên bấm
+// kết thúc (forceEnd). Trước đây có trần cứng 8 câu; đã bỏ theo yêu cầu vì con số đó giáo viên không thấy, không đổi
+// được và làm buổi vấn đáp dừng bất ngờ khi còn thời gian.
 
 const CONTEXT_CHUNK_COUNT = 3;
 
@@ -45,7 +44,6 @@ function buildSystemPrompt(params: {
   contextChunks: string[];
   /** true khi đây là lượt hỏi đầu tiên — chưa có câu trả lời nào của SV. */
   isFirstTurn: boolean;
-  isLastQuestion: boolean;
   isClosing: boolean;
   language: "vi" | "en" | "zh";
   /** GV tự soạn — chèn thêm, KHÔNG thay thế nguyên tắc cứng bên dưới. */
@@ -85,19 +83,12 @@ Nguyên tắc:
 4. ${LANGUAGE_DIRECTIVE[params.language]}${buildExtraRules(params)}${extra}`;
 }
 
-// Quy tắc chỉ áp dụng cho 1 lượt cụ thể (mở màn / câu cuối) — tách riêng để
-// đánh số tiếp nối "Nguyên tắc" phía trên mà không hardcode số thứ tự trùng
-// nhau khi cả 2 điều kiện (hiếm khi, nhưng không loại trừ) cùng đúng.
-function buildExtraRules(params: { isFirstTurn: boolean; isLastQuestion: boolean }): string {
+// Quy tắc chỉ áp dụng cho lượt mở màn — tách riêng để đánh số tiếp nối "Nguyên tắc" phía trên.
+function buildExtraRules(params: { isFirstTurn: boolean }): string {
   const rules: string[] = [];
   if (params.isFirstTurn) {
     rules.push(
       "Đây là lượt ĐẦU TIÊN của buổi vấn đáp — trước khi hỏi, hãy mở đầu bằng một câu chào hỏi và giới thiệu ngắn gọn bản thân (là giảng viên ảo phụ trách buổi vấn đáp này), rồi mới đặt câu hỏi đầu tiên, trong CÙNG một lượt trả lời này.",
-    );
-  }
-  if (params.isLastQuestion) {
-    rules.push(
-      "Đây là câu hỏi CUỐI CÙNG của buổi vấn đáp — hỏi sao cho sinh viên có thể trả lời trọn vẹn trong lượt này.",
     );
   }
   return rules.map((r, i) => `\n${5 + i}. ${r}`).join("");
@@ -199,8 +190,7 @@ export async function runOralExamTurn(
 
   const elapsedSec = (Date.now() - attempt.startedAt.getTime()) / 1000;
   const timeUp = elapsedSec >= attempt.durationSec;
-  const shouldClose = Boolean(input.forceEnd) || timeUp || questionsAsked >= MAX_ORAL_QUESTIONS;
-  const isLastQuestion = !shouldClose && questionsAsked + 1 >= MAX_ORAL_QUESTIONS;
+  const shouldClose = Boolean(input.forceEnd) || timeUp;
 
   let contextChunks: string[] = [];
   let embedTokens = 0;
@@ -226,7 +216,6 @@ export async function runOralExamTurn(
     examTitle: attempt.exam.title,
     contextChunks,
     isFirstTurn: questionsAsked === 0,
-    isLastQuestion,
     isClosing: shouldClose,
     language: attempt.exam.language,
     examinerInstructions: attempt.exam.examinerInstructions,
@@ -314,7 +303,7 @@ export interface RunOralExamPreviewTurnInput {
 
 /**
  * "Thử vấn đáp" của giáo viên trước khi mở phiên. Cùng prompt, cùng cách lấy đoạn tài liệu và cùng quy tắc
- * kết thúc (đủ MAX_ORAL_QUESTIONS hoặc forceEnd) như runOralExamTurn để bản thử phản ánh đúng buổi thật —
+ * kết thúc (forceEnd) như runOralExamTurn để bản thử phản ánh đúng buổi thật —
  * nhưng KHÔNG ghi ExamAttempt/OralExamTurn/LearningEvent và không đổi trạng thái gì. Không giới hạn theo thời
  * gian: bản thử không có đồng hồ. Vẫn qua assertWithinCaps + recordAiUsage nên TÍNH vào hạn mức token AI của
  * giáo viên (mỗi lượt hỏi thử gọi AI thật).
@@ -354,8 +343,7 @@ export async function runOralExamPreviewTurn(
   await assertWithinCaps(input.teacherUserId, db, "oral_exam");
 
   const trimmedAnswer = input.studentMessage?.trim() ?? null;
-  const shouldClose = Boolean(input.forceEnd) || questionsAsked >= MAX_ORAL_QUESTIONS;
-  const isLastQuestion = !shouldClose && questionsAsked + 1 >= MAX_ORAL_QUESTIONS;
+  const shouldClose = Boolean(input.forceEnd);
 
   let contextChunks: string[] = [];
   let embedTokens = 0;
@@ -376,7 +364,6 @@ export async function runOralExamPreviewTurn(
     examTitle: exam.title,
     contextChunks,
     isFirstTurn: questionsAsked === 0,
-    isLastQuestion,
     isClosing: shouldClose,
     language: exam.language,
     examinerInstructions: exam.examinerInstructions,

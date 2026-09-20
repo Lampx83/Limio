@@ -1,6 +1,5 @@
 import { prisma } from "@feedbackme/db";
 import { getRoomScope } from "@feedbackme/core-lms";
-import { MAX_ORAL_QUESTIONS } from "@feedbackme/core-feedback";
 import { requireUserId } from "@/lib/session";
 import { examChannel, getExamSnapshot, roomChannel, seedAttemptsBulk, type AttemptLive, type LiveEvent } from "@/lib/exam-live-bus";
 import { subscribe as streamSubscribe } from "@/lib/realtime/stream";
@@ -104,11 +103,10 @@ export async function GET(
     },
     orderBy: { startedAt: "asc" },
   });
-  // A6.5 — Vấn đáp AI không có ExamQuestion; "tổng câu" tương ứng là trần
-  // câu hỏi cứng của 1 buổi vấn đáp (MAX_ORAL_QUESTIONS), không phải đếm từ DB.
+  // A6.5 — Vấn đáp AI không có ExamQuestion và không giới hạn số câu hỏi nên không có "tổng câu" (0).
   const totalQuestions =
     exam.kind === "oral"
-      ? MAX_ORAL_QUESTIONS
+      ? 0
       : await prisma.examQuestion.count({ where: { examId: exam.id } });
   const examMode = (
     await prisma.exam.findUnique({

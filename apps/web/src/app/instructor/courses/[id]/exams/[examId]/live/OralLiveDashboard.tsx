@@ -201,6 +201,9 @@ function AttemptCard({
   const remainingSec = Math.max(0, Math.floor((a.expiresAt - now) / 1000));
   const minutes = Math.floor(remainingSec / 60);
   const seconds = remainingSec % 60;
+  // Không có tổng số câu để so — thanh tiến độ theo thời gian đã trôi của buổi.
+  const totalMs = Math.max(1, a.expiresAt - a.startedAt);
+  const elapsedPct = Math.min(100, Math.max(0, ((a.status === "in_progress" ? now : (a.submittedAt ?? now)) - a.startedAt) / totalMs * 100));
 
   return (
     <li className={`rounded-lg border bg-white p-4 ${stale ? "border-red-300" : "border-default"}`}>
@@ -219,13 +222,13 @@ function AttemptCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs text-faint">
-        <span>Câu {Math.min(a.questionsAsked, a.totalQuestions)}/{a.totalQuestions}</span>
+        <span>Đã hỏi {a.questionsAsked} câu</span>
         {a.status === "in_progress" && <span className="tabular-nums">{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}</span>}
       </div>
       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div
           className="h-full rounded-full bg-brand-500"
-          style={{ width: `${Math.min(100, (a.questionsAsked / a.totalQuestions) * 100)}%` }}
+          style={{ width: `${elapsedPct}%` }}
         />
       </div>
 

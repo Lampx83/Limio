@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { MAX_ORAL_QUESTIONS } from "@feedbackme/core-feedback";
 import { startOralExamAttempt } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
@@ -47,7 +46,7 @@ export async function POST(
           expiresAt: attempt.startedAt.getTime() + r.durationSec * 1000,
           submittedAt: attempt.submittedAt?.getTime() ?? null,
           answeredQuestionIds: [],
-          totalQuestions: MAX_ORAL_QUESTIONS,
+          totalQuestions: 0, // vấn đáp không giới hạn số câu
           incidentCount: attempt._count.incidents,
           lastSeenAt: Date.now(),
           resumeCount: attempt.resumeCount,
