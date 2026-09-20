@@ -3012,6 +3012,8 @@ model Exam {
   openAt                 DateTime
   closeAt                DateTime
   attemptPolicy          ExamAttemptPolicy   @default(single)
+  // Số lượt tối đa mỗi người khi attemptPolicy=multi (chỉ đề vấn đáp AI). Bỏ qua khi single.
+  maxAttempts            Int                 @default(3)
   gradingMode            ExamGradingMode     @default(hybrid)
   proctoringLevel        ExamProctoringLevel @default(none)
   // NGỪNG DÙNG: đề thi chỉ trả về điểm; đạt hay không do quy chế bên ngoài

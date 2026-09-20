@@ -149,6 +149,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "exam_not_oral" ||
               err.code === "exam_not_written" ||
               err.code === "attempt_already_submitted" ||
+              err.code === "attempt_limit_reached" ||
               err.code === "session_stale" ||
               err.code === "exam_not_open" ||
               err.code === "exam_window_closed" ||

@@ -9,7 +9,9 @@ import {
   createExam,
   createOralMaterialTopicList,
   deleteOralAttempt,
+  decideOralStart,
   ExamError,
+  getOralAttemptQuota,
   joinOralSessionByCode,
   openOralExamSession,
   publishExam,
@@ -120,6 +122,129 @@ describe("startOralExamAttempt (A6.3)", () => {
     await expect(startOralExamAttempt(s.learnerId, s.examId)).rejects.toMatchObject({
       code: "attempt_already_submitted",
     });
+  });
+});
+
+describe("decideOralStart — thi nhiều lượt (pure)", () => {
+  const done = { status: "submitted" };
+  const live = { status: "in_progress" };
+
+  it("chưa có lượt nào → tạo lượt đầu, không cần retake", () => {
+    expect(decideOralStart([], "single", 1, false)).toBe("create");
+    expect(decideOralStart([], "multi", 3, false)).toBe("create");
+  });
+  it("đang làm dở → luôn tiếp tục, kể cả hết lượt", () => {
+    expect(decideOralStart([live], "single", 1, false)).toBe("resume");
+    expect(decideOralStart([done, done, live], "multi", 3, true)).toBe("resume");
+  });
+  it("single: xong 1 lượt là chặn, retake không có tác dụng", () => {
+    expect(decideOralStart([done], "single", 1, true)).toBe("already_submitted");
+  });
+  it("multi còn lượt: chỉ tạo mới khi bấm Thi lại; mở lại link thì không tự đốt lượt", () => {
+    expect(decideOralStart([done], "multi", 3, false)).toBe("already_submitted");
+    expect(decideOralStart([done], "multi", 3, true)).toBe("create");
+  });
+  it("multi hết lượt: chặn dù có bấm Thi lại", () => {
+    expect(decideOralStart([done, done, done], "multi", 3, true)).toBe("limit_reached");
+  });
+});
+
+describe("thi vấn đáp nhiều lượt (tích hợp DB)", () => {
+  async function multiSetup(slug: string, maxAttempts: number) {
+    const s = await publishedOralExamSetup(slug);
+    await prisma.exam.update({
+      where: { id: s.examId },
+      data: { attemptPolicy: "multi", maxAttempts },
+    });
+    return s;
+  }
+  async function finish(attemptId: string) {
+    await prisma.examAttempt.update({
+      where: { id: attemptId },
+      data: { status: "submitted", submittedAt: new Date() },
+    });
+  }
+
+  it("thi lại tạo lượt MỚI (id khác), tối đa maxAttempts rồi báo attempt_limit_reached", async () => {
+    const s = await multiSetup("m1", 2);
+    const a1 = await startOralExamAttempt(s.learnerId, s.examId);
+    await finish(a1.attemptId);
+    // Mở lại link không tự tạo lượt mới.
+    await expect(startOralExamAttempt(s.learnerId, s.examId)).rejects.toMatchObject({
+      code: "attempt_already_submitted",
+    });
+    const a2 = await startOralExamAttempt(s.learnerId, s.examId, { retake: true });
+    expect(a2.attemptId).not.toBe(a1.attemptId);
+    expect(a2.resumed).toBe(false);
+    await finish(a2.attemptId);
+    await expect(
+      startOralExamAttempt(s.learnerId, s.examId, { retake: true }),
+    ).rejects.toMatchObject({ code: "attempt_limit_reached" });
+    expect(await prisma.examAttempt.count({ where: { examId: s.examId, userId: s.learnerId } })).toBe(2);
+  });
+
+  it("đang làm dở thì bấm Thi lại chỉ tiếp tục lượt đó, không mở lượt song song", async () => {
+    const s = await multiSetup("m2", 3);
+    const a1 = await startOralExamAttempt(s.learnerId, s.examId);
+    const again = await startOralExamAttempt(s.learnerId, s.examId, { retake: true });
+    expect(again.attemptId).toBe(a1.attemptId);
+    expect(again.resumed).toBe(true);
+  });
+
+  it("chỉ mục DB chặn 2 lượt in_progress cùng (đề, người dùng)", async () => {
+    const s = await multiSetup("m3", 3);
+    await startOralExamAttempt(s.learnerId, s.examId);
+    await expect(
+      prisma.examAttempt.create({
+        data: {
+          examId: s.examId,
+          userId: s.learnerId,
+          durationSec: 60,
+          sessionToken: `dup-${Date.now()}`,
+        },
+      }),
+    ).rejects.toBeTruthy();
+  });
+
+  it("đề single vẫn 1 lượt dù có retake", async () => {
+    const s = await publishedOralExamSetup("m4");
+    const a1 = await startOralExamAttempt(s.learnerId, s.examId);
+    await finish(a1.attemptId);
+    await expect(
+      startOralExamAttempt(s.learnerId, s.examId, { retake: true }),
+    ).rejects.toMatchObject({ code: "attempt_already_submitted" });
+  });
+
+  it("getOralAttemptQuota: số lượt đã dùng/còn lại và canRetake", async () => {
+    const s = await multiSetup("m5", 3);
+    const q0 = await getOralAttemptQuota(s.learnerId, s.examId);
+    expect(q0).toMatchObject({ policy: "multi", max: 3, used: 0, remaining: 3, canRetake: false });
+    const a1 = await startOralExamAttempt(s.learnerId, s.examId);
+    const q1 = await getOralAttemptQuota(s.learnerId, s.examId);
+    expect(q1).toMatchObject({ used: 1, canRetake: false, latestAttemptId: a1.attemptId }); // đang làm dở
+    await finish(a1.attemptId);
+    const q2 = await getOralAttemptQuota(s.learnerId, s.examId);
+    expect(q2).toMatchObject({ used: 1, remaining: 2, canRetake: true });
+  });
+
+  it("vào bằng mã tham gia cũng theo cùng luật thi lại", async () => {
+    const s = await multiSetup("m6", 2);
+    const { joinCode } = await openOralExamSession(s.ownerId, s.examId);
+    const stranger = await registerUser(
+      { email: `oa-m6-x@e.com`, password: "password1234", displayName: "X" },
+      BASE,
+    );
+    const j1 = await joinOralSessionByCode(stranger.userId, joinCode);
+    await finish(j1.attemptId);
+    await expect(joinOralSessionByCode(stranger.userId, joinCode)).rejects.toMatchObject({
+      code: "attempt_already_submitted",
+    });
+    const j2 = await joinOralSessionByCode(stranger.userId, joinCode, { retake: true });
+    expect(j2.attemptId).not.toBe(j1.attemptId);
+    await finish(j2.attemptId);
+    await expect(
+      joinOralSessionByCode(stranger.userId, joinCode, { retake: true }),
+    ).rejects.toMatchObject({ code: "attempt_limit_reached" });
   });
 });
 

@@ -11,6 +11,7 @@ import { WizardConfigShape, type WizardConfigT, assembleWizardPool } from "./wiz
 const examAttemptPolicy = z.enum(["single", "multi"]);
 const examGradingMode = z.enum(["auto", "manual", "hybrid"]);
 const examProctoringLevel = z.enum(["none", "basic", "strict"]);
+const MAX_ATTEMPTS = z.number().int().min(2).max(10);
 
 export const CreateExamInput = z
   .object({
@@ -25,6 +26,8 @@ export const CreateExamInput = z
     openAt: z.coerce.date().optional(),
     closeAt: z.coerce.date().optional(),
     attemptPolicy: examAttemptPolicy.optional(),
+    // Số lượt tối đa mỗi người khi attemptPolicy=multi (chỉ vấn đáp AI).
+    maxAttempts: MAX_ATTEMPTS.optional(),
     gradingMode: examGradingMode.optional(),
     proctoringLevel: examProctoringLevel.optional(),
     shuffleQuestions: z.boolean().optional(),
@@ -57,6 +60,7 @@ export const UpdateExamInput = z
     openAt: z.coerce.date().optional(),
     closeAt: z.coerce.date().optional(),
     attemptPolicy: examAttemptPolicy.optional(),
+    maxAttempts: MAX_ATTEMPTS.optional(),
     gradingMode: examGradingMode.optional(),
     proctoringLevel: examProctoringLevel.optional(),
     shuffleQuestions: z.boolean().optional(),
@@ -100,6 +104,10 @@ export async function createExam(
     throw new ExamError("validation_failed", parsed.error.flatten());
   }
   const d = parsed.data;
+  // Nhiều lượt chỉ có cho vấn đáp AI — thi viết (chấm tự động, xáo đề, mã thi…) vẫn 1 lượt.
+  if (d.attemptPolicy === "multi" && d.kind !== "oral") {
+    throw new ExamError("validation_failed", "attemptPolicy=multi chỉ áp dụng cho đề vấn đáp");
+  }
   const exam = await db.exam.create({
     data: {
       courseId,
@@ -111,6 +119,7 @@ export async function createExam(
       openAt: d.openAt ?? new Date(),
       closeAt: d.closeAt ?? new Date(Date.now() + 365 * 24 * 60 * 60_000),
       attemptPolicy: d.attemptPolicy ?? "single",
+      ...(d.maxAttempts !== undefined ? { maxAttempts: d.maxAttempts } : {}),
       gradingMode: d.gradingMode ?? "hybrid",
       proctoringLevel: d.proctoringLevel ?? "none",
       shuffleQuestions: d.shuffleQuestions ?? true,
@@ -270,6 +279,10 @@ export async function updateExam(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined),
   );
   if (Object.keys(data).length === 0) return;
+
+  if (exam.kind !== "oral" && data.attemptPolicy === "multi") {
+    throw new ExamError("validation_failed", "attemptPolicy=multi chỉ áp dụng cho đề vấn đáp");
+  }
 
   // answerMode/language chỉ thuộc đề vấn đáp — đề viết không có khái niệm này.
   if (exam.kind !== "oral" && ("answerMode" in data || "language" in data)) {

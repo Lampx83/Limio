@@ -332,6 +332,33 @@ describe("updateExam (A7.1.3)", () => {
     });
   });
 
+  it("nhiều lượt chỉ cho đề vấn đáp; maxAttempts trong 2–10", async () => {
+    const { ownerId, courseId } = await newOwner("u8");
+    await expect(
+      createExam(ownerId, courseId, validExamInput({ attemptPolicy: "multi" })),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+    await expect(
+      createExam(ownerId, courseId, validExamInput({ kind: "oral", attemptPolicy: "multi", maxAttempts: 1 })),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+    await expect(
+      createExam(ownerId, courseId, validExamInput({ kind: "oral", attemptPolicy: "multi", maxAttempts: 11 })),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+    const { examId } = await createExam(
+      ownerId,
+      courseId,
+      validExamInput({ kind: "oral", attemptPolicy: "multi", maxAttempts: 4 }),
+    );
+    const e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(e.attemptPolicy).toBe("multi");
+    expect(e.maxAttempts).toBe(4);
+    await updateExam(ownerId, examId, { maxAttempts: 5 });
+    expect((await prisma.exam.findUniqueOrThrow({ where: { id: examId } })).maxAttempts).toBe(5);
+    const written = await createExam(ownerId, courseId, validExamInput());
+    await expect(updateExam(ownerId, written.examId, { attemptPolicy: "multi" })).rejects.toMatchObject({
+      code: "validation_failed",
+    });
+  });
+
   it("A6.6 — đề viết không nhận answerMode/language", async () => {
     const { ownerId, courseId } = await newOwner("u7");
     const { examId } = await createExam(ownerId, courseId, validExamInput());

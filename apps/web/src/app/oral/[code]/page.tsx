@@ -13,9 +13,13 @@ export const dynamic = "force-dynamic";
  */
 export default async function OralJoinByCodePage({
   params,
+  searchParams,
 }: {
   params: { code: string };
+  searchParams?: { retake?: string };
 }) {
+  // ?retake=1 chỉ do nút "Thi lại" tạo ra — mở lại link/refresh không tự đốt lượt.
+  const retake = searchParams?.retake === "1";
   const code = params.code.toUpperCase();
   const session = await auth();
   if (!session?.user?.id) {
@@ -38,7 +42,7 @@ export default async function OralJoinByCodePage({
           {info.examTitle} — {info.courseTitle ?? "Đề độc lập"}. Liên hệ giảng
           viên nếu bạn cần vào lại.
         </p>
-        <a href="/" className="mt-6 inline-block text-sm text-blue-600 hover:underline">
+        <a href="/" className="mt-6 inline-block text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300">
           ← Trang chủ
         </a>
       </main>
@@ -46,13 +50,14 @@ export default async function OralJoinByCodePage({
   }
 
   try {
-    const r = await joinOralSessionByCode(session.user.id, code);
+    const r = await joinOralSessionByCode(session.user.id, code, { retake });
     redirect(`/learn/${courseSlug}/exams/${r.examId}/oral/${r.attemptId}`);
   } catch (e) {
     if (e instanceof ExamError) {
-      if (e.code === "attempt_already_submitted") {
+      if (e.code === "attempt_already_submitted" || e.code === "attempt_limit_reached") {
         const existing = await prisma.examAttempt.findFirst({
           where: { examId: info.examId, userId: session.user.id },
+          orderBy: { startedAt: "desc" },
           select: { id: true },
         });
         if (existing) {
@@ -65,7 +70,7 @@ export default async function OralJoinByCodePage({
         <main className="mx-auto max-w-md px-4 py-16 text-center">
           <h1 className="mb-2 text-xl font-semibold">Không vào được buổi vấn đáp</h1>
           <p className="text-sm text-faint">{describeError(e.code)}</p>
-          <a href="/" className="mt-6 inline-block text-sm text-blue-600 hover:underline">
+          <a href="/" className="mt-6 inline-block text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300">
             ← Trang chủ
           </a>
         </main>
@@ -81,6 +86,8 @@ function describeError(code: string): string {
       return "Mã tham gia không hợp lệ.";
     case "exam_window_closed":
       return "Buổi vấn đáp đã đóng.";
+    case "attempt_limit_reached":
+      return "Bạn đã dùng hết số lượt vấn đáp cho phép.";
     default:
       return `Lỗi: ${code}`;
   }

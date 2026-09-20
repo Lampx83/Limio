@@ -30,6 +30,8 @@ interface InitialValues {
   openAt: string; // datetime-local ISO without zone
   closeAt: string;
   attemptPolicy: "single" | "multi";
+  /** Chỉ có ý nghĩa khi attemptPolicy="multi" (vấn đáp AI): số lượt tối đa mỗi sinh viên, 2–10. */
+  maxAttempts?: number;
   gradingMode: "auto" | "manual" | "hybrid";
   proctoringLevel: "none" | "basic" | "strict";
   shuffleQuestions: boolean;
@@ -107,6 +109,10 @@ export default function ExamMetaForm({
       openAt: new Date(v.openAt).toISOString(),
       closeAt: new Date(v.closeAt).toISOString(),
       attemptPolicy: v.attemptPolicy,
+      // Chỉ gửi khi thật sự dùng (vấn đáp + nhiều lượt) — khoá bởi lượt thi thì server từ chối trường này.
+      ...(v.kind === "oral" && v.attemptPolicy === "multi" && !isLocked("maxAttempts")
+        ? { maxAttempts: Math.min(10, Math.max(2, Math.round(v.maxAttempts ?? 3))) }
+        : {}),
       gradingMode: v.gradingMode,
       proctoringLevel: v.proctoringLevel,
       shuffleQuestions: v.shuffleQuestions,
@@ -203,15 +209,6 @@ export default function ExamMetaForm({
           {" "}— không đổi được sau khi tạo (ca thi và bố cục đã gắn với khoá này).
         </p>
       )}
-      {mode === "create" && v.kind === "oral" && (
-        <p className="banner-info px-3 py-2 text-caption">
-          Vấn đáp AI không có ngân hàng câu hỏi — sau khi tạo, bạn sẽ nộp tài
-          liệu (đề cương, danh sách chủ đề…) ở tab "Tài liệu" để AI dựa vào đó
-          hỏi sinh viên. Bài thi luôn bắt buộc toàn màn hình; điểm do AI gợi ý
-          và giảng viên duyệt/sửa thủ công, không tự động chấm. Cách trả lời
-          và ngôn ngữ đổi được cho tới khi có sinh viên vào thi.
-        </p>
-      )}
 
       {v.kind === "oral" && (
         <div>
@@ -255,17 +252,42 @@ export default function ExamMetaForm({
           Cùng một gói chạy 15 phút ở lớp này và 30 phút ở lớp kia là chuyện
           bình thường, nên con số đó được chọn lúc mở buổi thi (Tổ chức thi →
           Link thi nhanh). Exam.durationMin chỉ còn là giá trị mặc định gợi ý. */}
-      <div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectField
-          label="Số lượt thi"
+          label={v.kind === "oral" ? "Số lượt vấn đáp" : "Số lượt thi"}
           value={v.attemptPolicy}
           disabled={isLocked("attemptPolicy")}
-          options={[
-            { value: "single", label: "1 lượt duy nhất" },
-            { value: "multi", label: "Nhiều lượt (P1)" },
-          ]}
+          // Nhiều lượt chỉ có cho vấn đáp AI; thi viết luôn 1 lượt (server cũng chặn).
+          options={
+            v.kind === "oral"
+              ? [
+                  { value: "single", label: "1 lượt duy nhất" },
+                  { value: "multi", label: "Nhiều lượt (sinh viên tự bấm Thi lại)" },
+                ]
+              : [{ value: "single", label: "1 lượt duy nhất" }]
+          }
           onChange={(s) => setV({ ...v, attemptPolicy: s as "single" | "multi" })}
         />
+        {v.kind === "oral" && v.attemptPolicy === "multi" && (
+          <div>
+            <label className="block text-sm font-medium" htmlFor="maxAttempts">
+              Số lượt tối đa mỗi sinh viên
+            </label>
+            <input
+              id="maxAttempts"
+              type="number"
+              min={2}
+              max={10}
+              value={v.maxAttempts ?? 3}
+              disabled={isLocked("maxAttempts")}
+              onChange={(e) => setV({ ...v, maxAttempts: Number(e.target.value) })}
+              className="mt-1 w-full rounded border border-default px-3 py-2 text-sm disabled:bg-slate-50"
+            />
+            <p className="mt-1 text-caption text-faint">
+              Điểm tính theo lượt cao nhất. Mỗi lượt vấn đáp dùng token AI riêng.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* A5.3 PR2.10 — Thời gian mở/đóng đã chuyển sang Tổ chức thi (ca thi). */}

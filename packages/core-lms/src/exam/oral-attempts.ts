@@ -23,6 +23,64 @@ function generateOralJoinCode(): string {
   return s;
 }
 
+type StartDecision = "resume" | "create" | "already_submitted" | "limit_reached";
+
+/**
+ * Quyết định thuần (không đụng DB) khi SV bấm vào 1 đề vấn đáp, để logic "thi nhiều lượt" test được riêng:
+ * - đang có lượt làm dở → tiếp tục (luôn, kể cả hết lượt);
+ * - chưa có lượt nào → tạo lượt đầu (vào thẳng, như cũ);
+ * - đã có lượt xong: single → chặn; multi → hết lượt thì chặn, còn lượt thì CHỈ tạo mới khi SV chủ động
+ *   bấm "Thi lại" (retake). Không tự tạo khi chỉ mở lại link/refresh, để không đốt lượt ngoài ý muốn.
+ */
+export function decideOralStart(
+  attempts: ReadonlyArray<{ status: string }>,
+  policy: "single" | "multi",
+  maxAttempts: number,
+  retake: boolean,
+): StartDecision {
+  if (attempts.some((a) => a.status === "in_progress")) return "resume";
+  if (attempts.length === 0) return "create";
+  if (policy !== "multi") return "already_submitted";
+  if (attempts.length >= maxAttempts) return "limit_reached";
+  return retake ? "create" : "already_submitted";
+}
+
+/** Số lượt còn lại của 1 SV với 1 đề vấn đáp — dùng cho nút "Thi lại" và dòng "Lượt x/y". */
+export async function getOralAttemptQuota(
+  userId: string,
+  examId: string,
+  db: PrismaClient = prisma,
+): Promise<{
+  policy: "single" | "multi";
+  max: number;
+  used: number;
+  remaining: number;
+  canRetake: boolean;
+  latestAttemptId: string | null;
+}> {
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { attemptPolicy: true, maxAttempts: true },
+  });
+  if (!exam) throw new ExamError("exam_not_found");
+  const attempts = await db.examAttempt.findMany({
+    where: { examId, userId },
+    orderBy: { startedAt: "desc" },
+    select: { id: true, status: true },
+  });
+  const max = exam.attemptPolicy === "multi" ? exam.maxAttempts : 1;
+  const used = attempts.length;
+  const inProgress = attempts.some((a) => a.status === "in_progress");
+  return {
+    policy: exam.attemptPolicy,
+    max,
+    used,
+    remaining: Math.max(0, max - used),
+    canRetake: exam.attemptPolicy === "multi" && used > 0 && used < max && !inProgress,
+    latestAttemptId: attempts[0]?.id ?? null,
+  };
+}
+
 /**
  * A6.3 — Bắt đầu (hoặc resume) 1 lượt vấn đáp AI. Dùng lại nguyên
  * `assertEligibleForExam` (status/ca thi/cohort/enrollment — không quan tâm
@@ -38,27 +96,30 @@ function generateOralJoinCode(): string {
 export async function startOralExamAttempt(
   userId: string,
   examId: string,
+  opts: { retake?: boolean } = {},
   db: PrismaClient = prisma,
 ): Promise<{ attemptId: string; durationSec: number; resumed: boolean }> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, kind: true },
+    select: { id: true, courseId: true, kind: true, attemptPolicy: true, maxAttempts: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
 
   const eligibility = await assertEligibleForExam(userId, examId, db);
 
-  const existing = await db.examAttempt.findFirst({
+  const attempts = await db.examAttempt.findMany({
     where: { examId, userId },
+    orderBy: { startedAt: "desc" },
     select: { id: true, status: true, durationSec: true },
   });
-  if (existing) {
-    if (existing.status === "in_progress") {
-      return { attemptId: existing.id, durationSec: existing.durationSec, resumed: true };
-    }
-    throw new ExamError("attempt_already_submitted");
+  const decision = decideOralStart(attempts, exam.attemptPolicy, exam.maxAttempts, !!opts.retake);
+  if (decision === "resume") {
+    const inProgress = attempts.find((a) => a.status === "in_progress")!;
+    return { attemptId: inProgress.id, durationSec: inProgress.durationSec, resumed: true };
   }
+  if (decision === "limit_reached") throw new ExamError("attempt_limit_reached");
+  if (decision === "already_submitted") throw new ExamError("attempt_already_submitted");
 
   const attemptId = randomUUID();
   const durationSec = eligibility.durationSec;
@@ -317,6 +378,7 @@ export async function resolveOralJoinCode(
 export async function joinOralSessionByCode(
   userId: string,
   code: string,
+  opts: { retake?: boolean } = {},
   db: PrismaClient = prisma,
 ): Promise<{ attemptId: string; durationSec: number; resumed: boolean; examId: string }> {
   const session = await db.examSession.findUnique({
@@ -328,23 +390,32 @@ export async function joinOralSessionByCode(
       closesAt: true,
       timingMode: true,
       status: true,
-      exam: { select: { id: true, courseId: true, kind: true, durationMin: true } },
+      exam: {
+        select: { id: true, courseId: true, kind: true, durationMin: true, attemptPolicy: true, maxAttempts: true },
+      },
     },
   });
   if (!session || session.exam.kind !== "oral") throw new ExamError("invalid_code");
   if (!isSessionOpen(session, new Date())) throw new ExamError("exam_window_closed");
 
   const examId = session.exam.id;
-  const existing = await db.examAttempt.findFirst({
+  const attempts = await db.examAttempt.findMany({
     where: { examId, userId },
+    orderBy: { startedAt: "desc" },
     select: { id: true, status: true, durationSec: true },
   });
-  if (existing) {
-    if (existing.status === "in_progress") {
-      return { attemptId: existing.id, durationSec: existing.durationSec, resumed: true, examId };
-    }
-    throw new ExamError("attempt_already_submitted");
+  const decision = decideOralStart(
+    attempts,
+    session.exam.attemptPolicy,
+    session.exam.maxAttempts,
+    !!opts.retake,
+  );
+  if (decision === "resume") {
+    const inProgress = attempts.find((a) => a.status === "in_progress")!;
+    return { attemptId: inProgress.id, durationSec: inProgress.durationSec, resumed: true, examId };
   }
+  if (decision === "limit_reached") throw new ExamError("attempt_limit_reached");
+  if (decision === "already_submitted") throw new ExamError("attempt_already_submitted");
 
   const attemptId = randomUUID();
   const durationSec = (session.durationOverrideMin ?? session.exam.durationMin) * 60;

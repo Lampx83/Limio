@@ -18,9 +18,13 @@ export const dynamic = "force-dynamic";
  */
 export default async function ExamLandingPage({
   params,
+  searchParams,
 }: {
   params: { slug: string; examId: string };
+  searchParams?: { retake?: string };
 }) {
+  // ?retake=1 chỉ do nút "Thi lại" ở trang đã nộp tạo ra — mở lại link/refresh thì không tự đốt lượt (xem decideOralStart).
+  const retake = searchParams?.retake === "1";
   const session = await auth();
   if (!session?.user?.id) {
     redirect(`/signin?callbackUrl=/learn/${params.slug}/exams/${params.examId}`);
@@ -45,13 +49,14 @@ export default async function ExamLandingPage({
   // như thi viết, nên đi luồng bắt đầu riêng và runtime URL riêng (/oral/...).
   if (exam.kind === "oral") {
     try {
-      const r = await startOralExamAttempt(session.user.id, params.examId);
+      const r = await startOralExamAttempt(session.user.id, params.examId, { retake });
       redirect(`/learn/${params.slug}/exams/${params.examId}/oral/${r.attemptId}`);
     } catch (e) {
       if (e instanceof ExamError) {
-        if (e.code === "attempt_already_submitted") {
+        if (e.code === "attempt_already_submitted" || e.code === "attempt_limit_reached") {
           const existing = await prisma.examAttempt.findFirst({
             where: { examId: exam.id, userId: session.user.id },
+            orderBy: { startedAt: "desc" },
             select: { id: true },
           });
           if (existing) {
@@ -107,6 +112,8 @@ function describeExamError(code: string): string {
       return "Bài thi chưa mở.";
     case "exam_window_closed":
       return "Bài thi đã đóng.";
+    case "attempt_limit_reached":
+      return "Bạn đã dùng hết số lượt thi cho phép.";
     case "not_enrolled":
       return "Bạn chưa đăng ký khóa học này.";
     default:

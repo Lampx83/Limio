@@ -125,6 +125,7 @@ export default async function EditExamPage({
           "durationMin",
           "openAt",
           "attemptPolicy",
+          "maxAttempts",
           "gradingMode",
           "proctoringLevel",
           "shuffleQuestions",
@@ -243,6 +244,7 @@ export default async function EditExamPage({
               kind: exam.kind,
               answerMode: exam.answerMode,
               language: exam.language,
+              maxAttempts: exam.maxAttempts,
               examinerInstructions: exam.examinerInstructions ?? "",
             }}
           />

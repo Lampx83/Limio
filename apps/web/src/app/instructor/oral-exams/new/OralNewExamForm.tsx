@@ -63,6 +63,7 @@ export default function OralNewExamForm({
           openAt: toLocalInput(now),
           closeAt: toLocalInput(inWeek),
           attemptPolicy: "single",
+          maxAttempts: 3,
           gradingMode: "hybrid",
           proctoringLevel: "basic",
           shuffleQuestions: true,

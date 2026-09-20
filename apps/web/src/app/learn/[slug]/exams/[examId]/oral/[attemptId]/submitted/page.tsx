@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getAttemptRuntime } from "@feedbackme/core-lms";
+import { getAttemptRuntime, getOralAttemptQuota } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -35,14 +35,30 @@ export default async function OralExamSubmittedPage({
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { title: true },
+    select: { title: true, courseId: true },
   });
+
+  // Thi nhiều lượt: hiện số lượt đã dùng + nút "Thi lại" (chỉ khi còn lượt và không có lượt đang làm dở).
+  const quota = await getOralAttemptQuota(session.user.id, params.examId);
+  let retakeHref: string | null = null;
+  if (quota.canRetake) {
+    if (exam?.courseId) {
+      retakeHref = `/learn/${params.slug}/exams/${params.examId}?retake=1`;
+    } else {
+      // Đề độc lập không có trang khoá học — vào lại bằng mã tham gia của buổi vấn đáp.
+      const session2 = await prisma.examSession.findFirst({
+        where: { examId: params.examId, oralJoinCode: { not: null } },
+        select: { oralJoinCode: true },
+      });
+      if (session2?.oralJoinCode) retakeHref = `/oral/${session2.oralJoinCode}?retake=1`;
+    }
+  }
 
   return (
     <main className="relative mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-4 py-16 text-center">
       <a
         href={`/learn/${params.slug}`}
-        className="absolute left-4 top-4 text-sm text-blue-600 hover:underline sm:left-6 sm:top-6"
+        className="absolute left-4 top-4 text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300 sm:left-6 sm:top-6"
       >
         ← Khoá học
       </a>
@@ -55,9 +71,22 @@ export default async function OralExamSubmittedPage({
         Buổi vấn đáp đã kết thúc. Giảng viên sẽ nghe lại và chấm điểm — kết
         quả sẽ được thông báo riêng, không hiện tự động ở đây.
       </p>
-      <a href={`/learn/${params.slug}`} className="btn btn-secondary btn-sm mt-6">
-        Quay lại khoá học
-      </a>
+      {quota.policy === "multi" && (
+        <p className="mt-4 text-sm text-faint">
+          Bạn đã dùng {quota.used}/{quota.max} lượt.
+          {quota.remaining === 0 && " Đã hết lượt thi."}
+        </p>
+      )}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        {retakeHref && (
+          <a href={retakeHref} className="btn btn-primary btn-sm">
+            Thi lại (còn {quota.remaining} lượt)
+          </a>
+        )}
+        <a href={`/learn/${params.slug}`} className="btn btn-secondary btn-sm">
+          Quay lại khoá học
+        </a>
+      </div>
     </main>
   );
 }

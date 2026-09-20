@@ -16,6 +16,7 @@ export class ExamError extends Error {
       | "unknown_passage"
       | "attempt_not_found"
       | "attempt_already_submitted"
+      | "attempt_limit_reached"
       | "attempt_belongs_to_other"
       | "session_stale"
       | "not_enrolled"
