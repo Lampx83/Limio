@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { AlignLeft, BarChart3, Cloud, FileUp, ListChecks, StickyNote, X, type LucideIcon } from "lucide-react";
+import { useEffect, type ComponentType } from "react";
+import { BarChart3, FileUp, ListChecks, PenLine, X, type LucideIcon, type LucideProps } from "lucide-react";
 import { RESOURCE_TYPES, RESOURCE_TYPE_HINTS, RESOURCE_TYPE_ICONS } from "../ResourceEditor";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 
@@ -9,21 +9,53 @@ export type SlideChoice =
   | { type: "content"; resourceKind?: ResourceType }
   | { type: "quiz" | "poll" | "word_cloud" | "collaborate_board" };
 
+// Đám mây chữ thật: vài từ to nhỏ khác nhau xếp cụm, một màu theo màu chữ của ô — lucide không có icon này.
+// Vẽ lớn hơn cỡ icon được truyền vào (×1.5) vì chữ cần chỗ mới đọc được; ô chứa không cắt phần tràn.
+export function WordCloudIcon({ size = 28 }: LucideProps) {
+  const px = Number(size) * 1.5;
+  return (
+    <svg width={px} height={px} viewBox="0 0 40 40" fill="currentColor" fontWeight={800} fontFamily="system-ui, sans-serif" textAnchor="middle" aria-hidden>
+      <text x="20" y="22" fontSize="16">học</text>
+      <text x="9" y="9" fontSize="8">AI</text>
+      <text x="30" y="10" fontSize="9">lớp</text>
+      <text x="9" y="34" fontSize="9">vui</text>
+      <text x="30" y="35" fontSize="10">mới</text>
+    </svg>
+  );
+}
+
+// Bảng cộng tác: 2 tờ ghi chú nét viền, tờ phía trước được gim bằng ghim — giống Padlet. Không tô màu, theo màu chữ của ô.
+export function CollabBoardIcon({ size = 28 }: LucideProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <g transform="rotate(-8 12 24)">
+        <rect x="3" y="12" width="20" height="20" rx="2" />
+        <path d="M7 19h12M7 24h8" />
+      </g>
+      <g transform="rotate(6 28 22)">
+        <rect x="16" y="9" width="21" height="22" rx="2" fill="rgb(var(--surface))" />
+        <path d="M20 19h13M20 24h13M20 29h7" />
+        <circle cx="26.5" cy="10" r="3.5" fill="rgb(var(--surface))" />
+      </g>
+    </svg>
+  );
+}
+
 interface Tile {
   key: string;
   label: string;
   hint: string;
-  icon: LucideIcon;
+  icon: LucideIcon | ComponentType<LucideProps>;
   choice: SlideChoice;
 }
 
-// 9 loại slide trình bày: 1 kiểu "Tiêu đề & ý chính" + 8 loại theo tài nguyên nhúng được.
+// Slide trình bày: 1 kiểu "Tiêu đề & ý chính" + các loại theo tài nguyên nhúng được (một số bị ẩn khỏi bảng chọn, xem HIDDEN_KEYS).
 const CONTENT_TILES: Tile[] = [
   {
     key: "text",
-    label: "Tiêu đề & ý chính",
+    label: "Văn bản",
     hint: "Tiêu đề, phụ đề, gạch đầu dòng và ảnh minh hoạ",
-    icon: AlignLeft,
+    icon: PenLine,
     choice: { type: "content" },
   },
   ...RESOURCE_TYPES.map((rt) => ({
@@ -38,13 +70,14 @@ const CONTENT_TILES: Tile[] = [
 const INTERACTIVE_TILES: Tile[] = [
   { key: "quiz", label: "Trắc nghiệm", hint: "Câu hỏi 1 đáp án đúng, chấm tức thì", icon: ListChecks, choice: { type: "quiz" } },
   { key: "poll", label: "Thăm dò", hint: "Lấy ý kiến cả lớp, không chấm điểm", icon: BarChart3, choice: { type: "poll" } },
-  { key: "word_cloud", label: "Word Cloud", hint: "Thu thập từ khoá thành đám mây chữ", icon: Cloud, choice: { type: "word_cloud" } },
-  { key: "collaborate_board", label: "Bảng cộng tác", hint: "Học viên dán ghi chú lên bảng chung", icon: StickyNote, choice: { type: "collaborate_board" } },
+  { key: "word_cloud", label: "Word Cloud", hint: "Thu thập từ khoá thành đám mây chữ", icon: WordCloudIcon, choice: { type: "word_cloud" } },
+  { key: "collaborate_board", label: "Dán Note", hint: "Học viên dán ghi chú lên bảng chung", icon: CollabBoardIcon, choice: { type: "collaborate_board" } },
 ];
 
-// Một lưới phẳng duy nhất: mọi loại slide (tài nguyên + tương tác + tách PDF) ngang hàng nhau.
-// Ô cờ vua: 2 tông nền xen kẽ theo (hàng + cột) để lưới đọc như bàn cờ.
-const COLS = 4;
+// Một lưới phẳng duy nhất: mọi loại slide (tài nguyên + tương tác + tách PDF) ngang hàng nhau, cùng một kiểu thẻ.
+
+// Loại hay dùng — xếp lên đầu theo thứ tự này, các loại còn lại nối tiếp phía sau.
+const POPULAR_KEYS = ["poll", "quiz", "word_cloud", "collaborate_board", "video", "pdf-split", "text"];
 
 export default function SlideTypePicker({
   onPick,
@@ -65,12 +98,17 @@ export default function SlideTypePicker({
 
   const pdfSplit: Tile = {
     key: "pdf-split",
-    label: "Tách PDF thành slide",
+    label: "PDF",
     hint: pdfNote,
     icon: FileUp,
     choice: { type: "content" },
   };
-  const tiles = [...CONTENT_TILES, ...INTERACTIVE_TILES, pdfSplit].map((t) => ({
+  // "richtext" (văn bản), "pdf" (nhúng nguyên file) và "file" (đính kèm) không còn trong bảng chọn; slide cũ vẫn hiển thị bình thường.
+  const HIDDEN_KEYS = ["richtext", "pdf", "file"];
+  const all = [...CONTENT_TILES.filter((t) => !HIDDEN_KEYS.includes(t.key)), ...INTERACTIVE_TILES, pdfSplit];
+  const popular = POPULAR_KEYS.map((k) => all.find((t) => t.key === k)).filter((t): t is Tile => !!t);
+  const others = all.filter((t) => !POPULAR_KEYS.includes(t.key));
+  const tiles = [...popular, ...others].map((t) => ({
     ...t,
     onClick: t.key === "pdf-split" ? onImportPdf : () => onPick(t.choice),
   }));
@@ -90,23 +128,20 @@ export default function SlideTypePicker({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {tiles.map((t, i) => {
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {tiles.map((t) => {
             const Icon = t.icon;
-            const dark = (Math.floor(i / COLS) + (i % COLS)) % 2 === 1;
             return (
               <button
                 key={t.key}
                 onClick={t.onClick}
                 title={t.hint}
-                className={`flex min-h-[112px] flex-col items-center justify-center gap-2 rounded-xl border border-transparent p-3 text-center transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md ${
-                  dark ? "bg-brand-50 dark:bg-brand-900/20" : "bg-[rgb(var(--surface-muted))]"
-                }`}
+                className="group flex min-h-[112px] flex-col items-center justify-center gap-2 rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 text-center transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 text-brand-700 shadow-sm">
-                  <Icon size={20} />
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition group-hover:bg-brand-100 dark:bg-brand-900/30">
+                  <Icon size={26} />
                 </span>
-                <span className="text-[13px] font-semibold leading-tight text-[rgb(var(--text))]">{t.label}</span>
+                <span className="text-sm font-semibold leading-tight text-[rgb(var(--text))]">{t.label}</span>
               </button>
             );
           })}

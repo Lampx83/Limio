@@ -50,7 +50,7 @@ const TYPE_LABELS: Record<SlideType, string> = {
   quiz: "Trắc nghiệm",
   poll: "Thăm dò",
   word_cloud: "Word Cloud",
-  collaborate_board: "Collaborate Board",
+  collaborate_board: "Dán Note",
 };
 
 interface UiState {
@@ -152,6 +152,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         if (!deckRes.ok) { toast.error("Không tải được bài giảng"); return; }
         const deckData: Deck = await deckRes.json();
         if (cancelled) return;
+        // Slide bị ẩn (config.hidden) không xuất hiện khi trình chiếu.
+        deckData.slides = deckData.slides.filter((sl) => !sl.config?.hidden);
         setDeck(deckData);
 
         const presentRes = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/present`), {

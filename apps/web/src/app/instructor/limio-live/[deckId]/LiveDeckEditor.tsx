@@ -23,7 +23,6 @@ import {
   FileText,
   ListChecks,
   BarChart3,
-  Cloud,
   StickyNote,
   Plus,
   Trash2,
@@ -34,6 +33,7 @@ import {
   X,
   SlidersHorizontal,
   Eye,
+  EyeOff,
   ClipboardX,
   ZoomIn,
   ZoomOut,
@@ -48,7 +48,7 @@ import { toast } from "@/lib/toast";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 import BoardNotesView from "../BoardNotesView";
 import { contentKind } from "../slideKind";
-import SlideTypePicker, { type SlideChoice } from "./SlideTypePicker";
+import SlideTypePicker, { CollabBoardIcon, WordCloudIcon, type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { SLIDE_THEMES, slideThemeBg } from "../slideThemes";
@@ -74,14 +74,14 @@ interface Deck {
 
 const INTERACTIVE_META: Record<
   Exclude<SlideType, "content">,
-  { label: string; icon: typeof FileText; badge: string }
+  { label: string; icon: typeof FileText | typeof WordCloudIcon | typeof CollabBoardIcon; badge: string }
 > = {
   quiz: { label: "Trắc nghiệm", icon: ListChecks, badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
   poll: { label: "Thăm dò", icon: BarChart3, badge: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
-  word_cloud: { label: "Word Cloud", icon: Cloud, badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
+  word_cloud: { label: "Word Cloud", icon: WordCloudIcon, badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
   collaborate_board: {
-    label: "Bảng cộng tác",
-    icon: StickyNote,
+    label: "Dán Note",
+    icon: CollabBoardIcon,
     badge: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   },
 };
@@ -89,7 +89,7 @@ const INTERACTIVE_META: Record<
 // Nhãn/icon/màu hiển thị của 1 slide — slide "content" được hiển thị theo loại tài nguyên cụ thể.
 function slideMeta(slide: { type: SlideType; config: Record<string, any> }): {
   label: string;
-  icon: typeof FileText;
+  icon: typeof FileText | typeof WordCloudIcon | typeof CollabBoardIcon;
   badge: string;
 } {
   if (slide.type === "content") {
@@ -671,6 +671,10 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                       setSelectedSlideId(slide.id);
                       setSlidesOpen(false);
                     }}
+                    onToggleHidden={() =>
+                      handleSaveSlide(slide.id, { config: { ...slide.config, hidden: !slide.config?.hidden } })
+                    }
+                    onDelete={() => handleDeleteSlide(slide.id)}
                   />
                 ))}
               </SortableContext>
@@ -831,13 +835,18 @@ const SlideThumb = memo(function SlideThumb({
   isActive,
   collapsed,
   onSelect,
+  onToggleHidden,
+  onDelete,
 }: {
   slide: Slide;
   index: number;
   isActive: boolean;
   collapsed: boolean;
   onSelect: () => void;
+  onToggleHidden: () => void;
+  onDelete: () => void;
 }) {
+  const hidden = !!slide.config?.hidden;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slide.id });
   const meta = slideMeta(slide);
   const Icon = meta.icon;
@@ -845,7 +854,7 @@ const SlideThumb = memo(function SlideThumb({
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : hidden ? 0.55 : 1 }}
       onClick={onSelect}
       title={`${index + 1}. ${meta.label} — ${slideSummary(slide)}`}
       className={`group mb-1.5 flex cursor-pointer items-center gap-2 rounded-xl border bg-[rgb(var(--surface))] p-1.5 transition ${
@@ -879,7 +888,34 @@ const SlideThumb = memo(function SlideThumb({
         <p className="mt-0.5 text-[10px] font-semibold text-faint">
           {index + 1} · {meta.label}
           {slide.timerSeconds != null && ` · ${Math.round(slide.timerSeconds / 60)}p`}
+          {hidden && " · Đã ẩn"}
         </p>
+      </div>
+      <div className={`flex shrink-0 flex-col gap-0.5 ${collapsed ? "lg:hidden" : ""}`}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleHidden();
+          }}
+          className={`rounded p-1 transition hover:bg-[rgb(var(--surface-muted))] ${hidden ? "text-brand-700" : "text-faint opacity-0 focus:opacity-100 group-hover:opacity-100"}`}
+          aria-label={hidden ? "Hiện slide khi trình chiếu" : "Ẩn slide khi trình chiếu"}
+          title={hidden ? "Đang ẩn — bấm để hiện lại khi trình chiếu" : "Ẩn khỏi lúc trình chiếu"}
+        >
+          {hidden ? <EyeOff size={13} /> : <Eye size={13} />}
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="rounded p-1 text-faint opacity-0 transition hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover:opacity-100"
+          aria-label="Xoá slide"
+          title="Xoá slide"
+        >
+          <Trash2 size={13} />
+        </button>
       </div>
       {collapsed && (
         <span className="hidden text-[10px] font-bold text-faint lg:block" aria-hidden>

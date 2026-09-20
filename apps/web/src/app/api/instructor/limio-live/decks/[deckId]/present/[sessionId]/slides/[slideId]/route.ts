@@ -78,7 +78,7 @@ export async function POST(
         data: {
           code,
           ownerId: userId,
-          title: (config.title || config.prompt || "Bảng cộng tác").slice(0, 120),
+          title: (config.title || config.prompt || "Dán Note").slice(0, 120),
           prompt: config.prompt || null,
           columns,
           blockPaste: !!config.blockPaste,
