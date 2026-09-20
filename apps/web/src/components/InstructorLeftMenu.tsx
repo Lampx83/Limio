@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, type ComponentType } from "react";
 import { useActiveNavSectionOverride } from "@/lib/activeNavSection";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
+import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -28,7 +29,6 @@ import {
   FolderOpen,
   Crown,
   Bot,
-  Cloud,
   Clock,
   PenTool,
   Gamepad2,
@@ -37,6 +37,7 @@ import {
   StickyNote,
   createLucideIcon,
   type LucideIcon,
+  type LucideProps,
 } from "lucide-react";
 
 /** Điểm "A+" khoanh tròn bằng nét bút — icon module Kiểm tra đánh giá (lucide không có sẵn hình này). */
@@ -55,10 +56,19 @@ const GradeAPlus = createLucideIcon("GradeAPlus", [
   ],
 ]);
 
+/** Icon Word Cloud của bài giảng tương tác — bọc lại để nhận className (màu) như icon lucide. */
+function WordCloudMenuIcon({ size = 14, className, strokeWidth }: LucideProps) {
+  return (
+    <span className={`inline-flex ${className ?? ""}`}>
+      <WordCloudIcon size={Number(size) * 1.2} strokeWidth={strokeWidth} />
+    </span>
+  );
+}
+
 type Item = {
   label: string;
   href?: string;
-  icon: LucideIcon;
+  icon: LucideIcon | ComponentType<LucideProps>;
   note?: string;
   /** Nhãn nhỏ, không tương tác — chỉ để nhóm trực quan các item trong 1 module dài (vd LMS). */
   section?: string;
@@ -155,8 +165,8 @@ const MODULES: ModuleDef[] = [
       { label: "Bài giảng của tôi", href: "/instructor/limio-live", icon: Presentation, section: "Bài giảng tương tác" },
       { label: "Thư viện mẫu", icon: FolderOpen, note: "Chợ chia sẻ mẫu bài giảng — đang phát triển (P2)", section: "Bài giảng tương tác" },
       // Mỗi công cụ 1 dòng menu (mở thẳng qua ?tool=...), gom theo mục đích, ≤5 mục/nhóm.
-      { label: "Quick Poll", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Brainstorming" },
-      { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: Cloud, section: "Brainstorming" },
+      { label: "Vote", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Brainstorming" },
+      { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: WordCloudMenuIcon, section: "Brainstorming" },
       { label: "Padlet", href: "/instructor/teaching-tools?tool=board", icon: StickyNote, section: "Brainstorming" },
       { label: "Whiteboard", href: "/instructor/teaching-tools?tool=whiteboard", icon: PenTool, section: "Brainstorming" },
       { label: "Đếm ngược", href: "/instructor/teaching-tools?tool=timer", icon: Clock, section: "Điều hành lớp học" },
