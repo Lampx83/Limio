@@ -26,13 +26,6 @@ export async function commitMcqRowsToQuiz(
   db: PrismaClient = prisma,
 ): Promise<CommitMcqResult> {
   const validRows = rows.filter((r) => r.status !== "error" && r.parsed);
-  const maxRow = await db.quizQuestion.findFirst({
-    where: { quizId },
-    orderBy: { orderIndex: "desc" },
-    select: { orderIndex: true },
-  });
-  let nextIdx = (maxRow?.orderIndex ?? -1) + 1;
-
   let created = 0;
   const errors: CommitMcqResult["errors"] = [];
 
@@ -47,7 +40,6 @@ export async function commitMcqRowsToQuiz(
           prompt: p.prompt,
           explanation: p.explanation ?? undefined,
           points: p.points,
-          orderIndex: nextIdx,
           options: p.options.map((o) => ({
             label: o.label,
             isCorrect: o.isCorrect,
@@ -62,7 +54,6 @@ export async function commitMcqRowsToQuiz(
         db,
       );
       created++;
-      nextIdx++;
     } catch (e) {
       errors.push({
         rowNumber: row.rowNumber,

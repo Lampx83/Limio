@@ -241,7 +241,6 @@ export default function AddQuestionForm({
         type,
         prompt: prompt.trim(),
         points,
-        orderIndex: nextOrderIndex,
         explanation: explanation.trim() || undefined,
         options: cleanOptions,
         extra,

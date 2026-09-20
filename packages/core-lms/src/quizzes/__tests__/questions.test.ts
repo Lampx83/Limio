@@ -43,6 +43,23 @@ describe("createQuestion", () => {
     expect(tags.map((t) => t.skillId)).toEqual([skill.skillId]);
   });
 
+  it("bỏ trống orderIndex thì nối vào cuối, kể cả sau câu có chỉ số lớn hoặc chỉ số tường minh", async () => {
+    const { ownerId, quizId } = await setup("Q-append");
+    const opts = [
+      { label: "A", isCorrect: true },
+      { label: "B", isCorrect: false },
+    ];
+    const add = (prompt: string, orderIndex?: number) =>
+      createQuestion(ownerId, quizId, { type: "mcq", prompt, options: opts, ...(orderIndex === undefined ? {} : { orderIndex }) });
+    await add("first");
+    await add("big", 73512);
+    await add("after-big");
+    await add("last");
+    const rows = await prisma.quizQuestion.findMany({ where: { quizId }, orderBy: { orderIndex: "asc" } });
+    expect(rows.map((r) => r.prompt)).toEqual(["first", "big", "after-big", "last"]);
+    expect(new Set(rows.map((r) => r.orderIndex)).size).toBe(4);
+  });
+
   it("rejects question with zero correct options", async () => {
     const { ownerId, quizId } = await setup("Q2");
     await expect(

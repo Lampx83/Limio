@@ -64,7 +64,6 @@ export default function AiQuestionGenerator({
       type: d.type,
       prompt: d.prompt,
       points: 1,
-      orderIndex: nextOrderIndex + idx,
       explanation: d.explanation || undefined,
       options: d.options.map((o) => ({
         label: o.label,

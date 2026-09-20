@@ -29,7 +29,12 @@ export const CreateQuestionInput = z
     prompt: z.string().min(1).max(5_000).trim(),
     explanation: z.string().max(5_000).optional(),
     points: z.number().int().min(1).max(100).optional(),
-    orderIndex: z.number().int().nonnegative(),
+    /**
+     * Bỏ trống = nối vào cuối quiz (server tính max+1 ngay trong transaction).
+     * Nên bỏ trống: mọi đường thêm câu (gõ tay, Excel, CSV, AI) cùng dùng một
+     * cách đánh số nên không thể trộn lộn thứ tự hay trùng chỉ số.
+     */
+    orderIndex: z.number().int().nonnegative().optional(),
     // Optional for essay (no options needed). Required for everything else.
     options: z.array(OptionInput).max(40).optional(),
     skillIds: z.array(z.string().uuid()).max(20).optional(),
@@ -228,6 +233,14 @@ export async function createQuestion(
   const input = parsed.data;
 
   return db.$transaction(async (tx) => {
+    let orderIndex = input.orderIndex;
+    if (orderIndex === undefined) {
+      const last = await tx.quizQuestion.aggregate({
+        where: { quizId },
+        _max: { orderIndex: true },
+      });
+      orderIndex = (last._max.orderIndex ?? -1) + 1;
+    }
     const q = await tx.quizQuestion.create({
       data: {
         quizId,
@@ -235,7 +248,7 @@ export async function createQuestion(
         prompt: input.prompt,
         explanation: input.explanation ?? null,
         points: input.points ?? 1,
-        orderIndex: input.orderIndex,
+        orderIndex,
         extra: input.extra
           ? (input.extra as Prisma.InputJsonValue)
           : Prisma.JsonNull,

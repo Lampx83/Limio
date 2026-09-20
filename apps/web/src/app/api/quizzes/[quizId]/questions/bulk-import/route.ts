@@ -87,11 +87,7 @@ export async function POST(
 
   const errors: Array<{ index: number; prompt: string; error: string }> = [];
   let created = 0;
-  // Find the next orderIndex to start from.
-  // Caller persists in order — service will append after existing questions.
-  // We just use sequential indexes starting at a large number to avoid collision;
-  // proper compaction is for instructor to do later.
-  const baseIndex = Date.now() % 100000;
+  // Vị trí câu do createQuestion tự nối vào cuối quiz.
 
   for (let i = 0; i < groups.length; i++) {
     const g = groups[i]!;
@@ -105,7 +101,6 @@ export async function POST(
         prompt: g.prompt,
         explanation: g.explanation,
         points: g.points ?? 1,
-        orderIndex: baseIndex + i,
         options: g.options,
       });
       created += 1;
