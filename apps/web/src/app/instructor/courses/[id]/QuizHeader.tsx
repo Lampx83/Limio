@@ -134,69 +134,95 @@ export function QuizEditForm({
     }
   }
 
+  const chip =
+    "inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 text-sm transition hover:border-brand-400";
+
   return (
-    <form onSubmit={save} className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
+    <form onSubmit={save} className="space-y-2.5 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
-        className="input"
+        aria-label="Tên bài kiểm tra"
+        placeholder="Tên bài kiểm tra"
+        className="input w-full"
       />
-      <div className="flex flex-wrap items-center gap-3 text-sm">
-        <label className="flex items-center gap-2">
-          <span className="text-xs text-muted">Difficulty</span>
-          <input
-            type="number"
-            min={1}
-            max={5}
-            value={difficulty}
-            onChange={(e) => setDifficulty(Number(e.target.value))}
-            className="input w-16"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-xs">
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-2">
+          <span id="quiz-difficulty-label" className="text-xs font-medium text-muted">
+            Độ khó
+          </span>
+          <div
+            role="radiogroup"
+            aria-labelledby="quiz-difficulty-label"
+            title="1 dễ, 5 khó"
+            className="inline-flex overflow-hidden rounded-lg border border-token"
+          >
+            {[1, 2, 3, 4, 5].map((level) => (
+              <button
+                key={level}
+                type="button"
+                role="radio"
+                aria-checked={difficulty === level}
+                onClick={() => setDifficulty(level)}
+                className={`h-8 w-8 text-sm font-medium tabular-nums transition ${level > 1 ? "border-l border-token" : ""} ${
+                  difficulty === level
+                    ? "bg-brand-600 text-white"
+                    : "bg-[rgb(var(--surface))] text-fg hover:bg-[rgb(var(--surface-muted))]"
+                }`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className={chip} title="Người học chọn mức tự tin sau mỗi câu trả lời">
           <input
             type="checkbox"
             checked={requireConfidence}
             onChange={(e) => setRequireConfidence(e.target.checked)}
             className="h-4 w-4 rounded border-token accent-brand-600"
           />
-          <span>Yêu cầu đánh giá độ tự tin</span>
+          Đánh giá độ tự tin
         </label>
-        <label className="flex items-center gap-2 text-xs">
+
+        <div className={chip.replace("cursor-pointer ", "")}>
           <input
+            id="quiz-time-limit"
             type="checkbox"
             checked={timeLimitEnabled}
             onChange={(e) => setTimeLimitEnabled(e.target.checked)}
-            className="h-4 w-4 rounded border-token accent-brand-600"
+            className="h-4 w-4 cursor-pointer rounded border-token accent-brand-600"
           />
-          <span>Giới hạn thời gian</span>
-        </label>
-        {timeLimitEnabled && (
-          <label className="flex items-center gap-2 text-xs">
-            <input
-              type="number"
-              min={1}
-              max={1440}
-              value={timeLimitMin}
-              onChange={(e) => setTimeLimitMin(Number(e.target.value))}
-              className="input w-16"
-            />
-            <span className="text-muted">phút</span>
+          <label htmlFor="quiz-time-limit" className="cursor-pointer">
+            Giới hạn thời gian
           </label>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <button type="submit" disabled={busy} className="btn-primary btn-sm">
-          Lưu
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="btn-secondary btn-sm"
-        >
-          Hủy
-        </button>
+          {timeLimitEnabled && (
+            <>
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                value={timeLimitMin}
+                onChange={(e) => setTimeLimitMin(Number(e.target.value))}
+                aria-label="Số phút tối đa"
+                className="input h-6 w-14 px-1.5 py-0 text-center text-sm"
+              />
+              <span className="text-muted">phút</span>
+            </>
+          )}
+        </div>
+
+        <div className="ml-auto flex gap-2">
+          <button type="submit" disabled={busy} className="btn-primary btn-sm">
+            {busy ? "Đang lưu…" : "Lưu"}
+          </button>
+          <button type="button" onClick={onClose} disabled={busy} className="btn-secondary btn-sm">
+            Hủy
+          </button>
+        </div>
       </div>
     </form>
   );
