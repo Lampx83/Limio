@@ -1,6 +1,7 @@
 "use client";
 
 import { looksLikeHtml } from "@/lib/richText";
+import { MATCHING_EXAMPLES } from "@/lib/questionExamples";
 import AdaptiveTextField from "@/components/AdaptiveTextField";
 
 /**
@@ -125,13 +126,13 @@ export default function MatchingPairsEditor({
               {i + 1}
             </span>
             <div className="col-start-2 sm:col-start-auto">
-              <Cell value={p.left} onChange={(v) => setSide(i, "left", v)} placeholder={`Vế trái ${i + 1}`} label={`Vế trái cặp ${i + 1}`} />
+              <Cell value={p.left} onChange={(v) => setSide(i, "left", v)} placeholder={MATCHING_EXAMPLES[i] ? `VD: ${MATCHING_EXAMPLES[i]![0]}` : `Vế trái ${i + 1}`} label={`Vế trái cặp ${i + 1}`} />
             </div>
             <span className="hidden text-center text-muted sm:block" aria-hidden>
               ↔
             </span>
             <div className="col-start-2 sm:col-start-auto">
-              <Cell value={p.right} onChange={(v) => setSide(i, "right", v)} placeholder={`Vế phải ${i + 1}`} label={`Vế phải cặp ${i + 1}`} />
+              <Cell value={p.right} onChange={(v) => setSide(i, "right", v)} placeholder={MATCHING_EXAMPLES[i] ? `VD: ${MATCHING_EXAMPLES[i]![1]}` : `Vế phải ${i + 1}`} label={`Vế phải cặp ${i + 1}`} />
             </div>
             <button
               type="button"

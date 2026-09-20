@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdaptiveTextField from "@/components/AdaptiveTextField";
+import AdaptiveTextField, { needsRich } from "@/components/AdaptiveTextField";
+import { PROMPT_EXAMPLE, explanationExample, optionExample, NUMERICAL_EXAMPLE } from "@/lib/questionExamples";
 import SkillTagPicker from "@/components/SkillTagPicker";
 import MatchingPairsEditor from "@/components/MatchingPairsEditor";
+import DragDropFillEditor from "@/components/DragDropFillEditor";
 import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
@@ -14,7 +16,7 @@ interface OptionDraft {
   label: string;
   isCorrect: boolean;
   misconceptionId: string | null;
-  extra: { side?: "left" | "right"; pairKey?: string } | null;
+  extra: { side?: "left" | "right"; pairKey?: string; blankIndex?: number | null } | null;
 }
 
 interface ExistingOption {
@@ -146,13 +148,22 @@ export default function EditQuestionForm({
   // ── submit ─────────────────────────────────────────────────────────────────
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (type === "drag_drop_fill" && !/\[\[\d+\]\]/.test(prompt)) {
+      setError("Câu hỏi cần ít nhất một ô trống — bấm \"Chèn ô trống\".");
+      return;
+    }
     setBusy(true);
     setError(null);
 
     const cleanOptions = hasOptions
       ? options.map((o) => ({
           label: o.label.trim(),
-          isCorrect: type === "ordering" ? false : o.isCorrect,
+          isCorrect:
+              type === "ordering"
+                ? false
+                : type === "fill_in" || type === "short_answer"
+                  ? true
+                  : o.isCorrect,
           misconceptionId: o.misconceptionId || undefined,
           extra: o.extra ?? undefined,
         }))
@@ -210,17 +221,19 @@ export default function EditQuestionForm({
       />
 
       {/* Prompt */}
-      <div>
-        <span className={FIELD_LABEL}>
-          Câu hỏi
-        </span>
-        <AdaptiveTextField
-          value={prompt}
-          onChange={setPrompt}
-          placeholder="Nhập câu hỏi"
-          minHeight={80}
-        />
-      </div>
+      {(type !== "drag_drop_fill" || needsRich(prompt)) && (
+        <div>
+          <span className={FIELD_LABEL}>
+            Câu hỏi
+          </span>
+          <AdaptiveTextField
+            value={prompt}
+            onChange={setPrompt}
+            placeholder={PROMPT_EXAMPLE[type] ?? "Nhập câu hỏi"}
+            minHeight={80}
+          />
+        </div>
+      )}
 
       {/* Essay info */}
       {type === "essay" && (
@@ -240,6 +253,7 @@ export default function EditQuestionForm({
               type="number"
               step="any"
               required
+              placeholder={NUMERICAL_EXAMPLE.expected}
               value={numExpected}
               onChange={(e) => setNumExpected(e.target.value)}
               className="input mt-1"
@@ -253,6 +267,7 @@ export default function EditQuestionForm({
               type="number"
               step="any"
               min={0}
+              placeholder={NUMERICAL_EXAMPLE.tolerance}
               value={numTolerance}
               onChange={(e) => setNumTolerance(e.target.value)}
               className="input mt-1"
@@ -268,17 +283,28 @@ export default function EditQuestionForm({
         </div>
       )}
 
+      {type === "drag_drop_fill" && (
+        <DragDropFillEditor
+          prompt={prompt}
+          onPrompt={setPrompt}
+          options={options}
+          onChange={setOptions}
+        />
+      )}
+
       {/* Options list */}
-      {hasOptions && type !== "matching" && (
+      {hasOptions && type !== "matching" && type !== "drag_drop_fill" && (
         <div>
           <p className={FIELD_LABEL}>
-            Đáp án ({options.length})
+            {type === "fill_in" || type === "short_answer"
+              ? "Đáp án chấp nhận được"
+              : `Đáp án (${options.length})`}
           </p>
           <p className="-mt-1 mb-2 text-xs text-faint">
             {type === "mcq" && "Đánh dấu câu đúng (checkbox)"}
             {type === "true_false" && "Chọn đáp án đúng (radio)"}
-            {type === "fill_in" && "Mỗi label = đáp án chấp nhận được"}
-            {type === "short_answer" && "Labels = exact match (case-insensitive)"}
+            {(type === "fill_in" || type === "short_answer") &&
+              "Học viên đúng khi câu trả lời khớp một trong các đáp án dưới đây. Không phân biệt hoa thường và khoảng trắng thừa, nhưng dấu tiếng Việt phải đúng."}
             {type === "ordering" && "Thứ tự đúng = thứ tự bạn nhập"}
           </p>
           <ul className="mt-2 space-y-2">
@@ -315,9 +341,10 @@ export default function EditQuestionForm({
                         onChange={(e) => setOption(i, { label: e.target.value })}
                         required
                         placeholder={
-                          type === "fill_in" || type === "short_answer"
+                          optionExample(type, i) ??
+                          (type === "fill_in" || type === "short_answer"
                             ? "Đáp án chấp nhận được"
-                            : `Option ${i + 1}`
+                            : `Đáp án ${i + 1}`)
                         }
                         className="input flex-1"
                       />
@@ -362,7 +389,7 @@ export default function EditQuestionForm({
                       <AdaptiveTextField
                         value={o.label}
                         onChange={(html) => setOption(i, { label: html })}
-                        placeholder={`Đáp án ${i + 1}`}
+                        placeholder={optionExample(type, i) ?? `Đáp án ${i + 1}`}
                         minHeight={48}
                       />
                     </div>
@@ -373,7 +400,9 @@ export default function EditQuestionForm({
           </ul>
           {type !== "true_false" && (
             <button type="button" onClick={addOption} className="link mt-2 text-xs">
-              + Thêm đáp án
+              {type === "fill_in" || type === "short_answer"
+                  ? "+ Thêm cách viết khác"
+                  : "+ Thêm đáp án"}
             </button>
           )}
         </div>
@@ -381,18 +410,22 @@ export default function EditQuestionForm({
 
       {/* Short-answer regex */}
       {type === "short_answer" && (
-        <label className="block">
-          <span className={FIELD_LABEL}>
-            Regex chấp nhận thêm (mỗi dòng 1 mẫu, không bắt buộc)
-          </span>
+        <details className="group" open={acceptedRegexes.trim() !== ""}>
+          <summary className="cursor-pointer text-sm text-muted hover:text-brand-700">
+            Nâng cao: chấp nhận theo mẫu (regex)
+          </summary>
+          <p className="mb-2 mt-2 text-xs text-faint">
+            Dùng khi có nhiều cách viết khó liệt kê hết. Mỗi dòng một mẫu, không phân biệt hoa thường.
+            Ví dụ <code>^h(e|a)llo$</code> nhận "hello" và "hallo".
+          </p>
           <textarea
             value={acceptedRegexes}
             onChange={(e) => setAcceptedRegexes(e.target.value)}
             rows={2}
-            placeholder="^h(e|a)llo$"
-            className="textarea mt-1 font-mono text-xs"
+            aria-label="Mẫu regex chấp nhận thêm"
+            className="textarea font-mono text-xs"
           />
-        </label>
+        </details>
       )}
 
       {/* Explanation */}
@@ -407,7 +440,7 @@ export default function EditQuestionForm({
           <AdaptiveTextField
             value={explanation}
             onChange={setExplanation}
-            placeholder="Vì sao đáp án này đúng"
+            placeholder={explanationExample(type)}
             minHeight={100}
           />
         </div>

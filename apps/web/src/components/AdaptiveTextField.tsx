@@ -13,7 +13,7 @@ const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
  * nên một câu hỏi soạn ở chế độ rich mà chỉ có chữ vẫn mở được ở chế độ thường
  * mà không mất gì. Có ảnh, in đậm, danh sách… thì phải mở bằng rich.
  */
-function needsRich(value: string): boolean {
+export function needsRich(value: string): boolean {
   return /<(?!\/?(?:p|br)\b)[a-z][^>]*>/i.test(value);
 }
 

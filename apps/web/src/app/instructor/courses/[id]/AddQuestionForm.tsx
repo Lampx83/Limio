@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdaptiveTextField from "@/components/AdaptiveTextField";
+import AdaptiveTextField, { needsRich } from "@/components/AdaptiveTextField";
+import { PROMPT_EXAMPLE, explanationExample, optionExample, NUMERICAL_EXAMPLE } from "@/lib/questionExamples";
 import SkillTagPicker from "@/components/SkillTagPicker";
 import MatchingPairsEditor from "@/components/MatchingPairsEditor";
+import DragDropFillEditor from "@/components/DragDropFillEditor";
 import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
 import QuestionTypePicker from "./QuestionTypePicker";
@@ -71,13 +73,8 @@ const DEFAULTS: Record<QuestionType, OptionDraft[]> = {
   ],
   numerical: [],
   essay: [],
-  // 2 ô [[1]] [[2]] + 1 distractor. blankIndex bắt đầu từ 1 (không phải 0)
-  // để khớp syntax prompt: [[1]], [[2]], ...
-  drag_drop_fill: [
-    blank({ extra: { blankIndex: 1 } }),
-    blank({ extra: { blankIndex: 2 } }),
-    blank({ extra: { blankIndex: null } }),
-  ],
+  // Trình soạn kéo thả tự dựng option từ các [[N]] trong câu hỏi.
+  drag_drop_fill: [],
 };
 
 // Friendly Vietnamese labels — kept short to fit the badge in the form
@@ -199,6 +196,10 @@ export default function AddQuestionForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (type === "drag_drop_fill" && !/\[\[\d+\]\]/.test(prompt)) {
+      setError("Câu hỏi cần ít nhất một ô trống — bấm \"Chèn ô trống\".");
+      return;
+    }
     setBusy(true);
     setError(null);
     const cleanOptions =
@@ -206,7 +207,12 @@ export default function AddQuestionForm({
         ? undefined
         : options.map((o) => ({
             label: o.label.trim(),
-            isCorrect: type === "ordering" ? false : o.isCorrect,
+            isCorrect:
+              type === "ordering"
+                ? false
+                : type === "fill_in" || type === "short_answer"
+                  ? true
+                  : o.isCorrect,
             misconceptionId: o.misconceptionId || undefined,
             extra: o.extra ?? undefined,
           }));
@@ -311,17 +317,19 @@ export default function AddQuestionForm({
         onChangeType={() => setStage("picking")}
       />
 
-      <div>
-        <span className={FIELD_LABEL}>
-          Câu hỏi
-        </span>
-        <AdaptiveTextField
-          value={prompt}
-          onChange={setPrompt}
-          placeholder="Nhập câu hỏi"
-          minHeight={80}
-        />
-      </div>
+      {(type !== "drag_drop_fill" || needsRich(prompt)) && (
+        <div>
+          <span className={FIELD_LABEL}>
+            Câu hỏi
+          </span>
+          <AdaptiveTextField
+            value={prompt}
+            onChange={setPrompt}
+            placeholder={PROMPT_EXAMPLE[type] ?? "Nhập câu hỏi"}
+            minHeight={80}
+          />
+        </div>
+      )}
 
       {type === "essay" && (
         <p className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-xs text-accent-700">
@@ -340,6 +348,7 @@ export default function AddQuestionForm({
               type="number"
               step="any"
               required
+              placeholder={NUMERICAL_EXAMPLE.expected}
               value={numExpected}
               onChange={(e) => setNumExpected(e.target.value)}
               className="input mt-1"
@@ -353,6 +362,7 @@ export default function AddQuestionForm({
               type="number"
               step="any"
               min={0}
+              placeholder={NUMERICAL_EXAMPLE.tolerance}
               value={numTolerance}
               onChange={(e) => setNumTolerance(e.target.value)}
               className="input mt-1"
@@ -362,14 +372,12 @@ export default function AddQuestionForm({
       )}
 
       {type === "drag_drop_fill" && (
-        <div className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-xs text-accent-700">
-          <strong>Cách dùng:</strong> Trong nội dung câu hỏi, viết{" "}
-          <code className="rounded bg-white px-1 py-0.5">[[1]]</code>,{" "}
-          <code className="rounded bg-white px-1 py-0.5">[[2]]</code>… ở chỗ
-          muốn tạo ô kéo thả. Bên dưới, mỗi token đặt "Vào ô số" = chỉ số ô
-          tương ứng. Token có "Vào ô số" = 0 → distractor (xuất hiện trong pool
-          nhưng không thuộc ô nào).
-        </div>
+        <DragDropFillEditor
+          prompt={prompt}
+          onPrompt={setPrompt}
+          options={options}
+          onChange={setOptions}
+        />
       )}
 
       {type === "matching" && (
@@ -383,19 +391,19 @@ export default function AddQuestionForm({
         type === "true_false" ||
         type === "fill_in" ||
         type === "short_answer" ||
-        type === "ordering" ||
-        type === "drag_drop_fill") && (
+        type === "ordering") && (
         <div>
           <p className={FIELD_LABEL}>
-            {type === "drag_drop_fill" ? `Token (${options.length})` : `Đáp án (${options.length})`}
+            {type === "fill_in" || type === "short_answer"
+              ? "Đáp án chấp nhận được"
+              : `Đáp án (${options.length})`}
           </p>
           <p className="-mt-1 mb-2 text-xs text-faint">
             {type === "mcq" && "Đánh dấu nhiều câu đúng nếu cần"}
             {type === "true_false" && "Chọn đáp án đúng (radio)"}
-            {type === "fill_in" && "Mỗi label = đáp án chấp nhận được"}
-            {type === "short_answer" && "Labels = exact match (case-insensitive)"}
+            {(type === "fill_in" || type === "short_answer") &&
+              "Học viên đúng khi câu trả lời khớp một trong các đáp án dưới đây. Không phân biệt hoa thường và khoảng trắng thừa, nhưng dấu tiếng Việt phải đúng."}
             {type === "ordering" && "Thứ tự đúng = thứ tự bạn nhập"}
-            {type === "drag_drop_fill" && "Token có 'Vào ô số' = N sẽ là đáp án đúng cho ô [[N]]"}
           </p>
           <ul className="mt-2 space-y-2">
             {options.map((o, i) => {
@@ -405,8 +413,7 @@ export default function AddQuestionForm({
               // plain. True/false labels are fixed semantic markers.
               const useRichLabel =
                 type === "mcq" ||
-                type === "ordering" ||
-                type === "drag_drop_fill";
+                type === "ordering";
               return (
                 <li
                   key={i}
@@ -425,37 +432,16 @@ export default function AddQuestionForm({
                         className="h-4 w-4 accent-success-600"
                       />
                     )}
-                    {type === "drag_drop_fill" && (
-                      <label className="flex items-center gap-1 text-xs text-faint">
-                        Vào ô số
-                        <input
-                          type="number"
-                          min={0}
-                          max={20}
-                          value={o.extra?.blankIndex ?? 0}
-                          onChange={(e) => {
-                            const v = Number(e.target.value);
-                            setOption(i, {
-                              extra: {
-                                blankIndex:
-                                  Number.isFinite(v) && v >= 1 ? v : null,
-                              },
-                            });
-                          }}
-                          className="input w-14 text-xs"
-                          title="N = đáp án đúng cho ô [[N]]; 0 = distractor"
-                        />
-                      </label>
-                    )}
                     {!useRichLabel && (
                       <input
                         value={o.label}
                         onChange={(e) => setOption(i, { label: e.target.value })}
                         required
                         placeholder={
-                          type === "fill_in" || type === "short_answer"
+                          optionExample(type, i) ??
+                          (type === "fill_in" || type === "short_answer"
                             ? "Đáp án chấp nhận được"
-                            : `Option ${i + 1}`
+                            : `Đáp án ${i + 1}`)
                         }
                         className="input flex-1"
                       />
@@ -498,7 +484,7 @@ export default function AddQuestionForm({
                       <AdaptiveTextField
                         value={o.label}
                         onChange={(html) => setOption(i, { label: html })}
-                        placeholder={`Đáp án ${i + 1}`}
+                        placeholder={optionExample(type, i) ?? `Đáp án ${i + 1}`}
                         minHeight={48}
                       />
                     </div>
@@ -510,7 +496,9 @@ export default function AddQuestionForm({
           <div className="mt-2 flex flex-wrap gap-3 text-xs">
             {type !== "true_false" && (
               <button type="button" onClick={addOption} className="link">
-                + Thêm đáp án
+                {type === "fill_in" || type === "short_answer"
+                  ? "+ Thêm cách viết khác"
+                  : "+ Thêm đáp án"}
               </button>
             )}
             {(type === "mcq" || type === "true_false") && (
@@ -523,18 +511,22 @@ export default function AddQuestionForm({
       )}
 
       {type === "short_answer" && (
-        <label className="block">
-          <span className={FIELD_LABEL}>
-            Regex chấp nhận thêm (mỗi dòng 1 mẫu, không bắt buộc)
-          </span>
+        <details className="group" open={acceptedRegexes.trim() !== ""}>
+          <summary className="cursor-pointer text-sm text-muted hover:text-brand-700">
+            Nâng cao: chấp nhận theo mẫu (regex)
+          </summary>
+          <p className="mb-2 mt-2 text-xs text-faint">
+            Dùng khi có nhiều cách viết khó liệt kê hết. Mỗi dòng một mẫu, không phân biệt hoa thường.
+            Ví dụ <code>^h(e|a)llo$</code> nhận "hello" và "hallo".
+          </p>
           <textarea
             value={acceptedRegexes}
             onChange={(e) => setAcceptedRegexes(e.target.value)}
             rows={2}
-            placeholder="^h(e|a)llo$"
-            className="textarea mt-1 font-mono text-xs"
+            aria-label="Mẫu regex chấp nhận thêm"
+            className="textarea font-mono text-xs"
           />
-        </label>
+        </details>
       )}
 
       <div>
@@ -548,7 +540,7 @@ export default function AddQuestionForm({
           <AdaptiveTextField
             value={explanation}
             onChange={setExplanation}
-            placeholder="Vì sao đáp án này đúng"
+            placeholder={explanationExample(type)}
             minHeight={100}
           />
         </div>
