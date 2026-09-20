@@ -42,11 +42,11 @@ export default async function TeachingToolsPage() {
 
   return (
     <main>
+      {/* Trang mở công cụ dùng ngay tại lớp, khác "Bài giảng tương tác" (soạn sẵn rồi trình chiếu). */}
       <header className="mb-8">
-        <h1 className="text-2xl font-bold">Công cụ Giảng dạy</h1>
-        <p className="mt-2 text-muted">
-          Sử dụng các công cụ để tương tác với lớp học. Học viên quét mã QR để tham gia.
-          Mỗi công cụ là một chức năng độc lập — chọn nguồn sinh viên ngay sau khi mở công cụ.
+        <h1 className="text-2xl font-bold">Hoạt động nhanh</h1>
+        <p className="mt-1 text-sm text-faint">
+          Các phiên hoạt động nhanh ngay trên lớp để lấy ý kiến và tương tác với người học.
         </p>
       </header>
 

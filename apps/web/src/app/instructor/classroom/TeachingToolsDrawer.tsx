@@ -57,7 +57,7 @@ export default function TeachingToolsDrawer({
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900">Công cụ Giảng dạy</h2>
+          <h2 className="text-lg font-bold text-gray-900">Hoạt động nhanh</h2>
           <button
             onClick={onClose}
             className="inline-flex items-center justify-center rounded-lg p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"

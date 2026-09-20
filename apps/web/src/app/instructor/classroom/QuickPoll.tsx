@@ -119,7 +119,7 @@ export default function QuickPoll({
 
       if (!res.ok) {
         const error = await res.json();
-        toast.error(error.error || "Lỗi tạo poll");
+        toast.error(error.error || "Lỗi tạo vote");
         return;
       }
 
@@ -599,7 +599,7 @@ export default function QuickPoll({
     <div className="tool-panel">
       <div className="flex items-center gap-2">
         <span className="tool-icon"><BarChart3 size={20} strokeWidth={1.75} /></span>
-        <h3 className="tool-title">Tạo Poll</h3>
+        <h3 className="tool-title">Tạo Vote</h3>
       </div>
 
       <div className="mt-6 space-y-4">

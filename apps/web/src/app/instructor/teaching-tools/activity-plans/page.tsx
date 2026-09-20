@@ -22,7 +22,7 @@ export default async function ActivityPlansPage() {
             href="/instructor/teaching-tools"
             className="mb-2 inline-block text-xs font-medium text-brand-600 hover:text-brand-700"
           >
-            ← Công cụ giảng dạy
+            ← Hoạt động nhanh
           </Link>
           <Link
             href="/instructor/teaching-tools/activity-plans/market"

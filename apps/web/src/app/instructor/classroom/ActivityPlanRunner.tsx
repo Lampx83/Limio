@@ -146,7 +146,7 @@ export default function ActivityPlanRunner({ lessonId, studentList, onOpenWhiteb
               <p className="px-1 py-1 text-xs text-muted">Đang tải...</p>
             ) : plans.length === 0 ? (
               <p className="px-1 py-1 text-xs text-muted">
-                Chưa có kịch bản nào — soạn ở "Công cụ giảng dạy → Kịch bản lớp học".
+                Chưa có kịch bản nào — soạn ở "Hoạt động nhanh → Kịch bản lớp học".
               </p>
             ) : (
               <ul className="space-y-1">
