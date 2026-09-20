@@ -178,7 +178,7 @@ export default async function TournamentsPage({
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Card — fiery gradient border, live pulse, prize XP front and center.
+// Card — nền sáng, thanh accent trên đầu, số liệu gọn một hàng.
 // ─────────────────────────────────────────────────────────────────────
 
 function TournamentCard({
@@ -203,149 +203,125 @@ function TournamentCard({
   const isEnded = t.status === "ended";
   const isTeam = t.teamSize > 1;
 
-  // Solo = fiery (rose/orange). Team = cool (indigo/sky) to distinguish at a glance.
+  // Thanh accent trên đầu thẻ: solo = ấm (rose/cam), đội = lạnh (indigo/sky).
   const accent = isEnded
-    ? "from-slate-500 to-slate-400"
+    ? "from-slate-300 to-slate-200 dark:from-slate-600 dark:to-slate-700"
     : isTeam
-      ? isActive
-        ? "from-indigo-600 to-sky-500"
-        : "from-indigo-500 to-blue-400"
+      ? "from-indigo-500 to-sky-400"
       : isActive
-        ? "from-rose-600 to-orange-500"
-        : "from-amber-500 to-yellow-400";
+        ? "from-rose-500 to-orange-400"
+        : "from-amber-400 to-yellow-300";
 
   return (
-    <li className="group relative">
-      {/* Gradient border wrapper */}
-      <div
-        className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${accent} opacity-60 blur transition-opacity group-hover:opacity-100`}
-        aria-hidden
-      />
+    <li className="group">
       <Link
         href={`/tournaments/${t.id}`}
-        className="relative block h-full overflow-hidden rounded-2xl border border-white/60 bg-white p-5 shadow-lg transition-all hover:-translate-y-1 hover:shadow-2xl dark:border-slate-700/60 dark:bg-slate-800"
+        className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover"
       >
-        {/* Status ribbon */}
-        <div className="flex items-start justify-between gap-2">
-          {isActive ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md">
-              <span className="flex h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-              LIVE
+        <div className={`h-1.5 w-full bg-gradient-to-r ${accent}`} aria-hidden />
+
+        <div className="flex flex-1 flex-col p-5">
+          {/* Trạng thái + loại */}
+          <div className="flex flex-wrap items-center gap-2">
+            {isActive ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 ring-1 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-900/60">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500" />
+                </span>
+                Đang diễn ra
+              </span>
+            ) : isUpcoming ? (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900/60">
+                Sắp mở
+              </span>
+            ) : (
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                Đã kết thúc
+              </span>
+            )}
+            <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-[11px] font-medium text-muted">
+              {isTeam ? `Đội ${t.teamSize}` : "Cá nhân"}
             </span>
-          ) : isUpcoming ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md">
-              ⏳ Sắp mở
-            </span>
-          ) : (
-            <span className="rounded-full bg-slate-300 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700">
-              Đã kết thúc
-            </span>
+            {isRegistered && (
+              <span className="ml-auto rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900/60">
+                Đã ghi danh
+              </span>
+            )}
+          </div>
+
+          {/* Tiêu đề + phạm vi */}
+          <h2 className="mt-3 text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-rose-600 dark:text-white dark:group-hover:text-orange-400">
+            {t.title}
+          </h2>
+          <p className="mt-1 text-xs text-muted">
+            {t.course ? t.course.title : "Toàn nền tảng"}
+          </p>
+
+          {/* Đếm ngược */}
+          {(isActive || isUpcoming) && (
+            <p
+              className={`mt-4 text-sm font-semibold ${
+                isActive
+                  ? "text-rose-600 dark:text-rose-300"
+                  : "text-amber-700 dark:text-amber-300"
+              }`}
+            >
+              {isActive ? (
+                <>Còn <Countdown to={t.endsAt} endedText="đã kết thúc" /></>
+              ) : (
+                <>Khởi tranh sau <Countdown to={t.startsAt} endedText="đã mở" /></>
+              )}
+            </p>
           )}
 
-          <div className="flex items-center gap-1.5">
-            {isTeam ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-indigo-700 ring-1 ring-indigo-300 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-700">
-                👥 Đội ({t.teamSize})
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-rose-700 ring-1 ring-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:ring-rose-700">
-                🧍 Cá nhân
-              </span>
-            )}
-            {isRegistered && (
-              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-300">
-                ✓ Đã ghi danh
-              </span>
-            )}
+          {/* Số liệu */}
+          <dl className="mt-4 grid grid-cols-3 divide-x divide-[rgb(var(--border))] rounded-xl bg-[rgb(var(--surface-muted))] py-2.5 text-center">
+            <Stat value={t._count.registrations} label="người chơi" />
+            <Stat value={t._count.missions} label="nhiệm vụ" />
+            <Stat
+              value={t.prizeXp > 0 ? `${t.prizeXp}` : "—"}
+              label="XP thưởng"
+              highlight={t.prizeXp > 0}
+            />
+          </dl>
+
+          {/* Chân thẻ */}
+          <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+            <p className="text-[11px] leading-relaxed text-muted">
+              <DateTime value={t.startsAt} format="datetime" />
+              <br />→ <DateTime value={t.endsAt} format="datetime" />
+            </p>
+            <span className="shrink-0 text-sm font-semibold text-rose-600 transition-transform group-hover:translate-x-0.5 dark:text-orange-400">
+              {isEnded ? "Xem kết quả" : isRegistered ? "Tiếp tục" : "Tham gia"} →
+            </span>
           </div>
         </div>
-
-        {/* Title */}
-        <h2 className="mt-3 text-xl font-black leading-tight text-slate-900 transition-colors group-hover:text-rose-600 dark:text-white dark:group-hover:text-orange-400">
-          {t.title}
-        </h2>
-
-        {/* Course / scope */}
-        <p className="mt-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-          {t.course ? `📚 ${t.course.title}` : "🌐 Toàn nền tảng"}
-        </p>
-
-        {/* Countdown */}
-        {(isActive || isUpcoming) && (
-          <div
-            className={`mt-4 rounded-lg p-2.5 text-xs font-semibold ${
-              isActive
-                ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300"
-                : "bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-            }`}
-          >
-            {isActive ? (
-              <>⏱ Còn <Countdown to={t.endsAt} endedText="đã kết thúc" /></>
-            ) : (
-              <>⏳ Khởi tranh sau <Countdown to={t.startsAt} endedText="đã mở" /></>
-            )}
-          </div>
-        )}
-
-        {/* Stats row */}
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <Stat icon="👥" value={t._count.registrations} label="người chơi" />
-          <Stat icon="🎯" value={t._count.missions} label="missions" />
-          <Stat
-            icon="💎"
-            value={t.prizeXp > 0 ? `${t.prizeXp}` : "—"}
-            label="XP thưởng"
-            highlight={t.prizeXp > 0}
-          />
-        </div>
-
-        {/* Date range — small footer */}
-        <p className="mt-4 border-t border-slate-200 pt-3 text-[11px] text-slate-500 dark:border-slate-700 dark:text-slate-400">
-          <DateTime value={t.startsAt} format="datetime" /> →{" "}
-          <DateTime value={t.endsAt} format="datetime" />
-        </p>
-
-        {/* CTA */}
-        <p className="mt-2 text-right text-sm font-bold text-rose-600 group-hover:text-rose-700 dark:text-orange-400 dark:group-hover:text-orange-300">
-          {isEnded ? "Xem kết quả →" : isRegistered ? "Tiếp tục →" : "Tham gia →"}
-        </p>
       </Link>
     </li>
   );
 }
 
 function Stat({
-  icon,
   value,
   label,
   highlight,
 }: {
-  icon: string;
   value: string | number;
   label: string;
   highlight?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-lg px-2 py-1.5 ${
-        highlight
-          ? "bg-gradient-to-br from-amber-100 to-orange-100 ring-1 ring-amber-300 dark:from-amber-900/40 dark:to-orange-900/40 dark:ring-amber-700"
-          : "bg-slate-50 dark:bg-slate-900/50"
-      }`}
-    >
-      <p className="text-base">{icon}</p>
-      <p
-        className={`text-sm font-black ${
-          highlight
-            ? "text-amber-700 dark:text-amber-300"
-            : "text-slate-700 dark:text-slate-200"
+    <div className="px-2">
+      <dd
+        className={`text-base font-bold ${
+          highlight ? "text-amber-600 dark:text-amber-300" : "text-slate-800 dark:text-slate-100"
         }`}
       >
+        {highlight ? "💎 " : ""}
         {value}
-      </p>
-      <p className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {label}
-      </p>
+      </dd>
+      <dt className="text-[10px] uppercase tracking-wide text-muted">{label}</dt>
     </div>
   );
 }

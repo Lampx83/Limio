@@ -91,43 +91,73 @@ export default async function InstructorTournamentsPage({
           actions={[{ label: "+ Tạo đấu trường mới", href: "/instructor/tournaments/new" }]}
         />
       ) : (
-        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-          {tournaments.map((t) => (
-            <li key={t.id}>
-              <Link href={`/instructor/tournaments/${t.id}`} className="group block h-full" prefetch={false}>
-                <div className="card-hover h-full">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="text-base font-semibold transition-colors group-hover:text-brand-600">
-                      {t.title}
-                    </span>
-                    <span className={STATUS_TONE[t.status] ?? "chip"}>
-                      {STATUS_LABEL[t.status] ?? t.status}
-                    </span>
-                  </div>
+        <ul className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {tournaments.map((t) => {
+            const isTeam = t.teamSize > 1;
+            const accent =
+              t.status === "draft"
+                ? "from-slate-300 to-slate-200 dark:from-slate-600 dark:to-slate-700"
+                : t.status === "ended"
+                  ? "from-slate-400 to-slate-300 dark:from-slate-500 dark:to-slate-600"
+                  : isTeam
+                    ? "from-indigo-500 to-sky-400"
+                    : t.status === "active"
+                      ? "from-rose-500 to-orange-400"
+                      : "from-amber-400 to-yellow-300";
+            return (
+              <li key={t.id}>
+                <Link href={`/instructor/tournaments/${t.id}`} className="group block h-full" prefetch={false}>
+                  <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-card-hover">
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${accent}`} aria-hidden />
 
-                  <p className="mt-1 text-xs text-faint">
-                    {t.course ? t.course.title : "Platform-wide"}
-                  </p>
+                    <div className="flex flex-1 flex-col p-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={STATUS_TONE[t.status] ?? "chip"}>
+                          {STATUS_LABEL[t.status] ?? t.status}
+                        </span>
+                        <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs font-medium text-muted">
+                          {isTeam ? `Đội ${t.teamSize}` : "Cá nhân"}
+                        </span>
+                      </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-                    <span>
-                      {formatDate(t.startsAt)} → {formatDate(t.endsAt)}
-                    </span>
-                    <span>·</span>
-                    <span>{t._count.registrations} người tham gia</span>
-                    <span>·</span>
-                    <span>{t._count.missions} missions</span>
-                  </div>
+                      <h2 className="mt-3 text-lg font-bold leading-snug transition-colors group-hover:text-brand-600">
+                        {t.title}
+                      </h2>
+                      <p className="mt-1 text-xs text-faint">
+                        {t.course ? t.course.title : "Toàn nền tảng"}
+                      </p>
 
-                  <div className="mt-4 flex items-center justify-end border-t border-token pt-3">
-                    <span className="text-sm font-medium text-brand-600 group-hover:text-brand-700">
-                      Quản lý →
-                    </span>
+                      <dl className="mt-4 grid grid-cols-3 divide-x divide-[rgb(var(--border))] rounded-xl bg-[rgb(var(--surface-muted))] py-2.5 text-center">
+                        <div className="px-2">
+                          <dd className="text-base font-bold">{t._count.registrations}</dd>
+                          <dt className="text-[10px] uppercase tracking-wide text-muted">người tham gia</dt>
+                        </div>
+                        <div className="px-2">
+                          <dd className="text-base font-bold">{t._count.missions}</dd>
+                          <dt className="text-[10px] uppercase tracking-wide text-muted">nhiệm vụ</dt>
+                        </div>
+                        <div className="px-2">
+                          <dd className={`text-base font-bold ${t.prizeXp > 0 ? "text-amber-600 dark:text-amber-300" : ""}`}>
+                            {t.prizeXp > 0 ? `💎 ${t.prizeXp}` : "—"}
+                          </dd>
+                          <dt className="text-[10px] uppercase tracking-wide text-muted">XP thưởng</dt>
+                        </div>
+                      </dl>
+
+                      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                        <p className="text-xs text-muted">
+                          {formatDate(t.startsAt)} → {formatDate(t.endsAt)}
+                        </p>
+                        <span className="shrink-0 text-sm font-medium text-brand-600 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-700">
+                          Quản lý →
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </li>
-          ))}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </main>
