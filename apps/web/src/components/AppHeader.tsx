@@ -7,6 +7,7 @@ import NotificationBell from "./NotificationBell";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
+import HeaderTagline from "./HeaderTagline";
 
 export default async function AppHeader() {
   const session = await auth();
@@ -53,9 +54,7 @@ export default async function AppHeader() {
           <span className="text-4xl font-bold tracking-tight">
             Lim<span className="text-pink-500">io</span>
           </span>
-          <span className="hidden font-[family-name:var(--font-script)] text-[34px] font-semibold text-muted sm:inline">
-            — {activeRole === "instructor" ? "Teach" : "Learn"} your way
-          </span>
+          <HeaderTagline activeRole={activeRole} />
         </Link>
         </div>
 
