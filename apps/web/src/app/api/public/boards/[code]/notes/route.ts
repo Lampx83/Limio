@@ -4,7 +4,7 @@ import { publish } from "@/lib/realtime/publisher";
 import { rateLimit } from "@/lib/realtime/rateLimit";
 import { peekClientId } from "@/lib/realtime/clientKey";
 import { channelForBoard } from "@/lib/board";
-import { isValidAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
+import { isAcceptableAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
 
 export const runtime = "nodejs";
 
@@ -85,7 +85,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
   }
 
   // Validate attachment URL nếu có (chỉ http/https).
-  if (parsed.attachmentUrl && !isValidAttachmentUrl(parsed.attachmentUrl)) {
+  if (parsed.attachmentUrl && !isAcceptableAttachmentUrl(parsed.attachmentUrl)) {
     return Response.json({ error: "invalid_attachment_url" }, { status: 400 });
   }
 

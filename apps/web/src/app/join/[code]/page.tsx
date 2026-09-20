@@ -14,6 +14,7 @@ import {
   columnHeaderColor,
 } from "@/app/instructor/classroom/boardNoteStyle";
 import NoteAttachment from "@/app/instructor/classroom/NoteAttachment";
+import DrawingComposer from "./DrawingComposer";
 
 interface BoardNote {
   id: string;
@@ -33,6 +34,7 @@ interface Board {
   status: string;
   columns: string[];
   blockPaste: boolean;
+  drawingMode: boolean;
   notes: BoardNote[];
 }
 
@@ -236,13 +238,14 @@ export default function JoinBoardPage() {
 
   // Đóng modal khi bấm Escape
   useEffect(() => {
-    if (!modalOpen) return;
+    // Khung vẽ Draw-it: Escape thuộc về Excalidraw (bỏ chọn công cụ) — không đóng khung, khỏi mất hình đang vẽ.
+    if (!modalOpen || board?.drawingMode) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setModalOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [modalOpen]);
+  }, [modalOpen, board?.drawingMode]);
 
   useEffect(() => {
     if (!editingNote) return;
@@ -254,6 +257,12 @@ export default function JoinBoardPage() {
   }, [editingNote]);
 
   const openEditNote = (n: BoardNote) => {
+    // Board Draw-it: note là hình vẽ nên "sửa" = mở lại khung vẽ (đăng lại sẽ thay hình cũ), không có form chữ.
+    if (board?.drawingMode) {
+      setModalOpen(true);
+      setInfo(null);
+      return;
+    }
     setEditingNote(n);
     setEditContent(n.content);
     setEditAttachmentUrl(n.attachmentUrl || "");
@@ -502,8 +511,8 @@ export default function JoinBoardPage() {
             setInfo(null);
           }}
           className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-gradient text-white shadow-2xl hover:shadow-brand-glow flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          title="Thêm note (N)"
-          aria-label="Thêm note"
+          title={board.drawingMode ? "Vẽ hình" : "Thêm note (N)"}
+          aria-label={board.drawingMode ? "Vẽ hình" : "Thêm note"}
         >
           <Plus size={32} strokeWidth={3} />
         </button>
@@ -593,8 +602,25 @@ export default function JoinBoardPage() {
         </div>
       )}
 
+      {/* Draw-it: khung vẽ thay cho form gõ note */}
+      {modalOpen && board.status === "open" && board.drawingMode && (
+        <DrawingComposer
+          code={code}
+          initialName={name}
+          existingNoteId={board.notes.find((n) => myNoteIds.has(n.id))?.id ?? null}
+          onClose={() => setModalOpen(false)}
+          onPosted={({ noteId, name: postedName }) => {
+            localStorage.setItem(STORAGE_KEY_NAME, postedName);
+            setName(postedName);
+            rememberMyNoteId(board.code, noteId);
+            setMyNoteIds((s) => new Set(s).add(noteId));
+            setModalOpen(false);
+          }}
+        />
+      )}
+
       {/* Modal */}
-      {modalOpen && board.status === "open" && (
+      {modalOpen && board.status === "open" && !board.drawingMode && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in-up"
           onClick={(e) => {

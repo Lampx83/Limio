@@ -2459,6 +2459,11 @@ model InteractiveBoard {
   // (/join/[code]) — GV luôn dán được bình thường ở view của mình.
   blockPaste Boolean @default(false)
 
+  // Chế độ Whiteboard (Limio-Live): học viên vẽ 1 hình riêng rồi đăng lên bảng như 1 note ảnh,
+  // thay vì gõ chữ. Cờ nằm ở board (không chỉ ở link tham gia) để học viên vào bằng cách nhập
+  // mã 6 ký tự cũng thấy đúng khung vẽ.
+  drawingMode Boolean @default(false)
+
   notes BoardNote[]
 
   createdAt DateTime  @default(now())

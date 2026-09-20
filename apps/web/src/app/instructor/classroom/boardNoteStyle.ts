@@ -94,6 +94,17 @@ export function isValidAttachmentUrl(url: string): boolean {
   }
 }
 
+// Ảnh do chính hệ thống lưu (hình vẽ Draw-it của học viên, ảnh GV upload) — đường dẫn tương đối,
+// không qua được isValidAttachmentUrl (chỉ nhận http/https tuyệt đối). Server chỉ chấp nhận đúng
+// dạng file ảnh trong thư mục board-attachments, không nhận đường dẫn tự do.
+const BOARD_ATTACHMENT_PATH_RE = /^\/api\/board-attachments\/[A-Za-z0-9._-]+\.(png|jpe?g|webp|gif)$/;
+export function isBoardAttachmentPath(url: string): boolean {
+  return BOARD_ATTACHMENT_PATH_RE.test(url);
+}
+export function isAcceptableAttachmentUrl(url: string): boolean {
+  return isValidAttachmentUrl(url) || isBoardAttachmentPath(url);
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // Grid theo nhóm (columns) — dùng chung giữa host view (InteractiveBoard.tsx)
 // và student view (/join/[code]).

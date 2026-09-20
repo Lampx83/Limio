@@ -4,7 +4,7 @@ import { publish } from "@/lib/realtime/publisher";
 import { rateLimit } from "@/lib/realtime/rateLimit";
 import { peekClientId } from "@/lib/realtime/clientKey";
 import { channelForBoard } from "@/lib/board";
-import { BOARD_NOTE_COLORS, isValidAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
+import { BOARD_NOTE_COLORS, isAcceptableAttachmentUrl } from "@/app/instructor/classroom/boardNoteStyle";
 
 export const runtime = "nodejs";
 
@@ -53,7 +53,7 @@ export async function PATCH(
     return Response.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  if (parsed.attachmentUrl && !isValidAttachmentUrl(parsed.attachmentUrl)) {
+  if (parsed.attachmentUrl && !isAcceptableAttachmentUrl(parsed.attachmentUrl)) {
     return Response.json({ error: "invalid_attachment_url" }, { status: 400 });
   }
 
