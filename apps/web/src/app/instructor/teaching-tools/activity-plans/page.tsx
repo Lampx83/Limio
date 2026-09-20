@@ -31,7 +31,7 @@ export default async function ActivityPlansPage() {
             Chợ kịch bản →
           </Link>
         </div>
-        <h1 className="text-3xl font-bold">Kịch bản lớp học</h1>
+        <h1 className="text-2xl font-bold">Kịch bản lớp học</h1>
         <p className="mt-2 text-muted">
           Thư viện kịch bản của riêng bạn — soạn trước chuỗi hoạt động tương tác cho 1 tiết,
           lên lớp thì chạy sự kiện nào tuỳ ý, không ép theo thứ tự.

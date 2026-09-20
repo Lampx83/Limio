@@ -267,7 +267,7 @@ function Header({
       </Link>
       <div className="mt-4">
         <span className="chip-brand">Analytics</span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-3 text-2xl font-bold">
           Học viên cần hỗ trợ
         </h1>
         <p className="mt-1 text-sm text-faint">{courseTitle}</p>

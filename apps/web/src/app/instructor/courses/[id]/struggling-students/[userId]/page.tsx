@@ -109,7 +109,7 @@ export default async function StudentMisconceptionsPage({
         </span>
         <div className="min-w-0 flex-1">
           <span className="chip-brand">Hồ sơ học viên</span>
-          <h1 className="mt-2 h-display text-2xl font-bold sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-bold">
             {student.displayName}
           </h1>
           <p className="mt-1 text-sm text-muted">{student.email}</p>

@@ -23,7 +23,7 @@ export default async function QuestionSetsPage() {
     <main className="w-full py-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-h2">Bộ câu hỏi Gameshow</h1>
+          <h1 className="text-2xl font-bold">Bộ câu hỏi Gameshow</h1>
           <p className="text-meta mt-1.5">
             Soạn câu hỏi trực tiếp cho Gameshow — không cần Quiz có sẵn.
           </p>

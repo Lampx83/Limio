@@ -58,7 +58,7 @@ export default async function ClassroomToolsPage({
 
         <header className="mt-6">
           <span className="chip">{lesson.module.title}</span>
-          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{lesson.title}</h1>
+          <h1 className="mt-3 text-2xl font-bold">{lesson.title}</h1>
           <p className="mt-2 text-sm text-muted">
             Công cụ hỗ trợ dạy học trực tiếp tại lớp
           </p>

@@ -26,7 +26,7 @@ export default async function SkillTaggingHubPage({
   if (coverage.courses.length === 0) {
     return (
       <main>
-        <h1 className="h-display text-h1">Skill Tagging</h1>
+        <h1 className="text-2xl font-bold">Skill Tagging</h1>
         <EmptyState
           className="mt-6"
           icon="🏷️"
@@ -89,7 +89,7 @@ export default async function SkillTaggingHubPage({
   return (
     <main>
       <header>
-        <h1 className="h-display text-h1">
+        <h1 className="text-2xl font-bold">
           Skill Tagging
         </h1>
         <p className="mt-2 text-muted">

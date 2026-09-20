@@ -33,7 +33,7 @@ export default function NewQuestionSetPage() {
 
   return (
     <main className="w-full py-4">
-      <h1 className="text-h2">Bộ câu hỏi mới</h1>
+      <h1 className="text-2xl font-bold">Bộ câu hỏi mới</h1>
       <p className="text-meta mt-1.5">Đặt tên trước, thêm câu hỏi ở bước sau.</p>
 
       <input

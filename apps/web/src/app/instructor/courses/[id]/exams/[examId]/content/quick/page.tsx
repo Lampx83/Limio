@@ -39,7 +39,7 @@ export default async function QuickBankPickerPage({
       </Link>
 
       <div className="mt-6 max-w-2xl">
-        <h1 className="text-h2">Chọn nhanh theo tiêu chí</h1>
+        <h1 className="text-2xl font-bold">Chọn nhanh theo tiêu chí</h1>
         <p className="mt-2 text-meta">
           Đặt số lượng câu và tiêu chí — hệ thống tự rút ngẫu nhiên từ ngân hàng (chỉ câu đã
           publish).

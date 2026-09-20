@@ -65,7 +65,7 @@ export default function NewCoursePage() {
       </Link>
 
       <div className="mt-3">
-        <h1 className="h-display text-h2">Tạo khóa học mới</h1>
+        <h1 className="text-2xl font-bold">Tạo khóa học mới</h1>
         <p className="mt-1 text-sm text-muted">
           Khởi tạo nháp — bạn có thể bổ sung module, lesson, quiz ở bước tiếp theo.
         </p>

@@ -25,7 +25,7 @@ export default async function TimerTemplatesPage() {
           >
             ← Back to Teaching Tools
           </Link>
-          <h1 className="text-3xl font-bold">Timer Templates</h1>
+          <h1 className="text-2xl font-bold">Timer Templates</h1>
           <p className="mt-2 text-muted">
             Create and manage reusable countdown timer configurations
           </p>

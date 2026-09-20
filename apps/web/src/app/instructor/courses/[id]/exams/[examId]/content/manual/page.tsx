@@ -51,7 +51,7 @@ export default async function ManualBankPickerPage({
       </Link>
 
       <div className="mt-6 max-w-2xl">
-        <h1 className="text-h2">Chọn thủ công</h1>
+        <h1 className="text-2xl font-bold">Chọn thủ công</h1>
         <p className="mt-2 text-meta">
           Duyệt danh sách câu hỏi đã publish trong ngân hàng và tự tay tick chọn từng câu.
         </p>

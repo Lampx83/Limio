@@ -63,7 +63,7 @@ export default async function ItemAnalyticsPage({
   return (
     <main>
       <header>
-        <h1 className="h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="text-2xl font-bold">
           Phân tích item
           <span className="ml-2 align-middle text-sm font-normal text-faint">
             (CTT — Classical Test Theory)

@@ -27,7 +27,7 @@ export default async function GradeEssaysPage({
   if (ownedCourses.length === 0) {
     return (
       <main>
-        <h1 className="h-display text-3xl font-bold">Chấm essay quiz</h1>
+        <h1 className="text-2xl font-bold">Chấm essay quiz</h1>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5 text-sm">
           Bạn chưa là instructor của khoá nào.
         </div>
@@ -126,7 +126,7 @@ export default async function GradeEssaysPage({
   return (
     <main>
       <header>
-        <h1 className="h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="text-2xl font-bold">
           Chấm tự luận
         </h1>
         <p className="mt-2 text-muted">

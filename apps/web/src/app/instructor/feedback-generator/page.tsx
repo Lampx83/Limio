@@ -49,7 +49,7 @@ export default async function FeedbackGeneratorPage() {
         <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-soft px-2.5 py-0.5 text-xs font-medium text-brand-700">
           AI tools
         </span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-3 text-2xl font-bold">
           AI Feedback Generator
         </h1>
         <p className="mt-2 max-w-2xl text-muted">

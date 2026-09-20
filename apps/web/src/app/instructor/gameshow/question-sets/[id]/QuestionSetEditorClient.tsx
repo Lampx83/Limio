@@ -142,7 +142,7 @@ export default function QuestionSetEditorClient({ setId }: { setId: string }) {
       >
         ← Bộ câu hỏi
       </Link>
-      <h1 className="text-h2 mt-3">{title}</h1>
+      <h1 className="mt-3 text-2xl font-bold">{title}</h1>
       <p className="text-meta mt-1.5">{items.length} câu hỏi</p>
 
       {err && (

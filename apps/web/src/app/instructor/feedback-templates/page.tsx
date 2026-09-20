@@ -59,7 +59,7 @@ export default async function FeedbackTemplatesPage({
 
       <div className="mt-4">
         <span className="chip-brand">Analytics</span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-3 text-2xl font-bold">
           Chất lượng feedback templates
         </h1>
         <p className="mt-2 text-muted">

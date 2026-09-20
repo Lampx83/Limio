@@ -23,7 +23,7 @@ export default async function ActivityPlanMarketPage() {
         >
           ← Kịch bản của tôi
         </Link>
-        <h1 className="text-3xl font-bold">Chợ kịch bản</h1>
+        <h1 className="text-2xl font-bold">Chợ kịch bản</h1>
         <p className="mt-2 text-muted">
           Kịch bản công khai từ các giáo viên khác — lưu lại xem sau, thả tim ủng hộ, hoặc sao chép về thư viện của bạn để sửa.
         </p>

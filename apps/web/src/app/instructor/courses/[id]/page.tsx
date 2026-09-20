@@ -265,7 +265,7 @@ export default async function InstructorCourseEditPage({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="h-display text-2xl font-bold leading-tight sm:text-3xl">
+          <h1 className="leading-tight text-2xl font-bold">
             {course.title}
           </h1>
           <span className={STATUS_TONE[course.status] ?? "chip"}>

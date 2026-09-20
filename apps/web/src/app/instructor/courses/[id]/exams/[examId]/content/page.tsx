@@ -89,7 +89,7 @@ export default async function ContentSourceSelectPage({
       </Link>
 
       <div className="mt-6 max-w-2xl">
-        <h1 className="text-h2">Thêm câu hỏi từ ngân hàng</h1>
+        <h1 className="text-2xl font-bold">Thêm câu hỏi từ ngân hàng</h1>
         <p className="mt-2 text-meta">
           Chọn cách bạn muốn rút câu hỏi. Bấm vào một cách để mở trang riêng — bạn có thể quay lại
           và đổi cách khác bất cứ lúc nào.

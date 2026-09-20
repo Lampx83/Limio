@@ -14,7 +14,7 @@ export default async function LimioLivePage() {
   return (
     <main className="space-y-8">
       <div className="border-b border-token pb-6">
-        <h1 className="text-3xl font-bold">Limio-Live</h1>
+        <h1 className="text-2xl font-bold">Limio-Live</h1>
         <p className="mt-2 text-muted">
           Bài giảng của riêng bạn — trộn slide trình bày (văn bản, video, PDF...) với slide tương tác (trắc nghiệm, thăm dò,
           word cloud, bảng cộng tác) rồi trình chiếu tuần tự trên lớp.

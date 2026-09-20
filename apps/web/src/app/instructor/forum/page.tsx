@@ -28,7 +28,7 @@ export default async function InstructorForumHubPage({
   if (ownedCourses.length === 0) {
     return (
       <main>
-        <h1 className="h-display text-h1">Forum Q&amp;A</h1>
+        <h1 className="text-2xl font-bold">Forum Q&amp;A</h1>
         <EmptyState
           className="mt-6"
           icon="💬"
@@ -129,7 +129,7 @@ export default async function InstructorForumHubPage({
   return (
     <main>
       <header>
-        <h1 className="h-display text-h1">Forum Q&amp;A</h1>
+        <h1 className="text-2xl font-bold">Forum Q&amp;A</h1>
         <p className="mt-2 text-muted">
           Thread hỏi-đáp của học viên gắn theo từng bài học. Đánh dấu một reply là
           &ldquo;resolved&rdquo; để chốt đáp án.

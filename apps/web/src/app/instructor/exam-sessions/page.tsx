@@ -132,7 +132,7 @@ export default async function ExamSessionsPage() {
   if (rows.length === 0) {
     return (
       <main>
-        <h1 className="h-display text-3xl font-bold">Ca thi trực tiếp</h1>
+        <h1 className="text-2xl font-bold">Ca thi trực tiếp</h1>
         <p className="mt-2 text-muted">
           Hub theo dõi các phòng thi bạn được phân công làm giám thị hoặc người chấm.
         </p>
@@ -153,7 +153,7 @@ export default async function ExamSessionsPage() {
 
   return (
     <main>
-      <h1 className="h-display text-3xl font-bold sm:text-4xl">
+      <h1 className="text-2xl font-bold">
         Ca thi trực tiếp
       </h1>
       <p className="mt-2 text-muted">

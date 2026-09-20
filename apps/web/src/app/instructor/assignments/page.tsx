@@ -31,7 +31,7 @@ export default async function InstructorAssignmentsPage({
   if (ownedCourses.length === 0) {
     return (
       <main>
-        <h1 className="h-display text-h1">Assignment</h1>
+        <h1 className="text-2xl font-bold">Assignment</h1>
         <EmptyState
           className="mt-6"
           icon="📝"
@@ -117,7 +117,7 @@ export default async function InstructorAssignmentsPage({
     <main>
       {/* Header */}
       <header>
-        <h1 className="h-display text-h1">Assignment</h1>
+        <h1 className="text-2xl font-bold">Assignment</h1>
         <p className="mt-2 text-muted">
           Quản lý assignment + chấm tập trung mọi submission đang chờ trong{" "}
           {ownedCourses.length} khoá bạn phụ trách.

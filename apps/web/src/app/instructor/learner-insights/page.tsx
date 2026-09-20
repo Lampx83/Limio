@@ -27,7 +27,7 @@ export default async function LearnerInsightsPage({
   if (ownedCourses.length === 0) {
     return (
       <main>
-        <h1 className="h-display text-3xl font-bold">Learner Insights</h1>
+        <h1 className="text-2xl font-bold">Learner Insights</h1>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5 text-sm">
           Bạn chưa là instructor của khoá nào.
         </div>
@@ -156,7 +156,7 @@ export default async function LearnerInsightsPage({
   return (
     <main>
       <header>
-        <h1 className="h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="text-2xl font-bold">
           Learner Insights
           <span className="ml-2 align-middle text-sm font-normal text-faint">
             (BKT mastery)

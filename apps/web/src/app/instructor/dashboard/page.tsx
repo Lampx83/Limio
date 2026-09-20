@@ -148,7 +148,7 @@ export default async function InstructorDashboard() {
   if (ownedCourses.length === 0) {
     return (
       <main>
-        <h1 className="h-display text-3xl font-bold">{greeting()}</h1>
+        <h1 className="text-2xl font-bold">{greeting()}</h1>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
           <p className="text-sm font-semibold text-accent-700">
             Bạn chưa là instructor của khoá nào.
@@ -404,7 +404,7 @@ export default async function InstructorDashboard() {
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
           Giảng viên
         </span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-3 text-2xl font-bold">
           {greeting()},{" "}
           <span className="text-gradient">
             {session.user.name ?? session.user.email}

@@ -63,7 +63,7 @@ export default async function InstructorCoursesPage() {
       {/* Header — tiêu đề, công cụ và CTA chung 1 hàng để nhường chỗ cho lưới thẻ */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="min-w-0">
-          <h1 className="h-display text-h2">Khóa học của tôi</h1>
+          <h1 className="text-2xl font-bold">Khóa học của tôi</h1>
           <p className="mt-1 text-sm text-muted">
             {courses.length > 0
               ? `${courses.length} khóa bạn đang phụ trách`

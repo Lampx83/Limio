@@ -64,7 +64,7 @@ export default async function BlueprintPage({
       </Link>
 
       <div className="mt-6 max-w-2xl">
-        <h1 className="text-h2">Theo ma trận đề thi</h1>
+        <h1 className="text-2xl font-bold">Theo ma trận đề thi</h1>
         <p className="mt-2 text-meta">
           Thiết lập số câu theo từng chủ đề × mức độ nhận thức. Hệ thống sẽ tự rút câu (đã publish)
           từ ngân hàng theo đúng tỉ lệ này.
