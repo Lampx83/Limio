@@ -61,29 +61,20 @@ export default async function InstructorTournamentsPage({
 
   return (
     <main>
-      {/* Back link */}
-      <Link
-        href="/instructor/dashboard"
-        className="link inline-flex items-center gap-1 text-sm"
-      >
-        ← Dashboard
-      </Link>
-
       {/* Header */}
-      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <span className="chip-accent">Tournament</span>
-          <h1 className="mt-3 h-display text-h1">
-            Tournaments của tôi
+          <h1 className="text-2xl font-bold">
+            Đấu trường của tôi
           </h1>
           <p className="mt-2 text-muted">
             {tournaments.length > 0
-              ? `${tournaments.length} tournament`
-              : "Bạn chưa tạo tournament nào."}
+              ? `${tournaments.length} đấu trường`
+              : "Bạn chưa tạo đấu trường nào."}
           </p>
         </div>
         <Link href="/instructor/tournaments/new" className="btn-primary">
-          + Tạo tournament mới
+          + Tạo đấu trường mới
         </Link>
       </div>
 
@@ -95,9 +86,9 @@ export default async function InstructorTournamentsPage({
         <EmptyState
           className="mt-10"
           icon="🏆"
-          title={validStatus ? `Không có tournament ở trạng thái "${STATUS_LABEL[validStatus]}"` : "Chưa có tournament nào"}
-          description={validStatus ? "Đổi filter trạng thái hoặc tạo tournament mới." : "Tạo tournament đầu tiên để học viên tham gia missions, leaderboard, prize."}
-          actions={[{ label: "+ Tạo tournament mới", href: "/instructor/tournaments/new" }]}
+          title={validStatus ? `Không có đấu trường ở trạng thái "${STATUS_LABEL[validStatus]}"` : "Chưa có đấu trường nào"}
+          description={validStatus ? "Đổi filter trạng thái hoặc tạo đấu trường mới." : "Tạo đấu trường đầu tiên để học viên tham gia missions, leaderboard, prize."}
+          actions={[{ label: "+ Tạo đấu trường mới", href: "/instructor/tournaments/new" }]}
         />
       ) : (
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">

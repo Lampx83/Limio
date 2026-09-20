@@ -93,7 +93,7 @@ export default function InstructorTournamentTabs({
         {activeTab === "basic" && !canEdit && (
           <div className="rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-6">
             <p className="text-sm text-muted">
-              Không thể chỉnh sửa tournament sau khi publish. Liên hệ admin nếu cần thay đổi.
+              Không thể chỉnh sửa đấu trường sau khi publish. Liên hệ admin nếu cần thay đổi.
             </p>
           </div>
         )}

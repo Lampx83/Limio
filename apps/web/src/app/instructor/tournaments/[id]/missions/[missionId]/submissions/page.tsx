@@ -184,7 +184,7 @@ export default async function MissionSubmissionsPage({
             {mission.verifyMode}
             {isCollective && " · Nộp theo nhóm"}
           </p>
-          <h1 className="mt-1 h-display text-2xl font-bold sm:text-3xl">
+          <h1 className="mt-1 text-2xl font-bold">
             {mission.title}
           </h1>
           <p className="mt-1 text-sm text-muted">

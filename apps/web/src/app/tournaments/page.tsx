@@ -80,7 +80,7 @@ export default async function TournamentsPage({
                 <span className="ml-3 inline-block animate-bounce">🏆</span>
               </h1>
               <p className="mt-4 max-w-xl text-lg font-medium text-white/95">
-                Tham gia tournament — hoàn thành nhiệm vụ, leo bảng xếp hạng,
+                Tham gia đấu trường — hoàn thành nhiệm vụ, leo bảng xếp hạng,
                 giành XP & danh hiệu.
               </p>
 
@@ -123,7 +123,7 @@ export default async function TournamentsPage({
         {userId && (
           <div
             role="tablist"
-            aria-label="Bộ lọc tournament"
+            aria-label="Bộ lọc đấu trường"
             className="mb-8 inline-flex rounded-full border-2 border-rose-300/40 bg-white p-1 shadow-md dark:border-rose-700/40 dark:bg-slate-800"
           >
             <Link
@@ -360,20 +360,20 @@ function EmptyArena({ tab }: { tab: string }) {
       <div className="text-7xl">{tab === "mine" ? "🎟️" : "🏟️"}</div>
       <h2 className="mt-4 text-2xl font-black text-slate-900 dark:text-white">
         {tab === "mine"
-          ? "Bạn chưa tham gia tournament nào"
+          ? "Bạn chưa tham gia đấu trường nào"
           : "Đấu trường đang im ắng"}
       </h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 dark:text-slate-400">
         {tab === "mine"
-          ? "Đăng ký tournament đang mở để leo bảng xếp hạng và giành XP."
-          : "Tournament mới sẽ xuất hiện ở đây ngay khi giảng viên mở. Quay lại sau nhé."}
+          ? "Đăng ký đấu trường đang mở để leo bảng xếp hạng và giành XP."
+          : "Đấu trường mới sẽ xuất hiện ở đây ngay khi giảng viên mở. Quay lại sau nhé."}
       </p>
       {tab === "mine" && (
         <Link
           href="/tournaments"
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:scale-105"
         >
-          Xem tournament đang mở →
+          Xem đấu trường đang mở →
         </Link>
       )}
     </div>

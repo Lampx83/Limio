@@ -158,7 +158,7 @@ export default async function MissionDetailPage({
       <section className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5">
         {!registered ? (
           <div className="text-sm text-muted">
-            Bạn cần đăng ký tournament trước.{" "}
+            Bạn cần đăng ký đấu trường trước.{" "}
             <Link href={`/tournaments/${params.id}`} className="link">
               Đăng ký →
             </Link>

@@ -30,7 +30,7 @@ export default function TournamentRegisterButton({
     return (
       <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          🏁 Tournament đã kết thúc
+          🏁 Đấu trường đã kết thúc
         </p>
       </div>
     );
@@ -70,7 +70,7 @@ export default function TournamentRegisterButton({
     return (
       <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          ⏳ Tournament chưa mở đăng ký
+          ⏳ Đấu trường chưa mở đăng ký
         </p>
       </div>
     );
@@ -80,7 +80,7 @@ export default function TournamentRegisterButton({
     return (
       <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          🔒 Tournament đã bắt đầu — không thể đăng ký mới
+          🔒 Đấu trường đã bắt đầu — không thể đăng ký mới
         </p>
       </div>
     );
@@ -126,7 +126,7 @@ export default function TournamentRegisterButton({
           🔥 Sẵn sàng?
         </p>
         <p className="mt-1 text-sm font-bold text-slate-700 dark:text-slate-200">
-          Ghi danh tham gia tournament
+          Ghi danh tham gia đấu trường
         </p>
         <button
           onClick={handleRegister}

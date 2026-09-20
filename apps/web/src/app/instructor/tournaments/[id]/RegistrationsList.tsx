@@ -101,7 +101,7 @@ export default function RegistrationsList({
         <p className="mt-3 font-medium">Chưa có học viên nào đăng ký</p>
         <p className="mt-1 text-sm text-muted">
           {isTeamBased
-            ? "Tournament theo đội sẽ hiện danh sách khi học viên đầu tiên đăng ký."
+            ? "Đấu trường theo đội sẽ hiện danh sách khi học viên đầu tiên đăng ký."
             : "Danh sách sẽ xuất hiện khi học viên đầu tiên đăng ký."}
         </p>
       </div>

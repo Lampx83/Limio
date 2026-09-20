@@ -166,7 +166,7 @@ export default async function TournamentDetailPage({
       {/* A. Header */}
       <header className="mt-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="h-display text-3xl font-bold leading-tight sm:text-4xl">
+          <h1 className="leading-tight text-2xl font-bold">
             {tournament.title}
           </h1>
           <p className="mt-1 text-sm text-muted">
@@ -221,7 +221,7 @@ export default async function TournamentDetailPage({
         <section className="mt-4">
           <ShareCard
             path={`/tournaments/${tournament.id}`}
-            label="Link giới thiệu tournament"
+            label="Link giới thiệu đấu trường"
             hint="Người chưa đăng nhập cũng xem được thể lệ và bảng xếp hạng; đăng ký thì cần tài khoản."
             fileName={`tournament-${tournament.id.slice(0, 8)}`}
           />

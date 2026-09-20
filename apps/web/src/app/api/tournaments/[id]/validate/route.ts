@@ -118,7 +118,7 @@ export async function GET(
   if (missions.length === 0) {
     errors.push({
       code: "E01",
-      message: "Tournament phải có ít nhất 1 nhiệm vụ trước khi publish.",
+      message: "Đấu trường phải có ít nhất 1 nhiệm vụ trước khi publish.",
     });
   }
 
@@ -339,7 +339,7 @@ export async function GET(
         code: "W03",
         missionId: m.id,
         missionTitle: m.title,
-        message: `${label}: "Học liên tục N ngày" yêu cầu tournament gắn với một khoá học cụ thể. Tournament này là platform-wide — điều kiện streak sẽ không thể tự động kiểm tra.`,
+        message: `${label}: "Học liên tục N ngày" yêu cầu đấu trường gắn với một khoá học cụ thể. Đấu trường này là platform-wide — điều kiện streak sẽ không thể tự động kiểm tra.`,
       });
     }
   }

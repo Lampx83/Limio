@@ -543,8 +543,8 @@ export default async function TournamentDetailPage({
                   </p>
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                     {tournament.allowLateRegistration
-                      ? "Nhận đăng ký đến khi tournament kết thúc"
-                      : "Đóng đăng ký khi tournament bắt đầu"}
+                      ? "Nhận đăng ký đến khi đấu trường kết thúc"
+                      : "Đóng đăng ký khi đấu trường bắt đầu"}
                   </p>
                 </div>
               </section>
@@ -990,7 +990,7 @@ function StatusBanner({
         <div className="min-w-0">
           <p className="inline-flex items-center gap-1.5 text-sm font-black text-emerald-700 dark:text-emerald-400">
             <CheckCircle2 className="h-4 w-4" />
-            {isEnded ? "Tournament đã kết thúc" : "Bạn đã ghi danh"}
+            {isEnded ? "Đấu trường đã kết thúc" : "Bạn đã ghi danh"}
           </p>
           {teamSize > 1 && teamName ? (
             <p className="mt-0.5 text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -1032,7 +1032,7 @@ function StatusBanner({
     return (
       <div className={`${base} border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800`}>
         <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
-          <Eye className="h-4 w-4" /> Tournament đã bắt đầu — bạn đang ở chế độ xem, không nộp bài được.
+          <Eye className="h-4 w-4" /> Đấu trường đã bắt đầu — bạn đang ở chế độ xem, không nộp bài được.
         </p>
       </div>
     );
@@ -1042,7 +1042,7 @@ function StatusBanner({
     return (
       <div className={`${base} border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800`}>
         <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
-          🏁 Tournament đã kết thúc — xem kết quả bên dưới.
+          🏁 Đấu trường đã kết thúc — xem kết quả bên dưới.
         </p>
       </div>
     );

@@ -110,7 +110,7 @@ export default async function SubmissionsPage({
         <span className="chip-brand">
           {ctx.kind === "tournament" ? "Mission" : "Bài tập"}
         </span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-3 text-2xl font-bold">
           {assignment.title}
         </h1>
         <p className="mt-2 text-muted">
@@ -124,7 +124,7 @@ export default async function SubmissionsPage({
             </>
           ) : (
             <>
-              Tournament mission ·{" "}
+              Đấu trường mission ·{" "}
             </>
           )}
           Max <span className="font-semibold">{assignment.maxScore}</span> điểm

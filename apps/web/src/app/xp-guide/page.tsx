@@ -65,13 +65,13 @@ const rows: Row[] = [
     note: q.description,
   })),
   {
-    action: "Nhiệm vụ trong tournament",
+    action: "Nhiệm vụ trong đấu trường",
     xp: "Tuỳ nhiệm vụ",
     cap: "—",
     note: "Số điểm do giảng viên đặt khi tạo từng nhiệm vụ.",
   },
   {
-    action: "Giải thưởng tournament (theo hạng)",
+    action: "Giải thưởng đấu trường (theo hạng)",
     xp: "Tuỳ giải đấu",
     cap: "—",
     note: "Tổng điểm giải chia theo % cho từng hạng, giảng viên cấu hình khi kết thúc giải.",

@@ -47,7 +47,7 @@ export default function TournamentMetaForm({
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="link text-sm">
-        Sửa thông tin tournament
+        Sửa thông tin đấu trường
       </button>
     );
   }
@@ -81,7 +81,7 @@ export default function TournamentMetaForm({
   return (
     <form onSubmit={onSave} className="card space-y-4">
       <header className="border-b border-token pb-3">
-        <h3 className="text-base font-semibold">Thông tin tournament</h3>
+        <h3 className="text-base font-semibold">Thông tin đấu trường</h3>
       </header>
 
       <div>
@@ -163,7 +163,7 @@ export default function TournamentMetaForm({
           />
           <div className="text-sm">
             <span className="font-medium">
-              Cho phép đăng ký khi tournament đang diễn ra
+              Cho phép đăng ký khi đấu trường đang diễn ra
             </span>
             <p className="mt-0.5 text-xs text-muted">
               Bật → người chơi vẫn có thể tham gia sau startsAt. Tắt → khóa

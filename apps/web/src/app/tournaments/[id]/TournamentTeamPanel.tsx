@@ -7,14 +7,14 @@ import { Copy, LogOut, UserX, Crown, Users } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 const ERROR_LABEL: Record<string, string> = {
-  team_solo_only: "Tournament này không phải team-based.",
+  team_solo_only: "Đấu trường này không phải team-based.",
   team_name_taken: "Tên đội đã có người dùng.",
   team_full: "Đội đã đủ người.",
   team_join_code_invalid: "Mã đội không hợp lệ.",
-  already_registered: "Bạn đã đăng ký tournament này.",
-  not_published: "Tournament chưa mở đăng ký.",
-  ended: "Tournament đã kết thúc.",
-  team_locked_after_start: "Tournament đã bắt đầu — không thể thay đổi đội.",
+  already_registered: "Bạn đã đăng ký đấu trường này.",
+  not_published: "Đấu trường chưa mở đăng ký.",
+  ended: "Đấu trường đã kết thúc.",
+  team_locked_after_start: "Đấu trường đã bắt đầu — không thể thay đổi đội.",
   team_not_captain: "Chỉ captain mới có quyền này.",
   validation_failed: "Dữ liệu không hợp lệ.",
   not_registered: "Bạn chưa đăng ký.",
@@ -67,7 +67,7 @@ export default function TournamentTeamPanel({
     return (
       <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          🏁 Tournament đã kết thúc
+          🏁 Đấu trường đã kết thúc
         </p>
       </div>
     );
@@ -302,7 +302,7 @@ export default function TournamentTeamPanel({
     return (
       <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          ⏳ Tournament chưa mở đăng ký
+          ⏳ Đấu trường chưa mở đăng ký
         </p>
       </div>
     );
@@ -311,7 +311,7 @@ export default function TournamentTeamPanel({
     return (
       <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          🔒 Tournament đã bắt đầu — không thể đăng ký mới
+          🔒 Đấu trường đã bắt đầu — không thể đăng ký mới
         </p>
       </div>
     );
@@ -323,7 +323,7 @@ export default function TournamentTeamPanel({
         🔥 Sẵn sàng?
       </p>
       <p className="mt-1 text-sm font-bold">
-        Tournament đội ({teamSize} người/đội)
+        Đấu trường đội ({teamSize} người/đội)
       </p>
 
       {mode === "none" && (

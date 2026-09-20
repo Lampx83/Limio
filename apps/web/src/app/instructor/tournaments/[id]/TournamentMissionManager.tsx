@@ -881,7 +881,7 @@ function AddMissionForm({
             Chọn loại điều kiện để tự điền ngưỡng mặc định:
             {teamSize > 1 && (
               <span className="ml-1 text-[11px] text-amber-700 dark:text-amber-400">
-                · Tournament team-based — đã ẩn các loại không phù hợp cho nhóm.
+                · Đấu trường team-based — đã ẩn các loại không phù hợp cho nhóm.
               </span>
             )}
           </p>

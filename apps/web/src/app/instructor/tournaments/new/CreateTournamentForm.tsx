@@ -158,7 +158,7 @@ export default function CreateTournamentForm({
           />
           <div className="text-sm">
             <span className="font-medium">
-              Cho phép đăng ký khi tournament đang diễn ra
+              Cho phép đăng ký khi đấu trường đang diễn ra
             </span>
             <p className="mt-0.5 text-xs text-muted">
               Bật → người chơi có thể tham gia bất cứ lúc nào trước khi kết

@@ -26,7 +26,7 @@ export default async function NewTournamentPage() {
       <main>
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
           Bạn không phải instructor của khóa nào. Chỉ instructor hoặc admin
-          mới tạo được tournament.
+          mới tạo được đấu trường.
         </div>
       </main>
     );
@@ -42,9 +42,9 @@ export default async function NewTournamentPage() {
       </Link>
 
       <div className="mt-4">
-        <span className="chip-accent">Tournament</span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
-          Tạo tournament mới
+        <span className="chip-accent">Đấu trường</span>
+        <h1 className="mt-3 text-2xl font-bold">
+          Tạo đấu trường mới
         </h1>
         <p className="mt-2 text-muted">
           Phase 3 stub — chỉ tạo bản nháp. Mission, ranking, prize sẽ ship ở các

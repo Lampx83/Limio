@@ -83,7 +83,7 @@ export default function JudgesPanel({ tournamentId }: { tournamentId: string }) 
         <h3 className="text-base font-semibold">Giám khảo hackathon</h3>
       </div>
       <p className="mt-1 text-xs text-muted">
-        Khi tournament có giám khảo + mission nộp theo nhóm (PEER_REVIEW), hệ
+        Khi đấu trường có giám khảo + mission nộp theo nhóm (PEER_REVIEW), hệ
         thống tự assign mọi giám khảo chấm mỗi đội — thay vì peer chia ngẫu nhiên.
       </p>
 

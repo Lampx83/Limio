@@ -122,8 +122,8 @@ function LandingPage() {
             tone="success"
             badge="Gamification"
             title="Học là cuộc chơi"
-            desc="XP, level, streak, badge, quest và tournament — anti-farming bằng adaptive reward sizing."
-            bullets={["XP & level", "Skill badge", "Leaderboard & tournament"]}
+            desc="XP, level, streak, badge, quest và đấu trường — anti-farming bằng adaptive reward sizing."
+            bullets={["XP & level", "Skill badge", "Leaderboard & đấu trường"]}
           />
         </div>
       </section>
