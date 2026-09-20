@@ -50,6 +50,8 @@ type Runtime =
 
 const SIDE_MIN = 240;
 const SIDE_MAX = 720;
+const NOTE_FONT_MIN = 10;
+const NOTE_FONT_MAX = 40;
 
 const TYPE_LABELS: Record<SlideType, string> = {
   content: "Trình bày",
@@ -1093,12 +1095,59 @@ function FeedbackSidebar({
 // cha) — đây chính là lý do phải tách 2 cửa sổ: nội dung này không bao giờ đi
 // qua cửa sổ audience/màn chiếu, kể cả qua props hay polling.
 function PresenterNotesPanel({ note }: { note: string }) {
+  // Cỡ chữ riêng của ghi chú (không đụng zoom slide), nhớ trong localStorage.
+  const [size, setSize] = useState(13.5);
+  useEffect(() => {
+    try {
+      const v = Number(localStorage.getItem("limio-live:noteFont"));
+      if (v >= NOTE_FONT_MIN && v <= NOTE_FONT_MAX) setSize(v);
+    } catch {}
+  }, []);
+  const change = (next: number) => {
+    const v = Math.min(NOTE_FONT_MAX, Math.max(NOTE_FONT_MIN, next));
+    setSize(v);
+    try {
+      localStorage.setItem("limio-live:noteFont", String(v));
+    } catch {}
+  };
   return (
     <div>
-      <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">
-        Ghi chú của bạn — không hiện lên màn chiếu
+      <div className="mb-3 flex items-center gap-2">
+        <div className="min-w-0 flex-1 text-[11px] font-bold uppercase tracking-wide text-faint">
+          Ghi chú của bạn — không hiện lên màn chiếu
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface-muted))] p-0.5">
+          <button
+            onClick={() => change(size - 2)}
+            disabled={size <= NOTE_FONT_MIN}
+            className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-[rgb(var(--surface))] disabled:opacity-30"
+            aria-label="Thu nhỏ chữ ghi chú"
+            title="Thu nhỏ chữ ghi chú"
+          >
+            <ZoomOut size={14} />
+          </button>
+          <button
+            onClick={() => change(13.5)}
+            className="min-w-[2.5rem] rounded-full px-1 text-center text-[11px] font-semibold tabular-nums hover:bg-[rgb(var(--surface))]"
+            title="Về cỡ mặc định"
+          >
+            {Math.round((size / 13.5) * 100)}%
+          </button>
+          <button
+            onClick={() => change(size + 2)}
+            disabled={size >= NOTE_FONT_MAX}
+            className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-[rgb(var(--surface))] disabled:opacity-30"
+            aria-label="Phóng to chữ ghi chú"
+            title="Phóng to chữ ghi chú"
+          >
+            <ZoomIn size={14} />
+          </button>
+        </div>
       </div>
-      <div className="whitespace-pre-wrap rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-[13.5px] leading-relaxed text-[rgb(var(--text))]">
+      <div
+        style={{ fontSize: size }}
+        className="whitespace-pre-wrap rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-4 leading-relaxed text-[rgb(var(--text))]"
+      >
         {note}
       </div>
     </div>
