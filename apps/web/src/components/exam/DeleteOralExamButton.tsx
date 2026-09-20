@@ -15,10 +15,13 @@ export default function DeleteOralExamButton({
   examId,
   examTitle,
   redirectTo,
+  variant = "default",
 }: {
   examId: string;
   examTitle: string;
   redirectTo?: string;
+  /** "icon": nút thùng rác gọn, hợp với thẻ danh sách. */
+  variant?: "default" | "icon";
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -43,6 +46,24 @@ export default function DeleteOralExamButton({
     }
     if (redirectTo) router.push(redirectTo);
     else router.refresh();
+  }
+
+  if (variant === "icon") {
+    return (
+      <span className="inline-flex flex-col items-end gap-1">
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={busy}
+          title="Xoá đề"
+          aria-label={`Xoá đề ${examTitle}`}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+        >
+          <Trash2 className="h-4 w-4" aria-hidden />
+        </button>
+        {error && <span className="text-caption text-red-700">{error}</span>}
+      </span>
+    );
   }
 
   return (

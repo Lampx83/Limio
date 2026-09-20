@@ -35,7 +35,7 @@ export default async function NewOralExamPage({
   return (
     <main>
       <Link href="/instructor/oral-exams" className="text-sm text-blue-600 hover:underline">
-        ← Phòng thi Vấn đáp AI
+        ← Phòng vấn đáp AI
       </Link>
       <h1 className="mt-3 text-2xl font-bold">Tạo đề vấn đáp mới</h1>
       <p className="mt-1 text-sm text-faint">
