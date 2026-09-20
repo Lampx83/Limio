@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { EmptyState, KpiCard } from "@/components/ui";
 import { loadAssignmentsWithCounts } from "./assignmentQueries";
 import CourseAssignmentsBrowser from "./CourseAssignmentsBrowser";
+import CourseFilterSelect from "@/components/CourseFilterSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -183,26 +184,22 @@ export default async function InstructorAssignmentsPage({
       {/* Course filter — chỉ dùng cho tab "Cần chấm" (stream xuyên khoá). Tab
           "Danh sách assignment" chọn khoá qua bước drill-down bên dưới. */}
       {view === "pending" && (
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Khoá:
-          </span>
-          <Link
-            href={buildHref({ course: null })}
-            className={selectedCourseId === null ? "chip-brand" : "chip"}
-          >
-            Tất cả ({ownedCourses.length})
-          </Link>
-          {ownedCourses.map((c) => (
-            <Link
-              key={c.id}
-              href={buildHref({ course: c.id })}
-              className={selectedCourseId === c.id ? "chip-brand" : "chip"}
-              prefetch={false}
-            >
-              {c.title}
-            </Link>
-          ))}
+        <div className="mt-6">
+          <CourseFilterSelect
+            value={selectedCourseId ?? ""}
+            options={[
+              {
+                value: "",
+                label: `Tất cả khoá học (${ownedCourses.length})`,
+                href: buildHref({ course: null }),
+              },
+              ...ownedCourses.map((c) => ({
+                value: c.id,
+                label: c.title,
+                href: buildHref({ course: c.id }),
+              })),
+            ]}
+          />
         </div>
       )}
 

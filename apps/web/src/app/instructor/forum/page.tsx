@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { EmptyState, KpiCard, DateTime } from "@/components/ui";
+import CourseFilterSelect from "@/components/CourseFilterSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -151,49 +152,50 @@ export default async function InstructorForumHubPage({
         />
       </section>
 
-      {/* Filters */}
-      <div className="mt-8 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Khoá:
-        </span>
-        <Link
-          href={filterHref({ course: null })}
-          className={!courseFilter ? "chip-brand" : "chip"}
+      {/* Bộ lọc: khoá dạng dropdown, trạng thái dạng nhóm nút liền nhau */}
+      <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+        <CourseFilterSelect
+          value={courseFilter ?? ""}
+          options={[
+            { value: "", label: "Tất cả khoá học", href: filterHref({ course: null }) },
+            ...ownedCourses.map((c) => ({
+              value: c.id,
+              label: c.title,
+              href: filterHref({ course: c.id }),
+            })),
+          ]}
+        />
+        <div
+          role="group"
+          aria-label="Lọc theo trạng thái"
+          className="grid w-full grid-cols-2 gap-0.5 rounded-lg bg-[rgb(var(--surface-muted))] p-0.5 sm:inline-flex sm:w-auto sm:items-center"
         >
-          Tất cả
-        </Link>
-        {ownedCourses.map((c) => (
-          <Link
-            key={c.id}
-            href={filterHref({ course: c.id })}
-            className={courseFilter === c.id ? "chip-brand" : "chip"}
-            prefetch={false}
-          >
-            {c.title}
-          </Link>
-        ))}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Trạng thái:
-        </span>
-        {(
-          [
-            { id: "all", label: "Tất cả" },
-            { id: "unresolved", label: "Chưa giải đáp" },
-            { id: "stale", label: `Stale >${STALE_HOURS}h` },
-            { id: "resolved", label: "Đã resolved" },
-          ] as const
-        ).map((f) => (
-          <Link
-            key={f.id}
-            href={filterHref({ status: f.id })}
-            className={status === f.id ? "chip-brand" : "chip"}
-            prefetch={false}
-          >
-            {f.label}
-          </Link>
-        ))}
+          {(
+            [
+              { id: "all", label: "Tất cả" },
+              { id: "unresolved", label: "Chưa giải đáp" },
+              { id: "stale", label: `Stale >${STALE_HOURS}h` },
+              { id: "resolved", label: "Đã resolved" },
+            ] as const
+          ).map((f) => {
+            const active = status === f.id;
+            return (
+              <Link
+                key={f.id}
+                href={filterHref({ status: f.id })}
+                aria-current={active ? "true" : undefined}
+                prefetch={false}
+                className={`rounded-md px-3 py-1.5 text-center text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-[rgb(var(--surface))] text-brand-700 shadow-sm"
+                    : "text-muted hover:text-[rgb(var(--text))]"
+                }`}
+              >
+                {f.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* List */}
