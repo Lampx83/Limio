@@ -39,6 +39,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       status: true,
       columns: true,
       blockPaste: true,
+      drawingMode: true,
       createdAt: true,
       closedAt: true,
       notes: {

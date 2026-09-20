@@ -417,15 +417,13 @@ export default function JoinBoardPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-50 via-pink-50/60 to-pink-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 pb-24">
-      {/* Compact gradient header — nhỏ hơn bản trước để dành đất cho note */}
-      <header className="relative bg-brand-gradient text-white px-4 py-5">
-        <div className="absolute inset-0 opacity-30 mix-blend-overlay"
-          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+    <div className="min-h-screen bg-brand-50 dark:bg-zinc-900 pb-24">
+      {/* Compact header (lime phẳng) — nhỏ hơn bản trước để dành đất cho note */}
+      <header className="relative bg-brand-600 text-white px-4 py-5">
         <div className="relative max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90 mb-0.5">Bảng tương tác</p>
-            <h1 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm break-words leading-tight">{board.title}</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold break-words leading-tight">{board.title}</h1>
             {board.prompt && (
               <p className="mt-1 text-sm italic opacity-95 max-w-2xl">{board.prompt}</p>
             )}
@@ -469,7 +467,7 @@ export default function JoinBoardPage() {
                       {board.status === "open" && board.columns.includes(g.label) && (
                         <button
                           onClick={() => openComposeForColumn(g.label)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-gradient text-white shadow-md transition-all hover:scale-110 hover:shadow-brand-glow active:scale-95"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-600 text-white shadow-md transition-all hover:scale-110 hover:bg-brand-700 active:scale-95"
                           title={`Thêm note vào ${g.label}`}
                           aria-label={`Thêm note vào ${g.label}`}
                         >
@@ -496,7 +494,7 @@ export default function JoinBoardPage() {
         ) : board.notes.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-6xl mb-3">📝</p>
-            <p className="text-sm text-muted">Chưa có note nào — bấm <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-gradient text-white font-bold mx-1">+</span> để đăng note đầu tiên!</p>
+            <p className="text-sm text-muted">Chưa có note nào — bấm <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-600 text-white font-bold mx-1">+</span> để đăng note đầu tiên!</p>
           </div>
         ) : (
           <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 [column-fill:_balance]">
@@ -515,7 +513,7 @@ export default function JoinBoardPage() {
             setModalOpen(true);
             setInfo(null);
           }}
-          className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-gradient text-white shadow-2xl hover:shadow-brand-glow flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+          className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-600 text-white shadow-2xl hover:bg-brand-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
           title={board.drawingMode ? "Vẽ hình" : "Thêm note (N)"}
           aria-label={board.drawingMode ? "Vẽ hình" : "Thêm note"}
         >
@@ -596,7 +594,7 @@ export default function JoinBoardPage() {
                 <button
                   onClick={handleSaveEditNote}
                   disabled={editSubmitting}
-                  className="bg-brand-gradient hover:shadow-brand-glow text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all active:scale-[0.98]"
+                  className="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all active:scale-[0.98]"
                 >
                   {editSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
@@ -612,6 +610,9 @@ export default function JoinBoardPage() {
         <DrawingComposer
           code={code}
           initialName={name}
+          columns={board.columns}
+          groupColumn={groupColumn}
+          onGroupChange={setGroupColumn}
           existingNoteId={editingDrawingId && myNoteIds.has(editingDrawingId) ? editingDrawingId : null}
           onClose={() => setModalOpen(false)}
           onPosted={({ noteId, name: postedName }) => {
@@ -753,7 +754,7 @@ export default function JoinBoardPage() {
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="bg-brand-gradient hover:shadow-brand-glow text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all active:scale-[0.98]"
+                  className="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2 rounded-lg shadow disabled:opacity-50 transition-all active:scale-[0.98]"
                 >
                   {submitting ? "Đang gửi..." : "📌 Dán note"}
                 </button>

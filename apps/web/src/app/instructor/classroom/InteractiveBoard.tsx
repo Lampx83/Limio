@@ -53,6 +53,7 @@ interface Board {
   status: string;
   columns: string[];
   blockPaste: boolean;
+  drawingMode?: boolean;
   notes: BoardNote[];
 }
 
@@ -61,15 +62,18 @@ interface BoardHistoryItem {
   code: string;
   title: string;
   status: string;
+  drawingMode?: boolean;
   createdAt: string;
   _count: { notes: number };
 }
 
 interface InteractiveBoardProps {
   onExit?: () => void;
+  /** Draw-it độc lập: học viên quét QR rồi vẽ hình, mỗi hình là 1 note ảnh trên bảng. */
+  drawing?: boolean;
 }
 
-export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
+export default function InteractiveBoard({ onExit, drawing = false }: InteractiveBoardProps) {
   const [current, setCurrent] = useState<Board | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   // Mặc định full-screen ngay khi vào phiên board — che luôn top nav +
@@ -218,7 +222,8 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           title: title.trim(),
           prompt: prompt.trim() || undefined,
           columns,
-          blockPaste: blockPasteEnabled,
+          blockPaste: drawing ? false : blockPasteEnabled,
+          drawingMode: drawing,
         }),
       });
       if (!res.ok) {
@@ -332,7 +337,10 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     setIsLoadingHistory(true);
     try {
       const res = await fetch(apiUrl("/api/instructor/teaching-tools/boards"));
-      if (res.ok) setHistory(await res.json());
+      if (res.ok) {
+        const all = (await res.json()) as BoardHistoryItem[];
+        setHistory(all.filter((b) => !!b.drawingMode === drawing));
+      }
     } catch {
       toast.error("Lỗi tải lịch sử");
     } finally {
@@ -699,7 +707,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           <div className="relative max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-90 mb-0.5">
-                Bảng tương tác · GIẢNG VIÊN
+                {current.drawingMode ? "Draw-it · GIẢNG VIÊN" : "Bảng tương tác · GIẢNG VIÊN"}
               </p>
               <h1 className="text-xl sm:text-2xl font-extrabold drop-shadow-sm break-words leading-tight">
                 {current.title}
@@ -735,6 +743,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 <LayoutGrid size={14} />
                 {current.columns.length > 0 ? `${current.columns.length} nhóm` : "Nhóm"}
               </button>
+              {!current.drawingMode && (
               <button
                 onClick={handleToggleBlockPaste}
                 disabled={savingBlockPaste}
@@ -744,6 +753,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
                 {current.blockPaste ? <ClipboardX size={14} /> : <Clipboard size={14} />}
                 {current.blockPaste ? "Đã chặn dán" : "Cho dán"}
               </button>
+              )}
               <button
                 onClick={() => setIsFullscreen((v) => !v)}
                 className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
@@ -782,7 +792,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
         </main>
 
         {/* FAB add note — instructor cũng dùng được để demo */}
-        {current.status === "open" && (
+        {current.status === "open" && !current.drawingMode && (
           <button
             onClick={() => {
               setModalOpen(true);
@@ -1167,8 +1177,8 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
     <div className="tool-panel rounded-none">
       <div className="tool-header">
         <div className="flex items-center gap-2">
-          <span className="tool-icon"><StickyNote size={20} strokeWidth={1.75} /></span>
-          <h3 className="tool-title">Tạo bảng mới</h3>
+          <span className="tool-icon">{drawing ? <Pencil size={20} strokeWidth={1.75} /> : <StickyNote size={20} strokeWidth={1.75} />}</span>
+          <h3 className="tool-title">{drawing ? "Tạo phiên Draw-it" : "Tạo bảng mới"}</h3>
         </div>
         {onExit && (
           <button onClick={onExit} className="tool-action">
@@ -1266,7 +1276,8 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           )}
         </div>
 
-        {/* Chặn dán — tùy chọn, mặc định TẮT (cho phép dán như bình thường) */}
+        {/* Chặn dán — tùy chọn, mặc định TẮT (cho phép dán như bình thường); Draw-it không có ô chữ nên bỏ */}
+        {!drawing && (
         <div className="rounded-xl bg-white/70 p-3.5 ring-1 ring-brand-200/70 dark:bg-white/5">
           <label className="flex cursor-pointer items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-sm font-medium">
@@ -1286,8 +1297,10 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
           )}
         </div>
 
+        )}
+
         <button onClick={handleCreate} disabled={isCreating} className="btn-primary w-full">
-          {isCreating ? "Đang tạo..." : "Tạo Bảng"}
+          {isCreating ? "Đang tạo..." : drawing ? "Tạo phiên vẽ" : "Tạo Bảng"}
         </button>
       </div>
 

@@ -14,12 +14,13 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { title, prompt, columns, blockPaste } = z
+    const { title, prompt, columns, blockPaste, drawingMode } = z
       .object({
         title: z.string().min(1).max(120),
         prompt: z.string().max(500).optional(),
         columns: z.array(z.string()).optional(),
         blockPaste: z.boolean().optional(),
+        drawingMode: z.boolean().optional(),
       })
       .parse(body);
 
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
         prompt: prompt?.trim() || null,
         columns: normalizedColumns,
         blockPaste: blockPaste ?? false,
+        drawingMode: drawingMode ?? false,
         ownerId: userId,
       },
       select: {
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
         status: true,
         columns: true,
         blockPaste: true,
+        drawingMode: true,
         createdAt: true,
       },
     });
@@ -78,6 +81,7 @@ export async function GET() {
       title: true,
       prompt: true,
       status: true,
+      drawingMode: true,
       createdAt: true,
       closedAt: true,
       _count: { select: { notes: { where: { hidden: false } } } },

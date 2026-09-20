@@ -21,6 +21,7 @@ export type ToolType =
   | "grouping"
   | "board"
   | "whiteboard"
+  | "drawit"
   | "run-plan"
   | null;
 
@@ -47,6 +48,7 @@ const VALID_TOOLS: ToolType[] = [
   "grouping",
   "board",
   "whiteboard",
+  "drawit",
   "run-plan",
 ];
 
@@ -92,7 +94,7 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
       {/* Bảng tương tác tự mở full-screen ngay khi có phiên (xem InteractiveBoard.tsx)
           và có sẵn nút thoát riêng trong header của nó — không cần "← Quay lại" ở đây
           nữa, tránh 2 nút exit cùng hiển thị. */}
-      {selectedTool !== "board" && selectedTool !== "whiteboard" && selectedTool !== "random-picker" && (
+      {selectedTool !== "board" && selectedTool !== "drawit" && selectedTool !== "whiteboard" && selectedTool !== "random-picker" && (
         <button
           onClick={() => setSelectedTool(null)}
           className="mb-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
@@ -105,6 +107,7 @@ export default function TeachingToolsClient({ courses }: TeachingToolsClientProp
       {selectedTool === "wordcloud" && <WordCloud onExit={() => setSelectedTool(null)} />}
       {selectedTool === "timer" && <CountdownTimer onExit={() => setSelectedTool(null)} />}
       {selectedTool === "board" && <InteractiveBoard onExit={() => setSelectedTool(null)} />}
+      {selectedTool === "drawit" && <InteractiveBoard drawing onExit={() => setSelectedTool(null)} />}
       {selectedTool === "whiteboard" && <Whiteboard onExit={() => setSelectedTool(null)} />}
 
       {selectedTool === "random-picker" && (

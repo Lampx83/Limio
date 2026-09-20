@@ -40,12 +40,19 @@ export default function DrawingComposer({
   code,
   initialName,
   existingNoteId,
+  columns,
+  groupColumn,
+  onGroupChange,
   onClose,
   onPosted,
 }: {
   code: string;
   initialName: string;
   existingNoteId: string | null;
+  /** Board chia nhóm (grid): rỗng = không chia. Hình mới phải thuộc 1 nhóm. */
+  columns: string[];
+  groupColumn: string;
+  onGroupChange: (column: string) => void;
   onClose: () => void;
   onPosted: (posted: PostedDrawing) => void;
 }) {
@@ -127,7 +134,7 @@ export default function DrawingComposer({
         : await fetch(apiUrl(`/api/public/boards/${code}/notes`), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ authorName: name.trim(), content: "", attachmentUrl: url, clientId: getClientId() }),
+            body: JSON.stringify({ authorName: name.trim(), content: "", attachmentUrl: url, clientId: getClientId(), ...(columns.length > 0 ? { column: groupColumn } : {}) }),
           });
       if (res.status === 429) {
         setInfo("Bạn gửi quá nhanh — chờ vài giây rồi thử lại.");
@@ -158,6 +165,18 @@ export default function DrawingComposer({
           maxLength={40}
           className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
+        {columns.length > 0 && !existingNoteId && (
+          <select
+            value={groupColumn}
+            onChange={(e) => onGroupChange(e.target.value)}
+            aria-label="Thuộc nhóm"
+            className="max-w-[40%] shrink-0 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            {columns.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        )}
         <button onClick={onClose} className="shrink-0 rounded-lg p-1.5 hover:bg-gray-100" aria-label="Đóng">
           <X size={20} />
         </button>
@@ -225,7 +244,7 @@ export default function DrawingComposer({
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="shrink-0 rounded-lg bg-brand-gradient px-5 py-2 font-semibold text-white shadow transition-all hover:shadow-brand-glow active:scale-[0.98] disabled:opacity-50"
+          className="shrink-0 rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white shadow transition-all hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
         >
           {submitting ? "Đang đăng..." : existingNoteId ? "Cập nhật hình" : "📌 Đăng hình"}
         </button>
