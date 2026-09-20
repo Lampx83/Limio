@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 type Props = {
   tournamentId: string;
@@ -101,7 +102,7 @@ export default function TournamentRegisterButton({
         if (body.error === "already_registered") {
           setRegistered(true);
         } else {
-          setError(body.error ?? "Đăng ký thất bại. Vui lòng thử lại.");
+          setError(tournamentErrorMessage(body, "Đăng ký chưa được. Vui lòng thử lại."));
         }
       }
     } catch {

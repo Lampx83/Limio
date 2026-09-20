@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 import { plainToRichHtml } from "@/lib/richText";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
@@ -19,10 +21,6 @@ interface Initial {
   allowLateRegistration: boolean;
 }
 
-function toDatetimeLocal(iso: string) {
-  // Convert ISO to value compatible with datetime-local input (YYYY-MM-DDTHH:mm)
-  return iso.slice(0, 16);
-}
 
 export default function TournamentMetaForm({
   tournamentId,
@@ -35,8 +33,8 @@ export default function TournamentMetaForm({
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(plainToRichHtml(initial.description));
-  const [startsAt, setStartsAt] = useState(toDatetimeLocal(initial.startsAt));
-  const [endsAt, setEndsAt] = useState(toDatetimeLocal(initial.endsAt));
+  const [startsAt, setStartsAt] = useState(toDateTimeInputValue(initial.startsAt));
+  const [endsAt, setEndsAt] = useState(toDateTimeInputValue(initial.endsAt));
   const [prizeXp, setPrizeXp] = useState(String(initial.prizeXp));
   const [allowLateRegistration, setAllowLateRegistration] = useState(
     initial.allowLateRegistration,
@@ -62,8 +60,8 @@ export default function TournamentMetaForm({
       body: JSON.stringify({
         title,
         description,
-        startsAt: new Date(startsAt).toISOString(),
-        endsAt: new Date(endsAt).toISOString(),
+        startsAt: fromDateTimeInputValue(startsAt),
+        endsAt: fromDateTimeInputValue(endsAt),
         prizeXp: parseInt(prizeXp, 10) || 0,
         allowLateRegistration,
       }),
@@ -74,7 +72,7 @@ export default function TournamentMetaForm({
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "save_failed");
+      setError(tournamentErrorMessage(d, "Chưa lưu được. Vui lòng thử lại."));
     }
   }
 
@@ -175,7 +173,7 @@ export default function TournamentMetaForm({
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-token pt-4">
         {error && (
-          <span className="mr-auto text-sm text-danger-600">Lỗi: {error}</span>
+          <span className="mr-auto text-sm text-danger-600">{error}</span>
         )}
         <button
           type="button"

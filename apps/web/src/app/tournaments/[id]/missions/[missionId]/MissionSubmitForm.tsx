@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 import AssignmentSubmitForm from "@/components/AssignmentSubmitForm";
 
 type VerifyMode = "AUTO_GRADE" | "AUTO_CHECK" | "PEER_REVIEW" | "MANUAL_REVIEW";
@@ -89,9 +90,9 @@ export default function MissionSubmitForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payload }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "submit_failed");
+        setError(tournamentErrorMessage(data, "Nộp bài chưa được. Vui lòng thử lại."));
       } else {
         router.refresh();
       }
@@ -129,7 +130,7 @@ export default function MissionSubmitForm({
             className="input mt-1 text-sm"
           />
         </div>
-        {error && <p className="text-sm text-danger-600">Lỗi: {error}</p>}
+        {error && <p className="text-sm text-danger-600">{error}</p>}
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "Đang nộp..." : "Nộp"}
         </button>
@@ -206,7 +207,7 @@ export default function MissionSubmitForm({
             className="input mt-1 text-sm"
           />
         </div>
-        {error && <p className="text-sm text-danger-600">Lỗi: {error}</p>}
+        {error && <p className="text-sm text-danger-600">{error}</p>}
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "Đang nộp..." : "Nộp project"}
         </button>
@@ -238,7 +239,7 @@ export default function MissionSubmitForm({
           Sau hạn nộp, hệ thống chia ngẫu nhiên 3 bạn cùng đợt chấm. Có thể sửa
           trước khi có review đầu tiên.
         </p>
-        {error && <p className="text-sm text-danger-600">Lỗi: {error}</p>}
+        {error && <p className="text-sm text-danger-600">{error}</p>}
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "Đang nộp..." : "Nộp"}
         </button>

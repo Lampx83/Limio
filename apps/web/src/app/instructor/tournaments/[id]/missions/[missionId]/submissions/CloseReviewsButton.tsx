@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Gavel, Loader2 } from "lucide-react";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 /**
  * "Chốt điểm ngay" — GV force-close vòng chấm trước hạn: tính median + ra điểm
@@ -44,7 +45,7 @@ export default function CloseReviewsButton({
         error?: string;
       };
       if (!res.ok) {
-        setMsg({ kind: "err", text: data.error ?? "Có lỗi xảy ra." });
+        setMsg({ kind: "err", text: tournamentErrorMessage(data) });
         return;
       }
       setMsg({

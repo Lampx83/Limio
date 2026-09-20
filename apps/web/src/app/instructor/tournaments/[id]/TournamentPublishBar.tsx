@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -101,7 +102,7 @@ export default function TournamentPublishBar({
       const res = await fetch(apiUrl(`/api/tournaments/${tournamentId}/validate`));
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        setError(d.error ?? "validate_failed");
+        setError(tournamentErrorMessage(d, "Chưa kiểm tra được. Vui lòng thử lại."));
         setValidating(false);
         return;
       }
@@ -145,7 +146,7 @@ export default function TournamentPublishBar({
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "publish_failed");
+      setError(tournamentErrorMessage(d, "Chưa công bố được. Vui lòng thử lại."));
     }
   }
 
@@ -161,7 +162,7 @@ export default function TournamentPublishBar({
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "end_failed");
+      setError(tournamentErrorMessage(d, "Chưa kết thúc được. Vui lòng thử lại."));
     }
   }
 
@@ -179,7 +180,7 @@ export default function TournamentPublishBar({
     }
     setBusy(false);
     const d = await res.json().catch(() => ({}));
-    setError(d.error ?? "delete_failed");
+    setError(tournamentErrorMessage(d, "Chưa xoá được. Vui lòng thử lại."));
   }
 
   // ── Draft state ─────────────────────────────────────────────────────────────
@@ -202,7 +203,7 @@ export default function TournamentPublishBar({
               Publish để cho phép learner đăng ký. Cron tự flip sang active khi đến giờ bắt đầu.
             </p>
             {error && (
-              <p className="mt-1 text-xs text-danger-600">Lỗi: {error}</p>
+              <p className="mt-1 text-xs text-danger-600">{error}</p>
             )}
           </div>
 
@@ -316,7 +317,7 @@ export default function TournamentPublishBar({
             )}
           </p>
           {error && (
-            <p className="mt-1 text-xs text-danger-600">Lỗi: {error}</p>
+            <p className="mt-1 text-xs text-danger-600">{error}</p>
           )}
         </div>
         <div className="flex gap-2">
@@ -348,7 +349,7 @@ export default function TournamentPublishBar({
             )}
           </p>
           {error && (
-            <p className="mt-1 text-xs text-danger-600">Lỗi: {error}</p>
+            <p className="mt-1 text-xs text-danger-600">{error}</p>
           )}
         </div>
         <button

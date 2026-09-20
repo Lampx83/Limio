@@ -7,6 +7,7 @@ import {
   suggestPeerReviewerCount,
   reviewerCoverage,
 } from "@feedbackme/core-gamification";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 const MAX_N = 50;
 
@@ -94,7 +95,7 @@ export default function ReviewerLoadPlanner({
         error?: string;
       };
       if (!res.ok) {
-        setMsg({ kind: "err", text: data.error ?? "Có lỗi xảy ra." });
+        setMsg({ kind: "err", text: tournamentErrorMessage(data) });
         return;
       }
       setMsg({

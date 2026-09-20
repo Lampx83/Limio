@@ -5,20 +5,7 @@ import { copyText } from "@/lib/clipboard";
 import { useRouter } from "next/navigation";
 import { Copy, LogOut, UserX, Crown, Users } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
-
-const ERROR_LABEL: Record<string, string> = {
-  team_solo_only: "Đấu trường này không phải team-based.",
-  team_name_taken: "Tên đội đã có người dùng.",
-  team_full: "Đội đã đủ người.",
-  team_join_code_invalid: "Mã đội không hợp lệ.",
-  already_registered: "Bạn đã đăng ký đấu trường này.",
-  not_published: "Đấu trường chưa mở đăng ký.",
-  ended: "Đấu trường đã kết thúc.",
-  team_locked_after_start: "Đấu trường đã bắt đầu — không thể thay đổi đội.",
-  team_not_captain: "Chỉ captain mới có quyền này.",
-  validation_failed: "Dữ liệu không hợp lệ.",
-  not_registered: "Bạn chưa đăng ký.",
-};
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 type Member = {
   id: string;
@@ -105,7 +92,7 @@ export default function TournamentTeamPanel({
         setName("");
       } else {
         const body = await res.json().catch(() => ({}));
-        setError(ERROR_LABEL[body.error] ?? body.error ?? "Lỗi không xác định");
+        setError(tournamentErrorMessage(body));
       }
     } finally {
       setBusy(false);
@@ -131,7 +118,7 @@ export default function TournamentTeamPanel({
         setCode("");
       } else {
         const body = await res.json().catch(() => ({}));
-        setError(ERROR_LABEL[body.error] ?? body.error ?? "Lỗi không xác định");
+        setError(tournamentErrorMessage(body));
       }
     } finally {
       setBusy(false);
@@ -150,7 +137,7 @@ export default function TournamentTeamPanel({
       if (res.ok) router.refresh();
       else {
         const body = await res.json().catch(() => ({}));
-        setError(ERROR_LABEL[body.error] ?? body.error);
+        setError(tournamentErrorMessage(body));
       }
     } finally {
       setBusy(false);
@@ -173,7 +160,7 @@ export default function TournamentTeamPanel({
       if (res.ok) router.refresh();
       else {
         const body = await res.json().catch(() => ({}));
-        setError(ERROR_LABEL[body.error] ?? body.error);
+        setError(tournamentErrorMessage(body));
       }
     } finally {
       setBusy(false);

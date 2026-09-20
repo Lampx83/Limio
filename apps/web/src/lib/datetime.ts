@@ -99,3 +99,34 @@ export function formatRelative(v: DateInput, now: DateInput = new Date()): strin
   }
   return "";
 }
+
+
+// ── Ô nhập ngày giờ (<input type="datetime-local">) ─────────────────────────────
+// Toàn hệ thống cố định giờ Việt Nam (xem đầu file). Ô datetime-local không mang múi giờ,
+// nên PHẢI đổi qua lại bằng đúng múi giờ này; nếu dùng giờ trình duyệt hoặc cắt chuỗi ISO
+// (UTC) thì giờ hiển thị lệch so với giờ đã lưu.
+// Việt Nam không có giờ mùa hè nên độ lệch cố định +07:00.
+
+const VN_OFFSET = "+07:00";
+
+/** ISO/Date → "YYYY-MM-DDTHH:mm" theo giờ Việt Nam, để đổ vào ô datetime-local. */
+export function toDateTimeInputValue(v: DateInput): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: resolveTimeZone(),
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(toDate(v));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}
+
+/** "YYYY-MM-DDTHH:mm" (giờ Việt Nam) → ISO UTC để gửi lên API. Rỗng/sai định dạng → null. */
+export function fromDateTimeInputValue(s: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return null;
+  const d = new Date(`${s}:00${VN_OFFSET}`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, Plus, X, AlertTriangle } from "lucide-react";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 type Assignment = {
   id: string;
@@ -49,7 +50,7 @@ export default function ReviewerManager({
       );
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(data.error ?? "Có lỗi xảy ra");
+        setError(tournamentErrorMessage(data));
         return;
       }
       setPicked("");

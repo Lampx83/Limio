@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 import { plainToRichHtml } from "@/lib/richText";
 import { isMissionTeamCompatible } from "@feedbackme/core-gamification";
 
@@ -170,16 +172,21 @@ export default function TournamentMissionManager({
     if (!confirm("Xoá nhiệm vụ này?")) return;
     setDeleting(missionId);
     setError(null);
-    const res = await fetch(apiUrl(`/api/tournament-missions/${missionId}`), {
-      method: "DELETE",
-    });
-    setDeleting(null);
-    if (res.ok) {
-      setMissions((prev) => prev.filter((m) => m.id !== missionId));
-      router.refresh();
-    } else {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "delete_failed");
+    try {
+      const res = await fetch(apiUrl(`/api/tournament-missions/${missionId}`), {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setMissions((prev) => prev.filter((m) => m.id !== missionId));
+        router.refresh();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setError(tournamentErrorMessage(d, "Chưa xoá được nhiệm vụ. Vui lòng thử lại."));
+      }
+    } catch {
+      setError(tournamentErrorMessage({ error: "network_error" }));
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -206,7 +213,7 @@ export default function TournamentMissionManager({
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-danger-600">Lỗi: {error}</p>
+        <p className="mt-2 text-sm text-danger-600">{error}</p>
       )}
 
       {/* Mission list */}
@@ -471,7 +478,7 @@ function AddMissionForm({
     } else {
       payload.verifyMode = verifyMode;
       payload.submissionDeadline = submissionDeadline
-        ? new Date(submissionDeadline).toISOString()
+        ? fromDateTimeInputValue(submissionDeadline)
         : null;
       // For CUSTOM: description field (rich-text HTML) IS the content; no
       // separate contentPayload.markdown. EXTERNAL only stores the URL.
@@ -496,7 +503,7 @@ function AddMissionForm({
           ? parseInt(reviewQuorum, 10)
           : null;
         payload.reviewWindowEndAt = reviewWindowEndAt
-          ? new Date(reviewWindowEndAt).toISOString()
+          ? fromDateTimeInputValue(reviewWindowEndAt)
           : null;
         payload.passThreshold = parseFloat(passThreshold);
         // Chỉ có ý nghĩa khi nộp-nhóm; gửi kèm để cron/nút biết pool reviewer.
@@ -540,12 +547,7 @@ function AddMissionForm({
       }
     } else {
       const d = await res.json().catch(() => ({}));
-      const details = d.details
-        ? typeof d.details === "string"
-          ? d.details
-          : JSON.stringify(d.details)
-        : d.error ?? "add_failed";
-      setError(details);
+      setError(tournamentErrorMessage(d, "Chưa thêm được nhiệm vụ. Vui lòng thử lại."));
     }
   }
 
@@ -1053,13 +1055,9 @@ function AddMissionForm({
 
 // ── EditMissionForm ─────────────────────────────────────────────────────────
 
-/** Format a Date | ISO string to the value a <input type="datetime-local"> expects. */
+/** Giá trị cho <input type="datetime-local"> theo giờ Việt Nam. */
 function toLocalInput(d: string | Date | null | undefined): string {
-  if (!d) return "";
-  const dt = typeof d === "string" ? new Date(d) : d;
-  if (isNaN(dt.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  return d ? toDateTimeInputValue(d) : "";
 }
 
 function EditMissionForm({
@@ -1131,7 +1129,7 @@ function EditMissionForm({
 
     if (isCustom) {
       payload.submissionDeadline = submissionDeadline
-        ? new Date(submissionDeadline).toISOString()
+        ? fromDateTimeInputValue(submissionDeadline)
         : null;
       if (mt === "EXTERNAL") {
         payload.contentPayload = { ...(mission.contentPayload ?? {}), url: externalUrl };
@@ -1154,7 +1152,7 @@ function EditMissionForm({
           ? parseInt(reviewQuorum, 10)
           : null;
         payload.reviewWindowEndAt = reviewWindowEndAt
-          ? new Date(reviewWindowEndAt).toISOString()
+          ? fromDateTimeInputValue(reviewWindowEndAt)
           : null;
         payload.passThreshold = parseFloat(passThreshold);
         payload.peerReviewCaptainsOnly = peerReviewCaptainsOnly;
@@ -1179,10 +1177,7 @@ function EditMissionForm({
       onUpdated(updated as Mission);
     } else {
       const d = await res.json().catch(() => ({}));
-      const details = d.details
-        ? typeof d.details === "string" ? d.details : JSON.stringify(d.details)
-        : d.error ?? "update_failed";
-      setError(details);
+      setError(tournamentErrorMessage(d, "Chưa lưu được nhiệm vụ. Vui lòng thử lại."));
     }
   }
 

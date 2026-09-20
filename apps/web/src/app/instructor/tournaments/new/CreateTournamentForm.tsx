@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -35,8 +37,8 @@ export default function CreateTournamentForm({
     const payload: Record<string, unknown> = {
       title,
       description,
-      startsAt: new Date(startsAt).toISOString(),
-      endsAt: new Date(endsAt).toISOString(),
+      startsAt: fromDateTimeInputValue(startsAt),
+      endsAt: fromDateTimeInputValue(endsAt),
       teamSize: Number(teamSize) || 1,
       prizeXp: Number(prizeXp) || 0,
       allowLateRegistration,
@@ -53,7 +55,7 @@ export default function CreateTournamentForm({
     if (res.ok && d.tournamentId) {
       router.push(`/instructor/tournaments/${d.tournamentId}`);
     } else {
-      setError(d.error ?? "create_failed");
+      setError(tournamentErrorMessage(d, "Chưa tạo được đấu trường. Vui lòng thử lại."));
     }
   }
 
@@ -171,7 +173,7 @@ export default function CreateTournamentForm({
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-token pt-4">
         {error && (
-          <span className="mr-auto text-sm text-danger-600">Lỗi: {error}</span>
+          <span className="mr-auto text-sm text-danger-600">{error}</span>
         )}
         <button type="submit" disabled={busy} className="btn-primary">
           {busy ? "..." : "Tạo nháp"}

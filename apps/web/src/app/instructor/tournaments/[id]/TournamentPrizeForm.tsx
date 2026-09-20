@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 import { prizeXpForPercent } from "@feedbackme/core-gamification";
 
 const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
@@ -80,7 +81,7 @@ export default function TournamentPrizeForm({
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "save_failed");
+      setError(tournamentErrorMessage(d, "Chưa lưu được. Vui lòng thử lại."));
     }
   }
 
@@ -143,7 +144,7 @@ export default function TournamentPrizeForm({
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-token pt-4">
         {error && (
-          <span className="mr-auto text-sm text-danger-600">Lỗi: {error}</span>
+          <span className="mr-auto text-sm text-danger-600">{error}</span>
         )}
         <button type="button" onClick={() => setOpen(false)} className="btn-ghost">
           Hủy
