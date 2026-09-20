@@ -13,6 +13,7 @@ const UpdateTemplateSchema = z.object({
   description: z.string().optional(),
   durationSeconds: z.number().int().min(1).optional(),
   notes: z.string().optional(),
+  noteSize: z.enum(["sm", "md", "lg", "xl"]).optional(),
   musicId: z.string().optional(),
   courseId: z.string().optional(),
   isPublic: z.boolean().optional(),

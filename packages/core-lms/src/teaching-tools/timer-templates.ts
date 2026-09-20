@@ -6,6 +6,7 @@ export interface CreateTimerTemplateInput {
   durationSeconds: number;
   description?: string;
   notes?: string;
+  noteSize?: string;
   musicId?: string;
   courseId?: string;
   isPublic?: boolean;
@@ -16,6 +17,7 @@ export interface UpdateTimerTemplateInput {
   description?: string;
   durationSeconds?: number;
   notes?: string;
+  noteSize?: string;
   musicId?: string;
   courseId?: string;
   isPublic?: boolean;
@@ -40,6 +42,7 @@ export async function createTimerTemplate(
       description: input.description,
       durationSeconds: input.durationSeconds,
       notes: input.notes,
+      noteSize: input.noteSize,
       musicId: input.musicId,
       courseId: input.courseId || null,
       isPublic: input.isPublic || false,

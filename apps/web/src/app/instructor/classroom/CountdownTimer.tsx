@@ -1,10 +1,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Clock, Play, Pause, RotateCcw, Maximize2, Minimize2, X, Music2, Minus, Plus } from "lucide-react";
+import { Clock, Play, Pause, RotateCcw, Maximize2, Minimize2, X, Music2, Pencil } from "lucide-react";
 import type { TimerTemplate } from "@feedbackme/db";
-import NotesEditor from "./NotesEditor";
+import {
+  NOTE_SIZES,
+  DEFAULT_NOTE_SIZE,
+  noteToPlainText,
+  normalizeNoteSize,
+  type NoteSizeId,
+} from "./countdownNote";
 import TemplateSelector from "../teaching-tools/TimerTemplates/TemplateSelector";
+import TemplateSaveBar from "../teaching-tools/TimerTemplates/TemplateSaveBar";
+import { useTimerTemplates } from "../teaching-tools/TimerTemplates/useTimerTemplates";
+import { parseTimeInput, formatCountdown, MAX_COUNTDOWN_SECONDS } from "./countdownTime";
 
 const MUSIC_OPTIONS = [
   { id: "none", name: "Không có âm nhạc", src: "" },
@@ -14,10 +23,18 @@ const MUSIC_OPTIONS = [
 ];
 
 const TIMER_PRESETS = [
+  { label: "1 phút", seconds: 60 },
   { label: "5 phút", seconds: 300 },
   { label: "10 phút", seconds: 600 },
   { label: "15 phút", seconds: 900 },
   { label: "20 phút", seconds: 1200 },
+  { label: "30 phút", seconds: 1800 },
+];
+
+const ADJUST_STEPS = [
+  { label: "− 1 phút", delta: -60 },
+  { label: "+ 1 phút", delta: 60 },
+  { label: "+ 5 phút", delta: 300 },
 ];
 
 interface CountdownTimerProps {
@@ -60,12 +77,14 @@ const STATE_STYLES: Record<TimerState, { ring: string; bg: string; text: string;
 };
 
 export default function CountdownTimer({ onExit, initialMinutes }: CountdownTimerProps = {}) {
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(initialMinutes ?? 15);
-  const [seconds, setSeconds] = useState(0);
+  const [duration, setDuration] = useState((initialMinutes ?? 15) * 60);
+  const tpl = useTimerTemplates();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [notes, setNotes] = useState("");
+  const [noteSize, setNoteSize] = useState<NoteSizeId>(DEFAULT_NOTE_SIZE);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedMusic, setSelectedMusic] = useState("focus");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -103,22 +122,23 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
     return () => clearInterval(interval);
   }, [isRunning]);
 
-  const handleStart = () => {
-    const total = hours * 3600 + minutes * 60 + seconds;
-    if (total > 0) {
-      setHasFinished(false);
-      setTotalSeconds(total);
-      setIsRunning(true);
-      if (selectedMusic !== "none" && audioRef.current) {
-        const musicFile = MUSIC_OPTIONS.find((m) => m.id === selectedMusic);
-        if (musicFile?.src) {
-          audioRef.current.src = musicFile.src;
-          audioRef.current.loop = true;
-          audioRef.current.load();
-          audioRef.current.play().catch((err) => console.log("Audio playback failed:", err));
-        }
+  const startFrom = (total: number) => {
+    setHasFinished(false);
+    setTotalSeconds(total);
+    setIsRunning(true);
+    if (selectedMusic !== "none" && audioRef.current) {
+      const musicFile = MUSIC_OPTIONS.find((m) => m.id === selectedMusic);
+      if (musicFile?.src) {
+        audioRef.current.src = musicFile.src;
+        audioRef.current.loop = true;
+        audioRef.current.load();
+        audioRef.current.play().catch((err) => console.log("Audio playback failed:", err));
       }
     }
+  };
+
+  const handleStart = () => {
+    if (duration > 0) startFrom(duration);
   };
 
   const handlePause = () => setIsRunning(false);
@@ -132,33 +152,62 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
     }
   };
 
+  // Đặt lại về đúng mốc đang chọn, không nhảy về 15 phút.
   const handleReset = () => {
     setIsRunning(false);
     setHasFinished(false);
     setTotalSeconds(0);
-    setHours(0);
-    setMinutes(15);
-    setSeconds(0);
   };
 
   const handlePresetClick = (s: number) => {
-    if (isRunning || totalSeconds > 0) return;
-    setHours(Math.floor(s / 3600));
-    setMinutes(Math.floor((s % 3600) / 60));
-    setSeconds(s % 60);
+    if (started) return;
+    setHasFinished(false);
+    setDuration(s);
+  };
+
+  // Chưa bắt đầu: đổi mốc. Đang chạy/tạm dừng: cộng/trừ thẳng vào thời gian còn lại.
+  const handleAdjust = (delta: number) => {
+    if (started) {
+      setTotalSeconds((prev) => Math.min(MAX_COUNTDOWN_SECONDS, Math.max(1, prev + delta)));
+    } else {
+      setHasFinished(false);
+      setDuration((prev) => Math.min(MAX_COUNTDOWN_SECONDS, Math.max(10, prev + delta)));
+    }
+  };
+
+  const beginEdit = () => {
+    if (started) return;
+    setDraft(formatCountdown(duration));
+    setEditing(true);
+  };
+
+  const commitEdit = () => {
+    const parsed = parseTimeInput(draft);
+    if (parsed !== null) {
+      setHasFinished(false);
+      setDuration(parsed);
+    }
+    setEditing(false);
   };
 
   const handleSelectTemplate = (template: TimerTemplate | null) => {
     if (!template) {
       setSelectedTemplateId(null);
       setNotes("");
+      setNoteSize(DEFAULT_NOTE_SIZE);
       return;
     }
     setSelectedTemplateId(template.id);
-    setNotes(template.notes ?? "");
+    setNotes(noteToPlainText(template.notes));
+    setNoteSize(normalizeNoteSize(template.noteSize));
+    // Đồng hồ đang chạy thì chỉ đổi ghi chú, không đụng thời gian và nhạc.
+    if (started) return;
+    setHasFinished(false);
+    setDuration(Math.min(MAX_COUNTDOWN_SECONDS, Math.max(1, template.durationSeconds)));
     if (template.musicId) setSelectedMusic(template.musicId);
   };
 
+  const started = isRunning || totalSeconds > 0;
   const timerState: TimerState = isRunning
     ? "running"
     : hasFinished
@@ -226,79 +275,27 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
     return () => document.removeEventListener("keydown", onKey);
   }, [isFullscreen]);
 
-  const formatTime = (n: number) => String(n).padStart(2, "0");
-  const displayHours =
-    totalSeconds > 0 ? Math.floor(totalSeconds / 3600) : hasFinished ? 0 : hours;
-  const displayMinutes =
-    totalSeconds > 0
-      ? Math.floor((totalSeconds % 3600) / 60)
-      : hasFinished
-      ? 0
-      : minutes;
-  const displaySeconds =
-    totalSeconds > 0 ? totalSeconds % 60 : hasFinished ? 0 : seconds;
-  const showHours = displayHours > 0 || hours > 0;
-  const editingDisabled = isRunning || totalSeconds > 0;
+  const shownSeconds = totalSeconds > 0 ? totalSeconds : hasFinished ? 0 : duration;
+  const timeText = formatCountdown(shownSeconds);
+  const editingDisabled = started;
 
-  const stepperBtn =
-    "flex h-10 w-10 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30";
   const actionBtn =
     "inline-flex items-center gap-1.5 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm font-medium text-fg transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-50";
 
   // ── Reusable bits ─────────────────────────────────────────
-  const stepper = (
-    value: number,
-    onChange: (v: number) => void,
-    label: string,
-    max: number,
-  ) => (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-center rounded-lg border border-token bg-[rgb(var(--surface))] overflow-hidden">
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(0, value - 1))}
-          disabled={editingDisabled || value <= 0}
-          className="flex h-9 w-7 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
-          aria-label={`Giảm ${label}`}
-        >
-          <Minus size={14} />
-        </button>
-        <input
-          type="number"
-          min="0"
-          max={max}
-          value={value}
-          onChange={(e) =>
-            onChange(Math.max(0, Math.min(max, parseInt(e.target.value) || 0)))
-          }
-          disabled={editingDisabled}
-          className="h-9 w-10 border-x border-token bg-transparent text-center text-sm font-semibold focus:outline-none disabled:opacity-60"
-          aria-label={label}
-        />
-        <button
-          type="button"
-          onClick={() => onChange(Math.min(max, value + 1))}
-          disabled={editingDisabled || value >= max}
-          className="flex h-9 w-7 items-center justify-center text-muted transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
-          aria-label={`Tăng ${label}`}
-        >
-          <Plus size={14} />
-        </button>
-      </div>
-      <span className="text-[10px] font-medium uppercase tracking-wider text-muted">
-        {label}
-      </span>
-    </div>
-  );
-
   const presetChips = (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap justify-center gap-2">
       {TIMER_PRESETS.map((preset) => (
         <button
           key={preset.seconds}
           onClick={() => handlePresetClick(preset.seconds)}
           disabled={editingDisabled}
-          className="rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-fg transition hover:border-brand-400 hover:text-brand-700 disabled:opacity-50 disabled:hover:border-token disabled:hover:text-fg"
+          aria-pressed={!started && duration === preset.seconds}
+          className={`rounded-full border px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${
+            !started && duration === preset.seconds
+              ? "border-brand-400 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"
+              : "border-token bg-[rgb(var(--surface))] text-fg hover:border-brand-400 hover:text-brand-700"
+          }`}
         >
           {preset.label}
         </button>
@@ -306,35 +303,74 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
     </div>
   );
 
-  const primaryAction = (() => {
+  const adjustChips = (
+    <div className="flex flex-wrap justify-center gap-2">
+      {ADJUST_STEPS.map((step) => (
+        <button
+          key={step.delta}
+          onClick={() => handleAdjust(step.delta)}
+          className="rounded-lg border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-medium text-fg transition hover:bg-[rgb(var(--surface-muted))]"
+        >
+          {step.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const noteSizeSelector = (
+    <div role="group" aria-label="Cỡ chữ ghi chú" className="inline-flex overflow-hidden rounded-lg border border-token">
+      {NOTE_SIZES.map((size, i) => (
+        <button
+          key={size.id}
+          type="button"
+          onClick={() => setNoteSize(size.id)}
+          aria-pressed={noteSize === size.id}
+          className={`px-3.5 py-1.5 text-sm transition ${i > 0 ? "border-l border-token" : ""} ${
+            noteSize === size.id
+              ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"
+              : "bg-[rgb(var(--surface))] text-fg hover:bg-[rgb(var(--surface-muted))]"
+          }`}
+        >
+          {size.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const notePx = NOTE_SIZES.find((s) => s.id === noteSize)?.px ?? 24;
+  const noteVh = NOTE_SIZES.find((s) => s.id === noteSize)?.vh ?? 5;
+
+  const primaryBtnSize = (large: boolean) =>
+    large ? "h-14 flex-1 gap-2 rounded-xl text-lg" : "gap-2 rounded-xl px-5 py-2.5 text-sm";
+  const primaryAction = (large: boolean) => {
+    const size = primaryBtnSize(large);
     if (isRunning)
       return (
         <button
           onClick={handlePause}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent-300 bg-accent-50 px-5 py-2.5 text-sm font-semibold text-accent-700 transition hover:bg-accent-100 dark:bg-accent-900/30 dark:text-accent-300"
+          className={`inline-flex items-center justify-center border border-accent-300 bg-accent-50 font-semibold text-accent-700 transition hover:bg-accent-100 dark:bg-accent-900/30 dark:text-accent-300 ${size}`}
         >
-          <Pause size={16} /> Tạm dừng
+          <Pause size={large ? 20 : 16} /> Tạm dừng
         </button>
       );
     if (totalSeconds > 0)
       return (
         <button
           onClick={handleResume}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-brand-glow"
+          className={`inline-flex items-center justify-center bg-brand-gradient font-semibold text-white shadow-sm transition hover:shadow-brand-glow ${size}`}
         >
-          <Play size={16} /> Tiếp tục
+          <Play size={large ? 20 : 16} /> Tiếp tục
         </button>
       );
     return (
       <button
         onClick={handleStart}
-        disabled={hours === 0 && minutes === 0 && seconds === 0}
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-brand-glow disabled:cursor-not-allowed disabled:opacity-50"
+        className={`inline-flex items-center justify-center bg-brand-gradient font-semibold text-white shadow-sm transition hover:shadow-brand-glow ${size}`}
       >
-        <Play size={16} /> Bắt đầu
+        <Play size={large ? 20 : 16} /> {hasFinished ? "Bắt đầu lại" : "Bắt đầu"}
       </button>
     );
-  })();
+  };
 
   // ── Fullscreen view ────────────────────────────────────────
   // NOTE: both views share a single <audio> element rendered once at the end
@@ -347,35 +383,20 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
         className="fixed inset-0 z-50 flex flex-col bg-[rgb(var(--bg))] p-6"
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-token pb-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs font-medium text-muted">Nhanh</span>
-            {TIMER_PRESETS.map((preset) => (
-              <button
-                key={preset.seconds}
-                onClick={() => handlePresetClick(preset.seconds)}
-                disabled={editingDisabled}
-                className="rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1 text-xs font-medium text-fg transition hover:border-brand-400 disabled:opacity-50"
-              >
-                {preset.label}
-              </button>
-            ))}
-            <span className="mx-2 h-5 w-px bg-token" />
-            <div className="flex items-center gap-2">
-              {stepper(displayHours, (v) => setHours(v), "Giờ", 23)}
-              <span className="text-base font-bold text-muted">:</span>
-              {stepper(displayMinutes, (v) => setMinutes(v), "Phút", 59)}
-              <span className="text-base font-bold text-muted">:</span>
-              {stepper(displaySeconds, (v) => setSeconds(v), "Giây", 59)}
-            </div>
-            <span className="mx-2 h-5 w-px bg-token" />
-            {primaryAction}
-            {totalSeconds > 0 && (
+          <div className="flex flex-wrap items-center gap-3">
+            {presetChips}
+            <span className="h-5 w-px bg-token" />
+            {adjustChips}
+            <span className="h-5 w-px bg-token" />
+            {primaryAction(false)}
+            {started && (
               <button onClick={handleReset} className={actionBtn}>
                 <RotateCcw size={14} /> Đặt lại
               </button>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {noteSizeSelector}
             <button onClick={handleFullscreen} className={actionBtn}>
               <Minimize2 size={14} /> Thoát
             </button>
@@ -388,15 +409,17 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
         </div>
 
         <div className="flex flex-1 min-h-0 flex-col gap-3">
-          <div className="flex flex-1 min-h-0 flex-col">
-            <label className="mb-2 text-sm font-semibold">Nhiệm vụ / Hướng dẫn cho sinh viên</label>
-            <NotesEditor
-              value={notes}
-              onChange={setNotes}
-              placeholder="Nhập hướng dẫn cho sinh viên..."
-              className="input h-full w-full resize-none overflow-hidden p-4 leading-relaxed"
-              autoFit
-            />
+          <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-token bg-[rgb(var(--surface))] p-6">
+            {notes.trim() ? (
+              <p
+                className="whitespace-pre-wrap break-words leading-snug"
+                style={{ fontSize: `${noteVh}vh` }}
+              >
+                {notes}
+              </p>
+            ) : (
+              <p className="text-muted">Chưa có ghi chú. Thoát toàn màn hình để nhập.</p>
+            )}
           </div>
 
           <div
@@ -407,7 +430,7 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
               className={`whitespace-nowrap font-mono font-bold leading-none ${style.text}`}
               style={{ fontSize: "16vh" }}
             >
-              {showHours ? `${formatTime(displayHours)}:` : ""}{formatTime(displayMinutes)}:{formatTime(displaySeconds)}
+              {timeText}
             </span>
           </div>
         </div>
@@ -417,47 +440,93 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
   // ── Normal view ────────────────────────────────────────────
   const normalView = (
     <div ref={containerRef} className="space-y-3">
-      {/* Compact toolbar: title + presets + steppers + music + actions */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2 shadow-card">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-white">
-            <Clock size={16} strokeWidth={2.2} />
-          </div>
-          <h3 className="text-sm font-bold">Đếm Ngược</h3>
+      <div className="flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2 shadow-card">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-white">
+          <Clock size={16} strokeWidth={2.2} />
         </div>
-
-        <span className="h-6 w-px bg-token" />
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {TIMER_PRESETS.map((preset) => (
-            <button
-              key={preset.seconds}
-              onClick={() => handlePresetClick(preset.seconds)}
-              disabled={editingDisabled}
-              className="rounded-full border border-token bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-medium text-fg transition hover:border-brand-400 hover:text-brand-700 disabled:opacity-50"
-            >
-              {preset.label}
+        <h3 className="text-sm font-bold">Đếm Ngược</h3>
+        <div className="ml-auto flex items-center gap-1.5">
+          <button onClick={handleFullscreen} className={actionBtn} title="Toàn màn hình">
+            <Maximize2 size={14} /> Phóng to
+          </button>
+          {onExit && (
+            <button onClick={onExit} className={actionBtn} title="Đóng" aria-label="Đóng">
+              <X size={14} />
             </button>
-          ))}
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
+        <div
+          className={`flex flex-col items-center justify-center rounded-2xl border-4 px-6 py-8 transition-all duration-300 ${style.ring} ${style.bg} ${style.pulse ? "animate-pulse" : ""}`}
+        >
+          <span className={`mb-1 text-[11px] font-semibold uppercase tracking-wider ${style.text}`}>
+            {style.label}
+          </span>
+          {editing ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditing(false);
+              }}
+              inputMode="numeric"
+              aria-label="Nhập thời gian, ví dụ 7 hoặc 12:30"
+              className={`w-full max-w-md bg-transparent text-center font-mono text-6xl font-bold leading-none outline-none sm:text-7xl ${style.text}`}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={beginEdit}
+              disabled={started}
+              title={started ? undefined : "Bấm để gõ thời gian"}
+              className={`font-mono text-7xl font-bold leading-none sm:text-8xl ${style.text} ${started ? "cursor-default" : "cursor-text"}`}
+            >
+              {timeText}
+            </button>
+          )}
+          {!started && !editing && (
+            <span className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted">
+              <Pencil size={12} /> Bấm vào số để gõ trực tiếp, ví dụ 7 hoặc 12:30
+            </span>
+          )}
+          {notes.trim() && (
+            <p
+              className={`mt-4 w-full max-w-xl whitespace-pre-wrap break-words border-t border-token pt-4 text-center leading-snug ${style.text}`}
+              style={{ fontSize: `${notePx}px` }}
+            >
+              {notes}
+            </p>
+          )}
         </div>
 
-        <span className="h-6 w-px bg-token" />
-
-        <div className="flex items-center gap-1.5">
-          {stepper(displayHours, (v) => setHours(v), "Giờ", 23)}
-          <span className="text-base font-bold text-muted">:</span>
-          {stepper(displayMinutes, (v) => setMinutes(v), "Phút", 59)}
-          <span className="text-base font-bold text-muted">:</span>
-          {stepper(displaySeconds, (v) => setSeconds(v), "Giây", 59)}
+        <div className="mt-4 space-y-2">
+          {presetChips}
+          {adjustChips}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="mt-4 flex gap-2">
+          {primaryAction(true)}
+          {started && (
+            <button onClick={handleReset} className={`${actionBtn} h-14 rounded-xl px-5 text-base`}>
+              <RotateCcw size={16} /> Đặt lại
+            </button>
+          )}
+        </div>
+
+        <div className="mt-3 flex items-center justify-center gap-1.5">
           <Music2 size={14} className="text-muted" />
           <select
             value={selectedMusic}
             onChange={(e) => setSelectedMusic(e.target.value)}
-            disabled={editingDisabled}
+            disabled={started}
             className="input h-9 py-0 text-xs"
+            aria-label="Nhạc nền"
           >
             {MUSIC_OPTIONS.map((m) => (
               <option key={m.id} value={m.id}>
@@ -466,60 +535,46 @@ export default function CountdownTimer({ onExit, initialMinutes }: CountdownTime
             ))}
           </select>
         </div>
-
-        <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          {primaryAction}
-          {totalSeconds > 0 && (
-            <button onClick={handleReset} className={actionBtn}>
-              <RotateCcw size={14} /> Reset
-            </button>
-          )}
-          <button onClick={handleFullscreen} className={actionBtn} title="Toàn màn hình">
-            <Maximize2 size={14} />
-          </button>
-          {onExit && (
-            <button onClick={onExit} className={actionBtn} title="Đóng">
-              <X size={14} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Big timer */}
-      <div
-        className={`flex flex-col items-center justify-center rounded-2xl border-4 px-6 py-8 transition-all duration-300 ${style.ring} ${style.bg} ${style.pulse ? "animate-pulse" : ""}`}
-      >
-        <span className={`mb-1 text-[11px] font-semibold uppercase tracking-wider ${style.text}`}>
-          {style.label}
-        </span>
-        <span className={`font-mono text-7xl font-bold leading-none sm:text-8xl ${style.text}`}>
-          {showHours ? `${formatTime(displayHours)}:` : ""}{formatTime(displayMinutes)}:{formatTime(displaySeconds)}
-        </span>
       </div>
 
       {/* Template + Notes stacked in one section */}
       <div className="space-y-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 shadow-card">
         <TemplateSelector
+          templates={tpl.templates}
+          isLoading={tpl.isLoading}
           selectedTemplateId={selectedTemplateId}
           onSelectTemplate={handleSelectTemplate}
+          onDeleteTemplate={(t) => tpl.remove(t.id)}
         />
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-muted">
-            Ghi chú / Hướng dẫn
+          <label htmlFor="countdown-note" className="mb-1.5 block text-sm font-medium">
+            Ghi chú hiện cạnh đồng hồ
             {selectedTemplateId && (
-              <span className="ml-2 font-normal text-brand-700 dark:text-brand-300">
-                (từ mẫu — có thể chỉnh sửa)
+              <span className="ml-2 text-xs font-normal text-brand-700 dark:text-brand-300">
+                (từ mẫu, có thể chỉnh sửa)
               </span>
             )}
           </label>
-          <NotesEditor
+          <textarea
+            id="countdown-note"
             value={notes}
-            onChange={setNotes}
-            placeholder="Nhập ghi chú cho sinh viên..."
-            className="input w-full overflow-auto p-2 text-sm"
-            rows={6}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Thảo luận nhóm về ca 2, ghi ý chính lên bảng"
+            rows={4}
+            className="input w-full resize-y p-2 text-sm"
           />
+          <div className="mt-3">
+            <p className="mb-1.5 text-xs text-muted">Cỡ chữ</p>
+            {noteSizeSelector}
+          </div>
         </div>
+        <TemplateSaveBar
+          draft={{ durationSeconds: duration, notes, noteSize, musicId: selectedMusic }}
+          selectedTemplate={tpl.templates.find((t) => t.id === selectedTemplateId) ?? null}
+          onCreate={tpl.create}
+          onUpdate={tpl.update}
+          onSaved={(t) => setSelectedTemplateId(t.id)}
+        />
       </div>
     </div>
   );

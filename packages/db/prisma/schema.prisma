@@ -2578,7 +2578,8 @@ model TimerTemplate {
   name            String // e.g. "Group Discussion - 10min"
   description     String? // Optional description
   durationSeconds Int // Total duration in seconds (e.g., 600 for 10 minutes)
-  notes           String?  @db.Text // Instructions/notes for students
+  notes           String?  @db.Text // Instructions/notes for students (chữ thường; hàng cũ có thể là HTML)
+  noteSize        String? // Cỡ chữ ghi chú: sm | md | lg | xl. Null = mẫu cũ, dùng md
   musicId         String? // Selected background music identifier (optional)
   isPublic        Boolean  @default(false) // Can be shared with other instructors
   createdAt       DateTime @default(now())
