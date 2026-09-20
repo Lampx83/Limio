@@ -8,7 +8,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import LuckyWheel from "./LuckyWheel";
 import SlotMachineReel, { type ResolvedReelTarget } from "./SlotMachineReel";
 
-type PickerTemplate = "slot" | "wheel";
+export type PickerTemplate = "slot" | "wheel";
 
 function fireConfettiFireworks() {
   const colors = ["#FBBF24", "#F97316", "#EC4899", "#8B5CF6", "#22C55E"];
@@ -32,15 +32,16 @@ interface Student {
 interface RandomPickerProps {
   lessonId?: string;
   studentList?: Array<{ name: string; id: string | null }>;
+  initialTemplate?: PickerTemplate;
   onExit?: () => void;
 }
 
-export default function RandomPicker({ lessonId, studentList, onExit }: RandomPickerProps) {
+export default function RandomPicker({ lessonId, studentList, initialTemplate = "slot", onExit }: RandomPickerProps) {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [pickHistory, setPickHistory] = useState<Student[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [template, setTemplate] = useState<PickerTemplate>("slot");
+  const [template, setTemplate] = useState<PickerTemplate>(initialTemplate);
   const [winnerPopup, setWinnerPopup] = useState<Student | null>(null);
   const [excludePicked, setExcludePicked] = useState(true);
   const [pickedIdx, setPickedIdx] = useState<Set<number>>(new Set());
