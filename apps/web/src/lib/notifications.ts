@@ -1,5 +1,6 @@
 import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
+import { getTournamentNotifications } from "./tournamentNotifications";
 
 export type Role = "learner" | "instructor" | "admin" | "mentor";
 
@@ -13,6 +14,14 @@ export type NotificationType =
   | "badge.earned"
   | "level.up"
   | "leaderboard.rank"
+  | "tournament.registered"
+  | "tournament.team.joined"
+  | "tournament.starting_soon"
+  | "tournament.started"
+  | "tournament.deadline_soon"
+  | "tournament.ended"
+  | "tournament.cancelled"
+  | "tournament.prize"
   // Instructor
   | "instructor.assignment.submitted"
   | "instructor.essay.pending"
@@ -23,14 +32,22 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   "peer_review.assigned": "Chấm bài",
   "assignment.graded": "Bài tập",
   "forum.reply": "Trả lời forum",
-  "mission.passed": "Mission",
-  "mission.failed": "Mission",
+  "mission.passed": "Nhiệm vụ",
+  "mission.failed": "Nhiệm vụ",
   "badge.earned": "Huy hiệu",
   "level.up": "Lên level",
   "leaderboard.rank": "Xếp hạng",
+  "tournament.registered": "Đấu trường",
+  "tournament.team.joined": "Đấu trường",
+  "tournament.starting_soon": "Đấu trường",
+  "tournament.started": "Đấu trường",
+  "tournament.deadline_soon": "Hạn nộp",
+  "tournament.ended": "Đấu trường",
+  "tournament.cancelled": "Đấu trường",
+  "tournament.prize": "Thưởng XP",
   "instructor.assignment.submitted": "Bài cần chấm",
   "instructor.essay.pending": "Essay cần chấm",
-  "instructor.mission.review_needed": "Mission cần review",
+  "instructor.mission.review_needed": "Nhiệm vụ cần chấm",
   "instructor.forum.new_thread": "Câu hỏi mới",
 };
 
@@ -130,6 +147,7 @@ async function getLearnerNotifications(
     missionResults,
     badges,
     gamificationEvents,
+    tournamentItems,
   ] = await Promise.all([
     prisma.missionReviewAssignment.findMany({
       where: { reviewerId: userId, completedAt: null },
@@ -217,9 +235,10 @@ async function getLearnerNotifications(
         occurredAt: true,
       },
     }),
+    getTournamentNotifications(userId).catch(() => [] as Notification[]),
   ]);
 
-  const items: Notification[] = [];
+  const items: Notification[] = [...tournamentItems];
 
   for (const r of peerReviews) {
     items.push({
@@ -268,7 +287,7 @@ async function getLearnerNotifications(
     items.push({
       id: `ms:${m.id}`,
       type: passed ? "mission.passed" : "mission.failed",
-      title: passed ? "Mission hoàn thành" : "Mission chưa đạt",
+      title: passed ? "Nhiệm vụ hoàn thành" : "Nhiệm vụ chưa đạt",
       body: m.mission.title,
       link: `/tournaments/${m.mission.tournamentId}/missions/${m.mission.id}`,
       iconKey: passed ? "mission_ok" : "mission_fail",
@@ -325,7 +344,7 @@ async function getLearnerUnreadCount(
   userId: string,
   since: Date,
 ): Promise<number> {
-  const [a, b, c, d, e, f] = await Promise.all([
+  const [a, b, c, d, e, f, tournamentItems] = await Promise.all([
     prisma.missionReviewAssignment.count({
       where: { reviewerId: userId, completedAt: null, assignedAt: { gt: since } },
     }),
@@ -361,9 +380,11 @@ async function getLearnerUnreadCount(
         occurredAt: { gt: since },
       },
     }),
+    getTournamentNotifications(userId).catch(() => [] as Notification[]),
   ]);
 
-  return a + b + c + d + e + f;
+  const tournamentUnread = tournamentItems.filter((n) => n.createdAt > since).length;
+  return a + b + c + d + e + f + tournamentUnread;
 }
 
 // ─── Instructor aggregator ───────────────────────────────────────────────
