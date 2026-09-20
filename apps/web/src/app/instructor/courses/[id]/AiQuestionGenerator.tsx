@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { TriangleAlert } from "lucide-react";
+import { Sparkles, TriangleAlert } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface QuestionDraft {
@@ -128,17 +128,18 @@ export default function AiQuestionGenerator({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-soft px-3 py-1.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
+        className="btn-secondary btn-sm inline-flex items-center gap-1.5"
       >
+        <Sparkles className="h-4 w-4 text-brand-600" aria-hidden />
         Tạo câu hỏi bằng AI
       </button>
     );
   }
 
   return (
-    <div className="w-full rounded-xl border border-brand-200 bg-brand-soft p-3 text-xs">
+    <div className="w-full text-sm">
       <div className="flex items-center justify-between">
-        <p className="font-semibold text-brand-700">Tạo câu hỏi bằng AI</p>
+        <p className="flex items-center gap-2 text-base font-semibold"><Sparkles className="h-4 w-4 text-brand-600" aria-hidden />Tạo câu hỏi bằng AI</p>
         <button
           onClick={() => setOpen(false)}
           className="text-faint hover:text-[rgb(var(--text))]"
@@ -147,24 +148,24 @@ export default function AiQuestionGenerator({
           ✕
         </button>
       </div>
-      <div className="mt-3 flex flex-wrap items-end gap-3">
-        <label className="block">
-          <span className="text-faint">Số câu</span>
+      <div className="mt-4 flex flex-wrap items-end gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-muted">Số câu</span>
           <input
             type="number"
             min={1}
             max={10}
             value={count}
             onChange={(e) => setCount(Number(e.target.value) || 3)}
-            className="input ml-2 w-16"
+            className="input w-20"
           />
         </label>
-        <label className="block">
-          <span className="text-faint">Độ khó</span>
+        <label className="flex flex-col gap-1">
+          <span className="text-muted">Độ khó</span>
           <select
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value as "easy" | "medium" | "hard")}
-            className="select ml-2 w-28"
+            className="select w-40"
           >
             <option value="easy">Dễ</option>
             <option value="medium">Trung bình</option>
@@ -174,15 +175,15 @@ export default function AiQuestionGenerator({
         <button
           onClick={generate}
           disabled={generating}
-          className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+          className="btn-primary btn-sm"
         >
           {generating ? "Đang tạo…" : "Tạo câu hỏi"}
         </button>
       </div>
 
       {error && (
-        <p role="alert" className="banner-warning mt-2 flex items-start gap-2">
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+        <p role="alert" className="mt-4 flex items-start gap-2 rounded-lg border border-[rgb(var(--warning)/0.4)] bg-[rgb(var(--surface-warning))] px-3 py-2.5 text-sm text-[rgb(var(--text))]">
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--warning))]" aria-hidden />
           <span>{error}</span>
         </p>
       )}

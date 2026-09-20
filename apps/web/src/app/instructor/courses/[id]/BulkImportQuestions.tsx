@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Download, Upload } from "lucide-react";
+import { Download, FileSpreadsheet, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { questionSheetToCsv } from "@/lib/questionSheet";
@@ -67,14 +67,15 @@ export default function BulkImportQuestions({
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
+      <button onClick={() => setOpen(true)} className="btn-secondary btn-sm inline-flex items-center gap-1.5">
+        <FileSpreadsheet className="h-4 w-4 text-brand-600" aria-hidden />
         Nhập câu hỏi từ Excel
       </button>
     );
   }
 
   return (
-    <div className="w-full rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-sm">
+    <div className="w-full text-sm">
       <div className="flex items-center justify-between">
         <p className="text-base font-semibold">Nhập nhiều câu hỏi từ file Excel</p>
         <button

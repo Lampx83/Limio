@@ -115,7 +115,7 @@ export default function QuizEditorClient({
           <QuizActionButtons quiz={quiz} />
         </header>
 
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-token bg-[rgb(var(--surface-muted))] px-4 py-2.5 text-sm text-muted">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-transparent bg-[rgb(var(--surface-muted))] px-4 pt-2.5 pb-2 text-sm text-muted">
           <span>Độ khó <b className="font-semibold text-default">{quiz.difficulty ?? "—"}/5</b></span>
           <span>
             Thời gian{" "}
@@ -141,7 +141,7 @@ export default function QuizEditorClient({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 border-b border-token px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-token bg-[rgb(var(--surface-muted))] px-4 pb-3 pt-1">
           {lessonId && (
             <AiQuestionGenerator
               quizId={quiz.id}
@@ -159,7 +159,7 @@ export default function QuizEditorClient({
         </div>
 
         <div className="grid min-h-[560px] lg:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className="border-b border-token bg-[rgb(var(--surface-muted))] p-3 lg:sticky lg:top-4 lg:self-start lg:border-b-0 lg:border-r lg:min-h-[560px]">
+          <aside className="border-b border-token bg-[rgb(var(--surface))] p-3 lg:sticky lg:top-4 lg:self-start lg:border-b-0 lg:border-r lg:min-h-[560px]">
             <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-faint">
               Câu hỏi ({quiz.questions.length})
             </p>
@@ -176,11 +176,11 @@ export default function QuizEditorClient({
                       }}
                       className={`flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors ${
                         on
-                          ? "border-brand-400 bg-[rgb(var(--surface))] shadow-sm"
-                          : "border-transparent hover:border-token hover:bg-[rgb(var(--surface))]"
+                          ? "border-brand-300 bg-brand-soft"
+                          : "border-transparent hover:bg-[rgb(var(--surface-muted))]"
                       }`}
                     >
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${on ? "bg-brand-600 text-white" : "bg-slate-200 text-slate-600"}`}>{i + 1}</span>
+                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${on ? "bg-brand-600 text-white" : "bg-[rgb(var(--border))] text-muted"}`}>{i + 1}</span>
                       <span className="min-w-0 flex-1">
                         <span className="line-clamp-2 block text-sm font-medium text-default">{stripHtml(q.prompt) || "Câu hỏi trống"}</span>
                         <span className="block text-xs text-muted">
@@ -192,7 +192,7 @@ export default function QuizEditorClient({
                 );
               })}
               {tool === null && selected === "new" && (
-                <li className="flex items-center gap-2 rounded-lg border border-brand-400 bg-[rgb(var(--surface))] px-2.5 py-2 text-sm font-medium text-default shadow-sm">
+                <li className="flex items-center gap-2 rounded-lg border border-brand-300 bg-brand-soft px-2.5 py-2 text-sm font-medium text-default">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold tabular-nums text-white">{quiz.questions.length + 1}</span>
                   Câu mới…
                 </li>
