@@ -8,6 +8,7 @@ import { usePacedReveal } from "@/hooks/usePacedReveal";
 import UserAvatar from "@/components/ui/UserAvatar";
 import SafeHtml from "@/components/SafeHtml";
 import FullscreenGate from "./FullscreenGate";
+import InRoomConfirm from "./InRoomConfirm";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
 import OralAiAvatar, { type OralAvatarState } from "./OralAiAvatar";
@@ -80,9 +81,11 @@ export default function OralExamRoom({
   );
   const [ended, setEnded] = useState(false);
   // Sinh viên đang chủ động kết thúc (hoặc hết giờ) — tắt cờ chặn toàn màn
-  // hình từ đây, vì confirm()/điều hướng sau đó tự làm trình duyệt rớt khỏi
-  // toàn màn hình và FullscreenGate sẽ hiểu nhầm là thoát gian lận.
+  // hình từ đây để cổng toàn màn hình không hiểu nhầm việc rời phòng là gian lận.
   const [isEnding, setIsEnding] = useState(false);
+  // Hộp xác nhận nằm trong trang (InRoomConfirm), KHÔNG dùng window.confirm(): hộp thoại gốc làm trình duyệt
+  // rớt khỏi toàn màn hình và có thể trả về false ngay, khiến bấm "Kết thúc" phải lặp lại 2–3 lần.
+  const [confirmKind, setConfirmKind] = useState<"end" | "leave" | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -342,16 +345,34 @@ export default function OralExamRoom({
 
   function endEarly() {
     if (!canAnswer) return;
-    // Đặt cờ TRƯỚC confirm(): hộp thoại native của trình duyệt tự làm rớt
-    // toàn màn hình ngay khi mở, nên phải tắt guard trước khi nó kịp thấy.
+    setConfirmKind("end");
+  }
+
+  function confirmEnd() {
+    setConfirmKind(null);
     setIsEnding(true);
-    if (!confirm("Kết thúc buổi vấn đáp ngay bây giờ? Không thể tiếp tục sau khi kết thúc.")) {
-      setIsEnding(false);
-      return;
-    }
     setInput("");
     void sendTurn(null, { forceEnd: true });
   }
+
+  function confirmLeave() {
+    setConfirmKind(null);
+    setIsEnding(true);
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    router.push(exitUrl);
+  }
+
+  // Rời phòng thi (kết thúc xong, hoặc thoát): thoát toàn màn hình CÓ CHỦ Ý. Trước đây việc này xảy ra ngẫu
+  // nhiên nhờ confirm() làm rớt chế độ; giờ không còn hộp thoại gốc nên phải tự làm, nếu không trang kế tiếp
+  // (điều hướng SPA cùng một tài liệu) vẫn kẹt trong toàn màn hình.
+  useEffect(() => {
+    if (ended && document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+  }, [ended]);
+  useEffect(() => {
+    return () => {
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
+  }, []);
 
   const minutes = Math.floor(remainingSec / 60);
   const seconds = remainingSec % 60;
@@ -370,9 +391,25 @@ export default function OralExamRoom({
       <FullscreenGate
         examTitle={examTitle}
         onEnter={() => setStarted(true)}
-        required={!isEnding}
+        required={!isEnding && !ended}
         preview={preview}
       />
+      {confirmKind && !ended && !isEnding && (
+        <InRoomConfirm
+          danger={confirmKind === "end"}
+          title={confirmKind === "end" ? "Kết thúc buổi vấn đáp?" : preview ? "Thoát bản thử?" : "Rời phòng vấn đáp?"}
+          message={
+            confirmKind === "end"
+              ? "Không thể tiếp tục sau khi kết thúc."
+              : preview
+                ? "Hội thoại thử sẽ mất."
+                : "Bài làm vẫn giữ nguyên, quay lại sau để tiếp tục."
+          }
+          confirmLabel={confirmKind === "end" ? "Kết thúc ngay" : preview ? "Thoát bản thử" : "Rời phòng"}
+          onConfirm={confirmKind === "end" ? confirmEnd : confirmLeave}
+          onCancel={() => setConfirmKind(null)}
+        />
+      )}
       <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
       {!preview && (
         <MultiTabDetector
@@ -385,11 +422,7 @@ export default function OralExamRoom({
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              if (confirm(preview ? "Thoát bản thử? Hội thoại thử sẽ mất." : "Rời phòng vấn đáp? Bài làm vẫn giữ nguyên, quay lại sau để tiếp tục.")) {
-                router.push(exitUrl);
-              }
-            }}
+            onClick={() => setConfirmKind("leave")}
             className="shrink-0 rounded-full p-1.5 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-ink"
             aria-label="Thoát phòng vấn đáp"
             title="Thoát phòng vấn đáp"
