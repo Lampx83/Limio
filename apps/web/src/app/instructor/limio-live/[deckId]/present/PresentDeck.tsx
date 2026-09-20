@@ -48,6 +48,9 @@ type Runtime =
   | { kind: "word_cloud"; refId: string; joinPath: string }
   | { kind: "collaborate_board" | "whiteboard"; refId: string; code: string; joinPath: string };
 
+const SIDE_MIN = 240;
+const SIDE_MAX = 720;
+
 const TYPE_LABELS: Record<SlideType, string> = {
   content: "Trình bày",
   quiz: "Trắc nghiệm",
@@ -86,6 +89,35 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const [overlayDismissed, setOverlayDismissed] = useState(false);
   const fsToastedRef = useRef(false);
   const [sideOpen, setSideOpen] = useState(false);
+  // Chiều rộng cột phải (QR/ghi chú) ở lg+: presenter kéo mép trái để co dãn, nhớ lại giữa các lần mở.
+  const [sideWidth, setSideWidth] = useState(300);
+  useEffect(() => {
+    try {
+      const v = Number(localStorage.getItem("limio-live:sideWidth"));
+      if (v >= SIDE_MIN && v <= SIDE_MAX) setSideWidth(v);
+    } catch {}
+  }, []);
+  const startSideResize = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = sideWidth;
+    let w = startW;
+    const move = (ev: PointerEvent) => {
+      w = Math.min(SIDE_MAX, Math.max(SIDE_MIN, startW + (startX - ev.clientX)));
+      setSideWidth(w);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.style.userSelect = "";
+      try {
+        localStorage.setItem("limio-live:sideWidth", String(Math.round(w)));
+      } catch {}
+    };
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
 
   // Full-bleed sân khấu tối — nới khung main.mx-auto của instructor layout ra
   // hết viewport, cùng cơ chế với board-immersive/gameshow-immersive.
@@ -633,8 +665,22 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
           >
             QR &amp; ghi chú
           </button>
+          <div
+            onPointerDown={startSideResize}
+            onDoubleClick={() => {
+              setSideWidth(300);
+              try {
+                localStorage.removeItem("limio-live:sideWidth");
+              } catch {}
+            }}
+            role="separator"
+            aria-orientation="vertical"
+            title="Kéo để co dãn ô ghi chú (bấm đúp để về mặc định)"
+            className="hidden w-1.5 flex-shrink-0 cursor-col-resize bg-transparent transition hover:bg-brand-300/60 active:bg-brand-400/70 lg:block"
+          />
           <aside
-            className={`fixed bottom-0 right-0 top-16 z-40 w-[300px] max-w-[88vw] flex-shrink-0 overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
+            style={{ "--side-w": `${sideWidth}px` } as React.CSSProperties}
+            className={`fixed bottom-0 right-0 top-16 z-40 w-[300px] max-w-[88vw] flex-shrink-0 lg:w-[var(--side-w)] overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
               sideOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >
