@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
+import { canVoteInShowcase } from "@feedbackme/core-gamification";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,31 @@ export async function POST(
   const parsed = Input.safeParse(await readJson(req));
   if (!parsed.success) {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
+  }
+
+  // Quyền bình chọn: phải là người chơi (chưa bị loại) và giải đang cho xem bài của mọi đội
+  // (showcaseMode + trạng thái giải). Trước đây bất kỳ ai đăng nhập đều bình chọn được, kể cả giải nháp.
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: params.id },
+    select: { status: true, showcaseMode: true },
+  });
+  if (!tournament) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const voterReg = await prisma.tournamentRegistration.findUnique({
+    where: { tournamentId_userId: { tournamentId: params.id, userId } },
+    select: { disqualifiedAt: true },
+  });
+  if (
+    !canVoteInShowcase({
+      mode: tournament.showcaseMode,
+      status: tournament.status,
+      isParticipant: !!voterReg,
+      isDisqualified: !!voterReg?.disqualifiedAt,
+    })
+  ) {
+    return NextResponse.json(
+      { error: voterReg ? "voting_not_open" : "not_registered" },
+      { status: 403 },
+    );
   }
 
   // Verify submission belongs to a COLLECTIVE mission in this tournament.

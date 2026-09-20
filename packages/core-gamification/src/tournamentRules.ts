@@ -94,3 +94,50 @@ export function sortRankEntries<T extends RankEntry>(entries: T[]): T[] {
     return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
   });
 }
+
+export type ShowcaseMode = "always" | "after_end";
+export const SHOWCASE_MODES: { id: ShowcaseMode; label: string; description: string }[] = [
+  { id: "after_end", label: "Sau khi giải kết thúc", description: "Trong lúc thi, mỗi đội chỉ thấy bài của mình. Khuyên dùng để đội khác không xem và chép bài." },
+  { id: "always", label: "Ngay khi có bài nộp", description: "Mọi người đã đăng nhập xem được bài của các đội ngay khi nộp, phù hợp khi muốn cả lớp cùng xem và bình chọn." },
+];
+
+export function normalizeShowcaseMode(v: string | null | undefined): ShowcaseMode {
+  return v === "always" ? "always" : "after_end";
+}
+
+export type ShowcaseAccess =
+  | { canView: false }
+  | { canView: true; scope: "all" | "own_team_only"; reason: "creator" | "open" | "ended" | "own" };
+
+/**
+ * Ai xem được bài nộp của các đội ở trang showcase.
+ *  - Giải nháp: chỉ người tạo/admin (xem thử).
+ *  - Người tạo/admin: xem tất cả ở mọi giai đoạn.
+ *  - mode "always": mọi người đã đăng nhập xem tất cả khi giải đã công bố.
+ *  - mode "after_end": trước khi kết thúc, người chơi chỉ thấy bài của đội mình; sau khi kết thúc thì xem tất cả.
+ */
+export function showcaseAccess(input: {
+  mode: string | null | undefined;
+  status: string;
+  isCreatorOrAdmin: boolean;
+  isParticipant: boolean;
+}): ShowcaseAccess {
+  if (input.isCreatorOrAdmin) return { canView: true, scope: "all", reason: "creator" };
+  if (input.status === "draft") return { canView: false };
+  if (input.status === "ended") return { canView: true, scope: "all", reason: "ended" };
+  if (normalizeShowcaseMode(input.mode) === "always") return { canView: true, scope: "all", reason: "open" };
+  return { canView: true, scope: "own_team_only", reason: "own" };
+}
+
+/** Bình chọn: phải là người chơi (không bị loại) và đang được xem tất cả bài của các đội. */
+export function canVoteInShowcase(input: {
+  mode: string | null | undefined;
+  status: string;
+  isParticipant: boolean;
+  isDisqualified: boolean;
+}): boolean {
+  if (!input.isParticipant || input.isDisqualified) return false;
+  if (input.status !== "published" && input.status !== "active" && input.status !== "ended") return false;
+  const access = showcaseAccess({ mode: input.mode, status: input.status, isCreatorOrAdmin: false, isParticipant: true });
+  return access.canView && access.scope === "all";
+}

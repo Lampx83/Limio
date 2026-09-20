@@ -79,6 +79,7 @@ export default function InstructorTournamentTabs({
     endsAt: initial.endsAt,
     prizeXp: initial.prizeXp,
     allowLateRegistration: initial.allowLateRegistration,
+    showcaseMode: initial.showcaseMode,
     teamSize,
     courseTitle,
   };

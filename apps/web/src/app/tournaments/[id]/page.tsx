@@ -927,7 +927,7 @@ export default async function TournamentDetailPage({
               href={`/tournaments/${params.id}/showcase`}
               className="flex items-center justify-center gap-2 rounded-2xl border-2 border-violet-300 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-rose-50 p-4 text-center font-bold text-violet-800 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-violet-700 dark:from-violet-950/40 dark:via-fuchsia-950/40 dark:to-rose-950/40 dark:text-violet-200"
             >
-              <Sparkles className="h-4 w-4" /> Xem showcase project <ArrowRight className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" /> Xem bài của các đội <ArrowRight className="h-4 w-4" />
             </Link>
           )}
 

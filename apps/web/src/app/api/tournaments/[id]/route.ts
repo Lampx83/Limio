@@ -70,6 +70,7 @@ const PatchInput = z
     teamSize: z.number().int().positive().optional(),
     prizeXp: z.number().int().min(0).optional(),
     allowLateRegistration: z.boolean().optional(),
+    showcaseMode: z.enum(["always", "after_end"]).optional(),
     prizeDistribution: z.record(z.unknown()).nullable().optional(),
     status: z.enum(["published"]).optional(), // only draft→published allowed here
   })
@@ -177,6 +178,7 @@ export async function PATCH(
       ...(data.allowLateRegistration !== undefined && {
         allowLateRegistration: data.allowLateRegistration,
       }),
+      ...(data.showcaseMode !== undefined && { showcaseMode: data.showcaseMode }),
       ...(data.prizeDistribution !== undefined && {
         prizeDistribution:
           data.prizeDistribution === null

@@ -1491,6 +1491,9 @@ model Tournament {
   // tại thời điểm startsAt (đặc biệt hữu ích cho team-based khi muốn lock
   // composition sau khi bắt đầu).
   allowLateRegistration Boolean          @default(true)
+  // Khi nào người ngoài đội được xem bài nộp của các đội (trang showcase): "after_end" = chỉ sau khi
+  // giải kết thúc (mặc định, tránh lộ bài cho đối thủ), "always" = xem ngay khi có bài nộp.
+  showcaseMode          String           @default("after_end")
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
 

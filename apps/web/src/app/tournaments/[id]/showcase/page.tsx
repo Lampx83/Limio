@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Code2, Presentation, Video, Crown, Trophy, Play } from "lucide-react";
 import { prisma } from "@feedbackme/db";
+import { isAdmin } from "@feedbackme/core-lms";
+import { showcaseAccess, canVoteInShowcase, normalizeShowcaseMode } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import VoteButton from "./VoteButton";
 import { formatDateTime } from "@/lib/datetime";
@@ -52,9 +54,30 @@ export default async function ShowcasePage({
 
   const tournament = await prisma.tournament.findUnique({
     where: { id: params.id },
-    select: { id: true, title: true, teamSize: true, status: true },
+    select: { id: true, title: true, teamSize: true, status: true, creatorId: true, showcaseMode: true, endsAt: true },
   });
   if (!tournament) notFound();
+
+  // Ai xem được bài của các đội do giảng viên cấu hình (showcaseMode) + trạng thái giải.
+  const myReg = await prisma.tournamentRegistration.findUnique({
+    where: { tournamentId_userId: { tournamentId: params.id, userId } },
+    include: { team: { select: { captainId: true } } },
+  });
+  const myTeamCaptainId = myReg?.team?.captainId ?? null;
+  const isCreatorOrAdmin = tournament.creatorId === userId || (await isAdmin(userId));
+  const access = showcaseAccess({
+    mode: tournament.showcaseMode,
+    status: tournament.status,
+    isCreatorOrAdmin,
+    isParticipant: !!myReg,
+  });
+  if (!access.canView) redirect("/tournaments");
+  const canVote = canVoteInShowcase({
+    mode: tournament.showcaseMode,
+    status: tournament.status,
+    isParticipant: !!myReg,
+    isDisqualified: !!myReg?.disqualifiedAt,
+  });
 
   const missions = await prisma.tournamentMission.findMany({
     where: { tournamentId: params.id, isTeamSubmission: true },
@@ -117,12 +140,6 @@ export default async function ShowcasePage({
     if (best) topVotedBySubmission.add(best.id);
   }
 
-  const myReg = await prisma.tournamentRegistration.findUnique({
-    where: { tournamentId_userId: { tournamentId: params.id, userId } },
-    include: { team: { select: { captainId: true } } },
-  });
-  const myTeamCaptainId = myReg?.team?.captainId ?? null;
-
   const captainIds = missions.flatMap((m) => [
     ...m.submissions.map((s) => s.userId),
     ...(m.assignment?.submissions.map((s) => s.userId) ?? []),
@@ -150,7 +167,7 @@ export default async function ShowcasePage({
     : [];
   const teamByUser = new Map(teamRegs.map((r) => [r.userId, r.team!]));
 
-  const all = missions.flatMap((m) => [
+  const allRaw = missions.flatMap((m) => [
     // MissionSubmission (peer review / hackathon) — có bình chọn.
     ...m.submissions.map((s) => ({
       submissionId: s.id,
@@ -189,6 +206,10 @@ export default async function ShowcasePage({
       votable: false,
     })),
   ]);
+
+  // Chế độ "sau khi kết thúc": trong lúc thi chỉ thấy bài của đội mình (tránh lộ bài cho đối thủ).
+  const ownCaptainIds = new Set([userId, myTeamCaptainId].filter((x): x is string => !!x));
+  const all = access.scope === "all" ? allRaw : allRaw.filter((f) => ownCaptainIds.has(f.captain.id));
 
   // ── Filter + sort (server-driven via searchParams) ────────────────────
   const sort = (searchParams.sort as SortKey) || "recent";
@@ -272,6 +293,24 @@ export default async function ShowcasePage({
         )}
       </header>
 
+      {access.scope === "own_team_only" && (
+        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+          Trong lúc giải diễn ra, bạn chỉ thấy bài của đội mình. Bài của tất cả các đội sẽ được mở sau khi giải kết thúc
+          {" "}({formatDateTime(tournament.endsAt)}), lúc đó bạn cũng bình chọn được.
+        </div>
+      )}
+      {access.reason === "creator" && normalizeShowcaseMode(tournament.showcaseMode) === "after_end" && tournament.status !== "ended" && (
+        <div className="mt-4 rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900" role="status">
+          Bạn xem được tất cả vì là người tạo giải. Người chơi chỉ thấy bài của đội mình cho đến khi giải kết thúc
+          (đổi ở tab Thông tin cơ bản, mục "Khi nào xem được bài của các đội").
+        </div>
+      )}
+      {tournament.status === "draft" && (
+        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+          Đây là bản xem thử. Giải còn nháp nên học viên chưa thấy trang này.
+        </div>
+      )}
+
       {/* Mission filter chips — only when >1 COLLECTIVE mission */}
       {missions.length > 1 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
@@ -306,7 +345,11 @@ export default async function ShowcasePage({
         <div className="mt-8 rounded-2xl border border-dashed border-token py-16 text-center">
           <div className="text-4xl">🚧</div>
           <p className="mt-3 font-medium">
-            {all.length === 0 ? "Chờ các đội nộp project" : "Không có project khớp bộ lọc"}
+            {all.length === 0
+              ? access.scope === "own_team_only"
+                ? "Đội bạn chưa nộp bài"
+                : "Chờ các đội nộp bài"
+              : "Không có bài nộp khớp bộ lọc"}
           </p>
         </div>
       ) : (
@@ -449,8 +492,12 @@ export default async function ShowcasePage({
                         submissionId={f.submissionId}
                         initialVoted={myVoteByMission.get(f.missionId) === f.submissionId}
                         initialCount={f.voteCount}
-                        disabled={myTeamCaptainId === f.captain.id}
-                        disabledReason="Không thể vote cho đội của bạn"
+                        disabled={!canVote || myTeamCaptainId === f.captain.id}
+                        disabledReason={
+                          !canVote
+                            ? "Chỉ người chơi được bình chọn, khi giải cho xem bài của tất cả các đội"
+                            : "Không thể bình chọn cho đội của bạn"
+                        }
                       />
                     )}
                   </div>

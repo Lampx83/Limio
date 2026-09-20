@@ -11,6 +11,8 @@ export type TournamentFormState = {
   mode: "solo" | "team";
   teamSize: string;
   allowLateRegistration: boolean;
+  /** Khi nào người ngoài đội xem được bài nộp của các đội (showcase). */
+  showcaseMode: "always" | "after_end";
 };
 
 const DAY = 86_400_000;
@@ -34,6 +36,7 @@ export function defaultTournamentForm(now: Date, defaultCourseId: string): Tourn
     mode: "solo",
     teamSize: "3",
     allowLateRegistration: true,
+    showcaseMode: "after_end",
   };
 }
 
@@ -83,6 +86,7 @@ export function buildCreateTournamentPayload(s: TournamentFormState): Record<str
     endsAt: fromDateTimeInputValue(s.endsAt),
     teamSize: s.mode === "team" ? Math.round(Number(s.teamSize)) : 1,
     allowLateRegistration: s.allowLateRegistration,
+    showcaseMode: s.showcaseMode,
   };
   if (s.courseId && s.courseId !== "PLATFORM") p.courseId = s.courseId;
   return p;

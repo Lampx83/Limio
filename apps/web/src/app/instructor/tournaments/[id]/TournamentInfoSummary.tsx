@@ -9,6 +9,7 @@ export type InfoSummaryData = {
   endsAt: string;
   prizeXp: number;
   allowLateRegistration: boolean;
+  showcaseMode: string;
   teamSize: number;
   courseTitle: string | null;
 };
@@ -50,6 +51,13 @@ export default function TournamentInfoSummary({ data, note }: { data: InfoSummar
             "Cá nhân"
           ),
         )}
+        {data.teamSize > 1 &&
+          row(
+            "Xem bài của các đội",
+            data.showcaseMode === "always"
+              ? "Ngay khi có bài nộp"
+              : "Sau khi giải kết thúc (trong lúc thi mỗi đội chỉ thấy bài của mình)",
+          )}
         {row("XP thưởng", <>{data.prizeXp > 0 ? `${data.prizeXp.toLocaleString("vi-VN")} XP` : "Không có"} <span className="text-muted">(chỉnh ở tab Giải thưởng)</span></>)}
         {row(
           "Đăng ký khi giải đang diễn ra",

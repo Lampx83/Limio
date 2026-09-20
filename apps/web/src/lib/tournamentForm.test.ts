@@ -92,9 +92,14 @@ describe("buildCreateTournamentPayload", () => {
       endsAt: "2026-09-28T01:00:00.000Z",
       teamSize: 1,
       allowLateRegistration: true,
+      showcaseMode: "after_end",
       courseId: "c1",
     });
     expect(p).not.toHaveProperty("prizeXp");
+  });
+
+  it("gửi chế độ showcase giảng viên chọn", () => {
+    expect(buildCreateTournamentPayload(form({ showcaseMode: "always" })).showcaseMode).toBe("always");
   });
 
   it("theo đội dùng số người đã nhập; toàn hệ thống không gửi courseId", () => {

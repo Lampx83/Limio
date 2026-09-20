@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import ShowcaseModePicker from "../[id]/ShowcaseModePicker";
 import { tournamentErrorMessage } from "@/lib/tournamentText";
 import {
   buildCreateTournamentPayload,
@@ -269,6 +270,13 @@ export default function CreateTournamentForm({
           </span>
         </label>
       </section>
+
+      {s.mode === "team" && (
+        <section className="space-y-3">
+          <h2 className={sectionTitle}>4. Bài nộp của các đội</h2>
+          <ShowcaseModePicker value={s.showcaseMode} onChange={(v) => set({ showcaseMode: v })} />
+        </section>
+      )}
 
       <div className="border-t border-token pt-4">
         <p className="text-sm text-muted">

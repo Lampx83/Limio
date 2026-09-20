@@ -50,6 +50,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   verify_mode_mismatch: "Nhiệm vụ này không nhận bài theo cách đó.",
   self_review_forbidden: "Bạn không thể chấm bài của chính mình.",
   already_reviewed: "Bạn đã chấm bài này rồi.",
+  voting_not_open: "Chưa đến lúc bình chọn. Bạn bình chọn được khi giải cho xem bài của tất cả các đội.",
+  cannot_vote_own_team: "Bạn không thể bình chọn cho đội của mình.",
   network_error: "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.",
   validation_failed: "Thông tin chưa hợp lệ. Kiểm tra lại các ô đã nhập.",
 };

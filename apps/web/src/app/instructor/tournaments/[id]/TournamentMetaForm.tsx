@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { normalizeShowcaseMode, type ShowcaseMode } from "@feedbackme/core-gamification";
+import ShowcaseModePicker from "./ShowcaseModePicker";
 import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
 import { tournamentErrorMessage } from "@/lib/tournamentText";
 import { plainToRichHtml } from "@/lib/richText";
@@ -19,6 +21,8 @@ interface Initial {
   endsAt: string;   // ISO
   prizeXp: number;
   allowLateRegistration: boolean;
+  showcaseMode: string;
+  teamSize: number;
 }
 
 
@@ -38,6 +42,7 @@ export default function TournamentMetaForm({
   const [allowLateRegistration, setAllowLateRegistration] = useState(
     initial.allowLateRegistration,
   );
+  const [showcaseMode, setShowcaseMode] = useState<ShowcaseMode>(normalizeShowcaseMode(initial.showcaseMode));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +67,7 @@ export default function TournamentMetaForm({
         startsAt: fromDateTimeInputValue(startsAt),
         endsAt: fromDateTimeInputValue(endsAt),
         allowLateRegistration,
+        showcaseMode,
       }),
     });
     setBusy(false);
@@ -151,6 +157,8 @@ export default function TournamentMetaForm({
           </div>
         </label>
       </div>
+
+      {initial.teamSize > 1 && <ShowcaseModePicker value={showcaseMode} onChange={setShowcaseMode} />}
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-token pt-4">
         {error && (
