@@ -91,6 +91,46 @@ export async function updateLiveDeck(
   });
 }
 
+/**
+ * Sao chép một bài giảng của chính người dùng: tạo deck mới (cùng giao diện, cùng
+ * nhóm) và chép toàn bộ slide theo đúng thứ tự trình chiếu. Không chép phiên trình chiếu
+ * (LiveSession) — mỗi buổi dạy là dữ liệu riêng của bài gốc.
+ */
+export async function duplicateLiveDeck(
+  deckId: string,
+  userId: string,
+  db: PrismaClient
+): Promise<LiveDeck> {
+  const source = await db.liveDeck.findUnique({
+    where: { id: deckId },
+    include: { slides: { orderBy: { orderIndex: "asc" } } },
+  });
+  if (!source || source.userId !== userId) {
+    throw new Error("Not authorized to duplicate this deck");
+  }
+
+  const suffix = " (bản sao)";
+  const title = `${source.title.slice(0, 100 - suffix.length)}${suffix}`;
+
+  return db.$transaction(async (tx) => {
+    const copy = await tx.liveDeck.create({
+      data: { userId, title, theme: source.theme, groupId: source.groupId },
+    });
+    if (source.slides.length > 0) {
+      await tx.liveSlide.createMany({
+        data: source.slides.map((sl) => ({
+          deckId: copy.id,
+          type: sl.type,
+          config: sl.config as object,
+          timerSeconds: sl.timerSeconds,
+          orderIndex: sl.orderIndex,
+        })),
+      });
+    }
+    return copy;
+  });
+}
+
 export async function deleteLiveDeck(
   deckId: string,
   userId: string,

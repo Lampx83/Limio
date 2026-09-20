@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
-import { getLiveDeck, updateLiveDeck, deleteLiveDeck } from "@feedbackme/core-lms";
+import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup } from "@feedbackme/core-lms";
 import { z } from "zod";
 
 const UpdateDeckSchema = z.object({
   title: z.string().min(1, "Title is required").max(100).optional(),
   theme: z.enum(["white", "cream", "mint", "sky", "blush", "brand"]).optional(),
+  // null = bỏ khỏi nhóm
+  groupId: z.string().uuid().nullable().optional(),
 });
 
 /**
@@ -55,7 +57,17 @@ export async function PATCH(
       );
     }
 
-    const deck = await updateLiveDeck(params.deckId, userId, validation.data, prisma);
+    const { groupId, ...rest } = validation.data;
+    let deck = null;
+    if (Object.keys(rest).length > 0) {
+      deck = await updateLiveDeck(params.deckId, userId, rest, prisma);
+    }
+    if (groupId !== undefined) {
+      deck = await setLiveDeckGroup(params.deckId, userId, groupId, prisma);
+    }
+    if (!deck) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
     return NextResponse.json(deck);
   } catch (error) {
     console.error("[Limio-Live Deck API - PATCH]", error);

@@ -144,6 +144,7 @@ model User {
   teachingActivityPlanSaves          TeachingActivityPlanSave[]
   teachingActivityPlanLikes          TeachingActivityPlanLike[]
   liveDecks            LiveDeck[]
+  liveDeckGroups       LiveDeckGroup[]
   liveSessionsHosted   LiveSession[]
 
   // Gameshow
@@ -396,6 +397,7 @@ model Course {
   modules           Module[]
   enrollments       Enrollment[]
   instructors       CourseInstructor[]
+  liveDeckGroups    LiveDeckGroup[]
   userRoles         UserRole[]
   userProgress      UserCourseProgress[]
   xpTransactions    XpTransaction[]
@@ -4552,14 +4554,45 @@ model LiveDeck {
   title     String
   // Giao diện slide cho cả bài giảng — id trong limio-live/slideThemes.ts.
   theme     String   @default("white")
+  // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
+  // mất nhóm, không mất bài.
+  groupId   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group    LiveDeckGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   slides   LiveSlide[]
   sessions LiveSession[]
 
   @@index([userId])
+  @@index([groupId])
+}
+
+enum LiveDeckGroupKind {
+  course
+  event
+  other
+}
+
+// Nhóm bài giảng của một giảng viên — gom nhiều LiveDeck theo khoá học/sự kiện.
+// `courseId` liên kết TUỲ CHỌN với một khoá LMS thật; xoá khoá chỉ mất liên kết
+// (nhóm và bài giảng còn nguyên).
+model LiveDeckGroup {
+  id        String            @id @default(uuid())
+  userId    String
+  name      String
+  kind      LiveDeckGroupKind @default(other)
+  courseId  String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  decks  LiveDeck[]
+
+  @@index([userId])
+  @@index([courseId])
 }
 
 // orderIndex ở đây LÀ thứ tự trình chiếu thật (khác TeachingActivityPlanItem

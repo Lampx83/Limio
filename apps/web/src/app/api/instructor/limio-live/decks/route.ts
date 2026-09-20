@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
-import { createLiveDeck, getUserLiveDecks } from "@feedbackme/core-lms";
+import { createLiveDeck, getUserLiveDecks, setLiveDeckGroup } from "@feedbackme/core-lms";
 import { z } from "zod";
 
 const CreateDeckSchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
+  groupId: z.string().uuid().nullable().optional(),
 });
 
 /**
@@ -48,10 +49,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const deck = await createLiveDeck(
+    let deck = await createLiveDeck(
       { userId, title: validation.data.title },
       prisma
     );
+    if (validation.data.groupId) {
+      deck = await setLiveDeckGroup(deck.id, userId, validation.data.groupId, prisma);
+    }
 
     return NextResponse.json(deck, { status: 201 });
   } catch (error) {
