@@ -123,7 +123,7 @@ const MODULES: ModuleDef[] = [
     icon: GraduationCap,
     iconSize: 27,
     colors: {
-      rail: "bg-lime-600",
+      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -157,12 +157,12 @@ const MODULES: ModuleDef[] = [
     icon: Presentation,
     premium: true,
     colors: {
-      rail: "bg-lime-600",
+      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
       itemIconFg: "text-lime-600 dark:text-lime-300",
-      headerText: "text-lime-700 dark:text-lime-400",
+      headerText: "bg-gradient-to-r from-lime-600 to-pink-500 bg-clip-text text-transparent",
     },
     matchPrefixes: ["/instructor/limio-live", "/instructor/teaching-tools", "/instructor/gameshow"],
     items: [
@@ -193,7 +193,7 @@ const MODULES: ModuleDef[] = [
     icon: Bot,
     premium: true,
     colors: {
-      rail: "bg-lime-600",
+      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -209,7 +209,7 @@ const MODULES: ModuleDef[] = [
     icon: GradeAPlus,
     iconSize: 28,
     colors: {
-      rail: "bg-lime-600",
+      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -232,7 +232,7 @@ const MODULES: ModuleDef[] = [
     label: "Đấu trường",
     icon: Trophy,
     colors: {
-      rail: "bg-lime-600",
+      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -247,7 +247,7 @@ const MODULES: ModuleDef[] = [
     label: "Phân tích và Báo cáo",
     icon: BarChart3,
     colors: {
-      rail: "bg-lime-600",
+      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -504,7 +504,7 @@ function InstructorLeftMenuInner({
 }
 
 const NEUTRAL_COLORS: ModuleColors = {
-  rail: "bg-lime-600",
+  rail: "bg-gradient-to-br from-lime-500 to-pink-500",
   itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
   itemActiveText: "text-lime-700 dark:text-lime-200",
   itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -535,7 +535,7 @@ function ModuleRail({
         iconSize={28}
         hero
         isActive={activeModuleId === "home"}
-        railClass="bg-brand-600"
+        railClass="bg-gradient-to-br from-lime-500 to-pink-500"
         description="Tổng quan việc cần xử lý"
         onSelect={() => onSelect("home")}
         onHover={onHover}
