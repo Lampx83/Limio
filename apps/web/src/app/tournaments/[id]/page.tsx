@@ -343,8 +343,10 @@ export default async function TournamentDetailPage({
 
   // ── Việc tiếp theo cho người chơi (đang diễn ra) ──
   const isCaptain = !!registration?.team && registration.team.captainId === uid;
+  // Dựa vào giờ thật, không chỉ status: cron chuyển published → active có thể trễ vài phút.
+  const hasStarted = now >= tournament.startsAt && !isEnded;
   const nextMission =
-    isRegistered && isActive
+    isRegistered && hasStarted
       ? (tournament.missions.find((m) => {
           const actionable = !!m.missionType && m.missionType !== "COURSE_LINKED";
           if (!actionable) return false;
@@ -541,7 +543,7 @@ export default async function TournamentDetailPage({
         startsAt={tournament.startsAt}
         endsAt={tournament.endsAt}
         now={now}
-        isActive={isActive}
+        hasStarted={hasStarted}
         joinCode={registration?.team?.joinCode ?? null}
         isCaptain={isCaptain}
         nextMission={
@@ -1046,7 +1048,7 @@ function StatusBanner({
   startsAt,
   endsAt,
   now,
-  isActive,
+  hasStarted,
   joinCode,
   isCaptain,
   nextMission,
@@ -1069,7 +1071,7 @@ function StatusBanner({
   startsAt: Date;
   endsAt: Date;
   now: Date;
-  isActive: boolean;
+  hasStarted: boolean;
   joinCode: string | null;
   isCaptain: boolean;
   nextMission: { id: string; title: string; deadline: Date | null } | null;
@@ -1108,7 +1110,7 @@ function StatusBanner({
   }
 
   if (isRegistered) {
-    const notStarted = !isActive && !isEnded;
+    const notStarted = !hasStarted && !isEnded;
     const teamLine =
       teamSize > 1 && teamName ? (
         <p className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">
