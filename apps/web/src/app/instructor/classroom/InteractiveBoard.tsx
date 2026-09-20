@@ -1270,7 +1270,7 @@ export default function InteractiveBoard({ onExit }: InteractiveBoardProps) {
         <div className="rounded-xl bg-white/70 p-3.5 ring-1 ring-brand-200/70 dark:bg-white/5">
           <label className="flex cursor-pointer items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-sm font-medium">
-              <ClipboardX size={14} className="text-brand-700" /> Chặn dán khi HV viết note
+              <ClipboardX size={14} className="text-brand-700" /> Chặn dán (paste) khi HV viết note
             </span>
             <input
               type="checkbox"
