@@ -3,7 +3,7 @@
 import "@excalidraw/excalidraw/index.css";
 import { useRef, useState } from "react";
 import dynamicImport from "next/dynamic";
-import { X } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { getClientId } from "@/lib/clientId";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
@@ -163,35 +163,42 @@ export default function DrawingComposer({
         </button>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto border-b border-gray-200 bg-gray-50 px-3 py-2">
-        {PEN_COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => pickColor(c)}
-            aria-label={`Màu ${c}`}
-            aria-pressed={color === c}
-            style={{ backgroundColor: c }}
-            className={`h-10 w-10 shrink-0 rounded-full border-2 border-white shadow transition-transform ${
-              color === c ? "scale-110 ring-4 ring-brand-500" : "ring-1 ring-gray-300"
-            }`}
-          />
-        ))}
-        <span className="mx-1 h-8 w-px shrink-0 bg-gray-300" />
-        {PEN_WIDTHS.map((w) => (
-          <button
-            key={w.value}
-            type="button"
-            onClick={() => pickWidth(w.value)}
-            aria-label={`Nét ${w.label}`}
-            aria-pressed={width === w.value}
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-              width === w.value ? "bg-brand-100 ring-2 ring-brand-500" : "bg-white ring-1 ring-gray-300"
-            }`}
-          >
-            <span className="rounded-full bg-gray-900" style={{ width: w.dot, height: w.dot }} />
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 bg-gray-50 px-3 py-2">
+        <div className="flex items-center gap-2">
+          {PEN_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => pickColor(c)}
+              aria-label={`Màu ${c}`}
+              aria-pressed={color === c}
+              style={{ backgroundColor: c }}
+              className={`h-9 w-9 shrink-0 rounded-full border-2 border-white shadow transition-transform sm:h-10 sm:w-10 ${
+                color === c ? "scale-110 ring-4 ring-brand-500" : "ring-1 ring-gray-300"
+              }`}
+            />
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1 text-sm font-medium text-gray-600">
+            <Pencil size={18} aria-hidden />
+            Nét bút
+          </span>
+          {PEN_WIDTHS.map((w) => (
+            <button
+              key={w.value}
+              type="button"
+              onClick={() => pickWidth(w.value)}
+              aria-label={`Nét ${w.label}`}
+              aria-pressed={width === w.value}
+              className={`flex h-10 w-12 shrink-0 items-center justify-center rounded-lg ${
+                width === w.value ? "bg-brand-100 ring-2 ring-brand-500" : "bg-white ring-1 ring-gray-300"
+              }`}
+            >
+              <span className="rounded-full bg-gray-900" style={{ width: w.dot, height: w.dot }} />
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="min-h-0 flex-1">
