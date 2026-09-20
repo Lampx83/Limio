@@ -37,7 +37,7 @@ export const RESOURCE_TYPE_HINTS: Record<ResourceType, string> = {
   pdf: "Xem PDF ngay trong slide này (không tách trang thành slide riêng)",
   file: "Tài liệu để học viên tải xuống",
   external_link: "Trỏ tới website/tài liệu bên ngoài",
-  embed: "Nhúng iframe URL bất kỳ",
+  embed: "Hiện 1 trang web ngay trong slide — Google Slides, Canva, Form… (dán link)",
   html_block: "Upload 1 file .html, mở trong tab riêng (sandbox)",
 };
 

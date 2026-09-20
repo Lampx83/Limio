@@ -48,7 +48,7 @@ type Runtime =
 const TYPE_LABELS: Record<SlideType, string> = {
   content: "Trình bày",
   quiz: "Trắc nghiệm",
-  poll: "Thăm dò",
+  poll: "Vote",
   word_cloud: "Word Cloud",
   collaborate_board: "Dán Note",
 };
@@ -506,7 +506,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
           </span>
           <span className="min-w-0 flex-1 truncate text-sm text-muted">
             {deck.title}
-            {currentSlide ? ` · ${currentSlide.type === "content" ? contentKind(currentSlide.config).label : TYPE_LABELS[currentSlide.type]}` : ""}
+            {currentSlide ? ` · ${currentSlide.type === "content" ? contentKind(currentSlide.config).label : currentSlide.type === "collaborate_board" && currentSlide.config?.mode === "drawing" ? "Draw-it (vẽ)" : TYPE_LABELS[currentSlide.type]}` : ""}
           </span>
 
           {/* Cụm điều khiển 1 hàng: nút chức năng (icon, chữ hiện từ xl) | điều

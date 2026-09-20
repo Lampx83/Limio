@@ -78,10 +78,11 @@ export async function POST(
         data: {
           code,
           ownerId: userId,
-          title: (config.title || config.prompt || "Dán Note").slice(0, 120),
+          title: (config.title || config.prompt || (config.mode === "drawing" ? "Draw-it" : "Dán Note")).slice(0, 120),
           prompt: config.prompt || null,
           columns,
           blockPaste: !!config.blockPaste,
+          drawingMode: config.mode === "drawing",
         },
       });
       refId = board.id;

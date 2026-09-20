@@ -26,7 +26,7 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   pdf: "PDF",
   file: "File đính kèm",
   external_link: "Link ngoài",
-  embed: "Embed",
+  embed: "Trang web",
   html_block: "HTML tự tải lên",
 };
 

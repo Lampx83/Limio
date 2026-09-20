@@ -34,6 +34,7 @@ import {
   SlidersHorizontal,
   Eye,
   EyeOff,
+  Brush,
   ClipboardX,
   ZoomIn,
   ZoomOut,
@@ -74,10 +75,10 @@ interface Deck {
 
 const INTERACTIVE_META: Record<
   Exclude<SlideType, "content">,
-  { label: string; icon: typeof FileText | typeof WordCloudIcon | typeof CollabBoardIcon; badge: string }
+  { label: string; icon: typeof FileText | typeof WordCloudIcon | typeof CollabBoardIcon | typeof Brush; badge: string }
 > = {
   quiz: { label: "Trắc nghiệm", icon: ListChecks, badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
-  poll: { label: "Thăm dò", icon: BarChart3, badge: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
+  poll: { label: "Vote", icon: BarChart3, badge: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
   word_cloud: { label: "Word Cloud", icon: WordCloudIcon, badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
   collaborate_board: {
     label: "Dán Note",
@@ -89,12 +90,15 @@ const INTERACTIVE_META: Record<
 // Nhãn/icon/màu hiển thị của 1 slide — slide "content" được hiển thị theo loại tài nguyên cụ thể.
 function slideMeta(slide: { type: SlideType; config: Record<string, any> }): {
   label: string;
-  icon: typeof FileText | typeof WordCloudIcon | typeof CollabBoardIcon;
+  icon: typeof FileText | typeof WordCloudIcon | typeof CollabBoardIcon | typeof Brush;
   badge: string;
 } {
   if (slide.type === "content") {
     const k = contentKind(slide.config);
     return { ...k, badge: "bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300" };
+  }
+  if (slide.type === "collaborate_board" && slide.config?.mode === "drawing") {
+    return { label: "Draw-it (vẽ)", icon: Brush, badge: INTERACTIVE_META.collaborate_board.badge };
   }
   return INTERACTIVE_META[slide.type];
 }
@@ -359,7 +363,9 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     const config =
       choice.type === "content" && choice.resourceKind
         ? { title: "", subtitle: "", bullets: [], resourceKind: choice.resourceKind }
-        : defaultConfigFor(type);
+        : choice.type === "collaborate_board" && choice.mode === "drawing"
+          ? { ...defaultConfigFor(type), mode: "drawing" }
+          : defaultConfigFor(type);
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1378,7 +1384,7 @@ function SettingsPanel({
     slide.timerSeconds ? Math.max(1, Math.round(slide.timerSeconds / 60)) : 5
   );
 
-  const [boardMode, setBoardMode] = useState<"free" | "grouped">(config.mode ?? "free");
+  const [boardMode, setBoardMode] = useState<"free" | "grouped" | "drawing">(config.mode ?? "free");
   const [columnList, setColumnList] = useState<string[]>(
     (config.columns ?? []).length > 0 ? [...config.columns] : ["Nhóm 1", "Nhóm 2"]
   );
@@ -1395,7 +1401,7 @@ function SettingsPanel({
     onSave({ config: { ...config, presenterNote: presenterNote.trim() || undefined } });
   };
 
-  const commitBoard = (patch: Partial<{ mode: "free" | "grouped"; columns: string[]; title: string; allowViewOthers: boolean; blockPaste: boolean }>) => {
+  const commitBoard = (patch: Partial<{ mode: "free" | "grouped" | "drawing"; columns: string[]; title: string; allowViewOthers: boolean; blockPaste: boolean }>) => {
     const mode = patch.mode ?? boardMode;
     const cols = [...new Set((patch.columns ?? columnList).map((c: string) => c.trim()).filter(Boolean))];
     const title = (patch.title ?? boardTitle).trim();
@@ -1476,6 +1482,7 @@ function SettingsPanel({
             />
           </SettingCard>
 
+          {boardMode !== "drawing" && (
           <SettingCard
             icon={<LayoutGrid size={15} />}
             title="Đăng theo nhóm (grid)"
@@ -1539,10 +1546,11 @@ function SettingsPanel({
               </div>
             )}
           </SettingCard>
+          )}
 
           <SettingCard
             icon={<Eye size={15} />}
-            title="Xem ghi chú của nhau"
+            title={boardMode === "drawing" ? "Xem hình của nhau" : "Xem ghi chú của nhau"}
             hint="Học viên thấy ghi chú của bạn học"
             toggle={{
               checked: allowViewOthers,
@@ -1552,18 +1560,20 @@ function SettingsPanel({
               },
             }}
           />
-          <SettingCard
-            icon={<ClipboardX size={15} />}
-            title="Chặn dán (chống copy)"
-            hint="Học viên không dán được vào ô ghi chú"
-            toggle={{
-              checked: blockPaste,
-              onChange: (v) => {
-                setBlockPaste(v);
-                commitBoard({ blockPaste: v });
-              },
-            }}
-          />
+          {boardMode !== "drawing" && (
+            <SettingCard
+              icon={<ClipboardX size={15} />}
+              title="Chặn dán (chống copy)"
+              hint="Học viên không dán được vào ô ghi chú"
+              toggle={{
+                checked: blockPaste,
+                onChange: (v) => {
+                  setBlockPaste(v);
+                  commitBoard({ blockPaste: v });
+                },
+              }}
+            />
+          )}
         </>
       )}
 
