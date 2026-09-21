@@ -1458,22 +1458,31 @@ function JoinBox({
   );
 }
 
+// Kết quả trực tiếp cho presenter (cột phải): màn chiếu đã hiện kết quả to, nhưng presenter
+// cần thấy nó ngay trên màn của mình mà không phải cuộn trong khung slide.
 function LiveResponseStats({ refId, slide }: { refId: string; slide: Slide }) {
   const [totalVotes, setTotalVotes] = useState(0);
+  const [byOption, setByOption] = useState<Record<string, number>>({});
+  const options: { text: string; correct?: boolean }[] = slide.config?.options ?? [];
+  const letters = ["A", "B", "C", "D", "E", "F"];
 
   useEffect(() => {
     let cancelled = false;
     fetch(apiUrl(`/api/classroom/quick-poll/${refId}/results`))
       .then((r) => r.json())
       .then((d) => {
-        if (!cancelled) setTotalVotes(d.totalVotes ?? 0);
+        if (cancelled) return;
+        setTotalVotes(d.totalVotes ?? 0);
+        setByOption(d.votesByOption ?? {});
       })
       .catch(() => {});
     const es = new EventSource(apiUrl(`/api/classroom/quick-poll/${refId}/stream`));
     es.onmessage = (e) => {
       try {
         const ev = JSON.parse(e.data) as { choice?: string };
-        if (ev.choice) setTotalVotes((t) => t + 1);
+        if (!ev.choice) return;
+        setTotalVotes((t) => t + 1);
+        setByOption((v) => ({ ...v, [ev.choice!]: (v[ev.choice!] || 0) + 1 }));
       } catch {
         /* ignore */
       }
@@ -1490,9 +1499,34 @@ function LiveResponseStats({ refId, slide }: { refId: string; slide: Slide }) {
         {totalVotes}
         <span className="ml-1 text-sm font-semibold text-faint">phiếu</span>
       </div>
+      <div className="mt-3 space-y-2">
+        {options.map((o, idx) => {
+          const count = byOption[String(idx)] || 0;
+          const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+          return (
+            <div key={idx}>
+              <div className="flex items-baseline gap-2 text-[12.5px]">
+                <span className="w-4 shrink-0 font-bold text-muted">{letters[idx]}</span>
+                <span className="min-w-0 flex-1 truncate" title={o.text}>{o.text}</span>
+                <span className="shrink-0 font-semibold tabular-nums">
+                  {count} · {pct}%
+                </span>
+              </div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+                <div
+                  className={`h-full rounded-full transition-[width] duration-500 ${
+                    slide.type === "quiz" && o.correct ? "bg-green-500" : "bg-brand-500"
+                  }`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
       <div className="mt-3 text-[12.5px] leading-relaxed text-faint">
         {slide.type === "quiz"
-          ? "Đáp án đúng được đánh dấu khi bấm đóng câu hỏi."
+          ? "Thanh xanh = đáp án đúng. Trên màn chiếu, đáp án chỉ lộ khi bấm đóng câu hỏi."
           : "Thăm dò ý kiến — không chấm điểm, chỉ để biết cả lớp nghĩ gì."}
       </div>
     </div>
@@ -1501,13 +1535,16 @@ function LiveResponseStats({ refId, slide }: { refId: string; slide: Slide }) {
 
 function LiveWordCloudStats({ refId }: { refId: string }) {
   const [total, setTotal] = useState(0);
+  const [freq, setFreq] = useState<Record<string, number>>({});
   useEffect(() => {
     let cancelled = false;
     const refresh = () =>
       fetch(apiUrl(`/api/classroom/word-cloud/${refId}/results`))
         .then((r) => r.json())
         .then((d) => {
-          if (!cancelled) setTotal(d.totalSubmissions ?? 0);
+          if (cancelled) return;
+          setTotal(d.totalSubmissions ?? 0);
+          setFreq(d.wordFrequency ?? {});
         })
         .catch(() => {});
     refresh();
@@ -1519,34 +1556,57 @@ function LiveWordCloudStats({ refId }: { refId: string }) {
     };
   }, [refId]);
 
+  const top = Object.entries(freq)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 20);
+
   return (
     <div>
       <div className="text-[28px] font-extrabold leading-none">
         {total}
         <span className="ml-1 text-sm font-semibold text-faint">câu trả lời</span>
       </div>
+      {top.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {top.map(([word, f]) => (
+            <span key={word} className="rounded-full bg-brand-100 px-2.5 py-1 text-[12.5px] font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+              {word}
+              {f > 1 && <span className="ml-1 tabular-nums opacity-70">×{f}</span>}
+            </span>
+          ))}
+        </div>
+      )}
       <div className="mt-3 text-[12.5px] leading-relaxed text-faint">
-        Cụm từ xuất hiện càng nhiều sẽ hiện càng to.
+        Cụm từ xuất hiện càng nhiều sẽ hiện càng to trên màn chiếu.
       </div>
     </div>
   );
 }
 
 function LiveBoardStats({ code }: { code: string }) {
-  const [total, setTotal] = useState(0);
+  const [notes, setNotes] = useState<BoardViewNote[]>([]);
   useEffect(() => {
     let cancelled = false;
     fetch(apiUrl(`/api/public/boards/${code}`))
       .then((r) => r.json())
       .then((d) => {
-        if (!cancelled) setTotal((d.notes ?? []).length);
+        if (!cancelled) setNotes(d.notes ?? []);
       })
       .catch(() => {});
     const es = new EventSource(apiUrl(`/api/public/boards/${code}/stream`));
     es.onmessage = (e) => {
       try {
-        const ev = JSON.parse(e.data);
-        if (ev.type === "note.created") setTotal((t) => t + 1);
+        const ev = JSON.parse(e.data) as { type?: string; note?: BoardViewNote; noteId?: string; hidden?: boolean };
+        setNotes((prev) => {
+          if (ev.type === "note.created" && ev.note) {
+            return prev.some((n) => n.id === ev.note!.id) ? prev : [...prev, ev.note];
+          }
+          if (ev.type === "note.updated" && ev.note) return prev.map((n) => (n.id === ev.note!.id ? { ...n, ...ev.note } : n));
+          if (ev.type === "note.deleted" && ev.noteId) return prev.filter((n) => n.id !== ev.noteId);
+          if (ev.type === "note.moderated" && ev.noteId && ev.hidden) return prev.filter((n) => n.id !== ev.noteId);
+          if (ev.type === "board.reset") return [];
+          return prev;
+        });
       } catch {
         /* ignore */
       }
@@ -1557,14 +1617,30 @@ function LiveBoardStats({ code }: { code: string }) {
     };
   }, [code]);
 
+  const latest = notes.slice(-5).reverse();
+
   return (
     <div>
       <div className="text-[28px] font-extrabold leading-none">
-        {total}
+        {notes.length}
         <span className="ml-1 text-sm font-semibold text-faint">ghi chú</span>
       </div>
+      {latest.length > 0 && (
+        <ul className="mt-3 space-y-1.5">
+          {latest.map((n) => (
+            <li
+              key={n.id}
+              className="rounded-lg px-2.5 py-1.5 text-[12.5px] leading-snug text-[#20241F]"
+              style={{ backgroundColor: n.color || "#FEF3C7" }}
+            >
+              <div className="line-clamp-3 whitespace-pre-wrap">{n.content}</div>
+              <div className="mt-0.5 text-[11px] opacity-60">{n.authorName}</div>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="mt-3 text-[12.5px] leading-relaxed text-faint">
-        Bấm vào bảng để phóng to, ẩn ghi chú không phù hợp nếu cần.
+        Hiện 5 ghi chú mới nhất; toàn bộ bảng ở màn chiếu.
       </div>
     </div>
   );
