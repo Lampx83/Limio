@@ -32,7 +32,12 @@ interface ResolvedClosed {
 }
 interface ResolvedNotReady {
   state: "not_ready";
-  reason: "not_published" | "disabled" | "wrong_mode" | "oral_login_required";
+  reason:
+    | "not_published"
+    | "disabled"
+    | "wrong_mode"
+    | "oral_login_required"
+    | "no_session";
   examTitle: string;
 }
 type Resolved =
@@ -118,18 +123,11 @@ async function resolveCode(code: string): Promise<Resolved | null> {
       return { state: "not_ready", reason: "oral_login_required", examTitle: exam.title };
     if (exam.accessMode !== "open_code")
       return { state: "not_ready", reason: "wrong_mode", examTitle: exam.title };
-    if (now < exam.openAt)
-      return { state: "not_yet", examTitle: exam.title, opensAt: exam.openAt };
-    if (now >= exam.closeAt)
-      return { state: "closed", examTitle: exam.title, closesAt: exam.closeAt };
-    return {
-      state: "ok",
-      mode: "open",
-      examTitle: exam.title,
-      candidateName: null,
-      proctoringLevel: exam.proctoringLevel,
-      courseId: exam.courseId,
-    };
+    // Mã cũ gắn thẳng vào Exam, không qua ca nào: claimByOpenCode luôn từ chối
+    // (`no_session`) vì ca thi là tầng duy nhất quyết định giờ mở/đóng. Landing
+    // phải nói đúng điều đó, thay vì báo "ok" theo khung giờ cũ của đề rồi để
+    // thí sinh điền form xong mới bị từ chối.
+    return { state: "not_ready", reason: "no_session", examTitle: exam.title };
   }
 
   if (code.length === 8) {
@@ -139,7 +137,7 @@ async function resolveCode(code: string): Promise<Resolved | null> {
         displayName: true,
         disabledAt: true,
         session: {
-          select: { opensAt: true, closesAt: true },
+          select: { opensAt: true, closesAt: true, timingMode: true, status: true },
         },
         exam: {
           select: {
@@ -179,13 +177,25 @@ async function resolveCode(code: string): Promise<Resolved | null> {
         reason: "wrong_mode",
         examTitle: candidate.exam.title,
       };
-    // Use the candidate's session window if available, else exam window.
-    const opens = candidate.session?.opensAt ?? candidate.exam.openAt;
-    const closes = candidate.session?.closesAt ?? candidate.exam.closeAt;
-    if (now < opens)
-      return { state: "not_yet", examTitle: candidate.exam.title, opensAt: opens };
-    if (now >= closes)
-      return { state: "closed", examTitle: candidate.exam.title, closesAt: closes };
+    // Cùng quy tắc với claimByAssignedCode: ca thi quyết định (hẹn giờ so cửa sổ,
+    // thủ công so status), và thí sinh chưa xếp ca thì chưa vào được. Bản cũ tự
+    // so giờ và rơi về khung giờ của đề, nên ca thủ công vừa được mở vẫn bị báo
+    // "đã kết thúc".
+    if (!candidate.session)
+      return { state: "not_ready", reason: "no_session", examTitle: candidate.exam.title };
+    const st = sessionOpenState(candidate.session, now);
+    if (st === "not_yet")
+      return {
+        state: "not_yet",
+        examTitle: candidate.exam.title,
+        opensAt: candidate.session.opensAt,
+      };
+    if (st === "closed")
+      return {
+        state: "closed",
+        examTitle: candidate.exam.title,
+        closesAt: candidate.session.closesAt,
+      };
     return {
       state: "ok",
       mode: "assigned",
@@ -314,7 +324,12 @@ function NotReady({
   reason,
 }: {
   examTitle: string;
-  reason: "not_published" | "disabled" | "wrong_mode" | "oral_login_required";
+  reason:
+    | "not_published"
+    | "disabled"
+    | "wrong_mode"
+    | "oral_login_required"
+    | "no_session";
 }) {
   const msg =
     reason === "disabled"
@@ -323,7 +338,9 @@ function NotReady({
         ? "Mã không khớp với chế độ đề thi hiện tại."
         : reason === "oral_login_required"
           ? "Đây là đề vấn đáp AI — đăng nhập và vào thi từ trang khoá học của bạn, không dùng mã này."
-          : "Đề thi chưa được publish, vui lòng chờ giảng viên xác nhận.";
+          : reason === "no_session"
+            ? "Mã này chưa gắn với ca thi nào. Liên hệ giám thị hoặc giảng viên để được cấp lại link."
+            : "Đề thi chưa được publish, vui lòng chờ giảng viên xác nhận.";
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center px-6 py-10 text-center">
       <AlertCircle className="mx-auto h-16 w-16 text-amber-400" />

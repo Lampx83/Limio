@@ -6,6 +6,10 @@ import ExamPlayer from "@/components/ExamPlayer";
 
 export const dynamic = "force-dynamic";
 
+// URL của trang này mang khoá phiên (?st=). Không gửi nó đi qua Referer khi bài
+// thi có liên kết ra ngoài (đoạn văn, tài liệu tham khảo).
+export const metadata = { referrer: "no-referrer" as const };
+
 export default async function ExamRuntimePage({
   params,
   searchParams,

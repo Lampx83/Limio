@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * A7.7.3 — Multi-tab detection.
@@ -21,6 +21,12 @@ export default function MultiTabDetector({
   onConflict: (peerTabId: string) => void;
 }) {
   const [show, setShow] = useState(false);
+  // Giữ callback trong ref. ExamPlayer truyền một hàm MỚI mỗi lần dựng lại (mỗi
+  // giây, do đồng hồ đếm ngược); để nó trong dependency thì mỗi giây effect bị
+  // gỡ/gắn lại: tabId mới, `flagged` về false, "hello" phát lại — nên khi có tab
+  // thứ hai, sự cố multi_tab bị ghi lặp mỗi giây và lớp phủ đỏ hiện lại liên tục.
+  const onConflictRef = useRef(onConflict);
+  onConflictRef.current = onConflict;
 
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;
@@ -38,7 +44,7 @@ export default function MultiTabDetector({
       if (peer.kind === "hello" || peer.kind === "ack") {
         if (!flagged) {
           flagged = true;
-          onConflict(peer.tabId);
+          onConflictRef.current(peer.tabId);
           setShow(true);
         }
       }
@@ -50,7 +56,7 @@ export default function MultiTabDetector({
       ch.removeEventListener("message", onMessage);
       ch.close();
     };
-  }, [attemptId, onConflict]);
+  }, [attemptId]);
 
   if (!show) return null;
   return (

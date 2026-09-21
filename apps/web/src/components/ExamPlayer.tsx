@@ -407,6 +407,16 @@ export default function ExamPlayer(props: Props) {
     sessionTokenRef.current = j.sessionToken;
     setSessionToken(j.sessionToken);
     setSaveState("idle");
+    // Đường học viên đăng nhập mang khoá phiên trên URL (?st=) và trang ưu tiên nó
+    // hơn khoá trong DB. Không cập nhật URL thì F5 sau khi "Tiếp tục trên thiết bị
+    // này" tải lại với khoá cũ và bị đánh dấu stale ngay.
+    try {
+      const u = new URL(window.location.href);
+      if (u.searchParams.has("st")) {
+        u.searchParams.set("st", j.sessionToken);
+        window.history.replaceState(null, "", u.toString());
+      }
+    } catch { /* URL không đọc được — bỏ qua */ }
     // Đẩy lại những câu bị từ chối vì khoá cũ.
     for (const qid of [...pendingSync.current]) {
       const v = answersRef.current[qid];
