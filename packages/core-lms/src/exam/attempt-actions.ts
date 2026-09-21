@@ -227,6 +227,70 @@ export async function resetAttemptSession(
   return updated;
 }
 
+/** Thời hạn của quyền vào lại do giảng viên cấp (phút). */
+export const REENTRY_GRANT_MINUTES = 15;
+
+/**
+ * Cho một thí sinh vào lại bài đang làm dở dù không qua được bước xác thực.
+ *
+ * Thí sinh vào bằng mã thi mở chỉ vào lại được khi nhập đúng email/SĐT (hoặc họ
+ * tên) đã dùng lúc đầu — xem isSameOwner trong code-access.ts. Người quên/gõ sai
+ * thì kẹt: "Reset session" không giúp được vì nó chỉ xoay khoá phiên cho máy còn
+ * cookie. Thao tác này là đường thoát: giảng viên/giám thị (đã tự nhận diện người
+ * đó tại chỗ) mở một quyền vào lại DÙNG MỘT LẦN, hết hạn sau
+ * REENTRY_GRANT_MINUTES phút. Lượt vào lại tiếp theo chỉ cần nhập MSSV; thông tin
+ * email/SĐT họ nhập lúc đó trở thành yếu tố xác thực mới.
+ *
+ * Lưu trong ExamCandidate.metadata (không cần migration). Chỉ dùng cho thí sinh
+ * vào bằng mã; học viên đăng nhập không có bước này.
+ */
+export async function grantAttemptReentry(
+  actorUserId: string,
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<{ expiresAt: Date }> {
+  const a = await loadAttemptForAction(attemptId, db);
+  await assertCanModerateLiveExamForExam(actorUserId, a, db);
+  if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
+
+  const att = await db.examAttempt.findUnique({
+    where: { id: attemptId },
+    select: { candidateId: true, candidate: { select: { metadata: true } } },
+  });
+  if (!att?.candidateId || !att.candidate)
+    throw new ExamError("validation_failed", {
+      message: "Chỉ dùng cho thí sinh vào bằng mã thi (học viên đăng nhập không cần bước này).",
+    });
+
+  const expiresAt = new Date(Date.now() + REENTRY_GRANT_MINUTES * 60_000);
+  const meta =
+    att.candidate.metadata && typeof att.candidate.metadata === "object"
+      ? (att.candidate.metadata as Record<string, unknown>)
+      : {};
+  await db.examCandidate.update({
+    where: { id: att.candidateId },
+    data: { metadata: { ...meta, reentryGrantedUntil: expiresAt.toISOString() } as never },
+  });
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamAttemptSessionReset,
+    {
+      examId: a.examId,
+      attemptId,
+      candidateId: att.candidateId,
+      action: "reentry_granted",
+      expiresAt: expiresAt.toISOString(),
+    },
+    {
+      courseId: a.courseId,
+      candidateId: att.candidateId,
+      eventKey: `exam.attempt.reentry_granted:${attemptId}:${Date.now()}`,
+    },
+    db,
+  );
+  return { expiresAt };
+}
+
 /**
  * Flag an attempt (status=flagged). Does NOT auto-zero the score — instructor
  * decides during grading whether to award partial credit (§spec).

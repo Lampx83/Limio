@@ -528,6 +528,40 @@ const AttemptCard = memo(function AttemptCard({
 function ActionMenu({ a }: { a: AttemptLive }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
+
+  // Thí sinh vào bằng mã thi mở quên email/SĐT đã nhập lần đầu thì kẹt ở bước
+  // xác thực khi vào lại. Thao tác này mở cho họ một quyền vào lại dùng một lần.
+  const grantReentry = async () => {
+    if (
+      !window.confirm(
+        `Cho ${a.userName ?? "thí sinh này"} vào lại bài?\n\n` +
+          "Chỉ làm sau khi bạn đã tự nhận ra đúng người (thẻ sinh viên, có mặt tại phòng). " +
+          "Họ sẽ vào lại bằng cách nhập mã sinh viên, không cần email/SĐT cũ; quyền dùng một lần và hết hạn sau 15 phút.",
+      )
+    )
+      return;
+    setBusy("reentry");
+    setErr(null);
+    setOkMsg(null);
+    try {
+      const res = await fetch(`/api/exam-attempts/${a.attemptId}/allow-reentry`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        setErr(j?.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setOkMsg(
+        "Đã mở quyền vào lại trong 15 phút. Bảo sinh viên vào lại link thi và nhập mã sinh viên; email/SĐT nhập lần này sẽ dùng cho các lần sau.",
+      );
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const call = async (
     label: string,
@@ -589,6 +623,15 @@ function ActionMenu({ a }: { a: AttemptLive }) {
         >
           Reset session
         </ActionBtn>
+        {a.subjectType === "open" && (
+          <ActionBtn
+            disabled={!inProgress || busy !== null}
+            loading={busy === "reentry"}
+            onClick={grantReentry}
+          >
+            Cho vào lại
+          </ActionBtn>
+        )}
         <ActionBtn
           disabled={!inProgress || busy !== null}
           loading={busy === "force"}
@@ -643,6 +686,11 @@ function ActionMenu({ a }: { a: AttemptLive }) {
           <MessageSquare className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Message
         </ActionBtn>
       </div>
+      {okMsg && (
+        <div className="mt-1 text-[11px] text-emerald-700" data-testid="action-ok">
+          {okMsg}
+        </div>
+      )}
       {err && (
         <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-red-700" data-testid="action-error">
           <AlertTriangle className="h-3 w-3 shrink-0" /> {err}

@@ -8,6 +8,7 @@ import {
   createExamQuestion,
   createPassage,
   ensureDefaultSession,
+  grantAttemptReentry,
   publishExam,
 } from "../";
 import { capDurationToWindow, EXAM_CLOSE_GRACE_SEC } from "../session-window";
@@ -64,7 +65,7 @@ async function setup(slug: string, closesInMin = 120) {
       closesAt: new Date(now + closesInMin * 60_000),
     },
   });
-  return { examId, sessionId, code };
+  return { examId, sessionId, code, ownerId: owner.userId };
 }
 
 const student = (over: Record<string, string> = {}) => ({
@@ -192,6 +193,91 @@ describe("vào lại bài — yếu tố xác thực là email/SĐT đã nhập 
     await expect(
       claimByOpenCode(code, student({ displayName: "Người khác", email: "x@example.com" })),
     ).rejects.toMatchObject({ code: "student_code_in_use" });
+  });
+});
+
+describe("giảng viên cho vào lại (gỡ kẹt khi sinh viên quên email/SĐT)", () => {
+  it("sau khi cho vào lại: nhập MSSV với thông tin khác vẫn vào được bài cũ, và chỉ MỘT lần", async () => {
+    const { code, ownerId } = await setup("grant", 120);
+    const first = await claimByOpenCode(code, student({ email: "goc@example.com" }));
+    await grantAttemptReentry(ownerId, first.attemptId);
+
+    const again = await claimByOpenCode(code, student({ email: "moi@example.com" }));
+    expect(again.attemptId).toBe(first.attemptId);
+    expect(again.resumed).toBe(true);
+
+    // Quyền đã dùng hết: người khác nhập email lạ không vào được nữa...
+    await expect(
+      claimByOpenCode(code, student({ email: "ke.gian@example.com" })),
+    ).rejects.toMatchObject({ code: "student_code_in_use" });
+    // ...còn email vừa nhập sau khi được cho vào lại trở thành yếu tố mới.
+    const third = await claimByOpenCode(code, student({ email: "moi@example.com" }));
+    expect(third.attemptId).toBe(first.attemptId);
+    // Email cũ không còn giá trị.
+    await expect(
+      claimByOpenCode(code, student({ email: "goc@example.com" })),
+    ).rejects.toMatchObject({ code: "student_code_in_use" });
+  });
+
+  it("quyền vào lại hết hạn thì không còn tác dụng", async () => {
+    const { code, ownerId } = await setup("grant-exp", 120);
+    const first = await claimByOpenCode(code, student({ email: "goc@example.com" }));
+    await grantAttemptReentry(ownerId, first.attemptId);
+    const a = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: first.attemptId },
+      select: { candidateId: true },
+    });
+    const c = await prisma.examCandidate.findUniqueOrThrow({ where: { id: a.candidateId! } });
+    await prisma.examCandidate.update({
+      where: { id: c.id },
+      data: {
+        metadata: {
+          ...(c.metadata as object),
+          reentryGrantedUntil: new Date(Date.now() - 1000).toISOString(),
+        },
+      },
+    });
+    await expect(
+      claimByOpenCode(code, student({ email: "moi@example.com" })),
+    ).rejects.toMatchObject({ code: "student_code_in_use" });
+  });
+
+  it("người không có quyền thì không cho vào lại được", async () => {
+    const { code } = await setup("grant-authz", 120);
+    const first = await claimByOpenCode(code, student());
+    const stranger = await registerUser(
+      { email: "oc-stranger@e.com", password: "password1234", displayName: "X" },
+      BASE,
+    );
+    await expect(grantAttemptReentry(stranger.userId, first.attemptId)).rejects.toMatchObject({
+      code: "forbidden",
+    });
+  });
+
+  it("bài đã nộp thì không cho vào lại", async () => {
+    const { code, ownerId } = await setup("grant-done", 120);
+    const first = await claimByOpenCode(code, student());
+    await prisma.examAttempt.update({
+      where: { id: first.attemptId },
+      data: { status: "submitted", submittedAt: new Date() },
+    });
+    await expect(grantAttemptReentry(ownerId, first.attemptId)).rejects.toMatchObject({
+      code: "attempt_not_in_progress",
+    });
+  });
+
+  it("bài của học viên đăng nhập (không có MSSV) không dùng được thao tác này", async () => {
+    const { examId, ownerId } = await setup("grant-user", 120);
+    const u = await registerUser(
+      { email: "oc-user@e.com", password: "password1234", displayName: "U" },
+      BASE,
+    );
+    const a = await prisma.examAttempt.create({
+      data: { examId, userId: u.userId, durationSec: 3600 },
+    });
+    await expect(grantAttemptReentry(ownerId, a.id)).rejects.toMatchObject({
+      code: "validation_failed",
+    });
   });
 });
 

@@ -153,6 +153,15 @@ function normaliseEmail(raw: unknown): string | undefined {
   return e;
 }
 
+/** Giảng viên đã cấp quyền vào lại (grantAttemptReentry) và còn hạn? */
+function hasActiveReentryGrant(metadata: unknown, now: Date): boolean {
+  if (!metadata || typeof metadata !== "object") return false;
+  const until = (metadata as { reentryGrantedUntil?: unknown }).reentryGrantedUntil;
+  if (typeof until !== "string") return false;
+  const t = new Date(until).getTime();
+  return Number.isFinite(t) && t > now.getTime();
+}
+
 /**
  * Người vừa nhập có đúng là chủ của candidate đã có không?
  *
@@ -167,10 +176,12 @@ function normaliseEmail(raw: unknown): string | undefined {
 function isSameOwner(
   stored: { displayName: string; metadata: unknown },
   input: OpenClaimInput,
+  now: Date,
 ): boolean {
   const m = (stored.metadata && typeof stored.metadata === "object"
     ? stored.metadata
     : {}) as { email?: unknown; phone?: unknown };
+  if (hasActiveReentryGrant(stored.metadata, now)) return true;
   const storedEmail =
     typeof m.email === "string" && m.email.trim() ? m.email.trim().toLowerCase() : null;
   const storedPhone =
@@ -392,7 +403,27 @@ export async function claimByOpenCode(
         if (last) {
           if (last.status !== "in_progress")
             throw new ExamError("attempt_already_submitted");
-          if (!isSameOwner(existing, input)) throw new ExamError("student_code_in_use");
+          if (!isSameOwner(existing, input, now)) throw new ExamError("student_code_in_use");
+          // Quyền vào lại của giảng viên chỉ dùng MỘT lần: thu hồi, và lấy thông tin
+          // vừa nhập làm yếu tố xác thực mới (họ tên gốc giữ nguyên cho bảng điểm).
+          if (hasActiveReentryGrant(existing.metadata, now)) {
+            const {
+              reentryGrantedUntil: _grant,
+              email: _email,
+              phone: _phone,
+              ...rest
+            } = existing.metadata as Record<string, unknown>;
+            await tx.examCandidate.update({
+              where: { id: existing.id },
+              data: {
+                metadata: {
+                  ...rest,
+                  ...(input.email ? { email: input.email } : {}),
+                  ...(input.phone ? { phone: input.phone } : {}),
+                } as never,
+              },
+            });
+          }
           const newToken = randomUUID();
           await tx.examAttempt.update({
             where: { id: last.id },
