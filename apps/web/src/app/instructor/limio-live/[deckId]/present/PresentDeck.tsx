@@ -480,9 +480,14 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, zoom, sessionId]);
 
-  const handleEnd = async () => {
+  // Hộp xác nhận trong app (thay confirm() của trình duyệt — không đổi được giao diện và bị chặn ở fullscreen).
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const handleEnd = () => {
+    if (sessionId) setConfirmEnd(true);
+  };
+  const doEnd = async () => {
     if (!sessionId) return;
-    if (!confirm("Kết thúc buổi trình chiếu này? Bạn vẫn có thể xem lại kết quả sau.")) return;
+    setConfirmEnd(false);
     setEnding(true);
     try {
       await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/present/${sessionId}/end`), {
@@ -807,6 +812,10 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       </main>
 
       {showPreview && <Filmstrip slides={slides} currentId={currentSlideId} theme={deck.theme} onPick={(id) => sessionId && visitSlide(sessionId, id)} />}
+
+      {confirmEnd && (
+        <ConfirmEndDialog onCancel={() => setConfirmEnd(false)} onConfirm={doEnd} />
+      )}
 
       {slideshow && canQr && joinUrl && (
         <SlideshowQr
@@ -1554,6 +1563,52 @@ function JoinBox({
         </button>
       )}
       {big && <JoinEnlarged url={url} code={code} onClose={() => setBig(false)} />}
+    </div>
+  );
+}
+
+function ConfirmEndDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+  return (
+    <div
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="end-session-title"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
+      <div className="w-full max-w-sm rounded-2xl bg-[rgb(var(--surface))] p-5 text-[rgb(var(--text))] shadow-xl">
+        <h2 id="end-session-title" className="text-base font-bold">
+          Kết thúc buổi trình chiếu?
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          Học viên sẽ không trả lời thêm được nữa. Bạn vẫn có thể xem lại kết quả sau.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="rounded-full border border-token px-4 py-2 text-sm font-semibold hover:bg-[rgb(var(--surface-muted))]"
+          >
+            Tiếp tục trình chiếu
+          </button>
+          <button
+            onClick={onConfirm}
+            autoFocus
+            className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+          >
+            Kết thúc
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
