@@ -141,10 +141,6 @@ export async function startExamAttempt(
   durationSec: number;
 }> {
   const exam = await loadExamForRuntime(examId, db);
-  // A5.2 — eligibility (status, schedule window, cohort, enrollment, duration)
-  // all live in assertEligibleForExam now. Legacy exam.openAt/closeAt is the
-  // fallback when no ExamSchedule rows exist.
-  const eligibility = await assertEligibleForExam(userId, examId, db);
 
   // A5.8: composite unique was replaced with partial unique index in raw SQL;
   // Prisma can't model partial unique, so we use findFirst here. Still hits the
@@ -160,6 +156,10 @@ export async function startExamAttempt(
     },
   });
 
+  // Bài đã có được xử lý TRƯỚC khi kiểm tra ca còn mở: người đã nộp mở lại link
+  // ở trang khoá học sau giờ đóng phải được báo "đã nộp" (để chuyển sang kết quả),
+  // không phải "bài thi đã đóng"; người rớt mạng giữa chừng vẫn vào lại được bài
+  // của mình. Điều kiện tham dự (ghi danh, lớp, cửa sổ) đã được kiểm lúc bắt đầu.
   if (existing) {
     if (existing.status === "in_progress") {
       // Resume — rotate session token so new tab claims the lock (A7.4.7).
@@ -185,6 +185,10 @@ export async function startExamAttempt(
     throw new ExamError("attempt_already_submitted");
   }
 
+  // A5.2 — eligibility (status, schedule window, cohort, enrollment, duration)
+  // all live in assertEligibleForExam now. Legacy exam.openAt/closeAt is the
+  // fallback when no ExamSchedule rows exist. Chỉ cần khi BẮT ĐẦU bài mới.
+  const eligibility = await assertEligibleForExam(userId, examId, db);
   const durationSec = eligibility.durationSec;
   const attemptId = randomUUID();
   const sessionToken = randomUUID();

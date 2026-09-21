@@ -2,7 +2,8 @@
  * A5.8 — Code-based exam access services.
  *
  * `claimByOpenCode`     — Open mode: anyone with the exam's openCode can enter.
- *                         Each claim creates a fresh ExamCandidate + attempt.
+ *                         Một MSSV = một bài trong mỗi ca: vào lại (mất cookie,
+ *                         đổi máy) thì tiếp tục bài cũ chứ không tạo bài mới.
  *                         Bắt buộc: họ tên + mã sinh viên (định danh chính —
  *                         quét QR vào thi thường không có sẵn email/SĐT trong
  *                         tay). Phone/email chỉ tuỳ chọn.
@@ -23,7 +24,7 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 import { buildShuffleSnapshot } from "./attempts";
 import { ensureDefaultSession } from "./exam-rooms";
-import { sessionOpenState } from "./session-window";
+import { capDurationToWindow, sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
 
 /**
@@ -45,6 +46,17 @@ async function resolveDurationSec(
     if (session?.durationOverrideMin) return session.durationOverrideMin * 60;
   }
   return examDurationMin * 60;
+}
+
+/** So sánh họ tên không phân biệt dấu, hoa thường và khoảng trắng thừa. */
+function foldName(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 // Alphabet without ambiguous 0/O, 1/I/l. Easier to read off a slide.
@@ -141,6 +153,40 @@ function normaliseEmail(raw: unknown): string | undefined {
   return e;
 }
 
+/**
+ * Người vừa nhập có đúng là chủ của candidate đã có không?
+ *
+ * MSSV gần như công khai nên không đủ để chiếm lại một phiên đang làm dở. Yếu tố
+ * thứ hai:
+ *   - lần đầu có nhập email/SĐT → lần này phải nhập lại KHỚP một trong hai (họ tên
+ *     không còn được tính: bạn cùng lớp thường biết họ tên của nhau, còn email/SĐT
+ *     thì ít khi biết);
+ *   - lần đầu không nhập gì → so họ tên, để không khoá người dùng ra ngoài.
+ * Email so không phân biệt hoa thường; SĐT so theo chữ số.
+ */
+function isSameOwner(
+  stored: { displayName: string; metadata: unknown },
+  input: OpenClaimInput,
+): boolean {
+  const m = (stored.metadata && typeof stored.metadata === "object"
+    ? stored.metadata
+    : {}) as { email?: unknown; phone?: unknown };
+  const storedEmail =
+    typeof m.email === "string" && m.email.trim() ? m.email.trim().toLowerCase() : null;
+  const storedPhone =
+    typeof m.phone === "string" && m.phone.replace(/\D/g, "")
+      ? m.phone.replace(/\D/g, "")
+      : null;
+
+  if (storedEmail || storedPhone) {
+    return (
+      (storedEmail !== null && input.email === storedEmail) ||
+      (storedPhone !== null && input.phone === storedPhone)
+    );
+  }
+  return foldName(stored.displayName) === foldName(input.displayName);
+}
+
 /** Ca thủ công không có giờ đóng — cookie sống 24h là đủ cho một buổi học. */
 const MANUAL_SESSION_TTL_SEC = 24 * 3600;
 
@@ -152,7 +198,15 @@ function computeTtlSec(closeAt: Date | null): number {
   return Math.max(300, Math.min(remaining, 7 * 24 * 3600));
 }
 
-/** Q1: open-mode claim. Creates a fresh candidate + attempt every call. */
+/**
+ * Q1: open-mode claim. Một MSSV chỉ có MỘT bài trong mỗi ca:
+ *   - chưa có → tạo candidate + attempt;
+ *   - đang làm dở + đúng chủ (xem isSameOwner: email/SĐT đã nhập lần đầu, hoặc họ
+ *     tên nếu lần đầu không nhập) → tiếp tục bài đó (xoay sessionToken như luồng
+ *     mã được gán); sai → từ chối, vì MSSV là thông tin gần như công khai và
+ *     không được dùng để chiếm phiên của người đang thi;
+ *   - đã nộp → từ chối (không cho thi lại).
+ */
 export async function claimByOpenCode(
   code: unknown,
   rawInput: unknown,
@@ -253,13 +307,6 @@ export async function claimByOpenCode(
   // Null khi ca thủ công — computeTtlSec xử lý riêng.
   const closeAt = sessionMatch.closesAt;
 
-  // Cap on total candidates (anti-spam — Q2 IP rate-limit is layered on top).
-  if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
-    const used = await db.examCandidate.count({ where: { examId: exam.id } });
-    if (used >= exam.openMaxAttempts)
-      throw new ExamError("open_max_attempts_reached");
-  }
-
   const input: OpenClaimInput = parseOpenInput(rawInput);
 
   // PR2.12 — Validate cohortId server-side (client preview is convenience,
@@ -284,7 +331,12 @@ export async function claimByOpenCode(
   const sessionId =
     resolvedSessionId ?? (await ensureDefaultSession(exam.id, db));
 
-  const durationSec = await resolveDurationSec(exam.durationMin, sessionId, db);
+  // Không cho thời hạn làm bài vượt giờ đóng ca (xem capDurationToWindow).
+  const durationSec = capDurationToWindow(
+    await resolveDurationSec(exam.durationMin, sessionId, db),
+    closeAt,
+    now,
+  );
 
   // Resolve room:
   //   - Nhập mã phòng → lookup theo (sessionId, accessCode). Sai → reject.
@@ -306,8 +358,99 @@ export async function claimByOpenCode(
     resolvedRoomId = defaultRoom?.id ?? null;
   }
 
-  const { candidateId, attemptId, sessionToken } = await (db as typeof prisma).$transaction(
+  const claim = await (db as typeof prisma).$transaction(
     async (tx) => {
+      // Khoá theo (ca, MSSV) để hai lượt vào đồng thời (bấm đúp, hai máy cùng
+      // lúc) xếp hàng: lượt sau thấy candidate của lượt trước thay vì cùng tạo mới.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${sessionId}:${input.studentCode.toUpperCase()}`}))`;
+
+      const existing = await tx.examCandidate.findFirst({
+        where: {
+          sessionId,
+          OR: [
+            { metadata: { path: ["studentCode"], equals: input.studentCode } },
+            { metadata: { path: ["studentCode"], equals: input.studentCode.toUpperCase() } },
+            { metadata: { path: ["studentCode"], equals: input.studentCode.toLowerCase() } },
+          ],
+        },
+        select: {
+          id: true,
+          displayName: true,
+          metadata: true,
+          disabledAt: true,
+          attempts: {
+            orderBy: { startedAt: "desc" },
+            take: 1,
+            select: { id: true, status: true },
+          },
+        },
+      });
+
+      if (existing) {
+        if (existing.disabledAt) throw new ExamError("candidate_disabled");
+        const last = existing.attempts[0];
+        if (last) {
+          if (last.status !== "in_progress")
+            throw new ExamError("attempt_already_submitted");
+          if (!isSameOwner(existing, input)) throw new ExamError("student_code_in_use");
+          const newToken = randomUUID();
+          await tx.examAttempt.update({
+            where: { id: last.id },
+            data: {
+              sessionToken: newToken,
+              resumeCount: { increment: 1 },
+              lastHeartbeatAt: now,
+            },
+          });
+          return {
+            candidateId: existing.id,
+            attemptId: last.id,
+            sessionToken: newToken,
+            resumed: true,
+            displayName: existing.displayName,
+          };
+        }
+        // Candidate có sẵn nhưng chưa từng vào bài: dùng lại, chỉ tạo attempt.
+        const a = await tx.examAttempt.create({
+          data: {
+            examId: exam.id,
+            candidateId: existing.id,
+            candidateDisplayName: existing.displayName,
+            sessionId,
+            durationSec,
+            status: "in_progress",
+            lastHeartbeatAt: now,
+          },
+          select: { id: true, sessionToken: true },
+        });
+        const snap = await buildShuffleSnapshot(
+          exam.id,
+          a.id,
+          exam.shuffleQuestions,
+          exam.shuffleOptions,
+          tx as typeof prisma,
+        );
+        await tx.examAttempt.update({
+          where: { id: a.id },
+          data: { shuffleSnapshot: snap as unknown as Prisma.InputJsonValue },
+        });
+        return {
+          candidateId: existing.id,
+          attemptId: a.id,
+          sessionToken: a.sessionToken,
+          resumed: false,
+          displayName: existing.displayName,
+        };
+      }
+
+      // Cap on total candidates (anti-spam — Q2 IP rate-limit is layered on
+      // top). Chỉ áp cho người MỚI: người vào lại không được bị chặn vì ca đầy.
+      if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
+        const used = await tx.examCandidate.count({ where: { examId: exam.id } });
+        if (used >= exam.openMaxAttempts)
+          throw new ExamError("open_max_attempts_reached");
+      }
+
       const c = await tx.examCandidate.create({
         data: {
           examId: exam.id,
@@ -347,29 +490,42 @@ export async function claimByOpenCode(
         where: { id: a.id },
         data: { shuffleSnapshot: snapshot as unknown as Prisma.InputJsonValue },
       });
-      return { candidateId: c.id, attemptId: a.id, sessionToken: a.sessionToken };
+      return {
+        candidateId: c.id,
+        attemptId: a.id,
+        sessionToken: a.sessionToken,
+        resumed: false,
+        displayName: input.displayName,
+      };
     },
   );
+  const { candidateId, attemptId, sessionToken, resumed } = claim;
 
-  await emitEvent(
-    null,
-    LearningEventType.ExamCandidateCreated,
-    { examId: exam.id, candidateId, mode: "open_code" },
-    {
-      courseId: exam.courseId,
-      candidateId,
-      eventKey: `exam.candidate.created:${candidateId}`,
-    },
-    db,
-  );
+  // Candidate chỉ được tạo một lần; vào lại thì chỉ ghi sự kiện claim.
+  if (!resumed) {
+    await emitEvent(
+      null,
+      LearningEventType.ExamCandidateCreated,
+      { examId: exam.id, candidateId, mode: "open_code" },
+      {
+        courseId: exam.courseId,
+        candidateId,
+        eventKey: `exam.candidate.created:${candidateId}`,
+      },
+      db,
+    );
+  }
   await emitEvent(
     null,
     LearningEventType.ExamCandidateCodeClaimed,
-    { examId: exam.id, candidateId, attemptId, mode: "open_code" },
+    { examId: exam.id, candidateId, attemptId, mode: "open_code", resumed },
     {
       courseId: exam.courseId,
       candidateId,
-      eventKey: `exam.candidate.code_claimed:${attemptId}`,
+      // Mỗi lần vào lại là một lượt claim riêng, đừng để dedupe nuốt mất.
+      eventKey: resumed
+        ? `exam.candidate.code_claimed:${attemptId}:${Date.now()}`
+        : `exam.candidate.code_claimed:${attemptId}`,
     },
     db,
   );
@@ -379,8 +535,8 @@ export async function claimByOpenCode(
     attemptId,
     examId: exam.id,
     sessionToken,
-    displayName: input.displayName,
-    resumed: false,
+    displayName: claim.displayName,
+    resumed,
     ttlSec: computeTtlSec(closeAt),
   };
 }
@@ -507,10 +663,10 @@ export async function claimByAssignedCode(
     sessionToken = newToken;
     resumed = true;
   } else {
-    const durationSec = await resolveDurationSec(
-      exam.durationMin,
-      candidate.sessionId,
-      db,
+    const durationSec = capDurationToWindow(
+      await resolveDurationSec(exam.durationMin, candidate.sessionId, db),
+      closeAt,
+      now,
     );
     const a = await db.examAttempt.create({
       data: {

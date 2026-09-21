@@ -48,3 +48,27 @@ export function sessionOpenState(
 export function isSessionOpen(s: SessionWindowInput, now: Date): boolean {
   return sessionOpenState(s, now) === "open";
 }
+
+/**
+ * Ân hạn sau `closesAt` cho bài đang làm dở (giây). Bài bắt đầu sát giờ đóng
+ * vẫn có chút thời gian nộp thay vì bị cắt tức thì.
+ */
+export const EXAM_CLOSE_GRACE_SEC = 60;
+
+/**
+ * Thời hạn làm bài không được vượt quá giờ đóng ca (+ ân hạn).
+ *
+ * Trước đây durationSec được chốt đủ thời lượng bất kể giờ vào, nên thí sinh
+ * vào lúc `closesAt - 1 phút` vẫn làm trọn 60 phút — vừa bất công với bạn cùng
+ * ca, vừa làm chính sách `after_close` (lộ đáp án khi ca đóng) lộ đáp án khi
+ * người đó còn đang làm. Ca thủ công (closesAt = null) không có hạn.
+ */
+export function capDurationToWindow(
+  durationSec: number,
+  closesAt: Date | null,
+  now: Date,
+): number {
+  if (closesAt === null) return durationSec;
+  const untilCloseSec = Math.floor((closesAt.getTime() - now.getTime()) / 1000);
+  return Math.min(durationSec, Math.max(0, untilCloseSec) + EXAM_CLOSE_GRACE_SEC);
+}

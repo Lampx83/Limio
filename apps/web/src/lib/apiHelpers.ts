@@ -160,6 +160,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "access_mode_mismatch" ||
               err.code === "candidate_has_attempts" ||
               err.code === "session_has_attempts" ||
+              err.code === "student_code_in_use" ||
               err.code === "cohort_has_attempts" ||
               err.code === "cohort_name_taken" ||
               err.code === "cohort_required"

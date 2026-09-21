@@ -15,7 +15,7 @@ import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
 import type { RevealPolicy } from "./reveal-policy";
-import { isSessionOpen, sessionOpenState } from "./session-window";
+import { capDurationToWindow, isSessionOpen, sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
 
 // ============================================================================
@@ -776,5 +776,9 @@ export async function assertEligibleForExam(
   }
 
   const durationMin = picked.durationOverrideMin ?? exam.durationMin;
-  return { durationSec: durationMin * 60, scheduleId: picked.id };
+  return {
+    // Không vượt quá giờ đóng ca (+ ân hạn) — xem capDurationToWindow.
+    durationSec: capDurationToWindow(durationMin * 60, picked.closesAt, now),
+    scheduleId: picked.id,
+  };
 }

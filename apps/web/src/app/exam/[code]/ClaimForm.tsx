@@ -62,17 +62,19 @@ export default function ClaimForm({
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const j = (await res.json().catch(() => null)) as { error?: string } | null;
-        setErr(humanizeError(j?.error ?? `HTTP ${res.status}`));
+        const j = (await res.json().catch(() => null)) as ClaimErrorBody | null;
+        setErr(humanizeError(j?.error ?? `HTTP ${res.status}`, j));
         setStage({ kind: "form" });
+        setBusy(false);
         return;
       }
       const j = (await res.json()) as { attemptId: string };
+      // Giữ nút ở trạng thái bận cho tới khi chuyển trang xong: nhả sớm thì bấm đúp
+      // sẽ gửi hai lượt vào thi.
       router.replace(`/exam-take/${j.attemptId}`);
     } catch {
       setErr("Lỗi mạng — thử lại");
       setStage({ kind: "form" });
-    } finally {
       setBusy(false);
     }
   };
@@ -244,7 +246,7 @@ export default function ClaimForm({
             placeholder="ban@example.com"
             inputMode="email"
             maxLength={200}
-            hint="Không bắt buộc. Điền nếu muốn tra cứu lại điểm sau này."
+            hint="Không bắt buộc, nhưng nên điền: dùng để vào lại bài nếu bị mất kết nối hoặc đổi máy, và để tra cứu điểm sau này."
           />
           <Field
             label="Số điện thoại"
@@ -253,6 +255,7 @@ export default function ClaimForm({
             placeholder="09xxxxxxxx"
             inputMode="tel"
             maxLength={20}
+            hint="Không bắt buộc. Cũng dùng để vào lại bài — điền email hoặc số điện thoại, nhớ giữ nguyên khi vào lại."
           />
           <Field
             label="Mã lớp học"
@@ -338,7 +341,36 @@ function Field({
   );
 }
 
-function humanizeError(code: string): string {
+interface ClaimErrorBody {
+  error?: string;
+  /** Server có thể kèm lý do cụ thể (chuỗi hoặc { reason, message }). */
+  details?: unknown;
+  retryAfter?: number;
+}
+
+/** Lấy câu giải thích cụ thể mà server đã gửi kèm, nếu có. */
+function detailMessage(body: ClaimErrorBody | null): string | null {
+  const d = body?.details;
+  if (typeof d === "string") return d;
+  if (d && typeof d === "object" && typeof (d as { message?: unknown }).message === "string") {
+    return (d as { message: string }).message;
+  }
+  return null;
+}
+
+function humanizeError(code: string, body: ClaimErrorBody | null = null): string {
+  // Sai mã phòng: server đã phân biệt, đừng nói chung là "mã thi không hợp lệ".
+  if (code === "invalid_code" && body?.details === "invalid_room_code") {
+    return "Mã phòng thi không đúng. Kiểm tra lại với giám thị.";
+  }
+  if (code === "rate_limited") {
+    const s = body?.retryAfter;
+    return s
+      ? `Có quá nhiều lượt thử từ mạng này. Vui lòng thử lại sau khoảng ${s} giây.`
+      : "Có quá nhiều lượt thử từ mạng này. Vui lòng chờ một lát rồi thử lại.";
+  }
+  const specific = code === "exam_not_open" ? detailMessage(body) : null;
+  if (specific) return specific;
   const map: Record<string, string> = {
     invalid_code: "Mã thi không hợp lệ hoặc đã hết hạn.",
     candidate_name_required: "Vui lòng nhập họ tên.",
@@ -351,7 +383,8 @@ function humanizeError(code: string): string {
     open_max_attempts_reached: "Ca thi đã đủ số lượng thí sinh tối đa.",
     candidate_disabled: "Tài khoản thí sinh đã bị vô hiệu hoá. Liên hệ giám thị.",
     attempt_already_submitted: "Bài thi đã được nộp trước đó.",
-    rate_limited: "Quá nhiều lần thử. Vui lòng chờ vài phút rồi thử lại.",
+    student_code_in_use:
+      "Mã sinh viên này đang làm bài trong ca thi. Nếu là bạn, hãy nhập đúng email hoặc số điện thoại đã dùng lúc đầu (nếu lúc đó bạn không nhập, hãy nhập đúng họ tên) để tiếp tục. Nếu không được, báo giám thị.",
     cohort_not_found: "Mã lớp không tồn tại. Kiểm tra lại với GV.",
     invalid_room_code: "Mã phòng thi không đúng. Kiểm tra lại với giám thị.",
     exam_not_written:

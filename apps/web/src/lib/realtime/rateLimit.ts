@@ -10,6 +10,32 @@ export type RateLimitResult = {
   resetMs: number; // ms còn lại đến khi cửa sổ trượt qua request cũ nhất
 };
 
+/**
+ * Xem cửa sổ đã đầy chưa MÀ KHÔNG tính thêm một lượt. Dùng cho hàng rào chỉ đếm
+ * các lần THẤT BẠI (vd sai mã thi): kiểm tra trước khi xử lý, ghi nhận bằng
+ * `rateLimit` chỉ khi thất bại — nên người dùng đúng trong cùng mạng không bị
+ * trừ vào ngân sách của người gõ sai.
+ */
+export async function peekRateLimit(
+  bucket: string,
+  limit: number,
+  windowMs: number,
+): Promise<{ blocked: boolean; resetMs: number }> {
+  const key = `rl:${bucket}`;
+  const now = Date.now();
+  const redis = getRedis();
+  const pipe = redis.multi();
+  pipe.zremrangebyscore(key, 0, now - windowMs);
+  pipe.zcard(key);
+  const res = await pipe.exec();
+  // Redis lỗi — fail open như rateLimit().
+  if (!res) return { blocked: false, resetMs: 0 };
+  if (Number(res[1]?.[1] ?? 0) < limit) return { blocked: false, resetMs: 0 };
+  const oldest = await redis.zrange(key, 0, 0, "WITHSCORES");
+  const oldestMs = oldest.length >= 2 ? Number(oldest[1]) : now;
+  return { blocked: true, resetMs: Math.max(0, oldestMs + windowMs - now) };
+}
+
 export async function rateLimit(
   bucket: string,
   limit: number,

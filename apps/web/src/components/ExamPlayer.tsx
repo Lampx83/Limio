@@ -4,6 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Megaphone, MessageSquare, Timer, WifiOff } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import {
+  diffDraftAgainstServer,
+  estimateClockSkewMs,
+  humanizeSubmitError,
+  remainingSec as calcRemainingSec,
+  retryDelayMs,
+} from "@/lib/examPlayerSync";
 import PassageView from "./exam/PassageView";
 import ExamQuestion, { type AnswerValue } from "./exam/ExamQuestion";
 import QuestionPalette from "./exam/QuestionPalette";
@@ -85,11 +92,17 @@ const draftKey = (attemptId: string) => `exam-draft-${attemptId}`;
 export default function ExamPlayer(props: Props) {
   const router = useRouter();
   const [sessionToken, setSessionToken] = useState(props.sessionToken);
+  // Mọi callback bất đồng bộ (hẹn giờ lưu, tự nộp khi hết giờ) đọc giá trị mới
+  // nhất qua ref. Bản cũ để closure của lần render đầu chạy suốt phiên nên tự nộp
+  // bằng `answers` ban đầu và khoá phiên cũ.
+  const sessionTokenRef = useRef(sessionToken);
+  useEffect(() => { sessionTokenRef.current = sessionToken; }, [sessionToken]);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>(() => {
     const m: Record<string, AnswerValue> = {};
     for (const a of props.initialAnswers) m[a.questionId] = a.answerJson as AnswerValue;
     // Restore any draft saved during a prior offline period. Draft wins per-question
-    // because it was written more recently than the server snapshot.
+    // because it was written more recently than the server snapshot. Những câu khác
+    // server sẽ được đẩy lên ngay khi mount (xem effect "flush bản nháp" bên dưới).
     try {
       const raw = localStorage.getItem(draftKey(props.attemptId));
       if (raw) {
@@ -103,6 +116,7 @@ export default function ExamPlayer(props: Props) {
   });
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
@@ -115,35 +129,88 @@ export default function ExamPlayer(props: Props) {
   // questionIds whose latest value is in localStorage but not yet confirmed by server.
   const pendingSync = useRef<Set<string>>(new Set());
 
-  // Server-authoritative remaining: clock skew = serverNow - clientNow at load.
-  const clockSkewMs = useMemo(
-    () => new Date(props.serverNow).getTime() - Date.now(),
-    [props.serverNow],
-  );
+  // Thời lượng có thể TĂNG giữa chừng (giảng viên gia hạn) nên là state, cập nhật
+  // qua heartbeat. Độ lệch đồng hồ cũng được chỉnh lại theo heartbeat.
+  const [durationSec, setDurationSec] = useState(props.durationSec);
+  const clockSkewRef = useRef(new Date(props.serverNow).getTime() - Date.now());
   const deadlineEpoch = useMemo(
-    () => new Date(props.startedAt).getTime() + props.durationSec * 1000,
-    [props.startedAt, props.durationSec],
+    () => new Date(props.startedAt).getTime() + durationSec * 1000,
+    [props.startedAt, durationSec],
   );
+  const deadlineRef = useRef(deadlineEpoch);
+  useEffect(() => { deadlineRef.current = deadlineEpoch; }, [deadlineEpoch]);
   const [remainingSec, setRemainingSec] = useState(() =>
-    Math.max(0, Math.floor((deadlineEpoch - (Date.now() + clockSkewMs)) / 1000)),
+    calcRemainingSec(deadlineEpoch, Date.now(), clockSkewRef.current),
   );
+
+  const clearLocalState = useCallback(() => {
+    try {
+      localStorage.removeItem(draftKey(props.attemptId));
+      for (const p of props.passages) {
+        localStorage.removeItem(`exam:${props.attemptId}:passage:${p.id}`);
+      }
+    } catch { /* storage unavailable — ignore */ }
+  }, [props.attemptId, props.passages]);
+
+  // Hỏi server hạn làm bài + trạng thái hiện tại (heartbeat). Trả null nếu không
+  // liên lạc được.
+  const syncFromServer = useCallback(async () => {
+    const t0 = Date.now();
+    try {
+      const res = await fetch(apiUrl(`/api/exam-attempts/${props.attemptId}/heartbeat`), {
+        method: "POST",
+      });
+      if (!res.ok) return null;
+      const j = (await res.json()) as {
+        serverNow?: string;
+        status?: string;
+        durationSec?: number;
+      };
+      const skew = estimateClockSkewMs(j.serverNow, t0, Date.now());
+      if (skew !== null) clockSkewRef.current = skew;
+      if (typeof j.durationSec === "number") setDurationSec(j.durationSec);
+      if (j.status && j.status !== "in_progress") {
+        // Bài đã bị nộp/chấm ở nơi khác (giám thị buộc nộp, tab khác...).
+        clearLocalState();
+        router.replace(props.resultUrl);
+      }
+      return j;
+    } catch {
+      return null;
+    }
+  }, [props.attemptId, props.resultUrl, router, clearLocalState]);
+
+  // Hết giờ → tự nộp. Hỏi server một lần trước khi nộp: có thể vừa được gia hạn
+  // mà heartbeat chưa kịp báo (tối đa 10s).
+  const onTimeUpRef = useRef<() => Promise<void>>(async () => undefined);
+  const submitAttemptRef = useRef<(auto?: boolean) => Promise<void>>(async () => undefined);
+  onTimeUpRef.current = async () => {
+    const j = await syncFromServer();
+    if (j?.status && j.status !== "in_progress") return;
+    if (
+      typeof j?.durationSec === "number" &&
+      calcRemainingSec(
+        new Date(props.startedAt).getTime() + j.durationSec * 1000,
+        Date.now(),
+        clockSkewRef.current,
+      ) > 0
+    ) {
+      return; // được gia hạn: state đổi, hẹn giờ chạy lại với hạn mới
+    }
+    await submitAttemptRef.current(true);
+  };
 
   useEffect(() => {
     const t = setInterval(() => {
-      const r = Math.max(
-        0,
-        Math.floor((deadlineEpoch - (Date.now() + clockSkewMs)) / 1000),
-      );
+      const r = calcRemainingSec(deadlineRef.current, Date.now(), clockSkewRef.current);
       setRemainingSec(r);
       if (r <= 0) {
         clearInterval(t);
-        // Auto-submit when timer expires.
-        submitAttempt(true).catch(() => undefined);
+        void onTimeUpRef.current();
       }
     }, 1_000);
     return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deadlineEpoch, clockSkewMs]);
+  }, [deadlineEpoch]);
 
   // Build render order from shuffle snapshot.
   const passageQuestionMap = useMemo(() => {
@@ -189,10 +256,35 @@ export default function ExamPlayer(props: Props) {
 
   // Autosave queue — per-question latest-write-wins debounce.
   const pendingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const retryTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const retryCount = useRef<Record<string, number>>({});
   const inflightHash = useRef<Record<string, string>>({});
+  const sendSaveRef = useRef<(qid: string, v: AnswerValue) => Promise<boolean>>(
+    async () => false,
+  );
 
+  // Lưu lỗi (5xx, 429, mất mạng) thì thử lại với thời gian chờ tăng dần, gửi giá
+  // trị MỚI NHẤT của câu đó. Bản cũ chỉ thử lại khi thí sinh sửa tiếp hoặc lúc
+  // nộp, nên một lần lỗi thoáng qua có thể để câu đó không bao giờ lên server.
+  const scheduleRetry = useCallback((qid: string) => {
+    if (retryTimers.current[qid]) return;
+    const n = retryCount.current[qid] ?? 0;
+    retryCount.current[qid] = n + 1;
+    retryTimers.current[qid] = setTimeout(() => {
+      delete retryTimers.current[qid];
+      if (!pendingSync.current.has(qid)) return;
+      const v = answersRef.current[qid];
+      if (v === undefined) {
+        pendingSync.current.delete(qid);
+        return;
+      }
+      void sendSaveRef.current(qid, v);
+    }, retryDelayMs(n));
+  }, []);
+
+  /** Trả true khi server đã xác nhận đã lưu. */
   const sendSave = useCallback(
-    async (questionId: string, answerJson: AnswerValue) => {
+    async (questionId: string, answerJson: AnswerValue): Promise<boolean> => {
       setSaveState("saving");
       try {
         const res = await fetch(
@@ -200,36 +292,73 @@ export default function ExamPlayer(props: Props) {
           {
             method: "PATCH",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ answerJson, sessionToken }),
+            body: JSON.stringify({ answerJson, sessionToken: sessionTokenRef.current }),
           },
         );
         if (res.status === 409) {
           const j = (await res.json().catch(() => null)) as { error?: string } | null;
           if (j?.error === "session_stale") {
+            // Giữ câu trong hàng đợi: sau khi bấm "Tiếp tục trên thiết bị này" sẽ
+            // được đẩy lại bằng khoá mới.
+            pendingSync.current.add(questionId);
             setSaveState("stale");
-            return;
+            return false;
           }
           if (j?.error === "attempt_already_submitted") {
+            clearLocalState();
             router.replace(props.resultUrl);
-            return;
+            return false;
           }
         }
         if (!res.ok) {
+          pendingSync.current.add(questionId);
           setSaveState("error");
-          return;
+          scheduleRetry(questionId);
+          return false;
         }
         const r = (await res.json()) as { answerHash: string; persisted: boolean };
         inflightHash.current[questionId] = r.answerHash;
-        pendingSync.current.delete(questionId);
-        setSaveState("saved");
+        retryCount.current[questionId] = 0;
+        // Chỉ coi là đã đồng bộ nếu giá trị vừa lưu vẫn là giá trị hiện tại; nếu
+        // thí sinh đã sửa tiếp trong lúc chờ phản hồi thì câu vẫn còn chờ lưu.
+        if (
+          JSON.stringify(answersRef.current[questionId] ?? null) ===
+          JSON.stringify(answerJson ?? null)
+        ) {
+          pendingSync.current.delete(questionId);
+        }
+        setSaveState(pendingSync.current.size === 0 ? "saved" : "saving");
+        return true;
       } catch {
         // Network failure — answer is already in localStorage (written by onChange).
         pendingSync.current.add(questionId);
         setSaveState(navigator.onLine ? "error" : "offline");
+        scheduleRetry(questionId);
+        return false;
       }
     },
-    [props.attemptId, sessionToken, router],
+    [props.attemptId, props.resultUrl, router, clearLocalState, scheduleRetry],
   );
+  useEffect(() => { sendSaveRef.current = sendSave; }, [sendSave]);
+
+  // Flush bản nháp lên server ngay khi mount: những câu làm lúc mất mạng rồi tải
+  // lại trang đang chỉ nằm trong localStorage. Bản cũ chỉ đọc nháp vào giao diện,
+  // nên màn hình hiện đủ đáp án còn server không có câu nào.
+  useEffect(() => {
+    let draft: Record<string, unknown> | null = null;
+    try {
+      const raw = localStorage.getItem(draftKey(props.attemptId));
+      draft = raw ? (JSON.parse(raw) as { answers: Record<string, unknown> }).answers : null;
+    } catch { /* storage unavailable — ignore */ }
+    for (const qid of diffDraftAgainstServer(draft, props.initialAnswers)) {
+      pendingSync.current.add(qid);
+    }
+    for (const qid of [...pendingSync.current]) {
+      const v = answersRef.current[qid];
+      if (v !== undefined) void sendSaveRef.current(qid, v);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Write the current answer for one question into the localStorage draft.
   const writeDraft = useCallback(
@@ -255,8 +384,15 @@ export default function ExamPlayer(props: Props) {
       pendingSync.current.add(questionId);
       const existing = pendingTimers.current[questionId];
       if (existing) clearTimeout(existing);
+      // Giá trị mới sẽ được gửi bởi lần debounce này, huỷ lần thử lại của giá trị cũ.
+      const retry = retryTimers.current[questionId];
+      if (retry) {
+        clearTimeout(retry);
+        delete retryTimers.current[questionId];
+      }
       pendingTimers.current[questionId] = setTimeout(() => {
-        sendSave(questionId, value);
+        delete pendingTimers.current[questionId];
+        void sendSave(questionId, value);
       }, AUTOSAVE_DEBOUNCE_MS);
     },
     [sendSave, writeDraft],
@@ -268,8 +404,14 @@ export default function ExamPlayer(props: Props) {
     });
     if (!res.ok) return false;
     const j = (await res.json()) as { sessionToken: string };
+    sessionTokenRef.current = j.sessionToken;
     setSessionToken(j.sessionToken);
     setSaveState("idle");
+    // Đẩy lại những câu bị từ chối vì khoá cũ.
+    for (const qid of [...pendingSync.current]) {
+      const v = answersRef.current[qid];
+      if (v !== undefined) void sendSaveRef.current(qid, v);
+    }
     return true;
   }, [props.attemptId]);
 
@@ -392,23 +534,19 @@ export default function ExamPlayer(props: Props) {
     };
   }, [sendSave]);
 
-  // A5.3 — Heartbeat for the instructor live dashboard. Fire-and-forget, 10s.
+  // A5.3 — Heartbeat for the instructor live dashboard, every 10s. Nay phản hồi
+  // mang theo hạn làm bài + trạng thái + giờ server (xem syncFromServer).
   useEffect(() => {
     let cancelled = false;
-    const ping = () => {
-      fetch(apiUrl(`/api/exam-attempts/${props.attemptId}/heartbeat`), {
-        method: "POST",
-      }).catch(() => {});
-    };
-    ping();
+    void syncFromServer();
     const t = setInterval(() => {
-      if (!cancelled) ping();
+      if (!cancelled) void syncFromServer();
     }, 10_000);
     return () => {
       cancelled = true;
       clearInterval(t);
     };
-  }, [props.attemptId]);
+  }, [syncFromServer]);
 
   // A5.3.5 — Poll instructor messages every 5s. Toast on new + ack on dismiss.
   const [messages, setMessages] = useState<
@@ -471,45 +609,76 @@ export default function ExamPlayer(props: Props) {
 
   const submitAttempt = useCallback(
     async (auto = false) => {
-      if (submitting) return;
+      if (submittingRef.current) return;
+      submittingRef.current = true;
       setSubmitting(true);
+      setError(null);
+      const fail = (msg: string) => {
+        setError(msg);
+        submittingRef.current = false;
+        setSubmitting(false);
+      };
       try {
-        // Flush any pending debounced saves first.
-        for (const [qid, timer] of Object.entries(pendingTimers.current)) {
-          clearTimeout(timer);
-          await sendSave(qid, answers[qid] ?? null);
-        }
-        const res = await fetch(
-          apiUrl(`/api/exam-attempts/${props.attemptId}/submit`),
-          { method: "POST" },
+        // Dừng mọi hẹn giờ lưu/thử lại, rồi đẩy MỌI câu chưa được server xác nhận
+        // bằng giá trị MỚI NHẤT (ref). Bản cũ dùng `answers` của closure lúc tạo
+        // hàm và duyệt các khoá timer không bao giờ được xoá, nên lúc hết giờ nó
+        // ghi đè đáp án bằng dữ liệu cũ.
+        const queued = new Set<string>([
+          ...pendingSync.current,
+          ...Object.keys(pendingTimers.current),
+        ]);
+        for (const t of Object.values(pendingTimers.current)) clearTimeout(t);
+        pendingTimers.current = {};
+        for (const t of Object.values(retryTimers.current)) clearTimeout(t);
+        retryTimers.current = {};
+        await Promise.all(
+          [...queued].map((qid) => {
+            const v = answersRef.current[qid];
+            return v === undefined ? Promise.resolve(true) : sendSaveRef.current(qid, v);
+          }),
         );
-        if (!res.ok && !auto) {
-          const j = (await res.json().catch(() => null)) as { error?: string } | null;
-          setError(j?.error ?? "submit_failed");
-          setSubmitting(false);
+        // Nộp tay khi còn câu chưa lên được server: dừng lại để thí sinh xử lý
+        // (mạng?) thay vì chấm bài thiếu câu. Nộp tự động (hết giờ) thì vẫn nộp.
+        const unsynced = pendingSync.current.size;
+        if (unsynced > 0 && !auto) {
+          fail(`Chưa lưu được ${unsynced} câu trả lời lên hệ thống. ${humanizeSubmitError("network_error")}`);
           return;
         }
-        // Clear localStorage for this attempt (A7.4.6).
-        localStorage.removeItem(draftKey(props.attemptId));
-        for (const p of props.passages) {
-          localStorage.removeItem(`exam:${props.attemptId}:passage:${p.id}`);
+        // Nộp tự động thử lại vài lần: lỗi mạng thoáng qua không được làm mất bài.
+        const tries = auto ? 4 : 1;
+        let lastCode = "network_error";
+        for (let i = 0; i < tries; i++) {
+          try {
+            const res = await fetch(
+              apiUrl(`/api/exam-attempts/${props.attemptId}/submit`),
+              { method: "POST" },
+            );
+            if (res.ok) {
+              clearLocalState();
+              router.replace(props.resultUrl);
+              return;
+            }
+            const j = (await res.json().catch(() => null)) as { error?: string } | null;
+            lastCode = j?.error ?? "submit_failed";
+            if (lastCode === "attempt_already_submitted") {
+              clearLocalState();
+              router.replace(props.resultUrl);
+              return;
+            }
+          } catch {
+            lastCode = "network_error";
+          }
+          if (i < tries - 1) await new Promise((r) => setTimeout(r, 3_000));
         }
-        router.replace(props.resultUrl);
+        // Không nộp được: giữ nguyên bản nháp trên máy, cho thí sinh bấm nộp lại.
+        fail(humanizeSubmitError(lastCode));
       } catch {
-        setError("network_error");
-        setSubmitting(false);
+        fail(humanizeSubmitError("network_error"));
       }
     },
-    [
-      submitting,
-      sendSave,
-      answers,
-      props.attemptId,
-      props.passages,
-      props.resultUrl,
-      router,
-    ],
+    [props.attemptId, props.resultUrl, router, clearLocalState],
   );
+  submitAttemptRef.current = submitAttempt;
 
   const minutes = Math.floor(remainingSec / 60);
   const seconds = remainingSec % 60;
@@ -722,7 +891,7 @@ export default function ExamPlayer(props: Props) {
 
       {error && (
         <div className="mb-3 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
-          Lỗi: {error}
+          {error}
         </div>
       )}
 
@@ -842,7 +1011,7 @@ function SaveBadge({ state }: { state: SaveState }) {
     idle: { text: "Chưa thay đổi", cls: "text-faint" },
     saving: { text: "Đang lưu…", cls: "text-amber-700" },
     saved: { text: "Đã lưu", cls: "text-emerald-700" },
-    error: { text: "Lưu lỗi", cls: "text-red-700" },
+    error: { text: "Lưu lỗi — đang thử lại", cls: "text-red-700" },
     stale: { text: "Phiên đã được mở ở tab khác", cls: "text-red-700" },
     offline: { text: "Lưu tạm — chờ kết nối", cls: "text-amber-700" },
   };

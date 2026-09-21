@@ -41,7 +41,7 @@ export default async function ExamTakePage({
   if (!runtime) notFound();
 
   if (runtime.status !== "in_progress") {
-    redirect(`/exam-take/${params.attemptId}/result`);
+    redirect(`/exam-take/${params.attemptId}/submitted`);
   }
 
   const examDetail = await prisma.exam.findUniqueOrThrow({

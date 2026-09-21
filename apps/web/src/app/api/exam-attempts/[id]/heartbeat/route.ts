@@ -110,5 +110,27 @@ export async function POST(
     // mark step needed; the key auto-expires after 30s.
   }
 
-  return NextResponse.json({ ok: true });
+  // Trả lại trạng thái + hạn làm bài hiện tại (đọc theo khoá chính, rẻ):
+  //   - durationSec: giảng viên gia hạn (extendAttempt) chỉ đổi DB; không có
+  //     đường này thì đồng hồ trên máy thí sinh vẫn chạy về 0 theo hạn cũ và tự
+  //     nộp bài giữa lúc được cho thêm giờ.
+  //   - status: bài bị nộp/chấm ở nơi khác (giám thị buộc nộp, mở ở tab khác) thì
+  //     máy này biết mà chuyển sang trang kết quả.
+  //   - serverNow: để máy thí sinh chỉnh độ lệch đồng hồ liên tục, không chỉ một
+  //     lần lúc tải trang.
+  const cur = await prisma.examAttempt.findUnique({
+    where: { id: params.id },
+    select: { status: true, durationSec: true, userId: true, candidateId: true },
+  });
+  // Chỉ trả cho đúng chủ bài (nhánh cache ở trên không kiểm quyền sở hữu).
+  const mine =
+    cur !== null &&
+    (subject.kind === "user"
+      ? cur.userId === subject.userId
+      : cur.candidateId === subject.candidateId);
+  return NextResponse.json({
+    ok: true,
+    serverNow: new Date().toISOString(),
+    ...(mine ? { status: cur.status, durationSec: cur.durationSec } : {}),
+  });
 }

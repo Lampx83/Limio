@@ -46,6 +46,7 @@ export class ExamError extends Error {
       | "candidate_not_found"
       | "candidate_has_attempts"
       | "session_has_attempts"
+      | "student_code_in_use"
       | "cohort_has_attempts"
       | "candidate_code_collision"
       | "bank_not_found"

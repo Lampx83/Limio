@@ -6,7 +6,7 @@ import {
 } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
-import { allow, clientIp } from "@/lib/rate-limit";
+import { allow, clientIp, isBlocked } from "@/lib/rate-limit";
 import {
   EXAM_SESSION_COOKIE,
   examSessionCookieOptions,
@@ -28,9 +28,12 @@ export const runtime = "nodejs";
  * On success: HttpOnly cookie `exam_session` is set; response carries the
  * attemptId so the client can redirect to /exam-take/[attemptId].
  *
- * Rate limits (Q2):
- *   - 50 claims / hour / IP for open mode (covers shared-IP labs)
- *   - 10 claims / minute / IP total (anti-brute-force on unknown codes)
+ * Rate limits — chống dò mã, nhưng KHÔNG được chặn cả phòng máy dùng chung một IP
+ * (NAT): 60 sinh viên vào cùng lúc là chuyện bình thường, không phải tấn công.
+ *   - đoán sai mã: 10 lần THẤT BẠI / phút / IP (chỉ tính lượt sai, lượt đúng không tốn)
+ *   - lũ request: 300 / phút / IP (chặn flood, vẫn dư cho một phòng thi lớn)
+ *   - mã thi mở: 500 lượt / giờ / (IP, mã) — nhân bản người thi đã được chặn ở
+ *     tầng dữ liệu (một MSSV một bài), đây chỉ là van xả chống spam
  */
 export async function POST(req: Request) {
   const ip = clientIp(req);
@@ -40,9 +43,17 @@ export async function POST(req: Request) {
   // + code-validity still protect this endpoint.
   const throttle = ip !== "unknown";
 
-  // Burst guard first — same for both modes. Cheap.
+  // Hàng rào chống dò mã: đã sai quá nhiều lần thì chặn TRƯỚC khi xử lý, kẻ dò
+  // mã không được biết lượt kế tiếp có đúng hay không.
   if (throttle) {
-    const burst = await allow("claim:burst", ip, 10, 60_000);
+    const failures = await isBlocked("claim:invalid", ip, 10, 60_000);
+    if (!failures.ok) {
+      return NextResponse.json(
+        { error: "rate_limited", retryAfter: failures.retryAfterSec },
+        { status: 429, headers: { "retry-after": String(failures.retryAfterSec) } },
+      );
+    }
+    const burst = await allow("claim:burst", ip, 300, 60_000);
     if (!burst.ok) {
       return NextResponse.json(
         { error: "rate_limited", retryAfter: burst.retryAfterSec },
@@ -74,9 +85,9 @@ export async function POST(req: Request) {
   let result;
   try {
     if (code.length === 6) {
-      // Wider rate limit only on open-mode attempts (Q2: 50/h).
+      // Van xả riêng cho mã thi mở (theo IP + mã, xem chú thích đầu file).
       if (throttle) {
-        const hourly = await allow("claim:open", ip, 50, 60 * 60_000);
+        const hourly = await allow("claim:open", `${ip}:${code}`, 500, 60 * 60_000);
         if (!hourly.ok) {
           return NextResponse.json(
             { error: "rate_limited", retryAfter: hourly.retryAfterSec },
@@ -94,6 +105,15 @@ export async function POST(req: Request) {
       throw new ExamError("invalid_code");
     }
   } catch (e) {
+    // Ghi nhận lượt sai vào hàng rào chống dò (xem đầu hàm): đoán mã, và đoán
+    // email/SĐT để chiếm lại một bài đang làm (student_code_in_use).
+    if (
+      throttle &&
+      e instanceof ExamError &&
+      (e.code === "invalid_code" || e.code === "student_code_in_use")
+    ) {
+      await allow("claim:invalid", ip, 10, 60_000);
+    }
     const mapped = mapKnownError(e);
     if (mapped) return mapped;
     throw e;
