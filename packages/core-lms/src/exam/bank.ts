@@ -21,6 +21,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse, assertCanEditExam, canEditCourse } from "../courses/authz";
 import { ExamError } from "./types";
+import { configSchemaForType } from "./schemas";
 
 const BankVisibility = z.enum(["private", "course", "org"]);
 const QuestionType = z.enum([
@@ -250,6 +251,32 @@ const MetadataFields = z.object({
   editNote: z.string().max(2000).optional(),
 });
 
+/**
+ * Đưa config về dạng chuẩn trước khi lưu/kiểm: T/F/NG cũ lưu "not_given" (UI
+ * bank từng ghi thế) trong khi schema và trình làm bài chỉ hiểu "notgiven".
+ * Trả bản sao; giữ nguyên mọi khoá ngoài schema (vd `topic`).
+ */
+function canonicalizeBankConfig(type: string, config: Record<string, unknown>) {
+  if (type === "true_false_notgiven" && config.correct === "not_given") {
+    return { ...config, correct: "notgiven" };
+  }
+  return config;
+}
+
+/**
+ * Kiểm config đúng schema của loại câu (cùng schema phía đề). Chỉ kiểm, không
+ * thay config bằng bản đã parse — zod sẽ loại khoá lạ như `topic`.
+ * Trả về danh sách lỗi (rỗng = hợp lệ).
+ */
+function bankConfigIssues(type: string, config: unknown): string[] {
+  const r = configSchemaForType(type).safeParse(config);
+  if (r.success) return [];
+  return r.error.issues.map((i) => {
+    const path = i.path.join(".");
+    return path ? `${path}: ${i.message}` : i.message;
+  });
+}
+
 export const CreateBankQuestionInput = z.object({
   type: QuestionType,
   prompt: z.string().min(1).max(10_000),
@@ -311,6 +338,9 @@ export async function createBankQuestion(
   if (!parsed.success)
     throw new ExamError("validation_failed", parsed.error.flatten());
   const d = parsed.data;
+  const config = canonicalizeBankConfig(d.type, d.config);
+  const issues = bankConfigIssues(d.type, config);
+  if (issues.length > 0) throw new ExamError("validation_failed", { config: issues });
 
   // Default author = tên hoặc email creator (chỉ khi user không nhập tay).
   let authorName = d.authorName;
@@ -334,7 +364,7 @@ export async function createBankQuestion(
         code,
         type: d.type,
         prompt: d.prompt,
-        config: d.config as Prisma.InputJsonValue,
+        config: config as Prisma.InputJsonValue,
         points: d.points ?? 1,
         difficulty: d.difficulty ?? 3,
         cognitiveLevel: d.cognitiveLevel ?? "remember_understand",
@@ -357,6 +387,7 @@ async function loadBankQuestion(
 ): Promise<{
   id: string;
   bankId: string;
+  type: string;
   prompt: string;
   config: unknown;
   points: number;
@@ -368,6 +399,7 @@ async function loadBankQuestion(
     select: {
       id: true,
       bankId: true,
+      type: true,
       prompt: true,
       config: true,
       points: true,
@@ -379,6 +411,7 @@ async function loadBankQuestion(
   return {
     id: r.id,
     bankId: r.bankId,
+    type: r.type,
     prompt: r.prompt,
     config: r.config,
     points: r.points,
@@ -441,7 +474,14 @@ export async function updateBankQuestion(
     editNote?: string | null;
   } = {};
   if (d.prompt !== undefined) data.prompt = d.prompt;
-  if (d.config !== undefined) data.config = d.config as Prisma.InputJsonValue;
+  if (d.config !== undefined) {
+    // Chỉ kiểm khi config được gửi: sửa mỗi prompt/điểm trên câu cũ (config đã
+    // hỏng từ trước) không bị chặn oan.
+    const config = canonicalizeBankConfig(q.type, d.config);
+    const issues = bankConfigIssues(q.type, config);
+    if (issues.length > 0) throw new ExamError("validation_failed", { config: issues });
+    data.config = config as Prisma.InputJsonValue;
+  }
   if (d.points !== undefined) data.points = d.points;
   if (d.difficulty !== undefined) data.difficulty = d.difficulty;
   if (d.estimatedTimeSec !== undefined)
@@ -506,6 +546,14 @@ export async function publishBankQuestion(
   if (q.status === "published") return;
   if (q.status === "archived")
     throw new ExamError("bank_question_already_archived");
+  // Câu published được chép nguyên config vào đề và đem đi chấm, nên phải hợp
+  // lệ ngay từ cổng này (config hỏng làm chấm bài ném lỗi).
+  const issues = bankConfigIssues(
+    q.type,
+    canonicalizeBankConfig(q.type, (q.config ?? {}) as Record<string, unknown>),
+  );
+  if (issues.length > 0)
+    throw new ExamError("bank_question_not_publishable", { config: issues });
   await db.bankQuestion.update({
     where: { id: questionId },
     data: { status: "published" },
@@ -706,6 +754,30 @@ async function visibleBankIds(
   return banks.map((b) => b.id);
 }
 
+/** Điều kiện từ khoá (prompt/code) và chủ đề, mỗi cái một nhóm OR, ghép bằng AND. */
+function textAndTopicClauses(
+  filters: Pick<SearchFilters, "q" | "topics">,
+): Prisma.BankQuestionWhereInput[] {
+  const clauses: Prisma.BankQuestionWhereInput[] = [];
+  const q = filters.q?.trim();
+  if (q) {
+    // Search trên prompt + code (vd nhập "KNM-0042" tìm câu nhanh).
+    clauses.push({
+      OR: [
+        { prompt: { contains: q, mode: "insensitive" as const } },
+        { code: { contains: q, mode: "insensitive" as const } },
+      ],
+    });
+  }
+  if (filters.topics && filters.topics.length > 0) {
+    // Topic nằm ở BankQuestion.config.topic (JSON path), khớp chính xác từng giá trị.
+    clauses.push({
+      OR: filters.topics.map((t) => ({ config: { path: ["topic"], equals: t } })),
+    });
+  }
+  return clauses;
+}
+
 export async function searchQuestions(
   actorUserId: string,
   filters: SearchFilters,
@@ -737,28 +809,15 @@ export async function searchQuestions(
     ...(filters.reviewStatus && filters.reviewStatus.length > 0
       ? { reviewStatus: { in: filters.reviewStatus } }
       : {}),
-    ...(filters.q && filters.q.trim().length > 0
-      ? {
-          // Search trên prompt + code (vd nhập "KNM-0042" tìm câu nhanh).
-          OR: [
-            { prompt: { contains: filters.q.trim(), mode: "insensitive" as const } },
-            { code: { contains: filters.q.trim(), mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
     ...(filters.skillIds && filters.skillIds.length > 0
       ? { skillTags: { some: { skillId: { in: filters.skillIds } } } }
       : {}),
     // Topic filter — match BankQuestion.config.topic against any of the
     // provided strings. Postgres JSON path: config -> 'topic' = ANY(...).
     // Prisma's OR list keeps the queryable per topic value.
-    ...(filters.topics && filters.topics.length > 0
-      ? {
-          OR: filters.topics.map((t) => ({
-            config: { path: ["topic"], equals: t },
-          })),
-        }
-      : {}),
+    // q và topics đều là điều kiện OR bên trong; ghép bằng AND, KHÔNG để chung
+    // một khoá `OR` (spread sau sẽ ghi đè spread trước, mất bộ lọc từ khoá).
+    AND: textAndTopicClauses(filters),
   };
 
   // Đếm song song findMany để UI hiển thị "X câu khớp" + chọn "Tất cả X".
@@ -878,24 +937,12 @@ export async function listMatchingQuestionIds(
     ...(filters.reviewStatus && filters.reviewStatus.length > 0
       ? { reviewStatus: { in: filters.reviewStatus } }
       : {}),
-    ...(filters.q && filters.q.trim().length > 0
-      ? {
-          OR: [
-            { prompt: { contains: filters.q.trim(), mode: "insensitive" as const } },
-            { code: { contains: filters.q.trim(), mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
     ...(filters.skillIds && filters.skillIds.length > 0
       ? { skillTags: { some: { skillId: { in: filters.skillIds } } } }
       : {}),
-    ...(filters.topics && filters.topics.length > 0
-      ? {
-          OR: filters.topics.map((t) => ({
-            config: { path: ["topic"], equals: t },
-          })),
-        }
-      : {}),
+    // q và topics đều là điều kiện OR bên trong; ghép bằng AND, KHÔNG để chung
+    // một khoá `OR` (spread sau sẽ ghi đè spread trước, mất bộ lọc từ khoá).
+    AND: textAndTopicClauses(filters),
   };
   const rows = await db.bankQuestion.findMany({
     where,
@@ -930,6 +977,8 @@ export async function bulkUpdateBankQuestionStatus(
       id: true,
       bankId: true,
       status: true,
+      type: true,
+      config: true,
       _count: { select: { skillTags: true } },
     },
   });
@@ -970,7 +1019,19 @@ export async function bulkUpdateBankQuestionStatus(
         skipped.push({ id, reason: "Câu đã lưu trữ — phải khôi phục về draft trước" });
         continue;
       }
-      // Skill tag không còn required để publish (xem publishBankQuestion).
+      // Skill tag không còn required để publish (xem publishBankQuestion), nhưng
+      // config phải hợp lệ — cùng cổng với publishBankQuestion.
+      const issues = bankConfigIssues(
+        r.type,
+        canonicalizeBankConfig(r.type, (r.config ?? {}) as Record<string, unknown>),
+      );
+      if (issues.length > 0) {
+        skipped.push({
+          id,
+          reason: `Thiếu hoặc sai đáp án (${issues[0]}) — sửa câu trước khi publish`,
+        });
+        continue;
+      }
       ok.push(id);
     } else if (action === "archive") {
       if (r.status === "archived") {
@@ -1051,6 +1112,12 @@ export async function copyBankQuestionToExam(
   if (q.status === "archived") throw new ExamError("bank_question_not_publishable");
   if (q.status !== "published" && exam.purpose !== "field_test")
     throw new ExamError("bank_question_not_publishable");
+  // Config được chép nguyên sang đề rồi đem chấm — câu published cũ có config
+  // hỏng (từ trước khi bank validate) không được lọt vào đề.
+  const copyConfig = canonicalizeBankConfig(q.type, (q.config ?? {}) as Record<string, unknown>);
+  const copyIssues = bankConfigIssues(q.type, copyConfig);
+  if (copyIssues.length > 0)
+    throw new ExamError("bank_question_not_publishable", { config: copyIssues });
   await assertCanEditExam(actorUserId, exam, db);
   if (!exam.courseId) {
     throw new ExamError("exam_not_written", {
@@ -1101,7 +1168,7 @@ export async function copyBankQuestionToExam(
         bankQuestionId: q.id,
         versionNumber,
         prompt: q.prompt,
-        config: q.config as Prisma.InputJsonValue,
+        config: copyConfig as Prisma.InputJsonValue,
         points: q.points,
       },
       select: { id: true },
@@ -1114,7 +1181,7 @@ export async function copyBankQuestionToExam(
         passageId: position?.passageId ?? null,
         type: q.type,
         prompt: q.prompt,
-        config: q.config as Prisma.InputJsonValue,
+        config: copyConfig as Prisma.InputJsonValue,
         points: q.points,
         orderInExam: next,
       },

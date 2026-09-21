@@ -41,7 +41,7 @@ export async function commitMcqRowsToBank(
       if (p.type === "true_false") {
         bankType = "true_false_notgiven";
         // true_false template stores Đúng=A, Sai=B. Map to exam's
-        // true/false/not_given values: A correct → "true", B correct → "false".
+        // true/false/notgiven values: A correct → "true", B correct → "false".
         const correctLetter = p.options.find((o) => o.isCorrect)?.letter;
         config = { correct: correctLetter === "A" ? "true" : "false" };
       } else {
@@ -59,6 +59,8 @@ export async function commitMcqRowsToBank(
       // Topic stored in config.topic — BankQuestion không có dedicated topic
       // field. Free-text, không validate. UI filter có thể đọc config.topic.
       if (p.topic) config.topic = p.topic;
+      // Lời giải: cột Explanation của template. exam dùng config.explanation.
+      if (p.explanation) config.explanation = p.explanation;
 
       await createBankQuestion(
         actorUserId,

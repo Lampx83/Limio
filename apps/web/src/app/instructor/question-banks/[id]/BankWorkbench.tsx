@@ -377,6 +377,21 @@ export default function BankWorkbench({
     action: "publish" | "archive" | "draft",
     applyToAllMatching = false,
   ) => {
+    const count = applyToAllMatching ? (totalMatching ?? 0) : selectedIds.size;
+    const verb =
+      action === "publish" ? "publish" : action === "archive" ? "lưu trữ" : "chuyển về nháp";
+    // Publish/lưu trữ/về nháp hàng loạt tác động tới đề đang dùng câu này và không
+    // có nút hoàn tác: luôn hỏi lại kèm số câu để bấm nhầm bộ lọc còn kịp dừng.
+    if (
+      !window.confirm(
+        `${applyToAllMatching ? "Áp dụng cho TẤT CẢ câu đang lọc" : "Áp dụng cho các câu đã chọn"}: ` +
+          `${verb} ${count} câu?` +
+          (action === "publish"
+            ? "\n\nCâu thiếu hoặc sai đáp án sẽ được bỏ qua và báo lý do."
+            : ""),
+      )
+    )
+      return;
     setBulkBusy(true);
     try {
       const body = applyToAllMatching
@@ -470,7 +485,7 @@ export default function BankWorkbench({
                 onClick={() => void bulkAction("publish", true)}
                 disabled={bulkBusy}
                 className="rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
-                title={`Publish toàn bộ ${totalMatching} câu khớp filter (skip câu chưa tag skill)`}
+                title={`Publish toàn bộ ${totalMatching} câu khớp bộ lọc (câu thiếu hoặc sai đáp án sẽ được bỏ qua)`}
               >
                 ▶ Publish {totalMatching} câu đang lọc
               </button>
@@ -1705,6 +1720,10 @@ function QuestionForm({
     { label: "", correct: false },
     { label: "", correct: false },
   ]);
+  const [tfng, setTfng] = useState<"true" | "false" | "notgiven">("true");
+  // Mỗi dòng một đáp án chấp nhận (short_answer) / một chỗ trống (gap_fill, các
+  // đáp án chấp nhận của chỗ đó cách nhau bằng dấu |).
+  const [answerLines, setAnswerLines] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -1713,6 +1732,10 @@ function QuestionForm({
     setBusy(true);
     setErr(null);
     try {
+      const lines = answerLines
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
       const config: Record<string, unknown> =
         type === "mcq" || type === "multi"
           ? {
@@ -1725,11 +1748,17 @@ function QuestionForm({
                 .filter((o) => o.label.length > 0),
             }
           : type === "true_false_notgiven"
-          ? { correct: "true" }
+          ? { correct: tfng }
           : type === "short_answer"
-          ? { acceptedAnswers: [], matchMode: "exact" }
-          : type === "essay"
-          ? { rubric: "" }
+          ? { acceptedAnswers: lines, matchMode: "case_insensitive" }
+          : type === "gap_fill"
+          ? {
+              blanks: lines.map((l, i) => ({
+                id: `b${i + 1}`,
+                acceptedAnswers: l.split("|").map((a) => a.trim()).filter(Boolean),
+                matchMode: "case_insensitive",
+              })),
+            }
           : {};
       // Topic stored vào config.topic — đồng nhất với MCQ import flow.
       if (topic.trim()) config.topic = topic.trim();
@@ -1739,8 +1768,16 @@ function QuestionForm({
         body: JSON.stringify({ type, prompt, config, difficulty, points, cognitiveLevel }),
       });
       if (!r.ok) {
-        const j = (await r.json().catch(() => null)) as { error?: string } | null;
-        setErr(j?.error ?? `HTTP ${r.status}`);
+        const j = (await r.json().catch(() => null)) as {
+          error?: string;
+          details?: { config?: string[] };
+        } | null;
+        // Lý do cụ thể từ server (vd thiếu đáp án đúng) hữu ích hơn mã lỗi thô.
+        setErr(
+          j?.details?.config?.[0]
+            ? `Cấu hình đáp án chưa hợp lệ: ${j.details.config[0]}`
+            : (j?.error ?? `HTTP ${r.status}`),
+        );
         return;
       }
       await onDone();
@@ -1859,6 +1896,52 @@ function QuestionForm({
             </div>
           ))}
         </div>
+      )}
+
+      {type === "true_false_notgiven" && (
+        <div className="space-y-1">
+          <div className="text-xs font-medium text-slate-600">Đáp án đúng</div>
+          <div className="flex flex-wrap gap-3 text-xs">
+            {([
+              ["true", "Đúng"],
+              ["false", "Sai"],
+              ["notgiven", "Không đề cập"],
+            ] as const).map(([v, label]) => (
+              <label key={v} className="flex items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="new-tfng"
+                  checked={tfng === v}
+                  onChange={() => setTfng(v)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(type === "short_answer" || type === "gap_fill") && (
+        <label className="block">
+          <span className="block text-xs font-medium text-slate-600">
+            {type === "short_answer"
+              ? "Các đáp án được chấp nhận (mỗi dòng một đáp án)"
+              : "Các chỗ trống (mỗi dòng một chỗ trống, theo thứ tự)"}
+          </span>
+          <textarea
+            required
+            rows={3}
+            value={answerLines}
+            onChange={(e) => setAnswerLines(e.target.value)}
+            placeholder={type === "short_answer" ? "Hà Nội\nHa Noi" : "Hà Nội | Ha Noi\n1010"}
+            className="mt-1 w-full rounded border border-default px-2 py-1.5 text-xs"
+          />
+          {type === "gap_fill" && (
+            <span className="mt-0.5 block text-[10px] text-faint">
+              Chỗ trống nhận nhiều đáp án thì cách nhau bằng dấu |. Không phân biệt hoa thường.
+            </span>
+          )}
+        </label>
       )}
 
       {err && (
@@ -2023,7 +2106,7 @@ function parseCsv(raw: string): Array<{
 // Bank workbench is instructor-only — fine to reveal answer keys here.
 // Different ExamQuestionType has different config shapes:
 //   - mcq / multi:           config.options[] each { id, label, isCorrect }
-//   - true_false_notgiven:   config.correct = "true" | "false" | "not_given"
+//   - true_false_notgiven:   config.correct = "true" | "false" | "notgiven"
 //   - gap_fill:              config.blanks[] each { acceptable: string[] }
 //   - short_answer:          config.acceptable: string[]
 //   - matching_heading:      config.headings + config.paragraphs (P1)
@@ -2074,7 +2157,8 @@ function AnswerPreview({
     const LABEL: Record<string, string> = {
       true: "Đúng",
       false: "Sai",
-      not_given: "Không đề cập",
+      notgiven: "Không đề cập",
+      not_given: "Không đề cập", // dữ liệu cũ
     };
     if (!correct) return <AnswerEmpty hint="Chưa chọn đáp án đúng" />;
     return (
@@ -2434,7 +2518,9 @@ function TfngAnswerEditor({
   questionId: string;
   onSaved: () => void;
 }) {
-  const initial = typeof config?.correct === "string" ? (config.correct as string) : "true";
+  // Dữ liệu cũ có thể lưu "not_given"; schema/trình làm bài chỉ hiểu "notgiven".
+  const rawCorrect = typeof config?.correct === "string" ? (config.correct as string) : "true";
+  const initial = rawCorrect === "not_given" ? "notgiven" : rawCorrect;
   const [correct, setCorrect] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -2442,7 +2528,7 @@ function TfngAnswerEditor({
   const LABEL: Record<string, string> = {
     true: "Đúng",
     false: "Sai",
-    not_given: "Không đề cập",
+    notgiven: "Không đề cập",
   };
 
   async function save() {
@@ -2474,7 +2560,7 @@ function TfngAnswerEditor({
         {dirty && <span className="text-[10px] text-amber-700">Chưa lưu</span>}
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {(["true", "false", "not_given"] as const).map((v) => (
+        {(["true", "false", "notgiven"] as const).map((v) => (
           <label
             key={v}
             className={`flex cursor-pointer items-center gap-1.5 rounded border px-2 py-1 text-xs ${

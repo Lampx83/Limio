@@ -20,6 +20,7 @@ import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 import { resolveSkillScope, resolveBankScope } from "./wizard";
 import { pickPoolQuestions, PoolFilter } from "./sections";
+import { configSchemaForType } from "./schemas";
 
 // ============================================================================
 // Types
@@ -898,6 +899,11 @@ export async function importPreviewToExam(
       }
       if (q.status !== "published") {
         skipped.push({ id, reason: `Không published (${q.status})` });
+        continue;
+      }
+      // Config hỏng (câu cũ trước khi bank validate) sẽ làm chấm bài ném lỗi.
+      if (!configSchemaForType(q.type).safeParse(q.config).success) {
+        skipped.push({ id, reason: "Đáp án của câu chưa hợp lệ" });
         continue;
       }
 
