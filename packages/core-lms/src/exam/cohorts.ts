@@ -17,6 +17,8 @@ import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
 import type { RevealPolicy } from "./reveal-policy";
 import { capDurationToWindow, isSessionOpen, sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
+import { LearningEventType } from "@feedbackme/shared-types";
+import { courseIdOf, emitOrganizeEvent } from "./organize-events";
 
 // ============================================================================
 // Cohort CRUD
@@ -447,7 +449,7 @@ export const CreateSessionInput = z
     { message: "opensAt must be before closesAt" },
   );
 
-export async function createExamSession(
+async function createExamSessionImpl(
   actorUserId: string,
   examId: string,
   rawInput: unknown,
@@ -574,7 +576,7 @@ export async function listExamSessions(
  * Đóng ca KHÔNG đụng tới bài đang làm dở — ai đã vào thì vẫn làm hết giờ của
  * họ; đóng chỉ chặn người vào mới.
  */
-export async function setManualSessionOpen(
+async function setManualSessionOpenImpl(
   actorUserId: string,
   sessionId: string,
   open: boolean,
@@ -617,7 +619,7 @@ export async function setManualSessionOpen(
  *
  * `null` = trả về kế thừa gói đề.
  */
-export async function setSessionRevealPolicy(
+async function setSessionRevealPolicyImpl(
   actorUserId: string,
   sessionId: string,
   policy: RevealPolicy | null,
@@ -637,7 +639,7 @@ export async function setSessionRevealPolicy(
   });
 }
 
-export async function deleteExamSession(
+async function deleteExamSessionImpl(
   actorUserId: string,
   sessionId: string,
   db: PrismaClient = prisma,
@@ -781,4 +783,68 @@ export async function assertEligibleForExam(
     durationSec: capDurationToWindow(durationMin * 60, picked.closesAt, now),
     scheduleId: picked.id,
   };
+}
+
+// ============================================================================
+// Audit — mỗi hàm dưới đây bọc hàm gốc (`...Impl`) và phát LearningEvent SAU khi hàm
+// gốc thành công (xem organize-events.ts). Bọc thay vì chèn vào thân hàm vì các hàm
+// gốc có nhiều điểm trả về; hàm nào ném lỗi thì không phát gì.
+// ============================================================================
+
+export async function createExamSession(
+  ...args: Parameters<typeof createExamSessionImpl>
+): ReturnType<typeof createExamSessionImpl> {
+  const [actorUserId, examId] = args;
+  const db = args[3] ?? prisma;
+  const s = await createExamSessionImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamSessionCreated,
+    { sessionId: s.id, examId },
+    await courseIdOf({ examId }, db),
+    db,
+  );
+  return s;
+}
+
+export async function deleteExamSession(
+  ...args: Parameters<typeof deleteExamSessionImpl>
+): ReturnType<typeof deleteExamSessionImpl> {
+  const [actorUserId, sessionId] = args;
+  const db = args[2] ?? prisma;
+  const courseId = await courseIdOf({ sessionId }, db);
+  await deleteExamSessionImpl(...args);
+  await emitOrganizeEvent(actorUserId, LearningEventType.ExamSessionDeleted, { sessionId }, courseId, db);
+}
+
+export async function setManualSessionOpen(
+  ...args: Parameters<typeof setManualSessionOpenImpl>
+): ReturnType<typeof setManualSessionOpenImpl> {
+  const [actorUserId, sessionId, open] = args;
+  const db = args[3] ?? prisma;
+  const r = await setManualSessionOpenImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    open ? LearningEventType.ExamSessionOpened : LearningEventType.ExamSessionClosed,
+    { sessionId },
+    await courseIdOf({ sessionId }, db),
+    db,
+  );
+  return r;
+}
+
+export async function setSessionRevealPolicy(
+  ...args: Parameters<typeof setSessionRevealPolicyImpl>
+): ReturnType<typeof setSessionRevealPolicyImpl> {
+  const [actorUserId, sessionId, policy] = args;
+  const db = args[3] ?? prisma;
+  const r = await setSessionRevealPolicyImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamSessionRevealPolicyChanged,
+    { sessionId, policy },
+    await courseIdOf({ sessionId }, db),
+    db,
+  );
+  return r;
 }

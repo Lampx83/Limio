@@ -20,6 +20,8 @@ import { isAdmin } from "../auth/roles";
 import { canEditCourse } from "../courses/authz";
 import { ensureDefaultRoomForSession } from "./exam-rooms";
 import { ExamError } from "./types";
+import { LearningEventType } from "@feedbackme/shared-types";
+import { changedFields, courseIdOf, emitOrganizeEvent } from "./organize-events";
 
 // ============================================================================
 // Schemas
@@ -176,7 +178,7 @@ async function assertCanEdit(
 // CRUD
 // ============================================================================
 
-export async function createExamRound(
+async function createExamRoundImpl(
   actorUserId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
@@ -376,7 +378,7 @@ export async function getExamRound(
   };
 }
 
-export async function updateExamRound(
+async function updateExamRoundImpl(
   actorUserId: string,
   roundId: string,
   rawInput: unknown,
@@ -503,7 +505,7 @@ export const CreateExamSessionInRoundInput = z
  *  - Exam.courseId must match round.courseId (round = 1 course in PR2.11).
  *  - Optional code is unique-per-round.
  */
-export async function createExamSessionInRound(
+async function createExamSessionInRoundImpl(
   actorUserId: string,
   roundId: string,
   rawInput: unknown,
@@ -591,7 +593,7 @@ export const BulkCreateExamSessionsInput = z
     { message: "opensAt must be before closesAt" },
   );
 
-export async function bulkCreateExamSessionsInRound(
+async function bulkCreateExamSessionsInRoundImpl(
   actorUserId: string,
   roundId: string,
   rawInput: unknown,
@@ -739,7 +741,7 @@ export const UpdateExamSessionInput = z
   );
 
 /** Update session meta. Authz: must be able to edit the round. */
-export async function updateExamSession(
+async function updateExamSessionImpl(
   actorUserId: string,
   sessionId: string,
   rawInput: unknown,
@@ -1095,7 +1097,7 @@ export async function canProctorRoom(
   return await canEditExamRound(userId, r.session.roundId, db);
 }
 
-export async function setCandidateAttendance(
+async function setCandidateAttendanceImpl(
   actorUserId: string,
   candidateId: string,
   present: boolean,
@@ -1207,7 +1209,7 @@ export async function listMyProctorRooms(
  *
  * Authz: caller must have edit access on the round.
  */
-export async function inviteUserAsProctor(
+async function inviteUserAsProctorImpl(
   actorUserId: string,
   roomId: string,
   email: string,
@@ -1346,7 +1348,7 @@ function genAccessCode(): string {
   return out;
 }
 
-export async function addCandidatesToRoom(
+async function addCandidatesToRoomImpl(
   actorUserId: string,
   roomId: string,
   rawInput: unknown,
@@ -1578,7 +1580,7 @@ export async function copyCandidatesFromRoom(
  * candidate belongs to a different session than the destination, the whole
  * call aborts (no partial moves).
  */
-export async function moveCandidatesToRoom(
+async function moveCandidatesToRoomImpl(
   actorUserId: string,
   toRoomId: string,
   candidateIds: string[],
@@ -1617,7 +1619,7 @@ export async function moveCandidatesToRoom(
   return { moved: result.count };
 }
 
-export async function removeCandidateFromRoom(
+async function removeCandidateFromRoomImpl(
   actorUserId: string,
   candidateId: string,
   db: PrismaClient = prisma,
@@ -1778,7 +1780,7 @@ export async function listExamSessionsForRound(
   }));
 }
 
-export async function deleteExamRound(
+async function deleteExamRoundImpl(
   actorUserId: string,
   roundId: string,
   db: PrismaClient = prisma,
@@ -1803,7 +1805,7 @@ export async function deleteExamRound(
 // Round admin bridge management
 // ============================================================================
 
-export async function addAdminToRound(
+async function addAdminToRoundImpl(
   actorUserId: string,
   roundId: string,
   targetUserId: string,
@@ -1827,7 +1829,7 @@ export async function addAdminToRound(
   }
 }
 
-export async function removeAdminFromRound(
+async function removeAdminFromRoundImpl(
   actorUserId: string,
   roundId: string,
   targetUserId: string,
@@ -1885,4 +1887,233 @@ export async function roundDisplayWindow(
     closesAt: closes?.toISOString() ?? null,
     sessionCount: rows.length,
   };
+}
+
+// ============================================================================
+// Audit — mỗi hàm dưới đây bọc hàm gốc (`...Impl`) và phát LearningEvent SAU khi hàm
+// gốc thành công (xem organize-events.ts). Bọc thay vì chèn vào thân hàm vì các hàm
+// gốc có nhiều điểm trả về; hàm nào ném lỗi thì không phát gì.
+// ============================================================================
+
+export async function createExamRound(
+  ...args: Parameters<typeof createExamRoundImpl>
+): ReturnType<typeof createExamRoundImpl> {
+  const [actorUserId, rawInput] = args;
+  const db = args[2] ?? prisma;
+  const round = await createExamRoundImpl(...args);
+  const input = (rawInput ?? {}) as { courseId?: string; code?: string; title?: string };
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamRoundCreated,
+    { roundId: round.id, code: input.code, title: input.title },
+    input.courseId ?? null,
+    db,
+  );
+  return round;
+}
+
+export async function updateExamRound(
+  ...args: Parameters<typeof updateExamRoundImpl>
+): ReturnType<typeof updateExamRoundImpl> {
+  const [actorUserId, roundId, rawInput] = args;
+  const db = args[3] ?? prisma;
+  const before = await db.examRound.findUnique({
+    where: { id: roundId },
+    select: { status: true, courseId: true },
+  });
+  await updateExamRoundImpl(...args);
+  const fields = changedFields(rawInput);
+  if (fields.length === 0) return;
+  const statusTo = (rawInput as { status?: string }).status;
+  const statusChanged = statusTo !== undefined && before && statusTo !== before.status;
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamRoundUpdated,
+    {
+      roundId,
+      fields,
+      ...(statusChanged ? { statusFrom: before.status, statusTo } : {}),
+    },
+    before?.courseId ?? null,
+    db,
+  );
+}
+
+export async function deleteExamRound(
+  ...args: Parameters<typeof deleteExamRoundImpl>
+): ReturnType<typeof deleteExamRoundImpl> {
+  const [actorUserId, roundId] = args;
+  const db = args[2] ?? prisma;
+  // Lấy khoá học TRƯỚC: sau khi xoá thì dòng đã mất.
+  const courseId = await courseIdOf({ roundId }, db);
+  await deleteExamRoundImpl(...args);
+  await emitOrganizeEvent(actorUserId, LearningEventType.ExamRoundDeleted, { roundId }, courseId, db);
+}
+
+export async function addAdminToRound(
+  ...args: Parameters<typeof addAdminToRoundImpl>
+): ReturnType<typeof addAdminToRoundImpl> {
+  const [actorUserId, roundId, targetUserId] = args;
+  const db = args[3] ?? prisma;
+  await addAdminToRoundImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamRoundAdminAdded,
+    { roundId, targetUserId },
+    await courseIdOf({ roundId }, db),
+    db,
+  );
+}
+
+export async function removeAdminFromRound(
+  ...args: Parameters<typeof removeAdminFromRoundImpl>
+): ReturnType<typeof removeAdminFromRoundImpl> {
+  const [actorUserId, roundId, targetUserId] = args;
+  const db = args[3] ?? prisma;
+  await removeAdminFromRoundImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamRoundAdminRemoved,
+    { roundId, targetUserId },
+    await courseIdOf({ roundId }, db),
+    db,
+  );
+}
+
+export async function createExamSessionInRound(
+  ...args: Parameters<typeof createExamSessionInRoundImpl>
+): ReturnType<typeof createExamSessionInRoundImpl> {
+  const [actorUserId, roundId] = args;
+  const db = args[3] ?? prisma;
+  const s = await createExamSessionInRoundImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamSessionCreated,
+    { sessionId: s.id, roundId },
+    await courseIdOf({ sessionId: s.id }, db),
+    db,
+  );
+  return s;
+}
+
+export async function bulkCreateExamSessionsInRound(
+  ...args: Parameters<typeof bulkCreateExamSessionsInRoundImpl>
+): ReturnType<typeof bulkCreateExamSessionsInRoundImpl> {
+  const [actorUserId, roundId] = args;
+  const db = args[3] ?? prisma;
+  const r = await bulkCreateExamSessionsInRoundImpl(...args);
+  if (r.created > 0)
+    await emitOrganizeEvent(
+      actorUserId,
+      LearningEventType.ExamSessionCreated,
+      { roundId, sessionIds: r.sessionIds, count: r.created, bulk: true },
+      await courseIdOf({ roundId }, db),
+      db,
+    );
+  return r;
+}
+
+export async function updateExamSession(
+  ...args: Parameters<typeof updateExamSessionImpl>
+): ReturnType<typeof updateExamSessionImpl> {
+  const [actorUserId, sessionId, rawInput] = args;
+  const db = args[3] ?? prisma;
+  await updateExamSessionImpl(...args);
+  const fields = changedFields(rawInput);
+  if (fields.length === 0) return;
+  const status = (rawInput as { status?: string }).status;
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamSessionUpdated,
+    { sessionId, fields, ...(status !== undefined ? { statusTo: status } : {}) },
+    await courseIdOf({ sessionId }, db),
+    db,
+  );
+}
+
+export async function addCandidatesToRoom(
+  ...args: Parameters<typeof addCandidatesToRoomImpl>
+): ReturnType<typeof addCandidatesToRoomImpl> {
+  const [actorUserId, roomId] = args;
+  const db = args[3] ?? prisma;
+  const r = await addCandidatesToRoomImpl(...args);
+  if (r.added > 0)
+    await emitOrganizeEvent(
+      actorUserId,
+      LearningEventType.ExamCandidatesAdded,
+      { roomId, added: r.added, skipped: r.skipped },
+      await courseIdOf({ roomId }, db),
+      db,
+    );
+  return r;
+}
+
+export async function moveCandidatesToRoom(
+  ...args: Parameters<typeof moveCandidatesToRoomImpl>
+): ReturnType<typeof moveCandidatesToRoomImpl> {
+  const [actorUserId, toRoomId, candidateIds] = args;
+  const db = args[3] ?? prisma;
+  const r = await moveCandidatesToRoomImpl(...args);
+  if (r.moved > 0)
+    await emitOrganizeEvent(
+      actorUserId,
+      LearningEventType.ExamCandidatesMoved,
+      { toRoomId, moved: r.moved, candidateIds },
+      await courseIdOf({ roomId: toRoomId }, db),
+      db,
+    );
+  return r;
+}
+
+export async function removeCandidateFromRoom(
+  ...args: Parameters<typeof removeCandidateFromRoomImpl>
+): ReturnType<typeof removeCandidateFromRoomImpl> {
+  const [actorUserId, candidateId] = args;
+  const db = args[2] ?? prisma;
+  // Thí sinh bị xoá hẳn nên phải đọc phòng/khoá học trước.
+  const before = await db.examCandidate.findUnique({
+    where: { id: candidateId },
+    select: { roomId: true, exam: { select: { courseId: true } } },
+  });
+  await removeCandidateFromRoomImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamCandidateRemoved,
+    { candidateId, roomId: before?.roomId ?? null },
+    before?.exam.courseId ?? null,
+    db,
+  );
+}
+
+export async function setCandidateAttendance(
+  ...args: Parameters<typeof setCandidateAttendanceImpl>
+): ReturnType<typeof setCandidateAttendanceImpl> {
+  const [actorUserId, candidateId, present] = args;
+  const db = args[3] ?? prisma;
+  const r = await setCandidateAttendanceImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamCandidateAttendanceSet,
+    { candidateId, present },
+    await courseIdOf({ candidateId }, db),
+    db,
+  );
+  return r;
+}
+
+export async function inviteUserAsProctor(
+  ...args: Parameters<typeof inviteUserAsProctorImpl>
+): ReturnType<typeof inviteUserAsProctorImpl> {
+  const [actorUserId, roomId] = args;
+  const db = args[5] ?? prisma;
+  const r = await inviteUserAsProctorImpl(...args);
+  // Không ghi email hay đường dẫn đặt mật khẩu (resetUrl) vào sự kiện.
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamProctorInvited,
+    { roomId, invitedUserId: r.userId, newInvitation: r.invited },
+    await courseIdOf({ roomId }, db),
+    db,
+  );
+  return r;
 }

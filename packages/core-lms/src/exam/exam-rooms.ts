@@ -13,6 +13,8 @@ import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
+import { LearningEventType } from "@feedbackme/shared-types";
+import { changedFields, courseIdOf, emitOrganizeEvent } from "./organize-events";
 
 // ============================================================================
 // Room access code (cho thí sinh tự nhập khi join exam open_code)
@@ -201,7 +203,7 @@ export async function listExamRooms(
   });
 }
 
-export async function createExamRoom(
+async function createExamRoomImpl(
   actorUserId: string,
   examId: string,
   rawInput: unknown,
@@ -265,7 +267,7 @@ export async function createExamRoom(
   }
 }
 
-export async function updateExamRoom(
+async function updateExamRoomImpl(
   actorUserId: string,
   roomId: string,
   rawInput: unknown,
@@ -376,7 +378,7 @@ export async function updateExamRoom(
   });
 }
 
-export async function deleteExamRoom(
+async function deleteExamRoomImpl(
   actorUserId: string,
   roomId: string,
   db: PrismaClient = prisma,
@@ -729,4 +731,65 @@ export async function bulkCreateExamRooms(
     nextNum++;
   }
   return { created: created.length, roomIds: created };
+}
+
+// ============================================================================
+// Audit — mỗi hàm dưới đây bọc hàm gốc (`...Impl`) và phát LearningEvent SAU khi hàm
+// gốc thành công (xem organize-events.ts). Bọc thay vì chèn vào thân hàm vì các hàm
+// gốc có nhiều điểm trả về; hàm nào ném lỗi thì không phát gì.
+// ============================================================================
+
+export async function createExamRoom(
+  ...args: Parameters<typeof createExamRoomImpl>
+): ReturnType<typeof createExamRoomImpl> {
+  const [actorUserId, examId] = args;
+  const db = args[3] ?? prisma;
+  const room = await createExamRoomImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamRoomCreated,
+    { roomId: room.id, examId },
+    await courseIdOf({ examId }, db),
+    db,
+  );
+  return room;
+}
+
+export async function updateExamRoom(
+  ...args: Parameters<typeof updateExamRoomImpl>
+): ReturnType<typeof updateExamRoomImpl> {
+  const [actorUserId, roomId, rawInput] = args;
+  const db = args[3] ?? prisma;
+  await updateExamRoomImpl(...args);
+  const fields = changedFields(rawInput);
+  if (fields.length === 0) return;
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamRoomUpdated,
+    { roomId, fields },
+    await courseIdOf({ roomId }, db),
+    db,
+  );
+}
+
+export async function deleteExamRoom(
+  ...args: Parameters<typeof deleteExamRoomImpl>
+): ReturnType<typeof deleteExamRoomImpl> {
+  const [actorUserId, roomId] = args;
+  const db = args[2] ?? prisma;
+  // Hàm gốc idempotent (phòng không có thì im lặng). Chỉ ghi sự kiện khi phòng
+  // thật sự tồn tại, và lấy khoá học trước khi xoá.
+  const existed = await db.examRoom.findUnique({
+    where: { id: roomId },
+    select: { exam: { select: { courseId: true } } },
+  });
+  await deleteExamRoomImpl(...args);
+  if (existed)
+    await emitOrganizeEvent(
+      actorUserId,
+      LearningEventType.ExamRoomDeleted,
+      { roomId },
+      existed.exam.courseId,
+      db,
+    );
 }

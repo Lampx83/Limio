@@ -62,6 +62,28 @@ export const LearningEventType = {
   // A5.8 — Code-based access lifecycle
   ExamCandidateCreated: "exam.candidate.created",
   ExamCandidateCodeClaimed: "exam.candidate.code_claimed",
+  // Tổ chức thi (đợt / ca / phòng / thí sinh) — audit mọi thay đổi do người dùng
+  // thực hiện. Payload KHÔNG chứa mã truy cập (mã mở, mã dự thi, mã giám thị).
+  ExamRoundCreated: "exam.round.created",
+  ExamRoundUpdated: "exam.round.updated",
+  ExamRoundDeleted: "exam.round.deleted",
+  ExamRoundAdminAdded: "exam.round.admin_added",
+  ExamRoundAdminRemoved: "exam.round.admin_removed",
+  ExamSessionCreated: "exam.session.created",
+  ExamSessionUpdated: "exam.session.updated",
+  ExamSessionDeleted: "exam.session.deleted",
+  ExamSessionOpened: "exam.session.opened",
+  ExamSessionClosed: "exam.session.closed",
+  ExamSessionRevealPolicyChanged: "exam.session.reveal_policy_changed",
+  ExamRoomCreated: "exam.room.created",
+  ExamRoomUpdated: "exam.room.updated",
+  ExamRoomDeleted: "exam.room.deleted",
+  ExamCandidatesAdded: "exam.candidates.added",
+  ExamCandidatesMoved: "exam.candidates.moved",
+  ExamCandidateRemoved: "exam.candidate.removed",
+  ExamCandidateAttendanceSet: "exam.candidate.attendance_set",
+  ExamProctorInvited: "exam.proctor.invited",
+  ExamShareLinkOpened: "exam.share_link.opened",
   // Audio runtime — P1 only
   ExamAudioPlayed: "exam.audio.played",
   ExamAudioCompleted: "exam.audio.completed",

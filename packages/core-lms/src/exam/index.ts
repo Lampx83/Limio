@@ -21,6 +21,7 @@ export * from "./manual-grading";
 export * from "./incidents";
 export * from "./import";
 export * from "./attempt-actions";
+export * from "./organize-events";
 export * from "./messages";
 export * from "./heartbeat-watch";
 export * from "./subject";

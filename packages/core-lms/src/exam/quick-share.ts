@@ -5,6 +5,8 @@ import { generateOpenCode } from "./code-access";
 import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
 import { isSessionOpen } from "./session-window";
 import { ExamError } from "./types";
+import { LearningEventType } from "@feedbackme/shared-types";
+import { courseIdOf, emitOrganizeEvent } from "./organize-events";
 
 /**
  * "Mở buổi thi" — gộp mọi thứ cần để một bài kiểm tra sẵn sàng cho học sinh vào
@@ -21,7 +23,7 @@ import { ExamError } from "./types";
  * mã cũ, không sinh mã mới. Buổi cũ đã đóng thì đây là buổi MỚI — sinh mã mới.
  * Xem chi tiết ở chỗ chọn `existing` bên dưới.
  */
-export async function shareExamLink(
+async function shareExamLinkImpl(
   actorUserId: string,
   examId: string,
   opts: {
@@ -218,4 +220,27 @@ export async function shareExamLink(
     }
   }
   throw new ExamError("validation_failed", { reason: "openCode_collision" });
+}
+
+// ============================================================================
+// Audit — mỗi hàm dưới đây bọc hàm gốc (`...Impl`) và phát LearningEvent SAU khi hàm
+// gốc thành công (xem organize-events.ts). Bọc thay vì chèn vào thân hàm vì các hàm
+// gốc có nhiều điểm trả về; hàm nào ném lỗi thì không phát gì.
+// ============================================================================
+
+export async function shareExamLink(
+  ...args: Parameters<typeof shareExamLinkImpl>
+): ReturnType<typeof shareExamLinkImpl> {
+  const [actorUserId, examId] = args;
+  const db = args[3] ?? prisma;
+  const r = await shareExamLinkImpl(...args);
+  // Không ghi mã mở (`r.code`): đó là bí mật của buổi thi.
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamShareLinkOpened,
+    { examId, sessionId: r.sessionId, reusedExistingCode: r.reusedExistingCode },
+    await courseIdOf({ examId }, db),
+    db,
+  );
+  return r;
 }
