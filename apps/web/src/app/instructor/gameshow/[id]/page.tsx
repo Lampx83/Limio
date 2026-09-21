@@ -14,10 +14,10 @@ export default async function HostGameshowPage({ params }: { params: { id: strin
 
   const gameSession = await prisma.gameSession.findUnique({
     where: { id: params.id },
-    select: { id: true, hostId: true },
+    select: { id: true, hostId: true, theme: true },
   });
   if (!gameSession) notFound();
   if (gameSession.hostId !== userId) redirect("/instructor/gameshow/new");
 
-  return <HostGameClient sessionId={params.id} />;
+  return <HostGameClient sessionId={params.id} theme={gameSession.theme} />;
 }

@@ -487,6 +487,40 @@ body.limio-live-immersive .mx-auto.max-w-6xl.w-full {
   opacity: 0.55;
   pointer-events: none;
 }
+/* Theme gameshow — chọn lúc tạo phiên (lib/gameshow/themes.ts). Mặc định
+   "aurora" giữ nguyên palette cũ; theme khác chỉ ghi đè nền. Host gắn
+   data-gs-theme lên .gs-host-bg, người chơi gắn lên <body>. */
+.gs-player-bg {
+  background: linear-gradient(135deg, #312e81 0%, #030712 50%, #831843 100%);
+}
+[data-gs-theme="ocean"].gs-host-bg {
+  background: linear-gradient(120deg, #0369a1 0%, #0891b2 35%, #0d9488 65%, #0284c7 100%);
+  background-size: 220% 220%;
+}
+[data-gs-theme="sunset"].gs-host-bg {
+  background: linear-gradient(120deg, #9f1239 0%, #dc2626 30%, #ea580c 62%, #d97706 100%);
+  background-size: 220% 220%;
+}
+[data-gs-theme="forest"].gs-host-bg {
+  background: linear-gradient(120deg, #14532d 0%, #15803d 35%, #4d7c0f 65%, #0f766e 100%);
+  background-size: 220% 220%;
+}
+[data-gs-theme="midnight"].gs-host-bg {
+  background: linear-gradient(120deg, #0f172a 0%, #1e1b4b 35%, #3b0764 65%, #172554 100%);
+  background-size: 220% 220%;
+}
+body[data-gs-theme="ocean"] .gs-player-bg {
+  background: linear-gradient(135deg, #0c4a6e 0%, #020617 50%, #115e59 100%);
+}
+body[data-gs-theme="sunset"] .gs-player-bg {
+  background: linear-gradient(135deg, #7f1d1d 0%, #0c0a09 50%, #9a3412 100%);
+}
+body[data-gs-theme="forest"] .gs-player-bg {
+  background: linear-gradient(135deg, #14532d 0%, #022c22 50%, #3f6212 100%);
+}
+body[data-gs-theme="midnight"] .gs-player-bg {
+  background: linear-gradient(135deg, #1e1b4b 0%, #020617 50%, #3b0764 100%);
+}
 .gs-glass {
   background: rgb(255 255 255 / 0.16);
   border: 1px solid rgb(255 255 255 / 0.28);

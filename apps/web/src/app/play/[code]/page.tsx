@@ -7,6 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { MAX_PARTICIPANTS_PER_SESSION } from "@/lib/gameshow/constants";
 import { AVATARS, AVATAR_KEYS, randomAvatarKey } from "@/lib/gameshow/avatars";
 import { emojiForColorKey, teamColorClasses } from "@/lib/gameshow/teams";
+import { normalizeGameTheme } from "@/lib/gameshow/themes";
 import { useRankDeltas } from "@/lib/gameshow/useRankDeltas";
 import { useCountUp } from "@/lib/gameshow/useCountUp";
 import { Podium } from "@/components/gameshow/Podium";
@@ -22,6 +23,7 @@ type RoomInfo = {
   questionCount: number;
   participantCount: number;
   teamModeEnabled: boolean;
+  theme?: string;
   teams: TeamOption[];
 };
 type Identity = {
@@ -66,7 +68,7 @@ function storageKey(code: string) {
 // riêng, không còn palette 4 màu + icon hình khối kiểu Kahoot (xem
 // OptionCard). Khác host ở chỗ không ẩn header chung, xem ghi chú ở
 // HostGameClient.
-const SHELL = "min-h-screen bg-gradient-to-br from-brand-900 via-gray-950 to-pink-900 text-white";
+const SHELL = "gs-player-bg min-h-screen text-white";
 const QUESTION_SPLASH_MS = 650;
 
 // Thanh tiến trình ngang — thay vòng tròn đếm ngược kiểu Kahoot. Rút cạn từ
@@ -148,6 +150,16 @@ export default function PlayGameshowPage() {
   useEffect(() => {
     answerResultRef.current = answerResult;
   }, [answerResult]);
+
+  // Theme của phiên: đặt lên <body> vì nền `.gs-player-bg` nằm ở nhiều return
+  // khác nhau (mỗi phase một khung) — 1 chỗ đặt, CSS lo phần còn lại.
+  const themeKey = normalizeGameTheme(room?.theme);
+  useEffect(() => {
+    document.body.dataset.gsTheme = themeKey;
+    return () => {
+      delete document.body.dataset.gsTheme;
+    };
+  }, [themeKey]);
 
   // 1) Room lookup + reconnect từ sessionStorage
   useEffect(() => {
@@ -666,7 +678,9 @@ export default function PlayGameshowPage() {
               </span>
             )}
           </div>
-          <h2 className="mt-4 text-center text-xl font-black leading-snug">{question?.prompt}</h2>
+          <h2 className="mt-4 whitespace-pre-line break-words text-center text-xl font-black leading-snug">
+            {question?.prompt}
+          </h2>
 
           {phase === "question" && (
             <div className="mt-3 flex gap-2">
@@ -758,7 +772,9 @@ export default function PlayGameshowPage() {
         <main className="mx-auto max-w-md px-4 py-6">
           {question && (
             <>
-              <h2 className="text-center text-lg font-bold">{question.prompt}</h2>
+              <h2 className="whitespace-pre-line break-words text-center text-lg font-bold">
+                {question.prompt}
+              </h2>
               <div
                 className={`mt-3 grid gap-3 ${question.options.length <= 2 ? "grid-cols-1" : "grid-cols-2"}`}
               >
@@ -846,7 +862,7 @@ export default function PlayGameshowPage() {
         </main>
 
         {showReview && (
-          <div className="fixed inset-0 z-40 overflow-y-auto bg-black/80 px-4 py-8">
+          <div className="gs-player-bg fixed inset-0 z-40 overflow-y-auto px-4 py-8">
             <div className="mx-auto max-w-md">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-black text-white">📋 Xem lại câu hỏi</h2>
@@ -861,7 +877,7 @@ export default function PlayGameshowPage() {
                 {history.map((h) => (
                   <li key={h.questionIndex} className="rounded-2xl bg-white/10 p-4 text-left text-white">
                     <p className="text-xs font-bold text-white/50">Câu {h.questionIndex + 1}</p>
-                    <p className="mt-1 font-semibold">{h.prompt}</p>
+                    <p className="mt-1 whitespace-pre-line break-words font-semibold">{h.prompt}</p>
                     <div className="mt-2 space-y-1.5">
                       {h.options.map((o, i) => {
                         const isCorrect = o.id === h.correctOptionId;

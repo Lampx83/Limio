@@ -11,6 +11,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
       status: true,
       title: true,
       teamModeEnabled: true,
+      theme: true,
       _count: { select: { participants: true, questions: true } },
       teams: {
         orderBy: { createdAt: "asc" },
@@ -32,6 +33,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
     questionCount: gameSession._count.questions,
     participantCount: gameSession._count.participants,
     teamModeEnabled: gameSession.teamModeEnabled,
+    theme: gameSession.theme,
     teams: gameSession.teams.map((t) => ({
       id: t.id,
       name: t.name,

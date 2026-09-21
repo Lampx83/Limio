@@ -84,7 +84,11 @@ export function OptionCard({
           letter
         )}
       </span>
-      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+      <span
+        className="min-w-0 flex-1 whitespace-pre-line break-words text-left leading-snug"
+      >
+        {label}
+      </span>
     </button>
   );
 }

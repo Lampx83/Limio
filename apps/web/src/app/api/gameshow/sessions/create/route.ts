@@ -5,6 +5,7 @@ import { requireUserId } from "@/lib/session";
 import { generateUniqueGameCode } from "@/lib/gameshow/code";
 import { ELIGIBLE_QUESTION_TYPES } from "@/lib/gameshow/constants";
 import { snapshotQuestionsFromQuiz, snapshotQuestionsFromSet } from "@/lib/gameshow/sessionQuestions";
+import { GAME_THEME_KEYS, DEFAULT_GAME_THEME, type GameThemeKey } from "@/lib/gameshow/themes";
 import { TEAM_COUNT_MAX, TEAM_COUNT_MIN, createTeamsForSession } from "@/lib/gameshow/teams";
 
 export const runtime = "nodejs";
@@ -14,6 +15,7 @@ const BodySchema = z
     quizId: z.string().min(1).optional(),
     questionSetId: z.string().min(1).optional(),
     teamCount: z.number().int().min(TEAM_COUNT_MIN).max(TEAM_COUNT_MAX).optional(),
+    theme: z.enum(GAME_THEME_KEYS).optional(),
   })
   .refine((v) => (v.quizId ? 1 : 0) + (v.questionSetId ? 1 : 0) === 1, {
     message: "Cần đúng 1 trong 2: quizId hoặc questionSetId",
@@ -30,12 +32,20 @@ export async function POST(req: Request) {
   }
 
   if (parsed.data.quizId) {
-    return createFromQuiz(userId, parsed.data.quizId, parsed.data.teamCount);
+    return createFromQuiz(userId, parsed.data.quizId, parsed.data.teamCount, parsed.data.theme);
   }
-  return createFromQuestionSet(userId, parsed.data.questionSetId!, parsed.data.teamCount);
+  return createFromQuestionSet(
+    userId,
+    parsed.data.questionSetId!,
+    parsed.data.teamCount,
+    parsed.data.theme,
+  );
 }
 
-async function createFromQuiz(userId: string, quizId: string, teamCount?: number) {
+async function createFromQuiz(userId: string, quizId: string,
+  teamCount?: number,
+  theme: GameThemeKey = DEFAULT_GAME_THEME,
+) {
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
     select: {
@@ -77,6 +87,7 @@ async function createFromQuiz(userId: string, quizId: string, teamCount?: number
       hostId: userId,
       status: "lobby",
       teamModeEnabled: !!teamCount,
+      theme,
     },
   });
   const questionCount = await snapshotQuestionsFromQuiz(prisma, gameSession.id, quiz.id);
@@ -90,7 +101,10 @@ async function createFromQuiz(userId: string, quizId: string, teamCount?: number
   });
 }
 
-async function createFromQuestionSet(userId: string, questionSetId: string, teamCount?: number) {
+async function createFromQuestionSet(userId: string, questionSetId: string,
+  teamCount?: number,
+  theme: GameThemeKey = DEFAULT_GAME_THEME,
+) {
   const set = await prisma.gameQuestionSet.findUnique({
     where: { id: questionSetId },
     select: { id: true, title: true, ownerId: true, _count: { select: { items: true } } },
@@ -110,6 +124,7 @@ async function createFromQuestionSet(userId: string, questionSetId: string, team
       hostId: userId,
       status: "lobby",
       teamModeEnabled: !!teamCount,
+      theme,
     },
   });
   const questionCount = await snapshotQuestionsFromSet(prisma, gameSession.id, set.id);

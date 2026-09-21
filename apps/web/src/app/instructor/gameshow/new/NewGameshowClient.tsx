@@ -5,6 +5,7 @@ import Link from "next/link";
 import StickyMobileCTA from "@/components/ui/StickyMobileCTA";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
+import { DEFAULT_GAME_THEME, GAME_THEMES, type GameThemeKey } from "@/lib/gameshow/themes";
 import { TEAM_COUNT_MAX, TEAM_COUNT_MIN } from "@/lib/gameshow/teams";
 
 type QuizOption = {
@@ -94,6 +95,7 @@ export default function NewGameshowClient({
   const [selectedSet, setSelectedSet] = useState<string>(questionSets[0]?.id ?? "");
   const [teamMode, setTeamMode] = useState(false);
   const [teamCount, setTeamCount] = useState(4);
+  const [theme, setTheme] = useState<GameThemeKey>(DEFAULT_GAME_THEME);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -110,6 +112,7 @@ export default function NewGameshowClient({
         body: JSON.stringify({
           ...(tab === "quiz" ? { quizId: selectedQuiz } : { questionSetId: selectedSet }),
           ...(teamMode ? { teamCount } : {}),
+          theme,
         }),
       });
       if (!r.ok) {
@@ -309,6 +312,36 @@ export default function NewGameshowClient({
               </span>
             </div>
           )}
+        </section>
+
+        <section className="tool-panel !p-4">
+          <p className="tool-section-label !mb-2">Giao diện</p>
+          <div role="radiogroup" aria-label="Giao diện phiên" className="grid grid-cols-2 gap-2">
+            {GAME_THEMES.map((t) => (
+              <label
+                key={t.key}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 text-sm font-medium transition-colors ${
+                  theme === t.key
+                    ? "border-[rgb(var(--brand))] ring-1 ring-[rgb(var(--brand)/0.35)]"
+                    : "border-[rgb(var(--border))] hover:border-[rgb(var(--brand)/0.45)]"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="gs-theme"
+                  checked={theme === t.key}
+                  onChange={() => setTheme(t.key)}
+                  className="sr-only"
+                />
+                <span
+                  className="h-6 w-6 shrink-0 rounded-full ring-1 ring-black/10"
+                  style={{ background: t.preview }}
+                  aria-hidden="true"
+                />
+                <span className="truncate">{t.label}</span>
+              </label>
+            ))}
+          </div>
         </section>
 
         {err && <div className="banner-danger">{err}</div>}

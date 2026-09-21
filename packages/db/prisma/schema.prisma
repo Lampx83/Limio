@@ -2731,6 +2731,10 @@ model GameSession {
   // xem GameParticipant.teamId + lib/gameshow/bus.ts getTeamStandings).
   teamModeEnabled Boolean @default(false)
 
+  // Bộ màu giao diện chọn lúc tạo phiên (xem lib/gameshow/themes.ts). Chỉ là
+  // key — CSS nằm ở globals.css; key lạ được client coi như mặc định.
+  theme String @default("aurora")
+
   createdAt DateTime  @default(now())
   startedAt DateTime?
   endedAt   DateTime?

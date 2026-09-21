@@ -1,5 +1,6 @@
 "use client";
 
+import { normalizeGameTheme } from "@/lib/gameshow/themes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Baloo_2 } from "next/font/google";
@@ -56,7 +57,7 @@ const REVEAL_PAUSE_MS = 4000;
 // timer thật (currentQuestionStartedAt) vẫn chạy phía dưới song song.
 const QUESTION_SPLASH_MS = 700;
 
-export default function HostGameClient({ sessionId }: { sessionId: string }) {
+export default function HostGameClient({ sessionId, theme }: { sessionId: string; theme?: string }) {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [participants, setParticipants] = useState<LiveParticipant[]>([]);
   const [teamsMeta, setTeamsMeta] = useState<TeamMeta[]>([]);
@@ -270,7 +271,10 @@ export default function HostGameClient({ sessionId }: { sessionId: string }) {
   const sorted = [...participants].sort((a, b) => b.totalScore - a.totalScore);
 
   return (
-    <div className="gs-host-bg min-h-screen overflow-hidden px-4 py-6 text-white sm:px-8">
+    <div
+      data-gs-theme={normalizeGameTheme(theme)}
+      className="gs-host-bg min-h-screen overflow-hidden px-4 py-6 text-white sm:px-8"
+    >
       <div className="gs-host-blob -left-24 -top-24 h-80 w-80 bg-cyan-300" aria-hidden="true" />
       <div className="gs-host-blob -right-20 top-1/3 h-96 w-96 bg-amber-300" aria-hidden="true" />
       <div className="gs-host-blob -bottom-24 left-1/4 h-80 w-80 bg-fuchsia-300" aria-hidden="true" />
