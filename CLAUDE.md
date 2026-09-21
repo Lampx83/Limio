@@ -114,6 +114,22 @@ Mọi thay đổi schema đi qua `prisma migrate` — không chỉnh DB tay. Ind
 
 **Shared UI primitives** (trong `apps/web/src/components/ui/`): `<EmptyState>`, `<UserAvatar>`, `<StatusBadge>`, `<DateTime>`, `<StickyMobileCTA>` + `<Skeleton*>` ở `components/Skeleton.tsx`. Đừng tự reimplement trong từng page.
 
+### 4.6.1. Thuật ngữ giao diện — luồng kiểm tra đánh giá
+
+Cùng một khái niệm chỉ có **một** tên trong chuỗi hiển thị (comment/code không bắt buộc):
+
+| Dùng | Không dùng | Ghi chú |
+|---|---|---|
+| **Ngân hàng câu hỏi** | bank, kho | "Ngân hàng" khi ngữ cảnh đã rõ |
+| **Đề thi** | gói đề, bài thi trực tuyến | Nội dung câu hỏi + cài đặt; soạn ở mục Đề thi |
+| **Đợt thi** › **Ca thi** › **Phòng thi** | kỳ thi/buổi/lần thi lẫn lộn | Kỳ thi chính thức = đợt nhiều ca. "Buổi thi" chỉ dùng cho link thi nhanh (một ca đơn giản) |
+| **Lượt thi** | — | Một bài làm của một thí sinh trong một ca |
+| **Thí sinh** / **Học viên** | — | Thí sinh vào bằng mã; học viên vào bằng tài khoản đã ghi danh |
+| **Trưởng đợt** | admin (của đợt) | Người sửa được đợt thi; khác admin nền tảng |
+| **Chốt** | import (câu ngẫu nhiên vào đề) | Cố định bộ câu rút từ ngân hàng vào đề |
+
+Trạng thái đợt thi (Nháp/Đang mở/Đã đóng/Lưu trữ) **chỉ để phân loại**, không tự mở hay đóng ca — giờ vào thi do từng ca quyết định; giao diện phải nói đúng điều đó.
+
 ### 4.7. Index nóng (xem spec §7.3)
 
 | Bảng | Index |

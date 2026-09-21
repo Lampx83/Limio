@@ -15,6 +15,8 @@ import type { RevealPolicy } from "./reveal-policy";
  */
 export interface ExamRun {
   sessionId: string;
+  /** Đợt thi chứa ca này — để nối sang trang quản lý đợt. */
+  roundId: string;
   /** Còn cho học sinh vào không. */
   isOpen: boolean;
   opensAt: string;
@@ -80,6 +82,7 @@ export async function listExamRuns(
     },
     select: {
       id: true,
+      roundId: true,
       openCode: true,
       opensAt: true,
       closesAt: true,
@@ -147,6 +150,7 @@ export async function listExamRuns(
 
   return open.map((r) => ({
     sessionId: r.id,
+    roundId: r.roundId,
     isOpen: isSessionOpen(r, now),
     opensAt: r.opensAt.toISOString(),
     examId: r.exam.id,

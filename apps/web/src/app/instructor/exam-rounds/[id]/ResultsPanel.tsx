@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Download } from "lucide-react";
 
 export interface SessionSummary {
@@ -101,6 +102,18 @@ export default function ResultsPanel({ roundId, sessions }: Props) {
               />
             </div>
 
+            {/* Một ca duy nhất: bảng theo ca sẽ chỉ lặp lại số tổng, nên chỉ đưa lối vào chi tiết. */}
+            {ss.length === 1 && (
+              <p className="mb-2 text-xs">
+                <Link
+                  href={`/instructor/exam-runs/${ss[0]!.id}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  Xem chi tiết kết quả của ca →
+                </Link>
+              </p>
+            )}
+
             {/* Per-session breakdown */}
             {ss.length > 1 && (
               <table className="w-full text-xs">
@@ -110,7 +123,8 @@ export default function ResultsPanel({ roundId, sessions }: Props) {
                     <th className="pb-1.5 pr-3 font-medium text-right">Thí sinh</th>
                     <th className="pb-1.5 pr-3 font-medium text-right">Đã nộp</th>
                     <th className="pb-1.5 pr-3 font-medium text-right">Điểm TB</th>
-                    <th className="pb-1.5 font-medium text-right">Đạt</th>
+                    <th className="pb-1.5 pr-3 font-medium text-right">Đạt</th>
+                    <th className="pb-1.5 font-medium text-right">Chi tiết</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-default">
@@ -126,8 +140,16 @@ export default function ResultsPanel({ roundId, sessions }: Props) {
                       <td className="py-1.5 pr-3 text-right tabular-nums">
                         {s.avgScorePct !== null ? `${s.avgScorePct.toFixed(1)}%` : "—"}
                       </td>
-                      <td className="py-1.5 text-right tabular-nums">
+                      <td className="py-1.5 pr-3 text-right tabular-nums">
                         {s.graded > 0 ? `${s.passCount}/${s.graded}` : "—"}
+                      </td>
+                      <td className="py-1.5 text-right">
+                        <Link
+                          href={`/instructor/exam-runs/${s.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Xem →
+                        </Link>
                       </td>
                     </tr>
                   ))}

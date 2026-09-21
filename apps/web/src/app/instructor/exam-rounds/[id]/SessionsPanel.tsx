@@ -884,7 +884,7 @@ function BulkCreateSessionsDialog({
               </button>
             </div>
             <p className="mt-1 text-[11px] text-faint">
-              Lưu ý: mode được set lên gói đề thi, ảnh hưởng tất cả ca khác
+              Lưu ý: cách vào thi được đặt ở cấp đề thi, ảnh hưởng tất cả ca khác dùng đề này
               của cùng đề.
             </p>
           </div>

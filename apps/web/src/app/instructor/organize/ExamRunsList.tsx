@@ -259,6 +259,18 @@ function Row({ r, showRooms }: { r: ExamRun; showRooms: boolean }) {
         >
           Kết quả
         </Link>
+        {/* Kỳ thi chính thức thuộc một đợt: ca này nằm ở đợt nào, xếp phòng ra sao
+            là ở trang quản lý đợt — không có lối này thì lịch sử chỉ dẫn được tới
+            kết quả, mất đường quay về chỗ sửa ca. */}
+        {r.scale === "formal" && (
+          <Link
+            href={`/instructor/exam-rounds/${r.roundId}?tab=sessions`}
+            className="text-xs underline"
+            title="Mở đợt thi chứa ca này để sửa giờ, xếp phòng, cấp mã"
+          >
+            Quản lý ca
+          </Link>
+        )}
         <a
           href={apiUrl(
             `/api/exams/${r.examId}/results?sessionId=${r.sessionId}`,

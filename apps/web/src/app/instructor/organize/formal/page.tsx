@@ -55,7 +55,7 @@ export default async function OrganizeFormalPage() {
               <strong>1. Đợt thi</strong> — kỳ nào, của học phần nào.
             </li>
             <li>
-              <strong>2. Ca thi</strong> — mỗi ca chọn gói đề, giờ, và hình thức:{" "}
+              <strong>2. Ca thi</strong> — mỗi ca chọn đề thi, giờ, và hình thức:{" "}
               <em>Tự do</em> (một mã chung cho cả ca) hoặc <em>Theo phòng</em>{" "}
               (mã cấp riêng từng thí sinh).
             </li>
@@ -74,11 +74,11 @@ export default async function OrganizeFormalPage() {
               href="/instructor/exams/new"
               className="rounded border border-default px-3 py-1.5 text-sm"
             >
-              Soạn gói đề mới bằng trình hỗ trợ
+              Soạn đề thi mới bằng trình hỗ trợ
             </Link>
           </div>
           <p className="mt-3 text-caption text-faint">
-            Gói đề soạn trước ở mục Đề thi, rồi chọn lại khi tạo ca — cùng một
+            Đề thi soạn trước ở mục Đề thi, rồi chọn lại khi tạo ca — cùng một
             gói dùng được cho nhiều ca.
           </p>
         </>

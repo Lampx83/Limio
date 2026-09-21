@@ -224,6 +224,7 @@ const MODULES: ModuleDef[] = [
     // Các trang đợt/ca/buổi thi là phần con của "Tổ chức thi": vào đó mà menu rớt
     // về "Trang chủ" thì giảng viên tưởng đã rời khu vực này.
     matchPrefixes: [
+      "/instructor/assessment",
       "/instructor/question-banks",
       "/instructor/exams",
       "/instructor/organize",
@@ -234,6 +235,7 @@ const MODULES: ModuleDef[] = [
     items: [
       // Thứ tự bám theo trình tự làm việc thật: soạn câu → gom thành gói đề →
       // mang đi tổ chức → coi thi.
+      { label: "Bắt đầu", href: "/instructor/assessment", icon: ListChecks },
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
       { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },

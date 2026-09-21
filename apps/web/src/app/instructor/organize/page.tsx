@@ -87,7 +87,7 @@ export default async function OrganizePage({
             icon={<Zap className="h-5 w-5" aria-hidden />}
             title="Link thi nhanh"
             blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp."
-            detail="Chọn gói đề, đặt thời lượng. Mở ngay, đóng khi bạn bấm."
+            detail="Chọn đề thi, đặt thời lượng. Mở ngay, đóng khi bạn bấm."
             lead
           />
           <OptionCard

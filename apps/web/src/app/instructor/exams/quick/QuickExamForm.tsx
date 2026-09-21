@@ -147,17 +147,17 @@ export default function QuickExamForm({
     return (
       <div className="mt-6 rounded-lg border border-default bg-white p-5">
         <p className="text-sm">
-          Chưa có gói đề nào có câu hỏi.
+          Chưa có đề thi nào có câu hỏi.
         </p>
         <p className="mt-1 text-caption text-faint">
-          Gói đề là phần nội dung — soạn ở mục Đề thi, rồi quay lại đây để mở
+          Đề thi là phần nội dung câu hỏi — soạn ở mục Đề thi, rồi quay lại đây để mở
           buổi thi.
         </p>
         <Link
           href={`/instructor/courses/${courses[0]!.id}/exams/new`}
           className="mt-3 inline-block rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white"
         >
-          + Soạn gói đề mới
+          + Soạn đề thi mới
         </Link>
       </div>
     );
@@ -253,7 +253,7 @@ export default function QuickExamForm({
   return (
     <form onSubmit={submit} className="mt-6 space-y-4">
       <label className="block">
-        <span className="block text-sm font-medium">Gói đề</span>
+        <span className="block text-sm font-medium">Đề thi</span>
         <select
           value={paperId}
           onChange={(e) => onPickPaper(e.target.value)}

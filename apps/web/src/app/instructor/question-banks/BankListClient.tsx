@@ -80,7 +80,7 @@ export default function BankListClient({
           onClick={() => setShowForm((s) => !s)}
           className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
-          {showForm ? "Đóng" : "+ Tạo bank mới"}
+          {showForm ? "Đóng" : "+ Tạo ngân hàng mới"}
         </button>
       </div>
 
@@ -90,7 +90,7 @@ export default function BankListClient({
           className="mt-3 rounded-lg border border-default bg-white p-4 shadow-sm"
         >
           <label className="block">
-            <span className="block text-xs font-medium text-slate-600">Tên bank</span>
+            <span className="block text-xs font-medium text-slate-600">Tên ngân hàng</span>
             <input
               type="text"
               required
@@ -137,7 +137,7 @@ export default function BankListClient({
 
       {banks.length === 0 && (
         <div className="mt-6 rounded-lg border border-dashed border-default p-8 text-center text-sm text-faint">
-          Chưa có bank nào. Bấm &ldquo;+ Tạo bank mới&rdquo; để bắt đầu.
+          Chưa có ngân hàng câu hỏi nào. Bấm &ldquo;+ Tạo ngân hàng mới&rdquo; để bắt đầu.
         </div>
       )}
 
@@ -216,7 +216,7 @@ function DeleteBankButton({
   async function run() {
     if (
       !confirm(
-        `Xoá ngân hàng "${bankName}"?\n\nMọi câu hỏi + version + skill tag + stats trong bank sẽ bị xoá theo. Không thể khôi phục.`,
+        `Xoá ngân hàng "${bankName}"?\n\nMọi câu hỏi + version + skill tag + stats trong ngân hàng sẽ bị xoá theo. Không thể khôi phục.`,
       )
     ) {
       return;
