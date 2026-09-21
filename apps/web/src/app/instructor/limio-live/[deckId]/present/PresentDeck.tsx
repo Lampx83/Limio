@@ -535,6 +535,9 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const hasSidebar = !!currentSlide && currentSlide.type !== "content";
   const presenterNote =
     mode === "presenter" && !slideshow && currentSlide ? String(currentSlide.config?.presenterNote ?? "").trim() : "";
+  // Presenter view: khung slide luôn thu vừa cả slide (như PowerPoint) để không che kết quả;
+  // zoom trên thanh trên chỉ chỉnh cỡ màn chiếu. Whiteboard giữ dựng thật (toạ độ vẽ).
+  const fitSlide = showPreview && !focus && currentSlide?.type !== "whiteboard";
   const showSidebar = !focus && (hasSidebar || !!presenterNote || showPreview) && !!currentSlide;
 
   return (
@@ -587,7 +590,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                   disabled={zoom <= 0.5}
                   className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-[rgb(var(--surface))] disabled:opacity-30"
                   aria-label="Thu nhỏ"
-                  title="Thu nhỏ (−)"
+                  title={showPreview ? "Thu nhỏ trên màn chiếu (−)" : "Thu nhỏ (−)"}
                 >
                   <ZoomOut size={16} />
                 </button>
@@ -603,7 +606,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                   disabled={zoom >= 2}
                   className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-[rgb(var(--surface))] disabled:opacity-30"
                   aria-label="Phóng to"
-                  title="Phóng to (+)"
+                  title={showPreview ? "Phóng to trên màn chiếu (+)" : "Phóng to (+)"}
                 >
                   <ZoomIn size={16} />
                 </button>
@@ -649,18 +652,19 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
           {loadingSlide || !currentSlide ? (
             <p className="my-auto self-center text-sm text-muted">Đang tải slide...</p>
           ) : (
+            <SlideFit enabled={fitSlide} w={FIT_W} h={FIT_H}>
             <div
               key={currentSlide.id}
               ref={cardRef}
               onScrollCapture={handleCardScroll}
-              style={{ background: slideThemeBg(deck.theme) }}
+              style={{ background: slideThemeBg(deck.theme), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
               className={`box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
               } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
-              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom }}>
+              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide ? 1 : zoom }}>
               <SlideStage
                 slide={currentSlide}
                 runtime={runtime}
@@ -669,9 +673,11 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 onStartTimer={() => handleStartTimer(currentSlide.id)}
                 revealed={!!uiState.revealed?.[currentSlide.id]}
                 onToggleReveal={() => handleToggleReveal(currentSlide.id)}
+                zoom={fitSlide ? 1 : zoom}
               />
               </div>
             </div>
+            </SlideFit>
           )}
           {showPreview && currentSlide && (
             <div className="flex flex-shrink-0 items-center gap-4 px-1 pt-2 text-[13px] text-[rgb(var(--text))]">
@@ -897,6 +903,7 @@ function SlideStage({
   onStartTimer,
   revealed,
   onToggleReveal,
+  zoom,
 }: {
   slide: Slide;
   runtime: Runtime | null;
@@ -905,6 +912,7 @@ function SlideStage({
   onStartTimer: () => void;
   revealed: boolean;
   onToggleReveal: () => void;
+  zoom: number;
 }) {
   const config = slide.config ?? {};
   const scrolls = slide.type === "word_cloud" || slide.type === "collaborate_board";
@@ -912,6 +920,7 @@ function SlideStage({
   if (slide.type === "content") {
     return (
       <ContentSlideView
+        zoom={zoom}
         config={config}
         timerSeconds={slide.timerSeconds}
         timerStartedAt={timerStartedAt}
@@ -1023,6 +1032,7 @@ function ContentSlideView({
   editable,
   onStartTimer,
   lazyImages,
+  zoom = 1,
 }: {
   config: Record<string, any>;
   timerSeconds: number | null;
@@ -1030,7 +1040,12 @@ function ContentSlideView({
   editable: boolean;
   onStartTimer: () => void;
   lazyImages?: boolean;
+  zoom?: number;
 }) {
+  // CSS `zoom` của khung ngoài chỉ phóng chữ/kích thước cố định; ảnh/PDF vốn "vừa bề ngang"
+  // (w-full) nên vẫn chiếm đúng bề ngang cũ → không thấy phóng to. Với chúng, nới bề ngang
+  // thêm `zoom` lần (cuộn ngang khi vượt khung); chữ/markdown thì để reflow như thường.
+  const fitScale = { width: `${zoom * 100}%`, maxWidth: zoom > 1 ? "none" : undefined } as React.CSSProperties;
   const bullets: string[] = config.bullets ?? [];
 
   // Đồng hồ là sticker nổi ở chân slide (không chiếm chỗ của nội dung); vùng
@@ -1050,7 +1065,10 @@ function ContentSlideView({
     return (
       <div className="relative flex min-h-0 flex-1 flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto p-10 pb-28">
-          <div className="mx-auto w-full max-w-6xl">
+          <div
+            className="mx-auto w-full max-w-6xl"
+            style={config.resource.type === "pdf" ? { ...fitScale, maxWidth: zoom > 1 ? "none" : "72rem" } : undefined}
+          >
             <ResourceContent type={config.resource.type} payload={config.resource.payload} />
           </div>
         </div>
@@ -1068,7 +1086,7 @@ function ContentSlideView({
         {/* Trang PDF dài: ưu tiên bề ngang (chữ đủ to để đọc), chiều dọc cuộn chuột. */}
         <div className="min-h-0 flex-1 overflow-y-auto pb-24">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config.imageUrl} alt="" loading={lazyImages ? "lazy" : undefined} className="mx-auto block h-auto w-full max-w-[1600px]" />
+          <img src={config.imageUrl} alt="" loading={lazyImages ? "lazy" : undefined} className="mx-auto block h-auto w-full max-w-[1600px]" style={fitScale} />
         </div>
         {timerSticker}
       </div>
@@ -1097,6 +1115,45 @@ function ContentSlideView({
         )}
       </div>
       {timerSticker}
+    </div>
+  );
+}
+
+// Dựng slide ở khung thiết kế cố định (như màn chiếu 1920x1080) rồi thu vừa vào chỗ trống
+// (giữ tỉ lệ, căn giữa) — presenter thấy trọn slide gồm cả kết quả, không phụ thuộc zoom.
+const FIT_W = 1920;
+const FIT_H = 1080;
+
+function SlideFit({ enabled, w, h, children }: { enabled: boolean; w: number; h: number; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !enabled || typeof ResizeObserver === "undefined") return;
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    measure();
+    return () => ro.disconnect();
+  }, [enabled]);
+  if (!enabled) return <>{children}</>;
+  const scale = box.w > 0 && box.h > 0 ? Math.min(box.w / w, box.h / h) : 0;
+  return (
+    <div ref={ref} className="relative min-h-0 w-full flex-1">
+      <div
+        style={{
+          position: "absolute",
+          left: (box.w - w * scale) / 2,
+          top: (box.h - h * scale) / 2,
+          width: w,
+          height: h,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          visibility: scale > 0 ? "visible" : "hidden",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
