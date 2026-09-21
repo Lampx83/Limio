@@ -9,7 +9,8 @@ import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
 import { openAudienceWindow } from "@/lib/limioLiveWindow";
 import EmptyState from "@/components/ui/EmptyState";
-import ResourceContent from "../../ResourceContent";
+import { parseVideoUrl } from "@/lib/videoUrl";
+import ResourceContent, { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
 import { slideThemeBg } from "../../slideThemes";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
@@ -1130,8 +1131,26 @@ function Filmstrip({
         {slides.map((sl, i) => {
           const active = sl.id === currentId;
           const cfg = sl.config ?? {};
-          const plain = sl.type === "content" && !cfg.resource;
-          const summary = String(cfg.question ?? cfg.prompt ?? cfg.title ?? "").trim();
+          // Học liệu nhẹ (văn bản/markdown/HTML/link/file) → dựng thật; video/PDF/embed nặng
+          // (iframe/player ×N slide) nên hiện ảnh bìa hoặc thẻ kèm tên + nguồn.
+          const resType: string | undefined = cfg.resource?.type;
+          const plain = sl.type === "content" && (!cfg.resource || !["video", "pdf", "embed"].includes(resType ?? ""));
+          const pdfUrl: string | undefined = resType === "pdf" ? cfg.resource?.payload?.url : undefined;
+          const resPayload = cfg.resource?.payload ?? {};
+          const videoThumb = resType === "video" ? parseVideoUrl(resPayload.url ?? "")?.thumbnailUrl : undefined;
+          let host = "";
+          try {
+            host = resPayload.url ? new URL(resPayload.url).hostname.replace(/^www\./, "") : "";
+          } catch {}
+          const summary = String(
+            cfg.question ?? cfg.prompt ?? cfg.title ?? resPayload.title ?? resPayload.filename ?? ""
+          ).trim();
+          const cardLabel =
+            sl.type === "content"
+              ? (resType && (RESOURCE_TYPE_LABELS as Record<string, string>)[resType]) || "Học liệu"
+              : sl.type === "collaborate_board" && cfg.mode === "drawing"
+                ? "Draw-it (vẽ)"
+                : TYPE_LABELS[sl.type];
           return (
             <button
               key={sl.id}
@@ -1150,16 +1169,29 @@ function Filmstrip({
                 }`}
                 style={{ background: slideThemeBg(theme) }}
               >
-                {plain ? (
+                {pdfUrl ? (
+                  <PdfFirstPage url={pdfUrl} />
+                ) : videoThumb ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={videoThumb} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <span className="absolute inset-x-0 bottom-0 line-clamp-1 bg-black/60 px-1.5 py-0.5 text-[9px] font-semibold text-white">
+                      ▶ {summary || cardLabel}
+                    </span>
+                  </>
+                ) : plain ? (
                   <ThumbScaled width={FILM_ITEM_W - 22}>
                     <ContentSlideView config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages />
                   </ThumbScaled>
                 ) : (
                   <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 p-1.5 text-center text-[#20241F]">
                     <span className="text-[9px] font-bold uppercase tracking-wide text-[#6B7268]">
-                      {sl.type === "content" ? "Học liệu" : sl.type === "collaborate_board" && cfg.mode === "drawing" ? "Draw-it (vẽ)" : TYPE_LABELS[sl.type]}
+                      {cardLabel}
                     </span>
-                    {summary && <span className="line-clamp-2 text-[10px] font-semibold leading-tight">{summary}</span>}
+                    {(summary || host) && (
+                      <span className="line-clamp-2 text-[10px] font-semibold leading-tight">{summary || host}</span>
+                    )}
+                    {summary && host && <span className="line-clamp-1 text-[9px] text-[#6B7268]">{host}</span>}
                   </span>
                 )}
               </span>
@@ -1168,6 +1200,75 @@ function Filmstrip({
         })}
       </div>
     </div>
+  );
+}
+
+// Trang đầu của PDF làm thumbnail. Chỉ tải/dựng khi thumbnail lọt vào tầm nhìn của dải
+// cuộn (IntersectionObserver) nên bài có nhiều PDF không bị tải hết một lượt.
+function PdfFirstPage({ url }: { url: string }) {
+  const boxRef = useRef<HTMLSpanElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    let doc: { destroy?: () => void } | null = null;
+    (async () => {
+      try {
+        const lib = await import("pdfjs-dist");
+        lib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+        const pdf = await lib.getDocument(url).promise;
+        doc = pdf;
+        const page = await pdf.getPage(1);
+        const canvas = canvasRef.current;
+        const box = boxRef.current;
+        if (cancelled || !canvas || !box) return;
+        const base = page.getViewport({ scale: 1 });
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const viewport = page.getViewport({ scale: (box.clientWidth / base.width) * dpr });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext("2d")!, viewport, canvas }).promise;
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      doc?.destroy?.();
+    };
+  }, [visible, url]);
+
+  return (
+    <span ref={boxRef} className="absolute inset-0 block overflow-hidden bg-white">
+      {failed ? (
+        <span className="flex h-full w-full items-center justify-center text-[10px] font-bold uppercase text-[#6B7268]">PDF</span>
+      ) : (
+        <canvas ref={canvasRef} className="block w-full" />
+      )}
+    </span>
   );
 }
 
