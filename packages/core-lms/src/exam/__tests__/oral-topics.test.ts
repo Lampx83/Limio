@@ -13,6 +13,7 @@ import {
   listOralTopics,
   publishExam,
   startOralExamAttempt,
+  updateExam,
   updateOralTopic,
 } from "../";
 
@@ -225,5 +226,68 @@ describe("topic assignment when an attempt starts (A6.7)", () => {
     await prisma.oralExamTopic.delete({ where: { id: t.topicId } });
     const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: r.attemptId } });
     expect(attempt.oralTopicId).toBeNull();
+  });
+});
+
+describe("student-facing brief + feedback flags (A6.8)", () => {
+  it("stores studentBrief when given, and null when blank or omitted; editing can clear it", async () => {
+    const { ownerId, examId } = await newOralExam("sb1");
+    const a = await createOralTopic(ownerId, examId, { title: "A", brief: "b", studentBrief: "  Bối cảnh cho sinh viên " });
+    const b = await createOralTopic(ownerId, examId, { title: "B", brief: "b", studentBrief: "   " });
+    const c = await createOralTopic(ownerId, examId, { title: "C", brief: "b" });
+    let list = await listOralTopics(ownerId, examId);
+    expect(list.map((t) => t.studentBrief)).toEqual(["Bối cảnh cho sinh viên", null, null]);
+    await updateOralTopic(ownerId, a.topicId, { title: "A", brief: "b", studentBrief: "" });
+    list = await listOralTopics(ownerId, examId);
+    expect(list[0]!.studentBrief).toBeNull();
+    expect([b.topicId, c.topicId]).toHaveLength(2);
+  });
+
+  it("rejects an over-long studentBrief", async () => {
+    const { ownerId, examId } = await newOralExam("sb2");
+    await expect(
+      createOralTopic(ownerId, examId, { title: "A", brief: "b", studentBrief: "x".repeat(2_001) }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
+  it("exam defaults: feedback mode 'exam', no closing summary; both settable on create and while there are no attempts", async () => {
+    const { ownerId, examId } = await newOralExam("fl1");
+    let e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(e.oralFeedbackMode).toBe("exam");
+    expect(e.oralClosingSummary).toBe(false);
+    await updateExam(ownerId, examId, { oralFeedbackMode: "coaching", oralClosingSummary: true });
+    e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
+    expect(e.oralFeedbackMode).toBe("coaching");
+    expect(e.oralClosingSummary).toBe(true);
+
+    const c = await createCourse(ownerId, { title: "C", description: "x", slug: "ot-course-fl1b" });
+    const { examId: created } = await createExam(ownerId, c.courseId, {
+      title: "Có cờ", durationMin: 15, kind: "oral", oralFeedbackMode: "coaching", oralClosingSummary: true,
+    });
+    const ce = await prisma.exam.findUniqueOrThrow({ where: { id: created } });
+    expect([ce.oralFeedbackMode, ce.oralClosingSummary]).toEqual(["coaching", true]);
+  });
+
+  it("locks the feedback flags once attempts exist (changing them mid-exam makes attempts non-comparable)", async () => {
+    const s = await newOralExam("fl2");
+    await createOralMaterialTopicList(s.ownerId, s.examId, { title: "M", text: "m" });
+    await publishExam(s.ownerId, s.examId);
+    const learner = await newLearner("fl2", s.courseId);
+    await startOralExamAttempt(learner, s.examId);
+    await expect(updateExam(s.ownerId, s.examId, { oralFeedbackMode: "coaching" })).rejects.toMatchObject({
+      code: "exam_has_attempts",
+    });
+    await expect(updateExam(s.ownerId, s.examId, { oralClosingSummary: true })).rejects.toMatchObject({
+      code: "exam_has_attempts",
+    });
+  });
+
+  it("rejects the oral-only flags on a written exam", async () => {
+    const owner = await registerUser({ email: "ot-o-fl3@e.com", password: "password1234", displayName: "O" }, BASE);
+    const course = await createCourse(owner.userId, { title: "C3", description: "x", slug: "ot-course-fl3" });
+    const { examId } = await createExam(owner.userId, course.courseId, { title: "Viết", durationMin: 30 });
+    await expect(updateExam(owner.userId, examId, { oralFeedbackMode: "coaching" })).rejects.toMatchObject({
+      code: "validation_failed",
+    });
   });
 });

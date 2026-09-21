@@ -3063,6 +3063,11 @@ model Exam {
   // giới thiệu và hỏi một câu làm quen (không hỏi kiến thức); câu kiến thức đầu tiên
   // đến ở lượt sau. Tắt (mặc định) = hành vi cũ: chào rồi hỏi luôn trong cùng lượt.
   oralWarmup             Boolean             @default(false)
+  // A6.8 — cách AI phản hồi TRONG buổi: exam = trung lập (chỉ ghi nhận rồi hỏi tiếp, dùng cho bài thi);
+  // coaching = sau mỗi câu trả lời có 1 nhận xét ngắn cụ thể + 1 gợi ý/phản biện (dùng cho bài luyện).
+  oralFeedbackMode       OralFeedbackMode    @default(exam)
+  // A6.8 — bật thì lời kết buổi có thêm "Nhìn lại buổi vấn đáp": vài điểm làm tốt / cần cải thiện, KHÔNG có điểm số.
+  oralClosingSummary     Boolean             @default(false)
   // A6.4 (UI) — rubric chấm điểm GV tự gõ/sửa, dùng khi AI đề xuất điểm sau
   // buổi thi. KHÔNG dùng cơ chế "tài liệu" (OralExamMaterial, khoá sau khi
   // publish để công bằng câu hỏi) vì rubric chỉ ảnh hưởng cách CHẤM sau này,
@@ -3104,6 +3109,12 @@ enum ExamKind {
 enum OralAnswerMode {
   text
   voice
+}
+
+// A6.8 — xem Exam.oralFeedbackMode.
+enum OralFeedbackMode {
+  exam
+  coaching
 }
 
 // A6.3/A6.6 — Ngôn ngữ hỏi-đáp của buổi vấn đáp. Chỉ có ý nghĩa khi kind=oral.
@@ -3184,6 +3195,9 @@ model OralExamTopic {
   examId     String
   title      String
   brief      String   @db.Text
+  // A6.8 — phần sinh viên ĐƯỢC ĐỌC (thẻ "Tình huống của bạn" ghim trong phòng thi). Tách khỏi `brief` vì
+  // brief chứa dữ kiện AI chỉ đưa ra ở câu phát biểu vấn đề. Trống = không hiện thẻ.
+  studentBrief String? @db.Text
   orderIndex Int
   createdAt  DateTime @default(now())
 

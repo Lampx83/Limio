@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Info, Keyboard, LogOut, Mic, Square, Timer, X } from "lucide-react";
+import { ArrowLeft, Info, Keyboard, LogOut, Mic, Square, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { usePacedReveal } from "@/hooks/usePacedReveal";
 import UserAvatar from "@/components/ui/UserAvatar";
 import SafeHtml from "@/components/SafeHtml";
 import FullscreenGate from "./FullscreenGate";
 import InRoomConfirm from "./InRoomConfirm";
+import RoomCountdown from "./RoomCountdown";
+import { useVisualViewport } from "@/hooks/useVisualViewport";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
 import OralAiAvatar, { type OralAvatarState } from "./OralAiAvatar";
@@ -133,9 +135,7 @@ export default function OralVoiceRoom({
     () => new Date(startedAt).getTime() + durationSec * 1000,
     [startedAt, durationSec],
   );
-  const [remainingSec, setRemainingSec] = useState(() =>
-    Math.max(0, Math.floor((deadlineEpoch - (Date.now() + clockSkewMs)) / 1000)),
-  );
+  const vp = useVisualViewport();
 
   const revokeQueuedUrls = useCallback(() => {
     for (const u of objectUrlsRef.current) URL.revokeObjectURL(u);
@@ -366,25 +366,18 @@ export default function OralVoiceRoom({
     };
   }, [attemptId, preview]);
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      const r = Math.max(0, Math.floor((deadlineEpoch - (Date.now() + clockSkewMs)) / 1000));
-      setRemainingSec(r);
-      if (r <= 0) {
-        clearInterval(t);
-        const live = liveRef.current;
-        if (!live.ended && !live.processing && !live.recording && live.turns.length > 0) {
-          setIsEnding(true);
-          const finalMessage = live.input.trim() || "(Đã hết giờ, không kịp trả lời.)";
-          setInput("");
-          // Bản thử không có đồng hồ phía server — chủ động báo hết giờ bằng forceEnd.
-          void sendTextTurn(finalMessage, preview ? { forceEnd: true } : undefined);
-        }
-      }
-    }, 1_000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deadlineEpoch, clockSkewMs]);
+  // Hết giờ giữa chừng: gửi nốt câu đang gõ dở (hoặc một câu báo hết giờ) để buổi thi được đóng đúng qua
+  // runOralExamTurn thay vì treo mãi ở in_progress. Đồng hồ nằm trong RoomCountdown.
+  const handleExpire = () => {
+    const live = liveRef.current;
+    if (!live.ended && !live.processing && !live.recording && live.turns.length > 0) {
+      setIsEnding(true);
+      const finalMessage = live.input.trim() || "(Đã hết giờ, không kịp trả lời.)";
+      setInput("");
+      // Bản thử không có đồng hồ phía server — chủ động báo hết giờ bằng forceEnd.
+      void sendTextTurn(finalMessage, preview ? { forceEnd: true } : undefined);
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -489,9 +482,6 @@ export default function OralVoiceRoom({
     };
   }, []);
 
-  const minutes = Math.floor(remainingSec / 60);
-  const seconds = remainingSec % 60;
-  const timerDanger = remainingSec < 120;
 
   const avatarState: OralAvatarState = ended
     ? "idle"
@@ -504,7 +494,10 @@ export default function OralVoiceRoom({
         : "idle";
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[rgb(var(--surface-muted))]">
+    <div
+      className="fixed inset-x-0 top-0 z-40 flex h-[100dvh] flex-col bg-[rgb(var(--surface-muted))]"
+      style={vp ? { height: vp.height, top: vp.offsetTop } : undefined}
+    >
       <FullscreenGate
         examTitle={examTitle}
         onEnter={() => setStarted(true)}
@@ -536,7 +529,7 @@ export default function OralVoiceRoom({
       )}
       <audio ref={audioRef} className="hidden" />
 
-      <header className="flex items-center justify-between gap-3 border-b border-token bg-[rgb(var(--surface))] px-4 py-3 sm:px-6">
+      <header className="relative flex items-center justify-between gap-3 border-b border-token bg-[rgb(var(--surface))] px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
@@ -558,14 +551,12 @@ export default function OralVoiceRoom({
               Bản thử · không lưu
             </span>
           )}
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium tabular-nums ${
-              timerDanger ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-700"
-            }`}
-          >
-            <Timer className="h-4 w-4" />
-            {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-          </span>
+          <RoomCountdown
+            deadlineEpoch={deadlineEpoch}
+            clockSkewMs={clockSkewMs}
+            totalSec={durationSec}
+            onExpire={handleExpire}
+          />
         </div>
       </header>
 
@@ -625,7 +616,9 @@ export default function OralVoiceRoom({
                 </div>
               )}
               {processing && reveal.revealed && (
-                <Bubble role="examiner" content={reveal.revealed} typing />
+                <div onClick={() => reveal.skip()} className="cursor-pointer" title="Chạm để hiện hết">
+                  <Bubble role="examiner" content={reveal.revealed} typing />
+                </div>
               )}
               {processing && !reveal.revealed && (
                 <div className="flex items-center gap-1.5 pl-1 text-xs italic text-faint">

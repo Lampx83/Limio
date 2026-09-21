@@ -14,7 +14,9 @@ import { embedMaterial } from "../oralExam/materialEmbeddings";
 import { generateOralExamEvaluation } from "../oralExam/evaluation";
 import {
   buildOralSystemPrompt,
+  makeOpenerFilter,
   resolveOralPhase,
+  stripEvaluativeOpener,
   runOralExamPreviewTurn,
   runOralExamTurn,
 } from "../oralExam/examinerChat";
@@ -295,5 +297,121 @@ describe("grading prompt knows the assigned topic (A6.7)", () => {
     await generateOralExamEvaluation(s.ownerId, s.attemptId, grade);
     expect(prompts[0]).toContain("Chủ đề được giao cho sinh viên này");
     expect(prompts[0]).toContain("Điểm danh QR");
+  });
+});
+
+describe("stripEvaluativeOpener / makeOpenerFilter (A6.8)", () => {
+  it("cuts the praise opener and a vocative right after it, keeps the substance", () => {
+    expect(stripEvaluativeOpener("Rất tốt, Ngọc Anh! Việc khảo sát giúp nhóm hiểu vấn đề. Bạn chọn cách nào?")).toBe(
+      "Việc khảo sát giúp nhóm hiểu vấn đề. Bạn chọn cách nào?",
+    );
+    expect(stripEvaluativeOpener("Đúng vậy, việc khảo sát giúp xác định vấn đề. Bạn hỏi ai?")).toBe(
+      "Việc khảo sát giúp xác định vấn đề. Bạn hỏi ai?",
+    );
+    expect(stripEvaluativeOpener("Chính xác. Bạn sẽ hỏi ai ở phía tổ chức?")).toBe("Bạn sẽ hỏi ai ở phía tổ chức?");
+  });
+
+  it("leaves neutral text, real questions that start with the same word, and praise-only text alone", () => {
+    expect(stripEvaluativeOpener("Mình đã ghi nhận. Bạn sẽ hỏi ai?")).toBe("Mình đã ghi nhận. Bạn sẽ hỏi ai?");
+    expect(stripEvaluativeOpener("Hợp lý hay không hợp lý ở chỗ nào?")).toBe("Hợp lý hay không hợp lý ở chỗ nào?");
+    expect(stripEvaluativeOpener("Rất tốt!")).toBe("Rất tốt!"); // không bao giờ trả chuỗi rỗng
+  });
+
+  it("streams exactly what will be stored: chunks arrive split, output equals the stripped whole", () => {
+    const full = "Rất tốt, Ngọc Anh! Việc khảo sát giúp nhóm hiểu rõ vấn đề của sinh viên. Bạn chọn cách thu thập nào?";
+    const out: string[] = [];
+    const f = makeOpenerFilter((d) => out.push(d));
+    for (let i = 0; i < full.length; i += 7) f.push(full.slice(i, i + 7));
+    f.flush();
+    expect(out.join("")).toBe(stripEvaluativeOpener(full));
+  });
+
+  it("flushes a reply shorter than the buffer, and tolerates a missing onDelta", () => {
+    const out: string[] = [];
+    const f = makeOpenerFilter((d) => out.push(d));
+    f.push("Đúng vậy, ngắn thôi.");
+    expect(out).toEqual([]); // còn đang giữ
+    f.flush();
+    expect(out.join("")).toBe("Ngắn thôi.");
+    const none = makeOpenerFilter(undefined);
+    expect(() => {
+      none.push("abc");
+      none.flush();
+    }).not.toThrow();
+  });
+});
+
+describe("prompt rules by feedback mode, last-question cue, closing summary (A6.8)", () => {
+  const base = { courseTitle: "K", examTitle: "Đ", contextChunks: [] as string[], language: "vi" as const };
+
+  it("exam mode: one question, short turns, no praise openers; coaching mode: short specific comment instead", () => {
+    const exam = buildOralSystemPrompt({ ...base, phase: "normal", feedbackMode: "exam" });
+    expect(exam).toContain("đúng MỘT dấu hỏi");
+    expect(exam).toContain("tối đa 2 câu");
+    expect(exam).toContain("KHÔNG mở đầu bằng lời khen");
+    expect(exam).toContain("Mình đã ghi nhận.");
+    const def = buildOralSystemPrompt({ ...base, phase: "normal" });
+    expect(def).toContain("KHÔNG mở đầu bằng lời khen"); // mặc định là Thi
+    const coach = buildOralSystemPrompt({ ...base, phase: "normal", feedbackMode: "coaching" });
+    expect(coach).toContain("nhận xét NGẮN");
+    expect(coach).not.toContain("KHÔNG mở đầu bằng lời khen");
+    expect(coach).toContain("đúng MỘT dấu hỏi"); // ngắn gọn áp dụng cả hai chế độ
+  });
+
+  it("with 2 minutes or less left, the AI is told to say 'Đây là câu hỏi cuối.'", () => {
+    const late = buildOralSystemPrompt({ ...base, phase: "normal", timing: { durationMin: 15, elapsedMin: 13 } });
+    expect(late).toContain("Đây là câu hỏi cuối.");
+    const early = buildOralSystemPrompt({ ...base, phase: "normal", timing: { durationMin: 15, elapsedMin: 5 } });
+    expect(early).not.toContain("Đây là câu hỏi cuối.");
+  });
+
+  it("closing: summary only when enabled, and never with a score", () => {
+    const plain = buildOralSystemPrompt({ ...base, phase: "closing" });
+    expect(plain).not.toContain("Nhìn lại buổi vấn đáp");
+    const sum = buildOralSystemPrompt({ ...base, phase: "closing", closingSummary: true });
+    expect(sum).toContain("Nhìn lại buổi vấn đáp");
+    expect(sum).toContain("KHÔNG cho điểm số");
+  });
+});
+
+describe("runOralExamTurn applies the opener filter in exam mode only (A6.8)", () => {
+  const chatWithPraise = (streamed: string[]): ChatComputeFn => async (_m, onDelta) => {
+    const text = "Rất tốt, An! Bạn sẽ hỏi ai ở phía tổ chức?";
+    for (let i = 0; i < text.length; i += 9) onDelta?.(text.slice(i, i + 9));
+    void streamed;
+    return { content: text, inputTokens: 1, outputTokens: 1 };
+  };
+
+  it("exam mode: stored and streamed text have no praise opener", async () => {
+    const s = await setup("f1", { warmup: false, topics: [] });
+    const streamed: string[] = [];
+    const first = capturingChat([], "Xin chào");
+    await runOralExamTurn({ attemptId: s.attemptId, studentUserId: s.learnerId, studentMessage: null, computeChat: first, computeEmbed: recordingEmbed([]) });
+    const r = await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: "Em sẽ phỏng vấn.",
+      computeChat: chatWithPraise(streamed),
+      computeEmbed: recordingEmbed([]),
+      onDelta: (d) => streamed.push(d),
+    });
+    expect(r.assistantContent).toBe("Bạn sẽ hỏi ai ở phía tổ chức?");
+    expect(streamed.join("")).toBe("Bạn sẽ hỏi ai ở phía tổ chức?");
+    const stored = await prisma.oralExamTurn.findMany({ where: { attemptId: s.attemptId, role: "examiner" }, orderBy: { createdAt: "asc" } });
+    expect(stored.at(-1)!.content).toBe("Bạn sẽ hỏi ai ở phía tổ chức?");
+  });
+
+  it("coaching mode: the comment is kept", async () => {
+    const s = await setup("f2", { warmup: false, topics: [] });
+    await prisma.exam.update({ where: { id: s.examId }, data: { oralFeedbackMode: "coaching" } });
+    await runOralExamTurn({ attemptId: s.attemptId, studentUserId: s.learnerId, studentMessage: null, computeChat: capturingChat([], "Xin chào"), computeEmbed: recordingEmbed([]) });
+    const r = await runOralExamTurn({
+      attemptId: s.attemptId,
+      studentUserId: s.learnerId,
+      studentMessage: "Em sẽ phỏng vấn.",
+      computeChat: chatWithPraise([]),
+      computeEmbed: recordingEmbed([]),
+    });
+    expect(r.assistantContent).toBe("Rất tốt, An! Bạn sẽ hỏi ai ở phía tổ chức?");
   });
 });

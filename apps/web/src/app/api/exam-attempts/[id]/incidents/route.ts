@@ -16,7 +16,8 @@ export async function POST(
   const body = await readJson(req);
   try {
     const r = await logExamIncident(subject, params.id, body);
-    if (body && typeof body === "object" && typeof (body as { type?: unknown }).type === "string") {
+    // Sự cố bị gộp thì cũng không đếm thêm vào bảng theo dõi trực tiếp của giám thị.
+    if (!r.deduped && body && typeof body === "object" && typeof (body as { type?: unknown }).type === "string") {
       await recordIncident(params.id, (body as { type: string }).type);
     }
     return NextResponse.json(r, { status: 201 });

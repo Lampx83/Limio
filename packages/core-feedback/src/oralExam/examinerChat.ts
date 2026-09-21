@@ -63,6 +63,8 @@ export function resolveOralPhase(params: {
   return params.examinerTurns === 0 ? "first" : "normal";
 }
 
+export type OralFeedbackMode = "exam" | "coaching";
+
 export interface OralPromptTopic {
   title: string;
   brief: string;
@@ -81,6 +83,10 @@ export function buildOralSystemPrompt(params: {
   topic?: OralPromptTopic | null;
   /** Thời gian thật của lượt thi; null ở bản thử (không có đồng hồ). */
   timing?: { durationMin: number; elapsedMin: number } | null;
+  /** A6.8 — exam: trung lập trong buổi (mặc định); coaching: nhận xét ngắn sau mỗi câu trả lời. */
+  feedbackMode?: OralFeedbackMode;
+  /** A6.8 — lời kết có thêm "Nhìn lại buổi vấn đáp" (không điểm số). */
+  closingSummary?: boolean;
 }): string {
   const extra = params.examinerInstructions?.trim()
     ? `\n\nHướng dẫn thêm từ giảng viên (áp dụng cùng các nguyên tắc trên, không được mâu thuẫn):\n"""\n${params.examinerInstructions.trim()}\n"""`
@@ -94,13 +100,25 @@ export function buildOralSystemPrompt(params: {
 
 ${LANGUAGE_DIRECTIVE[params.language]}
 
-Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết ngắn gọn (2-3 câu): cảm ơn sinh viên, KHÔNG chấm điểm, KHÔNG tiết lộ đúng/sai, KHÔNG hứa hẹn kết quả — chỉ thông báo buổi vấn đáp đã hoàn tất.`;
+${
+    params.closingSummary
+      ? `Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết gồm 2 phần:
+1. Một câu cảm ơn sinh viên và thông báo buổi vấn đáp đã hoàn tất.
+2. Mục "Nhìn lại buổi vấn đáp": 2–3 điểm sinh viên làm tốt và 2–3 điểm nên cải thiện, mỗi ý MỘT câu ngắn, dựa trên CHÍNH các câu trả lời trong hội thoại (nhắc đúng ý họ đã nói). KHÔNG cho điểm số hay xếp loại, KHÔNG nêu đáp án đầy đủ, KHÔNG hứa hẹn kết quả — điểm do giảng viên quyết định sau.`
+      : "Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết ngắn gọn (2-3 câu): cảm ơn sinh viên, KHÔNG chấm điểm, KHÔNG tiết lộ đúng/sai, KHÔNG hứa hẹn kết quả — chỉ thông báo buổi vấn đáp đã hoàn tất."
+  }`;
   }
 
   // Báo cho AI biết giờ giấc: trước đây nó không có cách nào biết còn bao lâu nên không thể
   // "chốt câu cuối" đúng lúc — đồng hồ chỉ cắt buổi thi ở lượt trả lời kế tiếp.
+  const remainingMin = params.timing ? Math.max(0, params.timing.durationMin - params.timing.elapsedMin) : null;
+  const lastQuestion = remainingMin !== null && remainingMin <= 2;
   const timingBlock = params.timing
-    ? `\nThời gian buổi vấn đáp: tổng ${params.timing.durationMin} phút, đã trôi khoảng ${params.timing.elapsedMin} phút (còn khoảng ${Math.max(0, params.timing.durationMin - params.timing.elapsedMin)} phút). Khi còn từ 2 phút trở xuống: hỏi một câu chốt cuối, không mở thêm chủ đề mới. Đừng nhắc số phút ở mỗi lượt.\n`
+    ? `\nThời gian buổi vấn đáp: tổng ${params.timing.durationMin} phút, đã trôi khoảng ${params.timing.elapsedMin} phút (còn khoảng ${remainingMin} phút). ${
+        lastQuestion
+          ? 'Đã đến lúc chốt: lượt này hỏi MỘT câu chốt cuối, mở đầu bằng đúng cụm "Đây là câu hỏi cuối." và không mở thêm chủ đề mới.'
+          : "Còn nhiều thời gian: đừng nhắc số phút ở mỗi lượt."
+      }\n`
     : "";
 
   if (params.phase === "warmup") {
@@ -130,10 +148,68 @@ ${context}
 """
 
 Nguyên tắc:
-1. Hỏi ĐÚNG 1 câu hỏi mỗi lượt, bám sát tài liệu trên.
+1. Hỏi ĐÚNG 1 câu hỏi mỗi lượt (đúng MỘT dấu hỏi), bám sát tài liệu trên. Cả lượt nói của bạn tối đa 2 câu, khoảng 160 ký tự — sinh viên đọc trên điện thoại và gõ tay, lượt dài làm mất thời gian của họ.
 2. Đào sâu theo câu trả lời trước của sinh viên — hỏi follow-up thay vì hỏi câu độc lập không liên quan.
-3. KHÔNG đưa gợi ý, KHÔNG tiết lộ đáp án đúng, KHÔNG chấm điểm hay nhận xét đúng/sai trong lúc hỏi — đó là việc của bước chấm sau khi buổi thi kết thúc.
+3. ${
+    (params.feedbackMode ?? "exam") === "coaching"
+      ? "Sau mỗi câu trả lời, nhận xét NGẮN (1 câu) và CỤ THỂ về chính câu trả lời đó: điều đã đúng hoặc còn thiếu. KHÔNG nêu đáp án đầy đủ, KHÔNG chấm điểm, KHÔNG khen chung chung; rồi hỏi tiếp hoặc phản biện."
+      : 'KHÔNG đưa gợi ý, KHÔNG tiết lộ đáp án đúng, KHÔNG chấm điểm hay nhận xét đúng/sai trong lúc hỏi — đó là việc của bước chấm sau khi buổi thi kết thúc. Tuyệt đối KHÔNG mở đầu bằng lời khen hay xác nhận ("Rất tốt", "Đúng vậy", "Chính xác", "Hợp lý", "Hay quá", "Tuyệt vời"…): khen không phân biệt làm sinh viên tưởng câu nào cũng đúng. Muốn ghi nhận chỉ nói trung tính "Mình đã ghi nhận." (không quá một lần mỗi hai lượt) hoặc vào thẳng câu hỏi tiếp theo.'
+  }
 4. ${LANGUAGE_DIRECTIVE[params.language]}${buildExtraRules(params)}${extra}`;
+}
+
+// ── A6.8 — bộ lọc mở đầu bằng khen (chế độ Thi) ───────────────────────────────────────────────────────
+// Hướng dẫn trong prompt không đủ: dữ liệu thật cho thấy 52% lượt AI vẫn mở đầu bằng "Rất tốt/Đúng vậy/Hợp
+// lý" dù đã dặn không khen. Khen không phân biệt vừa không mang thông tin vừa bị sinh viên phàn nàn ("câu nào
+// cũng được cho là đúng"). Nên cắt cả ở đầu ra, không chỉ trông vào lời dặn.
+// Cụm khen: không phân biệt hoa thường. Tên gọi đi kèm (vd "Ngọc Anh!") tách riêng và PHẢI viết hoa chữ đầu — nếu
+// dùng chung cờ `i` thì \p{Lu} khớp cả chữ thường và câu thường ("ngắn thôi.") bị nuốt nhầm làm tên.
+const EVALUATIVE_PHRASE =
+  /^\s*(?:rất tốt|tốt lắm|đúng vậy|đúng rồi|chính xác|rất chính xác|rất hay|hay lắm|hay quá|tuyệt vời|xuất sắc|rất hợp lý|hợp lý|rất thú vị|thú vị|tuyệt)\s*[,!.…:;-]+\s*/iu;
+const VOCATIVE = /^\p{Lu}[\p{L}]*(?:\s+\p{Lu}[\p{L}]*){0,2}\s*[!.]\s*/u;
+
+/**
+ * Bỏ cụm khen/xác nhận đúng ở ĐẦU lượt (kèm tên gọi ngay sau nó, vd "Rất tốt, Ngọc Anh!"). Phần còn lại giữ
+ * nguyên, viết hoa chữ đầu. Nếu bỏ xong không còn gì thì trả nguyên văn — không bao giờ trả chuỗi rỗng.
+ */
+export function stripEvaluativeOpener(text: string): string {
+  const m = EVALUATIVE_PHRASE.exec(text);
+  if (!m) return text;
+  let rest = text.slice(m[0].length);
+  const v = VOCATIVE.exec(rest);
+  if (v) rest = rest.slice(v[0].length);
+  rest = rest.trimStart();
+  if (!rest) return text;
+  return rest.charAt(0).toLocaleUpperCase("vi") + rest.slice(1);
+}
+
+/** Số ký tự đầu được giữ lại chờ quyết định lọc — đủ chứa "Rất chính xác, Nguyễn Văn An!". */
+const OPENER_BUFFER_CHARS = 70;
+
+/**
+ * Bọc `onDelta` của luồng SSE: giữ lại phần đầu tới khi đủ OPENER_BUFFER_CHARS (hoặc luồng kết thúc), lọc
+ * mở đầu bằng khen rồi mới phát — để chữ sinh viên thấy khớp đúng với nội dung lưu vào DB.
+ */
+export function makeOpenerFilter(onDelta: ((delta: string) => void) | undefined) {
+  let buffer = "";
+  let decided = false;
+  const decide = () => {
+    decided = true;
+    if (buffer) onDelta?.(stripEvaluativeOpener(buffer));
+    buffer = "";
+  };
+  return {
+    push(delta: string) {
+      if (!onDelta) return;
+      if (decided) return onDelta(delta);
+      buffer += delta;
+      if (buffer.length >= OPENER_BUFFER_CHARS) decide();
+    },
+    /** Gọi khi luồng đóng — lượt ngắn hơn ngưỡng vẫn phải được phát. */
+    flush() {
+      if (!decided) decide();
+    },
+  };
 }
 
 // Quy tắc chỉ áp dụng cho lượt mở màn — tách riêng để đánh số tiếp nối "Nguyên tắc" phía trên.
@@ -242,6 +318,8 @@ export async function runOralExamTurn(
           language: true,
           examinerInstructions: true,
           oralWarmup: true,
+          oralFeedbackMode: true,
+          oralClosingSummary: true,
           course: { select: { title: true } },
         },
       },
@@ -315,6 +393,8 @@ export async function runOralExamTurn(
       durationMin: Math.round(attempt.durationSec / 60),
       elapsedMin: Math.floor(elapsedSec / 60),
     },
+    feedbackMode: attempt.exam.oralFeedbackMode,
+    closingSummary: attempt.exam.oralClosingSummary,
   });
 
   const history: ChatMessage[] = turns.map((t) => ({
@@ -325,15 +405,21 @@ export async function runOralExamTurn(
 
   const messages: ChatMessage[] = [{ role: "system", content: systemPrompt }, ...history];
 
+  // Chỉ lọc lời khen ở chế độ Thi và ở các lượt HỎI (không phải khởi động/lời kết).
+  const filterOpener = attempt.exam.oralFeedbackMode === "exam" && (phase === "first" || phase === "topic_intro" || phase === "normal");
+  const streamFilter = filterOpener ? makeOpenerFilter(input.onDelta) : null;
+
   let chatResult;
   try {
-    chatResult = await input.computeChat(messages, input.onDelta);
+    chatResult = await input.computeChat(messages, streamFilter ? (d) => streamFilter.push(d) : input.onDelta);
+    streamFilter?.flush();
   } catch (e) {
     throw new AiTutorError("openai_error", (e as Error).message);
   }
   if (!chatResult.content) {
     throw new AiTutorError("openai_error", "empty_response");
   }
+  if (filterOpener) chatResult = { ...chatResult, content: stripEvaluativeOpener(chatResult.content) };
 
   await db.oralExamTurn.create({
     data: {
@@ -425,6 +511,8 @@ export async function runOralExamPreviewTurn(
       language: true,
       examinerInstructions: true,
       oralWarmup: true,
+      oralFeedbackMode: true,
+      oralClosingSummary: true,
       course: { select: { title: true } },
     },
   });
@@ -481,6 +569,8 @@ export async function runOralExamPreviewTurn(
     topic,
     // Bản thử không có đồng hồ — không báo giờ cho AI.
     timing: null,
+    feedbackMode: exam.oralFeedbackMode,
+    closingSummary: exam.oralClosingSummary,
   });
 
   const history: ChatMessage[] = input.history.map((t) => ({
@@ -489,13 +579,21 @@ export async function runOralExamPreviewTurn(
   }));
   if (trimmedAnswer) history.push({ role: "user", content: trimmedAnswer });
 
+  const filterOpener = exam.oralFeedbackMode === "exam" && (phase === "first" || phase === "topic_intro" || phase === "normal");
+  const streamFilter = filterOpener ? makeOpenerFilter(input.onDelta) : null;
+
   let chatResult;
   try {
-    chatResult = await input.computeChat([{ role: "system", content: systemPrompt }, ...history], input.onDelta);
+    chatResult = await input.computeChat(
+      [{ role: "system", content: systemPrompt }, ...history],
+      streamFilter ? (d) => streamFilter.push(d) : input.onDelta,
+    );
+    streamFilter?.flush();
   } catch (e) {
     throw new AiTutorError("openai_error", (e as Error).message);
   }
   if (!chatResult.content) throw new AiTutorError("openai_error", "empty_response");
+  if (filterOpener) chatResult = { ...chatResult, content: stripEvaluativeOpener(chatResult.content) };
 
   if (embedTokens > 0) {
     await recordAiUsage(input.teacherUserId, DEFAULT_EMBEDDING_MODEL, embedTokens, 0, db);

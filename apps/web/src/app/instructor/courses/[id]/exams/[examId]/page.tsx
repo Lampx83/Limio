@@ -133,6 +133,8 @@ export default async function EditExamPage({
           "shuffleOptions",
           "showResultsAfterSubmit",
           "oralWarmup",
+          "oralFeedbackMode",
+          "oralClosingSummary",
           "answerMode",
           "language",
         ] as const)
@@ -258,6 +260,8 @@ export default async function EditExamPage({
               language: exam.language,
               examinerInstructions: exam.examinerInstructions ?? "",
               oralWarmup: exam.oralWarmup,
+              oralFeedbackMode: exam.oralFeedbackMode,
+              oralClosingSummary: exam.oralClosingSummary,
             }}
           />
         </div>

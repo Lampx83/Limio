@@ -49,8 +49,16 @@ const Spec = z.object({
   examinerInstructions: z.string().max(5_000).optional(),
   oralRubricText: z.string().max(20_000).optional(),
   oralWarmup: z.boolean().default(false),
+  oralFeedbackMode: z.enum(["exam", "coaching"]).default("exam"),
+  oralClosingSummary: z.boolean().default(false),
   topics: z
-    .array(z.object({ title: z.string().trim().min(1).max(200), brief: z.string().trim().min(1).max(4_000) }))
+    .array(
+      z.object({
+        title: z.string().trim().min(1).max(200),
+        brief: z.string().trim().min(1).max(4_000),
+        studentBrief: z.string().trim().max(2_000).optional(),
+      }),
+    )
     .max(MAX_ORAL_TOPICS)
     .default([]),
   materials: z
@@ -94,7 +102,7 @@ async function main() {
   console.log(`Khoá: ${course?.title ?? "(không thấy)"} · Chủ: ${owner ? `${owner.displayName} <${ownerEmail}>` : "(không thấy)"}`);
   console.log(`${spec.durationMin} phút · ${spec.language} · trả lời ${spec.answerMode} · ${spec.attemptPolicy}${spec.maxAttempts ? ` (tối đa ${spec.maxAttempts})` : ""}`);
   console.log(
-    `Hướng dẫn giám khảo ${spec.examinerInstructions?.length ?? 0}/5000 · rubric ${spec.oralRubricText?.length ?? 0}/20000 · tài liệu ${spec.materials.length} · chủ đề ${spec.topics.length} · khởi động ${spec.oralWarmup ? "bật" : "tắt"}`,
+    `Hướng dẫn giám khảo ${spec.examinerInstructions?.length ?? 0}/5000 · rubric ${spec.oralRubricText?.length ?? 0}/20000 · tài liệu ${spec.materials.length} · chủ đề ${spec.topics.length} · khởi động ${spec.oralWarmup ? "bật" : "tắt"} · phản hồi ${spec.oralFeedbackMode} · tóm tắt cuối ${spec.oralClosingSummary ? "bật" : "tắt"}`,
   );
   console.log(`Quyền ai_oral.access của chủ đề: ${feature === null ? "không kiểm được" : feature ? "có" : "KHÔNG (không mở được trang vấn đáp)"}`);
 
@@ -121,6 +129,8 @@ async function main() {
     examinerInstructions: spec.examinerInstructions,
     oralRubricText: spec.oralRubricText,
     oralWarmup: spec.oralWarmup,
+    oralFeedbackMode: spec.oralFeedbackMode,
+    oralClosingSummary: spec.oralClosingSummary,
   });
   for (const t of spec.topics) {
     await createOralTopic(owner!.id, examId, t);

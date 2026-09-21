@@ -21,6 +21,13 @@ const TopicInput = z.object({
   title: z.string().trim().min(1).max(200),
   // Phần AI đọc: bối cảnh + dữ kiện gắn với chủ đề. Không lộ nguyên văn cho sinh viên.
   brief: z.string().trim().min(1).max(4_000),
+  // Phần SINH VIÊN đọc được (thẻ "Tình huống của bạn" ghim trong phòng thi). Tuỳ chọn; chuỗi rỗng = không có.
+  studentBrief: z
+    .string()
+    .trim()
+    .max(2_000)
+    .optional()
+    .transform((v) => (v ? v : null)),
 });
 
 // Cùng bất biến với tài liệu: sửa chủ đề sau publish khiến sinh viên cùng ca gặp đề khác nhau
@@ -83,6 +90,7 @@ export async function createOralTopic(
       examId,
       title: parsed.data.title,
       brief: parsed.data.brief,
+      studentBrief: parsed.data.studentBrief,
       orderIndex: (existing._max.orderIndex ?? -1) + 1,
     },
     select: { id: true },

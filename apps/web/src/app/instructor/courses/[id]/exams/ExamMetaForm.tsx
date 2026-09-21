@@ -56,6 +56,10 @@ interface InitialValues {
   examinerInstructions?: string;
   /** A6.7 — pha khởi động (chào + làm quen) tách riêng trước câu kiến thức đầu tiên. */
   oralWarmup?: boolean;
+  /** A6.8 — exam: AI trung lập trong buổi (bài thi); coaching: nhận xét ngắn sau mỗi câu (bài luyện). */
+  oralFeedbackMode?: "exam" | "coaching";
+  /** A6.8 — lời kết có thêm "Nhìn lại buổi vấn đáp" (không điểm số). */
+  oralClosingSummary?: boolean;
 }
 
 interface Props {
@@ -133,6 +137,8 @@ export default function ExamMetaForm({
       body.examinerInstructions = v.examinerInstructions || undefined;
       // Khoá khi đã có lượt thi (đổi giữa chừng làm các lượt thi không cùng điều kiện).
       if (!isLocked("oralWarmup")) body.oralWarmup = v.oralWarmup ?? false;
+      if (!isLocked("oralFeedbackMode")) body.oralFeedbackMode = v.oralFeedbackMode ?? "exam";
+      if (!isLocked("oralClosingSummary")) body.oralClosingSummary = v.oralClosingSummary ?? false;
       // Sửa được cả lúc tạo lẫn sau đó (khoá khi đã có lượt thi — gửi trường bị khoá sẽ bị server từ chối).
       if (!isLocked("answerMode")) body.answerMode = v.answerMode;
       if (!isLocked("language")) body.language = v.language;
@@ -298,6 +304,38 @@ export default function ExamMetaForm({
             </span>
           </span>
         </label>
+      )}
+
+      {v.kind === "oral" && (
+        <div className="space-y-3">
+          <SelectField
+            label="Cách AI phản hồi trong buổi"
+            value={v.oralFeedbackMode ?? "exam"}
+            disabled={isLocked("oralFeedbackMode")}
+            options={[
+              { value: "exam", label: "Thi — trung lập: chỉ ghi nhận rồi hỏi tiếp, không khen/chê" },
+              { value: "coaching", label: "Luyện — sau mỗi câu có 1 nhận xét ngắn, cụ thể" },
+            ]}
+            onChange={(s) => setV({ ...v, oralFeedbackMode: s as "exam" | "coaching" })}
+          />
+          <label className="flex items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={v.oralClosingSummary ?? false}
+              disabled={isLocked("oralClosingSummary")}
+              onChange={(e) => setV({ ...v, oralClosingSummary: e.target.checked })}
+            />
+            <span>
+              <span className="font-medium">Có &quot;Nhìn lại buổi vấn đáp&quot; ở lời kết</span>
+              <span className="mt-0.5 block text-caption text-faint">
+                Cuối buổi AI nêu vài điểm làm tốt và vài điểm nên cải thiện dựa trên chính câu trả lời của sinh
+                viên — <strong>không có điểm số</strong>, không nêu đáp án đầy đủ. Bật khi muốn sinh viên nhận
+                được phản hồi mà vẫn giữ buổi thi công bằng.
+              </span>
+            </span>
+          </label>
+        </div>
       )}
 
       {v.kind === "oral" && (

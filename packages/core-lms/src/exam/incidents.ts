@@ -17,6 +17,14 @@ const INCIDENT_TYPES = [
   "network_lost",
 ] as const satisfies readonly ExamIncidentType[];
 
+/**
+ * Cùng một loại sự cố của cùng một lượt thi trong khoảng này chỉ ghi MỘT dòng. Có thật: một lượt vấn đáp
+ * trên điện thoại ghi 1.058 dòng `tab_blur` trong chưa đến 1 phút — con người không làm được, đó là bùng
+ * nổ sự kiện của trình duyệt/thiết bị, và nó làm màn chấm hiện một cờ gian lận vô nghĩa. Phía client cũng
+ * chỉ báo sau 5 giây rời thật sự, nên 10 giây ở đây không nuốt mất sự kiện thật nào.
+ */
+export const INCIDENT_DEDUPE_WINDOW_MS = 10_000;
+
 export const LogIncidentInput = z.object({
   type: z.enum(INCIDENT_TYPES),
   /** Type-specific extras: { pastedLength }, { offlineSec }, { tabId }, … */
@@ -25,15 +33,15 @@ export const LogIncidentInput = z.object({
 
 /**
  * A7.7.3 — Append an incident to the attempt's log. Per AC: only flag, never
- * auto-disqualify. Idempotency is not enforced — the same client-side event
- * fired twice yields two rows (browsers misbehave; instructors review later).
+ * auto-disqualify. Cùng loại trong INCIDENT_DEDUPE_WINDOW_MS thì gộp (trả lại dòng cũ, `deduped: true`)
+ * để một trình duyệt lỗi không nhét hàng nghìn dòng vào nhật ký.
  */
 export async function logExamIncident(
   subject: ExamSubject,
   attemptId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
-): Promise<{ incidentId: string }> {
+): Promise<{ incidentId: string; deduped?: boolean }> {
   const parsed = LogIncidentInput.safeParse(rawInput);
   if (!parsed.success) {
     throw new ExamError("validation_failed", parsed.error.flatten());
@@ -54,6 +62,17 @@ export async function logExamIncident(
   if (attempt.status !== "in_progress") {
     throw new ExamError("attempt_already_submitted");
   }
+
+  const recent = await db.examIncident.findFirst({
+    where: {
+      attemptId,
+      type: parsed.data.type,
+      occurredAt: { gte: new Date(Date.now() - INCIDENT_DEDUPE_WINDOW_MS) },
+    },
+    select: { id: true },
+    orderBy: { occurredAt: "desc" },
+  });
+  if (recent) return { incidentId: recent.id, deduped: true };
 
   const incident = await db.examIncident.create({
     data: {

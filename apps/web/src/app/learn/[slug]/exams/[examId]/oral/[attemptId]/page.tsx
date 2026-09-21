@@ -55,6 +55,15 @@ export default async function OralExamRuntimePage({
     select: { role: true, content: true },
   });
 
+  // A6.8 — thẻ "Tình huống của bạn": chỉ khi chủ đề được giao có phần mô tả dành cho sinh viên.
+  const assigned = await prisma.examAttempt.findUnique({
+    where: { id: params.attemptId },
+    select: { oralTopic: { select: { title: true, studentBrief: true } } },
+  });
+  const topicCard = assigned?.oralTopic?.studentBrief
+    ? { title: assigned.oralTopic.title, text: assigned.oralTopic.studentBrief }
+    : null;
+
   const roomProps = {
     examId: params.examId,
     attemptId: params.attemptId,
@@ -72,6 +81,7 @@ export default async function OralExamRuntimePage({
     instructionsHtml: exam.description ? plainToRichHtml(exam.description) : null,
     studentName: session.user.name,
     studentImageUrl: session.user.image,
+    topicCard,
   };
 
   if (exam.answerMode === "voice") {

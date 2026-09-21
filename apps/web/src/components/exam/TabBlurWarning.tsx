@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Shows a warning overlay each time the learner returns to the tab after
@@ -21,6 +21,13 @@ export default function TabBlurWarning({
 }) {
   const [count, setCount] = useState(0);
   const [show, setShow] = useState(false);
+  // Giữ callback trong ref: phòng thi truyền một hàm MỚI mỗi lần dựng lại, mà phòng vấn đáp dựng lại rất
+  // dày (chữ AI hiện dần). Để `onBlur` trong dependency thì bộ lắng nghe bị gỡ/gắn lại liên tục và bộ đếm
+  // 5 giây bị huỷ giữa chừng. Đây là điểm yếu thật, nhưng CHƯA chứng minh là nguyên nhân của một lượt thi
+  // từng ghi 1.058 sự cố trong chưa đến 1 phút — việc gộp sự cố phía máy chủ (INCIDENT_DEDUPE_WINDOW_MS)
+  // mới là lớp chặn chắc chắn.
+  const onBlurRef = useRef(onBlur);
+  onBlurRef.current = onBlur;
 
   useEffect(() => {
     const GRACE_MS = 5_000;
@@ -33,7 +40,7 @@ export default function TabBlurWarning({
         pending = setTimeout(() => {
           pending = null;
           leftForReal = true;
-          onBlur();
+          onBlurRef.current();
         }, GRACE_MS);
       } else if (document.visibilityState === "visible") {
         if (pending) {
@@ -55,7 +62,7 @@ export default function TabBlurWarning({
       if (pending) clearTimeout(pending);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [onBlur]);
+  }, []);
 
   if (!show) return null;
 

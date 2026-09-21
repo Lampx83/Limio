@@ -45,6 +45,10 @@ export const CreateExamInput = z
     examinerInstructions: z.string().max(5_000).optional(),
     // A6.7 — bật pha khởi động (chào + làm quen, chưa hỏi kiến thức) trước câu hỏi đầu tiên.
     oralWarmup: z.boolean().optional(),
+    // A6.8 — cách AI phản hồi trong buổi (exam = trung lập, coaching = nhận xét ngắn sau mỗi câu) và
+    // có thêm "Nhìn lại buổi vấn đáp" (không điểm số) trong lời kết hay không.
+    oralFeedbackMode: z.enum(["exam", "coaching"]).optional(),
+    oralClosingSummary: z.boolean().optional(),
     // A6.4 — rubric GV tự gõ/sửa, dùng khi AI đề xuất điểm sau buổi thi.
     oralRubricText: z.string().max(20_000).optional(),
   })
@@ -77,6 +81,9 @@ export const UpdateExamInput = z
     // A6.7 — đổi được tới khi có lượt thi (không nằm trong `allowed` bên dưới): bật/tắt khởi động giữa
     // chừng làm các lượt thi không cùng điều kiện.
     oralWarmup: z.boolean().optional(),
+    // A6.8 — như trên; đổi giữa chừng làm các lượt thi không cùng điều kiện nên cũng khoá khi đã có lượt thi.
+    oralFeedbackMode: z.enum(["exam", "coaching"]).optional(),
+    oralClosingSummary: z.boolean().optional(),
     // A6.4 — sửa được bất cứ lúc nào kể cả sau publish/có lượt thi (không
     // ảnh hưởng câu hỏi SV nhận lúc thi, chỉ ảnh hưởng cách AI chấm sau đó)
     // — cùng nhóm với title/description/closeAt trong `allowed` bên dưới.
@@ -139,6 +146,8 @@ export async function createExam(
       language: d.language ?? "vi",
       examinerInstructions: d.examinerInstructions ?? null,
       oralWarmup: d.oralWarmup ?? false,
+      oralFeedbackMode: d.oralFeedbackMode ?? "exam",
+      oralClosingSummary: d.oralClosingSummary ?? false,
       oralRubricText: d.oralRubricText ?? null,
     },
     select: { id: true },
@@ -294,8 +303,11 @@ export async function updateExam(
   if (exam.kind !== "oral" && ("answerMode" in data || "language" in data)) {
     throw new ExamError("validation_failed", "answerMode/language chỉ áp dụng cho đề vấn đáp");
   }
-  if (exam.kind !== "oral" && "oralWarmup" in data) {
-    throw new ExamError("validation_failed", "oralWarmup chỉ áp dụng cho đề vấn đáp");
+  if (
+    exam.kind !== "oral" &&
+    ("oralWarmup" in data || "oralFeedbackMode" in data || "oralClosingSummary" in data)
+  ) {
+    throw new ExamError("validation_failed", "oralWarmup/oralFeedbackMode/oralClosingSummary chỉ áp dụng cho đề vấn đáp");
   }
 
   if (exam.status === "published") {

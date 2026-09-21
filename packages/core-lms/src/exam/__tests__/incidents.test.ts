@@ -8,6 +8,7 @@ import {
   createExam,
   createExamQuestion,
   ExamError,
+  INCIDENT_DEDUPE_WINDOW_MS,
   listAttemptIncidents,
   logExamIncident,
   publishExam,
@@ -98,14 +99,37 @@ describe("logExamIncident (A7.7.3)", () => {
     expect((row.payload as { pastedLength: number }).pastedLength).toBe(124);
   });
 
-  it("allows multiple incidents of same type (no dedup)", async () => {
+  it("merges the same type within the dedupe window: a burst becomes ONE row (real case: 1,058 tab_blur in <1 min)", async () => {
     const s = await setupInProgress("i3");
-    await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "tab_blur" });
-    await logExamIncident({ kind: "user", userId: s.learnerId }, s.attemptId, { type: "tab_blur" });
-    const rows = await prisma.examIncident.findMany({
-      where: { attemptId: s.attemptId },
+    const subject = { kind: "user", userId: s.learnerId } as const;
+    const first = await logExamIncident(subject, s.attemptId, { type: "tab_blur" });
+    expect(first.deduped).toBeUndefined();
+    const again = await logExamIncident(subject, s.attemptId, { type: "tab_blur" });
+    expect(again).toEqual({ incidentId: first.incidentId, deduped: true });
+    for (let i = 0; i < 50; i++) await logExamIncident(subject, s.attemptId, { type: "tab_blur" });
+    const rows = await prisma.examIncident.findMany({ where: { attemptId: s.attemptId } });
+    expect(rows).toHaveLength(1);
+    const events = await prisma.learningEvent.count({
+      where: { eventType: LearningEventType.ExamIncidentFlagged, userId: s.learnerId },
     });
-    expect(rows).toHaveLength(2);
+    expect(events).toBe(1); // sự cố bị gộp không phát thêm sự kiện
+  });
+
+  it("still records a different type right away, and the same type again once the window has passed", async () => {
+    const s = await setupInProgress("i3b");
+    const subject = { kind: "user", userId: s.learnerId } as const;
+    const first = await logExamIncident(subject, s.attemptId, { type: "tab_blur" });
+    await logExamIncident(subject, s.attemptId, { type: "paste", payload: { pastedLength: 5 } });
+    expect(await prisma.examIncident.count({ where: { attemptId: s.attemptId } })).toBe(2);
+
+    await prisma.examIncident.update({
+      where: { id: first.incidentId },
+      data: { occurredAt: new Date(Date.now() - INCIDENT_DEDUPE_WINDOW_MS - 1_000) },
+    });
+    const later = await logExamIncident(subject, s.attemptId, { type: "tab_blur" });
+    expect(later.deduped).toBeUndefined();
+    expect(later.incidentId).not.toBe(first.incidentId);
+    expect(await prisma.examIncident.count({ where: { attemptId: s.attemptId, type: "tab_blur" } })).toBe(2);
   });
 
   it("rejects when other user attempts to log", async () => {

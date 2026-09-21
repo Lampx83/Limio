@@ -10,6 +10,8 @@ interface Topic {
   id: string;
   title: string;
   brief: string;
+  /** Phần sinh viên đọc được (thẻ ghim trong phòng thi); null = không hiện thẻ. */
+  studentBrief: string | null;
   orderIndex: number;
   /** Số lượt thi đã được giao chủ đề này. */
   assignedCount: number;
@@ -18,6 +20,7 @@ interface Topic {
 // Phải khớp TopicInput trong packages/core-lms/src/exam/oral-topics.ts.
 const TITLE_MAX = 200;
 const BRIEF_MAX = 4_000;
+const STUDENT_BRIEF_MAX = 2_000;
 const TOPICS_MAX = 30;
 
 const FRIENDLY_ERROR: Record<string, string> = {
@@ -37,6 +40,7 @@ export default function OralTopicsPanel({ examId, editable }: { examId: string; 
   const [err, setErr] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [brief, setBrief] = useState("");
+  const [studentBrief, setStudentBrief] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -53,6 +57,7 @@ export default function OralTopicsPanel({ examId, editable }: { examId: string; 
   function resetForm() {
     setTitle("");
     setBrief("");
+    setStudentBrief("");
     setEditingId(null);
   }
 
@@ -68,7 +73,7 @@ export default function OralTopicsPanel({ examId, editable }: { examId: string; 
         {
           method: editingId ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, brief }),
+          body: JSON.stringify({ title, brief, studentBrief }),
         },
       );
       if (!res.ok) {
@@ -102,6 +107,7 @@ export default function OralTopicsPanel({ examId, editable }: { examId: string; 
     setEditingId(t.id);
     setTitle(t.title);
     setBrief(t.brief);
+    setStudentBrief(t.studentBrief ?? "");
     setErr(null);
   }
 
@@ -144,6 +150,9 @@ export default function OralTopicsPanel({ examId, editable }: { examId: string; 
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">{t.title}</p>
                 <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-caption text-faint">{t.brief}</p>
+                {t.studentBrief && (
+                  <p className="mt-0.5 text-caption text-faint">Có thẻ &quot;Tình huống của bạn&quot; cho sinh viên.</p>
+                )}
                 {t.assignedCount > 0 && (
                   <p className="mt-1 text-caption text-faint">Đã giao cho {t.assignedCount} lượt thi</p>
                 )}
@@ -211,6 +220,23 @@ export default function OralTopicsPanel({ examId, editable }: { examId: string; 
             />
             <p className="mt-1 text-right text-caption text-faint" aria-live="polite">
               {brief.length.toLocaleString("vi-VN")} / {BRIEF_MAX.toLocaleString("vi-VN")} ký tự
+            </p>
+          </div>
+          <div>
+            <label htmlFor="oral-topic-student-brief" className="block text-caption font-medium">
+              Thẻ &quot;Tình huống của bạn&quot; — phần sinh viên được đọc (tuỳ chọn)
+            </label>
+            <textarea
+              id="oral-topic-student-brief"
+              rows={4}
+              value={studentBrief}
+              maxLength={STUDENT_BRIEF_MAX}
+              onChange={(e) => setStudentBrief(e.target.value)}
+              placeholder="Bối cảnh, nhân vật, ràng buộc. KHÔNG ghi dữ kiện/số liệu mà AI chỉ đưa ra ở câu hỏi sau. Hiện ghim trong phòng thi để sinh viên khỏi phải nhớ."
+              className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-right text-caption text-faint" aria-live="polite">
+              {studentBrief.length.toLocaleString("vi-VN")} / {STUDENT_BRIEF_MAX.toLocaleString("vi-VN")} ký tự
             </p>
           </div>
           <div className="flex items-center gap-2">

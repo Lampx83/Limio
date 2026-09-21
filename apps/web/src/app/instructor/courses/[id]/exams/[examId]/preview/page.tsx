@@ -53,7 +53,7 @@ export default async function OralExamPreviewPage({
   const topics = await prisma.oralExamTopic.findMany({
     where: { examId: exam.id },
     orderBy: { orderIndex: "asc" },
-    select: { id: true, title: true },
+    select: { id: true, title: true, studentBrief: true },
   });
   const chosenTopic =
     topics.find((t) => t.id === searchParams?.topic) ??
@@ -77,6 +77,7 @@ export default async function OralExamPreviewPage({
     studentImageUrl: session.user.image,
     preview: true,
     previewTopicId: chosenTopic?.id ?? null,
+    topicCard: chosenTopic?.studentBrief ? { title: chosenTopic.title, text: chosenTopic.studentBrief } : null,
   };
 
   const room = exam.answerMode === "voice" ? <OralVoiceRoom {...roomProps} /> : <OralExamRoom {...roomProps} />;

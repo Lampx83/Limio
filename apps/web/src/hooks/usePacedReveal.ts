@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
  * giống "hiện nhanh quá" dù có stream. `push` chỉ NÂNG mục tiêu — gọi lại
  * với cùng hoặc dài hơn base cũ đều an toàn (SSE nối dần từng delta).
  */
-export function usePacedReveal(charsPerSec = 26) {
+export function usePacedReveal(charsPerSec = 45) {
   const [revealed, setRevealed] = useState("");
   const targetRef = useRef("");
   const shownRef = useRef(0);
@@ -34,6 +34,11 @@ export function usePacedReveal(charsPerSec = 26) {
     /** Nâng mục tiêu lộ tới `text`. An toàn gọi nhiều lần (SSE nối từng delta). */
     push(text: string) {
       targetRef.current = text;
+    },
+    /** Hiện hết ngay phần đã nhận — sinh viên chạm vào lời AI để khỏi chờ chữ chạy. */
+    skip() {
+      shownRef.current = targetRef.current.length;
+      setRevealed(targetRef.current);
     },
     /** Reset về rỗng — gọi khi bắt đầu một lượt AI mới. */
     reset() {
