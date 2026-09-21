@@ -8,7 +8,9 @@ import {
   createExamQuestion,
   createPassage,
   ensureDefaultSession,
+  createExamRoom,
   grantAttemptReentry,
+  grantReentryByProctorCode,
   publishExam,
 } from "../";
 import { capDurationToWindow, EXAM_CLOSE_GRACE_SEC } from "../session-window";
@@ -278,6 +280,58 @@ describe("giảng viên cho vào lại (gỡ kẹt khi sinh viên quên email/S�
     await expect(grantAttemptReentry(ownerId, a.id)).rejects.toMatchObject({
       code: "validation_failed",
     });
+  });
+});
+
+describe("giám thị (vào bằng mã phòng) cho vào lại", () => {
+  /** Một thí sinh vào bằng mã mở, xếp vào một phòng cụ thể. */
+  async function inRoom(slug: string) {
+    const { code, ownerId, examId, sessionId } = await setup(slug, 120);
+    const room = await createExamRoom(ownerId, examId, { name: "P1", proctorUserId: ownerId });
+    const row = await prisma.examRoom.findUniqueOrThrow({ where: { id: room.id } });
+    const first = await claimByOpenCode(code, student({ email: "goc@example.com", roomCode: row.accessCode! }));
+    const cand = await prisma.examAttempt.findUniqueOrThrow({
+      where: { id: first.attemptId },
+      select: { candidateId: true },
+    });
+    return { code, ownerId, examId, sessionId, roomId: room.id, first, candidateId: cand.candidateId! };
+  }
+
+  it("thí sinh trong phòng mình: được cho vào lại một lần", async () => {
+    const { code, roomId, candidateId, first } = await inRoom("proc-ok");
+    await grantReentryByProctorCode(roomId, candidateId);
+    const again = await claimByOpenCode(code, student({ email: "khac@example.com" }));
+    expect(again.attemptId).toBe(first.attemptId);
+    expect(again.resumed).toBe(true);
+  });
+
+  it("thí sinh phòng khác: bị từ chối (cầm mã phòng A không mở được người phòng B)", async () => {
+    const { ownerId, examId, candidateId } = await inRoom("proc-other");
+    const otherRoom = await createExamRoom(ownerId, examId, { name: "P2", proctorUserId: ownerId });
+    await expect(grantReentryByProctorCode(otherRoom.id, candidateId)).rejects.toMatchObject({
+      code: "forbidden",
+    });
+  });
+
+  it("thí sinh đã nộp bài: không có gì để vào lại", async () => {
+    const { roomId, candidateId, first } = await inRoom("proc-done");
+    await prisma.examAttempt.update({
+      where: { id: first.attemptId },
+      data: { status: "submitted", submittedAt: new Date() },
+    });
+    await expect(grantReentryByProctorCode(roomId, candidateId)).rejects.toMatchObject({
+      code: "attempt_not_in_progress",
+    });
+  });
+
+  it("để lại sự kiện, ghi rõ là do giám thị và không lộ mã", async () => {
+    const { roomId, candidateId } = await inRoom("proc-event");
+    await grantReentryByProctorCode(roomId, candidateId);
+    const ev = await prisma.learningEvent.findMany({
+      where: { candidateId, eventType: "exam.attempt.session_reset" },
+    });
+    expect(ev).toHaveLength(1);
+    expect(ev[0]!.payload).toMatchObject({ action: "reentry_granted", by: "proctor_code", roomId });
   });
 });
 

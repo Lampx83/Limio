@@ -15,6 +15,9 @@
  */
 
 import { prisma, type PrismaClient } from "@feedbackme/db";
+import { openReentryGrant } from "./attempt-actions";
+import { emitEvent } from "../learning/events";
+import { LearningEventType } from "@feedbackme/shared-types";
 import { ExamError } from "./types";
 import { sessionOpenState } from "./session-window";
 
@@ -329,4 +332,57 @@ export async function listRoomsForOrganizer(
     });
   }
   return out;
+}
+
+/**
+ * Cho một thí sinh vào lại bài đang làm dở — bản cho giám thị vào bằng mã phòng.
+ *
+ * Thí sinh vào bằng mã thi mở phải nhập lại đúng email/SĐT đã dùng lúc đầu mới vào
+ * lại được bài (xem isSameOwner trong code-access.ts); người quên thì kẹt. Giám thị
+ * đang đứng trong phòng, nhìn thấy người đó, là người phù hợp nhất để gỡ. Như
+ * `setAttendanceByProctorCode`, roomId lấy từ cookie và thí sinh phải thuộc đúng phòng
+ * đó — cầm mã phòng A không mở được người phòng B. Quyền dùng một lần, hết hạn sau
+ * ít phút (xem openReentryGrant).
+ */
+export async function grantReentryByProctorCode(
+  roomId: string,
+  candidateId: string,
+  db: PrismaClient = prisma,
+): Promise<{ expiresAt: Date }> {
+  const c = await db.examCandidate.findUnique({
+    where: { id: candidateId },
+    select: {
+      roomId: true,
+      examId: true,
+      exam: { select: { courseId: true } },
+      attempts: { where: { status: "in_progress" }, orderBy: { startedAt: "desc" }, take: 1, select: { id: true } },
+    },
+  });
+  if (!c || c.roomId !== roomId) throw new ExamError("forbidden");
+  const attempt = c.attempts[0];
+  // Thí sinh chưa vào thi / đã nộp: không có bài dở nào để mở lại.
+  if (!attempt) throw new ExamError("attempt_not_in_progress");
+
+  const g = await openReentryGrant(attempt.id, db);
+  // Giám thị không có tài khoản: chủ thể của sự kiện là thí sinh được mở.
+  await emitEvent(
+    null,
+    LearningEventType.ExamAttemptSessionReset,
+    {
+      examId: c.examId,
+      attemptId: attempt.id,
+      candidateId,
+      roomId,
+      action: "reentry_granted",
+      by: "proctor_code",
+      expiresAt: g.expiresAt.toISOString(),
+    },
+    {
+      courseId: c.exam.courseId ?? undefined,
+      candidateId,
+      eventKey: `exam.attempt.reentry_granted:${attempt.id}:${Date.now()}`,
+    },
+    db,
+  );
+  return { expiresAt: g.expiresAt };
 }

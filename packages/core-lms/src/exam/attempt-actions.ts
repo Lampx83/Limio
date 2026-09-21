@@ -251,13 +251,42 @@ export async function grantAttemptReentry(
 ): Promise<{ expiresAt: Date }> {
   const a = await loadAttemptForAction(attemptId, db);
   await assertCanModerateLiveExamForExam(actorUserId, a, db);
-  if (a.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
+  const g = await openReentryGrant(attemptId, db);
+  await emitEvent(
+    actorUserId,
+    LearningEventType.ExamAttemptSessionReset,
+    {
+      examId: a.examId,
+      attemptId,
+      candidateId: g.candidateId,
+      action: "reentry_granted",
+      expiresAt: g.expiresAt.toISOString(),
+    },
+    {
+      courseId: a.courseId,
+      candidateId: g.candidateId,
+      eventKey: `exam.attempt.reentry_granted:${attemptId}:${Date.now()}`,
+    },
+    db,
+  );
+  return { expiresAt: g.expiresAt };
+}
 
+/**
+ * Phần ghi quyền vào lại, dùng chung cho giảng viên (có tài khoản) và giám thị
+ * (vào bằng mã phòng). KHÔNG kiểm quyền — người gọi phải làm việc đó trước.
+ */
+export async function openReentryGrant(
+  attemptId: string,
+  db: PrismaClient = prisma,
+): Promise<{ expiresAt: Date; candidateId: string }> {
   const att = await db.examAttempt.findUnique({
     where: { id: attemptId },
-    select: { candidateId: true, candidate: { select: { metadata: true } } },
+    select: { status: true, candidateId: true, candidate: { select: { metadata: true } } },
   });
-  if (!att?.candidateId || !att.candidate)
+  if (!att) throw new ExamError("attempt_not_found");
+  if (att.status !== "in_progress") throw new ExamError("attempt_not_in_progress");
+  if (!att.candidateId || !att.candidate)
     throw new ExamError("validation_failed", {
       message: "Chỉ dùng cho thí sinh vào bằng mã thi (học viên đăng nhập không cần bước này).",
     });
@@ -271,24 +300,7 @@ export async function grantAttemptReentry(
     where: { id: att.candidateId },
     data: { metadata: { ...meta, reentryGrantedUntil: expiresAt.toISOString() } as never },
   });
-  await emitEvent(
-    actorUserId,
-    LearningEventType.ExamAttemptSessionReset,
-    {
-      examId: a.examId,
-      attemptId,
-      candidateId: att.candidateId,
-      action: "reentry_granted",
-      expiresAt: expiresAt.toISOString(),
-    },
-    {
-      courseId: a.courseId,
-      candidateId: att.candidateId,
-      eventKey: `exam.attempt.reentry_granted:${attemptId}:${Date.now()}`,
-    },
-    db,
-  );
-  return { expiresAt };
+  return { expiresAt, candidateId: att.candidateId };
 }
 
 /**

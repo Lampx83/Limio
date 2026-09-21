@@ -18,6 +18,47 @@ export default function RoomBoard({ view }: { view: ProctorRoomView }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Thí sinh vào bằng mã chung quên email/SĐT đã nhập lần đầu thì không vào lại
+  // được bài đang làm. Giám thị đang đứng trong phòng nhìn thấy người đó nên là
+  // người gỡ được: mở một quyền vào lại dùng một lần, hết hạn sau 15 phút.
+  const allowReentry = async (candidateId: string, name: string) => {
+    if (
+      !window.confirm(
+        `Cho ${name} vào lại bài?\n\nChỉ làm khi bạn đã nhận ra đúng người (thẻ sinh viên, đang ngồi trong phòng). Họ sẽ vào lại bằng cách nhập mã sinh viên; quyền dùng một lần và hết hạn sau 15 phút.`,
+      )
+    )
+      return;
+    setBusyId(candidateId);
+    setNotice(null);
+    try {
+      const r = await fetch(apiUrl("/api/public/proctor/allow-reentry"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ candidateId }),
+      });
+      if (!r.ok) {
+        const j = (await r.json().catch(() => null)) as { error?: string } | null;
+        setNotice({
+          ok: false,
+          text:
+            j?.error === "attempt_not_in_progress"
+              ? `${name} không còn bài đang làm để vào lại.`
+              : `Chưa mở được quyền vào lại (${j?.error ?? `HTTP ${r.status}`}).`,
+        });
+        return;
+      }
+      setNotice({
+        ok: true,
+        text: `Đã cho ${name} vào lại trong 15 phút. Bảo bạn ấy mở lại link thi và nhập mã sinh viên.`,
+      });
+    } catch {
+      setNotice({ ok: false, text: "Không kết nối được máy chủ. Thử lại." });
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const toggle = async (candidateId: string, present: boolean) => {
     setBusyId(candidateId);
@@ -46,6 +87,19 @@ export default function RoomBoard({ view }: { view: ProctorRoomView }) {
         <Stat label="đã vào thi" value={`${started}`} />
         <Stat label="đã nộp" value={`${done}`} />
       </div>
+
+      {notice && (
+        <p
+          role={notice.ok ? "status" : "alert"}
+          className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
+            notice.ok
+              ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+              : "border-red-300 bg-red-50 text-red-800"
+          }`}
+        >
+          {notice.text}
+        </p>
+      )}
 
       <ul className="mt-4 divide-y divide-slate-100 rounded-lg border border-default bg-white">
         {view.candidates.map((c) => {
@@ -93,6 +147,18 @@ export default function RoomBoard({ view }: { view: ProctorRoomView }) {
                       <div className="text-caption text-faint tabular-nums">
                         {c.answered}/{view.totalQuestions} câu
                       </div>
+                    )}
+                    {/* Chỉ với người vào bằng mã chung (không có mã riêng): mã riêng
+                        đã đủ để vào lại, không cần gỡ kẹt. */}
+                    {c.attemptStatus === "in_progress" && !c.accessCode && (
+                      <button
+                        type="button"
+                        onClick={() => allowReentry(c.candidateId, c.displayName)}
+                        disabled={busyId === c.candidateId}
+                        className="mt-1 rounded border border-default bg-white px-2 py-0.5 text-caption text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Cho vào lại
+                      </button>
                     )}
                   </>
                 ) : (
