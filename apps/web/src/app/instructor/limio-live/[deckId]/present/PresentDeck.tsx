@@ -10,6 +10,7 @@ import { toast } from "@/lib/toast";
 import { openAudienceWindow } from "@/lib/limioLiveWindow";
 import EmptyState from "@/components/ui/EmptyState";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
 import ResourceContent, { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
 import { slideThemeBg } from "../../slideThemes";
@@ -48,6 +49,10 @@ type Runtime =
   | { kind: "poll" | "quiz"; refId: string; joinPath: string }
   | { kind: "word_cloud"; refId: string; joinPath: string }
   | { kind: "collaborate_board" | "whiteboard"; refId: string; code: string; joinPath: string };
+
+// Thanh % của bình chọn/trắc nghiệm: lime → hồng theo chiều ngang (gradient 135° mặc định của
+// brand-gradient gần như chỉ ra lime trên thanh dài-thấp, mất tương phản).
+const BAR_GRADIENT = "linear-gradient(90deg, #A3E635 0%, #84CC16 30%, #F472B6 75%, #EC4899 100%)";
 
 const SIDE_MIN = 240;
 const SIDE_MAX = 720;
@@ -1643,9 +1648,12 @@ function LiveResponseStats({ refId, slide }: { refId: string; slide: Slide }) {
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
                 <div
                   className={`h-full rounded-full transition-[width] duration-500 ${
-                    slide.type === "quiz" && o.correct ? "bg-green-500" : "bg-brand-500"
+                    slide.type === "quiz" && o.correct ? "bg-green-500" : ""
                   }`}
-                  style={{ width: `${pct}%` }}
+                  style={{
+                    width: `${pct}%`,
+                    ...(slide.type === "quiz" && o.correct ? null : { backgroundImage: BAR_GRADIENT }),
+                  }}
                 />
               </div>
             </div>
@@ -1696,8 +1704,8 @@ function LiveWordCloudStats({ refId }: { refId: string }) {
       </div>
       {top.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {top.map(([word, f]) => (
-            <span key={word} className="rounded-full bg-brand-100 px-2.5 py-1 text-[12.5px] font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+          {top.map(([word, f], idx) => (
+            <span key={word} className={`rounded-full px-2.5 py-1 text-[12.5px] font-semibold text-white ${WORD_GRADIENTS[idx % WORD_GRADIENTS.length]}`}>
               {word}
               {f > 1 && <span className="ml-1 tabular-nums opacity-70">×{f}</span>}
             </span>
@@ -1857,9 +1865,9 @@ function QuestionSlideView({
             >
               <div
                 className={`absolute inset-y-0 left-0 transition-[width] duration-500 ease-out ${
-                  isCorrect ? "bg-green-300/60" : "bg-brand-gradient opacity-25"
+                  isCorrect ? "bg-green-300/60" : "opacity-70"
                 }`}
-                style={{ width: `${pct}%` }}
+                style={{ width: `${pct}%`, ...(isCorrect ? null : { backgroundImage: BAR_GRADIENT }) }}
                 aria-hidden
               />
               <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F1EFE6] text-xl font-bold text-[#6B7268]">
@@ -1912,12 +1920,6 @@ function WordCloudSlideView({ prompt, refId }: { prompt: string; refId: string }
   const sorted = Object.entries(freq)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 50);
-  const gradients = [
-    "from-brand-500 to-pink-500",
-    "from-blue-400 to-blue-500",
-    "from-purple-400 to-purple-500",
-    "from-pink-400 to-pink-500",
-  ];
 
   return (
     <>
@@ -1927,8 +1929,8 @@ function WordCloudSlideView({ prompt, refId }: { prompt: string; refId: string }
           sorted.map(([word, f], idx) => (
             <span
               key={word}
-              className={`rounded-full bg-gradient-to-r px-6 py-3 font-bold text-white ${gradients[idx % gradients.length]}`}
-              style={{ fontSize: `${1.8 + (f / max) * (4.4 - 1.8)}rem` }}
+              className={`rounded-full px-6 py-3 font-bold text-white ${WORD_GRADIENTS[idx % WORD_GRADIENTS.length]}`}
+              style={{ fontSize: `${2.4 + (f / max) * (6 - 2.4)}rem` }}
             >
               {word}
             </span>

@@ -8,6 +8,7 @@ import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
+import { WORD_COLORS } from "@/lib/wordCloudColors";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -42,13 +43,6 @@ interface WordCloudProps {
   // Điền sẵn khi mở từ 1 event trong kịch bản lớp học (Activity Plan).
   initialPrompt?: string;
 }
-
-const WORD_COLORS = [
-  "bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-200",
-  "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200",
-  "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
-  "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
-];
 
 export default function WordCloud({ lessonId, studentList, onExit, initialPrompt }: WordCloudProps) {
   const [currentCloud, setCurrentCloud] = useState<WordCloud | null>(null);
