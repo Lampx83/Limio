@@ -479,6 +479,23 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     }
   };
 
+  // Presenter view kiểu PowerPoint: đồng hồ đếm giờ trình bày (từ lúc mở) + giờ hiện tại.
+  const [now, setNow] = useState(() => Date.now());
+  const startedAtRef = useRef(Date.now());
+  const showPreview = mode === "presenter" && !slideshow;
+  useEffect(() => {
+    if (!showPreview) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [showPreview]);
+  const elapsedSec = Math.max(0, Math.floor((now - startedAtRef.current) / 1000));
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  const elapsedLabel =
+    elapsedSec >= 3600
+      ? `${Math.floor(elapsedSec / 3600)}:${pad2(Math.floor((elapsedSec % 3600) / 60))}:${pad2(elapsedSec % 60)}`
+      : `${pad2(Math.floor(elapsedSec / 60))}:${pad2(elapsedSec % 60)}`;
+  const clockLabel = new Date(now).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
   if (!deck) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[rgb(var(--surface-muted))]">
@@ -517,7 +534,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const hasSidebar = !!currentSlide && currentSlide.type !== "content";
   const presenterNote =
     mode === "presenter" && !slideshow && currentSlide ? String(currentSlide.config?.presenterNote ?? "").trim() : "";
-  const showSidebar = !focus && (hasSidebar || !!presenterNote) && !!currentSlide;
+  const showSidebar = !focus && (hasSidebar || !!presenterNote || showPreview) && !!currentSlide;
 
   return (
     <div
@@ -627,16 +644,16 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
       <main className="flex min-h-0 flex-1">
-        <div className={`flex min-w-0 flex-1 items-stretch justify-center ${focus ? "p-2" : "p-5"}`}>
+        <div className={`flex min-w-0 flex-1 flex-col ${focus ? "p-2" : showPreview ? "px-5 pb-2 pt-5" : "p-5"}`}>
           {loadingSlide || !currentSlide ? (
-            <p className="self-center text-sm text-muted">Đang tải slide...</p>
+            <p className="my-auto self-center text-sm text-muted">Đang tải slide...</p>
           ) : (
             <div
               key={currentSlide.id}
               ref={cardRef}
               onScrollCapture={handleCardScroll}
               style={{ background: slideThemeBg(deck.theme) }}
-              className={`box-border flex min-h-0 w-full flex-col text-[#20241F] ${
+              className={`box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
               } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
@@ -653,6 +670,39 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 onToggleReveal={() => handleToggleReveal(currentSlide.id)}
               />
               </div>
+            </div>
+          )}
+          {showPreview && currentSlide && (
+            <div className="flex flex-shrink-0 items-center gap-4 px-1 pt-2 text-[13px] text-[rgb(var(--text))]">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={goPrev}
+                  disabled={currentIndex <= 0}
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface))] disabled:opacity-30"
+                  aria-label="Slide trước"
+                  title="Slide trước (←)"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={goNext}
+                  disabled={currentIndex < 0 || currentIndex >= slides.length - 1}
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface))] disabled:opacity-30"
+                  aria-label="Slide tiếp"
+                  title="Slide tiếp (→)"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+              <span className="tabular-nums">
+                Slide: <b>{currentIndex + 1}</b> / {slides.length}
+              </span>
+              <span className="flex items-center gap-1 tabular-nums" title="Thời gian trình bày">
+                <Clock size={14} /> {elapsedLabel}
+              </span>
+              <span className="ml-auto tabular-nums text-muted" title="Giờ hiện tại">
+                {clockLabel}
+              </span>
             </div>
           )}
         </div>
@@ -682,7 +732,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
           />
           <aside
             style={{ "--side-w": `${sideWidth}px` } as React.CSSProperties}
-            className={`fixed bottom-0 right-0 top-16 z-40 w-[300px] max-w-[88vw] flex-shrink-0 lg:w-[var(--side-w)] overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
+            className={`fixed bottom-0 right-0 top-16 z-40 w-[300px] max-w-[88vw] flex-shrink-0 lg:w-[var(--side-w)] flex flex-col overflow-y-auto border-l border-token bg-[rgb(var(--surface))] p-5 shadow-2xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none ${
               sideOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >
@@ -698,8 +748,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 onToggleQr={mode === "presenter" ? toggleQr : undefined}
               />
             )}
-            {presenterNote && (
-              <div className={hasSidebar ? "mt-6" : ""}>
+            {(presenterNote || showPreview) && (
+              <div className={`flex min-h-[200px] flex-1 flex-col ${hasSidebar ? "mt-6" : ""}`}>
                 <PresenterNotesPanel key={currentSlide.id} note={presenterNote} />
               </div>
             )}
@@ -708,6 +758,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         )}
       </main>
 
+      {showPreview && <Filmstrip slides={slides} currentId={currentSlideId} theme={deck.theme} onPick={(id) => sessionId && visitSlide(sessionId, id)} />}
 
       {slideshow && canQr && runtime && (
         <SlideshowQr
@@ -970,12 +1021,14 @@ function ContentSlideView({
   timerStartedAt,
   editable,
   onStartTimer,
+  lazyImages,
 }: {
   config: Record<string, any>;
   timerSeconds: number | null;
   timerStartedAt?: number;
   editable: boolean;
   onStartTimer: () => void;
+  lazyImages?: boolean;
 }) {
   const bullets: string[] = config.bullets ?? [];
 
@@ -1014,7 +1067,7 @@ function ContentSlideView({
         {/* Trang PDF dài: ưu tiên bề ngang (chữ đủ to để đọc), chiều dọc cuộn chuột. */}
         <div className="min-h-0 flex-1 overflow-y-auto pb-24">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config.imageUrl} alt="" className="mx-auto block h-auto w-full max-w-[1600px]" />
+          <img src={config.imageUrl} alt="" loading={lazyImages ? "lazy" : undefined} className="mx-auto block h-auto w-full max-w-[1600px]" />
         </div>
         {timerSticker}
       </div>
@@ -1037,13 +1090,96 @@ function ContentSlideView({
       <div className="flex flex-1 items-center justify-center bg-[#F1EFE6]">
         {config.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={config.imageUrl} alt="" className="h-full w-full object-cover" />
+          <img src={config.imageUrl} alt="" loading={lazyImages ? "lazy" : undefined} className="h-full w-full object-cover" />
         ) : (
           <span className="text-lg text-[#9AA090]">Ảnh/sơ đồ minh hoạ</span>
         )}
       </div>
       {timerSticker}
     </div>
+  );
+}
+
+// Dải slide ở đáy presenter view (như PowerPoint): thumbnail mọi slide, slide đang chiếu
+// được tô viền, bấm để nhảy tới. Slide "Nội dung" dựng thật ở khung 1280x720 rồi thu
+// nhỏ; slide tương tác cần runtime do server tạo khi mở slide (và slide nhúng tài
+// nguyên video/PDF quá nặng để dựng ×N) nên chỉ hiện thẻ tóm tắt.
+const THUMB_W = 1280;
+const THUMB_H = 720;
+const FILM_ITEM_W = 176;
+
+function Filmstrip({
+  slides,
+  currentId,
+  theme,
+  onPick,
+}: {
+  slides: Slide[];
+  currentId: string | null;
+  theme: string | undefined | null;
+  onPick: (id: string) => void;
+}) {
+  const curRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    curRef.current?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [currentId]);
+
+  return (
+    <div className="flex-shrink-0 overflow-x-auto border-t border-token bg-[rgb(var(--surface))] px-4 py-2.5">
+      <div className="flex gap-3">
+        {slides.map((sl, i) => {
+          const active = sl.id === currentId;
+          const cfg = sl.config ?? {};
+          const plain = sl.type === "content" && !cfg.resource;
+          const summary = String(cfg.question ?? cfg.prompt ?? cfg.title ?? "").trim();
+          return (
+            <button
+              key={sl.id}
+              ref={active ? curRef : undefined}
+              onClick={() => onPick(sl.id)}
+              title={`Slide ${i + 1}`}
+              style={{ width: FILM_ITEM_W }}
+              className="flex flex-shrink-0 items-start gap-1.5 text-left"
+            >
+              <span className={`w-4 pt-0.5 text-right text-[11px] font-bold tabular-nums ${active ? "text-brand-600" : "text-faint"}`}>
+                {i + 1}
+              </span>
+              <span
+                className={`relative block aspect-video min-w-0 flex-1 overflow-hidden rounded-md ${
+                  active ? "ring-2 ring-brand-500" : "ring-1 ring-black/10 hover:ring-2 hover:ring-brand-300"
+                }`}
+                style={{ background: slideThemeBg(theme) }}
+              >
+                {plain ? (
+                  <ThumbScaled width={FILM_ITEM_W - 22}>
+                    <ContentSlideView config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages />
+                  </ThumbScaled>
+                ) : (
+                  <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 p-1.5 text-center text-[#20241F]">
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-[#6B7268]">
+                      {sl.type === "content" ? "Học liệu" : sl.type === "collaborate_board" && cfg.mode === "drawing" ? "Draw-it (vẽ)" : TYPE_LABELS[sl.type]}
+                    </span>
+                    {summary && <span className="line-clamp-2 text-[10px] font-semibold leading-tight">{summary}</span>}
+                  </span>
+                )}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ThumbScaled({ width, children }: { width: number; children: React.ReactNode }) {
+  return (
+    <span
+      className="pointer-events-none absolute left-0 top-0 flex origin-top-left flex-col text-[#20241F]"
+      style={{ width: THUMB_W, height: THUMB_H, transform: `scale(${width / THUMB_W})` }}
+      aria-hidden
+    >
+      {children}
+    </span>
   );
 }
 
@@ -1111,7 +1247,7 @@ function PresenterNotesPanel({ note }: { note: string }) {
     } catch {}
   };
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-3 flex items-center gap-2">
         <div className="min-w-0 flex-1 text-[11px] font-bold uppercase tracking-wide text-faint">
           Ghi chú của bạn — không hiện lên màn chiếu
@@ -1146,9 +1282,9 @@ function PresenterNotesPanel({ note }: { note: string }) {
       </div>
       <div
         style={{ fontSize: size }}
-        className="whitespace-pre-wrap rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-4 leading-relaxed text-[rgb(var(--text))]"
+        className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-4 leading-relaxed text-[rgb(var(--text))]"
       >
-        {note}
+        {note || <span className="text-faint">Slide này chưa có ghi chú.</span>}
       </div>
     </div>
   );
