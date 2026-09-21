@@ -143,14 +143,15 @@ export default function SessionsPanel({
         )}
       </div>
 
-      <section className="overflow-hidden rounded-lg border border-default bg-white">
+      {/* overflow-x-auto (không phải hidden): bảng 12 cột phải cuộn ngang được dưới lg. */}
+      <section className="overflow-x-auto rounded-lg border border-default bg-white">
           {sessions.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-faint">
               Chưa có ca thi nào trong đợt này.{" "}
               {canEdit && "Click \"+ Thêm ca thi\" để bắt đầu."}
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[56rem] text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-2">STT</th>

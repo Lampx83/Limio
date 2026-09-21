@@ -9,7 +9,11 @@ import QuickExamForm from "../../exams/quick/QuickExamForm";
 export const dynamic = "force-dynamic";
 
 /** Thử nghiệm câu hỏi — tạo mới + lịch sử các đợt thử. */
-export default async function OrganizeFieldTestPage() {
+export default async function OrganizeFieldTestPage({
+  searchParams,
+}: {
+  searchParams: { examId?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id)
     redirect("/signin?callbackUrl=/instructor/organize/field-test");
@@ -65,6 +69,8 @@ export default async function OrganizeFieldTestPage() {
         </p>
       ) : (
         <QuickExamForm
+          // Đi từ một đề sang (?examId=): chọn sẵn đề đó nếu nó có trong danh sách.
+          initialPaperId={searchParams.examId}
           purpose="field_test"
           courses={courses}
           papers={papers.map((p) => ({

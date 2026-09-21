@@ -202,7 +202,14 @@ export default async function EditExamPage({
               Chấm bài
             </Link>
           )}
-          {exam.kind === "written" && <PublishBar examId={exam.id} status={exam.status} />}
+          {exam.kind === "written" && (
+            <PublishBar
+              examId={exam.id}
+              status={exam.status}
+              openAt={exam.openAt.toISOString()}
+              closeAt={exam.closeAt.toISOString()}
+            />
+          )}
           {exam.kind === "oral" && (
             <DeleteOralExamButton
               examId={exam.id}
@@ -313,7 +320,7 @@ export default async function EditExamPage({
             <p className="mb-4 text-sm text-faint">
               {exam.status === "archived"
                 ? "Bài thi đã lưu trữ — nội dung khoá, không sửa được."
-                : "Thêm câu hỏi từ ngân hàng, hoặc tự soạn. Mỗi câu hỏi cần ≥ 1 skill trước khi publish."}
+                : "Thêm câu hỏi từ ngân hàng, hoặc tự soạn. Gắn skill là tuỳ chọn (cần nếu muốn cá nhân hoá phản hồi)."}
             </p>
             {isPublished && hasAttempts && (
               <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">

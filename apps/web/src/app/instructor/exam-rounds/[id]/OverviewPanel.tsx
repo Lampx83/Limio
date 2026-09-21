@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Circle, Info, Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
+import type { ReadinessItem } from "@/lib/roundReadiness";
 
 type RoundStatus = "draft" | "open" | "closed" | "archived";
 
@@ -31,12 +33,31 @@ interface RoundData {
   course: CourseInfo;
 }
 
+// Trạng thái đợt chỉ để phân loại và lọc danh sách — KHÔNG tự mở/đóng ca thi hay
+// chặn ai vào thi (giờ vào thi do từng ca quyết định). Nói rõ điều đó, kẻo giảng
+// viên tưởng bấm "Đã đóng" là dừng được kỳ thi.
+const STATUS_HELP: Record<RoundStatus, string> = {
+  draft: "Đang chuẩn bị, chưa công bố.",
+  open: "Đợt đang diễn ra.",
+  closed: "Đợt đã kết thúc (để phân loại).",
+  archived: "Cất đi khỏi danh sách chính.",
+};
+
+const READINESS_ICON = {
+  ok: <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-label="Đã xong" />,
+  todo: <Circle className="h-4 w-4 shrink-0 text-amber-600" aria-label="Cần làm" />,
+  info: <Info className="h-4 w-4 shrink-0 text-blue-600" aria-label="Lưu ý" />,
+  skipped: <Circle className="h-4 w-4 shrink-0 text-slate-300" aria-label="Chưa tới bước này" />,
+} as const;
+
 export default function OverviewPanel({
   round,
   canEdit,
+  readiness,
 }: {
   round: RoundData;
   canEdit: boolean;
+  readiness: ReadinessItem[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -45,6 +66,13 @@ export default function OverviewPanel({
 
   const changeStatus = async (next: RoundStatus) => {
     if (busy) return;
+    if (
+      (next === "closed" || next === "archived") &&
+      !window.confirm(
+        `Chuyển đợt sang "${STATUS_LABEL[next]}"?\n\nLưu ý: trạng thái đợt chỉ để phân loại; các ca thi vẫn chạy theo giờ của từng ca. Muốn dừng một ca đang thi, hãy đóng ca đó ở tab Ca thi.`,
+      )
+    )
+      return;
     setBusy(true);
     setErr(null);
     try {
@@ -136,11 +164,46 @@ export default function OverviewPanel({
         )}
       </section>
 
+      <section
+        className="rounded-lg border border-default bg-white p-5"
+        data-testid="round-readiness"
+      >
+        <h2 className="text-sm font-semibold">Sẵn sàng thi chưa?</h2>
+        <ul className="mt-3 space-y-2">
+          {readiness.map((item) => (
+            <li key={item.key} className="flex gap-2 text-sm">
+              <span className="mt-0.5">{READINESS_ICON[item.status]}</span>
+              <div className="min-w-0">
+                <span className={item.status === "skipped" ? "text-faint" : ""}>
+                  {item.label}
+                </span>
+                {item.problems && item.problems.length > 0 && item.status !== "ok" && (
+                  <ul className="mt-0.5 list-inside list-disc text-xs text-slate-600">
+                    {item.problems.map((p, i) => (
+                      <li key={i}>{p}</li>
+                    ))}
+                  </ul>
+                )}
+                {item.tab && (item.status === "todo" || item.status === "info") && (
+                  <Link
+                    href={`/instructor/exam-rounds/${round.id}?tab=${item.tab}`}
+                    className="mt-0.5 inline-block text-xs font-medium text-blue-600 hover:underline"
+                  >
+                    Xử lý →
+                  </Link>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {canEdit && (
         <section className="rounded-lg border border-default bg-white p-5">
           <h2 className="text-sm font-semibold">Đổi trạng thái</h2>
           <p className="mt-1 text-xs text-faint">
-            Hiện tại: {STATUS_LABEL[round.status]}
+            Hiện tại: {STATUS_LABEL[round.status]} — {STATUS_HELP[round.status]} Trạng thái chỉ để
+            phân loại, không tự mở hay đóng ca thi.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {(["draft", "open", "closed", "archived"] as RoundStatus[])
@@ -150,6 +213,7 @@ export default function OverviewPanel({
                   key={s}
                   onClick={() => changeStatus(s)}
                   disabled={busy}
+                  title={STATUS_HELP[s]}
                   className="rounded border border-default px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
                 >
                   → {STATUS_LABEL[s]}
@@ -165,7 +229,7 @@ export default function OverviewPanel({
             Vùng nguy hiểm
           </h2>
           <p className="mt-1 text-xs text-red-700">
-            Xoá đợt thi sẽ gỡ luôn cả admin. Chỉ xoá được khi không còn ca thi.
+            Xoá đợt thi sẽ gỡ luôn cả trưởng đợt. Chỉ xoá được khi không còn ca thi.
           </p>
           <button
             onClick={onDeleteRound}

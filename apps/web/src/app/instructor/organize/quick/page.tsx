@@ -9,7 +9,11 @@ import QuickExamForm from "../../exams/quick/QuickExamForm";
 export const dynamic = "force-dynamic";
 
 /** Link thi nhanh — tạo mới + lịch sử các lần cùng dạng. */
-export default async function OrganizeQuickPage() {
+export default async function OrganizeQuickPage({
+  searchParams,
+}: {
+  searchParams: { examId?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id)
     redirect("/signin?callbackUrl=/instructor/organize/quick");
@@ -64,6 +68,8 @@ export default async function OrganizeQuickPage() {
         </p>
       ) : (
         <QuickExamForm
+          // Đi từ một đề sang (?examId=): chọn sẵn đề đó nếu nó có trong danh sách.
+          initialPaperId={searchParams.examId}
           purpose="assessment"
           courses={courses}
           papers={papers.map((p) => ({

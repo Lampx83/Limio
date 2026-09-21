@@ -123,7 +123,7 @@ export default async function InstructorExamsPage({
                   >
                     Chỉnh sửa
                   </Link>
-                  <OrganizeExamButton examId={e.id} isDraft={e.status === "draft"} />
+                  <OrganizeExamButton examId={e.id} courseId={course.id} isDraft={e.status === "draft"} />
                   <CloneButton examId={e.id} courseId={course.id} />
                   <DeleteExamButton examId={e.id} hasAttempts={e._count.attempts > 0} />
                 </div>

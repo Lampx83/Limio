@@ -19,6 +19,7 @@ import CohortsPanel from "./CohortsPanel";
 import AdminsPanel from "./AdminsPanel";
 import ResultsPanel, { type SessionSummary } from "./ResultsPanel";
 import { formatDateTime } from "@/lib/datetime";
+import { computeRoundReadiness } from "@/lib/roundReadiness";
 
 export const dynamic = "force-dynamic";
 
@@ -135,6 +136,27 @@ export default async function ExamRoundDetailPage({
     courseTitle: round.course.courseTitle,
   }));
 
+  // Checklist "sẵn sàng thi" cho tab Tổng quan: cần trạng thái publish của các đề
+  // mà ca đang dùng (danh sách ca không mang theo trường này).
+  let readiness = computeRoundReadiness([]);
+  if (activeTab === "overview") {
+    const examStatuses = await prisma.exam.findMany({
+      where: { id: { in: [...new Set(sessions.map((s) => s.examId))] } },
+      select: { id: true, status: true },
+    });
+    const statusByExam = new Map(examStatuses.map((e) => [e.id, e.status as string]));
+    readiness = computeRoundReadiness(
+      sessions.map((s) => ({
+        id: s.id,
+        label: s.title ?? s.code ?? "Ca thi",
+        examTitle: s.examTitle,
+        examStatus: statusByExam.get(s.examId) ?? "draft",
+        accessMode: s.examAccessMode,
+        roomCount: s.roomCount,
+      })),
+    );
+  }
+
   // Results tab: per-session stats (candidate counts + attempt aggregates).
   let sessionSummaries: SessionSummary[] = [];
   if (activeTab === "results") {
@@ -214,7 +236,7 @@ export default async function ExamRoundDetailPage({
           target="_blank"
           className="inline-flex items-center gap-1.5 rounded border border-default bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
         >
-          🖨 In mã ca thi & phòng thi (A5)
+          🖨 In phiếu mã ca thi và phòng thi (khổ A5)
         </Link>
       </div>
 
@@ -227,6 +249,7 @@ export default async function ExamRoundDetailPage({
           <OverviewPanel
             round={{ ...round, course: { ...round.course, courseId, courseTitle, courseSlug } }}
             canEdit={canEdit}
+            readiness={readiness}
           />
         )}
         {activeTab === "sessions" && (

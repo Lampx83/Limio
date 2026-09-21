@@ -18,7 +18,11 @@ export const dynamic = "force-dynamic";
  * Nên chúng nằm ở hai cột riêng — ExamPurpose và ExamSessionScale — thay vì
  * nhồi chung một enum.
  */
-export default async function OrganizePage() {
+export default async function OrganizePage({
+  searchParams,
+}: {
+  searchParams: { examId?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/organize");
 
@@ -26,12 +30,47 @@ export default async function OrganizePage() {
     where: { instructors: { some: { userId: session.user.id } } },
   });
 
+  // Đi từ một đề sang đây (nút "Tổ chức thi" ở danh sách đề) thì mang đề đó theo:
+  // hiện tên đề, và các trang con chọn sẵn nó — giảng viên khỏi phải tìm lại.
+  // Chỉ nhận đề thuộc khoá mình dạy; id lạ thì bỏ qua như không có.
+  const examId = typeof searchParams.examId === "string" ? searchParams.examId : null;
+  const exam = examId
+    ? await prisma.exam.findFirst({
+        where: {
+          id: examId,
+          kind: "written",
+          course: { instructors: { some: { userId: session.user.id } } },
+        },
+        select: { id: true, title: true, status: true, courseId: true },
+      })
+    : null;
+  const q = exam ? `?examId=${exam.id}` : "";
+
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
       <h1 className="text-2xl font-bold">Tổ chức thi</h1>
       <p className="mt-1 text-body text-faint">
         Bạn định tổ chức kiểu gì? Chọn xong hệ thống lo phần còn lại.
       </p>
+
+      {exam && (
+        <div className="mt-4 banner-info px-4 py-3 text-sm" data-testid="organize-exam-context">
+          Đang tổ chức cho đề: <strong>{exam.title}</strong>.{" "}
+          {exam.status === "published" ? (
+            "Chọn hình thức bên dưới — đề này sẽ được chọn sẵn."
+          ) : (
+            <>
+              Đề chưa publish nên chưa mở thi được.{" "}
+              <Link
+                href={`/instructor/courses/${exam.courseId}/exams/${exam.id}`}
+                className="font-semibold underline"
+              >
+                Publish đề trước →
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       {courseCount === 0 ? (
         <div className="mt-6 banner-info px-4 py-3 text-sm">
@@ -44,7 +83,7 @@ export default async function OrganizePage() {
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <OptionCard
-            href="/instructor/organize/quick"
+            href={`/instructor/organize/quick${q}`}
             icon={<Zap className="h-5 w-5" aria-hidden />}
             title="Link thi nhanh"
             blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp."
@@ -52,14 +91,14 @@ export default async function OrganizePage() {
             lead
           />
           <OptionCard
-            href="/instructor/organize/field-test"
+            href={`/instructor/organize/field-test${q}`}
             icon={<FlaskConical className="h-5 w-5" aria-hidden />}
             title="Thử nghiệm câu hỏi"
             blurb="Đo chất lượng câu trước khi kết nạp vào ngân hàng."
             detail="Chở được câu chưa kết nạp. Không hiện đáp án, để không đốt câu hỏi."
           />
           <OptionCard
-            href="/instructor/organize/formal"
+            href={`/instructor/organize/formal${q}`}
             icon={<CalendarCheck className="h-5 w-5" aria-hidden />}
             title="Kỳ thi chính thức"
             blurb="Nhiều ca, nhiều phòng, có giám thị."

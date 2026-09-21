@@ -221,7 +221,16 @@ const MODULES: ModuleDef[] = [
     },
     // "Giám sát phòng thi" ĐÃ BỎ khỏi menu này: giám thị nay vào bằng mã ở
     // /giam-thi, không cần tài khoản.
-    matchPrefixes: ["/instructor/question-banks", "/instructor/exams", "/instructor/organize"],
+    // Các trang đợt/ca/buổi thi là phần con của "Tổ chức thi": vào đó mà menu rớt
+    // về "Trang chủ" thì giảng viên tưởng đã rời khu vực này.
+    matchPrefixes: [
+      "/instructor/question-banks",
+      "/instructor/exams",
+      "/instructor/organize",
+      "/instructor/exam-rounds",
+      "/instructor/exam-runs",
+      "/instructor/exam-sessions",
+    ],
     items: [
       // Thứ tự bám theo trình tự làm việc thật: soạn câu → gom thành gói đề →
       // mang đi tổ chức → coi thi.

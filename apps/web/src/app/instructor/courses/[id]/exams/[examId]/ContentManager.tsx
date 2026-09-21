@@ -325,7 +325,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
         <span className="text-xs text-faint">{q.points} điểm</span>
         {q.skills.length === 0 && (
           <span
-            title="Câu hỏi này chưa có skill — sẽ bị reject khi publish."
+            title="Câu hỏi này chưa gắn skill. Không bắt buộc để publish; chỉ cần nếu muốn cá nhân hoá phản hồi."
             className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800"
           >
             ⚠ skill

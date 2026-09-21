@@ -47,12 +47,17 @@ export default function QuickExamForm({
   purpose,
   courses,
   papers,
+  initialPaperId,
 }: {
   purpose: "assessment" | "field_test";
   courses: Array<{ id: string; title: string }>;
   papers: Paper[];
+  /** Chọn sẵn đề này (nếu có trong `papers`), thay vì đề đầu danh sách. */
+  initialPaperId?: string;
 }) {
-  const [paperId, setPaperId] = useState(papers[0]?.id ?? "");
+  const [paperId, setPaperId] = useState(
+    papers.find((p) => p.id === initialPaperId)?.id ?? papers[0]?.id ?? "",
+  );
   const paper = useMemo(
     () => papers.find((p) => p.id === paperId) ?? null,
     [papers, paperId],
