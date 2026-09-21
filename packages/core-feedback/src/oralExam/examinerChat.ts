@@ -65,6 +65,15 @@ export function resolveOralPhase(params: {
 
 export type OralFeedbackMode = "exam" | "coaching";
 
+/**
+ * Số câu hỏi thường gặp trong một buổi dài `durationMin` phút — để nói trước với sinh viên và hiển thị "Câu 4 · thường
+ * khoảng 11". Dữ liệu thật: trung bình 11,9 lượt trả lời trong 15 phút (≈ 0,8 lượt/phút). Chỉ là ƯỚC LƯỢNG theo giờ,
+ * không phải hạn mức: buổi vấn đáp không giới hạn số câu.
+ */
+export function typicalQuestionCount(durationMin: number): number | null {
+  return durationMin >= 5 ? Math.max(3, Math.round(durationMin * 0.8)) : null;
+}
+
 export interface OralPromptTopic {
   title: string;
   brief: string;
@@ -102,10 +111,10 @@ ${LANGUAGE_DIRECTIVE[params.language]}
 
 ${
     params.closingSummary
-      ? `Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết gồm 2 phần:
-1. Một câu cảm ơn sinh viên và thông báo buổi vấn đáp đã hoàn tất.
+      ? `Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết, TUYỆT ĐỐI KHÔNG đặt thêm câu hỏi nào, gồm 2 phần:
+1. Một câu cảm ơn sinh viên (gọi tên nếu bạn biết) và thông báo buổi vấn đáp đã hoàn tất.
 2. Mục "Nhìn lại buổi vấn đáp": 2–3 điểm sinh viên làm tốt và 2–3 điểm nên cải thiện, mỗi ý MỘT câu ngắn, dựa trên CHÍNH các câu trả lời trong hội thoại (nhắc đúng ý họ đã nói). KHÔNG cho điểm số hay xếp loại, KHÔNG nêu đáp án đầy đủ, KHÔNG hứa hẹn kết quả — điểm do giảng viên quyết định sau.`
-      : "Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết ngắn gọn (2-3 câu): cảm ơn sinh viên, KHÔNG chấm điểm, KHÔNG tiết lộ đúng/sai, KHÔNG hứa hẹn kết quả — chỉ thông báo buổi vấn đáp đã hoàn tất."
+      : "Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết ngắn gọn (2-3 câu), TUYỆT ĐỐI KHÔNG đặt thêm câu hỏi: cảm ơn sinh viên (gọi tên nếu bạn biết), KHÔNG chấm điểm, KHÔNG tiết lộ đúng/sai, KHÔNG hứa hẹn kết quả — chỉ thông báo buổi vấn đáp đã hoàn tất."
   }`;
   }
 
@@ -122,11 +131,17 @@ ${
     : "";
 
   if (params.phase === "warmup") {
+    // Sinh viên phàn nàn "không biết còn bao nhiêu câu" và "muốn biết đúng/sai ngay": nói trước cả hai điều để
+    // đặt kỳ vọng (dữ liệu thật: trung bình khoảng 0,8 lượt trả lời mỗi phút).
+    const expectedQuestions = params.timing ? typicalQuestionCount(params.timing.durationMin) : null;
+    const afterwards = params.closingSummary
+      ? "trong lúc hỏi bạn không nhận xét từng câu; cuối buổi bạn sẽ nhận xét tổng thể vài điểm làm tốt và cần cải thiện"
+      : "trong lúc hỏi bạn không nhận xét từng câu; điểm do giảng viên xem lại sau buổi vấn đáp";
     return `Bạn là giảng viên ảo phụ trách buổi vấn đáp${courseClause} đề "${params.examTitle}".
 ${timingBlock}
 Đây là LƯỢT KHỞI ĐỘNG. Nguyên tắc:
-1. Chào sinh viên thân thiện và giới thiệu ngắn gọn bản thân (là giảng viên ảo phụ trách buổi vấn đáp này).
-2. Nói ngắn gọn buổi vấn đáp diễn ra thế nào: thời lượng (nếu đã biết ở trên), bạn hỏi từng câu một, không nhận xét đúng sai hay gợi ý trong lúc hỏi, sinh viên cứ trả lời bằng lời của mình.
+1. Chào sinh viên thân thiện, có chút ấm áp như một giảng viên thật (không cứng nhắc), và giới thiệu ngắn gọn bản thân (là giảng viên ảo phụ trách buổi vấn đáp này).
+2. Nói ngắn gọn buổi vấn đáp diễn ra thế nào: thời lượng (nếu đã biết ở trên)${expectedQuestions ? `, khoảng ${expectedQuestions} câu hỏi tuỳ tốc độ trả lời` : ""}, bạn hỏi từng câu một, ${afterwards}. Sinh viên cứ trả lời bằng lời của mình; nếu chưa hiểu câu hỏi thì cứ hỏi lại, bạn sẽ diễn đạt lại.
 3. Hỏi ĐÚNG 1 câu làm quen ngắn, nhẹ nhàng, KHÔNG liên quan kiến thức chuyên môn (ví dụ sinh viên muốn được gọi bằng tên gì, hoặc đã sẵn sàng chưa). TUYỆT ĐỐI chưa hỏi câu kiến thức nào và chưa nói chủ đề ở lượt này.
 4. ${LANGUAGE_DIRECTIVE[params.language]}${extra}`;
   }
@@ -148,14 +163,16 @@ ${context}
 """
 
 Nguyên tắc:
-1. Hỏi ĐÚNG 1 câu hỏi mỗi lượt (đúng MỘT dấu hỏi), bám sát tài liệu trên. Cả lượt nói của bạn tối đa 2 câu, khoảng 160 ký tự — sinh viên đọc trên điện thoại và gõ tay, lượt dài làm mất thời gian của họ.
-2. Đào sâu theo câu trả lời trước của sinh viên — hỏi follow-up thay vì hỏi câu độc lập không liên quan.
+1. Mỗi lượt của bạn gồm: (a) một mệnh đề NỐI Ý — nhắc lại ý chính sinh viên vừa nói bằng lời của bạn, không đánh giá; rồi (b) đúng MỘT câu hỏi (đúng MỘT dấu hỏi), bám sát tài liệu trên. Tối đa 3 câu, khoảng 220 ký tự — sinh viên đọc trên điện thoại và gõ tay, lượt dài làm mất thời gian của họ. (Câu hỏi kiến thức đầu tiên thì chưa có gì để nối.)
+2. Câu hỏi phải TỰ ĐỨNG ĐƯỢC, sinh viên đọc một lần là hiểu: gắn với tình huống của họ bằng một mệnh đề bối cảnh, dùng từ đời thường, tránh thuật ngữ trừu tượng; nếu ý còn trừu tượng thì kèm một ví dụ ngắn (ví dụ tuyệt đối không phải là đáp án). Đào sâu từ CHÍNH điều sinh viên vừa nói — không nhảy sang mục khác trong danh sách hướng dẫn; nếu câu trả lời đã bao gồm mục sau thì bỏ mục đó.
 3. ${
     (params.feedbackMode ?? "exam") === "coaching"
       ? "Sau mỗi câu trả lời, nhận xét NGẮN (1 câu) và CỤ THỂ về chính câu trả lời đó: điều đã đúng hoặc còn thiếu. KHÔNG nêu đáp án đầy đủ, KHÔNG chấm điểm, KHÔNG khen chung chung; rồi hỏi tiếp hoặc phản biện."
-      : 'KHÔNG đưa gợi ý, KHÔNG tiết lộ đáp án đúng, KHÔNG chấm điểm hay nhận xét đúng/sai trong lúc hỏi — đó là việc của bước chấm sau khi buổi thi kết thúc. Tuyệt đối KHÔNG mở đầu bằng lời khen hay xác nhận ("Rất tốt", "Đúng vậy", "Chính xác", "Hợp lý", "Hay quá", "Tuyệt vời"…): khen không phân biệt làm sinh viên tưởng câu nào cũng đúng. Muốn ghi nhận chỉ nói trung tính "Mình đã ghi nhận." (không quá một lần mỗi hai lượt) hoặc vào thẳng câu hỏi tiếp theo.'
+      : 'KHÔNG đưa gợi ý, KHÔNG tiết lộ đáp án đúng, KHÔNG chấm điểm hay nhận xét đúng/sai trong lúc hỏi — đó là việc của bước chấm sau khi buổi thi kết thúc. Tuyệt đối KHÔNG mở đầu bằng lời khen hay xác nhận đúng ("Rất tốt", "Đúng vậy", "Chính xác", "Hợp lý", "Hay quá", "Tuyệt vời"…): khen không phân biệt làm sinh viên tưởng câu nào cũng đúng. Cũng KHÔNG dùng câu cố định kiểu "Mình đã ghi nhận." — nó lặp lại nghe như máy. Mỗi lượt mở đầu một cách khác nhau, không lặp cùng một cụm ở hai lượt liền nhau.'
   }
-4. ${LANGUAGE_DIRECTIVE[params.language]}${buildExtraRules(params)}${extra}`;
+4. Khi sinh viên nói không hiểu, hỏi lại, hoặc trả lời lạc vì hiểu sai câu hỏi: diễn đạt lại CHÍNH câu hỏi đó bằng cách đơn giản hơn kèm một ví dụ ngắn; KHÔNG chuyển sang câu hỏi khác. Diễn đạt lại đề không phải là gợi ý đáp án.
+5. Nếu sinh viên đã cho biết tên gọi, dùng tên ở lượt nêu chủ đề, thỉnh thoảng (khoảng 3–4 lượt một lần) và ở lời kết; không lặp tên mỗi lượt.
+6. ${LANGUAGE_DIRECTIVE[params.language]}${buildExtraRules(params)}${extra}`;
 }
 
 // ── A6.8 — bộ lọc mở đầu bằng khen (chế độ Thi) ───────────────────────────────────────────────────────
@@ -165,7 +182,7 @@ Nguyên tắc:
 // Cụm khen: không phân biệt hoa thường. Tên gọi đi kèm (vd "Ngọc Anh!") tách riêng và PHẢI viết hoa chữ đầu — nếu
 // dùng chung cờ `i` thì \p{Lu} khớp cả chữ thường và câu thường ("ngắn thôi.") bị nuốt nhầm làm tên.
 const EVALUATIVE_PHRASE =
-  /^\s*(?:rất tốt|tốt lắm|đúng vậy|đúng rồi|chính xác|rất chính xác|rất hay|hay lắm|hay quá|tuyệt vời|xuất sắc|rất hợp lý|hợp lý|rất thú vị|thú vị|tuyệt)\s*[,!.…:;-]+\s*/iu;
+  /^\s*(?:rất tốt|tốt lắm|đúng vậy|đúng rồi|chính xác|rất chính xác|rất hay|hay lắm|hay quá|tuyệt vời|xuất sắc|rất hợp lý|hợp lý|rất thú vị|thú vị|tuyệt|mình đã ghi nhận|đã ghi nhận|mình ghi nhận|ghi nhận)\s*[,!.…:;-]+\s*/iu;
 const VOCATIVE = /^\p{Lu}[\p{L}]*(?:\s+\p{Lu}[\p{L}]*){0,2}\s*[!.]\s*/u;
 
 /**
@@ -181,6 +198,51 @@ export function stripEvaluativeOpener(text: string): string {
   rest = rest.trimStart();
   if (!rest) return text;
   return rest.charAt(0).toLocaleUpperCase("vi") + rest.slice(1);
+}
+
+const FALLBACK_CLOSING = "Cảm ơn bạn đã tham gia. Buổi vấn đáp đã hoàn tất.";
+
+/**
+ * Lời kết hợp lệ = không kết thúc bằng câu hỏi. Dữ liệu thật: khoảng 30% lần kết thúc mô hình bỏ qua lệnh "viết lời
+ * kết" (vì cả lịch sử toàn hỏi–đáp) và hỏi tiếp, nên buổi đóng lại bằng một câu hỏi dang dở và sinh viên không
+ * nhận được phần "Nhìn lại". Kiểm ở đầu ra, không chỉ trông vào lời dặn.
+ */
+export function isValidClosing(text: string): boolean {
+  const t = text.trim();
+  return t.length > 0 && !/\?\s*$/.test(t) && !/\?[^.!\n]{0,60}$/.test(t);
+}
+
+/** Tin nhắn cuối cùng (vai "user") ép mô hình chuyển sang viết lời kết — mạnh hơn hẳn chỉ dặn trong system. */
+function closingDirective(summary: boolean, retry: boolean): ChatMessage {
+  return {
+    role: "user",
+    content: `[Thông báo của hệ thống, không phải sinh viên nói] ${retry ? "Bạn vừa đặt một câu hỏi, nhưng buổi vấn đáp ĐÃ HẾT GIỜ. " : "Buổi vấn đáp đã hết giờ. "}Hãy viết lời kết ngay bây giờ theo hướng dẫn${summary ? ' (có mục "Nhìn lại buổi vấn đáp")' : ""}. Không đặt thêm câu hỏi nào.`,
+  };
+}
+
+/**
+ * Sinh lời kết cho một buổi: KHÔNG phát từng mảnh (nếu lần đầu mô hình lỡ hỏi tiếp thì sinh viên không được nhìn
+ * thấy câu hỏi đó rồi bị đổi), kiểm hợp lệ, thử lại 1 lần, cuối cùng dùng câu kết cố định. Cộng dồn token cả các lần.
+ */
+async function generateClosing(params: {
+  messages: ChatMessage[];
+  summary: boolean;
+  computeChat: ChatComputeFn;
+  onDelta?: (delta: string) => void;
+}): Promise<{ content: string; inputTokens: number; outputTokens: number }> {
+  let inputTokens = 0;
+  let outputTokens = 0;
+  for (const retry of [false, true]) {
+    const r = await params.computeChat([...params.messages, closingDirective(params.summary, retry)]);
+    inputTokens += r.inputTokens;
+    outputTokens += r.outputTokens;
+    if (isValidClosing(r.content)) {
+      params.onDelta?.(r.content);
+      return { content: r.content, inputTokens, outputTokens };
+    }
+  }
+  params.onDelta?.(FALLBACK_CLOSING);
+  return { content: FALLBACK_CLOSING, inputTokens, outputTokens };
 }
 
 /** Số ký tự đầu được giữ lại chờ quyết định lọc — đủ chứa "Rất chính xác, Nguyễn Văn An!". */
@@ -228,7 +290,7 @@ function buildExtraRules(params: { phase: OralPhase; topic?: OralPromptTopic | n
         : "Sinh viên vừa trả lời câu làm quen ở lượt khởi động. Trong lượt này: đáp lại ngắn gọn (1 câu) rồi hỏi câu kiến thức ĐẦU TIÊN, trong CÙNG một lượt trả lời này. Không chào lại.",
     );
   }
-  return rules.map((r, i) => `\n${5 + i}. ${r}`).join("");
+  return rules.map((r, i) => `\n${7 + i}. ${r}`).join("");
 }
 
 /**
@@ -411,8 +473,17 @@ export async function runOralExamTurn(
 
   let chatResult;
   try {
-    chatResult = await input.computeChat(messages, streamFilter ? (d) => streamFilter.push(d) : input.onDelta);
-    streamFilter?.flush();
+    if (phase === "closing") {
+      chatResult = await generateClosing({
+        messages,
+        summary: attempt.exam.oralClosingSummary,
+        computeChat: input.computeChat,
+        onDelta: input.onDelta,
+      });
+    } else {
+      chatResult = await input.computeChat(messages, streamFilter ? (d) => streamFilter.push(d) : input.onDelta);
+      streamFilter?.flush();
+    }
   } catch (e) {
     throw new AiTutorError("openai_error", (e as Error).message);
   }
@@ -584,11 +655,20 @@ export async function runOralExamPreviewTurn(
 
   let chatResult;
   try {
-    chatResult = await input.computeChat(
-      [{ role: "system", content: systemPrompt }, ...history],
-      streamFilter ? (d) => streamFilter.push(d) : input.onDelta,
-    );
-    streamFilter?.flush();
+    if (phase === "closing") {
+      chatResult = await generateClosing({
+        messages: [{ role: "system", content: systemPrompt }, ...history],
+        summary: exam.oralClosingSummary,
+        computeChat: input.computeChat,
+        onDelta: input.onDelta,
+      });
+    } else {
+      chatResult = await input.computeChat(
+        [{ role: "system", content: systemPrompt }, ...history],
+        streamFilter ? (d) => streamFilter.push(d) : input.onDelta,
+      );
+      streamFilter?.flush();
+    }
   } catch (e) {
     throw new AiTutorError("openai_error", (e as Error).message);
   }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Info, LogOut, X } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Info, LogOut, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { usePacedReveal } from "@/hooks/usePacedReveal";
 import UserAvatar from "@/components/ui/UserAvatar";
@@ -11,6 +11,7 @@ import FullscreenGate from "./FullscreenGate";
 import InRoomConfirm from "./InRoomConfirm";
 import RoomCountdown from "./RoomCountdown";
 import { useVisualViewport } from "@/hooks/useVisualViewport";
+import { useStoredFlag } from "@/hooks/useStoredFlag";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
 import OralAiAvatar, { type OralAvatarState } from "./OralAiAvatar";
@@ -124,6 +125,27 @@ export default function OralExamRoom({
   const vp = useVisualViewport();
   // Bàn phím ảo đang mở (khung nhìn thấp): ẩn "sân khấu" avatar và ghim câu hỏi hiện tại sát ô nhập.
   const compact = vp !== null && vp.height < 560;
+  const [hideAvatar, setHideAvatar] = useStoredFlag("oralRoom.hideAvatar");
+  // Điện thoại: mặc định ẩn ảnh giảng viên ảo (phản ánh SV: ảnh chiếm màn hình nhỏ, che câu hỏi) — trừ khi người
+  // dùng đã tự chọn. Không ghi vào localStorage để khỏi biến mặc định thành lựa chọn "đã lưu" trên trình duyệt này.
+  const [phoneDefaultHide, setPhoneDefaultHide] = useState(false);
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("oralRoom.hideAvatar") === null && window.innerWidth < 640) {
+        setPhoneDefaultHide(true);
+      }
+    } catch {
+      if (window.innerWidth < 640) setPhoneDefaultHide(true);
+    }
+  }, []);
+  const [avatarChosen, setAvatarChosen] = useState(false);
+  const stageHidden = compact || hideAvatar || (phoneDefaultHide && !avatarChosen);
+  const avatarIsHidden = hideAvatar || (phoneDefaultHide && !avatarChosen);
+  // Nút "Hướng dẫn" nổi bật (nhấp nháy nhẹ) đến khi sinh viên mở xem lần đầu; nhớ theo trình duyệt.
+  const [seenInstructions, setSeenInstructions] = useStoredFlag("oralRoom.seenInstructions");
+  // Ước lượng số câu theo giờ (≈ 0,8 lượt/phút, khớp typicalQuestionCount ở core-feedback) — chỉ để sinh viên
+  // biết mình đang ở đâu, KHÔNG phải hạn mức.
+  const typicalQuestions = durationSec >= 300 ? Math.max(3, Math.round((durationSec / 60) * 0.8)) : null;
   const [pinExpanded, setPinExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -249,17 +271,6 @@ export default function OralExamRoom({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
 
-  // Lời kết dài (có "Nhìn lại buổi vấn đáp") không tự chuyển trang sau 3 giây — sinh viên cần thời gian đọc,
-  // và có nút "Hoàn tất" để tự thoát.
-  const closingLength = ended ? (turns[turns.length - 1]?.content.length ?? 0) : 0;
-  const longClosing = closingLength > 320;
-  useEffect(() => {
-    if (ended && !longClosing) {
-      const t = setTimeout(() => router.push(preview ? exitUrl : submittedUrl), 3_000);
-      return () => clearTimeout(t);
-    }
-  }, [ended, longClosing, router, submittedUrl, exitUrl, preview]);
-
   // A6.5 — Heartbeat cho dashboard giám thị realtime (cùng endpoint/nhịp thi
   // viết đang dùng — generic theo attemptId, không cần sửa gì bên đó).
   useEffect(() => {
@@ -374,6 +385,8 @@ export default function OralExamRoom({
   }, []);
 
   const lastExaminer = [...turns].reverse().find((t) => t.role === "examiner") ?? null;
+  // Đếm lượt nói của giám khảo (gồm cả lượt chào/nêu chủ đề) — chỉ để định hướng, lệch 1–2 đơn vị không sao.
+  const questionNumber = turns.filter((t) => t.role === "examiner").length;
 
   const avatarState: OralAvatarState = ended
     ? "idle"
@@ -440,6 +453,47 @@ export default function OralExamRoom({
               Bản thử · không lưu
             </span>
           )}
+          {/* Ẩn/hiện giảng viên ảo: trên máy tính ảnh chiếm gần nửa chiều cao và đẩy nội dung hội thoại xuống. Nhớ lựa
+              chọn theo trình duyệt. Nút "Xem hướng dẫn" nằm trong khối ảnh nên khi ẩn phải có lối vào ở đây. */}
+          {questionNumber > 0 && (
+            <span
+              className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium text-faint"
+              title="Số câu chỉ là ước lượng theo thời gian — buổi vấn đáp không giới hạn số câu, hết giờ là kết thúc."
+            >
+              Lượt {questionNumber}
+              {typicalQuestions ? <span className="hidden sm:inline"> · thường ~{typicalQuestions}</span> : null}
+            </span>
+          )}
+          {instructionsHtml && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowInstructions(true);
+                setSeenInstructions(true);
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
+                seenInstructions
+                  ? "border-token text-faint hover:text-ink"
+                  : "animate-pulse border-brand-500 bg-brand-50 text-brand-700"
+              }`}
+            >
+              <Info className="h-3.5 w-3.5" />
+              Hướng dẫn
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setAvatarChosen(true);
+              setHideAvatar(!avatarIsHidden);
+            }}
+            aria-pressed={avatarIsHidden}
+            title={avatarIsHidden ? "Hiện giảng viên ảo" : "Ẩn giảng viên ảo"}
+            className="inline-flex items-center gap-1.5 rounded-full border border-token px-2.5 py-1 text-xs font-medium text-faint hover:text-ink"
+          >
+            {avatarIsHidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{avatarIsHidden ? "Hiện GV ảo" : "Ẩn GV ảo"}</span>
+          </button>
           <RoomCountdown
             deadlineEpoch={deadlineEpoch}
             clockSkewMs={clockSkewMs}
@@ -463,7 +517,7 @@ export default function OralExamRoom({
             giác đang đối diện trực tiếp (face-to-face) thay vì chỉ là 1 icon
             phụ trong panel bên cạnh. Hiện ở mọi kích thước màn hình. */}
         <div
-          className={`relative shrink-0 flex-col items-center justify-center gap-1.5 overflow-hidden border-b border-token bg-gradient-to-b from-brand-50 to-[rgb(var(--surface))] py-4 dark:from-slate-900 dark:to-[rgb(var(--surface))] ${compact ? "hidden" : "flex"}`}
+          className={`relative shrink-0 flex-col items-center justify-center gap-1.5 overflow-hidden border-b border-token bg-gradient-to-b from-brand-50 to-[rgb(var(--surface))] py-4 dark:from-slate-900 dark:to-[rgb(var(--surface))] ${stageHidden ? "hidden" : "flex"}`}
         >
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="h-56 w-56 rounded-full bg-brand-300/30 blur-3xl dark:bg-brand-500/10 sm:h-80 sm:w-80" />
@@ -515,7 +569,7 @@ export default function OralExamRoom({
               )}
               {ended && (
                 <div className="banner-success px-4 py-3 text-sm">
-                  Buổi vấn đáp đã kết thúc. Đang chuyển sang trang xác nhận…
+                  Buổi vấn đáp đã kết thúc. Bạn đọc xong nhận xét thì bấm “Hoàn tất” để tiếp tục.
                 </div>
               )}
               {error && (
@@ -529,11 +583,11 @@ export default function OralExamRoom({
           <footer className="border-t border-token bg-[rgb(var(--surface))] p-3 sm:p-4">
             {/* Bàn phím ảo mở thì khung chat gần như biến mất — ghim câu hỏi hiện tại sát ô nhập để khỏi phải
                 tắt bàn phím đi đọc lại (phản ánh thật của sinh viên). Chạm để xem đủ. */}
-            {compact && canAnswer && lastExaminer && (
+            {stageHidden && canAnswer && lastExaminer && (
               <button
                 type="button"
                 onClick={() => setPinExpanded((v) => !v)}
-                className="mx-auto mb-2 block w-full max-w-2xl rounded-lg border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-left text-sm"
+                className={`mx-auto mb-2 w-full max-w-2xl rounded-lg border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-left text-base sm:text-sm ${compact ? "block" : "block lg:hidden"}`}
               >
                 <span className="font-semibold text-brand-700">Câu hỏi: </span>
                 <span className={pinExpanded ? "" : "line-clamp-2"}>{lastExaminer.content}</span>
@@ -659,7 +713,7 @@ function Bubble({
         />
       )}
       <div
-        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-base shadow-sm sm:text-sm ${
           isStudent
             ? "bg-sky-100 text-slate-800 dark:bg-sky-900/40 dark:text-sky-100"
             : "border border-token bg-[rgb(var(--surface))] text-[rgb(var(--text))]"

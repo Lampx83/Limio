@@ -17,6 +17,8 @@ import {
   makeOpenerFilter,
   resolveOralPhase,
   stripEvaluativeOpener,
+  isValidClosing,
+  typicalQuestionCount,
   runOralExamPreviewTurn,
   runOralExamTurn,
 } from "../oralExam/examinerChat";
@@ -312,7 +314,7 @@ describe("stripEvaluativeOpener / makeOpenerFilter (A6.8)", () => {
   });
 
   it("leaves neutral text, real questions that start with the same word, and praise-only text alone", () => {
-    expect(stripEvaluativeOpener("Mình đã ghi nhận. Bạn sẽ hỏi ai?")).toBe("Mình đã ghi nhận. Bạn sẽ hỏi ai?");
+    expect(stripEvaluativeOpener("Mình đã ghi nhận. Bạn sẽ hỏi ai?")).toBe("Bạn sẽ hỏi ai?");
     expect(stripEvaluativeOpener("Hợp lý hay không hợp lý ở chỗ nào?")).toBe("Hợp lý hay không hợp lý ở chỗ nào?");
     expect(stripEvaluativeOpener("Rất tốt!")).toBe("Rất tốt!"); // không bao giờ trả chuỗi rỗng
   });
@@ -347,9 +349,11 @@ describe("prompt rules by feedback mode, last-question cue, closing summary (A6.
   it("exam mode: one question, short turns, no praise openers; coaching mode: short specific comment instead", () => {
     const exam = buildOralSystemPrompt({ ...base, phase: "normal", feedbackMode: "exam" });
     expect(exam).toContain("đúng MỘT dấu hỏi");
-    expect(exam).toContain("tối đa 2 câu");
+    expect(exam).toContain("Tối đa 3 câu");
+    expect(exam).toContain("NỐI Ý");
+    expect(exam).toContain("TỰ ĐỨNG ĐƯỢC");
     expect(exam).toContain("KHÔNG mở đầu bằng lời khen");
-    expect(exam).toContain("Mình đã ghi nhận.");
+    expect(exam).toContain("KHÔNG dùng câu cố định");
     const def = buildOralSystemPrompt({ ...base, phase: "normal" });
     expect(def).toContain("KHÔNG mở đầu bằng lời khen"); // mặc định là Thi
     const coach = buildOralSystemPrompt({ ...base, phase: "normal", feedbackMode: "coaching" });
@@ -413,5 +417,18 @@ describe("runOralExamTurn applies the opener filter in exam mode only (A6.8)", (
       computeEmbed: recordingEmbed([]),
     });
     expect(r.assistantContent).toBe("Rất tốt, An! Bạn sẽ hỏi ai ở phía tổ chức?");
+  });
+});
+
+describe("closing guarantee + typicalQuestionCount (padlet 6WS9UT)", () => {
+  it("isValidClosing rejects text ending in a question", () => {
+    expect(isValidClosing("Cảm ơn bạn. Buổi vấn đáp đã hoàn tất.")).toBe(true);
+    expect(isValidClosing("Bạn sẽ thử nghiệm ra sao?")).toBe(false);
+    expect(isValidClosing("Cảm ơn bạn. Còn gì nữa không? ")).toBe(false);
+    expect(isValidClosing("")).toBe(false);
+  });
+  it("typicalQuestionCount ≈ 0.8/phút, null khi quá ngắn", () => {
+    expect(typicalQuestionCount(15)).toBe(12);
+    expect(typicalQuestionCount(3)).toBeNull();
   });
 });

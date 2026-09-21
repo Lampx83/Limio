@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Info, Keyboard, LogOut, Mic, Square, X } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Info, Keyboard, LogOut, Mic, Square, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { usePacedReveal } from "@/hooks/usePacedReveal";
 import UserAvatar from "@/components/ui/UserAvatar";
@@ -11,6 +11,7 @@ import FullscreenGate from "./FullscreenGate";
 import InRoomConfirm from "./InRoomConfirm";
 import RoomCountdown from "./RoomCountdown";
 import { useVisualViewport } from "@/hooks/useVisualViewport";
+import { useStoredFlag } from "@/hooks/useStoredFlag";
 import TabBlurWarning from "./TabBlurWarning";
 import MultiTabDetector from "./MultiTabDetector";
 import OralAiAvatar, { type OralAvatarState } from "./OralAiAvatar";
@@ -136,6 +137,9 @@ export default function OralVoiceRoom({
     [startedAt, durationSec],
   );
   const vp = useVisualViewport();
+  const compact = vp !== null && vp.height < 560;
+  const [hideAvatar, setHideAvatar] = useStoredFlag("oralRoom.hideAvatar");
+  const stageHidden = compact || hideAvatar;
 
   const revokeQueuedUrls = useCallback(() => {
     for (const u of objectUrlsRef.current) URL.revokeObjectURL(u);
@@ -342,13 +346,6 @@ export default function OralVoiceRoom({
   }, [started]);
 
   useEffect(() => {
-    if (ended) {
-      const t = setTimeout(() => router.push(preview ? exitUrl : submittedUrl), 3_000);
-      return () => clearTimeout(t);
-    }
-  }, [ended, router, submittedUrl, exitUrl, preview]);
-
-  useEffect(() => {
     if (preview) return; // bản thử không có lượt thi để báo nhịp
     let cancelled = false;
     const ping = () => {
@@ -551,6 +548,28 @@ export default function OralVoiceRoom({
               Bản thử · không lưu
             </span>
           )}
+          {/* Ẩn/hiện giảng viên ảo: trên máy tính ảnh chiếm gần nửa chiều cao và đẩy nội dung hội thoại xuống. Nhớ lựa
+              chọn theo trình duyệt. Nút "Xem hướng dẫn" nằm trong khối ảnh nên khi ẩn phải có lối vào ở đây. */}
+          {stageHidden && instructionsHtml && (
+            <button
+              type="button"
+              onClick={() => setShowInstructions(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-token px-2.5 py-1 text-xs font-medium text-faint hover:text-ink"
+            >
+              <Info className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Hướng dẫn</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setHideAvatar(!hideAvatar)}
+            aria-pressed={hideAvatar}
+            title={hideAvatar ? "Hiện giảng viên ảo" : "Ẩn giảng viên ảo"}
+            className="inline-flex items-center gap-1.5 rounded-full border border-token px-2.5 py-1 text-xs font-medium text-faint hover:text-ink"
+          >
+            {hideAvatar ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{hideAvatar ? "Hiện GV ảo" : "Ẩn GV ảo"}</span>
+          </button>
           <RoomCountdown
             deadlineEpoch={deadlineEpoch}
             clockSkewMs={clockSkewMs}
@@ -564,7 +583,9 @@ export default function OralVoiceRoom({
         {/* "Sân khấu" — avatar AI giám khảo ở giữa, phông nền có glow tạo cảm
             giác đang đối diện trực tiếp (face-to-face) thay vì chỉ là 1 icon
             phụ trong panel bên cạnh. Hiện ở mọi kích thước màn hình. */}
-        <div className="relative flex shrink-0 flex-col items-center justify-center gap-1.5 overflow-hidden border-b border-token bg-gradient-to-b from-brand-50 to-[rgb(var(--surface))] py-4 dark:from-slate-900 dark:to-[rgb(var(--surface))]">
+        <div
+          className={`relative shrink-0 flex-col items-center justify-center gap-1.5 overflow-hidden border-b border-token bg-gradient-to-b from-brand-50 to-[rgb(var(--surface))] py-4 dark:from-slate-900 dark:to-[rgb(var(--surface))] ${stageHidden ? "hidden" : "flex"}`}
+        >
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="h-56 w-56 rounded-full bg-brand-300/30 blur-3xl dark:bg-brand-500/10 sm:h-80 sm:w-80" />
           </div>
@@ -634,8 +655,15 @@ export default function OralVoiceRoom({
                 <p className="pl-1 text-xs italic text-faint">🔊 AI giám khảo đang đọc câu hỏi…</p>
               )}
               {ended && (
-                <div className="banner-success px-4 py-3 text-sm">
-                  Buổi vấn đáp đã kết thúc. Đang chuyển sang trang xác nhận…
+                <div className="banner-success flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
+                  <span>Buổi vấn đáp đã kết thúc. Bạn đọc xong nhận xét thì bấm “Hoàn tất” để tiếp tục.</span>
+                  <button
+                    type="button"
+                    onClick={() => router.push(preview ? exitUrl : submittedUrl)}
+                    className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-700"
+                  >
+                    Hoàn tất
+                  </button>
                 </div>
               )}
               {error && (
