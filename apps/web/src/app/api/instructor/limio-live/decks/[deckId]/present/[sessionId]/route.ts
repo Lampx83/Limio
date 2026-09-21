@@ -42,6 +42,8 @@ export async function GET(
       currentSlideId: session.currentSlideId,
       endedAt: session.endedAt,
       uiState: session.uiState,
+      joinCode: session.joinCode,
+      identityMode: session.identityMode,
       runtime,
     });
   } catch (error) {

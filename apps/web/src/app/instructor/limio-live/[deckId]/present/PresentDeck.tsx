@@ -81,6 +81,9 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentSlideId, setCurrentSlideId] = useState<string | null>(null);
   const [runtime, setRuntime] = useState<Runtime | null>(null);
+  // Mã tham gia CẤP PHIÊN: học viên quét 1 QR cho cả buổi rồi tự theo slide đang chiếu.
+  const [joinCode, setJoinCode] = useState<string | null>(null);
+  const [identityMode, setIdentityMode] = useState<"anonymous" | "login">("anonymous");
   const [uiState, setUiState] = useState<UiState>({});
   const [endedAt, setEndedAt] = useState<string | null>(null);
   const [loadingSlide, setLoadingSlide] = useState(true);
@@ -204,6 +207,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         setSessionId(session.id);
         setUiState(session.uiState ?? {});
         setEndedAt(session.endedAt ?? null);
+        setJoinCode(session.joinCode ?? null);
+        setIdentityMode(session.identityMode === "login" ? "login" : "anonymous");
 
         if (mode === "presenter") {
           // ?from=start | <slideId> (nút "Từ đầu"/"Từ slide hiện tại" ở editor): nhảy tới
@@ -250,6 +255,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         setRuntime(data.runtime);
         setUiState(data.uiState ?? {});
         setEndedAt(data.endedAt ?? null);
+        setJoinCode(data.joinCode ?? null);
       } catch {
         /* bỏ qua lỗi poll thoáng qua — lần poll sau sẽ tự sửa */
       }
@@ -403,7 +409,11 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   // không cần chạm chuột vào màn chiếu. Reset khi đổi slide.
   const [qrBig, setQrBig] = useState(false);
   const [qrRemote, setQrRemote] = useState(false);
-  const canQr = !!currentSlide && currentSlide.type !== "content" && !!runtime && runtime.kind !== "content";
+  const runtimeJoin = runtime && runtime.kind !== "content" ? runtime : null;
+  const joinUrl = joinCode ? shareUrl(`/learn/live/${joinCode}`) : runtimeJoin ? shareUrl(runtimeJoin.joinPath) : null;
+  const joinLabel =
+    joinCode ?? (runtimeJoin && (runtimeJoin.kind === "collaborate_board" || runtimeJoin.kind === "whiteboard") ? runtimeJoin.code : undefined);
+  const canQr = !!currentSlide && !!joinUrl;
   const toggleQr = () => {
     if (mode !== "presenter" || !canQr) return;
     const next = !qrBig;
@@ -746,13 +756,39 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             <button onClick={() => setSideOpen(false)} className="mb-3 text-xs font-medium text-muted lg:hidden">
               ✕ Gấp gọn
             </button>
+            {showPreview && !hasSidebar && joinCode && (
+              <div className="mb-6">
+                <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">Tham gia cả buổi</div>
+                <JoinBox joinPath={`/learn/live/${joinCode}`} code={joinCode} qrOnScreen={qrBig} onToggleQr={toggleQr} />
+              </div>
+            )}
             {hasSidebar && (
               <FeedbackSidebar
                 key={currentSlide.id}
                 slide={currentSlide}
                 runtime={runtime}
+                sessionCode={joinCode}
                 qrOnScreen={qrBig}
                 onToggleQr={mode === "presenter" ? toggleQr : undefined}
+              />
+            )}
+            {showPreview && joinCode && (
+              <IdentityModeToggle
+                mode={identityMode}
+                onChange={async (next) => {
+                  const prev = identityMode;
+                  setIdentityMode(next);
+                  try {
+                    const res = await fetch(
+                      apiUrl(`/api/instructor/limio-live/decks/${deckId}/present/${sessionId}/settings`),
+                      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ identityMode: next }) }
+                    );
+                    if (!res.ok) throw new Error();
+                  } catch {
+                    setIdentityMode(prev);
+                    toast.error("Không đổi được chế độ tham gia");
+                  }
+                }}
               />
             )}
             {(presenterNote || showPreview) && (
@@ -767,19 +803,19 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
       {showPreview && <Filmstrip slides={slides} currentId={currentSlideId} theme={deck.theme} onPick={(id) => sessionId && visitSlide(sessionId, id)} />}
 
-      {slideshow && canQr && runtime && (
+      {slideshow && canQr && joinUrl && (
         <SlideshowQr
-          url={shareUrl(runtime.joinPath)}
-          code={runtime.kind === "collaborate_board" || runtime.kind === "whiteboard" ? runtime.code : undefined}
+          url={joinUrl}
+          code={joinLabel}
           big={qrBig}
           onToggle={() => setQrBig((v) => !v)}
         />
       )}
 
-      {canQr && runtime && mode === "audience" && qrRemote && (
+      {canQr && joinUrl && mode === "audience" && qrRemote && (
         <JoinEnlarged
-          url={shareUrl(runtime.joinPath)}
-          code={runtime.kind === "collaborate_board" || runtime.kind === "whiteboard" ? runtime.code : undefined}
+          url={joinUrl}
+          code={joinLabel}
           onClose={() => {
             setQrRemote(false);
             setQrBig(false);
@@ -1348,9 +1384,11 @@ function FeedbackSidebar({
   runtime,
   qrOnScreen,
   onToggleQr,
+  sessionCode,
 }: {
   slide: Slide;
   runtime: Runtime | null;
+  sessionCode?: string | null;
   qrOnScreen?: boolean;
   onToggleQr?: () => void;
 }) {
@@ -1359,11 +1397,11 @@ function FeedbackSidebar({
   return (
     <div>
       <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">
-        Tham gia slide này
+        {sessionCode ? "Tham gia cả buổi — quét 1 lần" : "Tham gia slide này"}
       </div>
       <JoinBox
-        joinPath={runtime.joinPath}
-        code={runtime.kind === "collaborate_board" || runtime.kind === "whiteboard" ? runtime.code : undefined}
+        joinPath={sessionCode ? `/learn/live/${sessionCode}` : runtime.joinPath}
+        code={sessionCode ?? (runtime.kind === "collaborate_board" || runtime.kind === "whiteboard" ? runtime.code : undefined)}
         qrOnScreen={qrOnScreen}
         onToggleQr={onToggleQr}
       />
@@ -1511,6 +1549,39 @@ function JoinBox({
         </button>
       )}
       {big && <JoinEnlarged url={url} code={code} onClose={() => setBig(false)} />}
+    </div>
+  );
+}
+
+// Giảng viên chọn học viên vào phiên ẩn danh hay bắt buộc đăng nhập (mỗi tài khoản 1 phiếu/câu).
+function IdentityModeToggle({ mode, onChange }: { mode: "anonymous" | "login"; onChange: (m: "anonymous" | "login") => void }) {
+  const opts: { value: "anonymous" | "login"; label: string }[] = [
+    { value: "anonymous", label: "Ẩn danh" },
+    { value: "login", label: "Đăng nhập" },
+  ];
+  return (
+    <div className="mt-5">
+      <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-faint">Học viên tham gia</div>
+      <div className="flex rounded-full border border-token bg-[rgb(var(--surface-muted))] p-0.5" role="radiogroup" aria-label="Cách học viên tham gia">
+        {opts.map((o) => (
+          <button
+            key={o.value}
+            role="radio"
+            aria-checked={mode === o.value}
+            onClick={() => mode !== o.value && onChange(o.value)}
+            className={`flex-1 rounded-full px-3 py-1.5 text-[12.5px] font-semibold transition ${
+              mode === o.value ? "bg-[rgb(var(--surface))] shadow-sm" : "text-muted hover:text-[rgb(var(--text))]"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-1.5 text-[12px] leading-relaxed text-faint">
+        {mode === "login"
+          ? "Học viên phải đăng nhập Limio; mỗi tài khoản chỉ trả lời 1 lần cho mỗi câu."
+          : "Chỉ cần quét QR, không cần tài khoản. Không biết ai trả lời gì."}
+      </p>
     </div>
   );
 }
@@ -1769,11 +1840,6 @@ function QuestionSlideView({
           >
             {revealed ? "Đã đóng" : "Đóng câu hỏi"}
           </button>
-        )}
-        {!isQuiz && (
-          <span className="shrink-0 rounded-full bg-blue-100 px-5 py-2 text-lg font-bold text-blue-700">
-            Không có đáp án đúng/sai
-          </span>
         )}
       </div>
 

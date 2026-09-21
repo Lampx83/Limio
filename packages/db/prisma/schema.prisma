@@ -4598,6 +4598,13 @@ model EmailDispatchItem {
 // InteractiveBoard lúc trình chiếu, tái dùng nguyên hạ tầng QR/join/SSE của
 // các công cụ đó thay vì xây lại.
 
+// Cách học viên vào phiên trình chiếu qua mã tham gia cấp phiên: ẩn danh (mặc định, chỉ cần
+// quét QR) hoặc bắt buộc đăng nhập tài khoản Limio (mỗi tài khoản 1 phiếu/câu).
+enum LiveIdentityMode {
+  anonymous
+  login
+}
+
 enum LiveSlideType {
   content
   quiz
@@ -4703,6 +4710,11 @@ model LiveSession {
   slideRuntimeRefs Json @default("{}")
 
   currentSlideId String?
+
+  // Mã tham gia CẤP PHIÊN (6 ký tự): học viên quét 1 QR /learn/live/{joinCode} rồi tự động
+  // theo slide tương tác giảng viên đang chiếu, không phải quét lại cho từng câu hỏi.
+  joinCode     String?          @unique
+  identityMode LiveIdentityMode @default(anonymous)
 
   // Trạng thái UI cần đồng bộ giữa cửa sổ người trình bày và cửa sổ chiếu lên
   // màn hình (2 cửa sổ riêng — xem PresentDeck.tsx) — vd đồng hồ đếm giờ đã

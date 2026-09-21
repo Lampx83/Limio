@@ -50,11 +50,33 @@ export async function POST(
   try {
     const poll = await prisma.classroomPoll.findUnique({
       where: { id: params.pollId },
-      select: { id: true, options: true },
+      select: { id: true, options: true, sessionId: true },
     });
 
     if (!poll) {
       return Response.json({ error: "Poll not found" }, { status: 404 });
+    }
+
+    // Phiên Limio-Live có thể yêu cầu đăng nhập: khi đó mỗi tài khoản chỉ 1 phiếu/câu
+    // (áp dụng cả khi vào bằng QR riêng của slide, không chỉ qua mã tham gia cấp phiên).
+    const liveSession = await prisma.liveSession.findFirst({
+      where: { classroomSessionId: poll.sessionId },
+      select: { identityMode: true },
+    });
+    if (liveSession?.identityMode === "login") {
+      if (!userId) {
+        return Response.json(
+          { error: "Phiên này yêu cầu đăng nhập để trả lời.", code: "login_required" },
+          { status: 401 },
+        );
+      }
+      const already = await prisma.classroomPollVote.findFirst({
+        where: { pollId: params.pollId, userId },
+        select: { id: true },
+      });
+      if (already) {
+        return Response.json({ error: "Bạn đã trả lời câu này rồi.", code: "already_voted" }, { status: 409 });
+      }
     }
 
     const choiceIndex = parseInt(choice);
