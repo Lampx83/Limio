@@ -6,6 +6,7 @@ import { isInstructor } from "../auth/roles";
 import { emitEvent } from "../learning/events";
 import { ensureDefaultSession } from "./exam-rooms";
 import { ExamError } from "./types";
+import { importPreviewToExam } from "./blueprint";
 import { WizardConfigShape, type WizardConfigT, assembleWizardPool } from "./wizard";
 
 const examAttemptPolicy = z.enum(["single", "multi"]);
@@ -243,8 +244,22 @@ export async function createExamFromWizard(
         },
       },
     },
-    select: { id: true },
+    select: { id: true, sections: { select: { id: true } } },
   });
+
+  // Chốt ngay pool thành ExamQuestion cụ thể. Màn làm bài chỉ đọc ExamQuestion
+  // (kết quả rút ngẫu nhiên per-attempt chưa được đọc ở đâu), nên một đề wizard
+  // giữ nguyên section ngẫu nhiên sẽ rỗng với học viên — và publishExam từ chối
+  // nó. Nếu chốt không được (ngân hàng hết câu...), đề vẫn ở nháp với section
+  // chưa chốt để giảng viên xử lý, thay vì làm hỏng cả lần tạo.
+  const sectionId = exam.sections[0]?.id;
+  if (sectionId) {
+    try {
+      await importPreviewToExam(actorUserId, exam.id, sectionId, {}, db);
+    } catch (e) {
+      if (!(e instanceof ExamError)) throw e;
+    }
+  }
 
   // Increment counter for upgrade-banner (non-critical — ignore failure).
   await db.user.update({
@@ -376,6 +391,7 @@ export async function publishExam(
       sections: {
         select: {
           id: true,
+          title: true,
           selectionMode: true,
           poolFilter: true,
           _count: { select: { items: true } },
@@ -406,6 +422,15 @@ export async function publishExam(
       full.passages.length > 0 || full.questions.length > 0 || randomSections.length > 0;
     if (!hasContent) {
       errors.push("exam has no passages, standalone questions, or random sections");
+    }
+    // Section rút ngẫu nhiên CHƯA CHỐT không tới được thí sinh: màn làm bài chỉ
+    // đọc ExamQuestion, còn kết quả rút (sectionMaterializations) chưa ai đọc lại.
+    // Publish một đề như vậy = đề rỗng với học viên, nên bắt chốt trước.
+    for (const s of randomSections) {
+      errors.push(
+        `Phần "${s.title}" đang để rút ngẫu nhiên nên chưa có câu hỏi cụ thể cho học viên. ` +
+          `Vào tab Nội dung → mục "Các phần của đề" → bấm "Xem & chốt" rồi chốt câu vào đề trước khi publish.`,
+      );
     }
     for (const p of full.passages) {
       if (p._count.questions === 0) {
@@ -543,7 +568,9 @@ export async function deleteExam(
   // ExamCandidate), nên xoá Exam chỉ cascade OralExamTurn/OralExamEvaluation
   // — không đụng LearningEvent (bảng đó chỉ cascade qua ExamCandidate, thứ
   // vấn đáp không dùng tới). FE tự xin xác nhận trước khi gọi API này.
-  if (exam.status === "published" && exam.kind !== "oral") {
+  // Guard theo bài làm thật, KHÔNG theo status: đề archived vẫn có thể còn bài
+  // làm, và xoá Exam cascade sạch candidate → attempt → LearningEvent.
+  if (exam.kind !== "oral") {
     const hasAttempts =
       (await db.examAttempt.count({ where: { examId } })) > 0;
     if (hasAttempts) throw new ExamError("exam_has_attempts");

@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getAttemptRuntime } from "@feedbackme/core-lms";
+import { getAttemptRuntime, toPublicQuestionConfig } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ExamPlayer from "@/components/ExamPlayer";
 
@@ -77,7 +77,7 @@ export default async function ExamRuntimePage({
         passageId: q.passageId,
         orderInPassage: q.orderInPassage,
         orderInExam: q.orderInExam,
-        config: q.config as Record<string, unknown>,
+        config: toPublicQuestionConfig(q.type, q.config),
       }))}
       shuffleSnapshot={runtime.shuffleSnapshot}
       initialAnswers={runtime.answers}

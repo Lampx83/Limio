@@ -299,6 +299,17 @@ export async function deleteCohort(
   db: PrismaClient = prisma,
 ): Promise<void> {
   await assertCanEditCohort(actorUserId, cohortId, db);
+  // Lớp gắn với ca thi (ExamSession.cohortId) và thí sinh của lớp; xoá lớp có
+  // thể kéo theo bài làm. Có bài làm thì chặn.
+  const attempts = await db.examAttempt.count({
+    where: {
+      OR: [
+        { session: { cohortId } },
+        { candidate: { cohortId } },
+      ],
+    },
+  });
+  if (attempts > 0) throw new ExamError("cohort_has_attempts");
   await db.courseSection.delete({ where: { id: cohortId } });
 }
 
@@ -637,6 +648,14 @@ export async function deleteExamSession(
   });
   if (!s) throw new ExamError("schedule_not_found");
   await assertCanEditExam(actorUserId, s.exam, db);
+  // ExamCandidate → ExamAttempt → LearningEvent đều cascade theo ca. Có bài làm
+  // (gắn trực tiếp qua sessionId, hoặc qua thí sinh của ca) thì không được xoá.
+  const attempts = await db.examAttempt.count({
+    where: {
+      OR: [{ sessionId }, { candidate: { sessionId } }],
+    },
+  });
+  if (attempts > 0) throw new ExamError("session_has_attempts");
   await db.examSession.delete({ where: { id: sessionId } });
 }
 

@@ -51,7 +51,12 @@ export default function SectionsPanel({ examId }: { examId: string }) {
     if (sRes.ok) {
       const list = ((await sRes.json()) as { sections: Section[] }).sections;
       setSections(list);
-      if (!autoOpened && list.length > 1) {
+      // Mở sẵn khi có ≥2 phần, hoặc khi còn phần rút ngẫu nhiên chưa chốt: chưa
+      // chốt thì đề không publish được, nên nút "Xem & chốt" không được giấu.
+      if (
+        !autoOpened &&
+        (list.length > 1 || list.some((s) => s.selectionMode === "random_from_bank"))
+      ) {
         setOpen(true);
         setAutoOpened(true);
       }
@@ -184,7 +189,7 @@ export default function SectionsPanel({ examId }: { examId: string }) {
                   className="rounded border border-blue-300 bg-blue-50 px-2 py-0.5 text-xs text-blue-800 hover:bg-blue-100"
                   title="Xem danh sách câu hỏi sẽ được rút (preview)"
                 >
-                  Xem {s.poolFilter?.count ?? "?"} câu
+                  Xem & chốt {s.poolFilter?.count ?? "?"} câu
                 </button>
               )}
               <button
@@ -290,7 +295,7 @@ function PreviewPoolModal({
         j.skipped.length > 0
           ? ` (${j.skipped.length} bị skip: ${j.skipped[0]?.reason ?? "?"}…)`
           : "";
-      alert(`Đã import ${j.imported} câu vào đề thi${skipMsg}.`);
+      alert(`Đã chốt ${j.imported} câu vào đề thi${skipMsg}.`);
       await onImported();
     } finally {
       setImporting(false);
@@ -470,7 +475,7 @@ function PreviewPoolModal({
 
         <div className="flex shrink-0 items-center justify-between gap-2 border-t border-default bg-slate-50 px-4 py-2">
           <p className="text-[11px] text-faint">
-            Import = chốt cứng bộ câu hiện tại vào đề (mất randomization per-attempt).
+            Chốt = cố định bộ câu hiện tại vào đề (mất randomization per-attempt).
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -486,8 +491,8 @@ function PreviewPoolModal({
               title="Chuyển section thành fixed + copy mỗi câu thành ExamQuestion"
             >
               {importing
-                ? "Đang import…"
-                : `Import ${data?.totalSampled ?? 0} câu vào đề thi`}
+                ? "Đang chốt…"
+                : `Chốt ${data?.totalSampled ?? 0} câu vào đề thi`}
             </button>
           </div>
         </div>

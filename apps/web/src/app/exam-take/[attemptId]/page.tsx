@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
-import { getAttemptRuntime } from "@feedbackme/core-lms";
+import { getAttemptRuntime, toPublicQuestionConfig } from "@feedbackme/core-lms";
 import { requireExamSubject } from "@/lib/session";
 import ExamPlayer from "@/components/ExamPlayer";
 import SebBrowserPrompt from "@/components/exam/SebBrowserPrompt";
@@ -105,7 +105,7 @@ export default async function ExamTakePage({
         passageId: q.passageId,
         orderInPassage: q.orderInPassage,
         orderInExam: q.orderInExam,
-        config: q.config as Record<string, unknown>,
+        config: toPublicQuestionConfig(q.type, q.config),
       }))}
       shuffleSnapshot={runtime.shuffleSnapshot}
       initialAnswers={runtime.answers}

@@ -1634,10 +1634,13 @@ export async function removeCandidateFromRoom(
   if (!c || !c.roomId || !c.room)
     throw new ExamError("validation_failed", { reason: "candidate_not_found" });
   await assertCanEdit(actorUserId, c.room.session.roundId, db);
-  // Delete the candidate row entirely. They were created via the room flow,
-  // so unassigning would leave a dangling roster entry the user can't see.
-  // ExamAttempt → ExamCandidate is FK Cascade, so any in-flight attempts
-  // also get cleared. (Should not happen if the room hasn't started.)
+  // ExamAttempt → ExamCandidate là FK Cascade: xoá thí sinh đã có bài làm sẽ xoá
+  // luôn bài làm và LearningEvent của họ. Chỉ được xoá khi chưa từng vào thi
+  // (cùng guard với removeCandidate ở candidates.ts).
+  const attempts = await db.examAttempt.count({ where: { candidateId } });
+  if (attempts > 0) throw new ExamError("candidate_has_attempts");
+  // Xoá hẳn hàng: thí sinh này sinh ra từ luồng phòng thi, bỏ gán phòng sẽ để
+  // lại một mục danh sách mà người dùng không thấy được.
   await db.examCandidate.delete({ where: { id: candidateId } });
 }
 

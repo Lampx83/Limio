@@ -45,6 +45,8 @@ export class ExamError extends Error {
       | "result_not_yet_graded"
       | "candidate_not_found"
       | "candidate_has_attempts"
+      | "session_has_attempts"
+      | "cohort_has_attempts"
       | "candidate_code_collision"
       | "bank_not_found"
       | "bank_has_used_questions"

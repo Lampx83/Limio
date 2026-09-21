@@ -202,7 +202,12 @@ export async function startExamAttempt(
     examId,
     userId,
     db,
-  ).catch(() => ({}));
+  ).catch((e) => {
+    // Vẫn cho vào thi (đường ExamQuestion cố định không phụ thuộc bước này),
+    // nhưng KHÔNG nuốt im: pool thiếu/hỏng phải để lại dấu vết để còn biết.
+    console.error("[attempts] materializeRandomSections failed", { examId, userId, e });
+    return {};
+  });
   const snapshot = {
     ...baseSnapshot,
     sectionMaterializations,
