@@ -8,6 +8,8 @@ import { apiUrl } from "@/lib/apiUrl";
 interface Props {
   examId: string;
   open: boolean;
+  /** Cố định lúc mở — nút "AI import" / nút "Excel import" ở ContentManager quyết định. */
+  mode: "file" | "ai";
   onClose: () => void;
 }
 
@@ -125,13 +127,11 @@ function humanizeAiError(code: string | undefined, details: unknown): string {
   }
 }
 
-export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
+export default function ImportQuestionsModal({ examId, open, mode, onClose }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
-  /** Đường tạo ra `preview` — quyết định confirm gọi endpoint nào (file re-parse vs ai-commit theo rows). */
-  const [source, setSource] = useState<"file" | "ai" | null>(null);
   const [aiSkipped, setAiSkipped] = useState<SkippedAiQuestion[]>([]);
   const [includeWarnings, setIncludeWarnings] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -143,7 +143,6 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
   function reset() {
     setFile(null);
     setPreview(null);
-    setSource(null);
     setAiSkipped([]);
     setDone(null);
     setError(null);
@@ -171,7 +170,6 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
       );
       return;
     }
-    setSource("file");
     setPreview(data as PreviewResponse);
   }
 
@@ -199,7 +197,6 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
       );
       return;
     }
-    setSource("ai");
     setAiSkipped(skipped);
     setPreview(j);
   }
@@ -207,7 +204,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
   async function runConfirm() {
     setLoading(true);
     setError(null);
-    if (source === "ai") {
+    if (mode === "ai") {
       if (!preview) {
         setLoading(false);
         return;
@@ -279,7 +276,14 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
     >
       <div className="w-full max-w-4xl rounded-lg bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-default px-5 py-3">
-          <h2 className="flex items-center gap-1.5 text-base font-semibold"><UploadIcon className="h-4 w-4 shrink-0 text-slate-400" /> Nhập câu hỏi</h2>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold">
+            {mode === "ai" ? (
+              <Sparkles className="h-4 w-4 shrink-0 text-violet-600" />
+            ) : (
+              <UploadIcon className="h-4 w-4 shrink-0 text-slate-400" />
+            )}
+            {mode === "ai" ? "AI import" : "Excel import"}
+          </h2>
           <button type="button" onClick={close} className="text-faint hover:text-red-600">
             ✕
           </button>
@@ -307,6 +311,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
             </>
           ) : (
             <Upload
+              mode={mode}
               loading={loading}
               examId={examId}
               fileInputRef={fileInputRef}
@@ -365,7 +370,7 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
                   disabled={loading}
                   className="rounded border border-default px-3 py-1.5 text-sm disabled:opacity-50"
                 >
-                  {source === "ai" ? "Làm lại" : "Chọn file khác"}
+                  {mode === "ai" ? "Làm lại" : "Chọn file khác"}
                 </button>
                 <button
                   type="button"
@@ -393,44 +398,24 @@ export default function ImportQuestionsModal({ examId, open, onClose }: Props) {
 }
 
 function Upload({
+  mode,
   examId,
   fileInputRef,
   onFile,
   onExtractAi,
   loading,
 }: {
+  mode: "file" | "ai";
   examId: string;
   fileInputRef: React.RefObject<HTMLInputElement>;
   onFile: (f: File) => void;
   onExtractAi: (rawText: string) => void;
   loading: boolean;
 }) {
-  const [mode, setMode] = useState<"file" | "ai">("file");
   const [rawText, setRawText] = useState("");
 
   return (
     <div className="space-y-3 text-sm">
-      <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-xs font-medium">
-        <button
-          type="button"
-          onClick={() => setMode("file")}
-          className={`flex-1 rounded-md py-1.5 transition-colors ${
-            mode === "file" ? "bg-white text-slate-900 shadow-sm" : "text-faint hover:text-slate-700"
-          }`}
-        >
-          Tải file Excel
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("ai")}
-          className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1.5 transition-colors ${
-            mode === "ai" ? "bg-white text-slate-900 shadow-sm" : "text-faint hover:text-slate-700"
-          }`}
-        >
-          <Sparkles className="h-3 w-3" /> Dán & định dạng bằng AI
-        </button>
-      </div>
-
       {mode === "file" ? (
         <>
           <p>
@@ -483,8 +468,14 @@ function Upload({
             <ol className="mt-1 list-decimal space-y-0.5 pl-4">
               <li>
                 Dán nội dung câu hỏi — copy nguyên văn từ Word, PDF, hoặc gõ tay.
-                Định dạng tuỳ ý, nhiều câu một lúc, hỗ trợ trắc nghiệm, đúng/sai,
-                sắp xếp thứ tự, ghép cặp, điền khuyết.
+                Định dạng tuỳ ý, có thể nhiều câu một lúc, nhiều loại trộn lẫn
+                cũng được.
+              </li>
+              <li>
+                Hỗ trợ 5 loại: <b>trắc nghiệm</b>, <b>đúng/sai</b>,{" "}
+                <b>sắp xếp thứ tự</b>, <b>ghép cặp</b>, <b>điền khuyết</b>. Các
+                loại khác (tự luận, số học…) AI sẽ báo bỏ qua, không tự gán
+                nhầm loại.
               </li>
               <li>
                 Đáp án đúng đánh dấu kiểu gì cũng được (in đậm, "Đáp án: B",

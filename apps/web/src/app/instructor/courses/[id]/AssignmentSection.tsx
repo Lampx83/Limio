@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
+import { ClipboardList, Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
 import { plainToRichHtml } from "@/lib/richText";
@@ -124,9 +124,13 @@ export default function AssignmentSection({
       {!editing ? (
         <>
           <div className="flex items-start justify-between gap-3">
-            <div className="flex-1">
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-pink-100 text-pink-700">
+                <ClipboardList className="h-4 w-4" aria-hidden />
+              </span>
+              <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base font-semibold">{assignment.title}</p>
+                <span className="chip bg-pink-100 text-pink-700">Assignment</span>
                 {assignment.pedagogicalIntent && (
                   <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-700">
                     {GENERATIVE_PRESETS[assignment.pedagogicalIntent].label}
@@ -134,12 +138,14 @@ export default function AssignmentSection({
                 )}
                 {isHidden && <span className="chip-danger text-xs">👁️ Ẩn</span>}
               </div>
+              <p className="mt-1 text-base font-semibold">{assignment.title}</p>
               {assignment.description && (
                 <SafeHtml
                   html={plainToRichHtml(assignment.description)}
                   className="prose prose-sm mt-2 max-w-none text-muted dark:prose-invert"
                 />
               )}
+              </div>
             </div>
             <span className="shrink-0 text-right text-sm text-muted">
               <div className="font-semibold text-base">{assignment.maxScore}đ</div>

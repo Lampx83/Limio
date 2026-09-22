@@ -4,16 +4,20 @@ import { useState } from "react";
 import { Download, Upload, Sparkles, X, Check, AlertTriangle, XCircle } from "lucide-react";
 
 /**
- * Shared MCQ import modal — dùng được cho Quiz, Question Bank, Exam.
+ * Shared MCQ import modal — dùng được cho Quiz, Question Bank.
  * Caller truyền `target` để xác định 2 endpoint preview + commit phù hợp.
  *
  * Flow 3 stage:
  *   upload → preview (bảng row với status icon) → result (số đã tạo + lỗi)
  *
+ * `mode` do caller quyết định TRƯỚC KHI mở modal (2 nút riêng "AI import" /
+ * "Excel import" ở trang cha) — modal không còn tab chuyển qua lại bên trong
+ * nữa (trước Đợt sau đợt 6 có, nay tách hẳn thành 2 lối vào để rõ ràng hơn).
+ *
  * Server endpoints expected:
- *   POST `${previewEndpoint}`        — multipart form-data field "file" → ParseResult
- *   POST /api/ai/extract-questions   — JSON { rawText } → ParseResult (dùng chung mọi đích,
- *                                       không cần previewEndpoint riêng — xem "Nhập bằng AI")
+ *   POST `${previewEndpoint}`        — multipart form-data field "file" → ParseResult (mode="file")
+ *   POST /api/ai/extract-questions   — JSON { rawText } → ParseResult (mode="ai", dùng chung mọi
+ *                                       đích, không cần previewEndpoint riêng)
  *   POST `${commitEndpoint}`         — JSON { rows: ParsedMcqRow[] } → { created, errors }
  *
  * Template download: GET /api/imports/mcq-template (xlsx file).
@@ -105,6 +109,7 @@ interface SkippedAiQuestion {
 
 export default function ImportMcqModal({
   open,
+  mode,
   onClose,
   onCommitted,
   previewEndpoint,
@@ -112,6 +117,8 @@ export default function ImportMcqModal({
   destinationLabel,
 }: {
   open: boolean;
+  /** Nút nào mở modal quyết định — cố định suốt vòng đời lần mở này, không đổi giữa chừng. */
+  mode: "file" | "ai";
   onClose: () => void;
   onCommitted: () => void;
   /** vd: `/api/quizzes/abc-123/questions/mcq-import-preview` */
@@ -242,9 +249,14 @@ export default function ImportMcqModal({
       <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-default px-5 py-3">
-          <h2 className="text-base font-semibold">
-            Nhập câu hỏi
-            <span className="ml-2 text-xs font-normal text-faint">
+          <h2 className="flex items-center gap-1.5 text-base font-semibold">
+            {mode === "ai" ? (
+              <Sparkles className="h-4 w-4 shrink-0 text-violet-600" />
+            ) : (
+              <Upload className="h-4 w-4 shrink-0 text-slate-400" />
+            )}
+            {mode === "ai" ? "AI import" : "Excel import"}
+            <span className="ml-1 text-xs font-normal text-faint">
               → {destinationLabel}
             </span>
           </h2>
@@ -260,7 +272,13 @@ export default function ImportMcqModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5">
           {stage === "upload" && (
-            <UploadStage onPickFile={uploadFile} onExtractAi={extractWithAi} busy={busy} err={err} />
+            <UploadStage
+              mode={mode}
+              onPickFile={uploadFile}
+              onExtractAi={extractWithAi}
+              busy={busy}
+              err={err}
+            />
           )}
           {stage === "preview" && result && (
             <PreviewStage
@@ -312,42 +330,22 @@ function humanizeAiError(code: string | undefined, details: unknown): string {
 }
 
 function UploadStage({
+  mode,
   onPickFile,
   onExtractAi,
   busy,
   err,
 }: {
+  mode: "file" | "ai";
   onPickFile: (f: File) => void;
   onExtractAi: (rawText: string) => void;
   busy: boolean;
   err: string | null;
 }) {
-  const [mode, setMode] = useState<"file" | "ai">("file");
   const [rawText, setRawText] = useState("");
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-xs font-medium">
-        <button
-          type="button"
-          onClick={() => setMode("file")}
-          className={`flex-1 rounded-md py-1.5 transition-colors ${
-            mode === "file" ? "bg-white text-slate-900 shadow-sm" : "text-faint hover:text-slate-700"
-          }`}
-        >
-          Tải file Excel
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("ai")}
-          className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1.5 transition-colors ${
-            mode === "ai" ? "bg-white text-slate-900 shadow-sm" : "text-faint hover:text-slate-700"
-          }`}
-        >
-          <Sparkles className="h-3 w-3" /> Dán & định dạng bằng AI
-        </button>
-      </div>
-
       {mode === "file" ? (
         <>
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
@@ -409,9 +407,15 @@ function UploadStage({
             <p className="font-semibold">Hướng dẫn:</p>
             <ol className="mt-1 list-decimal space-y-0.5 pl-4">
               <li>
-                Dán nội dung câu hỏi trắc nghiệm/đúng-sai — copy nguyên văn từ
-                Word, PDF, hoặc gõ tay. Định dạng tuỳ ý, có thể nhiều câu một
-                lúc.
+                Dán nội dung câu hỏi — copy nguyên văn từ Word, PDF, hoặc gõ
+                tay. Định dạng tuỳ ý, có thể nhiều câu một lúc, nhiều loại
+                trộn lẫn cũng được.
+              </li>
+              <li>
+                Hỗ trợ 5 loại: <b>trắc nghiệm</b>, <b>đúng/sai</b>,{" "}
+                <b>sắp xếp thứ tự</b>, <b>ghép cặp</b>, <b>điền khuyết</b>.
+                Các loại khác (tự luận, số học…) AI sẽ báo bỏ qua, không tự
+                gán nhầm loại.
               </li>
               <li>
                 Đáp án đúng đánh dấu kiểu gì cũng được (in đậm, "Đáp án: B",

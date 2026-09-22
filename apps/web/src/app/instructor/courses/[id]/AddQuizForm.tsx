@@ -21,6 +21,7 @@ export default function AddQuizForm({
   const [difficulty, setDifficulty] = useState(1);
   const [requireConfidence, setRequireConfidence] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   function close() {
     if (embedded) onCancel?.();
@@ -41,23 +42,34 @@ export default function AddQuizForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/quizzes`), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        difficulty,
-        requireConfidence,
-      }),
-    });
-    if (res.ok) {
+    setErr(null);
+    try {
+      const res = await fetch(apiUrl(`/api/lessons/${lessonId}/quizzes`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          difficulty,
+          requireConfidence,
+        }),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        setErr(j?.error ?? `HTTP ${res.status}`);
+        setBusy(false);
+        return;
+      }
       const { quizId } = (await res.json()) as { quizId: string };
+      // Điều hướng sang trang soạn quiz TRƯỚC khi đóng modal — gọi close()
+      // (đổi state ở component cha) trước router.push() từng làm điều hướng
+      // bị huỷ giữa chừng (net::ERR_ABORTED), quiz tạo xong ở server nhưng
+      // GV bị kẹt lại màn cũ, tưởng nút "Tạo quiz" không hoạt động.
+      router.push(`${pathname}/quizzes/${quizId}/edit`);
       setTitle("");
       close();
-      // Sang thẳng trang soạn quiz để nhập câu hỏi.
-      router.push(`${pathname}/quizzes/${quizId}/edit`);
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   return (
@@ -95,6 +107,11 @@ export default function AddQuizForm({
           <span>Yêu cầu confidence</span>
         </label>
       </div>
+      {err && (
+        <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800">
+          ⚠ {err}
+        </div>
+      )}
       <div className="flex gap-2">
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "..." : "Tạo quiz"}

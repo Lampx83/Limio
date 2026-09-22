@@ -5,7 +5,6 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@feedbackme/core-lms";
 import AddQuestionForm from "@/app/instructor/courses/[id]/AddQuestionForm";
 import QuestionRow from "@/app/instructor/courses/[id]/QuestionRow";
-import BulkImportQuestions from "@/app/instructor/courses/[id]/BulkImportQuestions";
 
 export const dynamic = "force-dynamic";
 
@@ -120,10 +119,9 @@ export default async function TournamentMissionQuizEditorPage({
         </ol>
       )}
 
-      {/* Add question + bulk import */}
+      {/* Thêm câu hỏi (soạn thủ công / AI import / Excel import — 3 nút bên trong AddQuestionForm) */}
       <div className="mt-6 space-y-3">
         <AddQuestionForm quizId={mission.quiz.id} nextOrderIndex={nextOrderIndex} />
-        <BulkImportQuestions quizId={mission.quiz.id} />
       </div>
     </main>
   );

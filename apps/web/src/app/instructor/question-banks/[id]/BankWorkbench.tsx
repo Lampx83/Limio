@@ -178,8 +178,8 @@ export default function BankWorkbench({
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [mcqImportOpen, setMcqImportOpen] = useState(false);
+  const [mcqImportMode, setMcqImportMode] = useState<"file" | "ai">("file");
   const [flash, setFlash] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -501,25 +501,31 @@ export default function BankWorkbench({
               onChange={setCodePrefix}
             />
             <button
-              onClick={() => setMcqImportOpen(true)}
-              title="Import nhiều câu hỏi từ file Excel (.xlsx)"
-              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-300 bg-emerald-50 px-3.5 py-1.5 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100"
+              onClick={() => {
+                setMcqImportMode("ai");
+                setMcqImportOpen(true);
+              }}
+              title="Dán văn bản câu hỏi, AI định dạng lại rồi import"
+              className="inline-flex min-w-[120px] items-center justify-center gap-1.5 rounded-md border border-default bg-white px-3.5 py-1.5 text-sm font-medium text-slate-600 transition hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
             >
-              <span aria-hidden>⬆</span> Import Excel
+              <span aria-hidden className="text-violet-600">✨</span> AI import
             </button>
             <button
-              onClick={() => { setImporting((s) => !s); setAdding(false); }}
-              title="Import từ CSV (định dạng cũ)"
-              className="rounded-md border border-default bg-white px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-50"
+              onClick={() => {
+                setMcqImportMode("file");
+                setMcqImportOpen(true);
+              }}
+              title="Import nhiều câu hỏi từ file Excel (.xlsx)"
+              className="inline-flex min-w-[120px] items-center justify-center gap-1.5 rounded-md border border-default bg-white px-3.5 py-1.5 text-sm font-medium text-slate-600 transition hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
             >
-              {importing ? "Đóng" : "CSV"}
+              <span aria-hidden>⬆</span> Excel import
             </button>
             <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden />
             <button
-              onClick={() => { setAdding((s) => !s); setImporting(false); }}
+              onClick={() => setAdding((s) => !s)}
               className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
             >
-              {adding ? "Đóng" : (<><span aria-hidden>+</span> Thêm câu hỏi</>)}
+              {adding ? "Đóng" : (<><span aria-hidden>+</span> Nhập thủ công</>)}
             </button>
           </div>
         </div>
@@ -614,6 +620,7 @@ export default function BankWorkbench({
         </div>
         <ImportMcqModal
           open={mcqImportOpen}
+          mode={mcqImportMode}
           onClose={() => setMcqImportOpen(false)}
           onCommitted={() => {
             void refreshAndKeepSelection();
@@ -626,32 +633,20 @@ export default function BankWorkbench({
         />
 
         {/* Overlay panels */}
-        {(importing || adding) && (
+        {adding && (
           <div className="shrink-0 overflow-y-auto border-b border-default bg-white px-4 py-3">
-            {importing && (
-              <ImportCsvPanel
-                bankId={bankId}
-                onDone={async () => {
-                  setImporting(false);
-                  await refreshAndKeepSelection();
-                  flashOk("Đã import");
-                }}
-              />
-            )}
-            {adding && (
-              <QuestionForm
-                bankId={bankId}
-                suggestedSkills={suggestedSkills}
-                availableTopics={availableTopics}
-                onDone={async () => {
-                  setAdding(false);
-                  await refreshAndKeepSelection();
-                  // Topic mới (nếu user tạo) → refresh filter list.
-                  void fetchTopics();
-                  flashOk("Đã tạo câu hỏi");
-                }}
-              />
-            )}
+            <QuestionForm
+              bankId={bankId}
+              suggestedSkills={suggestedSkills}
+              availableTopics={availableTopics}
+              onDone={async () => {
+                setAdding(false);
+                await refreshAndKeepSelection();
+                // Topic mới (nếu user tạo) → refresh filter list.
+                void fetchTopics();
+                flashOk("Đã tạo câu hỏi");
+              }}
+            />
           </div>
         )}
 
@@ -1965,142 +1960,6 @@ function QuestionForm({
       </div>
     </form>
   );
-}
-
-// ─── ImportCsvPanel ───────────────────────────────────────────────────────
-
-function ImportCsvPanel({
-  bankId,
-  onDone,
-}: {
-  bankId: string;
-  onDone: () => Promise<void>;
-}) {
-  const [text, setText] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [report, setReport] = useState<{ created: number; failed: number } | null>(null);
-
-  const onImport = async () => {
-    setBusy(true);
-    setErr(null);
-    setReport(null);
-    try {
-      const rows = parseCsv(text);
-      if (rows.length === 0) {
-        setErr("CSV trống hoặc thiếu cột bắt buộc (type, prompt).");
-        return;
-      }
-      let created = 0;
-      let failed = 0;
-      for (const row of rows) {
-        const r = await fetch(`/api/question-banks/${bankId}/questions`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(row),
-        });
-        if (r.ok) created++;
-        else failed++;
-      }
-      setReport({ created, failed });
-      if (created > 0) await onDone();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <p className="text-xs text-faint">
-        Dán CSV. Header tối thiểu: <code>type,prompt</code>. Hỗ trợ thêm:{" "}
-        <code>difficulty,points,optionA,optionB,optionC,optionD,correct</code>
-      </p>
-      <pre className="overflow-x-auto rounded bg-white p-2 text-[10px] text-slate-700">
-{`type,prompt,difficulty,points,optionA,optionB,optionC,optionD,correct
-mcq,1+1=?,1,1,2,3,4,5,A`}
-      </pre>
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={4}
-        placeholder="Dán CSV vào đây..."
-        className="w-full rounded border border-default bg-white px-2 py-1.5 font-mono text-xs"
-      />
-      {err && <div className="rounded bg-red-50 px-2 py-1 text-xs text-red-800">⚠ {err}</div>}
-      {report && (
-        <div className="text-xs text-emerald-700">
-          Tạo thành công {report.created} / lỗi {report.failed}
-        </div>
-      )}
-      <div className="flex justify-end">
-        <button
-          onClick={onImport}
-          disabled={busy || !text.trim()}
-          className="rounded bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-        >
-          {busy ? "..." : "Import"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── CSV parser (unchanged logic) ─────────────────────────────────────────
-
-function parseCsv(raw: string): Array<{
-  type: string;
-  prompt: string;
-  config: Record<string, unknown>;
-  difficulty?: number;
-  points?: number;
-}> {
-  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length < 2) return [];
-  const head = lines[0]!.split(",").map((s) => s.trim());
-  const idx = (k: string) => head.indexOf(k);
-  const iType = idx("type");
-  const iPrompt = idx("prompt");
-  if (iType < 0 || iPrompt < 0) return [];
-  const iDiff = idx("difficulty");
-  const iPoints = idx("points");
-  const iCorrect = idx("correct");
-  const optIdx = ["A", "B", "C", "D"].map((l) => idx(`option${l}`));
-
-  const out: ReturnType<typeof parseCsv> = [];
-  for (let r = 1; r < lines.length; r++) {
-    const cells = lines[r]!.split(",").map((s) => s.trim());
-    const type = cells[iType];
-    const prompt = cells[iPrompt];
-    if (!type || !prompt) continue;
-    const config: Record<string, unknown> = {};
-    if (type === "mcq" || type === "multi") {
-      const options: { id: string; label: string; isCorrect: boolean }[] = [];
-      const correctSet = (cells[iCorrect] ?? "")
-        .split("|")
-        .map((s) => s.trim().toUpperCase());
-      for (let i = 0; i < 4; i++) {
-        const colIdx = optIdx[i] ?? -1;
-        if (colIdx < 0) continue;
-        const label = cells[colIdx];
-        if (!label) continue;
-        const letter = String.fromCharCode(65 + i);
-        options.push({
-          id: letter.toLowerCase(),
-          label,
-          isCorrect: correctSet.includes(letter),
-        });
-      }
-      config.options = options;
-    }
-    out.push({
-      type,
-      prompt,
-      config,
-      ...(iDiff >= 0 && cells[iDiff] ? { difficulty: Number(cells[iDiff]) } : {}),
-      ...(iPoints >= 0 && cells[iPoints] ? { points: Number(cells[iPoints]) } : {}),
-    });
-  }
-  return out;
 }
 
 // ─── Answer preview (read-only) ─────────────────────────────────────────────

@@ -2,7 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
+import {
+  Blocks,
+  Eye,
+  EyeOff,
+  FileCode,
+  FileText,
+  FileType,
+  Globe,
+  LayoutTemplate,
+  Link2,
+  NotebookPen,
+  Package,
+  Paperclip,
+  Pencil,
+  Puzzle,
+  Trash2,
+  Video,
+} from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { toast } from "@/lib/toast";
 import EditContentItemForm from "./EditContentItemForm";
@@ -50,18 +67,39 @@ function summarize(type: string, payload: unknown): string {
   }
 }
 
-const ICON: Record<string, string> = {
-  video: "",
-  markdown: "",
-  embed: "",
-  file: "",
-  external_link: "",
-  pdf: "",
-  scorm: "",
-  lti: "",
-  h5p: "",
-  html_block: "🌐",
+const ICON: Record<string, typeof Video> = {
+  video: Video,
+  markdown: FileCode,
+  richtext: FileText,
+  teacher_note: NotebookPen,
+  embed: LayoutTemplate,
+  file: Paperclip,
+  external_link: Link2,
+  pdf: FileType,
+  scorm: Package,
+  lti: Puzzle,
+  h5p: Blocks,
+  html_block: Globe,
 };
+
+// Mỗi loại content 1 màu riêng để quét mắt nhanh giữa danh sách nhiều loại
+// trộn lẫn — tránh trùng màu đã có ý nghĩa riêng nơi khác: lime (Quiz),
+// hồng/pink (Assignment), tím/violet (AI import).
+const TYPE_COLOR: Record<string, string> = {
+  video: "bg-red-100 text-red-700",
+  markdown: "bg-indigo-100 text-indigo-700",
+  richtext: "bg-blue-100 text-blue-700",
+  teacher_note: "bg-amber-100 text-amber-700",
+  embed: "bg-purple-100 text-purple-700",
+  file: "bg-slate-100 text-slate-700",
+  external_link: "bg-cyan-100 text-cyan-700",
+  pdf: "bg-orange-100 text-orange-700",
+  scorm: "bg-teal-100 text-teal-700",
+  lti: "bg-fuchsia-100 text-fuchsia-700",
+  h5p: "bg-emerald-100 text-emerald-700",
+  html_block: "bg-rose-100 text-rose-700",
+};
+const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
 
 export default function ContentItemRow({
   item,
@@ -143,16 +181,23 @@ export default function ContentItemRow({
           }}
         />
       ) : (
-        <span className="text-xl shrink-0" aria-hidden>
-          {ICON[item.type] ?? ""}
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${TYPE_COLOR[item.type] ?? DEFAULT_TYPE_COLOR}`}
+        >
+          {(() => {
+            const Icon = ICON[item.type] ?? FileText;
+            return <Icon className="h-4 w-4" aria-hidden />;
+          })()}
         </span>
       )}
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="chip">{item.type}</span>
+          <span className={`chip ${TYPE_COLOR[item.type] ?? DEFAULT_TYPE_COLOR}`}>
+            {item.type}
+          </span>
           {videoMeta && videoMeta.kind !== "file" && (
-            <span className="chip-brand">{videoMeta.providerName}</span>
+            <span className={`chip ${TYPE_COLOR.video}`}>{videoMeta.providerName}</span>
           )}
         </div>
         <p className="mt-1 truncate text-sm text-muted">

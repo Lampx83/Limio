@@ -1,13 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ListChecks } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { QuizActionButtons } from "./QuizHeader";
-import QuestionRow from "./QuestionRow";
-import AddQuestionForm from "./AddQuestionForm";
-import AiQuestionGenerator from "./AiQuestionGenerator";
-import BulkImportQuestions from "./BulkImportQuestions";
 
 interface Quiz {
   id: string;
@@ -43,65 +39,52 @@ interface Quiz {
 
 export default function QuizSection({
   quiz,
-  lessonId,
+  // Không còn dùng trong file này từ khi bỏ AiQuestionGenerator (nút "Tạo câu
+  // hỏi bằng AI" — sinh câu MỚI từ chủ đề) khỏi giao diện. Giữ prop vì
+  // ActivitySection.tsx (đang có phiên khác chỉnh sửa) vẫn truyền vào.
+  lessonId: _lessonId,
 }: {
   quiz: Quiz;
   lessonId: string;
 }) {
   const pathname = usePathname();
 
+  // Không còn bấm-để-mở-rộng-soạn-tại-chỗ nữa (từng dùng <details>/<summary> +
+  // AddQuestionForm inline) — soạn câu hỏi giờ CHỈ qua "Mở trình soạn" (trang
+  // riêng, /quizzes/[quizId]/edit). Hàng này chỉ còn là dòng tóm tắt tĩnh —
+  // cùng khuôn với ContentItemRow (icon tròn + chip loại + nhóm action) để
+  // Quiz nhận ra được ngay giữa danh sách hoạt động nhiều loại khác nhau.
   return (
-    <details className={`group overflow-hidden rounded-xl border transition-colors ${
-      quiz.isHidden
-        ? 'border-danger-200 bg-danger-50/50'
-        : 'border-token bg-[rgb(var(--surface))] hover:border-brand-200'
-    }`}>
-      <summary className="flex flex-wrap items-center gap-2 cursor-pointer px-3 py-2.5 hover:bg-[rgb(var(--surface-muted))/0.5] transition-colors">
-        <span className="text-lg" aria-hidden></span>
-        <span className="text-sm font-semibold">{quiz.title}</span>
-        <span className="ml-auto text-sm text-muted">
-          {quiz.questions.length} câu · diff {quiz.difficulty ?? "—"}
-        </span>
-        <Link
-          href={`${pathname}/quizzes/${quiz.id}/edit`}
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-1 rounded-md border border-token px-2 py-1 text-xs font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
-        >
-          Mở trình soạn
-          <ExternalLink className="h-3 w-3" aria-hidden />
-        </Link>
-        <QuizActionButtons quiz={quiz} />
-        <span className="text-xs text-faint opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden>
-          ▾
-        </span>
-      </summary>
-      <div className="border-t border-token px-4 py-3 space-y-3">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">
-            Câu hỏi ({quiz.questions.length})
-          </p>
-          <ol className="space-y-2">
-            {quiz.questions.map((q, i) => (
-              <li key={q.id}>
-                <QuestionRow question={q} order={i + 1} />
-              </li>
-            ))}
-          </ol>
-        </div>
+    <div
+      className={`group flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+        quiz.isHidden
+          ? "border-danger-200 bg-danger-50/50"
+          : "border-token bg-[rgb(var(--surface))] hover:border-brand-200"
+      }`}
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand-700">
+        <ListChecks className="h-5 w-5" aria-hidden />
+      </span>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-token pt-3">
-          <AddQuestionForm
-            quizId={quiz.id}
-            nextOrderIndex={quiz.questions.length}
-          />
-          <AiQuestionGenerator
-            quizId={quiz.id}
-            lessonId={lessonId}
-            nextOrderIndex={quiz.questions.length}
-          />
-          <BulkImportQuestions quizId={quiz.id} />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="chip-brand">Quiz</span>
+          {quiz.isHidden && <span className="chip-danger">Đang ẩn</span>}
         </div>
+        <p className="mt-1 truncate text-sm font-medium text-default">{quiz.title}</p>
+        <p className="text-xs text-muted">
+          {quiz.questions.length} câu · độ khó {quiz.difficulty ?? "—"}
+        </p>
       </div>
-    </details>
+
+      <Link
+        href={`${pathname}/quizzes/${quiz.id}/edit`}
+        className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700"
+      >
+        Mở trình soạn
+        <ExternalLink className="h-3 w-3" aria-hidden />
+      </Link>
+      <QuizActionButtons quiz={quiz} />
+    </div>
   );
 }

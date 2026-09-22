@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, MoreHorizontal, PenLine, Plus } from "lucide-react";
+import { BookOpen, MoreHorizontal, PenLine, Plus, Sparkles, Upload } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
@@ -84,6 +84,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
   const [edit, setEdit] = useState<EditState>({ kind: "idle" });
   const [working, setWorking] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [importMode, setImportMode] = useState<"file" | "ai">("file");
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   // "Phần" (ExamSection) — chỉ khi có ≥2 phần thì khu vực câu hỏi độc lập mới
@@ -382,6 +383,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
       <ImportQuestionsModal
         examId={examId}
         open={importOpen}
+        mode={importMode}
         onClose={() => setImportOpen(false)}
       />
 
@@ -399,16 +401,27 @@ export default function ContentManager({ examId, courseId, editable, passages, q
           )}
           {!boxed && addMenuOpen && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-faint">Lấy câu hỏi từ đâu?</span>
+              <span className="w-full text-sm text-faint">Lấy câu hỏi từ đâu?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  setImportMode("ai");
+                  setImportOpen(true);
+                }}
+                className="inline-flex min-w-[160px] items-center justify-center gap-1.5 rounded border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+              >
+                <Sparkles className="h-4 w-4 text-violet-600" /> AI import
+              </button>
               <button
                 type="button"
                 onClick={() => {
                   setAddMenuOpen(false);
                   router.push(contentSourceHref(null));
                 }}
-                className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100"
+                className="inline-flex min-w-[160px] items-center justify-center gap-1.5 rounded border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
               >
-                <BookOpen className="h-4 w-4" /> Từ ngân hàng
+                <BookOpen className="h-4 w-4" /> Ngân hàng câu hỏi
               </button>
               <button
                 type="button"
@@ -416,9 +429,20 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                   setAddMenuOpen(false);
                   setEdit({ kind: "newQuestion", passageId: null, sectionId: null });
                 }}
-                className="inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 hover:bg-emerald-100"
+                className="inline-flex min-w-[160px] items-center justify-center gap-1.5 rounded border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
               >
-                <PenLine className="h-4 w-4" /> Tự soạn
+                <PenLine className="h-4 w-4" /> Nhập thủ công
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  setImportMode("file");
+                  setImportOpen(true);
+                }}
+                className="inline-flex min-w-[160px] items-center justify-center gap-1.5 rounded border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+              >
+                <Upload className="h-4 w-4" /> Excel import
               </button>
               <button
                 type="button"
@@ -443,15 +467,33 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMoreMenuOpen(false)} />
                   <div className="absolute right-0 z-20 mt-1 w-48 rounded border border-default bg-white py-1 text-sm shadow-lg">
+                    {/* Luôn hiện bất kể đề đã chia Phần hay chưa — khác addMenu
+                        chính (chỉ hiện khi !boxed) vì câu import luôn vào
+                        "Phần 1" ngầm định (commitExamQuestionRows không gán
+                        sectionId), giống hệt cách addMenu chính đã làm cho
+                        Từ ngân hàng/Tự soạn từ trước — không phải đường nhập
+                        riêng cho từng Phần. */}
                     <button
                       type="button"
                       onClick={() => {
                         setMoreMenuOpen(false);
+                        setImportMode("ai");
+                        setImportOpen(true);
+                      }}
+                      className="block w-full px-3 py-1.5 text-left font-medium text-violet-700 hover:bg-violet-50"
+                    >
+                      ✨ AI import
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        setImportMode("file");
                         setImportOpen(true);
                       }}
                       className="block w-full px-3 py-1.5 text-left hover:bg-slate-50"
                     >
-                      Import từ Excel
+                      ⬆ Excel import
                     </button>
                     {!showPassages && (
                       <button
@@ -767,9 +809,9 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                               setChooserFor(null);
                               router.push(contentSourceHref(box.section?.id ?? null));
                             }}
-                            className="inline-flex items-center gap-1.5 rounded border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100"
+                            className="inline-flex min-w-[132px] items-center justify-center gap-1.5 rounded border border-token bg-white px-2.5 py-1 text-xs font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
                           >
-                            <BookOpen className="h-3.5 w-3.5" /> Từ ngân hàng
+                            <BookOpen className="h-3.5 w-3.5" /> Ngân hàng câu hỏi
                           </button>
                           <button
                             type="button"
@@ -781,9 +823,9 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                                 sectionId: box.section?.id ?? null,
                               });
                             }}
-                            className="inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                            className="inline-flex min-w-[132px] items-center justify-center gap-1.5 rounded border border-token bg-white px-2.5 py-1 text-xs font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
                           >
-                            <PenLine className="h-3.5 w-3.5" /> Tự soạn
+                            <PenLine className="h-3.5 w-3.5" /> Nhập thủ công
                           </button>
                           <button
                             type="button"

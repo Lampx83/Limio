@@ -116,6 +116,7 @@ export default function AddQuestionForm({
     startOpen ? "picking" : "closed",
   );
   const [importOpen, setImportOpen] = useState(false);
+  const [importMode, setImportMode] = useState<"file" | "ai">("file");
   const [type, setType] = useState<QuestionType>("mcq");
   const [prompt, setPrompt] = useState("");
   const [points, setPoints] = useState(1);
@@ -263,19 +264,32 @@ export default function AddQuestionForm({
     return (
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => setStage("picking")}
-          className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+          onClick={() => {
+            setImportMode("ai");
+            setImportOpen(true);
+          }}
+          className="flex min-w-[140px] items-center justify-center gap-1.5 rounded-lg border border-token bg-white px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
         >
-          + Thêm câu hỏi
+          <span className="text-violet-600">✨</span> AI import
         </button>
         <button
-          onClick={() => setImportOpen(true)}
-          className="rounded-lg border border-token bg-white px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+          onClick={() => {
+            setImportMode("file");
+            setImportOpen(true);
+          }}
+          className="flex min-w-[140px] items-center justify-center gap-1.5 rounded-lg border border-token bg-white px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
         >
-          ⬆ Import .xlsx
+          ⬆ Excel import
+        </button>
+        <button
+          onClick={() => setStage("picking")}
+          className="flex min-w-[140px] items-center justify-center gap-1.5 rounded-lg border border-token bg-white px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+        >
+          + Nhập thủ công
         </button>
         <ImportMcqModal
           open={importOpen}
+          mode={importMode}
           onClose={() => setImportOpen(false)}
           onCommitted={() => router.refresh()}
           previewEndpoint={apiUrl(
