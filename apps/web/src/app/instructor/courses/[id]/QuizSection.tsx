@@ -62,7 +62,7 @@ export default function QuizSection({
           : "border-token bg-[rgb(var(--surface))] hover:border-brand-200"
       }`}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand-700">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-100 text-brand-700">
         <ListChecks className="h-5 w-5" aria-hidden />
       </span>
 

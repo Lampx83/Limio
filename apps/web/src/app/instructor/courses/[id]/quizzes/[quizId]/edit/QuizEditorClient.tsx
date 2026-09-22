@@ -118,7 +118,7 @@ export default function QuizEditorClient({
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-700">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
             <ListChecks className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
