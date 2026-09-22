@@ -208,6 +208,10 @@ export default async function InstructorCourseEditPage({
     }
   }
 
+  // Nút "Chế độ đứng lớp" mở đúng bài giảng viên đang xem trong trang soạn;
+  // chỉ lùi về bài đầu tiên khi chưa chọn bài nào (mới vào trang khoá học).
+  const presentLessonId = selectedModule ? selectedLessonId : firstLessonId;
+
   // Sidebar tree shape — only the data we need.
   // When personalization is off, force noSkill=false so the "chưa tag skill"
   // chip stops appearing in sidebar + module overview.
@@ -271,18 +275,19 @@ export default async function InstructorCourseEditPage({
           <span className={STATUS_TONE[course.status] ?? "chip"}>
             {STATUS_LABEL[course.status] ?? course.status}
           </span>
-            {/* Trình chiếu khoá học — mở ngay bài đầu tiên ở chế độ giảng dạy
-                trong tab mới, để trang soạn còn nguyên. */}
-            {firstLessonId && (
+            {/* Chế độ đứng lớp — mở bài đang chọn (hoặc bài đầu tiên nếu chưa
+                chọn bài nào) ở chế độ giảng dạy trong tab mới, để trang soạn
+                còn nguyên. */}
+            {presentLessonId && (
               <Link
-                href={`/learn/${course.slug}/lessons/${firstLessonId}?gv=1`}
+                href={`/learn/${course.slug}/lessons/${presentLessonId}?gv=1`}
                 target="_blank"
                 rel="noopener"
                 className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
-                title="Mở khoá học ở chế độ giảng dạy (thanh giảng viên, ghi chú, màn chiếu) trong tab mới"
+                title="Sử dụng để trình chiếu học liệu này trực tiếp tại lớp"
               >
                 <Presentation className="h-4 w-4" aria-hidden />
-                Trình chiếu
+                Chế độ đứng lớp
               </Link>
             )}
         </div>
