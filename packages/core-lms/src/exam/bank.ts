@@ -727,6 +727,8 @@ export interface SearchResult {
     stats: { pValueAvg: number; discriminationAvg: number; totalUses: number } | null;
     exposureCount: number;
     lastSampledAt: string | null;
+    /** Mã các đợt thi (ExamRound.code) đã copy câu này vào đề, duy nhất, sắp theo alphabet. [] = chưa dùng ở đợt thi nào. */
+    examRoundCodes: string[];
   }[];
   nextCursor: string | null;
   /** Total số câu khớp filter (toàn bộ, không bị giới hạn `limit`). */
@@ -864,6 +866,23 @@ export async function searchQuestions(
         lastSampledAt: true,
         skillTags: { select: { skillId: true } },
         stats: { select: { pValueAvg: true, discriminationAvg: true, totalUses: true } },
+        // Đợt 11 — mã đợt thi đã copy câu này vào đề, để hiện cột "Đợt thi" ở
+        // bank workbench. Đi qua chuỗi copiedTo (ExamQuestionFromBank) → đề →
+        // ca thi (schedules) → đợt thi, vì Exam không link thẳng ExamRound
+        // (1 đề có thể dùng ở nhiều ca/đợt khác nhau — xem ExamSession).
+        copiedTo: {
+          select: {
+            examQuestion: {
+              select: {
+                exam: {
+                  select: {
+                    schedules: { select: { round: { select: { code: true } } } },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     }),
     db.bankQuestion.count({ where }),
@@ -900,6 +919,11 @@ export async function searchQuestions(
       : null,
     exposureCount: r.exposureCount,
     lastSampledAt: r.lastSampledAt?.toISOString() ?? null,
+    examRoundCodes: [
+      ...new Set(
+        r.copiedTo.flatMap((c) => c.examQuestion.exam.schedules.map((s) => s.round.code)),
+      ),
+    ].sort(),
   }));
   return {
     items,

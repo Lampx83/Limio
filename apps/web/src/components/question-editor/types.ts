@@ -128,16 +128,16 @@ export type QuestionDraftByType = {
 
 /** Nhãn hiển thị tiếng Việt — dùng chung ở picker, chip loại câu, danh sách... */
 export const TYPE_LABEL: Record<QuestionType, string> = {
-  mcq: "Trắc nghiệm 1 đáp án",
-  multi: "Trắc nghiệm nhiều đáp án",
+  mcq: "TN 1 đáp án",
+  multi: "TN nhiều đáp án",
   true_false_notgiven: "Đúng / Sai",
   gap_fill: "Điền khuyết",
   short_answer: "Trả lời ngắn",
   essay: "Tự luận",
-  ordering: "Sắp xếp thứ tự",
+  ordering: "Sắp xếp",
   matching: "Ghép cặp",
-  numerical: "Đáp án dạng số",
-  drag_drop_fill: "Kéo thả từ/câu",
+  numerical: "Điền số",
+  drag_drop_fill: "Kéo thả",
 };
 
 /**

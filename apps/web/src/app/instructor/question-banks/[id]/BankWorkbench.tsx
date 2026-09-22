@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { X, Trash2, PenSquare, BarChart3 } from "lucide-react";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 import TopicCombobox from "@/components/instructor/TopicCombobox";
 import { formatDate, formatDateTime } from "@/lib/datetime";
@@ -83,6 +84,8 @@ type Item = {
   stats: { pValueAvg: number; discriminationAvg: number; totalUses: number } | null;
   exposureCount: number;
   lastSampledAt: string | null;
+  /** Đợt 11 — mã đợt thi đã copy câu này vào đề. [] = chưa dùng ở đợt thi nào. */
+  examRoundCodes: string[];
 };
 
 const REVIEW_LABEL: Record<ReviewStatus, string> = {
@@ -129,15 +132,6 @@ const COGNITIVE_TONE: Record<CognitiveLevel, string> = {
   analyze_plus: "bg-orange-100 text-orange-700",
 };
 
-const TYPE_LABEL: Record<string, string> = {
-  mcq: "MCQ",
-  multi: "Multi",
-  true_false_notgiven: "T/F/NG",
-  gap_fill: "Điền từ",
-  short_answer: "Ngắn",
-  essay: "Tự luận",
-};
-
 const DIFFICULTY_COLOR = ["", "bg-emerald-400", "bg-emerald-400", "bg-yellow-400", "bg-red-400", "bg-red-400"];
 const DIFFICULTY_COUNT = [0, 1, 2, 1, 1, 2];
 function DifficultyDots({ level }: { level: number }) {
@@ -178,6 +172,55 @@ function correctAnswerPreview(
   return null;
 }
 
+// Đợt 10 — sort theo cột trong bảng full-width. Chỉ sort client-side trên
+// `items` đã tải (không gọi lại API) — giống hành vi filter client hiện có,
+// đơn giản và đủ dùng vì list thường không quá dài trước khi bấm "Tải thêm".
+type SortKey =
+  | "code"
+  | "prompt"
+  | "topic"
+  | "type"
+  | "status"
+  | "reviewStatus"
+  | "cognitiveLevel"
+  | "difficulty"
+  | "updatedAt"
+  | "examRounds";
+
+const STATUS_ORDER: Record<Status, number> = { draft: 0, published: 1, archived: 2 };
+const REVIEW_ORDER: Record<ReviewStatus, number> = { pending: 0, approved: 1, needs_revision: 2 };
+const COGNITIVE_ORDER: Record<CognitiveLevel, number> = {
+  remember_understand: 0,
+  apply: 1,
+  analyze_plus: 2,
+};
+
+function sortValue(q: Item, key: SortKey): string | number {
+  switch (key) {
+    case "code":
+      return q.code ?? "";
+    case "prompt":
+      return q.prompt;
+    case "topic":
+      return typeof q.config?.topic === "string" ? q.config.topic : "";
+    case "type":
+      return SHARED_TYPE_LABEL[q.type as PickedType] ?? q.type;
+    case "status":
+      return STATUS_ORDER[q.status];
+    case "reviewStatus":
+      return REVIEW_ORDER[q.reviewStatus];
+    case "cognitiveLevel":
+      return COGNITIVE_ORDER[q.cognitiveLevel];
+    case "difficulty":
+      return q.difficulty;
+    case "updatedAt":
+      return q.updatedAt;
+    case "examRounds":
+      // Chưa dùng đợt thi nào xếp trước ("" < bất kỳ mã nào).
+      return q.examRoundCodes.join(",");
+  }
+}
+
 // Quality badge derived from BankQuestionStats
 function qualityInfo(
   stats: Item["stats"],
@@ -204,7 +247,6 @@ export default function BankWorkbench({
   initialCursor: string | null;
   suggestedSkills: Skill[];
 }) {
-  const [codePrefix, setCodePrefix] = useState<string | null>(initialCodePrefix);
   const [items, setItems] = useState<Item[]>(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
   const [loading, setLoading] = useState(false);
@@ -220,57 +262,9 @@ export default function BankWorkbench({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
-  // ── Panel resize ───────────────────────────────────────────────────────
-  // Wide mode: panel ~80% width, ẩn list để focus vào edit.
-  const [panelWide, setPanelWide] = useState(false);
-  // Drag-resize: panel width in px. Default 384 (w-96). Persisted localStorage.
-  const RESIZE_KEY = "fbm-bank-panel-px";
-  const [panelPx, setPanelPx] = useState<number>(384);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(RESIZE_KEY);
-      if (raw) {
-        const n = parseInt(raw, 10);
-        if (Number.isFinite(n) && n >= 320 && n <= 1400) setPanelPx(n);
-      }
-    } catch {}
-  }, []);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
-  const onResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    dragRef.current = { startX: e.clientX, startWidth: panelPx };
-    const onMove = (ev: MouseEvent) => {
-      if (!dragRef.current || !containerRef.current) return;
-      const containerW = containerRef.current.getBoundingClientRect().width;
-      const delta = dragRef.current.startX - ev.clientX; // kéo trái → panel rộng hơn
-      const next = Math.min(
-        Math.max(320, dragRef.current.startWidth + delta),
-        Math.max(360, containerW - 320), // chừa ≥320px cho list
-      );
-      setPanelPx(next);
-    };
-    const onUp = () => {
-      try {
-        if (dragRef.current) localStorage.setItem(RESIZE_KEY, String(panelPx));
-      } catch {}
-      dragRef.current = null;
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  };
-  // Persist khi panelPx settle.
-  useEffect(() => {
-    try {
-      localStorage.setItem(RESIZE_KEY, String(panelPx));
-    } catch {}
-  }, [panelPx]);
+  // Đợt 10 — bỏ panel chi tiết bên phải (resize/wide-mode) theo yêu cầu
+  // "apply full chiều rộng, bỏ panel bên phải". Sửa câu giờ mở popup
+  // (DetailModal ở cuối file) thay vì panel cố định — xem `selectedItem`.
 
   // ── Count metadata ─────────────────────────────────────────────────────
   // totalMatching = số câu khớp filter (server count). totalInBank = tổng bank.
@@ -378,6 +372,53 @@ export default function BankWorkbench({
 
   const selectedItem = items.find((i) => i.id === selectedId) ?? null;
 
+  // ── Sort cột bảng (Đợt 10) ─────────────────────────────────────────────
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+  const sortedItems = sortKey
+    ? [...items].sort((a, b) => {
+        const av = sortValue(a, sortKey);
+        const bv = sortValue(b, sortKey);
+        const cmp =
+          typeof av === "number" && typeof bv === "number"
+            ? av - bv
+            : String(av).localeCompare(String(bv), "vi");
+        return sortDir === "asc" ? cmp : -cmp;
+      })
+    : items;
+  function SortTh({
+    label,
+    sortKeyOf,
+    className,
+  }: {
+    label: string;
+    sortKeyOf: SortKey;
+    className?: string;
+  }) {
+    const active = sortKey === sortKeyOf;
+    return (
+      <th className={className}>
+        <button
+          type="button"
+          onClick={() => toggleSort(sortKeyOf)}
+          className="inline-flex items-center gap-1 hover:text-slate-700"
+        >
+          <span>{label}</span>
+          <span aria-hidden className={active ? "text-slate-600" : "text-slate-300"}>
+            {active && sortDir === "desc" ? "▼" : "▲"}
+          </span>
+        </button>
+      </th>
+    );
+  }
+
   const hasActiveFilter =
     filters.status.length > 0 ||
     filters.cognitiveLevel.length > 0 ||
@@ -475,14 +516,7 @@ export default function BankWorkbench({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="mt-3 flex h-[calc(100vh-160px)] min-h-[520px] gap-0 overflow-hidden rounded-xl border border-default bg-white shadow-sm"
-    >
-      {/* ── Main: Item list + horizontal filter header ──────────────────── */}
-      <div
-        className={`flex flex-col overflow-hidden ${panelWide && selectedItem ? "hidden lg:hidden" : "flex-1"}`}
-      >
+    <div className="mt-3 flex h-[calc(100vh-160px)] min-h-[520px] flex-col overflow-hidden rounded-xl border border-default bg-white shadow-sm">
         {/* Toolbar */}
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-default bg-white px-5 py-3">
           <div className="flex items-center gap-3 text-sm text-slate-600">
@@ -527,11 +561,6 @@ export default function BankWorkbench({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <CodePrefixEditor
-              bankId={bankId}
-              value={codePrefix}
-              onChange={setCodePrefix}
-            />
             <button
               onClick={() => {
                 setMcqImportMode("ai");
@@ -572,82 +601,61 @@ export default function BankWorkbench({
             className="w-56 rounded-md border border-default bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-200"
           />
 
-          <FilterChipGroup label="Trạng thái">
-            {(["draft", "published", "archived"] as Status[]).map((s) => (
-              <FilterChip
-                key={s}
-                label={STATUS_LABEL[s]}
-                active={filters.status.includes(s)}
-                onClick={() => toggleFilter("status", s)}
-              />
-            ))}
-          </FilterChipGroup>
+          {/* Đợt 10 — 4 nhóm chip luôn-mở trước đây tràn 3-4 dòng (mỗi câu
+              hỏi filter luôn hiện hết option), gộp thành dropdown gọn 1 nút
+              mỗi loại, cùng pattern popover với "Chủ đề" bên dưới. */}
+          <FilterDropdown
+            label="Trạng thái"
+            options={(["draft", "published", "archived"] as Status[]).map((s) => ({
+              value: s,
+              label: STATUS_LABEL[s],
+            }))}
+            selected={filters.status}
+            onToggle={(s) => toggleFilter("status", s)}
+            onClear={() => setFilters((f) => ({ ...f, status: [] }))}
+          />
 
-          <FilterChipGroup label="Thẩm định">
-            {(["pending", "approved", "needs_revision"] as ReviewStatus[]).map((r) => (
-              <FilterChip
-                key={r}
-                label={REVIEW_LABEL[r]}
-                active={filters.reviewStatus.includes(r)}
-                onClick={() => toggleFilter("reviewStatus", r)}
-              />
-            ))}
-          </FilterChipGroup>
+          <FilterDropdown
+            label="Thẩm định"
+            options={(["pending", "approved", "needs_revision"] as ReviewStatus[]).map((r) => ({
+              value: r,
+              label: REVIEW_LABEL[r],
+            }))}
+            selected={filters.reviewStatus}
+            onToggle={(r) => toggleFilter("reviewStatus", r)}
+            onClear={() => setFilters((f) => ({ ...f, reviewStatus: [] }))}
+          />
 
-          <FilterChipGroup label="Tư duy">
-            {(["remember_understand", "apply", "analyze_plus"] as CognitiveLevel[]).map((c) => (
-              <FilterChip
-                key={c}
-                label={COGNITIVE_LABEL[c]}
-                active={filters.cognitiveLevel.includes(c)}
-                onClick={() => toggleFilter("cognitiveLevel", c)}
-              />
-            ))}
-          </FilterChipGroup>
+          <FilterDropdown
+            label="Tư duy"
+            options={(["remember_understand", "apply", "analyze_plus"] as CognitiveLevel[]).map((c) => ({
+              value: c,
+              label: COGNITIVE_LABEL[c],
+            }))}
+            selected={filters.cognitiveLevel}
+            onToggle={(c) => toggleFilter("cognitiveLevel", c)}
+            onClear={() => setFilters((f) => ({ ...f, cognitiveLevel: [] }))}
+          />
 
-          <FilterChipGroup label="Độ khó">
-            {[1, 2, 3, 4, 5].map((d) => (
-              <FilterChip
-                key={d}
-                label={String(d)}
-                active={filters.difficulty.includes(d)}
-                onClick={() => toggleFilter("difficulty", d)}
-                compact
-              />
-            ))}
-          </FilterChipGroup>
+          <FilterDropdown
+            label="Độ khó"
+            options={[1, 2, 3, 4, 5].map((d) => ({ value: d, label: String(d) }))}
+            selected={filters.difficulty}
+            onToggle={(d) => toggleFilter("difficulty", d)}
+            onClear={() => setFilters((f) => ({ ...f, difficulty: [] }))}
+          />
 
-          <FilterChipGroup label="Chủ đề">
-            {availableTopics.length === 0 ? (
-              <span
-                className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-0.5 text-xs text-slate-500"
-                title="Chọn 1 câu hỏi ở danh sách, mở panel chi tiết bên phải để gán chủ đề"
-              >
-                <span aria-hidden>+</span> Thêm chủ đề cho câu hỏi
-              </span>
-            ) : availableTopics.length <= 4 ? (
-              // Ít topic → render inline chip cho nhanh
-              <div className="flex flex-wrap gap-1">
-                {availableTopics.map((t) => (
-                  <FilterChip
-                    key={t}
-                    label={t}
-                    active={filters.topics.includes(t)}
-                    onClick={() => toggleFilter("topics", t)}
-                    rounded
-                  />
-                ))}
-              </div>
-            ) : (
-              // ≥5 topic → popover dropdown để tránh tràn 3-4 dòng filter row
-              <TopicMultiselect
-                topics={availableTopics}
-                selected={filters.topics}
-                onToggle={(t) => toggleFilter("topics", t)}
-                onClear={() => setFilters((f) => ({ ...f, topics: [] }))}
-              />
-            )}
-          </FilterChipGroup>
+          {/* Đợt 11 — "Chủ đề" trước đây bọc trong FilterChipGroup riêng (có
+              nhãn "CHỦ ĐỀ" + tuỳ nhánh chip/dropdown/placeholder) nên rộng
+              hơn hẳn 4 dropdown kia và bị đẩy xuống dòng dưới. Giờ luôn dùng
+              TopicMultiselect, style nút y hệt FilterDropdown để gọn và nằm
+              cùng hàng với "Độ khó". */}
+          <TopicMultiselect
+            topics={availableTopics}
+            selected={filters.topics}
+            onToggle={(t) => toggleFilter("topics", t)}
+            onClear={() => setFilters((f) => ({ ...f, topics: [] }))}
+          />
 
         </div>
         <ImportMcqModal
@@ -666,7 +674,14 @@ export default function BankWorkbench({
 
         {/* Overlay panels */}
         {adding && (
-          <div className="shrink-0 overflow-y-auto border-b border-default bg-white px-4 py-3">
+          // Đợt 10 fix: trước là `shrink-0` — trong cột flex-col
+          // overflow-hidden có chiều cao cố định, panel không co lại được nên
+          // khi picker dài ra (10 loại thay vì 6, Đợt 7) phần bên dưới hàng
+          // đầu bị ancestor `overflow-hidden` cắt mất, không cách nào cuộn
+          // tới. Đổi sang `flex-1` (cùng idiom với list ở dưới và
+          // DetailPanel) để panel tự co theo không gian còn lại và tự cuộn
+          // nội bộ khi nội dung dài hơn không gian đó.
+          <div className="flex-1 overflow-y-auto border-b border-default bg-white px-4 py-3">
             <QuestionForm
               bankId={bankId}
               suggestedSkills={suggestedSkills}
@@ -738,69 +753,126 @@ export default function BankWorkbench({
           </div>
         )}
 
-        {/* List */}
-        <ul
-          data-testid="question-list"
-          className="flex-1 overflow-y-auto divide-y divide-default"
-        >
-          {items.length === 0 && !loading && (
-            <li className="flex items-center justify-center p-10 text-sm text-faint">
-              Không có câu hỏi phù hợp.
-            </li>
-          )}
-          {items.map((q) => {
-            const qi = qualityInfo(q.stats);
-            const isSelected = q.id === selectedId;
-            const isChecked = selectedIds.has(q.id);
-            const correctPreview = correctAnswerPreview(q.type, q.config);
-            return (
-              <li
-                key={q.id}
-                data-testid={`question-row-${q.id}`}
-                onClick={() => setSelectedId(isSelected ? null : q.id)}
-                className={`cursor-pointer px-4 py-3 transition-colors hover:bg-slate-50 ${isSelected ? "bg-blue-50 hover:bg-blue-50" : isChecked ? "bg-emerald-50/40" : "bg-white"}`}
-              >
-                <div className="flex items-start gap-2.5">
-                  {/* Checkbox bulk select */}
-                  <label
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-0.5 flex shrink-0 cursor-pointer items-center"
-                    title="Chọn để bulk action"
+        {/* List — Đợt 10: bảng full-width thay cho card-list, mỗi loại
+            metadata có cột riêng (trước gộp hết vào badge trong 1 dòng).
+            Bấm 1 hàng → mở popup sửa (xem DetailPanel modal cuối file), thay
+            panel cố định bên phải đã bỏ. */}
+        <div className="flex-1 overflow-y-auto">
+          <table className="w-full border-collapse text-base">
+            <thead className="sticky top-0 z-10 border-b border-default bg-slate-50/95 text-xs font-bold uppercase tracking-wide text-slate-600 backdrop-blur">
+              <tr>
+                <th className="w-8 px-4 py-2 text-left" />
+                <th className="w-6 px-1 py-2 text-left" />
+                <SortTh label="Mã câu" sortKeyOf="code" className="w-20 px-2 py-2 text-left" />
+                <SortTh label="Câu hỏi" sortKeyOf="prompt" className="px-2 py-2 text-left" />
+                <SortTh label="Chủ đề" sortKeyOf="topic" className="w-28 px-2 py-2 text-left" />
+                <SortTh label="Loại" sortKeyOf="type" className="w-24 px-2 py-2 text-left" />
+                <SortTh label="Trạng thái" sortKeyOf="status" className="w-24 px-2 py-2 text-left" />
+                <SortTh label="Thẩm định" sortKeyOf="reviewStatus" className="w-32 px-2 py-2 text-left" />
+                <SortTh label="Tư duy" sortKeyOf="cognitiveLevel" className="w-24 px-2 py-2 text-left" />
+                <SortTh label="Độ khó" sortKeyOf="difficulty" className="w-16 px-2 py-2 text-left" />
+                <SortTh label="Cập nhật" sortKeyOf="updatedAt" className="w-24 px-2 py-2 text-left" />
+                <SortTh label="Đợt thi" sortKeyOf="examRounds" className="w-28 px-2 py-2 text-left" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-default">
+              {items.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={12} className="p-10 text-center text-sm text-faint">
+                    Không có câu hỏi phù hợp.
+                  </td>
+                </tr>
+              )}
+              {sortedItems.map((q) => {
+                const qi = qualityInfo(q.stats);
+                const isChecked = selectedIds.has(q.id);
+                const correctPreview = correctAnswerPreview(q.type, q.config);
+                return (
+                  <tr
+                    key={q.id}
+                    data-testid={`question-row-${q.id}`}
+                    onClick={() => setSelectedId(q.id)}
+                    className={`cursor-pointer align-top transition-colors hover:bg-slate-50 ${isChecked ? "bg-emerald-50/40" : "bg-white"}`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => toggleSelect(q.id)}
-                      className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-1 focus:ring-brand-400"
-                    />
-                  </label>
-
-                  {/* Quality dot */}
-                  <div className="mt-1.5 shrink-0">
-                    {qi === null ? (
-                      <span className="block h-2 w-2 rounded-full bg-slate-200" title="Chưa có dữ liệu" />
-                    ) : qi.ok ? (
-                      <span className="block h-2 w-2 rounded-full bg-emerald-400" title="Chất lượng tốt" />
-                    ) : (
-                      <span className="block h-2 w-2 rounded-full bg-amber-400" title={qi.warnings.join(", ")} />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1">
-                      {q.code && (
+                    <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSelect(q.id)}
+                        title="Chọn để bulk action"
+                        className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-1 focus:ring-brand-400"
+                      />
+                    </td>
+                    <td className="px-1 py-2.5">
+                      {qi === null ? (
+                        <span className="block h-2 w-2 rounded-full bg-slate-200" title="Chưa có dữ liệu" />
+                      ) : qi.ok ? (
+                        <span className="block h-2 w-2 rounded-full bg-emerald-400" title="Chất lượng tốt" />
+                      ) : (
+                        <span className="block h-2 w-2 rounded-full bg-amber-400" title={qi.warnings.join(", ")} />
+                      )}
+                    </td>
+                    <td className="px-2 py-2.5">
+                      {q.code ? (
                         <span
-                          className="rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-indigo-700"
+                          className="inline-block rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-xs font-semibold text-indigo-700"
                           title="Mã câu hỏi"
                         >
                           {q.code}
                         </span>
+                      ) : (
+                        <span className="text-sm text-faint">—</span>
                       )}
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] ${STATUS_TONE[q.status]}`}>
+                    </td>
+                    <td className="min-w-0 px-2 py-2.5">
+                      <div className="flex flex-wrap items-center gap-1">
+                        {correctPreview && (
+                          <span
+                            className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-semibold text-emerald-700"
+                            title="Đáp án đúng"
+                          >
+                            ✓ {correctPreview}
+                          </span>
+                        )}
+                        {qi && !qi.ok && (
+                          <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700">
+                            ⚠ {qi.warnings.join(" · ")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-sm text-slate-800">{q.prompt}</p>
+                      {(q.authorName || q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && (
+                        <p className="mt-0.5 text-xs text-faint">
+                          {q.authorName && `✍ ${q.authorName}`}
+                          {q.authorName && (q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && " · "}
+                          {q.skillIds.length > 0 && `${q.skillIds.length} skill`}
+                          {q.skillIds.length > 0 && q.stats && q.stats.totalUses > 0 && " · "}
+                          {q.stats && q.stats.totalUses > 0 && `đã dùng ${q.stats.totalUses} lần`}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-2 py-2.5 text-sm text-slate-600">
+                      {typeof q.config?.topic === "string" && q.config.topic ? (
+                        <span className="inline-block max-w-full truncate rounded-full border border-token bg-white px-2 py-0.5 text-xs" title={q.config.topic}>
+                          {q.config.topic}
+                        </span>
+                      ) : (
+                        <span className="text-faint">—</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2.5">
+                      <span className="inline-block whitespace-nowrap rounded bg-slate-50 px-1.5 py-0.5 text-xs text-slate-500">
+                        {SHARED_TYPE_LABEL[q.type as PickedType] ?? q.type}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2.5">
+                      <span className={`inline-block whitespace-nowrap rounded px-1.5 py-0.5 text-xs ${STATUS_TONE[q.status]}`}>
                         {STATUS_LABEL[q.status]}
                       </span>
+                    </td>
+                    <td className="px-2 py-2.5">
                       <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] ${REVIEW_TONE[q.reviewStatus]}`}
+                        className={`inline-block whitespace-nowrap rounded px-1.5 py-0.5 text-xs ${REVIEW_TONE[q.reviewStatus]}`}
                         title={
                           q.reviewedAt
                             ? `${REVIEW_LABEL[q.reviewStatus]} bởi ${q.reviewedByName ?? "?"} · ${formatDate(q.reviewedAt)}`
@@ -809,46 +881,45 @@ export default function BankWorkbench({
                       >
                         {REVIEW_LABEL[q.reviewStatus]}
                       </span>
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] ${COGNITIVE_TONE[q.cognitiveLevel]}`}>
+                    </td>
+                    <td className="px-2 py-2.5">
+                      <span className={`inline-block whitespace-nowrap rounded px-1.5 py-0.5 text-xs ${COGNITIVE_TONE[q.cognitiveLevel]}`}>
                         {COGNITIVE_LABEL[q.cognitiveLevel]}
                       </span>
+                    </td>
+                    <td className="px-2 py-2.5">
                       <span
-                        className="inline-flex items-center gap-0.5 rounded bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-500"
-                        title={`Độ khó ${q.difficulty}/5 · ${q.points} điểm · ${TYPE_LABEL[q.type] ?? q.type}`}
+                        className="inline-flex items-center gap-0.5"
+                        title={`Độ khó ${q.difficulty}/5 · ${q.points} điểm`}
                       >
                         <DifficultyDots level={q.difficulty} />
-                        <span className="ml-1 uppercase">{TYPE_LABEL[q.type] ?? q.type}</span>
                       </span>
-                      {correctPreview && (
-                        <span
-                          className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700"
-                          title="Đáp án đúng"
-                        >
-                          ✓ {correctPreview}
-                        </span>
+                    </td>
+                    <td className="px-2 py-2.5 text-sm text-faint" title={formatDateTime(q.updatedAt)}>
+                      {formatDate(q.updatedAt)}
+                    </td>
+                    <td className="px-2 py-2.5">
+                      {q.examRoundCodes.length > 0 ? (
+                        <div className="flex flex-wrap gap-1" title={`Đã copy vào đề của đợt thi: ${q.examRoundCodes.join(", ")}`}>
+                          {q.examRoundCodes.map((code) => (
+                            <span
+                              key={code}
+                              className="inline-block whitespace-nowrap rounded bg-violet-50 px-1.5 py-0.5 font-mono text-xs font-medium text-violet-700"
+                            >
+                              {code}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-faint">Chưa dùng</span>
                       )}
-                      {qi && !qi.ok && (
-                        <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">
-                          ⚠ {qi.warnings.join(" · ")}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-800">{q.prompt}</p>
-                    {(q.authorName || q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && (
-                      <p className="mt-0.5 text-[10px] text-faint">
-                        {q.authorName && `✍ ${q.authorName}`}
-                        {q.authorName && (q.skillIds.length > 0 || (q.stats && q.stats.totalUses > 0)) && " · "}
-                        {q.skillIds.length > 0 && `${q.skillIds.length} skill`}
-                        {q.skillIds.length > 0 && q.stats && q.stats.totalUses > 0 && " · "}
-                        {q.stats && q.stats.totalUses > 0 && `đã dùng ${q.stats.totalUses} lần`}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {cursor && (
           <div className="shrink-0 border-t border-default bg-white px-4 py-2 text-center">
@@ -912,128 +983,142 @@ export default function BankWorkbench({
             </div>
           </div>
         )}
-      </div>
 
-      {/* ── Resize handle ───────────────────────────────────────────────── */}
-      {selectedItem && !panelWide && (
+      {/* ── Popup sửa câu hỏi (Đợt 10 — thay panel cố định bên phải, cho
+          list full-width) ─────────────────────────────────────────────── */}
+      {selectedItem && (
         <div
-          onMouseDown={onResizeStart}
-          onDoubleClick={() => setPanelPx(384)}
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Kéo để đổi rộng panel chi tiết · double-click để reset"
-          title="Kéo để đổi rộng · double-click để reset"
-          className="group hidden w-1 shrink-0 cursor-col-resize bg-default transition-colors hover:bg-brand-400 lg:flex"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setSelectedId(null)}
         >
-          {/* visual grip — 3 dots ở giữa khi hover */}
-          <span className="m-auto h-8 w-0.5 rounded-full bg-slate-300 opacity-0 transition-opacity group-hover:opacity-100" />
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+          >
+            <DetailPanel
+              key={selectedItem.id}
+              q={selectedItem}
+              suggestedSkills={suggestedSkills}
+              availableTopics={availableTopics}
+              onClose={() => setSelectedId(null)}
+              onUpdated={async (updated) => {
+                await refreshAndKeepSelection();
+                // Edit topic có thể tạo topic mới → refresh filter.
+                if (updated) void fetchTopics();
+                if (updated) flashOk("Đã lưu");
+              }}
+              onDeleted={async () => {
+                // Optimistic: drop selection + remove from local list before
+                // refetching so the UI feels immediate.
+                setSelectedId(null);
+                setItems((curr) => curr.filter((x) => x.id !== selectedItem.id));
+                flashOk("Đã xoá câu hỏi");
+                await refreshAndKeepSelection();
+              }}
+            />
+          </div>
         </div>
       )}
-
-      {/* ── Right: Detail panel ──────────────────────────────────────────── */}
-      <aside
-        style={
-          // Trên desktop dùng width drag-able; mobile / wide-mode override bằng class.
-          panelWide || !selectedItem ? undefined : { width: `${panelPx}px` }
-        }
-        className={`flex shrink-0 flex-col overflow-hidden border-l border-default bg-white ${
-          panelWide && selectedItem
-            ? "w-full lg:w-[80%]"
-            : selectedItem
-            ? ""
-            : "w-96"
-        }`}
-      >
-        {selectedItem ? (
-          <DetailPanel
-            key={selectedItem.id}
-            q={selectedItem}
-            suggestedSkills={suggestedSkills}
-            availableTopics={availableTopics}
-            wide={panelWide}
-            onToggleWide={() => setPanelWide((v) => !v)}
-            onClose={() => {
-              setSelectedId(null);
-              setPanelWide(false);
-            }}
-            onUpdated={async (updated) => {
-              await refreshAndKeepSelection();
-              // Edit topic có thể tạo topic mới → refresh filter.
-              if (updated) void fetchTopics();
-              if (updated) flashOk("Đã lưu");
-            }}
-            onDeleted={async () => {
-              // Optimistic: drop selection + remove from local list before
-              // refetching so the UI feels immediate.
-              setSelectedId(null);
-              setItems((curr) => curr.filter((x) => x.id !== selectedItem.id));
-              flashOk("Đã xoá câu hỏi");
-              await refreshAndKeepSelection();
-            }}
-          />
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-faint">
-            <span className="text-2xl">←</span>
-            <p>Chọn một câu hỏi để xem chi tiết và chỉnh sửa.</p>
-          </div>
-        )}
-      </aside>
     </div>
   );
 }
 
 // ─── Filter helpers ────────────────────────────────────────────────────────
 
-function FilterChipGroup({
+/**
+ * Đợt 10 — dropdown filter DÙNG CHUNG cho Trạng thái/Thẩm định/Tư duy/Độ khó.
+ * Trước đó mỗi nhóm render hết option thành chip luôn-mở → 4-5 hàng tràn dọc,
+ * tốn không gian. Giờ gọn thành 1 nút mỗi nhóm, mở popover khi cần (cùng
+ * pattern click-outside với TopicMultiselect bên dưới — component đó có thêm
+ * ô tìm kiếm vì topic có thể nhiều, còn 4 nhóm này số option cố định nhỏ nên
+ * không cần).
+ */
+function FilterDropdown<T extends string | number>({
   label,
-  children,
+  options,
+  selected,
+  onToggle,
+  onClear,
 }: {
   label: string;
-  children: React.ReactNode;
+  options: { value: T; label: string }[];
+  selected: T[];
+  onToggle: (value: T) => void;
+  onClear: () => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition ${
+          selected.length > 0
+            ? "border-brand-400 bg-brand-50 font-medium text-brand-800"
+            : "border-default bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+        }`}
+      >
         {label}
-      </span>
-      <div className="flex flex-wrap gap-1">{children}</div>
+        {selected.length > 0 && (
+          <span className="rounded-full bg-brand-600 px-1.5 text-[10px] font-semibold text-white">
+            {selected.length}
+          </span>
+        )}
+        <span aria-hidden className="text-slate-400">▾</span>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-1 w-52 rounded-lg border border-default bg-white shadow-lg">
+          <div className="max-h-64 overflow-y-auto p-1">
+            {options.map((o) => {
+              const checked = selected.includes(o.value);
+              return (
+                <label
+                  key={String(o.value)}
+                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-slate-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(o.value)}
+                    className="h-3.5 w-3.5 rounded border-slate-300 text-brand-600 focus:ring-1 focus:ring-brand-400"
+                  />
+                  <span className="flex-1 truncate text-slate-700">{o.label}</span>
+                </label>
+              );
+            })}
+          </div>
+          {selected.length > 0 && (
+            <div className="border-t border-default p-1.5 text-right">
+              <button
+                onClick={() => {
+                  onClear();
+                  setOpen(false);
+                }}
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Bỏ chọn tất cả
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function FilterChip({
-  label,
-  active,
-  onClick,
-  compact,
-  rounded,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  compact?: boolean;
-  rounded?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={label}
-      className={`border text-xs transition ${
-        compact ? "px-2 py-0.5" : "px-2.5 py-0.5"
-      } ${rounded ? "rounded-full" : "rounded-md"} ${
-        active
-          ? "border-brand-400 bg-brand-50 font-medium text-brand-800"
-          : "border-default bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
 /**
- * Topic filter dropdown — dùng khi bank có ≥5 topic để khỏi tràn nhiều dòng.
- * Click-outside để đóng. Chip count hiển thị khi có topic active.
+ * Topic filter dropdown — có ô tìm bên trong (topic có thể nhiều) nên tách
+ * riêng khỏi FilterDropdown chung, nhưng nút trigger style Y HỆT
+ * FilterDropdown (Đợt 11) để nằm gọn cùng hàng với Trạng thái/Thẩm
+ * định/Tư duy/Độ khó thay vì bị đẩy xuống dòng riêng. Click-outside để đóng.
  */
 function TopicMultiselect({
   topics,
@@ -1064,18 +1149,19 @@ function TopicMultiselect({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs transition ${
+        disabled={topics.length === 0}
+        title={topics.length === 0 ? "Chưa có chủ đề nào trong bank" : undefined}
+        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-50 ${
           selected.length > 0
             ? "border-brand-400 bg-brand-50 font-medium text-brand-800"
             : "border-default bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
         }`}
       >
-        {selected.length > 0 ? (
-          <>
-            <span className="font-semibold tabular-nums">{selected.length}</span> chủ đề
-          </>
-        ) : (
-          <>Chọn chủ đề ({topics.length})</>
+        <span>Chủ đề</span>
+        {selected.length > 0 && (
+          <span className="rounded-full bg-brand-600 px-1.5 text-[10px] font-semibold text-white">
+            {selected.length}
+          </span>
         )}
         <span aria-hidden className="text-slate-400">▾</span>
       </button>
@@ -1132,101 +1218,6 @@ function TopicMultiselect({
   );
 }
 
-/**
- * Inline editor cho QuestionBank.codePrefix. Bật/sửa prefix → câu hỏi mới tự
- * sinh code dạng `{prefix}-{NNNN}`. Để trống = tắt auto-sinh.
- */
-function CodePrefixEditor({
-  bankId,
-  value,
-  onChange,
-}: {
-  bankId: string;
-  value: string | null;
-  onChange: (next: string | null) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(value ?? "");
-  const [busy, setBusy] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
-  useEffect(() => setDraft(value ?? ""), [value]);
-
-  const save = async () => {
-    setBusy(true);
-    try {
-      const next = draft.trim() || null;
-      const r = await fetch(`/api/question-banks/${bankId}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ codePrefix: next }),
-      });
-      if (r.ok) {
-        const j = (await r.json()) as { codePrefix: string | null };
-        onChange(j.codePrefix);
-        setOpen(false);
-      }
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        title="Tiền tố mã câu hỏi auto-sinh"
-        className="inline-flex items-center gap-1 rounded-md border border-default bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
-      >
-        <span className="font-mono text-slate-500">#</span>
-        {value ? (
-          <span className="font-mono font-semibold text-slate-800">{value}</span>
-        ) : (
-          <span className="text-faint">tự sinh mã…</span>
-        )}
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full z-20 mt-1 w-72 rounded-lg border border-default bg-white p-3 shadow-lg">
-          <p className="text-xs font-medium text-slate-700">Tiền tố mã câu hỏi</p>
-          <p className="mt-1 text-[11px] text-faint">
-            Câu hỏi mới sẽ tự nhận mã dạng <code className="font-mono">{draft || "PREFIX"}-0001</code>.
-            Để trống → không auto-sinh.
-          </p>
-          <input
-            autoFocus
-            value={draft}
-            onChange={(e) => setDraft(e.target.value.toUpperCase().slice(0, 20))}
-            placeholder="VD: KNM"
-            className="mt-2 w-full rounded border border-default px-2 py-1.5 font-mono text-xs uppercase"
-          />
-          <div className="mt-2 flex justify-end gap-2">
-            <button
-              onClick={() => setOpen(false)}
-              className="rounded px-2 py-1 text-xs text-faint hover:bg-slate-100"
-            >
-              Huỷ
-            </button>
-            <button
-              onClick={() => void save()}
-              disabled={busy}
-              className="rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-            >
-              {busy ? "Đang lưu…" : "Lưu"}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Detail panel ──────────────────────────────────────────────────────────
 
 function DetailPanel({
@@ -1236,8 +1227,6 @@ function DetailPanel({
   onUpdated,
   onDeleted,
   availableTopics,
-  wide,
-  onToggleWide,
 }: {
   q: Item;
   suggestedSkills: Skill[];
@@ -1245,45 +1234,44 @@ function DetailPanel({
   onUpdated: (updated: boolean) => Promise<void>;
   onDeleted: () => Promise<void>;
   availableTopics: string[];
-  wide: boolean;
-  onToggleWide: () => void;
 }) {
   const [tab, setTab] = useState<"edit" | "quality">("edit");
 
   return (
     <>
-      {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-default px-4 py-2">
-        <div className="flex gap-1">
+      {/* Header — Đợt 10: tab dạng pill bo tròn trong nền xám (thay chip
+          vuông cũ), nút xoá/đóng có icon lucide-react + hover rõ ràng hơn
+          thay emoji/ký tự thô. */}
+      <div className="flex shrink-0 items-center justify-between border-b border-default px-4 py-2.5">
+        <div className="flex gap-0.5 rounded-full bg-slate-100 p-0.5">
           {(["edit", "quality"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`rounded px-2 py-1 text-xs font-medium ${
-                tab === t ? "bg-blue-100 text-blue-700" : "text-faint hover:bg-slate-100"
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                tab === t
+                  ? "bg-white text-brand-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
+              {t === "edit" ? (
+                <PenSquare className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <BarChart3 className="h-3.5 w-3.5" aria-hidden />
+              )}
               {t === "edit" ? "Sửa" : "Chất lượng"}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={onToggleWide}
-            className="hidden rounded p-1 text-faint transition hover:bg-slate-100 hover:text-slate-700 lg:inline-flex"
-            title={wide ? "Thu hẹp panel" : "Mở rộng panel (ẩn danh sách)"}
-            aria-label={wide ? "Thu hẹp" : "Mở rộng"}
-          >
-            {wide ? "⇥" : "⇤"}
-          </button>
           <DeleteQuestionButton questionId={q.id} promptHint={q.prompt} onDeleted={onDeleted} />
           <button
             onClick={onClose}
-            className="text-faint hover:text-slate-700"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-faint transition-colors hover:bg-slate-100 hover:text-slate-700"
             aria-label="Đóng"
             title="Đóng"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
       </div>
@@ -2712,9 +2700,9 @@ function DeleteQuestionButton({
       disabled={busy}
       aria-label="Xoá câu hỏi"
       title="Xoá câu hỏi khỏi ngân hàng"
-      className="flex h-7 w-7 items-center justify-center rounded text-faint hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+      className="flex h-7 w-7 items-center justify-center rounded-full text-faint transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
     >
-      🗑
+      <Trash2 className="h-4 w-4" aria-hidden />
     </button>
   );
 }
