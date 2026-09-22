@@ -1,7 +1,10 @@
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { ExamError, joinOralSessionByCode, resolveOralJoinCode } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { detectInAppBrowser } from "@/lib/inAppBrowser";
+import InAppBrowserNotice from "@/components/InAppBrowserNotice";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +26,17 @@ export default async function OralJoinByCodePage({
   const code = params.code.toUpperCase();
   const session = await auth();
   if (!session?.user?.id) {
+    // Đăng nhập Google chắc chắn thất bại trong webview của Zalo/Messenger/...
+    // — chặn ở đây và hướng dẫn mở trình duyệt thật thay vì đá vào /signin để
+    // rồi thất bại lặp lại vô ích. Xem lib/inAppBrowser.ts.
+    const embedded = detectInAppBrowser(headers().get("user-agent"));
+    if (embedded) {
+      return (
+        <main className="mx-auto max-w-md px-4 py-16">
+          <InAppBrowserNotice appName={embedded.appName} />
+        </main>
+      );
+    }
     redirect(`/signin?callbackUrl=/oral/${code}`);
   }
 
