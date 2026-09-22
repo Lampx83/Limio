@@ -66,6 +66,10 @@ const EXTENSIONS = [
   HeadingId,
 ];
 
+function htmlHasText(html: string): boolean {
+  return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").trim().length > 0;
+}
+
 async function uploadImageFile(file: File): Promise<string> {
   const fd = new FormData();
   fd.append("file", file);
@@ -115,6 +119,13 @@ export default function RichTextEditor({
         style: `min-height: ${minHeight}px;`,
       },
       handlePaste(view, event) {
+        // Word (và nhiều nguồn rich-text khác) luôn kèm một bitmap chụp lại
+        // vùng chọn trong clipboardData.files, kể cả khi người dùng chỉ copy
+        // chữ có định dạng. Nếu clipboard có text/html mang nội dung chữ thật,
+        // để ProseMirror parse HTML đó — đừng cướp paste chỉ vì có ảnh đính kèm.
+        const html = event.clipboardData?.getData("text/html") ?? "";
+        if (htmlHasText(html)) return false;
+
         const files = Array.from(event.clipboardData?.files ?? []).filter((f) =>
           f.type.startsWith("image/"),
         );
