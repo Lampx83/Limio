@@ -6,6 +6,22 @@ import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SkillPicker from "./SkillPicker";
+import QuestionTypePicker from "@/components/question-editor/QuestionTypePicker";
+import type { QuestionType as PickedType } from "@/components/question-editor/types";
+
+// Đợt 5 — 6 loại QuestionEditor biết soạn hôm nay (khớp TYPE_LABELS bên
+// dưới), dùng để giới hạn tile hiện ra ở QuestionTypePicker chung. Cùng gap
+// với Ngân hàng câu hỏi: matching/ordering/numerical/drag_drop_fill chưa có
+// editor ở Đề thi — chờ generalize MatchingPairsEditor/DragDropFillEditor
+// (đợt sau). Tên trùng 1-1 với QType nên gán thẳng, không cần adapter dịch.
+const EXAM_PICKER_TYPES: readonly PickedType[] = [
+  "mcq",
+  "multi",
+  "true_false_notgiven",
+  "gap_fill",
+  "short_answer",
+  "essay",
+];
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -124,6 +140,26 @@ export default function QuestionEditor({
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Đợt 5 — bước chọn loại bằng picker dùng chung. Mở sẵn lúc tạo mới; lúc
+  // sửa câu có sẵn thì để false (loại đã có), nhưng "Đổi loại" vẫn bật lại
+  // được — giữ đúng khả năng cũ của <select> (đổi type lúc edit không reset
+  // các field khác, y như trước).
+  const [pickingType, setPickingType] = useState(mode === "create");
+
+  if (pickingType) {
+    return (
+      <div className="rounded-lg border-2 border-emerald-300 bg-emerald-50 p-4">
+        <QuestionTypePicker
+          types={EXAM_PICKER_TYPES}
+          onPick={(t) => {
+            setV((prev) => ({ ...prev, type: t as QType }));
+            setPickingType(false);
+          }}
+          onCancel={mode === "create" ? onClose : () => setPickingType(false)}
+        />
+      </div>
+    );
+  }
 
   function buildConfig(): unknown {
     const base = buildTypeConfig();
@@ -235,20 +271,21 @@ export default function QuestionEditor({
       className="space-y-4 rounded-lg border-2 border-emerald-300 bg-emerald-50 p-4"
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr]">
-        <label className="block">
+        <div className="block">
           <span className="block text-sm font-medium">Loại câu hỏi</span>
-          <select
-            value={v.type}
-            onChange={(e) => setV({ ...v, type: e.target.value as QType })}
-            className="mt-1 w-full rounded border border-default px-2 py-1.5 text-sm"
-          >
-            {Object.entries(TYPE_LABELS).map(([t, l]) => (
-              <option key={t} value={t}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </label>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="rounded border border-emerald-300 bg-white px-2 py-1.5 text-sm font-medium text-emerald-700">
+              {TYPE_LABELS[v.type]}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPickingType(true)}
+              className="link text-xs"
+            >
+              Đổi loại
+            </button>
+          </div>
+        </div>
         <label className="block">
           <span className="block text-sm font-medium">Điểm</span>
           <input
