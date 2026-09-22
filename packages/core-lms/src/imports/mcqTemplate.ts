@@ -110,6 +110,31 @@ const HEADER_ALIASES: Record<string, string> = {
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
 const MAX_ROWS = 500;
 
+/**
+ * Validate + chuẩn hoá một mảng "dòng thô" (key đã là tên canonical: Prompt,
+ * OptionA..F, Correct, Type...) thành `ParsedMcqRow[]` kèm summary.
+ *
+ * Đây là lớp dùng chung giữa hai nguồn nhập liệu:
+ *   - `parseMcqImportXlsx` (bên dưới): đọc từ file Excel, tự map alias cột
+ *     (tiếng Việt, viết tắt...) sang tên canonical rồi gọi hàm này.
+ *   - AI import (`packages/core-lms/src/imports/aiQuestionRows.ts`): AI chỉ lo
+ *     phần "đọc hiểu" văn bản tự do, kết quả được map thẳng sang key canonical
+ *     rồi gọi ĐÚNG hàm này — AI không tự quyết câu nào hợp lệ, validate luôn là
+ *     logic xác định này, giống hệt khi giáo viên tự gõ vào Excel.
+ *
+ * Không tự chuẩn hoá alias cột — bên gọi phải tự đưa đúng key canonical vào.
+ */
+export function parseRawMcqRows(rows: Record<string, string>[]): ParseMcqResult {
+  const parsedRows: ParsedMcqRow[] = rows.map((r, i) => parseOneRow(r, i + 1));
+  const summary = {
+    total: parsedRows.length,
+    ok: parsedRows.filter((r) => r.status === "ok").length,
+    warning: parsedRows.filter((r) => r.status === "warning").length,
+    error: parsedRows.filter((r) => r.status === "error").length,
+  };
+  return { rows: parsedRows, summary };
+}
+
 export function parseMcqImportXlsx(
   buf: Buffer | ArrayBuffer | Uint8Array,
 ): ParseMcqResult {
@@ -135,17 +160,7 @@ export function parseMcqImportXlsx(
     return out;
   });
 
-  const rows: ParsedMcqRow[] = normalized.map((r, i) =>
-    parseOneRow(r, i + 1),
-  );
-
-  const summary = {
-    total: rows.length,
-    ok: rows.filter((r) => r.status === "ok").length,
-    warning: rows.filter((r) => r.status === "warning").length,
-    error: rows.filter((r) => r.status === "error").length,
-  };
-  return { rows, summary };
+  return parseRawMcqRows(normalized);
 }
 
 function parseOneRow(raw: Record<string, string>, rowNumber: number): ParsedMcqRow {
