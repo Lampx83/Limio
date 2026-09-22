@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { probeEditorLoss, type LossReport } from "./richtext/lossProbe";
 import { HeadingId } from "./richtext/headingId";
+import SafeHtml from "./SafeHtml";
 
 interface Props {
   value: string;
@@ -170,6 +171,17 @@ export default function RichTextEditor({
     return (
       <div className="rounded-lg border border-token bg-[rgb(var(--surface))]">
         {loss && <LossBanner loss={loss} onForceWysiwyg={() => setMode("wysiwyg")} />}
+        <div className="border-b border-token">
+          <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wide text-faint">
+            Xem trước — đúng những gì học viên sẽ thấy
+          </p>
+          <div className="max-h-72 overflow-y-auto px-3 pb-3 pt-1">
+            <SafeHtml html={value} className="prose prose-sm max-w-none dark:prose-invert" />
+          </div>
+        </div>
+        <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wide text-faint">
+          Mã HTML — sửa trực tiếp nếu cần
+        </p>
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
