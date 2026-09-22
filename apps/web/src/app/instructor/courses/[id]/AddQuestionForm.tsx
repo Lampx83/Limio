@@ -9,7 +9,8 @@ import MatchingPairsEditor from "@/components/MatchingPairsEditor";
 import DragDropFillEditor from "@/components/DragDropFillEditor";
 import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
-import QuestionTypePicker from "./QuestionTypePicker";
+import QuestionTypePicker from "@/components/question-editor/QuestionTypePicker";
+import type { QuestionType as PickedType } from "@/components/question-editor/types";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 
 
@@ -89,6 +90,30 @@ const TYPE_LABEL: Record<QuestionType, string> = {
   essay: "Tự luận",
   short_answer: "Trả lời ngắn",
   drag_drop_fill: "Kéo thả từ/câu",
+};
+
+/**
+ * Đợt 3 — dịch loại đã chọn ở picker DÙNG CHUNG (10 loại canonical, khớp
+ * packages/core-lms/src/exam/schemas.ts) sang loại nội bộ của Quiz (9 loại,
+ * vẫn dùng options[] table — xem comment đầu
+ * apps/web/src/components/question-editor/types.ts lý do Quiz không đổi
+ * shape). "mcq"/"multi" cùng đổ vào Quiz "mcq": form bên dưới vốn đã cho tick
+ * nhiều đáp án đúng (checkbox), không cần tách type riêng. "true_false_notgiven"
+ * đổ vào "true_false" (Quiz chỉ có 2 trạng thái, không có "không có thông
+ * tin"). "gap_fill" đổ vào "fill_in" (Quiz: 1 chỗ trống, danh sách đáp án chấp
+ * nhận được — xem comment "Đợt 0" ở exam/schemas.ts).
+ */
+const PICKED_TO_QUIZ_TYPE: Record<PickedType, QuestionType> = {
+  mcq: "mcq",
+  multi: "mcq",
+  true_false_notgiven: "true_false",
+  gap_fill: "fill_in",
+  short_answer: "short_answer",
+  essay: "essay",
+  ordering: "ordering",
+  matching: "matching",
+  numerical: "numerical",
+  drag_drop_fill: "drag_drop_fill",
 };
 
 export default function AddQuestionForm({
@@ -308,7 +333,7 @@ export default function AddQuestionForm({
     return (
       <QuestionTypePicker
         onPick={(t) => {
-          changeType(t);
+          changeType(PICKED_TO_QUIZ_TYPE[t]);
           setStage("editing");
         }}
         onCancel={() => (onExit ? onExit() : setStage("closed"))}
