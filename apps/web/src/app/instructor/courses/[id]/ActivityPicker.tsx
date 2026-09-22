@@ -46,8 +46,8 @@ const TILES: Tile[] = [
     group: "resource",
     icon: "📝",
     name: "Văn bản",
-    description: "Soạn thảo trực quan (rich text) — bold, list, link, heading",
-    keywords: "text richtext wysiwyg editor van ban",
+    description: "Copy-paste văn bản thô — AI định dạng đẹp giúp bạn",
+    keywords: "text richtext wysiwyg editor van ban ai dinh dang format",
     pick: { kind: "content", subtype: "richtext" },
   },
   {
@@ -232,7 +232,7 @@ export default function ActivityPicker({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-2xl rounded-2xl bg-[rgb(var(--surface))] shadow-2xl">
+      <div className="w-full max-w-7xl rounded-2xl bg-[rgb(var(--surface))] shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-token px-5 py-4">
           {pickedTile ? (
@@ -353,7 +353,7 @@ function Group({
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">
         {label}
       </h3>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         {tiles.map((t) => (
           <button
             key={t.key}
