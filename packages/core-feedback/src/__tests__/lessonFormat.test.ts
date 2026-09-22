@@ -89,8 +89,8 @@ describe("formatLessonContent — happy path", () => {
     ).rejects.toMatchObject({ code: "openai_error", details: "empty_html_output" });
   });
 
-  it("cả 3 template đều chạy được", async () => {
-    for (const template of ["clean", "academic", "modern"] as const) {
+  it("cả 4 template đều chạy được", async () => {
+    for (const template of ["clean", "academic", "modern", "vibrant"] as const) {
       const userId = await makeUser(`tpl-${template}`);
       const openai = fakeOpenAI("<h2>ok</h2>");
       const r = await formatLessonContent(userId, { html: "<p>x</p>", template }, openai);

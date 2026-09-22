@@ -710,6 +710,25 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <p>/<li>: style="color:#111827;font-size:1.25rem;line-height:1.7"
 - <div class="callout">: style="background:#dcfce7;border-left:4px solid #16a34a;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem" (đổi sang #fed7aa/#f97316 nếu là cảnh báo, #dbeafe/#0284c7 nếu là ví dụ)`,
   },
+  // Khớp ĐÚNG palette SECTION_HUES/SECTION_TEXT_HUES của
+  // packages/core-lms/scripts/import-course.ts (renderer khoá "Thiết kế
+  // UI/UX") — 5 màu đã đo tương phản ≥4:1 trên cả nền trắng lẫn nền tối, xoay
+  // vòng theo THỨ TỰ mục ## xuất hiện (mục 1→5). Vì cấu trúc chỉ cho tối đa 5
+  // mục ## nên không cần xử lý wrap-around.
+  vibrant: {
+    label: "Sinh động",
+    rules: `- font-family: ${FONT_STACK} cho MỌI thẻ
+- MỖI mục <h2> lấy MỘT MÀU THEO THỨ TỰ xuất hiện (mục thứ 1 → màu 1, mục thứ 2 → màu 2, ...) — KHÔNG dùng cùng 1 màu cho mọi mục:
+  1. lam: nền rgba(59,130,246,.14) · viền/chữ rgb(40,118,245)
+  2. tím: nền rgba(139,92,246,.14) · viền/chữ rgb(138,91,246)
+  3. ngọc: nền rgba(13,148,136,.14) · viền/chữ rgb(12,141,129)
+  4. hổ phách: nền rgba(217,150,40,.14) · viền/chữ rgb(165,113,29)
+  5. hồng sen: nền rgba(219,90,140,.14) · viền/chữ rgb(214,67,124)
+- <h2> (của mục thứ N): style="color:rgb(<màu chữ N>);font-size:1.7rem;font-weight:700;margin:1.5rem 0 .6rem;border-left:4px solid rgb(<màu chữ N>);padding-left:.7rem"
+- <h3> bên trong mục nào thì dùng ĐÚNG màu chữ của mục cha đó: style="color:rgb(<màu chữ của mục cha>);font-size:1.42rem;margin:0 0 .6rem"
+- <p>/<li>: style="color:#111827;font-size:1.25rem;line-height:1.7" (không đổi màu theo mục — chỉ heading đổi màu)
+- <div class="callout"> bên trong mục nào thì dùng màu nền+chữ của mục đó: style="background:rgba(<màu nền của mục>);border-left:4px solid rgb(<màu chữ của mục>);padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"`,
+  },
 };
 
 const FORMAT_SCHEMA = {
@@ -803,12 +822,59 @@ ${raw}
 const EXTRACT_MIN_INPUT_CHARS = 20;
 const EXTRACT_MAX_INPUT_CHARS = 20_000;
 
-export interface ExtractedAiQuestion {
-  type: "mcq" | "true_false";
-  prompt: string;
-  options: Array<{ label: string; isCorrect: boolean }>;
-  explanation: string | null;
-  topic: string | null;
+/**
+ * Shape phải khớp CẤU TRÚC với `AiExtractedQuestion` ở
+ * packages/core-lms/src/imports/aiQuestionRows.ts — core-feedback không được
+ * import core-lms (ranh giới module, CLAUDE.md §4.3), nên định nghĩa lặp lại
+ * ở đây; route.ts (apps/web) là tầng orchestration ghép hai bên qua kiểu cấu
+ * trúc (structural typing), không qua import chéo.
+ */
+export type ExtractedAiQuestion =
+  | {
+      type: "mcq" | "true_false";
+      prompt: string;
+      options: Array<{ label: string; isCorrect: boolean }>;
+      explanation: string | null;
+      topic: string | null;
+    }
+  | {
+      type: "ordering";
+      prompt: string;
+      items: Array<{ label: string }>;
+      explanation: string | null;
+      topic: string | null;
+    }
+  | {
+      type: "matching";
+      prompt: string;
+      pairs: Array<{ left: string; right: string }>;
+      explanation: string | null;
+      topic: string | null;
+    }
+  | {
+      type: "fill_in";
+      prompt: string;
+      acceptedAnswers: string[];
+      explanation: string | null;
+      topic: string | null;
+    };
+
+/**
+ * Một câu bị AI CHỦ ĐỘNG bỏ qua vì không thuộc 5 loại "Nhập bằng AI" hỗ trợ
+ * (mcq/true_false/ordering/matching/fill_in). Bắt AI báo lại thay vì im lặng
+ * bỏ sót — GV thấy được "vì sao chỉ ra N/tổng câu" thay vì tưởng AI đọc thiếu.
+ *
+ * Sự cố thật (2026-09-22): trước khi có field này, AI từng ép câu "Sắp xếp
+ * thứ tự" và "Ghép cặp" vào type=mcq (coi mỗi mảnh câu / mỗi vế ghép là một
+ * "option") — sai hoàn toàn về ngữ nghĩa. Vì validate xác định phía sau
+ * (parseRawMcqRows) chỉ kiểm HÌNH THỨC của mcq (có đáp án đúng, ≥2 lựa chọn),
+ * nó không có cách nào biết câu gốc vốn là loại khác — nên lọt qua thành
+ * "OK" dù nội dung vô nghĩa. Root cause là AI thiếu lựa chọn "bỏ qua" đủ rõ;
+ * field này là chỗ để AI dùng lựa chọn đó.
+ */
+export interface SkippedAiQuestion {
+  /** Vì sao không đưa vào — hiện cho GV xem, ví dụ "Câu ghép cặp — chưa hỗ trợ". */
+  reason: string;
 }
 
 const EXTRACT_SCHEMA = {
@@ -821,8 +887,12 @@ const EXTRACT_SCHEMA = {
         type: "object",
         additionalProperties: false,
         properties: {
-          type: { type: "string", enum: ["mcq", "true_false"] },
+          type: {
+            type: "string",
+            enum: ["mcq", "true_false", "ordering", "matching", "fill_in"],
+          },
           prompt: { type: "string" },
+          // mcq/true_false. Rỗng cho các loại khác.
           options: {
             type: "array",
             items: {
@@ -835,14 +905,58 @@ const EXTRACT_SCHEMA = {
               required: ["label", "isCorrect"],
             },
           },
+          // ordering — mảnh/bước theo ĐÚNG THỨ TỰ (thứ tự trong mảng = đáp án
+          // đúng). Rỗng cho các loại khác.
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: { label: { type: "string" } },
+              required: ["label"],
+            },
+          },
+          // matching — mỗi cặp đã ghép ĐÚNG theo đáp án. Rỗng cho các loại khác.
+          pairs: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                left: { type: "string" },
+                right: { type: "string" },
+              },
+              required: ["left", "right"],
+            },
+          },
+          // fill_in — mọi biến thể đáp án được chấp nhận. Rỗng cho các loại khác.
+          acceptedAnswers: { type: "array", items: { type: "string" } },
           explanation: { type: ["string", "null"] },
           topic: { type: ["string", "null"] },
         },
-        required: ["type", "prompt", "options", "explanation", "topic"],
+        required: [
+          "type",
+          "prompt",
+          "options",
+          "items",
+          "pairs",
+          "acceptedAnswers",
+          "explanation",
+          "topic",
+        ],
+      },
+    },
+    skipped: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: { reason: { type: "string" } },
+        required: ["reason"],
       },
     },
   },
-  required: ["questions"],
+  required: ["questions", "skipped"],
 };
 
 export interface ExtractQuestionsInput {
@@ -856,7 +970,7 @@ export async function extractQuestionsFromText(
   openai: OpenAI,
   model = "gpt-4o-mini",
   db: PrismaClient = prisma,
-): Promise<{ questions: ExtractedAiQuestion[] }> {
+): Promise<{ questions: ExtractedAiQuestion[]; skipped: SkippedAiQuestion[] }> {
   const raw = input.rawText.trim();
   if (!raw) {
     throw new AiGenerationError("validation_failed", "empty_content");
@@ -878,13 +992,45 @@ từng câu hỏi đã có sẵn trong văn bản.
 Quy tắc bắt buộc — vi phạm bất kỳ điều nào đều làm hỏng dữ liệu của giáo viên:
 1. CHỈ trích xuất câu hỏi CÓ SẴN trong văn bản. TUYỆT ĐỐI không tự sáng tác thêm
    câu hỏi, đáp án, hay giải thích nào không có trong văn bản gốc.
-2. Nếu một câu không xác định được đáp án nào đúng (văn bản không đánh dấu, hoặc
-   đánh dấu không rõ), để TẤT CẢ option của câu đó isCorrect=false. TUYỆT ĐỐI
-   không đoán đại một đáp án cho "đủ dữ liệu" — hệ thống sẽ tự báo thiếu đáp án
-   đúng cho giáo viên xem lại, đó là hành vi ĐÚNG, không phải lỗi cần bạn né.
-3. type chỉ được là "mcq" (trắc nghiệm, 2-6 lựa chọn) hoặc "true_false" (đúng/sai,
-   đúng 2 lựa chọn "Đúng"/"Sai"). Câu hỏi dạng khác (tự luận, điền từ...) thì bỏ
-   qua, không cố ép vào 2 loại này.
+2. TUYỆT ĐỐI không đoán đại đáp án/thứ tự/cặp ghép cho "đủ dữ liệu" khi văn bản
+   không đủ rõ — thà bỏ qua câu đó (thêm vào "skipped") còn hơn đưa thông tin
+   sai. Cụ thể theo từng loại:
+   - mcq/true_false: không xác định được đáp án nào đúng → để TẤT CẢ option
+     isCorrect=false (hệ thống sẽ tự báo thiếu đáp án đúng cho giáo viên xem
+     lại — đó là hành vi ĐÚNG, không phải lỗi cần bạn né).
+   - ordering: không chắc chắn về THỨ TỰ đúng (văn bản không cho đáp án mẫu để
+     đối chiếu) → BỎ QUA câu này, đừng tự sắp xếp theo suy đoán.
+   - matching: không chắc chắn cặp nào ghép với cặp nào → BỎ QUA câu này, đừng
+     tự đoán cặp ghép "có vẻ hợp lý".
+   - fill_in: không xác định được đáp án đúng cho chỗ trống → BỎ QUA câu này.
+3. type chỉ được là một trong 5 giá trị sau — MỖI LOẠI DÙNG ĐÚNG FIELD RIÊNG,
+   KHÔNG được lẫn lộn cấu trúc của loại này sang loại khác:
+   - "mcq" (trắc nghiệm, 2-6 lựa chọn) / "true_false" (đúng/sai, đúng 2 lựa
+     chọn "Đúng"/"Sai") → dùng field "options" (label + isCorrect từng lựa
+     chọn). Đây là 2 loại DUY NHẤT dùng "options".
+   - "ordering" (Sắp xếp thứ tự — xếp các từ/mảnh câu thành câu đúng) → dùng
+     field "items" (mỗi phần tử là 1 mảnh, LẤY NGUYÊN VĂN TỪ VĂN BẢN GỐC),
+     SẮP XẾP CÁC PHẦN TỬ TRONG MẢNG THEO ĐÚNG THỨ TỰ CỦA ĐÁP ÁN ĐÚNG (thứ tự
+     trong mảng CHÍNH LÀ đáp án đúng, không có field nào khác nói thứ tự).
+     TUYỆT ĐỐI không dùng "options" cho loại này — các mảnh câu KHÔNG PHẢI là
+     lựa chọn để chọn 1 trong N.
+   - "matching" (Ghép cặp/Ghép đôi — nối cột trái với cột phải, vd từ Hán ghép
+     nghĩa tiếng Việt) → dùng field "pairs", MỖI PHẦN TỬ LÀ MỘT CẶP ĐÃ GHÉP
+     ĐÚNG (left + right tương ứng theo đáp án trong văn bản, không phải liệt
+     kê rời rạc 2 cột chưa ghép). TUYỆT ĐỐI không dùng "options" cho loại
+     này, kể cả khi đề bài viết theo khuôn "A. ... B. ...".
+   - "fill_in" (Điền khuyết — câu có chỗ trống) → dùng field "acceptedAnswers"
+     (mọi biến thể đáp án được chấp nhận, lấy nguyên văn từ văn bản gốc kể cả
+     cách viết/phiên âm khác nhau nếu có liệt kê). Giữ nguyên "prompt" với ký
+     hiệu chỗ trống như trong văn bản gốc (gạch dưới, chấm chấm...), không tự
+     chuẩn hoá.
+   Với câu KHÔNG khớp cả 5 loại trên (tự luận, số học, kéo-thả điền từ vào
+   đoạn văn, hoặc bất kỳ dạng nào khác) → BỎ QUA, không cố ép vào loại nào.
+   Thêm một mục vào mảng "skipped" với "reason" ngắn gọn tiếng Việt (vd "Câu
+   tự luận — chưa hỗ trợ qua Nhập bằng AI"). KHÔNG được im lặng bỏ sót —
+   giáo viên cần biết vì sao câu đó không có mặt.
+   Với 4 field "options"/"items"/"pairs"/"acceptedAnswers": LUÔN có mặt trong
+   JSON, để mảng RỖNG [] cho những field không dùng tới loại của câu đó.
 4. Giữ nguyên văn tiếng Việt/Anh của văn bản gốc — không dịch, không diễn giải
    lại, không sửa chính tả trừ khi rõ ràng là lỗi gõ phím (vd thiếu dấu cách).
 5. explanation: chỉ điền nếu văn bản gốc có phần giải thích rõ ràng đi kèm câu đó,
@@ -897,13 +1043,15 @@ Quy tắc bắt buộc — vi phạm bất kỳ điều nào đều làm hỏng 
 ${raw}
 """
 
-Trích xuất mọi câu hỏi trắc nghiệm/đúng-sai có trong văn bản trên. Trả JSON: { questions: [...] }`;
+Trích xuất mọi câu hỏi trắc nghiệm/đúng-sai có trong văn bản trên; báo lại các câu
+đã bỏ qua vào "skipped". Trả JSON: { questions: [...], skipped: [...] }`;
 
   const { data, inputTokens, outputTokens } = await callJsonModel<{
     questions: ExtractedAiQuestion[];
+    skipped?: SkippedAiQuestion[];
   }>(openai, model, system, user, "extracted_questions", EXTRACT_SCHEMA, 4000);
 
   await logUsage(userId, model, inputTokens, outputTokens, db);
 
-  return { questions: data.questions ?? [] };
+  return { questions: data.questions ?? [], skipped: data.skipped ?? [] };
 }

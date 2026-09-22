@@ -232,6 +232,30 @@ export default function AddContentItemForm({
     setError(null);
   }
 
+  /**
+   * "Áp dụng và lưu" trong AiFormatPanel gọi thẳng đây — tạo content ngay
+   * với HTML đã AI định dạng, bỏ qua nút "Tạo" chung của form. CHỈ lưu —
+   * AiFormatPanel tự chuyển sang màn "Đã lưu bài học" + nút "Đóng form" gọi
+   * onClose bên dưới, không tự đóng ở đây để GV còn thấy xác nhận trước khi
+   * form biến mất.
+   */
+  async function saveRichtextViaAi(formattedHtml: string) {
+    const res = await fetch(apiUrl(`/api/lessons/${lessonId}/contents`), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "richtext",
+        orderIndex: nextOrderIndex,
+        payload: { html: formattedHtml },
+      }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error((d as { error?: string }).error ?? "create_failed");
+    }
+    router.refresh();
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -464,19 +488,31 @@ export default function AddContentItemForm({
         />
       )}
 
-      {type === "richtext" && (
-        <AiFormatPanel lessonId={lessonId} html={html} onApply={setHtml} />
-      )}
-      {(type === "richtext" || type === "teacher_note") && (
+      {type === "teacher_note" && (
         <RichTextEditor
           value={html}
           onChange={setHtml}
-          placeholder={
-            type === "teacher_note"
-              ? "Ghi chú cho chính bạn khi đứng lớp: hỏi câu gì, dừng ở đâu, đáp án…"
-              : "Nhập nội dung văn bản..."
-          }
+          placeholder="Ghi chú cho chính bạn khi đứng lớp: hỏi câu gì, dừng ở đâu, đáp án…"
         />
+      )}
+      {type === "richtext" && (
+        <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
+              Nội dung
+            </label>
+            <RichTextEditor value={html} onChange={setHtml} placeholder="Nhập nội dung văn bản..." />
+          </div>
+          <AiFormatPanel
+            lessonId={lessonId}
+            html={html}
+            onSaved={saveRichtextViaAi}
+            onClose={() => {
+              reset();
+              close();
+            }}
+          />
+        </div>
       )}
       {type === "teacher_note" && (
         <p className="text-xs text-muted">

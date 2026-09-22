@@ -68,6 +68,25 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
     String(initial.body ?? ""),
   );
 
+  /**
+   * "Áp dụng và lưu" trong AiFormatPanel gọi thẳng đây — PATCH ngay với HTML
+   * đã AI định dạng, bỏ qua nút "Lưu" chung của form. CHỈ lưu — AiFormatPanel
+   * tự chuyển sang màn "Đã lưu bài học" + nút "Đóng form" gọi onClose (prop
+   * có sẵn của form này) khi GV bấm, không tự đóng ở đây.
+   */
+  async function saveRichtextViaAi(formattedHtml: string) {
+    const res = await fetch(apiUrl(`/api/contents/${item.id}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payload: { html: formattedHtml } }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error((d as { error?: string }).error ?? `http_${res.status}`);
+    }
+    router.refresh();
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -178,10 +197,20 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
       )}
 
       {type === "richtext" && (
-        <>
-          <AiFormatPanel lessonId={lessonId} html={html} onApply={setHtml} />
-          <RichTextEditor value={html} onChange={setHtml} />
-        </>
+        <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
+              Nội dung
+            </label>
+            <RichTextEditor value={html} onChange={setHtml} />
+          </div>
+          <AiFormatPanel
+            lessonId={lessonId}
+            html={html}
+            onSaved={saveRichtextViaAi}
+            onClose={onClose}
+          />
+        </div>
       )}
 
       {(type === "video" ||

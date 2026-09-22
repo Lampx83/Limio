@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  LESSON_FORMAT_TEMPLATE_HINTS,
   LESSON_FORMAT_TEMPLATE_KEYS,
   LESSON_FORMAT_TEMPLATE_LABELS,
   type LessonFormatTemplateKey,
@@ -25,26 +26,50 @@ function describeFormatError(status: number, code: string | undefined): string {
   return "Định dạng thất bại. Thử lại sau.";
 }
 
+// Thẻ swatch cho từng theme — chấm màu đơn cho 3 theme đầu, 3 vạch màu cho
+// "Sinh động" vì theme đó không có MỘT màu đại diện (mỗi mục ## đổi màu khác
+// nhau), swatch phải gợi ý đúng điều đó chứ không được bịa ra 1 màu chủ đạo.
+function ThemeSwatch({ k }: { k: LessonFormatTemplateKey }) {
+  if (k === "vibrant") {
+    return (
+      <span className="flex shrink-0 gap-[2px]">
+        <span className="h-3 w-1 rounded-sm" style={{ background: "rgb(59,130,246)" }} />
+        <span className="h-3 w-1 rounded-sm" style={{ background: "rgb(139,92,246)" }} />
+        <span className="h-3 w-1 rounded-sm" style={{ background: "rgb(13,148,136)" }} />
+      </span>
+    );
+  }
+  const color = k === "clean" ? "#B5D4F4" : k === "academic" ? "#CECBF6" : "#9FE1CB";
+  return <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: color }} />;
+}
+
 export default function AiFormatPanel({
   lessonId,
   html,
-  onApply,
+  onSaved,
+  onClose,
 }: {
   lessonId: string;
   html: string;
-  onApply: (html: string) => void;
+  /** Lưu HTML đã định dạng vào bài (tạo mới hoặc cập nhật, tuỳ form gọi component này) — CHỈ lưu, không tự đóng form. Ném lỗi để hiện banner, không chuyển sang trạng thái đã lưu. */
+  onSaved: (formattedHtml: string) => Promise<void>;
+  /** GV bấm "Đóng form" sau khi thấy đã lưu thành công — cha tự đóng/reset UI của nó. */
+  onClose: () => void;
 }) {
+  const [revealed, setRevealed] = useState(false);
   const [template, setTemplate] = useState<LessonFormatTemplateKey>("clean");
-  const [busy, setBusy] = useState(false);
+  const [busyFormat, setBusyFormat] = useState(false);
+  const [busySave, setBusySave] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formatted, setFormatted] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   async function onFormat() {
     if (!html.trim()) {
       setError(describeFormatError(400, "empty_content"));
       return;
     }
-    setBusy(true);
+    setBusyFormat(true);
     setError(null);
     setFormatted(null);
     try {
@@ -62,47 +87,100 @@ export default function AiFormatPanel({
     } catch {
       setError("Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.");
     } finally {
-      setBusy(false);
+      setBusyFormat(false);
     }
   }
 
-  function apply() {
+  async function onApply() {
     if (!formatted) return;
-    onApply(formatted);
-    setFormatted(null);
+    setBusySave(true);
+    setError(null);
+    try {
+      await onSaved(formatted);
+      setSaved(true);
+    } catch (e) {
+      setError(`Lưu thất bại: ${(e as Error).message || "thử lại sau"}`);
+    } finally {
+      setBusySave(false);
+    }
+  }
+
+  if (saved) {
+    return (
+      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-token bg-success-50 p-4 text-center dark:bg-success-950/40">
+        <span className="text-2xl" aria-hidden>
+          ✅
+        </span>
+        <p className="text-sm font-medium text-success-700">Đã lưu bài học</p>
+        <button type="button" onClick={onClose} className="btn-secondary btn-sm">
+          Đóng form
+        </button>
+      </div>
+    );
+  }
+
+  if (!revealed) {
+    return (
+      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.4] p-4 text-center">
+        <span className="text-2xl" aria-hidden>
+          ✨
+        </span>
+        <p className="text-sm text-muted">
+          Dán xong nội dung bên cạnh thì bấm tiếp tục để chọn giao diện và định
+          dạng bằng AI.
+        </p>
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          disabled={!html.trim()}
+          title={html.trim() ? undefined : "Nhập nội dung trước"}
+          className="btn-secondary btn-sm"
+        >
+          Tiếp tục →
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.4] p-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Định dạng bằng AI
-        </label>
-        <select
-          value={template}
-          onChange={(e) => setTemplate(e.target.value as LessonFormatTemplateKey)}
-          disabled={busy}
-          className="select max-w-[160px]"
-        >
+    <div className="space-y-3 rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.4] p-3">
+      <div>
+        <label className="mb-1.5 block text-xs font-semibold text-muted">Chọn giao diện</label>
+        <div className="grid grid-cols-2 gap-1.5">
           {LESSON_FORMAT_TEMPLATE_KEYS.map((k) => (
-            <option key={k} value={k}>
+            <button
+              key={k}
+              type="button"
+              onClick={() => setTemplate(k)}
+              disabled={busyFormat || busySave}
+              className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-left text-xs font-medium transition-colors ${
+                template === k
+                  ? "border-brand-400 bg-brand-soft"
+                  : "border-token bg-[rgb(var(--surface))] hover:border-brand-200"
+              }`}
+            >
+              <ThemeSwatch k={k} />
               {LESSON_FORMAT_TEMPLATE_LABELS[k]}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
+        <p className="mt-1.5 text-[11px] text-faint">{LESSON_FORMAT_TEMPLATE_HINTS[template]}</p>
+      </div>
+
+      <div>
         <button
           type="button"
           onClick={onFormat}
-          disabled={busy || !html.trim()}
-          className="btn-secondary btn-sm"
+          disabled={busyFormat || busySave || !html.trim()}
+          className="btn-secondary btn-sm w-full justify-center"
         >
-          {busy ? "Đang định dạng…" : "Định dạng bằng AI"}
+          {busyFormat ? "Đang định dạng…" : "✨ Định dạng bằng AI"}
         </button>
+        <p className="mt-1.5 text-[11px] text-faint">
+          AI sắp xếp lại đúng nội dung đang có theo giao diện đã chọn — không
+          thêm bớt ý. &ldquo;Áp dụng&rdquo; sẽ lưu thẳng vào bài học.
+        </p>
       </div>
-      <p className="text-[11px] text-faint">
-        AI sắp xếp lại nội dung đang có trong ô theo mẫu đã chọn (mục tiêu, các
-        mục, ghi chú, tổng kết) — không thêm bớt ý. Xem trước trước khi áp dụng.
-      </p>
 
       {error && (
         <p role="alert" className="banner-danger text-sm">
@@ -110,23 +188,36 @@ export default function AiFormatPanel({
         </p>
       )}
 
-      {formatted && (
-        <div className="space-y-2">
-          <div className="max-h-80 overflow-y-auto rounded-md border border-token bg-[rgb(var(--surface))] p-3">
+      <div>
+        {formatted ? (
+          <div className="max-h-72 overflow-y-auto rounded-md border border-token bg-[rgb(var(--surface))] p-3">
             <SafeHtml html={formatted} className="prose prose-sm max-w-none dark:prose-invert" />
           </div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={apply} className="btn-primary btn-sm">
-              Áp dụng vào bài
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormatted(null)}
-              className="btn-secondary btn-sm"
-            >
-              Huỷ
-            </button>
-          </div>
+        ) : (
+          <p className="rounded-md border border-dashed border-token p-3 text-xs text-faint">
+            Kết quả AI sẽ hiện ở đây.
+          </p>
+        )}
+      </div>
+
+      {formatted && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setFormatted(null)}
+            disabled={busySave}
+            className="btn-secondary btn-sm"
+          >
+            Huỷ
+          </button>
+          <button
+            type="button"
+            onClick={onApply}
+            disabled={busySave}
+            className="btn-primary btn-sm"
+          >
+            {busySave ? "Đang lưu…" : "Áp dụng và lưu"}
+          </button>
         </div>
       )}
     </div>
