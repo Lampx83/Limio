@@ -21,6 +21,7 @@ const ALL_TYPES = [
   "numerical",
   "essay",
   "short_answer",
+  "drag_drop_fill",
 ] as const;
 
 export const CreateQuestionInput = z
@@ -137,6 +138,46 @@ export const CreateQuestionInput = z
             path: ["options"],
           });
         }
+      }
+    }
+    if (data.type === "drag_drop_fill") {
+      // Each option is a draggable token: extra.blankIndex (1-based) marks it
+      // as the correct token for that blank; omitted/null = pure distractor.
+      // See DragDropFillEditor.tsx + grading.ts's "drag_drop_fill" case.
+      const seen = new Set<number>();
+      let hasAnswer = false;
+      for (const o of opts) {
+        const meta = (o.extra ?? {}) as { blankIndex?: unknown };
+        if (meta.blankIndex === undefined || meta.blankIndex === null) continue;
+        if (
+          typeof meta.blankIndex !== "number" ||
+          !Number.isInteger(meta.blankIndex) ||
+          meta.blankIndex < 1
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "drag_drop_fill: extra.blankIndex must be a positive integer or omitted",
+            path: ["options"],
+          });
+          continue;
+        }
+        if (seen.has(meta.blankIndex)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `drag_drop_fill: blankIndex ${meta.blankIndex} used more than once`,
+            path: ["options"],
+          });
+          continue;
+        }
+        seen.add(meta.blankIndex);
+        hasAnswer = true;
+      }
+      if (!hasAnswer) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "drag_drop_fill needs at least 1 option with extra.blankIndex",
+          path: ["options"],
+        });
       }
     }
   });

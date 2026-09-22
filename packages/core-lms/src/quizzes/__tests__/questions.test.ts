@@ -103,6 +103,45 @@ describe("createQuestion", () => {
     ).rejects.toMatchObject({ code: "validation_failed" });
   });
 
+  it("creates drag_drop_fill with extra.blankIndex tokens (regression: ALL_TYPES was missing this type)", async () => {
+    const { ownerId, quizId } = await setup("Q-ddf");
+    const q = await createQuestion(ownerId, quizId, {
+      type: "drag_drop_fill",
+      prompt: "The capital of France is [[1]].",
+      orderIndex: 0,
+      options: [
+        { label: "Paris", isCorrect: false, extra: { blankIndex: 1 } },
+        { label: "London", isCorrect: false, extra: { blankIndex: null } }, // distractor
+      ],
+    });
+    const opts = await prisma.questionOption.findMany({ where: { questionId: q.questionId } });
+    expect(opts).toHaveLength(2);
+  });
+
+  it("rejects drag_drop_fill with no blankIndex or duplicate blankIndex", async () => {
+    const { ownerId, quizId } = await setup("Q-ddf-invalid");
+    await expect(
+      createQuestion(ownerId, quizId, {
+        type: "drag_drop_fill",
+        prompt: "No blanks here.",
+        orderIndex: 0,
+        options: [{ label: "Paris", isCorrect: false, extra: { blankIndex: null } }],
+      }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+
+    await expect(
+      createQuestion(ownerId, quizId, {
+        type: "drag_drop_fill",
+        prompt: "Two answers for [[1]].",
+        orderIndex: 1,
+        options: [
+          { label: "Paris", isCorrect: false, extra: { blankIndex: 1 } },
+          { label: "Lyon", isCorrect: false, extra: { blankIndex: 1 } }, // dup
+        ],
+      }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
   it("AC-A4.3: option misconceptionId persisted", async () => {
     const { ownerId, quizId } = await setup("Q4");
     const m = await prisma.misconception.create({
