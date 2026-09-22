@@ -27,6 +27,8 @@ type Tile = {
   icon: string;
   name: string;
   description: string;
+  /** Optional small corner badge, e.g. "AI" for AI-assisted tiles */
+  badge?: string;
   /** Search keywords (besides name + description) */
   keywords: string;
   /**
@@ -47,6 +49,7 @@ const TILES: Tile[] = [
     icon: "📝",
     name: "Văn bản",
     description: "Copy-paste văn bản thô — AI định dạng đẹp giúp bạn",
+    badge: "AI supported",
     keywords: "text richtext wysiwyg editor van ban ai dinh dang format",
     pick: { kind: "content", subtype: "richtext" },
   },
@@ -359,8 +362,19 @@ function Group({
             key={t.key}
             type="button"
             onClick={() => onPick(t)}
-            className="flex flex-col items-center gap-1.5 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-center transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-soft hover:shadow-sm"
+            className="relative flex flex-col items-center gap-1.5 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-center transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-soft hover:shadow-sm"
           >
+            {t.badge && (
+              <span
+                className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-violet-100 py-0.5 pl-1 pr-2 text-[10px] font-semibold text-violet-700"
+                aria-hidden
+              >
+                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-200 text-[9px] leading-none">
+                  ✨
+                </span>
+                {t.badge}
+              </span>
+            )}
             <span className="text-2xl" aria-hidden>
               {t.icon}
             </span>
