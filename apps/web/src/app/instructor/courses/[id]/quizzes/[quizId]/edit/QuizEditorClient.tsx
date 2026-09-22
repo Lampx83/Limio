@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, ListChecks, Settings2, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, ListChecks, Pencil, Settings2, Sparkles, Upload, X } from "lucide-react";
 import { QuizActionButtons, QuizEditForm } from "../../../QuizHeader";
 import EditQuestionForm from "../../../EditQuestionForm";
 import AddQuestionForm from "../../../AddQuestionForm";
@@ -160,41 +160,59 @@ export default function QuizEditorClient({
 
         {/* Toolbar — 3 lối nhập câu hỏi, đều mở popup. Đặt ở đây (ngoài
             <main>) để không bị rule [&>div]:!bg-transparent của <main> đè
-            mất nền của popup (xem comment đầu file). */}
-        <div className="flex flex-wrap gap-2 border-b border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
-          <button
-            type="button"
-            onClick={() => {
-              setImportMode("ai");
-              setImportOpen(true);
-            }}
-            className="inline-flex min-w-[140px] items-center justify-center gap-1.5 rounded-lg border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
-          >
-            <Sparkles className="h-4 w-4 text-violet-600" aria-hidden /> AI import
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setImportMode("file");
-              setImportOpen(true);
-            }}
-            className="inline-flex min-w-[140px] items-center justify-center gap-1.5 rounded-lg border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
-          >
-            <Upload className="h-4 w-4" aria-hidden /> Excel import
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setManualKey((k) => k + 1);
-              setManualOpen(true);
-            }}
-            className="inline-flex min-w-[140px] items-center justify-center gap-1.5 rounded-lg border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
-          >
-            ✎ Nhập thủ công
-          </button>
+            mất nền của popup (xem comment đầu file). Icon-trong-vòng-tròn +
+            shadow + hover lift cho hiện đại, nhưng GIỮ NGUYÊN quy ước đã
+            chốt qua nhiều vòng feedback: 3 nút trung tính đồng nhất, chỉ
+            icon AI import tô màu tím — đừng tô màu nền/viền riêng cho từng
+            nút. */}
+        <div className="border-b border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">
+            Thêm câu hỏi
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setImportMode("ai");
+                setImportOpen(true);
+              }}
+              className="inline-flex min-w-[152px] items-center gap-2 rounded-xl border border-token bg-white px-3 py-2 text-sm font-medium text-muted shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700 hover:shadow-md"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              </span>
+              AI import
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setImportMode("file");
+                setImportOpen(true);
+              }}
+              className="inline-flex min-w-[152px] items-center gap-2 rounded-xl border border-token bg-white px-3 py-2 text-sm font-medium text-muted shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700 hover:shadow-md"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--surface-muted))] text-muted">
+                <Upload className="h-3.5 w-3.5" aria-hidden />
+              </span>
+              Excel import
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setManualKey((k) => k + 1);
+                setManualOpen(true);
+              }}
+              className="inline-flex min-w-[152px] items-center gap-2 rounded-xl border border-token bg-white px-3 py-2 text-sm font-medium text-muted shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700 hover:shadow-md"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--surface-muted))] text-muted">
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+              </span>
+              Nhập thủ công
+            </button>
+          </div>
         </div>
 
-        <div className="grid min-h-[560px] lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div className="grid lg:min-h-[560px] lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="border-b border-token bg-[rgb(var(--surface))] p-3 lg:sticky lg:top-4 lg:self-start lg:border-b-0 lg:border-r lg:min-h-[560px]">
             <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-faint">
               Câu hỏi ({quiz.questions.length})
