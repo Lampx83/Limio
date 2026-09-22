@@ -8,7 +8,13 @@ interface Item {
   orderIndex: number;
 }
 
-export default function ContentItemsList({ items }: { items: Item[] }) {
+export default function ContentItemsList({
+  items,
+  lessonId,
+}: {
+  items: Item[];
+  lessonId: string;
+}) {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -27,7 +33,7 @@ export default function ContentItemsList({ items }: { items: Item[] }) {
     <ol className="space-y-1.5">
       {items.map((item) => (
         <li key={item.id}>
-          <ContentItemRow item={item} />
+          <ContentItemRow item={item} lessonId={lessonId} />
         </li>
       ))}
     </ol>

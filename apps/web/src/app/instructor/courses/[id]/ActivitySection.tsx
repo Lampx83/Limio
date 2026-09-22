@@ -184,7 +184,7 @@ export default function ActivitySection({
                   {i + 1}.
                 </span>
                 <div className="min-w-0 flex-1">
-                  {row.kind === "content" && <ContentItemRow item={row.content} />}
+                  {row.kind === "content" && <ContentItemRow item={row.content} lessonId={lessonId} />}
                   {row.kind === "quiz" && (
                     <QuizSection quiz={row.quiz} lessonId={lessonId} />
                   )}
@@ -209,7 +209,7 @@ export default function ActivitySection({
                 {i + 1}.
               </span>
               <div className="min-w-0 flex-1">
-                {row.kind === "content" && <ContentItemRow item={row.content} />}
+                {row.kind === "content" && <ContentItemRow item={row.content} lessonId={lessonId} />}
                 {row.kind === "quiz" && (
                   <QuizSection quiz={row.quiz} lessonId={lessonId} />
                 )}

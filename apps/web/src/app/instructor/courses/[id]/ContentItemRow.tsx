@@ -63,7 +63,13 @@ const ICON: Record<string, string> = {
   html_block: "🌐",
 };
 
-export default function ContentItemRow({ item }: { item: Item }) {
+export default function ContentItemRow({
+  item,
+  lessonId,
+}: {
+  item: Item;
+  lessonId: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -116,6 +122,7 @@ export default function ContentItemRow({ item }: { item: Item }) {
       <div className="rounded-lg border border-brand-300 bg-[rgb(var(--surface))] p-3">
         <EditContentItemForm
           item={item}
+          lessonId={lessonId}
           onClose={() => setEditing(false)}
         />
       </div>

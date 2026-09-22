@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
+import type { LessonFormatTemplateKey } from "@feedbackme/shared-types";
 import { assertWithinCaps, recordAiUsage } from "./aiTutor";
 
 /**
@@ -48,6 +49,7 @@ async function callJsonModel<T>(
   userPrompt: string,
   schemaName: string,
   schemaDef: Record<string, unknown>,
+  maxTokens = 2000,
 ): Promise<{ data: T; inputTokens: number; outputTokens: number }> {
   try {
     const res = await openai.chat.completions.create({
@@ -65,7 +67,7 @@ async function callJsonModel<T>(
         },
       },
       temperature: 0.3,
-      max_tokens: 2000,
+      max_tokens: maxTokens,
     });
     const content = res.choices[0]?.message?.content ?? "";
     let data: T;
@@ -656,4 +658,252 @@ Trả JSON: { proposals: [{ optionId, misconceptionCode, isNew, misconceptionNam
         rationale: p.rationale ?? "",
       };
     });
+}
+
+// =====================================================================
+// (f) Lesson content formatter — instructor pastes raw text into the
+// richtext editor, picks a visual template, and this turns it into clean
+// styled HTML. Output REPLACES nothing by itself: the caller shows it as
+// a preview and only applies it to the editor on explicit confirmation.
+// =====================================================================
+
+const FORMAT_MAX_INPUT_CHARS = 100_000;
+
+interface StyleGuide {
+  label: string;
+  /** Vietnamese instructions for the model — inline styles per tag, no <style>. */
+  rules: string;
+}
+
+// Colors/fonts/sizes baked as inline `style="..."` on each generated tag
+// (not CSS classes): payload.html renders standalone via SafeHtml wherever
+// a lesson is viewed, with no guarantee a matching stylesheet is loaded —
+// self-contained HTML is the only way the template survives everywhere.
+//
+// Thang chữ (1.25rem thân bài / 1.7rem h2 / 1.42rem h3 / 1rem caption) và
+// font Inter khớp ĐÚNG với packages/core-lms/scripts/import-course.ts (renderer
+// dựng các bài "Thiết kế UI/UX" đang có trên prod) — để bài AI-format và bài
+// dựng tay trông cùng một cỡ chữ trong cùng một khoá, không lệch tông.
+const FONT_STACK = 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
+  clean: {
+    label: "Sạch sẽ",
+    rules: `- font-family: ${FONT_STACK} cho MỌI thẻ
+- <h2>: style="color:#1e40af;font-size:1.7rem;font-weight:700;margin:1.5rem 0 .6rem"
+- <h3> (mục tiêu/tổng kết): style="color:#1e40af;font-size:1.42rem;margin:0 0 .6rem"
+- <p>/<li>: style="color:#374151;font-size:1.25rem;line-height:1.7"
+- <div class="callout">: style="background:#eff6ff;border-left:4px solid #1e40af;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"`,
+  },
+  academic: {
+    label: "Học thuật",
+    rules: `- <h2>/<h3>: font-family:Georgia,"Times New Roman",serif; <p>/<li>: font-family:${FONT_STACK}
+- <h2>: style="color:#581c87;font-size:1.7rem;font-weight:700;margin:1.5rem 0 .6rem;font-family:Georgia,serif"
+- <h3>: style="color:#581c87;font-size:1.42rem;margin:0 0 .6rem;font-family:Georgia,serif"
+- <p>/<li>: style="color:#1f2937;font-size:1.25rem;line-height:1.7"
+- <div class="callout">: style="background:#f3f4f6;border-left:3px solid #581c87;padding:12px;border-radius:4px;margin:16px 0;font-size:1.25rem"`,
+  },
+  modern: {
+    label: "Hiện đại",
+    rules: `- font-family: ${FONT_STACK} cho MỌI thẻ
+- <h2>: style="background:linear-gradient(135deg,#0d9488,#0369a1);color:#ffffff;font-size:1.7rem;font-weight:700;border-radius:4px;padding:8px 12px;display:inline-block;margin:1.5rem 0 .6rem"
+- <h3>: style="color:#0d9488;font-size:1.42rem;margin:0 0 .6rem"
+- <p>/<li>: style="color:#111827;font-size:1.25rem;line-height:1.7"
+- <div class="callout">: style="background:#dcfce7;border-left:4px solid #16a34a;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem" (đổi sang #fed7aa/#f97316 nếu là cảnh báo, #dbeafe/#0284c7 nếu là ví dụ)`,
+  },
+};
+
+const FORMAT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    html: { type: "string" },
+  },
+  required: ["html"],
+};
+
+export interface FormatLessonContentInput {
+  /** HTML hiện có trong ô richtext — thường là văn bản thô dán vào, lộn xộn. */
+  html: string;
+  template: LessonFormatTemplateKey;
+}
+
+export async function formatLessonContent(
+  userId: string,
+  input: FormatLessonContentInput,
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<{ html: string }> {
+  const raw = input.html.trim();
+  if (!raw) {
+    throw new AiGenerationError("validation_failed", "empty_content");
+  }
+  if (raw.length > FORMAT_MAX_INPUT_CHARS) {
+    throw new AiGenerationError("validation_failed", "too_long");
+  }
+  const guide = STYLE_GUIDES[input.template];
+  if (!guide) {
+    throw new AiGenerationError("validation_failed", "unknown_template");
+  }
+  await assertWithinCaps(userId, db, "generator");
+
+  const system = `Bạn là chuyên gia thiết kế học liệu. Định dạng lại nội dung bài học (dán thô, có thể lộn xộn) thành HTML sạch, có cấu trúc, và ÁP DỤNG đúng phong cách bên dưới.
+
+Cấu trúc — chỉ thêm phần nào có đủ cơ sở từ nội dung gốc, KHÔNG bịa:
+1. Nếu suy ra được mục tiêu học tập: <div class="lesson-objectives"><h3>Mục tiêu học tập</h3><ul><li>...</li></ul></div> — mỗi mục dùng ĐỘNG TỪ HÀNH ĐỘNG cụ thể theo thang Bloom (vd "phân biệt được", "áp dụng được", "phân tích được" — KHÔNG dùng "hiểu", "biết" chung chung)
+2. Chia nội dung thành các mục <h2>...</h2> — TỐI ĐA 5 mục, giữ nguyên câu chữ trong <p>/<ul>/<table>
+3. Đoạn ghi chú/lưu ý quan trọng (nếu có trong bài gốc): bọc trong <div class="callout">...</div>
+4. Nếu suy ra được tổng kết: <div class="lesson-summary"><h3>Tổng kết</h3><ul><li>...</li></ul></div>
+
+Phong cách "${guide.label}" — áp bằng inline style="..." trực tiếp trên từng thẻ, KHÔNG dùng thẻ <style>:
+${guide.rules}
+
+Quy tắc bắt buộc:
+- KHÔNG thêm, xoá, hay diễn giải lại Ý NGHĨA nội dung gốc — chỉ định dạng lại cách trình bày.
+- KHÔNG bịa mục tiêu/tổng kết nếu nội dung gốc không đủ cơ sở — bỏ qua phần đó thay vì đoán.
+- Output CHỈ chứa thẻ: div, h2, h3, p, ul, ol, li, strong, em, table, thead, tbody, tr, td, th, a, img, blockquote. KHÔNG <script>, <style>, <iframe>, <form>, thuộc tính onXxx.
+- Giữ nguyên href/src của link/ảnh có trong nội dung gốc.
+- Trả JSON: { html: "<toàn bộ HTML, một chuỗi>" }`;
+
+  const user = `# Nội dung gốc (HTML thô từ ô soạn thảo)
+"""
+${raw}
+"""
+
+Định dạng lại theo đúng cấu trúc và phong cách "${guide.label}" ở trên. Trả JSON: { html }`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<{ html: string }>(
+    openai,
+    model,
+    system,
+    user,
+    "lesson_format",
+    FORMAT_SCHEMA,
+    8000,
+  );
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+
+  const cleanHtml = data.html?.trim();
+  if (!cleanHtml) {
+    throw new AiGenerationError("openai_error", "empty_html_output");
+  }
+  return { html: cleanHtml };
+}
+
+// =====================================================================
+// (g) "Nhập bằng AI" — GV dán văn bản câu hỏi thô (copy từ Word, PDF, ghi
+// tay), AI tách thành mảng câu hỏi có cấu trúc. Đây CHỈ là bước "đọc hiểu" —
+// AI không tự quyết câu nào hợp lệ, không tự đoán đáp án đúng khi văn bản
+// không rõ. Output được feed qua `aiQuestionsToParseResult` (core-lms) để
+// chạy lại đúng validate xác định đã dùng cho import Excel — cùng một cổng,
+// không có đường tắt riêng cho AI.
+// =====================================================================
+
+const EXTRACT_MIN_INPUT_CHARS = 20;
+const EXTRACT_MAX_INPUT_CHARS = 20_000;
+
+export interface ExtractedAiQuestion {
+  type: "mcq" | "true_false";
+  prompt: string;
+  options: Array<{ label: string; isCorrect: boolean }>;
+  explanation: string | null;
+  topic: string | null;
+}
+
+const EXTRACT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          type: { type: "string", enum: ["mcq", "true_false"] },
+          prompt: { type: "string" },
+          options: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                label: { type: "string" },
+                isCorrect: { type: "boolean" },
+              },
+              required: ["label", "isCorrect"],
+            },
+          },
+          explanation: { type: ["string", "null"] },
+          topic: { type: ["string", "null"] },
+        },
+        required: ["type", "prompt", "options", "explanation", "topic"],
+      },
+    },
+  },
+  required: ["questions"],
+};
+
+export interface ExtractQuestionsInput {
+  /** Văn bản thô GV dán vào — có thể chứa nhiều câu hỏi, định dạng tuỳ ý. */
+  rawText: string;
+}
+
+export async function extractQuestionsFromText(
+  userId: string,
+  input: ExtractQuestionsInput,
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<{ questions: ExtractedAiQuestion[] }> {
+  const raw = input.rawText.trim();
+  if (!raw) {
+    throw new AiGenerationError("validation_failed", "empty_content");
+  }
+  if (raw.length < EXTRACT_MIN_INPUT_CHARS) {
+    throw new AiGenerationError("validation_failed", "too_short");
+  }
+  if (raw.length > EXTRACT_MAX_INPUT_CHARS) {
+    throw new AiGenerationError("validation_failed", "too_long");
+  }
+  await assertWithinCaps(userId, db, "generator");
+
+  const system = `Bạn là trợ lý trích xuất câu hỏi trắc nghiệm từ văn bản thô cho giáo viên.
+
+Nhiệm vụ: đọc văn bản (copy từ Word, PDF, hoặc gõ tay — có thể lộn xộn, đáp án đúng
+có thể được đánh dấu bằng in đậm, gạch chân, dấu *, hoặc ghi "Đáp án: B") và TÁCH ra
+từng câu hỏi đã có sẵn trong văn bản.
+
+Quy tắc bắt buộc — vi phạm bất kỳ điều nào đều làm hỏng dữ liệu của giáo viên:
+1. CHỈ trích xuất câu hỏi CÓ SẴN trong văn bản. TUYỆT ĐỐI không tự sáng tác thêm
+   câu hỏi, đáp án, hay giải thích nào không có trong văn bản gốc.
+2. Nếu một câu không xác định được đáp án nào đúng (văn bản không đánh dấu, hoặc
+   đánh dấu không rõ), để TẤT CẢ option của câu đó isCorrect=false. TUYỆT ĐỐI
+   không đoán đại một đáp án cho "đủ dữ liệu" — hệ thống sẽ tự báo thiếu đáp án
+   đúng cho giáo viên xem lại, đó là hành vi ĐÚNG, không phải lỗi cần bạn né.
+3. type chỉ được là "mcq" (trắc nghiệm, 2-6 lựa chọn) hoặc "true_false" (đúng/sai,
+   đúng 2 lựa chọn "Đúng"/"Sai"). Câu hỏi dạng khác (tự luận, điền từ...) thì bỏ
+   qua, không cố ép vào 2 loại này.
+4. Giữ nguyên văn tiếng Việt/Anh của văn bản gốc — không dịch, không diễn giải
+   lại, không sửa chính tả trừ khi rõ ràng là lỗi gõ phím (vd thiếu dấu cách).
+5. explanation: chỉ điền nếu văn bản gốc có phần giải thích rõ ràng đi kèm câu đó,
+   ngược lại để null. topic: chỉ điền nếu văn bản có ghi rõ chủ đề/chương, ngược
+   lại để null — không tự suy đoán chủ đề từ nội dung câu hỏi.
+6. Nếu văn bản không chứa câu hỏi nào, trả về { questions: [] }.`;
+
+  const user = `# Văn bản gốc
+"""
+${raw}
+"""
+
+Trích xuất mọi câu hỏi trắc nghiệm/đúng-sai có trong văn bản trên. Trả JSON: { questions: [...] }`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<{
+    questions: ExtractedAiQuestion[];
+  }>(openai, model, system, user, "extracted_questions", EXTRACT_SCHEMA, 4000);
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+
+  return { questions: data.questions ?? [] };
 }

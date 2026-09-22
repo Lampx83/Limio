@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+import AiFormatPanel from "@/components/AiFormatPanel";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -45,10 +46,11 @@ interface Props {
     type: string;
     payload: unknown;
   };
+  lessonId: string;
   onClose: () => void;
 }
 
-export default function EditContentItemForm({ item, onClose }: Props) {
+export default function EditContentItemForm({ item, lessonId, onClose }: Props) {
   const router = useRouter();
   const type = item.type as ContentType;
   const initial = (item.payload ?? {}) as Record<string, unknown>;
@@ -176,7 +178,10 @@ export default function EditContentItemForm({ item, onClose }: Props) {
       )}
 
       {type === "richtext" && (
-        <RichTextEditor value={html} onChange={setHtml} />
+        <>
+          <RichTextEditor value={html} onChange={setHtml} />
+          <AiFormatPanel lessonId={lessonId} html={html} onApply={setHtml} />
+        </>
       )}
 
       {(type === "video" ||

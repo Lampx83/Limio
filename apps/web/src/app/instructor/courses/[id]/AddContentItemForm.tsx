@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
+import AiFormatPanel from "@/components/AiFormatPanel";
 import { plainToRichHtml } from "@/lib/richText";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
@@ -473,6 +474,9 @@ export default function AddContentItemForm({
               : "Nhập nội dung văn bản..."
           }
         />
+      )}
+      {type === "richtext" && (
+        <AiFormatPanel lessonId={lessonId} html={html} onApply={setHtml} />
       )}
       {type === "teacher_note" && (
         <p className="text-xs text-muted">
