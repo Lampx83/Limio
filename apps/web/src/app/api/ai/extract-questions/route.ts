@@ -60,9 +60,10 @@ export async function POST(req: Request) {
       openai,
     );
     const result = aiQuestionsToParseResult(questions);
-    // `skipped`: câu AI đọc thấy nhưng không phải mcq/true_false (sắp xếp, ghép
-    // cặp...) — chưa hỗ trợ qua đường này. Trả kèm để GV biết vì sao thiếu, thay
-    // vì chỉ thấy "OK" cho những câu lọt qua rồi tự hỏi phần còn lại đâu mất.
+    // `skipped`: câu AI đọc thấy nhưng không đủ rõ để phân loại thành 1 trong
+    // 5 dạng hỗ trợ (mcq/true_false/ordering/matching/fill_in) — AI tự nhận
+    // không chắc thay vì đoán liều. Trả kèm để GV biết vì sao thiếu, thay vì
+    // chỉ thấy "OK" cho những câu lọt qua rồi tự hỏi phần còn lại đâu mất.
     return NextResponse.json({ ...result, skipped });
   } catch (e) {
     if (e instanceof AiTutorError) {

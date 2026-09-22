@@ -53,6 +53,42 @@ export type AiExtractedQuestion =
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
 
+const TRUE_LABEL = /^(đúng|dung|true|yes|correct)$/i;
+const FALSE_LABEL = /^(sai|false|no|incorrect)$/i;
+
+/**
+ * Đảm bảo option "Đúng/True" luôn ở vị trí A, "Sai/False" luôn ở vị trí B —
+ * BẤT KỂ AI trả về theo thứ tự nào.
+ *
+ * Lý do cần hàm này: downstream (commitToBank.ts) suy `config.correct` từ VỊ
+ * TRÍ ("Correct=A" → "true"), theo đúng quy ước cũ của template Excel (nơi
+ * GV luôn điền OptionA=Đúng, OptionB=Sai theo hướng dẫn). AI thì không có gì
+ * đảm bảo thứ tự đó — nó có thể hợp lý trả "Sai" trước "Đúng" tuỳ cách hành
+ * văn nguồn. Không sắp lại thì một câu true_false có thể bị GHI NGƯỢC đáp
+ * án đúng thành sai, và ngược lại — lỗi âm thầm, không validate nào bắt được
+ * vì về HÌNH THỨC dữ liệu vẫn hợp lệ.
+ *
+ * Nhãn không khớp "Đúng"/"Sai"/"True"/"False" quen thuộc (hiếm, vì prompt đã
+ * yêu cầu đúng 2 nhãn này) → giữ nguyên thứ tự AI trả, không có cách nào chắc
+ * chắn hơn khi không nhận ra được ngữ nghĩa nhãn.
+ */
+function normalizeTrueFalseOrder(
+  options: Array<{ label: string; isCorrect: boolean }>,
+): Array<{ label: string; isCorrect: boolean }> {
+  if (options.length !== 2) return options;
+  const [a, b] = options as [
+    { label: string; isCorrect: boolean },
+    { label: string; isCorrect: boolean },
+  ];
+  const aIsTrue = TRUE_LABEL.test(a.label.trim());
+  const bIsTrue = TRUE_LABEL.test(b.label.trim());
+  const aIsFalse = FALSE_LABEL.test(a.label.trim());
+  const bIsFalse = FALSE_LABEL.test(b.label.trim());
+  if (aIsTrue && (bIsFalse || !bIsTrue)) return [a, b];
+  if (bIsTrue && (aIsFalse || !aIsTrue)) return [b, a];
+  return options;
+}
+
 /** Điền các field chung (points/difficulty/...) mặc định — giống hệt giá trị mặc định của parseOneRow. */
 function emptyParsedDefaults() {
   return {
@@ -79,7 +115,8 @@ function mcqOrTrueFalseRow(
   //
   // Giới hạn 6 đáp án (A-F): khớp giới hạn cột OptionA..F của template Excel.
   // Câu AI trả nhiều hơn 6 lựa chọn thì chỉ giữ 6 đầu, không throw.
-  const options = q.options.slice(0, OPTION_LETTERS.length);
+  const ordered = q.type === "true_false" ? normalizeTrueFalseOrder(q.options) : q.options;
+  const options = ordered.slice(0, OPTION_LETTERS.length);
   const row: Record<string, string> = {
     Prompt: q.prompt ?? "",
     Type: q.type === "true_false" ? "true_false" : "mcq",

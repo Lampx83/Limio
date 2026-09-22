@@ -129,3 +129,66 @@ describe("commitMcqRowsToBank — ordering/matching (Đợt sau đợt 1: mở r
     expect(types).toEqual(["mcq", "matching", "ordering", "short_answer"].sort());
   });
 });
+
+describe("commitMcqRowsToBank — true_false: đáp án đúng theo NỘI DUNG nhãn, không theo vị trí", () => {
+  // Sự cố tiềm ẩn: commitToBank.ts từng suy "true"/"false" từ VỊ TRÍ option
+  // (option đầu = OptionA → luôn map thành "true"), không đọc nội dung nhãn.
+  // AI không bị ép trả "Đúng" luôn trước "Sai" — nếu trả ngược thứ tự, câu bị
+  // chấm SAI HOÀN TOÀN dù đáp án đúng.
+  it("AI trả 'Sai' trước 'Đúng' (thứ tự đảo ngược): config.correct vẫn phải là 'false', không phải 'true'", async () => {
+    const { ownerId, bankId } = await setup("tf-reversed");
+    const { rows } = aiQuestionsToParseResult([
+      {
+        type: "true_false",
+        prompt: "Trái đất phẳng.",
+        options: [
+          { label: "Sai", isCorrect: true },
+          { label: "Đúng", isCorrect: false },
+        ],
+        explanation: null,
+        topic: null,
+      },
+    ]);
+    await commitMcqRowsToBank(ownerId, bankId, rows);
+    const q = await prisma.bankQuestion.findFirstOrThrow({ where: { bankId } });
+    expect((q.config as { correct: string }).correct).toBe("false");
+  });
+
+  it("thứ tự thuận (Đúng trước Sai): config.correct đúng là 'true'", async () => {
+    const { ownerId, bankId } = await setup("tf-normal");
+    const { rows } = aiQuestionsToParseResult([
+      {
+        type: "true_false",
+        prompt: "Trái đất tròn.",
+        options: [
+          { label: "Đúng", isCorrect: true },
+          { label: "Sai", isCorrect: false },
+        ],
+        explanation: null,
+        topic: null,
+      },
+    ]);
+    await commitMcqRowsToBank(ownerId, bankId, rows);
+    const q = await prisma.bankQuestion.findFirstOrThrow({ where: { bankId } });
+    expect((q.config as { correct: string }).correct).toBe("true");
+  });
+
+  it("nhãn tiếng Anh 'False' đứng trước 'True': vẫn nhận đúng", async () => {
+    const { ownerId, bankId } = await setup("tf-en");
+    const { rows } = aiQuestionsToParseResult([
+      {
+        type: "true_false",
+        prompt: "Q",
+        options: [
+          { label: "False", isCorrect: true },
+          { label: "True", isCorrect: false },
+        ],
+        explanation: null,
+        topic: null,
+      },
+    ]);
+    await commitMcqRowsToBank(ownerId, bankId, rows);
+    const q = await prisma.bankQuestion.findFirstOrThrow({ where: { bankId } });
+    expect((q.config as { correct: string }).correct).toBe("false");
+  });
+});

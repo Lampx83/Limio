@@ -31,7 +31,16 @@ export interface ParsedQuestionRow {
       | "true_false_notgiven"
       | "gap_fill"
       | "short_answer"
-      | "essay";
+      | "essay"
+      // ordering/matching/numerical/drag_drop_fill: hợp lệ ở configSchemaForType
+      // (Đợt 0) và commitExamQuestionRows, nhưng CHƯA vào P0_TYPES bên dưới —
+      // Excel import (parseExamQuestionsXlsx) chưa hỗ trợ nhập các loại này,
+      // chỉ đường AI import (aiQuestionsToExamRows) dùng tới. Mở rộng P0_TYPES
+      // là quyết định riêng, chưa có yêu cầu.
+      | "ordering"
+      | "matching"
+      | "numerical"
+      | "drag_drop_fill";
     prompt: string;
     passageId: string | null;
     /** PassageTitle as written; useful for UI display. */

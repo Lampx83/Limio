@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { Prisma, prisma, type ExamQuestionType } from "@feedbackme/db";
-import { canEditExam, parseExamQuestionsXlsx } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
+import { canEditExam, commitExamQuestionRows, parseExamQuestionsXlsx } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -9,8 +9,10 @@ const MAX_BYTES = 5 * 1024 * 1024;
 
 /**
  * Bulk-insert imported questions into the exam after preview review.
- * Re-parses the uploaded file (we don't trust client-sent rows) and inserts
- * rows whose status passes the chosen filter inside a single transaction.
+ * Re-parses the uploaded file (we don't trust client-sent rows) and commits
+ * rows whose status passes the chosen filter via `commitExamQuestionRows`
+ * (per-row: ghi được bao nhiêu ghi bấy nhiêu, báo lỗi từng dòng — không bọc
+ * transaction cả batch).
  *
  * Body: multipart/form-data { file: <xlsx>, includeWarnings: "true"|"false" }
  * Returns: { imported, skippedError, skippedWarning, errors: [{rowNumber, errors[]}] }
@@ -98,56 +100,24 @@ export async function POST(
     });
   }
 
-  // Compute starting order indices once, then increment in memory.
-  const baseExamOrder = await prisma.examQuestion.count({
-    where: { examId: exam.id },
-  });
-  const passageOrderCounts = new Map<string, number>();
-  for (const p of exam.passages) {
-    const n = await prisma.examQuestion.count({
-      where: { examId: exam.id, passageId: p.id },
-    });
-    passageOrderCounts.set(p.id, n);
-  }
-
-  let imported = 0;
-  await prisma.$transaction(async (tx) => {
-    let nextExamOrder = baseExamOrder;
-    for (const row of toInsert) {
-      const p = row.parsed!;
-      const orderInPassage = p.passageId
-        ? (passageOrderCounts.get(p.passageId) ?? 0)
-        : null;
-      if (p.passageId) {
-        passageOrderCounts.set(p.passageId, (passageOrderCounts.get(p.passageId) ?? 0) + 1);
-      }
-      const q = await tx.examQuestion.create({
-        data: {
-          examId: exam.id,
-          passageId: p.passageId,
-          type: p.type as ExamQuestionType,
-          prompt: p.prompt,
-          config: p.config as Prisma.InputJsonValue,
-          points: p.points,
-          orderInExam: nextExamOrder++,
-          orderInPassage,
-        },
-        select: { id: true },
-      });
-      if (p.skillIds.length > 0) {
-        await tx.examQuestionSkillTag.createMany({
-          data: p.skillIds.map((skillId) => ({ questionId: q.id, skillId })),
-          skipDuplicates: true,
-        });
-      }
-      imported++;
-    }
-  });
+  // commitExamQuestionRows ghi được bao nhiêu ghi bấy nhiêu, báo lỗi từng
+  // dòng — khác transaction all-or-nothing trước đây (xem comment trong
+  // commitToExam.ts). Gộp lỗi ghi (hiếm — vd FK passageId lạ) vào cùng field
+  // `errors` với lỗi validate để không đổi shape response phía client.
+  const { imported, errors: writeErrors } = await commitExamQuestionRows(
+    userId,
+    exam.id,
+    toInsert,
+  );
+  const errors = [
+    ...errorRows,
+    ...writeErrors.map((e) => ({ rowNumber: e.rowNumber, errors: [e.message] })),
+  ];
 
   return NextResponse.json({
     imported,
     skippedError: result.summary.error,
     skippedWarning: includeWarnings ? 0 : result.summary.warning,
-    errors: errorRows,
+    errors,
   });
 }
