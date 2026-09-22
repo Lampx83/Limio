@@ -5,6 +5,8 @@ import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 import TopicCombobox from "@/components/instructor/TopicCombobox";
 import { formatDate, formatDateTime } from "@/lib/datetime";
 import { apiUrl } from "@/lib/apiUrl";
+import QuestionTypePicker from "@/components/question-editor/QuestionTypePicker";
+import { TYPE_LABEL as SHARED_TYPE_LABEL, type QuestionType as PickedType } from "@/components/question-editor/types";
 
 type Status = "draft" | "published" | "archived";
 type CognitiveLevel = "remember_understand" | "apply" | "analyze_plus";
@@ -18,8 +20,23 @@ type QuestionType =
 // Đợt 1 (thống nhất nhập câu hỏi Quiz/Bank/Exam): "matching_heading" (P1,
 // chưa từng build) đã đổi tên "matching" ở DB/schema, nhưng editor cho các
 // loại mới (matching/ordering/numerical/drag_drop_fill) chưa có ở đây — chờ
-// Đợt 2+ (component nhập câu hỏi dùng chung). Loại chưa có UI vẫn hiện được
-// qua fallback "raw config" bên dưới, không rơi vào type cũ đã chết.
+// Đợt 4+ (component nhập câu hỏi dùng chung, apps/web/src/components/question-editor/).
+// Loại chưa có UI vẫn hiện được qua fallback "raw config" bên dưới, không rơi
+// vào type cũ đã chết.
+
+// Đợt 4 — 6 loại QuestionForm biết soạn hôm nay, dùng để giới hạn tile hiện ra
+// ở QuestionTypePicker chung (picker có đủ 10 loại canonical, nhưng 4 loại
+// matching/ordering/numerical/drag_drop_fill chưa có editor ở Bank nên
+// KHÔNG hiện tile cho tới khi được thêm — tránh chọn phải loại chưa soạn được).
+// Tên trùng 1-1 với QuestionType ở trên nên gán thẳng, không cần adapter dịch.
+const BANK_PICKER_TYPES: readonly PickedType[] = [
+  "mcq",
+  "multi",
+  "true_false_notgiven",
+  "gap_fill",
+  "short_answer",
+  "essay",
+];
 
 type ReviewStatus = "pending" | "approved" | "needs_revision";
 
@@ -646,6 +663,7 @@ export default function BankWorkbench({
                 void fetchTopics();
                 flashOk("Đã tạo câu hỏi");
               }}
+              onCancel={() => setAdding(false)}
             />
           </div>
         )}
@@ -1700,13 +1718,17 @@ function QuestionForm({
   suggestedSkills,
   availableTopics,
   onDone,
+  onCancel,
 }: {
   bankId: string;
   suggestedSkills: Skill[];
   availableTopics: string[];
   onDone: () => Promise<void>;
+  /** Thoát khỏi bước chọn loại (picker) mà không tạo câu hỏi. */
+  onCancel: () => void;
 }) {
-  const [type, setType] = useState<QuestionType>("mcq");
+  // null = chưa chọn loại, đang ở bước picker (Đợt 4).
+  const [type, setType] = useState<QuestionType | null>(null);
   const [prompt, setPrompt] = useState("");
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState(3);
@@ -1724,6 +1746,23 @@ function QuestionForm({
   const [answerLines, setAnswerLines] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Bước picker (Đợt 4) — chỉ hiện 6 loại QuestionForm biết soạn (xem
+  // BANK_PICKER_TYPES). Đặt early-return ở ĐÂY (trước khi định nghĩa
+  // onSubmit) để TypeScript narrow `type` thành QuestionType (bỏ null) cho
+  // toàn bộ phần còn lại của component, kể cả trong closure onSubmit.
+  if (type === null) {
+    return (
+      <QuestionTypePicker
+        types={BANK_PICKER_TYPES}
+        // An toàn: picker chỉ render tile trong `types` ở trên nên giá trị
+        // trả về luôn nằm trong BANK_PICKER_TYPES, vốn là subset trùng tên
+        // 1-1 với QuestionType.
+        onPick={(t) => setType(t as QuestionType)}
+        onCancel={onCancel}
+      />
+    );
+  }
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1787,21 +1826,21 @@ function QuestionForm({
   return (
     <form onSubmit={onSubmit} data-testid="add-question-form" className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        <label className="block">
+        <div className="block">
           <span className="block text-xs font-medium text-slate-600">Loại</span>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as QuestionType)}
-            className="mt-1 rounded border border-default px-2 py-1.5 text-xs"
-          >
-            <option value="mcq">MCQ (1 đáp án)</option>
-            <option value="multi">Multi (nhiều đáp án)</option>
-            <option value="true_false_notgiven">True/False/Not Given</option>
-            <option value="gap_fill">Điền từ</option>
-            <option value="short_answer">Câu trả lời ngắn</option>
-            <option value="essay">Tự luận</option>
-          </select>
-        </label>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="rounded border border-brand-300 bg-brand-soft px-2 py-1.5 text-xs font-medium text-brand-700">
+              {SHARED_TYPE_LABEL[type]}
+            </span>
+            <button
+              type="button"
+              onClick={() => setType(null)}
+              className="link text-xs"
+            >
+              Đổi loại
+            </button>
+          </div>
+        </div>
         <label className="block">
           <span className="block text-xs font-medium text-slate-600">Mức tư duy</span>
           <select
