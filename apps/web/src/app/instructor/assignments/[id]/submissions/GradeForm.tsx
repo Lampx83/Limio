@@ -5,6 +5,20 @@ import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 
+function describeAiGradeError(status: number, code: string | undefined): string {
+  if (code === "unauthorized") return "Phiên đăng nhập đã hết hạn — tải lại trang.";
+  if (code === "forbidden") return "Bạn không có quyền chấm bài này.";
+  if (code === "submission_not_found") return "Không tìm thấy bài nộp (có thể đã bị xoá).";
+  if (code === "empty_submission") return "Bài nộp đang trống — không có gì để AI đọc.";
+  if (code === "openai_not_configured") return "Chưa cấu hình AI cho hệ thống — báo admin.";
+  if (code === "global_token_cap" || code === "daily_token_cap")
+    return "Hệ thống đang vượt hạn mức dùng AI hôm nay — thử lại sau.";
+  if (code === "no_token_budget") return "Ví token AI của bạn đã hết cho tháng này.";
+  if (code === "openai_error" || code === "json_parse_failed")
+    return "AI xử lý thất bại — thử lại.";
+  return "Gợi ý điểm thất bại. Thử lại sau.";
+}
+
 export default function GradeForm({
   submissionId,
   maxScore,
@@ -26,6 +40,37 @@ export default function GradeForm({
   const [busy, setBusy] = useState(false);
   const [scoreError, setScoreError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiNote, setAiNote] = useState<string | null>(null);
+
+  async function suggestWithAi() {
+    setAiBusy(true);
+    setAiError(null);
+    setAiNote(null);
+    try {
+      const res = await fetch(apiUrl(`/api/submissions/${submissionId}/suggest-grade`), {
+        method: "POST",
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAiError(describeAiGradeError(res.status, (d as { error?: string }).error));
+        return;
+      }
+      const suggestion = d as { score: number; feedback: string; rationale: string; hadRubric: boolean };
+      setScore(String(suggestion.score));
+      setFeedback(suggestion.feedback);
+      setScoreError(null);
+      setAiNote(
+        (suggestion.hadRubric ? "" : "⚠ Chưa có rubric cho assignment này — độ chính xác thấp hơn. ") +
+          `AI: ${suggestion.rationale}`,
+      );
+    } catch {
+      setAiError("Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.");
+    } finally {
+      setAiBusy(false);
+    }
+  }
 
   function validateScore(value: string): string | null {
     if (value.trim() === "") return "Hãy nhập điểm";
@@ -70,6 +115,26 @@ export default function GradeForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-3" noValidate>
+      <div>
+        <button
+          type="button"
+          onClick={suggestWithAi}
+          disabled={aiBusy || busy}
+          className="rounded border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+        >
+          {aiBusy ? "Đang gợi ý…" : "✨ Gợi ý điểm bằng AI"}
+        </button>
+        <p className="mt-1.5 text-[11px] text-faint">
+          AI đọc đề bài, rubric (nếu có) và bài nộp rồi điền tạm điểm + nhận xét —
+          bạn xem lại trước khi bấm &ldquo;Chấm điểm&rdquo;, AI không tự lưu gì cả.
+        </p>
+        {aiError && (
+          <p role="alert" className="banner-danger mt-1.5 text-sm">
+            {aiError}
+          </p>
+        )}
+        {aiNote && <p className="mt-1.5 text-xs text-muted">{aiNote}</p>}
+      </div>
       <div>
         <div className="flex items-center gap-3">
           <label className="label" htmlFor={scoreInputId}>

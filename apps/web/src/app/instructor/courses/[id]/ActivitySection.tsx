@@ -66,6 +66,7 @@ interface Assignment {
   requireSelfRating?: boolean;
   requireReflection?: boolean;
   countsTowardGrade?: boolean;
+  rubricText?: string | null;
 }
 
 interface LessonActivityRow {

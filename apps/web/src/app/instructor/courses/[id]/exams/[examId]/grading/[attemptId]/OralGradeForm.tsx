@@ -148,7 +148,7 @@ export default function OralGradeForm({
             type="button"
             onClick={suggest}
             disabled={suggesting}
-            className="inline-flex items-center gap-1.5 rounded border border-default px-3 py-1.5 text-xs font-medium hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-800 hover:bg-violet-100 disabled:opacity-50"
           >
             <Bot className="h-3.5 w-3.5" />
             {suggesting ? "Đang phân tích…" : graded ? "Chấm lại bằng AI" : "Chấm bằng AI"}

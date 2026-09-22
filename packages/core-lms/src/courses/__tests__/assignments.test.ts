@@ -4,6 +4,7 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import {
   createAssignment,
   deleteAssignment,
+  getSubmissionGradingContext,
   gradeSubmission,
   listAssignmentsForLesson,
   listSubmissionsForInstructor,
@@ -351,5 +352,64 @@ describe("Assignments — A5", () => {
     expect(
       await prisma.assignment.findUnique({ where: { id: a.assignmentId } }),
     ).toBeNull();
+  });
+
+  it("rubricText saves on create and update, null by default", async () => {
+    const s = await setup();
+    const noRubric = await createAssignment(s.instId, s.lessonId, {
+      title: "T",
+      description: "x",
+    });
+    const rowNoRubric = await prisma.assignment.findUniqueOrThrow({
+      where: { id: noRubric.assignmentId },
+    });
+    expect(rowNoRubric.rubricText).toBeNull();
+
+    const withRubric = await createAssignment(s.instId, s.lessonId, {
+      title: "T2",
+      description: "x",
+      rubricText: "3đ khái niệm. 4đ ví dụ. 3đ trình bày.",
+    });
+    const rowWithRubric = await prisma.assignment.findUniqueOrThrow({
+      where: { id: withRubric.assignmentId },
+    });
+    expect(rowWithRubric.rubricText).toContain("khái niệm");
+
+    await updateAssignment(s.instId, withRubric.assignmentId, { rubricText: null });
+    const rowCleared = await prisma.assignment.findUniqueOrThrow({
+      where: { id: withRubric.assignmentId },
+    });
+    expect(rowCleared.rubricText).toBeNull();
+  });
+
+  it("getSubmissionGradingContext returns assignment+submission fields for course editor", async () => {
+    const s = await setup();
+    const a = await createAssignment(s.instId, s.lessonId, {
+      title: "Bài luận",
+      description: "Viết về chủ đề X",
+      maxScore: 20,
+      rubricText: "10đ nội dung, 10đ hình thức",
+    });
+    const sub = await submitAssignment(s.learnerId, a.assignmentId, {
+      body: "Bài làm của học viên",
+    });
+    const ctx = await getSubmissionGradingContext(s.instId, sub.submissionId);
+    expect(ctx.assignmentTitle).toBe("Bài luận");
+    expect(ctx.assignmentDescription).toBe("Viết về chủ đề X");
+    expect(ctx.maxScore).toBe(20);
+    expect(ctx.rubricText).toBe("10đ nội dung, 10đ hình thức");
+    expect(ctx.submissionBody).toBe("Bài làm của học viên");
+  });
+
+  it("getSubmissionGradingContext blocks non-editors, 404s on missing submission", async () => {
+    const s = await setup();
+    const a = await createAssignment(s.instId, s.lessonId, { title: "T", description: "x" });
+    const sub = await submitAssignment(s.learnerId, a.assignmentId, { body: "x" });
+    await expect(
+      getSubmissionGradingContext(s.learnerId, sub.submissionId),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    await expect(
+      getSubmissionGradingContext(s.instId, "00000000-0000-0000-0000-000000000000"),
+    ).rejects.toMatchObject({ code: "submission_not_found" });
   });
 });

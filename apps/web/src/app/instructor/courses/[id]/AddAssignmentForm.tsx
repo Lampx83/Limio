@@ -49,6 +49,7 @@ export default function AddAssignmentForm({
   const [requireSelfRating, setRequireSelfRating] = useState(false);
   const [requireReflection, setRequireReflection] = useState(false);
   const [countsTowardGrade, setCountsTowardGrade] = useState(true);
+  const [rubricText, setRubricText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
@@ -96,6 +97,7 @@ export default function AddAssignmentForm({
     setRequireSelfRating(false);
     setRequireReflection(false);
     setCountsTowardGrade(true);
+    setRubricText("");
     setError(null);
   }
 
@@ -134,6 +136,7 @@ export default function AddAssignmentForm({
       requireSelfRating,
       requireReflection,
       countsTowardGrade,
+      rubricText: rubricText.trim() || null,
     };
     if (dueAt) payload.dueAt = new Date(dueAt).toISOString();
     if (pedagogicalIntent) {
@@ -248,6 +251,19 @@ export default function AddAssignmentForm({
         onChange={setDescription}
         placeholder="Mô tả nhiệm vụ..."
       />
+      <label className="block">
+        <span className="text-xs text-faint">
+          Rubric chấm điểm (tuỳ chọn) — dùng khi bấm &ldquo;Gợi ý điểm bằng AI&rdquo; trên
+          từng bài nộp
+        </span>
+        <textarea
+          value={rubricText}
+          onChange={(e) => setRubricText(e.target.value)}
+          rows={3}
+          placeholder={'Vd: "3đ nêu đúng khái niệm. 4đ có ví dụ. 3đ trình bày rõ ràng."'}
+          className="textarea mt-1"
+        />
+      </label>
       <div className="flex flex-wrap gap-2">
         <label className="block flex-1">
           <span className="text-xs text-faint">Hạn nộp (optional)</span>

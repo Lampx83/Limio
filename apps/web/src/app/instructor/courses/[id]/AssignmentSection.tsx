@@ -30,6 +30,7 @@ interface Assignment {
   requireSelfRating?: boolean;
   requireReflection?: boolean;
   countsTowardGrade?: boolean;
+  rubricText?: string | null;
 }
 
 export default function AssignmentSection({
@@ -60,6 +61,7 @@ export default function AssignmentSection({
   const [countsTowardGrade, setCountsTowardGrade] = useState(
     assignment.countsTowardGrade ?? true,
   );
+  const [rubricText, setRubricText] = useState(assignment.rubricText ?? "");
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -73,6 +75,7 @@ export default function AssignmentSection({
       requireSelfRating,
       requireReflection,
       countsTowardGrade,
+      rubricText: rubricText.trim() || null,
     };
     if (pedagogicalIntent) {
       payload.responseFormat =
@@ -220,6 +223,19 @@ export default function AssignmentSection({
             className="input"
           />
           <RichTextEditor value={description} onChange={setDescription} />
+          <label className="block">
+            <span className="text-xs text-faint">
+              Rubric chấm điểm (tuỳ chọn) — dùng khi bấm &ldquo;Gợi ý điểm bằng AI&rdquo; trên
+              từng bài nộp
+            </span>
+            <textarea
+              value={rubricText}
+              onChange={(e) => setRubricText(e.target.value)}
+              rows={3}
+              placeholder={'Vd: "3đ nêu đúng khái niệm. 4đ có ví dụ. 3đ trình bày rõ ràng."'}
+              className="textarea mt-1"
+            />
+          </label>
           <fieldset className="grid grid-cols-1 gap-1 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2 text-xs sm:grid-cols-3">
             <label className="flex items-center gap-2">
               <input

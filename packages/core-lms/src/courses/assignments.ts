@@ -63,6 +63,8 @@ const CreateInput = z.object({
   requireSelfRating: z.boolean().optional(),
   requireReflection: z.boolean().optional(),
   countsTowardGrade: z.boolean().optional(),
+  // Ngữ cảnh cho "Gợi ý điểm bằng AI" trên từng bài nộp — không bắt buộc.
+  rubricText: z.string().trim().max(5_000).nullable().optional(),
 });
 
 const UpdateInput = CreateInput.partial();
@@ -172,6 +174,9 @@ export async function createAssignment(
         ...(parsed.data.countsTowardGrade !== undefined && {
           countsTowardGrade: parsed.data.countsTowardGrade,
         }),
+        ...(parsed.data.rubricText !== undefined && {
+          rubricText: parsed.data.rubricText,
+        }),
       },
     });
     await attachLessonActivity(tx, lessonId, "assignment", created.id);
@@ -218,6 +223,9 @@ export async function updateAssignment(
       }),
       ...(parsed.data.countsTowardGrade !== undefined && {
         countsTowardGrade: parsed.data.countsTowardGrade,
+      }),
+      ...(parsed.data.rubricText !== undefined && {
+        rubricText: parsed.data.rubricText,
       }),
     },
   });
@@ -439,6 +447,64 @@ export async function gradeSubmission(
   );
 }
 
+export interface SubmissionGradingContext {
+  assignmentTitle: string;
+  assignmentDescription: string;
+  maxScore: number;
+  rubricText: string | null;
+  submissionBody: string;
+}
+
+/**
+ * Ngữ cảnh cho "Gợi ý điểm bằng AI" — CÙNG luật quyền như gradeSubmission
+ * (courseId qua lesson, hoặc chủ tournament cho assignment cross-course),
+ * cố ý lặp lại khối authz thay vì trừu tượng hoá chung với gradeSubmission:
+ * hai hàm đọc field khác nhau (grade cần userId để emit event, cái này thì
+ * không), gộp chung sẽ phải truyền cờ để phân nhánh — không đáng.
+ */
+export async function getSubmissionGradingContext(
+  userId: string,
+  submissionId: string,
+  db: PrismaClient = prisma,
+): Promise<SubmissionGradingContext> {
+  const submission = await db.assignmentSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      body: true,
+      assignment: {
+        select: {
+          title: true,
+          description: true,
+          maxScore: true,
+          rubricText: true,
+          lesson: { select: { module: { select: { courseId: true } } } },
+          tournamentMission: { select: { tournament: { select: { courseId: true, creatorId: true } } } },
+        },
+      },
+    },
+  });
+  if (!submission) throw new AssignmentError("submission_not_found");
+  const courseId =
+    submission.assignment.lesson?.module.courseId ??
+    submission.assignment.tournamentMission?.tournament.courseId ??
+    "";
+  if (courseId) {
+    await assertCanEditCourse(userId, courseId, db);
+  } else {
+    const creatorId = submission.assignment.tournamentMission?.tournament.creatorId;
+    if (creatorId && creatorId !== userId) {
+      throw new AssignmentError("forbidden");
+    }
+  }
+  return {
+    assignmentTitle: submission.assignment.title,
+    assignmentDescription: submission.assignment.description,
+    maxScore: submission.assignment.maxScore,
+    rubricText: submission.assignment.rubricText,
+    submissionBody: submission.body,
+  };
+}
+
 export async function listAssignmentsForLesson(
   lessonId: string,
   db: PrismaClient = prisma,
@@ -459,6 +525,7 @@ export async function listAssignmentsForLesson(
       requireSelfRating: true,
       requireReflection: true,
       countsTowardGrade: true,
+      rubricText: true,
     },
   });
 }

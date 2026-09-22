@@ -1055,3 +1055,98 @@ Trích xuất mọi câu hỏi trắc nghiệm/đúng-sai có trong văn bản t
 
   return { questions: data.questions ?? [], skipped: data.skipped ?? [] };
 }
+
+// =====================================================================
+// (h) Assignment grade suggester — GV bấm "Gợi ý điểm bằng AI" trên một bài
+// nộp cụ thể. CHỈ trả gợi ý — hàm này không ghi gì vào DB, GV phải tự bấm
+// "Chấm điểm" ở form mới thực sự lưu, đúng quy ước "suggestion, GV xác nhận"
+// của mọi generator trong file này.
+// =====================================================================
+
+export interface AssignmentGradeSuggestion {
+  score: number;
+  /** Viết trực tiếp cho học viên đọc. */
+  feedback: string;
+  /** Giải thích ngắn cho GV vì sao cho mức điểm này — không phải cho học viên. */
+  rationale: string;
+}
+
+const ASSIGNMENT_GRADE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    score: { type: "number" },
+    feedback: { type: "string" },
+    rationale: { type: "string" },
+  },
+  required: ["score", "feedback", "rationale"],
+};
+
+export interface SuggestAssignmentGradeInput {
+  assignmentTitle: string;
+  assignmentDescription: string;
+  maxScore: number;
+  /** Rubric GV tự gõ — null/rỗng vẫn chấm được, chỉ kém căn cứ hơn. */
+  rubricText: string | null;
+  submissionBody: string;
+}
+
+export async function suggestAssignmentGrade(
+  userId: string,
+  input: SuggestAssignmentGradeInput,
+  openai: OpenAI,
+  model = "gpt-4o-mini",
+  db: PrismaClient = prisma,
+): Promise<AssignmentGradeSuggestion> {
+  if (!input.submissionBody.trim()) {
+    throw new AiGenerationError("validation_failed", "empty_submission");
+  }
+  await assertWithinCaps(userId, db, "generator");
+
+  const rubricBlock = input.rubricText?.trim()
+    ? `# Rubric chấm điểm (GV cung cấp)\n${input.rubricText.trim()}`
+    : `# Rubric chấm điểm\n(GV chưa cung cấp — chấm theo hiểu biết chung về đề bài, độ chính xác sẽ thấp hơn khi có rubric)`;
+
+  const system = `Bạn là trợ giảng chấm bài tập cho một LMS. Nhiệm vụ: đọc đề bài, rubric (nếu có), và bài nộp của học viên, rồi đề xuất điểm + nhận xét.
+
+Quy tắc bắt buộc:
+- Điểm là số trong khoảng [0, ${input.maxScore}] — KHÔNG vượt quá ${input.maxScore}, KHÔNG âm.
+- Nếu có rubric: bám sát từng tiêu chí trong rubric, không tự đặt tiêu chí khác.
+- Nếu KHÔNG có rubric: chấm theo mức độ bài nộp đáp ứng đề bài, nêu rõ trong "rationale" là đang chấm không có rubric.
+- feedback: 2-4 câu, TIẾNG VIỆT, viết trực tiếp cho học viên (xưng "bạn"), chỉ ra điểm được và điểm cần cải thiện cụ thể — không chung chung.
+- rationale: 1-2 câu giải thích NGẮN GỌN cho giảng viên vì sao cho mức điểm này — không phải để học viên đọc.
+- KHÔNG bịa nội dung bài nộp không có — chỉ đánh giá dựa trên đúng những gì học viên đã viết.
+- Trả JSON: { score, feedback, rationale }`;
+
+  const user = `# Đề bài: ${input.assignmentTitle}
+${input.assignmentDescription}
+
+# Điểm tối đa: ${input.maxScore}
+
+${rubricBlock}
+
+# Bài nộp của học viên
+"""
+${input.submissionBody.slice(0, 20_000)}
+"""
+
+Trả JSON: { score, feedback, rationale }`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<AssignmentGradeSuggestion>(
+    openai,
+    model,
+    system,
+    user,
+    "assignment_grade_suggestion",
+    ASSIGNMENT_GRADE_SCHEMA,
+    1200,
+  );
+
+  await logUsage(userId, model, inputTokens, outputTokens, db);
+
+  return {
+    score: Math.max(0, Math.min(input.maxScore, Math.round(data.score))),
+    feedback: data.feedback?.trim() ?? "",
+    rationale: data.rationale?.trim() ?? "",
+  };
+}

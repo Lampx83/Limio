@@ -1333,6 +1333,11 @@ model Assignment {
   requireReflection Boolean                 @default(false)
   countsTowardGrade Boolean                 @default(true)
 
+  // GV tự gõ, dùng làm ngữ cảnh khi bấm "Gợi ý điểm bằng AI" trên từng bài
+  // nộp — không bắt buộc, AI vẫn chấm được nếu để trống (chỉ kém căn cứ hơn).
+  // Cùng mẫu với Exam.oralRubricText.
+  rubricText String? @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
