@@ -1,10 +1,29 @@
-/** Logic thuần của trình soạn kéo thả (xem components/DragDropFillEditor.tsx). */
+/**
+ * Logic thuần của trình soạn kéo thả — xem
+ * apps/web/src/components/question-editor/DragDropFillEditor.tsx.
+ *
+ * Đợt 9: tổng quát hoá để dùng chung Quiz/Ngân hàng/Đề thi — trước đó file
+ * này chỉ Quiz dùng, `Opt` mang cả `isCorrect`/`misconceptionId` (kế thừa từ
+ * OptionDraft chung của Quiz dù 2 field đó vô nghĩa với loại này). Giờ `Opt`
+ * đổi tên thành `Token`, chỉ còn đúng field cốt lõi thuật toán cần
+ * (`id`/`label`/`blankIndex`, khớp canonical DragDropToken) — component nào
+ * cần thêm field Quiz-only thì tự lo ở tầng adapter riêng, không lẫn vào đây.
+ *
+ * `id` chỉ cần DUY NHẤT trong 1 lần xuất mảng (server yêu cầu), KHÔNG cần ổn
+ * định qua các lần sửa — UI luôn key theo số ô/blankIndex hoặc vị trí mảng
+ * mồi nhử, không key theo `id`, nên tự sinh id mới mỗi lần rebuild là an toàn.
+ */
 
-export interface Opt {
+export interface Token {
+  id: string;
   label: string;
-  isCorrect: boolean;
-  misconceptionId: string | null;
-  extra: { blankIndex?: number | null } | null;
+  blankIndex: number | null;
+}
+
+let seq = 0;
+function newId(): string {
+  seq += 1;
+  return `ddt${Date.now().toString(36)}${seq}`;
 }
 
 const BLANK_RE = /\[\[(\d+)\]\]/g;
@@ -19,27 +38,26 @@ export function blankIndexes(prompt: string): number[] {
   return [...seen].sort((a, b) => a - b);
 }
 
-export function blankOf(o: Opt): number | null {
-  const b = o.extra?.blankIndex;
-  return typeof b === "number" && b >= 1 ? b : null;
+export function blankOf(t: Token): number | null {
+  return typeof t.blankIndex === "number" && t.blankIndex >= 1 ? t.blankIndex : null;
 }
 
-export function mk(label: string, blankIndex: number | null): Opt {
-  return { label, isCorrect: false, misconceptionId: null, extra: { blankIndex } };
+export function mk(label: string, blankIndex: number | null): Token {
+  return { id: newId(), label, blankIndex };
 }
 
-export function split(options: Opt[]) {
-  const answers = new Map<number, Opt>();
-  const distractors: Opt[] = [];
-  for (const o of options) {
-    const b = blankOf(o);
-    if (b === null) distractors.push(mk(o.label, null));
-    else if (!answers.has(b)) answers.set(b, o);
+export function split(tokens: Token[]) {
+  const answers = new Map<number, Token>();
+  const distractors: Token[] = [];
+  for (const t of tokens) {
+    const b = blankOf(t);
+    if (b === null) distractors.push(mk(t.label, null));
+    else if (!answers.has(b)) answers.set(b, t);
   }
   return { answers, distractors };
 }
 
-export function compose(blanks: number[], answers: Map<number, Opt>, distractors: Opt[]): Opt[] {
+export function compose(blanks: number[], answers: Map<number, Token>, distractors: Token[]): Token[] {
   return [...blanks.map((n) => answers.get(n) ?? mk("", n)), ...distractors];
 }
 
@@ -78,12 +96,12 @@ export function tokenize(text: string): Tok[] {
 /** Ghép lại câu và đánh số lại các ô theo thứ tự xuất hiện, chuyển đáp án theo số mới. */
 export function rebuild(
   tokens: BuildTok[],
-  answers: Map<number, Opt>,
-  distractors: Opt[],
-): { prompt: string; options: Opt[] } {
+  answers: Map<number, Token>,
+  distractors: Token[],
+): { prompt: string; options: Token[] } {
   let n = 0;
   let prompt = "";
-  const next = new Map<number, Opt>();
+  const next = new Map<number, Token>();
   for (const t of tokens) {
     if (t.kind === "space") prompt += t.text;
     else if (t.kind === "word") prompt += t.lead + t.core + t.trail;
@@ -112,9 +130,9 @@ const HAS_BREAK = /\n/;
 export function blankifyAt(
   tokens: Tok[],
   idx: number,
-  answers: Map<number, Opt>,
-  distractors: Opt[],
-): { prompt: string; options: Opt[] } | null {
+  answers: Map<number, Token>,
+  distractors: Token[],
+): { prompt: string; options: Token[] } | null {
   const t = tokens[idx];
   if (!t || t.kind !== "word") return null;
 

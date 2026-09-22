@@ -17,17 +17,23 @@ import {
   split,
   tokenize,
   type BuildTok,
-  type Opt,
+  type Token,
 } from "@/lib/dragDropFill";
+import type { DragDropFillDraft } from "./types";
 
 /**
- * Soạn câu kéo thả từ/câu: GV gõ trọn câu, rồi BẤM VÀO TỪ muốn ẩn để biến nó
- * thành ô trống (bấm lại vào ô để bỏ). Từ được ẩn chính là đáp án đúng của ô.
- * GV không phải gõ hay đánh số gì.
+ * Đợt 9 — bản DÙNG CHUNG, port nguyên UX "bấm vào từ để ẩn" của bản Quiz-only
+ * cũ (apps/web/src/components/DragDropFillEditor.tsx, nay đã xoá) theo yêu
+ * cầu "Bank/Đề thi dùng lại UI của Quiz — nhất là chỗ soạn câu điền chỗ
+ * trống". Soạn câu: GV gõ trọn câu, rồi BẤM VÀO TỪ muốn ẩn để biến nó thành ô
+ * trống (bấm lại vào ô để bỏ). Từ được ẩn chính là đáp án đúng của ô. GV
+ * không phải gõ hay đánh số gì.
  *
- * Bên dưới vẫn lưu đúng định dạng cũ mà bộ chấm điểm và trình phát đang đọc:
- * câu chứa `[[N]]` (N đánh số theo thứ tự xuất hiện) và mỗi option mang
- * `extra.blankIndex` (N = đáp án của ô [[N]], null = từ gây nhiễu).
+ * Lưu đúng định dạng canonical mà bộ chấm điểm đang đọc (xem
+ * packages/core-lms/src/exam/schemas.ts DragDropFillConfig cho Bank/Đề thi,
+ * Quiz đọc qua adapter riêng — AddQuestionForm.tsx): câu chứa `[[N]]` (N đánh
+ * số theo thứ tự xuất hiện) và mỗi token mang `blankIndex` (N = đáp án của ô
+ * [[N]], null = từ gây nhiễu).
  *
  * Câu có định dạng/ảnh (rich) không chuyển được sang chế độ bấm-từ mà không
  * mất định dạng, nên rơi về cách cũ: gõ `[[N]]` tay, editor chỉ đồng bộ đáp án.
@@ -39,74 +45,74 @@ const LABEL =
 export default function DragDropFillEditor({
   prompt,
   onPrompt,
-  options,
+  value,
   onChange,
 }: {
   prompt: string;
   onPrompt: (next: string) => void;
-  options: Opt[];
-  onChange: (next: Opt[]) => void;
+  value: DragDropFillDraft;
+  onChange: (next: DragDropFillDraft) => void;
 }) {
+  const tokens: Token[] = value.tokens;
   const rich = needsRich(prompt);
   const plain = looksLikeHtml(prompt) ? htmlToPlainText(prompt) : prompt;
   const blanks = blankIndexes(prompt);
-  const { answers, distractors } = split(options);
+  const { answers, distractors } = split(tokens);
 
   // Bấm-từ chỉ khi đã có câu; câu trống thì bắt đầu ở bước gõ câu.
   const [editing, setEditing] = useState(() => plain.trim() === "");
 
-  // Giữ option khớp với các [[N]] trong câu (thêm dòng cho ô mới, bỏ ô mồ côi).
+  // Giữ token khớp với các [[N]] trong câu (thêm dòng cho ô mới, bỏ ô mồ côi).
   useEffect(() => {
     const target = compose(blanks, answers, distractors);
-    const key = (o: Opt) => `${blankOf(o) ?? "x"}|${o.label}`;
+    const key = (t: Token) => `${blankOf(t) ?? "x"}|${t.label}`;
     const same =
-      target.length === options.length &&
-      target.every((o, i) => key(o) === key(options[i]!));
-    if (!same) onChange(target);
+      target.length === tokens.length && target.every((t, i) => key(t) === key(tokens[i]!));
+    if (!same) onChange({ tokens: target });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prompt, options]);
+  }, [prompt, tokens]);
 
-  const tokens = tokenize(plain);
+  const toks = tokenize(plain);
 
   function apply(next: BuildTok[]) {
     const r = rebuild(next, answers, distractors);
     onPrompt(r.prompt);
-    onChange(r.options);
+    onChange({ tokens: r.options });
   }
 
   function blankify(idx: number) {
-    const r = blankifyAt(tokens, idx, answers, distractors);
+    const r = blankifyAt(toks, idx, answers, distractors);
     if (!r) return;
     onPrompt(r.prompt);
-    onChange(r.options);
+    onChange({ tokens: r.options });
   }
 
   function unblank(idx: number) {
-    const t = tokens[idx];
+    const t = toks[idx];
     if (!t || t.kind !== "blank") return;
     const label = answers.get(t.old)?.label || "…";
-    apply(tokens.map((x, i): BuildTok => (i === idx ? { kind: "space", text: label } : x)));
+    apply(toks.map((x, i): BuildTok => (i === idx ? { kind: "space", text: label } : x)));
   }
 
   function setAnswer(n: number, label: string) {
     const next = new Map(answers);
     next.set(n, mk(label, n));
-    onChange(compose(blanks, next, distractors));
+    onChange({ tokens: compose(blanks, next, distractors) });
   }
   function setDistractor(i: number, label: string) {
-    onChange(
-      compose(
+    onChange({
+      tokens: compose(
         blanks,
         answers,
         distractors.map((d, idx) => (idx === i ? mk(label, null) : d)),
       ),
-    );
+    });
   }
   function addDistractor() {
-    onChange(compose(blanks, answers, [...distractors, mk("", null)]));
+    onChange({ tokens: compose(blanks, answers, [...distractors, mk("", null)]) });
   }
   function removeDistractor(i: number) {
-    onChange(compose(blanks, answers, distractors.filter((_, idx) => idx !== i)));
+    onChange({ tokens: compose(blanks, answers, distractors.filter((_, idx) => idx !== i)) });
   }
 
   return (
@@ -146,7 +152,7 @@ export default function DragDropFillEditor({
         <div>
           <span className={LABEL}>Bước 2 · Bấm vào từ muốn ẩn đi</span>
           <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-base leading-10">
-            {tokens.map((t, i) => {
+            {toks.map((t, i) => {
               if (t.kind === "space") {
                 return (
                   <span key={i} className="whitespace-pre-wrap">

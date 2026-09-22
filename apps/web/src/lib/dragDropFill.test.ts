@@ -23,7 +23,7 @@ describe("bấm từ để tạo ô trống", () => {
   it("biến từ thành [[1]] và đặt từ đó làm đáp án", () => {
     const r = click("Một đội bóng có 11 cầu thủ", [], "11");
     expect(r.prompt).toBe("Một đội bóng có [[1]] cầu thủ");
-    expect(r.options.map((o) => [o.label, o.extra?.blankIndex])).toEqual([["11", 1]]);
+    expect(r.options.map((o) => [o.label, o.blankIndex])).toEqual([["11", 1]]);
   });
 
   it("không nuốt dấu câu dính vào từ", () => {
@@ -38,7 +38,7 @@ describe("bấm từ để tạo ô trống", () => {
     const opts = [mk("45", 1), mk("nhiễu", null)];
     const r = click("Đội có 11 cầu thủ, mỗi hiệp [[1]] phút", opts, "11");
     expect(r.prompt).toBe("Đội có [[1]] cầu thủ, mỗi hiệp [[2]] phút");
-    expect(r.options.map((o) => [o.label, o.extra?.blankIndex])).toEqual([
+    expect(r.options.map((o) => [o.label, o.blankIndex])).toEqual([
       ["11", 1],
       ["45", 2],
       ["nhiễu", null],
@@ -53,7 +53,7 @@ describe("blankIndexes / compose", () => {
   it("bỏ option của ô không còn trong câu, thêm dòng trống cho ô mới", () => {
     const { answers, distractors } = split([mk("x", 1), mk("y", 3), mk("z", null)]);
     const out = compose([1, 2], answers, distractors);
-    expect(out.map((o) => [o.label, o.extra?.blankIndex])).toEqual([
+    expect(out.map((o) => [o.label, o.blankIndex])).toEqual([
       ["x", 1],
       ["", 2],
       ["z", null],

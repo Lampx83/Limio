@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import AdaptiveTextField, { needsRich } from "@/components/AdaptiveTextField";
 import { PROMPT_EXAMPLE, explanationExample, optionExample, NUMERICAL_EXAMPLE } from "@/lib/questionExamples";
 import SkillTagPicker from "@/components/SkillTagPicker";
-import MatchingPairsEditor from "@/components/MatchingPairsEditor";
-import DragDropFillEditor from "@/components/DragDropFillEditor";
 import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
 import QuestionTypePicker from "@/components/question-editor/QuestionTypePicker";
-import type { QuestionType as PickedType } from "@/components/question-editor/types";
+import MatchingEditor from "@/components/question-editor/MatchingEditor";
+import DragDropFillEditor from "@/components/question-editor/DragDropFillEditor";
+import type {
+  QuestionType as PickedType,
+  MatchingDraft,
+  DragDropFillDraft,
+} from "@/components/question-editor/types";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 
 
@@ -77,6 +81,50 @@ const DEFAULTS: Record<QuestionType, OptionDraft[]> = {
   // Trình soạn kéo thả tự dựng option từ các [[N]] trong câu hỏi.
   drag_drop_fill: [],
 };
+
+/**
+ * Đợt 9 — adapter dịch 2 chiều options[] (extra.side/pairKey) của Quiz ⇄
+ * MatchingDraft canonical, để dùng lại MatchingEditor DÙNG CHUNG
+ * (apps/web/src/components/question-editor/MatchingEditor.tsx) thay vì
+ * MatchingPairsEditor.tsx riêng của Quiz (đã xoá — chính component chung giờ
+ * LÀ bản port từ đây). Chỉ 2 hàm này biết tới shape options[] của Quiz; bản
+ * thân MatchingEditor không biết gì về side/pairKey.
+ */
+function optionsToMatchingDraft(options: OptionDraft[]): MatchingDraft {
+  const order: string[] = [];
+  const map = new Map<string, { id: string; left: string; right: string }>();
+  options.forEach((o, i) => {
+    const key = o.extra?.pairKey || `p${i}`;
+    if (!map.has(key)) {
+      map.set(key, { id: key, left: "", right: "" });
+      order.push(key);
+    }
+    const p = map.get(key)!;
+    if (o.extra?.side === "right") p.right = o.label;
+    else p.left = o.label;
+  });
+  return { pairs: order.map((k) => map.get(k)!) };
+}
+function matchingDraftToOptions(draft: MatchingDraft): OptionDraft[] {
+  return draft.pairs.flatMap((p) => [
+    blank({ label: p.left, extra: { side: "left", pairKey: p.id } }),
+    blank({ label: p.right, extra: { side: "right", pairKey: p.id } }),
+  ]);
+}
+
+/** Tương tự cho drag_drop_fill: options[] (extra.blankIndex) ⇄ DragDropFillDraft. */
+function optionsToDragDropDraft(options: OptionDraft[]): DragDropFillDraft {
+  return {
+    tokens: options.map((o, i) => ({
+      id: `t${i}`,
+      label: o.label,
+      blankIndex: o.extra?.blankIndex ?? null,
+    })),
+  };
+}
+function dragDropDraftToOptions(draft: DragDropFillDraft): OptionDraft[] {
+  return draft.tokens.map((t) => blank({ label: t.label, extra: { blankIndex: t.blankIndex } }));
+}
 
 // Friendly Vietnamese labels — kept short to fit the badge in the form
 // header. The picker card titles use the same labels for consistency.
@@ -413,15 +461,18 @@ export default function AddQuestionForm({
         <DragDropFillEditor
           prompt={prompt}
           onPrompt={setPrompt}
-          options={options}
-          onChange={setOptions}
+          value={optionsToDragDropDraft(options)}
+          onChange={(draft) => setOptions(dragDropDraftToOptions(draft))}
         />
       )}
 
       {type === "matching" && (
         <div>
           <p className={FIELD_LABEL}>Các cặp ghép ({Math.floor(options.length / 2)})</p>
-          <MatchingPairsEditor options={options} onChange={setOptions} />
+          <MatchingEditor
+            value={optionsToMatchingDraft(options)}
+            onChange={(draft) => setOptions(matchingDraftToOptions(draft))}
+          />
         </div>
       )}
 

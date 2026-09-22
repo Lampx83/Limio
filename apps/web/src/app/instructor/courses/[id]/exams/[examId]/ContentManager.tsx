@@ -70,6 +70,11 @@ const TYPE_LABEL: Record<string, string> = {
   gap_fill: "Gap fill",
   short_answer: "Trả lời ngắn",
   essay: "Tự luận",
+  // Đợt 8 (thống nhất 10 loại Quiz/Bank/Đề thi).
+  ordering: "Sắp xếp",
+  matching: "Ghép cặp",
+  numerical: "Số",
+  drag_drop_fill: "Kéo thả",
 };
 
 type EditState =

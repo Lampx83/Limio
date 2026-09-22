@@ -7,13 +7,22 @@ import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SkillPicker from "./SkillPicker";
 import QuestionTypePicker from "@/components/question-editor/QuestionTypePicker";
-import type { QuestionType as PickedType } from "@/components/question-editor/types";
+import OrderingEditor from "@/components/question-editor/OrderingEditor";
+import MatchingEditor from "@/components/question-editor/MatchingEditor";
+import NumericalEditor from "@/components/question-editor/NumericalEditor";
+import DragDropFillEditor from "@/components/question-editor/DragDropFillEditor";
+import {
+  type QuestionType as PickedType,
+  type OrderingDraft,
+  type MatchingDraft,
+  type NumericalDraft,
+  type DragDropFillDraft,
+} from "@/components/question-editor/types";
 
-// Đợt 5 — 6 loại QuestionEditor biết soạn hôm nay (khớp TYPE_LABELS bên
-// dưới), dùng để giới hạn tile hiện ra ở QuestionTypePicker chung. Cùng gap
-// với Ngân hàng câu hỏi: matching/ordering/numerical/drag_drop_fill chưa có
-// editor ở Đề thi — chờ generalize MatchingPairsEditor/DragDropFillEditor
-// (đợt sau). Tên trùng 1-1 với QType nên gán thẳng, không cần adapter dịch.
+// Đợt 8 (thống nhất 10 loại Quiz/Bank/Đề thi) — đủ 10 loại canonical đều mở
+// được ở picker, dùng 4 editor DÙNG CHUNG (apps/web/src/components/question-editor/)
+// cho ordering/matching/numerical/drag_drop_fill. Tên trùng 1-1 với QType nên
+// gán thẳng, không cần adapter dịch.
 const EXAM_PICKER_TYPES: readonly PickedType[] = [
   "mcq",
   "multi",
@@ -21,6 +30,10 @@ const EXAM_PICKER_TYPES: readonly PickedType[] = [
   "gap_fill",
   "short_answer",
   "essay",
+  "ordering",
+  "matching",
+  "numerical",
+  "drag_drop_fill",
 ];
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
@@ -40,6 +53,10 @@ const TYPE_LABELS: Record<string, string> = {
   gap_fill: "Điền vào chỗ trống",
   short_answer: "Trả lời ngắn",
   essay: "Tự luận (Essay)",
+  ordering: "Sắp xếp thứ tự",
+  matching: "Ghép cặp",
+  numerical: "Đáp án dạng số",
+  drag_drop_fill: "Kéo thả từ/câu",
 };
 
 type QType = keyof typeof TYPE_LABELS;
@@ -56,6 +73,11 @@ interface State {
   shortMatchMode: "exact" | "case_insensitive";
   essayRubric: string;
   essayMinWords: number;
+  // Đợt 8 — 4 loại mới, dùng thẳng shape canonical.
+  ordering: OrderingDraft;
+  matching: MatchingDraft;
+  numerical: NumericalDraft;
+  dragDropFill: DragDropFillDraft;
   /** Giải thích đáp án — HS đọc sau khi bài được chấm. Lưu trong config. */
   explanation: string;
   skills: Skill[];
@@ -93,6 +115,21 @@ function defaultState(passageId: string | null): State {
     shortMatchMode: "case_insensitive",
     essayRubric: "",
     essayMinWords: 0,
+    ordering: {
+      items: [
+        { id: "o1", label: "" },
+        { id: "o2", label: "" },
+        { id: "o3", label: "" },
+      ],
+    },
+    matching: {
+      pairs: [
+        { id: "m1", left: "", right: "" },
+        { id: "m2", left: "", right: "" },
+      ],
+    },
+    numerical: { expected: null, tolerance: 0 },
+    dragDropFill: { tokens: [] },
     explanation: "",
     skills: [],
   };
@@ -135,6 +172,17 @@ export default function QuestionEditor({
     } else if (s.type === "essay") {
       s.essayRubric = plainToRichHtml((cfg.rubric as string) ?? "");
       s.essayMinWords = (cfg.minWords as number) ?? 0;
+    } else if (s.type === "ordering") {
+      s.ordering = { items: (cfg.items as State["ordering"]["items"]) ?? s.ordering.items };
+    } else if (s.type === "matching") {
+      s.matching = { pairs: (cfg.pairs as State["matching"]["pairs"]) ?? s.matching.pairs };
+    } else if (s.type === "numerical") {
+      s.numerical = {
+        expected: typeof cfg.expected === "number" ? cfg.expected : null,
+        tolerance: typeof cfg.tolerance === "number" ? cfg.tolerance : 0,
+      };
+    } else if (s.type === "drag_drop_fill") {
+      s.dragDropFill = { tokens: (cfg.tokens as State["dragDropFill"]["tokens"]) ?? [] };
     }
     return s;
   });
@@ -199,6 +247,18 @@ export default function QuestionEditor({
         if (v.essayMinWords > 0) out.minWords = v.essayMinWords;
         return out;
       }
+      case "ordering":
+        return { items: v.ordering.items.filter((it) => it.label.trim().length > 0) };
+      case "matching":
+        return {
+          pairs: v.matching.pairs.filter(
+            (p) => p.left.trim().length > 0 && p.right.trim().length > 0,
+          ),
+        };
+      case "numerical":
+        return { expected: v.numerical.expected, tolerance: v.numerical.tolerance };
+      case "drag_drop_fill":
+        return { tokens: v.dragDropFill.tokens.filter((t) => t.label.trim().length > 0) };
     }
   }
 
@@ -299,16 +359,20 @@ export default function QuestionEditor({
         </label>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Đề câu hỏi</label>
-        <textarea
-          required
-          rows={3}
-          value={v.prompt}
-          onChange={(e) => setV({ ...v, prompt: e.target.value })}
-          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
-        />
-      </div>
+      {/* drag_drop_fill có ô "câu hỏi" riêng bên trong DragDropFillEditor
+          (kèm cú pháp [[N]]) — ẩn ô chung ở đây để khỏi trùng lặp. */}
+      {v.type !== "drag_drop_fill" && (
+        <div>
+          <label className="block text-sm font-medium">Đề câu hỏi</label>
+          <textarea
+            required
+            rows={3}
+            value={v.prompt}
+            onChange={(e) => setV({ ...v, prompt: e.target.value })}
+            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+          />
+        </div>
+      )}
 
       {(v.type === "mcq" || v.type === "multi") && (
         <div className="rounded border border-default bg-white p-3">
@@ -506,6 +570,33 @@ export default function QuestionEditor({
               className="mt-1 w-32 rounded border border-default px-2 py-1 text-sm"
             />
           </label>
+        </div>
+      )}
+
+      {/* Đợt 8 — 4 loại mới, dùng editor DÙNG CHUNG (apps/web/src/components/question-editor/). */}
+      {v.type === "ordering" && (
+        <div className="rounded border border-default bg-white p-3">
+          <OrderingEditor value={v.ordering} onChange={(ordering) => setV({ ...v, ordering })} />
+        </div>
+      )}
+      {v.type === "matching" && (
+        <div className="rounded border border-default bg-white p-3">
+          <MatchingEditor value={v.matching} onChange={(matching) => setV({ ...v, matching })} />
+        </div>
+      )}
+      {v.type === "numerical" && (
+        <div className="rounded border border-default bg-white p-3">
+          <NumericalEditor value={v.numerical} onChange={(numerical) => setV({ ...v, numerical })} />
+        </div>
+      )}
+      {v.type === "drag_drop_fill" && (
+        <div className="rounded border border-default bg-white p-3">
+          <DragDropFillEditor
+            prompt={v.prompt}
+            onPrompt={(prompt) => setV({ ...v, prompt })}
+            value={v.dragDropFill}
+            onChange={(dragDropFill) => setV({ ...v, dragDropFill })}
+          />
         </div>
       )}
 

@@ -6,7 +6,18 @@ import TopicCombobox from "@/components/instructor/TopicCombobox";
 import { formatDate, formatDateTime } from "@/lib/datetime";
 import { apiUrl } from "@/lib/apiUrl";
 import QuestionTypePicker from "@/components/question-editor/QuestionTypePicker";
-import { TYPE_LABEL as SHARED_TYPE_LABEL, type QuestionType as PickedType } from "@/components/question-editor/types";
+import OrderingEditor from "@/components/question-editor/OrderingEditor";
+import MatchingEditor from "@/components/question-editor/MatchingEditor";
+import NumericalEditor from "@/components/question-editor/NumericalEditor";
+import DragDropFillEditor from "@/components/question-editor/DragDropFillEditor";
+import {
+  TYPE_LABEL as SHARED_TYPE_LABEL,
+  type QuestionType as PickedType,
+  type OrderingDraft,
+  type MatchingDraft,
+  type NumericalDraft,
+  type DragDropFillDraft,
+} from "@/components/question-editor/types";
 
 type Status = "draft" | "published" | "archived";
 type CognitiveLevel = "remember_understand" | "apply" | "analyze_plus";
@@ -16,19 +27,19 @@ type QuestionType =
   | "true_false_notgiven"
   | "gap_fill"
   | "short_answer"
-  | "essay";
-// Đợt 1 (thống nhất nhập câu hỏi Quiz/Bank/Exam): "matching_heading" (P1,
-// chưa từng build) đã đổi tên "matching" ở DB/schema, nhưng editor cho các
-// loại mới (matching/ordering/numerical/drag_drop_fill) chưa có ở đây — chờ
-// Đợt 4+ (component nhập câu hỏi dùng chung, apps/web/src/components/question-editor/).
-// Loại chưa có UI vẫn hiện được qua fallback "raw config" bên dưới, không rơi
-// vào type cũ đã chết.
+  | "essay"
+  | "ordering"
+  | "matching"
+  | "numerical"
+  | "drag_drop_fill";
+// Đợt 7 (thống nhất 10 loại Quiz/Bank/Đề thi) — QuestionForm giờ soạn được
+// đủ 10 loại, dùng 4 editor DÙNG CHUNG (apps/web/src/components/question-editor/)
+// cho ordering/matching/numerical/drag_drop_fill. "matching_heading" (P1,
+// chưa từng build) vẫn là tên cũ đã đổi thành "matching" ở DB/schema từ Đợt 1.
 
-// Đợt 4 — 6 loại QuestionForm biết soạn hôm nay, dùng để giới hạn tile hiện ra
-// ở QuestionTypePicker chung (picker có đủ 10 loại canonical, nhưng 4 loại
-// matching/ordering/numerical/drag_drop_fill chưa có editor ở Bank nên
-// KHÔNG hiện tile cho tới khi được thêm — tránh chọn phải loại chưa soạn được).
-// Tên trùng 1-1 với QuestionType ở trên nên gán thẳng, không cần adapter dịch.
+// Đợt 7 — mở picker đủ 10 loại canonical (trước đó BANK_PICKER_TYPES chỉ có
+// 6, giờ không cần giới hạn nữa vì đã có editor cho tất cả). Tên trùng 1-1
+// với QuestionType ở trên nên gán thẳng, không cần adapter dịch.
 const BANK_PICKER_TYPES: readonly PickedType[] = [
   "mcq",
   "multi",
@@ -36,6 +47,10 @@ const BANK_PICKER_TYPES: readonly PickedType[] = [
   "gap_fill",
   "short_answer",
   "essay",
+  "ordering",
+  "matching",
+  "numerical",
+  "drag_drop_fill",
 ];
 
 type ReviewStatus = "pending" | "approved" | "needs_revision";
@@ -1744,6 +1759,23 @@ function QuestionForm({
   // Mỗi dòng một đáp án chấp nhận (short_answer) / một chỗ trống (gap_fill, các
   // đáp án chấp nhận của chỗ đó cách nhau bằng dấu |).
   const [answerLines, setAnswerLines] = useState("");
+  // Đợt 7 — state cho 4 loại mới, dùng thẳng shape canonical (không cần
+  // struct riêng của Bank) vì config gửi API đã cùng shape rồi.
+  const [ordering, setOrdering] = useState<OrderingDraft>({
+    items: [
+      { id: "o1", label: "" },
+      { id: "o2", label: "" },
+      { id: "o3", label: "" },
+    ],
+  });
+  const [matching, setMatching] = useState<MatchingDraft>({
+    pairs: [
+      { id: "m1", left: "", right: "" },
+      { id: "m2", left: "", right: "" },
+    ],
+  });
+  const [numerical, setNumerical] = useState<NumericalDraft>({ expected: null, tolerance: 0 });
+  const [dragDropFill, setDragDropFill] = useState<DragDropFillDraft>({ tokens: [] });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -1796,6 +1828,18 @@ function QuestionForm({
                 matchMode: "case_insensitive",
               })),
             }
+          : type === "ordering"
+          ? { items: ordering.items.filter((it) => it.label.trim().length > 0) }
+          : type === "matching"
+          ? {
+              pairs: matching.pairs.filter(
+                (p) => p.left.trim().length > 0 && p.right.trim().length > 0,
+              ),
+            }
+          : type === "numerical"
+          ? { expected: numerical.expected, tolerance: numerical.tolerance }
+          : type === "drag_drop_fill"
+          ? { tokens: dragDropFill.tokens.filter((t) => t.label.trim().length > 0) }
           : {};
       // Topic stored vào config.topic — đồng nhất với MCQ import flow.
       if (topic.trim()) config.topic = topic.trim();
@@ -1888,16 +1932,20 @@ function QuestionForm({
         </div>
       </label>
 
-      <label className="block">
-        <span className="block text-xs font-medium text-slate-600">Nội dung câu hỏi</span>
-        <textarea
-          required rows={3}
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          maxLength={10000}
-          className="mt-1 w-full rounded border border-default px-2 py-1.5 text-xs"
-        />
-      </label>
+      {/* drag_drop_fill có ô "câu hỏi" riêng bên trong DragDropFillEditor
+          (kèm cú pháp [[N]]) — ẩn ô chung ở đây để khỏi trùng lặp. */}
+      {type !== "drag_drop_fill" && (
+        <label className="block">
+          <span className="block text-xs font-medium text-slate-600">Nội dung câu hỏi</span>
+          <textarea
+            required rows={3}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            maxLength={10000}
+            className="mt-1 w-full rounded border border-default px-2 py-1.5 text-xs"
+          />
+        </label>
+      )}
 
       {(type === "mcq" || type === "multi") && (
         <div className="space-y-1">
@@ -1981,6 +2029,19 @@ function QuestionForm({
         </label>
       )}
 
+      {/* Đợt 7 — 4 loại mới, dùng editor DÙNG CHUNG (apps/web/src/components/question-editor/). */}
+      {type === "ordering" && <OrderingEditor value={ordering} onChange={setOrdering} />}
+      {type === "matching" && <MatchingEditor value={matching} onChange={setMatching} />}
+      {type === "numerical" && <NumericalEditor value={numerical} onChange={setNumerical} />}
+      {type === "drag_drop_fill" && (
+        <DragDropFillEditor
+          prompt={prompt}
+          onPrompt={setPrompt}
+          value={dragDropFill}
+          onChange={setDragDropFill}
+        />
+      )}
+
       {err && (
         <div className="rounded border border-red-300 bg-red-50 px-2 py-1.5 text-xs text-red-800">
           ⚠ {err}
@@ -2010,7 +2071,10 @@ function QuestionForm({
 //   - true_false_notgiven:   config.correct = "true" | "false" | "notgiven"
 //   - gap_fill:              config.blanks[] each { acceptable: string[] }
 //   - short_answer:          config.acceptable: string[]
-//   - matching/ordering/numerical/drag_drop_fill (Đợt 1): xem schemas.ts — chưa có editor ở đây, rơi vào raw fallback
+//   - ordering (Đợt 7):      config.items[] each { id, label } — thứ tự mảng = thứ tự đúng
+//   - matching (Đợt 7):      config.pairs[] each { id, left, right }
+//   - numerical (Đợt 7):     config.expected: number, config.tolerance: number
+//   - drag_drop_fill (Đợt 7): config.tokens[] each { id, label, blankIndex }
 //   - essay:                 no objective answer — show "chấm tay"
 function AnswerPreview({
   type,
@@ -2139,8 +2203,94 @@ function AnswerPreview({
     );
   }
 
-  // matching/ordering/numerical/drag_drop_fill (Đợt 1) chưa có editor riêng —
-  // rơi vào fallback "raw config" bên dưới cho tới Đợt 2+.
+  // Đợt 7 — 4 loại mới, đọc trực tiếp shape canonical (packages/core-lms/src/exam/schemas.ts).
+  if (type === "ordering") {
+    const items = (cfg.items as Array<{ id?: string; label?: string }> | undefined) ?? [];
+    if (items.length === 0) return <AnswerEmpty hint="Chưa có bước nào" />;
+    return (
+      <AnswerBox label="Thứ tự đúng">
+        <ol className="space-y-1">
+          {items.map((it, i) => (
+            <li key={it.id ?? i} className="flex items-start gap-1.5 text-xs">
+              <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
+                {i + 1}
+              </span>
+              <span className="flex-1">{it.label ?? "(trống)"}</span>
+            </li>
+          ))}
+        </ol>
+      </AnswerBox>
+    );
+  }
+
+  if (type === "matching") {
+    const pairs =
+      (cfg.pairs as Array<{ id?: string; left?: string; right?: string }> | undefined) ?? [];
+    if (pairs.length === 0) return <AnswerEmpty hint="Chưa có cặp ghép nào" />;
+    return (
+      <AnswerBox label="Các cặp ghép đúng">
+        <ul className="space-y-1">
+          {pairs.map((p, i) => (
+            <li key={p.id ?? i} className="flex items-center gap-1.5 text-xs">
+              <span className="flex-1 rounded bg-emerald-50 px-1.5 py-0.5">{p.left ?? "—"}</span>
+              <span className="text-faint" aria-hidden>→</span>
+              <span className="flex-1 rounded bg-emerald-50 px-1.5 py-0.5">{p.right ?? "—"}</span>
+            </li>
+          ))}
+        </ul>
+      </AnswerBox>
+    );
+  }
+
+  if (type === "numerical") {
+    const expected = typeof cfg.expected === "number" ? cfg.expected : null;
+    const tolerance = typeof cfg.tolerance === "number" ? cfg.tolerance : 0;
+    if (expected === null) return <AnswerEmpty hint="Chưa có đáp án" />;
+    return (
+      <AnswerBox label="Đáp án">
+        <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-1 text-xs font-mono font-semibold text-emerald-800">
+          {expected} {tolerance > 0 && <span className="font-normal text-emerald-700">(±{tolerance})</span>}
+        </span>
+      </AnswerBox>
+    );
+  }
+
+  if (type === "drag_drop_fill") {
+    const tokens =
+      (cfg.tokens as Array<{ id?: string; label?: string; blankIndex?: number | null }> | undefined) ?? [];
+    const answers = tokens
+      .filter((t) => typeof t.blankIndex === "number" && t.blankIndex! >= 1)
+      .sort((a, b) => (a.blankIndex ?? 0) - (b.blankIndex ?? 0));
+    const distractors = tokens.filter((t) => t.blankIndex == null);
+    if (answers.length === 0) return <AnswerEmpty hint="Chưa có ô trống" />;
+    return (
+      <AnswerBox label="Đáp án các ô trống">
+        <ol className="space-y-1">
+          {answers.map((t) => (
+            <li key={t.id} className="flex items-start gap-1.5 text-xs">
+              <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
+                {t.blankIndex}
+              </span>
+              <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-medium text-emerald-800">
+                {t.label}
+              </span>
+            </li>
+          ))}
+        </ol>
+        {distractors.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1 text-[10px] text-faint">
+            Mồi nhử:{" "}
+            {distractors.map((t) => (
+              <span key={t.id} className="rounded border border-token px-1.5 py-0.5">
+                {t.label}
+              </span>
+            ))}
+          </div>
+        )}
+      </AnswerBox>
+    );
+  }
+
   // Unknown type — show raw config as fallback.
   return (
     <AnswerBox label="Đáp án (raw)">

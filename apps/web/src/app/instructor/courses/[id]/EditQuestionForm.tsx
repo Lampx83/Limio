@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import AdaptiveTextField, { needsRich } from "@/components/AdaptiveTextField";
 import { PROMPT_EXAMPLE, explanationExample, optionExample, NUMERICAL_EXAMPLE } from "@/lib/questionExamples";
 import SkillTagPicker from "@/components/SkillTagPicker";
-import MatchingPairsEditor from "@/components/MatchingPairsEditor";
-import DragDropFillEditor from "@/components/DragDropFillEditor";
+import MatchingEditor from "@/components/question-editor/MatchingEditor";
+import DragDropFillEditor from "@/components/question-editor/DragDropFillEditor";
+import type { MatchingDraft, DragDropFillDraft } from "@/components/question-editor/types";
 import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
@@ -17,6 +18,51 @@ interface OptionDraft {
   isCorrect: boolean;
   misconceptionId: string | null;
   extra: { side?: "left" | "right"; pairKey?: string; blankIndex?: number | null } | null;
+}
+
+/**
+ * Đợt 9 — adapter dịch 2 chiều options[] (extra.side/pairKey hoặc
+ * extra.blankIndex) của Quiz ⇄ canonical MatchingDraft/DragDropFillDraft, để
+ * dùng lại 2 editor DÙNG CHUNG (apps/web/src/components/question-editor/).
+ * Giống hệt cặp hàm ở AddQuestionForm.tsx — xem comment ở đó.
+ */
+function optionsToMatchingDraft(options: OptionDraft[]): MatchingDraft {
+  const order: string[] = [];
+  const map = new Map<string, { id: string; left: string; right: string }>();
+  options.forEach((o, i) => {
+    const key = o.extra?.pairKey || `p${i}`;
+    if (!map.has(key)) {
+      map.set(key, { id: key, left: "", right: "" });
+      order.push(key);
+    }
+    const p = map.get(key)!;
+    if (o.extra?.side === "right") p.right = o.label;
+    else p.left = o.label;
+  });
+  return { pairs: order.map((k) => map.get(k)!) };
+}
+function matchingDraftToOptions(draft: MatchingDraft): OptionDraft[] {
+  return draft.pairs.flatMap((p) => [
+    { label: p.left, isCorrect: false, misconceptionId: null, extra: { side: "left" as const, pairKey: p.id } },
+    { label: p.right, isCorrect: false, misconceptionId: null, extra: { side: "right" as const, pairKey: p.id } },
+  ]);
+}
+function optionsToDragDropDraft(options: OptionDraft[]): DragDropFillDraft {
+  return {
+    tokens: options.map((o, i) => ({
+      id: `t${i}`,
+      label: o.label,
+      blankIndex: o.extra?.blankIndex ?? null,
+    })),
+  };
+}
+function dragDropDraftToOptions(draft: DragDropFillDraft): OptionDraft[] {
+  return draft.tokens.map((t) => ({
+    label: t.label,
+    isCorrect: false,
+    misconceptionId: null,
+    extra: { blankIndex: t.blankIndex },
+  }));
 }
 
 interface ExistingOption {
@@ -279,7 +325,10 @@ export default function EditQuestionForm({
       {type === "matching" && (
         <div>
           <p className={FIELD_LABEL}>Các cặp ghép ({Math.floor(options.length / 2)})</p>
-          <MatchingPairsEditor options={options} onChange={setOptions} />
+          <MatchingEditor
+            value={optionsToMatchingDraft(options)}
+            onChange={(draft) => setOptions(matchingDraftToOptions(draft))}
+          />
         </div>
       )}
 
@@ -287,8 +336,8 @@ export default function EditQuestionForm({
         <DragDropFillEditor
           prompt={prompt}
           onPrompt={setPrompt}
-          options={options}
-          onChange={setOptions}
+          value={optionsToDragDropDraft(options)}
+          onChange={(draft) => setOptions(dragDropDraftToOptions(draft))}
         />
       )}
 
