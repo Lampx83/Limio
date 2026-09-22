@@ -146,7 +146,7 @@ export default function AiFormatPanel({
     <div className="space-y-3 rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.4] p-3">
       <div>
         <label className="mb-1.5 block text-xs font-semibold text-muted">Chọn giao diện</label>
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           {LESSON_FORMAT_TEMPLATE_KEYS.map((k) => (
             <button
               key={k}
@@ -172,7 +172,7 @@ export default function AiFormatPanel({
           type="button"
           onClick={onFormat}
           disabled={busyFormat || busySave || !html.trim()}
-          className="btn-secondary btn-sm w-full justify-center"
+          className="btn btn-sm w-full justify-center bg-pink-500 text-white shadow-sm hover:bg-pink-600 active:scale-[0.98]"
         >
           {busyFormat ? "Đang định dạng…" : "✨ Định dạng bằng AI"}
         </button>

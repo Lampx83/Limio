@@ -496,7 +496,7 @@ export default function AddContentItemForm({
         />
       )}
       {type === "richtext" && (
-        <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
+        <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
               Nội dung
