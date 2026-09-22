@@ -725,6 +725,10 @@ model Note {
 
 enum QuestionType {
   mcq
+  // Đợt 1 (thống nhất nhập câu hỏi Quiz/Bank/Exam) — trắc nghiệm nhiều đáp án
+  // đúng, tách khỏi mcq (đúng 1 đáp án) để khớp ExamQuestionType. Trước đây
+  // Quiz không tách "multi" — GV soạn mcq rồi tự tick nhiều đáp án đúng.
+  multi
   true_false
   fill_in
   ordering
@@ -2975,7 +2979,15 @@ enum ExamQuestionType {
   gap_fill
   short_answer
   essay
-  matching_heading // P1
+  // Đợt 1 (thống nhất nhập câu hỏi Quiz/Bank/Exam) — trước là "matching_heading"
+  // (P1, chưa từng build, luôn bị chặn bởi configSchemaForType → z.never()).
+  // Đổi tên "matching", lấy cấu trúc Ghép đôi đã chạy tốt bên Quiz làm chuẩn
+  // (xem MatchingConfig ở packages/core-lms/src/exam/schemas.ts). Không có
+  // dòng dữ liệu nào dùng giá trị cũ nên đổi tên an toàn, không cần backfill.
+  matching
+  ordering
+  numerical
+  drag_drop_fill
 }
 
 enum ExamAssetType {

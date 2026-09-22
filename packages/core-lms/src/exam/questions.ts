@@ -11,6 +11,13 @@ const P0_QUESTION_TYPES = [
   "gap_fill",
   "short_answer",
   "essay",
+  // Đợt 1 (thống nhất nhập câu hỏi Quiz/Bank/Exam) — matching thay
+  // matching_heading (chưa từng build); ordering/numerical/drag_drop_fill là
+  // loại mới, lấy nguyên cấu trúc đã chạy tốt bên Quiz.
+  "matching",
+  "ordering",
+  "numerical",
+  "drag_drop_fill",
 ] as const;
 
 const questionType = z.enum(P0_QUESTION_TYPES);

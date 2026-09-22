@@ -32,6 +32,33 @@ export async function commitMcqRowsToQuiz(
   for (const row of validRows) {
     const p = row.parsed!;
     try {
+      // mcq/true_false: options đã có sẵn (letter/label/isCorrect) từ parseOneRow.
+      // ordering/matching/fill_in tới từ AI import — options rỗng, dữ liệu thật
+      // nằm ở items/pairs/acceptedAnswers, cần dựng lại theo đúng shape Quiz cần
+      // (bảng quan hệ QuestionOption, khác hẳn config JSON của Bank/Exam).
+      let options: Array<{
+        label: string;
+        isCorrect: boolean;
+        extra?: Record<string, unknown>;
+      }>;
+      if (p.type === "ordering") {
+        // Thứ tự trong mảng = orderIndex lúc tạo = đáp án đúng (xem
+        // quizzes/grading.ts case "ordering"). isCorrect không được logic chấm
+        // đọc tới, nhưng Zod CreateQuestionInput vẫn yêu cầu options non-empty.
+        options = (p.items ?? []).map((it) => ({ label: it.label, isCorrect: true }));
+      } else if (p.type === "matching") {
+        // Mỗi cặp → 2 option cùng pairKey, khác side — đúng shape mà
+        // quizzes/grading.ts case "matching" đọc (extra.side/extra.pairKey).
+        options = (p.pairs ?? []).flatMap((pair) => [
+          { label: pair.left, isCorrect: true, extra: { side: "left", pairKey: pair.id } },
+          { label: pair.right, isCorrect: true, extra: { side: "right", pairKey: pair.id } },
+        ]);
+      } else if (p.type === "fill_in") {
+        options = (p.acceptedAnswers ?? []).map((a) => ({ label: a, isCorrect: true }));
+      } else {
+        options = p.options.map((o) => ({ label: o.label, isCorrect: o.isCorrect }));
+      }
+
       await createQuestion(
         actorUserId,
         quizId,
@@ -40,10 +67,7 @@ export async function commitMcqRowsToQuiz(
           prompt: p.prompt,
           explanation: p.explanation ?? undefined,
           points: p.points,
-          options: p.options.map((o) => ({
-            label: o.label,
-            isCorrect: o.isCorrect,
-          })),
+          options,
           skillIds: [],
           // Topic / chủ đề lưu vào QuizQuestion.extra để instructor có thể
           // filter/group sau. extra cũng giữ các field type-specific khác

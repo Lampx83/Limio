@@ -14,8 +14,12 @@ type QuestionType =
   | "true_false_notgiven"
   | "gap_fill"
   | "short_answer"
-  | "essay"
-  | "matching_heading";
+  | "essay";
+// Đợt 1 (thống nhất nhập câu hỏi Quiz/Bank/Exam): "matching_heading" (P1,
+// chưa từng build) đã đổi tên "matching" ở DB/schema, nhưng editor cho các
+// loại mới (matching/ordering/numerical/drag_drop_fill) chưa có ở đây — chờ
+// Đợt 2+ (component nhập câu hỏi dùng chung). Loại chưa có UI vẫn hiện được
+// qua fallback "raw config" bên dưới, không rơi vào type cũ đã chết.
 
 type ReviewStatus = "pending" | "approved" | "needs_revision";
 
@@ -100,7 +104,6 @@ const TYPE_LABEL: Record<string, string> = {
   gap_fill: "Điền từ",
   short_answer: "Ngắn",
   essay: "Tự luận",
-  matching_heading: "Ghép đầu đề",
 };
 
 const DIFFICULTY_COLOR = ["", "bg-emerald-400", "bg-emerald-400", "bg-yellow-400", "bg-red-400", "bg-red-400"];
@@ -1425,7 +1428,7 @@ function EditTab({
 
       {/* Answer editor — editable for MCQ/multi/T-F-NG; read-only preview
           fallback for other types (gap_fill, short_answer, essay,
-          matching_heading) where the config shape is more complex.
+          matching, ordering, numerical, drag_drop_fill) where the config shape is more complex.
           onChange persists via PATCH /api/bank-questions/[id] with `config`. */}
       <AnswerEditor
         type={q.type}
@@ -2109,7 +2112,7 @@ function parseCsv(raw: string): Array<{
 //   - true_false_notgiven:   config.correct = "true" | "false" | "notgiven"
 //   - gap_fill:              config.blanks[] each { acceptable: string[] }
 //   - short_answer:          config.acceptable: string[]
-//   - matching_heading:      config.headings + config.paragraphs (P1)
+//   - matching/ordering/numerical/drag_drop_fill (Đợt 1): xem schemas.ts — chưa có editor ở đây, rơi vào raw fallback
 //   - essay:                 no objective answer — show "chấm tay"
 function AnswerPreview({
   type,
@@ -2238,27 +2241,8 @@ function AnswerPreview({
     );
   }
 
-  // Matching headings (P1) — show pairs if config present.
-  if (type === "matching_heading") {
-    const pairs = (cfg.pairs as Array<{ heading?: string; paragraph?: string }> | undefined) ?? [];
-    if (pairs.length === 0) return <AnswerEmpty hint="Chưa ghép cặp" />;
-    return (
-      <AnswerBox label="Cặp ghép đúng">
-        <ul className="space-y-1 text-xs">
-          {pairs.map((p, i) => (
-            <li key={i} className="flex items-center gap-1.5">
-              <span className="rounded bg-emerald-50 px-1.5 py-0.5 font-medium text-emerald-800">
-                {p.heading ?? "?"}
-              </span>
-              <span className="text-faint">→</span>
-              <span className="text-slate-700">{p.paragraph ?? "?"}</span>
-            </li>
-          ))}
-        </ul>
-      </AnswerBox>
-    );
-  }
-
+  // matching/ordering/numerical/drag_drop_fill (Đợt 1) chưa có editor riêng —
+  // rơi vào fallback "raw config" bên dưới cho tới Đợt 2+.
   // Unknown type — show raw config as fallback.
   return (
     <AnswerBox label="Đáp án (raw)">
@@ -2298,7 +2282,7 @@ function AnswerEmpty({ hint }: { hint: string }) {
 //
 // Editable version of AnswerPreview for the types we can express with a
 // simple form (mcq/multi/true_false_notgiven). Other types fall back to the
-// read-only preview — editing gap_fill / matching_heading / etc. needs a
+// read-only preview — editing gap_fill / matching / ordering / etc. needs a
 // dedicated builder; deferred to a future PR.
 //
 // Save policy: explicit "Lưu đáp án" button (separate from the main "Lưu

@@ -54,13 +54,16 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { questions } = await extractQuestionsFromText(
+    const { questions, skipped } = await extractQuestionsFromText(
       userId,
       { rawText: body.rawText },
       openai,
     );
     const result = aiQuestionsToParseResult(questions);
-    return NextResponse.json(result);
+    // `skipped`: câu AI đọc thấy nhưng không phải mcq/true_false (sắp xếp, ghép
+    // cặp...) — chưa hỗ trợ qua đường này. Trả kèm để GV biết vì sao thiếu, thay
+    // vì chỉ thấy "OK" cho những câu lọt qua rồi tự hỏi phần còn lại đâu mất.
+    return NextResponse.json({ ...result, skipped });
   } catch (e) {
     if (e instanceof AiTutorError) {
       // Vượt trần token — 429: người gọi không sai gì, hết hạn mức thì thử lại sau.

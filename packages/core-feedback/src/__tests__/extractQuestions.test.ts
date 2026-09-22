@@ -13,6 +13,7 @@ import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
 
 function fakeOpenAI(
   questions: unknown[],
+  skipped: unknown[] = [],
   inputTokens = 500,
   outputTokens = 300,
 ): OpenAI {
@@ -20,7 +21,7 @@ function fakeOpenAI(
     chat: {
       completions: {
         create: async () => ({
-          choices: [{ message: { content: JSON.stringify({ questions }) } }],
+          choices: [{ message: { content: JSON.stringify({ questions, skipped }) } }],
           usage: { prompt_tokens: inputTokens, completion_tokens: outputTokens },
         }),
       },
@@ -102,7 +103,7 @@ describe("extractQuestionsFromText — ví token AI", () => {
     await extractQuestionsFromText(
       userId,
       { rawText: "Câu 1: Thủ đô VN là gì? A. Hà Nội B. Huế Đáp án: A" },
-      fakeOpenAI([sampleQuestion], 500, 300),
+      fakeOpenAI([sampleQuestion], [], 500, 300),
     );
 
     const after = await getTokenBudget(userId);
@@ -119,6 +120,7 @@ describe("extractQuestionsFromText — output", () => {
       fakeOpenAI([sampleQuestion]),
     );
     expect(r.questions).toEqual([sampleQuestion]);
+    expect(r.skipped).toEqual([]);
   });
 
   it("AI trả mảng rỗng (không tìm thấy câu hỏi nào): không lỗi, trả rỗng", async () => {
@@ -129,6 +131,80 @@ describe("extractQuestionsFromText — output", () => {
       fakeOpenAI([]),
     );
     expect(r.questions).toEqual([]);
+    expect(r.skipped).toEqual([]);
+  });
+
+  it("văn bản có câu Sắp xếp/Ghép cặp: AI báo lại đã bỏ qua thay vì ép vào mcq", async () => {
+    // Bug thật: trước khi sửa prompt, AI từng ép câu "Sắp xếp thứ tự" và "Ghép
+    // cặp" vào type=mcq (coi mỗi mảnh/cặp là 1 "option") — sai hoàn toàn về
+    // ngữ nghĩa, và validate xác định (chỉ kiểm hình thức mcq) không bắt được
+    // lỗi này vì nó không biết câu gốc vốn là loại khác.
+    const userId = await makeUser("skip-report");
+    const r = await extractQuestionsFromText(
+      userId,
+      { rawText: "Sắp xếp thứ tự câu: 邮局 / 我 / 去 / 寄 / 包裹\nGhép cặp từ Hán với nghĩa: A. 寄 B. 包裹" },
+      fakeOpenAI(
+        [],
+        [
+          { reason: "Câu sắp xếp thứ tự — chưa hỗ trợ qua Nhập bằng AI" },
+          { reason: "Câu ghép cặp — chưa hỗ trợ qua Nhập bằng AI" },
+        ],
+      ),
+    );
+    expect(r.questions).toEqual([]);
+    expect(r.skipped).toHaveLength(2);
+    expect(r.skipped[0]!.reason).toContain("sắp xếp");
+  });
+
+  it("hỗ trợ ordering/matching/fill_in (không còn ép vào mcq)", async () => {
+    const userId = await makeUser("new-types");
+    const orderingQ = {
+      type: "ordering",
+      prompt: "Sắp xếp thành câu đúng",
+      items: [{ label: "邮局" }, { label: "我" }, { label: "去" }],
+      explanation: null,
+      topic: null,
+    };
+    const matchingQ = {
+      type: "matching",
+      prompt: "Ghép từ Hán với nghĩa",
+      pairs: [{ left: "寄", right: "gửi" }],
+      explanation: null,
+      topic: null,
+    };
+    const fillInQ = {
+      type: "fill_in",
+      prompt: "我明天＿＿上海。",
+      acceptedAnswers: ["去", "qù"],
+      explanation: null,
+      topic: null,
+    };
+    const r = await extractQuestionsFromText(
+      userId,
+      { rawText: "Sắp xếp / Ghép cặp / Điền khuyết — văn bản mẫu đủ dài để qua ngưỡng tối thiểu" },
+      fakeOpenAI([orderingQ, matchingQ, fillInQ]),
+    );
+    expect(r.questions).toEqual([orderingQ, matchingQ, fillInQ]);
+  });
+
+  it("skipped thiếu trong output (model cũ/lệch schema): coi như rỗng, không crash", async () => {
+    const userId = await makeUser("skip-missing");
+    const openaiNoSkippedField = {
+      chat: {
+        completions: {
+          create: async () => ({
+            choices: [{ message: { content: JSON.stringify({ questions: [sampleQuestion] }) } }],
+            usage: { prompt_tokens: 10, completion_tokens: 5 },
+          }),
+        },
+      },
+    } as unknown as OpenAI;
+    const r = await extractQuestionsFromText(
+      userId,
+      { rawText: "Câu 1: Thủ đô VN là gì? A. Hà Nội B. Huế Đáp án: A" },
+      openaiNoSkippedField,
+    );
+    expect(r.skipped).toEqual([]);
   });
 
   it("OpenAI trả JSON hỏng: ném json_parse_failed", async () => {

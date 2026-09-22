@@ -31,9 +31,16 @@ interface ParsedMcqRow {
   errors: string[];
   warnings: string[];
   parsed?: {
-    type: "mcq" | "true_false";
+    type: "mcq" | "true_false" | "ordering" | "matching" | "fill_in";
     prompt: string;
+    /** mcq/true_false. Rỗng cho các loại khác. */
     options: Array<{ letter: string; label: string; isCorrect: boolean }>;
+    /** ordering — đúng thứ tự trong mảng. */
+    items?: Array<{ id: string; label: string }>;
+    /** matching. */
+    pairs?: Array<{ id: string; left: string; right: string }>;
+    /** fill_in. */
+    acceptedAnswers?: string[];
     points: number;
     difficulty: number;
     cognitiveLevel: string;
@@ -42,9 +49,58 @@ interface ParsedMcqRow {
   };
 }
 
+const TYPE_LABEL: Record<string, string> = {
+  mcq: "Trắc nghiệm",
+  true_false: "Đúng/Sai",
+  ordering: "Sắp xếp",
+  matching: "Ghép cặp",
+  fill_in: "Điền khuyết",
+};
+
+type ParsedRow = NonNullable<ParsedMcqRow["parsed"]>;
+
+/** Số lượng "đơn vị" của câu — đáp án (mcq/tf), mảnh (ordering), cặp (matching), đáp án chấp nhận (fill_in). */
+function answerCount(p: ParsedRow): number {
+  switch (p.type) {
+    case "ordering":
+      return p.items?.length ?? 0;
+    case "matching":
+      return p.pairs?.length ?? 0;
+    case "fill_in":
+      return p.acceptedAnswers?.length ?? 0;
+    default:
+      return p.options.length;
+  }
+}
+
+/** Cột "Đúng" — mỗi loại có một khái niệm "đáp án đúng" khác nhau, không phải luôn là chữ cái. */
+function answerSummary(p: ParsedRow): string {
+  switch (p.type) {
+    case "ordering":
+      // Thứ tự trong items CHÍNH LÀ đáp án đúng.
+      return (p.items ?? []).map((i) => i.label).join(" → ") || "—";
+    case "matching":
+      return (p.pairs ?? []).map((pr) => `${pr.left}→${pr.right}`).join(", ") || "—";
+    case "fill_in":
+      return (p.acceptedAnswers ?? []).join(" / ") || "—";
+    default:
+      return (
+        p.options
+          .filter((o) => o.isCorrect)
+          .map((o) => o.letter)
+          .join(", ") || "—"
+      );
+  }
+}
+
 interface ParseResult {
   rows: ParsedMcqRow[];
   summary: { ok: number; warning: number; error: number; total: number };
+}
+
+/** Câu AI đọc thấy nhưng không thuộc 5 loại đã hỗ trợ (mcq/true_false/ordering/matching/fill_in). */
+interface SkippedAiQuestion {
+  reason: string;
 }
 
 export default function ImportMcqModal({
@@ -69,6 +125,7 @@ export default function ImportMcqModal({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<ParseResult | null>(null);
+  const [aiSkipped, setAiSkipped] = useState<SkippedAiQuestion[]>([]);
   const [committed, setCommitted] = useState<{
     created: number;
     errors: Array<{ rowNumber: number; message: string }>;
@@ -81,6 +138,7 @@ export default function ImportMcqModal({
     setBusy(false);
     setErr(null);
     setResult(null);
+    setAiSkipped([]);
     setCommitted(null);
   }
   function closeAll() {
@@ -126,11 +184,21 @@ export default function ImportMcqModal({
         setErr(humanizeAiError(j?.error, j?.details));
         return;
       }
-      const j = (await r.json()) as ParseResult;
+      const j = (await r.json()) as ParseResult & { skipped?: SkippedAiQuestion[] };
+      const skipped = j.skipped ?? [];
       if (j.summary.total === 0) {
-        setErr("Không tìm thấy câu hỏi nào trong nội dung này — kiểm tra lại văn bản đã dán.");
+        // Phân biệt hai trường hợp GV cần biết: văn bản không có gì trông giống
+        // câu hỏi, hay có câu hỏi nhưng toàn loại AI đọc được mà chưa hỗ trợ
+        // import qua đây (sắp xếp, ghép cặp...) — nói đúng cái nào để GV khỏi
+        // tưởng AI "đọc thiếu" hoặc dán sai.
+        setErr(
+          skipped.length > 0
+            ? `AI tìm thấy ${skipped.length} câu nhưng đều thuộc loại chưa hỗ trợ qua Nhập bằng AI (vd tự luận, số học). Hiện hỗ trợ: trắc nghiệm, đúng/sai, sắp xếp thứ tự, ghép cặp, điền khuyết.`
+            : "Không tìm thấy câu hỏi nào trong nội dung này — kiểm tra lại văn bản đã dán.",
+        );
         return;
       }
+      setAiSkipped(skipped);
       setResult(j);
       setStage("preview");
     } catch {
@@ -175,7 +243,7 @@ export default function ImportMcqModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-default px-5 py-3">
           <h2 className="text-base font-semibold">
-            Import câu hỏi MCQ từ Excel
+            Nhập câu hỏi
             <span className="ml-2 text-xs font-normal text-faint">
               → {destinationLabel}
             </span>
@@ -195,7 +263,14 @@ export default function ImportMcqModal({
             <UploadStage onPickFile={uploadFile} onExtractAi={extractWithAi} busy={busy} err={err} />
           )}
           {stage === "preview" && result && (
-            <PreviewStage result={result} onBack={reset} onCommit={commit} busy={busy} err={err} />
+            <PreviewStage
+              result={result}
+              skipped={aiSkipped}
+              onBack={reset}
+              onCommit={commit}
+              busy={busy}
+              err={err}
+            />
           )}
           {stage === "result" && committed && (
             <ResultStage committed={committed} onDone={closeAll} />
@@ -387,12 +462,14 @@ function UploadStage({
 
 function PreviewStage({
   result,
+  skipped,
   onBack,
   onCommit,
   busy,
   err,
 }: {
   result: ParseResult;
+  skipped: SkippedAiQuestion[];
   onBack: () => void;
   onCommit: () => void;
   busy: boolean;
@@ -401,6 +478,19 @@ function PreviewStage({
   const { summary, rows } = result;
   return (
     <div className="space-y-3">
+      {skipped.length > 0 && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <p className="font-semibold">
+            AI đã bỏ qua {skipped.length} câu — chưa hỗ trợ qua "Nhập bằng AI" (hỗ trợ trắc
+            nghiệm, đúng/sai, sắp xếp thứ tự, ghép cặp, điền khuyết):
+          </p>
+          <ul className="mt-1 list-inside list-disc">
+            {skipped.map((s, i) => (
+              <li key={i}>{s.reason}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-default bg-slate-50 px-3 py-2 text-xs">
         <span className="font-semibold">Tổng: {summary.total}</span>
         <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-emerald-800">
@@ -473,16 +563,17 @@ function PreviewStage({
                   )}
                 </td>
                 <td className="px-2 py-1.5 align-top text-faint">
-                  {row.parsed?.type ?? "—"}
+                  {row.parsed ? (TYPE_LABEL[row.parsed.type] ?? row.parsed.type) : "—"}
                 </td>
                 <td className="px-2 py-1.5 align-top text-faint">
-                  {row.parsed?.options.length ?? 0}
+                  {row.parsed ? answerCount(row.parsed) : 0}
                 </td>
-                <td className="px-2 py-1.5 align-top text-faint">
-                  {row.parsed?.options
-                    .filter((o) => o.isCorrect)
-                    .map((o) => o.letter)
-                    .join(", ") ?? "—"}
+                <td className="max-w-[220px] px-2 py-1.5 align-top text-faint">
+                  {row.parsed ? (
+                    <span className="line-clamp-2">{answerSummary(row.parsed)}</span>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-2 py-1.5 align-top">
                   {row.status === "ok" && (

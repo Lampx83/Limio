@@ -53,8 +53,7 @@ export function describeResponse(
 
   switch (type) {
     case "mcq":
-    case "multi":
-    case "matching_heading": {
+    case "multi": {
       const options = Array.isArray(cfg?.options)
         ? (cfg!.options as Array<Record<string, unknown>>)
         : [];
@@ -109,6 +108,11 @@ export function describeResponse(
       return { chosen: "", key: "", text };
     }
 
+    // matching/ordering/numerical/drag_drop_fill (Đợt 1): chấp nhận được ở
+    // Bank/Exam từ nay, nhưng trình làm bài chưa render được các loại này
+    // (chờ Đợt 2+ — component nhập/làm bài dùng chung). Chưa có answerJson
+    // thật nào để mô tả, nên trả rỗng thay vì đoán hình dạng — thêm case khi
+    // UI làm bài hỗ trợ, đúng cùng tinh thần "đừng làm cho giống như đã có".
     default:
       return empty;
   }

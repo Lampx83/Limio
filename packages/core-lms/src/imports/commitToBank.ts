@@ -35,16 +35,29 @@ export async function commitMcqRowsToBank(
   for (const row of validRows) {
     const p = row.parsed!;
     try {
-      const correctCount = p.options.filter((o) => o.isCorrect).length;
-      let bankType: "mcq" | "multi" | "true_false_notgiven";
+      let bankType: "mcq" | "multi" | "true_false_notgiven" | "ordering" | "matching" | "short_answer";
       let config: Record<string, unknown>;
-      if (p.type === "true_false") {
+      if (p.type === "fill_in") {
+        // Chỉ tới từ AI import. Map vào short_answer (đã có config schema từ
+        // trước Đợt 1) — không có type "fill_in" riêng ở Bank/Exam.
+        bankType = "short_answer";
+        config = { acceptedAnswers: p.acceptedAnswers ?? [], matchMode: "case_insensitive" };
+      } else if (p.type === "ordering") {
+        // Chỉ tới từ AI import (aiQuestionRows.ts) — Excel không diễn đạt được
+        // chuỗi thứ tự. config khớp thẳng OrderingConfig (schemas.ts).
+        bankType = "ordering";
+        config = { items: p.items ?? [] };
+      } else if (p.type === "matching") {
+        bankType = "matching";
+        config = { pairs: p.pairs ?? [] };
+      } else if (p.type === "true_false") {
         bankType = "true_false_notgiven";
         // true_false template stores Đúng=A, Sai=B. Map to exam's
         // true/false/notgiven values: A correct → "true", B correct → "false".
         const correctLetter = p.options.find((o) => o.isCorrect)?.letter;
         config = { correct: correctLetter === "A" ? "true" : "false" };
       } else {
+        const correctCount = p.options.filter((o) => o.isCorrect).length;
         bankType = correctCount > 1 ? "multi" : "mcq";
         // Option id = lowercase letter (a/b/c/d/e/f) — match với letter cột
         // OptionA-F để answer-preview ở UI workbench dễ map về "B", "A,C"…

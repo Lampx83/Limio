@@ -31,7 +31,12 @@ const QuestionType = z.enum([
   "gap_fill",
   "short_answer",
   "essay",
-  "matching_heading",
+  // Đợt 1 (thống nhất nhập câu hỏi Quiz/Bank/Exam) — "matching_heading" đổi
+  // tên thành "matching" (xem MatchingConfig ở schemas.ts), cộng 3 loại mới.
+  "matching",
+  "ordering",
+  "numerical",
+  "drag_drop_fill",
 ]);
 
 export const CreateBankInput = z.object({

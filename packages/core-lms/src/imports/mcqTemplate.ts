@@ -31,10 +31,21 @@ export interface ParsedMcqRow {
   warnings: string[];
   /** Populated when status != "error" — ready for committer. */
   parsed?: {
-    type: "mcq" | "true_false";
+    // "ordering"/"matching" (Đợt sau đợt 1 — mở rộng "Nhập bằng AI") không đến
+    // được từ đường Excel (khuôn cột A-F không diễn đạt được chuỗi thứ tự hay
+    // cặp ghép) — chỉ AI adapter (aiQuestionRows.ts) mới tạo ra 2 loại này,
+    // dùng thẳng OrderingConfig/MatchingConfig để validate, không qua
+    // parseOneRow. `options` để rỗng cho 2 loại này.
+    type: "mcq" | "true_false" | "ordering" | "matching" | "fill_in";
     prompt: string;
-    /** Options in spreadsheet order; only non-empty rows. */
+    /** Options in spreadsheet order; only non-empty rows. Rỗng cho ordering/matching/fill_in. */
     options: Array<{ letter: string; label: string; isCorrect: boolean }>;
+    /** Chỉ có khi type === "ordering" — thứ tự trong mảng LÀ đáp án đúng. */
+    items?: Array<{ id: string; label: string }>;
+    /** Chỉ có khi type === "matching". */
+    pairs?: Array<{ id: string; left: string; right: string }>;
+    /** Chỉ có khi type === "fill_in" — mọi đáp án chấp nhận, so không phân biệt hoa thường. */
+    acceptedAnswers?: string[];
     points: number;
     difficulty: 1 | 2 | 3 | 4 | 5;
     cognitiveLevel: "remember_understand" | "apply" | "analyze_plus";
@@ -126,13 +137,17 @@ const MAX_ROWS = 500;
  */
 export function parseRawMcqRows(rows: Record<string, string>[]): ParseMcqResult {
   const parsedRows: ParsedMcqRow[] = rows.map((r, i) => parseOneRow(r, i + 1));
-  const summary = {
-    total: parsedRows.length,
-    ok: parsedRows.filter((r) => r.status === "ok").length,
-    warning: parsedRows.filter((r) => r.status === "warning").length,
-    error: parsedRows.filter((r) => r.status === "error").length,
+  return { rows: parsedRows, summary: summarizeRows(parsedRows) };
+}
+
+/** Đếm ok/warning/error/total — dùng chung cho mọi nguồn tạo ra ParsedMcqRow[]. */
+export function summarizeRows(rows: ParsedMcqRow[]): ParseMcqResult["summary"] {
+  return {
+    total: rows.length,
+    ok: rows.filter((r) => r.status === "ok").length,
+    warning: rows.filter((r) => r.status === "warning").length,
+    error: rows.filter((r) => r.status === "error").length,
   };
-  return { rows: parsedRows, summary };
 }
 
 export function parseMcqImportXlsx(
@@ -163,7 +178,12 @@ export function parseMcqImportXlsx(
   return parseRawMcqRows(normalized);
 }
 
-function parseOneRow(raw: Record<string, string>, rowNumber: number): ParsedMcqRow {
+/**
+ * Validate 1 dòng "thô" (key canonical) thành mcq/true_false. Dùng cho cả Excel
+ * (qua parseRawMcqRows) và AI adapter (aiQuestionRows.ts, cho type mcq/true_false
+ * — ordering/matching KHÔNG qua hàm này, xem ghi chú ở ParsedMcqRow.parsed).
+ */
+export function parseOneRow(raw: Record<string, string>, rowNumber: number): ParsedMcqRow {
   const errors: string[] = [];
   const warnings: string[] = [];
 
