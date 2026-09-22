@@ -179,8 +179,8 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
 
       {type === "richtext" && (
         <>
-          <RichTextEditor value={html} onChange={setHtml} />
           <AiFormatPanel lessonId={lessonId} html={html} onApply={setHtml} />
+          <RichTextEditor value={html} onChange={setHtml} />
         </>
       )}
 

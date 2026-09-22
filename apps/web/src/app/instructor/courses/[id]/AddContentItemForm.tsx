@@ -464,6 +464,9 @@ export default function AddContentItemForm({
         />
       )}
 
+      {type === "richtext" && (
+        <AiFormatPanel lessonId={lessonId} html={html} onApply={setHtml} />
+      )}
       {(type === "richtext" || type === "teacher_note") && (
         <RichTextEditor
           value={html}
@@ -474,9 +477,6 @@ export default function AddContentItemForm({
               : "Nhập nội dung văn bản..."
           }
         />
-      )}
-      {type === "richtext" && (
-        <AiFormatPanel lessonId={lessonId} html={html} onApply={setHtml} />
       )}
       {type === "teacher_note" && (
         <p className="text-xs text-muted">
