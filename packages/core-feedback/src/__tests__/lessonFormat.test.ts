@@ -148,7 +148,13 @@ describe("formatLessonContent — happy path", () => {
 
       await formatLessonContent(userId, { html: "<p>x</p>", template }, openai);
 
-      expect(capturedSystemPrompt).toMatch(/<img>:\s*style="[^"]*max-width:100%/);
+      // Ảnh docx giữ nguyên kích thước gốc (có thể rất to/lệch tỉ lệ) — chỉ
+      // max-width:100% không đủ nếu ảnh cao bất thường (portrait); cần thêm
+      // max-height để ảnh luôn vừa khung nội dung, không tràn dọc trang.
+      // Hẹp hơn lề ~1.5cm mỗi bên (trừ 3cm tổng) + margin:auto căn giữa.
+      expect(capturedSystemPrompt).toMatch(/<img>:\s*style="[^"]*max-width:calc\(100% - 3cm\)/);
+      expect(capturedSystemPrompt).toMatch(/<img>:\s*style="[^"]*max-height:\d+px/);
+      expect(capturedSystemPrompt).toMatch(/<img>:\s*style="[^"]*margin:12px auto/);
     }
   });
 

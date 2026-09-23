@@ -697,7 +697,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <th>: style="border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#374151;font-size:1.25rem;line-height:1.7;padding:8px 12px"
 - <blockquote>: style="border-left:4px solid #93c5fd;background:#f8fafc;color:#374151;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:12px 0"
-- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
+- <img>: style="max-width:calc(100% - 3cm);max-height:480px;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
   academic: {
     label: "Học thuật",
@@ -710,7 +710,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <th>: style="border:1px solid #d8b4fe;background:#f3f4f6;color:#581c87;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#1f2937;font-size:1.25rem;line-height:1.7;padding:8px 12px"
 - <blockquote>: style="border-left:3px solid #c4b5fd;background:#faf5ff;color:#1f2937;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:16px 0;font-family:Georgia,serif"
-- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
+- <img>: style="max-width:calc(100% - 3cm);max-height:480px;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
   modern: {
     label: "Hiện đại",
@@ -723,7 +723,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <th>: style="border:1px solid #5eead4;background:#0d9488;color:#ffffff;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#111827;font-size:1.25rem;line-height:1.7;padding:8px 12px"
 - <blockquote>: style="border-left:4px solid #5eead4;background:#f0fdfa;color:#111827;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:12px 0"
-- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
+- <img>: style="max-width:calc(100% - 3cm);max-height:480px;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
   // Khớp ĐÚNG palette SECTION_HUES/SECTION_TEXT_HUES của
   // packages/core-lms/scripts/import-course.ts (renderer khoá "Thiết kế
@@ -747,7 +747,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <th>: style="border:1px solid #e5e7eb;background:#f9fafb;color:#111827;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#111827;font-size:1.25rem;line-height:1.7;padding:8px 12px"
 - <blockquote>: style="border-left:4px solid #9ca3af;background:#f9fafb;color:#111827;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:12px 0" (không đổi màu theo mục — như <table>)
-- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
+- <img>: style="max-width:calc(100% - 3cm);max-height:480px;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
 };
 
