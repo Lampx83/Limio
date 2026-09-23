@@ -284,7 +284,7 @@ export default function ActivityPicker({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-7xl rounded-2xl bg-[rgb(var(--surface))] shadow-2xl">
+      <div className="w-full max-w-4xl rounded-2xl bg-[rgb(var(--surface))] shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-token px-5 py-4">
           {pickedTile ? (
@@ -408,7 +408,7 @@ function Group({
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">
         {label}
       </h3>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {tiles.map((t) => (
           <button
             key={t.key}
