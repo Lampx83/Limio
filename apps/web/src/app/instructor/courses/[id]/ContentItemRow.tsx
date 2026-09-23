@@ -1,11 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Blocks,
   Eye,
   EyeOff,
+  ExternalLink,
   FileCode,
   FileText,
   FileType,
@@ -24,6 +26,11 @@ import { parseVideoUrl } from "@/lib/videoUrl";
 import { toast } from "@/lib/toast";
 import EditContentItemForm from "./EditContentItemForm";
 import { apiUrl } from "@/lib/apiUrl";
+
+// Loại nào có trình soạn riêng (trang toàn màn hình, xem
+// contents/[contentId]/edit/) thay vì chỉ sửa nội-tuyến chật hẹp trong hàng
+// này — bắt đầu với richtext (editor + AiFormatPanel cần chỗ rộng hơn).
+const POPOUT_EDITOR_TYPES = new Set(["richtext"]);
 
 interface Item {
   id: string;
@@ -67,7 +74,7 @@ function summarize(type: string, payload: unknown): string {
   }
 }
 
-const ICON: Record<string, typeof Video> = {
+export const ICON: Record<string, typeof Video> = {
   video: Video,
   markdown: FileCode,
   richtext: FileText,
@@ -85,7 +92,7 @@ const ICON: Record<string, typeof Video> = {
 // Mỗi loại content 1 màu riêng để quét mắt nhanh giữa danh sách nhiều loại
 // trộn lẫn — tránh trùng màu đã có ý nghĩa riêng nơi khác: lime (Quiz),
 // hồng/pink (Assignment), tím/violet (AI import).
-const TYPE_COLOR: Record<string, string> = {
+export const TYPE_COLOR: Record<string, string> = {
   video: "bg-red-100 text-red-700",
   markdown: "bg-indigo-100 text-indigo-700",
   richtext: "bg-blue-100 text-blue-700",
@@ -99,7 +106,7 @@ const TYPE_COLOR: Record<string, string> = {
   h5p: "bg-emerald-100 text-emerald-700",
   html_block: "bg-rose-100 text-rose-700",
 };
-const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
+export const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
 
 export default function ContentItemRow({
   item,
@@ -109,6 +116,7 @@ export default function ContentItemRow({
   lessonId: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [isHidden, setIsHidden] = useState(item.isHidden ?? false);
@@ -221,6 +229,16 @@ export default function ContentItemRow({
         >
           {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
+        {POPOUT_EDITOR_TYPES.has(item.type) && (
+          <Link
+            href={`${pathname}/contents/${item.id}/edit`}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700"
+            title="Mở trình soạn"
+          >
+            Mở trình soạn
+            <ExternalLink className="h-3 w-3" aria-hidden />
+          </Link>
+        )}
         <button
           type="button"
           onClick={() => setEditing(true)}
