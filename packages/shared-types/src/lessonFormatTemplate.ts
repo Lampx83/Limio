@@ -7,10 +7,10 @@
 export type LessonFormatTemplateKey = "clean" | "academic" | "modern" | "vibrant";
 
 export const LESSON_FORMAT_TEMPLATE_KEYS: LessonFormatTemplateKey[] = [
+  "vibrant",
   "clean",
   "academic",
   "modern",
-  "vibrant",
 ];
 
 export const LESSON_FORMAT_TEMPLATE_LABELS: Record<LessonFormatTemplateKey, string> = {
@@ -25,7 +25,7 @@ export const LESSON_FORMAT_TEMPLATE_HINTS: Record<LessonFormatTemplateKey, strin
   clean: "Chữ gọn, xanh dương — hợp bài hướng dẫn.",
   academic: "Tiêu đề chữ serif — hợp bài lý thuyết.",
   modern: "Tiêu đề nổi bật — hợp bài thiết kế sáng tạo.",
-  vibrant: "Mỗi mục một màu riêng — dễ phân biệt khi bài nhiều mục (giống khoá Thiết kế UI/UX).",
+  vibrant: "Mỗi mục một màu riêng — dễ phân biệt khi bài nhiều mục.",
 };
 
 export function isLessonFormatTemplateKey(v: unknown): v is LessonFormatTemplateKey {

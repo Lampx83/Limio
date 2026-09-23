@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LimeSliceIcon } from "@/components/BrandIcons";
 import {
   LESSON_FORMAT_TEMPLATE_HINTS,
   LESSON_FORMAT_TEMPLATE_KEYS,
@@ -145,7 +146,7 @@ export default function AiFormatPanel({
   return (
     <div className="space-y-3 rounded-lg border border-token bg-[rgb(var(--surface-muted))/0.4] p-3">
       <div>
-        <label className="mb-1.5 block text-xs font-semibold text-muted">Chọn giao diện</label>
+        <label className="mb-1.5 block text-xs font-semibold text-muted">Chọn phong cách</label>
         <div className="grid grid-cols-4 gap-1.5">
           {LESSON_FORMAT_TEMPLATE_KEYS.map((k) => (
             <button
@@ -164,19 +165,28 @@ export default function AiFormatPanel({
             </button>
           ))}
         </div>
-        <p className="mt-1.5 text-[11px] text-faint">{LESSON_FORMAT_TEMPLATE_HINTS[template]}</p>
+        <p className="mt-1.5 text-sm text-muted">{LESSON_FORMAT_TEMPLATE_HINTS[template]}</p>
       </div>
 
       <div>
-        <button
-          type="button"
-          onClick={onFormat}
-          disabled={busyFormat || busySave || !html.trim()}
-          className="btn btn-sm w-full justify-center bg-pink-500 text-white shadow-sm hover:bg-pink-600 active:scale-[0.98]"
-        >
-          {busyFormat ? "Đang định dạng…" : "✨ Định dạng bằng AI"}
-        </button>
-        <p className="mt-1.5 text-[11px] text-faint">
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={onFormat}
+            disabled={busyFormat || busySave || !html.trim()}
+            className="btn btn-sm inline-flex items-center gap-1.5 bg-violet-200 text-violet-900 shadow-sm hover:bg-violet-300 active:scale-[0.98]"
+          >
+            {busyFormat ? (
+              <>
+                <LimeSliceIcon className="h-4 w-4 animate-spin" />
+                Đang định dạng…
+              </>
+            ) : (
+              "✨ Định dạng bằng AI"
+            )}
+          </button>
+        </div>
+        <p className="mt-1.5 text-sm text-muted">
           AI sắp xếp lại đúng nội dung đang có theo giao diện đã chọn — không
           thêm bớt ý. &ldquo;Áp dụng&rdquo; sẽ lưu thẳng vào bài học.
         </p>
@@ -189,7 +199,17 @@ export default function AiFormatPanel({
       )}
 
       <div>
-        {formatted ? (
+        {busyFormat ? (
+          <div className="space-y-2 rounded-md border border-dashed border-token p-3">
+            <div className="flex items-center gap-2 text-xs font-medium text-brand-700">
+              <LimeSliceIcon className="h-3.5 w-3.5 animate-spin" />
+              AI đang định dạng — thường mất vài giây…
+            </div>
+            <div className="h-3 w-4/5 animate-pulse rounded bg-[rgb(var(--surface-muted))]" />
+            <div className="h-3 w-full animate-pulse rounded bg-[rgb(var(--surface-muted))]" />
+            <div className="h-3 w-3/5 animate-pulse rounded bg-[rgb(var(--surface-muted))]" />
+          </div>
+        ) : formatted ? (
           <div className="max-h-72 overflow-y-auto rounded-md border border-token bg-[rgb(var(--surface))] p-3">
             <SafeHtml html={formatted} className="prose prose-sm max-w-none dark:prose-invert" />
           </div>
