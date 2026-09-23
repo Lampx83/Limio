@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import mammoth from "mammoth";
+import JSZip from "jszip";
 import { requireUserId } from "@/lib/session";
 import { storageFor } from "@/lib/storage";
 import { lessonImageKey } from "@/lib/storage-keys";
@@ -16,10 +17,16 @@ export const runtime = "nodejs";
  * Trả về HTML thô để FE đổ vào ô "Nội dung thô" của tile Văn bản — AI hỗ trợ —
  * GV vẫn chọn giao diện + bấm "Định dạng bằng AI" như dán tay bình thường.
  * Route này KHÔNG tự gọi AI, không ghi ContentItem nào.
+ *
+ * File .docx gốc KHÔNG được lưu ở đâu cả — chỉ nằm trong Buffer bộ nhớ trong
+ * lúc xử lý request này, bị giải phóng ngay khi response trả về. Chỉ ẢNH
+ * nhúng trong file mới được upload lên storage (bắt buộc — HTML kết quả
+ * tham chiếu chúng qua URL, phải sống lâu hơn 1 request).
  */
 
-const MAX_DOCX_MB = 20;
+const MAX_DOCX_MB = 5;
 const MAX_DOCX_BYTES = MAX_DOCX_MB * 1024 * 1024;
+const MAX_DOCX_PAGES = 5;
 
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -41,6 +48,25 @@ const STYLE_MAP = [
   "p[style-name='Intense Quote'] => blockquote:fresh",
   "p[style-name='Title'] => h1:fresh",
 ];
+
+/**
+ * `docProps/app.xml` lưu số trang lúc Word save gần nhất — không phải phân
+ * trang thời gian thực (không tồn tại khái niệm đó ở dạng XML), nhưng đủ tin
+ * cho hầu hết file GV tải lên (Word tự cập nhật field này mỗi lần lưu). Thiếu
+ * field (file từ nguồn khác không ghi field này) → bỏ qua kiểm tra, không
+ * chặn — best-effort, không phải chốt chặn cứng.
+ */
+async function readDocxPageCount(buffer: Buffer): Promise<number | null> {
+  try {
+    const zip = await JSZip.loadAsync(buffer);
+    const appXml = await zip.file("docProps/app.xml")?.async("string");
+    if (!appXml) return null;
+    const m = /<Pages>(\d+)<\/Pages>/.exec(appXml);
+    return m ? Number(m[1]) : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(req: Request) {
   const userId = await requireUserId();
@@ -76,6 +102,15 @@ export async function POST(req: Request) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+
+  const pages = await readDocxPageCount(buffer);
+  if (pages !== null && pages > MAX_DOCX_PAGES) {
+    return NextResponse.json(
+      { error: "too_many_pages", details: { pages, maxPages: MAX_DOCX_PAGES } },
+      { status: 400 },
+    );
+  }
+
   const now = new Date();
   const imageWarnings: string[] = [];
 

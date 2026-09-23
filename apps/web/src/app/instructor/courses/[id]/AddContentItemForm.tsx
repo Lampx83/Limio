@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { FileCheck2, FileUp } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
 import AiFormatPanel from "@/components/AiFormatPanel";
+import { LimeSliceIcon } from "@/components/BrandIcons";
 import { plainToRichHtml } from "@/lib/richText";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
@@ -1563,7 +1565,8 @@ function PdfUploadPanel({
   );
 }
 
-const DOCX_MAX_MB = 20;
+const DOCX_MAX_MB = 5;
+const DOCX_MAX_PAGES = 5;
 
 /**
  * Tile "Văn bản — AI hỗ trợ": thay vì copy-paste (bảng/chữ đậm từ Word dán
@@ -1582,9 +1585,25 @@ function DocxImportPanel({
   setError: (v: string | null) => void;
   onImported: (html: string, warnings: string[]) => void;
 }) {
+  const [filename, setFilename] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function describeDocxError(code: string | undefined, details: unknown): string {
+    if (code === "file_too_large") return `File quá lớn — giới hạn ${DOCX_MAX_MB} MB.`;
+    if (code === "too_many_pages") {
+      const pages = (details as { pages?: number } | undefined)?.pages;
+      return `Tài liệu ${pages ? `có ${pages} trang, ` : ""}vượt giới hạn ${DOCX_MAX_PAGES} trang — rút gọn rồi thử lại.`;
+    }
+    if (code === "unsupported_media_type") return "Chỉ nhận file .docx (Word).";
+    if (code === "validation_failed") return "File rỗng hoặc không đọc được nội dung.";
+    if (code === "convert_failed") return "Không đọc được file này — thử lưu lại từ Word rồi tải lên lại.";
+    return `Tải file thất bại${code ? `: ${code}` : ""}.`;
+  }
+
   async function handleFile(file: File) {
     setUploading(true);
     setError(null);
+    setFilename(file.name);
     const fd = new FormData();
     fd.append("file", file);
     let res: Response;
@@ -1596,13 +1615,14 @@ function DocxImportPanel({
     } catch (networkErr) {
       setUploading(false);
       console.error("[DocxImportPanel] network error", networkErr);
-      setError("network_error");
+      setError("Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.");
       return;
     }
     setUploading(false);
     if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      setError(`docx_import_failed: ${(d as { error?: string }).error ?? res.status}`);
+      const d = (await res.json().catch(() => ({}))) as { error?: string; details?: unknown };
+      setFilename(null);
+      setError(describeDocxError(d.error, d.details));
       return;
     }
     const data = (await res.json()) as { html: string; warnings: string[] };
@@ -1611,10 +1631,18 @@ function DocxImportPanel({
 
   return (
     <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-        Hoặc tải file .docx (Word) lên — giữ đúng bảng/ảnh
-      </p>
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-100 text-blue-700">
+          <FileUp className="h-4 w-4" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-default">Tải file .docx (Word) lên</p>
+          <p className="text-xs text-muted">Giữ đúng bảng, ảnh, trích dẫn — thay vì dán tay dễ rụng định dạng.</p>
+        </div>
+      </div>
+
       <input
+        ref={fileInputRef}
         type="file"
         accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         disabled={uploading}
@@ -1622,15 +1650,36 @@ function DocxImportPanel({
           const f = e.target.files?.[0];
           if (f) void handleFile(f);
         }}
-        className="mt-2 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+        className="hidden"
       />
-      {uploading && (
-        <p className="mt-1 text-xs text-muted">Đang đọc file...</p>
-      )}
-      <p className="mt-2 text-[11px] text-muted">
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="btn-secondary btn-sm inline-flex items-center gap-1.5 disabled:opacity-60"
+        >
+          {uploading ? (
+            <LimeSliceIcon className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <FileUp className="h-3.5 w-3.5" aria-hidden />
+          )}
+          {filename ? "Chọn file khác" : "Chọn file .docx"}
+        </button>
+        {uploading && <span className="text-xs text-muted">Đang đọc file…</span>}
+        {!uploading && filename && (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-success-700">
+            <FileCheck2 className="h-3.5 w-3.5" aria-hidden />
+            {filename}
+          </span>
+        )}
+      </div>
+
+      <p className="mt-2.5 text-xs text-muted">
         Chỉ nhận file <span className="font-mono font-semibold text-faint">.docx</span>
         {" · "}tối đa <span className="font-semibold">{DOCX_MAX_MB} MB</span>
-        {" · "}nên gọn vài trang — file quá dài sẽ bị AI format từ chối
+        {" · "}tối đa <span className="font-semibold">{DOCX_MAX_PAGES} trang</span>
       </p>
     </div>
   );
