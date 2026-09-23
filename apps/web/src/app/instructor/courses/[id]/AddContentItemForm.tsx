@@ -147,6 +147,10 @@ export default function AddContentItemForm({
   const [ltiToolId, setLtiToolId] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tile "Văn bản — AI hỗ trợ": tải file .docx thay vì paste tay. Own busy
+  // flag, tách khỏi `uploading` (scorm/h5p) như transcriptUploading bên dưới.
+  const [docxUploading, setDocxUploading] = useState(false);
+  const [docxWarnings, setDocxWarnings] = useState<string[]>([]);
   // In-video cuepoint editor state — only used when type === "video".
   const [lessonQuizzes, setLessonQuizzes] = useState<LessonQuizRow[]>([]);
   const [skills, setSkills] = useState<SkillRow[]>([]);
@@ -237,6 +241,7 @@ export default function AddContentItemForm({
     setH5pPackageId("");
     setLtiToolId("");
     setCuepoints([]);
+    setDocxWarnings([]);
     setError(null);
   }
 
@@ -517,6 +522,22 @@ export default function AddContentItemForm({
       )}
       {type === "richtext" && richtextMode === "ai" && (
         <div className="space-y-3">
+          <DocxImportPanel
+            uploading={docxUploading}
+            setUploading={setDocxUploading}
+            setError={setError}
+            onImported={(importedHtml, warnings) => {
+              setHtml(importedHtml);
+              setDocxWarnings(warnings);
+            }}
+          />
+          {docxWarnings.length > 0 && (
+            <ul className="space-y-0.5 rounded-lg border border-warning-200 bg-warning-50 p-2 text-xs text-warning-800">
+              {docxWarnings.map((w, i) => (
+                <li key={i}>⚠ {w}</li>
+              ))}
+            </ul>
+          )}
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
               Nội dung thô
@@ -525,7 +546,7 @@ export default function AddContentItemForm({
               value={html}
               onChange={(e) => setHtml(e.target.value)}
               rows={8}
-              placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn."
+              placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn. Hoặc tải file .docx ở trên."
               className="textarea"
             />
           </div>
@@ -1537,6 +1558,79 @@ function PdfUploadPanel({
       <p className="mt-2 text-[11px] text-muted">
         Chỉ nhận file <span className="font-mono font-semibold text-faint">PDF</span>
         {" · "}tối đa <span className="font-semibold">{PDF_MAX_MB} MB</span>
+      </p>
+    </div>
+  );
+}
+
+const DOCX_MAX_MB = 20;
+
+/**
+ * Tile "Văn bản — AI hỗ trợ": thay vì copy-paste (bảng/chữ đậm từ Word dán
+ * vào <textarea> luôn bị trình duyệt rụng hết định dạng), cho tải thẳng file
+ * .docx — server đọc XML thật của Word (mammoth), giữ đúng bảng/ảnh/quote
+ * rồi trả HTML thô đổ vào ô bên dưới, đi tiếp qua AI format như bình thường.
+ */
+function DocxImportPanel({
+  uploading,
+  setUploading,
+  setError,
+  onImported,
+}: {
+  uploading: boolean;
+  setUploading: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  onImported: (html: string, warnings: string[]) => void;
+}) {
+  async function handleFile(file: File) {
+    setUploading(true);
+    setError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(apiUrl("/api/lesson-media/docx-import"), {
+        method: "POST",
+        body: fd,
+      });
+    } catch (networkErr) {
+      setUploading(false);
+      console.error("[DocxImportPanel] network error", networkErr);
+      setError("network_error");
+      return;
+    }
+    setUploading(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(`docx_import_failed: ${(d as { error?: string }).error ?? res.status}`);
+      return;
+    }
+    const data = (await res.json()) as { html: string; warnings: string[] };
+    onImported(data.html, data.warnings ?? []);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+        Hoặc tải file .docx (Word) lên — giữ đúng bảng/ảnh
+      </p>
+      <input
+        type="file"
+        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        disabled={uploading}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+        }}
+        className="mt-2 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {uploading && (
+        <p className="mt-1 text-xs text-muted">Đang đọc file...</p>
+      )}
+      <p className="mt-2 text-[11px] text-muted">
+        Chỉ nhận file <span className="font-mono font-semibold text-faint">.docx</span>
+        {" · "}tối đa <span className="font-semibold">{DOCX_MAX_MB} MB</span>
+        {" · "}nên gọn vài trang — file quá dài sẽ bị AI format từ chối
       </p>
     </div>
   );
