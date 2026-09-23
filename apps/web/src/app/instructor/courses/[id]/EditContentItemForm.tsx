@@ -196,10 +196,7 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-3 rounded-lg border border-brand-200 bg-brand-soft/30 p-3"
-    >
+    <form onSubmit={onSubmit} className="space-y-3">
       <div className="flex items-center gap-2 text-xs">
         <span className="chip-brand">Sửa {type}</span>
       </div>

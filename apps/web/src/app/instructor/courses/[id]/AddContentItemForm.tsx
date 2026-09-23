@@ -524,43 +524,60 @@ export default function AddContentItemForm({
       )}
       {type === "richtext" && richtextMode === "ai" && (
         <div className="space-y-3">
-          <DocxImportPanel
-            uploading={docxUploading}
-            setUploading={setDocxUploading}
-            setError={setError}
-            onImported={(importedHtml, warnings) => {
-              setHtml(importedHtml);
-              setDocxWarnings(warnings);
-            }}
-          />
-          {docxWarnings.length > 0 && (
-            <ul className="space-y-0.5 rounded-lg border border-warning-200 bg-warning-50 p-2 text-xs text-warning-800">
-              {docxWarnings.map((w, i) => (
-                <li key={i}>⚠ {w}</li>
-              ))}
-            </ul>
-          )}
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
-              Nội dung thô
-            </label>
-            <textarea
-              value={html}
-              onChange={(e) => setHtml(e.target.value)}
-              rows={8}
-              placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn. Hoặc tải file .docx ở trên."
-              className="textarea"
+          <div className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
+                1
+              </span>
+              <p className="text-sm font-semibold text-default">Nội dung</p>
+            </div>
+            <DocxImportPanel
+              uploading={docxUploading}
+              setUploading={setDocxUploading}
+              setError={setError}
+              onImported={(importedHtml, warnings) => {
+                setHtml(importedHtml);
+                setDocxWarnings(warnings);
+              }}
+            />
+            {docxWarnings.length > 0 && (
+              <ul className="space-y-0.5 rounded-lg border border-warning-200 bg-warning-50 p-2 text-xs text-warning-800">
+                {docxWarnings.map((w, i) => (
+                  <li key={i}>⚠ {w}</li>
+                ))}
+              </ul>
+            )}
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
+                Nội dung thô
+              </label>
+              <textarea
+                value={html}
+                onChange={(e) => setHtml(e.target.value)}
+                rows={8}
+                placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn. Hoặc tải file .docx ở trên."
+                className="textarea"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4 dark:border-violet-900 dark:bg-violet-950/20">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-200 text-[11px] font-bold text-violet-900">
+                2
+              </span>
+              <p className="text-sm font-semibold text-default">Định dạng bằng AI</p>
+            </div>
+            <AiFormatPanel
+              lessonId={lessonId}
+              html={html}
+              onSaved={saveRichtextViaAi}
+              onClose={() => {
+                reset();
+                close();
+              }}
             />
           </div>
-          <AiFormatPanel
-            lessonId={lessonId}
-            html={html}
-            onSaved={saveRichtextViaAi}
-            onClose={() => {
-              reset();
-              close();
-            }}
-          />
         </div>
       )}
       {type === "teacher_note" && (

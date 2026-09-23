@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 import {
   LESSON_FORMAT_TEMPLATE_HINTS,
@@ -122,11 +123,11 @@ export default function AiFormatPanel({
 
   if (!revealed) {
     return (
-      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.4] p-4 text-center">
-        <span className="text-2xl" aria-hidden>
-          ✨
+      <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 p-4 text-center">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-violet-200 text-violet-900">
+          <Sparkles className="h-7 w-7" aria-hidden />
         </span>
-        <p className="text-sm text-muted">
+        <p className="max-w-xs text-base font-medium text-default">
           Dán xong nội dung bên cạnh thì bấm tiếp tục để chọn giao diện và định
           dạng bằng AI.
         </p>
@@ -135,7 +136,7 @@ export default function AiFormatPanel({
           onClick={() => setRevealed(true)}
           disabled={!html.trim()}
           title={html.trim() ? undefined : "Nhập nội dung trước"}
-          className="btn-secondary btn-sm"
+          className="btn btn-sm bg-violet-200 text-violet-900 hover:bg-violet-300 active:scale-[0.98]"
         >
           Tiếp tục →
         </button>
@@ -174,7 +175,7 @@ export default function AiFormatPanel({
             type="button"
             onClick={onFormat}
             disabled={busyFormat || busySave || !html.trim()}
-            className="btn btn-sm inline-flex items-center gap-1.5 bg-violet-200 text-violet-900 shadow-sm hover:bg-violet-300 active:scale-[0.98]"
+            className="btn btn-sm inline-flex items-center gap-1.5 bg-violet-200 text-violet-900 hover:bg-violet-300 active:scale-[0.98]"
           >
             {busyFormat ? (
               <>
@@ -182,7 +183,10 @@ export default function AiFormatPanel({
                 Đang định dạng…
               </>
             ) : (
-              "✨ Định dạng bằng AI"
+              <>
+                <Sparkles className="h-4 w-4" aria-hidden />
+                Định dạng bằng AI
+              </>
             )}
           </button>
         </div>
