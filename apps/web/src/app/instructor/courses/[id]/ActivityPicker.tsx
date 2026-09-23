@@ -1,6 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Blocks,
+  ClipboardList,
+  FileCode,
+  FileText,
+  FileType,
+  Globe,
+  LayoutTemplate,
+  Link2,
+  ListChecks,
+  NotebookPen,
+  Package,
+  Paperclip,
+  Puzzle,
+  Sparkles,
+  Video,
+  type LucideIcon,
+} from "lucide-react";
 import AddContentItemForm from "./AddContentItemForm";
 import AddQuizForm from "./AddQuizForm";
 import AddAssignmentForm from "./AddAssignmentForm";
@@ -24,7 +42,13 @@ type Tile = {
   key: string;
   /** Group label */
   group: "resource" | "activity";
-  icon: string;
+  icon: LucideIcon;
+  /**
+   * Màu nền/chữ của ô icon (bg-{color}-100 text-{color}-700) — dùng đúng màu
+   * định danh theo loại content đã có ở ContentItemRow.tsx/QuizSection.tsx/
+   * AssignmentSection.tsx, để nhất quán xuyên suốt app.
+   */
+  color: string;
   name: string;
   description: string;
   /** Optional small corner badge, e.g. "AI" for AI-assisted tiles */
@@ -46,7 +70,8 @@ const TILES: Tile[] = [
   {
     key: "richtext",
     group: "resource",
-    icon: "📝",
+    icon: FileText,
+    color: "bg-blue-100 text-blue-700",
     name: "Văn bản",
     description: "Copy-paste văn bản thô — AI định dạng đẹp giúp bạn",
     badge: "AI supported",
@@ -56,7 +81,8 @@ const TILES: Tile[] = [
   {
     key: "teacher_note",
     group: "resource",
-    icon: "🗒️",
+    icon: NotebookPen,
+    color: "bg-amber-100 text-amber-700",
     name: "Ghi chú giảng viên",
     description: "Chỉ bạn thấy khi dạy — học viên và bản in của họ không có",
     keywords: "ghi chu giao an speaker note teacher presenter giang vien",
@@ -65,7 +91,8 @@ const TILES: Tile[] = [
   {
     key: "markdown",
     group: "resource",
-    icon: "🅼",
+    icon: FileCode,
+    color: "bg-indigo-100 text-indigo-700",
     name: "Markdown",
     description: "Viết markdown thô — cho người quen cú pháp",
     keywords: "markdown md note",
@@ -74,7 +101,8 @@ const TILES: Tile[] = [
   {
     key: "video",
     group: "resource",
-    icon: "🎬",
+    icon: Video,
+    color: "bg-red-100 text-red-700",
     name: "Video",
     description: "Embed YouTube/Vimeo/Loom hoặc upload file",
     keywords: "youtube vimeo loom mp4 webm",
@@ -83,7 +111,8 @@ const TILES: Tile[] = [
   {
     key: "pdf",
     group: "resource",
-    icon: "📄",
+    icon: FileType,
+    color: "bg-orange-100 text-orange-700",
     name: "PDF",
     description: "Upload file PDF hoặc dán link",
     keywords: "pdf document slide",
@@ -92,7 +121,8 @@ const TILES: Tile[] = [
   {
     key: "file",
     group: "resource",
-    icon: "📁",
+    icon: Paperclip,
+    color: "bg-slate-100 text-slate-700",
     name: "File đính kèm",
     description: "Tài liệu để học viên download",
     keywords: "file download attachment",
@@ -101,7 +131,8 @@ const TILES: Tile[] = [
   {
     key: "external_link",
     group: "resource",
-    icon: "🔗",
+    icon: Link2,
+    color: "bg-cyan-100 text-cyan-700",
     name: "Link ngoài",
     description: "Trỏ tới website/tài liệu bên ngoài",
     keywords: "url link external website",
@@ -110,7 +141,8 @@ const TILES: Tile[] = [
   {
     key: "embed",
     group: "resource",
-    icon: "🌐",
+    icon: LayoutTemplate,
+    color: "bg-purple-100 text-purple-700",
     name: "Embed",
     description: "Nhúng iframe URL bất kỳ",
     keywords: "iframe embed url",
@@ -119,7 +151,8 @@ const TILES: Tile[] = [
   {
     key: "html_block",
     group: "resource",
-    icon: "🌐",
+    icon: Globe,
+    color: "bg-rose-100 text-rose-700",
     name: "HTML tự tải lên",
     description: "Upload 1 file .html, hiển thị trong khung riêng (sandbox)",
     keywords: "html file iframe sandbox upload",
@@ -128,7 +161,8 @@ const TILES: Tile[] = [
   {
     key: "quiz",
     group: "activity",
-    icon: "❓",
+    icon: ListChecks,
+    color: "bg-brand-100 text-brand-700",
     name: "Quiz",
     description: "Trắc nghiệm, short answer — auto chấm",
     keywords: "quiz question test mcq",
@@ -137,7 +171,8 @@ const TILES: Tile[] = [
   {
     key: "assignment",
     group: "activity",
-    icon: "📋",
+    icon: ClipboardList,
+    color: "bg-pink-100 text-pink-700",
     name: "Assignment",
     description: "Bài tập — instructor chấm tay",
     keywords: "assignment homework essay",
@@ -146,7 +181,8 @@ const TILES: Tile[] = [
   {
     key: "scorm",
     group: "activity",
-    icon: "📦",
+    icon: Package,
+    color: "bg-teal-100 text-teal-700",
     name: "SCORM",
     description: "Package SCORM 1.2 (.zip)",
     keywords: "scorm package zip",
@@ -155,7 +191,8 @@ const TILES: Tile[] = [
   {
     key: "h5p",
     group: "activity",
-    icon: "🎯",
+    icon: Blocks,
+    color: "bg-emerald-100 text-emerald-700",
     name: "H5P",
     description: "Interactive H5P content",
     keywords: "h5p interactive",
@@ -164,7 +201,8 @@ const TILES: Tile[] = [
   {
     key: "lti",
     group: "activity",
-    icon: "🔌",
+    icon: Puzzle,
+    color: "bg-fuchsia-100 text-fuchsia-700",
     name: "LTI",
     description: "Tool LTI 1.3 external",
     keywords: "lti external tool",
@@ -310,8 +348,10 @@ export default function ActivityPicker({
         ) : (
           <div className="space-y-3 p-5">
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-2xl" aria-hidden>
-                {pickedTile.icon}
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${pickedTile.color}`}
+              >
+                <pickedTile.icon className="h-4 w-4" aria-hidden />
               </span>
               <span className="font-semibold">{pickedTile.name}</span>
               <span className="text-muted">— {pickedTile.description}</span>
@@ -366,17 +406,17 @@ function Group({
           >
             {t.badge && (
               <span
-                className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-violet-100 py-0.5 pl-1 pr-2 text-[10px] font-semibold text-violet-700"
+                className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-violet-600 py-0.5 pl-1.5 pr-2 text-[10px] font-semibold text-white"
                 aria-hidden
               >
-                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-200 text-[9px] leading-none">
-                  ✨
-                </span>
+                <Sparkles className="h-2.5 w-2.5" />
                 {t.badge}
               </span>
             )}
-            <span className="text-2xl" aria-hidden>
-              {t.icon}
+            <span
+              className={`flex h-10 w-10 items-center justify-center rounded-xl ${t.color}`}
+            >
+              <t.icon className="h-5 w-5" aria-hidden />
             </span>
             <span className="text-sm font-semibold text-default">{t.name}</span>
             <span className="text-xs text-muted leading-snug">
