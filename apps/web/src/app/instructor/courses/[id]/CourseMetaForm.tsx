@@ -107,54 +107,62 @@ export default function CourseMetaForm({
     return (
       <div className="card relative overflow-hidden !p-4 pl-5">
         <span className="absolute inset-y-0 left-0 w-1 bg-lime-500" aria-hidden />
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <dl className="flex flex-wrap items-center gap-2">
-            {facts.map(([Icon, k, v, tone]) => (
-              <div
-                key={k}
-                title={
-                  k === "Chế độ"
-                    ? initial.personalizationEnabled
-                      ? "Có AI feedback theo skill: BKT, chẩn đoán, lộ trình thích ứng, huy hiệu kỹ năng. Đổi bằng nút Sửa."
-                      : "Chạy như LMS truyền thống, không có AI feedback. Đổi bằng nút Sửa."
-                    : undefined
-                }
-                className={`flex items-center gap-2 rounded-lg py-1 pl-1 pr-3 ${FACT_TONE[tone]!.chip}`}
-              >
-                <span className={`flex h-7 w-7 items-center justify-center rounded-md ${FACT_TONE[tone]!.icon}`}>
-                  <Icon className="h-4 w-4" aria-hidden />
-                </span>
-                <div className="leading-tight">
-                  <dt className="text-[10px] font-medium uppercase tracking-wide text-faint">{k}</dt>
-                  <dd className="text-sm font-semibold">{v}</dd>
-                </div>
-              </div>
-            ))}
-          </dl>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            {initial.description && (
+              <>
+                <SafeHtml
+                  html={plainToRichHtml(initial.description)}
+                  className={`prose prose-sm max-w-none text-muted dark:prose-invert ${
+                    longDesc && !descExpanded ? "line-clamp-3" : ""
+                  }`}
+                />
+                {longDesc && (
+                  <button
+                    type="button"
+                    onClick={() => setDescExpanded((v) => !v)}
+                    className="link mt-1 text-xs font-medium"
+                  >
+                    {descExpanded ? "Thu gọn" : "Xem thêm"}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
           <button onClick={() => setOpen(true)} className="btn-secondary btn-sm inline-flex shrink-0 items-center gap-1.5">
             <PencilLine className="h-3.5 w-3.5" aria-hidden />
             Sửa
           </button>
         </div>
-        {initial.description && (
-          <div className="mt-3 border-t border-token pt-3">
-            <SafeHtml
-              html={plainToRichHtml(initial.description)}
-              className={`prose prose-sm max-w-none text-muted dark:prose-invert ${
-                longDesc && !descExpanded ? "line-clamp-3" : ""
-              }`}
-            />
-            {longDesc && (
-              <button
-                type="button"
-                onClick={() => setDescExpanded((v) => !v)}
-                className="link mt-1 text-xs font-medium"
-              >
-                {descExpanded ? "Thu gọn" : "Xem thêm"}
-              </button>
-            )}
-          </div>
-        )}
+        {/* Nhãn màu (Level/Ngôn ngữ/Category/Giá/Chế độ) đặt DƯỚI mô tả — đặt
+            ngay đầu card rất dễ bị đọc nhầm thành hàng nút bấm. */}
+        <dl
+          className={`flex flex-wrap items-center gap-2 ${
+            initial.description ? "mt-3 border-t border-token pt-3" : ""
+          }`}
+        >
+          {facts.map(([Icon, k, v, tone]) => (
+            <div
+              key={k}
+              title={
+                k === "Chế độ"
+                  ? initial.personalizationEnabled
+                    ? "Có AI feedback theo skill: BKT, chẩn đoán, lộ trình thích ứng, huy hiệu kỹ năng. Đổi bằng nút Sửa."
+                    : "Chạy như LMS truyền thống, không có AI feedback. Đổi bằng nút Sửa."
+                  : undefined
+              }
+              className={`flex items-center gap-2 rounded-lg py-1 pl-1 pr-3 ${FACT_TONE[tone]!.chip}`}
+            >
+              <span className={`flex h-7 w-7 items-center justify-center rounded-md ${FACT_TONE[tone]!.icon}`}>
+                <Icon className="h-4 w-4" aria-hidden />
+              </span>
+              <div className="leading-tight">
+                <dt className="text-[10px] font-medium uppercase tracking-wide text-faint">{k}</dt>
+                <dd className="text-sm font-semibold">{v}</dd>
+              </div>
+            </div>
+          ))}
+        </dl>
       </div>
     );
   }
