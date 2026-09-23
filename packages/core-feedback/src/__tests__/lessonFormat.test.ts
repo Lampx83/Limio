@@ -97,6 +97,82 @@ describe("formatLessonContent — happy path", () => {
       expect(r.html).toContain("<h2>ok</h2>");
     }
   });
+
+  it("cả 4 template đều dặn cỡ chữ 1.25rem cho <td>/<blockquote> — không bỏ sót như <p>/<li>", async () => {
+    // Từng có bug: guide.rules chỉ dặn font-size cho h2/h3/p/li/callout, quên
+    // hẳn <table>/<th>/<td> — AI trả bảng không style gì, chữ trong bảng nhỏ
+    // hẳn so với phần còn lại của bài (phát hiện khi GV test thật với 1 bài có
+    // bảng, theme "Sinh động"). Rà soát lại phát hiện thêm <blockquote>/<img>
+    // cũng thiếu — test này chặn cả 2 lớp cùng dạng.
+    for (const template of ["clean", "academic", "modern", "vibrant"] as const) {
+      const userId = await makeUser(`tpl-gap-${template}`);
+      let capturedSystemPrompt = "";
+      const openai = {
+        chat: {
+          completions: {
+            create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+              capturedSystemPrompt = req.messages.find((m) => m.role === "system")?.content ?? "";
+              return {
+                choices: [{ message: { content: JSON.stringify({ html: "<table></table>" }) } }],
+                usage: { prompt_tokens: 1, completion_tokens: 1 },
+              };
+            },
+          },
+        },
+      } as unknown as OpenAI;
+
+      await formatLessonContent(userId, { html: "<table><tr><td>x</td></tr></table>", template }, openai);
+
+      expect(capturedSystemPrompt).toMatch(/<td>:\s*style="[^"]*font-size:1\.25rem/);
+      expect(capturedSystemPrompt).toMatch(/<blockquote>:\s*style="[^"]*font-size:1\.25rem/);
+    }
+  });
+
+  it("cả 4 template đều dặn <img> không tràn khung (max-width:100%)", async () => {
+    for (const template of ["clean", "academic", "modern", "vibrant"] as const) {
+      const userId = await makeUser(`tpl-img-${template}`);
+      let capturedSystemPrompt = "";
+      const openai = {
+        chat: {
+          completions: {
+            create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+              capturedSystemPrompt = req.messages.find((m) => m.role === "system")?.content ?? "";
+              return {
+                choices: [{ message: { content: JSON.stringify({ html: "<p>x</p>" }) } }],
+                usage: { prompt_tokens: 1, completion_tokens: 1 },
+              };
+            },
+          },
+        },
+      } as unknown as OpenAI;
+
+      await formatLessonContent(userId, { html: "<p>x</p>", template }, openai);
+
+      expect(capturedSystemPrompt).toMatch(/<img>:\s*style="[^"]*max-width:100%/);
+    }
+  });
+
+  it("dặn bọc <table> trong overflow-x:auto để không vỡ layout mobile", async () => {
+    const userId = await makeUser("tpl-table-wrap");
+    let capturedSystemPrompt = "";
+    const openai = {
+      chat: {
+        completions: {
+          create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+            capturedSystemPrompt = req.messages.find((m) => m.role === "system")?.content ?? "";
+            return {
+              choices: [{ message: { content: JSON.stringify({ html: "<p>x</p>" }) } }],
+              usage: { prompt_tokens: 1, completion_tokens: 1 },
+            };
+          },
+        },
+      },
+    } as unknown as OpenAI;
+
+    await formatLessonContent(userId, { html: "<p>x</p>", template: "clean" }, openai);
+
+    expect(capturedSystemPrompt).toContain("overflow-x:auto");
+  });
 });
 
 describe("formatLessonContent — hạn mức ví token", () => {

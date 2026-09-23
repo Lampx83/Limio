@@ -692,7 +692,12 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h2>: style="color:#1e40af;font-size:1.7rem;font-weight:700;margin:1.5rem 0 .6rem"
 - <h3> (mục tiêu/tổng kết): style="color:#1e40af;font-size:1.42rem;margin:0 0 .6rem"
 - <p>/<li>: style="color:#374151;font-size:1.25rem;line-height:1.7"
-- <div class="callout">: style="background:#eff6ff;border-left:4px solid #1e40af;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"`,
+- <div class="callout">: style="background:#eff6ff;border-left:4px solid #1e40af;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"
+- <table>: style="border-collapse:collapse;width:100%;margin:12px 0"
+- <th>: style="border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
+- <td>: style="border:1px solid #e5e7eb;color:#374151;font-size:1.25rem;line-height:1.7;padding:8px 12px"
+- <blockquote>: style="border-left:4px solid #93c5fd;background:#f8fafc;color:#374151;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:12px 0"
+- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
   academic: {
     label: "Học thuật",
@@ -700,7 +705,12 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h2>: style="color:#581c87;font-size:1.7rem;font-weight:700;margin:1.5rem 0 .6rem;font-family:Georgia,serif"
 - <h3>: style="color:#581c87;font-size:1.42rem;margin:0 0 .6rem;font-family:Georgia,serif"
 - <p>/<li>: style="color:#1f2937;font-size:1.25rem;line-height:1.7"
-- <div class="callout">: style="background:#f3f4f6;border-left:3px solid #581c87;padding:12px;border-radius:4px;margin:16px 0;font-size:1.25rem"`,
+- <div class="callout">: style="background:#f3f4f6;border-left:3px solid #581c87;padding:12px;border-radius:4px;margin:16px 0;font-size:1.25rem"
+- <table>: style="border-collapse:collapse;width:100%;margin:16px 0;font-family:${FONT_STACK}"
+- <th>: style="border:1px solid #d8b4fe;background:#f3f4f6;color:#581c87;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
+- <td>: style="border:1px solid #e5e7eb;color:#1f2937;font-size:1.25rem;line-height:1.7;padding:8px 12px"
+- <blockquote>: style="border-left:3px solid #c4b5fd;background:#faf5ff;color:#1f2937;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:16px 0;font-family:Georgia,serif"
+- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
   modern: {
     label: "Hiện đại",
@@ -708,7 +718,12 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h2>: style="background:linear-gradient(135deg,#0d9488,#0369a1);color:#ffffff;font-size:1.7rem;font-weight:700;border-radius:4px;padding:8px 12px;display:inline-block;margin:1.5rem 0 .6rem"
 - <h3>: style="color:#0d9488;font-size:1.42rem;margin:0 0 .6rem"
 - <p>/<li>: style="color:#111827;font-size:1.25rem;line-height:1.7"
-- <div class="callout">: style="background:#dcfce7;border-left:4px solid #16a34a;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem" (đổi sang #fed7aa/#f97316 nếu là cảnh báo, #dbeafe/#0284c7 nếu là ví dụ)`,
+- <div class="callout">: style="background:#dcfce7;border-left:4px solid #16a34a;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem" (đổi sang #fed7aa/#f97316 nếu là cảnh báo, #dbeafe/#0284c7 nếu là ví dụ)
+- <table>: style="border-collapse:collapse;width:100%;margin:12px 0"
+- <th>: style="border:1px solid #5eead4;background:#0d9488;color:#ffffff;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
+- <td>: style="border:1px solid #e5e7eb;color:#111827;font-size:1.25rem;line-height:1.7;padding:8px 12px"
+- <blockquote>: style="border-left:4px solid #5eead4;background:#f0fdfa;color:#111827;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:12px 0"
+- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
   // Khớp ĐÚNG palette SECTION_HUES/SECTION_TEXT_HUES của
   // packages/core-lms/scripts/import-course.ts (renderer khoá "Thiết kế
@@ -727,7 +742,12 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h2> (của mục thứ N): style="color:rgb(<màu chữ N>);font-size:1.7rem;font-weight:700;margin:1.5rem 0 .6rem;border-left:4px solid rgb(<màu chữ N>);padding-left:.7rem"
 - <h3> bên trong mục nào thì dùng ĐÚNG màu chữ của mục cha đó: style="color:rgb(<màu chữ của mục cha>);font-size:1.42rem;margin:0 0 .6rem"
 - <p>/<li>: style="color:#111827;font-size:1.25rem;line-height:1.7" (không đổi màu theo mục — chỉ heading đổi màu)
-- <div class="callout"> bên trong mục nào thì dùng màu nền+chữ của mục đó: style="background:rgba(<màu nền của mục>);border-left:4px solid rgb(<màu chữ của mục>);padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"`,
+- <div class="callout"> bên trong mục nào thì dùng màu nền+chữ của mục đó: style="background:rgba(<màu nền của mục>);border-left:4px solid rgb(<màu chữ của mục>);padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"
+- <table>: style="border-collapse:collapse;width:100%;margin:12px 0" (không đổi màu theo mục — như <p>/<li>)
+- <th>: style="border:1px solid #e5e7eb;background:#f9fafb;color:#111827;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
+- <td>: style="border:1px solid #e5e7eb;color:#111827;font-size:1.25rem;line-height:1.7;padding:8px 12px"
+- <blockquote>: style="border-left:4px solid #9ca3af;background:#f9fafb;color:#111827;font-style:italic;font-size:1.25rem;line-height:1.7;padding:10px 16px;margin:12px 0" (không đổi màu theo mục — như <table>)
+- <img>: style="max-width:100%;height:auto;border-radius:8px;margin:12px auto;display:block"`,
   },
 };
 
@@ -780,6 +800,7 @@ ${guide.rules}
 Quy tắc bắt buộc:
 - KHÔNG thêm, xoá, hay diễn giải lại Ý NGHĨA nội dung gốc — chỉ định dạng lại cách trình bày.
 - KHÔNG bịa mục tiêu/tổng kết nếu nội dung gốc không đủ cơ sở — bỏ qua phần đó thay vì đoán.
+- Có <table>: LUÔN bọc trong <div style="overflow-x:auto">...</div> để bảng dài không vỡ layout trên di động.
 - Output CHỈ chứa thẻ: div, h2, h3, p, ul, ol, li, strong, em, table, thead, tbody, tr, td, th, a, img, blockquote. KHÔNG <script>, <style>, <iframe>, <form>, thuộc tính onXxx.
 - Giữ nguyên href/src của link/ảnh có trong nội dung gốc.
 - Trả JSON: { html: "<toàn bộ HTML, một chuỗi>" }`;
