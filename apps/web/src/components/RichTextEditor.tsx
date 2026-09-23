@@ -8,10 +8,12 @@ import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
+import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { probeEditorLoss, type LossReport } from "./richtext/lossProbe";
 import { HeadingId } from "./richtext/headingId";
+import { cleanWordHtml } from "./richtext/wordPaste";
 import SafeHtml from "./SafeHtml";
 
 interface Props {
@@ -64,6 +66,10 @@ const EXTENSIONS = [
     HTMLAttributes: { class: "max-w-full h-auto rounded-md" },
   }),
   HeadingId,
+  Table.configure({ resizable: false }),
+  TableRow,
+  TableHeader,
+  TableCell,
 ];
 
 function htmlHasText(html: string): boolean {
@@ -118,6 +124,7 @@ export default function RichTextEditor({
         "data-placeholder": placeholder,
         style: `min-height: ${minHeight}px;`,
       },
+      transformPastedHTML: cleanWordHtml,
       handlePaste(view, event) {
         // Word (và nhiều nguồn rich-text khác) luôn kèm một bitmap chụp lại
         // vùng chọn trong clipboardData.files, kể cả khi người dùng chỉ copy
