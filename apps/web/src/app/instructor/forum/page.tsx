@@ -132,7 +132,7 @@ export default async function InstructorForumHubPage({
         <h1 className="text-2xl font-bold">Forum Q&amp;A</h1>
         <p className="mt-2 text-muted">
           Thread hỏi-đáp của học viên gắn theo từng bài học. Đánh dấu một reply là
-          &ldquo;resolved&rdquo; để chốt đáp án.
+          &ldquo;Đã xử lý&rdquo; để chốt đáp án.
         </p>
       </header>
 
@@ -144,7 +144,7 @@ export default async function InstructorForumHubPage({
           value={unresolved}
           tone={unresolved > 0 ? "accent" : "success"}
         />
-        <KpiCard label="Đã resolved" value={resolved} tone="success" />
+        <KpiCard label="Đã xử lý" value={resolved} tone="success" />
         <KpiCard
           label={`Stale (>${STALE_HOURS}h chưa resolve)`}
           value={stale}
@@ -175,7 +175,7 @@ export default async function InstructorForumHubPage({
               { id: "all", label: "Tất cả" },
               { id: "unresolved", label: "Chưa giải đáp" },
               { id: "stale", label: `Stale >${STALE_HOURS}h` },
-              { id: "resolved", label: "Đã resolved" },
+              { id: "resolved", label: "Đã xử lý" },
             ] as const
           ).map((f) => {
             const active = status === f.id;
@@ -258,7 +258,7 @@ export default async function InstructorForumHubPage({
                         </td>
                         <td className="px-4 py-3 align-top">
                           {t.resolvedPostId ? (
-                            <span className="chip-success">Resolved</span>
+                            <span className="chip-success">Đã xử lý</span>
                           ) : isStale ? (
                             <span className="chip-danger">Stale</span>
                           ) : (
@@ -296,7 +296,7 @@ export default async function InstructorForumHubPage({
                     <div className="flex items-start justify-between gap-2">
                       <p className="line-clamp-2 flex-1 font-medium">{t.title}</p>
                       {t.resolvedPostId ? (
-                        <span className="chip-success shrink-0">Resolved</span>
+                        <span className="chip-success shrink-0">Đã xử lý</span>
                       ) : isStale ? (
                         <span className="chip-danger shrink-0">Stale</span>
                       ) : (

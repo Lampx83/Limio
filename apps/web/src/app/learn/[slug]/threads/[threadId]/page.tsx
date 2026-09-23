@@ -59,7 +59,7 @@ export default async function ThreadPage({
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="h-display text-h3">{thread.title}</h1>
               {isResolvedThread && (
-                <StatusBadge tone="success">Đã giải quyết</StatusBadge>
+                <StatusBadge tone="success">Đã xử lý</StatusBadge>
               )}
             </div>
             <p className="mt-1 text-caption">

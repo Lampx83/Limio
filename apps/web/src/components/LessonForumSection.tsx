@@ -250,7 +250,7 @@ export default function LessonForumSection({
 
                 {t.resolvedPostId && (
                   <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-success-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                    ✓ Đã giải
+                    ✓ Đã xử lý
                   </span>
                 )}
 
