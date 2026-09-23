@@ -37,7 +37,7 @@ export default function ContentEditorClient({
   const Icon = ICON[item.type] ?? FileText;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-4">
+    <div className="mx-auto max-w-7xl px-4 py-4">
       <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-sm">
         <header className="flex flex-wrap items-center gap-3 border-b border-token px-5 py-4">
           <Link
