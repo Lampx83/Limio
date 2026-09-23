@@ -137,7 +137,7 @@ export default async function InstructorCoursesPage() {
                     <div className="flex items-center gap-1.5">
                       <Link
                         href={`/instructor/courses/${c.id}`}
-                        className="inline-flex h-8 items-center gap-1 rounded-md bg-brand-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700"
+                        className="btn-primary btn-sm gap-1 px-6"
                         prefetch={false}
                       >
                         Mở
