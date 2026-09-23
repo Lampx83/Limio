@@ -83,7 +83,7 @@ export default async function AssessmentStartPage() {
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
+    <main>
       <h1 className="text-2xl font-bold">Kiểm tra đánh giá</h1>
       <p className="mt-1 text-body text-faint">
         Ba bước theo thứ tự: soạn câu hỏi → gom thành đề thi → tổ chức thi.

@@ -47,7 +47,7 @@ export default async function OrganizePage({
   const q = exam ? `?examId=${exam.id}` : "";
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
+    <main>
       <h1 className="text-2xl font-bold">Tổ chức thi</h1>
       <p className="mt-1 text-body text-faint">
         Bạn định tổ chức kiểu gì? Chọn xong hệ thống lo phần còn lại.
