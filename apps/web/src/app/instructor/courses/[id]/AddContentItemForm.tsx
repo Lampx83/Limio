@@ -864,19 +864,26 @@ export default function AddContentItemForm({
       )}
 
       <div className="flex flex-wrap items-center gap-2 border-t border-token pt-3">
-        <button type="submit" disabled={busy} className="btn-primary btn-sm">
-          {busy ? "..." : "Tạo"}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            reset();
-            close();
-          }}
-          className="btn-secondary btn-sm"
-        >
-          Hủy
-        </button>
+        {/* Tile "Văn bản — AI hỗ trợ" lưu qua "Áp dụng và lưu" của
+            AiFormatPanel — nút "Tạo" chung của form ở đây thừa, dễ hiểu
+            nhầm thành đường lưu thứ 2 song song với AI. */}
+        {!(type === "richtext" && richtextMode === "ai") && (
+          <>
+            <button type="submit" disabled={busy} className="btn-primary btn-sm">
+              {busy ? "..." : "Tạo"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                reset();
+                close();
+              }}
+              className="btn-secondary btn-sm"
+            >
+              Hủy
+            </button>
+          </>
+        )}
         {error && (
           <span className="text-xs text-danger-600">Lỗi: {error}</span>
         )}
