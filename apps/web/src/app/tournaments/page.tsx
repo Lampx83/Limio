@@ -162,7 +162,7 @@ export default async function TournamentsPage({
         {tournaments.length === 0 ? (
           <EmptyArena tab={tab} />
         ) : (
-          <ul className="grid gap-5 sm:grid-cols-2">
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {tournaments.map((t) => (
               <TournamentCard
                 key={t.id}
