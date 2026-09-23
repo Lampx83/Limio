@@ -583,10 +583,10 @@ export default function BankWorkbench({
             </button>
             <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden />
             <button
-              onClick={() => setAdding((s) => !s)}
+              onClick={() => setAdding(true)}
               className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
             >
-              {adding ? "Đóng" : (<><span aria-hidden>+</span> Nhập thủ công</>)}
+              <span aria-hidden>+</span> Nhập thủ công
             </button>
           </div>
         </div>
@@ -672,31 +672,6 @@ export default function BankWorkbench({
           destinationLabel="ngân hàng câu hỏi"
         />
 
-        {/* Overlay panels */}
-        {adding && (
-          // Đợt 10 fix: trước là `shrink-0` — trong cột flex-col
-          // overflow-hidden có chiều cao cố định, panel không co lại được nên
-          // khi picker dài ra (10 loại thay vì 6, Đợt 7) phần bên dưới hàng
-          // đầu bị ancestor `overflow-hidden` cắt mất, không cách nào cuộn
-          // tới. Đổi sang `flex-1` (cùng idiom với list ở dưới và
-          // DetailPanel) để panel tự co theo không gian còn lại và tự cuộn
-          // nội bộ khi nội dung dài hơn không gian đó.
-          <div className="flex-1 overflow-y-auto border-b border-default bg-white px-4 py-3">
-            <QuestionForm
-              bankId={bankId}
-              suggestedSkills={suggestedSkills}
-              availableTopics={availableTopics}
-              onDone={async () => {
-                setAdding(false);
-                await refreshAndKeepSelection();
-                // Topic mới (nếu user tạo) → refresh filter list.
-                void fetchTopics();
-                flashOk("Đã tạo câu hỏi");
-              }}
-              onCancel={() => setAdding(false)}
-            />
-          </div>
-        )}
 
         {/* Notifications */}
         {err && (
@@ -983,6 +958,48 @@ export default function BankWorkbench({
             </div>
           </div>
         )}
+
+      {/* ── Popup thêm câu hỏi (Đợt 12 — trước đây render inline ở trên
+          list, chỉ đẩy list xuống chứ không phải popup thật; giờ dùng đúng
+          pattern modal như popup sửa câu bên dưới). */}
+      {adding && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setAdding(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-default px-4 py-2.5">
+              <h3 className="text-sm font-semibold text-slate-800">Thêm câu hỏi mới</h3>
+              <button
+                onClick={() => setAdding(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-faint transition-colors hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Đóng"
+                title="Đóng"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <QuestionForm
+                bankId={bankId}
+                suggestedSkills={suggestedSkills}
+                availableTopics={availableTopics}
+                onDone={async () => {
+                  setAdding(false);
+                  await refreshAndKeepSelection();
+                  // Topic mới (nếu user tạo) → refresh filter list.
+                  void fetchTopics();
+                  flashOk("Đã tạo câu hỏi");
+                }}
+                onCancel={() => setAdding(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Popup sửa câu hỏi (Đợt 10 — thay panel cố định bên phải, cho
           list full-width) ─────────────────────────────────────────────── */}
