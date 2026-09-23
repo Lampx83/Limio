@@ -106,12 +106,20 @@ export default function AddContentItemForm({
   embedded = false,
   onCancel,
   lockedType,
+  richtextMode = "wysiwyg",
 }: {
   lessonId: string;
   nextOrderIndex: number;
   embedded?: boolean;
   onCancel?: () => void;
   lockedType?: ContentType;
+  /**
+   * Chỉ có ý nghĩa khi lockedType === "richtext" — 2 tile riêng trong
+   * ActivityPicker ("Văn bản — AI hỗ trợ" vs "Richtext editor") cùng tạo
+   * content type "richtext", chỉ khác Ô NHẬP: "ai" = textarea thô +
+   * AiFormatPanel, "wysiwyg" = RichTextEditor thường, không AI.
+   */
+  richtextMode?: "ai" | "wysiwyg";
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(embedded);
@@ -370,7 +378,11 @@ export default function AddContentItemForm({
           setBusy(false);
           return;
         }
-        payload = { html };
+        // Tile "AI hỗ trợ" cho gõ text thô vào <textarea> (không phải HTML) —
+        // nếu GV lưu thẳng mà không bấm "Định dạng bằng AI", biến đoạn text
+        // đó thành <p>/<br> tối thiểu thay vì lưu 1 dòng chữ dính liền không
+        // ngắt đoạn. HTML thật (từ RichTextEditor) đi qua hàm này không đổi.
+        payload = { html: plainToRichHtml(html) };
         break;
       case "embed":
         payload = { url };
@@ -495,13 +507,27 @@ export default function AddContentItemForm({
           placeholder="Ghi chú cho chính bạn khi đứng lớp: hỏi câu gì, dừng ở đâu, đáp án…"
         />
       )}
-      {type === "richtext" && (
+      {type === "richtext" && richtextMode === "wysiwyg" && (
+        <div>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
+            Nội dung
+          </label>
+          <RichTextEditor value={html} onChange={setHtml} placeholder="Nhập nội dung văn bản..." />
+        </div>
+      )}
+      {type === "richtext" && richtextMode === "ai" && (
         <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
-              Nội dung
+              Nội dung thô
             </label>
-            <RichTextEditor value={html} onChange={setHtml} placeholder="Nhập nội dung văn bản..." />
+            <textarea
+              value={html}
+              onChange={(e) => setHtml(e.target.value)}
+              rows={8}
+              placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn."
+              className="textarea"
+            />
           </div>
           <AiFormatPanel
             lessonId={lessonId}

@@ -14,6 +14,7 @@ import {
   NotebookPen,
   Package,
   Paperclip,
+  PenLine,
   Puzzle,
   Sparkles,
   Video,
@@ -61,22 +62,32 @@ type Tile = {
    * the dedicated form.
    */
   pick:
-    | { kind: "content"; subtype: ContentSubtype }
+    | { kind: "content"; subtype: ContentSubtype; richtextMode?: "ai" | "wysiwyg" }
     | { kind: "quiz" }
     | { kind: "assignment" };
 };
 
 const TILES: Tile[] = [
   {
-    key: "richtext",
+    key: "richtext_ai",
     group: "resource",
     icon: FileText,
     color: "bg-blue-100 text-blue-700",
-    name: "Văn bản",
+    name: "Văn bản — AI hỗ trợ",
     description: "Copy-paste văn bản thô — AI định dạng đẹp giúp bạn",
     badge: "AI supported",
-    keywords: "text richtext wysiwyg editor van ban ai dinh dang format",
-    pick: { kind: "content", subtype: "richtext" },
+    keywords: "text richtext ai dinh dang format van ban tho paste",
+    pick: { kind: "content", subtype: "richtext", richtextMode: "ai" },
+  },
+  {
+    key: "richtext_wysiwyg",
+    group: "resource",
+    icon: PenLine,
+    color: "bg-blue-100 text-blue-700",
+    name: "Richtext editor",
+    description: "Soạn trực tiếp — in đậm, danh sách, ảnh, bảng, không qua AI",
+    keywords: "richtext wysiwyg editor soan thao truc quan van ban",
+    pick: { kind: "content", subtype: "richtext", richtextMode: "wysiwyg" },
   },
   {
     key: "teacher_note",
@@ -363,6 +374,7 @@ export default function ActivityPicker({
                 embedded
                 onCancel={onClose}
                 lockedType={pickedTile.pick.subtype}
+                richtextMode={pickedTile.pick.richtextMode}
               />
             )}
             {pickedTile.pick.kind === "quiz" && (

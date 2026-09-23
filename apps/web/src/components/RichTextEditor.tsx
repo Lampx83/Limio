@@ -48,7 +48,7 @@ const TEXT_COLORS = [
  * Một danh sách duy nhất, dùng cho cả editor thật lẫn hàm dò mất mát. Tách ra
  * đây vì hai chỗ đó mà lệch nhau thì lời cảnh báo sẽ nói sai sự thật.
  */
-const EXTENSIONS = [
+export const EXTENSIONS = [
   StarterKit.configure({
     heading: { levels: [1, 2, 3] },
   }),
