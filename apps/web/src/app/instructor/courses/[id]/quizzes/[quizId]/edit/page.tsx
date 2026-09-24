@@ -60,6 +60,8 @@ export default async function QuizEditorPage({
         timeLimitSec: quiz.timeLimitSec,
         maxAttempts: quiz.maxAttempts,
         dueAt: quiz.dueAt ? quiz.dueAt.toISOString() : null,
+        opensAt: quiz.opensAt ? quiz.opensAt.toISOString() : null,
+        scoringPolicy: quiz.scoringPolicy,
         isHidden: quiz.isHidden,
         questions: quiz.questions.map((q) => ({
           id: q.id,

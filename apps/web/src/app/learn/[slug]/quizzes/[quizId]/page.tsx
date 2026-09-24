@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 
 const ERROR_LABEL: Record<string, string> = {
   max_attempts_exceeded: "Bạn đã hết số lần làm bài cho phép.",
+  quiz_not_open: "Quiz này chưa tới giờ mở.",
   quiz_past_due: "Quiz này đã quá hạn hoàn thành nên không thể làm thêm.",
   no_questions: "Quiz này chưa có câu hỏi nào.",
 };

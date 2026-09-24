@@ -6,6 +6,7 @@ import {
   getCourseProgress,
   isUserEnrolled,
   listThreadsForLesson,
+  resolveQuizScore,
 } from "@feedbackme/core-lms";
 import { shouldSkipLesson } from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
@@ -72,6 +73,7 @@ export default async function LessonPage({
           isHidden: true,
           createdAt: true,
           cuepointOnly: true,
+          scoringPolicy: true,
         },
       },
       assignments: {
@@ -308,41 +310,33 @@ export default async function LessonPage({
   const quizAttempts = visibleQuizzes.length
     ? await prisma.quizAttempt.findMany({
         where: { userId, quizId: { in: visibleQuizzes.map((q) => q.id) } },
-        select: { quizId: true, status: true, scorePct: true },
+        select: { quizId: true, status: true, scorePct: true, submittedAt: true },
         orderBy: { startedAt: "desc" },
       })
     : [];
+  const scoreAttempts = new Map<string, Array<{ scorePct: number | null; submittedAt: Date | null }>>();
+  const attemptedQuizzes = new Set<string>();
+  const submittedQuizzes = new Set<string>();
+  for (const att of quizAttempts) {
+    attemptedQuizzes.add(att.quizId);
+    if (att.status !== "submitted") continue;
+    submittedQuizzes.add(att.quizId);
+    const list = scoreAttempts.get(att.quizId) ?? [];
+    list.push({ scorePct: att.scorePct ?? null, submittedAt: att.submittedAt });
+    scoreAttempts.set(att.quizId, list);
+  }
+  // Điểm hiển thị theo cách GV chọn cho quiz (cao nhất / cuối cùng / trung bình).
   const bestAttemptByQuiz = new Map<
     string,
-    {
-      scorePct: number | null;
-      attempted: boolean;
-      submitted: boolean;
-    }
+    { scorePct: number | null; attempted: boolean; submitted: boolean }
   >();
-  for (const att of quizAttempts) {
-    const cur = bestAttemptByQuiz.get(att.quizId);
-    const score = att.scorePct ?? null;
-    const isSubmitted = att.status === "submitted";
-    if (!cur) {
-      bestAttemptByQuiz.set(att.quizId, {
-        attempted: true,
-        submitted: isSubmitted,
-        scorePct: score,
-      });
-    } else {
-      // Keep "submitted" sticky; otherwise prefer the higher score.
-      const submitted = cur.submitted || isSubmitted;
-      const bestScore =
-        score !== null && (cur.scorePct === null || score > cur.scorePct)
-          ? score
-          : cur.scorePct;
-      bestAttemptByQuiz.set(att.quizId, {
-        attempted: true,
-        submitted,
-        scorePct: bestScore,
-      });
-    }
+  for (const q of visibleQuizzes) {
+    if (!attemptedQuizzes.has(q.id)) continue;
+    bestAttemptByQuiz.set(q.id, {
+      attempted: true,
+      submitted: submittedQuizzes.has(q.id),
+      scorePct: resolveQuizScore(scoreAttempts.get(q.id) ?? [], q.scoringPolicy),
+    });
   }
 
   const tasks: TaskItem[] = [
@@ -584,6 +578,7 @@ export default async function LessonPage({
           teacherMode={teacherMode}
           noteCount={teacherNotes.length}
           containerId="lesson-content"
+          editHref={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
         />
       )}
 

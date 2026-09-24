@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, ListChecks, Pencil, Settings2, Sparkles, Upload, X } from "lucide-react";
-import { QuizActionButtons, QuizEditForm } from "../../../QuizHeader";
+import {
+  QuizActionButtons,
+  QuizEditForm,
+  SCORING_POLICY_LABEL,
+  type ScoringPolicy,
+} from "../../../QuizHeader";
 import EditQuestionForm from "../../../EditQuestionForm";
 import AddQuestionForm from "../../../AddQuestionForm";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
@@ -42,6 +47,8 @@ interface Quiz {
   timeLimitSec: number | null;
   maxAttempts: number | null;
   dueAt: string | null;
+  opensAt: string | null;
+  scoringPolicy: ScoringPolicy;
   isHidden: boolean;
   questions: Question[];
 }
@@ -170,7 +177,7 @@ export default function QuizEditorClient({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 [--text-faint:96_106_126] [--border:208_211_222]">
-      <div className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-sm">
+      <div className="overflow-clip rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-sm">
         <header className="flex flex-wrap items-center gap-3 border-b border-token px-5 py-4">
           <Link
             href={backHref}
@@ -211,11 +218,19 @@ export default function QuizEditorClient({
             </b>
           </span>
           <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
-            Hạn hoàn thành:{" "}
+            Mở / đóng:{" "}
             <b className="font-semibold text-default">
-              {quiz.dueAt ? formatDateTime(quiz.dueAt) : "Không có"}
+              {quiz.opensAt ? formatDateTime(quiz.opensAt) : "Mở ngay"}
+              {" → "}
+              {quiz.dueAt ? formatDateTime(quiz.dueAt) : "Không có hạn"}
             </b>
           </span>
+          {quiz.maxAttempts !== 1 && (
+            <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
+              Tính điểm:{" "}
+              <b className="font-semibold text-default">{SCORING_POLICY_LABEL[quiz.scoringPolicy]}</b>
+            </span>
+          )}
           {SHOW_QUIZ_CONFIDENCE && (
             <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
               Confidence <b className="font-semibold text-default">{quiz.requireConfidence ? "Bật" : "Tắt"}</b>
@@ -293,11 +308,11 @@ export default function QuizEditorClient({
         </div>
 
         <div className="grid lg:min-h-[560px] lg:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className="border-b border-token bg-[rgb(var(--surface))] p-3 lg:sticky lg:top-4 lg:self-start lg:border-b-0 lg:border-r lg:min-h-[560px]">
+          <aside className="border-b border-token bg-[rgb(var(--surface))] p-3 lg:sticky lg:top-20 lg:self-start lg:border-b-0 lg:border-r lg:min-h-[560px]">
             <p className="sticky top-0 z-10 bg-[rgb(var(--surface))] px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-faint">
               Câu hỏi ({quiz.questions.length})
             </p>
-            <ol className="max-h-[50vh] space-y-1 overflow-y-auto pr-1 lg:max-h-[calc(100vh-15rem)]">
+            <ol className="max-h-[50vh] space-y-1 overflow-y-auto pr-1 lg:max-h-[calc(100vh-11rem)]">
               {quiz.questions.map((q, i) => {
                 const on = q.id === selected;
                 return (

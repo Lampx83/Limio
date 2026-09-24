@@ -8,6 +8,20 @@ import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
 import { toast } from "@/lib/toast";
 import { SHOW_QUIZ_CONFIDENCE, SHOW_QUIZ_DIFFICULTY } from "./quizEditorFlags";
 
+export type ScoringPolicy = "highest" | "latest" | "average";
+
+export const SCORING_POLICY_LABEL: Record<ScoringPolicy, string> = {
+  highest: "Cao nhất",
+  latest: "Lần cuối",
+  average: "Trung bình",
+};
+
+const SCORING_POLICY_HINT: Record<ScoringPolicy, string> = {
+  highest: "Lấy điểm cao nhất trong các lần làm",
+  latest: "Lấy điểm của lần nộp cuối cùng",
+  average: "Lấy điểm trung bình của các lần làm",
+};
+
 interface Quiz {
   id: string;
   title: string;
@@ -17,6 +31,9 @@ interface Quiz {
   maxAttempts: number | null;
   /** ISO UTC; null = không có hạn hoàn thành. */
   dueAt?: string | null;
+  /** ISO UTC; null = mở ngay. */
+  opensAt?: string | null;
+  scoringPolicy?: ScoringPolicy;
   isHidden: boolean;
 }
 
@@ -100,6 +117,49 @@ export function QuizActionButtons({ quiz }: { quiz: Quiz }) {
   );
 }
 
+/** Ô cài đặt: nhãn (kèm công tắc bật/tắt nếu là tuỳ chọn) + phần điều khiển bên dưới. */
+function SettingCell({
+  id,
+  label,
+  enabled,
+  onToggle,
+  hint,
+  children,
+  className = "",
+}: {
+  id: string;
+  label: string;
+  /** undefined = luôn bật, không có công tắc. */
+  enabled?: boolean;
+  onToggle?: (v: boolean) => void;
+  hint?: string;
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`rounded-lg border border-token bg-[rgb(var(--surface))] p-2.5 ${className}`}>
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor={id} className="text-xs font-semibold text-default">
+          {label}
+        </label>
+        {onToggle && (
+          <input
+            id={id}
+            type="checkbox"
+            role="switch"
+            checked={!!enabled}
+            onChange={(e) => onToggle(e.target.checked)}
+            className="h-4 w-4 cursor-pointer rounded border-token accent-brand-600"
+          />
+        )}
+      </div>
+      <div className="mt-1.5 text-sm">
+        {(enabled ?? true) ? children : <span className="text-muted">{hint}</span>}
+      </div>
+    </div>
+  );
+}
+
 /** Inline edit form for the quiz body. */
 export function QuizEditForm({
   quiz,
@@ -115,6 +175,9 @@ export function QuizEditForm({
   const [requireConfidence, setRequireConfidence] = useState(quiz.requireConfidence);
   const [attemptsLimited, setAttemptsLimited] = useState(quiz.maxAttempts !== null);
   const [maxAttempts, setMaxAttempts] = useState(quiz.maxAttempts ?? 3);
+  const [scoringPolicy, setScoringPolicy] = useState<ScoringPolicy>(quiz.scoringPolicy ?? "highest");
+  const [opensEnabled, setOpensEnabled] = useState(!!quiz.opensAt);
+  const [opensLocal, setOpensLocal] = useState(quiz.opensAt ? toDateTimeInputValue(quiz.opensAt) : "");
   const [dueEnabled, setDueEnabled] = useState(!!quiz.dueAt);
   const [dueLocal, setDueLocal] = useState(quiz.dueAt ? toDateTimeInputValue(quiz.dueAt) : "");
   const [error, setError] = useState<string | null>(null);
@@ -123,12 +186,24 @@ export function QuizEditForm({
     quiz.timeLimitSec !== null ? Math.max(1, Math.round(quiz.timeLimitSec / 60)) : 15,
   );
 
+  // Một lần làm thì không có gì để gộp — ẩn ô cách tính điểm cho đỡ rối.
+  const singleAttempt = attemptsLimited && Math.round(maxAttempts) === 1;
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const opensAt = opensEnabled ? fromDateTimeInputValue(opensLocal) : null;
+    if (opensEnabled && !opensAt) {
+      setError("Chọn ngày giờ cho hạn mở, hoặc tắt hạn mở.");
+      return;
+    }
     const dueAt = dueEnabled ? fromDateTimeInputValue(dueLocal) : null;
     if (dueEnabled && !dueAt) {
-      setError("Chọn ngày giờ cho hạn hoàn thành, hoặc tắt hạn hoàn thành.");
+      setError("Chọn ngày giờ cho hạn đóng, hoặc tắt hạn đóng.");
+      return;
+    }
+    if (opensAt && dueAt && new Date(opensAt).getTime() >= new Date(dueAt).getTime()) {
+      setError("Hạn mở phải trước hạn đóng.");
       return;
     }
     setBusy(true);
@@ -144,6 +219,8 @@ export function QuizEditForm({
           ...(SHOW_QUIZ_CONFIDENCE ? { requireConfidence } : {}),
           timeLimitSec,
           maxAttempts: attemptsLimited ? Math.min(100, Math.max(1, Math.round(maxAttempts) || 1)) : null,
+          scoringPolicy,
+          opensAt,
           dueAt,
         }),
       });
@@ -162,8 +239,8 @@ export function QuizEditForm({
     }
   }
 
-  const chip =
-    "inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 text-sm transition hover:border-brand-400";
+  const numInput = "input h-7 w-16 px-1.5 py-0 text-center text-sm";
+  const dateInput = "input h-7 w-full px-1.5 py-0 text-sm";
 
   return (
     <form onSubmit={save} className="space-y-2.5 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
@@ -176,148 +253,170 @@ export function QuizEditForm({
         className="input w-full"
       />
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {SHOW_QUIZ_DIFFICULTY && (
-        <div className="flex items-center gap-2">
-          <span id="quiz-difficulty-label" className="text-xs font-medium text-muted">
-            Độ khó
-          </span>
-          <div
-            role="radiogroup"
-            aria-labelledby="quiz-difficulty-label"
-            title="1 dễ, 5 khó"
-            className="inline-flex overflow-hidden rounded-lg border border-token"
-          >
-            {[1, 2, 3, 4, 5].map((level) => (
-              <button
-                key={level}
-                type="button"
-                role="radio"
-                aria-checked={difficulty === level}
-                onClick={() => setDifficulty(level)}
-                className={`h-8 w-8 text-sm font-medium tabular-nums transition ${level > 1 ? "border-l border-token" : ""} ${
-                  difficulty === level
-                    ? "bg-brand-600 text-white"
-                    : "bg-[rgb(var(--surface))] text-fg hover:bg-[rgb(var(--surface-muted))]"
-                }`}
-              >
-                {level}
-              </button>
-            ))}
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <SettingCell
+          id="quiz-time-limit"
+          label="Thời gian làm bài"
+          enabled={timeLimitEnabled}
+          onToggle={setTimeLimitEnabled}
+          hint="Không giới hạn"
+        >
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              min={1}
+              max={1440}
+              value={timeLimitMin}
+              onChange={(e) => setTimeLimitMin(Number(e.target.value))}
+              aria-label="Số phút tối đa"
+              className={numInput}
+            />
+            <span className="text-muted">phút</span>
           </div>
-        </div>
+        </SettingCell>
+
+        <SettingCell
+          id="quiz-attempts-limit"
+          label="Số lần làm"
+          enabled={attemptsLimited}
+          onToggle={setAttemptsLimited}
+          hint="Không giới hạn"
+        >
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={maxAttempts}
+              onChange={(e) => setMaxAttempts(Number(e.target.value))}
+              aria-label="Số lần làm tối đa"
+              className={numInput}
+            />
+            <span className="text-muted">lần tối đa</span>
+          </div>
+        </SettingCell>
+
+        <SettingCell
+          id="quiz-opens"
+          label="Hạn mở"
+          enabled={opensEnabled}
+          onToggle={(v) => {
+            setOpensEnabled(v);
+            if (v && !opensLocal) setOpensLocal(toDateTimeInputValue(new Date()));
+          }}
+          hint="Mở ngay"
+        >
+          <input
+            type="datetime-local"
+            value={opensLocal}
+            onChange={(e) => setOpensLocal(e.target.value)}
+            aria-label="Hạn mở (giờ Việt Nam)"
+            className={dateInput}
+          />
+        </SettingCell>
+
+        <SettingCell
+          id="quiz-due"
+          label="Hạn đóng"
+          enabled={dueEnabled}
+          onToggle={(v) => {
+            setDueEnabled(v);
+            if (v && !dueLocal) {
+              setDueLocal(toDateTimeInputValue(new Date(Date.now() + 7 * 86_400_000)));
+            }
+          }}
+          hint="Không có hạn"
+        >
+          <input
+            type="datetime-local"
+            value={dueLocal}
+            onChange={(e) => setDueLocal(e.target.value)}
+            aria-label="Hạn đóng (giờ Việt Nam)"
+            className={dateInput}
+          />
+        </SettingCell>
+
+        {!singleAttempt && (
+          <SettingCell
+            id="quiz-scoring"
+            label="Cách tính điểm khi làm nhiều lần"
+            className="sm:col-span-2"
+          >
+            <div
+              role="radiogroup"
+              aria-label="Cách tính điểm khi làm nhiều lần"
+              title={SCORING_POLICY_HINT[scoringPolicy]}
+              className="inline-flex overflow-hidden rounded-lg border border-token"
+            >
+              {(Object.keys(SCORING_POLICY_LABEL) as ScoringPolicy[]).map((k, i) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={scoringPolicy === k}
+                  onClick={() => setScoringPolicy(k)}
+                  className={`h-7 px-3 text-xs font-medium transition ${i > 0 ? "border-l border-token" : ""} ${
+                    scoringPolicy === k
+                      ? "bg-brand-600 text-white"
+                      : "bg-[rgb(var(--surface))] text-fg hover:bg-[rgb(var(--surface-muted))]"
+                  }`}
+                >
+                  {SCORING_POLICY_LABEL[k]}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-muted">{SCORING_POLICY_HINT[scoringPolicy]}</p>
+          </SettingCell>
+        )}
+
+        {SHOW_QUIZ_DIFFICULTY && (
+          <SettingCell id="quiz-difficulty" label="Độ khó (1 dễ – 5 khó)">
+            <div role="radiogroup" aria-label="Độ khó" className="inline-flex overflow-hidden rounded-lg border border-token">
+              {[1, 2, 3, 4, 5].map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  role="radio"
+                  aria-checked={difficulty === level}
+                  onClick={() => setDifficulty(level)}
+                  className={`h-7 w-7 text-xs font-medium tabular-nums transition ${level > 1 ? "border-l border-token" : ""} ${
+                    difficulty === level
+                      ? "bg-brand-600 text-white"
+                      : "bg-[rgb(var(--surface))] text-fg hover:bg-[rgb(var(--surface-muted))]"
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </SettingCell>
         )}
 
         {SHOW_QUIZ_CONFIDENCE && (
-        <label className={chip} title="Người học chọn mức tự tin sau mỗi câu trả lời">
-          <input
-            type="checkbox"
-            checked={requireConfidence}
-            onChange={(e) => setRequireConfidence(e.target.checked)}
-            className="h-4 w-4 rounded border-token accent-brand-600"
-          />
-          Đánh giá độ tự tin
-        </label>
+          <SettingCell
+            id="quiz-confidence"
+            label="Đánh giá độ tự tin"
+            enabled={requireConfidence}
+            onToggle={setRequireConfidence}
+            hint="Tắt"
+          >
+            <span className="text-muted">Người học chọn mức tự tin sau mỗi câu</span>
+          </SettingCell>
         )}
-
-        <div className={chip.replace("cursor-pointer ", "")}>
-          <input
-            id="quiz-time-limit"
-            type="checkbox"
-            checked={timeLimitEnabled}
-            onChange={(e) => setTimeLimitEnabled(e.target.checked)}
-            className="h-4 w-4 cursor-pointer rounded border-token accent-brand-600"
-          />
-          <label htmlFor="quiz-time-limit" className="cursor-pointer">
-            Giới hạn thời gian
-          </label>
-          {timeLimitEnabled && (
-            <>
-              <input
-                type="number"
-                min={1}
-                max={1440}
-                value={timeLimitMin}
-                onChange={(e) => setTimeLimitMin(Number(e.target.value))}
-                aria-label="Số phút tối đa"
-                className="input h-6 w-14 px-1.5 py-0 text-center text-sm"
-              />
-              <span className="text-muted">phút</span>
-            </>
-          )}
-        </div>
-
-        <div className={chip.replace("cursor-pointer ", "")}>
-          <input
-            id="quiz-attempts-limit"
-            type="checkbox"
-            checked={attemptsLimited}
-            onChange={(e) => setAttemptsLimited(e.target.checked)}
-            className="h-4 w-4 cursor-pointer rounded border-token accent-brand-600"
-          />
-          <label htmlFor="quiz-attempts-limit" className="cursor-pointer">
-            Giới hạn số lần làm
-          </label>
-          {attemptsLimited ? (
-            <>
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={maxAttempts}
-                onChange={(e) => setMaxAttempts(Number(e.target.value))}
-                aria-label="Số lần làm tối đa"
-                className="input h-6 w-14 px-1.5 py-0 text-center text-sm"
-              />
-              <span className="text-muted">lần</span>
-            </>
-          ) : (
-            <span className="text-muted">(không giới hạn)</span>
-          )}
-        </div>
-
-        <div className={chip.replace("cursor-pointer ", "")}>
-          <input
-            id="quiz-due"
-            type="checkbox"
-            checked={dueEnabled}
-            onChange={(e) => {
-              setDueEnabled(e.target.checked);
-              if (e.target.checked && !dueLocal) {
-                setDueLocal(toDateTimeInputValue(new Date(Date.now() + 7 * 86_400_000)));
-              }
-            }}
-            className="h-4 w-4 cursor-pointer rounded border-token accent-brand-600"
-          />
-          <label htmlFor="quiz-due" className="cursor-pointer">
-            Hạn hoàn thành
-          </label>
-          {dueEnabled ? (
-            <input
-              type="datetime-local"
-              value={dueLocal}
-              onChange={(e) => setDueLocal(e.target.value)}
-              aria-label="Hạn hoàn thành (giờ Việt Nam)"
-              className="input h-6 px-1.5 py-0 text-sm"
-            />
-          ) : (
-            <span className="text-muted">(không có hạn)</span>
-          )}
-        </div>
-
-        <div className="ml-auto flex gap-2">
-          <button type="submit" disabled={busy} className="btn-primary btn-sm">
-            {busy ? "Đang lưu…" : "Lưu"}
-          </button>
-          <button type="button" onClick={onClose} disabled={busy} className="btn-secondary btn-sm">
-            Hủy
-          </button>
-        </div>
       </div>
-      <p className="text-xs text-muted">
-        Hạn hoàn thành tính theo giờ Việt Nam. Quá hạn, học viên không bắt đầu được lượt làm mới
-        (lượt đang làm dở vẫn nộp được).
-      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="min-w-0 flex-1 text-xs text-muted">
+          Giờ theo múi giờ Việt Nam. Trước hạn mở hoặc sau hạn đóng, học viên không bắt đầu được lượt làm mới
+          (lượt đang làm dở vẫn nộp được).
+        </p>
+        <button type="submit" disabled={busy} className="btn-primary btn-sm">
+          {busy ? "Đang lưu…" : "Lưu"}
+        </button>
+        <button type="button" onClick={onClose} disabled={busy} className="btn-secondary btn-sm">
+          Hủy
+        </button>
+      </div>
       {error && (
         <p role="alert" className="banner-danger text-sm">
           {error}

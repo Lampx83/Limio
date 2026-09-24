@@ -6,3 +6,4 @@ export * from "./attempts";
 export * from "./misconceptions";
 export * from "./inline";
 export * from "./cuepoint";
+export * from "./scoring";

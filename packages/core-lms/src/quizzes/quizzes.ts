@@ -4,7 +4,7 @@ import { assertCanEditCourse, CourseAuthzError } from "../courses/authz";
 import { attachLessonActivity } from "../courses/lessonActivity";
 import { QuizError } from "./types";
 
-export const CreateQuizInput = z.object({
+const QuizFields = z.object({
   title: z.string().min(1).max(200).trim(),
   description: z.string().max(5_000).optional(),
   difficulty: z.number().int().min(1).max(5).optional(),
@@ -14,12 +14,21 @@ export const CreateQuizInput = z.object({
   maxAttempts: z.number().int().positive().max(100).nullable().optional(),
   // null = không có hạn hoàn thành. ISO 8601 (UTC) từ client.
   dueAt: z.string().datetime().nullable().optional(),
+  // null = mở ngay. Phải trước hạn đóng (kiểm tra ở refine bên dưới).
+  opensAt: z.string().datetime().nullable().optional(),
+  // Cách gộp điểm khi làm nhiều lần.
+  scoringPolicy: z.enum(["highest", "latest", "average"]).optional(),
   randomizeOrder: z.boolean().optional(),
   requireConfidence: z.boolean().optional(),
   isHidden: z.boolean().optional(),
 });
 
-export const UpdateQuizInput = CreateQuizInput.partial();
+const opensBeforeDue = (v: { opensAt?: string | null; dueAt?: string | null }) =>
+  !v.opensAt || !v.dueAt || new Date(v.opensAt).getTime() < new Date(v.dueAt).getTime();
+const OPENS_BEFORE_DUE = { message: "opens_after_due", path: ["opensAt"] };
+
+export const CreateQuizInput = QuizFields.refine(opensBeforeDue, OPENS_BEFORE_DUE);
+export const UpdateQuizInput = QuizFields.partial().refine(opensBeforeDue, OPENS_BEFORE_DUE);
 
 /** Create a quiz scoped to a course (and optionally a lesson within it). */
 export async function createQuiz(
@@ -59,6 +68,8 @@ export async function createQuiz(
         timeLimitSec: parsed.data.timeLimitSec ?? null,
         maxAttempts: parsed.data.maxAttempts ?? null,
         dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
+        opensAt: parsed.data.opensAt ? new Date(parsed.data.opensAt) : null,
+        ...(parsed.data.scoringPolicy ? { scoringPolicy: parsed.data.scoringPolicy } : {}),
         randomizeOrder: parsed.data.randomizeOrder ?? false,
         requireConfidence: parsed.data.requireConfidence ?? true,
       },
@@ -91,6 +102,7 @@ export async function updateQuiz(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined),
   );
   if (typeof data.dueAt === "string") data.dueAt = new Date(data.dueAt);
+  if (typeof data.opensAt === "string") data.opensAt = new Date(data.opensAt);
   if (Object.keys(data).length === 0) return;
   await db.quiz.update({ where: { id: quizId }, data });
 }

@@ -743,6 +743,12 @@ enum QuestionType {
   drag_drop_fill
 }
 
+enum QuizScoringPolicy {
+  highest
+  latest
+  average
+}
+
 model Quiz {
   id                  String   @id @default(uuid())
   // A quiz can attach to a lesson, or stand alone within a course.
@@ -755,7 +761,11 @@ model Quiz {
   passThresholdPct    Int      @default(70)
   timeLimitSec        Int?
   maxAttempts         Int?
-  // Hạn hoàn thành: sau mốc này học viên không bắt đầu lượt mới được nữa
+  // Hạn mở: trước mốc này học viên chưa bắt đầu lượt mới được. Null = mở ngay.
+  opensAt             DateTime?
+  // Cách gộp điểm khi học viên làm nhiều lần (điểm hiển thị / vào sổ điểm).
+  scoringPolicy       QuizScoringPolicy @default(highest)
+  // Hạn đóng (UI gọi là "Hạn đóng"): sau mốc này học viên không bắt đầu lượt mới được nữa
   // (lượt đang làm dở vẫn nộp được). Null = không có hạn.
   dueAt               DateTime?
   randomizeOrder      Boolean  @default(false)
