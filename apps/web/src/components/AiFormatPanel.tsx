@@ -59,7 +59,7 @@ export default function AiFormatPanel({
   onClose: () => void;
 }) {
   const [revealed, setRevealed] = useState(false);
-  const [template, setTemplate] = useState<LessonFormatTemplateKey>("clean");
+  const [template, setTemplate] = useState<LessonFormatTemplateKey>("vibrant");
   const [busyFormat, setBusyFormat] = useState(false);
   const [busySave, setBusySave] = useState(false);
   const [error, setError] = useState<string | null>(null);

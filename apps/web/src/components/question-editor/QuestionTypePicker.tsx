@@ -2,7 +2,6 @@
 
 import { ArrowLeft } from "lucide-react";
 import {
-  AI_SUPPORTED_TYPES,
   QUESTION_TYPES,
   TYPE_LABEL,
   type QuestionType,
@@ -14,9 +13,6 @@ import {
  * chưa bị xoá/thay thế — xem comment ở file đó). Đợt 3-5 sẽ lần lượt đổi
  * Quiz/Ngân hàng/Đề thi sang dùng component này; tới lúc đó nó chưa được
  * import ở đâu cả (chỉ mới build hạ tầng, chưa đổi hành vi nơi nào).
- *
- * Badge "✨ AI" tái dùng đúng pattern + màu (violet-100/violet-700) mà user đã
- * thêm tay vào ActivityPicker.tsx (tile "Văn bản") — xem AI_SUPPORTED_TYPES.
  */
 
 interface TypeCard {
@@ -187,14 +183,11 @@ export default function QuestionTypePicker({
   onPick,
   onCancel,
   types = QUESTION_TYPES,
-  aiSupported = AI_SUPPORTED_TYPES,
 }: {
   onPick: (type: QuestionType) => void;
   onCancel: () => void;
   /** Giới hạn tile hiển thị (mặc định: cả 10 loại). */
   types?: readonly QuestionType[];
-  /** Loại nào gắn badge "✨ AI" (mặc định: 5 loại ImportMcqModal hỗ trợ). */
-  aiSupported?: ReadonlySet<QuestionType>;
 }) {
   const cards: TypeCard[] = types.map((type) => ({ type, preview: TYPE_CARDS[type] }));
 
@@ -222,14 +215,6 @@ export default function QuestionTypePicker({
             onClick={() => onPick(c.type)}
             className="group relative flex cursor-pointer flex-col items-stretch justify-start rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md"
           >
-            {aiSupported.has(c.type) && (
-              <span
-                className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700"
-                aria-hidden
-              >
-                ✨ AI
-              </span>
-            )}
             <div className="text-sm font-semibold text-slate-900 group-hover:text-brand-700">
               {TYPE_LABEL[c.type]}
             </div>

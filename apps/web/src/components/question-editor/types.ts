@@ -139,17 +139,3 @@ export const TYPE_LABEL: Record<QuestionType, string> = {
   numerical: "Điền số",
   drag_drop_fill: "Kéo thả",
 };
-
-/**
- * 5 loại AI import sinh được (xem apps/web/src/components/instructor/ImportMcqModal.tsx,
- * dòng "Hỗ trợ 5 loại: trắc nghiệm, đúng/sai, sắp xếp thứ tự, ghép cặp, điền khuyết").
- * Dùng để gắn badge "✨ AI" trên picker — cùng pattern badge đã có ở
- * ActivityPicker.tsx (tile "Văn bản" có badge AI tương tự).
- */
-export const AI_SUPPORTED_TYPES: ReadonlySet<QuestionType> = new Set([
-  "mcq",
-  "true_false_notgiven",
-  "ordering",
-  "matching",
-  "gap_fill",
-]);

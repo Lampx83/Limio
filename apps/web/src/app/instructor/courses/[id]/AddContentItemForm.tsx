@@ -545,6 +545,7 @@ export default function AddContentItemForm({
               <p className="text-sm font-semibold text-default">Nội dung</p>
             </div>
             <DocxImportPanel
+              error={error}
               uploading={docxUploading}
               setUploading={setDocxUploading}
               setError={setError}
@@ -657,6 +658,7 @@ export default function AddContentItemForm({
           )}
           {type === "pdf" && (
             <PdfUploadPanel
+              error={error}
               uploading={uploading}
               setUploading={setUploading}
               setError={setError}
@@ -729,6 +731,7 @@ export default function AddContentItemForm({
               className="input"
             />
             <HtmlUploadPanel
+              error={error}
               uploading={uploading}
               setUploading={setUploading}
               setError={setError}
@@ -914,7 +917,7 @@ export default function AddContentItemForm({
             </button>
           </>
         )}
-        {error && (
+        {error && !(["pdf", "html_block"].includes(type) || (type === "richtext" && richtextMode === "ai")) && (
           <span className="text-xs text-danger-600">Lỗi: {error}</span>
         )}
       </div>
@@ -1527,11 +1530,14 @@ function VideoUploadPanel({
 const PDF_MAX_MB = 50;
 
 function PdfUploadPanel({
+  error,
   uploading,
   setUploading,
   setError,
   onUploaded,
 }: {
+  /** Lỗi chung của form — hiện ngay dưới khu vực upload thay vì cuối form. */
+  error: string | null;
   uploading: boolean;
   setUploading: (v: boolean) => void;
   setError: (v: string | null) => void;
@@ -1615,6 +1621,11 @@ function PdfUploadPanel({
         Chỉ nhận file <span className="font-mono font-semibold text-faint">PDF</span>
         {" · "}tối đa <span className="font-semibold">{PDF_MAX_MB} MB</span>
       </p>
+      {error && (
+        <p role="alert" className="mt-2 rounded-md bg-danger-50 px-2.5 py-1.5 text-xs font-medium text-danger-700">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -1629,11 +1640,14 @@ const DOCX_MAX_PAGES = 5;
  * rồi trả HTML thô đổ vào ô bên dưới, đi tiếp qua AI format như bình thường.
  */
 function DocxImportPanel({
+  error,
   uploading,
   setUploading,
   setError,
   onImported,
 }: {
+  /** Lỗi chung của form — hiện ngay dưới khu vực upload thay vì cuối form. */
+  error: string | null;
   uploading: boolean;
   setUploading: (v: boolean) => void;
   setError: (v: string | null) => void;
@@ -1735,6 +1749,11 @@ function DocxImportPanel({
         {" · "}tối đa <span className="font-semibold">{DOCX_MAX_MB} MB</span>
         {" · "}tối đa <span className="font-semibold">{DOCX_MAX_PAGES} trang</span>
       </p>
+      {error && (
+        <p role="alert" className="mt-2 rounded-md bg-danger-50 px-2.5 py-1.5 text-xs font-medium text-danger-700">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -1742,11 +1761,14 @@ function DocxImportPanel({
 const HTML_MAX_MB = 10;
 
 function HtmlUploadPanel({
+  error,
   uploading,
   setUploading,
   setError,
   onUploaded,
 }: {
+  /** Lỗi chung của form — hiện ngay dưới khu vực upload thay vì cuối form. */
+  error: string | null;
   uploading: boolean;
   setUploading: (v: boolean) => void;
   setError: (v: string | null) => void;
@@ -1812,6 +1834,11 @@ function HtmlUploadPanel({
         {" · "}tối đa <span className="font-semibold">{HTML_MAX_MB} MB</span>
         {" · "}không kèm file ảnh/CSS/JS riêng (nhúng thẳng trong file nếu cần)
       </p>
+      {error && (
+        <p role="alert" className="mt-2 rounded-md bg-danger-50 px-2.5 py-1.5 text-xs font-medium text-danger-700">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
