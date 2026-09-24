@@ -50,6 +50,7 @@ import { toast } from "@/lib/toast";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 import BoardNotesView from "../BoardNotesView";
 import { contentKind } from "../slideKind";
+import ImportFromCourseDialog from "./ImportFromCourseDialog";
 import SlideTypePicker, { CollabBoardIcon, WordCloudIcon, type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
@@ -254,6 +255,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   }, [dirty]);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(initialDeck?.slides[0]?.id ?? null);
   const [pickingType, setPickingType] = useState(false);
+  const [importingCourse, setImportingCourse] = useState(false);
   const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
@@ -701,9 +703,27 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               setPickingType(false);
               pdfInputRef.current?.click();
             }}
+            onImportCourse={() => {
+              setPickingType(false);
+              setImportingCourse(true);
+            }}
             onClose={() => setPickingType(false)}
             pdfLimit={`Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB`}
             pdfNote={`Mỗi trang PDF → 1 slide riêng, nối vào cuối bài giảng. Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB.`}
+          />
+        )}
+
+        {importingCourse && (
+          <ImportFromCourseDialog
+            deckId={deckId}
+            onClose={() => setImportingCourse(false)}
+            onImported={(newSlides) => {
+              const added = newSlides as Slide[];
+              setImportingCourse(false);
+              setDeck((prev) => (prev ? { ...prev, slides: [...prev.slides, ...added] } : prev));
+              setSelectedSlideId(added[0]?.id ?? null);
+              setLastSavedAt(new Date());
+            }}
           />
         )}
 

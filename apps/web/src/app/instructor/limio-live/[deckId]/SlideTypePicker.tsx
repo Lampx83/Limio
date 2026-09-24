@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ComponentType } from "react";
-import { BarChart3, Brush, PenTool, FileUp, ListChecks, PenLine, X, type LucideIcon, type LucideProps } from "lucide-react";
+import { BarChart3, BookOpen, Brush, PenTool, FileUp, ListChecks, PenLine, X, type LucideIcon, type LucideProps } from "lucide-react";
 import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import { RESOURCE_TYPES, RESOURCE_TYPE_HINTS, RESOURCE_TYPE_ICONS } from "../ResourceEditor";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
@@ -72,17 +72,19 @@ const INTERACTIVE_TILES: Tile[] = [
 // Một lưới phẳng duy nhất: mọi loại slide (tài nguyên + tương tác + tách PDF) ngang hàng nhau, cùng một kiểu thẻ.
 
 // Loại hay dùng — xếp lên đầu theo thứ tự này, các loại còn lại nối tiếp phía sau.
-const POPULAR_KEYS = ["poll", "quiz", "word_cloud", "collaborate_board", "draw", "whiteboard", "video", "pdf-split", "text"];
+const POPULAR_KEYS = ["poll", "quiz", "word_cloud", "collaborate_board", "draw", "whiteboard", "video", "pdf-split", "course-import", "text"];
 
 export default function SlideTypePicker({
   onPick,
   onImportPdf,
+  onImportCourse,
   onClose,
   pdfNote,
   pdfLimit,
 }: {
   onPick: (choice: SlideChoice) => void;
   onImportPdf: () => void;
+  onImportCourse: () => void;
   onClose: () => void;
   pdfNote: string;
   pdfLimit: string;
@@ -101,9 +103,16 @@ export default function SlideTypePicker({
     icon: FileUp,
     choice: { type: "content" },
   };
+  const courseImport: Tile = {
+    key: "course-import",
+    label: "Từ khoá học",
+    hint: "Nhập bài học có sẵn từ khoá học của bạn thành slide",
+    icon: BookOpen,
+    choice: { type: "content" },
+  };
   // "richtext" (văn bản), "pdf" (nhúng nguyên file), "file" (đính kèm) và "external_link" không còn trong bảng chọn; slide cũ vẫn hiển thị bình thường.
   const HIDDEN_KEYS = ["richtext", "pdf", "file", "external_link"];
-  const all = [...CONTENT_TILES.filter((t) => !HIDDEN_KEYS.includes(t.key)), ...INTERACTIVE_TILES, pdfSplit];
+  const all = [...CONTENT_TILES.filter((t) => !HIDDEN_KEYS.includes(t.key)), ...INTERACTIVE_TILES, pdfSplit, courseImport];
   const popular = POPULAR_KEYS.map((k) => all.find((t) => t.key === k)).filter((t): t is Tile => !!t);
   // Nhóm ít dùng xếp cuối: Embed, rồi HTML và Markdown (loại cho người rành kỹ thuật) nằm cạnh nhau ở cuối.
   const TAIL_KEYS = ["html_block", "markdown"];
@@ -113,7 +122,7 @@ export default function SlideTypePicker({
   ];
   const tiles = [...popular, ...others].map((t) => ({
     ...t,
-    onClick: t.key === "pdf-split" ? onImportPdf : () => onPick(t.choice),
+    onClick: t.key === "pdf-split" ? onImportPdf : t.key === "course-import" ? onImportCourse : () => onPick(t.choice),
   }));
 
   return (

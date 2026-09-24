@@ -381,7 +381,7 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
               />
             </div>
             <a
-              href="/instructor/gameshow"
+              href="/instructor/gameshow/new"
               className="gs-btn-3d mt-8 inline-block rounded-2xl bg-white px-6 py-3 text-sm font-bold text-fuchsia-700 hover:bg-white/90"
               style={{ ["--gs-btn-shadow" as string]: "#701a75" }}
             >
