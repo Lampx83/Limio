@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, ListChecks, Pencil, Settings2, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, ListChecks, Pencil, Settings2, Sparkles, Upload, X } from "lucide-react";
 import {
   QuizActionButtons,
   QuizEditForm,
@@ -141,33 +141,12 @@ export default function QuizEditorClient({
   const [manualKey, setManualKey] = useState(0);
 
   const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
-  const currentIndex = quiz.questions.findIndex((q) => q.id === selected);
 
-  // Giữ câu đang chọn trong tầm nhìn của danh sách (chọn bằng nút Câu trước/tiếp
-  // hoặc phím tắt thì danh sách cuộn theo). block:"nearest" chỉ cuộn khung list,
-  // không kéo cả trang.
+  // Giữ câu đang chọn trong tầm nhìn của danh sách. block:"nearest" chỉ cuộn
+  // khung list, không kéo cả trang.
   useEffect(() => {
     itemRefs.current[selected]?.scrollIntoView({ block: "nearest" });
   }, [selected]);
-
-  function go(delta: number) {
-    const next = quiz.questions[currentIndex + delta];
-    if (next) setSelected(next.id);
-  }
-
-  // Alt+Shift+↑/↓ = câu trước/tiếp. Không dùng phím trần để khỏi va vào ô nhập liệu.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (!e.altKey || !e.shiftKey) return;
-      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
-      e.preventDefault();
-      const i = quiz.questions.findIndex((q) => q.id === selected);
-      const next = quiz.questions[i + (e.key === "ArrowUp" ? -1 : 1)];
-      if (next) setSelected(next.id);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [quiz.questions, selected]);
 
   const totalPoints = quiz.questions.reduce((a, q) => a + q.points, 0);
   const current = quiz.questions.find((q) => q.id === selected) ?? null;
@@ -354,29 +333,6 @@ export default function QuizEditorClient({
           <main className="min-w-0 bg-[rgb(var(--surface))] p-5 md:p-6 [&>div]:!m-0 [&>div]:!border-0 [&>div]:!bg-transparent [&>div]:!p-0 [&>form]:!border-0 [&>form]:!bg-transparent [&>form]:!p-0">
             {current ? (
               <>
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => go(-1)}
-                  disabled={currentIndex <= 0}
-                  title="Câu trước (Alt+Shift+↑)"
-                  className="btn-secondary btn-sm inline-flex items-center gap-1"
-                >
-                  <ChevronLeft className="h-4 w-4" aria-hidden /> Câu trước
-                </button>
-                <span className="text-sm text-muted" aria-live="polite">
-                  Câu <b className="text-default">{currentIndex + 1}</b> / {quiz.questions.length}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => go(1)}
-                  disabled={currentIndex >= quiz.questions.length - 1}
-                  title="Câu tiếp (Alt+Shift+↓)"
-                  className="btn-secondary btn-sm inline-flex items-center gap-1"
-                >
-                  Câu tiếp <ChevronRight className="h-4 w-4" aria-hidden />
-                </button>
-              </div>
               <EditQuestionForm
                 key={current.id}
                 question={current}
