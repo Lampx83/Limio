@@ -18,8 +18,6 @@ export default function AddQuizForm({
   const pathname = usePathname();
   const [open, setOpen] = useState(embedded);
   const [title, setTitle] = useState("");
-  const [difficulty, setDifficulty] = useState(1);
-  const [requireConfidence, setRequireConfidence] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -49,8 +47,10 @@ export default function AddQuizForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          difficulty,
-          requireConfidence,
+          // Không còn hỏi lúc tạo: giữ đúng giá trị mặc định form cũ vẫn gửi.
+          // Độ khó / confidence chỉnh (nếu bật cờ) ở Cài đặt của trình soạn quiz.
+          difficulty: 1,
+          requireConfidence: false,
         }),
       });
       if (!res.ok) {
@@ -85,28 +85,6 @@ export default function AddQuizForm({
         autoFocus
         className="input"
       />
-      <div className="flex flex-wrap items-center gap-3 text-xs">
-        <label className="flex items-center gap-2">
-          <span className="text-muted">Difficulty (1-5)</span>
-          <input
-            type="number"
-            min={1}
-            max={5}
-            value={difficulty}
-            onChange={(e) => setDifficulty(Number(e.target.value))}
-            className="input w-16"
-          />
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={requireConfidence}
-            onChange={(e) => setRequireConfidence(e.target.checked)}
-            className="h-4 w-4 rounded border-token accent-brand-600"
-          />
-          <span>Yêu cầu confidence</span>
-        </label>
-      </div>
       {err && (
         <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800">
           ⚠ {err}
