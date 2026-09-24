@@ -22,8 +22,8 @@ describe("nhập bài học vào deck dạy trực tiếp", () => {
       { type: "richtext", payload: { html } },
     ]);
     expect(slides).toHaveLength(2);
-    expect((slides[0].config as { bullets: string[] }).bullets).toHaveLength(6);
-    expect((slides[1].config as { title: string }).title).toBe("Bài 1 (tiếp)");
+    expect((slides[0]!.config as { bullets: string[] }).bullets).toHaveLength(6);
+    expect((slides[1]!.config as { title: string }).title).toBe("Bài 1 (tiếp)");
   });
 
   it("bài không có chữ vẫn ra 1 slide tiêu đề", () => {
