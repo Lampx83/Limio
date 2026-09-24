@@ -12,6 +12,7 @@ import {
   MonitorPlay,
   Pause,
   Play,
+  PenLine,
   Wrench,
   X,
 } from "lucide-react";
@@ -152,6 +153,7 @@ export default function TeacherBar({
   teacherMode,
   noteCount,
   containerId,
+  editHref,
 }: {
   lessonId: string;
   lessonTitle: string;
@@ -159,6 +161,8 @@ export default function TeacherBar({
   /** Số ghi chú giảng viên có trong bài — 0 thì nút bật ghi chú nói rõ là chưa có. */
   noteCount: number;
   containerId: string;
+  /** Trang soạn nội dung của đúng bài này — lối thoát khỏi chế độ đứng lớp. */
+  editHref: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -476,6 +480,16 @@ export default function TeacherBar({
 
   return (
     <div data-print-hide data-teacher-bar className="print:hidden">
+      {/* Lối thoát luôn thấy được: chế độ đứng lớp mở ở tab mới nên giảng viên
+          cần một nút rõ ràng để về màn soạn, không phải mò trong ngăn kéo. */}
+      <a
+        href={editHref}
+        title="Thoát chế độ đứng lớp, quay về màn hình soạn nội dung của bài này."
+        className="fixed left-4 top-20 z-40 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1.5 text-sm font-medium text-brand-700 shadow-md transition-colors hover:bg-brand-100"
+      >
+        <PenLine size={16} aria-hidden />
+        Về soạn nội dung
+      </a>
       {/*
         Cùng cơ chế với nút ghi chú của học viên: một nút tròn ở mép dưới bên
         phải, bấm vào thì ngăn kéo trượt ra thành một lớp riêng đè lên trang.
@@ -638,6 +652,15 @@ export default function TeacherBar({
                   {focus ? `Bỏ chiếu to: ${focus.label}` : "Chiếu to một phần"}
                 </span>
               </button>
+
+              <a
+                href={editHref}
+                title="Thoát chế độ đứng lớp, quay về màn hình soạn nội dung của bài này."
+                className={rowBtn}
+              >
+                <PenLine size={16} />
+                Về soạn nội dung
+              </a>
 
               <button
                 type="button"
