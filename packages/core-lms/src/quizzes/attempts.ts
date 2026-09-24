@@ -85,6 +85,7 @@ interface QuizForAttempt {
   id: string;
   courseId: string | null;
   maxAttempts: number | null;
+  dueAt: Date | null;
   timeLimitSec: number | null;
   requireConfidence: boolean;
 }
@@ -96,6 +97,7 @@ async function loadQuiz(quizId: string, db: PrismaClient): Promise<QuizForAttemp
       id: true,
       courseId: true,
       maxAttempts: true,
+      dueAt: true,
       timeLimitSec: true,
       requireConfidence: true,
     },
@@ -124,6 +126,14 @@ export async function startAttempt(
     where: { userId, quizId, status: "in_progress" },
   });
   if (existing) return { attemptId: existing.id, created: false };
+
+  // Hạn hoàn thành: qua hạn thì không mở lượt mới (lượt đang làm dở đã được
+  // trả về ở trên và vẫn nộp được). Giảng viên xem trước không bị chặn.
+  if (quiz.dueAt && quiz.dueAt.getTime() < Date.now()) {
+    if (!(await canEditCourse(userId, quiz.courseId, db))) {
+      throw new QuizError("quiz_past_due", { dueAt: quiz.dueAt.toISOString() });
+    }
+  }
 
   // Enforce max_attempts (counting submitted+abandoned).
   if (quiz.maxAttempts !== null) {

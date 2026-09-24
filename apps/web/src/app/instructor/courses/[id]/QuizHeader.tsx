@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
+import { toast } from "@/lib/toast";
+import { SHOW_QUIZ_CONFIDENCE, SHOW_QUIZ_DIFFICULTY } from "./quizEditorFlags";
 
 interface Quiz {
   id: string;
@@ -12,6 +15,8 @@ interface Quiz {
   requireConfidence: boolean;
   timeLimitSec: number | null;
   maxAttempts: number | null;
+  /** ISO UTC; null = không có hạn hoàn thành. */
+  dueAt?: string | null;
   isHidden: boolean;
 }
 
@@ -108,6 +113,11 @@ export function QuizEditForm({
   const [title, setTitle] = useState(quiz.title);
   const [difficulty, setDifficulty] = useState(quiz.difficulty ?? 1);
   const [requireConfidence, setRequireConfidence] = useState(quiz.requireConfidence);
+  const [attemptsLimited, setAttemptsLimited] = useState(quiz.maxAttempts !== null);
+  const [maxAttempts, setMaxAttempts] = useState(quiz.maxAttempts ?? 3);
+  const [dueEnabled, setDueEnabled] = useState(!!quiz.dueAt);
+  const [dueLocal, setDueLocal] = useState(quiz.dueAt ? toDateTimeInputValue(quiz.dueAt) : "");
+  const [error, setError] = useState<string | null>(null);
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(quiz.timeLimitSec !== null);
   const [timeLimitMin, setTimeLimitMin] = useState(
     quiz.timeLimitSec !== null ? Math.max(1, Math.round(quiz.timeLimitSec / 60)) : 15,
@@ -115,22 +125,40 @@ export function QuizEditForm({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+    const dueAt = dueEnabled ? fromDateTimeInputValue(dueLocal) : null;
+    if (dueEnabled && !dueAt) {
+      setError("Chọn ngày giờ cho hạn hoàn thành, hoặc tắt hạn hoàn thành.");
+      return;
+    }
     setBusy(true);
     const timeLimitSec = timeLimitEnabled ? Math.max(1, timeLimitMin) * 60 : null;
-    const res = await fetch(apiUrl(`/api/quizzes/${quiz.id}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        difficulty,
-        requireConfidence,
-        timeLimitSec,
-      }),
-    });
-    setBusy(false);
-    if (res.ok) {
-      onClose();
-      router.refresh();
+    try {
+      const res = await fetch(apiUrl(`/api/quizzes/${quiz.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          // Trường đang ẩn UI thì không gửi, để không ghi đè giá trị đã lưu.
+          ...(SHOW_QUIZ_DIFFICULTY ? { difficulty } : {}),
+          ...(SHOW_QUIZ_CONFIDENCE ? { requireConfidence } : {}),
+          timeLimitSec,
+          maxAttempts: attemptsLimited ? Math.min(100, Math.max(1, Math.round(maxAttempts) || 1)) : null,
+          dueAt,
+        }),
+      });
+      if (res.ok) {
+        toast.success("Đã lưu cài đặt quiz");
+        onClose();
+        router.refresh();
+      } else {
+        const d = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(`Chưa lưu được cài đặt quiz (${d.error ?? res.statusText}).`);
+      }
+    } catch {
+      setError("Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -149,6 +177,7 @@ export function QuizEditForm({
       />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {SHOW_QUIZ_DIFFICULTY && (
         <div className="flex items-center gap-2">
           <span id="quiz-difficulty-label" className="text-xs font-medium text-muted">
             Độ khó
@@ -177,7 +206,9 @@ export function QuizEditForm({
             ))}
           </div>
         </div>
+        )}
 
+        {SHOW_QUIZ_CONFIDENCE && (
         <label className={chip} title="Người học chọn mức tự tin sau mỗi câu trả lời">
           <input
             type="checkbox"
@@ -187,6 +218,7 @@ export function QuizEditForm({
           />
           Đánh giá độ tự tin
         </label>
+        )}
 
         <div className={chip.replace("cursor-pointer ", "")}>
           <input
@@ -215,6 +247,64 @@ export function QuizEditForm({
           )}
         </div>
 
+        <div className={chip.replace("cursor-pointer ", "")}>
+          <input
+            id="quiz-attempts-limit"
+            type="checkbox"
+            checked={attemptsLimited}
+            onChange={(e) => setAttemptsLimited(e.target.checked)}
+            className="h-4 w-4 cursor-pointer rounded border-token accent-brand-600"
+          />
+          <label htmlFor="quiz-attempts-limit" className="cursor-pointer">
+            Giới hạn số lần làm
+          </label>
+          {attemptsLimited ? (
+            <>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={maxAttempts}
+                onChange={(e) => setMaxAttempts(Number(e.target.value))}
+                aria-label="Số lần làm tối đa"
+                className="input h-6 w-14 px-1.5 py-0 text-center text-sm"
+              />
+              <span className="text-muted">lần</span>
+            </>
+          ) : (
+            <span className="text-muted">(không giới hạn)</span>
+          )}
+        </div>
+
+        <div className={chip.replace("cursor-pointer ", "")}>
+          <input
+            id="quiz-due"
+            type="checkbox"
+            checked={dueEnabled}
+            onChange={(e) => {
+              setDueEnabled(e.target.checked);
+              if (e.target.checked && !dueLocal) {
+                setDueLocal(toDateTimeInputValue(new Date(Date.now() + 7 * 86_400_000)));
+              }
+            }}
+            className="h-4 w-4 cursor-pointer rounded border-token accent-brand-600"
+          />
+          <label htmlFor="quiz-due" className="cursor-pointer">
+            Hạn hoàn thành
+          </label>
+          {dueEnabled ? (
+            <input
+              type="datetime-local"
+              value={dueLocal}
+              onChange={(e) => setDueLocal(e.target.value)}
+              aria-label="Hạn hoàn thành (giờ Việt Nam)"
+              className="input h-6 px-1.5 py-0 text-sm"
+            />
+          ) : (
+            <span className="text-muted">(không có hạn)</span>
+          )}
+        </div>
+
         <div className="ml-auto flex gap-2">
           <button type="submit" disabled={busy} className="btn-primary btn-sm">
             {busy ? "Đang lưu…" : "Lưu"}
@@ -224,6 +314,15 @@ export function QuizEditForm({
           </button>
         </div>
       </div>
+      <p className="text-xs text-muted">
+        Hạn hoàn thành tính theo giờ Việt Nam. Quá hạn, học viên không bắt đầu được lượt làm mới
+        (lượt đang làm dở vẫn nộp được).
+      </p>
+      {error && (
+        <p role="alert" className="banner-danger text-sm">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

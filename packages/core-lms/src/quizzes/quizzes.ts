@@ -10,7 +10,10 @@ export const CreateQuizInput = z.object({
   difficulty: z.number().int().min(1).max(5).optional(),
   // null = tắt giới hạn thời gian; số dương = số giây (tối đa 24h).
   timeLimitSec: z.number().int().positive().max(86_400).nullable().optional(),
-  maxAttempts: z.number().int().positive().max(100).optional(),
+  // null = không giới hạn số lần làm (dùng khi cập nhật để gỡ giới hạn).
+  maxAttempts: z.number().int().positive().max(100).nullable().optional(),
+  // null = không có hạn hoàn thành. ISO 8601 (UTC) từ client.
+  dueAt: z.string().datetime().nullable().optional(),
   randomizeOrder: z.boolean().optional(),
   requireConfidence: z.boolean().optional(),
   isHidden: z.boolean().optional(),
@@ -55,6 +58,7 @@ export async function createQuiz(
         difficulty: parsed.data.difficulty ?? null,
         timeLimitSec: parsed.data.timeLimitSec ?? null,
         maxAttempts: parsed.data.maxAttempts ?? null,
+        dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
         randomizeOrder: parsed.data.randomizeOrder ?? false,
         requireConfidence: parsed.data.requireConfidence ?? true,
       },
@@ -83,7 +87,10 @@ export async function updateQuiz(
   await assertCanEditCourse(actorUserId, courseId, db);
   const parsed = UpdateQuizInput.safeParse(rawInput);
   if (!parsed.success) throw new QuizError("validation_failed", parsed.error.flatten());
-  const data = Object.fromEntries(Object.entries(parsed.data).filter(([, v]) => v !== undefined));
+  const data: Record<string, unknown> = Object.fromEntries(
+    Object.entries(parsed.data).filter(([, v]) => v !== undefined),
+  );
+  if (typeof data.dueAt === "string") data.dueAt = new Date(data.dueAt);
   if (Object.keys(data).length === 0) return;
   await db.quiz.update({ where: { id: quizId }, data });
 }

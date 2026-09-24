@@ -45,7 +45,13 @@ export default function SkillTagPicker({
     .slice(0, MAX_SUGGESTIONS);
 
   function add(id: string) {
-    onChange([...picked, id]);
+    // Tag GV tự gắn luôn thắng tag tự sinh (CLAUDE.md §4.4): server gỡ tag tự
+    // sinh khỏi câu này, nên UI cũng bỏ chip đó đi cho khớp.
+    const kept = picked.filter((x) => {
+      const s = byId.get(x);
+      return !(s && isAutoLessonSkillCode(s.code));
+    });
+    onChange([...kept, id]);
     setQ("");
   }
 
@@ -60,9 +66,13 @@ export default function SkillTagPicker({
               <span
                 key={id}
                 className="inline-flex items-center gap-1 rounded-full bg-brand-600 py-0.5 pl-2.5 pr-1 text-xs font-medium text-white"
-                title={s?.code}
+                title={auto ? "Chủ đề tự sinh từ bài học" : s?.code}
               >
-                {auto ? "Chủ đề của bài học" : (s?.name || s?.code || id)}
+                {auto
+                  ? s?.name
+                    ? `Bài: ${s.name}`
+                    : "Chủ đề của bài học"
+                  : (s?.name || s?.code || id)}
                 <button
                   type="button"
                   onClick={() => onChange(picked.filter((x) => x !== id))}
@@ -78,6 +88,7 @@ export default function SkillTagPicker({
       )}
       <div className="relative">
         <input
+          aria-label="Tìm chủ đề để gắn thêm"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => setFocused(true)}
@@ -114,7 +125,7 @@ export default function SkillTagPicker({
         )}
       </div>
       <p className="mt-1.5 text-xs text-faint">
-        Mặc định câu hỏi thuộc chủ đề của bài học. Chỉ gắn thêm khi cần.
+        Chủ đề cho biết câu hỏi kiểm tra kiến thức nào, để hệ thống gợi ý ôn tập đúng chỗ. Mặc định câu hỏi thuộc chủ đề là bài học chứa quiz; gắn chủ đề riêng sẽ thay cho chủ đề mặc định đó.
       </p>
     </div>
   );

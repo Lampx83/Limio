@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ArrowLeft, ListChecks, Pencil, Settings2, Sparkles, Upload, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ListChecks, Pencil, Settings2, Sparkles, Upload, X } from "lucide-react";
 import { QuizActionButtons, QuizEditForm } from "../../../QuizHeader";
 import EditQuestionForm from "../../../EditQuestionForm";
 import AddQuestionForm from "../../../AddQuestionForm";
 import ImportMcqModal from "@/components/instructor/ImportMcqModal";
 import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
+import { formatDateTime } from "@/lib/datetime";
+import { isAutoLessonSkillCode } from "@feedbackme/shared-types";
+import { SHOW_QUIZ_CONFIDENCE, SHOW_QUIZ_DIFFICULTY } from "../../../quizEditorFlags";
 
 interface Question {
   id: string;
@@ -38,6 +41,7 @@ interface Quiz {
   requireConfidence: boolean;
   timeLimitSec: number | null;
   maxAttempts: number | null;
+  dueAt: string | null;
   isHidden: boolean;
   questions: Question[];
 }
@@ -53,6 +57,34 @@ const TYPE_LABEL: Record<string, string> = {
   short_answer: "Trả lời ngắn",
   drag_drop_fill: "Kéo thả từ/câu",
 };
+
+/** Chip chủ đề của câu ở danh sách xem nhanh: tag GV gắn trước; tag tự sinh từ bài học chỉ hiện mờ khi câu không có tag riêng. */
+function TopicChips({ tags }: { tags: Question["skillTags"] }) {
+  const manual = tags.filter((t) => !isAutoLessonSkillCode(t.skill.code));
+  const auto = tags.filter((t) => isAutoLessonSkillCode(t.skill.code));
+  const shown = manual.length > 0 ? manual : auto;
+  if (shown.length === 0) return null;
+  const max = 2;
+  return (
+    <span className="mt-1 flex flex-wrap gap-1" title="Chủ đề">
+      {shown.slice(0, max).map((t) => (
+        <span
+          key={t.skillId}
+          className={`max-w-full truncate rounded-full px-1.5 py-0.5 text-[11px] leading-4 ${
+            manual.length > 0 ? "bg-brand-100 text-brand-700" : "bg-[rgb(var(--surface-muted))] text-muted"
+          }`}
+        >
+          {t.skill.name || t.skill.code}
+        </span>
+      ))}
+      {shown.length > max && (
+        <span className="rounded-full bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 text-[11px] leading-4 text-muted">
+          +{shown.length - max}
+        </span>
+      )}
+    </span>
+  );
+}
 
 function stripHtml(html: string): string {
   return plainToRichHtml(html)
@@ -101,6 +133,35 @@ export default function QuizEditorClient({
   const [manualOpen, setManualOpen] = useState(false);
   const [manualKey, setManualKey] = useState(0);
 
+  const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const currentIndex = quiz.questions.findIndex((q) => q.id === selected);
+
+  // Giữ câu đang chọn trong tầm nhìn của danh sách (chọn bằng nút Câu trước/tiếp
+  // hoặc phím tắt thì danh sách cuộn theo). block:"nearest" chỉ cuộn khung list,
+  // không kéo cả trang.
+  useEffect(() => {
+    itemRefs.current[selected]?.scrollIntoView({ block: "nearest" });
+  }, [selected]);
+
+  function go(delta: number) {
+    const next = quiz.questions[currentIndex + delta];
+    if (next) setSelected(next.id);
+  }
+
+  // Alt+Shift+↑/↓ = câu trước/tiếp. Không dùng phím trần để khỏi va vào ô nhập liệu.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!e.altKey || !e.shiftKey) return;
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      e.preventDefault();
+      const i = quiz.questions.findIndex((q) => q.id === selected);
+      const next = quiz.questions[i + (e.key === "ArrowUp" ? -1 : 1)];
+      if (next) setSelected(next.id);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [quiz.questions, selected]);
+
   const totalPoints = quiz.questions.reduce((a, q) => a + q.points, 0);
   const current = quiz.questions.find((q) => q.id === selected) ?? null;
   const backHref = lessonId
@@ -132,15 +193,34 @@ export default function QuizEditorClient({
         </header>
 
         <div className="flex flex-wrap items-center gap-2 border-b border-token bg-[rgb(var(--surface-muted))] px-5 py-3">
+          {SHOW_QUIZ_DIFFICULTY && (
+            <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
+              Độ khó <b className="font-semibold text-default">{quiz.difficulty ?? "—"}/5</b>
+            </span>
+          )}
           <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
-            Độ khó <b className="font-semibold text-default">{quiz.difficulty ?? "—"}/5</b>
+            Thời gian làm bài:{" "}
+            <b className="font-semibold text-default">
+              {quiz.timeLimitSec ? `${Math.round(quiz.timeLimitSec / 60)} phút` : "Không giới hạn"}
+            </b>
           </span>
           <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
-            {quiz.timeLimitSec ? `${Math.round(quiz.timeLimitSec / 60)} phút` : "Không giới hạn"}
+            Số lần làm:{" "}
+            <b className="font-semibold text-default">
+              {quiz.maxAttempts ? `Tối đa ${quiz.maxAttempts} lần` : "Không giới hạn"}
+            </b>
           </span>
           <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
-            Confidence <b className="font-semibold text-default">{quiz.requireConfidence ? "Bật" : "Tắt"}</b>
+            Hạn hoàn thành:{" "}
+            <b className="font-semibold text-default">
+              {quiz.dueAt ? formatDateTime(quiz.dueAt) : "Không có"}
+            </b>
           </span>
+          {SHOW_QUIZ_CONFIDENCE && (
+            <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
+              Confidence <b className="font-semibold text-default">{quiz.requireConfidence ? "Bật" : "Tắt"}</b>
+            </span>
+          )}
           <span className="chip-brand ml-auto">
             {quiz.questions.length} câu · {totalPoints} điểm
           </span>
@@ -214,14 +294,19 @@ export default function QuizEditorClient({
 
         <div className="grid lg:min-h-[560px] lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="border-b border-token bg-[rgb(var(--surface))] p-3 lg:sticky lg:top-4 lg:self-start lg:border-b-0 lg:border-r lg:min-h-[560px]">
-            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-faint">
+            <p className="sticky top-0 z-10 bg-[rgb(var(--surface))] px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-faint">
               Câu hỏi ({quiz.questions.length})
             </p>
-            <ol className="space-y-1">
+            <ol className="max-h-[50vh] space-y-1 overflow-y-auto pr-1 lg:max-h-[calc(100vh-15rem)]">
               {quiz.questions.map((q, i) => {
                 const on = q.id === selected;
                 return (
-                  <li key={q.id}>
+                  <li
+                    key={q.id}
+                    ref={(el) => {
+                      itemRefs.current[q.id] = el;
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => setSelected(q.id)}
@@ -237,6 +322,7 @@ export default function QuizEditorClient({
                         <span className="block text-xs text-muted">
                           {TYPE_LABEL[q.type] ?? q.type} · {q.points} điểm
                         </span>
+                        <TopicChips tags={q.skillTags} />
                       </span>
                     </button>
                   </li>
@@ -252,12 +338,37 @@ export default function QuizEditorClient({
 
           <main className="min-w-0 bg-[rgb(var(--surface))] p-5 md:p-6 [&>div]:!m-0 [&>div]:!border-0 [&>div]:!bg-transparent [&>div]:!p-0 [&>form]:!border-0 [&>form]:!bg-transparent [&>form]:!p-0">
             {current ? (
+              <>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => go(-1)}
+                  disabled={currentIndex <= 0}
+                  title="Câu trước (Alt+Shift+↑)"
+                  className="btn-secondary btn-sm inline-flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden /> Câu trước
+                </button>
+                <span className="text-sm text-muted" aria-live="polite">
+                  Câu <b className="text-default">{currentIndex + 1}</b> / {quiz.questions.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => go(1)}
+                  disabled={currentIndex >= quiz.questions.length - 1}
+                  title="Câu tiếp (Alt+Shift+↓)"
+                  className="btn-secondary btn-sm inline-flex items-center gap-1"
+                >
+                  Câu tiếp <ChevronRight className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
               <EditQuestionForm
                 key={current.id}
                 question={current}
                 hideCancel
                 onClose={() => {}}
               />
+              </>
             ) : (
               <div className="rounded-lg border border-dashed border-token p-8 text-center text-sm text-muted">
                 Chưa có câu hỏi nào được chọn — bấm AI import / Excel import /

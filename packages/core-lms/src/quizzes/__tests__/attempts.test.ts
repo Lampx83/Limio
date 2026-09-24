@@ -25,6 +25,7 @@ interface SetupOpts {
   maxAttempts?: number | null;
   requireConfidence?: boolean;
   timeLimitSec?: number | null;
+  dueAt?: string | null;
 }
 
 async function setup(slug: string, opts: SetupOpts = {}) {
@@ -50,6 +51,7 @@ async function setup(slug: string, opts: SetupOpts = {}) {
   };
   if (opts.maxAttempts != null) quizPayload.maxAttempts = opts.maxAttempts;
   if (opts.timeLimitSec != null) quizPayload.timeLimitSec = opts.timeLimitSec;
+  if (opts.dueAt != null) quizPayload.dueAt = opts.dueAt;
   const q = await createQuiz(
     owner.userId,
     { courseId: c.courseId, lessonId: l.lessonId },
@@ -142,6 +144,16 @@ describe("startAttempt", () => {
     await expect(startAttempt(learnerId, quizId)).rejects.toMatchObject({
       code: "max_attempts_exceeded",
     });
+  });
+
+  it("dueAt: quá hạn thì không mở lượt mới; chưa tới hạn thì vẫn làm được", async () => {
+    const past = await setup("a3b", { dueAt: new Date(Date.now() - 3_600_000).toISOString() });
+    await expect(startAttempt(past.learnerId, past.quizId)).rejects.toMatchObject({
+      code: "quiz_past_due",
+    });
+    const future = await setup("a3c", { dueAt: new Date(Date.now() + 3_600_000).toISOString() });
+    const r = await startAttempt(future.learnerId, future.quizId);
+    expect(r.created).toBe(true);
   });
 
   it("not_enrolled blocks outsider", async () => {

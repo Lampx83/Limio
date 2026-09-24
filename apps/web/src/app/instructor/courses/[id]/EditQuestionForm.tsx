@@ -10,6 +10,7 @@ import DragDropFillEditor from "@/components/question-editor/DragDropFillEditor"
 import type { MatchingDraft, DragDropFillDraft } from "@/components/question-editor/types";
 import QuestionFormHeader, { FIELD_LABEL } from "./QuestionFormHeader";
 import { apiUrl } from "@/lib/apiUrl";
+import { toast } from "@/lib/toast";
 import { plainToRichHtml } from "@/lib/richText";
 
 
@@ -229,28 +230,39 @@ export default function EditQuestionForm({
             : undefined
           : undefined;
 
-    const res = await fetch(apiUrl(`/api/questions/${question.id}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: prompt.trim(),
-        points,
-        explanation: explanation.trim() || null,
-        options: cleanOptions,
-        extra,
-        skillIds: pickedSkillIds,
-      }),
-    });
+    let res: Response;
+    try {
+      res = await fetch(apiUrl(`/api/questions/${question.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          points,
+          explanation: explanation.trim() || null,
+          options: cleanOptions,
+          extra,
+          skillIds: pickedSkillIds,
+        }),
+      });
+    } catch {
+      setBusy(false);
+      const msg = "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+      setError(msg);
+      toast.error("Chưa lưu được câu hỏi", { description: msg });
+      return;
+    }
 
     setBusy(false);
     if (res.ok) {
+      toast.success("Đã lưu câu hỏi");
       onClose();
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(
-        typeof d.error === "string" ? d.error : JSON.stringify(d.error ?? d) ?? "update_failed",
-      );
+      const msg =
+        typeof d.error === "string" ? d.error : JSON.stringify(d.error ?? d) ?? "update_failed";
+      setError(msg);
+      toast.error("Chưa lưu được câu hỏi", { description: msg, duration: 8000 });
     }
   }
 
@@ -515,7 +527,11 @@ export default function EditQuestionForm({
             Hủy
           </button>
         )}
-        {error && <span className="text-xs text-danger-600">Lỗi: {error}</span>}
+        {error && (
+          <span role="alert" className="text-xs text-danger-600">
+            Lỗi: {error}
+          </span>
+        )}
       </div>
     </form>
   );

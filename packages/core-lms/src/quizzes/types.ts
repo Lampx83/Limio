@@ -7,6 +7,7 @@ export class QuizError extends Error {
       | "attempt_not_found"
       | "not_enrolled"
       | "max_attempts_exceeded"
+      | "quiz_past_due"
       | "attempt_already_submitted"
       | "time_expired"
       | "attempt_belongs_to_other"

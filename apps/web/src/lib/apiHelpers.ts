@@ -108,6 +108,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
         : err.code === "not_enrolled" || err.code === "attempt_belongs_to_other"
           ? 403
           : err.code === "max_attempts_exceeded" ||
+              err.code === "quiz_past_due" ||
               err.code === "attempt_already_submitted" ||
               err.code === "no_questions" ||
               err.code === "quiz_has_attempts"

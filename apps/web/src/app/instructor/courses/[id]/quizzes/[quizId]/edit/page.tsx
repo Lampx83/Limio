@@ -59,6 +59,7 @@ export default async function QuizEditorPage({
         requireConfidence: quiz.requireConfidence,
         timeLimitSec: quiz.timeLimitSec,
         maxAttempts: quiz.maxAttempts,
+        dueAt: quiz.dueAt ? quiz.dueAt.toISOString() : null,
         isHidden: quiz.isHidden,
         questions: quiz.questions.map((q) => ({
           id: q.id,
