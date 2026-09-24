@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+import { enrollErrorMessage } from "@/lib/enrollErrors";
 
 export default function JoinSectionButton({
   code,
@@ -44,7 +45,7 @@ export default function JoinSectionButton({
         });
       } else {
         toast.error("Tham gia thất bại", {
-          description: data.error ?? "Vui lòng thử lại sau.",
+          description: enrollErrorMessage(data.error, res.status),
         });
       }
       setSubmitting(false);

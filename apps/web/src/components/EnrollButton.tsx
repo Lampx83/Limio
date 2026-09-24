@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "@/lib/toast";
 import { formatPrice, isFree } from "@/lib/formatPrice";
 import { apiUrl } from "@/lib/apiUrl";
+import { enrollErrorMessage } from "@/lib/enrollErrors";
 
 const REDEEM_ERROR_LABEL: Record<string, string> = {
   code_not_found: "Không tìm thấy mã này. Kiểm tra lại chữ/số đã gõ.",
@@ -65,6 +66,7 @@ export default function EnrollButton({
   const [selectedPlanId, setSelectedPlanId] = useState(accessPlans[0]?.id ?? "");
   const [checkingOut, setCheckingOut] = useState(false);
   const [showRedeem, setShowRedeem] = useState(false);
+  const [enrollError, setEnrollError] = useState<string | null>(null);
   // When payment is globally disabled, treat every course as free for UI purposes.
   const free = !paymentEnabled || (accessPlans.length === 0 && isFree(priceCents));
 
@@ -81,16 +83,23 @@ export default function EnrollButton({
 
   async function onEnrollFree() {
     setSubmitting(true);
-    const res = await fetch(apiUrl(`/api/courses/${slug}/enroll`), { method: "POST" });
+    setEnrollError(null);
+    let res: Response;
+    try {
+      res = await fetch(apiUrl(`/api/courses/${slug}/enroll`), { method: "POST" });
+    } catch {
+      setEnrollError(enrollErrorMessage("network_error"));
+      setSubmitting(false);
+      return;
+    }
     if (res.status === 401) {
       window.location.href = `/signin?callbackUrl=/catalog/${slug}`;
       return;
     }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      toast.error("Đăng ký thất bại", {
-        description: data.error ?? "Vui lòng thử lại sau.",
-      });
+      // Lỗi hiện thành banner cố định cạnh nút (toast tự tắt sau 4s nên dễ lỡ).
+      setEnrollError(enrollErrorMessage(data?.error, res.status));
       setSubmitting(false);
       return;
     }
@@ -256,6 +265,7 @@ export default function EnrollButton({
   }
 
   return (
+    <div className="space-y-2">
     <button
       onClick={() => void onEnrollFree()}
       disabled={submitting}
@@ -263,5 +273,11 @@ export default function EnrollButton({
     >
       {submitting ? "Đang đăng ký…" : freeLabel}
     </button>
+    {enrollError && (
+      <div role="alert" className="banner-danger text-sm">
+        {enrollError}
+      </div>
+    )}
+    </div>
   );
 }

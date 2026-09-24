@@ -53,6 +53,16 @@ export async function POST(
         return NextResponse.json({ error: "not_found" }, { status: 404 });
       }
     }
-    throw err;
+    if (err instanceof EnrollError && err.code === "invalid_invite_code") {
+      return NextResponse.json({ error: "invalid_invite_code" }, { status: 404 });
+    }
+    // Hai yêu cầu đồng thời (bấm đúp, hai nút trên cùng trang) cùng qua bước
+    // "chưa ghi danh" → yêu cầu sau đụng unique (userId, courseId). Kết quả
+    // mong muốn đã đạt, không phải lỗi.
+    if ((err as { code?: string })?.code === "P2002") {
+      return NextResponse.json({ ok: true, created: false });
+    }
+    console.error("[enroll] unexpected error", err);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }
