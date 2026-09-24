@@ -373,6 +373,30 @@ MISCONCEPTIONS = [
             "học tập sản phẩm chiếm giữ và thứ AI miễn phí không thay được."
         ),
     },
+    {
+        "code": "cngdtt.blockchain-equals-truth",
+        "name": "Ghi lên chuỗi khối nghĩa là dữ liệu đúng",
+        "description": (
+            "Nhầm tính chống sửa với tính đúng đắn. Chuỗi khối chỉ bảo đảm dữ liệu không bị đổi sau khi ghi; "
+            "nếu dữ liệu sai từ lúc nhập thì chuỗi giữ nguyên lỗi đó vĩnh viễn."
+        ),
+    },
+    {
+        "code": "cngdtt.personal-data-on-chain",
+        "name": "Đưa dữ liệu cá nhân lên chuỗi cho minh bạch",
+        "description": (
+            "Bỏ qua việc chuỗi khối không xoá được, trong khi người học có quyền yêu cầu xoá hoặc sửa dữ liệu "
+            "cá nhân. Thiết kế an toàn chỉ neo mã băm, dữ liệu ở ngoài chuỗi."
+        ),
+    },
+    {
+        "code": "cngdtt.blockchain-default-solution",
+        "name": "Có nhiều bên hay có tiếng là dùng chuỗi khối",
+        "description": (
+            "Chọn chuỗi khối vì nó hiện đại hoặc vì một nơi nổi tiếng đã dùng, không chạy qua các câu hỏi: "
+            "có nhiều bên cùng ghi không, có bên thứ ba đáng tin không, có cần chống sửa với cả người vận hành không."
+        ),
+    },
 ]
 
 FEEDBACK_TEMPLATES = [
@@ -713,6 +737,30 @@ FEEDBACK_TEMPLATES = [
         "body": (
             "Hãy hỏi: nếu người học mở một chatbot miễn phí có chế độ học tập, sản phẩm này còn làm được gì mà "
             "chatbot không làm được? Nếu câu trả lời chỉ là có AI, sản phẩm chưa có hào phòng thủ."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.blockchain-equals-truth",
+        "body": (
+            "Chuỗi khối chống được việc sửa dữ liệu về sau, không kiểm chứng dữ liệu đúng hay sai lúc ghi. "
+            "Hãy đặt bảo đảm ở quy trình cấp và danh tính bên cấp, và có cơ chế ghi bản đính chính mới thay vì xoá."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.personal-data-on-chain",
+        "body": (
+            "Chuỗi không xoá được nên dữ liệu cá nhân không được nằm trên đó. Hãy chỉ neo mã băm, để nội dung "
+            "ở ngoài chuỗi và xoá được khi người học yêu cầu (Luật 91/2025/QH15, Điều 30)."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.blockchain-default-solution",
+        "body": (
+            "Chạy lại bộ năm câu hỏi: chỉ một bên ghi hoặc có trung gian đáng tin thì cơ sở dữ liệu thường kèm chữ "
+            "ký số rẻ hơn và đủ dùng. Chuỗi khối chỉ xứng khi cả bốn câu đầu đều trả lời có."
         ),
         "priority": 10,
     },

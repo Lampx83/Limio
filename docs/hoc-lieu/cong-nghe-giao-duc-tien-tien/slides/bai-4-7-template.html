@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mô phỏng chuỗi khối</title>
+<style>
+/*FONT*/
+:root{--bg:rgb(250,250,252);--fg:#1c1c28;--mut:rgba(28,28,40,.62);--rule:rgba(127,127,127,.3);--blue:37,99,235;--teal:13,148,136;--vio:124,58,237;--amb:217,150,40;--red:220,38,38}
+@media(prefers-color-scheme:dark){:root{--bg:#15151c;--fg:#ececf3;--mut:rgba(236,236,243,.62)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:1.2rem 1rem 3rem}
+h1{font-size:1.5rem;margin:0 0 .2rem}.sub{color:var(--mut);margin:0 0 1rem}
+.tabs{display:flex;gap:.4rem;margin:0 0 1rem;border-bottom:1px solid var(--rule)}
+.tab{background:none;border:0;border-bottom:3px solid transparent;color:var(--mut);font:inherit;font-weight:600;padding:.6rem .9rem;cursor:pointer}
+.tab[aria-selected=true]{color:var(--fg);border-color:rgb(var(--blue))}
+.bar{display:flex;gap:.5rem;flex-wrap:wrap;margin:0 0 .9rem;align-items:center}
+button.b{font:inherit;font-weight:600;border:0;border-radius:.4rem;padding:.5rem .9rem;color:#fff;background:rgba(var(--blue),.9);cursor:pointer}
+button.b.g{background:rgba(120,113,108,.85)}button.b.t{background:rgba(var(--teal),.9)}
+button.b:disabled{opacity:.5;cursor:wait}
+.chain{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.7rem}
+.blk{border:2px solid rgba(var(--teal),.7);background:rgba(var(--teal),.07);border-radius:.5rem;padding:.7rem;transition:.2s}
+.blk.bad{border-color:rgba(var(--red),.8);background:rgba(var(--red),.09)}
+.blk h3{margin:0 0 .4rem;font-size:1rem;display:flex;justify-content:space-between}
+.tag{font-size:.75rem;padding:.1rem .45rem;border-radius:999px;color:#fff;background:rgba(var(--teal),.9)}.bad .tag{background:rgba(var(--red),.9)}
+label{display:block;font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);margin:.4rem 0 .15rem}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;word-break:break-all;background:rgba(127,127,127,.12);border-radius:.3rem;padding:.3rem .4rem}
+textarea,input{width:100%;font:inherit;font-size:.9rem;color:var(--fg);background:rgba(127,127,127,.08);border:1px solid var(--rule);border-radius:.3rem;padding:.35rem .45rem}
+textarea{resize:vertical}
+.hh{color:rgb(var(--teal));font-weight:700}.bad .hh{color:rgb(var(--red))}
+.note{border-left:4px solid rgba(var(--vio),.6);background:rgba(var(--vio),.07);border-radius:0 .4rem .4rem 0;padding:.6rem .9rem;margin:1rem 0;font-size:.92rem}
+.res{margin:.8rem 0;padding:.8rem 1rem;border-radius:.5rem;font-weight:600}
+.ok{background:rgba(var(--teal),.15);border:2px solid rgba(var(--teal),.8)}.no{background:rgba(var(--red),.12);border:2px solid rgba(var(--red),.8)}
+table{border-collapse:collapse;width:100%;font-size:.85rem}td,th{padding:.4rem;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+[hidden]{display:none!important}
+</style></head><body><div class="wrap">
+<h1>Mô phỏng chuỗi khối</h1><p class="sub">Bài 4.7 · chạy hoàn toàn trong trình duyệt, không gửi dữ liệu đi đâu. Dữ liệu chỉ là giả lập.</p>
+<div class="tabs" role="tablist"><button class="tab" role="tab" id="t1" aria-selected="true">① Chuỗi khối</button><button class="tab" role="tab" id="t2" aria-selected="false">② Xác minh chứng chỉ</button></div>
+
+<section id="p1">
+<div class="bar"><button class="b t" id="mineAll">Đào tất cả</button><button class="b g" id="reset">Đặt lại</button><span class="sub" style="margin:0" id="stat"></span></div>
+<div class="chain" id="chain"></div>
+<div class="note"><strong>Cách làm:</strong> (1) bấm <em>Đào tất cả</em>, ghi số lần thử của từng khối. (2) Sửa một chữ số ở dữ liệu Khối 2 — khối nào chuyển đỏ? (3) Bấm <em>Đào</em> lần lượt Khối 2, 3, 4 để "sửa lại lịch sử". Một khối hợp lệ khi mã băm bắt đầu bằng <b>0000</b>.</div>
+</section>
+
+<section id="p2" hidden>
+<div class="note">Trường đã neo mã băm của 3 chứng chỉ vào sổ (bảng dưới). Nhà tuyển dụng nhận một tệp, <b>tự băm</b> rồi đối chiếu — không cần hỏi trường. Thử nạp mẫu, rồi sửa <b>một ký tự</b>.</div>
+<div class="bar"><button class="b g" data-s="0">Nạp chứng chỉ 1</button><button class="b g" data-s="1">Nạp chứng chỉ 2</button><button class="b g" data-s="2">Nạp chứng chỉ 3</button><button class="b g" data-s="3">Nạp chứng chỉ chưa neo</button></div>
+<label for="cert">Nội dung chứng chỉ (băm chính xác từng ký tự, chỉ bỏ khoảng trắng đầu/cuối)</label>
+<textarea id="cert" rows="6"></textarea>
+<div class="bar" style="margin-top:.6rem"><button class="b" id="verify">Băm và tra sổ neo</button></div>
+<label>Mã băm SHA-256 của nội dung vừa nhập</label><div class="mono" id="hout">—</div>
+<div id="vres"></div>
+<label style="margin-top:1rem">Sổ neo (phần công khai trên chuỗi — chỉ có mã băm)</label>
+<table><thead><tr><th>Mã</th><th>Mã băm đã neo</th></tr></thead><tbody id="anch"></tbody></table>
+</section>
+</div>
+<script>
+// SHA-256 thuần JS: không phụ thuộc crypto.subtle (có thể bị chặn trong sandbox).
+function sha256(str){
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const b=new TextEncoder().encode(str),l=b.length,n=((l+9+63)>>6)<<6,m=new Uint8Array(n);m.set(b);m[l]=0x80;
+  const dv=new DataView(m.buffer);dv.setUint32(n-8,Math.floor(l*8/4294967296));dv.setUint32(n-4,(l*8)>>>0);
+  let h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];const w=new Uint32Array(64);
+  const R=(x,c)=>(x>>>c)|(x<<(32-c));
+  for(let o=0;o<n;o+=64){
+    for(let i=0;i<16;i++)w[i]=dv.getUint32(o+i*4);
+    for(let i=16;i<64;i++){const a=w[i-15],c=w[i-2];w[i]=(w[i-16]+(R(a,7)^R(a,18)^(a>>>3))+w[i-7]+(R(c,17)^R(c,19)^(c>>>10)))>>>0}
+    let [a,b2,c,d,e,f,g,hh]=h;
+    for(let i=0;i<64;i++){const t1=(hh+(R(e,6)^R(e,11)^R(e,25))+((e&f)^(~e&g))+K[i]+w[i])>>>0,t2=((R(a,2)^R(a,13)^R(a,22))+((a&b2)^(a&c)^(b2&c)))>>>0;hh=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b2;b2=a;a=(t1+t2)>>>0}
+    h=[h[0]+a,h[1]+b2,h[2]+c,h[3]+d,h[4]+e,h[5]+f,h[6]+g,h[7]+hh].map(x=>x>>>0);
+  }
+  return h.map(x=>x.toString(16).padStart(8,"0")).join("");
+}
+const ZERO="0".repeat(64),DIFF="0000";
+const INIT=["Khối 1: Trường A cấp chứng chỉ #1 cho Lan","Khối 2: Trường A cấp chứng chỉ #2 cho Minh","Khối 3: Trường B cấp chứng chỉ #3 cho An","Khối 4: Trường A cấp chứng chỉ #4 cho Hà"];
+let blocks;
+const $=id=>document.getElementById(id);
+const hashOf=(i)=>sha256(i+"|"+(i?blocks[i-1].hash:ZERO)+"|"+blocks[i].data+"|"+blocks[i].nonce);
+function recompute(){for(let i=0;i<blocks.length;i++)blocks[i].hash=hashOf(i)}
+function render(){
+  recompute();
+  $("chain").innerHTML=blocks.map((b,i)=>{const ok=b.hash.startsWith(DIFF);
+    return `<div class="blk ${ok?"":"bad"}"><h3>Khối ${i+1}<span class="tag">${ok?"hợp lệ":"KHÔNG hợp lệ"}</span></h3>
+    <label>Dữ liệu</label><textarea rows="3" data-i="${i}">${b.data.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</textarea>
+    <label>Nonce</label><div class="mono">${b.nonce}</div>
+    <label>Băm khối trước</label><div class="mono">${i?blocks[i-1].hash:ZERO}</div>
+    <label>Băm khối này</label><div class="mono hh">${b.hash}</div>
+    <div class="bar" style="margin:.5rem 0 0"><button class="b" data-m="${i}">Đào khối ${i+1}</button></div>
+    ${b.tries?`<label>Số lần thử lần đào gần nhất</label><div class="mono">${b.tries.toLocaleString("vi-VN")}</div>`:""}</div>`}).join("");
+  $("stat").textContent=blocks.filter(b=>b.hash.startsWith(DIFF)).length+"/"+blocks.length+" khối hợp lệ";
+}
+function mine(i){let n=0;for(;;n++){blocks[i].nonce=n;if(hashOf(i).startsWith(DIFF))break}blocks[i].tries=n+1;blocks[i].hash=hashOf(i)}
+function mineFrom(list){const busy=[...document.querySelectorAll("button.b")];busy.forEach(x=>x.disabled=true);
+  let k=0;(function step(){if(k>=list.length){busy.forEach(x=>x.disabled=false);render();return}mine(list[k++]);recompute();render();busy.forEach(x=>x.disabled=true);setTimeout(step,20)})()}
+function init(){blocks=INIT.map(d=>({data:d,nonce:0,hash:"",tries:0}));render()}
+$("chain").addEventListener("input",e=>{const t=e.target;if(t.dataset.i===undefined)return;const i=+t.dataset.i,pos=t.selectionStart;blocks[i].data=t.value;render();const ta=document.querySelector(`textarea[data-i="${i}"]`);ta.focus();ta.setSelectionRange(pos,pos)});
+$("chain").addEventListener("click",e=>{const m=e.target.dataset.m;if(m!==undefined)mineFrom([+m])});
+$("mineAll").onclick=()=>mineFrom(blocks.map((_,i)=>i));
+$("reset").onclick=()=>{init();mineFrom(blocks.map((_,i)=>i))};
+// Tab 2
+const CERTS=/*CERTS*/[];
+const HASHES=CERTS.slice(0,3).map(sha256);
+$("anch").innerHTML=HASHES.map((h,i)=>`<tr><td>Chứng chỉ ${i+1}</td><td class="mono">${h}</td></tr>`).join("");
+document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{$("cert").value=CERTS[+b.dataset.s];$("hout").textContent="—";$("vres").innerHTML=""});
+$("verify").onclick=()=>{const t=$("cert").value.trim(),h=sha256(t);$("hout").textContent=h;const i=HASHES.indexOf(h);
+  $("vres").innerHTML=i>=0?`<div class="res ok">KHỚP — chứng chỉ ${i+1} đã được neo, nội dung nguyên vẹn.</div>`:`<div class="res no">KHÔNG KHỚP — tệp đã bị sửa, hoặc chưa từng được cấp. Hệ thống không thể phân biệt hai trường hợp này.</div>`};
+$("cert").value=CERTS[0];
+function tab(n){$("p1").hidden=n!==1;$("p2").hidden=n!==2;$("t1").setAttribute("aria-selected",n===1);$("t2").setAttribute("aria-selected",n===2)}
+$("t1").onclick=()=>tab(1);$("t2").onclick=()=>tab(2);
+init();mineFrom(blocks.map((_,i)=>i));
+</script></body></html>
