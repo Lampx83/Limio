@@ -77,6 +77,7 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   // dọa người dùng. Giờ dò 1 lần lúc mount: nếu phức tạp, ưu tiên hiện PREVIEW
   // đẹp + hướng dẫn thân thiện, chỉ khi bấm "Sửa mã HTML" mới lộ ra textarea.
   // null = chưa dò xong (chỉ dò được ở trình duyệt).
+  const [aiSaved, setAiSaved] = useState(false);
   const [richtextComplex, setRichtextComplex] = useState<boolean | null>(null);
   const [rawHtmlEditing, setRawHtmlEditing] = useState(false);
   const initialHtmlRef = useRef(String(initial.html ?? ""));
@@ -103,6 +104,10 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
       const d = await res.json().catch(() => ({}));
       throw new Error((d as { error?: string }).error ?? `http_${res.status}`);
     }
+    // Bản đã format là bản duy nhất hiển thị; đồng bộ state để nút "Lưu" chung
+    // không ghi đè lại bằng bản gốc, ẩn ô nhập bản gốc.
+    setHtml(formattedHtml);
+    setAiSaved(true);
     router.refresh();
   }
 
@@ -222,7 +227,13 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
               Nội dung
             </label>
-            <RichTextEditor value={html} onChange={setHtml} />
+            {aiSaved ? (
+              <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
+                <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
+              </div>
+            ) : (
+              <RichTextEditor value={html} onChange={setHtml} />
+            )}
           </div>
           <AiFormatPanel
             lessonId={lessonId}
@@ -269,12 +280,18 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
                 ← Xem trước
               </button>
             </div>
-            <textarea
-              value={html}
-              onChange={(e) => setHtml(e.target.value)}
-              rows={12}
-              className="textarea font-mono text-xs"
-            />
+            {aiSaved ? (
+              <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
+                <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
+              </div>
+            ) : (
+              <textarea
+                value={html}
+                onChange={(e) => setHtml(e.target.value)}
+                rows={12}
+                className="textarea font-mono text-xs"
+              />
+            )}
           </div>
           <AiFormatPanel
             lessonId={lessonId}

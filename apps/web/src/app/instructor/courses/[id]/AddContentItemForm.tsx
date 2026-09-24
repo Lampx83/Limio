@@ -138,6 +138,9 @@ export default function AddContentItemForm({
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
   const [html, setHtml] = useState("");
+  // AI mode: đã "Áp dụng và lưu" → ẩn ô nhập bản thô (bản đã format là bản duy nhất
+  // hiển thị; bản thô chỉ còn trong mục thu gọn "Xem bản gốc").
+  const [aiSaved, setAiSaved] = useState(false);
   const [htmlBlockBody, setHtmlBlockBody] = useState("");
   const [filename, setFilename] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
@@ -237,6 +240,7 @@ export default function AddContentItemForm({
     setUrl("");
     setBody("");
     setHtml("");
+    setAiSaved(false);
     setFilename("");
     setLinkTitle("");
     setScormPackageId("");
@@ -268,6 +272,7 @@ export default function AddContentItemForm({
       const d = await res.json().catch(() => ({}));
       throw new Error((d as { error?: string }).error ?? "create_failed");
     }
+    setAiSaved(true);
     router.refresh();
   }
 
@@ -524,6 +529,14 @@ export default function AddContentItemForm({
       )}
       {type === "richtext" && richtextMode === "ai" && (
         <div className="space-y-3">
+          {aiSaved ? (
+            <details className="rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-sm">
+              <summary className="cursor-pointer text-muted">Xem bản gốc</summary>
+              <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs text-muted">
+                {html}
+              </pre>
+            </details>
+          ) : (
           <div className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
             <div className="flex items-center gap-2">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
@@ -560,6 +573,7 @@ export default function AddContentItemForm({
               />
             </div>
           </div>
+          )}
 
           <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4 dark:border-violet-900 dark:bg-violet-950/20">
             <div className="mb-3 flex items-center gap-2">
@@ -585,6 +599,25 @@ export default function AddContentItemForm({
           Khối này không bao giờ gửi tới học viên — kể cả ở bản in. Nó chỉ hiện khi bạn
           bật &ldquo;Hiện ghi chú&rdquo; trong chế độ giảng viên trên trang bài học.
         </p>
+      )}
+
+      {type === "pdf" && (
+        <div>
+          <label
+            htmlFor="pdf-title"
+            className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint"
+          >
+            Tiêu đề
+          </label>
+          <input
+            id="pdf-title"
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề PDF (nếu để trống sẽ lấy từ tên file)"
+            className="input"
+          />
+        </div>
       )}
 
       {(type === "video" ||
@@ -627,7 +660,14 @@ export default function AddContentItemForm({
               uploading={uploading}
               setUploading={setUploading}
               setError={setError}
-              onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+              onUploaded={(uploadedUrl, originalName) => {
+                setUrl(uploadedUrl);
+                // Tiêu đề mặc định = tên file gốc bỏ đuôi .pdf (chỉ khi GV
+                // chưa gõ gì) — server đặt tên file ngẫu nhiên nên không
+                // thể suy từ URL.
+                const t = originalName.replace(/\.pdf$/i, "").trim();
+                if (t) setLinkTitle((cur) => (cur.trim() ? cur : t.slice(0, 200)));
+              }}
             />
           )}
           {type === "video" && url.trim() && (
@@ -660,16 +700,6 @@ export default function AddContentItemForm({
             </p>
           )}
         </div>
-      )}
-
-      {type === "pdf" && (
-        <input
-          value={linkTitle}
-          onChange={(e) => setLinkTitle(e.target.value)}
-          maxLength={200}
-          placeholder="Tiêu đề PDF (optional)"
-          className="input"
-        />
       )}
 
       {/* Nhập nội dung (tiêu đề + mô tả) trước, chọn file HTML sau — instructor
@@ -1505,7 +1535,7 @@ function PdfUploadPanel({
   uploading: boolean;
   setUploading: (v: boolean) => void;
   setError: (v: string | null) => void;
-  onUploaded: (url: string) => void;
+  onUploaded: (url: string, originalName: string) => void;
 }) {
   async function handleFile(file: File) {
     setUploading(true);
@@ -1560,7 +1590,7 @@ function PdfUploadPanel({
       return;
     }
     const data = (await res.json()) as { url: string };
-    onUploaded(data.url);
+    onUploaded(data.url, file.name);
   }
 
   return (
