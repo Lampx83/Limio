@@ -31,7 +31,7 @@ import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
-import { Download, Lock } from "lucide-react";
+import { Download, Lock, PenLine } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -486,6 +486,19 @@ export default async function LessonPage({
           >
             ← {lesson.module.course.title}
           </Link>
+          {/* Lối thoát của giảng viên: chế độ đứng lớp mở ở tab mới nên cần một
+              nút rõ ràng để về màn soạn bài này. Nằm cùng hàng với link về
+              khoá học, không thả nổi để khỏi đè lên mục lục. */}
+          {canEdit && (
+            <Link
+              href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+              title="Quay về màn hình soạn nội dung của bài này."
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+            >
+              <PenLine className="h-4 w-4" aria-hidden />
+              Về soạn nội dung
+            </Link>
+          )}
         </div>
       )}
       {previewMode && (
