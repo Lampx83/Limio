@@ -92,7 +92,7 @@ export default function UsersBrowser() {
     const active = sort === key;
     return (
       <th
-        className="px-4 py-2 text-left font-medium"
+        className="whitespace-nowrap px-4 py-2 text-left font-medium"
         aria-sort={
           active ? (dir === "asc" ? "ascending" : "descending") : "none"
         }
@@ -100,7 +100,7 @@ export default function UsersBrowser() {
         <button
           type="button"
           onClick={() => toggleSort(key)}
-          className="inline-flex items-center gap-1 uppercase hover:text-body"
+          className="inline-flex items-center gap-1 uppercase transition-colors hover:text-brand-600"
         >
           {label}
           <span aria-hidden className={active ? "" : "opacity-40"}>
@@ -311,15 +311,23 @@ export default function UsersBrowser() {
 
       {/* Table */}
       <div className="card overflow-x-auto p-0">
-        <table className="min-w-full text-sm">
+        <table className="w-full min-w-[980px] table-fixed text-sm">
+          <colgroup>
+            <col />
+            <col className="w-[190px]" />
+            <col className="w-[130px]" />
+            <col className="w-[120px]" />
+            <col className="w-[170px]" />
+            <col className="w-[160px]" />
+          </colgroup>
           <thead className="border-b border-token bg-base-50 text-xs uppercase text-faint">
             <tr>
               {sortTh("displayName", "Người dùng")}
-              <th className="px-4 py-2 text-left font-medium">Roles</th>
-              <th className="px-4 py-2 text-left font-medium">SSO</th>
+              <th className="whitespace-nowrap px-4 py-2 text-left font-medium">Roles</th>
+              <th className="whitespace-nowrap px-4 py-2 text-left font-medium">SSO</th>
               {sortTh("createdAt", "Tạo lúc")}
               {sortTh("lastAccessAt", "Truy cập gần nhất")}
-              <th className="px-4 py-2 text-right font-medium">Thao tác</th>
+              <th className="whitespace-nowrap px-4 py-2 text-right font-medium">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-token">
@@ -376,14 +384,14 @@ export default function UsersBrowser() {
                 <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
                   {formatDate(u.createdAt)}
                 </td>
-                <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
+                <td className="whitespace-nowrap px-4 py-2.5 text-xs text-muted tabular-nums">
                   {u.lastAccessAt ? formatDateTime(u.lastAccessAt) : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-right">
-                  <div className="inline-flex gap-1">
+                  <div className="inline-flex gap-1 whitespace-nowrap">
                     <Link
                       href={`/admin/users/${u.id}`}
-                      className="btn-secondary btn-sm"
+                      className="btn-secondary btn-sm whitespace-nowrap"
                       prefetch={false}
                     >
                       Quản lý
@@ -392,7 +400,7 @@ export default function UsersBrowser() {
                       type="button"
                       onClick={() => impersonate(u.id)}
                       disabled={impersonatingId === u.id}
-                      className="btn-ghost btn-sm"
+                      className="btn-ghost btn-sm whitespace-nowrap"
                       title="Xem ứng dụng dưới vai trò user này (read-only)"
                     >
                       {impersonatingId === u.id ? "…" : "Xem"}
