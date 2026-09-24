@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Build-time base path (e.g. "/limio"). Empty string when served from root.
@@ -70,6 +70,15 @@ export default function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [providers, setProviders] = useState<ProvidersMap | null>(null);
   const [embeddedBrowser, setEmbeddedBrowser] = useState<{ appName: string } | null>(null);
+  const router = useRouter();
+
+  // Trang này thường được tới bằng redirect mềm từ trang cần đăng nhập khi
+  // phiên đã hết/bị đăng xuất. Root layout (AppHeader) không render lại trong
+  // điều hướng mềm nên vẫn hiện tên người dùng cũ — refresh để header đọc
+  // lại cookie hiện tại.
+  useEffect(() => {
+    router.refresh();
+  }, [router]);
 
   useEffect(() => {
     let cancelled = false;
