@@ -47,6 +47,9 @@ model User {
   // below so each role tracks its own seen-state independently.
   notificationsLastSeenAt     DateTime?
   notificationsLastSeenByRole Json?
+  // Lần cuối user truy cập hệ thống (có phiên đăng nhập hợp lệ). Ghi có
+  // throttle ở auth.ts jwt callback nên chỉ chính xác trong ~5 phút.
+  lastAccessAt                DateTime?
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
 

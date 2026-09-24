@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@feedbackme/db";
+import { prisma, type Prisma } from "@feedbackme/db";
 import { requireAdmin } from "@/lib/session";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,11 +31,27 @@ export async function GET(req: Request) {
     where.userRoles = { some: { role: { name: role } } };
   }
 
+  const SORTABLE = ["displayName", "createdAt", "lastAccessAt"] as const;
+  type SortKey = (typeof SORTABLE)[number];
+  const sortParam = url.searchParams.get("sort") ?? "";
+  const sort: SortKey = (SORTABLE as readonly string[]).includes(sortParam)
+    ? (sortParam as SortKey)
+    : "createdAt";
+  const dir: "asc" | "desc" =
+    url.searchParams.get("dir") === "asc" ? "asc" : "desc";
+  // lastAccessAt có NULL (chưa từng truy cập): luôn xếp cuối cho cả 2 chiều.
+  const orderBy: Prisma.UserOrderByWithRelationInput[] =
+    sort === "lastAccessAt"
+      ? [{ lastAccessAt: { sort: dir, nulls: "last" } }, { id: "asc" }]
+      : sort === "displayName"
+        ? [{ displayName: dir }, { id: "asc" }]
+        : [{ createdAt: dir }, { id: "asc" }];
+
   const [total, rows] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip: page * limit,
       take: limit,
       select: {
@@ -45,6 +61,7 @@ export async function GET(req: Request) {
         avatarUrl: true,
         emailVerifiedAt: true,
         createdAt: true,
+        lastAccessAt: true,
         userRoles: {
           select: {
             role: { select: { name: true } },
@@ -65,6 +82,7 @@ export async function GET(req: Request) {
     avatarUrl: u.avatarUrl,
     emailVerified: u.emailVerifiedAt !== null,
     createdAt: u.createdAt,
+    lastAccessAt: u.lastAccessAt,
     roles: Array.from(new Set(u.userRoles.map((ur) => ur.role.name))),
     providers: Array.from(new Set(u.authProviders.map((p) => p.provider))),
   }));

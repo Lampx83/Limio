@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
-import { formatDate } from "@/lib/datetime";
+import { formatDate, formatDateTime } from "@/lib/datetime";
 
 interface UserRow {
   id: string;
@@ -12,6 +12,7 @@ interface UserRow {
   avatarUrl: string | null;
   emailVerified: boolean;
   createdAt: string;
+  lastAccessAt: string | null;
   roles: string[];
   providers: string[];
 }
@@ -23,6 +24,9 @@ interface UsersResponse {
   limit: number;
   pageCount: number;
 }
+
+type SortKey = "displayName" | "createdAt" | "lastAccessAt";
+type SortDir = "asc" | "desc";
 
 const ROLE_OPTIONS = [
   { value: "", label: "Tất cả role" },
@@ -38,6 +42,8 @@ export default function UsersBrowser() {
   const [q, setQ] = useState("");
   const [role, setRole] = useState("");
   const [page, setPage] = useState(0);
+  const [sort, setSort] = useState<SortKey>("createdAt");
+  const [dir, setDir] = useState<SortDir>("desc");
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [newName, setNewName] = useState("");
@@ -54,6 +60,8 @@ export default function UsersBrowser() {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (role) params.set("role", role);
+    params.set("sort", sort);
+    params.set("dir", dir);
     params.set("page", String(page));
     params.set("limit", "25");
     fetch(apiUrl(`/api/admin/users?${params}`))
@@ -67,7 +75,41 @@ export default function UsersBrowser() {
     return () => {
       cancelled = true;
     };
-  }, [q, role, page, reloadKey]);
+  }, [q, role, page, sort, dir, reloadKey]);
+
+  function toggleSort(key: SortKey) {
+    if (sort === key) {
+      setDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSort(key);
+      // Tên: A→Z trước; các cột thời gian: mới nhất trước.
+      setDir(key === "displayName" ? "asc" : "desc");
+    }
+    setPage(0);
+  }
+
+  function sortTh(key: SortKey, label: string) {
+    const active = sort === key;
+    return (
+      <th
+        className="px-4 py-2 text-left font-medium"
+        aria-sort={
+          active ? (dir === "asc" ? "ascending" : "descending") : "none"
+        }
+      >
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          className="inline-flex items-center gap-1 uppercase hover:text-body"
+        >
+          {label}
+          <span aria-hidden className={active ? "" : "opacity-40"}>
+            {active ? (dir === "asc" ? "↑" : "↓") : "↕"}
+          </span>
+        </button>
+      </th>
+    );
+  }
 
   async function createUser(e: React.FormEvent) {
     e.preventDefault();
@@ -272,24 +314,25 @@ export default function UsersBrowser() {
         <table className="min-w-full text-sm">
           <thead className="border-b border-token bg-base-50 text-xs uppercase text-faint">
             <tr>
-              <th className="px-4 py-2 text-left font-medium">Người dùng</th>
+              {sortTh("displayName", "Người dùng")}
               <th className="px-4 py-2 text-left font-medium">Roles</th>
               <th className="px-4 py-2 text-left font-medium">SSO</th>
-              <th className="px-4 py-2 text-left font-medium">Tạo lúc</th>
+              {sortTh("createdAt", "Tạo lúc")}
+              {sortTh("lastAccessAt", "Truy cập gần nhất")}
               <th className="px-4 py-2 text-right font-medium">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-token">
             {loading && !data && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted">
+                <td colSpan={6} className="px-4 py-6 text-center text-muted">
                   Đang tải…
                 </td>
               </tr>
             )}
             {data?.users.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted">
+                <td colSpan={6} className="px-4 py-6 text-center text-muted">
                   Không có user nào khớp.
                 </td>
               </tr>
@@ -332,6 +375,9 @@ export default function UsersBrowser() {
                 </td>
                 <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
                   {formatDate(u.createdAt)}
+                </td>
+                <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
+                  {u.lastAccessAt ? formatDateTime(u.lastAccessAt) : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-right">
                   <div className="inline-flex gap-1">

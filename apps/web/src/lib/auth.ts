@@ -53,6 +53,34 @@ if (
   );
 }
 
+// Throttle ghi lastAccessAt: tối đa 1 lần / 5 phút / user / process. Cộng thêm
+// điều kiện trong WHERE để nhiều process không ghi đè dồn dập.
+const LAST_ACCESS_INTERVAL_MS = 5 * 60 * 1000;
+const lastAccessTouched = new Map<string, number>();
+
+function touchLastAccess(userId: string): void {
+  const now = Date.now();
+  const prev = lastAccessTouched.get(userId) ?? 0;
+  if (now - prev < LAST_ACCESS_INTERVAL_MS) return;
+  lastAccessTouched.set(userId, now);
+  if (lastAccessTouched.size > 5000) lastAccessTouched.clear();
+  // Fire-and-forget: không được chặn hay làm hỏng request.
+  prisma.user
+    .updateMany({
+      where: {
+        id: userId,
+        OR: [
+          { lastAccessAt: null },
+          { lastAccessAt: { lt: new Date(now - LAST_ACCESS_INTERVAL_MS) } },
+        ],
+      },
+      data: { lastAccessAt: new Date(now) },
+    })
+    .catch(() => {
+      lastAccessTouched.delete(userId);
+    });
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   basePath: `/api/auth`,
   session: { strategy: "jwt" },
@@ -132,6 +160,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.userId = user.id;
         token.isEmailVerified = (user as { isEmailVerified?: boolean }).isEmailVerified ?? false;
       }
+      if (token.userId) touchLastAccess(token.userId as string);
       const shouldRefreshRoles = Boolean(user) || trigger === "update" || token.roles === undefined;
       if (shouldRefreshRoles && token.userId) {
         const rows = await getRolesForUser(token.userId as string);
