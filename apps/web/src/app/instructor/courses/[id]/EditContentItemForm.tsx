@@ -19,6 +19,7 @@ import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import AiFormatPanel from "@/components/AiFormatPanel";
 import SafeHtml from "@/components/SafeHtml";
+import { formatHtml } from "@/lib/formatHtml";
 import { EXTENSIONS } from "@/components/RichTextEditor";
 import { probeEditorLoss } from "@/components/richtext/lossProbe";
 
@@ -257,7 +258,11 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
           </p>
           <button
             type="button"
-            onClick={() => setRawHtmlEditing(true)}
+            onClick={() => {
+              // Mã do AI sinh thường dồn một dòng — dàn lại cho dễ đọc/sửa.
+              setHtml((h) => formatHtml(h));
+              setRawHtmlEditing(true);
+            }}
             className="btn-secondary btn-sm"
           >
             Sửa mã HTML
