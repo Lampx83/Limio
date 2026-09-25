@@ -49,7 +49,7 @@ export default async function AssessmentStartPage() {
     bank: {
       n: 1,
       title: "Ngân hàng câu hỏi",
-      blurb: "Soạn hoặc nhập câu hỏi một lần, dùng cho nhiều đề. Bước này không bắt buộc nếu bạn tự soạn câu ngay trong đề.",
+      blurb: "Đây là nơi lưu các câu hỏi của bạn. Bạn soạn hoặc nhập câu hỏi một lần, sau đó có thể dùng lại cho nhiều đề thi khác nhau. Nếu bạn muốn soạn câu hỏi trực tiếp trong đề thi thì có thể bỏ qua bước này.",
       href: "/instructor/question-banks",
       cta: publishedQuestions > 0 ? "Mở ngân hàng" : "Tạo ngân hàng câu hỏi",
       icon: <Library className="h-5 w-5" aria-hidden />,
@@ -57,8 +57,8 @@ export default async function AssessmentStartPage() {
     },
     exam: {
       n: 2,
-      title: "Đề thi",
-      blurb: "Gom câu hỏi thành một đề: chọn từ ngân hàng hoặc tự soạn, đặt thời lượng và cách chấm, rồi Publish.",
+      title: "Thiết kế đề thi",
+      blurb: "Ở bước này bạn tạo đề thi, tức là bộ câu hỏi thí sinh sẽ làm. Bạn chọn câu hỏi từ ngân hàng hoặc tự soạn thêm, đặt thời gian làm bài và cách chấm điểm, rồi bấm Publish để đề sẵn sàng đưa vào tổ chức thi.",
       href: "/instructor/exams",
       cta: publishedExams + draftExams > 0 ? "Mở danh sách đề" : "Tạo đề thi",
       icon: <FlaskConical className="h-5 w-5" aria-hidden />,
@@ -67,7 +67,7 @@ export default async function AssessmentStartPage() {
     organize: {
       n: 3,
       title: "Tổ chức thi",
-      blurb: "Quyết định chạy khi nào, bao lâu, ai vào: link thi nhanh, thử nghiệm câu hỏi, hoặc kỳ thi nhiều ca có giám thị.",
+      blurb: "Bạn chọn đề thi, rồi quyết định thi vào lúc nào, kéo dài bao lâu và những ai được vào thi. Bạn có thể tạo nhanh một đường link cho thí sinh vào làm bài, cho học viên làm thử để kiểm tra chất lượng câu hỏi, hoặc lập một đợt thi chính thức gồm nhiều ca có giám thị.",
       href: "/instructor/organize",
       cta: sessions > 0 ? "Mở Tổ chức thi" : "Tổ chức buổi thi đầu tiên",
       icon: <CalendarCheck className="h-5 w-5" aria-hidden />,

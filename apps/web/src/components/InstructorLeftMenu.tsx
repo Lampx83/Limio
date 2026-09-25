@@ -237,7 +237,7 @@ const MODULES: ModuleDef[] = [
       // mang đi tổ chức → coi thi.
       { label: "Bắt đầu", href: "/instructor/assessment", icon: ListChecks },
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
-      { label: "Đề thi", href: "/instructor/exams", icon: FlaskConical },
+      { label: "Thiết kế đề thi", href: "/instructor/exams", icon: FlaskConical },
       { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },
     ],
   },

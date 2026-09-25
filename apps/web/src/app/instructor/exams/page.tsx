@@ -95,7 +95,7 @@ export default async function InstructorExamsHubPage() {
     <main>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Đề thi</h1>
+          <h1 className="text-2xl font-bold">Thiết kế đề thi</h1>
           <p className="mt-1 text-sm text-faint">
             {exams.length} bài thi · {draftCount} nháp · {publishedCount} đã publish
           </p>
