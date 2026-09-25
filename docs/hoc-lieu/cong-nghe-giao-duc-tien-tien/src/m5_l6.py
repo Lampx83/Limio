@@ -65,7 +65,7 @@ Bốn câu khó nhất và hướng trả lời:
 
 **Câu 3 — bỏ AR đi thì mất gì?** Trả lời bằng một đặc điểm nội dung, không bằng tính từ: *nội dung này là quá trình động ba chiều, hình tĩnh buộc người học tự nội suy chuyển động, và ở lớp 8 đó là chỗ hai phần ba số em giải thích sai theo biên bản thử nghiệm của em.*
 
-**Câu 7 — có khái quát được không?** Trả lời thẳng là không, kèm lý do bằng số: *với ba người thử và một lớp, thiết kế của em chỉ đủ để kết luận sản phẩm chạy được và chỗ nào cần sửa; muốn nói về hiệu quả thì cần thiết kế luân phiên hai lớp như trong kế hoạch đo ở mốc 4.*
+**Câu 7 — có khái quát được không?** Trả lời thẳng là không, kèm lý do bằng số: *với mười người thử và một lớp, thiết kế của em chỉ đủ để kết luận sản phẩm chạy được và chỗ nào cần sửa; muốn nói về hiệu quả thì cần thiết kế luân phiên hai lớp như trong kế hoạch đo ở mốc 4.*
 
 **Câu 9 — học sinh không có thiết bị?** Đây là câu kiểm tra bạn có nghĩ tới công bằng không. Trả lời bằng thiết kế: *trang giấy tự nó đủ nghĩa, lớp phủ là phần thêm; ngoài ra em bố trí dùng chung theo nhóm ba người, và đã thử phương án ấy trong buổi thử nghiệm.*
 
@@ -174,7 +174,7 @@ Diễn tập bảo vệ chéo: mỗi người trình bày mười phút, ba ngư
                 "key": "5.6-cau-7",
                 "type": "mcq",
                 "prompt": "Hội đồng hỏi kết quả có khái quát được không. Câu trả lời đúng là gì?",
-                "explanation": "Trả lời thẳng là không, kèm lý do bằng số: với ba người thử và một lớp, thiết kế chỉ đủ kết luận sản phẩm chạy được và chỗ cần sửa; muốn nói hiệu quả thì cần thiết kế luân phiên hai lớp.",
+                "explanation": "Trả lời thẳng là không, kèm lý do bằng số: với mười người thử và một lớp, thiết kế chỉ đủ kết luận sản phẩm chạy được và chỗ cần sửa; muốn nói hiệu quả thì cần thiết kế luân phiên hai lớp.",
                 "points": 2,
                 "options": [
                     {"label": "Trả lời thẳng là không, nêu cỡ mẫu và nói thiết kế nào mới cho phép kết luận về hiệu quả", "isCorrect": True},

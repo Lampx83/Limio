@@ -23,10 +23,10 @@ Hồ sơ nộp cuối kỳ gồm bốn phần, thiếu phần nào cũng không 
 
 | Phần | Nội dung | Dung lượng gợi ý |
 |---|---|---|
-| 1. Bản in | Tệp PDF in được của ít nhất **4 trang sách**, trong đó tối thiểu **3 trang có nội dung AR** | A4 hoặc A5, in thử thật một lần |
+| 1. Bản in | Tệp PDF in được của ít nhất **20 trang**, trong đó tối thiểu **10 trang có nội dung AR** | A4 hoặc A5, in thử thật một lần |
 | 2. Nội dung số | Mô hình, hoạt hình, âm thanh và cấu hình quét — chạy được trên điện thoại phổ thông | Mỗi cảnh tải xong dưới 5 giây trên mạng 4G |
 | 3. Hồ sơ thẩm định | Vì sao nội dung này đáng dựng bằng AR, bằng chứng liên quan, dữ liệu người học (nếu có), phương án cho người học thiếu thiết bị | 3–5 trang |
-| 4. Biên bản thử nghiệm | Thử với **ít nhất 3 người học thật** thuộc đúng nhóm đối tượng, ghi lại chỗ họ tắc và những gì bạn đã sửa sau đó | 2 trang kèm ảnh hoặc video |
+| 4. Biên bản thử nghiệm | Thử với **ít nhất 10 người học thật** thuộc đúng nhóm đối tượng, ghi lại chỗ họ tắc và những gì bạn đã sửa sau đó | 2 trang kèm ảnh hoặc video |
 
 > [!ghi-nho] Tiêu chí đạt tối thiểu: một người học chưa từng thấy sản phẩm, chỉ cầm trang giấy và điện thoại của **chính họ**, tự mở được nội dung AR trong vòng một phút mà không cần bạn hướng dẫn. Nếu phải đứng bên cạnh chỉ dẫn, sản phẩm chưa đạt — và đây là chỗ rớt phổ biến nhất.
 
@@ -145,7 +145,7 @@ Nguồn mô hình ba chiều dùng được, **luôn kiểm giấy phép trướ
 | 2 | Module 2 | Bản thảo nội dung 4 trang, nêu rõ phần nào do AI hỗ trợ soạn và bạn đã kiểm chứng thế nào |
 | 3 | Module 3 | Phần luyện tập kèm sách: câu hỏi phân hoá theo mức, cơ chế ôn lại |
 | 4 | Module 4 | Kế hoạch đo: đo cái gì để biết sách có tác dụng, dữ liệu nào thu, căn cứ pháp lý nào |
-| 5 | Module 5 | Bản dựng AR hoàn chỉnh + biên bản thử với 3 người học thật + danh sách sửa sau thử nghiệm |
+| 5 | Module 5 | Bản dựng AR hoàn chỉnh + biên bản thử với 10 người học thật + danh sách sửa sau thử nghiệm |
 | 6 | Buổi cuối | Bảo vệ 10 phút: 3 phút trình bày lý do sư phạm, 4 phút demo trực tiếp, 3 phút trả lời chất vấn |
 
 | Tiêu chí | Điểm | Đạt tối đa khi |
@@ -278,7 +278,7 @@ Nhóm chọn tuyến A hoặc C làm việc tương đương trên nền tảng 
             {
                 "key": "1.6-bien-ban-thu-nghiem",
                 "type": "true_false",
-                "prompt": "Biên bản thử nghiệm ghi rằng cả ba người học đều thấy sản phẩm hay và không gặp khó khăn gì là một biên bản tốt.",
+                "prompt": "Biên bản thử nghiệm ghi rằng cả mười người học đều thấy sản phẩm hay và không gặp khó khăn gì là một biên bản tốt.",
                 "explanation": "Thử nghiệm không tìm ra vấn đề nào tức là chưa thử nghiệm đúng cách. Giá trị của biên bản nằm ở chỗ hỏng tìm được và bản sửa tương ứng.",
                 "points": 1,
                 "options": [
@@ -310,7 +310,7 @@ Nhóm chọn tuyến A hoặc C làm việc tương đương trên nền tảng 
                     "Bản thảo nội dung bốn trang, ghi rõ phần nào có AI hỗ trợ và cách kiểm chứng",
                     "Phần luyện tập kèm sách, có phân hoá mức độ và cơ chế ôn lại",
                     "Kế hoạch đo lường và phần dữ liệu người học kèm căn cứ pháp lý",
-                    "Bản dựng AR hoàn chỉnh, thử với ba người học thật và danh sách sửa",
+                    "Bản dựng AR hoàn chỉnh, thử với mười người học thật và danh sách sửa",
                     "Bảo vệ mười phút với demo trực tiếp",
                 ],
             },

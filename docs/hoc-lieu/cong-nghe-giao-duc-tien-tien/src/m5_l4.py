@@ -104,7 +104,7 @@ Diễn tập: một người đóng vai học sinh cố tình làm sai, một ng
 
 ### Bài tập về nhà — mốc 5 của đồ án (150 phút)
 
-Thực hiện thử nghiệm thật với **ít nhất ba người học đúng nhóm đối tượng** (khuyến khích năm người) và nộp hồ sơ.
+Thực hiện thử nghiệm thật với **ít nhất mười người học đúng nhóm đối tượng** và nộp hồ sơ.
 
 1. Kịch bản buổi thử nghiệm đã chuẩn bị trước, kèm bằng chứng đã xin phép đúng quy định.
 2. Bảng ba chỉ số cho từng người thử, kèm ghi chú chỗ dừng lâu nhất.
