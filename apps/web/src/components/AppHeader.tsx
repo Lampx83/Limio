@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import UserMenu from "./UserMenu";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
+import ScanExamQrButton from "./ScanExamQrButton";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
@@ -74,6 +75,7 @@ export default async function AppHeader() {
             🏆 Đấu trường
           </Link>
 
+          {user && activeRole === "learner" && <ScanExamQrButton />}
           {user && (
             <NotificationBell
               initialUnread={notiUnread}
