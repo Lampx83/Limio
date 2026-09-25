@@ -238,7 +238,7 @@ export default function TournamentPublishBar({
                 <button
                   onClick={handlePublishAnyway}
                   disabled={busy}
-                  className="btn-sm inline-flex items-center justify-center rounded-lg bg-warning-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-warning-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-primary btn-sm"
                 >
                   {busy ? "Đang công bố…" : "Vẫn công bố"}
                 </button>
@@ -338,7 +338,7 @@ export default function TournamentPublishBar({
           <button
             onClick={endEarly}
             disabled={busy}
-            className="btn-sm inline-flex items-center justify-center rounded-lg bg-warning-600 px-4 py-2 font-medium text-white transition-all hover:bg-warning-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-danger btn-sm disabled:cursor-not-allowed disabled:opacity-50"
             title="Huỷ đấu trường trước khi bắt đầu"
           >
             {busy ? "Đang huỷ…" : "Huỷ đấu trường"}
