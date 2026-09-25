@@ -10,7 +10,6 @@ import DeleteOralExamButton from "@/components/exam/DeleteOralExamButton";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import OralMaterialsPanel from "./OralMaterialsPanel";
-import OralTopicsPanel from "./OralTopicsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
 
@@ -276,7 +275,6 @@ export default async function EditExamPage({
 
       {activeTab === "materials" && (
         <div className="mt-6">
-          <OralTopicsPanel examId={exam.id} editable={exam.status === "draft"} />
           <OralMaterialsPanel
             examId={exam.id}
             editable={exam.status === "draft"}
