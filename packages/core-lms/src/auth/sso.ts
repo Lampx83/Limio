@@ -1,4 +1,5 @@
 import { prisma } from "@feedbackme/db";
+import { RoleName } from "@feedbackme/shared-types";
 import type { DbClient } from "./tokens";
 
 /**
@@ -10,7 +11,8 @@ import type { DbClient } from "./tokens";
  * 2. Else if a user with this email already exists — link it (insert AuthProvider
  *    row pointing to the existing user). Marks email as verified since the
  *    provider already verified it.
- * 3. Else create a new user + AuthProvider row.
+ * 3. Else create a new user + AuthProvider row + role `learner` (giống đăng ký
+ *    bằng mật khẩu, để danh sách người dùng không có tài khoản "trống role").
  *
  * Important: only call this with `emailVerifiedByProvider: true` when the
  * upstream IdP guarantees email ownership (Google + Microsoft do; some
@@ -76,8 +78,10 @@ export async function loginOrLinkSso(
   }
 
   // Step 3: create new user.
+  const learnerRole = await db.role.findUniqueOrThrow({ where: { name: RoleName.Learner } });
   const created = await db.user.create({
     data: {
+      userRoles: { create: { roleId: learnerRole.id } },
       email,
       displayName: input.name || email.split("@")[0]!,
       emailVerifiedAt: input.emailVerifiedByProvider ? new Date() : null,

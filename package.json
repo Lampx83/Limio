@@ -19,6 +19,7 @@
     "db:down": "docker compose down",
     "changelog": "npx --yes git-cliff@latest --output CHANGELOG.md",
     "changelog:preview": "npx --yes git-cliff@latest",
+    "backfill:learner-role": "pnpm --filter @feedbackme/core-lms backfill:learner-role",
     "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags",
     "backfill:feedback-coding": "pnpm --filter @feedbackme/core-feedback backfill:feedback-coding",
     "import:course": "pnpm --filter @feedbackme/core-lms import:course",
