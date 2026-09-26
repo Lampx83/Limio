@@ -84,11 +84,11 @@ function touchLastAccess(userId: string): void {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   basePath: `/api/auth`,
   session: { strategy: "jwt" },
-  // pages.error intentionally omitted: pointing it at /api/auth/error (the
-  // NextAuth API route itself) creates a redirect loop. Letting NextAuth fall
-  // back to its built-in error UI avoids that.
+  // pages.error must NOT point at /api/auth/error (the NextAuth API route
+  // itself) — that creates a redirect loop. It points at a plain app page.
   pages: {
     signIn: `${BASE}/signin`,
+    error: `${BASE}/auth-error`,
   },
   // Allows NextAuth to accept requests from plain-HTTP origins (IP:PORT) and
   // from behind reverse proxies. Without this, NextAuth v5 throws UntrustedHost
