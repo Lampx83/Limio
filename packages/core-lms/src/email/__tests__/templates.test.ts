@@ -36,6 +36,18 @@ describe("template fallback khi DB rỗng (trạng thái production)", () => {
     expect(r.html).toContain("display:none;max-height:0"); // preheader ẩn
   });
 
+  it("mẫu DB dạng HTML gọn được thêm style inline lúc render (admin không phải viết CSS)", async () => {
+    findFirst.mockResolvedValueOnce({
+      subject: "s",
+      bodyHtml: '<h1>Chào {{n}}</h1>\n<a class="button" href="{{u}}">Bấm</a>',
+      bodyText: "t",
+    });
+    const r = await renderTemplate({ key: "auth.verify_email", variables: { n: "An", u: "https://x" } });
+    expect(r.html).toMatch(/<h1 style="[^"]*">Chào An<\/h1>/);
+    expect(r.html).toContain('href="https://x"');
+    expect(r.html).toContain('bgcolor="#4d7c0f"');
+  });
+
   it("mẫu admin dán nguyên tài liệu HTML → không bọc lần hai", async () => {
     findFirst.mockResolvedValueOnce({ subject: "s", bodyHtml: "<html><body>tự thiết kế</body></html>", bodyText: "t" });
     const r = await renderTemplate({ key: "auth.verify_email", variables: {} });

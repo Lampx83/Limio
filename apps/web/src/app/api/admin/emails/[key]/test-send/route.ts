@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  composeEmailHtml,
   getTemplateForScope,
   renderField,
   sendEmail,
@@ -62,8 +63,9 @@ export async function POST(
       : (detail.bodyText ?? "");
 
   const subject = renderField(subjectTpl, vars);
-  const html = renderField(bodyHtmlTpl, vars);
   const text = bodyTextTpl ? renderField(bodyTextTpl, vars) : undefined;
+  // Cùng pipeline với gửi thật: thêm style inline + khung thương hiệu.
+  const html = composeEmailHtml(renderField(bodyHtmlTpl, vars), subject, text ?? "");
 
   // Prepend a clear "TEST" marker so it never gets mistaken for real mail.
   const result = await sendEmail({

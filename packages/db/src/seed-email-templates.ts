@@ -7,15 +7,15 @@
  * sendTemplatedEmail() prefers org-specific row, then falls back to
  * this global row, then to hard-coded defaults (core-lms/email/templates.ts).
  *
- * Body là phần NỘI DUNG (fragment) — khung thương hiệu bao quanh (logo, thẻ, chân thư)
- * do core-lms `wrapEmail` thêm lúc gửi, nên sửa khung một chỗ là đổi mọi email.
- * Nội dung dựng bằng các linh kiện trong ./emailUi (nút, hộp mã, bảng thông tin…).
+ * Body là HTML GỌN (không có style) để admin dễ đọc/sửa. Lúc gửi, core-lms
+ * `emailize()` thêm style inline cho các thẻ và các khối đặc biệt, `wrapEmail` bọc
+ * khung thương hiệu (logo, thẻ, chân thư) — nên đổi thiết kế một chỗ là đổi mọi email.
+ * Xem danh sách thẻ/khối hỗ trợ ở packages/core-lms/src/email/emailize.ts.
  * Cú pháp biến: Handlebars {{variableName}}.
  *
  * Chạy lại KHÔNG ghi đè template mà admin đã sửa (updatedByUserId khác null).
  */
 import { PrismaClient, type Prisma } from "./generated/client";
-import { ui } from "./emailUi";
 
 const prisma = new PrismaClient();
 
@@ -47,9 +47,22 @@ const V = {
   examTitle: { name: "examTitle", label: "Tên kỳ thi", example: "Kỳ thi cuối kỳ", required: true },
 } as const;
 
-const hello = (v: string) => ui.p(`Xin chào <strong>{{${v}}}</strong>,`);
-const resetNote = ui.note("⏱ Liên kết đặt mật khẩu có hiệu lực trong <strong>1 giờ</strong> và chỉ dùng được một lần.");
-const ignoreSmall = ui.small("Nếu bạn không biết lý do mình nhận được thư này, hãy bỏ qua nó một cách an toàn.");
+// Trình dựng HTML gọn: chỉ sinh thẻ đơn giản + class, KHÔNG có style (style thêm lúc gửi).
+const h = {
+  title: (t: string) => `<h1>${t}</h1>`,
+  p: (t: string) => `<p>${t}</p>`,
+  button: (urlVar: string, label: string) => `<a class="button" href="{{${urlVar}}}">${label}</a>`,
+  linkFallback: (urlVar: string) => `<div class="linkbox">{{${urlVar}}}</div>`,
+  codeCard: (label: string, valueVar: string) => `<div class="code" data-label="${label}">{{${valueVar}}}</div>`,
+  note: (t: string, tone: "info" | "warn" = "info") => `<div class="note${tone === "warn" ? " warn" : ""}">${t}</div>`,
+  small: (t: string) => `<p class="small">${t}</p>`,
+  facts: (rows: Array<[string, string]>) =>
+    `<table class="facts">\n${rows.map(([k, v]) => `  <tr><td>${k}</td><td>${v}</td></tr>`).join("\n")}\n</table>`,
+};
+
+const hello = (v: string) => h.p(`Xin chào <strong>{{${v}}}</strong>,`);
+const resetNote = h.note("⏱ Liên kết đặt mật khẩu có hiệu lực trong <strong>1 giờ</strong> và chỉ dùng được một lần.");
+const ignoreSmall = h.small("Nếu bạn không biết lý do mình nhận được thư này, hãy bỏ qua nó một cách an toàn.");
 
 const TEMPLATES: TemplateSeed[] = [
   // ============ AUTH ============
@@ -60,13 +73,13 @@ const TEMPLATES: TemplateSeed[] = [
     category: "auth",
     subject: "Xác thực email để bắt đầu học trên Limio",
     bodyHtml: [
-      ui.title("Xác thực email của bạn"),
+      h.title("Xác thực email của bạn"),
       hello("displayName"),
-      ui.p("Cảm ơn bạn đã đăng ký Limio. Chỉ còn một bước nữa: hãy xác thực địa chỉ email để kích hoạt tài khoản và bắt đầu học."),
-      ui.button("verificationUrl", "Xác thực email"),
-      ui.note("⏱ Liên kết có hiệu lực trong <strong>24 giờ</strong>."),
-      ui.linkFallback("verificationUrl"),
-      ui.small("Nếu bạn không tạo tài khoản này, hãy bỏ qua email — sẽ không có gì thay đổi."),
+      h.p("Cảm ơn bạn đã đăng ký Limio. Chỉ còn một bước nữa: hãy xác thực địa chỉ email để kích hoạt tài khoản và bắt đầu học."),
+      h.button("verificationUrl", "Xác thực email"),
+      h.note("⏱ Liên kết có hiệu lực trong <strong>24 giờ</strong>."),
+      h.linkFallback("verificationUrl"),
+      h.small("Nếu bạn không tạo tài khoản này, hãy bỏ qua email — sẽ không có gì thay đổi."),
     ].join("\n"),
     bodyText: `Xin chào {{displayName}},
 
@@ -86,13 +99,13 @@ Nếu bạn không tạo tài khoản này, hãy bỏ qua email.`,
     category: "auth",
     subject: "Đặt lại mật khẩu Limio của bạn",
     bodyHtml: [
-      ui.title("Đặt lại mật khẩu"),
+      h.title("Đặt lại mật khẩu"),
       hello("displayName"),
-      ui.p("Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Limio của bạn. Nhấn nút bên dưới để tạo mật khẩu mới."),
-      ui.button("resetUrl", "Đặt lại mật khẩu"),
+      h.p("Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Limio của bạn. Nhấn nút bên dưới để tạo mật khẩu mới."),
+      h.button("resetUrl", "Đặt lại mật khẩu"),
       resetNote,
-      ui.linkFallback("resetUrl"),
-      ui.small("Bạn không yêu cầu đặt lại? Hãy bỏ qua email này — mật khẩu hiện tại của bạn vẫn an toàn."),
+      h.linkFallback("resetUrl"),
+      h.small("Bạn không yêu cầu đặt lại? Hãy bỏ qua email này — mật khẩu hiện tại của bạn vẫn an toàn."),
     ].join("\n"),
     bodyText: `Xin chào {{displayName}},
 
@@ -111,18 +124,18 @@ Nếu bạn không yêu cầu, hãy bỏ qua email này — mật khẩu hiện 
     category: "exam",
     subject: "[{{examTitle}}] Mã dự thi của bạn",
     bodyHtml: [
-      ui.title("Mã dự thi của bạn"),
+      h.title("Mã dự thi của bạn"),
       hello("candidateName"),
-      ui.p("Bạn được mời tham gia kỳ thi <strong>{{examTitle}}</strong>. Đây là mã dự thi cá nhân của bạn:"),
-      ui.codeCard("Mã dự thi", "accessCode"),
-      ui.facts([
+      h.p("Bạn được mời tham gia kỳ thi <strong>{{examTitle}}</strong>. Đây là mã dự thi cá nhân của bạn:"),
+      h.codeCard("Mã dự thi", "accessCode"),
+      h.facts([
         ["Mở thi", "{{examOpensAt}}"],
         ["Đóng thi", "{{examClosesAt}}"],
         ["Thời lượng", "{{examDurationMin}} phút"],
       ]),
-      ui.button("claimUrl", "Vào thi"),
-      ui.note("🔒 Mã dự thi là của riêng bạn — vui lòng <strong>không chia sẻ</strong> cho người khác.", "warn"),
-      ui.linkFallback("claimUrl"),
+      h.button("claimUrl", "Vào thi"),
+      h.note("🔒 Mã dự thi là của riêng bạn — vui lòng <strong>không chia sẻ</strong> cho người khác.", "warn"),
+      h.linkFallback("claimUrl"),
     ].join("\n"),
     bodyText: `Mã dự thi cho {{examTitle}}
 
@@ -154,13 +167,13 @@ Lưu ý: mã dự thi là cá nhân — không chia sẻ cho người khác.`,
     category: "exam",
     subject: "Bạn được mời làm giám thị trên Limio",
     bodyHtml: [
-      ui.title("Bạn được mời làm giám thị"),
+      h.title("Bạn được mời làm giám thị"),
       hello("name"),
-      ui.p("Bạn vừa được phân công làm <strong>giám thị phòng thi</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập và xem phòng thi của mình."),
-      ui.button("resetUrl", "Đặt mật khẩu"),
+      h.p("Bạn vừa được phân công làm <strong>giám thị phòng thi</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập và xem phòng thi của mình."),
+      h.button("resetUrl", "Đặt mật khẩu"),
       resetNote,
-      ui.p("Sau khi đăng nhập, chọn <strong>“Giám sát phòng thi”</strong> ở menu bên trái để xem các phòng bạn phụ trách."),
-      ui.linkFallback("resetUrl"),
+      h.p("Sau khi đăng nhập, chọn <strong>“Giám sát phòng thi”</strong> ở menu bên trái để xem các phòng bạn phụ trách."),
+      h.linkFallback("resetUrl"),
       ignoreSmall,
     ].join("\n"),
     bodyText: `Xin chào {{name}},
@@ -180,12 +193,12 @@ Sau khi đăng nhập, chọn "Giám sát phòng thi" ở menu bên trái để 
     category: "exam",
     subject: "Bạn được mời làm giám thị trên Limio",
     bodyHtml: [
-      ui.title("Bạn được mời làm giám thị"),
+      h.title("Bạn được mời làm giám thị"),
       hello("name"),
-      ui.p("Bạn vừa được thêm làm <strong>giám thị phòng thi</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập."),
-      ui.button("resetUrl", "Đặt mật khẩu"),
+      h.p("Bạn vừa được thêm làm <strong>giám thị phòng thi</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập."),
+      h.button("resetUrl", "Đặt mật khẩu"),
       resetNote,
-      ui.linkFallback("resetUrl"),
+      h.linkFallback("resetUrl"),
       ignoreSmall,
     ].join("\n"),
     bodyText: `Xin chào {{name}},
@@ -201,12 +214,12 @@ Bạn được mời làm giám thị phòng thi trên Limio.
     category: "exam",
     subject: "Bạn được mời làm giảng viên phụ trách lớp trên Limio",
     bodyHtml: [
-      ui.title("Bạn được mời phụ trách lớp học"),
+      h.title("Bạn được mời phụ trách lớp học"),
       hello("name"),
-      ui.p("Bạn vừa được thêm làm <strong>giảng viên phụ trách lớp học</strong> trên Limio. Hãy đặt mật khẩu để bắt đầu."),
-      ui.button("resetUrl", "Đặt mật khẩu"),
+      h.p("Bạn vừa được thêm làm <strong>giảng viên phụ trách lớp học</strong> trên Limio. Hãy đặt mật khẩu để bắt đầu."),
+      h.button("resetUrl", "Đặt mật khẩu"),
       resetNote,
-      ui.linkFallback("resetUrl"),
+      h.linkFallback("resetUrl"),
       ignoreSmall,
     ].join("\n"),
     bodyText: `Xin chào {{name}},
@@ -222,16 +235,16 @@ Bạn được mời làm giảng viên phụ trách lớp học trên Limio.
     category: "exam",
     subject: "[{{examTitle}}] Kết quả thi của bạn đã có",
     bodyHtml: [
-      ui.title("Kết quả thi của bạn đã có"),
+      h.title("Kết quả thi của bạn đã có"),
       hello("candidateName"),
-      ui.p("Kết quả kỳ thi <strong>{{examTitle}}</strong> đã được công bố."),
-      ui.codeCard("Điểm số", "score"),
-      ui.facts([
+      h.p("Kết quả kỳ thi <strong>{{examTitle}}</strong> đã được công bố."),
+      h.codeCard("Điểm số", "score"),
+      h.facts([
         ["Kỳ thi", "{{examTitle}}"],
         ["Thang điểm", "{{maxScore}}"],
       ]),
-      ui.button("resultUrl", "Xem chi tiết kết quả"),
-      ui.linkFallback("resultUrl"),
+      h.button("resultUrl", "Xem chi tiết kết quả"),
+      h.linkFallback("resultUrl"),
     ].join("\n"),
     bodyText: `Xin chào {{candidateName}},
 
@@ -252,16 +265,16 @@ Xem chi tiết: {{resultUrl}}`,
     category: "exam",
     subject: "Nhắc lịch: {{examTitle}} mở thi sau {{hoursUntilOpen}} giờ",
     bodyHtml: [
-      ui.title("Sắp đến giờ thi"),
+      h.title("Sắp đến giờ thi"),
       hello("candidateName"),
-      ui.p("Kỳ thi <strong>{{examTitle}}</strong> sắp bắt đầu. Hãy chuẩn bị sẵn mã dự thi của bạn:"),
-      ui.codeCard("Mã dự thi", "accessCode"),
-      ui.facts([
+      h.p("Kỳ thi <strong>{{examTitle}}</strong> sắp bắt đầu. Hãy chuẩn bị sẵn mã dự thi của bạn:"),
+      h.codeCard("Mã dự thi", "accessCode"),
+      h.facts([
         ["Mở thi lúc", "{{examOpensAt}}"],
         ["Còn lại", "{{hoursUntilOpen}} giờ"],
       ]),
-      ui.button("claimUrl", "Vào thi"),
-      ui.linkFallback("claimUrl"),
+      h.button("claimUrl", "Vào thi"),
+      h.linkFallback("claimUrl"),
     ].join("\n"),
     bodyText: `Xin chào {{candidateName}},
 
@@ -286,12 +299,12 @@ Vào thi: {{claimUrl}}`,
     category: "cohort",
     subject: "Bạn được mời làm giảng viên phụ trách lớp trên Limio",
     bodyHtml: [
-      ui.title("Bạn được mời phụ trách lớp học"),
+      h.title("Bạn được mời phụ trách lớp học"),
       hello("name"),
-      ui.p("Bạn vừa được phân công làm <strong>giảng viên phụ trách một lớp học</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập và xem các lớp của mình."),
-      ui.button("resetUrl", "Đặt mật khẩu"),
+      h.p("Bạn vừa được phân công làm <strong>giảng viên phụ trách một lớp học</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập và xem các lớp của mình."),
+      h.button("resetUrl", "Đặt mật khẩu"),
       resetNote,
-      ui.linkFallback("resetUrl"),
+      h.linkFallback("resetUrl"),
       ignoreSmall,
     ].join("\n"),
     bodyText: `Xin chào {{name}},
@@ -313,12 +326,12 @@ Sau khi đăng nhập, bạn sẽ thấy các lớp được phân công.`,
     category: "course",
     subject: "Bạn được thêm làm đồng giảng viên khoá “{{courseTitle}}”",
     bodyHtml: [
-      ui.title("Bạn là đồng giảng viên"),
-      ui.p("Xin chào,"),
-      ui.p("Bạn vừa được thêm làm <strong>đồng giảng viên</strong> của khoá học <strong>{{courseTitle}}</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập và cùng quản lý khoá học."),
-      ui.button("resetUrl", "Đặt mật khẩu"),
+      h.title("Bạn là đồng giảng viên"),
+      h.p("Xin chào,"),
+      h.p("Bạn vừa được thêm làm <strong>đồng giảng viên</strong> của khoá học <strong>{{courseTitle}}</strong> trên Limio. Hãy đặt mật khẩu để đăng nhập và cùng quản lý khoá học."),
+      h.button("resetUrl", "Đặt mật khẩu"),
       resetNote,
-      ui.linkFallback("resetUrl"),
+      h.linkFallback("resetUrl"),
       ignoreSmall,
     ].join("\n"),
     bodyText: `Xin chào,
@@ -336,12 +349,12 @@ Bạn vừa được thêm làm đồng giảng viên khoá {{courseTitle}} trê
     category: "course",
     subject: "Chào mừng bạn đến với {{courseTitle}}!",
     bodyHtml: [
-      ui.title("Chào mừng bạn đến với khoá học"),
+      h.title("Chào mừng bạn đến với khoá học"),
       hello("learnerName"),
-      ui.p("Bạn đã ghi danh thành công vào khoá học <strong>{{courseTitle}}</strong>. Mọi bài học đã sẵn sàng — hãy bắt đầu ngay khi bạn muốn."),
-      ui.button("courseUrl", "Bắt đầu học"),
-      ui.linkFallback("courseUrl"),
-      ui.small("Chúc bạn có một hành trình học tập thật hiệu quả."),
+      h.p("Bạn đã ghi danh thành công vào khoá học <strong>{{courseTitle}}</strong>. Mọi bài học đã sẵn sàng — hãy bắt đầu ngay khi bạn muốn."),
+      h.button("courseUrl", "Bắt đầu học"),
+      h.linkFallback("courseUrl"),
+      h.small("Chúc bạn có một hành trình học tập thật hiệu quả."),
     ].join("\n"),
     bodyText: `Xin chào {{learnerName}},
 
@@ -360,14 +373,14 @@ Bắt đầu học tại: {{courseUrl}}`,
     category: "course",
     subject: "Khoá “{{courseTitle}}” của bạn sắp hết hạn truy cập",
     bodyHtml: [
-      ui.title("Khoá học sắp hết hạn"),
+      h.title("Khoá học sắp hết hạn"),
       hello("learnerName"),
-      ui.p("Quyền truy cập khoá học của bạn sắp kết thúc. Hãy hoàn thành phần còn lại hoặc gia hạn sớm để việc học không bị gián đoạn."),
-      ui.facts([
+      h.p("Quyền truy cập khoá học của bạn sắp kết thúc. Hãy hoàn thành phần còn lại hoặc gia hạn sớm để việc học không bị gián đoạn."),
+      h.facts([
         ["Khoá học", "{{courseTitle}}"],
         ["Hết hạn vào", "{{expiresAtDate}}"],
       ]),
-      ui.note("Sau ngày này bạn sẽ không thể xem nội dung khoá học nữa.", "warn"),
+      h.note("Sau ngày này bạn sẽ không thể xem nội dung khoá học nữa.", "warn"),
     ].join("\n"),
     bodyText: `Xin chào {{learnerName}},
 
@@ -387,15 +400,15 @@ Quyền truy cập khoá {{courseTitle}} của bạn sẽ hết hạn vào {{exp
     category: "gamification",
     subject: "🎉 Chúc mừng! Bạn vừa đạt cấp {{newLevel}}",
     bodyHtml: [
-      ui.title("🎉 Bạn vừa lên cấp {{newLevel}}!"),
+      h.title("🎉 Bạn vừa lên cấp {{newLevel}}!"),
       hello("learnerName"),
-      ui.p("Nỗ lực của bạn đã được ghi nhận. Bạn vừa đạt danh hiệu <strong>{{levelTitle}}</strong>."),
-      ui.facts([
+      h.p("Nỗ lực của bạn đã được ghi nhận. Bạn vừa đạt danh hiệu <strong>{{levelTitle}}</strong>."),
+      h.facts([
         ["Cấp hiện tại", "Cấp {{newLevel}}"],
         ["Danh hiệu", "{{levelTitle}}"],
         ["Tổng XP", "{{totalXp}}"],
       ]),
-      ui.button("profileUrl", "Xem hồ sơ của bạn"),
+      h.button("profileUrl", "Xem hồ sơ của bạn"),
     ].join("\n"),
     bodyText: `Chúc mừng {{learnerName}}!
 
@@ -417,11 +430,11 @@ Hồ sơ: {{profileUrl}}`,
     category: "gamification",
     subject: "🏆 Bạn vừa nhận huy hiệu: {{badgeName}}",
     bodyHtml: [
-      ui.title("🏆 Huy hiệu mới: {{badgeName}}"),
+      h.title("🏆 Huy hiệu mới: {{badgeName}}"),
       hello("learnerName"),
-      ui.p("Chúc mừng! Bạn vừa mở khoá một huy hiệu mới:"),
-      ui.note("<strong>{{badgeName}}</strong><br>{{badgeDescription}}"),
-      ui.button("badgesUrl", "Xem bộ sưu tập huy hiệu"),
+      h.p("Chúc mừng! Bạn vừa mở khoá một huy hiệu mới:"),
+      h.note("<strong>{{badgeName}}</strong><br>{{badgeDescription}}"),
+      h.button("badgesUrl", "Xem bộ sưu tập huy hiệu"),
     ].join("\n"),
     bodyText: `Xin chào {{learnerName}},
 
@@ -445,16 +458,16 @@ Xem tại: {{badgesUrl}}`,
     category: "notification",
     subject: "Tóm tắt tuần qua của bạn trên Limio",
     bodyHtml: [
-      ui.title("Tóm tắt tuần của bạn"),
+      h.title("Tóm tắt tuần của bạn"),
       hello("learnerName"),
-      ui.p("Đây là những gì bạn đã làm được trong tuần qua:"),
-      ui.facts([
+      h.p("Đây là những gì bạn đã làm được trong tuần qua:"),
+      h.facts([
         ["Bài học hoàn thành", "{{lessonsCompleted}}"],
         ["Quiz đã làm", "{{quizzesTaken}}"],
         ["XP kiếm được", "{{xpEarned}}"],
         ["Chuỗi ngày học", "{{streakDays}} ngày"],
       ]),
-      ui.button("dashboardUrl", "Tiếp tục học"),
+      h.button("dashboardUrl", "Tiếp tục học"),
     ].join("\n"),
     bodyText: `Xin chào {{learnerName}},
 

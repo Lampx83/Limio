@@ -17,6 +17,7 @@ import Handlebars from "handlebars";
 import { prisma } from "@feedbackme/db";
 import { sendEmail, type SendResult } from "./sender";
 import { wrapEmail } from "./layout";
+import { emailize } from "./emailize";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -268,9 +269,18 @@ export async function sendTemplatedEmail(
 
 /** Bọc nội dung vào khung thương hiệu; bỏ qua nếu đã là tài liệu HTML hoàn chỉnh. */
 function frame(inner: string, subject: string, text: string): string {
+  return composeEmailHtml(inner, subject, text);
+}
+
+/**
+ * Nội dung gọn (đã render Handlebars) → HTML email hoàn chỉnh: thêm style inline cho
+ * các thẻ/khối của template rồi bọc khung thương hiệu. Dùng chung cho gửi thật,
+ * gửi test và xem trước trong admin để cả ba luôn cho ra cùng một kết quả.
+ */
+export function composeEmailHtml(inner: string, subject: string, text = ""): string {
   if (/<html[\s>]/i.test(inner)) return inner;
   const preheader = text.replace(/\s+/g, " ").trim().slice(0, 110);
-  return wrapEmail({ bodyHtml: inner, subject, preheader });
+  return wrapEmail({ bodyHtml: emailize(inner), subject, preheader });
 }
 
 function maskEmail(email: string): string {

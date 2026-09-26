@@ -58,16 +58,31 @@ export default function EmailEditorClient({
     return m;
   }, [initial.variables]);
 
-  // Live preview — render Handlebars-style {{var}} in-browser using a simple
-  // string replace. Good enough for preview; real send uses server Handlebars.
-  const previewHtml = useMemo(
-    () => renderInBrowser(bodyHtml, exampleVars),
-    [bodyHtml, exampleVars],
-  );
-  const previewSubject = useMemo(
-    () => renderInBrowser(subject, exampleVars),
-    [subject, exampleVars],
-  );
+  // Preview lấy từ server (debounce) để khớp 100% thứ người nhận thấy: server thêm style
+  // inline + khung thương hiệu. Trong lúc chờ (hoặc khi lỗi mạng) dùng bản thay biến tại chỗ.
+  const [serverPreview, setServerPreview] = useState<{ subject: string; html: string } | null>(null);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`${apiUrl("/api/admin/emails")}/${encodeURIComponent(key_)}/preview?scope=${scopeId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subject, bodyHtml, bodyText }),
+          signal: ctrl.signal,
+        });
+        if (res.ok) setServerPreview(await res.json());
+      } catch {
+        /* giữ bản preview trước đó */
+      }
+    }, 400);
+    return () => {
+      clearTimeout(t);
+      ctrl.abort();
+    };
+  }, [subject, bodyHtml, bodyText, key_, scopeId]);
+  const previewHtml = serverPreview?.html ?? renderInBrowser(bodyHtml, exampleVars);
+  const previewSubject = serverPreview?.subject ?? renderInBrowser(subject, exampleVars);
 
   const apiBase = `${apiUrl("/api/admin/emails")}/${encodeURIComponent(key_)}`;
 
@@ -190,6 +205,19 @@ export default function EmailEditorClient({
             <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
               Body HTML
             </label>
+            <details className="mt-1 rounded-lg border border-base-200 bg-white px-3 py-2 text-xs text-muted">
+              <summary className="cursor-pointer font-medium text-base-700">Cách viết nhanh (không cần CSS)</summary>
+              <ul className="mt-2 space-y-1 font-mono leading-relaxed">
+                <li>{"<h1>Tiêu đề</h1>  <p>Đoạn văn</p>  <ul><li>…</li></ul>"}</li>
+                <li>{'<a class="button" href="{{url}}">Nhãn nút</a>'} — nút hành động</li>
+                <li>{'<div class="note">…</div>'} / {'<div class="note warn">…</div>'} — ô lưu ý (xanh / vàng)</li>
+                <li>{'<div class="code" data-label="Mã dự thi">{{accessCode}}</div>'} — hộp mã</li>
+                <li>{'<div class="linkbox">{{url}}</div>'} — “nếu nút không bấm được…”</li>
+                <li>{'<table class="facts"><tr><td>Nhãn</td><td>Giá trị</td></tr></table>'} — bảng thông tin</li>
+                <li>{'<p class="small">…</p>'} — chú thích nhỏ</li>
+              </ul>
+              <p className="mt-2 font-sans">Style và khung (logo, chân thư) được thêm tự động khi gửi; xem kết quả ở khung Preview bên phải.</p>
+            </details>
             <textarea
               value={bodyHtml}
               onChange={(e) => setBodyHtml(e.target.value)}

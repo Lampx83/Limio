@@ -1,16 +1,15 @@
 /**
- * Linh kiện dựng HTML cho email (nút, hộp mã, bảng thông tin…) dùng khi viết nội dung
- * mẫu email. Trả về chuỗi có chứa biến Handlebars (`{{name}}`).
- *
- * Nằm ở packages/db vì script seed (chạy trong image migrator, chỉ có packages/db)
- * cần chúng. Khung bao ngoài (`wrapEmail`) ở packages/core-lms/src/email/layout.ts.
+ * Linh kiện HTML "an toàn cho email client" (nút, hộp mã, bảng thông tin…).
+ * Được `emailize()` gọi lúc gửi để biến markup GỌN trong DB thành HTML style inline —
+ * nhờ vậy admin chỉ phải sửa `<a class="button">…</a>` chứ không phải đống `style="…"`.
+ * Tham số là giá trị THỰC (đã qua Handlebars), không phải tên biến.
  *
  * Ràng buộc của email client quyết định cách viết: bố cục <table>, style inline,
  * nút "bulletproof" (<td bgcolor> + <a>), không dùng ảnh/SVG.
  */
 
 // Bảng màu lấy từ tailwind.config (brand = lime, accent = pink của "quả dưa hấu").
-const C = {
+export const C = {
   ink: "#1a2e05", // chữ tiêu đề
   text: "#3f4a36", // chữ thân
   muted: "#6b7560", // chữ phụ / footer
@@ -26,7 +25,7 @@ const C = {
   warnText: "#92400e",
 } as const;
 
-const FONT =
+export const FONT =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif";
 
 export const ui = {
@@ -41,28 +40,28 @@ export const ui = {
   },
 
   /** Nút hành động chính. `urlVar` là tên biến Handlebars chứa link. */
-  button(urlVar: string, label: string): string {
+  button(href: string, label: string): string {
     return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="btn-wrap" style="margin:8px 0 24px;"><tr>
 <td align="center" bgcolor="${C.brand}" style="border-radius:10px;background:${C.brand};">
-<a href="{{${urlVar}}}" target="_blank" class="btn" style="display:inline-block;padding:14px 32px;font-family:${FONT};font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px;">${label}</a>
+<a href="${href}" target="_blank" class="btn" style="display:inline-block;padding:14px 32px;font-family:${FONT};font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px;">${label}</a>
 </td></tr></table>`;
   },
 
   /** Khối "nếu nút không bấm được": in lại link dạng chữ. */
-  linkFallback(urlVar: string): string {
+  linkFallback(url: string): string {
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;"><tr>
 <td class="soft" style="padding:14px 16px;background:${C.brandSoft};border:1px solid ${C.brandLine};border-radius:10px;font-family:${FONT};font-size:13px;line-height:1.6;color:${C.muted};">
 Nếu nút không hoạt động, hãy sao chép liên kết này vào trình duyệt:<br>
-<a href="{{${urlVar}}}" style="color:${C.brand};word-break:break-all;">{{${urlVar}}}</a>
+<a href="${url}" style="color:${C.brand};word-break:break-all;">${url}</a>
 </td></tr></table>`;
   },
 
   /** Ô hiển thị một mã (mã dự thi, mã xác nhận…). */
-  codeCard(label: string, valueVar: string): string {
+  codeCard(label: string, value: string): string {
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr>
 <td align="center" class="soft" style="padding:22px 16px;background:${C.brandSoft};border:2px dashed ${C.brand};border-radius:14px;">
 <div style="font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${C.muted};margin:0 0 8px;">${label}</div>
-<div style="font-family:'SF Mono',Menlo,Consolas,'Courier New',monospace;font-size:34px;line-height:1.1;font-weight:800;letter-spacing:6px;color:${C.ink};">{{${valueVar}}}</div>
+<div style="font-family:'SF Mono',Menlo,Consolas,'Courier New',monospace;font-size:34px;line-height:1.1;font-weight:800;letter-spacing:6px;color:${C.ink};">${value}</div>
 </td></tr></table>`;
   },
 

@@ -3,6 +3,7 @@ export {
   sendTemplatedEmail,
   renderTemplate,
   renderField,
+  composeEmailHtml,
   type TemplateKey,
   type RenderedTemplate,
   type SendTemplatedEmailInput,
