@@ -30,7 +30,8 @@ const Schema = z.object({
   // If RESEND_API_KEY is unset, lib/email.ts falls back to console.log so
   // dev/test still flow without burning the Resend quota.
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().email().optional(),
+  // Chấp nhận cả dạng `Limio <admin@limio.vn>`.
+  EMAIL_FROM: z.string().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 

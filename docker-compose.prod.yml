@@ -40,6 +40,9 @@ x-web-env: &web-env
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
+  # Email qua Resend (limio.vn Verified). Thiếu key → sender.ts chỉ log, không gửi thật.
+  EMAIL_FROM: ${EMAIL_FROM:-}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
 
 services:
   postgres:
