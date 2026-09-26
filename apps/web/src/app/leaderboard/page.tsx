@@ -70,7 +70,7 @@ export default async function LeaderboardPage({
   const podium = [top3[1], top3[0], top3[2]];
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 relative">
+    <main className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6 relative">
       {/* Decorative gradient blobs */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden">
         <div className="mx-auto h-64 max-w-3xl rounded-full bg-gradient-to-r from-amber-200/40 via-brand-200/40 to-accent-200/40 blur-3xl" />
@@ -178,7 +178,7 @@ export default async function LeaderboardPage({
           {rest.length > 0 && (
             <section className="mt-8">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-faint">Bảng xếp hạng</h2>
-              <ul className="overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card">
+              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {rest.map((e) => (
                   <Row key={e.userId} entry={e} />
                 ))}
@@ -294,11 +294,11 @@ function Row({ entry }: { entry: BoardEntry }) {
     <li
       className={
         entry.isYou
-          ? "flex items-center gap-3 border-b border-token bg-brand-50 px-4 py-3 last:border-b-0"
-          : "flex items-center gap-3 border-b border-token px-4 py-3 last:border-b-0 hover:bg-[rgb(var(--surface-muted))]"
+          ? "flex items-center gap-3 rounded-2xl border border-brand-300 bg-brand-50 px-4 py-3 shadow-card"
+          : "flex items-center gap-3 rounded-2xl border border-token bg-[rgb(var(--surface))] px-4 py-3 shadow-card hover:bg-[rgb(var(--surface-muted))]"
       }
     >
-      <span className="w-10 text-center font-mono text-sm font-semibold tabular-nums text-faint">
+      <span className="w-9 shrink-0 text-center font-mono text-sm font-semibold tabular-nums text-faint">
         {medal ?? `#${entry.rank}`}
       </span>
       {entry.avatarUrl ? (
@@ -318,7 +318,7 @@ function Row({ entry }: { entry: BoardEntry }) {
         {entry.isYou && <span className="ml-2 chip-brand text-xs">Bạn</span>}
       </span>
       <DeltaPill delta={entry.delta} />
-      <span className="w-20 text-right font-mono text-sm font-semibold tabular-nums text-brand-700">
+      <span className="shrink-0 text-right font-mono text-sm font-semibold tabular-nums text-brand-700">
         {entry.xp.toLocaleString("vi-VN")} XP
       </span>
     </li>
