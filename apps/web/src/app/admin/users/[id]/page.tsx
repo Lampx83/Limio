@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { isDeletedUserEmail } from "@feedbackme/core-lms";
 import UserRoleManager from "./UserRoleManager";
 import ImpersonateButton from "./ImpersonateButton";
+import DeleteUserButton from "./DeleteUserButton";
 import { formatDate, formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -121,7 +123,18 @@ export default async function AdminUserDetailPage({
             )}
           </p>
         </div>
-        <ImpersonateButton userId={user.id} userName={user.displayName} />
+        {isDeletedUserEmail(user.email) ? (
+          <span className="chip-warning">Đã xoá</span>
+        ) : (
+          <div className="flex gap-2">
+            <ImpersonateButton userId={user.id} userName={user.displayName} />
+            <DeleteUserButton
+              userId={user.id}
+              userName={user.displayName}
+              userEmail={user.email}
+            />
+          </div>
+        )}
       </header>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
