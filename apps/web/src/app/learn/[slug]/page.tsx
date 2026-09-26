@@ -1,3 +1,4 @@
+import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Lock } from "lucide-react";
@@ -383,7 +384,7 @@ export default async function LearnCoursePage({
                     }`}
                   >
                     {isEarned ? (
-                      <div className="text-xl">{b.emoji ?? ""}</div>
+                      <BadgeIcon code={b.code} className="mx-auto h-14 w-14" />
                     ) : (
                       <Lock className="mx-auto h-4 w-4 text-faint" aria-hidden />
                     )}

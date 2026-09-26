@@ -1,3 +1,4 @@
+import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -77,7 +78,7 @@ export default async function CertificatePage({
       badge: { category: "skill" },
       context: { path: ["courseId"], equals: course.id },
     },
-    include: { badge: { select: { name: true, emoji: true } } },
+    include: { badge: { select: { code: true, name: true } } },
   });
 
   const certNumber = `FBM-${course.id.slice(0, 8).toUpperCase()}-${userId.slice(0, 8).toUpperCase()}`;
@@ -132,7 +133,7 @@ export default async function CertificatePage({
                     key={sb.id}
                     className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-3 py-1 text-xs font-semibold text-accent-700"
                   >
-                    <span>{sb.badge.emoji}</span>
+                    <BadgeIcon code={sb.badge.code} className="h-9 w-9" />
                     {sb.badge.name}
                   </li>
                 ))}

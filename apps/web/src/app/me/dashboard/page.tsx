@@ -1,3 +1,4 @@
+import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -35,7 +36,7 @@ export default async function LearnerDashboard() {
     where: { userId },
     orderBy: { earnedAt: "desc" },
     take: 5,
-    include: { badge: { select: { code: true, name: true, emoji: true } } },
+    include: { badge: { select: { code: true, name: true } } },
   });
 
   const courseIds = enrollments.map((e) => e.courseId);
@@ -294,7 +295,7 @@ export default async function LearnerDashboard() {
                   title={b.badge.name}
                   className="rounded-xl border border-accent-200 bg-accent-50 p-3 text-center"
                 >
-                  <div className="text-2xl">{b.badge.emoji ?? ""}</div>
+                  <BadgeIcon code={b.badge.code} className="mx-auto h-20 w-20" />
                   <div className="mt-1 truncate text-xs font-medium text-accent-700">
                     {b.badge.name}
                   </div>

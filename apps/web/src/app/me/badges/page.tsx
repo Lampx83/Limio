@@ -1,3 +1,4 @@
+import BadgeIcon from "@/components/ui/BadgeIcon";
 import { redirect } from "next/navigation";
 import { listBadgeCatalog, listUserBadges } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
@@ -79,8 +80,8 @@ export default async function BadgesPage() {
                 style={{ animationDelay: `${Math.min(idx * 40, 240)}ms` }}
               >
                 <div className="absolute inset-x-0 -top-12 mx-auto h-24 w-24 rounded-full bg-accent-300/30 blur-2xl transition-opacity group-hover:opacity-100" aria-hidden />
-                <div className="relative text-4xl drop-shadow-sm">
-                  {u.badge.emoji ?? ""}
+                <div className="relative drop-shadow-sm">
+                  <BadgeIcon code={u.badge.code} className="mx-auto h-32 w-32" />
                 </div>
                 <div className="relative mt-2 text-sm font-semibold leading-tight">
                   {u.badge.name}
@@ -110,7 +111,7 @@ export default async function BadgesPage() {
                 title={b.description}
                 className="rounded-2xl border border-dashed border-token bg-[rgb(var(--surface-muted))] p-5 text-center opacity-80 transition-opacity hover:opacity-100"
               >
-                <div className="text-4xl grayscale">{b.emoji ?? ""}</div>
+                <BadgeIcon code={b.code} className="mx-auto h-32 w-32 grayscale opacity-50" />
                 <div className="mt-2 text-sm font-semibold leading-tight text-muted">
                   {b.name}
                 </div>

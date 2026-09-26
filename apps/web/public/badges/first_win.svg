@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="First Win">
+  <title>First Win</title>
+  <polygon points="48.0,32.0 74.0,47.0 74.0,77.0 48.0,92.0 22.0,77.0 22.0,47.0" fill="#6D28D9" stroke="#6D28D9" stroke-width="6" stroke-linejoin="round"/>
+  <polygon points="48.0,28.0 74.0,43.0 74.0,73.0 48.0,88.0 22.0,73.0 22.0,43.0" fill="#A78BFA" stroke="#A78BFA" stroke-width="6" stroke-linejoin="round"/>
+  <polygon points="48.0,35.6 68.3,47.3 68.3,70.7 48.0,82.4 27.7,70.7 27.7,47.3" fill="#DDD6FE" stroke="#DDD6FE" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M28 45 L44 35" stroke="#fff" stroke-opacity=".55" stroke-width="3.5" stroke-linecap="round"/>
+  <g transform="translate(48 50) scale(0.78) translate(-48 -57)">
+    <path d="M48 33 C47 25 54 19 63 20 C62 29 56 34 48 33Z" fill="#65A30D" stroke="#365314" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="48" cy="57" rx="27" ry="25" fill="#A3E635" stroke="#365314" stroke-width="3.5"/>
+    <path d="M30 47 C32 41 37 38 42 38" fill="none" stroke="#ECFCCB" stroke-width="4" stroke-linecap="round"/>
+    <path d="M22 56 Q12 48 13 36" fill="none" stroke="#365314" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="13" cy="35" r="4.2" fill="#A3E635" stroke="#365314" stroke-width="3"/>
+    <path d="M74 58 Q82 62 84 70" fill="none" stroke="#365314" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="84" cy="71" r="4.2" fill="#A3E635" stroke="#365314" stroke-width="3"/>
+    <path d="M35 55 Q39 48.5 43 55" fill="none" stroke="#1A2E05" stroke-width="3" stroke-linecap="round"/><path d="M53 55 Q57 48.5 61 55" fill="none" stroke="#1A2E05" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="31.5" cy="62" rx="4" ry="2.6" fill="#FDA4AF" opacity=".85"/><ellipse cx="64.5" cy="62" rx="4" ry="2.6" fill="#FDA4AF" opacity=".85"/>
+    <path d="M40.5 62 Q48 75 55.5 62Z" fill="#7F1D1D" stroke="#1A2E05" stroke-width="2.5" stroke-linejoin="round"/><path d="M44 68.5 Q48 65.5 52 68.5 Q48 72 44 68.5Z" fill="#FB7185"/>
+  </g>
+  <g>
+    <circle cx="24" cy="81.5" r="14" fill="#0F172A"/>
+    <circle cx="24" cy="79" r="14" fill="#1E293B" stroke="#fff" stroke-width="3"/>
+    <ellipse cx="20" cy="71" rx="6" ry="2.2" fill="#fff" opacity=".18"/>
+    <g transform="translate(24 79)" fill="none" stroke="#FACC15" stroke-linecap="round" stroke-linejoin="round"><path d="M-7 0.5 L-2 6 L8 -6.5" stroke-width="5.6"/></g>
+  </g>
+</svg>
