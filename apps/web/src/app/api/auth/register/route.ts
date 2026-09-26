@@ -16,6 +16,7 @@ export async function POST(req: Request) {
       {
         userId: result.userId,
         email: result.email,
+        emailSent: result.emailSent,
         // Verification URL is logged via dev email helper. Don't return it in prod.
       },
       { status: 201 },

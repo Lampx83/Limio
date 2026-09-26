@@ -291,7 +291,7 @@ export async function sendAccessExpiryReminders(
   for (const e of due) {
     if (!e.accessExpiresAt) continue;
     try {
-      await sendTemplatedEmail({
+      const mail = await sendTemplatedEmail({
         key: "course.access_expiring",
         to: e.user.email,
         organizationId: e.course.organizationId,
@@ -301,6 +301,8 @@ export async function sendAccessExpiryReminders(
           expiresAtDate: e.accessExpiresAt.toLocaleDateString("vi-VN"),
         },
       });
+      // Gửi lỗi (sendEmail không throw) → KHÔNG đánh dấu đã nhắc, để lần chạy cron sau thử lại.
+      if (!mail.delivered && !mail.loggedOnly) continue;
     } catch {
       continue;
     }

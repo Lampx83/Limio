@@ -25,7 +25,11 @@ export default function RegisterPage() {
     const data = await res.json();
     if (res.ok) {
       setStatus("ok");
-      setMessage("Tài khoản tạo OK. Kiểm tra console server để lấy link xác thực email.");
+      setMessage(
+        data.emailSent === false
+          ? "Tài khoản đã được tạo nhưng chúng tôi chưa gửi được email xác thực. Vui lòng thử lại sau ít phút hoặc liên hệ quản trị viên."
+          : `Tài khoản đã được tạo. Chúng tôi đã gửi email xác thực tới ${data.email ?? email} — hãy kiểm tra hộp thư (cả mục Spam).`,
+      );
     } else {
       setStatus("error");
       setMessage(`Lỗi: ${data.error ?? "unknown"}`);

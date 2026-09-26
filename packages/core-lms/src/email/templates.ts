@@ -8,12 +8,15 @@
  *   3. Hard-coded fallback     (FALLBACKS map below)
  *
  * Render: Handlebars with safe defaults — missing variables become "".
+ *         Nội dung (fragment) được bọc khung thương hiệu bằng wrapEmail(), trừ khi
+ *         admin đã dán nguyên một tài liệu HTML hoàn chỉnh (có thẻ <html>).
  * Send:   delegates to sendEmail() and returns SendResult.
  */
 
 import Handlebars from "handlebars";
 import { prisma } from "@feedbackme/db";
 import { sendEmail, type SendResult } from "./sender";
+import { wrapEmail } from "./layout";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -167,6 +170,36 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
     bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Quyền truy cập khóa <strong>{{courseTitle}}</strong> của bạn sẽ hết hạn vào <strong>{{expiresAtDate}}</strong>. Gia hạn sớm để không bị gián đoạn việc học.</p>`,
     bodyText: `Xin chào {{learnerName}},\n\nQuyền truy cập khóa {{courseTitle}} của bạn sẽ hết hạn vào {{expiresAtDate}}. Gia hạn sớm để không bị gián đoạn việc học.`,
   },
+  "course.welcome": {
+    subject: "Chào mừng bạn đến với {{courseTitle}}!",
+    bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Chào mừng bạn đến với khoá học <strong>{{courseTitle}}</strong> trên Limio.vn!</p><p>Bắt đầu học: <a href="{{courseUrl}}">{{courseUrl}}</a></p>`,
+    bodyText: `Xin chào {{learnerName}},\n\nChào mừng bạn đến với khoá học {{courseTitle}}.\nBắt đầu học tại: {{courseUrl}}`,
+  },
+  "exam.grade_published": {
+    subject: "[{{examTitle}}] Kết quả thi của bạn đã có",
+    bodyHtml: `<p>Xin chào {{candidateName}},</p><p>Kết quả kỳ thi <strong>{{examTitle}}</strong> đã được công bố.</p><p><strong>Điểm: {{score}} / {{maxScore}}</strong></p><p>Xem chi tiết: <a href="{{resultUrl}}">{{resultUrl}}</a></p>`,
+    bodyText: `Xin chào {{candidateName}},\n\nKết quả kỳ thi {{examTitle}}: {{score}} / {{maxScore}}\nXem chi tiết: {{resultUrl}}`,
+  },
+  "exam.deadline_reminder": {
+    subject: "Nhắc lịch: {{examTitle}} mở thi sau {{hoursUntilOpen}} giờ",
+    bodyHtml: `<p>Xin chào {{candidateName}},</p><p>Kỳ thi <strong>{{examTitle}}</strong> sẽ mở vào <strong>{{examOpensAt}}</strong> (còn {{hoursUntilOpen}} giờ nữa).</p><p>Mã dự thi: <strong>{{accessCode}}</strong></p><p>Vào thi: <a href="{{claimUrl}}">{{claimUrl}}</a></p>`,
+    bodyText: `Xin chào {{candidateName}},\n\nKỳ thi {{examTitle}} sẽ mở vào {{examOpensAt}} (còn {{hoursUntilOpen}} giờ).\nMã dự thi: {{accessCode}}\nLink: {{claimUrl}}`,
+  },
+  "gamification.level_up": {
+    subject: "🎉 Chúc mừng! Bạn vừa đạt cấp {{newLevel}}",
+    bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Chúc mừng bạn vừa đạt <strong>Cấp {{newLevel}}</strong> — {{levelTitle}}!</p><p>Tổng XP: <strong>{{totalXp}}</strong></p><p>Xem hồ sơ: <a href="{{profileUrl}}">{{profileUrl}}</a></p>`,
+    bodyText: `Chúc mừng {{learnerName}}!\n\nBạn vừa đạt Cấp {{newLevel}} - {{levelTitle}}.\nTổng XP: {{totalXp}}\nHồ sơ: {{profileUrl}}`,
+  },
+  "gamification.badge_earned": {
+    subject: "🏆 Bạn vừa nhận huy hiệu: {{badgeName}}",
+    bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Bạn vừa nhận được huy hiệu <strong>{{badgeName}}</strong>!</p><p>{{badgeDescription}}</p><p>Xem huy hiệu: <a href="{{badgesUrl}}">{{badgesUrl}}</a></p>`,
+    bodyText: `Xin chào {{learnerName}},\n\nBạn vừa nhận huy hiệu: {{badgeName}}\n{{badgeDescription}}\n\nXem tại: {{badgesUrl}}`,
+  },
+  "notification.weekly_digest": {
+    subject: "Tóm tắt tuần qua trên Limio.vn",
+    bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Tuần này bạn đã hoàn thành <strong>{{lessonsCompleted}}</strong> bài học, làm <strong>{{quizzesTaken}}</strong> quiz, kiếm <strong>{{xpEarned}} XP</strong> và duy trì streak <strong>{{streakDays}} ngày</strong>.</p><p><a href="{{dashboardUrl}}">Vào học ngay</a></p>`,
+    bodyText: `Xin chào {{learnerName}},\n\nTuần này: {{lessonsCompleted}} bài học, {{quizzesTaken}} quiz, {{xpEarned}} XP, streak {{streakDays}} ngày.\nVào học: {{dashboardUrl}}`,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -182,14 +215,10 @@ export async function renderTemplate(input: {
   const loaded = await loadTemplate(input.key, input.organizationId);
 
   if (loaded) {
-    const html = renderField(loaded.bodyHtml, vars);
-    const text = loaded.bodyText ? renderField(loaded.bodyText, vars) : stripHtml(html);
-    return {
-      subject: renderField(loaded.subject, vars),
-      html,
-      text,
-      source: loaded.source,
-    };
+    const inner = renderField(loaded.bodyHtml, vars);
+    const text = loaded.bodyText ? renderField(loaded.bodyText, vars) : stripHtml(inner);
+    const subject = renderField(loaded.subject, vars);
+    return { subject, html: frame(inner, subject, text), text, source: loaded.source };
   }
 
   const fb = FALLBACKS[input.key];
@@ -198,10 +227,12 @@ export async function renderTemplate(input: {
       `No template found for key=${input.key} (no DB row + no hard-coded fallback)`,
     );
   }
+  const subject = renderField(fb.subject, vars);
+  const text = renderField(fb.bodyText, vars);
   return {
-    subject: renderField(fb.subject, vars),
-    html: renderField(fb.bodyHtml, vars),
-    text: renderField(fb.bodyText, vars),
+    subject,
+    html: frame(renderField(fb.bodyHtml, vars), subject, text),
+    text,
     source: "fallback",
   };
 }
@@ -220,12 +251,33 @@ export async function sendTemplatedEmail(
     html: rendered.html,
     text: rendered.text,
   });
+  // sendEmail không bao giờ throw — lỗi provider (rate limit, domain chưa verify,
+  // mất mạng) chỉ nằm trong SendResult. Nhiều caller không đọc nó, nên ghi log tập
+  // trung ở đây để thất bại không còn im lặng.
+  if (!result.delivered && !result.loggedOnly) {
+    console.error(
+      `[email:send_failed] key=${input.key} to=${maskEmail(input.to)} source=${rendered.source} error=${JSON.stringify(result.error ?? "unknown")}`,
+    );
+  }
   return { ...result, source: rendered.source };
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Bọc nội dung vào khung thương hiệu; bỏ qua nếu đã là tài liệu HTML hoàn chỉnh. */
+function frame(inner: string, subject: string, text: string): string {
+  if (/<html[\s>]/i.test(inner)) return inner;
+  const preheader = text.replace(/\s+/g, " ").trim().slice(0, 110);
+  return wrapEmail({ bodyHtml: inner, subject, preheader });
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return "***";
+  return `${local.slice(0, 2)}***@${domain}`;
+}
 
 function stripHtml(html: string): string {
   return html

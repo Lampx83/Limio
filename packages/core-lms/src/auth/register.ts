@@ -20,6 +20,8 @@ export interface RegisterResult {
   email: string;
   displayName: string;
   verificationUrl: string;
+  /** false nếu provider từ chối/lỗi — tài khoản vẫn được tạo, nhưng user chưa nhận link. */
+  emailSent: boolean;
 }
 
 // Mặc định 12 (~350ms/hash, bcryptjs thuần JS). Vitest đặt BCRYPT_COST=4 vì test
@@ -81,7 +83,7 @@ export async function registerUser(
 
   const verificationUrl = buildVerificationUrl(baseUrl, raw);
   // Self-registration: user not tied to an org yet → use global template.
-  await sendTemplatedEmail({
+  const mail = await sendTemplatedEmail({
     key: "auth.verify_email",
     to: input.email,
     organizationId: null,
@@ -93,5 +95,7 @@ export async function registerUser(
     email: input.email,
     displayName: input.displayName,
     verificationUrl,
+    // loggedOnly = môi trường dev chưa cấu hình provider → coi như OK (link nằm trong log).
+    emailSent: mail.delivered || mail.loggedOnly,
   };
 }
