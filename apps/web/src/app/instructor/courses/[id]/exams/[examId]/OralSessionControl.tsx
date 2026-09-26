@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { Check, Copy } from "lucide-react";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
+import QrZoom from "@/components/ui/QrZoom";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -187,8 +188,15 @@ export default function OralSessionControl({
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
           </div>
-          <div className="rounded-lg border border-default bg-white p-1.5">
-            <QRCode value={joinUrl!} size={96} level="M" />
+          <div className="flex flex-col items-center gap-1">
+            <QrZoom url={joinUrl!} title="Quét mã để vào phiên vấn đáp">
+              <div className="rounded-lg border border-default bg-white p-1.5">
+                <QRCode value={joinUrl!} size={96} level="M" />
+              </div>
+            </QrZoom>
+            <p className="max-w-[16rem] break-all text-center font-mono text-[11px] text-muted">
+              {joinUrl}
+            </p>
           </div>
         </div>
       )}

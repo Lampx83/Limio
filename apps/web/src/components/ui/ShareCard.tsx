@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Download, QrCode } from "lucide-react";
 import { shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
+import QrZoom from "./QrZoom";
 
 const QR_DISPLAY_SIZE = 176;
 /** QR để in/chiếu: 1024px là đủ nét cho A4 lẫn slide máy chiếu. */
@@ -125,9 +126,11 @@ export default function ShareCard({
         <div className="mt-3 flex flex-wrap items-end gap-3">
           {/* Nền trắng + đệm quiet zone: QR sát mép hoặc trên nền màu thì máy
               quét hay không bắt được. */}
-          <div className="rounded-lg border border-token bg-white p-3">
-            <QRCodeSVG value={url} size={QR_DISPLAY_SIZE} level="M" />
-          </div>
+          <QrZoom url={url} title={label}>
+            <div className="rounded-lg border border-token bg-white p-3">
+              <QRCodeSVG value={url} size={QR_DISPLAY_SIZE} level="M" />
+            </div>
+          </QrZoom>
           <button
             type="button"
             onClick={onDownloadQr}

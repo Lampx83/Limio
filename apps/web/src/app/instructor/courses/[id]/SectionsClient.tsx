@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiUrl } from "@/lib/apiUrl";
-import { ShareCard } from "@/components/ui";
+import { EmptyState, ShareCard } from "@/components/ui";
+import { ChevronRight, Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 
 type FeedbackVariant = "personalized" | "minimal";
 
@@ -168,11 +169,11 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
 
       <form
         onSubmit={onCreate}
-        className="grid grid-cols-1 gap-3 rounded border border-default bg-white p-4 md:grid-cols-3"
+        className="card grid grid-cols-1 gap-4 md:grid-cols-3"
       >
         <label className="md:col-span-2">
-          <span className="block text-xs font-medium text-slate-600">
-            Tên lớp <span className="text-red-600">*</span>
+          <span className="label">
+            Tên lớp <span className="text-danger-600">*</span>
           </span>
           <input
             type="text"
@@ -181,53 +182,56 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
             onChange={(e) => setName(e.target.value)}
             maxLength={200}
             placeholder="Vd: Lớp K65-CS1"
-            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+            className="input mt-1"
           />
         </label>
         <label>
-          <span className="block text-xs font-medium text-slate-600">Mô tả (tuỳ chọn)</span>
+          <span className="label">Mô tả (tuỳ chọn)</span>
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={2000}
             placeholder="Vd: Lớp thứ 7 chiều"
-            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+            className="input mt-1"
           />
         </label>
         <div className="md:col-span-3 flex justify-end">
           <button
             type="submit"
             disabled={busy || !name.trim()}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="btn-primary"
           >
-            {busy ? "..." : "+ Tạo lớp"}
+            {busy ? "..." : (<><Plus className="h-4 w-4" aria-hidden />Tạo lớp</>)}
           </button>
         </div>
       </form>
 
       {err && (
-        <div className="mt-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <div className="mt-3 rounded-lg border border-danger-600/30 bg-danger-50 px-4 py-3 text-sm text-danger-700">
           ⚠ {err}
         </div>
       )}
 
       {!loaded && (
-        <div className="mt-4 text-sm text-faint">Đang tải...</div>
+        <div className="mt-4 text-meta">Đang tải...</div>
       )}
 
       {loaded && sections.length === 0 && (
-        <div className="mt-6 rounded border border-dashed border-default p-6 text-center text-sm text-faint">
-          Chưa có lớp học nào. Tạo lớp để lấy link mời học viên tự đăng ký.
-        </div>
+        <EmptyState
+          className="mt-6"
+          icon="🏫"
+          title="Chưa có lớp học nào"
+          description="Tạo lớp để lấy link mời học viên tự đăng ký."
+        />
       )}
 
-      <ul data-testid="section-list" className="mt-4 space-y-2">
+      <ul data-testid="section-list" className="mt-5 space-y-4">
         {sections.map((s) => (
           <li
             key={s.id}
             data-testid={`section-row-${s.id}`}
-            className="rounded border border-default bg-white"
+            className="card overflow-hidden !p-0"
           >
             {editId === s.id ? (
               <EditRow
@@ -240,49 +244,58 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
                 }}
               />
             ) : (
-              <div className="p-3">
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="p-4 sm:p-5">
+                <div className="flex flex-wrap items-start gap-x-3 gap-y-3">
                   <Link
                     href={`/instructor/courses/${courseId}/sections/${s.id}`}
-                    className="min-w-0 flex-1 hover:opacity-80"
+                    className="group min-w-0 flex-1"
                     prefetch={false}
                   >
-                    <span className="text-sm font-semibold">{s.name}</span>
+                    <span className="text-h4 block">{s.name}</span>
                     {s.description && (
-                      <span className="ml-2 text-xs text-faint">{s.description}</span>
+                      <p className="text-meta mt-0.5">{s.description}</p>
                     )}
-                    <div className="mt-0.5 text-xs text-blue-600 underline decoration-dotted">
-                      {s.enrolledCount} học viên
+                    <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-brand-100 py-1 pl-3 pr-2 text-brand-800 transition-colors group-hover:bg-brand-200">
+                      <Users className="h-4 w-4" aria-hidden />
+                      <span className="text-base font-bold leading-none">{s.enrolledCount}</span>
+                      <span className="text-sm font-medium">học viên</span>
+                      <span className="ml-1 inline-flex items-center gap-0.5 border-l border-brand-800/20 pl-2 text-sm font-semibold underline-offset-2 group-hover:underline">
+                        Xem danh sách
+                        <ChevronRight className="h-4 w-4" aria-hidden />
+                      </span>
                     </div>
                   </Link>
                   <span
                     title={VARIANTS[s.feedbackVariant].desc}
-                    className={`shrink-0 rounded-full border px-2 py-0.5 text-xs ${VARIANTS[s.feedbackVariant].tone}`}
+                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${VARIANTS[s.feedbackVariant].tone}`}
                   >
                     {VARIANTS[s.feedbackVariant].short}
                   </span>
-                  <button
-                    onClick={() => setEditId(s.id)}
-                    className="rounded border border-default bg-white px-3 py-1 text-xs hover:bg-slate-50"
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    onClick={() => onRegenerate(s.id)}
-                    disabled={busy}
-                    className="rounded border border-default bg-white px-3 py-1 text-xs hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    ↻ Tạo lại mã
-                  </button>
-                  <button
-                    onClick={() => onDelete(s.id)}
-                    className="rounded border border-red-300 bg-red-50 px-3 py-1 text-xs text-red-800 hover:bg-red-100"
-                  >
-                    Xoá
-                  </button>
+                  <div className="flex w-full flex-wrap items-center gap-2 border-t border-token pt-3 sm:w-auto sm:border-0 sm:pt-0">
+                    <button onClick={() => setEditId(s.id)} className="btn-secondary btn-sm">
+                      <Pencil className="h-3.5 w-3.5" aria-hidden />
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => onRegenerate(s.id)}
+                      disabled={busy}
+                      className="btn-secondary btn-sm"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                      Tạo lại mã
+                    </button>
+                    <button
+                      onClick={() => onDelete(s.id)}
+                      className="btn-secondary btn-sm !border-danger-600/30 text-danger-700 hover:!bg-danger-50"
+                      aria-label={`Xoá lớp ${s.name}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                      Xoá
+                    </button>
+                  </div>
                 </div>
                 {s.inviteCode && (
-                  <div className="mt-2">
+                  <div className="mt-4">
                     <ShareCard
                       path={`/enroll/${s.inviteCode}`}
                       label="Link mời vào lớp"
@@ -319,35 +332,33 @@ function EditRow({
   const [description, setDescription] = useState(section.description ?? "");
   const [variant, setVariant] = useState<FeedbackVariant>(section.feedbackVariant);
   return (
-    <div className="grid grid-cols-1 gap-3 border-b border-default p-3 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 border-b border-token p-4 sm:p-5 md:grid-cols-3">
       <label className="md:col-span-2">
-        <span className="block text-xs font-medium text-slate-600">Tên lớp</span>
+        <span className="label">Tên lớp</span>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={200}
-          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+          className="input mt-1"
         />
       </label>
       <label>
-        <span className="block text-xs font-medium text-slate-600">Mô tả</span>
+        <span className="label">Mô tả</span>
         <input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={2000}
-          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+          className="input mt-1"
         />
       </label>
       <label className="md:col-span-3">
-        <span className="block text-xs font-medium text-slate-600">
-          Điều kiện phản hồi của lớp
-        </span>
+        <span className="label">Điều kiện phản hồi của lớp</span>
         <select
           value={variant}
           onChange={(e) => setVariant(e.target.value as FeedbackVariant)}
-          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+          className="input mt-1"
         >
           {(Object.keys(VARIANTS) as FeedbackVariant[]).map((v) => (
             <option key={v} value={v}>
@@ -355,9 +366,9 @@ function EditRow({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-faint">{VARIANTS[variant].desc}</span>
+        <span className="help">{VARIANTS[variant].desc}</span>
         {variant !== section.feedbackVariant && (
-          <span className="mt-1 block text-xs text-amber-800">
+          <span className="mt-1 block text-xs text-warning-700">
             Đổi giữa kỳ sẽ chia dữ liệu của lớp làm hai giai đoạn — phản hồi đã
             sinh trước đó vẫn giữ điều kiện cũ. Nên chốt trước khi lớp bắt đầu
             làm quiz.
@@ -368,7 +379,7 @@ function EditRow({
         <button
           onClick={onCancel}
           disabled={busy}
-          className="rounded border border-default bg-white px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
+          className="btn-secondary btn-sm"
         >
           Huỷ
         </button>
@@ -381,7 +392,7 @@ function EditRow({
             })
           }
           disabled={busy || !name.trim()}
-          className="rounded bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary btn-sm"
         >
           {busy ? "..." : "Lưu"}
         </button>
