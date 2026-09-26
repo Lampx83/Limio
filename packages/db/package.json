@@ -15,6 +15,7 @@
     "seed": "node --env-file=.env --import tsx src/seed.ts",
     "seed:sample-course": "node --env-file=.env --import tsx src/seed-sample-course.ts",
     "seed:demo-users": "node --env-file=.env --import tsx src/seed-demo-users.ts",
+    "seed:demo-gamification": "node --env-file=.env --import tsx src/seed-demo-gamification.ts",
     "seed:badges": "node --env-file=.env --import tsx src/seed-badges.ts",
     "seed:feedback-templates": "node --env-file=.env --import tsx src/seed-feedback-templates.ts",
     "seed:quests": "node --env-file=.env --import tsx src/seed-quests.ts",

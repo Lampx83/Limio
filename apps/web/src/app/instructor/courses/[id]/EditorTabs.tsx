@@ -6,6 +6,7 @@ import {
   School,
   GraduationCap,
   BarChart3,
+  Trophy,
   Lock,
   type LucideIcon,
 } from "lucide-react";
@@ -27,7 +28,8 @@ export type EditorTab =
   | "students"
   | "sections"
   | "assignments"
-  | "analytics";
+  | "analytics"
+  | "gamification";
 
 const TABS: Array<{ key: EditorTab; label: string; icon: LucideIcon }> = [
   { key: "overview", label: "Tổng quan", icon: Info },
@@ -36,6 +38,7 @@ const TABS: Array<{ key: EditorTab; label: string; icon: LucideIcon }> = [
   { key: "sections", label: "Lớp học", icon: School },
   { key: "assignments", label: "Grade", icon: GraduationCap },
   { key: "analytics", label: "Phân tích", icon: BarChart3 },
+  { key: "gamification", label: "Gamification", icon: Trophy },
 ];
 
 const LOCKED_TAB_MESSAGE = "Nội dung đang bị khóa, bạn không có quyền chỉnh sửa";

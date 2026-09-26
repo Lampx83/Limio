@@ -29,6 +29,7 @@ import EditorNavProgress from "./EditorNavProgress";
 import EditorTabs, { type EditorTab } from "./EditorTabs";
 import EnrollmentList from "./EnrollmentList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
+import GamificationTab from "./GamificationTab";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
 import CourseGradeOverview from "../../assignments/CourseGradeOverview";
@@ -57,6 +58,7 @@ export default async function InstructorCourseEditPage({
     tab?: string;
     assignmentLesson?: string;
     assignmentFilter?: string;
+    section?: string;
   };
 }) {
   const TAB_VALUES: EditorTab[] = [
@@ -66,6 +68,7 @@ export default async function InstructorCourseEditPage({
     "sections",
     "assignments",
     "analytics",
+    "gamification",
   ];
   const requestedTab: EditorTab = TAB_VALUES.includes(searchParams?.tab as EditorTab)
     ? (searchParams!.tab as EditorTab)
@@ -125,9 +128,9 @@ export default async function InstructorCourseEditPage({
   // người học: khoá nháp chưa có ai ghi danh, chưa có bài nộp hay dữ liệu học
   // tập. Khoá đã lưu trữ (từng publish) vẫn giữ để còn tra lại danh sách và điểm.
   const hiddenTabs: EditorTab[] = [
-    ...(!canViewAnalytics ? (["analytics"] as const) : []),
+    ...(!canViewAnalytics ? (["analytics", "gamification"] as const) : []),
     ...(course.status === "draft"
-      ? (["students", "sections", "assignments", "analytics"] as const)
+      ? (["students", "sections", "assignments", "analytics", "gamification"] as const)
       : []),
   ];
   // Content stays visible but locked (not hidden) for non-editing-teacher/
@@ -570,6 +573,11 @@ export default async function InstructorCourseEditPage({
           </div>
           <AnalyticsDashboard courseId={course.id} />
         </div>
+      )}
+
+      {/* TAB: Gamification — XP / level / streak / badge theo học viên */}
+      {tab === "gamification" && (
+        <GamificationTab courseId={course.id} sectionId={searchParams?.section} />
       )}
     </main>
     </>

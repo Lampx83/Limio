@@ -453,6 +453,11 @@ export default async function InstructorAnalyticsPage({
             title="Assignment gradebook"
             desc="Điểm assignment + feedback đã chấm."
           />
+          <ExportCard
+            href={`/api/instructor/courses/${selectedId}/analytics/exports/gamification`}
+            title="Gamification"
+            desc="XP, level, streak và badge của từng học viên."
+          />
         </div>
       </section>
     </main>

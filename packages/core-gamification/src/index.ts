@@ -33,3 +33,4 @@ export * from "./tournamentRules";
 export * from "./missionCondition";
 export * from "./customMissions";
 export * from "./customMissionsRuntime";
+export * from "./courseStats";

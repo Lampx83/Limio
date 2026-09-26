@@ -9,6 +9,7 @@ import {
   ListChecks,
   MessageSquare,
   Tag,
+  Trophy,
   UserX,
   Users,
   type LucideIcon,
@@ -373,6 +374,36 @@ export default async function InstructorDashboard() {
     .map((priority) => ({ priority, items: items.filter((i) => i.priority === priority) }))
     .filter((tier) => tier.items.length > 0);
 
+  // ── Gamification theo khoá (chỉ khoá đã mở — khoá nháp không có tab này) ──
+  const gamiCourses = ownedCourses.filter((c) => c.status !== "draft");
+  const gamiSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const gamiSummaries = await Promise.all(
+    gamiCourses.map(async (c) => {
+      const [agg, active, badges] = await Promise.all([
+        prisma.userCourseProgress.aggregate({
+          where: { courseId: c.id },
+          _sum: { xp: true },
+          _count: { _all: true },
+        }),
+        prisma.xpTransaction.findMany({
+          where: { courseId: c.id, occurredAt: { gte: gamiSince }, amount: { gt: 0 } },
+          select: { userId: true },
+          distinct: ["userId"],
+        }),
+        prisma.userBadge.count({
+          where: { context: { path: ["courseId"], equals: c.id } },
+        }),
+      ]);
+      return {
+        course: c,
+        totalXp: agg._sum.xp ?? 0,
+        earners: agg._count._all,
+        active7d: active.length,
+        badges,
+      };
+    }),
+  );
+
   // ── Context line for greeting ─────────────────────────────────────────
   const highCount = items.filter((i) => i.priority === "high").length;
   const totalLearners = ownedCourses.reduce((s, c) => s + c._count.enrollments, 0);
@@ -581,6 +612,55 @@ export default async function InstructorDashboard() {
           )}
         </section>
       </div>
+
+      {/* Gamification theo khoá */}
+      {gamiSummaries.length > 0 && (
+        <section className="mt-8">
+          <header className="flex items-baseline justify-between">
+            <h2 className="text-base font-semibold">Gamification theo khoá</h2>
+            <span className="text-xs text-faint">XP, badge, streak của học viên</span>
+          </header>
+          <div className="mt-3 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
+            {gamiSummaries.map((g) => (
+              <Link
+                key={g.course.id}
+                href={`/instructor/courses/${g.course.id}?tab=gamification`}
+                prefetch={false}
+                className="card block p-4 transition-colors hover:border-brand-300"
+              >
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 shrink-0 text-accent-600" aria-hidden />
+                  <p className="truncate text-sm font-semibold">{g.course.title}</p>
+                </div>
+                {g.earners === 0 ? (
+                  <p className="mt-3 text-xs text-muted">
+                    Khoá này chưa có dữ liệu gamification.
+                  </p>
+                ) : (
+                  <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <dd className="text-lg font-bold leading-none">{g.totalXp}</dd>
+                      <dt className="mt-1 text-xs text-muted">Tổng XP</dt>
+                    </div>
+                    <div>
+                      <dd className="text-lg font-bold leading-none">{g.badges}</dd>
+                      <dt className="mt-1 text-xs text-muted">Badge</dt>
+                    </div>
+                    <div>
+                      <dd className="text-lg font-bold leading-none">
+                        {g.active7d}
+                      </dd>
+                      <dt className="mt-1 text-xs text-muted">
+                        Có XP 7 ngày
+                      </dt>
+                    </div>
+                  </dl>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
