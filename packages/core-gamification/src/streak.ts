@@ -8,8 +8,13 @@ export interface StreakResult {
   extended: boolean;
   /** True if a previous streak (>0) got broken before resetting on this call. */
   broken: boolean;
+  /** True if a missed day was forgiven by the weekly streak freeze on this call. */
+  freezeUsed: boolean;
   previousStreak: number;
 }
+
+/** Bỏ lỡ đúng 1 ngày được tha nếu chưa dùng đóng băng trong chừng này ngày. */
+export const FREEZE_COOLDOWN_DAYS = 7;
 
 // Streaks roll over at national-local midnight, NOT UTC midnight — otherwise a
 // learner active at 23:00 VN (16:00 UTC) and again at 06:00 VN next day would
@@ -29,6 +34,11 @@ function vnDayStart(d: Date = new Date()): Date {
   return shifted;
 }
 
+/** Đóng băng còn dùng được nếu chưa từng dùng, hoặc đã dùng cách đây ≥ cooldown. */
+function freezeAvailable(lastUsed: Date | null, today: Date): boolean {
+  return lastUsed === null || dayDiff(lastUsed, today) >= FREEZE_COOLDOWN_DAYS;
+}
+
 /** Returns the difference in whole VN-local days between two `@db.Date` values. */
 function dayDiff(a: Date, b: Date): number {
   const ms = vnDayStart(b).getTime() - vnDayStart(a).getTime();
@@ -40,7 +50,10 @@ function dayDiff(a: Date, b: Date): number {
  *   - first activity ever → current=1
  *   - same VN day → no change
  *   - exactly 1 day after lastActiveDate → current+=1
- *   - ≥2 days after → emit `streak.broken {previousStreak}`, reset to 1
+ *   - exactly 2 days after (1 missed day) AND streak freeze available (none
+ *     used in the last FREEZE_COOLDOWN_DAYS) → current+=1, missed day forgiven,
+ *     emit `streak.freeze.used`
+ *   - otherwise ≥2 days after → emit `streak.broken {previousStreak}`, reset to 1
  * Always emits `streak.extended {newStreak}` when current goes up.
  *
  * Idempotent on same VN day: calling twice on day N returns the same numbers.
@@ -81,6 +94,7 @@ export async function recordActivity(
         longestStreak: 1,
         extended: true,
         broken: false,
+        freezeUsed: false,
         previousStreak: 0,
       };
     }
@@ -103,6 +117,7 @@ export async function recordActivity(
         longestStreak: updated.longestStreak,
         extended: true,
         broken: false,
+        freezeUsed: false,
         previousStreak: existing.currentStreak,
       };
     }
@@ -116,6 +131,53 @@ export async function recordActivity(
         longestStreak: existing.longestStreak,
         extended: false,
         broken: false,
+        freezeUsed: false,
+        previousStreak: existing.currentStreak,
+      };
+    }
+
+    // Bỏ lỡ đúng 1 ngày: tha nếu còn lượt đóng băng. Ngày bỏ lỡ KHÔNG được cộng
+    // vào streak — chỉ giữ chuỗi khỏi đứt, hôm nay tính +1 như bình thường.
+    if (
+      diff === 2 &&
+      existing.currentStreak > 0 &&
+      freezeAvailable(existing.lastFreezeUsedDate, today)
+    ) {
+      const newCurrent = existing.currentStreak + 1;
+      const newLongest = Math.max(existing.longestStreak, newCurrent);
+      const missedDate = new Date(today.getTime() - 86_400_000);
+      await tx.streakRecord.update({
+        where: { id: existing.id },
+        data: {
+          currentStreak: newCurrent,
+          longestStreak: newLongest,
+          lastActiveDate: today,
+          lastFreezeUsedDate: today,
+        },
+      });
+      await tx.learningEvent.create({
+        data: {
+          userId, courseId,
+          eventType: LearningEventType.StreakFreezeUsed,
+          payload: {
+            missedDate: missedDate.toISOString().slice(0, 10),
+            streak: newCurrent,
+          } as Prisma.InputJsonValue,
+        },
+      });
+      await tx.learningEvent.create({
+        data: {
+          userId, courseId,
+          eventType: LearningEventType.StreakExtended,
+          payload: { newStreak: newCurrent, longestStreak: newLongest } as Prisma.InputJsonValue,
+        },
+      });
+      return {
+        currentStreak: newCurrent,
+        longestStreak: newLongest,
+        extended: true,
+        broken: false,
+        freezeUsed: true,
         previousStreak: existing.currentStreak,
       };
     }
@@ -140,6 +202,7 @@ export async function recordActivity(
         longestStreak: newLongest,
         extended: true,
         broken: false,
+        freezeUsed: false,
         previousStreak: existing.currentStreak,
       };
     }
@@ -174,6 +237,7 @@ export async function recordActivity(
       longestStreak: existing.longestStreak,
       extended: true,
       broken: previousStreak > 0,
+      freezeUsed: false,
       previousStreak,
     };
   });
@@ -184,6 +248,8 @@ export interface StreakInfo {
   longestStreak: number;
   lastActiveDate: Date | null;
   isActiveToday: boolean;
+  /** Còn lượt đóng băng để tha 1 ngày bỏ lỡ (chưa dùng trong 7 ngày gần nhất). */
+  freezeAvailable: boolean;
 }
 
 export async function getStreak(
@@ -203,6 +269,7 @@ export async function getStreak(
     longestStreak: row?.longestStreak ?? 0,
     lastActiveDate: row?.lastActiveDate ?? null,
     isActiveToday,
+    freezeAvailable: freezeAvailable(row?.lastFreezeUsedDate ?? null, today),
   };
 }
 
@@ -240,7 +307,7 @@ export async function getGlobalStreak(
     orderBy: { occurredAt: "desc" },
   });
   if (events.length === 0) {
-    return { currentStreak: 0, longestStreak: 0, lastActiveDate: null, isActiveToday: false };
+    return { currentStreak: 0, longestStreak: 0, lastActiveDate: null, isActiveToday: false, freezeAvailable: false };
   }
 
   // Distinct active VN-day numbers, descending.
@@ -272,5 +339,7 @@ export async function getGlobalStreak(
     longestStreak: Math.max(longestStreak, currentStreak),
     lastActiveDate: new Date(days[0]! * 86_400_000),
     isActiveToday,
+    // Streak toàn cục chỉ đếm ngày liên tiếp, không có khái niệm đóng băng.
+    freezeAvailable: false,
   };
 }

@@ -122,6 +122,7 @@ export const LearningEventType = {
   QuestCompleted: "quest.completed",
   StreakExtended: "streak.extended",
   StreakBroken: "streak.broken",
+  StreakFreezeUsed: "streak.freeze.used",
   LeaderboardUpdated: "leaderboard.updated",
 
   // Tournament

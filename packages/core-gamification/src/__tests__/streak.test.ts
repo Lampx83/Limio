@@ -80,6 +80,72 @@ describe("recordActivity", () => {
     expect((broken[0]!.payload as { previousStreak: number }).previousStreak).toBe(3);
   });
 
+  it("AC-C4.9: bỏ lỡ đúng 1 ngày + còn đóng băng → streak +1, không broken, phát streak.freeze.used", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 10));
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 11));
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 12)); // streak 3
+    const r = await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 14)); // bỏ lỡ 13
+    expect(r.freezeUsed).toBe(true);
+    expect(r.broken).toBe(false);
+    expect(r.currentStreak).toBe(4); // ngày 13 không được cộng, chỉ hôm nay
+    expect(r.longestStreak).toBe(4);
+
+    const frozen = await prisma.learningEvent.findMany({
+      where: { userId, eventType: LearningEventType.StreakFreezeUsed },
+    });
+    expect(frozen).toHaveLength(1);
+    expect(frozen[0]!.payload).toMatchObject({ missedDate: "2026-05-13", streak: 4 });
+    const broken = await prisma.learningEvent.count({
+      where: { userId, eventType: LearningEventType.StreakBroken },
+    });
+    expect(broken).toBe(0);
+  });
+
+  it("AC-C4.10: đã dùng đóng băng trong 7 ngày → bỏ lỡ 1 ngày nữa vẫn broken", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 10));
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 12)); // dùng freeze (bỏ 11)
+    const r = await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 14)); // bỏ 13, cooldown
+    expect(r.freezeUsed).toBe(false);
+    expect(r.broken).toBe(true);
+    expect(r.currentStreak).toBe(1);
+    expect(r.previousStreak).toBe(2);
+  });
+
+  it("AC-C4.11: đóng băng dùng lại được sau đủ 7 ngày", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 10));
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 12)); // freeze ngày 12
+    for (let d = 13; d <= 18; d++) await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, d));
+    // ngày 19 bỏ lỡ 1 ngày, đúng 7 ngày sau lần freeze (12 → 19 = 7)? bỏ 19 hoạt động ngày 20
+    const info = await getStreak(userId, courseId, prisma, dayUtc(2026, 5, 19));
+    expect(info.freezeAvailable).toBe(true); // 12 → 19 = 7 ngày
+    const r = await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 20)); // bỏ 19
+    expect(r.freezeUsed).toBe(true);
+    expect(r.broken).toBe(false);
+  });
+
+  it("AC-C4.12: bỏ lỡ ≥ 2 ngày liên tiếp → broken dù còn đóng băng", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 10));
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 11));
+    const r = await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 14)); // bỏ 12, 13
+    expect(r.freezeUsed).toBe(false);
+    expect(r.broken).toBe(true);
+    expect(r.currentStreak).toBe(1);
+  });
+
+  it("AC-C4.13: getStreak.freezeAvailable = false trong cooldown, true khi chưa dùng", async () => {
+    const { userId, courseId } = await makeUserCourse();
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 10));
+    expect((await getStreak(userId, courseId, prisma, dayUtc(2026, 5, 10))).freezeAvailable).toBe(true);
+    await recordActivity(userId, courseId, prisma, dayUtc(2026, 5, 12)); // freeze
+    expect((await getStreak(userId, courseId, prisma, dayUtc(2026, 5, 12))).freezeAvailable).toBe(false);
+    expect((await getStreak(userId, courseId, prisma, dayUtc(2026, 5, 18))).freezeAvailable).toBe(false); // 6 ngày
+    expect((await getStreak(userId, courseId, prisma, dayUtc(2026, 5, 19))).freezeAvailable).toBe(true); // 7 ngày
+  });
+
   it("AC-C4.5: per-course isolation", async () => {
     const userId = (await makeUserCourse()).userId;
     const courseA = (await makeUserCourse()).courseId;

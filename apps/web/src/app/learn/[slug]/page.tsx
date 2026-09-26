@@ -153,7 +153,11 @@ export default async function LearnCoursePage({
             {streak.currentStreak > 0 && (
               <div
                 className="flex items-center gap-2 rounded-xl bg-accent-500/95 px-3 py-2 text-sm font-semibold shadow-sm"
-                title={`Kỷ lục dài nhất: ${streak.longestStreak} ngày`}
+                title={`Kỷ lục dài nhất: ${streak.longestStreak} ngày. ${
+                  streak.freezeAvailable
+                    ? "Đóng băng streak sẵn sàng: bỏ lỡ 1 ngày không mất chuỗi."
+                    : "Đóng băng streak đang nghỉ (dùng lại sau 7 ngày)."
+                }`}
               >
                 <span aria-hidden className="text-lg leading-none">🔥</span>
                 <span>
