@@ -31,6 +31,7 @@ describe("template fallback khi DB rỗng (trạng thái production)", () => {
     const r = await renderTemplate({ key, variables: { displayName: "An" } });
     expect(r.html).toMatch(/^<!doctype html>/i);
     expect(r.html).toContain("Lim<span");
+    expect(r.html).toContain("/email/logo-lime.png");
     expect(r.html).toContain("Thư này được gửi tự động");
     expect(r.html).toContain("display:none;max-height:0"); // preheader ẩn
   });

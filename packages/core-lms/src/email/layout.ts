@@ -96,23 +96,13 @@ ${pre}
 <tr><td align="center" class="outer" style="padding:32px 16px;">
 
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
-    <!-- Thương hiệu: lát chanh (3 vòng lồng nhau, không dùng ảnh) + chữ Limio (io màu hồng như logo web) -->
+    <!-- Thương hiệu: đúng logo web (LimeSliceIcon xuất PNG) + chữ "Lim" + "io" hồng-500 như AppHeader -->
     <tr><td style="padding:0 4px 18px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-        <td width="44" height="44" valign="middle" style="width:44px;height:44px;">
-          <table role="presentation" width="44" height="44" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td align="center" valign="middle" bgcolor="#3f6212" style="width:44px;height:44px;border-radius:22px;background:#3f6212;">
-              <table role="presentation" width="38" height="38" cellpadding="0" cellspacing="0" border="0"><tr>
-                <td align="center" valign="middle" bgcolor="#84cc16" style="width:38px;height:38px;border-radius:19px;background:#84cc16;">
-                  <table role="presentation" width="28" height="28" cellpadding="0" cellspacing="0" border="0"><tr>
-                    <td align="center" valign="middle" bgcolor="#ecfccb" style="width:28px;height:28px;border-radius:14px;background:#ecfccb;font-family:${FONT};font-size:15px;font-weight:800;line-height:28px;color:#4d7c0f;">&#10035;</td>
-                  </tr></table>
-                </td>
-              </tr></table>
-            </td>
-          </tr></table>
+        <td width="48" valign="middle" style="width:48px;line-height:0;">
+          <img src="${site}/email/logo-lime.png" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;outline:none;text-decoration:none;">
         </td>
-        <td class="brand-name" style="padding-left:12px;font-family:${FONT};font-size:28px;font-weight:800;letter-spacing:-0.8px;color:${C.ink};">Lim<span style="color:${C.pink};">io</span></td>
+        <td class="brand-name" valign="middle" style="padding-left:12px;font-family:${FONT};font-size:34px;line-height:1;font-weight:700;letter-spacing:-0.85px;color:${C.ink};">Lim<span style="color:${C.pink};">io</span></td>
       </tr></table>
     </td></tr>
 
