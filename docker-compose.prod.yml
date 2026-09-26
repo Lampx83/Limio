@@ -43,6 +43,9 @@ x-web-env: &web-env
   # Email qua Resend (limio.vn Verified). Thiếu key → sender.ts chỉ log, không gửi thật.
   EMAIL_FROM: ${EMAIL_FROM:-}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
+  # Hạn mức hiển thị ở admin/emails (mặc định gói free Resend: 100/ngày, 3000/tháng; 0 = ẩn).
+  EMAIL_DAILY_LIMIT: ${EMAIL_DAILY_LIMIT:-}
+  EMAIL_MONTHLY_LIMIT: ${EMAIL_MONTHLY_LIMIT:-}
 
 services:
   postgres:

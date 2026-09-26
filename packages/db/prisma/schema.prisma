@@ -4770,3 +4770,21 @@ model LiveSession {
   @@index([deckId, userId, endedAt])
   @@index([userId])
 }
+
+/// Nhật ký mỗi lần app GỌI provider gửi email (Resend/SMTP) — để admin xem số email đã
+/// gửi trong ngày/tháng và tỉ lệ lỗi. Chỉ ghi lần gọi thật (bỏ qua chế độ dev chỉ-log).
+/// KHÔNG lưu địa chỉ đầy đủ, chỉ domain: đây là log vận hành, không phải dữ liệu người dùng.
+model EmailSendLog {
+  id          String   @id @default(uuid())
+  /// Khoá template (vd. "auth.verify_email"); null với email gửi tay/không qua template.
+  templateKey String?
+  toDomain    String
+  /// "sent" | "failed"
+  status      String
+  providerId  String?
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([templateKey, createdAt])
+}

@@ -1,5 +1,6 @@
 import { prisma } from "@feedbackme/db";
-import { listTemplatesForScope } from "@feedbackme/core-lms";
+import { getEmailUsageStats, listTemplatesForScope } from "@feedbackme/core-lms";
+import EmailUsage from "./EmailUsage";
 import EmailListClient from "./EmailListClient";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,9 @@ export default async function AdminEmailsPage({
   const isValidScope = scopes.some((s) => s.id === scopeParam);
   const activeScopeId = isValidScope ? scopeParam : "global";
 
+  // Thống kê chỉ đọc; nếu bảng log chưa có (migration chưa chạy) thì bỏ qua thay vì làm sập trang.
+  const usage = await getEmailUsageStats().catch(() => null);
+
   const items = await listTemplatesForScope(
     activeScopeId === "global"
       ? "global"
@@ -40,6 +44,8 @@ export default async function AdminEmailsPage({
           riêng cho từng trường (override) hoặc dùng mẫu chung toàn hệ thống.
         </p>
       </div>
+
+      {usage && <EmailUsage stats={usage} />}
 
       <EmailListClient
         scopes={scopes}

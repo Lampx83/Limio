@@ -1,4 +1,5 @@
 export { sendEmail, type SendResult } from "./sender";
+export { getEmailUsageStats, type EmailUsageStats } from "./stats";
 export {
   sendTemplatedEmail,
   renderTemplate,

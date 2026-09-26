@@ -251,6 +251,7 @@ export async function sendTemplatedEmail(
     subject: rendered.subject,
     html: rendered.html,
     text: rendered.text,
+    templateKey: input.key,
   });
   // sendEmail không bao giờ throw — lỗi provider (rate limit, domain chưa verify,
   // mất mạng) chỉ nằm trong SendResult. Nhiều caller không đọc nó, nên ghi log tập
