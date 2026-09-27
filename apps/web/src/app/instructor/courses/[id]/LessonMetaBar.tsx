@@ -132,16 +132,16 @@ export default function LessonMetaBar({
           }`}
           aria-haspopup="dialog"
           aria-expanded={skillsOpen}
-          title={noSkill ? "Bài học chưa được tag skill — bấm để thêm" : `${tags.length} skill đã tag — bấm để chỉnh sửa`}
+          title={noSkill ? "Bài học chưa có chủ đề — bấm để thêm" : `${tags.length} chủ đề — bấm để chỉnh sửa`}
         >
           {noSkill ? (
             <span className="inline-flex items-center gap-1 font-medium">
               <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
-              chưa tag skill
+              chưa có chủ đề
             </span>
           ) : (
             <>
-              <span>{tags.length} skill{tags.length > 1 ? "s" : ""}</span>
+              <span>{tags.length} chủ đề</span>
               {manualCodes.length > 0 && (
                 <span className="hidden sm:inline text-faint">
                   {manualCodes.slice(0, 2).join(" · ")}

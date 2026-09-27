@@ -70,14 +70,13 @@ describe("createCuepointQuiz", () => {
     expect(questions[0]!.skillTags.map((t) => t.skillId)).toEqual([skillId]);
   });
 
-  it("rejects question without skill tag (AC7)", async () => {
+  it("accepts question without skill tag — không bắt buộc chủ đề (AC7)", async () => {
     const { ownerId, lessonId } = await setup("C2");
-    await expect(
-      createCuepointQuiz(ownerId, lessonId, {
-        atSec: 10,
-        question: { ...mcq("dummy"), skillIds: [] },
-      }),
-    ).rejects.toMatchObject({ code: "validation_failed" });
+    const res = await createCuepointQuiz(ownerId, lessonId, {
+      atSec: 10,
+      question: { ...mcq("dummy"), skillIds: [] },
+    });
+    expect(res.quizId).toBeTruthy();
   });
 
   it("rejects question with no correct option", async () => {

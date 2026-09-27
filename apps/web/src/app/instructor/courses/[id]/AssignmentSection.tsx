@@ -249,7 +249,7 @@ export default function AssignmentSection({
                 checked={requireSelfRating}
                 onChange={(e) => setRequireSelfRating(e.target.checked)}
               />
-              Yêu cầu tự đánh giá
+              Yêu cầu học viên tự đánh giá bài làm (1–5)
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -257,7 +257,7 @@ export default function AssignmentSection({
                 checked={requireReflection}
                 onChange={(e) => setRequireReflection(e.target.checked)}
               />
-              Yêu cầu reflection
+              Yêu cầu học viên viết nhận xét sau khi làm (tối thiểu 20 ký tự)
             </label>
             <label className="flex items-center gap-2">
               <input

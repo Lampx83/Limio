@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { FileCheck2, FileUp } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
+import { lmsErrorMessage } from "@/lib/lmsErrors";
 import SafeHtml from "@/components/SafeHtml";
 import AiFormatPanel from "@/components/AiFormatPanel";
 import { LimeSliceIcon } from "@/components/BrandIcons";
@@ -207,7 +208,7 @@ export default function AddContentItemForm({
     setUploading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(`upload_failed: ${d.error ?? res.status}`);
+      setError(lmsErrorMessage(d.error ?? "upload_failed", res.status));
       return;
     }
     const data = await res.json();
@@ -226,7 +227,7 @@ export default function AddContentItemForm({
     setUploading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(`upload_failed: ${d.error ?? res.status}`);
+      setError(lmsErrorMessage(d.error ?? "upload_failed", res.status));
       return;
     }
     const data = await res.json();
@@ -270,7 +271,9 @@ export default function AddContentItemForm({
     });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      throw new Error((d as { error?: string }).error ?? "create_failed");
+      throw new Error(
+        lmsErrorMessage((d as { error?: string }).error ?? "create_failed", res.status),
+      );
     }
     setAiSaved(true);
     router.refresh();
@@ -297,9 +300,7 @@ export default function AddContentItemForm({
           (id, i) => existingQuizIds.indexOf(id) !== i,
         );
         if (dupQuizId) {
-          setError(
-            "duplicate_cuepoint_quiz: 2+ cuepoint đang chọn cùng 1 quiz. Mỗi cuepoint phải dùng quiz khác nhau.",
-          );
+          setError(lmsErrorMessage("duplicate_cuepoint_quiz"));
           setBusy(false);
           return;
         }
@@ -315,11 +316,6 @@ export default function AddContentItemForm({
           // mode === "inline": validate locally before round-tripping.
           if (!c.prompt.trim()) {
             setError(`Cuepoint @ ${c.atSec}s: thiếu prompt`);
-            failed = true;
-            break;
-          }
-          if (c.skillIds.length === 0) {
-            setError(`Cuepoint @ ${c.atSec}s: chọn ít nhất 1 skill`);
             failed = true;
             break;
           }
@@ -352,7 +348,7 @@ export default function AddContentItemForm({
           );
           if (!res.ok) {
             const d = await res.json().catch(() => ({}));
-            setError(`cuepoint_quiz_failed: ${d.error ?? res.status}`);
+            setError(lmsErrorMessage(d.error ?? "cuepoint_quiz_failed", res.status));
             failed = true;
             break;
           }
@@ -386,7 +382,7 @@ export default function AddContentItemForm({
       case "richtext":
       case "teacher_note":
         if (!html.trim()) {
-          setError("empty_content");
+          setError(lmsErrorMessage("empty_content"));
           setBusy(false);
           return;
         }
@@ -417,7 +413,7 @@ export default function AddContentItemForm({
         break;
       case "scorm":
         if (!scormPackageId) {
-          setError("missing_scorm_package");
+          setError(lmsErrorMessage("missing_scorm_package"));
           setBusy(false);
           return;
         }
@@ -428,7 +424,7 @@ export default function AddContentItemForm({
         break;
       case "h5p":
         if (!h5pPackageId) {
-          setError("missing_h5p_package");
+          setError(lmsErrorMessage("missing_h5p_package"));
           setBusy(false);
           return;
         }
@@ -439,7 +435,7 @@ export default function AddContentItemForm({
         break;
       case "lti":
         if (!ltiToolId) {
-          setError("missing_lti_tool");
+          setError(lmsErrorMessage("missing_lti_tool"));
           setBusy(false);
           return;
         }
@@ -462,7 +458,7 @@ export default function AddContentItemForm({
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "create_failed");
+      setError(lmsErrorMessage(d.error ?? "create_failed", res.status));
     }
   }
 
@@ -918,7 +914,7 @@ export default function AddContentItemForm({
           </>
         )}
         {error && !(["pdf", "html_block"].includes(type) || (type === "richtext" && richtextMode === "ai")) && (
-          <span className="text-xs text-danger-600">Lỗi: {error}</span>
+          <span className="text-xs text-danger-600">{error}</span>
         )}
       </div>
     </form>
@@ -1353,11 +1349,11 @@ function InlineCuepointQuestion({
       )}
       <div>
         <label className="block text-[11px] font-semibold uppercase tracking-wide text-faint">
-          Skill (bắt buộc ≥1)
+          Chủ đề (không bắt buộc)
         </label>
         {skills.length === 0 ? (
           <p className="mt-1 text-xs text-accent-700">
-            Chưa có skill nào trong course — tạo skill ở tab Skills trước.
+            Khoá học chưa có chủ đề nào — bạn có thể bỏ qua. Bật “Cá nhân hoá học tập” trong cài đặt khoá học để hệ thống tự gắn chủ đề theo từng bài.
           </p>
         ) : (
           <div className="mt-1 flex max-h-24 flex-wrap gap-1 overflow-y-auto">
@@ -1482,13 +1478,15 @@ function VideoUploadPanel({
     } catch (networkErr) {
       setUploading(false);
       console.error("[VideoUploadPanel] network error", networkErr);
-      setError("network_error");
+      setError(lmsErrorMessage("network_error"));
       return;
     }
     setUploading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      setError(
+        lmsErrorMessage((d as { error?: string }).error ?? "upload_failed", res.status),
+      );
       return;
     }
     const data = (await res.json()) as { url: string };
@@ -1568,7 +1566,7 @@ function PdfUploadPanel({
     } catch (networkErr) {
       setUploading(false);
       console.error("[PdfUploadPanel] network error", networkErr);
-      setError("network_error");
+      setError(lmsErrorMessage("network_error"));
       return;
     }
     setUploading(false);
@@ -1587,12 +1585,12 @@ function PdfUploadPanel({
           );
         } else {
           setError(
-            `Reverse proxy chặn upload (413). File ${sizeMb} MB vượt giới hạn body của proxy — báo admin tăng client_max_body_size lên ≥ ${PDF_MAX_MB} MB.`,
+            `File ${sizeMb} MB vượt giới hạn tải lên của máy chủ. Hãy nén file nhỏ hơn hoặc liên hệ quản trị viên.`,
           );
         }
         return;
       }
-      setError(`upload_failed: ${d.error ?? res.status}`);
+      setError(lmsErrorMessage(d.error ?? "upload_failed", res.status));
       return;
     }
     const data = (await res.json()) as { url: string };
@@ -1798,13 +1796,15 @@ function HtmlUploadPanel({
     } catch (networkErr) {
       setUploading(false);
       console.error("[HtmlUploadPanel] network error", networkErr);
-      setError("network_error");
+      setError(lmsErrorMessage("network_error"));
       return;
     }
     setUploading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      setError(
+        lmsErrorMessage((d as { error?: string }).error ?? "upload_failed", res.status),
+      );
       return;
     }
     const data = (await res.json()) as { url: string };
@@ -1884,13 +1884,15 @@ function TranscriptUploadPanel({
     } catch (networkErr) {
       setUploading(false);
       console.error("[TranscriptUploadPanel] network error", networkErr);
-      setError("network_error");
+      setError(lmsErrorMessage("network_error"));
       return;
     }
     setUploading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(`upload_failed: ${(d as { error?: string }).error ?? res.status}`);
+      setError(
+        lmsErrorMessage((d as { error?: string }).error ?? "upload_failed", res.status),
+      );
       return;
     }
     const data = (await res.json()) as { url: string };

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { plainToRichHtml } from "@/lib/richText";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
@@ -68,7 +69,7 @@ export default function AddAssignmentForm({
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        setError(d.error ?? "ai_failed");
+        setError(lmsErrorMessage(d.error ?? "ai_failed", res.status));
         setAiSuggestions(null);
       } else {
         const d = (await res.json()) as { suggestions: AiSuggestion[] };
@@ -156,7 +157,7 @@ export default function AddAssignmentForm({
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "create_failed");
+      setError(lmsErrorMessage(d.error ?? "create_failed", res.status));
     }
   }
 
@@ -293,7 +294,7 @@ export default function AddAssignmentForm({
             checked={requireSelfRating}
             onChange={(e) => setRequireSelfRating(e.target.checked)}
           />
-          Yêu cầu tự đánh giá (1–5)
+          Yêu cầu học viên tự đánh giá bài làm (1–5)
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -301,7 +302,7 @@ export default function AddAssignmentForm({
             checked={requireReflection}
             onChange={(e) => setRequireReflection(e.target.checked)}
           />
-          Yêu cầu reflection (≥20 ký tự)
+          Yêu cầu học viên viết nhận xét sau khi làm (tối thiểu 20 ký tự)
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -327,7 +328,7 @@ export default function AddAssignmentForm({
           Hủy
         </button>
         {error && (
-          <span className="text-xs text-danger-600">Lỗi: {error}</span>
+          <span className="text-xs text-danger-600">{error}</span>
         )}
       </div>
     </form>

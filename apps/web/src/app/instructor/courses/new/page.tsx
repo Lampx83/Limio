@@ -299,12 +299,13 @@ export default function NewCoursePage() {
               className="mt-1 h-4 w-4 shrink-0"
             />
             <div className="min-w-0">
-              <span className="font-medium">Bật cá nhân hoá học tập (AI feedback theo skill)</span>
+              <span className="font-medium">Bật cá nhân hoá học tập</span>
               <p className="mt-1 text-xs text-muted">
-                Khi bật: mỗi bài học cần tag ít nhất 1 skill mới publish được;
-                learner nhận diagnostic feedback, adaptive path và skill badge.
-                Khi tắt (mặc định): course chạy như LMS truyền thống, publish không cần tag skill.
-                Có thể đổi sau trong cài đặt course.
+                Khi bật: hệ thống tự coi mỗi bài học là một chủ đề để theo dõi mức
+                thành thạo của từng học viên, rồi gợi ý ôn tập và lộ trình riêng —
+                bạn không cần gắn chủ đề thủ công.
+                Khi tắt (mặc định): khoá học chạy như LMS thông thường.
+                Bạn có thể đổi lại trong cài đặt khoá học.
               </p>
             </div>
           </label>

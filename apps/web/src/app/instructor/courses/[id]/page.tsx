@@ -265,8 +265,6 @@ export default async function InstructorCourseEditPage({
             <PublishControls
               courseId={course.id}
               status={course.status}
-              untaggedLessons={untaggedLessonIds}
-              personalizationEnabled={course.personalizationEnabled}
             />
           </div>
         </div>
@@ -313,21 +311,21 @@ export default async function InstructorCourseEditPage({
               <span className="text-xl shrink-0" aria-hidden>⚠️</span>
               <div className="flex-1">
                 <p className="text-sm font-semibold">
-                  {untaggedLessonIds.length} bài chưa tag skill
+                  {untaggedLessonIds.length} bài chưa có chủ đề
                 </p>
                 <p className="mt-1 text-xs opacity-90">
-                  Khoá không thể publish khi còn bài chưa được tag —
-                  personalization sẽ không hoạt động cho những bài này.
+                  Hệ thống sẽ tự gắn chủ đề cho các bài này khi bạn xuất bản.
+                  Trước đó, cá nhân hoá học tập chưa hoạt động với chúng.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <a
                     href={`?tab=content&lesson=${untaggedLessonIds[0]!.id}`}
                     className="btn-primary btn-sm"
                   >
-                    Tag ngay bài đầu tiên →
+                    Gắn chủ đề cho bài đầu tiên →
                   </a>
                   <a href="?tab=content" className="btn-ghost btn-sm">
-                    Xem tất cả bài chưa tag
+                    Xem các bài chưa có chủ đề
                   </a>
                 </div>
               </div>
