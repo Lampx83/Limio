@@ -46,7 +46,7 @@ const GROUPS: Group[] = [
       { label: "Ghi chú", href: "/me/notes", icon: Pencil },
       { label: "Kỹ năng", href: "/me/skills", icon: Brain },
       { label: "Huy hiệu", href: "/me/badges", icon: Award },
-      { label: "Portfolio", href: "/me/portfolio", icon: FolderOpen },
+      { label: "e-Portfolio của tôi", href: "/me/portfolio", icon: FolderOpen },
     ],
   },
   {
