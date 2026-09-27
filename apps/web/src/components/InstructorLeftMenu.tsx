@@ -473,6 +473,14 @@ function InstructorLeftMenuInner({
             Premium
           </span>
         )}
+        {activeModule.premium && (
+          <span
+            className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-800"
+            title="Tài khoản miễn phí được dùng thử tính năng này"
+          >
+            Trial
+          </span>
+        )}
         {activeModule.tagline && (
           <p className="basis-full text-[14px] font-medium leading-tight text-muted">{activeModule.tagline}</p>
         )}
@@ -585,7 +593,7 @@ function ModuleRail({
           isActive={activeModuleId === m.id}
           railClass={m.colors.rail}
           premium={m.premium}
-          description={m.tagline ?? (m.premium ? "Tính năng Premium" : undefined)}
+          description={m.tagline ?? (m.premium ? "Premium — dùng thử miễn phí" : undefined)}
           onSelect={() => onSelect(m.id)}
           onHover={onHover}
         />
@@ -636,7 +644,7 @@ function RailButton({
       onMouseLeave={() => setTipHidden(false)}
         onMouseEnter={() => onHover(href)}
         onFocus={() => onHover(href)}
-        aria-label={premium ? `${label} — Premium` : label}
+        aria-label={premium ? `${label} — Premium, dùng thử` : label}
         aria-current={isActive ? "page" : undefined}
         prefetch={false}
         className={`group relative flex items-center justify-center transition-transform hover:scale-105 ${box}`}
@@ -749,7 +757,7 @@ function ItemRow({
       }`}
       prefetch={false}
     >
-      {active && <span className={`absolute inset-y-1 left-0 w-1 rounded-r-full ${colors.rail}`} />}
+      {active && <span className={`absolute inset-y-1 left-0 w-1 rounded-r-full bg-lime-600`} />}
       <span className={iconCircle}>
         {pending ? (
           <Loader2 size={14} className={`${colors.itemIconFg} animate-spin`} />

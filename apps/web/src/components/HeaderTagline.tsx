@@ -1,15 +1,27 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffectiveRole } from "./useEffectiveRole";
 
-// "Teach in Flow" khi đang ở khu giảng viên hoặc role đang chọn là giảng viên.
+// "Teach in Flow" khi đang ở khu giảng viên/quản trị hoặc role đang chọn là giảng viên/admin.
 // Xét cả đường dẫn vì tài khoản có nhiều role (vd. admin) hoặc cookie role cũ
 // vẫn có thể vào /instructor mà activeRole không phải "instructor".
-export default function HeaderTagline({ activeRole, roles }: { activeRole: string; roles: string[] }) {
-  const teach = useEffectiveRole(activeRole, roles) === "instructor";
+export default function HeaderTagline({
+  activeRole,
+  roles,
+  guest = false,
+}: {
+  activeRole: string;
+  roles: string[];
+  guest?: boolean;
+}) {
+  const role = useEffectiveRole(activeRole, roles);
+  const pathname = usePathname() ?? "";
+  // Trang chủ trước đăng nhập quảng bá phía giảng viên; các trang công khai khác giữ Learn.
+  const teach = role === "instructor" || role === "admin" || (guest && pathname === "/");
   return (
-    <span className="hidden font-[family-name:var(--font-script)] text-[34px] font-semibold text-muted sm:inline">
-      — {teach ? "Teach in Flow" : "Learn your way"}
+    <span className="hidden font-[family-name:var(--font-script)] text-base font-normal italic text-lime-700 sm:inline">
+      {teach ? "Teach in Flow" : "Learn in Flow"}
     </span>
   );
 }
