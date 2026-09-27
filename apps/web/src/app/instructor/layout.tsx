@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
-import { isInstructor, userIsAnyProctor } from "@feedbackme/core-lms";
+import { isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
@@ -17,11 +17,12 @@ import InstructorContentFrame from "./InstructorContentFrame";
 // tạo khoá đầu tiên, tự khoá luôn lối vào hợp lệ duy nhất.
 const getInstructorRoles = unstable_cache(
   async (userId: string) => {
-    const [instructor, proctor] = await Promise.all([
+    const [instructor, proctor, researcher] = await Promise.all([
       isInstructor(userId),
       userIsAnyProctor(userId),
+      isResearcher(userId),
     ]);
-    return { isInstructor: instructor, isProctor: proctor };
+    return { isInstructor: instructor, isProctor: proctor, isResearcher: researcher };
   },
   ["instructor-layout-roles"],
   { revalidate: 60, tags: ["user-roles"] },
@@ -35,7 +36,7 @@ export default async function InstructorLayout({
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/courses");
 
-  const { isInstructor: hasInstructorRole, isProctor } = await getInstructorRoles(
+  const { isInstructor: hasInstructorRole, isProctor, isResearcher: hasResearcherRole } = await getInstructorRoles(
     session.user.id,
   );
 
@@ -56,7 +57,11 @@ export default async function InstructorLayout({
   return (
     <ActiveNavSectionProvider>
       <div className="flex w-full">
-        <InstructorLeftMenu isInstructor={hasInstructorRole} isProctor={isProctor} />
+        <InstructorLeftMenu
+          isInstructor={hasInstructorRole}
+          isProctor={isProctor}
+          isResearcher={hasResearcherRole}
+        />
         <div className="min-w-0 flex-1">
           <InstructorContentFrame>{children}</InstructorContentFrame>
         </div>

@@ -68,7 +68,8 @@ export class CourseError extends Error {
       | "cannot_change_owner_role"
       | "section_not_found"
       | "section_name_taken"
-      | "section_has_enrollments",
+      | "section_has_enrollments"
+      | "researcher_only",
     public readonly details?: unknown,
   ) {
     super(code);

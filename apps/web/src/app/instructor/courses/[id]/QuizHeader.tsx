@@ -6,7 +6,6 @@ import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
 import { toast } from "@/lib/toast";
-import { SHOW_QUIZ_CONFIDENCE, SHOW_QUIZ_DIFFICULTY } from "./quizEditorFlags";
 
 export type ScoringPolicy = "highest" | "latest" | "average";
 
@@ -164,9 +163,12 @@ function SettingCell({
 export function QuizEditForm({
   quiz,
   onClose,
+  showResearch = false,
 }: {
   quiz: Quiz;
   onClose: () => void;
+  /** Độ khó và độ tự tin là biến nghiên cứu — chỉ Researcher thấy và chỉnh. */
+  showResearch?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -215,8 +217,8 @@ export function QuizEditForm({
         body: JSON.stringify({
           title,
           // Trường đang ẩn UI thì không gửi, để không ghi đè giá trị đã lưu.
-          ...(SHOW_QUIZ_DIFFICULTY ? { difficulty } : {}),
-          ...(SHOW_QUIZ_CONFIDENCE ? { requireConfidence } : {}),
+          ...(showResearch ? { difficulty } : {}),
+          ...(showResearch ? { requireConfidence } : {}),
           timeLimitSec,
           maxAttempts: attemptsLimited ? Math.min(100, Math.max(1, Math.round(maxAttempts) || 1)) : null,
           scoringPolicy,
@@ -369,7 +371,7 @@ export function QuizEditForm({
           </SettingCell>
         )}
 
-        {SHOW_QUIZ_DIFFICULTY && (
+        {showResearch && (
           <SettingCell id="quiz-difficulty" label="Độ khó (1 dễ – 5 khó)">
             <div role="radiogroup" aria-label="Độ khó" className="inline-flex overflow-hidden rounded-lg border border-token">
               {[1, 2, 3, 4, 5].map((level) => (
@@ -392,7 +394,7 @@ export function QuizEditForm({
           </SettingCell>
         )}
 
-        {SHOW_QUIZ_CONFIDENCE && (
+        {showResearch && (
           <SettingCell
             id="quiz-confidence"
             label="Đánh giá độ tự tin"

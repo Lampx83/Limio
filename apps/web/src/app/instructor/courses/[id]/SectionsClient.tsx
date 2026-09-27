@@ -39,7 +39,13 @@ type Section = {
   createdAt: string;
 };
 
-export default function SectionsClient({ courseId }: { courseId: string }) {
+export default function SectionsClient({
+  courseId,
+  showResearch = false,
+}: {
+  courseId: string;
+  showResearch?: boolean;
+}) {
   const [sections, setSections] = useState<Section[]>([]);
   const [unassigned, setUnassigned] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -93,7 +99,7 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
 
   const onSaveEdit = async (
     id: string,
-    patch: { name: string; description: string | null; feedbackVariant: FeedbackVariant },
+    patch: { name: string; description: string | null; feedbackVariant?: FeedbackVariant },
   ) => {
     setBusy(true);
     setErr(null);
@@ -237,6 +243,7 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
               <EditRow
                 section={s}
                 busy={busy}
+                showResearch={showResearch}
                 onCancel={() => setEditId(null)}
                 onSave={async (patch) => {
                   const ok = await onSaveEdit(s.id, patch);
@@ -265,12 +272,14 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
                       </span>
                     </div>
                   </Link>
-                  <span
-                    title={VARIANTS[s.feedbackVariant].desc}
-                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${VARIANTS[s.feedbackVariant].tone}`}
-                  >
-                    {VARIANTS[s.feedbackVariant].short}
-                  </span>
+                  {showResearch && (
+                    <span
+                      title={VARIANTS[s.feedbackVariant].desc}
+                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${VARIANTS[s.feedbackVariant].tone}`}
+                    >
+                      {VARIANTS[s.feedbackVariant].short}
+                    </span>
+                  )}
                   <div className="flex w-full flex-wrap items-center gap-2 border-t border-token pt-3 sm:w-auto sm:border-0 sm:pt-0">
                     <button onClick={() => setEditId(s.id)} className="btn-secondary btn-sm">
                       <Pencil className="h-3.5 w-3.5" aria-hidden />
@@ -316,15 +325,17 @@ export default function SectionsClient({ courseId }: { courseId: string }) {
 function EditRow({
   section,
   busy,
+  showResearch,
   onSave,
   onCancel,
 }: {
   section: Section;
   busy: boolean;
+  showResearch: boolean;
   onSave: (patch: {
     name: string;
     description: string | null;
-    feedbackVariant: FeedbackVariant;
+    feedbackVariant?: FeedbackVariant;
   }) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -353,6 +364,7 @@ function EditRow({
           className="input mt-1"
         />
       </label>
+      {showResearch && (
       <label className="md:col-span-3">
         <span className="label">Điều kiện phản hồi của lớp</span>
         <select
@@ -375,6 +387,7 @@ function EditRow({
           </span>
         )}
       </label>
+      )}
       <div className="flex items-end justify-end gap-2 md:col-span-3">
         <button
           onClick={onCancel}
@@ -388,7 +401,8 @@ function EditRow({
             onSave({
               name: name.trim(),
               description: description.trim() ? description.trim() : null,
-              feedbackVariant: variant,
+              // Không gửi khi giảng viên thường không thấy ô này.
+              ...(showResearch ? { feedbackVariant: variant } : {}),
             })
           }
           disabled={busy || !name.trim()}

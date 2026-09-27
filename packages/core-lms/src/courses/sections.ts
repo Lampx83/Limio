@@ -14,6 +14,7 @@ import { generateSectionInviteCode } from "../exam/code-access";
 import { assertCanEditCourse, assertCanGradeCourse } from "./authz";
 import { CourseError } from "./courses";
 import { logAudit } from "../auth/audit";
+import { isResearcher } from "../auth/roles";
 import { getCourseProgress } from "../learning/progress";
 
 export const CreateCourseSectionInput = z.object({
@@ -180,6 +181,16 @@ export async function updateCourseSection(
   if (parsed.data.description !== undefined) data.description = parsed.data.description;
   if (parsed.data.feedbackVariant !== undefined) {
     data.feedbackVariant = parsed.data.feedbackVariant;
+  }
+  // Điều kiện thực nghiệm là công cụ nghiên cứu: chỉ Researcher/admin đổi được.
+  // So với giá trị hiện tại (không phải "có gửi hay không") để một client cũ
+  // gửi lại nguyên giá trị đang có không bị chặn oan.
+  if (
+    data.feedbackVariant !== undefined &&
+    data.feedbackVariant !== section.feedbackVariant &&
+    !(await isResearcher(actorUserId, db))
+  ) {
+    throw new CourseError("researcher_only");
   }
   if (Object.keys(data).length === 0) return;
 

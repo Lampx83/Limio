@@ -14,6 +14,7 @@ import { createModule } from "../modules";
 import { createLesson } from "../lessons";
 import { createSkill, tagLessonSkill } from "../skills";
 import { registerUser } from "../../auth/register";
+import { grantRole } from "../../auth/roles";
 import { enrollInCourse } from "../../learning/enroll";
 import { completeLesson } from "../../learning/lessons";
 
@@ -84,6 +85,28 @@ describe("updateCourseSection", () => {
     await updateCourseSection(ownerId, section.id, { name: "Lớp A (đổi tên)" });
     const list = await listCourseSections(ownerId, courseId);
     expect(list[0]!.name).toBe("Lớp A (đổi tên)");
+  });
+
+  it("đổi điều kiện phản hồi: giảng viên thường bị chặn, researcher được; gửi lại giá trị cũ thì không bị chặn", async () => {
+    const ownerId = await makeUser("sec-o4b@e.com");
+    const adminId = await makeUser("sec-adm4b@e.com");
+    const courseId = await publishedCourse(ownerId, "sec4b");
+    const section = await createCourseSection(ownerId, courseId, { name: "Lớp B" });
+
+    await expect(
+      updateCourseSection(ownerId, section.id, { feedbackVariant: "minimal" }),
+    ).rejects.toMatchObject({ code: "researcher_only" });
+
+    // Không đổi giá trị thật → không cần quyền researcher.
+    await updateCourseSection(ownerId, section.id, {
+      name: "Lớp B2",
+      feedbackVariant: "personalized",
+    });
+
+    await grantRole(adminId, { targetUserId: ownerId, roleName: "researcher" });
+    await updateCourseSection(ownerId, section.id, { feedbackVariant: "minimal" });
+    const list = await listCourseSections(ownerId, courseId);
+    expect(list[0]!.feedbackVariant).toBe("minimal");
   });
 });
 

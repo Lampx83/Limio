@@ -6,14 +6,14 @@ import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
 import ScanExamQrButton from "./ScanExamQrButton";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
-import { getActiveRole } from "@/lib/active-role";
+import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 import HeaderTagline from "./HeaderTagline";
 
 export default async function AppHeader() {
   const session = await auth();
   const user = session?.user;
-  const roles = user?.roles ?? [];
+  const roles = switchableRoles(user?.roles ?? []);
   const activeRole = getActiveRole(roles);
 
   // Fetch avatar separately — JWT session doesn't refresh after upload, so

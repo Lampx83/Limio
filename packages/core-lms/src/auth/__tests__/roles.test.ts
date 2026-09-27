@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { registerUser } from "../register";
-import { getRolesForUser, grantRole, isAdmin, RoleError, revokeRole } from "../roles";
+import { getRolesForUser, grantRole, isAdmin, isResearcher, RoleError, revokeRole } from "../roles";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -100,5 +100,20 @@ describe("roles", () => {
     expect(await isAdmin(userId)).toBe(false);
     await grantRole(adminId, { targetUserId: userId, roleName: RoleName.Admin });
     expect(await isAdmin(userId)).toBe(true);
+  });
+
+  it("researcher: grant tạo được Role row còn thiếu; isResearcher đúng cho researcher/admin, sai cho instructor", async () => {
+    const adminId = await makeUser("adm-r@example.com");
+    const resId = await makeUser("res@example.com");
+    const insId = await makeUser("ins-r@example.com");
+    await prisma.role.deleteMany({ where: { name: RoleName.Researcher } });
+
+    await grantRole(adminId, { targetUserId: resId, roleName: "researcher" });
+    await grantRole(adminId, { targetUserId: insId, roleName: "instructor" });
+    await grantRole(adminId, { targetUserId: adminId, roleName: "admin" });
+
+    expect(await isResearcher(resId)).toBe(true);
+    expect(await isResearcher(adminId)).toBe(true);
+    expect(await isResearcher(insId)).toBe(false);
   });
 });

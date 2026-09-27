@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
+import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
+import { isResearcher } from "@feedbackme/core-lms";
 
 /**
  * B13 — phần dùng chung của ba báo cáo nghiên cứu.
@@ -83,3 +85,14 @@ export const VARIANT_LABEL: Record<"personalized" | "minimal", string> = {
   personalized: "Cá nhân hoá",
   minimal: "Rút gọn (đối chứng)",
 };
+
+/**
+ * Cổng chung cho cả bốn báo cáo nghiên cứu. Trả về response 403 để route
+ * `return` ngay, hoặc null nếu được qua. Chạy SAU khi đã có userId và TRƯỚC
+ * mọi truy vấn dữ liệu — dữ liệu thô nguyên văn (hội thoại AI, câu trả lời
+ * từng học viên) không được đọc chỉ để rồi bị vứt đi.
+ */
+export async function requireResearcher(userId: string): Promise<NextResponse | null> {
+  if (await isResearcher(userId)) return null;
+  return NextResponse.json({ error: "researcher_only" }, { status: 403 });
+}

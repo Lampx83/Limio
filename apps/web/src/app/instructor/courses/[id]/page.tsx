@@ -7,6 +7,7 @@ import {
   canEditCourse,
   canGradeCourse,
   canModerateLiveExam,
+  isResearcher,
   isCourseOwner,
 } from "@feedbackme/core-lms";
 import { ArrowLeft, Eye, Presentation } from "lucide-react";
@@ -32,6 +33,7 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import GamificationTab from "./GamificationTab";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
+import ExportButtons from "./ExportButtons";
 import CourseGradeOverview from "../../assignments/CourseGradeOverview";
 
 export const dynamic = "force-dynamic";
@@ -115,13 +117,16 @@ export default async function InstructorCourseEditPage({
   // non-editing-teacher/teaching-assistant reach the page at all (they need
   // "Học viên" for grading context). Content-edit UI is separately gated by
   // canEdit below.
-  const [canAccess, canEdit, isOwner, canViewAnalytics] = await Promise.all([
+  const [canAccess, canEdit, isOwner, canViewAnalytics, canResearch] = await Promise.all([
     canGradeCourse(userId, course.id),
     canEditCourse(userId, course.id),
     isCourseOwner(userId, course.id),
     // Analytics is hidden from teaching-assistant (grade-only role, no course
     // reports) — same role tier as the live-moderate check.
     canModerateLiveExam(userId, course.id),
+    // Công cụ nghiên cứu chỉ hiện với role Researcher — giảng viên thường
+    // không thấy để giao diện không lẫn thứ họ không cần.
+    isResearcher(userId),
   ]);
   if (!canAccess) redirect("/instructor/courses");
   // Học viên / Lớp học / Grade / Phân tích chỉ có nghĩa khi khoá đã mở cho
@@ -129,6 +134,8 @@ export default async function InstructorCourseEditPage({
   // tập. Khoá đã lưu trữ (từng publish) vẫn giữ để còn tra lại danh sách và điểm.
   const hiddenTabs: EditorTab[] = [
     ...(!canViewAnalytics ? (["analytics", "gamification"] as const) : []),
+    // Tab Phân tích là khu vực nghiên cứu: chỉ Researcher thấy.
+    ...(!canResearch ? (["analytics"] as const) : []),
     ...(course.status === "draft"
       ? (["students", "sections", "assignments", "analytics", "gamification"] as const)
       : []),
@@ -527,7 +534,10 @@ export default async function InstructorCourseEditPage({
                 Quản lý danh sách enrollment, role và trạng thái.
               </p>
             </div>
-            <ImportStudentsButton courseId={course.id} />
+            <div className="flex flex-wrap items-center gap-2">
+              {canEdit && <ExportButtons courseId={course.id} kinds={["enrollments"]} />}
+              <ImportStudentsButton courseId={course.id} />
+            </div>
           </div>
 
           <EnrollmentList courseId={course.id} />
@@ -543,12 +553,20 @@ export default async function InstructorCourseEditPage({
               Cùng 1 khoá học có thể có nhiều lớp — mỗi lớp có link mời riêng để học viên tự đăng ký.
             </p>
           </div>
-          <SectionsClient courseId={course.id} />
+          <SectionsClient courseId={course.id} showResearch={canResearch} />
         </div>
       )}
 
       {/* TAB: Grade — danh sách bài học (theo module) → assignment + quiz của
           bài học đó, dùng chung component với trang /instructor/assignments. */}
+      {tab === "assignments" && canEdit && (
+        <div className="mt-8 flex justify-end">
+          <ExportButtons
+            courseId={course.id}
+            kinds={["quiz-gradebook", "assignment-gradebook"]}
+          />
+        </div>
+      )}
       {tab === "assignments" && (
         <CourseGradeOverview
           courseId={course.id}
@@ -569,7 +587,7 @@ export default async function InstructorCourseEditPage({
               skill. Đợt 1: 4 báo cáo CSV; đợt 2/3 sẽ thêm chart và XLSX/PDF.
             </p>
           </div>
-          <AnalyticsDashboard courseId={course.id} />
+          <AnalyticsDashboard courseId={course.id} showResearch={canResearch} />
         </div>
       )}
 

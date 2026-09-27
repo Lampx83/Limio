@@ -221,6 +221,9 @@
   .chip-danger {
     @apply chip bg-danger-100 text-danger-700;
   }
+  .chip-warning {
+    @apply chip bg-warning-100 text-warning-700;
+  }
 
   /* ---------- Teaching-tool shell ----------
      Quick Poll, Word Cloud, Gọi tên, Phân nhóm, Gameshow dùng chung bộ này

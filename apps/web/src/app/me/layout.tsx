@@ -4,6 +4,7 @@ import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import AdminSidebar from "@/app/admin/_components/AdminSidebar";
 import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
 import { getActiveRole } from "@/lib/active-role";
+import { isResearcher } from "@feedbackme/core-lms";
 
 // /me/* là các trang dùng chung mọi role (ví dụ Token AI, Cài đặt tài khoản)
 // — cả StudentLeftMenu lẫn InstructorLeftMenu đều trỏ "Token AI" về đây.
@@ -28,11 +29,16 @@ export default async function MeLayout({
       ])
     : [{}, null];
 
+  const hasResearcherRole =
+    activeRole === "instructor" && session?.user?.id
+      ? await isResearcher(session.user.id)
+      : false;
+
   const leftMenu =
     activeRole === "admin" ? (
       <AdminSidebar />
     ) : activeRole === "instructor" ? (
-      <InstructorLeftMenu />
+      <InstructorLeftMenu isResearcher={hasResearcherRole} />
     ) : (
       <StudentLeftMenu badges={badges} continueTo={continueTo} />
     );
