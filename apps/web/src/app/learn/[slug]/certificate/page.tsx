@@ -2,8 +2,7 @@ import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getCourseProgress, isUserEnrolled } from "@feedbackme/core-lms";
-import { LearningEventType } from "@feedbackme/shared-types";
+import { getCourseProgress, isUserEnrolled, issueCertificate } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatVN } from "@/lib/datetime";
 
@@ -57,20 +56,9 @@ export default async function CertificatePage({
     );
   }
 
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { displayName: true, email: true },
-  });
-
-  const completedEvent = await prisma.learningEvent.findFirst({
-    where: {
-      userId,
-      courseId: course.id,
-      eventType: LearningEventType.CourseCompleted,
-    },
-    orderBy: { occurredAt: "asc" },
-  });
-  const completedAt = completedEvent?.occurredAt ?? new Date();
+  // A6 — idempotent: tạo ở lần xem đầu tiên, những lần sau chỉ đọc lại đúng
+  // bản đã cấp (tên/tên khoá snapshot lúc đó, không đổi theo dữ liệu hiện tại).
+  const certificate = await issueCertificate(userId, course.id);
 
   const skillBadges = await prisma.userBadge.findMany({
     where: {
@@ -81,7 +69,22 @@ export default async function CertificatePage({
     include: { badge: { select: { code: true, name: true } } },
   });
 
-  const certNumber = `FBM-${course.id.slice(0, 8).toUpperCase()}-${userId.slice(0, 8).toUpperCase()}`;
+  const verifyUrl = `${(process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "")}/verify/${certificate.certNumber}`;
+  const issuedAtLabel = formatVN(certificate.issuedAt, { year: "numeric", month: "long", day: "numeric" });
+
+  // LinkedIn "Add to Profile" — mở sẵn form Licenses & Certifications điền
+  // trước tên/khoá/ngày cấp + link xác thực. Không cần OAuth hay LinkedIn
+  // Company Page ID, chỉ cần đúng query params theo chuẩn của LinkedIn.
+  const linkedinParams = new URLSearchParams({
+    startTask: "CERTIFICATION_NAME",
+    name: course.title,
+    organizationName: certificate.issuerName,
+    issueYear: String(certificate.issuedAt.getFullYear()),
+    issueMonth: String(certificate.issuedAt.getMonth() + 1),
+    certUrl: verifyUrl,
+    certId: certificate.certNumber,
+  });
+  const linkedinUrl = `https://www.linkedin.com/profile/add?${linkedinParams.toString()}`;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 print:">
@@ -106,7 +109,7 @@ export default async function CertificatePage({
             Chứng nhận này được trao cho
           </h1>
           <p className="mt-3 h-display text-4xl font-bold tracking-tight sm:text-5xl">
-            <span className="text-gradient">{user.displayName}</span>
+            <span className="text-gradient">{certificate.userNameSnapshot}</span>
           </p>
           <p className="mt-6 text-base text-muted">
             đã hoàn thành xuất sắc khóa học
@@ -146,31 +149,41 @@ export default async function CertificatePage({
               <p className="text-xs font-semibold uppercase tracking-wide text-faint">
                 Hoàn thành ngày
               </p>
-              <p className="mt-1 font-semibold">
-                {formatVN(completedAt, {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
+              <p className="mt-1 font-semibold">{issuedAtLabel}</p>
             </div>
             <div className="text-right">
               <p className="text-xs font-semibold uppercase tracking-wide text-faint">
                 Mã chứng nhận
               </p>
-              <p className="mt-1 font-mono text-xs">{certNumber}</p>
+              <p className="mt-1 font-mono text-xs">{certificate.certNumber}</p>
             </div>
           </div>
+          <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-faint">
+            {certificate.issuerLogoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={certificate.issuerLogoUrl} alt="" className="h-4 w-4 object-contain" />
+            )}
+            Cấp bởi {certificate.issuerName}
+          </p>
         </div>
       </article>
 
-      <p className="mt-6 text-center text-xs text-faint print:hidden">
-        Để in:{" "}
-        <kbd className="rounded border border-token bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono">
-          Cmd/Ctrl+P
-        </kbd>{" "}
-        · Mã trên dùng để verify chứng nhận.
-      </p>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3 print:hidden">
+        <a href={`/api/certificates/${params.slug}/pdf`} className="btn-primary">
+          Tải PDF
+        </a>
+        <a
+          href={linkedinUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary"
+        >
+          Thêm vào LinkedIn
+        </a>
+        <Link href={`/verify/${certificate.certNumber}`} className="link text-sm">
+          Xem trang xác thực công khai →
+        </Link>
+      </div>
     </main>
   );
 }

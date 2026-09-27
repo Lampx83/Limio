@@ -1,15 +1,15 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@feedbackme/db";
-import { listSessionTemplates, isAnyOrgAdmin } from "@feedbackme/core-lms";
+import { isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
-import SessionTemplatesClient from "./SessionTemplatesClient";
+import OrgSettingsClient from "./OrgSettingsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function SessionTemplatesPage() {
+export default async function OrgSettingsPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/signin?callbackUrl=/org-admin/session-templates");
+  if (!session?.user?.id) redirect("/signin?callbackUrl=/org-admin/settings");
   const userId = session.user.id;
   if (!(await isAnyOrgAdmin(userId))) {
     return (
@@ -27,7 +27,7 @@ export default async function SessionTemplatesPage() {
     where: { userId },
     select: {
       organizationId: true,
-      organization: { select: { name: true, code: true } },
+      organization: { select: { name: true, code: true, brandingLogoUrl: true } },
     },
   });
   if (adminships.length === 0) {
@@ -41,32 +41,26 @@ export default async function SessionTemplatesPage() {
     );
   }
   const primary = adminships[0]!;
-  const templates = await listSessionTemplates(primary.organizationId);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
-      <div className="flex items-center justify-between">
-        <Link
-          href="/instructor/dashboard"
-          className="text-sm text-blue-600 hover:underline"
-        >
-          ← Dashboard
-        </Link>
-        <Link href="/org-admin/settings" className="text-sm text-blue-600 hover:underline">
-          Thương hiệu trường →
-        </Link>
-      </div>
-      <h1 className="mt-3 text-2xl font-bold">📅 Danh mục ca thi</h1>
+    <main className="mx-auto max-w-3xl px-6 py-10">
+      <Link
+        href="/org-admin/session-templates"
+        className="text-sm text-blue-600 hover:underline"
+      >
+        ← Danh mục ca thi
+      </Link>
+      <h1 className="mt-3 text-2xl font-bold">Thương hiệu trường</h1>
       <p className="mt-1 text-sm text-faint">
-        Trường <strong>{primary.organization.name}</strong> ({primary.organization.code}). Đặt
-        sẵn các ca chuẩn (mã + giờ), khi tạo đợt thi mới chỉ cần pick template
-        + chọn ngày → hệ thống auto sinh ca thi với giờ tương ứng.
+        Trường <strong>{primary.organization.name}</strong> ({primary.organization.code}). Logo
+        này hiển thị trên chứng nhận hoàn thành khoá học do trường cấp (
+        &quot;Limio × {primary.organization.name}&quot;).
       </p>
 
       <div className="mt-6">
-        <SessionTemplatesClient
+        <OrgSettingsClient
           organizationId={primary.organizationId}
-          initial={templates}
+          initialLogoUrl={primary.organization.brandingLogoUrl}
         />
       </div>
     </main>

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { completeLesson, type LessonCompleteReason } from "@feedbackme/core-lms";
+import {
+  completeLesson,
+  issueCertificate,
+  type LessonCompleteReason,
+} from "@feedbackme/core-lms";
 import {
   onCourseCompleted,
   onLessonCompleted,
@@ -49,6 +53,9 @@ export async function POST(
     let courseBadges: Awaited<ReturnType<typeof onCourseCompleted>> | null = null;
     if (result.courseCompleted) {
       courseBadges = await onCourseCompleted({ userId, courseId: result.courseId });
+      // A6 — cấp chứng nhận ngay khi hoàn thành, không đợi tới lúc học viên
+      // mở trang /certificate mới cấp (idempotent nên gọi lại vẫn an toàn).
+      await issueCertificate(userId, result.courseId);
     }
 
     // B4 — log the path event when a learner accepts a skip suggestion.

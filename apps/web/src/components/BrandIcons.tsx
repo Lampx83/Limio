@@ -5,6 +5,8 @@
  *   pulp, 8 wedge dividers, small dark seeds. Logo identity.
  * - WatermelonSliceIcon: wedge slice — green rind, white inner rind, pink
  *   flesh, black seeds. Decoration / accent.
+ * - LimioLearningLogo: full lockup (lime slice + "Limio Learning" wordmark)
+ *   for the platform's own sub-brand, distinct from a single "Limio" mark.
  *
  * Colors hard-coded to brand tokens (lime + pink) so the icons read as Limio
  * regardless of surrounding context. Pass `className` for sizing.
@@ -88,5 +90,53 @@ export function LimioMark({ size = 32 }: { size?: number }) {
     >
       <LimeSliceIcon className="absolute inset-0 h-full w-full drop-shadow-sm" />
     </span>
+  );
+}
+
+/**
+ * "Limio Learning" lockup — lime slice + wordmark, "io" hồng đặc (text-pink-500,
+ * khớp AppHeader) + "Learning" nhỏ cùng lề trái bên dưới. Dùng khi cần thể
+ * hiện "Limio Learning" như một đơn vị cấp riêng (khác brand "Limio" đơn lẻ) —
+ * ví dụ chứng nhận của khoá không thuộc Organization nào (xem
+ * packages/core-lms/src/certification/index.ts, issuerName fallback).
+ */
+export function LimioLearningLogo({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 280 92"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="Limio Learning"
+    >
+      <g transform="translate(0,8) scale(2.4)">
+        <circle cx="16" cy="16" r="15" fill="#3F6212" />
+        <circle cx="16" cy="16" r="14" fill="#65A30D" />
+        <circle cx="16" cy="16" r="12" fill="#ECFCCB" />
+        <g stroke="#84CC16" strokeWidth="1.4" strokeLinecap="round">
+          <line x1="16" y1="4.5" x2="16" y2="27.5" />
+          <line x1="4.5" y1="16" x2="27.5" y2="16" />
+          <line x1="7.9" y1="7.9" x2="24.1" y2="24.1" />
+          <line x1="24.1" y1="7.9" x2="7.9" y2="24.1" />
+        </g>
+        <g fill="#D9F99D" opacity="0.6">
+          <ellipse cx="16" cy="10.5" rx="2" ry="1" />
+          <ellipse cx="16" cy="21.5" rx="2" ry="1" />
+          <ellipse cx="10.5" cy="16" rx="1" ry="2" />
+          <ellipse cx="21.5" cy="16" rx="1" ry="2" />
+        </g>
+        <circle cx="16" cy="16" r="1.6" fill="#84CC16" />
+        <ellipse cx="13" cy="13" rx="0.6" ry="1" fill="#365314" />
+        <ellipse cx="19" cy="19" rx="0.6" ry="1" fill="#365314" />
+      </g>
+      <line x1="100" y1="17" x2="100" y2="76" stroke="#d1d5db" strokeWidth="1.5" />
+      <text x="122" y="45" fontSize="50" fontWeight="700">
+        <tspan fill="#1f2937">Lim</tspan>
+        <tspan fill="#ec4899">io</tspan>
+      </text>
+      <text x="122" y="78" fontSize="22" fontWeight="400" fill="#6b7280" letterSpacing="3">
+        Learning
+      </text>
+    </svg>
   );
 }
