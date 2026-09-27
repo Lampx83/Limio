@@ -343,6 +343,53 @@ Bạn vừa được thêm làm đồng giảng viên khoá {{courseTitle}} trê
     variables: [V.courseTitle, V.resetUrl],
   },
   {
+    key: "instructor.application_approved",
+    name: "Đơn giáo viên được duyệt",
+    description: "Gửi khi admin duyệt đơn xin làm giáo viên: chúc mừng và mời vào tạo khoá học đầu tiên.",
+    category: "auth",
+    subject: "Chúc mừng! Tài khoản giáo viên của bạn trên Limio đã được duyệt",
+    bodyHtml: [
+      h.title("Chúc mừng bạn! 🎉"),
+      hello("displayName"),
+      h.p("Đơn đăng ký giáo viên của bạn trên Limio đã được <strong>duyệt</strong>. Từ giờ bạn có thể soạn khoá học, giao bài tập, tổ chức đợt thi và giảng trực tiếp."),
+      h.button("dashboardUrl", "Bắt đầu dạy"),
+      h.linkFallback("dashboardUrl"),
+      h.small("Chào mừng bạn đến với cộng đồng giáo viên của Limio. Dạy thật phiêu, học thật yêu."),
+    ].join("\n"),
+    bodyText: `Xin chào {{displayName}},
+
+Chúc mừng bạn! Đơn đăng ký giáo viên của bạn trên Limio đã được duyệt.
+Bắt đầu dạy tại: {{dashboardUrl}}`,
+    variables: [
+      V.displayName,
+      { name: "dashboardUrl", label: "Link vào khu giáo viên", example: "https://limio.vn/instructor/dashboard", required: true },
+    ],
+  },
+  {
+    key: "instructor.application_rejected",
+    name: "Đơn giáo viên bị từ chối",
+    description: "Gửi khi admin từ chối đơn xin làm giáo viên, kèm lý do. Người nộp vẫn dùng tài khoản học viên và có thể nộp lại.",
+    category: "auth",
+    subject: "Về đơn đăng ký giáo viên của bạn trên Limio",
+    bodyHtml: [
+      h.title("Về đơn đăng ký giáo viên"),
+      hello("displayName"),
+      h.p("Cảm ơn bạn đã quan tâm đến việc dạy trên Limio. Rất tiếc, lần này chúng tôi chưa thể duyệt đơn của bạn."),
+      h.note("<strong>Lý do:</strong> {{reason}}"),
+      h.p("Bạn vẫn dùng tài khoản học viên bình thường, và có thể nộp lại đơn khi bổ sung thêm thông tin."),
+    ].join("\n"),
+    bodyText: `Xin chào {{displayName}},
+
+Rất tiếc, lần này chúng tôi chưa thể duyệt đơn giáo viên của bạn.
+Lý do: {{reason}}
+
+Bạn vẫn dùng tài khoản học viên bình thường và có thể nộp lại đơn khi bổ sung thêm thông tin.`,
+    variables: [
+      V.displayName,
+      { name: "reason", label: "Lý do từ chối", example: "Chưa xác minh được đơn vị công tác.", required: true },
+    ],
+  },
+  {
     key: "course.welcome",
     name: "Welcome khi enroll khoá học",
     description: "Gửi sau khi học viên enroll thành công vào 1 khoá.",

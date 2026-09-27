@@ -13,11 +13,12 @@ import {
   listBadgeCatalog,
   listUserBadges,
 } from "@feedbackme/core-gamification";
-import { getAdaptiveNextLesson } from "@feedbackme/core-feedback";
+import { getLearningPath, recordPathShown } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import { StickyMobileCTA } from "@/components/ui";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
+import LearningPathList from "@/components/LearningPathList";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +100,7 @@ export default async function LearnCoursePage({
     allTimeLeaderboard,
     champions,
     dailyQuests,
-    adaptiveNext,
+    learningPath,
     catalog,
     earned,
   ] = await Promise.all([
@@ -113,7 +114,7 @@ export default async function LearnCoursePage({
     getLeaderboard({ scope: "course", period: "all_time", courseId: course.id, viewerId: session.user.id, limit: 8 }),
     getClearedChampionsLeaderboard(course.id, session.user.id),
     getDailyQuestsForUser(session.user.id),
-    getAdaptiveNextLesson(session.user.id, course.id),
+    getLearningPath(session.user.id, course.id),
     listBadgeCatalog(),
     listUserBadges(session.user.id),
   ]);
@@ -124,8 +125,20 @@ export default async function LearnCoursePage({
 
   const isComplete = progress.courseCompletionPct >= 100;
 
-  const continueLessonId = enrollment.lastLessonId || adaptiveNext?.lessonId;
-  const continueLabel = enrollment.lastLessonId ? "Tiếp tục" : adaptiveNext ? "Đề xuất" : null;
+  // Bài chưa học đầu tiên theo thứ tự khoá — không cá nhân hoá, nên lớp đối
+  // chứng và khoá tắt cá nhân hoá cũng có nút vào học (B4 AC-2.8).
+  const firstOpenLessonId = progress.modules
+    .flatMap((m) => m.lessons)
+    .find((l) => !l.completed && !l.locked)?.id;
+  const continueLessonId = enrollment.lastLessonId || firstOpenLessonId;
+  const continueLabel = enrollment.lastLessonId ? "Tiếp tục" : firstOpenLessonId ? "Bắt đầu" : null;
+
+  // B4 AC-2.13 — ghi mẫu số uptake. Đo lường không được làm hỏng trang.
+  if (learningPath.steps.length > 0) {
+    await recordPathShown(session.user.id, course.id, learningPath.steps, "course_home").catch(
+      () => {},
+    );
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
@@ -211,19 +224,6 @@ export default async function LearnCoursePage({
                 Tiếp tục bài gần nhất
               </Link>
             )}
-            {adaptiveNext && (
-              <Link
-                href={`/learn/${params.slug}/lessons/${adaptiveNext.lessonId}`}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur transition-all hover:bg-white/20"
-                title={`Đề xuất: ${adaptiveNext.lessonTitle} (skill yếu: ${adaptiveNext.weakestSkillName} ${Math.round(
-                  adaptiveNext.masteryProbability * 100,
-                )}%)`}
-              >
-                <span aria-hidden>✨</span>
-                <span className="hidden sm:inline">Đề xuất: {adaptiveNext.lessonTitle}</span>
-                <span className="sm:hidden">Đề xuất</span>
-              </Link>
-            )}
             {isComplete && (
               <Link
                 href={`/learn/${params.slug}/certificate`}
@@ -239,10 +239,27 @@ export default async function LearnCoursePage({
       {/* Content grid */}
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-8">
+          {/* B4 — lộ trình cá nhân hoá */}
+          {learningPath.steps.length > 0 && (
+            <section>
+              <h2 className="text-h3">Lộ trình của bạn</h2>
+              <p className="text-meta mt-1">
+                Gợi ý dựa trên kết quả làm bài của bạn. Bạn vẫn có thể học bất kỳ bài nào.
+              </p>
+              <div className="mt-3">
+                <LearningPathList
+                  steps={learningPath.steps}
+                  courseSlug={params.slug}
+                  surface="course_home"
+                />
+              </div>
+            </section>
+          )}
+
           {/* Modules */}
           <section>
             <div className="flex items-baseline justify-between">
-              <h2 className="text-xl font-semibold">Lộ trình học</h2>
+              <h2 className="text-xl font-semibold">Nội dung khoá học</h2>
               <span className="text-xs text-faint">
                 {
                   course.modules

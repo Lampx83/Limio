@@ -9,3 +9,4 @@ export * from "./rating";
 export * from "./aiTutor/index";
 export * from "./oralExam/index";
 export * from "./uptake";
+export * from "./learningPath";

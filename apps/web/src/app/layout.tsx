@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Caveat } from "next/font/google";
+import { Inter, Nunito } from "next/font/google";
 import "./globals.css";
 import AppHeader from "@/components/AppHeader";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
@@ -16,11 +16,12 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-// Chữ viết tay cho tagline "Learn your way" ở header.
-const caveat = Caveat({
-  subsets: ["latin"],
+// Font tròn, mềm cho tagline "Learn in Flow" / "Teach in Flow" ở header.
+const nunito = Nunito({
+  subsets: ["latin", "vietnamese"],
   display: "swap",
-  weight: ["600"],
+  weight: ["400"],
+  style: ["normal", "italic"],
   variable: "--font-script",
 });
 
@@ -29,7 +30,7 @@ const caveat = Caveat({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Limio — Learn your way",
+  title: "Limio — Learn in Flow",
   description:
     "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và gamification. Học theo cách của bạn — fresh, focused, your own pace.",
   icons: {
@@ -62,7 +63,7 @@ export default async function RootLayout({
   const aiTokensPageUnlocked = !(await getAiTokensPageLocked().catch(() => true));
 
   return (
-    <html lang="vi" className={`${inter.variable} ${caveat.variable}`} suppressHydrationWarning>
+    <html lang="vi" className={`${inter.variable} ${nunito.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
@@ -70,7 +71,7 @@ export default async function RootLayout({
         <Providers>
           <AiTokensPageProvider unlocked={aiTokensPageUnlocked}>
           <ImpersonationBanner />
-          <div data-print-hide>
+          <div data-print-hide className="sticky top-0 z-30">
             <AppHeader />
           </div>
           <div className="flex flex-1 flex-col">{children}</div>
