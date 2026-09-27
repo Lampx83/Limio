@@ -90,6 +90,7 @@ export default async function AppHeader() {
               avatarUrl={avatarUrl}
               roles={roles}
               activeRole={activeRole}
+              isResearcher={(user.roles ?? []).includes("researcher")}
             />
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">
