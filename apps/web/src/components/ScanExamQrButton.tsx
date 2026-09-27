@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ScanLine, X } from "lucide-react";
 
@@ -119,38 +120,41 @@ export default function ScanExamQrButton() {
         <ScanLine className="h-5 w-5" />
       </button>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Quét QR vào thi"
-          className="fixed inset-0 z-50 flex flex-col bg-black"
-        >
-          <div className="flex items-center justify-between p-4 text-white">
-            <span className="font-semibold">Quét QR vào thi</span>
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Đóng"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="relative flex-1">
-            <video
-              ref={videoRef}
-              playsInline
-              muted
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-2xl border-4 border-white/80" />
-          </div>
-          <div className="p-4 text-center text-sm text-white">
-            {err ?? "Đưa mã QR của ca thi vào khung hình."}
-          </div>
-        </div>
-      )}
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Quét QR vào thi"
+            className="fixed inset-0 z-50 flex flex-col bg-black"
+          >
+            <div className="flex items-center justify-between p-4 text-white">
+              <span className="font-semibold">Quét QR vào thi</span>
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Đóng"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="relative flex-1">
+              <video
+                ref={videoRef}
+                playsInline
+                muted
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-2xl border-4 border-white/80" />
+            </div>
+            <div className="p-4 text-center text-sm text-white">
+              {err ?? "Đưa mã QR của ca thi vào khung hình."}
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
