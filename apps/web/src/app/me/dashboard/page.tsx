@@ -5,9 +5,10 @@ import { prisma } from "@feedbackme/db";
 import { getCourseProgress } from "@feedbackme/core-lms";
 import { getLearnerSkillStates } from "@feedbackme/core-feedback";
 import { getLeaderboard } from "@feedbackme/core-gamification";
-import { LearningEventType } from "@feedbackme/shared-types";
+import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import { formatDate } from "@/lib/datetime";
+import MasteryBadge from "@/components/MasteryBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,12 @@ export default async function LearnerDashboard() {
   const xpMap = new Map(xpByCourse.map((x) => [x.courseId, x]));
 
   const allSkillStates = await getLearnerSkillStates(userId, undefined);
-  const weakSkills = allSkillStates.filter((s) => s.isWeak).slice(0, 5);
-  const masteredSkills = allSkillStates.filter((s) => s.masteryProbability >= 0.9).length;
+  const weakSkills = allSkillStates
+    .filter((s) => masteryLabel(s.masteryProbability) === "needs_review")
+    .slice(0, 5);
+  const masteredSkills = allSkillStates.filter(
+    (s) => masteryLabel(s.masteryProbability) === "solid",
+  ).length;
 
   const recentBadges = await prisma.userBadge.findMany({
     where: { userId },
@@ -166,7 +171,7 @@ export default async function LearnerDashboard() {
           icon="✓"
         />
         <Stat
-          label="Chủ đề đã nắm"
+          label="Chủ đề vững"
           value={masteredSkills}
           tone="accent"
           icon=""
@@ -327,9 +332,7 @@ export default async function LearnerDashboard() {
                   <span className="flex-1 font-medium text-danger-700">
                     {s.skillName}
                   </span>
-                  <span className="text-xs font-semibold tabular-nums text-danger-600">
-                    {Math.round(s.masteryProbability * 100)}%
-                  </span>
+                  <MasteryBadge label={masteryLabel(s.masteryProbability)} />
                 </li>
               ))}
             </ul>

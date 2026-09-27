@@ -4,12 +4,15 @@ import { prisma } from "@feedbackme/db";
 import { getAttemptResult, QuizError } from "@feedbackme/core-lms";
 import {
   getDeliveriesForAttempt,
-  getRemedialSuggestion,
+  getLearningPath,
+  recordPathShown,
 } from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import FeedbackRater from "@/components/FeedbackRater";
 import RemediationLink from "@/components/RemediationLink";
+import LearningPathList from "@/components/LearningPathList";
+import MasteryBadge from "@/components/MasteryBadge";
 import SafeHtml from "@/components/SafeHtml";
 import AnswerBreakdown from "@/components/quiz/AnswerBreakdown";
 import ConfidenceStars from "@/components/quiz/ConfidenceStars";
@@ -51,7 +54,26 @@ export default async function ResultPage({
   }
 
   const correctCount = result.items.filter((i) => i.isCorrect).length;
-  const remedial = await getRemedialSuggestion(userId, result.attempt.quizId);
+
+  // B4 AC-2.9 — sau MỌI lần nộp (không chờ trượt 2 lần): nhãn của bài vừa làm
+  // + bước tiếp theo trong lộ trình. Quiz không gắn bài thì chưa có nhãn để nói.
+  const quizContext = await prisma.quiz.findUnique({
+    where: { id: result.attempt.quizId },
+    select: {
+      courseId: true,
+      lesson: { select: { id: true, title: true } },
+    },
+  });
+  const pathLesson = quizContext?.lesson ?? null;
+  const path =
+    pathLesson && quizContext?.courseId
+      ? await getLearningPath(userId, quizContext.courseId)
+      : null;
+  const pathLabel = path?.enabled && pathLesson ? path.labels[pathLesson.id] : undefined;
+  const nextSteps = path?.enabled ? path.steps.slice(0, 1) : [];
+  if (quizContext?.courseId && nextSteps.length > 0) {
+    await recordPathShown(userId, quizContext.courseId, nextSteps, "quiz_result").catch(() => {});
+  }
 
   const xpEvent = await prisma.learningEvent.findFirst({
     where: {
@@ -233,29 +255,34 @@ export default async function ResultPage({
         </div>
       )}
 
-      {/* Remedial */}
-      {remedial?.shouldShow && remedial.weakestSkill && (
-        <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
-          <p className="flex items-center gap-2 text-sm font-semibold text-accent-700">
-            Đề xuất ôn lại
-          </p>
-          <p className="mt-2 text-sm text-accent-800">
-            Bạn đang gặp khó ở chủ đề{" "}
-            <span className="font-semibold">{remedial.weakestSkill.skillName}</span>{" "}
-            <span className="text-xs opacity-70">
-              (mức nắm vững {Math.round(remedial.weakestSkill.masteryProbability * 100)}%)
-            </span>
-            . Hãy ôn lại trước khi thử lại quiz này.
-          </p>
-          {remedial.lesson && (
-            <Link
-              href={`/learn/${remedial.lesson.courseSlug}/lessons/${remedial.lesson.id}`}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-700 hover:scale-[1.02]"
-            >
-              Mở: {remedial.lesson.title}
-            </Link>
+      {/* B4 — lộ trình: nhãn bài vừa làm + bước tiếp theo */}
+      {pathLesson && pathLabel && (
+        <section className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card">
+          <p className="text-meta">Mức nắm vững sau lần làm này</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="break-words font-semibold">{pathLesson.title}</span>
+            <MasteryBadge label={pathLabel} />
+          </div>
+          {nextSteps.length > 0 ? (
+            <>
+              <p className="text-meta mt-4">Bước tiếp theo</p>
+              <div className="mt-2">
+                <LearningPathList
+                  steps={nextSteps}
+                  courseSlug={params.slug}
+                  surface="quiz_result"
+                />
+              </div>
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-muted">
+              Bạn đã đi hết lộ trình của khoá này.
+            </p>
           )}
-        </div>
+          <Link href={`/learn/${params.slug}`} className="link mt-3 inline-block text-sm">
+            Xem cả lộ trình →
+          </Link>
+        </section>
       )}
 
       {/* Per-question results */}
