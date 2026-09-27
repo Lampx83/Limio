@@ -71,6 +71,16 @@ export async function exportProfile(userId: string, db: DbClient = prisma) {
       },
       enrollments: true,
       verificationTokens: { select: { id: true, purpose: true, createdAt: true, consumedAt: true } },
+      portfolio: {
+        select: {
+          slug: true,
+          isPublic: true,
+          headline: true,
+          createdAt: true,
+          updatedAt: true,
+          items: { select: { submissionId: true, note: true, createdAt: true } },
+        },
+      },
     },
   });
 }

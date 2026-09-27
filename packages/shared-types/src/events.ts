@@ -33,6 +33,11 @@ export const LearningEventType = {
   // Cron nhắc hạn đã gửi email — chống gửi trùng qua accessExpiryReminderSentAt.
   EnrollmentAccessReminderSent: "enrollment.access.reminder_sent",
   CourseCompleted: "course.completed",
+  // A8 — E-portfolio. Ghim/bỏ ghim bài đã chấm, sửa câu giới thiệu, bật/tắt công khai.
+  PortfolioItemAdded: "portfolio.item.added",
+  PortfolioItemUpdated: "portfolio.item.updated",
+  PortfolioItemRemoved: "portfolio.item.removed",
+  PortfolioVisibilityChanged: "portfolio.visibility.changed",
   CourseInstructorAdded: "course.instructor.added",
   CourseInstructorRemoved: "course.instructor.removed",
 

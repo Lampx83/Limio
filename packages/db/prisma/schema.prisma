@@ -168,6 +168,9 @@ model User {
   aiTokenOrders          AiTokenOrder[]
   featureOverrides       UserFeatureOverride[]
 
+  // A8 — E-portfolio (1 hồ sơ / học viên)
+  portfolio Portfolio?
+
   @@index([createdAt])
 }
 
@@ -1436,6 +1439,8 @@ model AssignmentSubmission {
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   user       User       @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
   grader     User?      @relation("Grader", fields: [graderId], references: [id])
+  // A8 — bài này đang được ghim vào e-portfolio của học viên.
+  portfolioItems PortfolioItem[]
 
   // Idempotent — one row per (assignment, user). Re-submission updates this row.
   @@unique([assignmentId, userId])
@@ -4818,4 +4823,41 @@ model EmailSendLog {
 
   @@index([createdAt])
   @@index([templateKey, createdAt])
+}
+
+// =====================================================================
+// A8 — E-portfolio học viên (bản tối giản, trưng bày).
+// Mỗi học viên 1 hồ sơ; chỉ ghim được bài tập đã được GV chấm. Không chụp
+// snapshot: hồ sơ luôn hiện bản bài nộp hiện tại, và trang công khai chỉ hiện
+// mục mà bài nộp còn ở trạng thái graded (nộp lại → status submitted → tạm ẩn).
+// =====================================================================
+
+model Portfolio {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  // Đường dẫn công khai /p/<slug>. Học viên đổi được.
+  slug      String   @unique
+  // false = trang /p/<slug> trả 404 cho mọi người.
+  isPublic  Boolean  @default(false)
+  headline  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items PortfolioItem[]
+}
+
+model PortfolioItem {
+  id           String   @id @default(uuid())
+  portfolioId  String
+  submissionId String
+  // Câu giới thiệu ngắn học viên tự viết (tuỳ chọn).
+  note         String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  portfolio  Portfolio            @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, submissionId])
+  @@index([submissionId])
 }

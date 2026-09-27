@@ -9,6 +9,7 @@ import {
   LearningError,
   MisconceptionError,
   NoteError,
+  PortfolioError,
   QuizError,
   SkillError,
 } from "@feedbackme/core-lms";
@@ -203,6 +204,11 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
     );
+  }
+  if (err instanceof PortfolioError) {
+    const status =
+      err.code === "submission_not_found" ? 404 : err.code === "slug_taken" ? 409 : 400;
+    return NextResponse.json({ error: err.code }, { status });
   }
   return null;
 }

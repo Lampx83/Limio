@@ -17,3 +17,4 @@ export * from "./live/groups";
 export * from "./live/present";
 export * from "./imports/index";
 export * from "./live/importFromCourse";
+export * from "./portfolio/index";
