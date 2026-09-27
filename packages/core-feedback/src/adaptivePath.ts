@@ -35,6 +35,23 @@ export async function shouldSkipLesson(
   lessonId: string,
   db: PrismaClient = prisma,
 ): Promise<SkipSuggestion> {
+  // B10 — gợi ý bỏ qua là định tuyến theo mức nắm vững, nên lớp đối chứng
+  // không được thấy (cùng lý do với getAdaptiveNextLesson).
+  const lesson = await db.lesson.findUnique({
+    where: { id: lessonId },
+    select: { module: { select: { courseId: true } } },
+  });
+  if (lesson) {
+    const { variant } = await resolveFeedbackVariant(
+      userId,
+      lesson.module.courseId,
+      db,
+    );
+    if (variant === "minimal") {
+      return { shouldSkip: false, masteries: [], reason: "control_variant" };
+    }
+  }
+
   const tags = await db.contentSkillMapping.findMany({
     where: { contentType: "lesson", contentId: lessonId },
     include: { skill: { select: { id: true, code: true, name: true } } },
@@ -124,6 +141,11 @@ export async function getRemedialSuggestion(
   });
   if (!quiz?.courseId) return { shouldShow: false, reason: "course_unknown" };
   const courseId = quiz.courseId;
+
+  // B10 — lớp đối chứng không được gợi ý bài ôn. diagnostic.ts đã cắt bài ôn
+  // trong feedback từng câu; khung này là cùng loại gợi ý, chỉ khác chỗ hiện.
+  const { variant } = await resolveFeedbackVariant(userId, courseId, db);
+  if (variant === "minimal") return { shouldShow: false, reason: "control_variant" };
 
   // All skills tagged on this quiz's questions.
   const tags = await db.questionSkillTag.findMany({
