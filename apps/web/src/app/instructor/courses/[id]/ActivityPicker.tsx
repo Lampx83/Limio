@@ -228,11 +228,13 @@ export default function ActivityPicker({
   onClose,
   lessonId,
   nextContentOrderIndex,
+  showResearch = false,
 }: {
   open: boolean;
   onClose: () => void;
   lessonId: string;
   nextContentOrderIndex: number;
+  showResearch?: boolean;
 }) {
   const [pickedTile, setPickedTile] = useState<Tile | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
@@ -385,6 +387,7 @@ export default function ActivityPicker({
                 lessonId={lessonId}
                 embedded
                 onCancel={onClose}
+                showResearch={showResearch}
               />
             )}
           </div>

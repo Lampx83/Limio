@@ -154,7 +154,9 @@ export default function AssignmentSubmitForm({
       {needUpload && (
         <div className="space-y-1 rounded-lg border border-token bg-[rgb(var(--surface))] p-2">
           <span className="text-xs font-medium text-default">
-            Tải lên artifact ({responseFormat})
+            {pedagogicalIntent
+              ? GENERATIVE_PRESETS[pedagogicalIntent].uploadLabel
+              : "Tải lên file bài làm"}
             <span className="text-danger-600"> *</span>
           </span>
           <input

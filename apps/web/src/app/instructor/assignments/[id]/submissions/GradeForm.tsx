@@ -62,7 +62,7 @@ export default function GradeForm({
       setFeedback(suggestion.feedback);
       setScoreError(null);
       setAiNote(
-        (suggestion.hadRubric ? "" : "⚠ Chưa có rubric cho assignment này — độ chính xác thấp hơn. ") +
+        (suggestion.hadRubric ? "" : "⚠ Chưa có rubric — hãy nhập ở ô Rubric chấm điểm phía trên để AI chấm sát hơn. ") +
           `AI: ${suggestion.rationale}`,
       );
     } catch {

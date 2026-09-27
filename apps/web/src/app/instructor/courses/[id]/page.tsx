@@ -447,6 +447,7 @@ export default async function InstructorCourseEditPage({
                       title: m.title,
                     }))}
                     hideUntaggedWarning={!course.personalizationEnabled}
+                    showResearch={canResearch}
                     titleAside={
                       <PreviewAsLearnerButton
                         courseSlug={course.slug}
