@@ -17,8 +17,10 @@ export default function HeaderTagline({
 }) {
   const role = useEffectiveRole(activeRole, roles);
   const pathname = usePathname() ?? "";
-  // Trang chủ trước đăng nhập quảng bá phía giảng viên; các trang công khai khác giữ Learn.
-  const teach = role === "instructor" || role === "admin" || (guest && pathname === "/");
+  // Trang chủ và trang đăng ký giáo viên (trước đăng nhập) quảng bá phía giáo viên;
+  // các trang công khai khác giữ Learn.
+  const guestTeachPage = pathname === "/" || pathname.startsWith("/register/instructor");
+  const teach = role === "instructor" || role === "admin" || (guest && guestTeachPage);
   return (
     <span className="hidden font-[family-name:var(--font-script)] text-base font-normal italic text-lime-700 sm:inline">
       {teach ? "Teach in Flow" : "Learn in Flow"}
