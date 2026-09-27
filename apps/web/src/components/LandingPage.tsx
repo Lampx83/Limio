@@ -32,7 +32,6 @@ export default function LandingPage() {
       <Hero />
       <Audiences />
       <HowItWorks />
-      <Plans />
       <Promises />
       <FinalCta />
     </main>
@@ -394,55 +393,6 @@ function HowItWorks() {
             </li>
           ))}
         </ol>
-      </div>
-    </section>
-  );
-}
-
-// Chỉ hiện gói miễn phí. Gói trả phí chưa công bố nên chưa hiện giá; số hạn mức AI
-// cũng chưa chốt nên chỉ ghi có hạn mức, không ghi con số.
-function Plans() {
-  return (
-    <section className="mx-auto max-w-6xl px-6 pb-4 pt-16 sm:pt-20">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="h-display text-3xl font-bold sm:text-4xl">Bắt đầu dạy với gói miễn phí</h2>
-        <p className="mt-3 text-muted">Đăng ký tài khoản giáo viên, được duyệt là dạy được ngay.</p>
-      </div>
-      <div className="mx-auto mt-10 max-w-md rounded-3xl border border-brand-200 bg-white p-8 shadow-card-hover">
-        <div className="flex items-baseline justify-between">
-          <h3 className="text-xl font-bold">Giáo viên</h3>
-          <span className="chip-brand">Miễn phí</span>
-        </div>
-        <ul className="mt-6 space-y-2.5 text-sm">
-          {[
-            "Khoá học, bài tập và ngân hàng câu hỏi",
-            "Đợt thi, ca thi, phòng thi",
-            "Thống kê chủ đề cả lớp còn yếu",
-          ].map((b) => (
-            <li key={b} className="flex items-start gap-2.5">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-              <span>{b}</span>
-            </li>
-          ))}
-          {["Limio-Live: dạy học trực tiếp", "Vấn đáp AI"].map((b) => (
-            <li key={b} className="flex items-start gap-2.5">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-              <span>
-                {b}{" "}
-                <span className="ml-1 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-800">
-                  Trial
-                </span>
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-6 flex items-start gap-2 rounded-2xl bg-[rgb(var(--surface-muted))] p-3.5 text-sm text-muted">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-          Tài khoản miễn phí có hạn mức AI token cho các tính năng AI hỗ trợ.
-        </p>
-        <Link href="/register/instructor" className="btn-primary btn-lg mt-7 w-full">
-          Đăng ký tài khoản giáo viên
-        </Link>
       </div>
     </section>
   );
