@@ -280,11 +280,11 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
       <div className="gs-host-blob -bottom-24 left-1/4 h-80 w-80 bg-fuchsia-300" aria-hidden="true" />
       <div className="w-full">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="gs-glass flex min-w-0 items-center gap-2.5 rounded-full py-2 pl-3 pr-5 text-lg font-bold sm:text-xl">
+          <h1 className={`gs-glass flex min-w-0 items-center gap-2.5 rounded-full py-2 pl-3 pr-6 text-xl font-bold sm:text-2xl ${playerNameFont.className}`}>
             <svg
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="h-5 w-5 flex-none text-amber-200 sm:h-6 sm:w-6"
+              className="h-6 w-6 flex-none text-amber-200 sm:h-7 sm:w-7"
               aria-hidden="true"
             >
               <path d="M7.5 4.5h9a6 6 0 0 1 5.94 6.85l-.82 5.4a3 3 0 0 1-5.4 1.22L15 15.5H9l-1.22 2.47a3 3 0 0 1-5.4-1.22l-.82-5.4A6 6 0 0 1 7.5 4.5Z" />
@@ -302,7 +302,7 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
                 onClick={onStart}
                 disabled={busy || sorted.length === 0}
                 style={{ ["--gs-btn-shadow" as string]: "#b45309" }}
-                className={`gs-btn-3d inline-flex items-center gap-2 rounded-2xl bg-gradient-to-b from-yellow-300 to-amber-400 px-6 py-3 text-base font-black text-indigo-950 disabled:opacity-40 sm:text-lg ${
+                className={`gs-btn-3d inline-flex items-center gap-2 rounded-2xl bg-gradient-to-b from-yellow-300 to-amber-400 px-6 py-3 text-lg font-black text-indigo-950 disabled:opacity-40 sm:text-xl ${playerNameFont.className} ${
                   sorted.length > 0 ? "gs-glow-pulse" : ""
                 }`}
               >
@@ -316,7 +316,7 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
                   if (window.confirm("Kết thúc phiên gameshow?")) onEnd();
                 }}
                 disabled={busy}
-                className="gs-glass flex-none rounded-full px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/30"
+                className="gs-glass flex-none rounded-full px-5 py-2.5 text-base font-semibold text-white transition-colors hover:bg-white/30"
               >
                 Kết thúc sớm
               </button>
@@ -431,35 +431,35 @@ function LobbyView({
       {/* Thanh vào phòng — hướng dẫn | mã PIN + copy | QR, ngang hàng kiểu Kahoot */}
       <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-5 text-indigo-950 shadow-[0_20px_50px_-15px_rgb(60_10_100/0.6)] sm:flex-row sm:justify-center sm:gap-8 sm:p-6">
         <div className="text-center sm:text-left">
-          <p className="text-xs font-medium text-slate-400">Học viên tham gia tại</p>
-          <p className="max-w-[16rem] truncate text-sm font-semibold text-fuchsia-700">{joinUrl}</p>
-          <p className="mt-0.5 text-xs text-slate-400">hoặc quét mã QR bên cạnh</p>
+          <p className="text-base font-medium text-slate-500">Học viên tham gia tại</p>
+          <p className="max-w-[22rem] truncate text-lg font-bold text-fuchsia-700">{joinUrl}</p>
+          <p className="mt-0.5 text-base text-slate-500">hoặc quét mã QR bên cạnh</p>
         </div>
 
         <div className="hidden h-14 w-px bg-slate-200 sm:block" />
 
         <div className="flex flex-col items-center gap-1">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-base font-semibold uppercase tracking-widest text-slate-500">
             Mã phòng
           </p>
           <button
             onClick={onCopyPin}
             title="Bấm để copy"
-            className="gs-glow-pulse group relative rounded-2xl bg-gradient-to-br from-indigo-50 to-fuchsia-50 px-6 py-2 text-4xl font-black tracking-[0.2em] text-indigo-900 ring-1 ring-fuchsia-200 transition-transform hover:scale-105 sm:text-5xl"
+            className={`gs-glow-pulse group relative rounded-2xl bg-gradient-to-br from-indigo-50 to-fuchsia-50 px-6 py-2 text-4xl font-black tracking-[0.2em] text-indigo-900 ring-1 ring-fuchsia-200 transition-transform hover:scale-105 sm:text-5xl ${playerNameFont.className}`}
           >
             {code}
             <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs text-white opacity-0 shadow transition-opacity group-hover:opacity-100">
               {pinCopied ? "✓" : "⧉"}
             </span>
           </button>
-          {pinCopied && <span className="text-xs font-semibold text-emerald-600">Đã copy!</span>}
+          {pinCopied && <span className="text-base font-semibold text-emerald-600">Đã copy!</span>}
         </div>
 
         <div className="hidden h-14 w-px bg-slate-200 sm:block" />
 
         {joinUrl && (
           <div className="flex-none rounded-lg border border-slate-200 p-1.5">
-            <QRCode value={joinUrl} size={96} />
+            <QRCode value={joinUrl} size={128} />
           </div>
         )}
       </div>
@@ -469,14 +469,14 @@ function LobbyView({
         <div className="flex justify-center">
           <span
             key={participants.length}
-            className="gs-bounce-in inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-sm font-bold text-fuchsia-700 shadow-lg"
+            className={`gs-bounce-in inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-xl font-bold text-fuchsia-700 shadow-lg ${playerNameFont.className}`}
           >
-            <Users className="h-4 w-4" aria-hidden="true" />
+            <Users className="h-5 w-5" aria-hidden="true" />
             {participants.length} người sẵn sàng
           </span>
         </div>
 
-        <p className="mt-3 text-center text-sm font-medium text-white/85">
+        <p className="mt-4 text-center text-lg font-medium text-white/90">
           {participants.length === 0
             ? "Đang chờ học viên tham gia..."
             : "Học viên đã vào phòng — sẵn sàng khi bạn bấm Bắt đầu"}
@@ -489,7 +489,7 @@ function LobbyView({
               return (
                 <div key={t.teamId} className="rounded-2xl bg-white/15 p-3 ring-1 ring-white/25">
                   <p
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${colors.bg} ${colors.text}`}
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-base font-semibold ${colors.bg} ${colors.text}`}
                   >
                     {emojiForColorKey(t.colorKey)} {t.name}
                   </p>
@@ -510,7 +510,7 @@ function LobbyView({
                       </span>
                     ))}
                     {t.members.length === 0 && (
-                      <span className="text-xs text-white/60">Chưa có ai</span>
+                      <span className="text-base text-white/70">Chưa có ai</span>
                     )}
                   </div>
                 </div>
@@ -535,7 +535,7 @@ function LobbyView({
               </span>
             ))}
             {participants.length === 0 && (
-              <span className="text-sm text-white/70">Chưa có ai tham gia...</span>
+              <span className="text-lg text-white/80">Chưa có ai tham gia...</span>
             )}
           </div>
         )}
