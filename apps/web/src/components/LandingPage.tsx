@@ -105,7 +105,7 @@ function Hero() {
           </div>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
             <Link href="/register" className="btn-primary btn-lg !rounded-full shadow-md transition-transform hover:-translate-y-0.5">
-              Tạo tài khoản →
+              Tạo tài khoản học viên →
             </Link>
             <Link href="/catalog" className="btn-secondary btn-lg !rounded-full transition-transform hover:-translate-y-0.5">
               Khám phá khóa học

@@ -50,7 +50,7 @@ export default function RegisterPage() {
             <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
-            Tạo tài khoản trong 30 giây. Nhận feedback cá nhân hóa, lộ trình học
+            Tạo tài khoản học viên trong 30 giây. Nhận feedback cá nhân hóa, lộ trình học
             adaptive, và cộng đồng learners năng động.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -74,7 +74,7 @@ export default function RegisterPage() {
           <div className="card shadow-card-hover">
             <div className="text-center">
               <LimeSliceIcon className="mx-auto h-14 w-14 drop-shadow-md" />
-              <h1 className="mt-4 h-display text-2xl font-bold">Tạo tài khoản</h1>
+              <h1 className="mt-4 h-display text-2xl font-bold">Tạo tài khoản học viên</h1>
             </div>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
