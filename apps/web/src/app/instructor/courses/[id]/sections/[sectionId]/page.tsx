@@ -37,11 +37,11 @@ export default async function SectionRosterPage({
     <main>
       <Link
         href={`/instructor/courses/${params.id}?tab=sections`}
-        className="text-sm text-blue-600 hover:underline"
+        className="text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300"
       >
         ← {roster.section.courseTitle}
       </Link>
-      <h1 className="mt-3 text-2xl font-bold">👥 {roster.section.name}</h1>
+      <h1 className="mt-3 text-2xl font-bold">{roster.section.name}</h1>
       {roster.section.description && (
         <p className="mt-1 text-sm text-faint">{roster.section.description}</p>
       )}
