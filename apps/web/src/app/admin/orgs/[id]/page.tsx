@@ -1,0 +1,55 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { prisma } from "@feedbackme/db";
+import { listOrgAdmins } from "@feedbackme/core-lms";
+import OrgAdminManager from "./OrgAdminManager";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminOrgDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const org = await prisma.organization.findUnique({
+    where: { id: params.id },
+    select: { id: true, code: true, name: true },
+  });
+  if (!org) notFound();
+
+  const admins = await listOrgAdmins(org.id);
+
+  return (
+    <main>
+      <Link href="/admin/orgs" className="link mb-3 inline-block text-sm">
+        ← Quay lại danh sách
+      </Link>
+
+      <header className="card">
+        <h1 className="h-display text-2xl font-bold">{org.name}</h1>
+        <p className="mt-1 text-xs text-faint">
+          Mã: <code className="font-mono">{org.code}</code> · ID:{" "}
+          <code className="font-mono">{org.id}</code>
+        </p>
+      </header>
+
+      <section className="card mt-6">
+        <h2 className="mb-1 text-base font-semibold">OrgAdmin</h2>
+        <p className="mb-3 text-xs text-muted">
+          Người có quyền quản trị riêng tổ chức này (branding, ca thi, session
+          template…). Chỉ Platform Admin mới cấp/thu hồi được ở đây.
+        </p>
+        <OrgAdminManager
+          organizationId={org.id}
+          initialAdmins={admins.map((a) => ({
+            userId: a.userId,
+            email: a.email,
+            displayName: a.displayName,
+            grantedAt: a.grantedAt.toISOString(),
+            grantedByName: a.grantedByName,
+          }))}
+        />
+      </section>
+    </main>
+  );
+}

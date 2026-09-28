@@ -22,6 +22,7 @@ export default function UserMenu({
   roles,
   activeRole: cookieRole,
   isResearcher = false,
+  isOrgAdmin = false,
 }: {
   name: string;
   email: string;
@@ -30,6 +31,8 @@ export default function UserMenu({
   activeRole?: string;
   /** Năng lực cộng thêm, không phải vai chuyển được — chỉ hiện làm nhãn. */
   isResearcher?: boolean;
+  /** True nếu user là OrgAdmin của ≥1 trường (hoặc Platform Admin) — xem isAnyOrgAdmin. */
+  isOrgAdmin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -121,6 +124,11 @@ export default function UserMenu({
           <div className="py-1">
             <Item href="/me/dashboard" onClick={close}>Tổng quan của tôi</Item>
             <Item href="/me/settings" onClick={close}>Cài đặt tài khoản</Item>
+            {isOrgAdmin && (
+              <Item href="/org-admin/settings" onClick={close}>
+                Quản trị trường (OrgAdmin)
+              </Item>
+            )}
           </div>
 
           {/* Role switcher */}

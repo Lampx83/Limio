@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@feedbackme/db";
+import { isAnyOrgAdmin } from "@feedbackme/core-lms";
 import UserMenu from "./UserMenu";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
@@ -9,6 +11,14 @@ import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 import HeaderTagline from "./HeaderTagline";
+
+// Header render trên MỌI trang — cache isAnyOrgAdmin 60s/userId để không query
+// OrganizationAdmin mỗi request, cùng cách admin/layout.tsx cache isAdmin.
+const getIsAnyOrgAdminCached = unstable_cache(
+  async (userId: string) => isAnyOrgAdmin(userId),
+  ["header-is-any-org-admin"],
+  { revalidate: 60, tags: ["user-roles"] },
+);
 
 export default async function AppHeader() {
   const session = await auth();
@@ -91,6 +101,7 @@ export default async function AppHeader() {
               roles={roles}
               activeRole={activeRole}
               isResearcher={(user.roles ?? []).includes("researcher")}
+              isOrgAdmin={user.id ? await getIsAnyOrgAdminCached(user.id).catch(() => false) : false}
             />
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">
