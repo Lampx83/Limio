@@ -12,10 +12,28 @@ interface OrgRow {
   userCount: number;
 }
 
+const ERROR_MESSAGES: Record<string, string> = {
+  invalid_code: "Mã trường chỉ gồm chữ/số/gạch ngang, tối đa 32 ký tự",
+  missing_name: "Tên trường không được bỏ trống",
+  code_taken: "Mã trường đã tồn tại",
+};
+
+function errorMessage(code: unknown): string {
+  if (typeof code === "string" && ERROR_MESSAGES[code]) return ERROR_MESSAGES[code];
+  return `Lỗi: ${code ?? "unknown"}`;
+}
+
 export default function OrgsBrowser() {
   const [orgs, setOrgs] = useState<OrgRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const [newCode, setNewCode] = useState("");
+  const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createOk, setCreateOk] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,10 +51,83 @@ export default function OrgsBrowser() {
     return () => {
       cancelled = true;
     };
-  }, [q]);
+  }, [q, reloadKey]);
+
+  async function createOrg(e: React.FormEvent) {
+    e.preventDefault();
+    setCreateError(null);
+    setCreateOk(null);
+    setCreating(true);
+    try {
+      const res = await fetch(apiUrl("/api/admin/orgs"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code: newCode, name: newName }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCreateError(errorMessage(data?.error));
+        return;
+      }
+      setCreateOk(`Đã tạo tổ chức ${data.organization.name}`);
+      setNewCode("");
+      setNewName("");
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      setCreateError(`Lỗi mạng: ${(err as Error).message}`);
+    } finally {
+      setCreating(false);
+    }
+  }
 
   return (
     <>
+      <form onSubmit={createOrg} className="card mb-4">
+        <div className="mb-2">
+          <h2 className="text-base font-semibold">Thêm tổ chức mới</h2>
+          <p className="text-xs text-muted">
+            Mã trường ngắn, viết hoa, dùng làm định danh — không đổi được sau
+            khi tạo.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label htmlFor="new-org-code" className="label">
+              Mã trường
+            </label>
+            <input
+              id="new-org-code"
+              type="text"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value)}
+              className="input mt-1 font-mono uppercase"
+              placeholder="vd: BKHN"
+              maxLength={32}
+              required
+            />
+          </div>
+          <div className="min-w-[280px] flex-1">
+            <label htmlFor="new-org-name" className="label">
+              Tên tổ chức
+            </label>
+            <input
+              id="new-org-name"
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="input mt-1"
+              placeholder="vd: Đại học Bách khoa Hà Nội"
+              required
+            />
+          </div>
+          <button type="submit" disabled={creating} className="btn-primary">
+            {creating ? "Đang tạo…" : "Thêm tổ chức"}
+          </button>
+        </div>
+        {createError && <p className="mt-2 text-sm text-danger">{createError}</p>}
+        {createOk && <p className="mt-2 text-sm text-success">{createOk}</p>}
+      </form>
+
       <div className="card mb-4">
         <label htmlFor="orgs-search" className="label">
           Tìm theo tên / mã trường
