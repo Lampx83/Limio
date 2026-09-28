@@ -162,7 +162,7 @@ export default function SectionsClient({
         đây thì họ lặng lẽ đứng ngoài mọi lớp suốt kỳ.
       */}
       {unassigned > 0 && (
-        <div className="banner-warning mb-4 block rounded-xl px-4 py-3 text-sm">
+        <div className="banner-info mb-4 block rounded-xl px-4 py-3 text-sm">
           <p className="font-medium">
             {unassigned} học viên chưa được xếp lớp
           </p>
