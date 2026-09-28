@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import MarketList from "./MarketList";
 
 export const metadata = {
-  title: "Chợ kịch bản | FeedBackMe",
+  title: "Chợ kịch bản | Limio",
   description: "Kịch bản lớp học công khai từ các giáo viên khác",
 };
 

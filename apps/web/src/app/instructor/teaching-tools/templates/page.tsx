@@ -4,7 +4,7 @@ import Link from "next/link";
 import TemplateList from "../TimerTemplates/TemplateList";
 
 export const metadata = {
-  title: "Timer Templates | FeedBackMe",
+  title: "Timer Templates | Limio",
   description: "Manage your countdown timer templates",
 };
 

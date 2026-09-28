@@ -4,7 +4,7 @@ import { requireFeature } from "@/lib/session";
 import PresentDeck from "./PresentDeck";
 
 export const metadata = {
-  title: "Trình chiếu | FeedBackMe",
+  title: "Trình chiếu | Limio",
 };
 
 export default async function LiveDeckPresentPage({

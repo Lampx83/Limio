@@ -5,7 +5,7 @@ import { getLiveDeck } from "@feedbackme/core-lms";
 import LiveDeckEditor from "./LiveDeckEditor";
 
 export const metadata = {
-  title: "Soạn bài giảng | FeedBackMe",
+  title: "Soạn bài giảng | Limio",
 };
 
 export default async function LiveDeckEditorPage({

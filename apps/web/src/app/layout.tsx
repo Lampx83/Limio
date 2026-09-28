@@ -30,7 +30,7 @@ const nunito = Nunito({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Limio — Learn in Flow",
+  title: "Limio",
   description:
     "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và gamification. Học theo cách của bạn — fresh, focused, your own pace.",
   icons: {
