@@ -3,7 +3,7 @@ import { requireFeature } from "@/lib/session";
 import LiveDeckList from "./LiveDeckList";
 
 export const metadata = {
-  title: "Limio-Live | FeedBackMe",
+  title: "Limio-Live | Limio",
   description: "Soạn và trình chiếu bài giảng tương tác kiểu Nearpod",
 };
 

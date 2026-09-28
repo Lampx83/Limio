@@ -32,6 +32,7 @@ export type TemplateKey =
   | "exam.instructor_invite_bulk"
   | "cohort.instructor_invite"
   | "course.co_instructor_invite"
+  | "org.member_invite"
   | "course.welcome"
   | "instructor.application_approved"
   | "instructor.application_rejected"
@@ -167,6 +168,11 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
     subject: "Bạn được thêm làm đồng giảng viên khóa \"{{courseTitle}}\" trên Limio.vn",
     bodyHtml: `<p>Xin chào,</p><p>Bạn vừa được thêm làm đồng giảng viên khóa <strong>{{courseTitle}}</strong>. Đặt mật khẩu để đăng nhập (TTL 1h): <a href="{{resetUrl}}">{{resetUrl}}</a></p>`,
     bodyText: `Xin chào,\n\nBạn vừa được thêm làm đồng giảng viên khóa {{courseTitle}}. Đặt mật khẩu để đăng nhập (TTL 1h):\n{{resetUrl}}`,
+  },
+  "org.member_invite": {
+    subject: "Bạn được thêm vào {{orgName}} trên Limio.vn",
+    bodyHtml: `<p>Xin chào {{name}},</p><p>Bạn vừa được thêm vào trường <strong>{{orgName}}</strong> trên Limio. Đặt mật khẩu để đăng nhập (TTL 1h): <a href="{{resetUrl}}">{{resetUrl}}</a></p>`,
+    bodyText: `Xin chào {{name}},\n\nBạn vừa được thêm vào trường {{orgName}} trên Limio. Đặt mật khẩu để đăng nhập (TTL 1h):\n{{resetUrl}}`,
   },
   "course.access_expiring": {
     subject: "Khóa \"{{courseTitle}}\" của bạn sắp hết hạn truy cập",

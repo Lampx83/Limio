@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import ActivityPlanEditor from "./ActivityPlanEditor";
 
 export const metadata = {
-  title: "Sửa kịch bản | FeedBackMe",
+  title: "Sửa kịch bản | Limio",
 };
 
 export default async function ActivityPlanEditorPage({

@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import ActivityPlanList from "./ActivityPlanList";
 
 export const metadata = {
-  title: "Kịch bản lớp học | FeedBackMe",
+  title: "Kịch bản lớp học | Limio",
   description: "Thư viện kịch bản hoạt động tương tác cho 1 tiết học",
 };
 

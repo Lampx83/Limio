@@ -19,6 +19,7 @@ import {
   LayoutGrid,
   GraduationCap,
   UserCheck,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -50,6 +51,7 @@ const GROUPS: Group[] = [
     iconFg: PINK_FG,
     items: [
       { label: "Người dùng", href: "/admin/users", icon: Users },
+      { label: "Tổ chức (OrgAdmin)", href: "/admin/orgs", icon: Building2 },
       { label: "Đơn giáo viên", href: "/admin/instructor-applications", icon: UserCheck },
       { label: "Hoạt động giảng viên", href: "/admin/instructor-activity", icon: History },
       { label: "Skill taxonomy", href: "/admin/skills", icon: Network },

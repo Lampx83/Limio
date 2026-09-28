@@ -43,6 +43,15 @@ export const LearningEventType = {
   CourseInstructorAdded: "course.instructor.added",
   CourseInstructorRemoved: "course.instructor.removed",
 
+  // D — Multi-tenancy. Platform Admin cấp/thu hồi quyền OrgAdmin cho user
+  // (bảng OrganizationAdmin, xem packages/core-lms/src/org/admins.ts).
+  OrgAdminGranted: "org.admin.granted",
+  OrgAdminRevoked: "org.admin.revoked",
+  // OrgAdmin (hoặc Platform Admin) gắn/gỡ user khỏi trường (User.organizationId).
+  // Gỡ = quay lại "nhóm chung" của platform (organizationId = null), không xoá user.
+  OrgMemberAdded: "org.member.added",
+  OrgMemberRemoved: "org.member.removed",
+
   // Session — không gắn courseId (đăng nhập không thuộc một khoá cụ thể).
   /** Đăng nhập thành công, mọi provider. Payload chỉ mang phân loại thô — xem SessionStartedPayload. */
   SessionStarted: "session.started",

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import SharedPlanView from "./SharedPlanView";
 
 export const metadata = {
-  title: "Kịch bản được chia sẻ | FeedBackMe",
+  title: "Kịch bản được chia sẻ | Limio",
 };
 
 export default async function SharedActivityPlanPage({

@@ -1,5 +1,14 @@
 import { prisma } from "@feedbackme/db";
-import { consumeToken, findValidToken, type DbClient } from "./tokens";
+import {
+  consumeToken,
+  findValidToken,
+  invalidateOutstandingTokens,
+  issueToken,
+  type DbClient,
+} from "./tokens";
+import { buildVerificationUrl } from "./email";
+import { sendTemplatedEmail } from "../email/templates";
+import { logAudit } from "./audit";
 
 export class VerifyError extends Error {
   constructor(public readonly code: "invalid_or_expired_token" | "already_verified") {
@@ -36,4 +45,46 @@ export async function verifyEmail(
     data: { emailVerifiedAt: new Date() },
   });
   return { userId: user.id, email: user.email };
+}
+
+export class ResendVerificationError extends Error {
+  constructor(public readonly code: "user_not_found" | "already_verified") {
+    super(code);
+  }
+}
+
+/** Admin-triggered resend: burns any outstanding token and mints + sends a fresh one. */
+export async function resendVerificationEmail(
+  actorUserId: string,
+  targetUserId: string,
+  baseUrl: string,
+  db: DbClient = prisma,
+): Promise<void> {
+  const user = await db.user.findUnique({
+    where: { id: targetUserId },
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+      organizationId: true,
+      emailVerifiedAt: true,
+    },
+  });
+  if (!user) throw new ResendVerificationError("user_not_found");
+  if (user.emailVerifiedAt) throw new ResendVerificationError("already_verified");
+
+  await invalidateOutstandingTokens(user.id, "email_verify", db);
+  const issued = await issueToken(user.id, "email_verify", db);
+  const verificationUrl = buildVerificationUrl(baseUrl, issued.raw);
+  await sendTemplatedEmail({
+    key: "auth.verify_email",
+    to: user.email,
+    organizationId: user.organizationId,
+    variables: { displayName: user.displayName, verificationUrl },
+  });
+
+  await logAudit(
+    { action: "user.verification_email_resent", actorUserId, targetUserId, payload: {} },
+    db,
+  );
 }

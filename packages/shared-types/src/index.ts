@@ -1,4 +1,5 @@
 export * from "./events";
+export * from "./organizations";
 export * from "./roles";
 export * from "./skills";
 export * from "./lessonFormatTemplate";

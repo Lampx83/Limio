@@ -28,6 +28,7 @@ import {
   Circle,
   Ban,
   LogIn,
+  Info,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
@@ -42,6 +43,7 @@ import { auth } from "@/lib/auth";
 import TournamentRegisterButton from "./TournamentRegisterButton";
 import TournamentTeamPanel from "./TournamentTeamPanel";
 import LeaderboardTabs from "./LeaderboardTabs";
+import Tooltip from "@/components/ui/Tooltip";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatVN, formatDateTime } from "@/lib/datetime";
@@ -778,6 +780,12 @@ export default async function TournamentDetailPage({
                 <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
                   (Top 20)
                 </span>
+                <Tooltip
+                  label="Cách xếp hạng"
+                  description="Cộng dồn điểm mọi nhiệm vụ đã hoàn thành trong đấu trường này. Bằng điểm: ai đạt mốc đó trước xếp trên."
+                >
+                  <Info className="h-4 w-4 cursor-help text-slate-400" aria-label="Cách xếp hạng" tabIndex={0} />
+                </Tooltip>
               </h2>
 
               <LeaderboardTabs

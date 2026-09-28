@@ -52,9 +52,15 @@ export async function GET(
 
   const siteOrigin = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "");
   const verifyUrl = `${siteOrigin}/verify/${certificate.certNumber}`;
-  // issuerLogoUrl snapshot là đường dẫn tương đối (/api/org-logos/...) —
+  // issuerLogoUrl/*SignatureUrl snapshot là đường dẫn tương đối (/api/...) —
   // react-pdf render phía server (Node fetch), cần URL tuyệt đối.
   const issuerLogoUrl = certificate.issuerLogoUrl ? `${siteOrigin}${certificate.issuerLogoUrl}` : null;
+  const issuerSignatureUrl = certificate.issuerSignatureUrl
+    ? `${siteOrigin}${certificate.issuerSignatureUrl}`
+    : null;
+  const platformSignatureUrl = certificate.platformSignatureUrl
+    ? `${siteOrigin}${certificate.platformSignatureUrl}`
+    : null;
 
   const buf = await renderToBuffer(
     CertificatePdfDocument({
@@ -62,6 +68,13 @@ export async function GET(
       courseTitle: certificate.courseTitleSnapshot,
       issuerName: certificate.issuerName,
       issuerLogoUrl,
+      issuerOrgName: certificate.issuerOrgName,
+      issuerSignatureUrl,
+      issuerSignatureName: certificate.issuerSignatureName,
+      issuerSignatureTitle: certificate.issuerSignatureTitle,
+      platformSignatureUrl,
+      platformSignatureName: certificate.platformSignatureName,
+      platformSignatureTitle: certificate.platformSignatureTitle,
       skillBadgeNames: skillBadges.map((sb) => sb.badge.name),
       issuedAt: certificate.issuedAt,
       totalStudySec: engagement._sum.activeSec ?? 0,

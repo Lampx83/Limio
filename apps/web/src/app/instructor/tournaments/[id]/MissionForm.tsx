@@ -198,6 +198,7 @@ export default function MissionForm({
       teamSize,
       template: template ? { hasMinScore: template.hasMinScore, requiresSkillGroup: template.requiresSkillGroup } : null,
       unchangedDeadline: originalDeadline.current,
+      editableConditions: !isEdit || editConditions,
     };
   }
 

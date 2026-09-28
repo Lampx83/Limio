@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma, type Prisma } from "@feedbackme/db";
+import { COMMON_POOL_FILTER_VALUE } from "@feedbackme/shared-types";
 import { requireAdmin } from "@/lib/session";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,6 +20,7 @@ export async function GET(req: Request) {
   );
   const q = (url.searchParams.get("q") ?? "").trim();
   const role = url.searchParams.get("role");
+  const org = url.searchParams.get("org");
 
   const where: Record<string, unknown> = {};
   if (q) {
@@ -29,6 +31,9 @@ export async function GET(req: Request) {
   }
   if (role) {
     where.userRoles = { some: { role: { name: role } } };
+  }
+  if (org) {
+    where.organizationId = org === COMMON_POOL_FILTER_VALUE ? null : org;
   }
 
   const SORTABLE = ["displayName", "createdAt", "lastAccessAt"] as const;
@@ -62,6 +67,7 @@ export async function GET(req: Request) {
         emailVerifiedAt: true,
         createdAt: true,
         lastAccessAt: true,
+        organization: { select: { id: true, name: true } },
         userRoles: {
           select: {
             role: { select: { name: true } },
@@ -83,6 +89,7 @@ export async function GET(req: Request) {
     emailVerified: u.emailVerifiedAt !== null,
     createdAt: u.createdAt,
     lastAccessAt: u.lastAccessAt,
+    organization: u.organization,
     roles: Array.from(new Set(u.userRoles.map((ur) => ur.role.name))),
     providers: Array.from(new Set(u.authProviders.map((p) => p.provider))),
   }));

@@ -1,4 +1,19 @@
-import { Document, Page, Text, View, StyleSheet, Font, Svg, Circle, Ellipse, G, Line, Polygon, Image } from "@react-pdf/renderer";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
+  Svg,
+  Circle,
+  Ellipse,
+  G,
+  Line,
+  Polygon,
+  Path,
+  Image,
+} from "@react-pdf/renderer";
 import { slugify } from "@feedbackme/core-lms";
 import {
   ROBOTO_REGULAR_VIETNAMESE_DATA_URL,
@@ -35,6 +50,8 @@ const CORNER_PINK = "#fce7f3";
 const PAGE_W = 841.89;
 const PAGE_H = 595.28;
 const MARGIN = 46;
+const CARD_W = PAGE_W - 2 * MARGIN;
+const CARD_H = PAGE_H - 2 * MARGIN;
 
 const styles = StyleSheet.create({
   // fontFeatureSettings tắt ligature (fi/fl/ff...) — font Roboto-Vietnamese
@@ -55,6 +72,10 @@ const styles = StyleSheet.create({
     bottom: MARGIN,
     backgroundColor: "#ffffff",
   },
+  // Lớp hoạ tiết nền — vẽ trước (dưới) outerFrame trong cùng `card`, nên
+  // outerFrame/innerFrame phải để trong suốt (không set backgroundColor)
+  // thì hoạ tiết mới lộ ra sau chữ.
+  cardPattern: { position: "absolute", top: 0, left: 0, width: CARD_W, height: CARD_H },
   outerFrame: { flex: 1, borderWidth: 1.5, borderColor: ACCENT, borderStyle: "solid", padding: 5 },
   // justifyContent: "center" — toàn bộ nội dung là MỘT khối căn giữa theo
   // chiều dọc (kể cả hàng chữ ký/huy hiệu và dòng mã số), thay vì ghim phần
@@ -77,9 +98,9 @@ const styles = StyleSheet.create({
   // Roboto-subset, letterSpacing làm sai lệch layer text ẩn của PDF (chữ "A"
   // và "D" bị đổi thành dấu phẩy/gạch ngang khi copy/paste hoặc đọc màn
   // hình) dù phần hiển thị vẫn đúng — một lỗi tương tác react-pdf/fontkit.
-  kicker: { fontSize: 15, fontWeight: "bold", color: ACCENT, marginTop: 18 },
+  kicker: { fontSize: 22.5, fontWeight: "bold", color: ACCENT, marginTop: 18 },
   title: {
-    fontSize: 34,
+    fontSize: 51,
     fontWeight: "bold",
     color: INK,
     textAlign: "center",
@@ -87,11 +108,14 @@ const styles = StyleSheet.create({
     lineHeight: 1.15,
     maxWidth: 620,
   },
-  subline: { fontSize: 13, color: MUTED, textAlign: "center", marginTop: 22 },
-  sublineName: { fontWeight: "bold", color: INK },
-  dateLine: { fontSize: 10.5, color: "#9ca3af", textAlign: "center", marginTop: 4 },
+  // Tên học viên đứng 1 dòng riêng ngay dưới tên khoá, không kèm nhãn
+  // "Hoàn thành bởi" — to hơn + đậm để đọc như một dòng tên, không phải màu
+  // gradient (react-pdf fill chỉ nhận 1 màu đặc, và PDF vốn không theo
+  // hướng gradient của web).
+  sublineName: { fontSize: 26, fontWeight: "bold", color: INK, textAlign: "center", marginTop: 22 },
+  dateLine: { fontSize: 15.75, color: "#9ca3af", textAlign: "center", marginTop: 4 },
   skillsLabel: {
-    fontSize: 9,
+    fontSize: 13.5,
     fontWeight: "bold",
     color: "#9ca3af",
     textAlign: "center",
@@ -106,7 +130,7 @@ const styles = StyleSheet.create({
     maxWidth: 560,
   },
   badge: {
-    fontSize: 9.5,
+    fontSize: 14.25,
     color: ACCENT,
     borderWidth: 0.75,
     borderColor: "#d9f99d",
@@ -115,6 +139,15 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 12,
   },
+  // Chỉ dùng khi có logo Organization (issuerLogoUrl != null) — top header
+  // CHỈ gồm 2 logo (Limio + Organization) đứng cạnh nhau, căn giữa; KHÔNG
+  // kèm tên chữ Organization ở đây nữa — tên đã có ở "issuerRow" cuối trang
+  // (ô chữ ký, "Cấp bởi Limio × <tên trường>"). Trường có tên nhưng chưa
+  // upload logo thì top vẫn chỉ hiện Limio một mình — không có ảnh thứ 2 để
+  // ghép, tên vẫn hiện đủ ở ô chữ ký.
+  topRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  topRowDivider: { width: 1, height: 28, backgroundColor: "#d1d5db" },
+  topRowOrgLogo: { width: 36, height: 36, objectFit: "contain" },
   // Luồng bình thường (không absolute) + alignSelf: "stretch" để chiếm hết
   // bề ngang cột giữa (innerFrame alignItems:"center" co nhỏ theo nội dung
   // nếu không có stretch) — xem ghi chú ở innerFrame.
@@ -125,25 +158,30 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
   },
+  // 2 chữ ký cạnh nhau (Limio bên trái, Organization bên phải) khi khoá
+  // thuộc 1 Organization — mỗi bên là 1 signatureBlock độc lập, đầy đủ ảnh +
+  // dòng kẻ + tên/chức danh riêng, không gộp chung 1 khối như bản cũ. Chỉ
+  // Limio (không Organization) thì vẫn 1 signatureBlock đứng một mình.
+  signatureColumnsRow: { flexDirection: "row", gap: 28 },
   signatureBlock: { alignItems: "flex-start" },
-  signatureRule: { width: 150, height: 0.75, backgroundColor: "#a3a3a3", marginBottom: 6 },
-  issuerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  issuerLogo: { width: 22, height: 22, objectFit: "contain" },
-  issuerName: { fontSize: 13, fontWeight: "bold", color: INK },
-  issuerCaption: { fontSize: 8, color: MUTED, marginTop: 2 },
+  signatureImage: { height: 24, maxWidth: 84, objectFit: "contain", marginBottom: 4 },
+  signatureRule: { width: 110, height: 0.75, backgroundColor: "#a3a3a3", marginBottom: 6 },
+  issuerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  issuerLogo: { width: 18, height: 18, objectFit: "contain" },
+  issuerName: { fontSize: 14, fontWeight: "bold", color: INK },
+  issuerCaption: { fontSize: 9.5, color: MUTED, marginTop: 2 },
   footerCenter: {
     alignSelf: "stretch",
     alignItems: "center",
     marginTop: 14,
   },
-  footerLabel: { fontSize: 7.5, color: "#9ca3af" },
-  footerMono: { fontSize: 8.5, color: MUTED, marginTop: 1 },
+  footerLabel: { fontSize: 11.25, color: "#9ca3af" },
+  footerMono: { fontSize: 12.75, color: MUTED, marginTop: 1 },
 });
 
 const STRINGS = {
   vi: {
     kicker: "CHỨNG NHẬN HOÀN THÀNH",
-    completedBy: "Hoàn thành bởi",
     skillsLabel: "KỸ NĂNG ĐÃ ĐẠT",
     issuerCaption: "Nền tảng học tập cá nhân hoá",
     certId: "Mã chứng nhận",
@@ -154,7 +192,6 @@ const STRINGS = {
   },
   en: {
     kicker: "CERTIFICATE OF COMPLETION",
-    completedBy: "Completed by",
     skillsLabel: "SKILLS ACHIEVED",
     issuerCaption: "Personalized Learning Platform",
     certId: "Certificate ID",
@@ -213,6 +250,72 @@ function LimeSliceShapes() {
 }
 
 /**
+ * Một "lát chanh" trừu tượng cho hoạ tiết nền — vành tròn mảnh (vỏ) + 6 nan
+ * CONG (thay vì 4 nan thẳng + hạt + highlight của LimeSliceShapes thật), toạ
+ * độ cục bộ tâm (16,16) bán kính 13 cho khớp hệ 32×32 dùng chung trong file.
+ * Cong thay vì thẳng để không đọc thành logo Limio thu nhỏ khi lặp lại dày
+ * đặc — chỉ còn giữ "cấu trúc múi toả tâm" của một lát chanh, phần diễn giải
+ * trừu tượng, không phải bản sao icon thương hiệu.
+ */
+function LimeSliceAbstractMotif() {
+  const cx = 16;
+  const cy = 16;
+  const r = 12;
+  const spokes = [];
+  for (let i = 0; i < 6; i++) {
+    const a0 = (i * 60 * Math.PI) / 180;
+    const ex = cx + r * Math.cos(a0);
+    const ey = cy + r * Math.sin(a0);
+    const ca = a0 + (26 * Math.PI) / 180;
+    const cr = r * 0.55;
+    const cxp = cx + cr * Math.cos(ca);
+    const cyp = cy + cr * Math.sin(ca);
+    spokes.push(
+      <Path
+        key={i}
+        d={`M ${cx} ${cy} Q ${cxp.toFixed(2)} ${cyp.toFixed(2)} ${ex.toFixed(2)} ${ey.toFixed(2)}`}
+        stroke={ACCENT}
+        strokeWidth={0.9}
+        strokeLinecap="round"
+        fill="none"
+      />,
+    );
+  }
+  return (
+    <>
+      <Circle cx={cx} cy={cy} r={r + 1} stroke={ACCENT} strokeWidth={1} fill="none" />
+      {spokes}
+    </>
+  );
+}
+
+/**
+ * Hoạ tiết nền tô kín `card` ở opacity rất thấp — lưới lệch hàng (mỗi hàng
+ * lệch nửa ô so với hàng trên, kiểu gạch xây) chứ không phải lưới vuông đều,
+ * để tránh cảm giác "dán tem" của icon lặp lại đều tăm tắp.
+ */
+function BackgroundPattern({ width, height }: { width: number; height: number }) {
+  const cell = 48;
+  const scale = cell / 32;
+  const rows = Math.ceil(height / cell) + 1;
+  const cols = Math.ceil(width / cell) + 2;
+  const marks = [];
+  for (let r = 0; r <= rows; r++) {
+    const offsetX = r % 2 === 1 ? cell / 2 : 0;
+    for (let c = -1; c <= cols; c++) {
+      const x = c * cell + offsetX;
+      const y = r * cell;
+      marks.push(
+        <G key={`${r}-${c}`} transform={`translate(${x}, ${y}) scale(${scale})`}>
+          <LimeSliceAbstractMotif />
+        </G>,
+      );
+    }
+  }
+  return <G opacity={0.07}>{marks}</G>;
+}
+
+/**
  * Logo "Limio Learning" — cùng thiết kế đã chốt với
  * apps/web/src/components/BrandIcons.tsx LimioLearningLogo (lát chanh + Lim
  * đen/io hồng đúng màu AppHeader + Learning cùng lề trái), viết lại bằng
@@ -263,8 +366,20 @@ export interface CertificatePdfProps {
   userName: string;
   courseTitle: string;
   issuerName: string;
-  /** Logo của Organization (URL tuyệt đối, react-pdf fetch phía server) — null nếu không có. */
+  /** Logo của Organization (URL tuyệt đối, react-pdf fetch phía server) — null nếu không có; quyết định có hiện logo 2 ở header hay không. */
   issuerLogoUrl: string | null;
+  /** Tên riêng Organization (không tiền tố "Limio × ") — null nếu khoá không thuộc Organization nào; quyết định có tách 2 cột chữ ký hay không. */
+  issuerOrgName: string | null;
+  /** Ảnh chữ ký người đại diện Organization — null nếu khoá không thuộc Organization nào hoặc trường chưa cấu hình. */
+  issuerSignatureUrl: string | null;
+  /** Tên + chức danh người đại diện Organization, in dưới ảnh chữ ký — null nếu chưa cấu hình. */
+  issuerSignatureName: string | null;
+  issuerSignatureTitle: string | null;
+  /** Ảnh chữ ký Limio (dùng chung toàn hệ thống) — null nếu chưa cấu hình ở /admin/settings. */
+  platformSignatureUrl: string | null;
+  /** Tên + chức danh người ký Limio — null nếu chưa cấu hình. */
+  platformSignatureName: string | null;
+  platformSignatureTitle: string | null;
   skillBadgeNames: string[];
   issuedAt: Date;
   totalStudySec: number;
@@ -279,6 +394,13 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
     courseTitle,
     issuerName,
     issuerLogoUrl,
+    issuerOrgName,
+    issuerSignatureUrl,
+    issuerSignatureName,
+    issuerSignatureTitle,
+    platformSignatureUrl,
+    platformSignatureName,
+    platformSignatureTitle,
     skillBadgeNames,
     issuedAt,
     totalStudySec,
@@ -307,16 +429,27 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
       </View>
 
       <View style={styles.card}>
+        <View style={styles.cardPattern}>
+          <Svg width={CARD_W} height={CARD_H}>
+            <BackgroundPattern width={CARD_W} height={CARD_H} />
+          </Svg>
+        </View>
         <View style={styles.outerFrame}>
           <View style={styles.innerFrame}>
-            <LimioLearningLogo />
+            {issuerLogoUrl ? (
+              <View style={styles.topRow}>
+                <LimioLearningLogo />
+                <View style={styles.topRowDivider} />
+                <Image src={issuerLogoUrl} style={styles.topRowOrgLogo} />
+              </View>
+            ) : (
+              <LimioLearningLogo />
+            )}
             <Text style={styles.kicker}>{tracked(t.kicker)}</Text>
 
             <Text style={styles.title}>{courseTitle}</Text>
 
-            <Text style={styles.subline}>
-              {t.completedBy} <Text style={styles.sublineName}>{userName}</Text>
-            </Text>
+            <Text style={styles.sublineName}>{userName}</Text>
             <Text style={styles.dateLine}>
               {dateLabel}
               {durationLabel ? ` · ${durationLabel}` : ""}
@@ -336,16 +469,42 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
             )}
 
             <View style={styles.bottomRow}>
-              <View style={styles.signatureBlock}>
-                <View style={styles.signatureRule} />
-                <View style={styles.issuerRow}>
-                  {issuerLogoUrl && <Image src={issuerLogoUrl} style={styles.issuerLogo} />}
-                  <View>
-                    <Text style={styles.issuerName}>{issuerName}</Text>
-                    <Text style={styles.issuerCaption}>{t.issuerCaption}</Text>
+              {issuerOrgName ? (
+                <View style={styles.signatureColumnsRow}>
+                  <View style={styles.signatureBlock}>
+                    {platformSignatureUrl && (
+                      <Image src={platformSignatureUrl} style={styles.signatureImage} />
+                    )}
+                    <View style={styles.signatureRule} />
+                    <Text style={styles.issuerName}>{platformSignatureName || "Limio Learning"}</Text>
+                    <Text style={styles.issuerCaption}>
+                      {platformSignatureTitle || t.issuerCaption}
+                    </Text>
+                  </View>
+                  <View style={styles.signatureBlock}>
+                    {issuerSignatureUrl && (
+                      <Image src={issuerSignatureUrl} style={styles.signatureImage} />
+                    )}
+                    <View style={styles.signatureRule} />
+                    <View style={styles.issuerRow}>
+                      {issuerLogoUrl && <Image src={issuerLogoUrl} style={styles.issuerLogo} />}
+                      <Text style={styles.issuerName}>{issuerSignatureName || issuerOrgName}</Text>
+                    </View>
+                    {issuerSignatureTitle && (
+                      <Text style={styles.issuerCaption}>{issuerSignatureTitle}</Text>
+                    )}
                   </View>
                 </View>
-              </View>
+              ) : (
+                <View style={styles.signatureBlock}>
+                  {platformSignatureUrl && (
+                    <Image src={platformSignatureUrl} style={styles.signatureImage} />
+                  )}
+                  <View style={styles.signatureRule} />
+                  <Text style={styles.issuerName}>{platformSignatureName || issuerName}</Text>
+                  <Text style={styles.issuerCaption}>{platformSignatureTitle || t.issuerCaption}</Text>
+                </View>
+              )}
               <SealBadge />
             </View>
 

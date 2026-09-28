@@ -27,7 +27,16 @@ export default async function OrgSettingsPage() {
     where: { userId },
     select: {
       organizationId: true,
-      organization: { select: { name: true, code: true, brandingLogoUrl: true } },
+      organization: {
+        select: {
+          name: true,
+          code: true,
+          brandingLogoUrl: true,
+          signatureImageUrl: true,
+          signatureName: true,
+          signatureTitle: true,
+        },
+      },
     },
   });
   if (adminships.length === 0) {
@@ -60,7 +69,11 @@ export default async function OrgSettingsPage() {
       <div className="mt-6">
         <OrgSettingsClient
           organizationId={primary.organizationId}
+          initialName={primary.organization.name}
           initialLogoUrl={primary.organization.brandingLogoUrl}
+          initialSignatureUrl={primary.organization.signatureImageUrl}
+          initialSignatureName={primary.organization.signatureName}
+          initialSignatureTitle={primary.organization.signatureTitle}
         />
       </div>
     </main>
