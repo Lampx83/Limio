@@ -120,6 +120,8 @@ export type FormContext = {
   template: { hasMinScore: boolean; requiresSkillGroup: boolean } | null;
   /** Hạn nộp hiện có của nhiệm vụ đang sửa: nếu không đổi thì không kiểm tra lại mốc thời gian. */
   unchangedDeadline: string | null;
+  /** false khi đang sửa nhiệm vụ "course" mà đấu trường đã công bố: điều kiện bị khoá, không hiển thị field nên không được bắt buộc. Mặc định true. */
+  editableConditions?: boolean;
 };
 
 export type FormErrors = Partial<Record<
@@ -167,7 +169,7 @@ export function validateMissionForm(step: 1 | 2 | 3, s: MissionFormState, ctx: F
       if (!ok) e.externalUrl = "Nhập liên kết bắt đầu bằng https://";
     }
 
-    if (s.mode === "course") {
+    if (s.mode === "course" && ctx.editableConditions !== false) {
       if (!s.templateId) e.templateId = "Chọn điều kiện hoàn thành.";
       if (!isInt(s.conditionValue) || Number(s.conditionValue) < 1) e.conditionValue = "Nhập số lượng từ 1 trở lên.";
       if (ctx.template?.hasMinScore) {
