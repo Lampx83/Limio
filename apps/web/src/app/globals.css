@@ -389,6 +389,11 @@
     border-color: transparent;
     color: rgb(var(--danger));
   }
+  .banner-brand {
+    @apply banner;
+    background-color: rgb(var(--brand-soft));
+    border-color: rgb(var(--brand) / 0.3);
+  }
 }
 
 /* Padlet Board immersive mode — ẩn instructor left sidebar khi giảng viên

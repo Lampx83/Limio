@@ -104,12 +104,13 @@ export default async function LearnerDashboard() {
         này là nơi họ hạ cánh ngay sau khi đăng nhập, nên là chỗ đúng để nói.
       */}
       {enrollments.length === 0 && (
-        <div className="banner-warning mt-6 block rounded-2xl px-5 py-4">
+        <div className="banner-brand mt-6 block rounded-2xl px-5 py-4">
           <p className="font-semibold">Bạn chưa ghi danh khoá học nào</p>
           <p className="mt-1 text-sm">
-            Phải ghi danh rồi mới mở được bài học, bài tập và bài kiểm tra —
-            kể cả với khoá miễn phí. Nếu lớp của bạn có link mời do giảng viên
-            gửi thì mở link đó; còn không, tìm khoá trong danh mục và bấm đăng ký.
+            Ghi danh là bước đầu tiên để mở bài học, bài tập và bài kiểm tra —
+            kể cả với khoá miễn phí. Nếu giảng viên đã gửi link mời, bấm vào
+            đó là vào lớp ngay. Chưa có link? Ghé danh mục khoá học để tìm
+            khoá phù hợp và đăng ký nhé.
           </p>
           <Link href="/catalog" className="btn-primary btn-sm mt-3 inline-block">
             Xem danh mục khoá học
