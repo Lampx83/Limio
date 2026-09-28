@@ -2,16 +2,20 @@ import {
   getPaymentEnabled,
   getFooterSettings,
   getAiBankSettings,
+  getLimioSignatureUrl,
+  getLimioSignatureMeta,
 } from "@/lib/site-settings";
 import SettingsClient from "./SettingsClient";
 
 export const revalidate = 30;
 
 export default async function AdminSettingsPage() {
-  const [paymentEnabled, footer, bank] = await Promise.all([
+  const [paymentEnabled, footer, bank, signatureUrl, signatureMeta] = await Promise.all([
     getPaymentEnabled(),
     getFooterSettings(),
     getAiBankSettings(),
+    getLimioSignatureUrl(),
+    getLimioSignatureMeta(),
   ]);
 
   return (
@@ -27,6 +31,9 @@ export default async function AdminSettingsPage() {
         initialFooterText={footer.text}
         initialFooterEnabled={footer.enabled}
         initialBank={bank}
+        initialSignatureUrl={signatureUrl}
+        initialSignatureName={signatureMeta.name}
+        initialSignatureTitle={signatureMeta.title}
       />
     </div>
   );

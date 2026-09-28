@@ -785,6 +785,23 @@ model Certificate {
   // Snapshot cùng lý do với issuerName: trường đổi logo sau đó không được
   // làm đổi ảnh trên chứng nhận đã cấp.
   issuerLogoUrl       String?
+  // Tên riêng của Organization (KHÔNG có tiền tố "Limio × ") — null khi khoá
+  // không thuộc Organization nào. Tách riêng khỏi issuerName (chuỗi ghép sẵn
+  // dùng cho dòng "Cấp bởi ...") vì header 2 logo trái/phải cần tên trường
+  // đứng một mình, không dựng lại bằng cách cắt chuỗi issuerName.
+  issuerOrgName       String?
+  // Ảnh chữ ký — snapshot cùng lý do với issuerLogoUrl (đổi chữ ký sau đó
+  // không sửa lại chứng nhận đã cấp). platformSignatureUrl là chữ ký Limio
+  // dùng chung (SiteSetting), null nếu lúc cấp Limio chưa cấu hình; ngược lại
+  // issuerSignatureUrl là chữ ký riêng của Organization, null nếu khoá không
+  // thuộc Organization nào hoặc trường chưa upload.
+  platformSignatureUrl String?
+  issuerSignatureUrl    String?
+  // Tên + chức danh người ký, snapshot cùng lý do — in dưới ảnh chữ ký.
+  platformSignatureName  String?
+  platformSignatureTitle String?
+  issuerSignatureName    String?
+  issuerSignatureTitle   String?
   issuedAt            DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -4489,6 +4506,13 @@ model Organization {
   locale          String   @default("vi")
   timezone        String   @default("Asia/Ho_Chi_Minh")
   brandingLogoUrl String?
+  // Ảnh chữ ký người đại diện trường — hiện trên chứng nhận hoàn thành khoá
+  // học, cạnh chữ ký Limio (xem SiteSetting key branding.limio_signature_url).
+  signatureImageUrl String?
+  // Tên + chức danh in dưới ảnh chữ ký (vd "Nguyễn Văn A" / "Hiệu trưởng") —
+  // null nếu chưa cấu hình, khi đó chỉ hiện ảnh (nếu có) không kèm chữ.
+  signatureName   String?
+  signatureTitle  String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

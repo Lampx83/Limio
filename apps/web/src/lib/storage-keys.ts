@@ -63,6 +63,23 @@ export function orgLogoKeyFromFilename(filename: string): StorageKey | null {
   return orgLogoKey(m[1]!, filename);
 }
 
+/** Org signature image — per-org subdir, same shape as orgLogoKey. */
+export function orgSignatureKey(organizationId: string, filename: string): StorageKey {
+  return { layer: "public", key: `org-signatures/${organizationId}/${filename}` };
+}
+
+/** Derive shard from an org signature filename that begins with `<organizationId>-`. */
+export function orgSignatureKeyFromFilename(filename: string): StorageKey | null {
+  const m = /^([A-Za-z0-9_-]+)-[A-Za-z0-9]+\.[A-Za-z0-9]+$/.exec(filename);
+  if (!m) return null;
+  return orgSignatureKey(m[1]!, filename);
+}
+
+/** Chữ ký nền tảng Limio — 1 ảnh dùng chung toàn hệ thống, không cần shard theo entity. */
+export function platformSignatureKey(filename: string): StorageKey {
+  return { layer: "public", key: `branding/signature/${filename}` };
+}
+
 type DateShardedKind =
   | "lesson-media/images"
   | "lesson-media/videos"

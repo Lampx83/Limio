@@ -59,6 +59,24 @@ export async function getAiTokensPageLocked(): Promise<boolean> {
   return (await getSiteSetting(AI_TOKENS_PAGE_LOCKED_KEY)) !== "false";
 }
 
+export const LIMIO_SIGNATURE_URL_KEY = "branding.limio_signature_url";
+export const LIMIO_SIGNATURE_NAME_KEY = "branding.limio_signature_name";
+export const LIMIO_SIGNATURE_TITLE_KEY = "branding.limio_signature_title";
+
+/** Ảnh chữ ký đại diện Limio — chung cho mọi chứng nhận, ký lúc cấp (xem packages/core-lms/src/certification/index.ts). */
+export async function getLimioSignatureUrl(): Promise<string | null> {
+  return getSiteSetting(LIMIO_SIGNATURE_URL_KEY);
+}
+
+/** Tên + chức danh người ký, in dưới ảnh chữ ký Limio. */
+export async function getLimioSignatureMeta(): Promise<{ name: string; title: string }> {
+  const [name, title] = await Promise.all([
+    getSiteSetting(LIMIO_SIGNATURE_NAME_KEY),
+    getSiteSetting(LIMIO_SIGNATURE_TITLE_KEY),
+  ]);
+  return { name: name ?? "", title: title ?? "" };
+}
+
 export async function setSiteSetting(key: string, value: string): Promise<void> {
   await prisma.siteSetting.upsert({
     where: { key },

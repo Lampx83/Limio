@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+
+const MAX_SIGNATURE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_SIGNATURE_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 function ToggleRow({
   label,
@@ -53,11 +56,17 @@ export default function SettingsClient({
   initialFooterText,
   initialFooterEnabled,
   initialBank,
+  initialSignatureUrl,
+  initialSignatureName,
+  initialSignatureTitle,
 }: {
   initialPaymentEnabled: boolean;
   initialFooterText: string;
   initialFooterEnabled: boolean;
   initialBank: BankSettings;
+  initialSignatureUrl: string | null;
+  initialSignatureName: string;
+  initialSignatureTitle: string;
 }) {
   const [paymentEnabled, setPaymentEnabled] = useState(initialPaymentEnabled);
   const [footerText, setFooterText] = useState(initialFooterText);
@@ -66,6 +75,75 @@ export default function SettingsClient({
   const [bank, setBank] = useState(initialBank);
   const [savedBank, setSavedBank] = useState(initialBank);
   const [pending, startTransition] = useTransition();
+  const [signatureUrl, setSignatureUrl] = useState(initialSignatureUrl);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
+  const [signatureName, setSignatureName] = useState(initialSignatureName);
+  const [signatureTitle, setSignatureTitle] = useState(initialSignatureTitle);
+  const [savedSignatureName, setSavedSignatureName] = useState(initialSignatureName);
+  const [savedSignatureTitle, setSavedSignatureTitle] = useState(initialSignatureTitle);
+  const [savingSignatureMeta, setSavingSignatureMeta] = useState(false);
+  const signatureMetaDirty =
+    signatureName !== savedSignatureName || signatureTitle !== savedSignatureTitle;
+
+  async function saveSignatureMeta() {
+    setSavingSignatureMeta(true);
+    const res = await fetch(apiUrl("/api/admin/branding/signature"), {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: signatureName.trim(), title: signatureTitle.trim() }),
+    });
+    setSavingSignatureMeta(false);
+    if (res.ok) {
+      setSavedSignatureName(signatureName.trim());
+      setSavedSignatureTitle(signatureTitle.trim());
+      setSignatureName(signatureName.trim());
+      setSignatureTitle(signatureTitle.trim());
+      toast.success("Đã lưu tên/chức danh người ký");
+    } else {
+      toast.error("Lưu thất bại");
+    }
+  }
+
+  async function onSignatureChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_SIGNATURE_BYTES) {
+      toast.error("Ảnh quá lớn", { description: "Tối đa 5 MB." });
+      return;
+    }
+    if (!ALLOWED_SIGNATURE_MIME.includes(file.type)) {
+      toast.error("Định dạng không hỗ trợ", { description: "Chỉ chấp nhận JPG, PNG, WebP hoặc GIF." });
+      return;
+    }
+    setUploadingSignature(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(apiUrl("/api/admin/branding/signature"), { method: "POST", body: fd });
+    setUploadingSignature(false);
+    if (res.ok) {
+      const data = (await res.json()) as { url: string };
+      setSignatureUrl(data.url);
+      toast.success("Đã cập nhật chữ ký Limio");
+    } else {
+      toast.error("Tải ảnh thất bại");
+    }
+  }
+
+  async function onSignatureRemove() {
+    if (!signatureUrl) return;
+    if (!confirm("Xoá ảnh chữ ký Limio hiện tại?")) return;
+    setUploadingSignature(true);
+    const res = await fetch(apiUrl("/api/admin/branding/signature"), { method: "DELETE" });
+    setUploadingSignature(false);
+    if (res.ok) {
+      setSignatureUrl(null);
+      toast.success("Đã xoá chữ ký Limio");
+    } else {
+      toast.error("Xoá thất bại");
+    }
+  }
 
   const footerDirty = footerText !== savedFooterText;
   const bankDirty =
@@ -189,6 +267,105 @@ export default function SettingsClient({
             nhưng thanh toán thực tế chưa hoạt động. Cần cấu hình Stripe/VNPay trước khi thu tiền thật.
           </div>
         )}
+      </section>
+
+      {/* Chữ ký đại diện Limio — A6, hiện trên chứng nhận hoàn thành khoá học */}
+      <section className="card">
+        <header className="border-b border-token pb-4">
+          <h2 className="text-base font-semibold">Chữ ký Limio</h2>
+          <p className="mt-1 text-xs text-muted">
+            Hiện trên chứng nhận hoàn thành khoá học, cạnh chữ ký của Organization (nếu khoá
+            thuộc 1 trường). Dùng chung cho toàn hệ thống.
+          </p>
+        </header>
+
+        <div className="mt-4 flex items-center gap-4 py-2">
+          <div className="relative flex h-16 w-32 shrink-0 items-center justify-center rounded-lg border border-token bg-[rgb(var(--surface-muted))]">
+            {signatureUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={signatureUrl}
+                alt="Chữ ký Limio"
+                className="h-full w-full rounded-lg object-contain p-2"
+              />
+            ) : (
+              <span className="text-xs text-faint">Chưa có</span>
+            )}
+            {uploadingSignature && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40 text-[10px] font-medium text-white">
+                Đang tải...
+              </div>
+            )}
+          </div>
+
+          <div>
+            <input
+              ref={signatureInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={onSignatureChange}
+              className="hidden"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => signatureInputRef.current?.click()}
+                disabled={uploadingSignature}
+                className="btn-secondary btn-sm"
+              >
+                {signatureUrl ? "Đổi chữ ký" : "Tải ảnh chữ ký lên"}
+              </button>
+              {signatureUrl && (
+                <button
+                  type="button"
+                  onClick={onSignatureRemove}
+                  disabled={uploadingSignature}
+                  className="btn-ghost btn-sm text-danger-700 hover:bg-danger-50"
+                >
+                  Xoá
+                </button>
+              )}
+            </div>
+            <p className="mt-1 text-[11px] text-faint">
+              JPG, PNG, WebP hoặc GIF, nền trong suốt. Tối đa 5 MB.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-token pt-4">
+          <div>
+            <label className="text-xs font-semibold" htmlFor="sig-name">
+              Tên người ký
+            </label>
+            <input
+              id="sig-name"
+              value={signatureName}
+              onChange={(e) => setSignatureName(e.target.value)}
+              placeholder="Nguyễn Văn A"
+              className="mt-1 w-48 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold" htmlFor="sig-title">
+              Chức danh
+            </label>
+            <input
+              id="sig-title"
+              value={signatureTitle}
+              onChange={(e) => setSignatureTitle(e.target.value)}
+              placeholder="Nhà sáng lập"
+              className="mt-1 w-48 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={saveSignatureMeta}
+            disabled={savingSignatureMeta || !signatureMetaDirty}
+            className="btn-secondary btn-sm"
+          >
+            Lưu
+          </button>
+        </div>
       </section>
 
       {/* Tài khoản nhận tiền mua token AI */}

@@ -65,17 +65,52 @@ export async function issueCertificate(
     throw new CertificationError("not_completed");
   }
 
-  const [user, course] = await Promise.all([
+  const [user, course, platformSignatureSettings] = await Promise.all([
     db.user.findUniqueOrThrow({ where: { id: userId }, select: { displayName: true } }),
     db.course.findUniqueOrThrow({
       where: { id: courseId },
-      select: { title: true, organization: { select: { name: true, brandingLogoUrl: true } } },
+      select: {
+        title: true,
+        organization: {
+          select: {
+            name: true,
+            brandingLogoUrl: true,
+            signatureImageUrl: true,
+            signatureName: true,
+            signatureTitle: true,
+          },
+        },
+      },
+    }),
+    // SiteSetting — chữ ký Limio dùng chung toàn hệ thống (config ở
+    // /admin/settings), không phải model core-lms nào cả nên đọc thẳng qua
+    // db thay vì import apps/web/src/lib/site-settings.ts (module boundary).
+    db.siteSetting.findMany({
+      where: {
+        key: {
+          in: [
+            "branding.limio_signature_url",
+            "branding.limio_signature_name",
+            "branding.limio_signature_title",
+          ],
+        },
+      },
     }),
   ]);
+  const platformSettingsByKey = Object.fromEntries(
+    platformSignatureSettings.map((s) => [s.key, s.value]),
+  );
 
   const certNumber = await generateUniqueCertNumber(db);
   const issuerName = course.organization ? `Limio × ${course.organization.name}` : "Limio Learning";
   const issuerLogoUrl = course.organization?.brandingLogoUrl ?? null;
+  const issuerOrgName = course.organization?.name ?? null;
+  const issuerSignatureUrl = course.organization?.signatureImageUrl ?? null;
+  const issuerSignatureName = course.organization?.signatureName ?? null;
+  const issuerSignatureTitle = course.organization?.signatureTitle ?? null;
+  const platformSignatureUrl = platformSettingsByKey["branding.limio_signature_url"] || null;
+  const platformSignatureName = platformSettingsByKey["branding.limio_signature_name"] || null;
+  const platformSignatureTitle = platformSettingsByKey["branding.limio_signature_title"] || null;
 
   try {
     const certificate = await db.certificate.create({
@@ -87,6 +122,13 @@ export async function issueCertificate(
         courseTitleSnapshot: course.title,
         issuerName,
         issuerLogoUrl,
+        issuerOrgName,
+        issuerSignatureUrl,
+        issuerSignatureName,
+        issuerSignatureTitle,
+        platformSignatureUrl,
+        platformSignatureName,
+        platformSignatureTitle,
       },
     });
     await emitEvent(
