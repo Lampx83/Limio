@@ -1,6 +1,19 @@
 import { z } from "zod";
 
 /**
+ * `.env.prod.example` documents "optional" vars as `KEY=` (present, empty) so
+ * `grep`/`diff` shows every known key at a glance. Zod's `.optional()` only
+ * skips validation for `undefined`, not for `""` — so a copy-pasted empty
+ * line here used to sail past `cp .env.prod.example .env.prod` and then blow
+ * up `.url()` at runtime (prod outage 2026-09-28: root layout started calling
+ * getEnv() on every request, and "" is not a valid URL). Treat "" as unset
+ * for every optional field so the example file stays copy-paste-safe.
+ */
+const emptyToUndefined = z.literal("").transform(() => undefined);
+const optionalString = () => z.union([z.string(), emptyToUndefined]).optional();
+const optionalUrl = () => z.union([z.string().url(), emptyToUndefined]).optional();
+
+/**
  * Validate process.env at boot. Fail fast on missing required vars in prod;
  * warn-only in dev. Import this once from the root layout / next.config.
  */
@@ -10,22 +23,22 @@ const Schema = z.object({
   NEXTAUTH_SECRET: z.string().min(16),
 
   // Optional — features degrade if missing.
-  OPENAI_API_KEY: z.string().optional(),
-  SECRETS_MASTER_KEY: z.string().optional(),
-  SENTRY_DSN: z.string().url().optional(),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
-  SCORM_STORAGE_ROOT: z.string().optional(),
-  H5P_STORAGE_ROOT: z.string().optional(),
-  S3_BUCKET: z.string().optional(),
-  S3_REGION: z.string().optional(),
-  S3_ACCESS_KEY_ID: z.string().optional(),
-  S3_SECRET_ACCESS_KEY: z.string().optional(),
-  S3_ENDPOINT: z.string().url().optional(),
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  LTI_PLATFORM_ISSUER: z.string().url().optional(),
+  OPENAI_API_KEY: optionalString(),
+  SECRETS_MASTER_KEY: optionalString(),
+  SENTRY_DSN: optionalUrl(),
+  NEXT_PUBLIC_SENTRY_DSN: optionalUrl(),
+  SCORM_STORAGE_ROOT: optionalString(),
+  H5P_STORAGE_ROOT: optionalString(),
+  S3_BUCKET: optionalString(),
+  S3_REGION: optionalString(),
+  S3_ACCESS_KEY_ID: optionalString(),
+  S3_SECRET_ACCESS_KEY: optionalString(),
+  S3_ENDPOINT: optionalUrl(),
+  STRIPE_SECRET_KEY: optionalString(),
+  STRIPE_WEBHOOK_SECRET: optionalString(),
+  LTI_PLATFORM_ISSUER: optionalUrl(),
   // Origin công khai cho canonical/sitemap/OG. Bỏ trống → lib/seo.ts lấy NEXTAUTH_URL.
-  SITE_URL: z.string().url().optional(),
+  SITE_URL: optionalUrl(),
   AI_TURNS_PER_HOUR: z.string().optional(),
   AI_TOKENS_PER_DAY: z.string().optional(),
   // A5.8 Q3 — Email service for sending exam codes to assigned candidates.
