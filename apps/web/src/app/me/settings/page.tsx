@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import SettingsForm from "./SettingsForm";
@@ -31,6 +32,17 @@ export default async function SettingsPage() {
         <p className="mt-2 text-muted">
           Quản lý hồ sơ, quyền riêng tư và tùy chọn hiển thị.
         </p>
+      </div>
+      <div className="card mt-8 flex items-center justify-between gap-3">
+        <div>
+          <p className="font-semibold">Hướng dẫn sử dụng</p>
+          <p className="mt-1 text-sm text-muted">
+            Xem lại tour giới thiệu trang tổng quan học tập.
+          </p>
+        </div>
+        <Link href="/me/dashboard?tour=1" className="btn-secondary btn-sm shrink-0">
+          Xem lại hướng dẫn
+        </Link>
       </div>
       <div className="mt-8">
         <SettingsForm

@@ -47,6 +47,10 @@ model User {
   // below so each role tracks its own seen-state independently.
   notificationsLastSeenAt     DateTime?
   notificationsLastSeenByRole Json?
+  // Help tour lần đầu đăng nhập, per-role (giống notificationsLastSeenByRole).
+  // Key = role đang active lúc xem tour (vd "learner", "instructor"), value =
+  // ISO timestamp lúc hoàn tất/bỏ qua. Thiếu key = chưa từng xem tour đó.
+  helpTourCompletedByRole     Json?
   // Lần cuối user truy cập hệ thống (có phiên đăng nhập hợp lệ). Ghi có
   // throttle ở auth.ts jwt callback nên chỉ chính xác trong ~5 phút.
   lastAccessAt                DateTime?

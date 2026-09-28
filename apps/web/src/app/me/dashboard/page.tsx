@@ -9,13 +9,37 @@ import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import { formatDate } from "@/lib/datetime";
 import MasteryBadge from "@/components/MasteryBadge";
+import HelpTour from "@/components/HelpTour";
+import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
+import { getActiveRole } from "@/lib/active-role";
 
 export const dynamic = "force-dynamic";
 
-export default async function LearnerDashboard() {
+export default async function LearnerDashboard({
+  searchParams,
+}: {
+  searchParams: { tour?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/me/dashboard");
   const userId = session.user.id;
+
+  // Chỉ hiện help tour cho workspace Học viên — trang này cũng phục vụ role
+  // "mentor" (xem ROLE_DEFAULT_PATH), scope hiện tại (CLAUDE.md §6) chỉ chốt
+  // cho học viên nên bỏ qua mentor thay vì đoán nội dung phù hợp cho họ.
+  const activeRole = getActiveRole(session.user.roles ?? []);
+  const isLearnerWorkspace = activeRole === "learner";
+  let shouldShowTour = false;
+  if (isLearnerWorkspace) {
+    const meTour = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { helpTourCompletedByRole: true },
+    });
+    const forceReplay = searchParams?.tour === "1";
+    shouldShowTour =
+      forceReplay ||
+      !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "learner");
+  }
 
   const enrollments = await prisma.enrollment.findMany({
     where: { userId },
@@ -157,7 +181,7 @@ export default async function LearnerDashboard() {
       )}
 
       {/* KPI cards */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div data-tour="help-tour-kpis" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <Stat
           label="Khóa đã enroll"
           value={enrollments.length}
@@ -477,6 +501,9 @@ export default async function LearnerDashboard() {
           </section>
         )}
       </div>
+      {shouldShowTour && (
+        <HelpTour steps={LEARNER_TOUR_STEPS} role="learner" initiallyOpen />
+      )}
     </main>
   );
 }

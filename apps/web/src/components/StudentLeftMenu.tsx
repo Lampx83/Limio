@@ -29,6 +29,8 @@ type Item = {
   label: string;
   href: string;
   icon: LucideIcon;
+  // Hook cho HelpTour (components/HelpTour.tsx) highlight đúng mục nav.
+  tourId?: string;
 };
 
 type Group = {
@@ -42,35 +44,35 @@ const GROUPS: Group[] = [
     id: "learning",
     label: "Học tập",
     items: [
-      { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen },
-      { label: "Ghi chú", href: "/me/notes", icon: Pencil },
-      { label: "Kỹ năng", href: "/me/skills", icon: Brain },
-      { label: "Huy hiệu", href: "/me/badges", icon: Award },
-      { label: "e-Portfolio của tôi", href: "/me/portfolio", icon: FolderOpen },
+      { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen, tourId: "help-tour-nav-courses" },
+      { label: "Ghi chú", href: "/me/notes", icon: Pencil, tourId: "help-tour-nav-notes" },
+      { label: "Kỹ năng", href: "/me/skills", icon: Brain, tourId: "help-tour-nav-skills" },
+      { label: "Huy hiệu", href: "/me/badges", icon: Award, tourId: "help-tour-nav-badges" },
+      { label: "e-Portfolio của tôi", href: "/me/portfolio", icon: FolderOpen, tourId: "help-tour-nav-portfolio" },
     ],
   },
   {
     id: "feedback",
     label: "Phản hồi",
     items: [
-      { label: "Chấm bài bạn học", href: "/me/reviews", icon: Star },
+      { label: "Chấm bài bạn học", href: "/me/reviews", icon: Star, tourId: "help-tour-nav-reviews" },
     ],
   },
   {
     id: "explore",
     label: "Khám phá",
     items: [
-      { label: "Catalog khoá học", href: "/catalog", icon: Compass },
-      { label: "Đấu trường", href: "/tournaments", icon: Trophy },
-      { label: "Bảng xếp hạng", href: "/leaderboard", icon: BarChart3 },
+      { label: "Catalog khoá học", href: "/catalog", icon: Compass, tourId: "help-tour-nav-catalog" },
+      { label: "Đấu trường", href: "/tournaments", icon: Trophy, tourId: "help-tour-nav-tournaments" },
+      { label: "Bảng xếp hạng", href: "/leaderboard", icon: BarChart3, tourId: "help-tour-nav-leaderboard" },
     ],
   },
   {
     id: "account",
     label: "Tài khoản",
     items: [
-      { label: "Token AI", href: "/me/ai-tokens", icon: Coins },
-      { label: "Cài đặt", href: "/me/settings", icon: Settings },
+      { label: "Token AI", href: "/me/ai-tokens", icon: Coins, tourId: "help-tour-nav-ai-tokens" },
+      { label: "Cài đặt", href: "/me/settings", icon: Settings, tourId: "help-tour-nav-settings" },
     ],
   },
 ];
@@ -194,6 +196,7 @@ export default function StudentLeftMenu({
                     <li key={it.label}>
                       <Link
                         href={it.href}
+                        data-tour={it.tourId}
                         className={`group/item relative flex items-center gap-2.5 rounded-lg pl-3 pr-2 py-2 text-sm transition-colors ${
                           active
                             ? "bg-emerald-50 font-semibold text-emerald-700 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-200"
