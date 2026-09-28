@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate, formatDateTime } from "@/lib/datetime";
+import ResendVerificationButton from "./[id]/ResendVerificationButton";
 
 interface UserRow {
   id: string;
@@ -390,7 +391,10 @@ export default function UsersBrowser() {
                   {u.lastAccessAt ? formatDateTime(u.lastAccessAt) : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-right">
-                  <div className="inline-flex gap-1 whitespace-nowrap">
+                  <div className="inline-flex flex-wrap justify-end gap-1">
+                    {!u.emailVerified && (
+                      <ResendVerificationButton userId={u.id} compact />
+                    )}
                     <Link
                       href={`/admin/users/${u.id}`}
                       className="btn-secondary btn-sm whitespace-nowrap"

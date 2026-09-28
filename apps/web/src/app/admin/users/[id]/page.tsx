@@ -5,6 +5,7 @@ import { isDeletedUserEmail } from "@feedbackme/core-lms";
 import UserRoleManager from "./UserRoleManager";
 import ImpersonateButton from "./ImpersonateButton";
 import DeleteUserButton from "./DeleteUserButton";
+import ResendVerificationButton from "./ResendVerificationButton";
 import { formatDate, formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -127,6 +128,9 @@ export default async function AdminUserDetailPage({
           <span className="chip-warning">Đã xoá</span>
         ) : (
           <div className="flex gap-2">
+            {!user.emailVerifiedAt && (
+              <ResendVerificationButton userId={user.id} />
+            )}
             <ImpersonateButton userId={user.id} userName={user.displayName} />
             <DeleteUserButton
               userId={user.id}
