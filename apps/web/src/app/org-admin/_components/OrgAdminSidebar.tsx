@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Calendar, Palette, Menu, X, Building2, type LucideIcon } from "lucide-react";
+import { Calendar, Palette, Menu, X, Building2, Users, Mail, type LucideIcon } from "lucide-react";
 
 type Item = {
   label: string;
@@ -13,7 +13,9 @@ type Item = {
 
 // OrgAdmin palette = amber ("vàng cam") — phân biệt với Admin nền tảng (pink).
 const ITEMS: Item[] = [
+  { label: "Thành viên trường", href: "/org-admin/members", icon: Users },
   { label: "Danh mục ca thi", href: "/org-admin/session-templates", icon: Calendar },
+  { label: "Mẫu email", href: "/org-admin/emails", icon: Mail },
   { label: "Thương hiệu trường", href: "/org-admin/settings", icon: Palette },
 ];
 

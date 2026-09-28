@@ -33,10 +33,13 @@ export default function EmailListClient({
   scopes,
   activeScopeId,
   items,
+  basePath = "/admin/emails",
 }: {
   scopes: ScopeOption[];
   activeScopeId: string;
   items: TemplateItem[];
+  /** Cho phép tái dùng component này ở /org-admin/emails (khác route admin). */
+  basePath?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,7 +47,7 @@ export default function EmailListClient({
   function onScopeChange(newScope: string) {
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("scope", newScope);
-    router.push(`/admin/emails?${sp.toString()}`);
+    router.push(`${basePath}?${sp.toString()}`);
   }
 
   // Group by category for display.
@@ -89,7 +92,7 @@ export default function EmailListClient({
               {list.map((it) => (
                 <Link
                   key={it.key}
-                  href={`/admin/emails/${encodeURIComponent(it.key)}?scope=${activeScopeId}`}
+                  href={`${basePath}/${encodeURIComponent(it.key)}?scope=${activeScopeId}`}
                   className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-base-100"
                   prefetch={false}
                 >

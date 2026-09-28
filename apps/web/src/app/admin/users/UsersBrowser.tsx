@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate, formatDateTime } from "@/lib/datetime";
+import { COMMON_POOL_FILTER_VALUE, COMMON_POOL_LABEL } from "@feedbackme/shared-types";
 import ResendVerificationButton from "./[id]/ResendVerificationButton";
 
 interface UserRow {
@@ -16,6 +17,13 @@ interface UserRow {
   lastAccessAt: string | null;
   roles: string[];
   providers: string[];
+  organization: { id: string; name: string } | null;
+}
+
+interface OrgOption {
+  id: string;
+  name: string;
+  code: string;
 }
 
 interface UsersResponse {
@@ -43,6 +51,8 @@ export default function UsersBrowser() {
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [role, setRole] = useState("");
+  const [org, setOrg] = useState("");
+  const [orgs, setOrgs] = useState<OrgOption[]>([]);
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState<SortKey>("createdAt");
   const [dir, setDir] = useState<SortDir>("desc");
@@ -57,11 +67,20 @@ export default function UsersBrowser() {
   const [createOk, setCreateOk] = useState<string | null>(null);
 
   useEffect(() => {
+    fetch(apiUrl("/api/admin/orgs"))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { organizations: OrgOption[] } | null) => {
+        if (d) setOrgs(d.organizations);
+      });
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (role) params.set("role", role);
+    if (org) params.set("org", org);
     params.set("sort", sort);
     params.set("dir", dir);
     params.set("page", String(page));
@@ -77,7 +96,7 @@ export default function UsersBrowser() {
     return () => {
       cancelled = true;
     };
-  }, [q, role, page, sort, dir, reloadKey]);
+  }, [q, role, org, page, sort, dir, reloadKey]);
 
   function toggleSort(key: SortKey) {
     if (sort === key) {
@@ -309,24 +328,48 @@ export default function UsersBrowser() {
               ))}
             </select>
           </div>
+          <div>
+            <label htmlFor="users-org" className="label">
+              Tổ chức
+            </label>
+            <select
+              id="users-org"
+              value={org}
+              onChange={(e) => {
+                setOrg(e.target.value);
+                setPage(0);
+              }}
+              className="select mt-1"
+            >
+              <option value="">Tất cả tổ chức</option>
+              <option value={COMMON_POOL_FILTER_VALUE}>{COMMON_POOL_LABEL}</option>
+              {orgs.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name} ({o.code})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="card overflow-x-auto p-0">
-        <table className="w-full min-w-[980px] table-fixed text-sm">
+        <table className="w-full min-w-[1080px] table-fixed text-sm">
           <colgroup>
             <col />
-            <col className="w-[190px]" />
-            <col className="w-[130px]" />
-            <col className="w-[120px]" />
-            <col className="w-[170px]" />
+            <col className="w-[160px]" />
+            <col className="w-[150px]" />
+            <col className="w-[100px]" />
+            <col className="w-[110px]" />
+            <col className="w-[160px]" />
             <col className="w-[160px]" />
           </colgroup>
           <thead className="border-b border-token bg-base-50 text-xs uppercase text-faint">
             <tr>
               {sortTh("displayName", "Người dùng")}
               <th className="whitespace-nowrap px-4 py-2 text-left font-medium">Roles</th>
+              <th className="whitespace-nowrap px-4 py-2 text-left font-medium">Tổ chức</th>
               <th className="whitespace-nowrap px-4 py-2 text-left font-medium">SSO</th>
               {sortTh("createdAt", "Tạo lúc")}
               {sortTh("lastAccessAt", "Truy cập gần nhất")}
@@ -336,14 +379,14 @@ export default function UsersBrowser() {
           <tbody className="divide-y divide-token">
             {loading && !data && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted">
+                <td colSpan={7} className="px-4 py-6 text-center text-muted">
                   Đang tải…
                 </td>
               </tr>
             )}
             {data?.users.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted">
+                <td colSpan={7} className="px-4 py-6 text-center text-muted">
                   Không có user nào khớp.
                 </td>
               </tr>
@@ -379,6 +422,19 @@ export default function UsersBrowser() {
                         </span>
                       ))}
                     </div>
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-xs">
+                  {u.organization ? (
+                    <Link
+                      href={`/admin/orgs/${u.organization.id}`}
+                      className="link truncate"
+                      prefetch={false}
+                    >
+                      {u.organization.name}
+                    </Link>
+                  ) : (
+                    <span className="text-faint">{COMMON_POOL_LABEL}</span>
                   )}
                 </td>
                 <td className="px-4 py-2.5 text-xs text-muted">
