@@ -56,6 +56,24 @@ describe("password reset", () => {
     expect(resetTokens.every((t) => t.consumedAt !== null)).toBe(true);
   });
 
+  it("resetPassword lets a user with no AuthProvider yet (e.g. instructor-bulk-added, or SSO-only) log in with the new password", async () => {
+    // Mirrors enroll-bulk's user.create: email-only row, no password, no AuthProvider.
+    const user = await prisma.user.create({
+      data: { email: "gina@example.com", displayName: "Gina", passwordHash: null },
+    });
+    expect(await prisma.authProvider.count({ where: { userId: user.id } })).toBe(0);
+
+    const t = await issueToken(user.id, "password_reset");
+    await resetPassword({ token: t.raw, newPassword: "brandnew123" });
+
+    expect(
+      await loginCredentials({ email: "gina@example.com", password: "brandnew123" }),
+    ).toMatchObject({ email: "gina@example.com" });
+    const providers = await prisma.authProvider.findMany({ where: { userId: user.id } });
+    expect(providers).toHaveLength(1);
+    expect(providers[0]).toMatchObject({ provider: "password", providerUserId: "gina@example.com" });
+  });
+
   it("rejects unknown / expired token", async () => {
     await expect(
       resetPassword({ token: "0".repeat(64), newPassword: "password5678" }),

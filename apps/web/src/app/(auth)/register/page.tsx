@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "ok" | "error">("idle");
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<React.ReactNode>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +32,24 @@ export default function RegisterPage() {
       );
     } else {
       setStatus("error");
-      setMessage(`Lỗi: ${data.error ?? "unknown"}`);
+      if (data.error === "email_taken") {
+        setMessage(
+          <>
+            <p>Email này đã có tài khoản trên hệ thống.</p>
+            <p className="mt-1">
+              <Link href="/signin" className="link font-medium">
+                Đăng nhập
+              </Link>
+              {" · Chưa từng đặt mật khẩu? "}
+              <Link href="/reset-request" className="link font-medium">
+                Quên mật khẩu
+              </Link>
+            </p>
+          </>,
+        );
+      } else {
+        setMessage(data.message ?? `Lỗi: ${data.error ?? "unknown"}`);
+      }
     }
   }
 

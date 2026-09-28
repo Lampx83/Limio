@@ -26,19 +26,19 @@ function AiBadge({ className = "" }: { className?: string }) {
   );
 }
 
-export default function LandingPage() {
+export default function LandingPage({ registerEnabled = true }: { registerEnabled?: boolean }) {
   return (
     <main>
-      <Hero />
-      <Audiences />
+      <Hero registerEnabled={registerEnabled} />
+      <Audiences registerEnabled={registerEnabled} />
       <HowItWorks />
       <Promises />
-      <FinalCta />
+      <FinalCta registerEnabled={registerEnabled} />
     </main>
   );
 }
 
-function Hero() {
+function Hero({ registerEnabled }: { registerEnabled: boolean }) {
   return (
     <section className="relative overflow-hidden">
       <div
@@ -104,10 +104,15 @@ function Hero() {
             </p>
           </div>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-            <Link href="/register" className="btn-primary btn-lg !rounded-full shadow-md transition-transform hover:-translate-y-0.5">
-              Tạo tài khoản học viên →
-            </Link>
-            <Link href="/catalog" className="btn-secondary btn-lg !rounded-full transition-transform hover:-translate-y-0.5">
+            {registerEnabled && (
+              <Link href="/register" className="btn-primary btn-lg !rounded-full shadow-md transition-transform hover:-translate-y-0.5">
+                Tạo tài khoản học viên →
+              </Link>
+            )}
+            <Link
+              href="/catalog"
+              className={`btn-lg !rounded-full transition-transform hover:-translate-y-0.5 ${registerEnabled ? "btn-secondary" : "btn-primary"}`}
+            >
               Khám phá khóa học
             </Link>
           </div>
@@ -208,7 +213,7 @@ function HeroMock() {
   );
 }
 
-function Audiences() {
+function Audiences({ registerEnabled }: { registerEnabled: boolean }) {
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl text-center">
@@ -235,7 +240,7 @@ function Audiences() {
             "Thống kê chủ đề cả lớp còn yếu",
             "AI hỗ trợ soạn phản hồi và vấn đáp",
           ]}
-          cta={{ href: "/register/instructor", label: "Đăng ký tài khoản giáo viên" }}
+          cta={registerEnabled ? { href: "/register/instructor", label: "Đăng ký tài khoản giáo viên" } : undefined}
         />
         <AudienceCard
           tone="pink"
@@ -273,7 +278,7 @@ function AudienceCard({
   title: string;
   desc: string;
   bullets: string[];
-  cta: { href: string; label: string };
+  cta?: { href: string; label: string };
 }) {
   const t =
     tone === "lime"
@@ -317,9 +322,11 @@ function AudienceCard({
           </li>
         ))}
       </ul>
-      <Link href={cta.href} className={`mt-8 inline-flex items-center gap-1 text-sm font-semibold ${t.link}`}>
-        {cta.label} →
-      </Link>
+      {cta && (
+        <Link href={cta.href} className={`mt-8 inline-flex items-center gap-1 text-sm font-semibold ${t.link}`}>
+          {cta.label} →
+        </Link>
+      )}
     </div>
   );
 }
@@ -438,7 +445,7 @@ function Promises() {
   );
 }
 
-function FinalCta() {
+function FinalCta({ registerEnabled }: { registerEnabled: boolean }) {
   return (
     <section className="mx-auto max-w-6xl px-6 pb-24">
       <div className="relative overflow-hidden rounded-3xl bg-brand-gradient p-10 text-center text-white shadow-card-hover sm:p-14">
@@ -453,22 +460,29 @@ function FinalCta() {
           aria-hidden
         />
         <h2 className="relative h-display text-3xl font-bold sm:text-4xl">
-          Dạy hay học, bắt đầu từ hôm nay
+          {registerEnabled ? "Dạy hay học, bắt đầu từ hôm nay" : "Khám phá điều Limio có thể làm"}
         </h2>
         <p className="relative mx-auto mt-3 max-w-xl text-white/90">
-          Giáo viên tạo khoá học đầu tiên, học viên vào lớp
-          đầu tiên, và Limio lo phần còn lại.
+          {registerEnabled
+            ? "Giáo viên tạo khoá học đầu tiên, học viên vào lớp đầu tiên, và Limio lo phần còn lại."
+            : "Xem danh mục khoá học đang mở — đăng ký tài khoản mới tạm thời chưa mở."}
         </p>
         <div className="relative mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/register"
-            className="btn-lg rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg"
-          >
-            Đăng ký ngay
-          </Link>
+          {registerEnabled && (
+            <Link
+              href="/register"
+              className="btn-lg rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg"
+            >
+              Đăng ký ngay
+            </Link>
+          )}
           <Link
             href="/catalog"
-            className="btn-lg rounded-xl border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition-all hover:bg-white/20"
+            className={
+              registerEnabled
+                ? "btn-lg rounded-xl border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition-all hover:bg-white/20"
+                : "btn-lg rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg"
+            }
           >
             Xem danh mục khoá học
           </Link>

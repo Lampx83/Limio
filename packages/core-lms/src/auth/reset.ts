@@ -67,9 +67,19 @@ export async function resetPassword(rawInput: unknown, db: DbClient = prisma): P
   if (!won) throw new ResetError("invalid_or_expired_token");
 
   const passwordHash = await bcrypt.hash(parsed.data.newPassword, BCRYPT_COST);
-  await db.user.update({
+  const user = await db.user.update({
     where: { id: token.userId },
     data: { passwordHash },
+    select: { id: true, email: true },
+  });
+  // Học viên được GV add thủ công (hoặc user SSO-only) chưa từng có
+  // AuthProvider("password") — không tạo row này thì loginCredentials()
+  // vẫn từ chối đăng nhập dù passwordHash đã đúng. Upsert theo unique key
+  // (provider, providerUserId) để idempotent với user đã có sẵn provider này.
+  await db.authProvider.upsert({
+    where: { provider_providerUserId: { provider: "password", providerUserId: user.email } },
+    create: { userId: user.id, provider: "password", providerUserId: user.email },
+    update: {},
   });
   // Burn any other outstanding reset tokens for this user.
   await invalidateOutstandingTokens(token.userId, "password_reset", db);

@@ -3,6 +3,7 @@ import { RoleName } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import JsonLd from "@/components/JsonLd";
 import LandingPage from "@/components/LandingPage";
+import { getRegisterEnabled } from "@/lib/site-settings";
 import { absoluteUrl, organizationJsonLd, webSiteJsonLd } from "@/lib/seo";
 import type { Metadata } from "next";
 
@@ -34,12 +35,14 @@ export default async function HomePage() {
     redirect("/me/dashboard");
   }
 
+  const registerEnabled = await getRegisterEnabled();
+
   return (
     <>
       {/* Danh tính tổ chức + website cho Google: gắn logo/tên thương hiệu vào
           knowledge panel và mở ô sitelinks search trỏ thẳng vào catalog. */}
       <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
-      <LandingPage />
+      <LandingPage registerEnabled={registerEnabled} />
     </>
   );
 }

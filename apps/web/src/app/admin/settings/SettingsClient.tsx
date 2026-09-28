@@ -53,6 +53,7 @@ interface BankSettings {
 
 export default function SettingsClient({
   initialPaymentEnabled,
+  initialRegisterEnabled,
   initialFooterText,
   initialFooterEnabled,
   initialBank,
@@ -61,6 +62,7 @@ export default function SettingsClient({
   initialSignatureTitle,
 }: {
   initialPaymentEnabled: boolean;
+  initialRegisterEnabled: boolean;
   initialFooterText: string;
   initialFooterEnabled: boolean;
   initialBank: BankSettings;
@@ -69,6 +71,7 @@ export default function SettingsClient({
   initialSignatureTitle: string;
 }) {
   const [paymentEnabled, setPaymentEnabled] = useState(initialPaymentEnabled);
+  const [registerEnabled, setRegisterEnabled] = useState(initialRegisterEnabled);
   const [footerText, setFooterText] = useState(initialFooterText);
   const [footerEnabled, setFooterEnabled] = useState(initialFooterEnabled);
   const [savedFooterText, setSavedFooterText] = useState(initialFooterText);
@@ -235,8 +238,46 @@ export default function SettingsClient({
     });
   }
 
+  async function toggleRegister(val: boolean) {
+    setRegisterEnabled(val);
+    startTransition(async () => {
+      const ok = await patchSettings({ "register.enabled": val ? "true" : "false" });
+      if (!ok) {
+        setRegisterEnabled(!val);
+        toast.error("Cập nhật thất bại", { description: "Vui lòng thử lại." });
+      } else {
+        toast.success(val ? "Đã bật đăng ký tài khoản" : "Đã tắt đăng ký tài khoản");
+      }
+    });
+  }
+
   return (
     <div className="space-y-6">
+      {/* Đăng ký tài khoản trên trang chủ */}
+      <section className="card">
+        <header className="border-b border-token pb-4">
+          <h2 className="text-base font-semibold">Đăng ký tài khoản</h2>
+          <p className="mt-1 text-xs text-muted">
+            Nút/mục mời tạo tài khoản mới ở trang chủ. Không chặn truy cập trực tiếp trang{" "}
+            <code>/register</code> — chỉ ẩn lời mời trên trang chủ.
+          </p>
+        </header>
+
+        <div className="divide-y divide-token">
+          <ToggleRow
+            label="Hiện mục đăng ký tài khoản ở trang chủ"
+            description={
+              registerEnabled
+                ? "Đang bật — trang chủ hiện các nút mời tạo tài khoản học viên/giáo viên."
+                : "Đang tắt — trang chủ ẩn các nút đăng ký, chỉ còn lối vào khám phá khoá học."
+            }
+            checked={registerEnabled}
+            onChange={toggleRegister}
+            disabled={pending}
+          />
+        </div>
+      </section>
+
       {/* Payment section */}
       <section className="card">
         <header className="border-b border-token pb-4">

@@ -18,7 +18,7 @@ export default function RegisterInstructorPage() {
   const [verificationUrl, setVerificationUrl] = useState("");
   const [motivation, setMotivation] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "ok" | "error">("idle");
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<React.ReactNode>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,11 +44,25 @@ export default function RegisterInstructorPage() {
       );
     } else {
       setStatus("error");
-      setMessage(
-        data.error === "email_taken"
-          ? "Email này đã có tài khoản. Hãy đăng nhập và liên hệ quản trị viên để được cấp quyền giáo viên."
-          : `Lỗi: ${data.error ?? "unknown"}`,
-      );
+      if (data.error === "email_taken") {
+        setMessage(
+          <>
+            <p>Email này đã có tài khoản.</p>
+            <p className="mt-1">
+              <Link href="/signin" className="link font-medium">
+                Đăng nhập
+              </Link>
+              {" · Chưa từng đặt mật khẩu? "}
+              <Link href="/reset-request" className="link font-medium">
+                Quên mật khẩu
+              </Link>
+            </p>
+            <p className="mt-1">Sau đó liên hệ quản trị viên để được cấp quyền giáo viên.</p>
+          </>,
+        );
+      } else {
+        setMessage(data.message ?? `Lỗi: ${data.error ?? "unknown"}`);
+      }
     }
   }
 

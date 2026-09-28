@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 
 const ALLOWED_KEYS = [
   "payment.enabled",
+  "register.enabled",
   "footer.text",
   "footer.enabled",
   // Thông tin chuyển khoản hiện trên trang mua token.

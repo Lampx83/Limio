@@ -11,6 +11,17 @@ export async function getPaymentEnabled(): Promise<boolean> {
   return val === "true";
 }
 
+export const REGISTER_ENABLED_KEY = "register.enabled";
+
+/**
+ * Mục "Đăng ký tài khoản" ở trang chủ. Mặc định BẬT (chưa có giá trị) — chỉ
+ * tắt khi admin chủ động chọn ở /admin/settings, ví dụ lúc muốn tạm ngưng
+ * nhận đăng ký mới.
+ */
+export async function getRegisterEnabled(): Promise<boolean> {
+  return (await getSiteSetting(REGISTER_ENABLED_KEY)) !== "false";
+}
+
 export const DEFAULT_FOOTER_TEXT = "Đây là dòng footer sẽ hiện ở trang chủ...";
 
 export async function getFooterSettings(): Promise<{ text: string; enabled: boolean }> {
