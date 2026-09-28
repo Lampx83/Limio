@@ -51,6 +51,18 @@ export function avatarKeyFromFilename(filename: string): StorageKey | null {
   return avatarKey(m[1]!, filename);
 }
 
+/** Org branding logo — per-org subdir, same shape as avatarKey. */
+export function orgLogoKey(organizationId: string, filename: string): StorageKey {
+  return { layer: "public", key: `org-logos/${organizationId}/${filename}` };
+}
+
+/** Derive shard from an org logo filename that begins with `<organizationId>-`. */
+export function orgLogoKeyFromFilename(filename: string): StorageKey | null {
+  const m = /^([A-Za-z0-9_-]+)-[A-Za-z0-9]+\.[A-Za-z0-9]+$/.exec(filename);
+  if (!m) return null;
+  return orgLogoKey(m[1]!, filename);
+}
+
 type DateShardedKind =
   | "lesson-media/images"
   | "lesson-media/videos"

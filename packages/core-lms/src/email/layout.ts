@@ -96,13 +96,10 @@ ${pre}
 <tr><td align="center" class="outer" style="padding:32px 16px;">
 
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
-    <!-- Thương hiệu: đúng logo web (LimeSliceIcon xuất PNG) + chữ "Lim" + "io" hồng-500 như AppHeader -->
+    <!-- Thương hiệu: chỉ chữ "Lim" + "io" hồng-500 như AppHeader (không dùng ảnh logo) -->
     <tr><td style="padding:0 4px 18px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-        <td width="48" valign="middle" style="width:48px;line-height:0;">
-          <img src="${site}/email/logo-lime.png" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;outline:none;text-decoration:none;">
-        </td>
-        <td class="brand-name" valign="middle" style="padding-left:12px;font-family:${FONT};font-size:34px;line-height:1;font-weight:700;letter-spacing:-0.85px;color:${C.ink};">Lim<span style="color:${C.pink};">io</span></td>
+        <td class="brand-name" valign="middle" style="font-family:${FONT};font-size:34px;line-height:1;font-weight:700;letter-spacing:-0.85px;color:${C.ink};">Lim<span style="color:${C.pink};">io</span></td>
       </tr></table>
     </td></tr>
 

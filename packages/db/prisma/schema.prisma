@@ -171,6 +171,9 @@ model User {
   // A8 — E-portfolio (1 hồ sơ / học viên)
   portfolio Portfolio?
 
+  // A6 — Certification
+  certificates Certificate[]
+
   @@index([createdAt])
 }
 
@@ -451,6 +454,7 @@ model Course {
   accessPlans           CourseAccessPlan[]
   organization          Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   catalogSectionCourses CatalogSectionCourse[]
+  certificates          Certificate[]
 
   @@index([status, publishedAt])
   @@index([category, level])
@@ -754,6 +758,40 @@ model Note {
   contentItem ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
 
   @@index([userId, lessonId])
+}
+
+// =====================================================================
+// A6 — Certification. Cấp 1 lần khi học viên hoàn thành 100% một khoá học
+// (idempotent theo (userId, courseId)). Tên học viên + tên khoá được snapshot
+// tại thời điểm cấp — đổi displayName/course title sau đó không sửa lại
+// chứng nhận đã cấp, giống mọi bản in giấy thật.
+// =====================================================================
+
+model Certificate {
+  id                  String   @id @default(uuid())
+  userId              String
+  courseId            String
+  // Mã tra cứu công khai ở /verify/[certNumber] — random, không suy ra được
+  // từ userId/courseId (tránh dò mã theo kiểu liệt kê).
+  certNumber          String   @unique
+  userNameSnapshot    String
+  courseTitleSnapshot String
+  // "Limio" cho khoá không thuộc Organization nào, "Limio × <tên trường>" khi
+  // khoá thuộc 1 Organization (multi-tenant, PR2.17) — snapshot lúc cấp, đổi
+  // tên trường sau đó không sửa lại chứng nhận đã cấp.
+  issuerName          String
+  // Logo của Organization tại thời điểm cấp (Organization.brandingLogoUrl),
+  // null nếu trường không có logo hoặc khoá không thuộc Organization nào.
+  // Snapshot cùng lý do với issuerName: trường đổi logo sau đó không được
+  // làm đổi ảnh trên chứng nhận đã cấp.
+  issuerLogoUrl       String?
+  issuedAt            DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
 }
 
 // =====================================================================
