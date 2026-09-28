@@ -7,8 +7,19 @@ import Toaster from "@/components/Toaster";
 import { Providers } from "@/components/Providers";
 import Footer from "@/components/Footer";
 import FooterGate from "@/components/FooterGate";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { AiTokensPageProvider } from "@/components/AiTokensPageContext";
 import { getAiTokensPageLocked } from "@/lib/site-settings";
+import { getEnv } from "@/lib/env";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_DESCRIPTION,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_URL,
+  absoluteUrl,
+} from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -30,14 +41,57 @@ const nunito = Nunito({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Limio",
-  description:
-    "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và gamification. Học theo cách của bạn — fresh, focused, your own pace.",
+  // Mọi URL tương đối trong metadata (canonical, ảnh OG) được Next resolve dựa
+  // trên cái này. Thiếu nó thì OG image ra đường dẫn tương đối và Facebook/Zalo
+  // không render được thumbnail khi ai đó chia sẻ link khoá học.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    // Trang con chỉ cần khai tên riêng; hậu tố thương hiệu tự gắn vào.
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Limio",
+    "LMS",
+    "học trực tuyến",
+    "khoá học online",
+    "nền tảng học tập",
+    "e-learning",
+    "phản hồi cá nhân hoá",
+    "gamification học tập",
+  ],
+  // KHÔNG đặt `alternates.canonical` ở đây: metadata layout được mọi trang con
+  // kế thừa, nên mỗi trang không tự khai canonical sẽ tự nhận mình là trang chủ.
+  // Canonical của "/" nằm trong app/page.tsx.
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: SITE_LOCALE,
+    url: absoluteUrl("/"),
+    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE), width: 1200, height: 630, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    images: [absoluteUrl(DEFAULT_OG_IMAGE)],
+  },
+  // KHÔNG khai `robots` ở layout gốc: nó kế thừa xuống mọi trang, kể cả /signin
+  // hay /thi — tuyên bố "index, follow" cho những trang đó là đá nhau với
+  // `X-Robots-Tag: noindex` mà middleware đặt. Trang công khai tự khai qua
+  // `pageMetadata`; trang riêng tư dùng `NOINDEX` ở layout khu vực.
+  // Số điện thoại trong nội dung bài học không nên bị Safari tự biến thành link.
+  formatDetection: { telephone: false, address: false, email: false },
   icons: {
     // SVG favicon — Next.js automatically prepends basePath so the <link>
     // tag will reference /limio/favicon.svg when basePath=/limio.
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 
@@ -68,6 +122,12 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
       <body className="flex min-h-screen flex-col">
+        <GoogleAnalytics
+          measurementIds={[
+            getEnv().NEXT_PUBLIC_GA_MEASUREMENT_ID,
+            getEnv().NEXT_PUBLIC_GA_MEASUREMENT_ID_ALL,
+          ]}
+        />
         <Providers>
           <AiTokensPageProvider unlocked={aiTokensPageUnlocked}>
           <ImpersonationBanner />

@@ -40,6 +40,13 @@ x-web-env: &web-env
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
+  # Đọc bằng getEnv() ở server runtime (root layout), KHÔNG cần build-arg —
+  # khác NEXT_PUBLIC_BASE_PATH ở dưới, đổi ID không cần rebuild image, chỉ
+  # cần recreate container. Thiếu 2 dòng này ban đầu khiến GA không nhận
+  # được Measurement ID nào dù .env.prod đã set (compose không tự truyền
+  # biến vào container trừ khi khai rõ trong `environment:`).
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-}
+  NEXT_PUBLIC_GA_MEASUREMENT_ID_ALL: ${NEXT_PUBLIC_GA_MEASUREMENT_ID_ALL:-}
   # Email qua Resend (limio.vn Verified). Thiếu key → sender.ts chỉ log, không gửi thật.
   EMAIL_FROM: ${EMAIL_FROM:-}
   RESEND_API_KEY: ${RESEND_API_KEY:-}

@@ -11,7 +11,10 @@ interface Status {
   updatedAt: string | Date | null;
 }
 
-const LABELS: Record<string, { name: string; placeholder: string; help?: string; emoji?: string }> = {
+const LABELS: Record<
+  string,
+  { name: string; placeholder: string; help?: string; emoji?: string; multiline?: boolean }
+> = {
   openai: {
     name: "OpenAI API key",
     placeholder: "sk-proj-...",
@@ -27,6 +30,17 @@ const LABELS: Record<string, { name: string; placeholder: string; help?: string;
   "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY", emoji: "" },
   "vbee.app_id": { name: "App-Id", placeholder: "App-Id" },
   "vbee.token": { name: "Token", placeholder: "Token" },
+  "ga4.property_id": {
+    name: "GA4 Property ID",
+    placeholder: "556146065",
+    help: "Số ID property trong GA Admin → Property details (không phải Measurement ID G-...).",
+  },
+  "ga4.service_account": {
+    name: "Service account JSON",
+    placeholder: '{"type":"service_account",...}',
+    help: "Toàn bộ nội dung file JSON key, cấp quyền Viewer trên property trong GA Admin → Property access management.",
+    multiline: true,
+  },
 };
 
 /**
@@ -47,6 +61,12 @@ const GROUPS: Record<
     // độc lập, không có một giá trị "đang gõ" duy nhất để test tạm. Test
     // luôn nhắm vào cặp ĐÃ LƯU, và chỉ bật khi cả hai đã cấu hình.
     testEndpoint: "/api/admin/integrations/vbee/test",
+  },
+  ga4: {
+    name: "Google Analytics 4 — traffic & acquisition",
+    help: "Property ID lấy ở GA Admin → Property details. Service account JSON: tạo ở Google Cloud Console (IAM → Service accounts → Keys), cấp quyền Viewer cho property trong GA Admin → Property access management. Dùng cho traffic/acquisition trên Admin Dashboard — không dùng cho hành vi học chi tiết (đã có LearningEvent).",
+    keys: ["ga4.property_id", "ga4.service_account"],
+    testEndpoint: "/api/admin/integrations/ga4/test",
   },
 };
 
@@ -304,14 +324,26 @@ function IntegrationField({
 
       {showInput ? (
         <div className="space-y-3">
-          <input
-            type="password"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={meta.placeholder}
-            className="input font-mono"
-            autoComplete="off"
-          />
+          {meta.multiline ? (
+            <textarea
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={meta.placeholder}
+              rows={6}
+              className="input font-mono text-xs"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          ) : (
+            <input
+              type="password"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={meta.placeholder}
+              className="input font-mono"
+              autoComplete="off"
+            />
+          )}
           <div className="flex flex-wrap gap-2">
             {status.key === "openai" && (
               <button
