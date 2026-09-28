@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, Pencil, Trash2, Save, X, AlertTriangle, Loader2 } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface Template {
   id: string;
@@ -51,19 +53,24 @@ export default function SessionTemplatesClient({
   return (
     <div className="space-y-4">
       {err && (
-        <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
-          ⚠ {err}
+        <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-sm text-danger-700">
+          <AlertTriangle size={14} /> {err}
         </div>
       )}
 
       {initial.length === 0 && !adding ? (
-        <div className="rounded-lg border border-dashed border-default p-8 text-center text-sm text-faint">
-          Chưa có ca thi nào. Click &ldquo;+ Thêm ca thi&rdquo; để bắt đầu.
-        </div>
+        <EmptyState
+          title="Chưa có ca thi nào"
+          description={
+            <>
+              Bấm <strong>Thêm ca thi</strong> để bắt đầu.
+            </>
+          }
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-default bg-white">
+        <div className="overflow-x-auto rounded-lg border border-token bg-[rgb(var(--surface))]">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-token bg-[rgb(var(--surface-muted))] text-left text-xs uppercase tracking-wide text-faint">
               <tr>
                 <th className="px-3 py-2">Mã</th>
                 <th className="px-3 py-2">Tên ca</th>
@@ -73,7 +80,7 @@ export default function SessionTemplatesClient({
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-token">
               {initial.map((t) =>
                 editing === t.id ? (
                   <EditRow
@@ -86,7 +93,7 @@ export default function SessionTemplatesClient({
                     onCancel={() => setEditing(null)}
                   />
                 ) : (
-                  <tr key={t.id} className="border-t border-default">
+                  <tr key={t.id} className="border-t border-token">
                     <td className="px-3 py-2 font-mono text-xs">{t.code}</td>
                     <td className="px-3 py-2 font-medium">{t.name}</td>
                     <td className="px-3 py-2 font-mono text-sm">{t.startTime}</td>
@@ -95,19 +102,25 @@ export default function SessionTemplatesClient({
                       {t.orderIndex}
                     </td>
                     <td className="px-3 py-2 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => setEditing(t.id)}
-                        className="mr-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        onClick={() => remove(t.id, t.name)}
-                        disabled={busy}
-                        className="rounded border border-default bg-white px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
-                      >
-                        🗑
-                      </button>
+                      <div className="flex justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditing(t.id)}
+                          className="btn-ghost btn-sm"
+                          title="Sửa"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => remove(t.id, t.name)}
+                          disabled={busy}
+                          className="btn-ghost btn-sm text-danger-600 hover:bg-danger-50"
+                          title="Xoá"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ),
@@ -129,10 +142,11 @@ export default function SessionTemplatesClient({
 
       {!adding && (
         <button
+          type="button"
           onClick={() => setAdding(true)}
-          className="rounded border border-default bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
+          className="btn-primary btn-sm inline-flex items-center gap-1.5"
         >
-          + Thêm ca thi
+          <Plus size={14} /> Thêm ca thi
         </button>
       )}
     </div>
@@ -183,7 +197,7 @@ function AddRow({
   };
 
   return (
-    <tr className="border-t border-default bg-emerald-50">
+    <tr className="border-t border-token bg-brand-50 dark:bg-brand-950/20">
       <td className="px-3 py-2">
         <input
           value={code}
@@ -191,7 +205,7 @@ function AddRow({
           placeholder="CA-1"
           maxLength={32}
           autoFocus
-          className="w-20 rounded border border-default px-2 py-1 font-mono text-xs uppercase"
+          className="w-20 rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 font-mono text-xs uppercase"
         />
       </td>
       <td className="px-3 py-2">
@@ -200,7 +214,7 @@ function AddRow({
           onChange={(e) => setName(e.target.value)}
           placeholder="Ca 1 — Sáng"
           maxLength={200}
-          className="w-full rounded border border-default px-2 py-1 text-sm"
+          className="w-full rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2">
@@ -208,7 +222,7 @@ function AddRow({
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="w-24 rounded border border-default px-2 py-1 text-sm"
+          className="w-24 rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2">
@@ -216,7 +230,7 @@ function AddRow({
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="w-24 rounded border border-default px-2 py-1 text-sm"
+          className="w-24 rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2">
@@ -227,25 +241,34 @@ function AddRow({
           placeholder="0"
           min={0}
           max={9999}
-          className="w-16 rounded border border-default px-2 py-1 text-sm"
+          className="w-16 rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2 text-right whitespace-nowrap">
-        {err && <div className="text-xs text-red-700">⚠ {err}</div>}
-        <button
-          onClick={onCancel}
-          disabled={busy}
-          className="mr-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-50"
-        >
-          Huỷ
-        </button>
-        <button
-          onClick={submit}
-          disabled={busy || !code.trim() || !name.trim() || !startTime || !endTime}
-          className="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-        >
-          {busy ? "..." : "Tạo"}
-        </button>
+        <div className="flex items-center justify-end gap-2">
+          {err && (
+            <span className="inline-flex items-center gap-1 text-xs text-danger-600">
+              <AlertTriangle size={12} /> {err}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="btn-ghost btn-sm"
+          >
+            <X size={12} />
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={busy || !code.trim() || !name.trim() || !startTime || !endTime}
+            className="btn-primary btn-sm inline-flex items-center gap-1"
+          >
+            {busy ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+            Tạo
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -293,7 +316,7 @@ function EditRow({
   };
 
   return (
-    <tr className="border-t border-default bg-blue-50">
+    <tr className="border-t border-token bg-brand-50 dark:bg-brand-950/20">
       <td className="px-3 py-2 font-mono text-xs text-faint">
         {template.code}
       </td>
@@ -302,7 +325,7 @@ function EditRow({
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={200}
-          className="w-full rounded border border-default px-2 py-1 text-sm"
+          className="w-full rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2">
@@ -310,7 +333,7 @@ function EditRow({
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="w-24 rounded border border-default px-2 py-1 text-sm"
+          className="w-24 rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2">
@@ -318,7 +341,7 @@ function EditRow({
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="w-24 rounded border border-default px-2 py-1 text-sm"
+          className="w-24 rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2">
@@ -328,25 +351,34 @@ function EditRow({
           onChange={(e) => setOrderIndex(e.target.value)}
           min={0}
           max={9999}
-          className="w-16 rounded border border-default px-2 py-1 text-sm"
+          className="w-16 rounded border border-token bg-[rgb(var(--surface))] px-2 py-1 text-sm"
         />
       </td>
       <td className="px-3 py-2 text-right whitespace-nowrap">
-        {err && <div className="text-xs text-red-700">⚠ {err}</div>}
-        <button
-          onClick={onCancel}
-          disabled={busy}
-          className="mr-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-50"
-        >
-          Huỷ
-        </button>
-        <button
-          onClick={submit}
-          disabled={busy || !name.trim() || !startTime || !endTime}
-          className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {busy ? "..." : "Lưu"}
-        </button>
+        <div className="flex items-center justify-end gap-2">
+          {err && (
+            <span className="inline-flex items-center gap-1 text-xs text-danger-600">
+              <AlertTriangle size={12} /> {err}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="btn-ghost btn-sm"
+          >
+            <X size={12} />
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={busy || !name.trim() || !startTime || !endTime}
+            className="btn-primary btn-sm inline-flex items-center gap-1"
+          >
+            {busy ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+            Lưu
+          </button>
+        </div>
       </td>
     </tr>
   );

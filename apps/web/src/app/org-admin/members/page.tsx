@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { prisma } from "@feedbackme/db";
 import { isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import EmptyState from "@/components/ui/EmptyState";
 import OrgMembersClient from "./OrgMembersClient";
 
 export const dynamic = "force-dynamic";
@@ -13,12 +13,10 @@ export default async function OrgMembersPage() {
   const userId = session.user.id;
   if (!(await isAnyOrgAdmin(userId))) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <h1 className="text-xl font-semibold">Không có quyền</h1>
-        <p className="mt-2 text-sm text-faint">
-          Bạn cần là quản trị viên trường để xem trang này.
-        </p>
-      </main>
+      <EmptyState
+        title="Không có quyền"
+        description="Bạn cần là quản trị viên trường để xem trang này."
+      />
     );
   }
 
@@ -33,36 +31,27 @@ export default async function OrgMembersPage() {
   });
   if (adminships.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <h1 className="text-xl font-semibold">Chưa được gán trường nào</h1>
-        <p className="mt-2 text-sm text-faint">
-          Bạn là Platform Admin nhưng chưa được gán làm OrgAdmin cho trường nào.
-        </p>
-      </main>
+      <EmptyState
+        title="Chưa được gán trường nào"
+        description="Bạn là Platform Admin nhưng chưa được gán làm OrgAdmin cho trường nào."
+      />
     );
   }
   const primary = adminships[0]!;
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
-      <div className="flex items-center justify-between">
-        <Link href="/instructor/dashboard" className="text-sm text-blue-600 hover:underline">
-          ← Dashboard
-        </Link>
-        <Link href="/org-admin/settings" className="text-sm text-blue-600 hover:underline">
-          Thương hiệu trường →
-        </Link>
+    <div>
+      <div className="mb-6">
+        <span className="chip-brand">OrgAdmin</span>
+        <h1 className="mt-3 h-display text-2xl font-bold">Thành viên trường</h1>
+        <p className="mt-1 text-sm text-muted">
+          Trường <strong>{primary.organization.name}</strong> ({primary.organization.code}). Thêm
+          user vào trường theo email — nếu chưa có tài khoản, hệ thống tự tạo và
+          gửi email mời đặt mật khẩu.
+        </p>
       </div>
-      <h1 className="mt-3 text-2xl font-bold">👥 Thành viên trường</h1>
-      <p className="mt-1 text-sm text-faint">
-        Trường <strong>{primary.organization.name}</strong> ({primary.organization.code}). Thêm
-        user vào trường theo email — nếu chưa có tài khoản, hệ thống tự tạo và
-        gửi email mời đặt mật khẩu.
-      </p>
 
-      <div className="mt-6">
-        <OrgMembersClient organizationId={primary.organizationId} />
-      </div>
-    </main>
+      <OrgMembersClient organizationId={primary.organizationId} />
+    </div>
   );
 }

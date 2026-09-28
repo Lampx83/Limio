@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isAnyOrgAdmin, listTemplatesForScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import EmptyState from "@/components/ui/EmptyState";
 import EmailListClient from "../../admin/emails/EmailListClient";
 
 export const dynamic = "force-dynamic";
@@ -16,12 +17,10 @@ export default async function OrgEmailsPage({
   const userId = session.user.id;
   if (!(await isAnyOrgAdmin(userId))) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <h1 className="text-xl font-semibold">Không có quyền</h1>
-        <p className="mt-2 text-sm text-faint">
-          Bạn cần là quản trị viên trường để xem trang này.
-        </p>
-      </main>
+      <EmptyState
+        title="Không có quyền"
+        description="Bạn cần là quản trị viên trường để xem trang này."
+      />
     );
   }
 
@@ -34,12 +33,10 @@ export default async function OrgEmailsPage({
   });
   if (grants.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <h1 className="text-xl font-semibold">Chưa được gán trường nào</h1>
-        <p className="mt-2 text-sm text-faint">
-          Bạn là Platform Admin nhưng chưa được gán làm OrgAdmin cho trường nào.
-        </p>
-      </main>
+      <EmptyState
+        title="Chưa được gán trường nào"
+        description="Bạn là Platform Admin nhưng chưa được gán làm OrgAdmin cho trường nào."
+      />
     );
   }
   const scopes = grants.map((g) => ({

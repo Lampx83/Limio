@@ -11,7 +11,7 @@ type Item = {
   icon: LucideIcon;
 };
 
-// OrgAdmin palette = amber ("vàng cam") — phân biệt với Admin nền tảng (pink).
+// OrgAdmin palette = brand lime — màu thương hiệu chuẩn của nền tảng.
 const ITEMS: Item[] = [
   { label: "Thành viên trường", href: "/org-admin/members", icon: Users },
   { label: "Danh mục ca thi", href: "/org-admin/session-templates", icon: Calendar },
@@ -31,16 +31,16 @@ export default function OrgAdminSidebar() {
       <div className="mb-3 px-4">
         <Link
           href="/org-admin/settings"
-          className="flex items-center gap-2.5 rounded-xl border border-amber-200/60 bg-gradient-to-br from-amber-50 to-amber-100/50 px-3 py-2.5 transition-colors hover:from-amber-100 hover:to-amber-50 dark:border-amber-900/40 dark:from-amber-950/30 dark:to-amber-950/10 dark:hover:from-amber-950/50"
+          className="flex items-center gap-2.5 rounded-xl border border-brand-200/60 bg-gradient-to-br from-brand-50 to-brand-100/50 px-3 py-2.5 transition-colors hover:from-brand-100 hover:to-brand-50 dark:border-brand-900/40 dark:from-brand-950/30 dark:to-brand-950/10 dark:hover:from-brand-950/50"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white shadow-sm">
             <Building2 size={16} strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-medium uppercase tracking-wider text-amber-700 dark:text-amber-300">
+            <div className="text-xs font-medium uppercase tracking-wider text-brand-700 dark:text-brand-300">
               Workspace
             </div>
-            <div className="truncate text-sm font-semibold text-amber-900 dark:text-amber-100">
+            <div className="truncate text-sm font-semibold text-brand-900 dark:text-brand-100">
               Quản trị đơn vị
             </div>
           </div>
@@ -58,18 +58,18 @@ export default function OrgAdminSidebar() {
                   href={it.href}
                   className={`group/item relative flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1 text-sm transition-colors ${
                     active
-                      ? "bg-amber-50 font-semibold text-amber-700 shadow-sm dark:bg-amber-950/40 dark:text-amber-200"
+                      ? "bg-brand-50 font-semibold text-brand-700 shadow-sm dark:bg-brand-950/40 dark:text-brand-200"
                       : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                   }`}
                   prefetch={false}
                 >
                   {active && (
-                    <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-amber-500" />
+                    <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-brand-500" />
                   )}
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/40">
                     <Icon
                       size={14}
-                      className="text-amber-600 dark:text-amber-300"
+                      className="text-brand-600 dark:text-brand-300"
                       strokeWidth={active ? 2.5 : 2}
                     />
                   </span>
@@ -90,7 +90,7 @@ export default function OrgAdminSidebar() {
         type="button"
         onClick={() => setMobileOpen((v) => !v)}
         aria-label="Mở menu quản trị đơn vị"
-        className="fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg transition-transform hover:scale-105 lg:hidden"
+        className="fixed bottom-4 left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-brand-500 text-white shadow-lg transition-transform hover:scale-105 lg:hidden"
       >
         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
       </button>

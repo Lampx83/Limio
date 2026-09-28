@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@feedbackme/db";
 import { isAnyOrgAdmin, getTemplateForScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import EmptyState from "@/components/ui/EmptyState";
 import EmailEditorClient from "../../../admin/emails/[key]/EmailEditorClient";
 
 export const dynamic = "force-dynamic";
@@ -19,12 +20,10 @@ export default async function OrgEmailEditPage({
   const userId = session.user.id;
   if (!(await isAnyOrgAdmin(userId))) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <h1 className="text-xl font-semibold">Không có quyền</h1>
-        <p className="mt-2 text-sm text-faint">
-          Bạn cần là quản trị viên trường để xem trang này.
-        </p>
-      </main>
+      <EmptyState
+        title="Không có quyền"
+        description="Bạn cần là quản trị viên trường để xem trang này."
+      />
     );
   }
 
