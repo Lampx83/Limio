@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import type { HelpTourRole, HelpTourStep } from "@/lib/helpTour";
-import { STUDENT_MENU_TOGGLE_EVENT } from "./StudentLeftMenu";
 
 const MOBILE_BREAKPOINT = 1024; // Tailwind `lg` — xem CLAUDE.md §4.6
 const SPOTLIGHT_PAD = 6;
@@ -32,10 +31,15 @@ export default function HelpTour({
   steps,
   role,
   initiallyOpen,
+  mobileMenuToggleEvent,
 }: {
   steps: HelpTourStep[];
   role: HelpTourRole;
   initiallyOpen: boolean;
+  // Tên custom event để tự mở sidebar dạng drawer trên mobile khi target đang
+  // bị ẩn (mỗi sidebar theo role tự export event riêng — StudentLeftMenu,
+  // InstructorLeftMenu...), vì mỗi role có 1 component sidebar khác nhau.
+  mobileMenuToggleEvent: string;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
   const [index, setIndex] = useState(0);
@@ -72,7 +76,7 @@ export default function HelpTour({
     if (!tryMeasure()) {
       if (window.innerWidth < MOBILE_BREAKPOINT) {
         // Sidebar đang ở drawer đóng (mobile) — mở ra rồi đo lại.
-        window.dispatchEvent(new Event(STUDENT_MENU_TOGGLE_EVENT));
+        window.dispatchEvent(new Event(mobileMenuToggleEvent));
       }
       // Mở drawer cần ít nhất 1 chu kỳ React commit + layout — poll vài frame
       // thay vì tin đúng 1 requestAnimationFrame là đủ.
@@ -98,7 +102,7 @@ export default function HelpTour({
       window.removeEventListener("resize", tryMeasure);
       window.removeEventListener("scroll", tryMeasure, true);
     };
-  }, [open, step]);
+  }, [open, step, mobileMenuToggleEvent]);
 
   if (!open || !step) return null;
 

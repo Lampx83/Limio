@@ -23,6 +23,7 @@ export default async function SettingsPage() {
     },
   });
   const hasPassword = me.authProviders.some((p) => p.provider === "password");
+  const isInstructor = (session.user.roles ?? []).includes("instructor");
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
@@ -33,16 +34,31 @@ export default async function SettingsPage() {
           Quản lý hồ sơ, quyền riêng tư và tùy chọn hiển thị.
         </p>
       </div>
-      <div className="card mt-8 flex items-center justify-between gap-3">
-        <div>
-          <p className="font-semibold">Hướng dẫn sử dụng</p>
-          <p className="mt-1 text-sm text-muted">
-            Xem lại tour giới thiệu trang tổng quan học tập.
-          </p>
+      <div className="card mt-8 flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold">Hướng dẫn sử dụng</p>
+            <p className="mt-1 text-sm text-muted">
+              Xem lại tour giới thiệu trang tổng quan học tập.
+            </p>
+          </div>
+          <Link href="/me/dashboard?tour=1" className="btn-secondary btn-sm shrink-0">
+            Xem lại hướng dẫn
+          </Link>
         </div>
-        <Link href="/me/dashboard?tour=1" className="btn-secondary btn-sm shrink-0">
-          Xem lại hướng dẫn
-        </Link>
+        {isInstructor && (
+          <div className="flex items-center justify-between gap-3 border-t border-token pt-4">
+            <div>
+              <p className="font-semibold">Hướng dẫn dành cho giảng viên</p>
+              <p className="mt-1 text-sm text-muted">
+                Xem lại tour giới thiệu trang tổng quan giảng dạy.
+              </p>
+            </div>
+            <Link href="/instructor/dashboard?tour=1" className="btn-secondary btn-sm shrink-0">
+              Xem lại hướng dẫn
+            </Link>
+          </div>
+        )}
       </div>
       <div className="mt-8">
         <SettingsForm

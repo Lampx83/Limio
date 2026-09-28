@@ -22,6 +22,9 @@ import {
 import { auth } from "@/lib/auth";
 import FeatureBlockedToast from "@/components/FeatureBlockedToast";
 import UserAvatar from "@/components/ui/UserAvatar";
+import HelpTour from "@/components/HelpTour";
+import { INSTRUCTOR_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
+import { INSTRUCTOR_MENU_TOGGLE_EVENT } from "@/components/InstructorLeftMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -118,10 +121,22 @@ const EVENT_LABEL: Record<string, (payload: Record<string, unknown>) => string> 
   "course.completed": () => "🎉 hoàn thành khoá học",
 };
 
-export default async function InstructorDashboard() {
+export default async function InstructorDashboard({
+  searchParams,
+}: {
+  searchParams: { tour?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/dashboard");
   const userId = session.user.id;
+
+  const meTour = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { helpTourCompletedByRole: true },
+  });
+  const shouldShowTour =
+    searchParams?.tour === "1" ||
+    !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "instructor");
 
   // Proctor-only users (no CourseInstructor binding) land here when they
   // first log in; redirect them straight to their rooms to skip the empty
@@ -158,6 +173,14 @@ export default async function InstructorDashboard() {
             + Tạo khoá đầu tiên
           </Link>
         </div>
+        {shouldShowTour && (
+          <HelpTour
+            steps={INSTRUCTOR_TOUR_STEPS}
+            role="instructor"
+            initiallyOpen
+            mobileMenuToggleEvent={INSTRUCTOR_MENU_TOGGLE_EVENT}
+          />
+        )}
       </main>
     );
   }
@@ -445,7 +468,7 @@ export default async function InstructorDashboard() {
       </header>
 
       {/* Stat strip */}
-      <div className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+      <div data-tour="help-tour-instructor-stats" className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
         <StatTile
           icon={BookOpen}
           iconBg="bg-[rgb(var(--brand-soft))]"
@@ -478,7 +501,7 @@ export default async function InstructorDashboard() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         {/* Priority queue */}
-        <section className="lg:col-span-2">
+        <section data-tour="help-tour-instructor-priority" className="lg:col-span-2">
           <header className="flex items-baseline justify-between">
             <h2 className="text-base font-semibold">
               Cần xử lý gấp{" "}
@@ -660,6 +683,14 @@ export default async function InstructorDashboard() {
             ))}
           </div>
         </section>
+      )}
+      {shouldShowTour && (
+        <HelpTour
+          steps={INSTRUCTOR_TOUR_STEPS}
+          role="instructor"
+          initiallyOpen
+          mobileMenuToggleEvent={INSTRUCTOR_MENU_TOGGLE_EVENT}
+        />
       )}
     </main>
   );

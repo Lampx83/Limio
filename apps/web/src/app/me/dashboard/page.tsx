@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/datetime";
 import MasteryBadge from "@/components/MasteryBadge";
 import HelpTour from "@/components/HelpTour";
 import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
+import { STUDENT_MENU_TOGGLE_EVENT } from "@/components/StudentLeftMenu";
 import { getActiveRole } from "@/lib/active-role";
 
 export const dynamic = "force-dynamic";
@@ -502,7 +503,12 @@ export default async function LearnerDashboard({
         )}
       </div>
       {shouldShowTour && (
-        <HelpTour steps={LEARNER_TOUR_STEPS} role="learner" initiallyOpen />
+        <HelpTour
+          steps={LEARNER_TOUR_STEPS}
+          role="learner"
+          initiallyOpen
+          mobileMenuToggleEvent={STUDENT_MENU_TOGGLE_EVENT}
+        />
       )}
     </main>
   );

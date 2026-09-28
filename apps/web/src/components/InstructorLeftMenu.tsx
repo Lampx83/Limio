@@ -42,6 +42,8 @@ import {
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
 
+export const INSTRUCTOR_MENU_TOGGLE_EVENT = "fbm:instructor-menu:toggle";
+
 /** Điểm "A+" khoanh tròn bằng nét bút — icon module Kiểm tra đánh giá (lucide không có sẵn hình này). */
 const GradeAPlus = createLucideIcon("GradeAPlus", [
   ["path", { d: "M4.6 17 8 7.2 11.4 17", key: "a-legs" }],
@@ -106,6 +108,8 @@ type ModuleDef = {
    * đúng module. */
   matchPrefixes: string[];
   items: Item[];
+  /** Hook cho HelpTour (components/HelpTour.tsx) highlight đúng icon rail của module. */
+  tourId?: string;
 };
 
 const PROCTOR_ITEM: Item = {
@@ -126,6 +130,7 @@ const MODULES: ModuleDef[] = [
     tagline: "Bài giảng Elearning",
     icon: GraduationCap,
     iconSize: 27,
+    tourId: "help-tour-rail-lms",
     colors: {
       rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
@@ -160,6 +165,7 @@ const MODULES: ModuleDef[] = [
     tagline: "Dạy học trực tiếp",
     icon: Presentation,
     premium: true,
+    tourId: "help-tour-rail-limio-live",
     colors: {
       rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
@@ -197,6 +203,7 @@ const MODULES: ModuleDef[] = [
     label: "Vấn đáp AI",
     icon: Bot,
     premium: true,
+    tourId: "help-tour-rail-oral",
     colors: {
       rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
@@ -213,6 +220,7 @@ const MODULES: ModuleDef[] = [
     label: "Kiểm tra đánh giá",
     icon: GradeAPlus,
     iconSize: 28,
+    tourId: "help-tour-rail-exam",
     colors: {
       rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
@@ -247,6 +255,7 @@ const MODULES: ModuleDef[] = [
     id: "tournament",
     label: "Đấu trường",
     icon: Trophy,
+    tourId: "help-tour-rail-tournament",
     colors: {
       rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
@@ -262,6 +271,7 @@ const MODULES: ModuleDef[] = [
     id: "analytics",
     label: "Phân tích và Báo cáo",
     icon: BarChart3,
+    tourId: "help-tour-rail-analytics",
     colors: {
       rail: "bg-gradient-to-br from-lime-500 to-pink-500",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
@@ -345,6 +355,14 @@ function InstructorLeftMenuInner({
     setPendingModuleId(null);
     setPendingHref(null);
   }, [pathname, searchParams]);
+
+  // HelpTour (components/HelpTour.tsx) tự mở drawer mobile khi cần highlight
+  // 1 icon rail đang bị ẩn — xem STUDENT_MENU_TOGGLE_EVENT ở StudentLeftMenu.
+  useEffect(() => {
+    const handler = () => setMobileOpen((v) => !v);
+    window.addEventListener(INSTRUCTOR_MENU_TOGGLE_EVENT, handler);
+    return () => window.removeEventListener(INSTRUCTOR_MENU_TOGGLE_EVENT, handler);
+  }, []);
 
   // Cột tên mục của module gấp/mở được (rail icon luôn hiện). Trang soạn
   // Limio-Live cần bề ngang nhất nên mặc định gấp và nhớ lựa chọn riêng.
@@ -581,6 +599,7 @@ function ModuleRail({
         description="Tổng quan việc cần xử lý"
         onSelect={() => onSelect("home")}
         onHover={onHover}
+        tourId="help-tour-rail-home"
       />
       <div className="my-1.5 h-px w-8 bg-token" />
       {modules.map((m) => (
@@ -596,6 +615,7 @@ function ModuleRail({
           description={m.tagline ?? (m.premium ? "Premium — dùng thử miễn phí" : undefined)}
           onSelect={() => onSelect(m.id)}
           onHover={onHover}
+          tourId={m.tourId}
         />
       ))}
       {footer && <div className="mt-auto pt-3">{footer}</div>}
@@ -615,6 +635,7 @@ function RailButton({
   description,
   onSelect,
   onHover,
+  tourId,
 }: {
   href: string;
   label: string;
@@ -628,6 +649,7 @@ function RailButton({
   description?: string;
   onSelect: () => void;
   onHover: (href: string) => void;
+  tourId?: string;
 }) {
   const box = hero ? "h-14 w-14 rounded-2xl" : "h-12 w-12 rounded-xl";
   // Bấm module → tooltip biến mất ngay (không kẹt lại đè lên cột tên mục), hiện lại khi rê chuột ra rồi vào.
@@ -636,6 +658,7 @@ function RailButton({
     <Tooltip label={label} description={description} side="right" suppressed={tipHidden}>
       <Link
         href={href}
+        data-tour={tourId}
         onClick={(e) => {
         setTipHidden(true);
         (e.currentTarget as HTMLElement).blur();

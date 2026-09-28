@@ -129,3 +129,72 @@ export const LEARNER_TOUR_STEPS: HelpTourStep[] = [
     body: "Bạn có thể xem lại hướng dẫn này bất cứ lúc nào từ mục Cài đặt. Chúc bạn học vui!",
   },
 ];
+
+export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
+  {
+    id: "welcome",
+    title: "Limio chào mừng bạn 👋",
+    body: "Đây là trang tổng quan giảng dạy — nơi bạn thấy ngay việc cần xử lý gấp và hoạt động của học viên. Xem nhanh cách bố trí trước khi bắt đầu nhé.",
+  },
+  {
+    id: "stats",
+    title: "Tổng quan nhanh",
+    body: "Số khoá đang dạy, tổng học viên, số việc cần xử lý và số học viên im ắng lâu ngày — nhìn một lượt là biết lớp đang ổn hay cần để ý.",
+    target: "help-tour-instructor-stats",
+    placement: "bottom",
+  },
+  {
+    id: "priority",
+    title: "Cần xử lý gấp",
+    body: "Essay/assignment chờ chấm, thread forum chưa trả lời... được xếp theo độ ưu tiên, việc gấp nhất nằm trên cùng.",
+    target: "help-tour-instructor-priority",
+    placement: "top",
+  },
+  {
+    id: "rail-lms",
+    title: "LMS",
+    body: "Khoá học, assignment và forum Q&A của bạn — nơi bạn dành phần lớn thời gian soạn bài.",
+    target: "help-tour-rail-lms",
+    placement: "right",
+  },
+  {
+    id: "rail-limio-live",
+    title: "Limio-Live",
+    body: "Dạy học trực tiếp: vote, word cloud, whiteboard, gameshow... để tương tác ngay trong buổi học.",
+    target: "help-tour-rail-limio-live",
+    placement: "right",
+  },
+  {
+    id: "rail-oral",
+    title: "Vấn đáp AI",
+    body: "Tổ chức và chấm thi vấn đáp qua hội thoại với AI, không cần giám khảo ngồi nghe trực tiếp.",
+    target: "help-tour-rail-oral",
+    placement: "right",
+  },
+  {
+    id: "rail-exam",
+    title: "Kiểm tra đánh giá",
+    body: "Soạn ngân hàng câu hỏi, gom thành đề thi, rồi tổ chức đợt/ca thi — theo đúng trình tự làm việc thật.",
+    target: "help-tour-rail-exam",
+    placement: "right",
+  },
+  {
+    id: "rail-tournament",
+    title: "Đấu trường",
+    body: "Tạo giải đấu, nhiệm vụ cho học viên thi đua với nhau, tăng động lực học.",
+    target: "help-tour-rail-tournament",
+    placement: "right",
+  },
+  {
+    id: "rail-analytics",
+    title: "Phân tích và Báo cáo",
+    body: "Nắm kiến thức của từng học viên và quản lý Token AI đang dùng cho lớp.",
+    target: "help-tour-rail-analytics",
+    placement: "right",
+  },
+  {
+    id: "done",
+    title: "Vậy là xong!",
+    body: "Bạn có thể xem lại hướng dẫn này bất cứ lúc nào từ mục Cài đặt. Chúc giảng dạy vui vẻ!",
+  },
+];
