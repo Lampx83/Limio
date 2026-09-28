@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiUrl } from "@/lib/apiUrl";
 import { EmptyState, ShareCard } from "@/components/ui";
 import { ChevronRight, Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
+import ImportStudentsButton from "./ImportStudentsButton";
 
 type FeedbackVariant = "personalized" | "minimal";
 
@@ -281,6 +282,12 @@ export default function SectionsClient({
                     </span>
                   )}
                   <div className="flex w-full flex-wrap items-center gap-2 border-t border-token pt-3 sm:w-auto sm:border-0 sm:pt-0">
+                    <ImportStudentsButton
+                      courseId={courseId}
+                      sectionId={s.id}
+                      sectionName={s.name}
+                      onImported={refresh}
+                    />
                     <button onClick={() => setEditId(s.id)} className="btn-secondary btn-sm">
                       <Pencil className="h-3.5 w-3.5" aria-hidden />
                       Sửa

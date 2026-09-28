@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { Upload } from "lucide-react";
 
 const SAMPLE = `name,email
 Nguyễn Văn An,an.nguyen@example.com
@@ -20,11 +21,6 @@ interface ImportResult {
   created: number;
   errors: Array<{ row: number; email: string; error: string }>;
   sectionName: string | null;
-}
-
-interface SectionOption {
-  id: string;
-  name: string;
 }
 
 function parseCsvRow(line: string): string[] {
@@ -55,30 +51,24 @@ function parseCsv(text: string): ParsedRow[] {
   });
 }
 
-export default function ImportStudentsButton({ courseId }: { courseId: string }) {
+export default function ImportStudentsButton({
+  courseId,
+  sectionId,
+  sectionName,
+  onImported,
+}: {
+  courseId: string;
+  /** Lớp cố định để import vào — nút này luôn gắn với một lớp cụ thể (thẻ lớp ở tab Lớp học). */
+  sectionId: string;
+  sectionName: string;
+  /** Gọi thêm sau khi import thành công, để trang cha (đang tự quản state riêng, không dựa vào router.refresh) cập nhật số học viên. */
+  onImported?: () => void;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [csv, setCsv] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
-  const [sections, setSections] = useState<SectionOption[]>([]);
-  const [sectionId, setSectionId] = useState<string>("");
-
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    fetch(apiUrl(`/api/courses/${courseId}/sections`))
-      .then((res) => (res.ok ? res.json() : { sections: [] }))
-      .then((data) => {
-        if (!cancelled) setSections(data.sections ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setSections([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, courseId]);
 
   const parsed = csv.trim() ? parseCsv(csv) : [];
   const preview = parsed.slice(0, 5);
@@ -100,7 +90,10 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
         return;
       }
       setResult(data as ImportResult);
-      if (data.enrolled > 0) router.refresh();
+      if (data.enrolled > 0) {
+        router.refresh();
+        onImported?.();
+      }
     } finally {
       setBusy(false);
     }
@@ -116,7 +109,8 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
-        Import học viên
+        <Upload className="h-3.5 w-3.5" aria-hidden />
+        Nhập học viên
       </button>
     );
   }
@@ -142,27 +136,9 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
         Học viên chưa có tài khoản sẽ được tạo mới (cần đặt mật khẩu lần đầu qua Forgot password).
       </p>
 
-      {/* Section picker */}
-      {sections.length > 0 && (
-        <div className="mt-3 flex items-center gap-2 text-xs">
-          <label htmlFor="import-section" className="text-muted">
-            Nhập vào lớp:
-          </label>
-          <select
-            id="import-section"
-            value={sectionId}
-            onChange={(e) => setSectionId(e.target.value)}
-            className="select text-xs"
-          >
-            <option value="">Lớp mặc định</option>
-            {sections.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      <p className="mt-3 text-xs text-muted">
+        Nhập vào lớp: <span className="font-medium text-[rgb(var(--text))]">{sectionName}</span>
+      </p>
 
       {/* Controls */}
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">

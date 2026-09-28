@@ -23,7 +23,6 @@ import DuplicateCourseButton from "./DuplicateCourseButton";
 import ArchiveCourseButton from "./ArchiveCourseButton";
 import DeleteCourseButton from "./DeleteCourseButton";
 import SortableModulesWrapper from "./SortableModulesWrapper";
-import ImportStudentsButton from "./ImportStudentsButton";
 import PreviewAsLearnerButton from "./PreviewAsLearnerButton";
 import EditorSidebar from "./EditorSidebar";
 import EditorNavProgress from "./EditorNavProgress";
@@ -532,12 +531,19 @@ export default async function InstructorCourseEditPage({
             <div>
               <h2 className="text-xl font-semibold">Học viên</h2>
               <p className="mt-1 text-sm text-muted">
-                Quản lý danh sách enrollment, role và trạng thái.
+                Quản lý danh sách enrollment, role và trạng thái. Nhập học
+                viên theo từng lớp ở{" "}
+                <Link
+                  href={`/instructor/courses/${course.id}?tab=sections`}
+                  className="underline underline-offset-2"
+                >
+                  tab Lớp học
+                </Link>
+                .
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {canEdit && <ExportButtons courseId={course.id} kinds={["enrollments"]} />}
-              <ImportStudentsButton courseId={course.id} />
             </div>
           </div>
 
