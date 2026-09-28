@@ -53,102 +53,104 @@ model User {
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
 
-  authProviders            AuthProvider[]
-  userRoles                UserRole[]
-  enrollments              Enrollment[]
-  authoredCourses          CourseInstructor[]
-  quizAttempts             QuizAttempt[]
-  learningEvents           LearningEvent[]
-  lessonEngagements        LessonEngagement[]
-  verificationTokens       VerificationToken[]
-  notes                    Note[]
-  courseProgress           UserCourseProgress[]
-  xpTransactions           XpTransaction[]
-  userBadges               UserBadge[]
-  streakRecords            StreakRecord[]
-  skillStates              LearnerSkillState[]
-  misconceptionFlags       MisconceptionFlag[]
-  feedbackDeliveries       FeedbackDelivery[]
-  assignmentSubmissions    AssignmentSubmission[]    @relation("Submitter")
-  gradedSubmissions        AssignmentSubmission[]    @relation("Grader")
-  forumThreads             ForumThread[]
-  forumPosts               ForumPost[]
-  questProgress            UserQuestProgress[]
-  tournamentRegistrations  TournamentRegistration[]
-  tournamentCreated        Tournament[]              @relation("TournamentCreator")
-  tournamentTeamsCaptained TournamentTeam[]          @relation("TeamCaptain")
-  hackathonVotes           HackathonVote[]           @relation("HackathonVoter")
-  tournamentJudgeOf        TournamentJudge[]         @relation("TournamentJudge")
-  missionSubmissions       MissionSubmission[]
-  missionReviews           MissionReviewAssignment[]
-  scormAttempts            ScormAttempt[]
-  scormPackagesUploaded    ScormPackage[]            @relation("ScormUploader")
-  ltiToolsRegistered       LtiTool[]                 @relation("LtiToolRegistrar")
-  ltiLaunches              LtiLaunch[]
-  h5pPackagesUploaded      H5pPackage[]              @relation("H5pUploader")
-  h5pAttempts              H5pAttempt[]
-  aiConversations          AiConversation[]
-  aiUsageLogs              AiUsageLog[]
-  aiTokenLedger            AiTokenLedger[]
-  aiTokenBalance           AiTokenBalance?
-  createdAccessCodes       CourseAccessCode[]        @relation("CourseAccessCodeCreator")
-  redeemedAccessCodes      CourseAccessCode[]        @relation("CourseAccessCodeRedeemer")
-  orders                   Order[]
-  auditEntriesAsActor      AuditLog[]                @relation("AuditActor")
-  auditEntriesAsTarget     AuditLog[]                @relation("AuditTarget")
+  authProviders                  AuthProvider[]
+  userRoles                      UserRole[]
+  enrollments                    Enrollment[]
+  authoredCourses                CourseInstructor[]
+  quizAttempts                   QuizAttempt[]
+  learningEvents                 LearningEvent[]
+  lessonEngagements              LessonEngagement[]
+  verificationTokens             VerificationToken[]
+  notes                          Note[]
+  courseProgress                 UserCourseProgress[]
+  xpTransactions                 XpTransaction[]
+  userBadges                     UserBadge[]
+  streakRecords                  StreakRecord[]
+  skillStates                    LearnerSkillState[]
+  misconceptionFlags             MisconceptionFlag[]
+  feedbackDeliveries             FeedbackDelivery[]
+  assignmentSubmissions          AssignmentSubmission[]    @relation("Submitter")
+  gradedSubmissions              AssignmentSubmission[]    @relation("Grader")
+  forumThreads                   ForumThread[]
+  forumPosts                     ForumPost[]
+  questProgress                  UserQuestProgress[]
+  tournamentRegistrations        TournamentRegistration[]
+  tournamentCreated              Tournament[]              @relation("TournamentCreator")
+  tournamentTeamsCaptained       TournamentTeam[]          @relation("TeamCaptain")
+  hackathonVotes                 HackathonVote[]           @relation("HackathonVoter")
+  tournamentJudgeOf              TournamentJudge[]         @relation("TournamentJudge")
+  missionSubmissions             MissionSubmission[]
+  missionReviews                 MissionReviewAssignment[]
+  scormAttempts                  ScormAttempt[]
+  scormPackagesUploaded          ScormPackage[]            @relation("ScormUploader")
+  ltiToolsRegistered             LtiTool[]                 @relation("LtiToolRegistrar")
+  ltiLaunches                    LtiLaunch[]
+  h5pPackagesUploaded            H5pPackage[]              @relation("H5pUploader")
+  h5pAttempts                    H5pAttempt[]
+  aiConversations                AiConversation[]
+  aiUsageLogs                    AiUsageLog[]
+  aiTokenLedger                  AiTokenLedger[]
+  aiTokenBalance                 AiTokenBalance?
+  createdAccessCodes             CourseAccessCode[]        @relation("CourseAccessCodeCreator")
+  redeemedAccessCodes            CourseAccessCode[]        @relation("CourseAccessCodeRedeemer")
+  orders                         Order[]
+  auditEntriesAsActor            AuditLog[]                @relation("AuditActor")
+  auditEntriesAsTarget           AuditLog[]                @relation("AuditTarget")
+  instructorApplications         InstructorApplication[]   @relation("InstructorApplicant")
+  instructorApplicationsReviewed InstructorApplication[]   @relation("InstructorApplicationReviewer")
 
   // A7 Exam
-  examAttempts             ExamAttempt[]
-  examAssetsUploaded       ExamAsset[]              @relation("ExamAssetUploader")
+  examAttempts              ExamAttempt[]
+  examAssetsUploaded        ExamAsset[]              @relation("ExamAssetUploader")
   // A6.1 — Vấn đáp AI: tài liệu GV upload cho giảng viên ảo.
-  oralExamMaterialsUploaded OralExamMaterial[]      @relation("OralExamMaterialUploader")
+  oralExamMaterialsUploaded OralExamMaterial[]       @relation("OralExamMaterialUploader")
   // A6.4 — GV duyệt/sửa điểm AI đề xuất cho buổi vấn đáp.
-  oralExamEvaluationsGraded OralExamEvaluation[]    @relation("OralExamEvaluationGrader")
-  examAnswersGraded        ExamAnswer[]             @relation("ExamGrader")
-  examGradeChanges         ExamGradeHistory[]       @relation("ExamGradeChanger")
+  oralExamEvaluationsGraded OralExamEvaluation[]     @relation("OralExamEvaluationGrader")
+  examAnswersGraded         ExamAnswer[]             @relation("ExamGrader")
+  examGradeChanges          ExamGradeHistory[]       @relation("ExamGradeChanger")
   // A5.3.5 — Instructor → student messages during live exam.
-  examMessagesSent         ExamMessage[]            @relation("ExamMessageSender")
+  examMessagesSent          ExamMessage[]            @relation("ExamMessageSender")
   // A7.7.5 — Instructors mark proctor snapshots they've reviewed.
-  proctorSnapshotsReviewed AttemptProctorSnapshot[] @relation("ProctorSnapshotReviewer")
+  proctorSnapshotsReviewed  AttemptProctorSnapshot[] @relation("ProctorSnapshotReviewer")
   // P0 phòng thi — rooms this user is assigned to as proctor / grader.
-  examRoomsAsProctor       ExamRoom[]               @relation("ExamRoomProctor")
-  examRoomsAsGrader        ExamRoomGrader[]         @relation("ExamRoomGrader")
+  examRoomsAsProctor        ExamRoom[]               @relation("ExamRoomProctor")
+  examRoomsAsGrader         ExamRoomGrader[]         @relation("ExamRoomGrader")
   // A5.3 Đợt thi — round-level admin (trưởng đợt thi).
-  examRoundsAsAdmin        ExamRoundAdmin[]
+  examRoundsAsAdmin         ExamRoundAdmin[]
   // A5.3 Thí sinh có thể link tới User account (nullable — candidate có thể chưa có account).
-  examCandidateLinks       ExamCandidate[]          @relation("ExamCandidateUser")
-  examRoundAdminGrants     ExamRoundAdmin[]         @relation("ExamRoundAdminGrantor")
+  examCandidateLinks        ExamCandidate[]          @relation("ExamCandidateUser")
+  examRoundAdminGrants      ExamRoundAdmin[]         @relation("ExamRoundAdminGrantor")
   // A5.1 Question Bank
-  questionBanksOwned       QuestionBank[]           @relation("QuestionBankOwner")
-  bankQuestionsReviewed    BankQuestion[]           @relation("BankQuestionReviewedBy")
+  questionBanksOwned        QuestionBank[]           @relation("QuestionBankOwner")
+  bankQuestionsReviewed     BankQuestion[]           @relation("BankQuestionReviewedBy")
   // A5.5 — Exam tạo bởi user này (set khi publish; nullable cho exam legacy).
-  examsCreated             Exam[]                   @relation("ExamCreator")
+  examsCreated              Exam[]                   @relation("ExamCreator")
   // A5.2 Cohort (renamed to CourseSection — see model comment)
-  cohortMemberships        CohortMember[]
-  sectionsAsInstructor     CourseSection[]          @relation("CohortInstructor")
+  cohortMemberships         CohortMember[]
+  sectionsAsInstructor      CourseSection[]          @relation("CohortInstructor")
 
   // PR2.17 — Multi-tenancy
   organization Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   orgAdminOf   OrganizationAdmin[]
 
   // Classroom tools
-  classroomRandomPicks ClassroomRandomPick[]
-  classroomPollVotes   ClassroomPollVote[]
-  createdPolls         ClassroomPoll[]       @relation("PollCreator")
-  createdWordClouds    WordCloud[]           @relation("WordCloudCreator")
-  wordCloudSubmissions WordCloudSubmission[]
-  ownedBoards          InteractiveBoard[]    @relation("BoardOwner")
-  boardNotes           BoardNote[]
-  ownedWhiteboards     Whiteboard[]          @relation("WhiteboardOwner")
-  groupMemberships     GroupMembership[]
-  timerTemplates       TimerTemplate[]
-  teachingActivityPlans TeachingActivityPlan[]
+  classroomRandomPicks               ClassroomRandomPick[]
+  classroomPollVotes                 ClassroomPollVote[]
+  createdPolls                       ClassroomPoll[]                    @relation("PollCreator")
+  createdWordClouds                  WordCloud[]                        @relation("WordCloudCreator")
+  wordCloudSubmissions               WordCloudSubmission[]
+  ownedBoards                        InteractiveBoard[]                 @relation("BoardOwner")
+  boardNotes                         BoardNote[]
+  ownedWhiteboards                   Whiteboard[]                       @relation("WhiteboardOwner")
+  groupMemberships                   GroupMembership[]
+  timerTemplates                     TimerTemplate[]
+  teachingActivityPlans              TeachingActivityPlan[]
   teachingActivityPlanCollaborations TeachingActivityPlanCollaborator[]
   teachingActivityPlanSaves          TeachingActivityPlanSave[]
   teachingActivityPlanLikes          TeachingActivityPlanLike[]
-  liveDecks            LiveDeck[]
-  liveDeckGroups       LiveDeckGroup[]
-  liveSessionsHosted   LiveSession[]
+  liveDecks                          LiveDeck[]
+  liveDeckGroups                     LiveDeckGroup[]
+  liveSessionsHosted                 LiveSession[]
 
   // Gameshow
   gameSessionsHosted GameSession[]     @relation("GameSessionHost")
@@ -165,6 +167,12 @@ model User {
   emailBatchesApproved   EmailDispatchBatch[]    @relation("EmailBatchApprover")
   aiTokenOrders          AiTokenOrder[]
   featureOverrides       UserFeatureOverride[]
+
+  // A8 — E-portfolio (1 hồ sơ / học viên)
+  portfolio Portfolio?
+
+  // A6 — Certification
+  certificates Certificate[]
 
   @@index([createdAt])
 }
@@ -183,10 +191,10 @@ model AuthProvider {
 }
 
 model Role {
-  id              String                @id @default(uuid())
-  name            String                @unique // "learner" | "instructor" | "admin" | "mentor"
-  description     String?
-  userRoles       UserRole[]
+  id               String                @id @default(uuid())
+  name             String                @unique // "learner" | "instructor" | "admin" | "mentor"
+  description      String?
+  userRoles        UserRole[]
   featureOverrides RoleFeatureOverride[]
 }
 
@@ -247,6 +255,35 @@ model AuditLog {
 
   @@index([action, occurredAt])
   @@index([targetUserId, occurredAt])
+}
+
+// Đơn xin làm giáo viên: người dùng tự đăng ký chọn "Tôi muốn dạy", vào hệ thống
+// như học viên, admin duyệt xong mới được cấp role instructor. Lịch sử giữ nguyên
+// (không xoá) để biết ai từng bị từ chối và vì sao; nộp lại = tạo đơn mới.
+enum InstructorApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+model InstructorApplication {
+  id               String                      @id @default(uuid())
+  userId           String
+  status           InstructorApplicationStatus @default(pending)
+  institution      String
+  subject          String
+  motivation       String?                     @db.Text
+  verificationUrl  String?
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  rejectionReason  String?                     @db.Text
+  createdAt        DateTime                    @default(now())
+
+  user     User  @relation("InstructorApplicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("InstructorApplicationReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, status])
 }
 
 // =====================================================================
@@ -315,7 +352,7 @@ model RoleFeatureOverride {
 }
 
 model UserFeatureOverride {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   userId     String
   featureKey String
   value      Json
@@ -397,26 +434,27 @@ model Course {
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
 
-  modules           Module[]
-  enrollments       Enrollment[]
-  instructors       CourseInstructor[]
-  liveDeckGroups    LiveDeckGroup[]
-  userRoles         UserRole[]
-  userProgress      UserCourseProgress[]
-  xpTransactions    XpTransaction[]
-  streakRecords     StreakRecord[]
-  tournaments       Tournament[]
-  orders            Order[]
-  timerTemplates    TimerTemplate[]
-  exams             Exam[]
-  questionBanks     QuestionBank[]
-  sections          CourseSection[]
-  cohortExamClasses CohortExamClass[]
-  examRounds        ExamRound[]
-  accessCodes       CourseAccessCode[]
-  accessPlans       CourseAccessPlan[]
-  organization      Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  modules               Module[]
+  enrollments           Enrollment[]
+  instructors           CourseInstructor[]
+  liveDeckGroups        LiveDeckGroup[]
+  userRoles             UserRole[]
+  userProgress          UserCourseProgress[]
+  xpTransactions        XpTransaction[]
+  streakRecords         StreakRecord[]
+  tournaments           Tournament[]
+  orders                Order[]
+  timerTemplates        TimerTemplate[]
+  exams                 Exam[]
+  questionBanks         QuestionBank[]
+  sections              CourseSection[]
+  cohortExamClasses     CohortExamClass[]
+  examRounds            ExamRound[]
+  accessCodes           CourseAccessCode[]
+  accessPlans           CourseAccessPlan[]
+  organization          Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   catalogSectionCourses CatalogSectionCourse[]
+  certificates          Certificate[]
 
   @@index([status, publishedAt])
   @@index([category, level])
@@ -604,18 +642,18 @@ model LessonEngagement {
   courseId String
 
   /// Tổng giây tab hiện và bài đang mở, cộng dồn mọi lượt.
-  activeSec    Int @default(0)
+  activeSec            Int   @default(0)
   /// Cuộn sâu nhất từng đạt, 0-100.
-  maxScrollPct Int @default(0)
+  maxScrollPct         Int   @default(0)
   /// Tỉ lệ video xem được cao nhất từng đạt, 0-100. 0 khi bài không có video.
-  maxVideoPct  Int @default(0)
+  maxVideoPct          Int   @default(0)
   /// Số lượt mở bài. Mở đi mở lại nhiều lần là một tín hiệu khác hẳn đọc một mạch.
-  sessionCount Int @default(0)
+  sessionCount         Int   @default(0)
   /// Các đoạn video đã xem thật, hợp nhất — [[startSec,endSec], ...]. Khác
   /// maxVideoPct: mốc cao nhất không phân biệt được "xem liền mạch" với "tua
   /// tới cuối rồi tua lại xem đoạn đầu". Null khi bài không có video hoặc
   /// chưa từng nhận nhịp nào mang theo range.
-  videoRanges Json?
+  videoRanges          Json?
   /// Vị trí phát gần nhất (giây) tại nhịp gần nhất — "điểm dừng" để biết bỏ
   /// dở ở đâu, khác với mốc cao nhất từng đạt.
   lastVideoPositionSec Int?
@@ -668,21 +706,21 @@ enum EnrollmentStatus {
 }
 
 model Enrollment {
-  id              String           @id @default(uuid())
-  userId          String
-  courseId        String
+  id                         String           @id @default(uuid())
+  userId                     String
+  courseId                   String
   // Lớp học (CourseSection) mà enrollment này thuộc về. courseId vẫn giữ
   // denormalized song song để không phải sửa các query hiện có đang lọc
   // theo courseId trực tiếp.
-  sectionId       String
+  sectionId                  String
   // Frozen at enrollment time (A2 acceptance: học viên không bị break khi course update).
-  courseVersion   Int
-  status          EnrollmentStatus @default(active)
-  enrolledAt      DateTime         @default(now())
-  completedAt     DateTime?
+  courseVersion              Int
+  status                     EnrollmentStatus @default(active)
+  enrolledAt                 DateTime         @default(now())
+  completedAt                DateTime?
   // A3 acceptance: resume position lưu mỗi 10s.
-  lastLessonId    String?
-  lastPositionSec Int?
+  lastLessonId               String?
+  lastPositionSec            Int?
   // Hạn truy cập khi mua theo CourseAccessPlan có thời hạn (1 năm, 2 năm...).
   // null = vĩnh viễn — mặc định, giữ nguyên hành vi của mọi enrollment trước
   // tính năng này (không cần backfill dữ liệu cũ).
@@ -723,6 +761,40 @@ model Note {
 }
 
 // =====================================================================
+// A6 — Certification. Cấp 1 lần khi học viên hoàn thành 100% một khoá học
+// (idempotent theo (userId, courseId)). Tên học viên + tên khoá được snapshot
+// tại thời điểm cấp — đổi displayName/course title sau đó không sửa lại
+// chứng nhận đã cấp, giống mọi bản in giấy thật.
+// =====================================================================
+
+model Certificate {
+  id                  String   @id @default(uuid())
+  userId              String
+  courseId            String
+  // Mã tra cứu công khai ở /verify/[certNumber] — random, không suy ra được
+  // từ userId/courseId (tránh dò mã theo kiểu liệt kê).
+  certNumber          String   @unique
+  userNameSnapshot    String
+  courseTitleSnapshot String
+  // "Limio" cho khoá không thuộc Organization nào, "Limio × <tên trường>" khi
+  // khoá thuộc 1 Organization (multi-tenant, PR2.17) — snapshot lúc cấp, đổi
+  // tên trường sau đó không sửa lại chứng nhận đã cấp.
+  issuerName          String
+  // Logo của Organization tại thời điểm cấp (Organization.brandingLogoUrl),
+  // null nếu trường không có logo hoặc khoá không thuộc Organization nào.
+  // Snapshot cùng lý do với issuerName: trường đổi logo sau đó không được
+  // làm đổi ảnh trên chứng nhận đã cấp.
+  issuerLogoUrl       String?
+  issuedAt            DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+// =====================================================================
 // A4 — Assessment Engine (Quiz)
 // =====================================================================
 
@@ -753,7 +825,7 @@ enum QuizScoringPolicy {
 }
 
 model Quiz {
-  id                  String   @id @default(uuid())
+  id                  String            @id @default(uuid())
   // A quiz can attach to a lesson, or stand alone within a course.
   lessonId            String?
   courseId            String?
@@ -761,7 +833,7 @@ model Quiz {
   description         String?
   // 1-5 (per spec gamification XP table). Null until set by instructor.
   difficulty          Int?
-  passThresholdPct    Int      @default(70)
+  passThresholdPct    Int               @default(70)
   timeLimitSec        Int?
   maxAttempts         Int?
   // Hạn mở: trước mốc này học viên chưa bắt đầu lượt mới được. Null = mở ngay.
@@ -771,20 +843,20 @@ model Quiz {
   // Hạn đóng (UI gọi là "Hạn đóng"): sau mốc này học viên không bắt đầu lượt mới được nữa
   // (lượt đang làm dở vẫn nộp được). Null = không có hạn.
   dueAt               DateTime?
-  randomizeOrder      Boolean  @default(false)
+  randomizeOrder      Boolean           @default(false)
   // A4 acceptance: confidence rating bắt buộc trước khi xem đáp án (per-quiz toggle).
-  requireConfidence   Boolean  @default(true)
+  requireConfidence   Boolean           @default(true)
   // Instructor-controlled visibility (false = hidden from all learners)
-  isHidden            Boolean  @default(false)
+  isHidden            Boolean           @default(false)
   // True when this quiz was auto-created as a 1-question in-video cuepoint.
   // Filtered out of learner lesson-quiz lists; rendered with a badge in
   // instructor Question Bank. See docs/SPEC §6.1 cuepoint flow.
-  cuepointOnly        Boolean  @default(false)
+  cuepointOnly        Boolean           @default(false)
   // Set when this quiz backs a TournamentMission with verifyMode=AUTO_GRADE.
   // Filtered out of all course/lesson listings; reachable only in tournament UI.
-  tournamentMissionId String?  @unique
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  tournamentMissionId String?           @unique
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   lesson            Lesson?            @relation(fields: [lessonId], references: [id])
   questions         QuizQuestion[]
@@ -798,21 +870,21 @@ model Quiz {
 }
 
 model QuizQuestion {
-  id          String       @id @default(uuid())
-  quizId      String
-  type        QuestionType
-  prompt      String       @db.Text
-  explanation String?      @db.Text
-  points      Int          @default(1)
-  orderIndex  Int
+  id                String       @id @default(uuid())
+  quizId            String
+  type              QuestionType
+  prompt            String       @db.Text
+  explanation       String?      @db.Text
+  points            Int          @default(1)
+  orderIndex        Int
   // Type-specific metadata. Examples:
   //   numerical:   { expected: number, tolerance: number }
   //   short_answer: { acceptedRegexes: string[] }   // case-insensitive
   //   essay:       null (manual graded)
-  extra       Json?
+  extra             Json?
   // B11 — mục tiêu học tập của câu hỏi, dùng cho nước "feed up" của phản hồi
   // (Hattie & Timperley: mục tiêu là gì). Null ⇒ lùi về tiêu đề bài học.
-  learningObjective String? @db.Text
+  learningObjective String?      @db.Text
 
   quiz      Quiz               @relation(fields: [quizId], references: [id], onDelete: Cascade)
   options   QuestionOption[]
@@ -1229,17 +1301,17 @@ model Badge {
 // =====================================================================
 
 model StreakRecord {
-  id             String    @id @default(uuid())
-  userId         String
-  courseId       String
-  currentStreak  Int       @default(0)
-  longestStreak  Int       @default(0)
+  id                 String    @id @default(uuid())
+  userId             String
+  courseId           String
+  currentStreak      Int       @default(0)
+  longestStreak      Int       @default(0)
   // UTC date of the most recent qualifying activity. Null = never active.
-  lastActiveDate DateTime? @db.Date
+  lastActiveDate     DateTime? @db.Date
   // Ngày (VN) gần nhất "đóng băng streak" đã được dùng để cứu 1 ngày bỏ lỡ.
   // Tối đa 1 lần / 7 ngày (streak.ts). Null = chưa từng dùng.
   lastFreezeUsedDate DateTime? @db.Date
-  updatedAt      DateTime  @updatedAt
+  updatedAt          DateTime  @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -1405,6 +1477,8 @@ model AssignmentSubmission {
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   user       User       @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
   grader     User?      @relation("Grader", fields: [graderId], references: [id])
+  // A8 — bài này đang được ghim vào e-portfolio của học viên.
+  portfolioItems PortfolioItem[]
 
   // Idempotent — one row per (assignment, user). Re-submission updates this row.
   @@unique([assignmentId, userId])
@@ -2252,24 +2326,24 @@ enum PaymentProvider {
 }
 
 model Order {
-  id          String          @id @default(uuid())
-  userId      String
-  courseId    String
+  id           String          @id @default(uuid())
+  userId       String
+  courseId     String
   // Gói đã chọn lúc checkout (thời hạn truy cập). null = mua theo giá phẳng
   // Course.priceCents cũ (vĩnh viễn) — đường trước khi có CourseAccessPlan,
   // giữ nguyên để không phải migrate Order lịch sử.
   accessPlanId String?
   // Locked at order time so price changes don't affect pending orders.
-  amountCents Int
-  currency    String          @default("USD")
-  provider    PaymentProvider @default(stripe)
-  status      OrderStatus     @default(pending)
+  amountCents  Int
+  currency     String          @default("USD")
+  provider     PaymentProvider @default(stripe)
+  status       OrderStatus     @default(pending)
   // Provider-specific reference (Stripe Checkout Session id, VNPay txn ref, ...)
-  providerRef String?         @unique
-  paidAt      DateTime?
-  refundedAt  DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  providerRef  String?         @unique
+  paidAt       DateTime?
+  refundedAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   course     Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -2360,12 +2434,12 @@ model ClassroomSession {
   endedAt   DateTime?
 
   // Tool data
-  randomPicks ClassroomRandomPick[]
-  polls       ClassroomPoll[]
-  wordClouds  WordCloud[]
-  groupings   GroupingSession[]
-  boards      InteractiveBoard[]
-  whiteboards Whiteboard[]
+  randomPicks  ClassroomRandomPick[]
+  polls        ClassroomPoll[]
+  wordClouds   WordCloud[]
+  groupings    GroupingSession[]
+  boards       InteractiveBoard[]
+  whiteboards  Whiteboard[]
   // Limio-Live present runs that lazily created this session to back their
   // poll/quiz/word_cloud slides (xem LiveSession).
   liveSessions LiveSession[]
@@ -2652,7 +2726,7 @@ model TeachingActivityPlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user          User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User                               @relation(fields: [userId], references: [id], onDelete: Cascade)
   items         TeachingActivityPlanItem[]
   collaborators TeachingActivityPlanCollaborator[]
   saves         TeachingActivityPlanSave[]
@@ -3183,25 +3257,25 @@ enum OralExamMaterialType {
 }
 
 model OralExamMaterial {
-  id     String               @id @default(uuid())
-  examId String
-  type   OralExamMaterialType
-  title  String
+  id            String               @id @default(uuid())
+  examId        String
+  type          OralExamMaterialType
+  title         String
   // Null cho topic_list nhập tay — không có file đứng sau.
-  s3Key     String?
-  mimeType  String?
-  sizeBytes Int?
+  s3Key         String?
+  mimeType      String?
+  sizeBytes     Int?
   // Text thuần: trích từ file (pdf/docx/txt/md) khi type=document/rubric, hoặc
   // chính nội dung GV gõ khi type=topic_list. Null nếu parse file thất bại
   // (vd PDF scan không có text layer) — không suy đoán, để trống cho rõ ràng
   // là chưa trích được gì, GV cần biết để xử lý (thay file khác).
-  extractedText String? @db.Text
+  extractedText String?              @db.Text
   orderIndex    Int
   uploadedById  String
-  uploadedAt    DateTime @default(now())
+  uploadedAt    DateTime             @default(now())
 
-  exam       Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
-  uploadedBy User @relation("OralExamMaterialUploader", fields: [uploadedById], references: [id])
+  exam       Exam                    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  uploadedBy User                    @relation("OralExamMaterialUploader", fields: [uploadedById], references: [id])
   chunks     OralExamMaterialChunk[]
 
   @@index([examId, orderIndex])
@@ -3231,15 +3305,15 @@ model OralExamMaterialChunk {
 // hướng dẫn (dễ sai, và không kiểm chứng được). `brief` là phần AI đọc; sinh viên chỉ
 // được nghe tiêu đề + mô tả từ chính AI. Khoá sau khi publish như tài liệu (công bằng).
 model OralExamTopic {
-  id         String   @id @default(uuid())
-  examId     String
-  title      String
-  brief      String   @db.Text
+  id           String   @id @default(uuid())
+  examId       String
+  title        String
+  brief        String   @db.Text
   // A6.8 — phần sinh viên ĐƯỢC ĐỌC (thẻ "Tình huống của bạn" ghim trong phòng thi). Tách khỏi `brief` vì
   // brief chứa dữ kiện AI chỉ đưa ra ở câu phát biểu vấn đề. Trống = không hiện thẻ.
-  studentBrief String? @db.Text
-  orderIndex Int
-  createdAt  DateTime @default(now())
+  studentBrief String?  @db.Text
+  orderIndex   Int
+  createdAt    DateTime @default(now())
 
   exam     Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
   attempts ExamAttempt[]
@@ -3280,7 +3354,7 @@ enum OralExamEvaluationStatus {
 }
 
 model OralExamEvaluation {
-  id       String @id @default(uuid())
+  id        String @id @default(uuid())
   attemptId String @unique
 
   aiSuggestedScore  Float?
@@ -4787,4 +4861,41 @@ model EmailSendLog {
 
   @@index([createdAt])
   @@index([templateKey, createdAt])
+}
+
+// =====================================================================
+// A8 — E-portfolio học viên (bản tối giản, trưng bày).
+// Mỗi học viên 1 hồ sơ; chỉ ghim được bài tập đã được GV chấm. Không chụp
+// snapshot: hồ sơ luôn hiện bản bài nộp hiện tại, và trang công khai chỉ hiện
+// mục mà bài nộp còn ở trạng thái graded (nộp lại → status submitted → tạm ẩn).
+// =====================================================================
+
+model Portfolio {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  // Đường dẫn công khai /p/<slug>. Học viên đổi được.
+  slug      String   @unique
+  // false = trang /p/<slug> trả 404 cho mọi người.
+  isPublic  Boolean  @default(false)
+  headline  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items PortfolioItem[]
+}
+
+model PortfolioItem {
+  id           String   @id @default(uuid())
+  portfolioId  String
+  submissionId String
+  // Câu giới thiệu ngắn học viên tự viết (tuỳ chọn).
+  note         String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  portfolio  Portfolio            @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, submissionId])
+  @@index([submissionId])
 }

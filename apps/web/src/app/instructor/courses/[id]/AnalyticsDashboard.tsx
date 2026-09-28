@@ -110,8 +110,10 @@ const RESEARCH_REPORTS: Array<{
 
 export default function AnalyticsDashboard({
   courseId,
+  showResearch = false,
 }: {
   courseId: string;
+  showResearch?: boolean;
 }) {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -216,6 +218,7 @@ export default function AnalyticsDashboard({
         </ul>
       </section>
 
+      {showResearch && (
       <section>
         <h2 className="mb-1 text-base font-semibold">Dữ liệu nghiên cứu</h2>
         <p className="mb-3 text-xs text-muted">
@@ -250,6 +253,7 @@ export default function AnalyticsDashboard({
           ))}
         </ul>
       </section>
+      )}
 
       <QuizResultsSection courseId={courseId} />
 

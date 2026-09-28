@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 
 const SAMPLE = `name,email
@@ -19,6 +19,12 @@ interface ImportResult {
   alreadyEnrolled: number;
   created: number;
   errors: Array<{ row: number; email: string; error: string }>;
+  sectionName: string | null;
+}
+
+interface SectionOption {
+  id: string;
+  name: string;
 }
 
 function parseCsvRow(line: string): string[] {
@@ -55,6 +61,24 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
   const [csv, setCsv] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [sections, setSections] = useState<SectionOption[]>([]);
+  const [sectionId, setSectionId] = useState<string>("");
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    fetch(apiUrl(`/api/courses/${courseId}/sections`))
+      .then((res) => (res.ok ? res.json() : { sections: [] }))
+      .then((data) => {
+        if (!cancelled) setSections(data.sections ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setSections([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, courseId]);
 
   const parsed = csv.trim() ? parseCsv(csv) : [];
   const preview = parsed.slice(0, 5);
@@ -68,7 +92,7 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
       const res = await fetch(apiUrl(`/api/instructor/courses/${courseId}/enroll-bulk`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ students: parsed }),
+        body: JSON.stringify({ students: parsed, sectionId: sectionId || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -117,6 +141,28 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
         <code className="rounded bg-[rgb(var(--surface))] px-1 py-0.5 font-mono">name,email</code>.
         Học viên chưa có tài khoản sẽ được tạo mới (cần đặt mật khẩu lần đầu qua Forgot password).
       </p>
+
+      {/* Section picker */}
+      {sections.length > 0 && (
+        <div className="mt-3 flex items-center gap-2 text-xs">
+          <label htmlFor="import-section" className="text-muted">
+            Nhập vào lớp:
+          </label>
+          <select
+            id="import-section"
+            value={sectionId}
+            onChange={(e) => setSectionId(e.target.value)}
+            className="select text-xs"
+          >
+            <option value="">Lớp mặc định</option>
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
@@ -186,7 +232,7 @@ export default function ImportStudentsButton({ courseId }: { courseId: string })
         <div className="mt-4 space-y-2 rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-xs">
           <div className="flex flex-wrap gap-4">
             <span className="font-medium text-success-700">
-              ✓ {result.enrolled} mới enroll
+              ✓ {result.enrolled} mới enroll{result.sectionName ? ` vào ${result.sectionName}` : ""}
             </span>
             {result.created > 0 && (
               <span className="font-medium text-brand-700">

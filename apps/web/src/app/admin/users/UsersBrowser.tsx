@@ -32,6 +32,7 @@ const ROLE_OPTIONS = [
   { value: "", label: "Tất cả role" },
   { value: "admin", label: "Admin" },
   { value: "instructor", label: "Instructor" },
+  { value: "researcher", label: "Researcher" },
   { value: "mentor", label: "Mentor" },
   { value: "learner", label: "Learner" },
 ];
@@ -231,6 +232,7 @@ export default function UsersBrowser() {
             >
               <option value="learner">Learner</option>
               <option value="instructor">Instructor</option>
+              <option value="researcher">Researcher</option>
               <option value="mentor">Mentor</option>
               <option value="admin">Admin</option>
             </select>
@@ -451,6 +453,8 @@ function roleChipClass(role: string): string {
       return "chip-brand";
     case "mentor":
       return "chip-accent";
+    case "researcher":
+      return "chip-warning";
     case "learner":
       return "chip-success";
     default:

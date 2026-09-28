@@ -147,8 +147,8 @@ export default function CourseMetaForm({
               title={
                 k === "Chế độ"
                   ? initial.personalizationEnabled
-                    ? "Có AI feedback theo skill: BKT, chẩn đoán, lộ trình thích ứng, huy hiệu kỹ năng. Đổi bằng nút Sửa."
-                    : "Chạy như LMS truyền thống, không có AI feedback. Đổi bằng nút Sửa."
+                    ? "Có phản hồi cá nhân hoá theo chủ đề: theo dõi mức thành thạo, chẩn đoán lỗi sai, lộ trình thích ứng, huy hiệu kỹ năng. Đổi bằng nút Sửa."
+                    : "Chạy như LMS thông thường, không có phản hồi cá nhân hoá. Đổi bằng nút Sửa."
                   : undefined
               }
               className={`flex items-center gap-2 rounded-lg py-1 pl-1 pr-3 ${FACT_TONE[tone]!.chip}`}
@@ -269,12 +269,13 @@ export default function CourseMetaForm({
             className="mt-1 h-4 w-4 shrink-0"
           />
           <div className="min-w-0">
-            <span className="font-medium">Cá nhân hoá học tập (AI feedback theo skill)</span>
+            <span className="font-medium">Cá nhân hoá học tập</span>
             <p className="mt-1 text-xs text-muted">
-              Bật → mỗi bài cần tag ≥1 skill mới publish được; learner nhận
-              diagnostic feedback, adaptive path và skill badge.
-              Tắt → course chạy như LMS truyền thống, publish bỏ qua kiểm tra
-              skill. Đổi flag chỉ áp dụng ở lần publish kế tiếp.
+              Bật: hệ thống tự coi mỗi bài học là một chủ đề để theo dõi mức
+              thành thạo của từng học viên, rồi gợi ý ôn tập và lộ trình riêng —
+              bạn không cần gắn chủ đề thủ công. Các bài học hiện có cũng được
+              tự gắn chủ đề.
+              Tắt: khoá học chạy như LMS thông thường.
             </p>
           </div>
         </label>
@@ -379,18 +380,15 @@ export default function CourseMetaForm({
           <div className="min-w-0">
             <span className="font-medium">Công khai — xem được không cần đăng nhập</span>
             <p className="mt-1 text-xs text-muted">
-              Bật → bất kỳ ai, kể cả khách chưa đăng nhập, đọc được mọi bài học
-              (nội dung + video) mà không cần ghi danh. Các tính năng cần tài khoản
-              — tiến độ, hoàn thành bài, ghi chú, thảo luận, quiz, AI tutor — vẫn ẩn.
-              Tắt → bài học yêu cầu đăng nhập như bình thường.
-              Chỉ có hiệu lực khi course đã publish; course draft không bao giờ công khai.
+              Khách chưa đăng nhập vẫn đọc được nội dung và video của các bài học.
+              Tiến độ, ghi chú, thảo luận, quiz và trợ lý AI vẫn cần đăng nhập.
+              Chỉ có hiệu lực khi khoá học đã xuất bản.
             </p>
             {publicAccess && enrollMode === "open" && priceCents.trim() !== "" && (
               <p className="mt-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-xs text-warning-800">
-                ⚠ Đang thu phí nhưng bật công khai — ai cũng đọc được hết nội
-                dung miễn phí, mất lý do trả tiền. Muốn học viên xem thử trước
-                khi mua, dùng nút &ldquo;Cho preview&rdquo; ở từng bài thay vì
-                bật cả khoá.
+                ⚠ Khoá đang thu phí nhưng lại công khai: ai cũng đọc được toàn bộ
+                nội dung miễn phí. Muốn cho xem thử trước khi mua, hãy bật
+                &ldquo;Cho preview&rdquo; ở từng bài thay vì công khai cả khoá.
               </p>
             )}
           </div>

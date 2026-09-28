@@ -11,6 +11,7 @@ export const GrantRoleInput = z.object({
     RoleName.Instructor,
     RoleName.Admin,
     RoleName.Mentor,
+    RoleName.Researcher,
   ]),
   // null/undefined = platform-wide grant. Set for course-scoped roles.
   courseId: z.string().uuid().optional().nullable(),
@@ -45,8 +46,14 @@ export async function grantRole(
   if (!parsed.success) throw new RoleError("validation_failed");
   const { targetUserId, roleName, courseId } = parsed.data;
 
-  const role = await db.role.findUnique({ where: { name: roleName } });
-  if (!role) throw new RoleError("role_not_found");
+  // upsert: `Role` là bảng tra cứu theo tên, không phải enum — vai mới (như
+  // researcher) không cần migration, nhưng hàng của nó phải tồn tại trên
+  // production dù chưa ai chạy lại seed.
+  const role = await db.role.upsert({
+    where: { name: roleName },
+    update: {},
+    create: { name: roleName },
+  });
 
   if (courseId) {
     const course = await db.course.findUnique({ where: { id: courseId } });
@@ -143,6 +150,24 @@ export async function getRolesForUser(
     roleName: r.role.name,
     courseId: r.courseId,
   }));
+}
+
+/**
+ * Researcher (hoặc admin nền tảng). Gate cho mọi tính năng nghiên cứu: xuất dữ
+ * liệu thô, đổi điều kiện thực nghiệm của lớp. Vẫn phải qua kiểm tra quyền trên
+ * khoá học như thường — role này chỉ mở thêm công cụ, không mở thêm khoá học.
+ */
+export async function isResearcher(
+  userId: string,
+  db: DbClient = prisma,
+): Promise<boolean> {
+  const count = await db.userRole.count({
+    where: {
+      userId,
+      role: { name: { in: [RoleName.Researcher, RoleName.Admin] } },
+    },
+  });
+  return count > 0;
 }
 
 export async function isAdmin(userId: string, db: DbClient = prisma): Promise<boolean> {

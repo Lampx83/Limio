@@ -45,12 +45,17 @@ export default async function SessionTemplatesPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
-      <Link
-        href="/instructor/dashboard"
-        className="text-sm text-blue-600 hover:underline"
-      >
-        ← Dashboard
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/instructor/dashboard"
+          className="text-sm text-blue-600 hover:underline"
+        >
+          ← Dashboard
+        </Link>
+        <Link href="/org-admin/settings" className="text-sm text-blue-600 hover:underline">
+          Thương hiệu trường →
+        </Link>
+      </div>
       <h1 className="mt-3 text-2xl font-bold">📅 Danh mục ca thi</h1>
       <p className="mt-1 text-sm text-faint">
         Trường <strong>{primary.organization.name}</strong> ({primary.organization.code}). Đặt

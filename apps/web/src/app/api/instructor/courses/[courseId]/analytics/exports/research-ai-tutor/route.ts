@@ -3,7 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { assertCanEditCourse, CourseAuthzError } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { csvResponse } from "@/lib/csvExport";
-import { identityCols, IDENTITY_COLUMNS, learnerIndex } from "@/lib/researchExport";
+import { requireResearcher, identityCols, IDENTITY_COLUMNS, learnerIndex } from "@/lib/researchExport";
 
 export const runtime = "nodejs";
 
@@ -29,6 +29,8 @@ export async function GET(
 ) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const denied = await requireResearcher(userId);
+  if (denied) return denied;
   try {
     await assertCanEditCourse(userId, params.courseId);
   } catch (err) {

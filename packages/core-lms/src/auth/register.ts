@@ -5,6 +5,7 @@ import { RoleName } from "@feedbackme/shared-types";
 import { issueToken } from "./tokens";
 import { buildVerificationUrl } from "./email";
 import { sendTemplatedEmail } from "../email/templates";
+import { InstructorApplicationInput, createInstructorApplication } from "./instructorApplication";
 
 export const RegisterInput = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -12,6 +13,8 @@ export const RegisterInput = z.object({
   displayName: z.string().min(1).max(80).trim(),
   locale: z.string().min(2).max(10).optional(),
   timezone: z.string().min(1).max(64).optional(),
+  // Có mặt = người đăng ký xin làm giáo viên; vẫn tạo tài khoản học viên, đơn chờ admin duyệt.
+  instructorApplication: InstructorApplicationInput.optional(),
 });
 export type RegisterInput = z.infer<typeof RegisterInput>;
 
@@ -77,6 +80,9 @@ export async function registerUser(
     await tx.userRole.create({
       data: { userId: user.id, roleId: learnerRole.id },
     });
+    if (input.instructorApplication) {
+      await createInstructorApplication(user.id, input.instructorApplication, tx);
+    }
     const issued = await issueToken(user.id, "email_verify", tx);
     return { userId: user.id, raw: issued.raw };
   });

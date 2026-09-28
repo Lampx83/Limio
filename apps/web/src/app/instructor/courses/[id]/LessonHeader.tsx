@@ -270,7 +270,7 @@ export default function LessonHeader({
           }
         />
         {noSkill && !hideUntaggedWarning && (
-          <span className="chip-accent text-xs">chưa tag skill</span>
+          <span className="chip-accent text-xs">chưa có chủ đề</span>
         )}
         <div className="ml-auto flex items-center gap-1 rounded-lg p-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-lg:opacity-100">
           {courseSlug && (

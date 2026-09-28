@@ -287,10 +287,19 @@ export default async function CatalogPage({
           />
         </div>
       ) : !hasFilter && sections.length > 0 ? (
-        <div className="mt-8 space-y-10">
-          {sections.map((section) => (
-            <section key={section.id}>
-              <h2 className="h-display text-h3">{section.title}</h2>
+        <div className="mt-10 space-y-12">
+          {sections.map((section, i) => (
+            <section
+              key={section.id}
+              className={i > 0 ? "border-t border-token pt-10" : ""}
+            >
+              <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-6 w-1.5 shrink-0 rounded-full bg-brand-gradient" aria-hidden />
+                  <h2 className="h-display text-h3">{section.title}</h2>
+                </div>
+                <span className="text-meta">{section.courses.length} khóa học</span>
+              </div>
               <CourseGrid
                 courses={section.courses}
                 paymentEnabled={paymentEnabled}

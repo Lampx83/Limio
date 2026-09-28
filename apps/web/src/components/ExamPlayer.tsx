@@ -861,7 +861,7 @@ export default function ExamPlayer(props: Props) {
         onJump={jumpToQuestion}
       />
       {/* Sticky header strip — palette + timer + submit always visible. */}
-      <div className="sticky top-0 z-30 -mx-4 mb-4 border-b border-default bg-white/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="sticky top-[74px] z-20 -mx-4 mb-4 border-b border-default bg-white/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80">
         <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-semibold leading-tight">{props.exam.title}</h1>

@@ -43,7 +43,12 @@ const Schema = z.object({
   EMAIL_FROM: z.string().optional(),
   // Google Analytics 4 Measurement ID (dạng G-XXXXXXXXXX). Bỏ trống → không
   // load script GA, không cần trong dev/test.
+  //  - NEXT_PUBLIC_GA_MEASUREMENT_ID: property RIÊNG của domain đang deploy
+  //    (limio.vn dùng ID khác, limio.hust.edu.vn dùng ID khác).
+  //  - NEXT_PUBLIC_GA_MEASUREMENT_ID_ALL: property TỔNG GỘP — set CÙNG một
+  //    giá trị trên mọi server để xem traffic toàn hệ thống ở một chỗ.
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
+  NEXT_PUBLIC_GA_MEASUREMENT_ID_ALL: z.string().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 

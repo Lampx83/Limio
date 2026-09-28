@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
 import { generateDiagnosticFeedback } from "../diagnostic";
-import { getAdaptiveNextLesson } from "../adaptivePath";
+import {
+  getAdaptiveNextLesson,
+  getRemedialSuggestion,
+  shouldSkipLesson,
+} from "../adaptivePath";
 import { resolveFeedbackVariant } from "../variant";
 
 /**
@@ -239,5 +243,93 @@ describe("getAdaptiveNextLesson — kênh cá nhân hoá thứ hai", () => {
 
     expect(await getAdaptiveNextLesson(p.userId, f.courseId)).not.toBeNull();
     expect(await getAdaptiveNextLesson(m.userId, f.courseId)).toBeNull();
+  });
+});
+
+/** Cho người học một mức nắm vững cố định trên skill của fixture. */
+async function setMastery(slug: string, userId: string, mastery: number) {
+  const skill = await prisma.skill.findFirstOrThrow({
+    where: { code: `skill.v.${slug}` },
+  });
+  await prisma.learnerSkillState.create({
+    data: {
+      userId,
+      skillId: skill.id,
+      masteryProbability: mastery,
+      attempts: 3,
+      correctCount: mastery >= 0.5 ? 3 : 0,
+    },
+  });
+}
+
+describe("shouldSkipLesson — kênh cá nhân hoá thứ ba", () => {
+  it("B4 AC-1.1: lớp đối chứng không được gợi ý bỏ qua bài", async () => {
+    const f = await fixture("s1");
+    const p = await learnerWhoAnsweredWrong(f, f.sectionPersonalized, "s1p");
+    const m = await learnerWhoAnsweredWrong(f, f.sectionMinimal, "s1m");
+    // Cả hai đều đã vững skill của bài — đủ điều kiện gợi ý bỏ qua.
+    await setMastery("s1", p.userId, 0.95);
+    await setMastery("s1", m.userId, 0.95);
+
+    expect((await shouldSkipLesson(p.userId, f.lessonId)).shouldSkip).toBe(true);
+    const rm = await shouldSkipLesson(m.userId, f.lessonId);
+    expect(rm.shouldSkip).toBe(false);
+    expect(rm.masteries).toEqual([]);
+    expect(rm.reason).toBe("control_variant");
+  });
+
+  it("B4 AC-1.3: chưa xếp lớp thì vẫn được gợi ý như personalized", async () => {
+    const f = await fixture("s2");
+    const u = await learnerWhoAnsweredWrong(f, null, "s2n");
+    await setMastery("s2", u.userId, 0.95);
+    expect((await shouldSkipLesson(u.userId, f.lessonId)).shouldSkip).toBe(true);
+  });
+});
+
+describe("getRemedialSuggestion — kênh cá nhân hoá thứ tư", () => {
+  /** Hai lượt nộp liên tiếp dưới ngưỡng — đủ điều kiện gợi ý ôn lại. */
+  async function failTwice(f: Fixture, userId: string) {
+    // Lượt dựng sẵn của fixture có submittedAt null — Postgres xếp null lên
+    // đầu khi sort desc, nên phải đẩy nó về quá khứ để không chen vào 2 lượt cuối.
+    await prisma.quizAttempt.updateMany({
+      where: { userId, quizId: f.quizId },
+      data: { submittedAt: new Date(0), scorePct: 0 },
+    });
+    for (let i = 0; i < 2; i++) {
+      await prisma.quizAttempt.create({
+        data: {
+          quizId: f.quizId,
+          userId,
+          status: "submitted",
+          scorePct: 20,
+          submittedAt: new Date(Date.now() + i * 1000),
+        },
+      });
+    }
+  }
+
+  it("B4 AC-1.2: lớp đối chứng trượt 2 lần không thấy đề xuất ôn lại", async () => {
+    const f = await fixture("rm1");
+    const p = await learnerWhoAnsweredWrong(f, f.sectionPersonalized, "rm1p");
+    const m = await learnerWhoAnsweredWrong(f, f.sectionMinimal, "rm1m");
+    for (const u of [p.userId, m.userId]) {
+      await setMastery("rm1", u, 0.1);
+      await failTwice(f, u);
+    }
+
+    const rp = await getRemedialSuggestion(p.userId, f.quizId);
+    expect(rp.shouldShow).toBe(true);
+    expect(rp.lesson?.id).toBe(f.lessonId);
+
+    const rm = await getRemedialSuggestion(m.userId, f.quizId);
+    expect(rm).toEqual({ shouldShow: false, reason: "control_variant" });
+  });
+
+  it("B4 AC-1.3: chưa xếp lớp thì vẫn được đề xuất ôn lại", async () => {
+    const f = await fixture("rm2");
+    const u = await learnerWhoAnsweredWrong(f, null, "rm2n");
+    await setMastery("rm2", u.userId, 0.1);
+    await failTwice(f, u.userId);
+    expect((await getRemedialSuggestion(u.userId, f.quizId)).shouldShow).toBe(true);
   });
 });

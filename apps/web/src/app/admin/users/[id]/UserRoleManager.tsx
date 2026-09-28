@@ -11,7 +11,7 @@ interface RoleEntry {
   grantedAt: string;
 }
 
-const ASSIGNABLE_ROLES = ["admin", "instructor", "mentor", "learner"];
+const ASSIGNABLE_ROLES = ["admin", "instructor", "researcher", "mentor", "learner"];
 
 export default function UserRoleManager({
   userId,

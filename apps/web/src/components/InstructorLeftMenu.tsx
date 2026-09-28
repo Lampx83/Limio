@@ -74,6 +74,8 @@ type Item = {
   note?: string;
   /** Nhãn nhỏ, không tương tác — chỉ để nhóm trực quan các item trong 1 module dài (vd LMS). */
   section?: string;
+  /** Chỉ Researcher thấy — khu vực nghiên cứu, giảng viên thường không cần. */
+  researcherOnly?: boolean;
 };
 
 type ModuleColors = {
@@ -270,7 +272,7 @@ const MODULES: ModuleDef[] = [
     },
     matchPrefixes: ["/instructor/analytics", "/instructor/learner-insights", "/me/ai-tokens"],
     items: [
-      { label: "Analytics và Báo cáo", href: "/instructor/analytics", icon: BarChart3 },
+      { label: "Analytics và Báo cáo", href: "/instructor/analytics", icon: BarChart3, researcherOnly: true },
       { label: "Nắm kiến thức", href: "/instructor/learner-insights", icon: Brain },
       { label: "Token AI", href: "/me/ai-tokens", icon: Coins },
     ],
@@ -300,7 +302,11 @@ function resolveActiveModuleId(pathname: string, navOverride: string | null): st
 const PROCTOR_ONLY_ITEMS: Item[] = [PROCTOR_ITEM];
 
 // useSearchParams cần Suspense (Next 14) — bọc ở đây để 2 layout dùng chung khỏi phải tự bọc.
-export default function InstructorLeftMenu(props: { isInstructor?: boolean; isProctor?: boolean }) {
+export default function InstructorLeftMenu(props: {
+  isInstructor?: boolean;
+  isProctor?: boolean;
+  isResearcher?: boolean;
+}) {
   return (
     <Suspense fallback={null}>
       <InstructorLeftMenuInner {...props} />
@@ -311,10 +317,16 @@ export default function InstructorLeftMenu(props: { isInstructor?: boolean; isPr
 function InstructorLeftMenuInner({
   isInstructor = true,
   isProctor = false,
+  isResearcher = false,
 }: {
   isInstructor?: boolean;
   isProctor?: boolean;
+  isResearcher?: boolean;
 }) {
+  const modules = MODULES.map((m) => ({
+    ...m,
+    items: m.items.filter((it) => !it.researcherOnly || isResearcher),
+  }));
   const tokensUnlocked = useAiTokensPageUnlocked();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -406,7 +418,7 @@ function InstructorLeftMenuInner({
   }
 
   const activeModuleId = pendingModuleId ?? resolveActiveModuleId(pathname, navOverride);
-  const foundModule = MODULES.find((m) => m.id === activeModuleId) ?? null;
+  const foundModule = modules.find((m) => m.id === activeModuleId) ?? null;
   const activeModule =
     foundModule && !tokensUnlocked
       ? { ...foundModule, items: foundModule.items.filter((it) => it.href !== AI_TOKENS_HREF) }
@@ -423,10 +435,11 @@ function InstructorLeftMenuInner({
   const isImmersive = isCourseEditor || isPresentMode;
 
   const rail = (
-    <ModuleRail activeModuleId={activeModuleId} onSelect={setPendingModuleId} onHover={(href) => router.prefetch(href)} />
+    <ModuleRail modules={modules} activeModuleId={activeModuleId} onSelect={setPendingModuleId} onHover={(href) => router.prefetch(href)} />
   );
   const railDesktop = (
     <ModuleRail
+      modules={modules}
       activeModuleId={activeModuleId}
       onSelect={setPendingModuleId}
       onHover={(href) => router.prefetch(href)}
@@ -458,6 +471,14 @@ function InstructorLeftMenuInner({
           <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-900 dark:from-amber-700 dark:to-amber-600 dark:text-amber-50">
             <Crown size={9} strokeWidth={2.5} />
             Premium
+          </span>
+        )}
+        {activeModule.premium && (
+          <span
+            className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-800"
+            title="Tài khoản miễn phí được dùng thử tính năng này"
+          >
+            Trial
           </span>
         )}
         {activeModule.tagline && (
@@ -535,11 +556,13 @@ const NEUTRAL_COLORS: ModuleColors = {
 // 6 module. Đây là điều hướng THẬT (Link), không phải state client — F5 hay
 // deep-link vào thẳng 1 trang vẫn tự sáng đúng icon nhờ resolveActiveModuleId.
 function ModuleRail({
+  modules,
   activeModuleId,
   footer,
   onSelect,
   onHover,
 }: {
+  modules: ModuleDef[];
   activeModuleId: string;
   footer?: React.ReactNode;
   onSelect: (id: string) => void;
@@ -560,7 +583,7 @@ function ModuleRail({
         onHover={onHover}
       />
       <div className="my-1.5 h-px w-8 bg-token" />
-      {MODULES.map((m) => (
+      {modules.map((m) => (
         <RailButton
           key={m.id}
           href={m.items.find((it) => it.href)?.href ?? "/instructor/dashboard"}
@@ -570,7 +593,7 @@ function ModuleRail({
           isActive={activeModuleId === m.id}
           railClass={m.colors.rail}
           premium={m.premium}
-          description={m.tagline ?? (m.premium ? "Tính năng Premium" : undefined)}
+          description={m.tagline ?? (m.premium ? "Premium — dùng thử miễn phí" : undefined)}
           onSelect={() => onSelect(m.id)}
           onHover={onHover}
         />
@@ -621,7 +644,7 @@ function RailButton({
       onMouseLeave={() => setTipHidden(false)}
         onMouseEnter={() => onHover(href)}
         onFocus={() => onHover(href)}
-        aria-label={premium ? `${label} — Premium` : label}
+        aria-label={premium ? `${label} — Premium, dùng thử` : label}
         aria-current={isActive ? "page" : undefined}
         prefetch={false}
         className={`group relative flex items-center justify-center transition-transform hover:scale-105 ${box}`}
@@ -734,7 +757,7 @@ function ItemRow({
       }`}
       prefetch={false}
     >
-      {active && <span className={`absolute inset-y-1 left-0 w-1 rounded-r-full ${colors.rail}`} />}
+      {active && <span className={`absolute inset-y-1 left-0 w-1 rounded-r-full bg-lime-600`} />}
       <span className={iconCircle}>
         {pending ? (
           <Loader2 size={14} className={`${colors.itemIconFg} animate-spin`} />

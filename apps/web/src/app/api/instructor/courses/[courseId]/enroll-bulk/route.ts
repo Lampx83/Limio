@@ -47,6 +47,9 @@ export async function POST(
     return NextResponse.json({ error: "too_many_rows", limit: MAX_ROWS }, { status: 400 });
   }
 
+  const requestedSectionId =
+    typeof body.sectionId === "string" && body.sectionId.trim() ? body.sectionId.trim() : null;
+
   const course = await prisma.course.findUnique({
     where: { id: params.courseId },
     select: { id: true, version: true },
@@ -58,8 +61,23 @@ export async function POST(
     return NextResponse.json({ error: "role_seed_missing" }, { status: 500 });
   }
 
-  // Bulk-import lands everyone in the course's default section (isDefault=true).
-  const sectionId = await resolveDefaultSectionId(course.id, prisma);
+  // Default: land everyone in the course's default section (isDefault=true).
+  // Teacher may instead pick a specific lớp học (CourseSection) to import into.
+  let sectionId: string;
+  let sectionName: string | null = null;
+  if (requestedSectionId) {
+    const section = await prisma.courseSection.findFirst({
+      where: { id: requestedSectionId, courseId: course.id },
+      select: { id: true, name: true },
+    });
+    if (!section) {
+      return NextResponse.json({ error: "invalid_section" }, { status: 400 });
+    }
+    sectionId = section.id;
+    sectionName = section.name;
+  } else {
+    sectionId = await resolveDefaultSectionId(course.id, prisma);
+  }
 
   let enrolled = 0;
   let alreadyEnrolled = 0;
@@ -115,10 +133,10 @@ export async function POST(
       if (existing && (existing.status === "active" || existing.status === "completed")) {
         alreadyEnrolled++;
       } else if (existing) {
-        // Re-activate a dropped / refunded enrollment
+        // Re-activate a dropped / refunded enrollment into the chosen section
         await prisma.enrollment.update({
           where: { id: existing.id },
-          data: { status: "active", enrolledAt: new Date() },
+          data: { status: "active", enrolledAt: new Date(), sectionId },
         });
         enrolled++;
       } else {
@@ -144,5 +162,5 @@ export async function POST(
     }
   }
 
-  return NextResponse.json({ enrolled, alreadyEnrolled, created, errors });
+  return NextResponse.json({ enrolled, alreadyEnrolled, created, errors, sectionName });
 }

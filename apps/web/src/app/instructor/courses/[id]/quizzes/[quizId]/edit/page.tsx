@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { assertCanEditCourse, CourseAuthzError } from "@feedbackme/core-lms";
+import { assertCanEditCourse, CourseAuthzError, isResearcher } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import QuizEditorClient from "./QuizEditorClient";
 
@@ -49,6 +49,7 @@ export default async function QuizEditorPage({
 
   return (
     <QuizEditorClient
+      showResearch={await isResearcher(userId)}
       courseId={params.id}
       lessonId={quiz.lessonId}
       lessonTitle={quiz.lesson?.title ?? null}

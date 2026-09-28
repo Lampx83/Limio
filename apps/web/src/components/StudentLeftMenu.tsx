@@ -17,6 +17,7 @@ import {
   ChevronRight,
   PlayCircle,
   Coins,
+  FolderOpen,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -45,6 +46,7 @@ const GROUPS: Group[] = [
       { label: "Ghi chú", href: "/me/notes", icon: Pencil },
       { label: "Kỹ năng", href: "/me/skills", icon: Brain },
       { label: "Huy hiệu", href: "/me/badges", icon: Award },
+      { label: "e-Portfolio của tôi", href: "/me/portfolio", icon: FolderOpen },
     ],
   },
   {

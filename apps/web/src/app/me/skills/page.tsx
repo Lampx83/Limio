@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLearnerSkillStates, type SkillStateView } from "@feedbackme/core-feedback";
+import { MASTERY_LABEL_TEXT, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
+import MasteryBadge from "@/components/MasteryBadge";
+
+/** Ngưỡng trao huy hiệu kỹ năng — khác nhãn "Vững" (85%) có chủ ý: huy hiệu là phần thưởng. */
+const BADGE_AT = 0.9;
 
 export const dynamic = "force-dynamic";
 
@@ -50,11 +55,11 @@ export default async function SkillsPage() {
 
   const topics = await getLearnerSkillStates(session.user.id, undefined);
 
-  const masteredCount = topics.filter((s) => s.masteryProbability >= 0.9).length;
-  const weakCount = topics.filter(
-    (s) => s.isWeak && s.masteryProbability < 0.9,
-  ).length;
-  const learningCount = topics.length - masteredCount - weakCount;
+  const countOf = (label: ReturnType<typeof masteryLabel>) =>
+    topics.filter((s) => masteryLabel(s.masteryProbability) === label).length;
+  const solidCount = countOf("solid");
+  const practiceCount = countOf("practice_more");
+  const reviewCount = countOf("needs_review");
   const groups = groupTopics(topics);
 
   return (
@@ -66,16 +71,16 @@ export default async function SkillsPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-muted">
           Mỗi câu hỏi bạn trả lời sẽ cập nhật mức nắm vững của chủ đề liên quan.
-          Chủ đề yếu được tô đỏ — nên ưu tiên ôn lại.
+          Chủ đề “Cần ôn” nên được ưu tiên ôn lại.
         </p>
       </div>
 
       {/* Summary */}
       {topics.length > 0 && (
         <div className="mt-6 grid grid-cols-3 gap-3 sm:gap-4">
-          <SummaryCard label="Đã nắm vững" value={masteredCount} tone="accent" icon="" />
-          <SummaryCard label="Đang học" value={learningCount} tone="brand" icon="" />
-          <SummaryCard label="Cần ôn" value={weakCount} tone="danger" icon="" />
+          <SummaryCard label={MASTERY_LABEL_TEXT.solid} value={solidCount} tone="accent" icon="" />
+          <SummaryCard label={MASTERY_LABEL_TEXT.practice_more} value={practiceCount} tone="brand" icon="" />
+          <SummaryCard label={MASTERY_LABEL_TEXT.needs_review} value={reviewCount} tone="danger" icon="" />
         </div>
       )}
 
@@ -137,21 +142,15 @@ function TopicCard({
   topic: SkillStateView;
   courseSlug: string | null;
 }) {
-  const masteryPct = Math.round(s.masteryProbability * 100);
-  const isMastered = s.masteryProbability >= 0.9;
-  const tone = isMastered ? "mastered" : s.isWeak ? "weak" : "learning";
+  const label = masteryLabel(s.masteryProbability);
+  const hasBadge = s.masteryProbability >= BADGE_AT;
 
   const toneStyle = {
-    mastered: "border-accent-200 bg-gradient-to-br from-accent-50 to-transparent",
-    weak: "border-danger-100 bg-gradient-to-br from-danger-50 to-transparent",
-    learning: "border-token",
-  }[tone];
-
-  const barColor = {
-    mastered: "bg-gradient-to-r from-accent-400 to-accent-600",
-    weak: "bg-gradient-to-r from-danger-500 to-danger-600",
-    learning: "bg-gradient-to-r from-brand-500 to-brand-700",
-  }[tone];
+    solid: "border-accent-200 bg-gradient-to-br from-accent-50 to-transparent",
+    needs_review: "border-yellow-200 bg-gradient-to-br from-yellow-50 to-transparent",
+    practice_more: "border-token",
+    no_data: "border-token",
+  }[label];
 
   const lessonHref =
     courseSlug && s.group ? `/learn/${courseSlug}/lessons/${s.group.lessonId}` : null;
@@ -160,48 +159,28 @@ function TopicCard({
     <li className={`card ${toneStyle} transition-shadow hover:shadow-card-hover`}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            {isMastered && <span className="text-lg"></span>}
-            <p className="truncate text-base font-semibold">{s.skillName}</p>
-          </div>
+          <p className="truncate text-base font-semibold">{s.skillName}</p>
           {/* An auto tag's code is just the lesson id — noise for the learner. */}
           {!s.isAuto && (
             <p className="mt-0.5 font-mono text-xs text-faint">{s.skillCode}</p>
           )}
-        </div>
-        <div className="text-right">
-          <p className="h-display text-xl font-bold tabular-nums">
-            {masteryPct}
-            <span className="text-sm text-muted">%</span>
-          </p>
-          <p className="text-xs text-faint">
-            {s.correctCount}/{s.attempts} đúng
+          <p className="mt-0.5 text-xs text-faint">
+            {s.correctCount}/{s.attempts} câu đúng
           </p>
         </div>
+        <MasteryBadge label={label} className="shrink-0" />
       </div>
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
-        <div
-          className={`h-2 rounded-full transition-all duration-500 ${barColor}`}
-          style={{ width: `${masteryPct}%` }}
-        />
-      </div>
-
-      {isMastered && (
-        <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-accent-700">
-          <span></span>
-          Đã nắm vững — bạn đã được trao badge cho chủ đề này.
+      {hasBadge && (
+        <p className="mt-3 text-xs font-medium text-accent-700">
+          Bạn đã được trao huy hiệu cho chủ đề này.
         </p>
       )}
-      {!isMastered && s.isWeak && (
-        <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-danger-600">
-          <span></span>
-          Cần ôn — dưới 50% sau ≥2 câu.
-          {lessonHref && (
-            <Link href={lessonHref} className="link font-semibold">
-              Mở bài học →
-            </Link>
-          )}
+      {label === "needs_review" && lessonHref && (
+        <p className="mt-3 text-xs">
+          <Link href={lessonHref} className="link font-semibold">
+            Ôn lại bài học →
+          </Link>
         </p>
       )}
     </li>

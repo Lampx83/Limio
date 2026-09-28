@@ -87,7 +87,7 @@ export default function ModuleOverviewCard({
                     {order}.{i + 1}
                   </span>
                   <span className="min-w-0 flex-1 truncate">{l.title}</span>
-                  {l.noSkill && <span className="chip-accent text-xs">chưa tag skill</span>}
+                  {l.noSkill && <span className="chip-accent text-xs">chưa có chủ đề</span>}
                   {l.isHidden && <span className="chip-danger text-xs">Ẩn</span>}
                   {!l.isHidden && (l.isLocked || module.isLocked) && (
                     <span className="chip-accent text-xs">Khoá</span>

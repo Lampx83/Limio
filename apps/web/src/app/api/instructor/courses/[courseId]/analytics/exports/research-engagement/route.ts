@@ -9,7 +9,7 @@ import {
 import { LearningEventType } from "@feedbackme/shared-types";
 import { requireUserId } from "@/lib/session";
 import { csvResponse } from "@/lib/csvExport";
-import { identityCols, learnerIndex } from "@/lib/researchExport";
+import { requireResearcher, identityCols, learnerIndex } from "@/lib/researchExport";
 
 export const runtime = "nodejs";
 
@@ -27,6 +27,8 @@ export async function GET(
 ) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const denied = await requireResearcher(userId);
+  if (denied) return denied;
   try {
     await assertCanEditCourse(userId, params.courseId);
   } catch (err) {

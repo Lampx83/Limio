@@ -17,7 +17,6 @@ import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatDateTime } from "@/lib/datetime";
 import { isAutoLessonSkillCode } from "@feedbackme/shared-types";
-import { SHOW_QUIZ_CONFIDENCE, SHOW_QUIZ_DIFFICULTY } from "../../../quizEditorFlags";
 
 interface Question {
   id: string;
@@ -126,11 +125,13 @@ export default function QuizEditorClient({
   lessonId,
   lessonTitle,
   quiz,
+  showResearch = false,
 }: {
   courseId: string;
   lessonId: string | null;
   lessonTitle: string | null;
   quiz: Quiz;
+  showResearch?: boolean;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string>(quiz.questions[0]?.id ?? "");
@@ -179,7 +180,7 @@ export default function QuizEditorClient({
         </header>
 
         <div className="flex flex-wrap items-center gap-2 border-b border-token bg-[rgb(var(--surface-muted))] px-5 py-3">
-          {SHOW_QUIZ_DIFFICULTY && (
+          {showResearch && (
             <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
               Độ khó <b className="font-semibold text-default">{quiz.difficulty ?? "—"}/5</b>
             </span>
@@ -210,7 +211,7 @@ export default function QuizEditorClient({
               <b className="font-semibold text-default">{SCORING_POLICY_LABEL[quiz.scoringPolicy]}</b>
             </span>
           )}
-          {SHOW_QUIZ_CONFIDENCE && (
+          {showResearch && (
             <span className="rounded-full bg-[rgb(var(--surface))] px-3 py-1 text-xs text-muted">
               Confidence <b className="font-semibold text-default">{quiz.requireConfidence ? "Bật" : "Tắt"}</b>
             </span>
@@ -228,7 +229,7 @@ export default function QuizEditorClient({
         </div>
         {settingsOpen && (
           <div className="border-b border-token px-5 py-4">
-            <QuizEditForm quiz={quiz} onClose={() => setSettingsOpen(false)} />
+            <QuizEditForm quiz={quiz} showResearch={showResearch} onClose={() => setSettingsOpen(false)} />
           </div>
         )}
 

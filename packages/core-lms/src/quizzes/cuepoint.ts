@@ -8,8 +8,9 @@ import { ensureQuestionTag } from "../courses/autoTags";
 const CuepointQuestionInput = CreateQuestionInput
   .innerType()
   .extend({
-    // Cuepoint inline questions must always tag at least one skill (CLAUDE.md §4.4).
-    skillIds: z.array(z.string().uuid()).min(1).max(20),
+    // Có thể để trống: câu hỏi kế thừa tag lesson-as-tag (CLAUDE.md §4.4) qua
+    // ensureQuestionTag; khoá tắt cá nhân hoá thì không có tag nào, và không sao.
+    skillIds: z.array(z.string().uuid()).max(20).default([]),
   })
   // orderIndex is fixed (single question per cuepoint quiz) — caller need not pass it.
   .omit({ orderIndex: true });
@@ -22,7 +23,7 @@ export const CreateCuepointQuizInput = z.object({
 export const UpdateCuepointQuizInput = z.object({
   atSec: z.number().nonnegative().optional(),
   question: UpdateQuestionInput.extend({
-    skillIds: z.array(z.string().uuid()).min(1).max(20).optional(),
+    skillIds: z.array(z.string().uuid()).max(20).optional(),
   }).optional(),
 });
 

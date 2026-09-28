@@ -21,12 +21,15 @@ export default function UserMenu({
   avatarUrl,
   roles,
   activeRole: cookieRole,
+  isResearcher = false,
 }: {
   name: string;
   email: string;
   avatarUrl?: string | null;
   roles?: string[];
   activeRole?: string;
+  /** Năng lực cộng thêm, không phải vai chuyển được — chỉ hiện làm nhãn. */
+  isResearcher?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -97,10 +100,19 @@ export default function UserMenu({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold leading-tight">{name}</p>
               <p className="truncate text-xs text-muted">{email}</p>
-              {activeBadge && (
-                <span className={`mt-1.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${activeBadge.className}`}>
-                  {activeBadge.label}
-                </span>
+              {(activeBadge || isResearcher) && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {activeBadge && (
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${activeBadge.className}`}>
+                      {activeBadge.label}
+                    </span>
+                  )}
+                  {isResearcher && (
+                    <span className="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
+                      Researcher
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>

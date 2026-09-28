@@ -118,7 +118,7 @@ export default function EditorSidebar({
                         {l.noSkill && (
                           <span
                             className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent-500"
-                            title="Chưa tag skill"
+                            title="Chưa có chủ đề"
                           />
                         )}
                         {l.isHidden && (

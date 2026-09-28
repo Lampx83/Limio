@@ -95,6 +95,7 @@ export default function LessonSection({
   siblingLessonIds,
   modules,
   hideUntaggedWarning = false,
+  showResearch = false,
   titleAside,
 }: {
   lesson: Lesson;
@@ -105,6 +106,8 @@ export default function LessonSection({
   siblingLessonIds?: string[];
   modules?: Array<{ id: string; title: string }>;
   hideUntaggedWarning?: boolean;
+  /** Role Researcher: hiện các thiết lập dành cho nghiên cứu (vd. bài tập yêu cầu tự đánh giá). */
+  showResearch?: boolean;
   titleAside?: React.ReactNode;
 }) {
   const noSkill = lesson.skillTags.length === 0;
@@ -140,7 +143,7 @@ export default function LessonSection({
         />
 
         {!flat && !(hideUntaggedWarning && noSkill) && (
-          <SubSection label="Skills">
+          <SubSection label="Chủ đề">
             <SkillTagsEditor
               lessonId={lesson.id}
               tags={lesson.skillTags.map((t) => ({
@@ -158,6 +161,7 @@ export default function LessonSection({
           quizzes={lesson.quizzes}
           assignments={lesson.assignments}
           activities={lesson.activities ?? []}
+          showResearch={showResearch}
         />
       </div>
   );
@@ -179,7 +183,7 @@ export default function LessonSection({
           {lesson.title}
         </span>
         {lesson.isHidden && <span className="chip-danger">👁️ Ẩn</span>}
-        {noSkill && <span className="chip-accent">chưa tag skill</span>}
+        {noSkill && <span className="chip-accent">chưa có chủ đề</span>}
         {lesson.previewable && <span className="chip">Preview</span>}
         <span className="ml-auto text-sm text-muted">
           {lesson.contentItems.length} content · {lesson.quizzes.length} quiz ·{" "}

@@ -15,9 +15,9 @@ const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
 });
 import {
   GENERATIVE_PRESETS,
-  GENERATIVE_TYPE_OPTIONS,
   type GenerativeActivityType,
 } from "@/lib/generativeActivity";
+import GenerativeTypePicker from "@/components/GenerativeTypePicker";
 
 interface Assignment {
   id: string;
@@ -35,8 +35,11 @@ interface Assignment {
 
 export default function AssignmentSection({
   assignment,
+  showResearch = false,
 }: {
   assignment: Assignment;
+  /** Role Researcher: mới thấy hai ô yêu cầu tự đánh giá / nhận xét. */
+  showResearch?: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -58,10 +61,6 @@ export default function AssignmentSection({
   const [requireReflection, setRequireReflection] = useState(
     assignment.requireReflection ?? false,
   );
-  const [countsTowardGrade, setCountsTowardGrade] = useState(
-    assignment.countsTowardGrade ?? true,
-  );
-  const [rubricText, setRubricText] = useState(assignment.rubricText ?? "");
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -74,8 +73,6 @@ export default function AssignmentSection({
       pedagogicalIntent: pedagogicalIntent || null,
       requireSelfRating,
       requireReflection,
-      countsTowardGrade,
-      rubricText: rubricText.trim() || null,
     };
     if (pedagogicalIntent) {
       payload.responseFormat =
@@ -202,26 +199,15 @@ export default function AssignmentSection({
         </>
       ) : (
         <form onSubmit={save} className="space-y-2">
-          <label className="block">
-            <span className="text-xs text-faint">Loại hoạt động (tuỳ chọn)</span>
-            <select
-              value={pedagogicalIntent}
-              onChange={(e) =>
-                setPedagogicalIntent(
-                  e.target.value as GenerativeActivityType | "",
-                )
-              }
-              className="input mt-1"
-            >
-              <option value="">Bài tập thường</option>
-              {GENERATIVE_TYPE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value} disabled={!o.available}>
-                  {o.label}
-                  {!o.available ? " (sắp có)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div>
+            <span className="text-xs text-faint">Dạng bài làm (không bắt buộc)</span>
+            <div className="mt-1">
+              <GenerativeTypePicker
+                value={pedagogicalIntent}
+                onChange={setPedagogicalIntent}
+              />
+            </div>
+          </div>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -229,45 +215,26 @@ export default function AssignmentSection({
             className="input"
           />
           <RichTextEditor value={description} onChange={setDescription} />
-          <label className="block">
-            <span className="text-xs text-faint">
-              Rubric chấm điểm (tuỳ chọn) — dùng khi bấm &ldquo;Gợi ý điểm bằng AI&rdquo; trên
-              từng bài nộp
-            </span>
-            <textarea
-              value={rubricText}
-              onChange={(e) => setRubricText(e.target.value)}
-              rows={3}
-              placeholder={'Vd: "3đ nêu đúng khái niệm. 4đ có ví dụ. 3đ trình bày rõ ràng."'}
-              className="textarea mt-1"
-            />
-          </label>
-          <fieldset className="grid grid-cols-1 gap-1 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2 text-xs sm:grid-cols-3">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={requireSelfRating}
-                onChange={(e) => setRequireSelfRating(e.target.checked)}
-              />
-              Yêu cầu tự đánh giá
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={requireReflection}
-                onChange={(e) => setRequireReflection(e.target.checked)}
-              />
-              Yêu cầu reflection
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={countsTowardGrade}
-                onChange={(e) => setCountsTowardGrade(e.target.checked)}
-              />
-              Tính vào điểm
-            </label>
-          </fieldset>
+          {showResearch && (
+            <fieldset className="grid grid-cols-1 gap-1 rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-2 text-xs sm:grid-cols-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={requireSelfRating}
+                  onChange={(e) => setRequireSelfRating(e.target.checked)}
+                />
+                Yêu cầu học viên tự đánh giá bài làm (1–5)
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={requireReflection}
+                  onChange={(e) => setRequireReflection(e.target.checked)}
+                />
+                Yêu cầu học viên viết nhận xét sau khi làm (tối thiểu 20 ký tự)
+              </label>
+            </fieldset>
+          )}
           <div className="flex flex-wrap gap-2">
             <input
               type="datetime-local"

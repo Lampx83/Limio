@@ -50,7 +50,7 @@ export default function RegisterPage() {
             <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
-            Tạo tài khoản trong 30 giây. Nhận feedback cá nhân hóa, lộ trình học
+            Tạo tài khoản học viên trong 30 giây. Nhận feedback cá nhân hóa, lộ trình học
             adaptive, và cộng đồng learners năng động.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -74,13 +74,13 @@ export default function RegisterPage() {
           <div className="card shadow-card-hover">
             <div className="text-center">
               <LimeSliceIcon className="mx-auto h-14 w-14 drop-shadow-md" />
-              <h1 className="mt-4 h-display text-2xl font-bold">Tạo tài khoản</h1>
-              <p className="mt-1 text-sm text-muted">Miễn phí — không cần thẻ tín dụng</p>
+              <h1 className="mt-4 h-display text-2xl font-bold">Tạo tài khoản học viên</h1>
             </div>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
+              <p className="text-xs text-muted"><span className="text-danger-600" aria-hidden>*</span> Trường bắt buộc</p>
               <div>
-                <label className="label" htmlFor="displayName">Tên hiển thị</label>
+                <label className="label" htmlFor="displayName">Tên hiển thị<span className="text-danger-600" aria-hidden> *</span></label>
                 <input
                   id="displayName"
                   type="text"
@@ -93,7 +93,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div>
-                <label className="label" htmlFor="email">Email</label>
+                <label className="label" htmlFor="email">Email<span className="text-danger-600" aria-hidden> *</span></label>
                 <input
                   id="email"
                   type="email"
@@ -106,7 +106,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div>
-                <label className="label" htmlFor="password">Mật khẩu</label>
+                <label className="label" htmlFor="password">Mật khẩu<span className="text-danger-600" aria-hidden> *</span></label>
                 <div className="relative mt-1.5">
                   <input
                     id="password"
@@ -155,6 +155,12 @@ export default function RegisterPage() {
               Đã có tài khoản?{" "}
               <Link href="/signin" className="link font-medium">
                 Đăng nhập
+              </Link>
+            </p>
+            <p className="mt-2 text-center text-sm text-muted">
+              Bạn là giáo viên?{" "}
+              <Link href="/register/instructor" className="link font-medium">
+                Đăng ký tài khoản giáo viên
               </Link>
             </p>
           </div>

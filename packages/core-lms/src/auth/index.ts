@@ -13,3 +13,5 @@ export * from "./sso";
 export * from "./impersonation";
 export * from "./invite";
 export * from "./deviceInfo";
+export * from "./deleteUser";
+export * from "./instructorApplication";

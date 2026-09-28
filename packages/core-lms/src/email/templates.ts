@@ -33,6 +33,8 @@ export type TemplateKey =
   | "cohort.instructor_invite"
   | "course.co_instructor_invite"
   | "course.welcome"
+  | "instructor.application_approved"
+  | "instructor.application_rejected"
   | "course.access_expiring"
   | "exam.grade_published"
   | "exam.deadline_reminder"
@@ -175,6 +177,16 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
     subject: "Chào mừng bạn đến với {{courseTitle}}!",
     bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Chào mừng bạn đến với khoá học <strong>{{courseTitle}}</strong> trên Limio.vn!</p><p>Bắt đầu học: <a href="{{courseUrl}}">{{courseUrl}}</a></p>`,
     bodyText: `Xin chào {{learnerName}},\n\nChào mừng bạn đến với khoá học {{courseTitle}}.\nBắt đầu học tại: {{courseUrl}}`,
+  },
+  "instructor.application_approved": {
+    subject: "Chúc mừng! Tài khoản giáo viên của bạn trên Limio đã được duyệt",
+    bodyHtml: `<p>Xin chào {{displayName}},</p><p>Chúc mừng bạn! Đơn đăng ký giáo viên của bạn đã được duyệt. Bạn có thể bắt đầu tạo khoá học đầu tiên ngay bây giờ.</p><p><a href="{{dashboardUrl}}">{{dashboardUrl}}</a></p>`,
+    bodyText: `Xin chào {{displayName}},\n\nChúc mừng bạn! Đơn đăng ký giáo viên của bạn đã được duyệt. Bắt đầu tại: {{dashboardUrl}}`,
+  },
+  "instructor.application_rejected": {
+    subject: "Về đơn đăng ký giáo viên của bạn trên Limio",
+    bodyHtml: `<p>Xin chào {{displayName}},</p><p>Cảm ơn bạn đã quan tâm đến việc dạy trên Limio. Rất tiếc, lần này chúng tôi chưa thể duyệt đơn của bạn.</p><p>Lý do: {{reason}}</p><p>Bạn vẫn dùng tài khoản học viên bình thường và có thể nộp lại đơn khi bổ sung thêm thông tin.</p>`,
+    bodyText: `Xin chào {{displayName}},\n\nRất tiếc, lần này chúng tôi chưa thể duyệt đơn giáo viên của bạn.\nLý do: {{reason}}\n\nBạn vẫn dùng tài khoản học viên bình thường và có thể nộp lại đơn khi bổ sung thêm thông tin.`,
   },
   "exam.grade_published": {
     subject: "[{{examTitle}}] Kết quả thi của bạn đã có",

@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { createCourse, isInstructor, listPublishedCourses } from "@feedbackme/core-lms";
+import {
+  backfillCourseTags,
+  createCourse,
+  isInstructor,
+  listPublishedCourses,
+} from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
@@ -60,6 +65,10 @@ export async function POST(req: Request) {
         }
       }
     });
+    // Khung bài học ở trên tạo thẳng bằng prisma nên bỏ qua hook lesson-as-tag
+    // (CLAUDE.md §4.4). Khoá bật cá nhân hoá phải được gắn chủ đề ngay, nếu không
+    // mọi bài hiện "chưa có chủ đề" cho tới lúc publish. Khoá tắt: no-op.
+    await backfillCourseTags(result.courseId);
     return NextResponse.json(result, { status: 201 });
   } catch (e) {
     const mapped = mapKnownError(e);

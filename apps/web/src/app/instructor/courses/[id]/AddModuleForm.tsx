@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
+import { lmsErrorMessage } from "@/lib/lmsErrors";
 
 export default function AddModuleForm({
   courseId,
@@ -43,7 +44,7 @@ export default function AddModuleForm({
     } catch (networkErr) {
       setBusy(false);
       console.error("[AddModuleForm] network error", networkErr);
-      const msg = "Không kết nối được tới server";
+      const msg = lmsErrorMessage("network_error");
       setError(msg);
       toast.error(msg);
       return;
@@ -59,8 +60,9 @@ export default function AddModuleForm({
     const d = await res.json().catch(() => ({}));
     const code = (d as { error?: string }).error ?? `http_${res.status}`;
     console.error("[AddModuleForm] create failed", res.status, d);
-    setError(code);
-    toast.error(`Tạo module thất bại: ${code}`);
+    const msg = lmsErrorMessage(code, res.status);
+    setError(msg);
+    toast.error(msg);
   }
 
   return (
@@ -92,7 +94,7 @@ export default function AddModuleForm({
         </button>
       </div>
       {error && (
-        <p className="mt-2 text-xs text-danger-600">Lỗi: {error}</p>
+        <p className="mt-2 text-xs text-danger-600">{error}</p>
       )}
     </form>
   );

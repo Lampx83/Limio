@@ -84,6 +84,7 @@ export default function ActivitySection({
   quizzes,
   assignments,
   activities,
+  showResearch = false,
 }: {
   lessonId: string;
   contentItems: ContentItem[];
@@ -92,6 +93,7 @@ export default function ActivitySection({
   // Unified ordered list. If empty (legacy data not yet backfilled),
   // fall back to the old fixed grouping: content → quiz → assignment.
   activities: LessonActivityRow[];
+  showResearch?: boolean;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -190,7 +192,7 @@ export default function ActivitySection({
                     <QuizSection quiz={row.quiz} lessonId={lessonId} />
                   )}
                   {row.kind === "assignment" && (
-                    <AssignmentSection assignment={row.assignment} />
+                    <AssignmentSection assignment={row.assignment} showResearch={showResearch} />
                   )}
                 </div>
               </div>
@@ -215,7 +217,7 @@ export default function ActivitySection({
                   <QuizSection quiz={row.quiz} lessonId={lessonId} />
                 )}
                 {row.kind === "assignment" && (
-                  <AssignmentSection assignment={row.assignment} />
+                  <AssignmentSection assignment={row.assignment} showResearch={showResearch} />
                 )}
               </div>
             </li>
@@ -238,6 +240,7 @@ export default function ActivitySection({
         onClose={() => setPickerOpen(false)}
         lessonId={lessonId}
         nextContentOrderIndex={contentItems.length}
+        showResearch={showResearch}
       />
     </section>
   );

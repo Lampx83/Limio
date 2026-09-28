@@ -17,13 +17,12 @@
 import type { Metadata } from "next";
 
 export const SITE_NAME = "Limio";
-export const SITE_TAGLINE = "Learn your way";
+export const SITE_TAGLINE = "Learn in Flow";
 export const SITE_LOCALE = "vi_VN";
 
 export const SITE_DESCRIPTION =
-  "Limio là nền tảng học trực tuyến (LMS) thế hệ mới: khoá học có cấu trúc, " +
-  "phản hồi cá nhân hoá theo năng lực từng học viên và gamification giữ động lực " +
-  "mỗi ngày. Học theo cách của bạn.";
+  "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và " +
+  "gamification. Học theo cách của bạn — fresh, focused, your own pace.";
 
 const RAW_SITE_URL = (
   process.env.SITE_URL ||

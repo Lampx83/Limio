@@ -1,9 +1,9 @@
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { LearningEventType } from "@feedbackme/shared-types";
+import { LearningEventType, MASTERY_SOLID_AT } from "@feedbackme/shared-types";
 import { resolveFeedbackVariant } from "./variant";
 
 /** Per spec §4.4: skip suggestion when ALL tagged skills are ≥ this threshold. */
-export const SKIP_MASTERY_THRESHOLD = 0.85;
+export const SKIP_MASTERY_THRESHOLD = MASTERY_SOLID_AT;
 /** Number of consecutive failed attempts that triggers a remedial inject. */
 export const REMEDIAL_FAIL_STREAK = 2;
 /** Điểm dưới mức này coi là "làm chưa tốt" khi xét gợi ý học lại. Nội bộ, không hiển thị cho học viên. */
@@ -35,6 +35,23 @@ export async function shouldSkipLesson(
   lessonId: string,
   db: PrismaClient = prisma,
 ): Promise<SkipSuggestion> {
+  // B10 — gợi ý bỏ qua là định tuyến theo mức nắm vững, nên lớp đối chứng
+  // không được thấy (cùng lý do với getAdaptiveNextLesson).
+  const lesson = await db.lesson.findUnique({
+    where: { id: lessonId },
+    select: { module: { select: { courseId: true } } },
+  });
+  if (lesson) {
+    const { variant } = await resolveFeedbackVariant(
+      userId,
+      lesson.module.courseId,
+      db,
+    );
+    if (variant === "minimal") {
+      return { shouldSkip: false, masteries: [], reason: "control_variant" };
+    }
+  }
+
   const tags = await db.contentSkillMapping.findMany({
     where: { contentType: "lesson", contentId: lessonId },
     include: { skill: { select: { id: true, code: true, name: true } } },
@@ -124,6 +141,11 @@ export async function getRemedialSuggestion(
   });
   if (!quiz?.courseId) return { shouldShow: false, reason: "course_unknown" };
   const courseId = quiz.courseId;
+
+  // B10 — lớp đối chứng không được gợi ý bài ôn. diagnostic.ts đã cắt bài ôn
+  // trong feedback từng câu; khung này là cùng loại gợi ý, chỉ khác chỗ hiện.
+  const { variant } = await resolveFeedbackVariant(userId, courseId, db);
+  if (variant === "minimal") return { shouldShow: false, reason: "control_variant" };
 
   // All skills tagged on this quiz's questions.
   const tags = await db.questionSkillTag.findMany({

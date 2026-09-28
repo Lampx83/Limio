@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { canEditCourse, isAdmin, listSubmissionsForInstructor } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import RosterTable from "./RosterTable";
+import RubricBox from "./RubricBox";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -146,6 +147,8 @@ export default async function SubmissionsPage({
         />
         <Stat label="Đã chấm" value={gradedCount} tone="success" />
       </div>
+
+      <RubricBox assignmentId={assignment.id} initialRubric={assignment.rubricText} />
 
       {/* Roster: STT – Người nộp – Trạng thái, theo danh sách đăng ký khoá học */}
       <section className="mt-8">

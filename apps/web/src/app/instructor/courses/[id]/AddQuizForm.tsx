@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { lmsErrorMessage } from "@/lib/lmsErrors";
 
 export default function AddQuizForm({
   lessonId,
@@ -55,7 +56,7 @@ export default function AddQuizForm({
       });
       if (!res.ok) {
         const j = (await res.json().catch(() => null)) as { error?: string } | null;
-        setErr(j?.error ?? `HTTP ${res.status}`);
+        setErr(lmsErrorMessage(j?.error, res.status));
         setBusy(false);
         return;
       }

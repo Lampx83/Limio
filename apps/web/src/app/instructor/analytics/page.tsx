@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { isResearcher } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,8 @@ export default async function InstructorAnalyticsPage({
     redirect("/signin?callbackUrl=/instructor/analytics");
   }
   const userId = session.user.id;
+  // Khu vực nghiên cứu: giảng viên thường không vào được kể cả gõ thẳng URL.
+  if (!(await isResearcher(userId))) redirect("/instructor/dashboard");
 
   const ownedCourses = await prisma.course.findMany({
     where: { instructors: { some: { userId } } },

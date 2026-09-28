@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { masteryLabel } from "@feedbackme/shared-types";
 import { apiUrl } from "@/lib/apiUrl";
+import MasteryBadge from "@/components/MasteryBadge";
 
 interface MasteryRow {
   skillCode: string;
@@ -58,9 +60,7 @@ export default function SkipLessonBanner({
                 <span className="font-medium text-success-700">
                   {m.skillName}
                 </span>
-                <span className="text-success-700/70">
-                  {Math.round(m.masteryProbability * 100)}%
-                </span>
+                <MasteryBadge label={masteryLabel(m.masteryProbability)} />
               </li>
             ))}
           </ul>
