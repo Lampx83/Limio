@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { apiUrl } from "@/lib/apiUrl";
-import { EmptyState, ShareCard } from "@/components/ui";
-import { ChevronRight, Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
+import { EmptyState, ShareCard, StatusBadge, type StatusTone } from "@/components/ui";
+import { ChevronRight, MoreVertical, Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import ImportStudentsButton from "./ImportStudentsButton";
 
 type FeedbackVariant = "personalized" | "minimal";
@@ -13,19 +13,19 @@ type FeedbackVariant = "personalized" | "minimal";
 // mình đang cho lớp nào nhận gì, chứ không phải tên biến trong schema.
 const VARIANTS: Record<
   FeedbackVariant,
-  { label: string; short: string; desc: string; tone: string }
+  { label: string; short: string; desc: string; tone: StatusTone }
 > = {
   personalized: {
     label: "Cá nhân hoá",
     short: "Cá nhân hoá",
     desc: "Phản hồi gọi tên lỗi sai cụ thể, kèm bài ôn gợi ý và đề xuất bài học tiếp theo.",
-    tone: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    tone: "success",
   },
   minimal: {
     label: "Rút gọn (đối chứng)",
     short: "Rút gọn",
     desc: "Chỉ phản hồi chung. Vẫn thấy điểm và đáp án đúng, nhưng không gọi tên lỗi sai, không gợi ý bài ôn, không đề xuất bài kế tiếp.",
-    tone: "border-amber-300 bg-amber-50 text-amber-900",
+    tone: "warning",
   },
 };
 
@@ -253,13 +253,22 @@ export default function SectionsClient({
               />
             ) : (
               <div className="p-4 sm:p-5">
-                <div className="flex flex-wrap items-start gap-x-3 gap-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-3">
                   <Link
                     href={`/instructor/courses/${courseId}/sections/${s.id}`}
-                    className="group min-w-0 flex-1"
+                    className="group min-w-0"
                     prefetch={false}
                   >
-                    <span className="text-h4 block">{s.name}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-h4">{s.name}</span>
+                      {showResearch && (
+                        <span title={VARIANTS[s.feedbackVariant].desc} className="shrink-0">
+                          <StatusBadge tone={VARIANTS[s.feedbackVariant].tone} dot={false}>
+                            {VARIANTS[s.feedbackVariant].short}
+                          </StatusBadge>
+                        </span>
+                      )}
+                    </div>
                     {s.description && (
                       <p className="text-meta mt-0.5">{s.description}</p>
                     )}
@@ -273,41 +282,20 @@ export default function SectionsClient({
                       </span>
                     </div>
                   </Link>
-                  {showResearch && (
-                    <span
-                      title={VARIANTS[s.feedbackVariant].desc}
-                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${VARIANTS[s.feedbackVariant].tone}`}
-                    >
-                      {VARIANTS[s.feedbackVariant].short}
-                    </span>
-                  )}
-                  <div className="flex w-full flex-wrap items-center gap-2 border-t border-token pt-3 sm:w-auto sm:border-0 sm:pt-0">
+                  <div className="flex shrink-0 items-center gap-1.5">
                     <ImportStudentsButton
                       courseId={courseId}
                       sectionId={s.id}
                       sectionName={s.name}
                       onImported={refresh}
                     />
-                    <button onClick={() => setEditId(s.id)} className="btn-secondary btn-sm">
-                      <Pencil className="h-3.5 w-3.5" aria-hidden />
-                      Sửa
-                    </button>
-                    <button
-                      onClick={() => onRegenerate(s.id)}
-                      disabled={busy}
-                      className="btn-secondary btn-sm"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-                      Tạo lại mã
-                    </button>
-                    <button
-                      onClick={() => onDelete(s.id)}
-                      className="btn-secondary btn-sm !border-danger-600/30 text-danger-700 hover:!bg-danger-50"
-                      aria-label={`Xoá lớp ${s.name}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                      Xoá
-                    </button>
+                    <SectionActionsMenu
+                      sectionName={s.name}
+                      busy={busy}
+                      onEdit={() => setEditId(s.id)}
+                      onRegenerate={() => onRegenerate(s.id)}
+                      onDelete={() => onDelete(s.id)}
+                    />
                   </div>
                 </div>
                 {s.inviteCode && (
@@ -325,6 +313,103 @@ export default function SectionsClient({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// Sửa/Tạo lại mã/Xoá đều là hành động hiếm khi dùng so với Nhập học viên —
+// gom lại sau nút "..." để hàng tiêu đề của thẻ lớp đỡ dày đặc nút bấm.
+// Cùng pattern với LessonActionMenu.tsx.
+function SectionActionsMenu({
+  sectionName,
+  busy,
+  onEdit,
+  onRegenerate,
+  onDelete,
+}: {
+  sectionName: string;
+  busy: boolean;
+  onEdit: () => void;
+  onRegenerate: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        disabled={busy}
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-default disabled:opacity-50"
+        title="Thêm hành động cho lớp"
+        aria-label={`Thêm hành động cho lớp ${sectionName}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <MoreVertical className="h-4 w-4" aria-hidden />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="fixed inset-x-4 bottom-4 z-50 rounded-xl border border-token bg-[rgb(var(--surface))] py-1 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:z-30 sm:mt-1 sm:w-56"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onEdit();
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[rgb(var(--surface-muted))]"
+          >
+            <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+            Sửa lớp
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onRegenerate();
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[rgb(var(--surface-muted))]"
+          >
+            <RefreshCw className="h-4 w-4 shrink-0" aria-hidden />
+            Tạo lại mã mời
+          </button>
+          <div role="separator" className="my-1 border-t border-token" />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger-600 hover:bg-danger-50"
+          >
+            <Trash2 className="h-4 w-4 shrink-0" aria-hidden />
+            Xoá lớp
+          </button>
+        </div>
+      )}
     </div>
   );
 }
