@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAdmin, listIntegrationStatuses } from "@feedbackme/core-lms";
+import {
+  getGa4Summary,
+  getIntegrationSecret,
+  isAdmin,
+  listIntegrationStatuses,
+  type Ga4Summary,
+} from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
@@ -83,6 +89,25 @@ export default async function AdminDashboard() {
     integrations.find((i) => i.key === "stripe.secret")?.hasValue ?? false;
   const vnpayOk =
     integrations.find((i) => i.key === "vnpay.secret")?.hasValue ?? false;
+  const ga4Ok =
+    (integrations.find((i) => i.key === "ga4.property_id")?.hasValue ?? false) &&
+    (integrations.find((i) => i.key === "ga4.service_account")?.hasValue ?? false);
+
+  // GA4 chỉ cho traffic/acquisition tổng hợp (§4.8, §5.4 CLAUDE.md) — hành vi
+  // học chi tiết dùng LearningEvent. Lỗi gọi API không được làm sập cả trang.
+  let ga4Summary: Ga4Summary | null = null;
+  let ga4Error: string | null = null;
+  if (ga4Ok) {
+    try {
+      const [propertyId, serviceAccountJson] = await Promise.all([
+        getIntegrationSecret("ga4.property_id"),
+        getIntegrationSecret("ga4.service_account"),
+      ]);
+      ga4Summary = await getGa4Summary(propertyId, serviceAccountJson);
+    } catch (e) {
+      ga4Error = (e as Error).message ?? "unknown_error";
+    }
+  }
 
   return (
     <main>
@@ -159,7 +184,99 @@ export default async function AdminDashboard() {
         <IntegrationKpi label="OpenAI" ok={openaiOk} />
         <IntegrationKpi label="Stripe" ok={stripeOk} optional />
         <IntegrationKpi label="VNPay" ok={vnpayOk} optional />
+        <IntegrationKpi label="Google Analytics" ok={ga4Ok} optional />
       </section>
+
+      {/* GA4 — traffic & acquisition (aggregate, không phải hành vi học chi
+          tiết — cái đó nằm ở LearningEvent) */}
+      {ga4Ok && (
+        <section className="card mt-8">
+          <header className="flex items-baseline justify-between border-b border-token pb-3">
+            <h2 className="text-base font-semibold">
+              Google Analytics — 7 ngày qua
+            </h2>
+            <Link href="/admin/integrations" className="text-xs text-faint hover:underline">
+              Cấu hình
+            </Link>
+          </header>
+          {ga4Error ? (
+            <p className="mt-4 rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
+              Không lấy được dữ liệu GA4: {ga4Error}
+            </p>
+          ) : ga4Summary ? (
+            <div className="mt-4 space-y-6">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg border border-token p-3 text-center">
+                  <p className="h-display text-xl font-bold tabular-nums text-brand-600">
+                    {ga4Summary.activeUsers7d.toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">Active users</p>
+                </div>
+                <div className="rounded-lg border border-token p-3 text-center">
+                  <p className="h-display text-xl font-bold tabular-nums text-brand-600">
+                    {ga4Summary.sessions7d.toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">Sessions</p>
+                </div>
+                <div className="rounded-lg border border-token p-3 text-center">
+                  <p className="h-display text-xl font-bold tabular-nums text-brand-600">
+                    {ga4Summary.newUsers7d.toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">New users</p>
+                </div>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase text-faint">
+                    Top trang
+                  </h3>
+                  {ga4Summary.topPages.length === 0 ? (
+                    <p className="mt-2 text-sm text-muted">Chưa có dữ liệu.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-1.5">
+                      {ga4Summary.topPages.map((p) => (
+                        <li
+                          key={p.path}
+                          className="flex items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="truncate font-mono text-xs text-muted">
+                            {p.path}
+                          </span>
+                          <span className="shrink-0 font-mono text-xs font-semibold tabular-nums">
+                            {p.views.toLocaleString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold uppercase text-faint">
+                    Kênh truy cập
+                  </h3>
+                  {ga4Summary.channels.length === 0 ? (
+                    <p className="mt-2 text-sm text-muted">Chưa có dữ liệu.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-1.5">
+                      {ga4Summary.channels.map((c) => (
+                        <li
+                          key={c.channel}
+                          className="flex items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="text-muted">{c.channel}</span>
+                          <span className="font-mono text-xs font-semibold tabular-nums">
+                            {c.sessions.toLocaleString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      )}
 
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
         {/* Recent audit log */}

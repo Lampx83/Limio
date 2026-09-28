@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
+import { NOINDEX } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import AdminSidebar from "./_components/AdminSidebar";
 import ExitImpersonationButton from "@/components/ExitImpersonationButton";
+
+// Khu vực cần đăng nhập → không bao giờ index. `middleware.ts` đã gắn
+// `X-Robots-Tag` cho cùng nhóm route; thẻ meta này là lớp thứ hai, phòng khi
+// trang được phục vụ qua đường không đi qua middleware (vd. reverse proxy cache).
+export const metadata: Metadata = NOINDEX;
+
 
 // Không set `dynamic = "force-dynamic"` ở layout này để mỗi page con tự
 // chọn chiến lược cache (vd. trang config có thể ISR 30s). Layout vẫn

@@ -24,14 +24,26 @@ const Schema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   LTI_PLATFORM_ISSUER: z.string().url().optional(),
+  // Origin công khai cho canonical/sitemap/OG. Bỏ trống → lib/seo.ts lấy NEXTAUTH_URL.
+  SITE_URL: z.string().url().optional(),
   AI_TURNS_PER_HOUR: z.string().optional(),
   AI_TOKENS_PER_DAY: z.string().optional(),
   // A5.8 Q3 — Email service for sending exam codes to assigned candidates.
   // If RESEND_API_KEY is unset, lib/email.ts falls back to console.log so
   // dev/test still flow without burning the Resend quota.
   RESEND_API_KEY: z.string().optional(),
-  // Chấp nhận cả dạng `Limio <admin@limio.vn>`.
+  // Hoặc SMTP tự host (ưu tiên hơn Resend khi SMTP_HOST được đặt).
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_SECURE: z.string().optional(),
+  SMTP_IGNORE_TLS: z.string().optional(),
+  // Chấp nhận cả dạng `Limio <no-reply@limio.vn>`.
   EMAIL_FROM: z.string().optional(),
+  // Google Analytics 4 Measurement ID (dạng G-XXXXXXXXXX). Bỏ trống → không
+  // load script GA, không cần trong dev/test.
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 

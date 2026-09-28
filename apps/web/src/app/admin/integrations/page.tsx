@@ -33,7 +33,7 @@ export default async function IntegrationsAdminPage() {
           Integration credentials
         </h1>
         <p className="mt-2 max-w-2xl text-muted">
-          Lưu API keys (OpenAI, Stripe, VNPay, Momo) — encrypted AES-256-GCM
+          Lưu API keys (OpenAI, Stripe, VNPay, Momo, Google Analytics) — encrypted AES-256-GCM
           với master key từ env{" "}
           <code className="rounded bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono text-xs">
             SECRETS_MASTER_KEY

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -16,7 +17,7 @@ import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
 import SafeHtml from "@/components/SafeHtml";
-import { plainToRichHtml } from "@/lib/richText";
+import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
 import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
 import LessonTasksTab, {
   type TaskItem,
@@ -32,8 +33,58 @@ import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
 import { Download, Lock, PenLine } from "lucide-react";
+import JsonLd from "@/components/JsonLd";
+import { SITE_NAME, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Bài học của khoá `publicAccess` là nội dung công khai thật — đây là thứ có
+ * cơ hội xếp hạng cho truy vấn dài ("cách tính độ lệch chuẩn", "PLS-SEM là gì"),
+ * chứ không phải trang bán khoá. Mọi bài học khác phải `noindex`: với Googlebot
+ * chúng chỉ redirect về `/signin`, và index chúng nghĩa là đẩy hàng nghìn trang
+ * đăng nhập trùng nhau vào kết quả tìm kiếm.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string; lessonId: string };
+}): Promise<Metadata> {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: params.lessonId },
+    select: {
+      title: true,
+      description: true,
+      isHidden: true,
+      updatedAt: true,
+      module: {
+        select: {
+          course: {
+            select: { title: true, slug: true, status: true, publicAccess: true, coverUrl: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!lesson) return { title: "Không tìm thấy bài học", robots: { index: false } };
+
+  const course = lesson.module.course;
+  const indexable =
+    course.publicAccess && course.status === "published" && !lesson.isHidden;
+
+  return pageMetadata({
+    title: `${lesson.title} — ${course.title}`,
+    description:
+      htmlToPlainText(lesson.description) ||
+      `Bài học "${lesson.title}" thuộc khoá ${course.title} trên ${SITE_NAME}.`,
+    path: `/learn/${params.slug}/lessons/${params.lessonId}`,
+    image: course.coverUrl,
+    type: "article",
+    modifiedTime: lesson.updatedAt,
+    noIndex: !indexable,
+  });
+}
 
 // Sentinel for user-scoped filters when nobody is signed in. Never a real id, so
 // the filter matches zero rows — as opposed to `undefined`, which Prisma would
@@ -178,6 +229,37 @@ export default async function LessonPage({
     // Otherwise fall through and render as preview below.
   }
 
+  // Dữ liệu có cấu trúc cho bài học công khai. Phải dựng trước khi rẽ nhánh:
+  // Googlebot luôn rơi vào nhánh "preview" bên dưới (nó không đăng nhập được),
+  // nên đặt riêng ở nhánh đã-enroll thì crawler không bao giờ thấy.
+  const structuredData = publiclyReadable ? (
+    <JsonLd
+      data={[
+        breadcrumbJsonLd([
+          { name: "Trang chủ", path: "/" },
+          { name: "Khoá học", path: "/catalog" },
+          { name: lesson.module.course.title, path: `/catalog/${params.slug}` },
+          { name: lesson.title, path: `/learn/${params.slug}/lessons/${lesson.id}` },
+        ]),
+        {
+          "@context": "https://schema.org",
+          "@type": "LearningResource",
+          name: lesson.title,
+          ...(lesson.description ? { description: htmlToPlainText(lesson.description) } : {}),
+          learningResourceType: "Lesson",
+          isPartOf: {
+            "@type": "Course",
+            name: lesson.module.course.title,
+            url: absoluteUrl(`/catalog/${params.slug}`),
+          },
+          provider: { "@type": "EducationalOrganization", name: SITE_NAME },
+          isAccessibleForFree: true,
+          dateModified: lesson.updatedAt.toISOString(),
+        },
+      ]}
+    />
+  ) : null;
+
   const allLessons = await prisma.lesson.findMany({
     where: { module: { courseId: lesson.module.course.id } },
     orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
@@ -199,6 +281,7 @@ export default async function LessonPage({
     const paid = course.priceCents !== null && course.priceCents > 0;
     return (
       <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
+        {structuredData}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href={`/catalog/${params.slug}`} className="link inline-flex items-center gap-1 text-base font-medium">
             ← {course.title}
@@ -471,6 +554,7 @@ export default async function LessonPage({
       className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"
     >
       {stageMode && <StageListener lessonId={lesson.id} />}
+      {structuredData}
       {/*
         Hàng trên chỉ còn đường quay lại khoá. Mục lục đã có sẵn ở thanh dính
         dưới đáy — luôn trong tầm tay dù đang đọc tới đâu — nên đặt thêm một

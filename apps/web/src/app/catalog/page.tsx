@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { listPublishedCourses, listCatalogSectionsForDisplay } from "@feedbackme/core-lms";
@@ -7,8 +8,40 @@ import { isFree, formatPrice } from "@/lib/formatPrice";
 import { htmlToPlainText } from "@/lib/richText";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { EmptyState } from "@/components/ui";
+import JsonLd from "@/components/JsonLd";
+import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export function generateMetadata({
+  searchParams,
+}: {
+  searchParams: { category?: string; level?: string; language?: string; q?: string };
+}): Metadata {
+  // Thứ tự cố định (không theo thứ tự user gõ) để `?q=a&level=b` và
+  // `?level=b&q=a` ra cùng một canonical.
+  const qs = new URLSearchParams();
+  for (const k of ["q", "category", "level", "language"] as const) {
+    if (searchParams[k]) qs.set(k, searchParams[k]!);
+  }
+  const filtered = qs.toString().length > 0;
+
+  return pageMetadata({
+    title: "Khám phá khoá học",
+    description:
+      "Duyệt toàn bộ khoá học đang mở trên Limio — lọc theo danh mục, cấp độ và ngôn ngữ. " +
+      "Khoá miễn phí lẫn có phí, kèm phản hồi cá nhân hoá theo năng lực của bạn.",
+    // Canonical tự trỏ chính nó. Trỏ bản đã lọc về `/catalog` trong khi vẫn
+    // `noindex` là hai chỉ thị đá nhau — Google khuyên không trộn; ở đây chỉ cần
+    // một tín hiệu: đừng index bản đã lọc.
+    path: filtered ? `/catalog?${qs}` : "/catalog",
+    // Mỗi tổ hợp filter × từ khoá là một URL khác nhưng cùng tập nội dung. Để
+    // index hết thì hàng trăm biến thể tự chia nhau thứ hạng của `/catalog`.
+    // `noindex` nhưng vẫn `follow` (xem pageMetadata) nên crawler đi tiếp được
+    // vào từng trang khoá học.
+    noIndex: filtered,
+  });
+}
 
 async function getDistinctCategories(): Promise<string[]> {
   const rows = await prisma.course.findMany({
@@ -100,6 +133,27 @@ export default async function CatalogPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-24 lg:pb-12">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Trang chủ", path: "/" },
+            { name: "Khoá học", path: "/catalog" },
+          ]),
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "Khoá học trên Limio",
+            numberOfItems: items.length,
+            itemListElement: items.map((c, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              url: absoluteUrl(`/catalog/${c.slug}`),
+              name: c.title,
+            })),
+          },
+        ]}
+      />
+
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

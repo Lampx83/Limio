@@ -86,6 +86,11 @@ export const INTEGRATION_KEYS = [
   // "provider.secretName" đã dùng cho stripe/vnpay/momo ở trên.
   "vbee.app_id",
   "vbee.token",
+  // GA4 Data API — đọc traffic/acquisition cho Admin Dashboard. property_id
+  // không thực sự "secret" nhưng lưu chung cơ chế cho đồng bộ với
+  // service_account (JSON key, secret thật sự).
+  "ga4.property_id",
+  "ga4.service_account",
 ] as const;
 export type IntegrationKey = (typeof INTEGRATION_KEYS)[number];
 
