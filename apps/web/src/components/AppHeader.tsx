@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@feedbackme/db";
 import { isAnyOrgAdmin } from "@feedbackme/core-lms";
+import { getRegisterEnabled } from "@/lib/site-settings";
 import UserMenu from "./UserMenu";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
@@ -25,6 +26,8 @@ export default async function AppHeader() {
   const user = session?.user;
   const roles = switchableRoles(user?.roles ?? []);
   const activeRole = getActiveRole(roles);
+  // Chỉ cần cho nhánh guest bên dưới — bỏ qua query khi đã đăng nhập.
+  const registerEnabled = user ? true : await getRegisterEnabled();
 
   // Fetch avatar separately — JWT session doesn't refresh after upload, so
   // reading from DB on each request keeps the header always fresh. Cheap
@@ -105,12 +108,14 @@ export default async function AppHeader() {
             />
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Link href="/signin" className="btn-ghost btn-sm">
+              <Link href="/signin" className={registerEnabled ? "btn-ghost btn-sm" : "btn-primary btn-sm"}>
                 Đăng nhập
               </Link>
-              <Link href="/register" className="btn-primary btn-sm">
-                Đăng ký
-              </Link>
+              {registerEnabled && (
+                <Link href="/register" className="btn-primary btn-sm">
+                  Đăng ký
+                </Link>
+              )}
             </div>
           )}
         </div>
