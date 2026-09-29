@@ -54,7 +54,7 @@ export async function embedMaterial(
   try {
     result = await compute(texts);
   } catch (e) {
-    throw new AiTutorError("openai_error", (e as Error).message);
+    throw new AiTutorError("openai_error", (e as Error).message, e);
   }
   if (result.embeddings.length !== texts.length) {
     throw new AiTutorError("openai_error", "embedding_count_mismatch");

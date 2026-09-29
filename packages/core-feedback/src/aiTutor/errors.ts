@@ -16,7 +16,13 @@ export class AiTutorError extends Error {
       // A6.2
       | "material_not_found",
     public readonly details?: unknown,
+    /**
+     * Lỗi gốc (vd RateLimitError của OpenAI). Giữ lại để tầng route nhận ra
+     * "OpenAI quá tải" theo status thay vì parse chuỗi `details`.
+     */
+    cause?: unknown,
   ) {
     super(code);
+    if (cause !== undefined) (this as { cause?: unknown }).cause = cause;
   }
 }

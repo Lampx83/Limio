@@ -251,6 +251,9 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
             {error === "openai_not_configured" && (
               <p className="mt-1">Admin chưa cấu hình OpenAI key ở /admin/integrations.</p>
             )}
+            {error === "openai_busy" && (
+              <p className="mt-1">Hệ thống AI đang quá tải, đợi vài giây rồi hỏi lại nhé.</p>
+            )}
             {error === "rate_limited" && (
               <p className="mt-1">Bạn đã hỏi quá nhiều trong 1 giờ, đợi chút nhé.</p>
             )}

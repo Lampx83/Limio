@@ -485,7 +485,7 @@ export async function runOralExamTurn(
       streamFilter?.flush();
     }
   } catch (e) {
-    throw new AiTutorError("openai_error", (e as Error).message);
+    throw new AiTutorError("openai_error", (e as Error).message, e);
   }
   if (!chatResult.content) {
     throw new AiTutorError("openai_error", "empty_response");
@@ -670,7 +670,7 @@ export async function runOralExamPreviewTurn(
       streamFilter?.flush();
     }
   } catch (e) {
-    throw new AiTutorError("openai_error", (e as Error).message);
+    throw new AiTutorError("openai_error", (e as Error).message, e);
   }
   if (!chatResult.content) throw new AiTutorError("openai_error", "empty_response");
   if (filterOpener) chatResult = { ...chatResult, content: stripEvaluativeOpener(chatResult.content) };

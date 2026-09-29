@@ -55,6 +55,7 @@ const FRIENDLY_ERROR: Record<string, string> = {
   openai_not_configured: "Admin chưa cấu hình OpenAI key — báo giảng viên/admin.",
   vbee_not_configured: "Admin chưa cấu hình Vbee (giọng nói) — báo giảng viên/admin, hoặc chuyển sang gõ chữ.",
   rate_limited: "Bạn thao tác quá nhanh, đợi một chút rồi thử lại.",
+  openai_busy: "Hệ thống AI đang quá tải nên chưa phản hồi được — đợi vài giây rồi thử lại; nếu vẫn lỗi, báo giám thị/giảng viên. Đây không phải lỗi của bạn.",
   global_token_cap: "Hệ thống đã chạm trần AI hôm nay — báo giảng viên, đây không phải lỗi của bạn.",
   empty_transcript: "Không nghe rõ câu trả lời — ghi âm lại, hoặc chuyển sang gõ chữ.",
   stt_timeout: "Nhận dạng giọng nói mất quá lâu — thử lại, hoặc chuyển sang gõ chữ.",

@@ -383,7 +383,7 @@ export async function runChatTurn(
       }
     }
   } catch (e) {
-    throw new AiTutorError("openai_error", (e as Error).message);
+    throw new AiTutorError("openai_error", (e as Error).message, e);
   }
 
   if (!assistantContent) {

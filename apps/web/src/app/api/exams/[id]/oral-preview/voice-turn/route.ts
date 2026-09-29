@@ -1,5 +1,6 @@
+import { isOpenaiOverloaded } from "@/lib/openaiResilience";
+import { createOpenaiClient, openaiBusyResponse } from "@/lib/openaiClient";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import {
   AiTutorError,
   openAiChatCompute,
@@ -79,7 +80,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     throw e;
   });
   if (!openaiKey) return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
-  const openai = new OpenAI({ apiKey: openaiKey });
+  const openai = createOpenaiClient(openaiKey);
 
   let studentTranscript: string | null = null;
   if (audioFile instanceof File) {
@@ -88,6 +89,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       const stt = await openAiSpeechToText(openai, exam.language)(audioBuf, audioFile.type || "audio/wav");
       studentTranscript = stt.transcript.trim() || null;
     } catch (e) {
+      if (isOpenaiOverloaded(e)) return openaiBusyResponse();
       if (e instanceof OpenAiVoiceError) {
         return NextResponse.json({ error: e.code, details: e.details }, { status: 502 });
       }
@@ -109,6 +111,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       computeEmbed: openAiEmbedCompute(openai),
     });
   } catch (e) {
+    if (isOpenaiOverloaded(e)) return openaiBusyResponse();
     if (e instanceof AiTutorError) {
       return NextResponse.json({ error: e.code, details: e.details }, { status: 400 });
     }

@@ -129,7 +129,7 @@ export async function generateOralExamEvaluation(
   try {
     chatResult = await computeChat([{ role: "system", content: prompt }]);
   } catch (e) {
-    throw new AiTutorError("openai_error", (e as Error).message);
+    throw new AiTutorError("openai_error", (e as Error).message, e);
   }
   if (!chatResult.content) throw new AiTutorError("openai_error", "empty_response");
 

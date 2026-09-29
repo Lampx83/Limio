@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { createOpenaiClient } from "@/lib/openaiClient";
 import { embedMaterial, openAiEmbedCompute } from "@feedbackme/core-feedback";
 import { getIntegrationSecret } from "@feedbackme/core-lms";
 
@@ -12,7 +12,7 @@ import { getIntegrationSecret } from "@feedbackme/core-lms";
 export async function tryEmbedMaterial(userId: string, materialId: string): Promise<boolean> {
   try {
     const openaiKey = await getIntegrationSecret("openai");
-    const openai = new OpenAI({ apiKey: openaiKey });
+    const openai = createOpenaiClient(openaiKey);
     const r = await embedMaterial(userId, materialId, openAiEmbedCompute(openai));
     return !r.skipped;
   } catch {

@@ -1,4 +1,5 @@
-import OpenAI from "openai";
+import { isOpenaiOverloaded } from "@/lib/openaiResilience";
+import { createOpenaiClient } from "@/lib/openaiClient";
 import {
   AiTutorError,
   openAiChatCompute,
@@ -47,7 +48,7 @@ export async function POST(
     throw e;
   }
 
-  const openai = new OpenAI({ apiKey: openaiKey });
+  const openai = createOpenaiClient(openaiKey);
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -81,7 +82,9 @@ export async function POST(
           // best-effort, xem comment ở trên
         }
       } catch (e) {
-        if (e instanceof AiTutorError) {
+        if (isOpenaiOverloaded(e)) {
+          send("error", { code: "openai_busy" });
+        } else if (e instanceof AiTutorError) {
           send("error", { code: e.code, details: e.details });
         } else {
           send("error", { code: "unknown", details: (e as Error).message });

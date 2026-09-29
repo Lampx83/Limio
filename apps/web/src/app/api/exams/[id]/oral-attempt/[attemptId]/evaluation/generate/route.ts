@@ -1,5 +1,5 @@
+import { createOpenaiClient } from "@/lib/openaiClient";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import {
   AiTutorError,
   generateOralExamEvaluation,
@@ -46,7 +46,7 @@ export async function POST(
   }
 
   try {
-    const openai = new OpenAI({ apiKey: openaiKey });
+    const openai = createOpenaiClient(openaiKey);
     const r = await generateOralExamEvaluation(userId, params.attemptId, openAiChatCompute(openai));
     return NextResponse.json(r);
   } catch (e) {
