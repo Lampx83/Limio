@@ -225,18 +225,16 @@ export default function SignInForm() {
                     onClick={() => signIn("microsoft-entra-id", { callbackUrl })}
                     className="btn-secondary flex w-full items-center justify-center gap-2"
                   >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 23 23"
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/hust-logo.webp"
+                      alt=""
                       aria-hidden
-                    >
-                      <path fill="#f25022" d="M1 1h10v10H1z" />
-                      <path fill="#7fba00" d="M12 1h10v10H12z" />
-                      <path fill="#00a4ef" d="M1 12h10v10H1z" />
-                      <path fill="#ffb900" d="M12 12h10v10H12z" />
-                    </svg>
-                    Đăng nhập với Microsoft
+                      width={81}
+                      height={16}
+                      className="h-4 w-auto"
+                    />
+                    Đăng nhập với Email BK
                   </button>
                 )}
                 <div className="relative my-2">
