@@ -53,6 +53,19 @@ x-web-env: &web-env
   # Hạn mức hiển thị ở admin/emails (mặc định gói free Resend: 100/ngày, 3000/tháng; 0 = ẩn).
   EMAIL_DAILY_LIMIT: ${EMAIL_DAILY_LIMIT:-}
   EMAIL_MONTHLY_LIMIT: ${EMAIL_MONTHLY_LIMIT:-}
+  # Lớp chịu tải OpenAI (apps/web/src/lib/openaiClient.ts). Bỏ trống → dùng mặc định
+  # trong code (20 request đồng thời MỖI replica, 4 lần thử lại, chờ hàng đợi 20s).
+  # Prod chạy 3 replica nên trần thật = 3 × OPENAI_MAX_CONCURRENCY.
+  OPENAI_MAX_CONCURRENCY: ${OPENAI_MAX_CONCURRENCY:-}
+  OPENAI_MAX_RETRIES: ${OPENAI_MAX_RETRIES:-}
+  OPENAI_QUEUE_TIMEOUT_MS: ${OPENAI_QUEUE_TIMEOUT_MS:-}
+  # Sổ ghi dung lượng file. "off" = tắt khẩn cấp (mặc định bật).
+  STORAGE_LEDGER: ${STORAGE_LEDGER:-}
+  # Dọn file mồ côi (cron chủ nhật 3h30). Để trống = CHỈ BÁO CÁO vào log; đặt "apply"
+  # (đúng từng chữ) mới xoá thật. Xem docs trong route storage-orphan-sweep.
+  STORAGE_ORPHAN_SWEEP: ${STORAGE_ORPHAN_SWEEP:-}
+  STORAGE_ORPHAN_DAYS: ${STORAGE_ORPHAN_DAYS:-}
+  STORAGE_ORPHAN_MAX_DELETE: ${STORAGE_ORPHAN_MAX_DELETE:-}
 
 services:
   postgres:
