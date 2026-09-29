@@ -19,6 +19,7 @@
 #   nguồn : S3_* trong /etc/feedbackme/.env.prod (chính là MinIO app đang dùng)
 #   đích  : /home/codelab/services/backup/r2.env (chmod 600), gồm
 #             R2_ENDPOINT R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET [R2_PREFIX]
+#             [R2_MAX_GB]  trần dung lượng (mặc định 9.5) để không vượt 10 GB miễn phí
 set -euo pipefail
 
 DRY=""
@@ -33,7 +34,8 @@ mkdir -p "$LOG_DIR"
 log() { echo "[$(date '+%F %T')] $*"; }
 
 # Đọc đúng khóa cần thiết, không `source` cả file (tránh chạy nhầm nội dung lạ).
-getv() { grep -E "^$2=" "$1" | tail -1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/'; }
+# `|| true`: khoá tùy chọn vắng mặt không được làm chết script (pipefail + set -e).
+getv() { { grep -E "^$2=" "$1" || true; } | tail -1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/'; }
 
 SRC_ENDPOINT="$(getv "$ENV_FILE" S3_ENDPOINT)"
 SRC_KEY="$(getv "$ENV_FILE" S3_ACCESS_KEY_ID)"
@@ -45,6 +47,7 @@ DST_KEY="$(getv "$R2_ENV" R2_ACCESS_KEY_ID)"
 DST_SECRET="$(getv "$R2_ENV" R2_SECRET_ACCESS_KEY)"
 DST_BUCKET="$(getv "$R2_ENV" R2_BUCKET)"
 DST_PREFIX="$(getv "$R2_ENV" R2_PREFIX)"; DST_PREFIX="${DST_PREFIX:-nas-mirror}"
+MAX_GB="$(getv "$R2_ENV" R2_MAX_GB)"; MAX_GB="${MAX_GB:-9.5}"
 
 for v in SRC_ENDPOINT SRC_KEY SRC_SECRET SRC_BUCKET DST_ENDPOINT DST_KEY DST_SECRET DST_BUCKET; do
   [[ -n "${!v}" ]] || { log "THIẾU cấu hình: $v"; exit 2; }
@@ -66,6 +69,17 @@ rc() {
 
 SRC="SRC:${SRC_BUCKET}"
 DST="DST:${DST_BUCKET}/${DST_PREFIX}"
+
+# Chốt chặn dung lượng: R2 miễn phí 10 GB. Nguồn (NAS) lớn hơn trần ⇒ dừng TRƯỚC
+# khi chép, thoát lỗi 3 để cron/log thấy rõ, thay vì lặng lẽ sinh phí hoặc chép dở.
+SRC_BYTES="$(rc size "$SRC" --json 2>/dev/null | sed -n 's/.*"bytes":\([0-9]*\).*/\1/p')"
+LIMIT_BYTES="$(awk -v g="$MAX_GB" 'BEGIN{printf "%.0f", g*1000000000}')"
+if [[ -n "$SRC_BYTES" && "$SRC_BYTES" -gt "$LIMIT_BYTES" ]]; then
+  log "DỪNG: nguồn $((SRC_BYTES/1000000)) MB > trần ${MAX_GB} GB của R2 miễn phí."
+  log "Chọn: nâng R2_MAX_GB (chấp nhận trả ~\$0.015/GB/tháng) hoặc loại bớt dữ liệu khỏi bản sao."
+  exit 3
+fi
+log "Nguồn ${SRC_BYTES:-?} bytes (trần ${MAX_GB} GB)"
 
 log "== NAS→R2 ${DRY:+(dry-run) }${SRC} → ${DST_BUCKET}/${DST_PREFIX}"
 rc copy "$SRC" "$DST" --size-only --transfers 4 --checkers 8 $DRY \
