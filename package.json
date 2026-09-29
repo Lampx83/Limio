@@ -37,7 +37,9 @@
     "import:deck": "pnpm --filter @feedbackme/core-lms import:deck",
     "import:deck:prod": "pnpm --filter @feedbackme/core-lms import:deck:prod",
     "import:oral": "pnpm --filter @feedbackme/core-lms import:oral",
-    "import:oral:prod": "pnpm --filter @feedbackme/core-lms import:oral:prod"
+    "import:oral:prod": "pnpm --filter @feedbackme/core-lms import:oral:prod",
+    "storage:verify-s3": "pnpm --filter @feedbackme/web storage:verify-s3",
+    "storage:migrate-to-s3": "pnpm --filter @feedbackme/web storage:migrate-to-s3"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

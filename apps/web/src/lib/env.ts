@@ -30,10 +30,20 @@ const Schema = z.object({
   SCORM_STORAGE_ROOT: optionalString(),
   H5P_STORAGE_ROOT: optionalString(),
   S3_BUCKET: optionalString(),
+  // Bucket riêng cho từng storage layer (xem lib/storage.ts getLayerStorage) —
+  // để layer "public" bật CDN/anonymous-read mà không kéo theo "private".
+  // Bỏ trống thì layer đó dùng chung S3_BUCKET với prefix theo tên layer.
+  S3_BUCKET_PUBLIC: optionalString(),
+  S3_BUCKET_PRIVATE: optionalString(),
   S3_REGION: optionalString(),
   S3_ACCESS_KEY_ID: optionalString(),
   S3_SECRET_ACCESS_KEY: optionalString(),
   S3_ENDPOINT: optionalUrl(),
+  // CDN/public base URL cho layer "public" (vd domain gắn vào R2 bucket).
+  // Bỏ trống → file public vẫn phục vụ được, chỉ là qua route Next.js thay vì
+  // thẳng từ CDN. Dùng optionalUrl() — xem cảnh báo outage 2026-09-28 ở đầu
+  // file này về lý do "" phải thành undefined chứ không được lọt qua .url().
+  S3_PUBLIC_BASE_URL: optionalUrl(),
   STRIPE_SECRET_KEY: optionalString(),
   STRIPE_WEBHOOK_SECRET: optionalString(),
   LTI_PLATFORM_ISSUER: optionalUrl(),

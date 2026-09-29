@@ -152,8 +152,60 @@ class S3Adapter implements StorageAdapter {
   }
 }
 
+/**
+ * D.1 cutover: ghi luôn đi thẳng lên `primary` (S3); đọc thử `primary` trước,
+ * không thấy thì rơi về `fallback` (local disk cũ). Cho phép bật S3_BUCKET mà
+ * KHÔNG cần migrate hết file cũ trước — file cũ vẫn phục vụ được nguyên trạng
+ * từ local, file mới tự động lên S3. Sau khi migrate xong (script riêng) và
+ * xoá file local, lớp fallback trở thành no-op vô hại (fallback luôn miss).
+ *
+ * Không tự chuyển file từ fallback sang primary khi đọc trúng — đó là việc
+ * của migrate-uploads-to-s3.ts, làm một lần, có kiểm soát, không lồng vào mỗi
+ * request đọc (tránh vừa đọc vừa âm thầm ghi lại, khó debug khi có lỗi).
+ */
+class FallbackReadAdapter implements StorageAdapter {
+  constructor(
+    private primary: StorageAdapter,
+    private fallback: StorageAdapter,
+  ) {}
+
+  async put(key: string, body: Buffer, contentType?: string): Promise<void> {
+    await this.primary.put(key, body, contentType);
+  }
+  async get(key: string): Promise<Buffer> {
+    if (await this.primary.exists(key)) return this.primary.get(key);
+    return this.fallback.get(key);
+  }
+  async exists(key: string): Promise<boolean> {
+    if (await this.primary.exists(key)) return true;
+    return this.fallback.exists(key);
+  }
+  async delete(key: string): Promise<void> {
+    // File có thể đang ở primary, fallback, hoặc cả hai (đã migrate tay nhưng
+    // chưa dọn bản gốc) — xoá cả hai cho chắc, không quan tâm bên nào có.
+    await Promise.allSettled([this.primary.delete(key), this.fallback.delete(key)]);
+  }
+  async copy(srcKey: string, destKey: string): Promise<void> {
+    if (await this.primary.exists(srcKey)) {
+      await this.primary.copy(srcKey, destKey);
+      return;
+    }
+    // Src chỉ có ở fallback (chưa migrate) — đọc rồi ghi thẳng lên primary,
+    // để bản copy mới hội tụ về S3 thay vì tạo thêm bản sao trên local.
+    const buf = await this.fallback.get(srcKey);
+    await this.primary.put(destKey, buf);
+  }
+  publicUrl(key: string): string | null {
+    // CHƯA migrate xong mà bật S3_PUBLIC_BASE_URL: link CDN sẽ 404 cho file
+    // cũ còn ở fallback (không có cách nào biết trước đồng bộ vì đây là hàm
+    // sync). publicUrl() hiện không được gọi ở đâu trong app — nhưng nếu sau
+    // này có người dùng, chỉ bật S3_PUBLIC_BASE_URL SAU KHI đã migrate xong.
+    return this.primary.publicUrl(key);
+  }
+}
+
 const localCache = new Map<StorageLayer, LocalFsAdapter>();
-const s3Cache = new Map<StorageLayer, S3Adapter>();
+const combinedCache = new Map<StorageLayer, StorageAdapter>();
 
 function s3Client(): S3Client | null {
   if (!process.env.S3_BUCKET) return null;
@@ -173,32 +225,51 @@ function s3Client(): S3Client | null {
   });
 }
 
-/** Adapter rooted at a specific storage layer. Keys are layer-relative. */
-export function getLayerStorage(layer: StorageLayer): StorageAdapter {
+function buildS3Adapter(layer: StorageLayer): S3Adapter | null {
   const client = s3Client();
-  if (client) {
-    const cached = s3Cache.get(layer);
-    if (cached) return cached;
-    // Allow each layer to live in its own bucket if desired (recommended for prod
-    // so public bucket can have CDN/anonymous-read while private bucket can't).
-    const layerBucket = process.env[`S3_BUCKET_${layer.toUpperCase()}`];
-    const sharedBucket = process.env.S3_BUCKET!;
-    const adapter = new S3Adapter(
-      client,
-      layerBucket ?? sharedBucket,
-      // When sharing one bucket across layers, prefix each layer's keys with the
-      // layer name to keep them separable in lifecycle rules / IAM policies.
-      layerBucket ? "" : layer,
-      layer === "public" ? (process.env.S3_PUBLIC_BASE_URL ?? null) : null,
-    );
-    s3Cache.set(layer, adapter);
-    return adapter;
-  }
+  if (!client) return null;
+  // Allow each layer to live in its own bucket if desired (recommended for prod
+  // so public bucket can have CDN/anonymous-read while private bucket can't).
+  const layerBucket = process.env[`S3_BUCKET_${layer.toUpperCase()}`];
+  const sharedBucket = process.env.S3_BUCKET!;
+  return new S3Adapter(
+    client,
+    layerBucket ?? sharedBucket,
+    // When sharing one bucket across layers, prefix each layer's keys with the
+    // layer name to keep them separable in lifecycle rules / IAM policies.
+    layerBucket ? "" : layer,
+    layer === "public" ? (process.env.S3_PUBLIC_BASE_URL ?? null) : null,
+  );
+}
+
+function localAdapterFor(layer: StorageLayer): LocalFsAdapter {
   const cached = localCache.get(layer);
   if (cached) return cached;
   const adapter = new LocalFsAdapter(path.join(localRoot(), layer));
   localCache.set(layer, adapter);
   return adapter;
+}
+
+/** Adapter rooted at a specific storage layer. Keys are layer-relative. */
+export function getLayerStorage(layer: StorageLayer): StorageAdapter {
+  const cached = combinedCache.get(layer);
+  if (cached) return cached;
+  const s3 = buildS3Adapter(layer);
+  const adapter: StorageAdapter = s3
+    ? new FallbackReadAdapter(s3, localAdapterFor(layer))
+    : localAdapterFor(layer);
+  combinedCache.set(layer, adapter);
+  return adapter;
+}
+
+/**
+ * Adapter S3 THUẦN cho layer này, bỏ qua fallback đọc local — dùng cho script
+ * ops (migrate) cần thao tác thẳng lên S3 mà không bị `exists()` báo "đã có"
+ * giả (vì fallback local đương nhiên "có" đúng những file script đang đọc để
+ * migrate). Trả null nếu S3 chưa cấu hình (S3_BUCKET không set).
+ */
+export function getPrimaryS3Storage(layer: StorageLayer): StorageAdapter | null {
+  return buildS3Adapter(layer);
 }
 
 /** Convenience: resolve a typed key to its adapter. */
