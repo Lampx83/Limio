@@ -7,6 +7,8 @@ async function cleanDb() {
   // AuthProvider → LearningEvent → Quiz attempt chain → Course chain → User → Role.
   await prisma.$transaction([
     prisma.auditLog.deleteMany(),
+    // Sổ ghi dung lượng: không có FK nên không tự dọn theo User/Course.
+    prisma.storedFile.deleteMany(),
     prisma.verificationToken.deleteMany(),
     prisma.note.deleteMany(),
     prisma.userBadge.deleteMany(),

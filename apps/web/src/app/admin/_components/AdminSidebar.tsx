@@ -21,6 +21,7 @@ import {
   UserCheck,
   Building2,
   type LucideIcon,
+  HardDrive,
 } from "lucide-react";
 
 type Item = {
@@ -77,6 +78,7 @@ const GROUPS: Group[] = [
       { label: "LTI tools", href: "/admin/lti-tools", icon: Wrench },
       { label: "Email templates", href: "/admin/emails", icon: Mail },
       { label: "Token AI", href: "/admin/ai-tokens", icon: Coins },
+      { label: "Dung lượng", href: "/admin/storage", icon: HardDrive },
     ],
   },
   {

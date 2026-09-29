@@ -13,6 +13,8 @@
     "test": "vitest run",
     "backfill:learner-role": "node --env-file=../db/.env --import tsx scripts/backfill-learner-role.ts",
     "backfill:lesson-tags": "node --env-file=../db/.env --import tsx scripts/backfill-lesson-tags.ts",
+    "backfill:stored-files": "node --env-file=../db/.env --import tsx scripts/backfill-stored-files.ts",
+    "storage:orphans": "node --env-file=../db/.env --import tsx scripts/report-orphan-files.ts",
     "import:course": "node --env-file=../db/.env --import tsx scripts/import-course.ts",
     "import:course:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-course.ts",
     "update:lesson": "node --env-file=../db/.env --import tsx scripts/update-lesson.ts",

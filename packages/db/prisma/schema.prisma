@@ -4927,3 +4927,52 @@ model PortfolioItem {
   @@unique([portfolioId, submissionId])
   @@index([submissionId])
 }
+
+// =====================================================================
+// Storage ledger (P0 — chỉ đo, chưa chặn)
+//
+// Mỗi file ghi qua `storage.put` có 1 dòng: nó là gì, nặng bao nhiêu, ai
+// upload, và dung lượng này TÍNH CHO AI (chủ khoá — quyết định D1/D2 của
+// kế hoạch hạn mức: giảng viên đồng giảng/trợ giảng upload vẫn tính cho chủ
+// khoá; mỗi giảng viên một phần riêng, không gộp theo tổ chức).
+//
+// Cố ý KHÔNG có FK sang User/Course: sổ ghi là sự thật về đĩa, phải sống sót
+// khi user/khoá bị xoá (file có thể còn trên đĩa). Dọn dòng mồ côi là việc
+// của job dọn file, không phải của cascade.
+//
+// `deletedAt` thay vì xoá dòng: có dấu vết, và ghi lại cùng key thì hồi sinh.
+// =====================================================================
+
+model StoredFile {
+  id           String    @id @default(uuid())
+  // "public" | "private" | "tmp" — khớp StorageLayer ở apps/web/src/lib/storage-keys.ts
+  layer        String
+  // Key tương đối theo layer, đúng như truyền vào adapter.put.
+  key          String
+  // BigInt: video có thể vượt 2 GB khi lên S3/R2.
+  sizeBytes    BigInt
+  contentType  String?
+  // Phân loại suy từ key (avatar, lesson_video, submission…) — để báo cáo.
+  kind         String
+  // Người bấm upload, suy từ tên file (`<userId>-<ms>-<hex>.ext`) hoặc thư mục
+  // avatar. null = không suy được.
+  uploaderUserId String?
+  // Dung lượng này tính cho ai: chủ khoá nếu tìm được tham chiếu, không thì
+  // rơi về người upload. null = chưa gán được (báo cáo hiện riêng).
+  billedUserId String?
+  courseId     String?
+  // Vì sao gán như vậy: "reference:content_item" | "reference:submission" |
+  // "reference:exam_asset" | "uploader" | ... — để kiểm tra lại được.
+  attribution  String?
+  attributedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([layer, key])
+  // Tổng dung lượng của một người: WHERE billedUserId AND deletedAt IS NULL.
+  @@index([billedUserId, deletedAt])
+  @@index([uploaderUserId])
+  @@index([kind, deletedAt])
+  @@index([courseId])
+}

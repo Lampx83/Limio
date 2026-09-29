@@ -33,6 +33,8 @@ export interface StorageAdapter {
   copy(srcKey: string, destKey: string): Promise<void>;
   /** Public URL or signed URL clients can fetch directly. Null = serve via app. */
   publicUrl(key: string): string | null;
+  /** Dung lượng file (byte) mà không đọc nội dung; null nếu không có. */
+  sizeOf(key: string): Promise<number | null>;
 }
 
 function localRoot(): string {
@@ -83,6 +85,13 @@ class LocalFsAdapter implements StorageAdapter {
   publicUrl(): string | null {
     // Serve via app routes, no public URL.
     return null;
+  }
+  async sizeOf(key: string): Promise<number | null> {
+    try {
+      return (await fs.stat(this.resolve(key))).size;
+    } catch {
+      return null;
+    }
   }
 
   /** Internal: absolute on-disk path (for streaming endpoints that need fd-level ops). */
@@ -150,6 +159,16 @@ class S3Adapter implements StorageAdapter {
   publicUrl(key: string): string | null {
     return this.publicBaseUrl ? `${this.publicBaseUrl}/${this.k(key)}` : null;
   }
+  async sizeOf(key: string): Promise<number | null> {
+    try {
+      const res = await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: this.k(key) }),
+      );
+      return res.ContentLength ?? null;
+    } catch {
+      return null;
+    }
+  }
 }
 
 /**
@@ -202,10 +221,72 @@ class FallbackReadAdapter implements StorageAdapter {
     // này có người dùng, chỉ bật S3_PUBLIC_BASE_URL SAU KHI đã migrate xong.
     return this.primary.publicUrl(key);
   }
+  async sizeOf(key: string): Promise<number | null> {
+    return (await this.primary.sizeOf(key)) ?? this.fallback.sizeOf(key);
+  }
+}
+
+/**
+ * Sổ ghi dung lượng: mọi file đi qua `put/copy` được ghi vào `StoredFile`, mọi
+ * `delete` được đánh dấu xoá. Đặt ở tầng adapter (chứ không ở từng route) để
+ * KHÔNG có đường upload nào lọt sổ — kể cả route viết sau này.
+ *
+ * Ghi sổ là phụ: lỗi sổ (DB chập chờn…) chỉ cảnh báo log, TUYỆT ĐỐI không làm
+ * hỏng upload của người dùng. Hệ quả chấp nhận được ở P0 (chỉ đo): thi thoảng
+ * thiếu một dòng, script backfill bù lại được.
+ */
+export interface StorageLedger {
+  record(input: {
+    layer: string;
+    key: string;
+    sizeBytes: number;
+    contentType?: string | null;
+  }): Promise<void>;
+  markDeleted(layer: string, key: string): Promise<void>;
+}
+
+export function withLedger(
+  inner: StorageAdapter,
+  layer: StorageLayer,
+  ledger: StorageLedger,
+): StorageAdapter {
+  const safe = async (what: string, fn: () => Promise<void>) => {
+    try {
+      await fn();
+    } catch (e) {
+      console.warn(`[storage-ledger] ${what} thất bại:`, (e as Error).message);
+    }
+  };
+  return {
+    async put(key, body, contentType) {
+      await inner.put(key, body, contentType);
+      await safe(`ghi ${layer}/${key}`, () =>
+        ledger.record({ layer, key, sizeBytes: body.length, contentType }),
+      );
+    },
+    get: (key) => inner.get(key),
+    exists: (key) => inner.exists(key),
+    publicUrl: (key) => inner.publicUrl(key),
+    sizeOf: (key) => inner.sizeOf(key),
+    async delete(key) {
+      await inner.delete(key);
+      await safe(`đánh dấu xoá ${layer}/${key}`, () => ledger.markDeleted(layer, key));
+    },
+    async copy(srcKey, destKey) {
+      await inner.copy(srcKey, destKey);
+      await safe(`ghi bản sao ${layer}/${destKey}`, async () => {
+        const size = await inner.sizeOf(destKey);
+        if (size !== null) await ledger.record({ layer, key: destKey, sizeBytes: size });
+      });
+    },
+  };
 }
 
 const localCache = new Map<StorageLayer, LocalFsAdapter>();
+// combinedCache giữ adapter THÔ (không bọc sổ) — cần cho `instanceof LocalFsAdapter`
+// ở localAbsPath. ledgerCache là bản đã bọc sổ, đây mới là thứ app dùng.
 const combinedCache = new Map<StorageLayer, StorageAdapter>();
+const ledgerCache = new Map<StorageLayer, StorageAdapter>();
 
 function s3Client(): S3Client | null {
   if (!process.env.S3_BUCKET) return null;
@@ -250,8 +331,7 @@ function localAdapterFor(layer: StorageLayer): LocalFsAdapter {
   return adapter;
 }
 
-/** Adapter rooted at a specific storage layer. Keys are layer-relative. */
-export function getLayerStorage(layer: StorageLayer): StorageAdapter {
+function getRawLayerStorage(layer: StorageLayer): StorageAdapter {
   const cached = combinedCache.get(layer);
   if (cached) return cached;
   const s3 = buildS3Adapter(layer);
@@ -259,6 +339,28 @@ export function getLayerStorage(layer: StorageLayer): StorageAdapter {
     ? new FallbackReadAdapter(s3, localAdapterFor(layer))
     : localAdapterFor(layer);
   combinedCache.set(layer, adapter);
+  return adapter;
+}
+
+/**
+ * Adapter rooted at a specific storage layer. Keys are layer-relative.
+ * Đã bọc sổ ghi dung lượng; đặt STORAGE_LEDGER=off để tắt khẩn cấp.
+ */
+export function getLayerStorage(layer: StorageLayer): StorageAdapter {
+  const cached = ledgerCache.get(layer);
+  if (cached) return cached;
+  const raw = getRawLayerStorage(layer);
+  const adapter =
+    process.env.STORAGE_LEDGER === "off"
+      ? raw
+      : withLedger(raw, layer, {
+          // import động: tránh kéo cả @feedbackme/core-lms vào các script ops
+          // chỉ cần thao tác S3 thô, và tránh vòng import lúc build.
+          record: async (i) => (await import("@feedbackme/core-lms")).recordStoredFile(i),
+          markDeleted: async (l, k) =>
+            (await import("@feedbackme/core-lms")).markStoredFileDeleted(l, k),
+        });
+  ledgerCache.set(layer, adapter);
   return adapter;
 }
 
@@ -303,7 +405,7 @@ export async function commitTmp(
  * Returns null when storage is S3.
  */
 export function localAbsPath(key: StorageKey): string | null {
-  const adapter = getLayerStorage(key.layer);
+  const adapter = getRawLayerStorage(key.layer);
   if (adapter instanceof LocalFsAdapter) return adapter.absPath(key.key);
   return null;
 }

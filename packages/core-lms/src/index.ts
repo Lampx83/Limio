@@ -19,3 +19,4 @@ export * from "./imports/index";
 export * from "./live/importFromCourse";
 export * from "./portfolio/index";
 export * from "./certification/index";
+export * from "./storage/index";

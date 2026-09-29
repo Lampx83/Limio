@@ -21,6 +21,8 @@
     "changelog:preview": "npx --yes git-cliff@latest",
     "backfill:learner-role": "pnpm --filter @feedbackme/core-lms backfill:learner-role",
     "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags",
+    "backfill:stored-files": "pnpm --filter @feedbackme/core-lms backfill:stored-files",
+    "storage:orphans": "pnpm --filter @feedbackme/core-lms storage:orphans",
     "backfill:feedback-coding": "pnpm --filter @feedbackme/core-feedback backfill:feedback-coding",
     "import:course": "pnpm --filter @feedbackme/core-lms import:course",
     "import:course:prod": "pnpm --filter @feedbackme/core-lms import:course:prod",
