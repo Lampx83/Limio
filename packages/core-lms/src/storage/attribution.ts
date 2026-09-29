@@ -42,6 +42,20 @@ async function findReference(
         ? { courseId: rows[0].courseId, billedUserId: null, source: "content_item" }
         : null;
     }
+    case "scorm_package":
+    case "h5p_package": {
+      // `leaf` của key `scorm/<id>` chính là packageId; bài học tham chiếu nó trong payload.
+      const rows = await db.$queryRaw<Array<{ courseId: string }>>`
+        SELECT m."courseId" AS "courseId"
+        FROM "ContentItem" ci
+        JOIN "Lesson" l ON l.id = ci."lessonId"
+        JOIN "Module" m ON m.id = l."moduleId"
+        WHERE ci.payload->>'packageId' = ${leaf}
+        LIMIT 1`;
+      return rows[0]
+        ? { courseId: rows[0].courseId, billedUserId: null, source: "content_item" }
+        : null;
+    }
     case "submission": {
       const rows = await db.$queryRaw<Array<{ courseId: string }>>`
         SELECT m."courseId" AS "courseId"
@@ -88,6 +102,8 @@ const REFERABLE: StoredFileKind[] = [
   "submission",
   "exam_asset",
   "oral_material",
+  "scorm_package",
+  "h5p_package",
 ];
 
 export interface AttributionResult {

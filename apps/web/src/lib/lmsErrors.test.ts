@@ -7,6 +7,10 @@ describe("lmsErrorMessage", () => {
     expect(lmsErrorMessage("empty_content")).toMatch(/chưa nhập nội dung/);
     expect(lmsErrorMessage("network_error")).toMatch(/Không kết nối/);
   });
+  it("gói SCORM/H5P quá lớn sau giải nén: nói rõ giới hạn, không lộ mã thô", () => {
+    expect(lmsErrorMessage("package_unpacked_too_large", 413)).toMatch(/1 GB/);
+    expect(lmsErrorMessage("package_too_many_files", 413)).toMatch(/20\.000/);
+  });
   it("mã có hậu tố chi tiết vẫn nhận ra phần đầu", () => {
     expect(lmsErrorMessage("upload_failed: 500")).toMatch(/Tải file lên/);
   });

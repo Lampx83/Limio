@@ -2,6 +2,14 @@ import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import AdmZip from "adm-zip";
+import {
+  assertDeclaredWithinLimits,
+  DEFAULT_PACKAGE_LIMITS,
+  extractEntries,
+  PackageLimitError,
+  type PackageLimits,
+} from "../storage/packageFiles";
+import { markStoredFileDeleted, PACKAGE_LAYER, recordStoredFile } from "../storage/ledger";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 
 export class ScormError extends Error {
@@ -11,6 +19,10 @@ export class ScormError extends Error {
       | "manifest_missing"
       | "manifest_invalid"
       | "package_too_large"
+      | "package_unpacked_too_large"
+      | "package_too_many_files"
+      | "package_in_use"
+      | "package_has_attempts"
       | "package_not_found"
       | "attempt_not_found"
       | "forbidden"
@@ -24,6 +36,10 @@ export class ScormError extends Error {
 const MAX_PACKAGE_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB
 
 /** Where unzipped SCORM packages live. Override per-env via env var if needed. */
+export function scormPackageRoot(): string {
+  return packageRoot();
+}
+
 function packageRoot(): string {
   return (
     process.env.SCORM_STORAGE_ROOT ??
@@ -110,7 +126,9 @@ export async function uploadScormPackage(
   fileBuffer: Buffer,
   originalName: string,
   db: PrismaClient = prisma,
+  opts: { limits?: PackageLimits } = {},
 ) {
+  const limits = opts.limits ?? DEFAULT_PACKAGE_LIMITS;
   if (fileBuffer.length > MAX_PACKAGE_SIZE_BYTES) {
     throw new ScormError("package_too_large");
   }
@@ -135,6 +153,14 @@ export async function uploadScormPackage(
   const manifestDir = path.posix.dirname(manifestEntry.entryName);
   const stripPrefix = manifestDir === "." ? "" : manifestDir + "/";
 
+  // Chặn zip "phình" TRƯỚC khi tạo dòng DB hay ghi gì ra đĩa.
+  try {
+    assertDeclaredWithinLimits(entries, limits);
+  } catch (e) {
+    if (e instanceof PackageLimitError) throw new ScormError(e.code, e.details);
+    throw e;
+  }
+
   const created = await db.scormPackage.create({
     data: {
       fileHash,
@@ -148,17 +174,27 @@ export async function uploadScormPackage(
   });
 
   const targetDir = path.join(packageRoot(), created.id);
-  await fs.mkdir(targetDir, { recursive: true });
-  for (const e of entries) {
-    if (e.isDirectory) continue;
-    const rel = e.entryName.startsWith(stripPrefix)
-      ? e.entryName.slice(stripPrefix.length)
-      : e.entryName;
-    if (!rel || rel.includes("..")) continue; // path traversal guard
-    const dest = path.join(targetDir, rel);
-    await fs.mkdir(path.dirname(dest), { recursive: true });
-    await fs.writeFile(dest, e.getData());
+  let unpacked: { bytes: number; files: number };
+  try {
+    await fs.mkdir(targetDir, { recursive: true });
+    unpacked = await extractEntries({ entries, stripPrefix, targetDir, limits });
+  } catch (e) {
+    // Ghi dở dang (vượt giới hạn, đầy đĩa…): không để lại dòng DB trỏ vào gói
+    // thiếu file, cũng không để lại thư mục nửa vời chiếm đĩa.
+    await fs.rm(targetDir, { recursive: true, force: true }).catch(() => undefined);
+    await db.scormPackage.delete({ where: { id: created.id } }).catch(() => undefined);
+    if (e instanceof PackageLimitError) throw new ScormError(e.code, e.details);
+    throw e;
   }
+
+  // Sổ ghi dung lượng: 1 dòng cho cả gói, tính theo dung lượng SAU giải nén (số
+  // thật chiếm đĩa, lớn hơn nhiều so với file zip). Lỗi sổ không làm hỏng upload.
+  await recordStoredFile({
+    layer: PACKAGE_LAYER,
+    key: `scorm/${created.id}`,
+    sizeBytes: unpacked.bytes,
+    uploaderUserId: uploaderId,
+  }).catch((e) => console.warn("[storage-ledger] ghi gói SCORM thất bại:", (e as Error).message));
 
   return created;
 }
@@ -167,9 +203,22 @@ export async function deleteScormPackage(
   packageId: string,
   db: PrismaClient = prisma,
 ) {
+  // Xoá gói kéo theo xoá TOÀN BỘ lượt học (ScormAttempt có onDelete: Cascade —
+  // mất tiến độ và điểm của học viên) và để bài học trỏ vào gói không còn. Vì vậy
+  // chỉ xoá khi không còn ai dùng.
+  const [inUse, attempts] = await Promise.all([
+    db.contentItem.count({
+      where: { type: "scorm", payload: { path: ["packageId"], equals: packageId } },
+    }),
+    db.scormAttempt.count({ where: { packageId } }),
+  ]);
+  if (inUse > 0) throw new ScormError("package_in_use", { contentItems: inUse });
+  if (attempts > 0) throw new ScormError("package_has_attempts", { attempts });
+
   await db.scormPackage.delete({ where: { id: packageId } });
   const dir = path.join(packageRoot(), packageId);
   await fs.rm(dir, { recursive: true, force: true });
+  await markStoredFileDeleted(PACKAGE_LAYER, `scorm/${packageId}`, db).catch(() => undefined);
 }
 
 /** Open or resume an attempt. Idempotent on (package, user). */

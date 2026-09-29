@@ -13,11 +13,6 @@ export interface StorageUsageReport {
     files: number;
     bytes: number;
   }>;
-  /**
-   * Gói SCORM/H5P nằm ở bảng riêng (có `sizeBytes` + `uploaderId`), không đi qua
-   * sổ ghi. Nêu riêng để không bị bỏ sót khi tính hạn mức.
-   */
-  packages: { scormBytes: number; h5pBytes: number };
 }
 
 const num = (v: bigint | number | null | undefined): number => Number(v ?? 0);
@@ -28,7 +23,7 @@ export async function getStorageUsageReport(
 ): Promise<StorageUsageReport> {
   const live = { deletedAt: null } as const;
 
-  const [byKind, unattributed, perUser, scorm, h5p] = await Promise.all([
+  const [byKind, unattributed, perUser] = await Promise.all([
     db.storedFile.groupBy({
       by: ["kind"],
       where: live,
@@ -48,8 +43,6 @@ export async function getStorageUsageReport(
       orderBy: { _sum: { sizeBytes: "desc" } },
       take: opts.topN ?? 20,
     }),
-    db.scormPackage.aggregate({ _sum: { sizeBytes: true } }),
-    db.h5pPackage.aggregate({ _sum: { sizeBytes: true } }),
   ]);
 
   const userIds = perUser.map((r) => r.billedUserId!).filter(Boolean);
@@ -78,6 +71,5 @@ export async function getStorageUsageReport(
         bytes: num(r._sum.sizeBytes),
       };
     }),
-    packages: { scormBytes: num(scorm._sum.sizeBytes), h5pBytes: num(h5p._sum.sizeBytes) },
   };
 }

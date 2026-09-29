@@ -45,7 +45,7 @@ const REF_TOKEN = String.raw`(\d{10,}-[A-Za-z0-9]+\.[A-Za-z0-9]+)`;
 const LEAF_TOKEN = new RegExp(String.raw`${REF_TOKEN}$`);
 
 export class OrphanSweepError extends Error {
-  constructor(public readonly code: "reference_scan_empty") {
+  constructor(public readonly code: "reference_scan_empty" | "reference_scan_failed") {
     super(code);
   }
 }
@@ -54,9 +54,20 @@ function quoteIdent(s: string): string {
   return `"${s.replace(/"/g, '""')}"`;
 }
 
-/** Mọi token tên file xuất hiện trong các cột văn bản/JSON của DB (chữ thường). */
-export async function collectReferencedTokens(db: PrismaClient = prisma): Promise<Set<string>> {
-  const cols = await db.$queryRaw<Array<{ table_name: string; column_name: string }>>`
+export interface ScanColumn {
+  table_name: string;
+  column_name: string;
+}
+
+/**
+ * Mọi cột văn bản/JSON của các bảng thật trong DB, trừ các bảng loại ra. Dùng
+ * chung cho mọi job dọn để "còn ai dùng không" luôn được trả lời cùng một cách.
+ */
+export async function listScannableColumns(
+  db: PrismaClient,
+  excludeTables: string[],
+): Promise<ScanColumn[]> {
+  return db.$queryRaw<ScanColumn[]>`
     SELECT c.table_name, c.column_name
     FROM information_schema.columns c
     JOIN information_schema.tables t
@@ -64,10 +75,18 @@ export async function collectReferencedTokens(db: PrismaClient = prisma): Promis
     WHERE c.table_schema = current_schema()
       AND t.table_type = 'BASE TABLE'
       AND c.data_type IN ('text', 'character varying', 'jsonb', 'json', 'ARRAY')
-      AND c.table_name <> 'StoredFile'
-      AND c.table_name <> '_prisma_migrations'
-      AND c.table_name <> ALL(${HISTORY_TABLES}::text[])`;
+      AND c.table_name <> ALL(${excludeTables}::text[])`;
+}
 
+/**
+ * Các chuỗi khớp `pattern` (regex Postgres, đúng 1 nhóm bắt) trong các cột đã
+ * chọn, chữ thường.
+ */
+export async function scanColumnsForMatches(
+  db: PrismaClient,
+  cols: ScanColumn[],
+  pattern: string,
+): Promise<Set<string>> {
   const found = new Set<string>();
   for (const { table_name, column_name } of cols) {
     // Định danh lấy từ danh mục hệ thống rồi mới quote — không có đầu vào người dùng.
@@ -75,11 +94,21 @@ export async function collectReferencedTokens(db: PrismaClient = prisma): Promis
       `SELECT DISTINCT lower(m[1]) AS ref
        FROM ${quoteIdent(table_name)} t,
             regexp_matches(t.${quoteIdent(column_name)}::text, $1, 'g') AS m`,
-      REF_TOKEN,
+      pattern,
     );
     for (const r of rows) found.add(r.ref);
   }
   return found;
+}
+
+/** Mọi token tên file xuất hiện trong các cột văn bản/JSON của DB (chữ thường). */
+export async function collectReferencedTokens(db: PrismaClient = prisma): Promise<Set<string>> {
+  const cols = await listScannableColumns(db, [
+    ...HISTORY_TABLES,
+    "StoredFile",
+    "_prisma_migrations",
+  ]);
+  return scanColumnsForMatches(db, cols, REF_TOKEN);
 }
 
 export interface OrphanCandidate {

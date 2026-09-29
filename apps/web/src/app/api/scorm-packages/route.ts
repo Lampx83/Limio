@@ -45,7 +45,9 @@ export async function POST(req: Request) {
   } catch (e) {
     if (e instanceof ScormError) {
       const status =
-        e.code === "package_too_large"
+        e.code === "package_too_large" ||
+        e.code === "package_unpacked_too_large" ||
+        e.code === "package_too_many_files"
           ? 413
           : e.code === "manifest_missing" || e.code === "manifest_invalid"
             ? 400

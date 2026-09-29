@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteScormPackage, isAdmin } from "@feedbackme/core-lms";
+import { deleteScormPackage, isAdmin, ScormError } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 
@@ -20,6 +20,15 @@ export async function DELETE(
   if (!admin && pkg.uploaderId !== userId) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
-  await deleteScormPackage(params.id);
+  try {
+    await deleteScormPackage(params.id);
+  } catch (e) {
+    // Gói đang được bài học dùng, hoặc đã có học viên học: xoá sẽ làm hỏng bài
+    // học / mất điểm và tiến độ. Trả 409 để giao diện báo rõ, không xoá.
+    if (e instanceof ScormError && (e.code === "package_in_use" || e.code === "package_has_attempts")) {
+      return NextResponse.json({ error: e.code, details: e.details }, { status: 409 });
+    }
+    throw e;
+  }
   return NextResponse.json({ ok: true });
 }

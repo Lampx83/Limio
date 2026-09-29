@@ -22,6 +22,8 @@ const KIND_LABEL: Record<string, string> = {
   board_attachment: "Đính kèm bảng thảo luận",
   live_slide: "Slide Limio Live",
   live_resource: "Tài nguyên Limio Live",
+  scorm_package: "Gói SCORM (đã giải nén)",
+  h5p_package: "Gói H5P (đã giải nén)",
   tmp: "Tạm",
   other: "Khác",
 };
@@ -44,7 +46,7 @@ export default async function AdminStoragePage() {
         giảng viên đồng giảng.
       </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-token p-4">
           <div className="text-caption">Tổng đã ghi sổ</div>
           <div className="text-h2">{formatBytes(r.totalBytes)}</div>
@@ -54,11 +56,6 @@ export default async function AdminStoragePage() {
           <div className="text-caption">Chưa gán được cho ai</div>
           <div className="text-h2">{formatBytes(r.unattributed.bytes)}</div>
           <div className="text-caption">{r.unattributed.files.toLocaleString("vi-VN")} file</div>
-        </div>
-        <div className="rounded-lg border border-token p-4">
-          <div className="text-caption">Gói SCORM / H5P</div>
-          <div className="text-h2">{formatBytes(r.packages.scormBytes + r.packages.h5pBytes)}</div>
-          <div className="text-caption">bảng riêng, chưa vào sổ ghi</div>
         </div>
       </div>
 

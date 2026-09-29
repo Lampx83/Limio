@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteH5pPackage, isAdmin } from "@feedbackme/core-lms";
+import { deleteH5pPackage, H5pError, isAdmin } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 
@@ -20,6 +20,13 @@ export async function DELETE(
   if (!admin && pkg.uploaderId !== userId) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
-  await deleteH5pPackage(params.id);
+  try {
+    await deleteH5pPackage(params.id);
+  } catch (e) {
+    if (e instanceof H5pError && (e.code === "package_in_use" || e.code === "package_has_attempts")) {
+      return NextResponse.json({ error: e.code, details: e.details }, { status: 409 });
+    }
+    throw e;
+  }
   return NextResponse.json({ ok: true });
 }

@@ -42,7 +42,9 @@ export async function POST(req: Request) {
   } catch (e) {
     if (e instanceof H5pError) {
       const status =
-        e.code === "package_too_large"
+        e.code === "package_too_large" ||
+        e.code === "package_unpacked_too_large" ||
+        e.code === "package_too_many_files"
           ? 413
           : e.code === "h5p_json_missing" || e.code === "h5p_json_invalid"
             ? 400

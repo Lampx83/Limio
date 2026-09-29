@@ -7,7 +7,7 @@
  */
 
 import { prisma } from "@feedbackme/db";
-import { findOrphanedFiles } from "../src/storage/index";
+import { findOrphanedFiles, findOrphanPackages } from "../src/storage/index";
 
 const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.split("=")[1];
 const days = Math.max(7, Number.parseInt(arg("days") ?? "30", 10) || 30);
@@ -34,6 +34,15 @@ async function main() {
   }
   for (const [kind, v] of [...byKind].sort((a, b) => b[1].bytes - a[1].bytes)) {
     console.log(`  ${kind.padEnd(20)} ${String(v.files).padStart(6)} file  ${mb(v.bytes).padStart(12)}`);
+  }
+
+  const pk = await findOrphanPackages({ olderThanDays: days });
+  console.log(
+    `\nGói SCORM/H5P không ai dùng quá ${days} ngày: ${pk.orphans.length} / ${pk.eligible} gói đủ cũ ` +
+      `(còn dùng hoặc đã có học viên học: ${pk.referenced}; chưa đủ ngày: ${pk.tooRecent})`,
+  );
+  for (const o of pk.orphans.slice(0, listAll ? undefined : 20)) {
+    console.log(`  ${String(o.ageDays).padStart(4)} ngày  ${o.type.padEnd(5)} ${mb(o.zipBytes).padStart(10)} (zip)  ${o.id}  ${o.title}`);
   }
 
   const shown = listAll ? scan.orphans : scan.orphans.slice(0, 20);

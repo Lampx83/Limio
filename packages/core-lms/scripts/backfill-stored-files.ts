@@ -21,9 +21,13 @@ import { prisma } from "@feedbackme/db";
 import {
   attributeStoredFiles,
   classifyStorageKey,
+  dirSizeBytes,
   getStorageUsageReport,
+  PACKAGE_LAYER,
   recordStoredFile,
 } from "../src/storage/index";
+import { scormPackageRoot } from "../src/scorm/scorm";
+import { h5pPackageRoot } from "../src/h5p/h5p";
 
 const dryRun = process.argv.includes("--dry-run");
 // tmp là vùng đệm tự dọn sau 24 giờ — không phải dung lượng người dùng "sở hữu".
@@ -83,10 +87,51 @@ async function main() {
     }
   }
 
+  // Gói SCORM/H5P: ghi thẳng ra thư mục giải nén nên không nằm trong quét ở trên.
+  // Mỗi gói 1 dòng sổ, tính theo dung lượng thư mục THẬT sau giải nén.
+  const pkgStats = { scanned: 0, added: 0, alreadyKnown: 0, missingDir: 0, bytes: 0 };
+  const knownPkgs = new Set(
+    (await prisma.storedFile.findMany({ where: { layer: PACKAGE_LAYER }, select: { key: true } })).map(
+      (r) => r.key,
+    ),
+  );
+  const sources = [
+    { prefix: "scorm", root: scormPackageRoot(), rows: await prisma.scormPackage.findMany({ select: { id: true, uploaderId: true } }) },
+    { prefix: "h5p", root: h5pPackageRoot(), rows: await prisma.h5pPackage.findMany({ select: { id: true, uploaderId: true } }) },
+  ];
+  for (const { prefix, root: pkgRoot, rows } of sources) {
+    for (const p of rows) {
+      pkgStats.scanned++;
+      const key = `${prefix}/${p.id}`;
+      if (knownPkgs.has(key)) {
+        pkgStats.alreadyKnown++;
+        continue;
+      }
+      const size = await dirSizeBytes(path.join(pkgRoot, p.id));
+      if (size === 0) {
+        pkgStats.missingDir++; // dòng DB còn nhưng thư mục đã mất/rỗng — không ghi số 0 vào sổ
+        continue;
+      }
+      pkgStats.added++;
+      pkgStats.bytes += size;
+      const k = byKind.get(`${prefix}_package`) ?? { files: 0, bytes: 0 };
+      k.files++;
+      k.bytes += size;
+      byKind.set(`${prefix}_package`, k);
+      if (!dryRun) {
+        await recordStoredFile({ layer: PACKAGE_LAYER, key, sizeBytes: size, uploaderUserId: p.uploaderId });
+      }
+    }
+  }
+
   console.log(`Tìm thấy ${stats.scanned} file, ${mb(stats.bytes)}`);
   console.log(`  Đã có trong sổ: ${stats.alreadyKnown} · Cần thêm: ${stats.added}\n`);
+  console.log(
+    `Gói SCORM/H5P: ${pkgStats.scanned} gói · cần thêm ${pkgStats.added} (${mb(pkgStats.bytes)} sau giải nén) · ` +
+      `đã có ${pkgStats.alreadyKnown} · thư mục đã mất ${pkgStats.missingDir}\n`,
+  );
   for (const [kind, v] of [...byKind].sort((a, b) => b[1].bytes - a[1].bytes)) {
-    console.log(`  ${kind.padEnd(20)} ${String(v.files).padStart(6)} file  ${mb(v.bytes).padStart(12)}`);
+    console.log(`  ${kind.padEnd(20)} ${String(v.files).padStart(6)} ${kind.endsWith("_package") ? "gói " : "file"}  ${mb(v.bytes).padStart(12)}`);
   }
 
   if (dryRun) {
@@ -108,9 +153,6 @@ async function main() {
   for (const u of report.topUsers) {
     console.log(`  ${(u.displayName ?? u.email ?? u.userId).padEnd(30)} ${mb(u.bytes).padStart(12)}`);
   }
-  console.log(
-    `Gói SCORM/H5P (bảng riêng, chưa vào sổ): SCORM ${mb(report.packages.scormBytes)}, H5P ${mb(report.packages.h5pBytes)}`,
-  );
 }
 
 main()

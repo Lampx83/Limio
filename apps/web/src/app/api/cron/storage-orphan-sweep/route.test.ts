@@ -1,12 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const runOrphanSweep = vi.fn();
+const runPackageOrphanSweep = vi.fn();
 class OrphanSweepError extends Error {
   constructor(public code: string) {
     super(code);
   }
 }
-vi.mock("@feedbackme/core-lms", () => ({ runOrphanSweep, OrphanSweepError }));
+const deleteScormPackage = vi.fn().mockResolvedValue(undefined);
+const deleteH5pPackage = vi.fn().mockResolvedValue(undefined);
+vi.mock("@feedbackme/core-lms", () => ({
+  runOrphanSweep,
+  runPackageOrphanSweep,
+  deleteScormPackage,
+  deleteH5pPackage,
+  OrphanSweepError,
+}));
 const del = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/lib/storage", () => ({ getLayerStorage: () => ({ delete: del }) }));
 
@@ -19,6 +28,7 @@ describe("GET /api/cron/storage-orphan-sweep", () => {
   const env = { ...process.env };
   beforeEach(() => {
     runOrphanSweep.mockReset().mockResolvedValue({ mode: "dry-run", deleted: 0 });
+    runPackageOrphanSweep.mockReset().mockResolvedValue({ mode: "dry-run", deleted: 0 });
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
     process.env.CRON_SECRET = "s3cret";
@@ -83,6 +93,23 @@ describe("GET /api/cron/storage-orphan-sweep", () => {
     const res = await GET(req("s3cret"));
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ ok: false, error: "reference_scan_empty" });
+  });
+
+  it("dọn cả gói SCORM/H5P với cùng chế độ (chạy thử/xoá thật), trần cố định 50, và truyền đúng hàm xoá", async () => {
+    runPackageOrphanSweep.mockImplementation(async (_o, deleters) => {
+      await deleters.scorm("s-1");
+      await deleters.h5p("h-1");
+      return { mode: "apply", deleted: 2 };
+    });
+    const { GET } = await import("./route");
+    await GET(req("s3cret"));
+    expect(runPackageOrphanSweep.mock.calls.at(-1)![0]).toEqual({ apply: false, olderThanDays: 30, maxDelete: 50 });
+    expect(deleteScormPackage).toHaveBeenCalledWith("s-1");
+    expect(deleteH5pPackage).toHaveBeenCalledWith("h-1");
+
+    process.env.STORAGE_ORPHAN_SWEEP = "apply";
+    await GET(req("s3cret"));
+    expect(runPackageOrphanSweep.mock.calls.at(-1)![0].apply).toBe(true);
   });
 
   it("hàm xoá truyền xuống đi qua adapter lưu trữ", async () => {

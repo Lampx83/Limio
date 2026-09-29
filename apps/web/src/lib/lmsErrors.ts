@@ -35,6 +35,9 @@ const LMS_ERROR_MESSAGES: Record<string, string> = {
   unsupported_media_type: "Định dạng file này chưa được hỗ trợ.",
   convert_failed: "Không xử lý được file này. Hãy kiểm tra file rồi tải lên lại.",
   upload_failed: "Tải file lên không thành công. Vui lòng thử lại.",
+  package_unpacked_too_large:
+    "Gói này quá lớn sau khi giải nén (tối đa 1 GB). Hãy giảm dung lượng video/ảnh trong gói rồi xuất lại.",
+  package_too_many_files: "Gói này có quá nhiều file (tối đa 20.000). Hãy rút gọn gói rồi xuất lại.",
 
   // Bài tập
   ai_failed: "AI chưa trả lời được lúc này. Vui lòng thử lại sau ít phút.",

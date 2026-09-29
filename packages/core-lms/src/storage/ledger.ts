@@ -30,6 +30,8 @@ export type StoredFileKind =
   | "board_attachment"
   | "live_slide"
   | "live_resource"
+  | "scorm_package"
+  | "h5p_package"
   | "tmp"
   | "other";
 
@@ -55,8 +57,18 @@ const KIND_PREFIXES: ReadonlyArray<readonly [string, StoredFileKind]> = [
   ["limio-live-resources/", "live_resource"],
 ];
 
+/** "layer" giả cho gói SCORM/H5P — không phải layer của adapter lưu trữ. */
+export const PACKAGE_LAYER = "package";
+
 export function classifyStorageKey(layer: string, key: string): StoredFileKind {
   if (layer === "tmp") return "tmp";
+  // Gói SCORM/H5P không đi qua adapter lưu trữ (ghi thẳng ra thư mục giải nén):
+  // 1 dòng sổ cho cả gói, key = `scorm/<packageId>` hoặc `h5p/<packageId>`.
+  if (layer === PACKAGE_LAYER) {
+    if (key.startsWith("scorm/")) return "scorm_package";
+    if (key.startsWith("h5p/")) return "h5p_package";
+    return "other";
+  }
   for (const [prefix, kind] of KIND_PREFIXES) {
     if (key.startsWith(prefix)) return kind;
   }
@@ -82,6 +94,8 @@ export interface RecordStoredFileInput {
   key: string;
   sizeBytes: number;
   contentType?: string | null;
+  /** Người upload đã biết chắc (vd gói SCORM có uploaderId); mặc định suy từ tên file. */
+  uploaderUserId?: string | null;
 }
 
 /**
@@ -93,7 +107,7 @@ export async function recordStoredFile(
   db: PrismaClient = prisma,
 ): Promise<void> {
   const kind = classifyStorageKey(input.layer, input.key);
-  const uploader = uploaderFromStorageKey(input.key);
+  const uploader = input.uploaderUserId ?? uploaderFromStorageKey(input.key);
   await db.storedFile.upsert({
     where: { layer_key: { layer: input.layer, key: input.key } },
     create: {
