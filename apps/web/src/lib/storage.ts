@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import type { Readable } from "node:stream";
 import {
   S3Client,
   GetObjectCommand,
@@ -24,6 +25,14 @@ import type { StorageKey, StorageLayer } from "./storage-keys";
  *
  * Use the key builders in `storage-keys.ts` instead of constructing keys by hand.
  */
+/** Một đoạn byte đọc theo luồng — dùng phát video/PDF có Range mà không nạp cả file vào RAM. */
+export interface RangeRead {
+  body: Readable;
+  total: number;
+  start: number;
+  end: number;
+}
+
 export interface StorageAdapter {
   put(key: string, body: Buffer, contentType?: string): Promise<void>;
   get(key: string): Promise<Buffer>;
@@ -35,6 +44,11 @@ export interface StorageAdapter {
   publicUrl(key: string): string | null;
   /** Dung lượng file (byte) mà không đọc nội dung; null nếu không có. */
   sizeOf(key: string): Promise<number | null>;
+  /**
+   * Đọc theo luồng một đoạn [start, end] (end mặc định = hết file). Null nếu
+   * adapter không hỗ trợ hoặc file không có ở đó — caller rơi về `get()`.
+   */
+  getRange?(key: string, start: number, end?: number): Promise<RangeRead | null>;
 }
 
 function localRoot(): string {
@@ -169,6 +183,20 @@ class S3Adapter implements StorageAdapter {
       return null;
     }
   }
+  async getRange(key: string, start: number, end?: number): Promise<RangeRead | null> {
+    const total = await this.sizeOf(key);
+    if (total === null || start >= total) return null;
+    const last = Math.min(end ?? total - 1, total - 1);
+    const res = await this.client.send(
+      new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: this.k(key),
+        Range: `bytes=${start}-${last}`,
+      }),
+    );
+    if (!res.Body) return null;
+    return { body: res.Body as Readable, total, start, end: last };
+  }
 }
 
 /**
@@ -224,6 +252,11 @@ class FallbackReadAdapter implements StorageAdapter {
   async sizeOf(key: string): Promise<number | null> {
     return (await this.primary.sizeOf(key)) ?? this.fallback.sizeOf(key);
   }
+  async getRange(key: string, start: number, end?: number): Promise<RangeRead | null> {
+    // Chỉ primary (S3) stream được; file còn ở fallback local đã có đường
+    // absPath riêng, hoặc rơi về get() ở caller.
+    return this.primary.getRange ? this.primary.getRange(key, start, end) : null;
+  }
 }
 
 /**
@@ -268,6 +301,7 @@ export function withLedger(
     exists: (key) => inner.exists(key),
     publicUrl: (key) => inner.publicUrl(key),
     sizeOf: (key) => inner.sizeOf(key),
+    getRange: inner.getRange ? (key, start, end) => inner.getRange!(key, start, end) : undefined,
     async delete(key) {
       await inner.delete(key);
       await safe(`đánh dấu xoá ${layer}/${key}`, () => ledger.markDeleted(layer, key));
@@ -311,15 +345,17 @@ function buildS3Adapter(layer: StorageLayer): S3Adapter | null {
   if (!client) return null;
   // Allow each layer to live in its own bucket if desired (recommended for prod
   // so public bucket can have CDN/anonymous-read while private bucket can't).
+  // Compose's `${VAR:-}` substitution yields an empty string (not undefined)
+  // when the .env.prod key is blank, so `??` never falls through — use `||`.
   const layerBucket = process.env[`S3_BUCKET_${layer.toUpperCase()}`];
   const sharedBucket = process.env.S3_BUCKET!;
   return new S3Adapter(
     client,
-    layerBucket ?? sharedBucket,
+    layerBucket || sharedBucket,
     // When sharing one bucket across layers, prefix each layer's keys with the
     // layer name to keep them separable in lifecycle rules / IAM policies.
     layerBucket ? "" : layer,
-    layer === "public" ? (process.env.S3_PUBLIC_BASE_URL ?? null) : null,
+    layer === "public" ? (process.env.S3_PUBLIC_BASE_URL || null) : null,
   );
 }
 

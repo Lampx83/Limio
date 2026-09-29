@@ -124,3 +124,54 @@ export async function streamWithRange(
     },
   });
 }
+
+/**
+ * Stream một object trên S3 với hỗ trợ Range (tua video, tải tiếp PDF) mà không
+ * nạp cả file vào RAM. Trả null khi adapter không stream được (file chỉ còn ở
+ * fallback local, hoặc không phải S3) — caller rơi về `resolved.get()`.
+ */
+export async function streamStorageWithRange(
+  key: StorageKey,
+  contentType: string,
+  req: Request,
+): Promise<NextResponse | null> {
+  const adapter = storageFor(key);
+  if (!adapter.getRange) return null;
+
+  const range = req.headers.get("range");
+  let start = 0;
+  let end: number | undefined;
+  if (range) {
+    const m = /^bytes=(\d+)-(\d+)?$/.exec(range);
+    if (!m) return new NextResponse("invalid_range", { status: 416 });
+    start = Number(m[1]);
+    if (m[2]) end = Number(m[2]);
+    if (end !== undefined && start > end) {
+      return new NextResponse("invalid_range", { status: 416 });
+    }
+  }
+
+  const total = await adapter.sizeOf(key.key);
+  if (total === null) return null;
+  if (start >= total) {
+    return new NextResponse("invalid_range", {
+      status: 416,
+      headers: { "content-range": `bytes */${total}` },
+    });
+  }
+
+  const part = await adapter.getRange(key.key, start, end);
+  if (!part) return null;
+
+  const headers: Record<string, string> = {
+    "content-type": contentType,
+    "content-length": String(part.end - part.start + 1),
+    "accept-ranges": "bytes",
+    "cache-control": "public, max-age=604800, immutable",
+  };
+  if (range) headers["content-range"] = `bytes ${part.start}-${part.end}/${part.total}`;
+  return new NextResponse(readableToWeb(part.body), {
+    status: range ? 206 : 200,
+    headers,
+  });
+}
