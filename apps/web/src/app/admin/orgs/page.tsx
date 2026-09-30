@@ -10,7 +10,7 @@ export default function AdminOrgsPage() {
           Tổ chức (Organization)
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Chọn một tổ chức để cấu hình tên, logo, chữ ký và cấp quyền OrgAdmin.
+          Chọn một tổ chức để cấu hình tên, logo, chữ ký, kỳ học và cấp quyền OrgAdmin.
         </p>
       </header>
       <OrgsBrowser />

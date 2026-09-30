@@ -7,12 +7,14 @@ import { getLearnerSkillStates } from "@feedbackme/core-feedback";
 import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
-import { formatDate } from "@/lib/datetime";
+import { formatDate, formatDayKey } from "@/lib/datetime";
 import MasteryBadge from "@/components/MasteryBadge";
 import HelpTour from "@/components/HelpTour";
 import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
 import { STUDENT_MENU_TOGGLE_EVENT } from "@/components/StudentLeftMenu";
 import { getActiveRole } from "@/lib/active-role";
+import CalendarLoader from "@/components/calendar/CalendarLoader";
+import { loadLearnerQuizDeadlines } from "@/lib/calendarData";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +74,9 @@ export default async function LearnerDashboard({
   const courseIds = enrollments.map((e) => e.courseId);
   const upcomingAssignments = await prisma.assignment.findMany({
     where: {
-      lesson: { module: { courseId: { in: courseIds } } },
+      // GV ẩn bài/bài tập = ẩn với mọi học viên (cùng luật với lịch bên trên).
+      isHidden: false,
+      lesson: { isHidden: false, module: { courseId: { in: courseIds } } },
       OR: [{ dueAt: null }, { dueAt: { gte: new Date() } }],
     },
     include: {
@@ -87,6 +91,15 @@ export default async function LearnerDashboard({
     take: 10,
     orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }],
   });
+
+  // Quiz có hạn đóng sắp tới — hiện chung với bài tập ở ô "Bài tập & quiz".
+  const nowForTodo = new Date();
+  const upcomingQuizzes = await loadLearnerQuizDeadlines(
+    userId,
+    nowForTodo,
+    nowForTodo,
+    new Date(nowForTodo.getTime() + 400 * 86_400_000),
+  );
 
   const recentResolved = await prisma.learningEvent.findMany({
     where: { userId, eventType: LearningEventType.MisconceptionResolved },
@@ -108,6 +121,42 @@ export default async function LearnerDashboard({
 
   const totalLessons = progressByCourse.reduce((s, p) => s + p.totalLessons, 0);
   const completedLessons = progressByCourse.reduce((s, p) => s + p.completedLessons, 0);
+
+  // Gộp bài tập + quiz thành một danh sách, xếp theo hạn (không hạn xuống cuối).
+  const todoRows = [
+    ...upcomingAssignments.map((a) => {
+      const sub = a.submissions[0];
+      const status = !sub
+        ? { label: "Chưa nộp", chip: "chip-accent" }
+        : sub.status === "graded"
+          ? { label: `✓ ${sub.score}/${a.maxScore}`, chip: "chip-success" }
+          : { label: "Đã nộp", chip: "chip-brand" };
+      const course = a.lesson?.module.course;
+      return {
+        key: `a:${a.id}`,
+        kind: "Bài tập",
+        title: a.title,
+        course: course?.title ?? "",
+        sortAt: a.dueAt ? a.dueAt.getTime() : Number.POSITIVE_INFINITY,
+        dueText: a.dueAt ? formatDate(a.dueAt) : "",
+        href: course && a.lessonId ? `/learn/${course.slug}/lessons/${a.lessonId}` : "/me/enrollments",
+        ...status,
+      };
+    }),
+    ...upcomingQuizzes.map((q) => ({
+      key: q.id,
+      kind: "Quiz",
+      title: q.title,
+      course: q.courseTitle,
+      // dueDay đã là ngày giờ VN; ghép giờ để xếp đúng thứ tự trong cùng ngày.
+      sortAt: new Date(`${q.dueDay}T${q.dueTime}:00+07:00`).getTime(),
+      dueText: `${formatDayKey(q.dueDay)} ${q.dueTime}`,
+      href: q.href,
+      label:
+        q.state === "graded" ? `✓ ${q.scoreLabel ?? "Đã làm"}` : (q.stateLabel ?? "Chưa làm"),
+      chip: q.state === "graded" ? "chip-success" : "chip-accent",
+    })),
+  ].sort((x, y) => x.sortAt - y.sortAt);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
@@ -308,6 +357,12 @@ export default async function LearnerDashboard({
           )}
         </section>
 
+        {/* Lịch tuần/tháng (cột phải, cạnh Khóa đã đăng ký): đánh dấu hạn nộp bài tập, chip chi tiết bên dưới.
+            self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khóa đã đăng ký. */}
+        <div className="self-start">
+          <CalendarLoader userId={userId} audience="learner" />
+        </div>
+
         {/* Recent badges */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
@@ -365,44 +420,35 @@ export default async function LearnerDashboard({
           )}
         </section>
 
-        {/* Upcoming assignments */}
+        {/* Việc cần làm: bài tập + quiz, xếp theo hạn (không hạn xuống cuối) */}
         <section className="card">
           <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Bài tập</h2>
-            <span className="text-xs text-faint">{upcomingAssignments.length}</span>
+            <h2 className="text-base font-semibold">Bài tập &amp; quiz</h2>
+            <span className="text-xs text-faint">{todoRows.length}</span>
           </header>
-          {upcomingAssignments.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">Không có bài tập nào.</p>
+          {todoRows.length === 0 ? (
+            <p className="mt-4 text-sm text-muted">Không có bài tập hay quiz nào cần làm.</p>
           ) : (
             <ul className="mt-4 space-y-2">
-              {upcomingAssignments.slice(0, 5).map((a) => {
-                const sub = a.submissions[0];
-                const status = !sub
-                  ? { label: "Chưa nộp", chip: "chip-accent" }
-                  : sub.status === "graded"
-                    ? { label: `✓ ${sub.score}/${a.maxScore}`, chip: "chip-success" }
-                    : { label: "Đã nộp", chip: "chip-brand" };
-                return (
-                  <li
-                    key={a.id}
-                    className="rounded-lg border border-token p-3 text-sm"
+              {todoRows.slice(0, 6).map((r) => (
+                <li key={r.key}>
+                  <Link
+                    href={r.href}
+                    prefetch={false}
+                    className="block rounded-lg border border-token p-3 text-sm transition-colors hover:border-brand-300"
                   >
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="font-medium">{a.title}</p>
-                      <span className={status.chip}>{status.label}</span>
+                      <p className="font-medium">{r.title}</p>
+                      <span className={`${r.chip} shrink-0`}>{r.label}</span>
                     </div>
                     <p className="mt-1 text-xs text-faint">
-                      {a.lesson?.module.course.title ?? ""}
-                      {a.dueAt && (
-                        <>
-                          {" · hạn "}
-                          {formatDate(a.dueAt)}
-                        </>
-                      )}
+                      <span className="font-semibold text-brand-700">{r.kind}</span>
+                      {r.course && <> · {r.course}</>}
+                      {r.dueText && <> · hạn {r.dueText}</>}
                     </p>
-                  </li>
-                );
-              })}
+                  </Link>
+                </li>
+              ))}
             </ul>
           )}
         </section>

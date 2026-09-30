@@ -16,7 +16,7 @@ const ITEMS: Item[] = [
   { label: "Thành viên trường", href: "/org-admin/members", icon: Users },
   { label: "Danh mục ca thi", href: "/org-admin/session-templates", icon: Calendar },
   { label: "Mẫu email", href: "/org-admin/emails", icon: Mail },
-  { label: "Thương hiệu trường", href: "/org-admin/settings", icon: Palette },
+  { label: "Thương hiệu & kỳ học", href: "/org-admin/settings", icon: Palette },
 ];
 
 export default function OrgAdminSidebar() {

@@ -4,3 +4,4 @@ export * from "./roles";
 export * from "./skills";
 export * from "./lessonFormatTemplate";
 export * from "./mastery";
+export * from "./academicTerm";

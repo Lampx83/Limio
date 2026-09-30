@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { isAnyOrgAdmin } from "@feedbackme/core-lms";
+import { isAnyOrgAdmin, listAcademicTerms } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import EmptyState from "@/components/ui/EmptyState";
 import OrgSettingsClient from "./OrgSettingsClient";
+import AcademicTermsManager from "./AcademicTermsManager";
+import { toDayKey } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -46,12 +48,13 @@ export default async function OrgSettingsPage() {
     );
   }
   const primary = adminships[0]!;
+  const terms = await listAcademicTerms(primary.organizationId);
 
   return (
     <div>
       <div className="mb-6">
         <span className="chip-brand">OrgAdmin</span>
-        <h1 className="mt-3 h-display text-2xl font-bold">Thương hiệu trường</h1>
+        <h1 className="mt-3 h-display text-2xl font-bold">Thương hiệu &amp; kỳ học</h1>
         <p className="mt-1 text-sm text-muted">
           Trường <strong>{primary.organization.name}</strong> ({primary.organization.code}). Logo
           này hiển thị trên chứng nhận hoàn thành khoá học do trường cấp (
@@ -67,6 +70,14 @@ export default async function OrgSettingsPage() {
         initialSignatureName={primary.organization.signatureName}
         initialSignatureTitle={primary.organization.signatureTitle}
       />
+
+      <div className="mt-6">
+        <AcademicTermsManager
+          organizationId={primary.organizationId}
+          initialTerms={terms}
+          todayKey={toDayKey(new Date())}
+        />
+      </div>
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { listOrgAdmins } from "@feedbackme/core-lms";
+import { listAcademicTerms, listOrgAdmins } from "@feedbackme/core-lms";
 import OrgAdminManager from "./OrgAdminManager";
 import OrgSettingsClient from "@/app/org-admin/settings/OrgSettingsClient";
+import AcademicTermsManager from "@/app/org-admin/settings/AcademicTermsManager";
+import { toDayKey } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,7 @@ export default async function AdminOrgDetailPage({
   });
   if (!org) notFound();
 
-  const admins = await listOrgAdmins(org.id);
+  const [admins, terms] = await Promise.all([listOrgAdmins(org.id), listAcademicTerms(org.id)]);
 
   return (
     <main>
@@ -56,6 +58,14 @@ export default async function AdminOrgDetailPage({
           initialSignatureUrl={org.signatureImageUrl}
           initialSignatureName={org.signatureName}
           initialSignatureTitle={org.signatureTitle}
+        />
+      </section>
+
+      <section className="mt-6">
+        <AcademicTermsManager
+          organizationId={org.id}
+          initialTerms={terms}
+          todayKey={toDayKey(new Date())}
         />
       </section>
 

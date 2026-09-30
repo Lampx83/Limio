@@ -25,6 +25,7 @@ import UserAvatar from "@/components/ui/UserAvatar";
 import HelpTour from "@/components/HelpTour";
 import { INSTRUCTOR_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
 import { INSTRUCTOR_MENU_TOGGLE_EVENT } from "@/components/InstructorLeftMenu";
+import CalendarLoader from "@/components/calendar/CalendarLoader";
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +173,9 @@ export default async function InstructorDashboard({
           <Link href="/instructor/courses/new" className="btn-primary mt-4 inline-flex">
             + Tạo khoá đầu tiên
           </Link>
+        </div>
+        <div className="mt-6 max-w-xl">
+          <CalendarLoader userId={userId} audience="instructor" />
         </div>
         {shouldShowTour && (
           <HelpTour
@@ -577,63 +581,68 @@ export default async function InstructorDashboard({
           )}
         </section>
 
-        {/* Activity feed */}
-        <section className="lg:col-span-1">
-          <header className="flex items-baseline justify-between">
-            <h2 className="text-base font-semibold">Hoạt động gần đây</h2>
-            <span className="text-xs text-faint">{ACTIVITY_FEED_HOURS}h qua</span>
-          </header>
+        <div className="space-y-6 lg:col-span-1">
+          {/* Lịch + nhãn tuần của kỳ học (chỉ tài khoản thuộc trường mới có nhãn) */}
+          <CalendarLoader userId={userId} audience="instructor" />
 
-          {recentActivityEvents.length === 0 ? (
-            <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center text-sm text-muted">
-              Chưa có hoạt động.
-            </div>
-          ) : (
-            <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
-              <ul className="space-y-4">
-                {recentActivityEvents.map((ev) => {
-                  const label =
-                    EVENT_LABEL[ev.eventType]?.(
-                      ev.payload as Record<string, unknown>,
-                    ) ?? ev.eventType;
-                  const slug = ev.courseId
-                    ? courseSlugById.get(ev.courseId)
-                    : undefined;
-                  const courseTitle = ev.courseId
-                    ? courseTitleById.get(ev.courseId)
-                    : undefined;
-                  const href = slug ? `/learn/${slug}` : "/instructor/enrollments";
-                  return (
-                    <li key={ev.id.toString()} className="flex gap-3">
-                      <UserAvatar
-                        name={ev.user?.displayName}
-                        size="sm"
-                        className="shrink-0"
-                      />
-                      <Link href={href} className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-sm">
-                          <span className="font-medium">
-                            {ev.user?.displayName ?? "—"}
-                          </span>{" "}
-                          <span className="text-muted">{label}</span>
-                        </p>
-                        {courseTitle && (
-                          <span className="chip-brand mt-1 inline-flex text-[11px]">
-                            {courseTitle}
-                          </span>
-                        )}
-                        <p className="mt-1 text-xs text-faint">
-                          {courseTitle ? "· " : ""}
-                          {formatAgo(ev.occurredAt)}
-                        </p>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-        </section>
+          {/* Activity feed */}
+          <section>
+            <header className="flex items-baseline justify-between">
+              <h2 className="text-base font-semibold">Hoạt động gần đây</h2>
+              <span className="text-xs text-faint">{ACTIVITY_FEED_HOURS}h qua</span>
+            </header>
+
+            {recentActivityEvents.length === 0 ? (
+              <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center text-sm text-muted">
+                Chưa có hoạt động.
+              </div>
+            ) : (
+              <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
+                <ul className="space-y-4">
+                  {recentActivityEvents.map((ev) => {
+                    const label =
+                      EVENT_LABEL[ev.eventType]?.(
+                        ev.payload as Record<string, unknown>,
+                      ) ?? ev.eventType;
+                    const slug = ev.courseId
+                      ? courseSlugById.get(ev.courseId)
+                      : undefined;
+                    const courseTitle = ev.courseId
+                      ? courseTitleById.get(ev.courseId)
+                      : undefined;
+                    const href = slug ? `/learn/${slug}` : "/instructor/enrollments";
+                    return (
+                      <li key={ev.id.toString()} className="flex gap-3">
+                        <UserAvatar
+                          name={ev.user?.displayName}
+                          size="sm"
+                          className="shrink-0"
+                        />
+                        <Link href={href} className="min-w-0 flex-1">
+                          <p className="line-clamp-2 text-sm">
+                            <span className="font-medium">
+                              {ev.user?.displayName ?? "—"}
+                            </span>{" "}
+                            <span className="text-muted">{label}</span>
+                          </p>
+                          {courseTitle && (
+                            <span className="chip-brand mt-1 inline-flex text-[11px]">
+                              {courseTitle}
+                            </span>
+                          )}
+                          <p className="mt-1 text-xs text-faint">
+                            {courseTitle ? "· " : ""}
+                            {formatAgo(ev.occurredAt)}
+                          </p>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </section>
+        </div>
       </div>
 
       {/* Gamification theo khoá */}

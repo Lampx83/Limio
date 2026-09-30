@@ -124,6 +124,21 @@ export function toDateTimeInputValue(v: DateInput): string {
   return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
 }
 
+/**
+ * Ngày lịch Việt Nam của một thời điểm, dạng "YYYY-MM-DD" (khoá ngày, sắp xếp được).
+ * Là chỗ DUY NHẤT đổi thời điểm → ngày cho lịch: hạn nộp 23:30 giờ VN phải rơi vào
+ * đúng ngày đó dù người xem mở máy ở múi giờ nào.
+ */
+export function toDayKey(v: DateInput): string {
+  return toDateTimeInputValue(v).slice(0, 10);
+}
+
+/** "2026-09-07" → "07/09/2026". Chỉ xáo chuỗi, không qua Date nên không lệch múi giờ. */
+export function formatDayKey(key: string): string {
+  const [y, m, d] = key.split("-");
+  return `${d}/${m}/${y}`;
+}
+
 /** "YYYY-MM-DDTHH:mm" (giờ Việt Nam) → ISO UTC để gửi lên API. Rỗng/sai định dạng → null. */
 export function fromDateTimeInputValue(s: string): string | null {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return null;

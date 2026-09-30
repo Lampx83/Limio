@@ -4526,8 +4526,28 @@ model Organization {
   sessionTemplates ExamSessionTemplate[]
   emailTemplates   EmailTemplate[]
   emailBatches     EmailDispatchBatch[]
+  academicTerms    AcademicTerm[]
 
   @@index([code])
+}
+
+// Kỳ học của trường — OrgAdmin/Platform Admin cấu hình, để lịch của mọi tài
+// khoản trong trường hiện "tuần N/M của kỳ". Mỗi trường có nhiều kỳ (HK1, HK2,
+// hè…), không chồng nhau (service chặn). startDate là ngày lịch thuần (@db.Date,
+// không múi giờ); tuần 1 = tuần T2–CN chứa startDate. Quy ước tính tuần ở
+// packages/shared-types/src/academicTerm.ts.
+model AcademicTerm {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  startDate      DateTime @db.Date
+  weekCount      Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startDate])
 }
 
 model OrganizationAdmin {
