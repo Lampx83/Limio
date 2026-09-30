@@ -6,6 +6,7 @@ import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
 import { toast } from "@/lib/toast";
+import SectionDeadlinesPanel from "@/components/instructor/SectionDeadlinesPanel";
 
 export type ScoringPolicy = "highest" | "latest" | "average";
 
@@ -245,6 +246,7 @@ export function QuizEditForm({
   const dateInput = "input h-7 w-full px-1.5 py-0 text-sm";
 
   return (
+    <div className="space-y-2.5">
     <form onSubmit={save} className="space-y-2.5 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
       <input
         value={title}
@@ -425,5 +427,8 @@ export function QuizEditForm({
         </p>
       )}
     </form>
+    {/* Ngoài <form> để bấm Enter trong ô ngày của panel không lưu nhầm cài đặt quiz. */}
+    <SectionDeadlinesPanel kind="quiz" itemId={quiz.id} />
+    </div>
   );
 }

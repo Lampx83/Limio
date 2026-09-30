@@ -885,6 +885,7 @@ model Quiz {
   tournamentMission TournamentMission? @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
   lessonActivity    LessonActivity?
   gameSessions      GameSession[]
+  sectionSchedules  QuizSectionSchedule[]
 
   @@index([lessonId])
   @@index([courseId])
@@ -1457,6 +1458,7 @@ model Assignment {
   tournamentMission TournamentMission?     @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
   submissions       AssignmentSubmission[]
   lessonActivity    LessonActivity?
+  sectionDues       AssignmentSectionDue[]
 
   @@index([lessonId])
   @@index([tournamentMissionId])
@@ -1464,6 +1466,41 @@ model Assignment {
   // dueAt asc to surface upcoming work. Without this index Postgres falls back
   // to a seq scan + sort once a course accumulates a few thousand assignments.
   @@index([dueAt])
+}
+
+// Hạn nộp bài tập RIÊNG của một lớp — ghi đè Assignment.dueAt cho học viên có
+// Enrollment.sectionId = lớp này. Không có dòng = lớp dùng hạn chung. `dueAt = null`
+// nghĩa là lớp này KHÔNG có hạn (khác với "không có dòng"). Lớp mặc định
+// ("chưa gán lớp") không có dòng riêng — luôn theo hạn chung.
+model AssignmentSectionDue {
+  assignmentId String
+  sectionId    String
+  dueAt        DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  assignment Assignment    @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  section    CourseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@id([assignmentId, sectionId])
+  @@index([sectionId])
+}
+
+// Lịch quiz RIÊNG của một lớp — ghi đè cả Quiz.opensAt lẫn Quiz.dueAt (một dòng =
+// lịch đầy đủ của lớp đó; null = không có mốc đó). Cùng quy ước với AssignmentSectionDue.
+model QuizSectionSchedule {
+  quizId    String
+  sectionId String
+  opensAt   DateTime?
+  dueAt     DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  quiz    Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  section CourseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@id([quizId, sectionId])
+  @@index([sectionId])
 }
 
 enum SubmissionStatus {
@@ -3931,6 +3968,9 @@ model CourseSection {
   candidates  ExamCandidate[]
   examClasses CohortExamClass[]
   enrollments Enrollment[]
+  // Hạn nộp / lịch quiz riêng của lớp này (ghi đè hạn chung của bài).
+  assignmentDues AssignmentSectionDue[]
+  quizSchedules  QuizSectionSchedule[]
 
   @@unique([courseId, name])
   @@unique([courseId, code])

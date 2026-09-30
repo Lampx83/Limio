@@ -11,6 +11,7 @@ import {
   NoteError,
   PortfolioError,
   QuizError,
+  SectionDeadlineError,
   SkillError,
 } from "@feedbackme/core-lms";
 
@@ -36,6 +37,10 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
     );
+  }
+  if (err instanceof SectionDeadlineError) {
+    const status = err.code === "not_found" ? 404 : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
   }
   if (err instanceof SkillError) {
     const status =

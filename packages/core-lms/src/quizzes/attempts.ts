@@ -6,6 +6,7 @@ import { emitEvent } from "../learning/events";
 import { gradeAnswer } from "./grading";
 import { QuizError } from "./types";
 import { assertCanEditCourse, assertCanGradeCourse, canEditCourse } from "../courses/authz";
+import { effectiveQuizSchedule } from "../courses/sectionDeadlines";
 
 /**
  * Deterministic Fisher-Yates shuffle for ordering question options. Uses a
@@ -129,18 +130,21 @@ export async function startAttempt(
   });
   if (existing) return { attemptId: existing.id, created: false };
 
+  // Lịch của quiz theo LỚP của học viên: lớp có lịch riêng thì dùng lịch đó, không thì lịch chung.
+  const schedule = await effectiveQuizSchedule(userId, quiz, db);
+
   // Hạn mở: chưa tới giờ thì không mở lượt mới. Giảng viên xem trước không bị chặn.
-  if (quiz.opensAt && quiz.opensAt.getTime() > Date.now()) {
+  if (schedule.opensAt && schedule.opensAt.getTime() > Date.now()) {
     if (!(await canEditCourse(userId, quiz.courseId, db))) {
-      throw new QuizError("quiz_not_open", { opensAt: quiz.opensAt.toISOString() });
+      throw new QuizError("quiz_not_open", { opensAt: schedule.opensAt.toISOString() });
     }
   }
 
   // Hạn đóng: qua hạn thì không mở lượt mới (lượt đang làm dở đã được
   // trả về ở trên và vẫn nộp được). Giảng viên xem trước không bị chặn.
-  if (quiz.dueAt && quiz.dueAt.getTime() < Date.now()) {
+  if (schedule.dueAt && schedule.dueAt.getTime() < Date.now()) {
     if (!(await canEditCourse(userId, quiz.courseId, db))) {
-      throw new QuizError("quiz_past_due", { dueAt: quiz.dueAt.toISOString() });
+      throw new QuizError("quiz_past_due", { dueAt: schedule.dueAt.toISOString() });
     }
   }
 

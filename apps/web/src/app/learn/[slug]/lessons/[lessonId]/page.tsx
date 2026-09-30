@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import {
   canEditCourse,
+  effectiveAssignmentDues,
   getCourseProgress,
   isUserEnrolled,
   listThreadsForLesson,
@@ -389,6 +390,11 @@ export default async function LessonPage({
     (q) => !q.isHidden && !q.cuepointOnly,
   );
   const visibleAssignments = lesson.assignments.filter((a) => !a.isHidden);
+  // Hạn hiển thị là hạn của LỚP học viên (nếu GV đặt riêng) hoặc hạn chung.
+  const effectiveDues = await effectiveAssignmentDues(
+    userId,
+    visibleAssignments.map((a) => ({ id: a.id, courseId: lesson.module.course.id, dueAt: a.dueAt })),
+  );
 
   const quizAttempts = visibleQuizzes.length
     ? await prisma.quizAttempt.findMany({
@@ -440,7 +446,7 @@ export default async function LessonPage({
       id: a.id,
       title: a.title,
       description: a.description,
-      dueAt: a.dueAt,
+      dueAt: effectiveDues.get(a.id) ?? null,
       maxScore: a.maxScore,
       pedagogicalIntent: a.pedagogicalIntent,
       responseFormat: a.responseFormat,

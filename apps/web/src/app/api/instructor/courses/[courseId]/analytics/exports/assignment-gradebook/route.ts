@@ -64,6 +64,23 @@ export async function GET(
     orderBy: { submittedAt: "desc" },
   });
 
+  // "Hạn nộp" là hạn HIỆU LỰC của từng học viên: hạn riêng của lớp họ (nếu GV đặt) hoặc hạn chung.
+  const enrollments = await prisma.enrollment.findMany({
+    where: { courseId: params.courseId, userId: { in: [...new Set(submissions.map((s) => s.userId))] } },
+    select: { userId: true, sectionId: true },
+  });
+  const sectionOf = new Map(enrollments.map((e) => [e.userId, e.sectionId]));
+  const overrides = await prisma.assignmentSectionDue.findMany({
+    where: { assignmentId: { in: [...new Set(submissions.map((s) => s.assignmentId))] } },
+    select: { assignmentId: true, sectionId: true, dueAt: true },
+  });
+  const overrideOf = new Map(overrides.map((o) => [`${o.assignmentId}:${o.sectionId}`, o.dueAt]));
+  const effectiveDue = (s: (typeof submissions)[number]): Date | null => {
+    const sectionId = sectionOf.get(s.userId);
+    const key = sectionId ? `${s.assignmentId}:${sectionId}` : null;
+    return key && overrideOf.has(key) ? (overrideOf.get(key) ?? null) : s.assignment.dueAt;
+  };
+
   const rows = submissions.map((s) => {
     const scorePct =
       s.score !== null && s.assignment.maxScore > 0
@@ -79,7 +96,7 @@ export async function GET(
       Điểm: s.score ?? "",
       "Điểm tối đa": s.assignment.maxScore,
       "Điểm (%)": scorePct,
-      "Hạn nộp": s.assignment.dueAt,
+      "Hạn nộp": effectiveDue(s),
       "Nộp lúc": s.submittedAt,
       "Chấm lúc": s.gradedAt,
       "Người chấm":
