@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate, formatDateTime, formatRelative } from "@/lib/datetime";
 import { COMMON_POOL_FILTER_VALUE, COMMON_POOL_LABEL } from "@feedbackme/shared-types";
@@ -35,6 +35,34 @@ interface UsersResponse {
 }
 
 type SortKey = "displayName" | "createdAt" | "lastAccessAt";
+/**
+ * Cột kéo đổi độ rộng được. "Người dùng" là cột co giãn (lấy phần còn lại) nên không nằm ở đây.
+ * Mỗi thanh kéo là một RANH GIỚI giữa hai cột liền kề: nó đi theo con trỏ, cột bên trái
+ * rộng ra bao nhiêu thì cột bên phải hẹp đi bấy nhiêu (riêng ranh giới với "Người dùng"
+ * thì cột "Người dùng" là bên trái).
+ */
+type ColKey = "roles" | "org" | "sso" | "created" | "access" | "actions";
+type ColWidths = Partial<Record<ColKey, number>>;
+
+const COL_STORAGE_KEY = "admin.users.colWidths.v2";
+const COL_MIN_PX: Record<ColKey, number> = {
+  roles: 64,
+  org: 64,
+  sso: 64,
+  created: 64,
+  access: 64,
+  actions: 150, // đủ chỗ cho 3 nút Xác thực / Quản lý / Xem
+};
+/** Cột "Người dùng" không bao giờ bị ép hẹp hơn mức này khi kéo cột khác. */
+const USER_COL_MIN_PX = 200;
+const COL_DEFAULT_WIDTH: Record<ColKey, string> = {
+  roles: "11%",
+  org: "15%",
+  sso: "9%",
+  created: "9%",
+  access: "10%",
+  actions: "190px",
+};
 type SortDir = "asc" | "desc";
 
 const ROLE_OPTIONS = [
@@ -65,6 +93,104 @@ export default function UsersBrowser() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [createOk, setCreateOk] = useState<string | null>(null);
+  // Độ rộng do người dùng tự kéo (px). Cột chưa kéo giữ mặc định theo %, nên vẫn co giãn theo màn hình.
+  const [colW, setColW] = useState<ColWidths>({});
+  const colWRef = useRef<ColWidths>({});
+  colWRef.current = colW;
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COL_STORAGE_KEY);
+      if (raw) setColW(JSON.parse(raw) as ColWidths);
+    } catch {
+      /* localStorage bị chặn / JSON hỏng: dùng mặc định */
+    }
+  }, []);
+
+  function persistColW(next: ColWidths) {
+    try {
+      if (Object.keys(next).length === 0) localStorage.removeItem(COL_STORAGE_KEY);
+      else localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* không lưu được thì thôi, chỉ mất khi tải lại */
+    }
+  }
+
+  /** left = cột bên trái ranh giới (null = "Người dùng"), right = cột bên phải. */
+  function startResize(e: React.PointerEvent<HTMLElement>, left: ColKey | null, right: ColKey) {
+    e.preventDefault();
+    e.stopPropagation();
+    const handle = e.currentTarget;
+    const leftTh = handle.closest("th");
+    const rightTh = leftTh?.nextElementSibling as HTMLElement | null | undefined;
+    if (!leftTh || !rightTh) return;
+
+    const startX = e.clientX;
+    const startL = leftTh.offsetWidth;
+    const startR = rightTh.offsetWidth;
+    // dx > 0 = ranh giới đi sang phải. Giới hạn để không cột nào xuống dưới mức tối thiểu.
+    const minDx = (left ? COL_MIN_PX[left] : USER_COL_MIN_PX) - startL;
+    const maxDx = startR - COL_MIN_PX[right];
+    handle.setPointerCapture(e.pointerId);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    let last: ColWidths | null = null;
+    const onMove = (ev: PointerEvent) => {
+      const dx = Math.round(Math.min(maxDx, Math.max(minDx, ev.clientX - startX)));
+      const patch: ColWidths = { [right]: startR - dx };
+      if (left) patch[left] = startL + dx;
+      last = patch;
+      setColW((prev) => ({ ...prev, ...patch }));
+    };
+    const onUp = () => {
+      handle.removeEventListener("pointermove", onMove);
+      handle.removeEventListener("pointerup", onUp);
+      handle.removeEventListener("pointercancel", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      // Không đọc colWRef ở đây: React có thể chưa render lại sau lần move cuối.
+      if (last) persistColW({ ...colWRef.current, ...last });
+    };
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", onUp);
+    handle.addEventListener("pointercancel", onUp);
+  }
+
+  function resetEdge(left: ColKey | null, right: ColKey) {
+    const next = { ...colWRef.current };
+    delete next[right];
+    if (left) delete next[left];
+    setColW(next);
+    persistColW(next);
+  }
+
+  function resetAllCols() {
+    setColW({});
+    persistColW({});
+  }
+
+  function colStyle(key: ColKey): React.CSSProperties {
+    const px = colW[key];
+    return { width: px != null ? `${px}px` : COL_DEFAULT_WIDTH[key] };
+  }
+
+  function resizeHandle(left: ColKey | null, right: ColKey, label: string) {
+    return (
+      <span
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={`Kéo để đổi độ rộng cột ${label} (nhấp đúp để đặt lại)`}
+        title="Kéo để đổi độ rộng · nhấp đúp để đặt lại"
+        onPointerDown={(e) => startResize(e, left, right)}
+        onDoubleClick={() => resetEdge(left, right)}
+        className="group absolute -right-1.5 top-0 z-10 flex h-full w-3 cursor-col-resize touch-none select-none justify-center"
+      >
+        <span className="my-auto h-5 w-0.5 rounded-full bg-[rgb(var(--text-faint))] transition-all group-hover:h-full group-hover:bg-brand-500" />
+      </span>
+    );
+  }
 
   useEffect(() => {
     fetch(apiUrl("/api/admin/orgs"))
@@ -109,11 +235,22 @@ export default function UsersBrowser() {
     setPage(0);
   }
 
-  function sortTh(key: SortKey, label: string) {
+  type Edge = [ColKey | null, ColKey];
+
+  function plainTh(label: string, edge?: Edge) {
+    return (
+      <th className="relative whitespace-nowrap px-3 py-2 text-left font-medium">
+        {label}
+        {edge && resizeHandle(edge[0], edge[1], label)}
+      </th>
+    );
+  }
+
+  function sortTh(key: SortKey, label: string, edge?: Edge) {
     const active = sort === key;
     return (
       <th
-        className="whitespace-nowrap px-3 py-2 text-left font-medium"
+        className="relative whitespace-nowrap px-3 py-2 text-left font-medium"
         aria-sort={
           active ? (dir === "asc" ? "ascending" : "descending") : "none"
         }
@@ -128,6 +265,7 @@ export default function UsersBrowser() {
             {active ? (dir === "asc" ? "↑" : "↓") : "↕"}
           </span>
         </button>
+        {edge && resizeHandle(edge[0], edge[1], label)}
       </th>
     );
   }
@@ -354,16 +492,33 @@ export default function UsersBrowser() {
       </div>
 
       {/* Table */}
+      {Object.keys(colW).length > 0 && (
+        <div className="mb-1 text-right text-xs">
+          <button type="button" onClick={resetAllCols} className="link">
+            Đặt lại độ rộng cột
+          </button>
+        </div>
+      )}
       <div className="card overflow-x-auto p-0">
-        <table className="w-full min-w-[880px] text-sm">
+        <table ref={tableRef} className="w-full min-w-[900px] table-fixed text-sm">
+          {/* Cột chưa kéo chia theo %, "Người dùng" lấy phần còn lại, "Thao tác" cố định. Kéo mép tiêu đề để đổi độ rộng (lưu trong trình duyệt). */}
+          <colgroup>
+            <col />
+            <col style={colStyle("roles")} />
+            <col style={colStyle("org")} />
+            <col style={colStyle("sso")} />
+            <col style={colStyle("created")} />
+            <col style={colStyle("access")} />
+            <col style={colStyle("actions")} />
+          </colgroup>
           <thead className="border-b border-token bg-base-50 text-xs uppercase text-faint">
             <tr>
-              {sortTh("displayName", "Người dùng")}
-              <th className="whitespace-nowrap px-3 py-2 text-left font-medium">Roles</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left font-medium">Tổ chức</th>
-              <th className="whitespace-nowrap px-3 py-2 text-left font-medium">SSO</th>
-              {sortTh("createdAt", "Tạo lúc")}
-              {sortTh("lastAccessAt", "Truy cập")}
+              {sortTh("displayName", "Người dùng", [null, "roles"])}
+              {plainTh("Roles", ["roles", "org"])}
+              {plainTh("Tổ chức", ["org", "sso"])}
+              {plainTh("SSO", ["sso", "created"])}
+              {sortTh("createdAt", "Tạo lúc", ["created", "access"])}
+              {sortTh("lastAccessAt", "Truy cập", ["access", "actions"])}
               <th className="whitespace-nowrap px-3 py-2 text-right font-medium">Thao tác</th>
             </tr>
           </thead>
@@ -384,7 +539,7 @@ export default function UsersBrowser() {
             )}
             {data?.users.map((u) => (
               <tr key={u.id} className="hover:bg-base-50">
-                <td className="w-full max-w-0 px-3 py-2">
+                <td className="overflow-hidden px-3 py-2">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-xs font-semibold text-white">
                       {(u.displayName || u.email).charAt(0).toUpperCase()}
@@ -394,35 +549,24 @@ export default function UsersBrowser() {
                         <p className="truncate font-medium">{u.displayName}</p>
                         {!u.emailVerified && (
                           <span
-                            className="chip-warning shrink-0 !px-1.5 !py-0 text-[11px]"
+                            className="h-2 w-2 shrink-0 rounded-full bg-warning-500"
                             title="Email chưa xác thực"
-                          >
-                            Chưa xác thực
-                          </span>
+                            aria-label="Email chưa xác thực"
+                          />
                         )}
                       </div>
                       <p className="truncate text-xs text-faint">{u.email}</p>
                     </div>
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-3 py-2">
-                  {u.roles.length === 0 ? (
-                    <span className="text-faint">—</span>
-                  ) : (
-                    <div className="flex gap-1">
-                      {u.roles.map((r) => (
-                        <span key={r} className={roleChipClass(r)}>
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                <td className="px-3 py-2">
+                  <RoleCell roles={u.roles} />
                 </td>
                 <td className="px-3 py-2 text-xs">
                   {u.organization ? (
                     <Link
                       href={`/admin/orgs/${u.organization.id}`}
-                      className="link block max-w-[180px] truncate"
+                      className="link block truncate"
                       title={u.organization.name}
                       prefetch={false}
                     >
@@ -432,7 +576,7 @@ export default function UsersBrowser() {
                     <span className="whitespace-nowrap text-faint">{COMMON_POOL_LABEL}</span>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2 text-xs text-muted">
+                <td className="break-words px-3 py-2 text-xs text-muted">
                   {u.providers.length === 0 ? "—" : u.providers.join(", ")}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-xs text-muted tabular-nums">
@@ -500,6 +644,27 @@ export default function UsersBrowser() {
         </div>
       )}
     </>
+  );
+}
+
+/** Vai trò ưu tiên hiển thị khi chỉ đủ chỗ cho một chip: quyền cao nhất trước. */
+const ROLE_PRIORITY = ["admin", "instructor", "researcher", "mentor", "learner"];
+
+/** Một chip vai trò chính + "+N" (tooltip liệt kê đủ), thay vì xếp chồng nhiều chip làm cao hàng. */
+function RoleCell({ roles }: { roles: string[] }) {
+  if (roles.length === 0) return <span className="text-faint">—</span>;
+  const sorted = [...roles].sort(
+    (a, b) =>
+      (ROLE_PRIORITY.indexOf(a) + 1 || 99) - (ROLE_PRIORITY.indexOf(b) + 1 || 99),
+  );
+  const [main = "", ...rest] = sorted;
+  return (
+    <div className="flex items-center gap-1" title={sorted.join(", ")}>
+      <span className={`${roleChipClass(main)} !px-2 !py-0`}>{main}</span>
+      {rest.length > 0 && (
+        <span className="chip !px-1.5 !py-0 tabular-nums">+{rest.length}</span>
+      )}
+    </div>
   );
 }
 
