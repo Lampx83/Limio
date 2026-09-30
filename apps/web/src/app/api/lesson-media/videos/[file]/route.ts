@@ -4,6 +4,7 @@ import { lessonVideoKeyFromFilename } from "@/lib/storage-keys";
 import {
   isSafeFilename,
   resolveKey,
+  streamStorageWithRange,
   streamWithRange,
 } from "@/lib/storage-serve";
 
@@ -33,18 +34,21 @@ export async function GET(
     return new NextResponse("forbidden", { status: 403 });
   }
 
-  const resolved = await resolveKey(lessonVideoKeyFromFilename(file));
+  const key = lessonVideoKeyFromFilename(file);
+  const resolved = await resolveKey(key);
   if (!resolved) return new NextResponse("not_found", { status: 404 });
 
   const ext = path.extname(file).toLowerCase();
   const mime = MIME[ext] ?? "application/octet-stream";
 
   // Local FS → stream with Range support (essential for video scrubbing).
-  // S3 → buffer and return 200; switch to redirect-to-signed-URL when we
-  // move public assets onto a CDN.
   if (resolved.absPath) {
     return streamWithRange(resolved.absPath, mime, req);
   }
+  // S3 → stream từng đoạn (Range) thẳng từ NAS, không nạp cả video vào RAM.
+  const streamed = await streamStorageWithRange(key!, mime, req);
+  if (streamed) return streamed;
+  // Còn lại (file chỉ ở fallback local): buffer.
   const buf = await resolved.get();
   return new NextResponse(new Uint8Array(buf), {
     headers: {
