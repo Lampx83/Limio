@@ -20,6 +20,7 @@
     "changelog": "npx --yes git-cliff@latest --output CHANGELOG.md",
     "changelog:preview": "npx --yes git-cliff@latest",
     "backfill:learner-role": "pnpm --filter @feedbackme/core-lms backfill:learner-role",
+    "backfill:sso-org": "pnpm --filter @feedbackme/core-lms backfill:sso-org",
     "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags",
     "backfill:stored-files": "pnpm --filter @feedbackme/core-lms backfill:stored-files",
     "storage:orphans": "pnpm --filter @feedbackme/core-lms storage:orphans",

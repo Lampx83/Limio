@@ -1,6 +1,7 @@
 import { prisma } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import type { DbClient } from "./tokens";
+import { resolveSsoDefaultOrgId } from "./ssoDefaultOrg";
 
 /**
  * Find-or-create user from a verified OAuth/OIDC sign-in.
@@ -11,6 +12,8 @@ import type { DbClient } from "./tokens";
  * 2. Else if a user with this email already exists — link it (insert AuthProvider
  *    row pointing to the existing user). Marks email as verified since the
  *    provider already verified it.
+ *    Nếu server đặt SSO_DEFAULT_ORG_CODE (ssoDefaultOrg.ts) và user chưa thuộc
+ *    trường nào thì gắn luôn vào trường mặc định ở bước 2 và 3.
  * 3. Else create a new user + AuthProvider row + role `learner` (giống đăng ký
  *    bằng mật khẩu, để danh sách người dùng không có tài khoản "trống role").
  *
@@ -62,11 +65,19 @@ export async function loginOrLinkSso(
         providerUserId: input.providerUserId,
       },
     });
-    // Mark email verified if provider asserts it and we haven't yet.
-    if (input.emailVerifiedByProvider && !existing.emailVerifiedAt) {
+    // Mark email verified if provider asserts it and we haven't yet; và gắn
+    // trường mặc định nếu tài khoản (đăng ký tay từ trước) chưa thuộc trường nào.
+    const defaultOrgId = existing.organizationId
+      ? null
+      : await resolveSsoDefaultOrgId(email, db);
+    const verifyNow = input.emailVerifiedByProvider && !existing.emailVerifiedAt;
+    if (verifyNow || defaultOrgId) {
       await db.user.update({
         where: { id: existing.id },
-        data: { emailVerifiedAt: new Date() },
+        data: {
+          ...(verifyNow ? { emailVerifiedAt: new Date() } : {}),
+          ...(defaultOrgId ? { organizationId: defaultOrgId } : {}),
+        },
       });
     }
     return {
@@ -79,8 +90,10 @@ export async function loginOrLinkSso(
 
   // Step 3: create new user.
   const learnerRole = await db.role.findUniqueOrThrow({ where: { name: RoleName.Learner } });
+  const defaultOrgId = await resolveSsoDefaultOrgId(email, db);
   const created = await db.user.create({
     data: {
+      organizationId: defaultOrgId,
       userRoles: { create: { roleId: learnerRole.id } },
       email,
       displayName: input.name || email.split("@")[0]!,
