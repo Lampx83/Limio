@@ -187,7 +187,7 @@ export default function RosterTable({
                     </td>
                     <td className="px-3 py-2">
                       <StatusBadge tone={s ? (isGraded ? "success" : "warning") : "neutral"}>
-                        {s ? "Đã nộp" : "Chưa nộp"}
+                        {s ? (isGraded ? "Đã chấm" : "Đã nộp") : "Chưa nộp"}
                       </StatusBadge>
                     </td>
                     <td className="px-3 py-2 text-muted">
