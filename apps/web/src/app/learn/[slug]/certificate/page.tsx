@@ -1,4 +1,3 @@
-import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Roboto } from "next/font/google";
@@ -7,6 +6,9 @@ import { prisma } from "@feedbackme/db";
 import { getCourseProgress, isUserEnrolled, issueCertificate } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatVN } from "@/lib/datetime";
+import CertificateCanvas from "./CertificateCanvas";
+import CertificateSeal from "./CertificateSeal";
+import { formatDuration, tracked } from "@/lib/certificateFormat";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +29,7 @@ export default async function CertificatePage({
 
   const course = await prisma.course.findUnique({
     where: { slug: params.slug },
-    select: { id: true, title: true, description: true, language: true },
+    select: { id: true, title: true, language: true },
   });
   if (!course) notFound();
   if (!(await isUserEnrolled(userId, course.id))) {
@@ -66,17 +68,25 @@ export default async function CertificatePage({
   // bản đã cấp (tên/tên khoá snapshot lúc đó, không đổi theo dữ liệu hiện tại).
   const certificate = await issueCertificate(userId, course.id);
 
-  const skillBadges = await prisma.userBadge.findMany({
-    where: {
-      userId,
-      badge: { category: "skill" },
-      context: { path: ["courseId"], equals: course.id },
-    },
-    include: { badge: { select: { code: true, name: true } } },
-  });
+  const [skillBadges, engagement] = await Promise.all([
+    prisma.userBadge.findMany({
+      where: {
+        userId,
+        badge: { category: "skill" },
+        context: { path: ["courseId"], equals: course.id },
+      },
+      include: { badge: { select: { name: true } } },
+    }),
+    // Cùng nguồn với route PDF: thời lượng học thật (activeSec cộng dồn).
+    prisma.lessonEngagement.aggregate({
+      where: { userId, courseId: course.id },
+      _sum: { activeSec: true },
+    }),
+  ]);
 
   const verifyUrl = `${(process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "")}/verify/${certificate.certNumber}`;
   const issuedAtLabel = formatVN(certificate.issuedAt, { year: "numeric", month: "long", day: "numeric" });
+  const durationLabel = formatDuration(engagement._sum.activeSec ?? 0, { hours: "giờ", minutes: "phút" });
 
   // LinkedIn "Add to Profile" — mở sẵn form Licenses & Certifications điền
   // trước tên/khoá/ngày cấp + link xác thực. Không cần OAuth hay LinkedIn
@@ -101,165 +111,177 @@ export default async function CertificatePage({
         ← {course.title}
       </Link>
 
-      <article
-        className={`${roboto.className} relative mx-auto mt-6 flex aspect-[841.89/595.28] w-full max-w-5xl flex-col bg-gradient-to-br from-brand-50 via-white to-pink-50 text-center shadow-card-hover print:aspect-auto print:shadow-none`}
-      >
-        {/* Lớp trang trí nằm trong hộp riêng có overflow-hidden: <article> KHÔNG được
-            overflow-hidden, vì aspect-ratio chỉ là mức tối thiểu khi overflow còn visible —
-            cắt ở đây thì khung cứng theo tỉ lệ A4 và nội dung dài (mô tả, chữ ký, mã
-            chứng nhận) bị xén mất phần dưới khi cửa sổ hẹp. */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-          {/* Decorative corner glows — lime góc trên-trái, hồng góc dưới-phải, cùng 2 tông màu với 2 tam giác góc trên bản PDF (CORNER_LIME/CORNER_PINK) */}
-          <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-brand-200/40 blur-3xl" aria-hidden />
-          <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" aria-hidden />
-          {/* Hoạ tiết nền — lát chanh trừu tượng (vành + 6 nan cong, thay 4 nan thẳng của logo thật) lệch hàng kiểu gạch xây; cùng motif với apps/web/src/lib/certificatePdf.tsx LimeSliceAbstractMotif */}
-          <div
-            className="absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cdefs%3E%3Cg id='m' fill='none' stroke='%233f6212' stroke-width='0.9' stroke-linecap='round'%3E%3Ccircle cx='0' cy='0' r='13' stroke-width='1'/%3E%3Cpath d='M0 0 Q5.93 2.89 12 0'/%3E%3Cpath d='M0 0 Q0.46 6.58 6 10.39'/%3E%3Cpath d='M0 0 Q-5.47 3.69 -6 10.39'/%3E%3Cpath d='M0 0 Q-5.93 -2.89 -12 0'/%3E%3Cpath d='M0 0 Q-0.46 -6.58 -6 -10.39'/%3E%3Cpath d='M0 0 Q5.47 -3.69 6 -10.39'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23m' x='24' y='24'/%3E%3Cuse href='%23m' x='72' y='24'/%3E%3Cuse href='%23m' x='0' y='72'/%3E%3Cuse href='%23m' x='48' y='72'/%3E%3Cuse href='%23m' x='96' y='72'/%3E%3C/svg%3E\")",
-              backgroundSize: "96px 96px",
-            }}
-            aria-hidden
-          />
-        </div>
+      {/* Bản xem trước dựng lại đúng bố cục PDF (apps/web/src/lib/certificatePdf.tsx):
+          cùng toạ độ A4 ngang, kích thước chữ tính bằng px = pt của PDF. Sửa bố cục
+          bên đó thì sửa cả ở đây. */}
+      <CertificateCanvas>
+        <article
+          className={`${roboto.className} relative h-full w-full overflow-hidden bg-white text-center`}
+        >
+          {/* Hai góc màu chéo phía sau khung trắng (CORNER_LIME / CORNER_PINK) */}
+          <svg
+            className="absolute left-0 top-0"
+            width={841.89}
+            height={595.28}
+            viewBox="0 0 841.89 595.28"
+            aria-hidden="true"
+          >
+            <polygon points={`0,0 ${841.89 * 0.42},0 0,${595.28 * 0.58}`} fill="#ecfccb" />
+            <polygon
+              points={`841.89,595.28 ${841.89 - 841.89 * 0.42},595.28 841.89,${595.28 - 595.28 * 0.58}`}
+              fill="#fce7f3"
+            />
+          </svg>
 
-        {/* Khung đôi (outer 1.5px + inner 1px, cách nhau 1 khoảng hở), góc
-            vuông sắc — đúng như outerFrame/innerFrame lồng nhau của bản PDF
-            (react-pdf không bo góc 2 khung này), thay vì CSS border-double
-            (chỉ là 1 viền mảnh, không có khoảng hở thật) hay góc bo tròn. */}
-        <div className="relative m-2 flex flex-1 border-[1.5px] border-brand-800 p-1 sm:m-3">
-          <div className="relative flex h-full w-full flex-col items-center justify-center border border-brand-800 p-4 sm:p-8">
-            {/* Bố cục học theo apps/web/src/lib/certificatePdf.tsx: một khối
-                căn giữa theo chiều dọc (logo → kicker → tên khoá → hoàn
-                thành bởi → mô tả/badge tuỳ chọn → hàng chữ ký/mã chứng nhận
-                dưới đáy), thay vì stack dọc dài như bản cũ.
-                Header chỉ gồm 2 logo (Limio + Organization) khi có logo —
-                KHÔNG kèm tên chữ ở đây; tên trường đã hiện đủ ở ô chữ ký
-                cuối trang ("Cấp bởi Limio × <tên trường>"). */}
-            {certificate.issuerLogoUrl ? (
-              <div className="mb-3 flex items-center justify-center gap-3.5">
-                <LimioLearningLogo className="h-7 w-auto shrink-0" />
-                <div className="h-7 w-px bg-gray-300" aria-hidden />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={certificate.issuerLogoUrl}
-                  alt=""
-                  className="h-8 w-8 shrink-0 object-contain sm:h-9 sm:w-9"
-                />
-              </div>
-            ) : (
-              <LimioLearningLogo className="mb-3 h-7 w-auto" />
-            )}
+          {/* Thẻ trắng lề 46 quanh trang; hoạ tiết lát chanh (cell 48, hàng lệch nửa ô) opacity 0.07 */}
+          <div className="absolute inset-[46px] bg-white">
+            <div
+              className="absolute inset-0 opacity-[0.07]"
+              style={{
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cdefs%3E%3Cg id='m' fill='none' stroke='%233f6212' stroke-width='0.9' stroke-linecap='round'%3E%3Ccircle cx='16' cy='16' r='13' stroke-width='1'/%3E%3Cpath d='M16 16 Q21.93 18.89 28 16'/%3E%3Cpath d='M16 16 Q16.46 22.58 22 26.39'/%3E%3Cpath d='M16 16 Q10.53 19.69 10 26.39'/%3E%3Cpath d='M16 16 Q10.07 13.11 4 16'/%3E%3Cpath d='M16 16 Q15.54 9.42 10 5.61'/%3E%3Cpath d='M16 16 Q21.47 12.31 22 5.61'/%3E%3C/g%3E%3C/defs%3E%3Cg transform='scale(1.5)'%3E%3Cuse href='%23m' x='0' y='0'/%3E%3Cuse href='%23m' x='32' y='0'/%3E%3Cuse href='%23m' x='-16' y='32'/%3E%3Cuse href='%23m' x='16' y='32'/%3E%3Cuse href='%23m' x='48' y='32'/%3E%3C/g%3E%3C/svg%3E\")",
+                backgroundSize: "96px 96px",
+              }}
+              aria-hidden
+            />
 
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.3em] text-brand-800 backdrop-blur sm:text-xs">
-              Chứng nhận hoàn thành
-            </p>
-
-            <p className="mt-4 text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
-              {course.title}
-            </p>
-            <p className="mt-3 text-lg font-bold sm:text-xl">{certificate.userNameSnapshot}</p>
-            <p className="mt-1 text-xs text-faint">{issuedAtLabel}</p>
-
-            {course.description && (
-              <p className="mx-auto mt-3 hidden max-w-xl text-xs italic text-faint sm:block">
-                {course.description.length > 140
-                  ? course.description.slice(0, 140) + "…"
-                  : course.description}
-              </p>
-            )}
-
-            {skillBadges.length > 0 && (
-              <ul className="mt-3 flex flex-wrap justify-center gap-1.5">
-                {skillBadges.slice(0, 4).map((sb) => (
-                  <li
-                    key={sb.id}
-                    className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-[0.6875rem] font-semibold text-brand-800"
-                  >
-                    <BadgeIcon code={sb.badge.code} className="h-5 w-5" />
-                    {sb.badge.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* 2 chữ ký cạnh nhau (Limio trái, Organization phải) khi khoá
-                thuộc 1 Organization — mỗi bên độc lập: ảnh + dòng kẻ + tên/
-                chức danh riêng. Chỉ Limio thì 1 khối đứng một mình. */}
-            {certificate.issuerOrgName ? (
-              <div className="mt-6 flex w-full items-start justify-between gap-4">
-                <div className="flex flex-col items-start text-left">
-                  {certificate.platformSignatureUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
+            {/* Khung đôi: ngoài 1.5px (padding 5) + trong 0.75px, góc vuông */}
+            <div className="absolute inset-0 flex border-[1.5px] border-[#3f6212] p-[5px]">
+              <div className="relative flex flex-1 flex-col items-center justify-center border-[0.75px] border-[#3f6212] px-16 py-[30px]">
+                {certificate.issuerLogoUrl ? (
+                  <div className="flex items-center gap-3.5">
+                    <LimioLearningLogo className="h-10 w-auto shrink-0" />
+                    <div className="h-7 w-px bg-[#d1d5db]" aria-hidden />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={certificate.platformSignatureUrl}
+                      src={certificate.issuerLogoUrl}
                       alt=""
-                      className="mb-1 h-6 max-w-[5rem] object-contain"
+                      className="h-9 w-9 shrink-0 object-contain"
                     />
-                  )}
-                  <div className="h-px w-20 bg-gray-300" />
-                  <p className="mt-1.5 text-sm font-bold">
-                    {certificate.platformSignatureName || "Limio Learning"}
-                  </p>
-                  <p className="text-[0.6875rem] text-faint">
-                    {certificate.platformSignatureTitle || "Nền tảng học tập cá nhân hoá"}
-                  </p>
-                </div>
-                <div className="flex flex-col items-start text-left">
-                  {certificate.issuerSignatureUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={certificate.issuerSignatureUrl}
-                      alt=""
-                      className="mb-1 h-6 max-w-[5rem] object-contain"
-                    />
-                  )}
-                  <div className="h-px w-20 bg-gray-300" />
-                  <div className="mt-1.5 flex items-center gap-1.5">
-                    {certificate.issuerLogoUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={certificate.issuerLogoUrl}
-                        alt=""
-                        className="h-4 w-4 object-contain"
-                      />
-                    )}
-                    <p className="text-sm font-bold">
-                      {certificate.issuerSignatureName || certificate.issuerOrgName}
-                    </p>
                   </div>
-                  {certificate.issuerSignatureTitle && (
-                    <p className="text-[0.6875rem] text-faint">{certificate.issuerSignatureTitle}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-6 flex w-full flex-col items-start text-left">
-                {certificate.platformSignatureUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={certificate.platformSignatureUrl}
-                    alt=""
-                    className="mb-1 h-6 max-w-[5rem] object-contain"
-                  />
+                ) : (
+                  <LimioLearningLogo className="h-10 w-auto" />
                 )}
-                <div className="h-px w-20 bg-gray-300" />
-                <p className="mt-1.5 text-sm font-bold">
-                  {certificate.platformSignatureName || certificate.issuerName}
+
+                <p
+                  aria-label="Chứng nhận hoàn thành"
+                  className="mt-[18px] whitespace-pre text-[22.5px] font-bold leading-normal text-[#3f6212]"
+                >
+                  {tracked("CHỨNG NHẬN HOÀN THÀNH")}
                 </p>
-                <p className="text-[0.6875rem] text-faint">
-                  {certificate.platformSignatureTitle || "Nền tảng học tập cá nhân hoá"}
+
+                <p className="mt-5 max-w-[620px] text-[51px] font-bold leading-[1.15] text-[#1f2937]">
+                  {certificate.courseTitleSnapshot}
+                </p>
+                <p className="mt-[22px] text-[26px] font-bold leading-normal text-[#1f2937]">
+                  {certificate.userNameSnapshot}
+                </p>
+                <p className="mt-1 text-[15.75px] leading-normal text-[#9ca3af]">
+                  {issuedAtLabel}
+                  {durationLabel ? ` · ${durationLabel}` : ""}
+                </p>
+
+                {skillBadges.length > 0 && (
+                  <>
+                    <p className="mt-[26px] whitespace-pre text-[13.5px] font-bold leading-normal text-[#9ca3af]">
+                      {tracked("KỸ NĂNG ĐÃ ĐẠT")}
+                    </p>
+                    <ul className="mt-2.5 flex max-w-[560px] flex-wrap justify-center gap-[7px]">
+                      {skillBadges.map((sb) => (
+                        <li
+                          key={sb.id}
+                          className="rounded-xl border-[0.75px] border-[#d9f99d] px-3 py-[5px] text-[14.25px] leading-normal text-[#3f6212]"
+                        >
+                          {sb.badge.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {/* Hàng dưới: chữ ký bên trái, con dấu bên phải (bottomRow của PDF) */}
+                <div className="mt-9 flex w-full items-end justify-between">
+                  {certificate.issuerOrgName ? (
+                    <div className="flex gap-7">
+                      <div className="flex flex-col items-center">
+                        {certificate.platformSignatureUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={certificate.platformSignatureUrl}
+                            alt=""
+                            className="mb-1 h-6 max-w-[84px] object-contain"
+                          />
+                        )}
+                        <div className="mb-1.5 h-[0.75px] w-[110px] bg-[#a3a3a3]" />
+                        <p className="text-sm font-bold leading-normal text-[#1f2937]">
+                          {certificate.platformSignatureName || "Limio Learning"}
+                        </p>
+                        <p className="mt-0.5 text-[9.5px] leading-normal text-[#6b7280]">
+                          {certificate.platformSignatureTitle || "Nền tảng học tập cá nhân hoá"}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        {certificate.issuerSignatureUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={certificate.issuerSignatureUrl}
+                            alt=""
+                            className="mb-1 h-6 max-w-[84px] object-contain"
+                          />
+                        )}
+                        <div className="mb-1.5 h-[0.75px] w-[110px] bg-[#a3a3a3]" />
+                        <div className="flex items-center gap-1.5">
+                          {certificate.issuerLogoUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={certificate.issuerLogoUrl}
+                              alt=""
+                              className="h-[18px] w-[18px] object-contain"
+                            />
+                          )}
+                          <p className="text-sm font-bold leading-normal text-[#1f2937]">
+                            {certificate.issuerSignatureName || certificate.issuerOrgName}
+                          </p>
+                        </div>
+                        {certificate.issuerSignatureTitle && (
+                          <p className="mt-0.5 text-[9.5px] leading-normal text-[#6b7280]">
+                            {certificate.issuerSignatureTitle}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      {certificate.platformSignatureUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={certificate.platformSignatureUrl}
+                          alt=""
+                          className="mb-1 h-6 max-w-[84px] object-contain"
+                        />
+                      )}
+                      <div className="mb-1.5 h-[0.75px] w-[110px] bg-[#a3a3a3]" />
+                      <p className="text-sm font-bold leading-normal text-[#1f2937]">
+                        {certificate.platformSignatureName || certificate.issuerName}
+                      </p>
+                      <p className="mt-0.5 text-[9.5px] leading-normal text-[#6b7280]">
+                        {certificate.platformSignatureTitle || "Nền tảng học tập cá nhân hoá"}
+                      </p>
+                    </div>
+                  )}
+                  <CertificateSeal />
+                </div>
+
+                <p className="mt-3.5 w-full text-center text-[11.25px] leading-normal text-[#9ca3af]">
+                  Mã chứng nhận: <span className="text-[12.75px] text-[#6b7280]">{certificate.certNumber}</span>
+                  {"   ·   "}
+                  Xác thực tại: <span className="text-[12.75px] text-[#6b7280]">{verifyUrl}</span>
                 </p>
               </div>
-            )}
-
-            <p className="mt-4 w-full border-t border-token pt-3 text-center text-xs text-faint">
-              Mã chứng nhận: <span className="font-mono">{certificate.certNumber}</span>
-            </p>
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
+      </CertificateCanvas>
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3 print:hidden">
         <a href={`/api/certificates/${params.slug}/pdf`} className="btn-primary">

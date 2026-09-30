@@ -15,6 +15,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { slugify } from "@feedbackme/core-lms";
+import { tracked, formatDuration } from "@/lib/certificateFormat";
 import {
   ROBOTO_REGULAR_VIETNAMESE_DATA_URL,
   ROBOTO_BOLD_VIETNAMESE_DATA_URL,
@@ -163,7 +164,8 @@ const styles = StyleSheet.create({
   // dòng kẻ + tên/chức danh riêng, không gộp chung 1 khối như bản cũ. Chỉ
   // Limio (không Organization) thì vẫn 1 signatureBlock đứng một mình.
   signatureColumnsRow: { flexDirection: "row", gap: 28 },
-  signatureBlock: { alignItems: "flex-start" },
+  // Ảnh chữ ký / dòng kẻ / tên / chức danh căn giữa trong khối (khớp bản xem trước HTML).
+  signatureBlock: { alignItems: "center" },
   signatureImage: { height: 24, maxWidth: 84, objectFit: "contain", marginBottom: 4 },
   signatureRule: { width: 110, height: 0.75, backgroundColor: "#a3a3a3", marginBottom: 6 },
   issuerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -203,21 +205,6 @@ const STRINGS = {
 } as const;
 
 type Locale = keyof typeof STRINGS;
-
-/** Chèn khoảng trắng thật giữa từng ký tự — xem ghi chú ở `styles.kicker`. */
-function tracked(s: string): string {
-  return s.split("").join(" ");
-}
-
-function formatDuration(totalSec: number, t: (typeof STRINGS)[Locale]): string | null {
-  if (totalSec < 60) return null;
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.round((totalSec % 3600) / 60);
-  const parts: string[] = [];
-  if (h > 0) parts.push(`${h} ${t.hours}`);
-  if (m > 0) parts.push(`${m} ${t.minutes}`);
-  return parts.join(" ") || null;
-}
 
 /**
  * Lát chanh — logo thật của Limio (xem apps/web/src/components/BrandIcons.tsx
