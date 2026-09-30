@@ -6,7 +6,7 @@
  */
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { isOrgAdminOf } from "../auth/roles";
+import { isAdmin, isOrgAdminOf } from "../auth/roles";
 import { logAudit } from "../auth/audit";
 import { emitEvent } from "../learning/events";
 import { findOrInviteUserByEmail } from "../auth/invite";
@@ -19,7 +19,8 @@ export class OrgMemberError extends Error {
       | "invalid_email"
       | "already_member"
       | "belongs_to_other_org"
-      | "not_member",
+      | "not_member"
+      | "user_not_found",
   ) {
     super(code);
   }
@@ -120,9 +121,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function addOrgMember(
   actorUserId: string,
   organizationId: string,
-  input: { email: string; displayName?: string; baseUrl: string },
+  input: { email: string; displayName?: string; baseUrl: string; sendInvite?: boolean },
   db: PrismaClient = prisma,
-): Promise<{ userId: string; invited: boolean }> {
+): Promise<{ userId: string; invited: boolean; created: boolean }> {
   await assertOrgAdmin(actorUserId, organizationId, db);
 
   const org = await db.organization.findUnique({
@@ -141,6 +142,7 @@ export async function addOrgMember(
 
   let userId: string;
   let invited = false;
+  let created = false;
 
   if (existing) {
     if (existing.organizationId === organizationId) {
@@ -162,10 +164,12 @@ export async function addOrgMember(
       templateKey: "org.member_invite",
       organizationId,
       extraVariables: { orgName: org.name },
+      sendInvite: input.sendInvite,
       db,
     });
     userId = result.userId;
     invited = result.invited;
+    created = result.created;
     // findOrInviteUserByEmail chỉ set organizationId lúc TẠO user mới — nếu
     // email đã tồn tại (race hiếm) thì rơi vào nhánh existing ở trên rồi, nên
     // ở đây user chắc chắn vừa được tạo với organizationId đúng.
@@ -188,7 +192,7 @@ export async function addOrgMember(
     db,
   );
 
-  return { userId, invited };
+  return { userId, invited, created };
 }
 
 /** Gỡ user khỏi trường — đưa về "nhóm chung" (organizationId = null). Không xoá user. */
@@ -229,4 +233,73 @@ export async function removeOrgMember(
     { eventKey: `org.member.removed:${organizationId}:${targetUserId}:${Date.now()}` },
     db,
   );
+}
+
+/**
+ * Platform Admin gắn / đổi / gỡ organization của một user bất kỳ.
+ * Khác addOrgMember (OrgAdmin, chỉ nhận user chưa thuộc trường nào): ở đây
+ * cho phép chuyển thẳng từ trường này sang trường khác, và `organizationId =
+ * null` đưa về "nhóm chung". Chỉ Platform Admin — OrgAdmin không được kéo
+ * user ra khỏi trường khác.
+ */
+export async function assignUserOrganization(
+  actorUserId: string,
+  targetUserId: string,
+  organizationId: string | null,
+  db: PrismaClient = prisma,
+): Promise<{ from: string | null; to: string | null }> {
+  if (!(await isAdmin(actorUserId, db))) throw new OrgMemberError("forbidden");
+
+  const user = await db.user.findUnique({
+    where: { id: targetUserId },
+    select: { organizationId: true },
+  });
+  if (!user) throw new OrgMemberError("user_not_found");
+
+  if (organizationId) {
+    const org = await db.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true },
+    });
+    if (!org) throw new OrgMemberError("org_not_found");
+  }
+
+  const from = user.organizationId;
+  if (from === organizationId) return { from, to: organizationId };
+
+  await db.user.update({
+    where: { id: targetUserId },
+    data: { organizationId },
+  });
+
+  await logAudit(
+    {
+      action: "user.organization_changed",
+      actorUserId,
+      targetUserId,
+      payload: { from, to: organizationId },
+    },
+    db,
+  );
+  const at = Date.now();
+  if (from) {
+    await emitEvent(
+      actorUserId,
+      LearningEventType.OrgMemberRemoved,
+      { organizationId: from, targetUserId },
+      { eventKey: `org.member.removed:${from}:${targetUserId}:${at}` },
+      db,
+    );
+  }
+  if (organizationId) {
+    await emitEvent(
+      actorUserId,
+      LearningEventType.OrgMemberAdded,
+      { organizationId, targetUserId },
+      { eventKey: `org.member.added:${organizationId}:${targetUserId}:${at}` },
+      db,
+    );
+  }
+
+  return { from, to: organizationId };
 }

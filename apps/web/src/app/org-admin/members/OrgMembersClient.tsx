@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
+import MemberImport from "./MemberImport";
 
 interface MemberRow {
   id: string;
@@ -161,6 +162,14 @@ export default function OrgMembersClient({
         {error && <p className="mt-2 text-sm text-danger">{error}</p>}
         {ok && <p className="mt-2 text-sm text-success">{ok}</p>}
       </form>
+
+      <MemberImport
+        organizationId={organizationId}
+        onImported={() => {
+          setPage(0);
+          setReloadKey((k) => k + 1);
+        }}
+      />
 
       <div className="card mb-4">
         <label htmlFor="member-search" className="label">

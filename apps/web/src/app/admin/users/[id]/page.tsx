@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isDeletedUserEmail } from "@feedbackme/core-lms";
 import UserRoleManager from "./UserRoleManager";
+import UserOrgAssigner from "./UserOrgAssigner";
 import ImpersonateButton from "./ImpersonateButton";
 import DeleteUserButton from "./DeleteUserButton";
 import ResendVerificationButton from "./ResendVerificationButton";
@@ -26,6 +27,7 @@ export default async function AdminUserDetailPage({
       createdAt: true,
       locale: true,
       timezone: true,
+      organizationId: true,
       authProviders: {
         select: { id: true, provider: true, providerUserId: true, createdAt: true },
         orderBy: { createdAt: "asc" },
@@ -44,6 +46,11 @@ export default async function AdminUserDetailPage({
   });
 
   if (!user) notFound();
+
+  const orgs = await prisma.organization.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, code: true },
+  });
 
   const auditLogs = await prisma.auditLog.findMany({
     where: {
@@ -154,6 +161,20 @@ export default async function AdminUserDetailPage({
               courseTitle: ur.course?.title ?? null,
               grantedAt: ur.grantedAt.toISOString(),
             }))}
+          />
+        </section>
+
+        {/* Organization */}
+        <section className="card">
+          <h2 className="mb-1 text-base font-semibold">Tổ chức</h2>
+          <p className="mb-3 text-xs text-muted">
+            Gắn user vào một trường/tổ chức, chuyển sang tổ chức khác, hoặc đưa
+            về nhóm chung. Không ảnh hưởng tới khoá học đã ghi danh.
+          </p>
+          <UserOrgAssigner
+            userId={user.id}
+            currentOrgId={user.organizationId}
+            orgs={orgs}
           />
         </section>
 

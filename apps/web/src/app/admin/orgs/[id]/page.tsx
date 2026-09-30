@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { listAcademicTerms, listOrgAdmins } from "@feedbackme/core-lms";
 import OrgAdminManager from "./OrgAdminManager";
+import OrgMembersClient from "@/app/org-admin/members/OrgMembersClient";
 import OrgSettingsClient from "@/app/org-admin/settings/OrgSettingsClient";
 import AcademicTermsManager from "@/app/org-admin/settings/AcademicTermsManager";
 import { toDayKey } from "@/lib/datetime";
@@ -24,6 +25,9 @@ export default async function AdminOrgDetailPage({
       signatureImageUrl: true,
       signatureName: true,
       signatureTitle: true,
+      inviteEmailOnImport: true,
+      inviteEmailOnInstructorAdd: true,
+      inviteEmailOnProctorAdd: true,
     },
   });
   if (!org) notFound();
@@ -58,6 +62,11 @@ export default async function AdminOrgDetailPage({
           initialSignatureUrl={org.signatureImageUrl}
           initialSignatureName={org.signatureName}
           initialSignatureTitle={org.signatureTitle}
+          initialEmailSettings={{
+            inviteEmailOnImport: org.inviteEmailOnImport,
+            inviteEmailOnInstructorAdd: org.inviteEmailOnInstructorAdd,
+            inviteEmailOnProctorAdd: org.inviteEmailOnProctorAdd,
+          }}
         />
       </section>
 
@@ -85,6 +94,16 @@ export default async function AdminOrgDetailPage({
             grantedByName: a.grantedByName,
           }))}
         />
+      </section>
+
+      <section className="card mt-6">
+        <h2 className="mb-1 text-base font-semibold">Thành viên</h2>
+        <p className="mb-3 text-xs text-muted">
+          User thuộc tổ chức này. Thêm theo email (tự tạo tài khoản và gửi mail
+          mời nếu chưa có). User đang ở tổ chức khác thì chuyển ở trang quản lý
+          của user đó.
+        </p>
+        <OrgMembersClient organizationId={org.id} />
       </section>
     </main>
   );

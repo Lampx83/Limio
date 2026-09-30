@@ -8,6 +8,30 @@ import { apiUrl } from "@/lib/apiUrl";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
+type EmailSettings = {
+  inviteEmailOnImport: boolean;
+  inviteEmailOnInstructorAdd: boolean;
+  inviteEmailOnProctorAdd: boolean;
+};
+
+const EMAIL_TOGGLES: { key: keyof EmailSettings; title: string; help: string }[] = [
+  {
+    key: "inviteEmailOnImport",
+    title: "Khi nhập hàng loạt thành viên",
+    help: "Tài khoản mới tạo từ file/danh sách nhận email đặt mật khẩu. Tắt = tạo im lặng (người dùng vào bằng SSO hoặc “Quên mật khẩu”).",
+  },
+  {
+    key: "inviteEmailOnInstructorAdd",
+    title: "Khi thêm đồng giảng viên / giảng viên lớp / đợt thi",
+    help: "Áp dụng cho tài khoản mới tạo khi thêm bằng email vào khoá học, lớp học hoặc đợt thi.",
+  },
+  {
+    key: "inviteEmailOnProctorAdd",
+    title: "Khi thêm giám thị vào phòng thi",
+    help: "Áp dụng cho tài khoản mới tạo khi gán giám thị bằng email (kể cả khi nhập danh sách ca/phòng thi).",
+  },
+];
+
 export default function OrgSettingsClient({
   organizationId,
   initialName,
@@ -15,6 +39,7 @@ export default function OrgSettingsClient({
   initialSignatureUrl,
   initialSignatureName,
   initialSignatureTitle,
+  initialEmailSettings,
 }: {
   organizationId: string;
   initialName: string;
@@ -22,6 +47,7 @@ export default function OrgSettingsClient({
   initialSignatureUrl: string | null;
   initialSignatureName: string | null;
   initialSignatureTitle: string | null;
+  initialEmailSettings: EmailSettings;
 }) {
   const router = useRouter();
   const [logoUrl, setLogoUrl] = useState<string | null>(initialLogoUrl);
@@ -183,6 +209,25 @@ export default function OrgSettingsClient({
       router.refresh();
     } else {
       toast.error("Xoá thất bại");
+    }
+  }
+
+  const [emailSettings, setEmailSettings] = useState<EmailSettings>(initialEmailSettings);
+  const [savingEmailKey, setSavingEmailKey] = useState<keyof EmailSettings | null>(null);
+
+  async function toggleEmailSetting(key: keyof EmailSettings, value: boolean) {
+    setSavingEmailKey(key);
+    const res = await fetch(apiUrl(`/api/orgs/${organizationId}/email-settings`), {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ [key]: value }),
+    });
+    setSavingEmailKey(null);
+    if (res.ok) {
+      setEmailSettings((cur) => ({ ...cur, [key]: value }));
+      toast.success(value ? "Đã bật gửi email" : "Đã tắt gửi email");
+    } else {
+      toast.error("Lưu thất bại");
     }
   }
 
@@ -364,6 +409,35 @@ export default function OrgSettingsClient({
             Lưu
           </button>
         </div>
+      </div>
+
+      <div className="card p-6">
+        <h2 className="text-base font-semibold">Email mời tài khoản mới</h2>
+        <p className="mt-0.5 text-xs text-muted">
+          Chỉ áp dụng cho tài khoản <strong>mới tạo</strong> khi được thêm vào; người đã có tài khoản
+          không nhận email này. Tắt email thì tài khoản vẫn được tạo, nhưng người đó phải tự dùng
+          &quot;Quên mật khẩu&quot; hoặc SSO để đăng nhập.
+        </p>
+        <ul className="mt-4 divide-y divide-token">
+          {EMAIL_TOGGLES.map((t) => (
+            <li key={t.key} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <div>
+                <p className="text-sm font-medium">{t.title}</p>
+                <p className="mt-0.5 text-xs text-muted">{t.help}</p>
+              </div>
+              <label className="flex shrink-0 items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={emailSettings[t.key]}
+                  disabled={savingEmailKey === t.key}
+                  onChange={(e) => toggleEmailSetting(t.key, e.target.checked)}
+                  aria-label={t.title}
+                />
+                {emailSettings[t.key] ? "Gửi" : "Không gửi"}
+              </label>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

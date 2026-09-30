@@ -35,6 +35,9 @@ export default async function OrgSettingsPage() {
           signatureImageUrl: true,
           signatureName: true,
           signatureTitle: true,
+          inviteEmailOnImport: true,
+          inviteEmailOnInstructorAdd: true,
+          inviteEmailOnProctorAdd: true,
         },
       },
     },
@@ -69,6 +72,11 @@ export default async function OrgSettingsPage() {
         initialSignatureUrl={primary.organization.signatureImageUrl}
         initialSignatureName={primary.organization.signatureName}
         initialSignatureTitle={primary.organization.signatureTitle}
+        initialEmailSettings={{
+          inviteEmailOnImport: primary.organization.inviteEmailOnImport,
+          inviteEmailOnInstructorAdd: primary.organization.inviteEmailOnInstructorAdd,
+          inviteEmailOnProctorAdd: primary.organization.inviteEmailOnProctorAdd,
+        }}
       />
 
       <div className="mt-6">

@@ -4557,6 +4557,15 @@ model Organization {
   // null nếu chưa cấu hình, khi đó chỉ hiện ảnh (nếu có) không kèm chữ.
   signatureName   String?
   signatureTitle  String?
+  // Import hàng loạt (Platform Admin hoặc OrgAdmin) có gửi email mời đặt mật
+  // khẩu cho tài khoản mới tạo không. Mặc định TẮT: import 500 dòng không
+  // được phát 500 email ngoài ý muốn; bật chủ động khi muốn.
+  inviteEmailOnImport Boolean @default(false)
+  // Gửi email mời đặt mật khẩu cho tài khoản MỚI được tạo khi thêm bằng email
+  // làm đồng giảng viên (khoá) / GV lớp / GV đợt thi, hoặc giám thị phòng thi.
+  // Mặc định BẬT (giữ hành vi cũ); trường không muốn phát mail thì tắt.
+  inviteEmailOnInstructorAdd Boolean @default(true)
+  inviteEmailOnProctorAdd    Boolean @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

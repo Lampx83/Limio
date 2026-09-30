@@ -1304,6 +1304,12 @@ async function inviteUserAsProctorImpl(
   });
 
   const resetUrl = buildResetUrl(baseUrl, raw);
+  // Đường này tự tạo user nên không đi qua findOrInviteUserByEmail — phải tự
+  // qua cổng cấu hình mail của trường.
+  const { isInviteEmailEnabled } = await import("../email/inviteGate");
+  if (!(await isInviteEmailEnabled("proctor", organizationId, db))) {
+    return { invited: false, userId, resetUrl };
+  }
   await sendTemplatedEmail({
     key: "exam.proctor_invite",
     to: normEmail,

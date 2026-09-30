@@ -12,10 +12,13 @@ import { RoleName } from "@feedbackme/shared-types";
 import { issueToken } from "./tokens";
 import { buildResetUrl } from "./email";
 import { sendTemplatedEmail, type TemplateKey } from "../email/templates";
+import { isInviteEmailEnabledForTemplate } from "../email/inviteGate";
 
 export interface InviteResult {
   userId: string;
   invited: boolean; // true = new account created + email sent
+  /** true = tài khoản vừa được tạo (kể cả khi không gửi mail mời). */
+  created: boolean;
   resetUrl?: string;
 }
 
@@ -28,6 +31,11 @@ export interface InviteOptions {
   organizationId?: string | null;
   /** Extra Handlebars variables on top of `{ name, resetUrl }`. */
   extraVariables?: Record<string, string | number | null | undefined>;
+  /**
+   * Ép gửi (true) / không gửi (false) mail mời. Bỏ trống = theo cấu hình của
+   * trường cho nhóm template này (email/inviteGate.ts); không có cấu hình = gửi.
+   */
+  sendInvite?: boolean;
   db?: PrismaClient;
 }
 
@@ -50,7 +58,7 @@ export async function findOrInviteUserByEmail(
     where: { email },
     select: { id: true },
   });
-  if (existing) return { userId: existing.id, invited: false };
+  if (existing) return { userId: existing.id, invited: false, created: false };
 
   const learnerRole = await db.role.findUniqueOrThrow({
     where: { name: RoleName.Learner },
@@ -80,6 +88,10 @@ export async function findOrInviteUserByEmail(
   });
 
   const resetUrl = buildResetUrl(opts.baseUrl, raw);
+  const send =
+    opts.sendInvite ??
+    (await isInviteEmailEnabledForTemplate(opts.templateKey, opts.organizationId, db));
+  if (!send) return { userId, invited: false, created: true, resetUrl };
   await sendTemplatedEmail({
     key: opts.templateKey,
     to: email,
@@ -87,5 +99,5 @@ export async function findOrInviteUserByEmail(
     variables: { name, resetUrl, ...(opts.extraVariables ?? {}) },
   });
 
-  return { userId, invited: true, resetUrl };
+  return { userId, invited: true, created: true, resetUrl };
 }
