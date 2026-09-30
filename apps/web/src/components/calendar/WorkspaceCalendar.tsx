@@ -371,10 +371,13 @@ export default function WorkspaceCalendar({
                           <span className={`w-0.5 shrink-0 self-stretch rounded-full ${meta.dot}`} aria-hidden />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold leading-snug">{a.title}</span>
-                            <span className="block truncate text-[11px] text-muted">
-                              {a.kind === "quiz" && <span className="font-semibold text-brand-700">Quiz · </span>}
-                              {a.courseTitle}
-                              {a.detail && ` · ${a.detail}`}
+                            <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted">
+                              {a.kind === "quiz" && <span className="font-semibold text-brand-700">Quiz</span>}{" "}
+                              {/* Tên môn học (= khoá học) dạng chip để nhìn ra ngay việc thuộc môn nào. */}
+                              <span className="chip-brand max-w-full truncate text-[10px]" title={a.courseTitle}>
+                                {a.courseTitle}
+                              </span>
+                              {a.detail && <span>{a.detail}</span>}
                             </span>
                           </span>
                           <span className={`${meta.chip} shrink-0 text-[10px]`}>

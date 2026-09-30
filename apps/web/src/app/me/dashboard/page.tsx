@@ -7,14 +7,15 @@ import { getLearnerSkillStates } from "@feedbackme/core-feedback";
 import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
-import { formatDate, formatDayKey } from "@/lib/datetime";
+import { formatDate, toDayKey } from "@/lib/datetime";
 import MasteryBadge from "@/components/MasteryBadge";
 import HelpTour from "@/components/HelpTour";
 import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
 import { STUDENT_MENU_TOGGLE_EVENT } from "@/components/StudentLeftMenu";
 import { getActiveRole } from "@/lib/active-role";
 import CalendarLoader from "@/components/calendar/CalendarLoader";
-import { loadLearnerQuizDeadlines } from "@/lib/calendarData";
+import LearnerTodoPanel from "@/components/todo/LearnerTodoPanel";
+import { loadLearnerTodo } from "@/lib/learnerTodo";
 
 export const dynamic = "force-dynamic";
 
@@ -71,35 +72,9 @@ export default async function LearnerDashboard({
     include: { badge: { select: { code: true, name: true } } },
   });
 
-  const courseIds = enrollments.map((e) => e.courseId);
-  const upcomingAssignments = await prisma.assignment.findMany({
-    where: {
-      // GV ẩn bài/bài tập = ẩn với mọi học viên (cùng luật với lịch bên trên).
-      isHidden: false,
-      lesson: { isHidden: false, module: { courseId: { in: courseIds } } },
-      OR: [{ dueAt: null }, { dueAt: { gte: new Date() } }],
-    },
-    include: {
-      submissions: { where: { userId } },
-      lesson: {
-        select: {
-          title: true,
-          module: { select: { course: { select: { slug: true, title: true } } } },
-        },
-      },
-    },
-    take: 10,
-    orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }],
-  });
-
-  // Quiz có hạn đóng sắp tới — hiện chung với bài tập ở ô "Bài tập & quiz".
-  const nowForTodo = new Date();
-  const upcomingQuizzes = await loadLearnerQuizDeadlines(
-    userId,
-    nowForTodo,
-    nowForTodo,
-    new Date(nowForTodo.getTime() + 400 * 86_400_000),
-  );
+  // Việc cần làm (bài tập + quiz chưa nộp, có hạn lẫn không hạn) cho khu "Việc cần làm".
+  const now = new Date();
+  const todoItems = await loadLearnerTodo(userId, now);
 
   const recentResolved = await prisma.learningEvent.findMany({
     where: { userId, eventType: LearningEventType.MisconceptionResolved },
@@ -121,42 +96,6 @@ export default async function LearnerDashboard({
 
   const totalLessons = progressByCourse.reduce((s, p) => s + p.totalLessons, 0);
   const completedLessons = progressByCourse.reduce((s, p) => s + p.completedLessons, 0);
-
-  // Gộp bài tập + quiz thành một danh sách, xếp theo hạn (không hạn xuống cuối).
-  const todoRows = [
-    ...upcomingAssignments.map((a) => {
-      const sub = a.submissions[0];
-      const status = !sub
-        ? { label: "Chưa nộp", chip: "chip-accent" }
-        : sub.status === "graded"
-          ? { label: `✓ ${sub.score}/${a.maxScore}`, chip: "chip-success" }
-          : { label: "Đã nộp", chip: "chip-brand" };
-      const course = a.lesson?.module.course;
-      return {
-        key: `a:${a.id}`,
-        kind: "Bài tập",
-        title: a.title,
-        course: course?.title ?? "",
-        sortAt: a.dueAt ? a.dueAt.getTime() : Number.POSITIVE_INFINITY,
-        dueText: a.dueAt ? formatDate(a.dueAt) : "",
-        href: course && a.lessonId ? `/learn/${course.slug}/lessons/${a.lessonId}` : "/me/enrollments",
-        ...status,
-      };
-    }),
-    ...upcomingQuizzes.map((q) => ({
-      key: q.id,
-      kind: "Quiz",
-      title: q.title,
-      course: q.courseTitle,
-      // dueDay đã là ngày giờ VN; ghép giờ để xếp đúng thứ tự trong cùng ngày.
-      sortAt: new Date(`${q.dueDay}T${q.dueTime}:00+07:00`).getTime(),
-      dueText: `${formatDayKey(q.dueDay)} ${q.dueTime}`,
-      href: q.href,
-      label:
-        q.state === "graded" ? `✓ ${q.scoreLabel ?? "Đã làm"}` : (q.stateLabel ?? "Chưa làm"),
-      chip: q.state === "graded" ? "chip-success" : "chip-accent",
-    })),
-  ].sort((x, y) => x.sortAt - y.sortAt);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
@@ -263,256 +202,230 @@ export default async function LearnerDashboard({
 
 
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        {/* Enrolled courses */}
-        <section className="card">
-          <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Khóa đã đăng ký</h2>
-            <span className="text-xs text-faint">{enrollments.length}</span>
-          </header>
-          {enrollments.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">
-              Chưa có khóa nào.{" "}
-              <Link href="/catalog" className="link">
-                Vào catalog
-              </Link>
-              .
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-3">
-              {enrollments.slice(0, 5).map((e, i) => {
-                const p = progressByCourse[i]!;
-                const xp = xpMap.get(e.course.id);
-                const pct = p.courseCompletionPct;
-                const done = pct >= 100;
-                const notStarted = pct <= 0;
-                const inProgress = !done && !notStarted;
+      <div className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-start">
+        {/* Hai cột độc lập ở lg (không ép cùng chiều cao hàng); dưới lg "contents" trả các ô về lưới 1 cột theo thứ tự order-*. */}
+        <div className="contents lg:flex lg:flex-col lg:gap-8">
+          {/* Enrolled courses */}
+          <section className="card order-1 lg:order-none">
+            <header className="flex items-baseline justify-between border-b border-token pb-3">
+              <h2 className="text-base font-semibold">Khóa đã đăng ký</h2>
+              <span className="text-xs text-faint">{enrollments.length}</span>
+            </header>
+            {enrollments.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">
+                Chưa có khóa nào.{" "}
+                <Link href="/catalog" className="link">
+                  Vào catalog
+                </Link>
+                .
+              </p>
+            ) : (
+              <ul className="mt-4 space-y-3">
+                {enrollments.slice(0, 5).map((e, i) => {
+                  const p = progressByCourse[i]!;
+                  const xp = xpMap.get(e.course.id);
+                  const pct = p.courseCompletionPct;
+                  const done = pct >= 100;
+                  const notStarted = pct <= 0;
+                  const inProgress = !done && !notStarted;
 
-                const rail = done
-                  ? "bg-success-500"
-                  : inProgress
-                    ? "bg-gradient-to-b from-brand-500 to-brand-700"
-                    : "bg-[rgb(var(--surface-muted))]";
-                const headerBg = done
-                  ? "bg-success-50"
-                  : inProgress
-                    ? "bg-brand-50"
-                    : "bg-[rgb(var(--surface-muted))]";
-                const titleColor = done
-                  ? "text-success-700"
-                  : inProgress
-                    ? "text-brand-700"
-                    : "text-token";
+                  const rail = done
+                    ? "bg-success-500"
+                    : inProgress
+                      ? "bg-gradient-to-b from-brand-500 to-brand-700"
+                      : "bg-[rgb(var(--surface-muted))]";
+                  const headerBg = done
+                    ? "bg-success-50"
+                    : inProgress
+                      ? "bg-brand-50"
+                      : "bg-[rgb(var(--surface-muted))]";
+                  const titleColor = done
+                    ? "text-success-700"
+                    : inProgress
+                      ? "text-brand-700"
+                      : "text-token";
 
-                return (
-                  <li key={e.id}>
-                    <Link
-                      href={`/learn/${e.course.slug}`}
-                      className="group relative block overflow-hidden rounded-xl border border-token transition-colors hover:border-brand-300"
-                      prefetch={false}
-                    >
-                      <span className={`absolute inset-y-0 left-0 w-1 ${rail}`} aria-hidden />
-                      <div className={`flex items-center justify-between gap-2 pl-4 pr-3 py-2 ${headerBg}`}>
-                        <p className={`font-medium transition-colors ${titleColor}`}>
-                          {e.course.title}
-                        </p>
-                        {done ? (
-                          <span className="chip-success shrink-0">✓ Hoàn thành</span>
-                        ) : inProgress ? (
-                          <span className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
-                            Đang học
-                          </span>
-                        ) : (
-                          <span className="shrink-0 text-[11px] font-medium text-faint">
-                            Chưa bắt đầu
-                          </span>
-                        )}
-                      </div>
-                      <div className="pl-4 pr-3 py-3">
-                        <div className="flex items-center gap-2 text-xs text-faint">
-                          <span>{pct}% hoàn thành</span>
-                          {xp && (
-                            <>
-                              <span>·</span>
-                              <span>L{xp.level} · {xp.xp} XP</span>
-                            </>
+                  return (
+                    <li key={e.id}>
+                      <Link
+                        href={`/learn/${e.course.slug}`}
+                        className="group relative block overflow-hidden rounded-xl border border-token transition-colors hover:border-brand-300"
+                        prefetch={false}
+                      >
+                        <span className={`absolute inset-y-0 left-0 w-1 ${rail}`} aria-hidden />
+                        <div className={`flex items-center justify-between gap-2 pl-4 pr-3 py-2 ${headerBg}`}>
+                          <p className={`font-medium transition-colors ${titleColor}`}>
+                            {e.course.title}
+                          </p>
+                          {done ? (
+                            <span className="chip-success shrink-0">✓ Hoàn thành</span>
+                          ) : inProgress ? (
+                            <span className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+                              Đang học
+                            </span>
+                          ) : (
+                            <span className="shrink-0 text-[11px] font-medium text-faint">
+                              Chưa bắt đầu
+                            </span>
                           )}
                         </div>
-                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
-                          <div
-                            className={`h-1.5 rounded-full transition-all ${
-                              done
-                                ? "bg-success-500"
-                                : "bg-gradient-to-r from-brand-500 to-brand-700"
-                            }`}
-                            style={{ width: `${pct}%` }}
-                          />
+                        <div className="pl-4 pr-3 py-3">
+                          <div className="flex items-center gap-2 text-xs text-faint">
+                            <span>{pct}% hoàn thành</span>
+                            {xp && (
+                              <>
+                                <span>·</span>
+                                <span>L{xp.level} · {xp.xp} XP</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
+                            <div
+                              className={`h-1.5 rounded-full transition-all ${
+                                done
+                                  ? "bg-success-500"
+                                  : "bg-gradient-to-r from-brand-500 to-brand-700"
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        {/* Lịch tuần/tháng (cột phải, cạnh Khóa đã đăng ký): đánh dấu hạn nộp bài tập, chip chi tiết bên dưới.
-            self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khóa đã đăng ký. */}
-        <div className="self-start">
-          <CalendarLoader userId={userId} audience="learner" />
-        </div>
-
-        {/* Recent badges */}
-        <section className="card">
-          <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Huy hiệu gần đây</h2>
-            <Link href="/me/badges" className="link text-sm">
-              Tất cả →
-            </Link>
-          </header>
-          {recentBadges.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">Chưa có huy hiệu nào.</p>
-          ) : (
-            <ul className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {recentBadges.map((b) => (
-                <li
-                  key={b.id}
-                  title={b.badge.name}
-                  className="rounded-xl border border-accent-200 bg-accent-50 p-3 text-center"
-                >
-                  <BadgeIcon code={b.badge.code} className="mx-auto h-20 w-20" />
-                  <div className="mt-1 truncate text-xs font-medium text-accent-700">
-                    {b.badge.name}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Weak topics (B1.5) */}
-        <section className="card">
-          <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Chủ đề cần ôn</h2>
-            <Link href="/me/skills" className="link text-sm">
-              Bản đồ chủ đề →
-            </Link>
-          </header>
-          {weakSkills.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">
-              Chưa có chủ đề nào yếu rõ rệt — tiếp tục học để hệ thống đánh giá!
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-2">
-              {weakSkills.map((s) => (
-                <li
-                  key={s.skillId}
-                  className="flex items-center gap-2 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm"
-                >
-                  <span className="flex-1 font-medium text-danger-700">
-                    {s.skillName}
-                  </span>
-                  <MasteryBadge label={masteryLabel(s.masteryProbability)} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Việc cần làm: bài tập + quiz, xếp theo hạn (không hạn xuống cuối) */}
-        <section className="card">
-          <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">Bài tập &amp; quiz</h2>
-            <span className="text-xs text-faint">{todoRows.length}</span>
-          </header>
-          {todoRows.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">Không có bài tập hay quiz nào cần làm.</p>
-          ) : (
-            <ul className="mt-4 space-y-2">
-              {todoRows.slice(0, 6).map((r) => (
-                <li key={r.key}>
-                  <Link
-                    href={r.href}
-                    prefetch={false}
-                    className="block rounded-lg border border-token p-3 text-sm transition-colors hover:border-brand-300"
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <p className="font-medium">{r.title}</p>
-                      <span className={`${r.chip} shrink-0`}>{r.label}</span>
-                    </div>
-                    <p className="mt-1 text-xs text-faint">
-                      <span className="font-semibold text-brand-700">{r.kind}</span>
-                      {r.course && <> · {r.course}</>}
-                      {r.dueText && <> · hạn {r.dueText}</>}
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Weekly leaderboard widget */}
-        <section className="card">
-          <header className="flex items-baseline justify-between border-b border-token pb-3">
-            <h2 className="text-base font-semibold">BXH tuần này</h2>
-            <Link href="/leaderboard" className="link text-sm">
-              Xem tất cả →
-            </Link>
-          </header>
-          {weeklyBoard.selfOptedOut ? (
-            <p className="mt-4 text-sm text-muted">
-              Bạn đang ẩn khỏi BXH.{" "}
-              <Link href="/me/settings" className="link">
-                Bật lại
+          {/* Recent badges */}
+          <section className="card order-3 lg:order-none">
+            <header className="flex items-baseline justify-between border-b border-token pb-3">
+              <h2 className="text-base font-semibold">Huy hiệu gần đây</h2>
+              <Link href="/me/badges" className="link text-sm">
+                Tất cả →
               </Link>
-              .
-            </p>
-          ) : weeklyBoard.entries.length === 0 ? (
-            <p className="mt-4 text-sm text-muted">Chưa có ai có XP tuần này.</p>
-          ) : (
-            <>
-              <ul className="mt-4 space-y-2">
-                {weeklyBoard.entries.map((e) => (
+            </header>
+            {recentBadges.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">Chưa có huy hiệu nào.</p>
+            ) : (
+              <ul className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {recentBadges.map((b) => (
                   <li
-                    key={e.userId}
-                    className={
-                      e.isYou
-                        ? "flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm"
-                        : "flex items-center gap-3 rounded-lg border border-token px-3 py-2 text-sm"
-                    }
+                    key={b.id}
+                    title={b.badge.name}
+                    className="rounded-xl border border-accent-200 bg-accent-50 p-3 text-center"
                   >
-                    <span className="w-6 text-center font-mono text-xs font-semibold tabular-nums text-faint">
-                      #{e.rank}
-                    </span>
-                    <span className="flex-1 truncate font-medium">
-                      {e.displayName}
-                      {e.isYou && (
-                        <span className="ml-2 chip-brand text-[10px]">Bạn</span>
-                      )}
-                    </span>
-                    <span className="font-mono text-xs font-semibold tabular-nums text-brand-700">
-                      {e.xp.toLocaleString("vi-VN")} XP
-                    </span>
+                    <BadgeIcon code={b.badge.code} className="mx-auto h-20 w-20" />
+                    <div className="mt-1 truncate text-xs font-medium text-accent-700">
+                      {b.badge.name}
+                    </div>
                   </li>
                 ))}
               </ul>
-              {weeklyBoard.me &&
-                !weeklyBoard.entries.some((e) => e.isYou) && (
-                  <div className="mt-3 flex items-center gap-3 rounded-lg border border-dashed border-brand-200 bg-brand-50/50 px-3 py-2 text-sm">
-                    <span className="w-6 text-center font-mono text-xs font-semibold tabular-nums text-brand-700">
-                      #{weeklyBoard.me.rank}
+            )}
+          </section>
+
+          {/* Weak topics (B1.5) */}
+          <section className="card order-4 lg:order-none">
+            <header className="flex items-baseline justify-between border-b border-token pb-3">
+              <h2 className="text-base font-semibold">Chủ đề cần ôn</h2>
+              <Link href="/me/skills" className="link text-sm">
+                Bản đồ chủ đề →
+              </Link>
+            </header>
+            {weakSkills.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">
+                Chưa có chủ đề nào yếu rõ rệt — tiếp tục học để hệ thống đánh giá!
+              </p>
+            ) : (
+              <ul className="mt-4 space-y-2">
+                {weakSkills.map((s) => (
+                  <li
+                    key={s.skillId}
+                    className="flex items-center gap-2 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm"
+                  >
+                    <span className="flex-1 font-medium text-danger-700">
+                      {s.skillName}
                     </span>
-                    <span className="flex-1 font-medium text-brand-700">Bạn</span>
-                    <span className="font-mono text-xs font-semibold tabular-nums text-brand-700">
-                      {weeklyBoard.me.xp.toLocaleString("vi-VN")} XP
-                    </span>
-                  </div>
-                )}
-            </>
-          )}
-        </section>
+                    <MasteryBadge label={masteryLabel(s.masteryProbability)} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+        <div className="contents lg:flex lg:flex-col lg:gap-8">
+          {/* Lịch tuần/tháng (cột phải, cạnh Khóa đã đăng ký): đánh dấu hạn nộp bài tập, chip chi tiết bên dưới.
+              self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khóa đã đăng ký. */}
+          <div className="order-2 space-y-8 lg:order-none">
+            <CalendarLoader userId={userId} audience="learner" />
+            {/* Việc cần làm (top 5 việc có hạn, thống kê, khu không hạn, xem đủ + phân trang): ngay dưới lịch để
+                việc cần hành động nhất nằm trong tầm mắt, không chôn ở hàng dưới. */}
+            <LearnerTodoPanel todayKey={toDayKey(now)} items={todoItems} />
+          </div>
+
+          {/* Weekly leaderboard widget */}
+          <section className="card order-5 lg:order-none">
+            <header className="flex items-baseline justify-between border-b border-token pb-3">
+              <h2 className="text-base font-semibold">BXH tuần này</h2>
+              <Link href="/leaderboard" className="link text-sm">
+                Xem tất cả →
+              </Link>
+            </header>
+            {weeklyBoard.selfOptedOut ? (
+              <p className="mt-4 text-sm text-muted">
+                Bạn đang ẩn khỏi BXH.{" "}
+                <Link href="/me/settings" className="link">
+                  Bật lại
+                </Link>
+                .
+              </p>
+            ) : weeklyBoard.entries.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">Chưa có ai có XP tuần này.</p>
+            ) : (
+              <>
+                <ul className="mt-4 space-y-2">
+                  {weeklyBoard.entries.map((e) => (
+                    <li
+                      key={e.userId}
+                      className={
+                        e.isYou
+                          ? "flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm"
+                          : "flex items-center gap-3 rounded-lg border border-token px-3 py-2 text-sm"
+                      }
+                    >
+                      <span className="w-6 text-center font-mono text-xs font-semibold tabular-nums text-faint">
+                        #{e.rank}
+                      </span>
+                      <span className="flex-1 truncate font-medium">
+                        {e.displayName}
+                        {e.isYou && (
+                          <span className="ml-2 chip-brand text-[10px]">Bạn</span>
+                        )}
+                      </span>
+                      <span className="font-mono text-xs font-semibold tabular-nums text-brand-700">
+                        {e.xp.toLocaleString("vi-VN")} XP
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {weeklyBoard.me &&
+                  !weeklyBoard.entries.some((e) => e.isYou) && (
+                    <div className="mt-3 flex items-center gap-3 rounded-lg border border-dashed border-brand-200 bg-brand-50/50 px-3 py-2 text-sm">
+                      <span className="w-6 text-center font-mono text-xs font-semibold tabular-nums text-brand-700">
+                        #{weeklyBoard.me.rank}
+                      </span>
+                      <span className="flex-1 font-medium text-brand-700">Bạn</span>
+                      <span className="font-mono text-xs font-semibold tabular-nums text-brand-700">
+                        {weeklyBoard.me.xp.toLocaleString("vi-VN")} XP
+                      </span>
+                    </div>
+                  )}
+              </>
+            )}
+          </section>
+        </div>
 
         {/* Recent misconception resolutions full-width */}
         {recentResolved.length > 0 && (

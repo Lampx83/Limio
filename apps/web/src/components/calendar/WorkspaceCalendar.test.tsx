@@ -253,7 +253,9 @@ describe("WorkspaceCalendar — quiz của học viên", () => {
 
   it("quiz hiện cùng bài tập: nhãn 'Quiz', trạng thái riêng, link vào trang làm quiz", () => {
     const out = html({ organizationName: "Trường A", terms: [HK1], assignments: [...HW, ...QUIZ] });
-    expect(text(out)).toContain("Quiz · Thiết kế UI/UX");
+    expect(text(out)).toContain("Quiz Thiết kế UI/UX");
+    // tên môn học là chip riêng
+    expect(out).toContain('class="chip-brand max-w-full truncate text-[10px]" title="Thiết kế UI/UX"');
     expect(text(out)).toContain("Chưa làm");
     expect(text(out)).toContain("✓ 85%");
     expect(out).toContain('href="/learn/uiux/quizzes/q1"');
