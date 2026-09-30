@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
-import { formatDate, formatDateTime } from "@/lib/datetime";
+import { formatDate, formatDateTime, formatRelative } from "@/lib/datetime";
 import { COMMON_POOL_FILTER_VALUE, COMMON_POOL_LABEL } from "@feedbackme/shared-types";
 import ResendVerificationButton from "./[id]/ResendVerificationButton";
 
@@ -113,7 +113,7 @@ export default function UsersBrowser() {
     const active = sort === key;
     return (
       <th
-        className="whitespace-nowrap px-4 py-2 text-left font-medium"
+        className="whitespace-nowrap px-3 py-2 text-left font-medium"
         aria-sort={
           active ? (dir === "asc" ? "ascending" : "descending") : "none"
         }
@@ -355,25 +355,16 @@ export default function UsersBrowser() {
 
       {/* Table */}
       <div className="card overflow-x-auto p-0">
-        <table className="w-full min-w-[1080px] table-fixed text-sm">
-          <colgroup>
-            <col />
-            <col className="w-[160px]" />
-            <col className="w-[150px]" />
-            <col className="w-[100px]" />
-            <col className="w-[110px]" />
-            <col className="w-[160px]" />
-            <col className="w-[160px]" />
-          </colgroup>
+        <table className="w-full min-w-[880px] text-sm">
           <thead className="border-b border-token bg-base-50 text-xs uppercase text-faint">
             <tr>
               {sortTh("displayName", "Người dùng")}
-              <th className="whitespace-nowrap px-4 py-2 text-left font-medium">Roles</th>
-              <th className="whitespace-nowrap px-4 py-2 text-left font-medium">Tổ chức</th>
-              <th className="whitespace-nowrap px-4 py-2 text-left font-medium">SSO</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left font-medium">Roles</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left font-medium">Tổ chức</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left font-medium">SSO</th>
               {sortTh("createdAt", "Tạo lúc")}
-              {sortTh("lastAccessAt", "Truy cập gần nhất")}
-              <th className="whitespace-nowrap px-4 py-2 text-right font-medium">Thao tác</th>
+              {sortTh("lastAccessAt", "Truy cập")}
+              <th className="whitespace-nowrap px-3 py-2 text-right font-medium">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-token">
@@ -393,29 +384,32 @@ export default function UsersBrowser() {
             )}
             {data?.users.map((u) => (
               <tr key={u.id} className="hover:bg-base-50">
-                <td className="px-4 py-2.5">
+                <td className="w-full max-w-0 px-3 py-2">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-xs font-semibold text-white">
                       {(u.displayName || u.email).charAt(0).toUpperCase()}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{u.displayName}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="truncate font-medium">{u.displayName}</p>
+                        {!u.emailVerified && (
+                          <span
+                            className="chip-warning shrink-0 !px-1.5 !py-0 text-[11px]"
+                            title="Email chưa xác thực"
+                          >
+                            Chưa xác thực
+                          </span>
+                        )}
+                      </div>
                       <p className="truncate text-xs text-faint">{u.email}</p>
                     </div>
-                    {!u.emailVerified && (
-                      <span
-                        className="chip-warning"
-                        title="Email chưa xác thực"
-                      >
-                                              </span>
-                    )}
                   </div>
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="whitespace-nowrap px-3 py-2">
                   {u.roles.length === 0 ? (
                     <span className="text-faint">—</span>
                   ) : (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex gap-1">
                       {u.roles.map((r) => (
                         <span key={r} className={roleChipClass(r)}>
                           {r}
@@ -424,36 +418,40 @@ export default function UsersBrowser() {
                     </div>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-xs">
+                <td className="px-3 py-2 text-xs">
                   {u.organization ? (
                     <Link
                       href={`/admin/orgs/${u.organization.id}`}
-                      className="link truncate"
+                      className="link block max-w-[180px] truncate"
+                      title={u.organization.name}
                       prefetch={false}
                     >
                       {u.organization.name}
                     </Link>
                   ) : (
-                    <span className="text-faint">{COMMON_POOL_LABEL}</span>
+                    <span className="whitespace-nowrap text-faint">{COMMON_POOL_LABEL}</span>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-xs text-muted">
+                <td className="whitespace-nowrap px-3 py-2 text-xs text-muted">
                   {u.providers.length === 0 ? "—" : u.providers.join(", ")}
                 </td>
-                <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
+                <td className="whitespace-nowrap px-3 py-2 text-xs text-muted tabular-nums">
                   {formatDate(u.createdAt)}
                 </td>
-                <td className="whitespace-nowrap px-4 py-2.5 text-xs text-muted tabular-nums">
-                  {u.lastAccessAt ? formatDateTime(u.lastAccessAt) : "—"}
+                <td
+                  className="whitespace-nowrap px-3 py-2 text-xs text-muted tabular-nums"
+                  title={u.lastAccessAt ? formatDateTime(u.lastAccessAt) : undefined}
+                >
+                  {u.lastAccessAt ? formatRelative(u.lastAccessAt) : "—"}
                 </td>
-                <td className="px-4 py-2.5 text-right">
-                  <div className="inline-flex flex-wrap justify-end gap-1">
+                <td className="whitespace-nowrap px-3 py-2 text-right">
+                  <div className="inline-flex items-center justify-end gap-1">
                     {!u.emailVerified && (
                       <ResendVerificationButton userId={u.id} compact />
                     )}
                     <Link
                       href={`/admin/users/${u.id}`}
-                      className="btn-secondary btn-sm whitespace-nowrap"
+                      className="btn-secondary btn-sm whitespace-nowrap !px-2.5 !py-1"
                       prefetch={false}
                     >
                       Quản lý
@@ -462,7 +460,7 @@ export default function UsersBrowser() {
                       type="button"
                       onClick={() => impersonate(u.id)}
                       disabled={impersonatingId === u.id}
-                      className="btn-ghost btn-sm whitespace-nowrap"
+                      className="btn-ghost btn-sm whitespace-nowrap !px-2.5 !py-1"
                       title="Xem ứng dụng dưới vai trò user này (read-only)"
                     >
                       {impersonatingId === u.id ? "…" : "Xem"}
