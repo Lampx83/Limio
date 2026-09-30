@@ -639,19 +639,34 @@ export default function UsersBrowser() {
   );
 }
 
-/** Một chip vai trò chính + "+N" (tooltip liệt kê đủ), thay vì xếp chồng nhiều chip làm cao hàng. */
+/**
+ * Gọn: một chip vai trò chính + nút "+N". Bấm nút để mở rộng ngay tại ô, hiện đủ mọi vai trò
+ * (chip xếp cuộn dòng, chỉ hàng này cao thêm); bấm "−" để thu lại. Vai trò xếp quyền cao trước.
+ */
 function RoleCell({ roles }: { roles: string[] }) {
+  const [open, setOpen] = useState(false);
   if (roles.length === 0) return <span className="text-faint">—</span>;
-  const sorted = [...roles].sort(
-    (a, b) =>
-      rolePriorityRank(a) - rolePriorityRank(b),
-  );
+  const sorted = [...roles].sort((a, b) => rolePriorityRank(a) - rolePriorityRank(b));
   const [main = "", ...rest] = sorted;
+  const shown = open ? sorted : [main];
   return (
-    <div className="flex items-center gap-1" title={sorted.join(", ")}>
-      <span className={`${roleChipClass(main)} !px-2 !py-0`}>{main}</span>
+    <div className="flex flex-wrap items-center gap-1">
+      {shown.map((r) => (
+        <span key={r} className={`${roleChipClass(r)} !px-2 !py-0`}>
+          {r}
+        </span>
+      ))}
       {rest.length > 0 && (
-        <span className="chip !px-1.5 !py-0 tabular-nums">+{rest.length}</span>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? "Thu gọn danh sách vai trò" : `Xem đủ ${sorted.length} vai trò: ${sorted.join(", ")}`}
+          title={open ? "Thu gọn" : `Xem đủ: ${sorted.join(", ")}`}
+          className="chip !px-1.5 !py-0 tabular-nums transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-brand-600"
+        >
+          {open ? "−" : `+${rest.length}`}
+        </button>
       )}
     </div>
   );
