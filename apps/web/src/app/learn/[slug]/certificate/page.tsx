@@ -102,21 +102,27 @@ export default async function CertificatePage({
       </Link>
 
       <article
-        className={`${roboto.className} relative mx-auto mt-6 flex aspect-[841.89/595.28] w-full max-w-5xl flex-col overflow-hidden bg-gradient-to-br from-brand-50 via-white to-pink-50 text-center shadow-card-hover print:aspect-auto print:shadow-none`}
+        className={`${roboto.className} relative mx-auto mt-6 flex aspect-[841.89/595.28] w-full max-w-5xl flex-col bg-gradient-to-br from-brand-50 via-white to-pink-50 text-center shadow-card-hover print:aspect-auto print:shadow-none`}
       >
-        {/* Decorative corner glows — lime góc trên-trái, hồng góc dưới-phải, cùng 2 tông màu với 2 tam giác góc trên bản PDF (CORNER_LIME/CORNER_PINK) */}
-        <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-brand-200/40 blur-3xl" aria-hidden />
-        <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" aria-hidden />
-        {/* Hoạ tiết nền — lát chanh trừu tượng (vành + 6 nan cong, thay 4 nan thẳng của logo thật) lệch hàng kiểu gạch xây; cùng motif với apps/web/src/lib/certificatePdf.tsx LimeSliceAbstractMotif */}
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cdefs%3E%3Cg id='m' fill='none' stroke='%233f6212' stroke-width='0.9' stroke-linecap='round'%3E%3Ccircle cx='0' cy='0' r='13' stroke-width='1'/%3E%3Cpath d='M0 0 Q5.93 2.89 12 0'/%3E%3Cpath d='M0 0 Q0.46 6.58 6 10.39'/%3E%3Cpath d='M0 0 Q-5.47 3.69 -6 10.39'/%3E%3Cpath d='M0 0 Q-5.93 -2.89 -12 0'/%3E%3Cpath d='M0 0 Q-0.46 -6.58 -6 -10.39'/%3E%3Cpath d='M0 0 Q5.47 -3.69 6 -10.39'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23m' x='24' y='24'/%3E%3Cuse href='%23m' x='72' y='24'/%3E%3Cuse href='%23m' x='0' y='72'/%3E%3Cuse href='%23m' x='48' y='72'/%3E%3Cuse href='%23m' x='96' y='72'/%3E%3C/svg%3E\")",
-            backgroundSize: "96px 96px",
-          }}
-          aria-hidden
-        />
+        {/* Lớp trang trí nằm trong hộp riêng có overflow-hidden: <article> KHÔNG được
+            overflow-hidden, vì aspect-ratio chỉ là mức tối thiểu khi overflow còn visible —
+            cắt ở đây thì khung cứng theo tỉ lệ A4 và nội dung dài (mô tả, chữ ký, mã
+            chứng nhận) bị xén mất phần dưới khi cửa sổ hẹp. */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          {/* Decorative corner glows — lime góc trên-trái, hồng góc dưới-phải, cùng 2 tông màu với 2 tam giác góc trên bản PDF (CORNER_LIME/CORNER_PINK) */}
+          <div className="absolute -left-20 -top-20 h-48 w-48 rounded-full bg-brand-200/40 blur-3xl" aria-hidden />
+          <div className="absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" aria-hidden />
+          {/* Hoạ tiết nền — lát chanh trừu tượng (vành + 6 nan cong, thay 4 nan thẳng của logo thật) lệch hàng kiểu gạch xây; cùng motif với apps/web/src/lib/certificatePdf.tsx LimeSliceAbstractMotif */}
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cdefs%3E%3Cg id='m' fill='none' stroke='%233f6212' stroke-width='0.9' stroke-linecap='round'%3E%3Ccircle cx='0' cy='0' r='13' stroke-width='1'/%3E%3Cpath d='M0 0 Q5.93 2.89 12 0'/%3E%3Cpath d='M0 0 Q0.46 6.58 6 10.39'/%3E%3Cpath d='M0 0 Q-5.47 3.69 -6 10.39'/%3E%3Cpath d='M0 0 Q-5.93 -2.89 -12 0'/%3E%3Cpath d='M0 0 Q-0.46 -6.58 -6 -10.39'/%3E%3Cpath d='M0 0 Q5.47 -3.69 6 -10.39'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23m' x='24' y='24'/%3E%3Cuse href='%23m' x='72' y='24'/%3E%3Cuse href='%23m' x='0' y='72'/%3E%3Cuse href='%23m' x='48' y='72'/%3E%3Cuse href='%23m' x='96' y='72'/%3E%3C/svg%3E\")",
+              backgroundSize: "96px 96px",
+            }}
+            aria-hidden
+          />
+        </div>
 
         {/* Khung đôi (outer 1.5px + inner 1px, cách nhau 1 khoảng hở), góc
             vuông sắc — đúng như outerFrame/innerFrame lồng nhau của bản PDF
