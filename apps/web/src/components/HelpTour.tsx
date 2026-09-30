@@ -192,18 +192,25 @@ export default function HelpTour({
     transform = "translateX(-100%)";
   }
   const cardWidth = 360;
+  // Chừa đủ chỗ cho card cao nhất có thể (title + 4 dòng body + nút) thay vì
+  // đo runtime — trên viewport thấp (mobile), hoặc khi target cuộn ra khỏi
+  // màn hình, phải luôn giữ card nằm trong viewport thay vì để nó trôi mất
+  // (đã xảy ra thật với placement "top" khi cuộn trang — xem git blame).
+  const cardMaxHeight = 280;
   const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-  // Kẹp trong viewport khi không có transform dịch ngược (placement top/left tự
-  // neo theo mép phần tử nên bỏ qua clamp trục tương ứng để tránh lệch popover).
-  if (transform !== "translateX(-100%)") {
+  // translateX(-100%) dịch card sang TRÁI của `left` — vùng card chiếm thực
+  // tế là [left-cardWidth, left], nên phải kẹp theo vùng đó, không phải theo
+  // `left` suông (khác cách clamp cho placement "right"/"bottom").
+  if (transform === "translateX(-100%)") {
+    left = Math.min(Math.max(left, 16 + Math.min(cardWidth, vw - 32)), vw - 16);
+  } else {
     left = Math.min(Math.max(left, 16), vw - Math.min(cardWidth, vw - 32) - 16);
   }
-  if (transform !== "translateY(-100%)") {
-    // Chừa đủ chỗ cho card cao nhất có thể (title + 4 dòng body + nút) thay vì
-    // đoán 200px — trên viewport thấp (mobile), 200 từng đẩy card tràn khỏi
-    // màn hình, khiến nút "Tiếp theo" nằm ngoài vùng nhìn thấy được.
-    top = Math.min(Math.max(top, 16), vh - 280);
+  if (transform === "translateY(-100%)") {
+    top = Math.min(Math.max(top, 16 + cardMaxHeight), vh - 16);
+  } else {
+    top = Math.min(Math.max(top, 16), vh - cardMaxHeight);
   }
 
   return (

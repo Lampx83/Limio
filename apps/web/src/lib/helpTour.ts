@@ -134,21 +134,7 @@ export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
   {
     id: "welcome",
     title: "Limio chào mừng bạn 👋",
-    body: "Đây là trang tổng quan giảng dạy — nơi bạn thấy ngay việc cần xử lý gấp và hoạt động của học viên. Xem nhanh cách bố trí trước khi bắt đầu nhé.",
-  },
-  {
-    id: "stats",
-    title: "Tổng quan nhanh",
-    body: "Số khoá đang dạy, tổng học viên, số việc cần xử lý và số học viên im ắng lâu ngày — nhìn một lượt là biết lớp đang ổn hay cần để ý.",
-    target: "help-tour-instructor-stats",
-    placement: "bottom",
-  },
-  {
-    id: "priority",
-    title: "Cần xử lý gấp",
-    body: "Essay/assignment chờ chấm, thread forum chưa trả lời... được xếp theo độ ưu tiên, việc gấp nhất nằm trên cùng.",
-    target: "help-tour-instructor-priority",
-    placement: "top",
+    body: "Đây là trang tổng quan giảng dạy. Cùng xem nhanh 6 module chính nằm ở cột icon bên trái nhé.",
   },
   {
     id: "rail-lms",

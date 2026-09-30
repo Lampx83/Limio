@@ -472,7 +472,7 @@ export default async function InstructorDashboard({
       </header>
 
       {/* Stat strip */}
-      <div data-tour="help-tour-instructor-stats" className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+      <div className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
         <StatTile
           icon={BookOpen}
           iconBg="bg-[rgb(var(--brand-soft))]"
@@ -505,7 +505,7 @@ export default async function InstructorDashboard({
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         {/* Priority queue */}
-        <section data-tour="help-tour-instructor-priority" className="lg:col-span-2">
+        <section className="lg:col-span-2">
           <header className="flex items-baseline justify-between">
             <h2 className="text-base font-semibold">
               Cần xử lý gấp{" "}
