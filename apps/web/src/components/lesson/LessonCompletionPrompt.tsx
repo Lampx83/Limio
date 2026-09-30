@@ -127,7 +127,11 @@ export default function LessonCompletionPrompt({
           io.disconnect();
         }
       },
-      { rootMargin: "0px 0px -20% 0px" },
+      // Không thu hẹp vùng quan sát: sentinel là phần tử cuối <main>, chỉ cách
+      // đáy trang một dải padding + Footer. Margin âm ở đáy (-20%) từng khiến
+      // nó không bao giờ lọt vào vùng nhìn khi cuộn hết cỡ → bài đọc không
+      // được ghi nhận hoàn thành dù đã đọc xong.
+      { rootMargin: "0px" },
     );
     io.observe(sentinel);
     return () => io.disconnect();
