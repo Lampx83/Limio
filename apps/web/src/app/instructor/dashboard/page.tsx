@@ -24,7 +24,10 @@ import FeatureBlockedToast from "@/components/FeatureBlockedToast";
 import UserAvatar from "@/components/ui/UserAvatar";
 import HelpTour from "@/components/HelpTour";
 import { INSTRUCTOR_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
-import { INSTRUCTOR_MENU_TOGGLE_EVENT } from "@/components/InstructorLeftMenu";
+import {
+  INSTRUCTOR_MENU_TOGGLE_EVENT,
+  INSTRUCTOR_MENU_PREVIEW_EVENT,
+} from "@/components/InstructorLeftMenu";
 import CalendarLoader from "@/components/calendar/CalendarLoader";
 
 export const dynamic = "force-dynamic";
@@ -183,6 +186,7 @@ export default async function InstructorDashboard({
             role="instructor"
             initiallyOpen
             mobileMenuToggleEvent={INSTRUCTOR_MENU_TOGGLE_EVENT}
+            moduleRevealEvent={INSTRUCTOR_MENU_PREVIEW_EVENT}
           />
         )}
       </main>
@@ -699,6 +703,7 @@ export default async function InstructorDashboard({
           role="instructor"
           initiallyOpen
           mobileMenuToggleEvent={INSTRUCTOR_MENU_TOGGLE_EVENT}
+          moduleRevealEvent={INSTRUCTOR_MENU_PREVIEW_EVENT}
         />
       )}
     </main>

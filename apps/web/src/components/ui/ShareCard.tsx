@@ -40,16 +40,19 @@ export default function ShareCard({
   label = "Link giới thiệu",
   hint,
   fileName,
+  defaultQrOpen = false,
 }: {
   path: string;
   label?: string;
   hint?: string;
   fileName?: string;
+  /** Mở sẵn mã QR (vd. khi thẻ nằm trong phần chi tiết mà người dùng đã chủ động mở). */
+  defaultQrOpen?: boolean;
 }) {
   const [url, setUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
-  const [qrOpen, setQrOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(defaultQrOpen);
   const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -43,6 +43,10 @@ import {
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
 
 export const INSTRUCTOR_MENU_TOGGLE_EVENT = "fbm:instructor-menu:toggle";
+// HelpTour (components/HelpTour.tsx) dùng để tự mở cột item của 1 module mà
+// không điều hướng khỏi trang hiện tại — payload CustomEvent<{ moduleId }>,
+// "home" = thu cột lại.
+export const INSTRUCTOR_MENU_PREVIEW_EVENT = "fbm:instructor-menu:preview-module";
 
 /** Điểm "A+" khoanh tròn bằng nét bút — icon module Kiểm tra đánh giá (lucide không có sẵn hình này). */
 const GradeAPlus = createLucideIcon("GradeAPlus", [
@@ -364,6 +368,18 @@ function InstructorLeftMenuInner({
     return () => window.removeEventListener(INSTRUCTOR_MENU_TOGGLE_EVENT, handler);
   }, []);
 
+  // HelpTour tự mở cột item của 1 module (không điều hướng) để người dùng
+  // thấy tính năng con bên trong module đang được giới thiệu.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const moduleId = (e as CustomEvent<{ moduleId: string }>).detail?.moduleId;
+      if (!moduleId) return;
+      setPendingModuleId(moduleId === "home" ? null : moduleId);
+    };
+    window.addEventListener(INSTRUCTOR_MENU_PREVIEW_EVENT, handler);
+    return () => window.removeEventListener(INSTRUCTOR_MENU_PREVIEW_EVENT, handler);
+  }, []);
+
   // Cột tên mục của module gấp/mở được (rail icon luôn hiện). Trang soạn
   // Limio-Live cần bề ngang nhất nên mặc định gấp và nhớ lựa chọn riêng.
   const isLiveEditor =
@@ -475,35 +491,42 @@ function InstructorLeftMenuInner({
   );
   const sidebarContent = activeModule ? (
     <div className="w-56 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] py-5 pl-5 pr-3">
-      {/* Module chia section (vd Limio-Live): chừa thêm khoảng trắng giữa tên
-          module và nhãn section đầu tiên để hai tầng tiêu đề không dính nhau. */}
-      <div
-        className={`flex flex-wrap items-center gap-x-2 gap-y-1 px-1 ${
-          activeModule.items.some((it) => it.section) ? "mb-8" : "mb-4"
-        }`}
-      >
-        <p className={`text-[19px] font-extrabold leading-tight tracking-tight ${activeModule.colors.headerText}`}>
-          {activeModule.label}
-        </p>
-        {activeModule.premium && (
-          <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-900 dark:from-amber-700 dark:to-amber-600 dark:text-amber-50">
-            <Crown size={9} strokeWidth={2.5} />
-            Premium
-          </span>
-        )}
-        {activeModule.premium && (
-          <span
-            className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-800"
-            title="Tài khoản miễn phí được dùng thử tính năng này"
-          >
-            Trial
-          </span>
-        )}
-        {activeModule.tagline && (
-          <p className="basis-full text-[14px] font-medium leading-tight text-muted">{activeModule.tagline}</p>
-        )}
+      {/* HelpTour highlight theo đúng chiều cao NỘI DUNG thật (header + danh
+          sách item), không phải div cha ở trên — div cha bị flexbox
+          (align-items: stretch mặc định của <aside>) kéo cao bằng cả sidebar
+          dù chỉ có vài item, nên spotlight sẽ sáng lan xuống cả khoảng trắng
+          trống nếu đo trên div cha. */}
+      <div data-tour="help-tour-instructor-panel">
+        {/* Module chia section (vd Limio-Live): chừa thêm khoảng trắng giữa tên
+            module và nhãn section đầu tiên để hai tầng tiêu đề không dính nhau. */}
+        <div
+          className={`flex flex-wrap items-center gap-x-2 gap-y-1 px-1 ${
+            activeModule.items.some((it) => it.section) ? "mb-8" : "mb-4"
+          }`}
+        >
+          <p className={`text-[19px] font-extrabold leading-tight tracking-tight ${activeModule.colors.headerText}`}>
+            {activeModule.label}
+          </p>
+          {activeModule.premium && (
+            <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-900 dark:from-amber-700 dark:to-amber-600 dark:text-amber-50">
+              <Crown size={9} strokeWidth={2.5} />
+              Premium
+            </span>
+          )}
+          {activeModule.premium && (
+            <span
+              className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-800"
+              title="Tài khoản miễn phí được dùng thử tính năng này"
+            >
+              Trial
+            </span>
+          )}
+          {activeModule.tagline && (
+            <p className="basis-full text-[14px] font-medium leading-tight text-muted">{activeModule.tagline}</p>
+          )}
+        </div>
+        <ItemList items={activeModule.items} isActive={isActive} colors={activeModule.colors} pendingHref={pendingHref} onNavigate={setPendingHref} />
       </div>
-      <ItemList items={activeModule.items} isActive={isActive} colors={activeModule.colors} pendingHref={pendingHref} onNavigate={setPendingHref} />
     </div>
   ) : null;
 

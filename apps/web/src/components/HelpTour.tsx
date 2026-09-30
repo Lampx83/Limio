@@ -27,11 +27,23 @@ function rectOf(el: HTMLElement): Rect {
   return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
 
+// Khung bao trọn nhiều rect — CHỈ dùng để tính vị trí đặt popover (cạnh mọi
+// vùng sáng), không dùng để vẽ spotlight: 2 vùng sáng tách rời (icon rail +
+// cột module) phải giữ khoảng trống giữa chúng tối, không gộp thành 1 khối.
+function unionRect(a: Rect, b: Rect): Rect {
+  const left = Math.min(a.left, b.left);
+  const top = Math.min(a.top, b.top);
+  const right = Math.max(a.left + a.width, b.left + b.width);
+  const bottom = Math.max(a.top + a.height, b.top + b.height);
+  return { left, top, width: right - left, height: bottom - top };
+}
+
 export default function HelpTour({
   steps,
   role,
   initiallyOpen,
   mobileMenuToggleEvent,
+  moduleRevealEvent,
 }: {
   steps: HelpTourStep[];
   role: HelpTourRole;
@@ -40,18 +52,35 @@ export default function HelpTour({
   // bị ẩn (mỗi sidebar theo role tự export event riêng — StudentLeftMenu,
   // InstructorLeftMenu...), vì mỗi role có 1 component sidebar khác nhau.
   mobileMenuToggleEvent: string;
+  // Tên custom event để tự mở cột module trên sidebar 2 tầng (vd
+  // InstructorLeftMenu) — payload là CustomEvent<{ moduleId: string }>,
+  // "home" nghĩa là thu cột lại. Bỏ trống nếu sidebar chỉ 1 tầng (StudentLeftMenu).
+  moduleRevealEvent?: string;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
   const [index, setIndex] = useState(0);
-  const [rect, setRect] = useState<Rect | null>(null);
+  // 1 phần tử bình thường; 2 khi step có unionTarget (icon rail + cột module
+  // vừa mở) — 2 vùng sáng TÁCH RỜI, không gộp thành 1 hình chữ nhật.
+  const [rects, setRects] = useState<Rect[] | null>(null);
 
   const step = steps[index];
 
   useEffect(() => {
     if (!open || !step) return;
+
+    const dispatchReveal = () => {
+      if (!moduleRevealEvent) return;
+      window.dispatchEvent(
+        new CustomEvent(moduleRevealEvent, {
+          detail: { moduleId: step.revealModuleId ?? "home" },
+        }),
+      );
+    };
+    dispatchReveal();
+
     // Xoá rect của bước trước ngay lập tức — nếu không, trong lúc đo lại
     // (đợi drawer mobile mở) người dùng vẫn thấy khung highlight cũ, sai vị trí.
-    setRect(null);
+    setRects(null);
     if (!step.target) return;
 
     // `cancelled` chặn mọi phép đo trễ (poll sau khi mở drawer, sự kiện
@@ -65,7 +94,15 @@ export default function HelpTour({
       if (cancelled) return true;
       const el = findVisibleTarget(step.target!);
       if (!el) return false;
-      setRect(rectOf(el));
+      const list: Rect[] = [rectOf(el)];
+      if (step.unionTarget) {
+        // Cột module (mở bởi revealModuleId) có thể đã hiện — thêm thành 1
+        // vùng sáng RIÊNG cạnh icon, không gộp chung 1 hình chữ nhật (để
+        // khoảng trống giữa icon và cột vẫn tối).
+        const panelEl = findVisibleTarget(step.unionTarget);
+        if (panelEl) list.push(rectOf(panelEl));
+      }
+      setRects(list);
       if (!scrolledOnce) {
         scrolledOnce = true;
         el.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -83,6 +120,10 @@ export default function HelpTour({
       let attempts = 0;
       const poll = () => {
         if (cancelled || tryMeasure()) return;
+        // Sidebar có thể tự reset state mở-module ngay sau lần dispatch đầu
+        // (vd effect khác của nó re-run vì searchParams đổi tham chiếu) —
+        // phát lại lệnh mở ở mỗi lần poll để tự thắng race đó.
+        dispatchReveal();
         if (attempts++ > 20) {
           // Mục tiêu không tồn tại thật (vd Token AI đang bị khoá) chứ không
           // phải do drawer chưa mở kịp — bỏ qua bước này thay vì đứng lại ở
@@ -93,6 +134,19 @@ export default function HelpTour({
         requestAnimationFrame(poll);
       };
       requestAnimationFrame(poll);
+    } else if (step.unionTarget) {
+      // Target chính (icon) đã có sẵn nên tryMeasure() thành công ngay, nhưng
+      // cột module vừa yêu cầu mở (revealModuleId) có thể chưa kịp render ở
+      // đúng lần đo đầu tiên, hoặc bị 1 effect khác của sidebar reset ngay
+      // sau đó — đo lại + phát lại lệnh mở vài frame để tự ổn định.
+      let attempts = 0;
+      const recheck = () => {
+        if (cancelled || attempts++ > 15) return;
+        dispatchReveal();
+        tryMeasure();
+        requestAnimationFrame(recheck);
+      };
+      requestAnimationFrame(recheck);
     }
 
     window.addEventListener("resize", tryMeasure);
@@ -102,12 +156,19 @@ export default function HelpTour({
       window.removeEventListener("resize", tryMeasure);
       window.removeEventListener("scroll", tryMeasure, true);
     };
-  }, [open, step, mobileMenuToggleEvent]);
+  }, [open, step, mobileMenuToggleEvent, moduleRevealEvent]);
 
   if (!open || !step) return null;
 
   const finish = () => {
     setOpen(false);
+    if (moduleRevealEvent) {
+      // Thu cột module lại — không để sidebar kẹt ở trạng thái mở dở khi
+      // người dùng bỏ qua/hoàn tất tour giữa chừng một bước module.
+      window.dispatchEvent(
+        new CustomEvent(moduleRevealEvent, { detail: { moduleId: "home" } }),
+      );
+    }
     fetch("/api/me/help-tour", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,9 +189,9 @@ export default function HelpTour({
         <button
           type="button"
           onClick={finish}
-          className="text-sm font-medium text-faint hover:text-token"
+          className="text-sm font-medium text-danger-600 hover:text-danger-700"
         >
-          Bỏ qua
+          {step.skipLabel ?? "Bỏ qua"}
         </button>
         <div className="flex items-center gap-2">
           {index > 0 && (
@@ -147,14 +208,14 @@ export default function HelpTour({
             onClick={() => (isLast ? finish() : setIndex((i) => i + 1))}
             className="btn-primary btn-sm"
           >
-            {isLast ? "Hoàn tất" : index === 0 ? "Bắt đầu" : "Tiếp theo"}
+            {step.nextLabel ?? (isLast ? "Hoàn tất" : index === 0 ? "Bắt đầu" : "Tiếp theo")}
           </button>
         </div>
       </div>
     </div>
   );
 
-  if (!rect) {
+  if (!rects || rects.length === 0) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4">
         {card}
@@ -162,33 +223,37 @@ export default function HelpTour({
     );
   }
 
-  const spotlight: Rect = {
-    top: rect.top - SPOTLIGHT_PAD,
-    left: rect.left - SPOTLIGHT_PAD,
-    width: rect.width + SPOTLIGHT_PAD * 2,
-    height: rect.height + SPOTLIGHT_PAD * 2,
-  };
+  const holes = rects.map((r) => ({
+    top: r.top - SPOTLIGHT_PAD,
+    left: r.left - SPOTLIGHT_PAD,
+    width: r.width + SPOTLIGHT_PAD * 2,
+    height: r.height + SPOTLIGHT_PAD * 2,
+  }));
+  // Khung bao mọi vùng sáng — chỉ để tính vị trí popover, KHÔNG dùng để vẽ
+  // (mỗi hole vẽ riêng, xem SVG mask bên dưới, để giữ khoảng trống giữa
+  // chúng tối thay vì sáng lan thành 1 khối chữ nhật).
+  const boundingBox = holes.slice(1).reduce((acc, h) => unionRect(acc, h), holes[0]!);
 
-  // Đặt popover cạnh phần tử được highlight, ưu tiên placement chỉ định,
-  // kẹp trong viewport để không tràn mép màn hình (đặc biệt mobile).
+  // Đặt popover cạnh vùng sáng, ưu tiên placement chỉ định, kẹp trong
+  // viewport để không tràn mép màn hình (đặc biệt mobile).
   const placement = step.placement ?? "bottom";
   const margin = 12;
-  let top = spotlight.top;
-  let left = spotlight.left;
+  let top = boundingBox.top;
+  let left = boundingBox.left;
   let transform: string | undefined;
   if (placement === "bottom") {
-    top = spotlight.top + spotlight.height + margin;
-    left = spotlight.left;
+    top = boundingBox.top + boundingBox.height + margin;
+    left = boundingBox.left;
   } else if (placement === "top") {
-    top = spotlight.top - margin;
-    left = spotlight.left;
+    top = boundingBox.top - margin;
+    left = boundingBox.left;
     transform = "translateY(-100%)";
   } else if (placement === "right") {
-    top = spotlight.top;
-    left = spotlight.left + spotlight.width + margin;
+    top = boundingBox.top;
+    left = boundingBox.left + boundingBox.width + margin;
   } else if (placement === "left") {
-    top = spotlight.top;
-    left = spotlight.left - margin;
+    top = boundingBox.top;
+    left = boundingBox.left - margin;
     transform = "translateX(-100%)";
   }
   const cardWidth = 360;
@@ -215,16 +280,24 @@ export default function HelpTour({
 
   return (
     <div className="fixed inset-0 z-[100]" aria-live="polite">
-      <div
-        className="pointer-events-none fixed rounded-xl ring-2 ring-brand-400 transition-all duration-150"
-        style={{
-          top: spotlight.top,
-          left: spotlight.left,
-          width: spotlight.width,
-          height: spotlight.height,
-          boxShadow: "0 0 0 9999px rgba(15,23,42,0.6)",
-        }}
-      />
+      <svg className="pointer-events-none fixed inset-0 h-full w-full">
+        <defs>
+          <mask id="help-tour-mask">
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            {holes.map((h, i) => (
+              <rect key={i} x={h.left} y={h.top} width={h.width} height={h.height} rx={12} fill="black" />
+            ))}
+          </mask>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="rgba(15,23,42,0.6)" mask="url(#help-tour-mask)" />
+      </svg>
+      {holes.map((h, i) => (
+        <div
+          key={i}
+          className="pointer-events-none fixed rounded-xl ring-2 ring-brand-400 transition-all duration-150"
+          style={{ top: h.top, left: h.left, width: h.width, height: h.height }}
+        />
+      ))}
       <div
         className="fixed transition-all duration-150"
         style={{
