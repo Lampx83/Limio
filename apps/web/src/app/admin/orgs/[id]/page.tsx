@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { listOrgAdmins } from "@feedbackme/core-lms";
 import OrgAdminManager from "./OrgAdminManager";
+import OrgSettingsClient from "@/app/org-admin/settings/OrgSettingsClient";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,15 @@ export default async function AdminOrgDetailPage({
 }) {
   const org = await prisma.organization.findUnique({
     where: { id: params.id },
-    select: { id: true, code: true, name: true },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      brandingLogoUrl: true,
+      signatureImageUrl: true,
+      signatureName: true,
+      signatureTitle: true,
+    },
   });
   if (!org) notFound();
 
@@ -32,6 +41,23 @@ export default async function AdminOrgDetailPage({
           <code className="font-mono">{org.id}</code>
         </p>
       </header>
+
+      <section className="mt-6">
+        <h2 className="mb-1 text-base font-semibold">Thông tin &amp; thương hiệu</h2>
+        <p className="mb-3 text-xs text-muted">
+          Tên trường, logo và chữ ký người đại diện hiện trên chứng nhận hoàn
+          thành khoá học do trường cấp. Mã trường là định danh nên không đổi
+          được.
+        </p>
+        <OrgSettingsClient
+          organizationId={org.id}
+          initialName={org.name}
+          initialLogoUrl={org.brandingLogoUrl}
+          initialSignatureUrl={org.signatureImageUrl}
+          initialSignatureName={org.signatureName}
+          initialSignatureTitle={org.signatureTitle}
+        />
+      </section>
 
       <section className="card mt-6">
         <h2 className="mb-1 text-base font-semibold">OrgAdmin</h2>

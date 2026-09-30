@@ -10,7 +10,7 @@ export default function AdminOrgsPage() {
           Tổ chức (Organization)
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Tìm trường/tổ chức, xem và cấp quyền OrgAdmin cho user.
+          Chọn một tổ chức để cấu hình tên, logo, chữ ký và cấp quyền OrgAdmin.
         </p>
       </header>
       <OrgsBrowser />

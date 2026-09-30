@@ -170,7 +170,15 @@ export default function OrgsBrowser() {
             )}
             {orgs?.map((o) => (
               <tr key={o.id} className="hover:bg-base-50">
-                <td className="px-4 py-2.5 font-medium">{o.name}</td>
+                <td className="px-4 py-2.5 font-medium">
+                  <Link
+                    href={`/admin/orgs/${o.id}`}
+                    className="hover:underline"
+                    prefetch={false}
+                  >
+                    {o.name}
+                  </Link>
+                </td>
                 <td className="px-4 py-2.5 font-mono text-xs text-muted">{o.code}</td>
                 <td className="px-4 py-2.5 tabular-nums">
                   {o.adminCount === 0 ? (
@@ -186,7 +194,7 @@ export default function OrgsBrowser() {
                     className="btn-secondary btn-sm whitespace-nowrap"
                     prefetch={false}
                   >
-                    Quản lý OrgAdmin
+                    Cấu hình
                   </Link>
                 </td>
               </tr>
