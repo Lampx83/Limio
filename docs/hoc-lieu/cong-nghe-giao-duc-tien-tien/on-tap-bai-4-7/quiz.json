@@ -1,0 +1,536 @@
+{
+ "title": "Ôn tập Bài 4.7 — Blockchain trong giáo dục",
+ "description": "20 câu trắc nghiệm kiểm tra lại các ý chính của Bài 4.7: mã băm và chuỗi khối, neo mã băm cho chứng chỉ, bằng chứng, ba giới hạn và bộ năm câu hỏi thẩm định.",
+ "passThresholdPct": 70,
+ "questions": [
+  {
+   "key": "tt-hai-tep-khac-ma",
+   "type": "mcq",
+   "prompt": "Hai tệp chứng chỉ trông giống hệt nhau khi mở ra. Bạn tính mã băm SHA-256 của từng tệp thì được hai dãy khác nhau. Kết luận hợp lý nhất?",
+   "explanation": "Cùng dữ liệu thì cùng mã băm; mã băm khác nghĩa là nội dung hai tệp không giống nhau từng ký tự, dù mắt thường không thấy (một dấu cách, một dấu phẩy cũng đủ).",
+   "points": 1,
+   "options": [
+    {
+     "label": "Nội dung hai tệp khác nhau ở ít nhất một ký tự, dù mắt thường không thấy",
+     "isCorrect": true
+    },
+    {
+     "label": "Hai tệp giống nhau; mã băm khác chỉ do tính hai lần vào hai thời điểm",
+     "isCorrect": false
+    },
+    {
+     "label": "Một trong hai tệp bị hỏng và phải xoá",
+     "isCorrect": false
+    },
+    {
+     "label": "Tệp nào có mã băm dài hơn là tệp gốc",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-chi-ghi-ma-bam",
+   "type": "mcq",
+   "prompt": "Một trường muốn ai cũng kiểm tra được chứng chỉ mà không muốn lộ thông tin sinh viên. Vì sao chỉ đưa mã băm lên nơi công khai là đủ để làm việc này?",
+   "explanation": "Người xác minh tự băm tệp mình nhận rồi đối chiếu, nên mã băm đủ để kiểm tra; và từ mã băm không suy ngược ra được dữ liệu gốc nên không lộ thông tin cá nhân.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Vì mã băm chứa sẵn họ tên và điểm số nên đọc ra là biết",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    },
+    {
+     "label": "Vì người xác minh tự băm tệp nhận được rồi đối chiếu, còn từ mã băm thì không suy ngược ra dữ liệu gốc",
+     "isCorrect": true
+    },
+    {
+     "label": "Vì nơi công khai tự động giữ bản gốc của tệp để so sánh",
+     "isCorrect": false
+    },
+    {
+     "label": "Vì mã băm là mật khẩu mở tệp chứng chỉ",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-chuan-hoa",
+   "type": "mcq",
+   "prompt": "Một cổng xác minh báo \"không khớp\" với chứng chỉ hợp lệ, vì người dùng vô tình thêm một khoảng trắng ở cuối tệp khi sao chép. Cách khắc phục đúng về thiết kế là gì?",
+   "explanation": "Khoảng trắng cũng là dữ liệu nên làm mã băm đổi. Hệ thống phải quy định cách chuẩn hoá văn bản (ví dụ bỏ khoảng trắng đầu cuối) trước khi băm, cả lúc neo lẫn lúc kiểm.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Đổi sang thuật toán băm khác để không nhạy với khoảng trắng",
+     "isCorrect": false
+    },
+    {
+     "label": "Cho phép cổng bỏ qua cảnh báo khi chỉ khác khoảng trắng mà không cần quy tắc nào",
+     "isCorrect": false
+    },
+    {
+     "label": "Cấm người dùng sao chép tệp",
+     "isCorrect": false
+    },
+    {
+     "label": "Quy định một cách chuẩn hoá văn bản thống nhất trước khi băm, dùng cho cả lúc neo lẫn lúc kiểm",
+     "isCorrect": true
+    }
+   ]
+  },
+  {
+   "key": "tt-do-dai-ma-bam",
+   "type": "mcq",
+   "prompt": "Bạn băm bằng cùng một thuật toán (SHA-256) một câu 5 chữ và một cuốn sách 500 trang. Nhận xét nào về hai mã băm là đúng?",
+   "explanation": "Hàm băm biến dữ liệu bất kỳ thành dãy có độ dài cố định, nên hai mã băm dài bằng nhau; dù vậy chúng gần như chắc chắn khác hẳn nhau.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Hai mã băm dài bằng nhau, và khác hẳn nhau",
+     "isCorrect": true
+    },
+    {
+     "label": "Mã băm của cuốn sách dài hơn nhiều vì dữ liệu nhiều hơn",
+     "isCorrect": false
+    },
+    {
+     "label": "Mã băm của câu 5 chữ ngắn hơn vì dữ liệu ít hơn",
+     "isCorrect": false
+    },
+    {
+     "label": "Hai mã băm giống nhau vì cùng một thuật toán",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-sua-khoi-cu",
+   "type": "mcq",
+   "prompt": "Một chuỗi có 1.000 khối, mỗi khối ghi kèm mã băm của khối trước. Kẻ gian sửa một chi tiết ở khối thứ 10 và muốn không ai phát hiện. Anh ta gặp khó khăn gì?",
+   "explanation": "Sửa khối 10 đổi mã băm của nó, nên khối 11 (đang ghi mã băm cũ) không còn khớp, và cứ thế. Muốn che, anh ta phải làm lại toàn bộ các khối sau, và trên mạng nhiều bản sao thì còn phải làm trên phần lớn các bản.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Không khó gì vì mỗi khối độc lập với khối khác",
+     "isCorrect": false
+    },
+    {
+     "label": "Chỉ khối thứ 10 bị đánh dấu sai, các khối khác vẫn khớp",
+     "isCorrect": false
+    },
+    {
+     "label": "Chuỗi tự sửa lại khối 10 về nguyên trạng",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-equals-truth"
+    },
+    {
+     "label": "Mọi khối từ 11 trở đi đều lệch, nên anh ta phải làm lại toàn bộ phần sau và làm trên phần lớn các bản sao",
+     "isCorrect": true
+    }
+   ]
+  },
+  {
+   "key": "tt-mot-trong-tram-ban",
+   "type": "mcq",
+   "prompt": "Một cuốn sổ có 100 bản sao do 100 bên độc lập giữ. Kẻ gian chỉ kiểm soát được 1 bản và sửa nó. Điều gì xảy ra?",
+   "explanation": "Bản bị sửa sẽ khác 99 bản còn lại; khi đối chiếu theo luật đồng thuận (đa số), bản sửa lén bị loại. Muốn thắng, kẻ gian phải kiểm soát phần lớn các bản.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Cả 100 bản tự động đổi theo bản đã sửa",
+     "isCorrect": false
+    },
+    {
+     "label": "Không ai phát hiện, vì mỗi bên chỉ nhìn bản của mình",
+     "isCorrect": false
+    },
+    {
+     "label": "Bản sửa trở thành bản đúng vì nó được ghi sau cùng",
+     "isCorrect": false
+    },
+    {
+     "label": "Bản bị sửa khác 99 bản còn lại nên bị loại khi đối chiếu, trừ khi kẻ gian kiểm soát được phần lớn các bản",
+     "isCorrect": true
+    }
+   ]
+  },
+  {
+   "key": "tt-ba-trong-nam",
+   "type": "mcq",
+   "prompt": "Một nhóm 5 bên cùng giữ sổ và dùng đa số để quyết định bản đúng. Nếu 3 trong 5 bên thông đồng sửa cùng một dòng, điều gì xảy ra, và bài học thiết kế là gì?",
+   "explanation": "Đa số (3/5) thuộc về nhóm gian lận nên bản sửa lén thắng. An toàn của kiểu sổ này dựa vào việc các bên đủ độc lập, không dễ thông đồng; nhóm ít bên hoặc cùng một chủ thì lợi thế gần như mất.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Bản đúng vẫn thắng vì blockchain luôn bảo vệ sự thật",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-equals-truth"
+    },
+    {
+     "label": "Bản sửa lén có thể thắng; độ an toàn phụ thuộc vào việc các bên giữ sổ đủ độc lập, khó thông đồng",
+     "isCorrect": true
+    },
+    {
+     "label": "Không có gì thay đổi vì bên nào cũng có bản sao riêng",
+     "isCorrect": false
+    },
+    {
+     "label": "Chỉ cần thêm một bên nữa là tuyệt đối an toàn",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-ghi-sai-tu-dau",
+   "type": "mcq",
+   "prompt": "Giáo vụ nhập nhầm điểm của sinh viên rồi neo lên chuỗi. Điều nào đúng về vai trò của công nghệ và của con người?",
+   "explanation": "Chuỗi chỉ bảo đảm sau khi ghi thì không bị đổi, không kiểm chứng đúng hay sai lúc ghi. Độ đúng đến từ quy trình nhập và bên cấp đáng tin; lỗi phải được đính chính bằng bản ghi mới chứ không xoá được.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Các nút trong mạng sẽ tự phát hiện điểm sai và từ chối ghi",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-equals-truth"
+    },
+    {
+     "label": "Vì nhiều bên đã đồng thuận nên điểm đó chắc chắn đúng",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-equals-truth"
+    },
+    {
+     "label": "Chỉ cần quản trị viên chuỗi xoá khối chứa lỗi là xong",
+     "isCorrect": false
+    },
+    {
+     "label": "Chuỗi chỉ giữ nguyên điều đã ghi; độ đúng do quy trình nhập liệu và bên cấp quyết định, lỗi phải đính chính bằng bản ghi mới",
+     "isCorrect": true
+    }
+   ]
+  },
+  {
+   "key": "tt-dinh-chinh",
+   "type": "mcq",
+   "prompt": "Một chứng chỉ đã neo lên chuỗi nhưng sau đó phát hiện cấp nhầm họ tên. Cách xử lý hợp lý với một hệ thống không xoá được dữ liệu?",
+   "explanation": "Không xoá hay sửa bản cũ được. Cách làm hợp lý là cấp bản đúng, neo mã băm mới, và đánh dấu bản cũ là thu hồi/thay thế ở lớp ngoài chuỗi để người xác minh biết.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Xoá khối cũ khỏi tất cả các bản sao để làm lại",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    },
+    {
+     "label": "Giữ nguyên, vì chuỗi đã ghi thì không cần sửa",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-equals-truth"
+    },
+    {
+     "label": "Sửa trực tiếp mã băm cũ trên chuỗi",
+     "isCorrect": false
+    },
+    {
+     "label": "Cấp bản đúng và neo mã băm mới, đồng thời ghi nhận bản cũ là đã bị thu hồi ở lớp ngoài chuỗi",
+     "isCorrect": true
+    }
+   ]
+  },
+  {
+   "key": "tt-ma-hoa-van-con",
+   "type": "mcq",
+   "prompt": "Nhà cung cấp đề nghị đưa họ tên và điểm của sinh viên lên chuỗi công khai nhưng đã mã hoá, nói \"vậy là an toàn\". Vấn đề lớn nhất của cách này là gì?",
+   "explanation": "Dữ liệu trên chuỗi tồn tại mãi và không xoá được, nên khi người học đòi xoá thì không thể, và mã hoá hôm nay có thể bị phá hoặc khoá bị lộ trong tương lai. Chỉ ghi mã băm, giữ dữ liệu ngoài chuỗi, tránh được cả hai.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Dữ liệu không xoá được và tồn tại vô thời hạn, nên không đáp ứng quyền xoá; mã hoá cũng có thể bị phá hoặc lộ khoá về sau",
+     "isCorrect": true
+    },
+    {
+     "label": "Mã hoá làm chuỗi chạy chậm, ngoài ra không có vấn đề gì",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    },
+    {
+     "label": "Không có vấn đề, mã hoá là đủ để tuân thủ mọi quy định bảo vệ dữ liệu",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    },
+    {
+     "label": "Vấn đề duy nhất là người xác minh không đọc được tên",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-doi-xoa",
+   "type": "mcq",
+   "prompt": "Sau tốt nghiệp, một cựu sinh viên đề nghị trường xoá toàn bộ dữ liệu cá nhân của mình. Thiết kế nào cho phép trường đáp ứng mà vẫn giữ được khả năng xác minh chứng chỉ?",
+   "explanation": "Dữ liệu cá nhân nằm ngoài chuỗi để xoá được; trên chuỗi chỉ có mã băm, không suy ngược ra người nào. Chuỗi không cần thay đổi gì.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Yêu cầu các bên giữ sổ cùng xoá khối đó khỏi mọi bản sao",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    },
+    {
+     "label": "Dữ liệu cá nhân nằm ngoài chuỗi để xoá được, trên chuỗi chỉ có mã băm",
+     "isCorrect": true
+    },
+    {
+     "label": "Từ chối vì chuỗi đã ghi thì không bao giờ xoá được",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    },
+    {
+     "label": "Đổi tên người học thành mã số ngay trên chuỗi",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-mat-khoa",
+   "type": "mcq",
+   "prompt": "Hai hệ thống lưu chứng chỉ: (A) cơ sở dữ liệu của trường, (B) chuỗi khối, người học tự giữ chìa khoá số. Một sinh viên làm mất thông tin đăng nhập ở cả hai. Khác biệt cốt lõi?",
+   "explanation": "Ở (A) quản trị viên có thể xác minh danh tính rồi cấp lại quyền truy cập. Ở (B) không có ai cấp lại được chìa khoá, nên chứng chỉ có thể vô dụng với chủ nhân.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Không khác nhau, cả hai đều cấp lại được như nhau",
+     "isCorrect": false
+    },
+    {
+     "label": "Ở (B) mất chìa khoá thì chuỗi tự khôi phục",
+     "isCorrect": false
+    },
+    {
+     "label": "Ở (A) quản trị viên cấp lại được quyền truy cập, ở (B) không ai cấp lại được chìa khoá",
+     "isCorrect": true
+    },
+    {
+     "label": "Ở (A) mất đăng nhập thì dữ liệu bị xoá vĩnh viễn",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-truong-dong-cua",
+   "type": "mcq",
+   "prompt": "Một trường đóng cửa, hệ thống máy chủ của trường không còn. Cựu sinh viên giữ tệp chứng chỉ. Với mô hình neo mã băm lên một sổ công khai độc lập, nhà tuyển dụng có xác minh được không, vì sao?",
+   "explanation": "Mã băm đã neo nằm trên sổ công khai, không phụ thuộc máy chủ của trường; nhà tuyển dụng băm tệp rồi đối chiếu. Đây là lợi ích: xác minh không phụ thuộc việc trường còn tồn tại.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Không được, vì mọi lần xác minh đều phải hỏi trường",
+     "isCorrect": false
+    },
+    {
+     "label": "Được, vì mã băm nằm trên sổ công khai độc lập nên không cần máy chủ của trường",
+     "isCorrect": true
+    },
+    {
+     "label": "Chỉ được nếu trường còn lưu họ tên và điểm",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    },
+    {
+     "label": "Được, vì chuỗi lưu bản sao của toàn bộ tệp chứng chỉ",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-mot-ben-tin",
+   "type": "mcq",
+   "prompt": "Trường A tự lưu điểm của chính mình, chỉ giáo vụ của trường được ghi, và mọi người đều tin trường. Có nên dùng blockchain không?",
+   "explanation": "Chỉ một bên ghi và bên đó đã được mọi người tin, nên cơ sở dữ liệu thường, có thể kèm chữ ký số cho tệp xuất ra, là đủ và rẻ hơn. Blockchain giải quyết bài toán thiếu bên tin cậy chung, mà ở đây không thiếu.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Nên dùng, vì blockchain luôn an toàn hơn cơ sở dữ liệu",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-default-solution"
+    },
+    {
+     "label": "Không cần; cơ sở dữ liệu thường kèm chữ ký số là đủ vì chỉ một bên ghi và bên đó đã được tin",
+     "isCorrect": true
+    },
+    {
+     "label": "Nên dùng, vì như vậy trường trông hiện đại hơn",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-default-solution"
+    },
+    {
+     "label": "Không giải pháp nào lưu điểm được an toàn",
+     "isCorrect": false
+    }
+   ]
+  },
+  {
+   "key": "tt-nhieu-ben",
+   "type": "mcq",
+   "prompt": "Mười trung tâm đào tạo độc lập cùng cấp huy hiệu số cho một kỹ năng, không có cơ quan chung nào mọi bên đều tin, và các bên muốn tra cứu chéo huy hiệu của nhau. Đánh giá nào hợp lý nhất?",
+   "explanation": "Có nhiều bên cùng ghi và thiếu một bên tin cậy chung là đúng loại bài toán mà sổ phân tán có thể giúp. Vẫn phải kiểm tra thêm các điều kiện còn lại, nhất là không đưa dữ liệu cá nhân lên chuỗi, nên kết luận là dùng có điều kiện.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Đáng cân nhắc dùng có điều kiện vì nhiều bên ghi và thiếu bên tin chung, nhưng vẫn phải xử lý dữ liệu cá nhân",
+     "isCorrect": true
+    },
+    {
+     "label": "Chắc chắn phải dùng, vì có nhiều bên thì blockchain luôn tốt hơn",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-default-solution"
+    },
+    {
+     "label": "Không bao giờ nên dùng vì blockchain không có ứng dụng nào trong giáo dục",
+     "isCorrect": false
+    },
+    {
+     "label": "Nên dùng và ghi luôn họ tên, ngày cấp lên chuỗi cho công khai",
+     "isCorrect": false,
+     "misconception": "cngdtt.personal-data-on-chain"
+    }
+   ]
+  },
+  {
+   "key": "tt-chi-phi-nhan-ban",
+   "type": "mcq",
+   "prompt": "Giữ 5 bản sao của một cuốn sổ thay vì 1 bản tốn thêm công sức. Phát biểu nào về phép cân nhắc này là hợp lý?",
+   "explanation": "Nhân bản làm tăng chi phí và công sức, đổi lấy khó sửa lén hơn. Vì vậy phải hỏi bài toán có thật sự cần mức khó sửa đó không, chứ không mặc định là tốt hơn.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Nhân bản không tốn thêm gì, chỉ có lợi",
+     "isCorrect": false
+    },
+    {
+     "label": "Nhân bản làm mọi dữ liệu ghi vào đều đúng sự thật",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-equals-truth"
+    },
+    {
+     "label": "Đổi chi phí và công sức lấy khả năng khó sửa lén; chỉ đáng khi bài toán thật sự cần mức bảo đảm đó",
+     "isCorrect": true
+    },
+    {
+     "label": "Càng nhiều bản sao thì càng nên dùng cho mọi bài toán",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-default-solution"
+    }
+   ]
+  },
+  {
+   "key": "tt-thi-diem-100",
+   "type": "mcq",
+   "prompt": "Một trường thí điểm cấp 100 chứng chỉ neo mã băm, và nhà tuyển dụng xác minh thành công cả 100. Từ kết quả này, điều nào có thể kết luận một cách chắc chắn?",
+   "explanation": "Thí điểm cho thấy làm được về kỹ thuật. Chưa suy ra được là rẻ hơn hay tiện hơn cách cũ (cần so sánh chi phí) và càng chưa suy ra là giúp người học học tốt hơn (cần đo kết quả học).",
+   "points": 1,
+   "options": [
+    {
+     "label": "Công nghệ này cải thiện kết quả học tập của sinh viên",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    },
+    {
+     "label": "Công nghệ này rẻ hơn mọi cách xác minh khác",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    },
+    {
+     "label": "Làm được về kỹ thuật; chưa kết luận được về chi phí hay về việc học tốt hơn",
+     "isCorrect": true
+    },
+    {
+     "label": "Mọi trường khác cũng nên làm theo ngay",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-default-solution"
+    }
+   ]
+  },
+  {
+   "key": "tt-bang-chung-hoc-tap",
+   "type": "mcq",
+   "prompt": "Một nhà cung cấp tuyên bố \"blockchain giúp học tốt hơn\". Loại bằng chứng nào mới đủ sức nặng để tin?",
+   "explanation": "Muốn nói học tốt hơn phải đo kết quả học và so với một nhóm đối chứng tương đương, trước và sau. Số lượng công bố, số người dùng hay độ nổi tiếng của nơi dùng không chứng minh được điều đó.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Số lượng bài viết và báo cáo ca ngợi công nghệ này",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    },
+    {
+     "label": "Số lượng người dùng đã đăng ký",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    },
+    {
+     "label": "So sánh kết quả học của nhóm dùng với nhóm đối chứng tương đương",
+     "isCorrect": true
+    },
+    {
+     "label": "Việc một trường danh tiếng đã triển khai",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    }
+   ]
+  },
+  {
+   "key": "tt-chi-so-12-thang",
+   "type": "mcq",
+   "prompt": "Hội đồng chọn \"Dùng có điều kiện\" một hệ thống xác minh chứng chỉ và cần một chỉ số để đánh giá sau 12 tháng. Chỉ số nào phù hợp nhất?",
+   "explanation": "Chỉ số phải gắn với mục tiêu của hệ thống: thời gian xác minh một chứng chỉ và tỉ lệ chứng chỉ giả bị phát hiện đo được. Số người dùng hay số khối ghi chỉ đo mức hoạt động, không đo giá trị.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Thời gian xác minh trung bình một chứng chỉ và tỉ lệ chứng chỉ giả bị phát hiện",
+     "isCorrect": true
+    },
+    {
+     "label": "Tổng số người đã đăng ký tài khoản",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    },
+    {
+     "label": "Số khối đã được ghi lên chuỗi",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    },
+    {
+     "label": "Số bài báo viết về hệ thống",
+     "isCorrect": false,
+     "misconception": "cngdtt.hype-as-evidence"
+    }
+   ]
+  },
+  {
+   "key": "tt-nam-dieu-kien",
+   "type": "mcq",
+   "prompt": "Bạn thẩm định một đề xuất dùng blockchain. Theo cách làm của bài, khi nào mới kết luận bài toán \"xứng\" với blockchain?",
+   "explanation": "Cần các điều kiện về cấu trúc bài toán (nhiều bên ghi, thiếu bên tin chung, cần lịch sử không sửa được, cần kiểm tra công khai) đều thoả, và có cách xử lý dữ liệu cá nhân. Một điều kiện thoả chưa đủ.",
+   "points": 1,
+   "options": [
+    {
+     "label": "Khi nhà cung cấp đã có nhiều khách hàng nổi tiếng",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-default-solution"
+    },
+    {
+     "label": "Khi bài toán có nhiều người dùng",
+     "isCorrect": false,
+     "misconception": "cngdtt.blockchain-default-solution"
+    },
+    {
+     "label": "Khi các điều kiện về nhiều bên ghi, thiếu bên tin chung, cần lịch sử không sửa được đều thoả, và có cách xử lý dữ liệu cá nhân",
+     "isCorrect": true
+    },
+    {
+     "label": "Khi thoả duy nhất một điều kiện đầu tiên là đủ",
+     "isCorrect": false
+    }
+   ]
+  }
+ ]
+}
