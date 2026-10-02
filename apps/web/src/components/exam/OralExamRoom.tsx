@@ -149,6 +149,8 @@ export default function OralExamRoom({
   const typicalQuestions = durationSec >= 300 ? Math.max(3, Math.round((durationSec / 60) * 0.8)) : null;
   const [pinExpanded, setPinExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Bộ gõ (Telex/VNI…) đang giữ từ cuối ở trạng thái "đang soạn" (gạch chân).
+  const composingRef = useRef(false);
 
   const sendTurn = useCallback(
     async (message: string | null, opts?: { forceEnd?: boolean }) => {
@@ -347,10 +349,26 @@ export default function OralExamRoom({
     turns.length > 0 &&
     turns[turns.length - 1]!.role === "examiner";
 
-  function submit() {
-    const text = input.trim();
-    if (!text || !canAnswer) return;
+  // Xoá ô nhập sau khi gửi. Nếu bộ gõ còn đang soạn từ cuối, chỉ setInput("") là chưa đủ: bộ gõ sẽ chốt
+  // từ đó vào ô SAU khi ta đã xoá, nên từ cuối của câu vừa gửi "sót" sang câu kế. Blur ép bộ gõ chốt ngay,
+  // rồi xoá lại ở frame sau và trả tiêu điểm (giữ bàn phím ảo không đóng).
+  function clearInput() {
     setInput("");
+    const ta = textareaRef.current;
+    if (!ta || !composingRef.current) return;
+    composingRef.current = false;
+    ta.blur();
+    requestAnimationFrame(() => {
+      setInput("");
+      ta.value = "";
+      ta.focus();
+    });
+  }
+
+  function submit() {
+    const text = (textareaRef.current?.value ?? input).trim();
+    if (!text || !canAnswer) return;
+    clearInput();
     void sendTurn(text);
   }
 
@@ -599,12 +617,20 @@ export default function OralExamRoom({
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onCompositionStart={() => {
+                  composingRef.current = true;
+                }}
+                onCompositionEnd={() => {
+                  composingRef.current = false;
+                }}
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
+                    // Safari báo keyCode 229 sau compositionend; Chrome báo isComposing — coi cả hai là đang soạn.
+                    if (e.nativeEvent.isComposing || e.keyCode === 229) composingRef.current = true;
                     submit();
                   }
                 }}
