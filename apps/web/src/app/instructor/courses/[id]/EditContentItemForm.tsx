@@ -19,7 +19,6 @@ import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import AiFormatPanel from "@/components/AiFormatPanel";
 import SafeHtml from "@/components/SafeHtml";
-import { formatHtml } from "@/lib/formatHtml";
 import { EXTENSIONS } from "@/components/RichTextEditor";
 import { probeEditorLoss } from "@/components/richtext/lossProbe";
 
@@ -76,11 +75,10 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   // riêng...) không có schema tương ứng trong RichTextEditor — mở thẳng bằng
   // WYSIWYG sẽ mất định dạng ngay lần sửa đầu, và trước đây hiện cảnh báo đỏ
   // dọa người dùng. Giờ dò 1 lần lúc mount: nếu phức tạp, ưu tiên hiện PREVIEW
-  // đẹp + hướng dẫn thân thiện, chỉ khi bấm "Sửa mã HTML" mới lộ ra textarea.
+  // đẹp + hướng dẫn thân thiện; không lộ mã HTML ra cho người dùng.
   // null = chưa dò xong (chỉ dò được ở trình duyệt).
   const [aiSaved, setAiSaved] = useState(false);
   const [richtextComplex, setRichtextComplex] = useState<boolean | null>(null);
-  const [rawHtmlEditing, setRawHtmlEditing] = useState(false);
   const initialHtmlRef = useRef(String(initial.html ?? ""));
 
   useEffect(() => {
@@ -245,59 +243,15 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         </div>
       )}
 
-      {type === "richtext" && richtextComplex === true && !rawHtmlEditing && (
+      {type === "richtext" && richtextComplex === true && (
         <div className="space-y-3">
           <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
             <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
           </div>
           <p className="banner-info text-sm">
-            Nội dung này đã được AI format sang mã HTML. Muốn sửa nội dung, bấm
-            &ldquo;Sửa mã HTML&rdquo;. Nếu bạn không rành sửa HTML, copy đoạn mã
-            đó sang Gemini/ChatGPT/Claude, mô tả điều bạn muốn sửa để AI sửa
-            giúp, rồi dán kết quả lại đây.
+            Nội dung này đã được AI định dạng nên không sửa trực tiếp trong trình soạn
+            thảo được. Muốn thay đổi, dùng &ldquo;Định dạng bằng AI&rdquo; bên dưới.
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              // Mã do AI sinh thường dồn một dòng — dàn lại cho dễ đọc/sửa.
-              setHtml((h) => formatHtml(h));
-              setRawHtmlEditing(true);
-            }}
-            className="btn-secondary btn-sm"
-          >
-            Sửa mã HTML
-          </button>
-        </div>
-      )}
-
-      {type === "richtext" && richtextComplex === true && rawHtmlEditing && (
-        <div className="space-y-3">
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wide text-faint">
-                Mã HTML
-              </label>
-              <button
-                type="button"
-                onClick={() => setRawHtmlEditing(false)}
-                className="link text-xs"
-              >
-                ← Xem trước
-              </button>
-            </div>
-            {aiSaved ? (
-              <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
-                <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
-              </div>
-            ) : (
-              <textarea
-                value={html}
-                onChange={(e) => setHtml(e.target.value)}
-                rows={12}
-                className="textarea font-mono text-xs"
-              />
-            )}
-          </div>
           <AiFormatPanel
             lessonId={lessonId}
             html={html}

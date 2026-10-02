@@ -157,6 +157,9 @@ export default function AddContentItemForm({
   // flag, tách khỏi `uploading` (scorm/h5p) như transcriptUploading bên dưới.
   const [docxUploading, setDocxUploading] = useState(false);
   const [docxWarnings, setDocxWarnings] = useState<string[]>([]);
+  // `html` đang là HTML do server dựng từ .docx (không phải chữ thô người dùng gõ):
+  // hiện bản xem trước thay vì đổ mã HTML ra ô nhập.
+  const [docxImported, setDocxImported] = useState(false);
   // In-video cuepoint editor state — only used when type === "video".
   const [lessonQuizzes, setLessonQuizzes] = useState<LessonQuizRow[]>([]);
   const [skills, setSkills] = useState<SkillRow[]>([]);
@@ -249,6 +252,7 @@ export default function AddContentItemForm({
     setLtiToolId("");
     setCuepoints([]);
     setDocxWarnings([]);
+    setDocxImported(false);
     setError(null);
   }
 
@@ -528,9 +532,16 @@ export default function AddContentItemForm({
           {aiSaved ? (
             <details className="rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-sm">
               <summary className="cursor-pointer text-muted">Xem bản gốc</summary>
-              <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs text-muted">
-                {html}
-              </pre>
+              {docxImported ? (
+                <SafeHtml
+                  html={html}
+                  className="prose prose-sm mt-2 max-h-60 max-w-none overflow-auto dark:prose-invert"
+                />
+              ) : (
+                <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs text-muted">
+                  {html}
+                </pre>
+              )}
             </details>
           ) : (
           <div className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
@@ -548,6 +559,7 @@ export default function AddContentItemForm({
               onImported={(importedHtml, warnings) => {
                 setHtml(importedHtml);
                 setDocxWarnings(warnings);
+                setDocxImported(true);
               }}
             />
             {docxWarnings.length > 0 && (
@@ -561,13 +573,32 @@ export default function AddContentItemForm({
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
                 Nội dung thô
               </label>
-              <textarea
-                value={html}
-                onChange={(e) => setHtml(e.target.value)}
-                rows={8}
-                placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn. Hoặc tải file .docx ở trên."
-                className="textarea"
-              />
+              {docxImported ? (
+                <div className="space-y-1.5">
+                  <div className="max-h-72 overflow-y-auto rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
+                    <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHtml("");
+                      setDocxWarnings([]);
+                      setDocxImported(false);
+                    }}
+                    className="link text-xs"
+                  >
+                    Bỏ nội dung đã tải, nhập tay
+                  </button>
+                </div>
+              ) : (
+                <textarea
+                  value={html}
+                  onChange={(e) => setHtml(e.target.value)}
+                  rows={8}
+                  placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn. Hoặc tải file .docx ở trên."
+                  className="textarea"
+                />
+              )}
             </div>
           </div>
           )}
