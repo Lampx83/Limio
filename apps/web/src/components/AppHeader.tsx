@@ -108,11 +108,11 @@ export default async function AppHeader() {
             />
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Link href="/signin" className={registerEnabled ? "btn-ghost btn-sm" : "btn-primary btn-sm"}>
+              <Link href="/signin" className="btn-primary btn-sm">
                 Đăng nhập
               </Link>
               {registerEnabled && (
-                <Link href="/register" className="btn-primary btn-sm">
+                <Link href="/register" className="btn-ghost btn-sm">
                   Đăng ký
                 </Link>
               )}
