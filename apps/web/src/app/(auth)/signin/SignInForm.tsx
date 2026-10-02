@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 import InAppBrowserNotice from "@/components/InAppBrowserNotice";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
+import { landingPathForRoles } from "@/lib/landing";
 
 interface DemoAccount {
   email: string;
@@ -48,8 +49,6 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 const DEMO_PASSWORD = "password1234";
 const SHOW_DEMO = process.env.NODE_ENV !== "production";
 
-type ProvidersMap = Record<string, { id: string; name: string }>;
-
 // Chỉ chấp nhận path nội bộ ("/a/b") — chặn open-redirect qua "//evil.com"
 // hay "https://evil.com" lẻn vào query string callbackUrl.
 function sanitizeCallbackUrl(raw: string | null): string {
@@ -58,7 +57,7 @@ function sanitizeCallbackUrl(raw: string | null): string {
   return raw;
 }
 
-export default function SignInForm() {
+export default function SignInForm({ ssoProviders }: { ssoProviders: string[] }) {
   const searchParams = useSearchParams();
   const callbackPath = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
   const callbackUrl = `${BASE}${callbackPath}`;
@@ -68,37 +67,27 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [providers, setProviders] = useState<ProvidersMap | null>(null);
   const [embeddedBrowser, setEmbeddedBrowser] = useState<{ appName: string } | null>(null);
   const router = useRouter();
 
   // Trang này thường được tới bằng redirect mềm từ trang cần đăng nhập khi
   // phiên đã hết/bị đăng xuất. Root layout (AppHeader) không render lại trong
   // điều hướng mềm nên vẫn hiện tên người dùng cũ — refresh để header đọc
-  // lại cookie hiện tại.
+  // lại cookie hiện tại. Chỉ refresh khi header thực sự đang hiện menu người
+  // dùng (UserMenu có `data-user-menu`): vào /signin trực tiếp thì header đã
+  // đúng, refresh chỉ tốn thêm một lượt render server + nháy lại cây React.
   useEffect(() => {
-    router.refresh();
+    if (document.querySelector("[data-user-menu]")) router.refresh();
   }, [router]);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${BASE}/api/auth/providers`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!cancelled && data) setProviders(data as ProvidersMap);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     setEmbeddedBrowser(detectInAppBrowser(navigator.userAgent));
   }, []);
 
-  const hasGoogle = providers != null && "google" in providers;
-  const hasMicrosoft = providers != null && "microsoft-entra-id" in providers;
+  // Danh sách SSO do server truyền xuống → nút có mặt ngay ở lần vẽ đầu, không
+  // bật ra sau khi fetch xong và đẩy form xuống.
+  const hasGoogle = ssoProviders.includes("google");
+  const hasMicrosoft = ssoProviders.includes("microsoft-entra-id");
   const hasSso = hasGoogle || hasMicrosoft;
 
   async function doSignIn(emailValue: string, passwordValue: string) {
@@ -118,7 +107,19 @@ export default function SignInForm() {
       // pre-login layout alive, causing AppHeader to still show the
       // "Đăng nhập" buttons even after a successful credentials login.
       // callbackUrl đã gồm BASE (sub-path deployment).
-      window.location.href = callbackUrl;
+      let target = callbackUrl;
+      if (callbackPath === "/") {
+        // Đích mặc định: "/" chỉ để server redirect tiếp sang dashboard theo vai
+        // trò — thêm một vòng request + render đầy đủ. Hỏi session (nhẹ) rồi đi
+        // thẳng; lỗi thì cứ về "/" như cũ.
+        try {
+          const session = await getSession();
+          if (session?.user) {
+            target = `${BASE}${landingPathForRoles(session.user.roles ?? [])}`;
+          }
+        } catch {}
+      }
+      window.location.href = target;
     }
   }
 

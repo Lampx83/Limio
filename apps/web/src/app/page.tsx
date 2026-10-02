@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { RoleName } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
+import { landingPathForRoles } from "@/lib/landing";
 import JsonLd from "@/components/JsonLd";
 import LandingPage from "@/components/LandingPage";
 import { getRegisterEnabled } from "@/lib/site-settings";
@@ -23,17 +23,9 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  // Logged-in users → role-appropriate dashboard. Default ưu tiên Instructor
-  // (đa số task hằng ngày là dạy học), Admin chỉ là landing khi user thuần
-  // admin — admin kiêm instructor sẽ vào /instructor/dashboard và tự nav sang
-  // /admin/dashboard khi cần. Learner > Instructor > Admin fallback chain.
+  // Logged-in users → role-appropriate dashboard (xem landingPathForRoles).
   const session = await auth();
-  if (session?.user?.id) {
-    const roles = session.user.roles ?? [];
-    if (roles.includes(RoleName.Instructor)) redirect("/instructor/dashboard");
-    if (roles.includes(RoleName.Admin)) redirect("/admin/dashboard");
-    redirect("/me/dashboard");
-  }
+  if (session?.user?.id) redirect(landingPathForRoles(session.user.roles ?? []));
 
   const registerEnabled = await getRegisterEnabled();
 

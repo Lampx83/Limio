@@ -33,61 +33,75 @@ export default async function LearnerDashboard({
   // cho học viên nên bỏ qua mentor thay vì đoán nội dung phù hợp cho họ.
   const activeRole = getActiveRole(session.user.roles ?? []);
   const isLearnerWorkspace = activeRole === "learner";
-  let shouldShowTour = false;
-  if (isLearnerWorkspace) {
-    const meTour = await prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      select: { helpTourCompletedByRole: true },
-    });
-    const forceReplay = searchParams?.tour === "1";
-    shouldShowTour =
-      forceReplay ||
-      !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "learner");
-  }
+  const now = new Date();
 
-  const enrollments = await prisma.enrollment.findMany({
-    where: { userId },
-    include: { course: { select: { id: true, slug: true, title: true } } },
-    orderBy: { enrolledAt: "desc" },
-  });
+  // Các truy vấn dưới đây độc lập nhau → chạy song song. Trước đây ~10 await
+  // nối tiếp nên thời gian vào trang = tổng độ trễ DB của từng truy vấn, và đây
+  // là trang người học hạ cánh ngay sau khi đăng nhập.
+  const [
+    meTour,
+    { enrollments, progressByCourse },
+    xpByCourse,
+    allSkillStates,
+    recentBadges,
+    // Việc cần làm (bài tập + quiz chưa nộp, có hạn lẫn không hạn) cho khu "Việc cần làm".
+    todoItems,
+    recentResolved,
+    weeklyBoard,
+  ] = await Promise.all([
+    isLearnerWorkspace
+      ? prisma.user.findUniqueOrThrow({
+          where: { id: userId },
+          select: { helpTourCompletedByRole: true },
+        })
+      : null,
+    // Tiến độ từng khoá phụ thuộc danh sách ghi danh nên 2 bước này nối nhau,
+    // nhưng cả chuỗi vẫn chạy song song với các truy vấn khác.
+    (async () => {
+      const enrollments = await prisma.enrollment.findMany({
+        where: { userId },
+        include: { course: { select: { id: true, slug: true, title: true } } },
+        orderBy: { enrolledAt: "desc" },
+      });
+      const progressByCourse = await Promise.all(
+        enrollments.map((e) => getCourseProgress(userId, e.course.id)),
+      );
+      return { enrollments, progressByCourse };
+    })(),
+    prisma.userCourseProgress.findMany({ where: { userId } }),
+    getLearnerSkillStates(userId, undefined),
+    prisma.userBadge.findMany({
+      where: { userId },
+      orderBy: { earnedAt: "desc" },
+      take: 5,
+      include: { badge: { select: { code: true, name: true } } },
+    }),
+    loadLearnerTodo(userId, now),
+    prisma.learningEvent.findMany({
+      where: { userId, eventType: LearningEventType.MisconceptionResolved },
+      orderBy: { occurredAt: "desc" },
+      take: 5,
+    }),
+    getLeaderboard({
+      scope: "global",
+      period: "weekly",
+      viewerId: userId,
+      limit: 5,
+    }),
+  ]);
 
-  const progressByCourse = await Promise.all(
-    enrollments.map((e) => getCourseProgress(userId, e.course.id)),
-  );
-  const xpByCourse = await prisma.userCourseProgress.findMany({ where: { userId } });
+  const shouldShowTour =
+    meTour != null &&
+    (searchParams?.tour === "1" ||
+      !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "learner"));
+
   const xpMap = new Map(xpByCourse.map((x) => [x.courseId, x]));
-
-  const allSkillStates = await getLearnerSkillStates(userId, undefined);
   const weakSkills = allSkillStates
     .filter((s) => masteryLabel(s.masteryProbability) === "needs_review")
     .slice(0, 5);
   const masteredSkills = allSkillStates.filter(
     (s) => masteryLabel(s.masteryProbability) === "solid",
   ).length;
-
-  const recentBadges = await prisma.userBadge.findMany({
-    where: { userId },
-    orderBy: { earnedAt: "desc" },
-    take: 5,
-    include: { badge: { select: { code: true, name: true } } },
-  });
-
-  // Việc cần làm (bài tập + quiz chưa nộp, có hạn lẫn không hạn) cho khu "Việc cần làm".
-  const now = new Date();
-  const todoItems = await loadLearnerTodo(userId, now);
-
-  const recentResolved = await prisma.learningEvent.findMany({
-    where: { userId, eventType: LearningEventType.MisconceptionResolved },
-    orderBy: { occurredAt: "desc" },
-    take: 5,
-  });
-
-  const weeklyBoard = await getLeaderboard({
-    scope: "global",
-    period: "weekly",
-    viewerId: userId,
-    limit: 5,
-  });
 
   // "Continue learning" — most-recent in-progress enrollment with lastLessonId.
   const continueTarget = enrollments
