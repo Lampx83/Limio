@@ -444,10 +444,10 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateCloud()}
             placeholder="Nhập câu hỏi cho học viên..."
-            maxLength={500}
+            maxLength={1000}
             className="input w-full"
           />
-          <p className="text-xs text-muted mt-1">{prompt.length}/500</p>
+          <p className="text-xs text-muted mt-1">{prompt.length}/1000</p>
         </div>
 
         <button onClick={handleCreateCloud} disabled={isCreating} className="btn-primary w-full">
