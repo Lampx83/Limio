@@ -3,6 +3,7 @@ import {
   composeEmailHtml,
   getTemplateForScope,
   renderField,
+  renderPlain,
   sendEmail,
 } from "@feedbackme/core-lms";
 import { requireScopeAccess } from "@/lib/emailAdminAuth";
@@ -62,8 +63,8 @@ export async function POST(
       ? body.bodyText
       : (detail.bodyText ?? "");
 
-  const subject = renderField(subjectTpl, vars);
-  const text = bodyTextTpl ? renderField(bodyTextTpl, vars) : undefined;
+  const subject = renderPlain(subjectTpl, vars);
+  const text = bodyTextTpl ? renderPlain(bodyTextTpl, vars) : undefined;
   // Cùng pipeline với gửi thật: thêm style inline + khung thương hiệu.
   const html = composeEmailHtml(renderField(bodyHtmlTpl, vars), subject, text ?? "");
 

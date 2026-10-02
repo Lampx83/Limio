@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { composeEmailHtml, getTemplateForScope, renderField } from "@feedbackme/core-lms";
+import { composeEmailHtml, getTemplateForScope, renderField, renderPlain } from "@feedbackme/core-lms";
 import { requireScopeAccess } from "@/lib/emailAdminAuth";
 import { readJson } from "@/lib/apiHelpers";
 
@@ -28,8 +28,8 @@ export async function POST(req: Request, { params }: { params: { key: string } }
   const bodyHtmlTpl = typeof body.bodyHtml === "string" ? body.bodyHtml : detail.bodyHtml;
   const bodyTextTpl = typeof body.bodyText === "string" ? body.bodyText : (detail.bodyText ?? "");
 
-  const subject = renderField(subjectTpl, vars);
-  const text = bodyTextTpl ? renderField(bodyTextTpl, vars) : "";
+  const subject = renderPlain(subjectTpl, vars);
+  const text = bodyTextTpl ? renderPlain(bodyTextTpl, vars) : "";
   const html = composeEmailHtml(renderField(bodyHtmlTpl, vars), subject, text);
   return NextResponse.json({ subject, html });
 }
