@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate, formatDateTime, formatRelative } from "@/lib/datetime";
 import { COMMON_POOL_FILTER_VALUE, COMMON_POOL_LABEL } from "@feedbackme/shared-types";
+import { rolePriorityRank } from "@/lib/adminUserSort";
 import ResendVerificationButton from "./[id]/ResendVerificationButton";
 
 interface UserRow {
@@ -34,7 +35,7 @@ interface UsersResponse {
   pageCount: number;
 }
 
-type SortKey = "displayName" | "createdAt" | "lastAccessAt";
+type SortKey = "displayName" | "roles" | "org" | "sso" | "createdAt" | "lastAccessAt";
 /**
  * Cột kéo đổi độ rộng được. "Người dùng" là cột co giãn (lấy phần còn lại) nên không nằm ở đây.
  * Mỗi thanh kéo là một RANH GIỚI giữa hai cột liền kề: nó đi theo con trỏ, cột bên trái
@@ -229,22 +230,13 @@ export default function UsersBrowser() {
       setDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSort(key);
-      // Tên: A→Z trước; các cột thời gian: mới nhất trước.
-      setDir(key === "displayName" ? "asc" : "desc");
+      // Cột chữ: A→Z trước (Roles: quyền cao trước); các cột thời gian: mới nhất trước.
+      setDir(key === "createdAt" || key === "lastAccessAt" ? "desc" : "asc");
     }
     setPage(0);
   }
 
   type Edge = [ColKey | null, ColKey];
-
-  function plainTh(label: string, edge?: Edge) {
-    return (
-      <th className="relative whitespace-nowrap px-3 py-2 text-left font-medium">
-        {label}
-        {edge && resizeHandle(edge[0], edge[1], label)}
-      </th>
-    );
-  }
 
   function sortTh(key: SortKey, label: string, edge?: Edge) {
     const active = sort === key;
@@ -514,9 +506,9 @@ export default function UsersBrowser() {
           <thead className="border-b border-token bg-base-50 text-xs uppercase text-faint">
             <tr>
               {sortTh("displayName", "Người dùng", [null, "roles"])}
-              {plainTh("Roles", ["roles", "org"])}
-              {plainTh("Tổ chức", ["org", "sso"])}
-              {plainTh("SSO", ["sso", "created"])}
+              {sortTh("roles", "Roles", ["roles", "org"])}
+              {sortTh("org", "Tổ chức", ["org", "sso"])}
+              {sortTh("sso", "SSO", ["sso", "created"])}
               {sortTh("createdAt", "Tạo lúc", ["created", "access"])}
               {sortTh("lastAccessAt", "Truy cập", ["access", "actions"])}
               <th className="whitespace-nowrap px-3 py-2 text-right font-medium">Thao tác</th>
@@ -647,22 +639,34 @@ export default function UsersBrowser() {
   );
 }
 
-/** Vai trò ưu tiên hiển thị khi chỉ đủ chỗ cho một chip: quyền cao nhất trước. */
-const ROLE_PRIORITY = ["admin", "instructor", "researcher", "mentor", "learner"];
-
-/** Một chip vai trò chính + "+N" (tooltip liệt kê đủ), thay vì xếp chồng nhiều chip làm cao hàng. */
+/**
+ * Gọn: một chip vai trò chính + nút "+N". Bấm nút để mở rộng ngay tại ô, hiện đủ mọi vai trò
+ * (chip xếp cuộn dòng, chỉ hàng này cao thêm); bấm "−" để thu lại. Vai trò xếp quyền cao trước.
+ */
 function RoleCell({ roles }: { roles: string[] }) {
+  const [open, setOpen] = useState(false);
   if (roles.length === 0) return <span className="text-faint">—</span>;
-  const sorted = [...roles].sort(
-    (a, b) =>
-      (ROLE_PRIORITY.indexOf(a) + 1 || 99) - (ROLE_PRIORITY.indexOf(b) + 1 || 99),
-  );
+  const sorted = [...roles].sort((a, b) => rolePriorityRank(a) - rolePriorityRank(b));
   const [main = "", ...rest] = sorted;
+  const shown = open ? sorted : [main];
   return (
-    <div className="flex items-center gap-1" title={sorted.join(", ")}>
-      <span className={`${roleChipClass(main)} !px-2 !py-0`}>{main}</span>
+    <div className="flex flex-wrap items-center gap-1">
+      {shown.map((r) => (
+        <span key={r} className={`${roleChipClass(r)} !px-2 !py-0`}>
+          {r}
+        </span>
+      ))}
       {rest.length > 0 && (
-        <span className="chip !px-1.5 !py-0 tabular-nums">+{rest.length}</span>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? "Thu gọn danh sách vai trò" : `Xem đủ ${sorted.length} vai trò: ${sorted.join(", ")}`}
+          title={open ? "Thu gọn" : `Xem đủ: ${sorted.join(", ")}`}
+          className="chip !px-1.5 !py-0 tabular-nums transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-brand-600"
+        >
+          {open ? "−" : `+${rest.length}`}
+        </button>
       )}
     </div>
   );

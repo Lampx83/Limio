@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma, type Prisma } from "@feedbackme/db";
 import { COMMON_POOL_FILTER_VALUE } from "@feedbackme/shared-types";
 import { requireAdmin } from "@/lib/session";
+import { DERIVED_SORT_KEYS, sortUserIds, type DerivedSortKey } from "@/lib/adminUserSort";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const BCRYPT_COST = 12;
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
     where.organizationId = org === COMMON_POOL_FILTER_VALUE ? null : org;
   }
 
-  const SORTABLE = ["displayName", "createdAt", "lastAccessAt"] as const;
+  const SORTABLE = ["displayName", "createdAt", "lastAccessAt", ...DERIVED_SORT_KEYS] as const;
   type SortKey = (typeof SORTABLE)[number];
   const sortParam = url.searchParams.get("sort") ?? "";
   const sort: SortKey = (SORTABLE as readonly string[]).includes(sortParam)
@@ -52,13 +53,38 @@ export async function GET(req: Request) {
         ? [{ displayName: dir }, { id: "asc" }]
         : [{ createdAt: dir }, { id: "asc" }];
 
-  const [total, rows] = await Promise.all([
+  // Roles / Tổ chức / SSO là cột dẫn xuất (quan hệ): xác định thứ tự id của trang này ở bộ nhớ
+  // trên bản nhẹ của toàn bộ kết quả lọc, rồi chỉ tải đầy đủ đúng các dòng của trang.
+  let pageIds: string[] | null = null;
+  if ((DERIVED_SORT_KEYS as readonly string[]).includes(sort)) {
+    const light = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        organization: { select: { name: true } },
+        userRoles: { select: { role: { select: { name: true } } } },
+        authProviders: { select: { provider: true } },
+      },
+    });
+    pageIds = sortUserIds(
+      light.map((u) => ({
+        id: u.id,
+        organization: u.organization,
+        roles: Array.from(new Set(u.userRoles.map((ur) => ur.role.name))),
+        providers: Array.from(new Set(u.authProviders.map((p) => p.provider))),
+      })),
+      sort as DerivedSortKey,
+      dir,
+    ).slice(page * limit, (page + 1) * limit);
+  }
+
+  const [total, fetched] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
-      where,
-      orderBy,
-      skip: page * limit,
-      take: limit,
+      where: pageIds ? { id: { in: pageIds } } : where,
+      orderBy: pageIds ? undefined : orderBy,
+      skip: pageIds ? undefined : page * limit,
+      take: pageIds ? undefined : limit,
       select: {
         id: true,
         email: true,
@@ -80,6 +106,11 @@ export async function GET(req: Request) {
       },
     }),
   ]);
+
+  // findMany với `id in` không giữ thứ tự: xếp lại đúng thứ tự đã sắp.
+  const rows = pageIds
+    ? pageIds.map((id) => fetched.find((u) => u.id === id)).filter((u): u is (typeof fetched)[number] => !!u)
+    : fetched;
 
   const users = rows.map((u) => ({
     id: u.id,
