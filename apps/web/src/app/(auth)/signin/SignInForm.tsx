@@ -57,7 +57,13 @@ function sanitizeCallbackUrl(raw: string | null): string {
   return raw;
 }
 
-export default function SignInForm({ ssoProviders }: { ssoProviders: string[] }) {
+export default function SignInForm({
+  ssoProviders,
+  registerEnabled,
+}: {
+  ssoProviders: string[];
+  registerEnabled: boolean;
+}) {
   const searchParams = useSearchParams();
   const callbackPath = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
   const callbackUrl = `${BASE}${callbackPath}`;
@@ -89,6 +95,12 @@ export default function SignInForm({ ssoProviders }: { ssoProviders: string[] })
   const hasGoogle = ssoProviders.includes("google");
   const hasMicrosoft = ssoProviders.includes("microsoft-entra-id");
   const hasSso = hasGoogle || hasMicrosoft;
+  // Đăng ký đang tắt → chỉ còn SSO: bỏ form email/mật khẩu và "Quên mật khẩu".
+  // Hai ngoại lệ để không tự khoá mình ra ngoài: chưa cấu hình SSO nào (không còn
+  // lối vào khác), và `?method=password` — lối vào không hiển thị trên giao diện
+  // để admin/giảng viên dùng mật khẩu vẫn vào được và bật lại cài đặt.
+  const showPasswordForm =
+    registerEnabled || !hasSso || searchParams.get("method") === "password";
 
   async function doSignIn(emailValue: string, passwordValue: string) {
     setStatus("submitting");
@@ -238,80 +250,86 @@ export default function SignInForm({ ssoProviders }: { ssoProviders: string[] })
                     Đăng nhập với Email BK
                   </button>
                 )}
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center" aria-hidden>
-                    <span className="w-full border-t border-base-200" />
+                {showPasswordForm && (
+                  <div className="relative my-2">
+                    <div className="absolute inset-0 flex items-center" aria-hidden>
+                      <span className="w-full border-t border-base-200" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-faint">hoặc</span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-faint">hoặc</span>
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
-            <form onSubmit={onSubmit} className={hasSso ? "space-y-4" : "mt-6 space-y-4"}>
-              <div>
-                <label className="label" htmlFor="email">Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="input mt-1.5"
-                  placeholder="ban@example.com"
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="label" htmlFor="password">Mật khẩu</label>
-                  <Link href="/reset-request" className="text-xs link">
-                    Quên mật khẩu?
-                  </Link>
-                </div>
-                <div className="relative mt-1.5">
+            {showPasswordForm && (
+              <form onSubmit={onSubmit} className={hasSso ? "space-y-4" : "mt-6 space-y-4"}>
+                <div>
+                  <label className="label" htmlFor="email">Email</label>
                   <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    autoComplete="current-password"
-                    className="input w-full pr-12"
-                    placeholder="••••••••"
+                    autoComplete="email"
+                    className="input mt-1.5"
+                    placeholder="ban@example.com"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                    aria-pressed={showPassword}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-xs text-neutral-500 hover:text-neutral-700"
-                  >
-                    {showPassword ? "Ẩn" : "Hiện"}
-                  </button>
                 </div>
-              </div>
-              <button
-                type="submit"
-                disabled={status === "submitting"}
-                className="btn-primary w-full"
-              >
-                {status === "submitting" ? "Đang xử lý..." : "Đăng nhập"}
-              </button>
-              {error && (
-                <div className="rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">
-                  {error}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="label" htmlFor="password">Mật khẩu</label>
+                    <Link href="/reset-request" className="text-xs link">
+                      Quên mật khẩu?
+                    </Link>
+                  </div>
+                  <div className="relative mt-1.5">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                      className="input w-full pr-12"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                      aria-pressed={showPassword}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-xs text-neutral-500 hover:text-neutral-700"
+                    >
+                      {showPassword ? "Ẩn" : "Hiện"}
+                    </button>
+                  </div>
                 </div>
-              )}
-            </form>
+                <button
+                  type="submit"
+                  disabled={status === "submitting"}
+                  className="btn-primary w-full"
+                >
+                  {status === "submitting" ? "Đang xử lý..." : "Đăng nhập"}
+                </button>
+                {error && (
+                  <div className="rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">
+                    {error}
+                  </div>
+                )}
+              </form>
+            )}
 
-            <p className="mt-6 text-center text-sm text-muted">
-              Chưa có tài khoản?{" "}
-              <Link href="/register" className="link font-medium">
-                Đăng ký
-              </Link>
-            </p>
+            {registerEnabled && (
+              <p className="mt-6 text-center text-sm text-muted">
+                Chưa có tài khoản?{" "}
+                <Link href="/register" className="link font-medium">
+                  Đăng ký
+                </Link>
+              </p>
+            )}
           </div>
 
           {SHOW_DEMO && (
