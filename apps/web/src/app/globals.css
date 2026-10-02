@@ -966,7 +966,7 @@ body:has(main[data-preview="1"]) footer {
 /* Đồng hồ đếm ngược nằm ở góc trên bên phải màn chiếu, nên dải tiêu đề bài
    phải thu lại nhường chỗ — không thì tên bài chạy thẳng xuống dưới đồng hồ và
    bị che mất nửa sau. Chỉ chừa khi thật sự đang đếm. */
-body[data-stage-timer] main[data-stage="1"] .sticky {
+body[data-stage-timer] main[data-stage="1"] .stage-title {
   /* Đồng hồ rộng khoảng 30rem sau khi nhân đôi cỡ chữ. Chừa rộng hơn một chút
      cho khoảng thở. Dùng min() để trên máy chiếu hẹp thì nó lùi về theo tỉ lệ
      màn hình thay vì ăn hết dòng tiêu đề. */
