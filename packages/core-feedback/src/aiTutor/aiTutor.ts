@@ -419,26 +419,11 @@ export async function runChatTurn(
     });
   }
 
-  // Aggregate daily usage.
-  const dayKey = dayKeyUtc();
-  await db.aiUsageLog.upsert({
-    where: { userId_dayKey_model: { userId: input.userId, dayKey, model } },
-    create: {
-      userId: input.userId,
-      dayKey,
-      model,
-      tokensInput: inputTokens,
-      tokensOutput: outputTokens,
-      costUsd,
-      turns: 1,
-    },
-    update: {
-      tokensInput: { increment: inputTokens },
-      tokensOutput: { increment: outputTokens },
-      costUsd: { increment: costUsd },
-      turns: { increment: 1 },
-    },
-  });
+  // Sổ ngày + trừ ví token. Phải đi qua recordAiUsage như mọi đường AI khác: trước
+  // đây chỗ này tự upsert AiUsageLog mà không trừ ví, nên lượt hỏi tutor — đường
+  // dùng nhiều nhất — không bao giờ làm "còn N lượt" giảm, và hạn mức tháng chỉ
+  // cạn vì các tính năng khác.
+  await recordAiUsage(input.userId, model, inputTokens, outputTokens, db);
 
   // B15 — ghi vào dòng hành vi. Trợ giảng AI trước đây là kênh duy nhất không
   // phát event, nên khi dựng lại "em này làm gì trong buổi học" thì mọi lượt
