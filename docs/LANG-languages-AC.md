@@ -134,13 +134,13 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 **Làm theo tiền lệ "Nhập câu hỏi bằng AI"** (không dựng cơ chế mới):
 - Hàm `extractVocabFromText` trong `core-feedback/src/aiTutor/generators.ts`, cùng `callJsonModel` với JSON schema `strict`, model mặc định `gpt-4o-mini`.
 - Route `POST /api/ai/extract-vocab`: cùng quyền (giảng viên của ít nhất một khoá hoặc admin), cùng cách lấy khoá OpenAI (`getOpenaiClient`, cấu hình ở admin/integrations), cùng ánh xạ lỗi (`openai_not_configured` 503, vượt trần 429, lỗi sinh 400).
-- Chặn bằng `assertWithinCaps(…, "generator")` và ghi `AiUsageLog` qua `recordAiUsage`, như mọi generator khác.
+- Chặn bằng `assertWithinCaps(…, "generator")` (trần ngày toàn hệ thống **và ví token AI của giảng viên**) rồi ghi `AiUsageLog` qua `recordAiUsage`, hàm này **trừ ví token** (`chargeTokens`) — đúng như nhập câu hỏi bằng AI.
 - Kết quả đi qua **một hàm chuẩn hoá xác định** (không tin đầu ra của mô hình): cùng giới hạn độ dài với `VocabItem`, tối đa 300 dòng, bỏ dòng thiếu từ hoặc nghĩa vào `skipped` kèm lý do.
 
 ### Hàm sinh (G2.5.1)
 - [ ] **G2.5.1.1** Văn bản rỗng, ngắn hơn 20 ký tự hoặc dài hơn 20.000 ký tự → `validation_failed`, **trước khi** chạm tới trần AI hay OpenAI.
-- [ ] **G2.5.1.2** Gọi `assertWithinCaps(userId, …, "generator")` trước OpenAI; vượt trần thì ném `AiTutorError` và **không gọi OpenAI**.
-- [ ] **G2.5.1.3** Ghi `AiUsageLog` với số token vào/ra của lượt gọi.
+- [ ] **G2.5.1.2** Gọi `assertWithinCaps(userId, …, "generator")` trước OpenAI; vượt trần ngày hoặc **hết ví token** thì ném `AiTutorError` và **không gọi OpenAI**.
+- [ ] **G2.5.1.3** Ghi `AiUsageLog` và **trừ ví token** đúng bằng số token vào + ra của lượt gọi.
 - [ ] **G2.5.1.4** Yêu cầu gửi cho mô hình có: quy tắc "chỉ trích xuất những gì có trong văn bản", chỉ dẫn coi văn bản là **dữ liệu không đáng tin** (mệnh lệnh nằm trong văn bản bị bỏ qua), JSON schema nghiêm ngặt; văn bản của giảng viên nằm trong khối được rào, không trộn vào chỉ dẫn.
 - [ ] **G2.5.1.5** Chế độ "chỉ trích xuất": dòng thiếu nghĩa **không được tự bịa**, mà vào `skipped` ("Thiếu nghĩa"). Chế độ "điền phần còn thiếu" (tuỳ chọn, tắt mặc định): AI được điền phiên âm/nghĩa/ví dụ còn trống và phải liệt kê các trường đã điền trong `filled`.
 - [ ] **G2.5.1.6** Lỗi OpenAI → `openai_error`; đầu ra không phải JSON → `json_parse_failed`.
@@ -168,11 +168,11 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 ### Quyết định đã chốt (2026-10-03)
 1. Có **cả hai chế độ**: "chỉ trích xuất" (nghiêm ngặt) và tuỳ chọn "điền phiên âm/nghĩa còn thiếu" tắt mặc định, ô do AI điền được đánh dấu.
 2. Đầu vào P0: **chỉ văn bản dán** (≤ 20.000 ký tự). Ảnh/PDF scan qua vision để P1.
-3. Tính phí **theo tiền lệ** nhập câu hỏi (trần ngày + `AiUsageLog`), không trừ ví token AI.
+3. Tính phí **theo tiền lệ** nhập câu hỏi: trần ngày + `AiUsageLog` **và trừ ví token AI của giảng viên**. *(Sửa 2026-10-03: bản nháp đầu ghi nhầm là "không trừ ví"; tiền lệ thật có trừ.)*
 4. Chỉ **từ vựng**; dán hội thoại thô → các lượt để P1.
 5. Model mặc định `gpt-4o-mini`.
 
-**Trạng thái:** chưa có test/code (làm sau khi G4 được commit, trên nhánh riêng).
+**Trạng thái code (2026-10-03, nhánh `feat/lang-g25-ai-vocab-import`):** G2.5.1–G2.5.4 đã cài và commit, test xanh (web 524 + 3 todo, core-feedback 351, core-lms 1217), typecheck sạch. Không đổi schema nên không có migration. Hàm sinh, route, logic phía máy khách và hai component (`AiVocabImportPanel`, `AiVocabPreview`) nằm ở commit G2.5; việc **nối panel vào bộ soạn từ vựng** (thẻ "Nhập bằng AI") nằm ở commit giao diện bộ soạn đi kèm. **Chưa làm:** chạy với mô hình OpenAI thật (test dùng OpenAI giả nên chưa kiểm được việc mô hình làm đúng chỉ dẫn "chỉ trích xuất / điền phần thiếu / bỏ qua lệnh giả trong văn bản"). Ý tưởng đã hoãn: sinh audio bằng AI (TTS) cho từng dòng/lượt — chủ dự án chọn chưa làm.
 
 ## G3 · Nhãn kỹ năng + hồ sơ 4 kỹ năng (chỉ đọc)
 
