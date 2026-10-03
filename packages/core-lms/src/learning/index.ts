@@ -6,4 +6,5 @@ export * from "./lessons";
 export * from "./engagement";
 export * from "./progress";
 export * from "./notes";
+export * from "./annotations";
 export * from "./forum";

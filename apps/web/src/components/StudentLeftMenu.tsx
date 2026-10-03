@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSidebarNav } from "./useSidebarNav";
 import {
   LayoutDashboard,
   BookOpen,
@@ -89,16 +89,11 @@ export default function StudentLeftMenu({
   continueTo?: { href: string; title: string } | null;
 }) {
   const tokensUnlocked = useAiTokensPageUnlocked();
-  const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { pathname, collapsed, toggle, pendingHref, linkProps } = useSidebarNav(LS_KEY);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) setCollapsed(JSON.parse(raw));
-    } catch {}
-  }, []);
+  // Mục vừa bấm coi như đang active ngay, không đợi URL đổi.
+  const current = pendingHref ?? pathname;
+  const closeDrawer = () => setDrawerOpen(false);
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -110,19 +105,9 @@ export default function StudentLeftMenu({
     return () => window.removeEventListener(STUDENT_MENU_TOGGLE_EVENT, handler);
   }, []);
 
-  const toggle = (id: string) => {
-    setCollapsed((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      try {
-        localStorage.setItem(LS_KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  };
-
   const isActive = (href: string) => {
-    if (href === "/me/dashboard") return pathname === href;
-    return pathname === href || pathname.startsWith(href + "/");
+    if (href === "/me/dashboard") return current === href;
+    return current === href || current.startsWith(href + "/");
   };
 
   const nav = (
@@ -130,6 +115,7 @@ export default function StudentLeftMenu({
       <div className="mb-3 px-4">
         <Link
           href="/me/dashboard"
+          {...linkProps("/me/dashboard", closeDrawer)}
           aria-current={isActive("/me/dashboard") ? "page" : undefined}
           className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
             isActive("/me/dashboard")
@@ -155,6 +141,7 @@ export default function StudentLeftMenu({
         <div className="mb-1 px-4">
           <Link
             href={continueTo.href}
+            {...linkProps(continueTo.href, closeDrawer)}
             className="group/continue flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-emerald-500 px-3 py-2.5 text-white shadow-sm transition-transform hover:scale-[1.02]"
           >
             <PlayCircle size={18} strokeWidth={2.5} className="shrink-0" />
@@ -196,13 +183,14 @@ export default function StudentLeftMenu({
                     <li key={it.label}>
                       <Link
                         href={it.href}
+                        {...linkProps(it.href, closeDrawer)}
+                        aria-current={active ? "page" : undefined}
                         data-tour={it.tourId}
                         className={`group/item relative flex items-center gap-2.5 rounded-lg pl-3 pr-2 py-2 text-sm transition-colors ${
                           active
                             ? "bg-emerald-50 font-semibold text-emerald-700 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-200"
                             : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                         }`}
-                        prefetch={false}
                       >
                         {active && (
                           <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-emerald-500" />

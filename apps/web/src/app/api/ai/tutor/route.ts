@@ -16,7 +16,7 @@ import { requireUserId } from "@/lib/session";
 export const runtime = "nodejs";
 
 /**
- * AI Tutor streaming endpoint. Body: { lessonId, message, conversationId? }.
+ * AI Tutor streaming endpoint. Body: { lessonId, message, conversationId?, quote? }.
  * Returns Server-Sent Events:
  *   event: meta  data: { conversationId }
  *   event: delta data: "<text>"
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   if (!userId) return new Response("unauthorized", { status: 401 });
 
   const body = (await req.json().catch(() => null)) as
-    | { lessonId?: string; message?: string; conversationId?: string }
+    | { lessonId?: string; message?: string; conversationId?: string; quote?: string }
     | null;
   if (!body?.lessonId || !body?.message) {
     return new Response(
@@ -98,6 +98,7 @@ export async function POST(req: Request) {
           conversationId: conversationId!,
           userId,
           userMessage: body.message!,
+          quote: typeof body.quote === "string" ? body.quote : undefined,
           openai,
           onDelta: (delta) => send("delta", delta),
         });

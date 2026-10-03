@@ -966,7 +966,7 @@ body:has(main[data-preview="1"]) footer {
 /* Đồng hồ đếm ngược nằm ở góc trên bên phải màn chiếu, nên dải tiêu đề bài
    phải thu lại nhường chỗ — không thì tên bài chạy thẳng xuống dưới đồng hồ và
    bị che mất nửa sau. Chỉ chừa khi thật sự đang đếm. */
-body[data-stage-timer] main[data-stage="1"] .sticky {
+body[data-stage-timer] main[data-stage="1"] .stage-title {
   /* Đồng hồ rộng khoảng 30rem sau khi nhân đôi cỡ chữ. Chừa rộng hơn một chút
      cho khoảng thở. Dùng min() để trên máy chiếu hẹp thì nó lùi về theo tỉ lệ
      màn hình thay vì ăn hết dòng tiêu đề. */
@@ -1029,4 +1029,25 @@ body[data-stage-timer] main[data-stage="1"] .sticky {
   .animate-drawer-in-left {
     animation: none !important;
   }
+}
+
+/* Annotation theo vùng chọn (LessonAnnotations). CSS Custom Highlight API: tô
+   nền lên Range mà không chèn node vào DOM của bài. Ba màu để nhìn là biết ai
+   viết: vàng = của mình (riêng tư), xanh lá = của mình đã chia sẻ, xanh dương =
+   của người khác. "active" đè lên khi đang mở cuộc trao đổi. Không dùng màu chữ:
+   ::highlight chỉ nhận một nhóm thuộc tính hẹp, và đổi màu chữ dễ làm tụt tương
+   phản trong dark mode. */
+::highlight(annot-private) {
+  background-color: rgb(250 204 21 / 0.35);
+}
+::highlight(annot-shared) {
+  background-color: rgb(52 211 153 / 0.3);
+}
+::highlight(annot-others) {
+  background-color: rgb(96 165 250 / 0.3);
+}
+::highlight(annot-active) {
+  background-color: rgb(var(--brand) / 0.35);
+  text-decoration: underline;
+  text-decoration-color: rgb(var(--brand));
 }

@@ -121,25 +121,11 @@ const STATUS_DOT: Record<Enrollment["status"], string> = {
 
 export default function EnrollmentList({ courseId }: { courseId: string }) {
   const [wrapEl, setWrapEl] = useState<HTMLDivElement | null>(null);
-  // Cột "Đăng ký" ẩn dưới 640px, "Hoạt động gần nhất" ẩn dưới 768px như trước.
-  const showEnrolled = useMediaMin(640);
-  const showActivity = useMediaMin(768);
-  const visibleCols: ColumnId[] = [
-    "name",
-    "section",
-    "status",
-    ...(showEnrolled ? (["enrolledAt"] as const) : []),
-    ...(showActivity ? (["lastActivityAt"] as const) : []),
-    "actions",
-  ];
-  const { widths, startResize, reset: resetWidth, isManual } = useColumnWidths(wrapEl, visibleCols);
-  const tableWidth =
-    widths.name +
-    widths.section +
-    widths.status +
-    widths.actions +
-    (showEnrolled ? widths.enrolledAt : 0) +
-    (showActivity ? widths.lastActivityAt : 0);
+  // Luôn hiện đủ mọi cột, kể cả trên mobile: màn hình hẹp thì bảng rộng hơn khung
+  // và cuộn ngang (độ rộng mỗi cột có mức tối thiểu, xem COLUMNS).
+  const visibleCols: ColumnId[] = COLUMNS.map((c) => c.id);
+  const { widths, startResize, reset: resetWidth } = useColumnWidths(wrapEl, visibleCols);
+  const tableWidth = visibleCols.reduce((sum, id) => sum + widths[id], 0);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -373,20 +359,20 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
           <div ref={setWrapEl} className="overflow-x-auto">
           <table
             className="text-sm"
-            // Tự co: luôn 100% khung (không để bảng tự phình làm sai phép đo bề rộng
-            // khung). Thủ công: đúng tổng độ rộng người dùng đã kéo.
+            // Tự co: vừa khung khi đủ chỗ; khung hẹp (mobile) thì rộng bằng tổng các
+            // cột ở mức tối thiểu và cuộn ngang. Thủ công: đúng tổng độ rộng đã kéo.
             style={{
               tableLayout: "fixed",
-              width: isManual ? tableWidth : "100%",
-              minWidth: isManual ? "100%" : undefined,
+              width: tableWidth,
+              minWidth: "100%",
             }}
           >
             <colgroup>
               <col style={{ width: widths.name }} />
               <col style={{ width: widths.section }} />
               <col style={{ width: widths.status }} />
-              {showEnrolled && <col style={{ width: widths.enrolledAt }} />}
-              {showActivity && <col style={{ width: widths.lastActivityAt }} />}
+              <col style={{ width: widths.enrolledAt }} />
+              <col style={{ width: widths.lastActivityAt }} />
               <col style={{ width: widths.actions }} />
             </colgroup>
             <thead className="bg-[rgb(var(--surface-muted))/0.5] text-left text-xs font-semibold uppercase tracking-wide text-muted">
@@ -415,26 +401,22 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                   onSort={toggleSort}
                   handle={<ResizeHandle id="status" onStart={startResize} onReset={resetWidth} />}
                 />
-                {showEnrolled && (
-                  <SortableHeader
-                    label="Đăng ký"
-                    sortKey="enrolledAt"
-                    current={sortKey}
-                    dir={sortDir}
-                    onSort={toggleSort}
-                    handle={<ResizeHandle id="enrolledAt" onStart={startResize} onReset={resetWidth} />}
-                  />
-                )}
-                {showActivity && (
-                  <SortableHeader
-                    label="Hoạt động gần nhất"
-                    sortKey="lastActivityAt"
-                    current={sortKey}
-                    dir={sortDir}
-                    onSort={toggleSort}
-                    handle={<ResizeHandle id="lastActivityAt" onStart={startResize} onReset={resetWidth} />}
-                  />
-                )}
+                <SortableHeader
+                  label="Đăng ký"
+                  sortKey="enrolledAt"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                  handle={<ResizeHandle id="enrolledAt" onStart={startResize} onReset={resetWidth} />}
+                />
+                <SortableHeader
+                  label="Hoạt động gần nhất"
+                  sortKey="lastActivityAt"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                  handle={<ResizeHandle id="lastActivityAt" onStart={startResize} onReset={resetWidth} />}
+                />
                 <th className="relative px-4 py-2 text-right">
                   Hành động
                   <ResizeHandle id="actions" onStart={startResize} onReset={resetWidth} />
@@ -482,12 +464,9 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                       {STATUS_LABEL[e.status]}
                     </span>
                   </td>
-                  {showEnrolled && (
                   <td className="overflow-hidden px-4 py-2.5 text-xs text-muted">
                     {formatDate(e.enrolledAt)}
                   </td>
-                  )}
-                  {showActivity && (
                   <td className="overflow-hidden px-4 py-2.5 text-xs text-muted">
                     {e.lastActivityAt ? (
                       <DateTime value={e.lastActivityAt} format="relative" />
@@ -495,7 +474,6 @@ export default function EnrollmentList({ courseId }: { courseId: string }) {
                       <span className="text-faint">chưa có hoạt động</span>
                     )}
                   </td>
-                  )}
                   <td className="px-4 py-2.5 text-right">
                     <EnrollmentActionsMenu
                       enrollment={e}
@@ -536,18 +514,6 @@ const COL_STORAGE_KEY = "fbm.enrollmentTable.colWidths";
 
 function defaultWidths(): Record<ColumnId, number> {
   return Object.fromEntries(COLUMNS.map((c) => [c.id, c.w])) as Record<ColumnId, number>;
-}
-
-function useMediaMin(px: number): boolean {
-  const [ok, setOk] = useState(true);
-  useEffect(() => {
-    const mq = window.matchMedia(`(min-width: ${px}px)`);
-    const on = () => setOk(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, [px]);
-  return ok;
 }
 
 /**
