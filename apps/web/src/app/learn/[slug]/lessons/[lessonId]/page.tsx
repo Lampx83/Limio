@@ -710,11 +710,19 @@ export default async function LessonPage({
             <p className="h-display text-2xl font-bold leading-tight">{lesson.title}</p>
           </div>
         )}
+        {/* Bọc ngoài để lề annotation (absolute, bên phải) nằm NGOÀI #lesson-content: LessonAnnotations
+            quan sát DOM của #lesson-content, nên dấu ở lề đặt trong đó sẽ tự kích hoạt vòng vẽ lại. */}
+        <div className="relative">
         <div id="lesson-content">
         <LessonContent
           items={visibleItems}
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
+        />
+        </div>
+        <div
+          id="lesson-annotation-gutter"
+          className="pointer-events-none absolute bottom-0 right-0 top-0 hidden w-14 lg:block xl:w-44"
         />
         </div>
         </div>
