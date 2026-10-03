@@ -177,9 +177,8 @@ export default async function InstructorDashboard({
             + Tạo khoá đầu tiên
           </Link>
         </div>
-        <div className="mt-6 max-w-xl">
-          <CalendarLoader userId={userId} audience="instructor" />
-        </div>
+        {/* Chưa có khoá thì lịch không có gì để hiện (nó chỉ liệt kê hạn nộp của các khoá mình dạy) —
+            đặt ở đây chỉ là một thẻ lạc chỗ dưới nút "Tạo khoá đầu tiên". Có khoá rồi mới hiện lịch. */}
         {shouldShowTour && (
           <HelpTour
             steps={INSTRUCTOR_TOUR_STEPS}
