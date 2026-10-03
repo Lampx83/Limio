@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 const KIND_LABEL: Record<string, string> = {
   lesson_video: "Video bài giảng",
+  lesson_audio: "Âm thanh bài giảng",
   lesson_image: "Ảnh bài giảng",
   lesson_pdf: "PDF bài giảng",
   lesson_html: "HTML bài giảng",

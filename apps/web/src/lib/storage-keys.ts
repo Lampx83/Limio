@@ -6,6 +6,7 @@
  *     avatars/{userId}/{hex}.{ext}
  *     lesson-media/images/{yyyy}/{mm}/{filename}
  *     lesson-media/videos/{yyyy}/{mm}/{filename}
+ *     lesson-media/audio/{yyyy}/{mm}/{filename}
  *     lesson-media/pdfs/{yyyy}/{mm}/{filename}
  *     lesson-media/html/{yyyy}/{mm}/{filename}
  *     exam-assets/{yyyy}/{mm}/{filename}
@@ -83,6 +84,7 @@ export function platformSignatureKey(filename: string): StorageKey {
 type DateShardedKind =
   | "lesson-media/images"
   | "lesson-media/videos"
+  | "lesson-media/audio"
   | "lesson-media/pdfs"
   | "lesson-media/html"
   | "lesson-media/transcripts"
@@ -110,6 +112,9 @@ export function lessonImageKey(date: Date, filename: string): StorageKey {
 }
 export function lessonVideoKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/videos", date, filename);
+}
+export function lessonAudioKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "lesson-media/audio", date, filename);
 }
 export function lessonPdfKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/pdfs", date, filename);
@@ -182,6 +187,9 @@ export function lessonImageKeyFromFilename(filename: string): StorageKey | null 
 }
 export function lessonVideoKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/videos", filename);
+}
+export function lessonAudioKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "lesson-media/audio", filename);
 }
 export function lessonPdfKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/pdfs", filename);

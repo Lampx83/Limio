@@ -12,6 +12,7 @@ import {
   FileText,
   FileType,
   Globe,
+  Headphones,
   LayoutTemplate,
   Link2,
   NotebookPen,
@@ -63,6 +64,8 @@ function summarize(type: string, payload: unknown): string {
       return `${String(p.title ?? "PDF")} — ${String(p.url ?? "")}`;
     case "html_block":
       return `${String(p.title ?? "HTML")} — ${String(p.url ?? "")}`;
+    case "audio":
+      return `${String(p.title ?? "Audio")} — ${String(p.url ?? "")}`;
     case "scorm":
       return `${String(p.title ?? "SCORM")} — packageId=${String(p.packageId ?? "")}`;
     case "lti":
@@ -87,6 +90,7 @@ export const ICON: Record<string, typeof Video> = {
   lti: Puzzle,
   h5p: Blocks,
   html_block: Globe,
+  audio: Headphones,
 };
 
 // Mỗi loại content 1 màu riêng để quét mắt nhanh giữa danh sách nhiều loại
@@ -105,6 +109,7 @@ export const TYPE_COLOR: Record<string, string> = {
   lti: "bg-fuchsia-100 text-fuchsia-700",
   h5p: "bg-emerald-100 text-emerald-700",
   html_block: "bg-rose-100 text-rose-700",
+  audio: "bg-sky-100 text-sky-700",
 };
 export const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
 

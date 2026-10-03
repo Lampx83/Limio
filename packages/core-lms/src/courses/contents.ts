@@ -6,7 +6,7 @@ import { CourseError } from "./courses";
 import { validateContentPayload, type ContentTypeKey } from "./contentSchemas";
 import { attachLessonActivity } from "./lessonActivity";
 
-const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p", "html_block"]);
+const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p", "html_block", "audio"]);
 
 export const CreateContentInput = z.object({
   type: TypeEnum,

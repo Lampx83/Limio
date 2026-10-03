@@ -111,6 +111,34 @@ export const HtmlBlockPayload = z.object({
   heightPx: z.number().int().positive().max(4000).optional(),
 });
 
+/**
+ * LANG G1 — bài nghe.
+ *
+ * `url` chặt hơn UrlOrPath: chỉ đường dẫn cùng-origin (file tự upload qua
+ * /api/lesson-media/audio) hoặc https. Audio http trên trang https bị trình duyệt
+ * chặn (mixed content) nên nhận vào chỉ là nhận một bài nghe sẽ im lặng. Đường
+ * dẫn bắt đầu bằng `//` hay `/\` là protocol-relative — trỏ sang host khác dù
+ * trông như đường dẫn nội bộ — nên bị loại.
+ */
+export const AudioUrl = z.string().refine(
+  (v) => (v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/\\")) || /^https:\/\//i.test(v),
+  { message: "must be an https URL or a same-origin path starting with a single /" },
+);
+
+export const AudioPayload = z.object({
+  url: AudioUrl,
+  title: z.string().max(200).optional(),
+  caption: z.string().max(600).optional(),
+  /** Văn bản thuần (không HTML). Hiển thị trong khối gấp lại được. */
+  transcript: z.string().max(20_000).optional(),
+  /**
+   * false = không gửi lời thoại cho học viên (bài nghe-hiểu: lời thoại là đáp án).
+   * Mặc định hiện. Phía hiển thị phải bỏ hẳn nội dung, không chỉ ẩn bằng CSS.
+   */
+  showTranscript: z.boolean().optional(),
+  durationSec: z.number().int().positive().optional(),
+});
+
 export const ScormPayload = z.object({
   packageId: z.string().uuid(),
   title: z.string().max(200).optional(),
@@ -155,6 +183,7 @@ const PAYLOAD_BY_TYPE = {
   h5p: H5pPayload,
   teacher_note: TeacherNotePayload,
   html_block: HtmlBlockPayload,
+  audio: AudioPayload,
 } as const;
 
 export type ContentTypeKey = keyof typeof PAYLOAD_BY_TYPE;

@@ -21,6 +21,7 @@ import type { StoredFileKind } from "./ledger";
 
 export const SWEEPABLE_KINDS: StoredFileKind[] = [
   "lesson_video",
+  "lesson_audio",
   "lesson_image",
   "lesson_pdf",
   "lesson_html",
