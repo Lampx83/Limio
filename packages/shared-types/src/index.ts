@@ -6,3 +6,4 @@ export * from "./lessonFormatTemplate";
 export * from "./mastery";
 export * from "./academicTerm";
 export * from "./languageSkills";
+export * from "./flashcards";

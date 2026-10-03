@@ -5,10 +5,17 @@ import {
   type LanguageSkill,
   type MasteryLabel,
 } from "@feedbackme/shared-types";
-import type { LanguageProfile, LanguageProfileReason, LanguageSuggestion } from "@feedbackme/core-feedback";
+import type {
+  FlashcardStats,
+  LanguageProfile,
+  LanguageProfileReason,
+  LanguageSuggestion,
+} from "@feedbackme/core-feedback";
 import StatusBadge, { type StatusTone } from "@/components/ui/StatusBadge";
 import StickyMobileCTA from "@/components/ui/StickyMobileCTA";
 import EmptyState from "@/components/ui/EmptyState";
+import FlashcardStatsBlock from "@/components/FlashcardStatsBlock";
+import { reviewableToday } from "@/lib/flashcardSession";
 import {
   RADAR_CENTER,
   RADAR_RADIUS,
@@ -109,7 +116,16 @@ function Radar({ skills }: { skills: LanguageProfile["skills"] }) {
   );
 }
 
-export default function LanguageProfileView({ slug, profile }: { slug: string; profile: LanguageProfile }) {
+export default function LanguageProfileView({
+  slug,
+  profile,
+  flashcards,
+}: {
+  slug: string;
+  profile: LanguageProfile;
+  /** Thống kê flashcard (G4); thiếu hoặc khoá không có thẻ thì không hiện khối Từ vựng. */
+  flashcards?: FlashcardStats;
+}) {
   if (!profile.enabled) {
     return (
       <EmptyState
@@ -131,6 +147,10 @@ export default function LanguageProfileView({ slug, profile }: { slug: string; p
 
   const s = profile.suggestion;
   const href = s ? `/learn/${slug}/lessons/${s.lessonId}` : null;
+  const cardsToReview = flashcards ? reviewableToday(flashcards) : 0;
+  const cardsHref = `/learn/${slug}/flashcards`;
+  const showToday = !!(s && href) || cardsToReview > 0;
+  const ctaHref = href ?? (cardsToReview > 0 ? cardsHref : null);
 
   return (
     <div className="space-y-6 pb-24 lg:pb-0">
@@ -143,17 +163,32 @@ export default function LanguageProfileView({ slug, profile }: { slug: string; p
           </div>
         </section>
 
-        {s && href && (
+        {showToday && (
           <section className="rounded-xl border-2 border-brand-200 bg-[rgb(var(--surface))] p-4" aria-labelledby="lp-today">
             <h2 id="lp-today" className="text-h4">Luyện hôm nay</h2>
-            <p className="mt-2 text-body font-medium">{s.lessonTitle}</p>
-            <p className="text-meta mt-1">{reasonText(s)}</p>
-            <Link href={href} className="btn-primary mt-4 hidden lg:inline-flex">
-              Bắt đầu luyện
-            </Link>
+            {s && href && (
+              <>
+                <p className="mt-2 text-body font-medium">{s.lessonTitle}</p>
+                <p className="text-meta mt-1">{reasonText(s)}</p>
+                <Link href={href} className="btn-primary mt-4 hidden lg:inline-flex">
+                  Bắt đầu luyện
+                </Link>
+              </>
+            )}
+            {cardsToReview > 0 && (
+              <div className={s ? "mt-4 border-t border-token pt-4" : "mt-2"}>
+                <p className="text-body font-medium">{`Ôn ${cardsToReview} thẻ từ vựng`}</p>
+                <p className="text-meta mt-1">Giữ những từ đã học khỏi quên.</p>
+                <Link href={cardsHref} className="btn-secondary mt-3 hidden lg:inline-flex">
+                  Ôn thẻ
+                </Link>
+              </div>
+            )}
           </section>
         )}
       </div>
+
+      {flashcards && <FlashcardStatsBlock slug={slug} stats={flashcards} />}
 
       <ul className="grid gap-3 sm:grid-cols-2">
         {profile.skills.map((r) => {
@@ -180,12 +215,12 @@ export default function LanguageProfileView({ slug, profile }: { slug: string; p
         })}
       </ul>
 
-      {s && href && (
+      {ctaHref && (
         <StickyMobileCTA
           primary="Luyện hôm nay"
-          secondary={s.lessonTitle}
+          secondary={s ? s.lessonTitle : `Ôn ${cardsToReview} thẻ từ vựng`}
           action={
-            <Link href={href} className="btn-primary">
+            <Link href={ctaHref} className="btn-primary">
               Bắt đầu
             </Link>
           }
