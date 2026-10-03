@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -8,7 +9,9 @@ import EnrollButton, { type AccessPlanOption } from "@/components/EnrollButton";
 import EnrollNudgeAction from "@/components/EnrollNudgeAction";
 import SafeHtml from "@/components/SafeHtml";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
-import { plainToRichHtml } from "@/lib/richText";
+import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
+import JsonLd from "@/components/JsonLd";
+import { SITE_NAME, breadcrumbJsonLd, courseJsonLd, pageMetadata } from "@/lib/seo";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { StickyMobileCTA } from "@/components/ui";
@@ -21,6 +24,48 @@ const LEVEL_LABEL: Record<string, string> = {
   intermediate: "Trung cấp",
   advanced: "Nâng cao",
 };
+
+/**
+ * Đây là trang đích cho truy vấn kiểu "khoá học <chủ đề>" nên phải tự khai
+ * title/description/canonical — không thì nó thừa hưởng title chung của site và
+ * mọi khoá học trông giống hệt nhau trên SERP và khi dán link vào Zalo/Facebook.
+ *
+ * Chỉ khoá đã publish mới được index: bản nháp chỉ chủ khoá xem được, còn với
+ * khách `getCourseDetail` trả 404 — query nhẹ ở đây không include modules vì
+ * `generateMetadata` chạy thêm một lần nữa ngoài page.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const course = await prisma.course.findUnique({
+    where: { slug: params.slug },
+    select: {
+      title: true,
+      description: true,
+      category: true,
+      language: true,
+      coverUrl: true,
+      status: true,
+      publishedAt: true,
+      updatedAt: true,
+    },
+  });
+  if (!course) return { title: "Không tìm thấy khoá học", robots: { index: false } };
+
+  return pageMetadata({
+    title: course.title,
+    description:
+      htmlToPlainText(course.description ?? "") ||
+      `Khoá học ${course.title}${course.category ? ` — ${course.category}` : ""} trên ${SITE_NAME}.`,
+    path: `/catalog/${params.slug}`,
+    image: course.coverUrl,
+    type: "website",
+    locale: course.language === "en" ? "en_US" : undefined,
+    noIndex: course.status !== "published",
+  });
+}
 
 export default async function CourseDetailPage({
   params,
@@ -93,6 +138,34 @@ export default async function CourseDetailPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
+      {/* Bản nháp (chủ khoá xem trước) không khai schema: không có gì để lên SERP. */}
+      {course.status === "published" && (
+        <JsonLd
+          data={[
+            breadcrumbJsonLd([
+              { name: "Trang chủ", path: "/" },
+              { name: "Khoá học", path: "/catalog" },
+              { name: course.title, path: `/catalog/${params.slug}` },
+            ]),
+            courseJsonLd({
+              slug: params.slug,
+              title: course.title,
+              description:
+                htmlToPlainText(course.description ?? "") || `Khoá học ${course.title} trên ${SITE_NAME}.`,
+              language: course.language,
+              level: course.level,
+              category: course.category,
+              coverUrl: course.coverUrl,
+              priceCents: cheapestPlan?.priceCents ?? course.priceCents,
+              currency: cheapestPlan?.currency ?? course.currency,
+              publishedAt: course.publishedAt,
+              paymentEnabled,
+              instructors: leadInstructors.map((i) => i.user.displayName),
+              modules: course.modules.map((m) => m.title),
+            }),
+          ]}
+        />
+      )}
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
         ← Catalog
       </Link>

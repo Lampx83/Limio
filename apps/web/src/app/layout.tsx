@@ -16,7 +16,7 @@ import {
   SITE_DESCRIPTION,
   SITE_LOCALE,
   SITE_NAME,
-  SITE_TAGLINE,
+  SITE_TITLE,
   SITE_URL,
   absoluteUrl,
 } from "@/lib/seo";
@@ -46,12 +46,20 @@ export const metadata: Metadata = {
   // không render được thumbnail khi ai đó chia sẻ link khoá học.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    default: SITE_TITLE,
     // Trang con chỉ cần khai tên riêng; hậu tố thương hiệu tự gắn vào.
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  // Mã xác minh Search Console (thẻ HTML) — đọc lúc chạy, đặt trong `.env.prod`
+  // của từng máy vì mỗi domain là một property riêng. Không đặt thì không xuất thẻ.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+      : undefined,
+  },
   keywords: [
     "Limio",
     "LMS",
@@ -70,13 +78,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     locale: SITE_LOCALE,
     url: absoluteUrl("/"),
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE), width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     images: [absoluteUrl(DEFAULT_OG_IMAGE)],
   },

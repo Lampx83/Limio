@@ -57,11 +57,6 @@ const getSitemapRows = unstable_cache(
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  const staticRoutes: MetadataRoute.Sitemap = [
-    { url: absoluteUrl("/"), lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: absoluteUrl("/catalog"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
-  ];
-
   let courses: Awaited<ReturnType<typeof getSitemapRows>>["courses"] = [];
   let publicLessons: Awaited<ReturnType<typeof getSitemapRows>>["publicLessons"] = [];
   try {
@@ -71,6 +66,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // dấu sitemap lỗi và ngừng đọc, mất luôn cả những URL vẫn còn tốt.
     console.error("[sitemap] không đọc được URL từ DB:", err);
   }
+
+  // `lastModified: now` cho mọi trang tĩnh = nói với Google "trang nào cũng vừa
+  // đổi" ở mỗi lần crawl; sau vài lần nó học được rằng trường này nói dối và bỏ
+  // qua luôn. Trang catalog thật sự đổi khi có khoá học đổi → lấy mốc đó.
+  // `unstable_cache` làm Date thành chuỗi nên ép lại.
+  const latestCourseChange = courses.reduce<Date | undefined>((latest, c) => {
+    const d = c.updatedAt ?? c.publishedAt;
+    if (!d) return latest;
+    const t = new Date(d);
+    return !latest || t > latest ? t : latest;
+  }, undefined);
+
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: absoluteUrl("/"), lastModified: latestCourseChange ?? now, changeFrequency: "weekly", priority: 1 },
+    { url: absoluteUrl("/catalog"), lastModified: latestCourseChange ?? now, changeFrequency: "daily", priority: 0.9 },
+    // Trang giới thiệu hệ thống (file tĩnh trong public/gioi-thieu).
+    { url: absoluteUrl("/gioi-thieu"), changeFrequency: "monthly", priority: 0.7 },
+    { url: absoluteUrl("/xp-guide"), changeFrequency: "monthly", priority: 0.4 },
+  ];
 
   const courseRoutes: MetadataRoute.Sitemap = courses.map((c) => ({
     url: absoluteUrl(`/catalog/${c.slug}`),
