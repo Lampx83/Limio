@@ -10,3 +10,4 @@ export * from "./aiTutor/index";
 export * from "./oralExam/index";
 export * from "./uptake";
 export * from "./learningPath";
+export * from "./languageProfile";

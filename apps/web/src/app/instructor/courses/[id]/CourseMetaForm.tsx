@@ -7,6 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 import { toast } from "@/lib/toast";
+import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { BarChart3, Languages, Tag, Wallet, PencilLine, Sparkles, BookOpen, type LucideIcon } from "lucide-react";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
@@ -22,6 +23,7 @@ interface Initial {
   priceCents: number | null;
   currency: string;
   personalizationEnabled: boolean;
+  languageMode: boolean;
   publicAccess: boolean;
   enrollMode: "open" | "invite_only";
 }
@@ -77,6 +79,7 @@ export default function CourseMetaForm({
   const [personalizationEnabled, setPersonalizationEnabled] = useState(
     initial.personalizationEnabled,
   );
+  const [languageMode, setLanguageMode] = useState(initial.languageMode);
   const [publicAccess, setPublicAccess] = useState(initial.publicAccess);
   const [enrollMode, setEnrollMode] = useState(initial.enrollMode);
   const [busy, setBusy] = useState(false);
@@ -99,7 +102,9 @@ export default function CourseMetaForm({
       [Languages, "Ngôn ngữ", initial.language === "vi" ? "Tiếng Việt" : "English", "sky"],
       ...(initial.category ? ([[Tag, "Category", initial.category, "violet"]] as Array<[LucideIcon, string, string, string]>) : []),
       [Wallet, "Giá", priceDisplay, "lime"],
-      initial.personalizationEnabled
+      initial.languageMode
+        ? [Languages, "Chế độ", "Ngoại ngữ (4 kỹ năng)", "pink"]
+        : initial.personalizationEnabled
         ? [Sparkles, "Chế độ", "AI Feedback", "pink"]
         : [BookOpen, "Chế độ", "LMS thường", "slate"],
     ];
@@ -183,6 +188,7 @@ export default function CourseMetaForm({
         priceCents: parsedPrice,
         currency,
         personalizationEnabled,
+        languageMode,
         publicAccess,
         enrollMode,
       }),
@@ -196,7 +202,10 @@ export default function CourseMetaForm({
     } else {
       const data = await res.json().catch(() => ({}));
       toast.error("Lưu thất bại", {
-        description: data.error ?? "Vui lòng thử lại.",
+        description:
+          data.error === "language_mode_requires_personalization"
+            ? lmsErrorMessage(data.error, res.status)
+            : (data.error ?? "Vui lòng thử lại."),
       });
     }
   }
@@ -265,17 +274,42 @@ export default function CourseMetaForm({
           <input
             type="checkbox"
             checked={personalizationEnabled}
+            disabled={languageMode}
             onChange={(e) => setPersonalizationEnabled(e.target.checked)}
             className="mt-1 h-4 w-4 shrink-0"
           />
           <div className="min-w-0">
             <span className="font-medium">Cá nhân hoá học tập</span>
+            {languageMode && (
+              <span className="mt-0.5 block text-xs text-muted">
+                Đang bị khoá vì Chế độ ngoại ngữ đang bật — tắt Chế độ ngoại ngữ trước nếu muốn tắt mục này.
+              </span>
+            )}
             <p className="mt-1 text-xs text-muted">
               Bật: hệ thống tự coi mỗi bài học là một chủ đề để theo dõi mức
               thành thạo của từng học viên, rồi gợi ý ôn tập và lộ trình riêng —
               bạn không cần gắn chủ đề thủ công. Các bài học hiện có cũng được
               tự gắn chủ đề.
               Tắt: khoá học chạy như LMS thông thường.
+            </p>
+          </div>
+        </label>
+      </div>
+      <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+        <label className={`flex items-start gap-3 ${personalizationEnabled ? "cursor-pointer" : "opacity-60"}`}>
+          <input
+            type="checkbox"
+            checked={languageMode}
+            disabled={!personalizationEnabled}
+            onChange={(e) => setLanguageMode(e.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0"
+          />
+          <div className="min-w-0">
+            <span className="font-medium">Chế độ ngoại ngữ</span>
+            <p className="mt-1 text-xs text-muted">
+              Bật: học viên có trang Hồ sơ 4 kỹ năng (nghe, nói, đọc, viết), và form sửa bài có ô chọn kỹ năng của bài.
+              Học viên chỉ thấy nhãn mức độ, không thấy phần trăm.
+              {!personalizationEnabled && " Cần bật Cá nhân hoá học tập trước."}
             </p>
           </div>
         </label>

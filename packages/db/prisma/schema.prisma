@@ -427,6 +427,10 @@ model Course {
   /// đang có giữ nguyên hành vi sau khi migrate.
   enrollMode             EnrollMode   @default(open)
   personalizationEnabled Boolean      @default(false)
+  /// LANG G3 — chế độ ngoại ngữ: bật trang "Hồ sơ 4 kỹ năng" và ô chọn kỹ năng ở
+  /// form sửa bài. Bất biến (ép ở core-lms/courses.ts): languageMode ⇒
+  /// personalizationEnabled, vì nhãn kỹ năng chỉ đi vào Skill khi cá nhân hoá bật.
+  languageMode           Boolean      @default(false)
   // Public access: when true, anyone — including logged-out visitors — may read the
   // course's lessons (content + video) without enrolling, in the same read-only
   // preview mode a non-enrolled learner gets. Account-only features (progress,
@@ -553,6 +557,9 @@ model Lesson {
   /// B14 — xem giải thích ở Module.isLocked. Bài nằm trong module đã khoá thì
   /// coi như khoá theo, không cần bật cờ này.
   isLocked               Boolean  @default(false)
+  /// LANG G3 — kỹ năng chính của bài (nghe/nói/đọc/viết); null = không gán. Nguồn
+  /// do giảng viên đặt; autoTags sao sang Skill tự sinh của bài.
+  languageSkill          LanguageSkill?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
@@ -573,6 +580,15 @@ model Lesson {
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
+}
+
+/// LANG G3 — bốn kỹ năng ngôn ngữ. Khớp LANGUAGE_SKILLS trong
+/// packages/shared-types/src/languageSkills.ts (đổi một bên phải đổi cả hai).
+enum LanguageSkill {
+  listening
+  speaking
+  reading
+  writing
 }
 
 enum ContentType {
@@ -1086,6 +1102,10 @@ model Skill {
   code        String   @unique // e.g. "linear_regression.basics"
   name        String
   description String?  @db.Text
+  /// LANG G3 — bản sao của Lesson.languageSkill cho Skill tự sinh (`lesson.<id>`).
+  /// Hồ sơ 4 kỹ năng gộp LearnerSkillState theo cột này (một join, không đi vòng
+  /// qua bài), và đề thi dùng chung Skill nên vào cùng chiều mà không cần gì thêm.
+  languageSkill LanguageSkill?
   createdAt   DateTime @default(now())
 
   prerequisites     SkillPrerequisite[]    @relation("SkillToPrerequisite")

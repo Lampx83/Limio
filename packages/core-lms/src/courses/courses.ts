@@ -26,6 +26,7 @@ export const CreateCourseInput = z.object({
   category: z.string().max(80).optional(),
   coverUrl: z.string().url().max(500).optional(),
   personalizationEnabled: z.boolean().optional(),
+  languageMode: z.boolean().optional(),
   enrollMode: z.enum(["open", "invite_only"]).optional(),
 });
 
@@ -39,6 +40,7 @@ export const UpdateCourseInput = z.object({
   priceCents: z.number().int().min(0).optional().nullable(),
   currency: z.enum(["VND", "USD"]).optional(),
   personalizationEnabled: z.boolean().optional(),
+  languageMode: z.boolean().optional(),
   publicAccess: z.boolean().optional(),
   enrollMode: z.enum(["open", "invite_only"]).optional(),
 });
@@ -48,6 +50,7 @@ export const UpdateCourseInput = z.object({
 // answerable after the fact.
 const AUDITED_FLAGS = {
   personalizationEnabled: "course.personalization.toggled",
+  languageMode: "course.language_mode.toggled",
   publicAccess: "course.public_access.toggled",
 } as const;
 type AuditedFlag = keyof typeof AUDITED_FLAGS;
@@ -69,7 +72,8 @@ export class CourseError extends Error {
       | "section_not_found"
       | "section_name_taken"
       | "section_has_enrollments"
-      | "researcher_only",
+      | "researcher_only"
+      | "language_mode_requires_personalization",
     public readonly details?: unknown,
   ) {
     super(code);
@@ -99,6 +103,12 @@ export async function createCourse(
 
   const slug = await uniqueCourseSlug(parsed.data.slug ?? parsed.data.title, db);
 
+  // LANG G3 — bất biến languageMode ⇒ personalizationEnabled (xem updateCourse).
+  const personalizationEnabled = parsed.data.personalizationEnabled ?? true;
+  if (parsed.data.languageMode && !personalizationEnabled) {
+    throw new CourseError("language_mode_requires_personalization");
+  }
+
   return db.$transaction(async (tx) => {
     const course = await tx.course.create({
       data: {
@@ -109,7 +119,8 @@ export async function createCourse(
         level: parsed.data.level ?? "beginner",
         category: parsed.data.category ?? null,
         coverUrl: parsed.data.coverUrl ?? null,
-        personalizationEnabled: parsed.data.personalizationEnabled ?? true,
+        personalizationEnabled,
+        languageMode: parsed.data.languageMode ?? false,
         enrollMode: parsed.data.enrollMode ?? "open",
         status: "draft",
         version: 1,
@@ -151,8 +162,18 @@ export async function updateCourse(
   if (touched.length > 0) {
     const cur = await db.course.findUniqueOrThrow({
       where: { id: courseId },
-      select: { personalizationEnabled: true, publicAccess: true },
+      select: { personalizationEnabled: true, languageMode: true, publicAccess: true },
     });
+    // LANG G3 — chế độ ngoại ngữ cần cá nhân hoá: nhãn kỹ năng chỉ đi vào Skill khi
+    // cá nhân hoá bật, nên hồ sơ 4 kỹ năng không có dữ liệu để gộp nếu thiếu nó. Ép ở
+    // đây (không chỉ ở form) để không đường nào khác tạo ra tổ hợp đó, theo cả hai
+    // chiều: bật chế độ ngoại ngữ khi cá nhân hoá tắt, hoặc tắt cá nhân hoá khi đang
+    // ở chế độ ngoại ngữ.
+    const nextPersonalization = (data.personalizationEnabled as boolean | undefined) ?? cur.personalizationEnabled;
+    const nextLanguageMode = (data.languageMode as boolean | undefined) ?? cur.languageMode;
+    if (nextLanguageMode && !nextPersonalization) {
+      throw new CourseError("language_mode_requires_personalization");
+    }
     for (const flag of touched) {
       const to = data[flag] as boolean;
       // Only a real flip is audited — re-saving the form unchanged is not an event.
