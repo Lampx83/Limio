@@ -73,6 +73,7 @@ model User {
   userBadges                     UserBadge[]
   streakRecords                  StreakRecord[]
   skillStates                    LearnerSkillState[]
+  flashcardStates                FlashcardState[]
   misconceptionFlags             MisconceptionFlag[]
   feedbackDeliveries             FeedbackDelivery[]
   assignmentSubmissions          AssignmentSubmission[]    @relation("Submitter")
@@ -463,6 +464,7 @@ model Course {
   exams                 Exam[]
   questionBanks         QuestionBank[]
   sections              CourseSection[]
+  flashcardStates       FlashcardState[]
   cohortExamClasses     CohortExamClass[]
   examRounds            ExamRound[]
   accessCodes           CourseAccessCode[]
@@ -596,6 +598,15 @@ enum LanguageSkill {
   writing
 }
 
+/// LANG G4 — mức tự đánh giá sau khi lật thẻ. Khớp FLASHCARD_RATINGS trong
+/// packages/shared-types/src/flashcards.ts.
+enum FlashcardRating {
+  again
+  hard
+  good
+  easy
+}
+
 enum ContentType {
   video
   markdown
@@ -627,6 +638,42 @@ enum ContentType {
   dialogue
 }
 
+/// LANG G4 — lịch ôn flashcard của MỘT học viên cho MỘT dòng từ vựng. Chỉ có dòng
+/// sau lần ôn đầu tiên: thẻ chưa ôn không có hàng nào (= "Mới"), nên bảng không
+/// phình theo cỡ bộ từ vựng. Đây là trạng thái dẫn xuất, dựng lại được từ event
+/// `flashcard.reviewed`; không dính vào LearnerSkillState (flashcard là tự đánh giá
+/// việc ghi nhớ, không phải bằng chứng khách quan về kỹ năng).
+model FlashcardState {
+  id             String          @id @default(uuid())
+  userId         String
+  courseId       String
+  contentItemId  String
+  /// `id` ổn định của dòng trong payload của khối vocab_list (G2). Không có FK vì
+  /// dòng nằm trong JSON; dòng bị xoá khỏi payload để lại hàng mồ côi, bị bỏ qua.
+  itemId         String
+  easeFactor     Float           @default(2.5)
+  intervalDays   Int             @default(0)
+  repetitions    Int             @default(0)
+  lapses         Int             @default(0)
+  /// Đầu ngày (giờ VN) mà thẻ đến hạn.
+  dueAt          DateTime
+  /// Lần ôn đầu tiên — để đếm trần thẻ mới mỗi ngày.
+  introducedAt   DateTime
+  lastReviewedAt DateTime
+  lastRating     FlashcardRating
+  /// Lượt ôn gần nhất đã áp, để gửi lại cùng lượt (mất mạng, bấm đúp) không tính hai lần.
+  lastReviewId   String?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  /// Chỉ mục nóng: "thẻ nào của tôi trong khoá này đến hạn".
+  @@index([userId, courseId, dueAt])
+  @@index([contentItemId])
+}
+
 model ContentItem {
   id         String      @id @default(uuid())
   lessonId   String
@@ -644,6 +691,7 @@ model ContentItem {
   lesson         Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   notes          Note[]
   annotations    LessonAnnotation[]
+  flashcardStates FlashcardState[]
   lessonActivity LessonActivity?
 
   @@index([lessonId])

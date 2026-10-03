@@ -10,6 +10,18 @@
 > Wireframe đã duyệt sơ bộ trong phiên làm việc: trang hồ sơ (radar 4 kỹ năng, "Luyện hôm nay",
 > khối từ vựng, khối thi thử), màn ôn flashcard, màn trước phòng thi và màn kết quả.
 
+## Dữ liệu mẫu để thử trên máy (dev DB)
+
+`packages/core-lms/scripts/seed-language-demo.ts` dựng khoá **"Tiếng Trung cơ bản (demo ngoại ngữ)"** (`/learn/demo-ngoai-ngu-tieng-trung`) cho giảng viên mẫu `giangvien.mau@feedbackme.dev`: bài nghe, hội thoại, từ vựng có audio thật (sinh bằng `say` + `afconvert` của macOS), quiz theo kỹ năng, một bài ẩn và một từ trùng giữa hai bài để thử việc gom trùng. Học viên mẫu `sv.demo.01@feedbackme.dev` có sẵn tiến độ (Nghe Cần ôn · Đọc Vững · Viết Nên luyện · Nói Chưa đủ dữ liệu) và lịch ôn flashcard đủ trạng thái. Mọi thứ đi qua hàm dịch vụ thật; chạy lại an toàn.
+
+```bash
+cd packages/core-lms
+SEED_ENROLL_EMAILS="ban@example.com" NODE_OPTIONS=--max-old-space-size=1536 \
+  node --env-file=../db/.env --import tsx scripts/seed-language-demo.ts
+```
+
+`SEED_ENROLL_EMAILS` ghi danh thêm tài khoản học viên **sạch** (chưa có tiến độ) để thử từ đầu. Mật khẩu của các tài khoản mẫu là `DEMO_PASSWORD` đã dùng khi chạy `seed-demo-course.ts`; không ghi vào repo.
+
 ## Tiêu chí chung cho mọi giai đoạn
 
 - [ ] Viết test từ checklist rồi mới code.
@@ -115,6 +127,53 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 
 **Bổ sung khi viết test:** server tự gán `id` cho dòng/lượt chưa có `id` (nhập qua API, import) và giữ nguyên `id` đã có, để G4 luôn có khoá ổn định.
 
+## G2.5 · Nhập từ vựng bằng AI
+
+**Mục tiêu.** Giảng viên dán văn bản thô (copy từ giáo trình, Word, PDF, bảng tính lộn xộn) vào bộ soạn từ vựng; AI tách thành các dòng từ vựng; giảng viên **xem trước, chọn dòng**, rồi thêm vào danh sách như khi dán bảng (G2.2). AI không bao giờ tự lưu khối: giảng viên vẫn bấm Tạo/Lưu.
+
+**Làm theo tiền lệ "Nhập câu hỏi bằng AI"** (không dựng cơ chế mới):
+- Hàm `extractVocabFromText` trong `core-feedback/src/aiTutor/generators.ts`, cùng `callJsonModel` với JSON schema `strict`, model mặc định `gpt-4o-mini`.
+- Route `POST /api/ai/extract-vocab`: cùng quyền (giảng viên của ít nhất một khoá hoặc admin), cùng cách lấy khoá OpenAI (`getOpenaiClient`, cấu hình ở admin/integrations), cùng ánh xạ lỗi (`openai_not_configured` 503, vượt trần 429, lỗi sinh 400).
+- Chặn bằng `assertWithinCaps(…, "generator")` và ghi `AiUsageLog` qua `recordAiUsage`, như mọi generator khác.
+- Kết quả đi qua **một hàm chuẩn hoá xác định** (không tin đầu ra của mô hình): cùng giới hạn độ dài với `VocabItem`, tối đa 300 dòng, bỏ dòng thiếu từ hoặc nghĩa vào `skipped` kèm lý do.
+
+### Hàm sinh (G2.5.1)
+- [ ] **G2.5.1.1** Văn bản rỗng, ngắn hơn 20 ký tự hoặc dài hơn 20.000 ký tự → `validation_failed`, **trước khi** chạm tới trần AI hay OpenAI.
+- [ ] **G2.5.1.2** Gọi `assertWithinCaps(userId, …, "generator")` trước OpenAI; vượt trần thì ném `AiTutorError` và **không gọi OpenAI**.
+- [ ] **G2.5.1.3** Ghi `AiUsageLog` với số token vào/ra của lượt gọi.
+- [ ] **G2.5.1.4** Yêu cầu gửi cho mô hình có: quy tắc "chỉ trích xuất những gì có trong văn bản", chỉ dẫn coi văn bản là **dữ liệu không đáng tin** (mệnh lệnh nằm trong văn bản bị bỏ qua), JSON schema nghiêm ngặt; văn bản của giảng viên nằm trong khối được rào, không trộn vào chỉ dẫn.
+- [ ] **G2.5.1.5** Chế độ "chỉ trích xuất": dòng thiếu nghĩa **không được tự bịa**, mà vào `skipped` ("Thiếu nghĩa"). Chế độ "điền phần còn thiếu" (tuỳ chọn, tắt mặc định): AI được điền phiên âm/nghĩa/ví dụ còn trống và phải liệt kê các trường đã điền trong `filled`.
+- [ ] **G2.5.1.6** Lỗi OpenAI → `openai_error`; đầu ra không phải JSON → `json_parse_failed`.
+
+### Chuẩn hoá đầu ra (G2.5.2, hàm thuần)
+- [ ] **G2.5.2.1** Cắt khoảng trắng; chuỗi rỗng coi như không có; dòng thiếu `term` hoặc `meaning` → `skipped` kèm lý do.
+- [ ] **G2.5.2.2** Trường quá dài (term/reading > 200, meaning > 500, ví dụ > 1000) → dòng đó vào `skipped`, không cắt cụt âm thầm.
+- [ ] **G2.5.2.3** Trùng từ trong cùng kết quả (so theo từ chuẩn hoá): giữ dòng đầu, các dòng sau vào `skipped` ("Trùng từ").
+- [ ] **G2.5.2.4** Quá 300 dòng: nhận 300 dòng đầu, phần dư vào `skipped`.
+- [ ] **G2.5.2.5** `filled` chỉ gồm tên trường hợp lệ (`reading`/`meaning`/`example`) **và** trường đó thực sự có giá trị; ở chế độ chỉ trích xuất, `filled` luôn rỗng.
+- [ ] **G2.5.2.6** Toàn bộ là văn bản thuần: thẻ HTML mô hình trả về không thành phần tử khi hiển thị (đã đảm bảo ở G2.3.4).
+
+### Route (G2.5.3)
+- [ ] **G2.5.3.1** Chưa đăng nhập → 401; không phải giảng viên/admin → 403; thân yêu cầu sai kiểu → 400.
+- [ ] **G2.5.3.2** Chưa cấu hình OpenAI → 503; vượt trần → 429; lỗi sinh → 400; thành công → `{ items, skipped }`.
+- [ ] **G2.5.3.3** Route **không ghi** từ vựng vào DB; ngoài `AiUsageLog` không có thay đổi dữ liệu nào.
+
+### Giao diện (G2.5.4)
+- [ ] **G2.5.4.1** Trong bộ soạn từ vựng có mục "Nhập bằng AI": ô dán, ô chọn "Điền phiên âm và nghĩa còn thiếu" (tắt mặc định), nút "Phân tích bằng AI"; nút bị khoá khi đang chạy hoặc ô trống.
+- [ ] **G2.5.4.2** Kết quả hiện thành danh sách xem trước, mặc định chọn hết; ô đã do AI điền được đánh dấu rõ ("AI điền — hãy kiểm tra"); có đếm "N dòng, M dòng bị bỏ qua" và liệt kê `skipped` kèm lý do.
+- [ ] **G2.5.4.3** "Thêm các dòng đã chọn" đi qua đúng bước nhận biết từ trùng của dán bảng (hỏi trước khi thêm từ đã có); thêm xong, các dòng sửa được như mọi dòng khác.
+- [ ] **G2.5.4.4** Lỗi 503/429/400 hiện lời tiếng Việt dễ hiểu, không để lộ chi tiết kỹ thuật; ô dán giữ nguyên nội dung để thử lại.
+- [ ] **G2.5.4.5** Không hiện với học viên (chỉ có trong bộ soạn của giảng viên). Dùng được ở mobile.
+
+### Quyết định đã chốt (2026-10-03)
+1. Có **cả hai chế độ**: "chỉ trích xuất" (nghiêm ngặt) và tuỳ chọn "điền phiên âm/nghĩa còn thiếu" tắt mặc định, ô do AI điền được đánh dấu.
+2. Đầu vào P0: **chỉ văn bản dán** (≤ 20.000 ký tự). Ảnh/PDF scan qua vision để P1.
+3. Tính phí **theo tiền lệ** nhập câu hỏi (trần ngày + `AiUsageLog`), không trừ ví token AI.
+4. Chỉ **từ vựng**; dán hội thoại thô → các lượt để P1.
+5. Model mặc định `gpt-4o-mini`.
+
+**Trạng thái:** chưa có test/code (làm sau khi G4 được commit, trên nhánh riêng).
+
 ## G3 · Nhãn kỹ năng + hồ sơ 4 kỹ năng (chỉ đọc)
 
 **Thiết kế đề xuất.** Không thêm bảng mới và không thêm module: hồ sơ là một **phép gộp chỉ đọc** trên `LearnerSkillState` (đã do BKT cập nhật), nhóm theo "kỹ năng ngôn ngữ" của `Skill`.
@@ -181,14 +240,65 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 
 ## G4 · Flashcard + lịch ôn cách quãng
 
-- [ ] **LANG.4.1** Ghi danh khoá → có bộ thẻ gồm từ vựng của khoá.
-- [ ] **LANG.4.2** Chọn Quên/Khó/Được/Dễ cập nhật lịch ôn; khoảng cách hiển thị khớp kết quả tính.
-- [ ] **LANG.4.3** Ba chế độ: Hán→nghĩa, Nghĩa→Hán, Nghe→Hán (cần audio).
-- [ ] **LANG.4.4** Mỗi lượt ôn emit `flashcard.reviewed`, idempotent.
-- [ ] **LANG.4.5** Hồ sơ hiện Đã học / Đến hạn hôm nay / Hay quên và phân bố Mới/Đang học/Nhớ lâu bằng số đếm.
-- [ ] **LANG.4.6** Chống farming: trần XP mỗi ngày, bỏ qua lượt quá nhanh (nguyên tắc 5).
-- [ ] **LANG.4.7** Ghi event không chặn hay làm chậm thao tác lật thẻ.
-- [ ] **LANG.4.8** Trạng thái thẻ nằm trong export/xoá dữ liệu cá nhân.
+**Thiết kế đề xuất.**
+- **Thẻ = một dòng từ vựng** (G2): danh tính là cặp (`ContentItem.id`, `items[].id`). Bộ thẻ của học viên trong khoá = mọi dòng của khối `vocab_list` nằm trong bài/chương học viên thấy được (không ẩn, không khoá). Học viên phải ghi danh.
+- **Trạng thái nằm ở `core-feedback`** (mô hình người học), bảng mới `FlashcardState` một dòng cho mỗi (học viên, dòng từ) khi **thẻ được ôn lần đầu**; thẻ chưa ôn không có dòng nào (= "Mới"). Gồm `easeFactor`, `intervalDays`, `repetitions`, `lapses`, `dueAt`, `introducedAt`, `lastReviewedAt`, `lastRating`, `lastReviewId`. FK tới `User`, `Course`, `ContentItem` (xoá khối thì trạng thái đi theo). Unique `(userId, itemId)`; chỉ mục nóng `(userId, courseId, dueAt)`.
+- **Thuật toán tự viết, hàm thuần** `scheduleReview(state, rating, now)`: biến thể SM-2 đơn giản, mức hạt là **ngày** (không có "ôn lại sau vài phút"). Bốn mức tự đánh giá Quên / Khó / Được / Dễ; nút hiển thị khoảng cách lần ôn tới.
+- **Phiên ôn** lấy: thẻ đến hạn (hạn ≤ cuối ngày VN) cũ nhất trước, rồi thẻ mới theo thứ tự bộ thẻ, tối đa **10 thẻ mới mỗi ngày** và **20 thẻ mỗi phiên**. Ba chế độ chỉ đổi cách hỏi, lịch ôn dùng chung một bộ: Hán→nghĩa, Nghĩa→Hán, Nghe→Hán (chỉ thẻ có audio).
+- **Sự kiện** `flashcard.reviewed` phát trong cùng giao dịch với việc cập nhật trạng thái, idempotent qua `eventKey` (client gửi `reviewId`; gửi lại cùng lượt thì không tính hai lần).
+- **Không cấp XP và không cập nhật BKT** ở P0. Flashcard là công cụ ghi nhớ tự đánh giá, không phải bằng chứng khách quan về kỹ năng; trộn vào `LearnerSkillState` sẽ làm hồ sơ 4 kỹ năng sai. Event vẫn phát để gamification đăng ký sau, kèm trần theo ngày (nguyên tắc 5).
+
+### Thuật toán lịch ôn (G4.1)
+- [ ] **G4.1.1** Given thẻ mới (chưa có trạng thái), when chọn Quên/Khó/Được/Dễ, then khoảng cách tới lần ôn sau lần lượt **1 · 1 · 2 · 4 ngày** (đề xuất; số cụ thể chốt cùng bạn).
+- [ ] **G4.1.2** Given thẻ đã ôn ≥ 1 lần, when chọn Được, then khoảng cách mới = khoảng cũ × `easeFactor` (làm tròn, tối thiểu +1 ngày so với khoảng cũ).
+- [ ] **G4.1.3** Bất biến: với mọi trạng thái, khoảng cách theo thứ tự **Quên ≤ Khó ≤ Được ≤ Dễ**; Quên luôn đặt lại về 1 ngày và tăng `lapses` (không tăng với thẻ chưa từng thuộc); `easeFactor` không bao giờ dưới **1.3**; khoảng cách không quá **365 ngày**.
+- [ ] **G4.1.4** `previewIntervals(state)` trả đúng bốn khoảng mà `scheduleReview` sẽ áp (nút hiển thị không bao giờ lệch với kết quả thật).
+- [ ] **G4.1.5** Hàm thuần: cùng đầu vào luôn cùng kết quả; không đọc đồng hồ ngoài `now` truyền vào.
+
+### Bộ thẻ và phiên ôn (G4.2)
+- [ ] **G4.2.1** Bộ thẻ gồm mọi dòng của khối `vocab_list` trong bài hiển thị, không khoá, thuộc khối không ẩn. Dòng thuộc bài/khối ẩn hoặc khoá không có trong bộ thẻ và không tính vào thống kê.
+- [ ] **G4.2.2** Hai dòng cùng từ (so theo từ chuẩn hoá: Unicode NFC, bỏ khoảng trắng, không phân biệt hoa-thường) ở hai khối: phiên ôn chỉ đưa **một** thẻ (ưu tiên thẻ đã có trạng thái).
+- [ ] **G4.2.3** Thẻ đến hạn xếp trước thẻ mới; trong thẻ đến hạn, hạn cũ nhất trước; thẻ mới theo thứ tự chương → bài → khối → dòng.
+- [ ] **G4.2.4** Trần **10 thẻ mới/ngày** (ngày theo giờ Việt Nam) tính cả thẻ mới đã ôn trong ngày ở các phiên trước; trần **20 thẻ/phiên**.
+- [ ] **G4.2.5** Chế độ Nghe→Hán chỉ lấy thẻ có `audioUrl`; không có thẻ nào thì báo rõ và gợi ý chọn chế độ khác.
+- [ ] **G4.2.6** Chưa ghi danh → 403; khoá không có thẻ nào → phiên rỗng với lời mời, không lỗi.
+
+### Ghi nhận một lượt ôn (G4.3)
+- [ ] **G4.3.1** Given thẻ thuộc bộ thẻ của học viên, when gửi lượt ôn, then trạng thái cập nhật đúng theo `scheduleReview` và phát `flashcard.reviewed` (payload: `itemId`, `contentItemId`, `rating`, `mode`, `intervalDays`, `reviewId`) trong **cùng giao dịch**.
+- [ ] **G4.3.2** Gửi lại cùng `reviewId` (mất mạng, bấm đúp) thì không tính lần hai: trạng thái và số event không đổi, trả lại trạng thái hiện tại.
+- [ ] **G4.3.3** Thẻ không thuộc bộ thẻ (khoá khác, bài ẩn, dòng đã xoá) → bị từ chối; `rating`/`mode` ngoài danh sách cho phép → `validation_failed`.
+- [ ] **G4.3.4** Lượt ôn đầu tiên tạo dòng trạng thái và ghi `introducedAt`; hai lượt cùng lúc cho cùng thẻ không tạo hai dòng (ràng buộc unique, không phụ thuộc may rủi).
+- [ ] **G4.3.5** Không cập nhật `LearnerSkillState` và không cấp XP.
+- [ ] **G4.3.6** Ghi nhận không chặn thao tác của học viên: lỗi mạng khi gửi lượt ôn được thử lại ở nền, thẻ kế tiếp hiện ngay.
+
+### Thống kê trên hồ sơ (G4.4)
+- [ ] **G4.4.1** `Đã học` = số thẻ đã có trạng thái; `Đến hạn hôm nay` = thẻ có `dueAt` ≤ cuối ngày VN; `Hay quên` = thẻ có `lapses ≥ 2`.
+- [ ] **G4.4.2** Phân bố: **Mới** (chưa có trạng thái), **Đang học** (khoảng < 21 ngày), **Nhớ lâu** (khoảng ≥ 21 ngày); cộng lại bằng tổng bộ thẻ; chỉ hiển thị số đếm.
+- [ ] **G4.4.3** Thống kê chỉ gồm thẻ còn trong bộ thẻ (thẻ của bài sau này bị ẩn/khoá/xoá không đếm).
+- [ ] **G4.4.4** Học viên chỉ xem thống kê của chính mình; giảng viên xem của học viên qua API (như G3).
+
+### Giao diện (G4.5)
+- [ ] **G4.5.1** Trang `/learn/[slug]/flashcards`: chọn chế độ, tiến độ "Thẻ 5/12", mặt trước → lật → bốn nút kèm khoảng cách, màn tổng kết cuối phiên.
+- [ ] **G4.5.2** Bàn phím: Space lật thẻ, phím 1–4 chọn mức; nút có nhãn truy cập cho trình đọc màn hình.
+- [ ] **G4.5.3** Trang hồ sơ 4 kỹ năng có khối "Từ vựng" (ba số + thanh phân bố) và dòng "Ôn N thẻ" trong "Luyện hôm nay"; trang khoá có lối vào khi khoá có từ vựng.
+- [ ] **G4.5.4** Mobile dưới `sm`: một cột, nút đánh giá dính đáy; thẻ không tràn ngang với từ dài.
+- [ ] **G4.5.5** Mặt thẻ có audio thì có nút nghe (một âm thanh tại một thời điểm — dùng lại bộ phát của G2).
+
+### Quyền, riêng tư, vận hành (G4.6)
+- [ ] **G4.6.1** `exportProfile` có trạng thái thẻ của người dùng (mã khoá, `itemId`, lịch ôn); không lẫn dữ liệu người khác.
+- [ ] **G4.6.2** Ẩn danh hoá tài khoản giữ trạng thái thẻ dạng thống kê ẩn danh (cùng chính sách với `LearningEvent`); API không bao giờ trả email/tên.
+- [ ] **G4.6.3** Migration chỉ thêm bảng và chỉ mục mới, không đổi bảng có sẵn.
+- [ ] **G4.6.4** Dòng từ bị xoá khỏi khối (payload) không làm hỏng phiên ôn hay thống kê: trạng thái mồ côi bị bỏ qua.
+
+### Quyết định đã chốt (2026-10-03)
+1. Thuật toán **tự viết** (biến thể SM-2, hàm thuần, mức hạt là ngày); không dùng thư viện FSRS.
+2. Danh tính thẻ = id dòng từ (G2); khi ôn gom các dòng trùng từ (so theo từ chuẩn hoá) thành một thẻ, ưu tiên dòng đã có trạng thái.
+3. **10 thẻ mới/ngày**, **20 thẻ/phiên**.
+4. **Không XP, không chạm BKT** ở P0.
+5. Phạm vi: mọi học viên đã ghi danh khoá có từ vựng; không phụ thuộc "Chế độ ngoại ngữ"; không bị ảnh hưởng bởi lớp đối chứng.
+6. Khoảng ôn lần đầu của thẻ mới: **Quên 1 · Khó 1 · Được 2 · Dễ 4 ngày** (đề xuất, chủ dự án đồng ý).
+
+**Trạng thái code (2026-10-03, nhánh `feat/lang-g4-flashcards`, chưa commit):** G4.1–G4.6 đã cài, test xanh (web 489 + 3 todo, core-lms 1217, core-feedback 331), typecheck sạch. **Chưa làm:** xem bằng mắt (`/learn/<slug>/flashcards`, khối "Từ vựng" trên hồ sơ, lối vào ở trang khoá, mobile < 640px, phím tắt, âm thanh); áp migration `20261003140000_flashcard_states` lên DB dev dùng chung (đã áp lên DB test) — migration chỉ thêm bảng `FlashcardState`, kiểu `FlashcardRating` và chỉ mục, không đổi bảng có sẵn. Nhãn chế độ dùng tên trung lập "Từ → nghĩa / Nghĩa → từ / Nghe → từ" (wireframe ghi "Hán → nghĩa"). Hàng đợi gửi lượt ôn thử lại với cùng `reviewId`; chỉ mục nóng `(userId, courseId, dueAt)`.
 
 ## G5 · Thi thử
 

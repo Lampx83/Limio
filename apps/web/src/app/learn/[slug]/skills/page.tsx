@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isUserEnrolled } from "@feedbackme/core-lms";
-import { getLanguageProfile } from "@feedbackme/core-feedback";
+import { getFlashcardStats, getLanguageProfile } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import LanguageProfileView from "@/components/LanguageProfileView";
 
@@ -26,7 +26,10 @@ export default async function LanguageSkillsPage({ params }: { params: { slug: s
   if (!course) notFound();
   if (!(await isUserEnrolled(userId, course.id))) redirect(`/catalog/${params.slug}?locked=1`);
 
-  const profile = await getLanguageProfile(userId, course.id, "learner");
+  const [profile, flashcards] = await Promise.all([
+    getLanguageProfile(userId, course.id, "learner"),
+    getFlashcardStats(userId, course.id),
+  ]);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
@@ -38,7 +41,7 @@ export default async function LanguageSkillsPage({ params }: { params: { slug: s
         Tổng hợp từ kết quả làm bài của bạn. Chỉ là gợi ý — bạn vẫn có thể học bất kỳ bài nào.
       </p>
       <div className="mt-6">
-        <LanguageProfileView slug={params.slug} profile={profile} />
+        <LanguageProfileView slug={params.slug} profile={profile} flashcards={flashcards} />
       </div>
     </main>
   );

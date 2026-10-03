@@ -11,3 +11,5 @@ export * from "./oralExam/index";
 export * from "./uptake";
 export * from "./learningPath";
 export * from "./languageProfile";
+export * from "./flashcardSrs";
+export * from "./flashcards";

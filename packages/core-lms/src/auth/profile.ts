@@ -83,6 +83,22 @@ export async function exportProfile(userId: string, db: DbClient = prisma) {
         },
         orderBy: { lastUpdatedAt: "asc" },
       },
+      // LANG G4 — lịch ôn flashcard (lần ôn, độ dễ, hạn kế tiếp) của chính người dùng.
+      flashcardStates: {
+        select: {
+          itemId: true,
+          easeFactor: true,
+          intervalDays: true,
+          repetitions: true,
+          lapses: true,
+          dueAt: true,
+          introducedAt: true,
+          lastReviewedAt: true,
+          lastRating: true,
+          course: { select: { slug: true } },
+        },
+        orderBy: { introducedAt: "asc" },
+      },
       verificationTokens: { select: { id: true, purpose: true, createdAt: true, consumedAt: true } },
       portfolio: {
         select: {

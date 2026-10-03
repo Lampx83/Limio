@@ -18,6 +18,9 @@ export const LearningEventType = {
   LessonAnnotationPublished: "lesson.annotation.published",
   LessonAnnotationReplied: "lesson.annotation.replied",
   LessonAnnotationRemoved: "lesson.annotation.removed",
+  // LANG G4 — một lượt ôn flashcard. Payload: itemId, contentItemId, rating, mode,
+  // intervalDays, reviewId. Idempotent qua eventKey `flashcard.reviewed:<userId>:<reviewId>`.
+  FlashcardReviewed: "flashcard.reviewed",
   /** In-video quiz cuepoint passed (formative — not a full QuizAttempt). */
   VideoCuepointPassed: "video.cuepoint.passed",
   QuizStarted: "quiz.started",
