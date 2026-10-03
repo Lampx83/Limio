@@ -7,6 +7,17 @@ import { FileCheck2, FileUp } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import { AUDIO_MAX_BYTES, AUDIO_UPLOAD_ACCEPT } from "@/lib/lessonAudio";
+import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import {
+  dialogueEditorFromPayload,
+  dialoguePayloadFromEditor,
+  validateDialogueEditor,
+  validateVocabEditor,
+  vocabEditorFromPayload,
+  vocabPayloadFromEditor,
+  type DialogueEditorValue,
+  type VocabEditorValue,
+} from "@/lib/langBlockEditor";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import SafeHtml from "@/components/SafeHtml";
 import AiFormatPanel from "@/components/AiFormatPanel";
@@ -88,7 +99,9 @@ type ContentType =
   | "h5p"
   | "teacher_note"
   | "html_block"
-  | "audio";
+  | "audio"
+  | "vocab_list"
+  | "dialogue";
 
 const TYPE_LABEL: Record<ContentType, string> = {
   richtext: "Văn bản (rich text)",
@@ -104,6 +117,8 @@ const TYPE_LABEL: Record<ContentType, string> = {
   h5p: "H5P",
   html_block: "HTML tự tải lên",
   audio: "Audio (bài nghe)",
+  vocab_list: "Từ vựng (bảng từ)",
+  dialogue: "Hội thoại",
 };
 
 export default function AddContentItemForm({
@@ -150,6 +165,8 @@ export default function AddContentItemForm({
   const [linkTitle, setLinkTitle] = useState("");
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioShowTranscript, setAudioShowTranscript] = useState(true);
+  const [vocabValue, setVocabValue] = useState<VocabEditorValue>(() => vocabEditorFromPayload(null));
+  const [dialogueValue, setDialogueValue] = useState<DialogueEditorValue>(() => dialogueEditorFromPayload(null));
   const [scormPackages, setScormPackages] = useState<ScormPackageRow[]>([]);
   const [scormPackageId, setScormPackageId] = useState("");
   const [h5pPackages, setH5pPackages] = useState<H5pPackageRow[]>([]);
@@ -255,6 +272,10 @@ export default function AddContentItemForm({
     setScormPackageId("");
     setH5pPackageId("");
     setLtiToolId("");
+    setAudioTranscript("");
+    setAudioShowTranscript(true);
+    setVocabValue(vocabEditorFromPayload(null));
+    setDialogueValue(dialogueEditorFromPayload(null));
     setCuepoints([]);
     setDocxWarnings([]);
     setDocxImported(false);
@@ -429,6 +450,26 @@ export default function AddContentItemForm({
           ...(audioShowTranscript ? {} : { showTranscript: false }),
         };
         break;
+      case "vocab_list": {
+        const problems = validateVocabEditor(vocabValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = vocabPayloadFromEditor(vocabValue);
+        break;
+      }
+      case "dialogue": {
+        const problems = validateDialogueEditor(dialogueValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = dialoguePayloadFromEditor(dialogueValue);
+        break;
+      }
       case "scorm":
         if (!scormPackageId) {
           setError(lmsErrorMessage("missing_scorm_package"));
@@ -744,6 +785,9 @@ export default function AddContentItemForm({
           )}
         </div>
       )}
+
+      {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
+      {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
 
       {type === "audio" && (
         <div className="space-y-2">

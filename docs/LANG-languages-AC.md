@@ -68,10 +68,52 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 
 ## G2 · Khối từ vựng / hội thoại có cấu trúc
 
-- [ ] **LANG.2.1** Khối từ vựng nhập từng dòng (chữ, phiên âm, nghĩa, ví dụ, audio tuỳ chọn); thiếu chữ hoặc nghĩa bị từ chối.
-- [ ] **LANG.2.2** Khối hội thoại: bấm một câu phát audio của riêng câu đó.
-- [ ] **LANG.2.3** Nhập hàng loạt (dán bảng), báo dòng lỗi.
-- [ ] **LANG.2.4** Là nguồn của bộ thẻ ở G4; một từ có một danh tính trong khoá, không sinh thẻ trùng.
+**Thiết kế đề xuất:** hai loại nội dung mới, `vocab_list` (bảng từ vựng) và `dialogue` (hội thoại). Payload JSON như mọi loại khác; **mỗi dòng có `id` ổn định** (uuid sinh một lần, giữ nguyên khi sửa/đổi thứ tự) để G4 gắn flashcard vào đúng từ. Tên trường trung lập ngôn ngữ (`term`, `reading`, `meaning`) để dùng được cho tiếng Trung (chữ Hán/pinyin), tiếng Anh (từ/IPA)... Toàn bộ là văn bản thuần, hiển thị bằng text node (không HTML).
+
+`vocab_list`: `{ title?, readingLabel?, items: [{ id, term, reading?, meaning, example?, exampleReading?, exampleMeaning?, audioUrl?, note? }] }` — tối đa 300 dòng.
+`dialogue`: `{ title?, caption?, audioUrl?, speakers?, turns: [{ id, speaker, text, reading?, translation?, audioUrl? }] }` — tối đa 100 lượt.
+
+**Trạng thái code (2026-10-03, nhánh `feat/lang-g2-vocab-dialogue`):** G2.1–G2.4 đã cài, test xanh (web 408 + 3 todo, core-lms 1195), typecheck sạch; chủ dự án đã thử trên local. Migration `20261003120000_add_vocab_dialogue_content_types` đã áp lên DB test và DB dev (chưa áp prod: tự chạy khi deploy). Chưa kiểm riêng: G2.4.4 (annotation trên chữ trong khối). Sót của G1 sửa cùng đợt: form Audio không xoá lời thoại sau khi tạo.
+
+### Dữ liệu và kiểm tra (G2.1)
+- [ ] **G2.1.1** Given `vocab_list` có dòng thiếu `term` hoặc `meaning`, when lưu, then bị từ chối (`validation_failed`); dòng chỉ có khoảng trắng cũng bị từ chối.
+- [ ] **G2.1.2** Given `id` trùng nhau trong cùng khối, when lưu, then bị từ chối.
+- [ ] **G2.1.3** Given quá 300 dòng từ vựng hoặc 100 lượt thoại, then bị từ chối; giới hạn độ dài từng trường (term/reading ≤ 200, meaning ≤ 500, example ≤ 1000, note ≤ 500).
+- [ ] **G2.1.4** Given `audioUrl` (ở dòng hoặc lượt), then theo luật `AudioUrl` của G1 (cùng-origin hoặc https; `http:`, `javascript:`, `//host` bị từ chối).
+- [ ] **G2.1.5** Given `dialogue` thiếu `speaker` hoặc `text`, then bị từ chối.
+- [ ] **G2.1.6** Given sửa khối đã lưu (đổi nghĩa, thêm/xoá/đổi thứ tự dòng), then `id` của các dòng còn lại không đổi; dòng mới nhận `id` mới.
+- [ ] **G2.1.7** Migration chỉ thêm hai giá trị enum `ContentType` (`vocab_list`, `dialogue`).
+
+### Soạn bài (G2.2)
+- [ ] **G2.2.1** Form thêm/sửa dạng bảng: thêm dòng, xoá dòng, đổi thứ tự, mỗi dòng có ô audio (upload qua `/api/lesson-media/audio` hoặc dán https).
+- [ ] **G2.2.2** Nhập hàng loạt: dán bảng từ Excel/Google Sheets (cột phân tách bằng tab) hoặc dạng `term | reading | meaning | example` mỗi dòng một từ; dòng lỗi được liệt kê theo số dòng và không chặn các dòng đúng.
+- [ ] **G2.2.3** Dán 50 dòng hợp lệ thì tạo đúng 50 dòng; dán lại cùng nội dung không tự trùng với dòng đã có trừ khi giảng viên xác nhận.
+- [ ] **G2.2.4** Hội thoại: nhập nhanh dạng `A：câu thoại` mỗi lượt một dòng, tự tách `speaker`/`text`.
+- [ ] **G2.2.5** Ô chọn nội dung có hai tile mới; dòng trong danh sách hiện loại và số mục ("12 từ", "8 lượt").
+
+### Hiển thị cho học viên (G2.3)
+- [ ] **G2.3.1** `vocab_list`: bảng trên màn rộng (từ · phiên âm · nghĩa), thẻ xếp dọc dưới `sm` (640px) — theo §4.6.
+- [ ] **G2.3.2** Dòng có audio: nút nghe; phát dòng khác thì dừng dòng đang phát (không chồng tiếng).
+- [ ] **G2.3.3** `dialogue`: mỗi lượt có người nói, nội dung, phiên âm/bản dịch (bật/tắt được), nút nghe riêng nếu có `audioUrl`; có audio toàn bài thì dùng `AudioLessonPlayer`.
+- [ ] **G2.3.4** Văn bản trong khối luôn là text: thẻ HTML nhập vào hiện nguyên chữ, không thành phần tử.
+- [ ] **G2.3.5** Không có dòng/lượt nào có audio thì không hiện nút nghe rỗng.
+- [ ] **G2.3.6** (nếu duyệt) Chế độ "Che nghĩa": bấm để ẩn cột nghĩa/phiên âm, tự kiểm tra; nội dung vẫn có trong DOM nhưng chỉ ẩn phía giao diện (không phải bí mật như lời thoại bài nghe).
+
+### Tích hợp (G2.4)
+- [ ] **G2.4.1** File audio của từng dòng/lượt được sổ dung lượng gán đúng chủ khoá và dọn mồ côi (tên file nằm trong payload nên cơ chế tham chiếu sẵn có tìm thấy).
+- [ ] **G2.4.2** Không phá lesson-as-tag: thêm khối không sinh Skill hay mapping mới.
+- [ ] **G2.4.3** Trang in: in thành bảng/danh sách chữ, không bể layout; không in nút audio.
+- [ ] **G2.4.4** Annotation theo vùng chọn: hoạt động bình thường trên chữ trong khối (hoặc ghi rõ nếu chưa hỗ trợ).
+- [ ] **G2.4.5** Ẩn khối bằng `isHidden` như mọi loại khác.
+
+### Quyết định đã chốt (2026-10-03)
+1. Hai loại riêng: `vocab_list` và `dialogue`.
+2. Audio hội thoại: **riêng từng lượt** (`turns[].audioUrl`), tuỳ chọn thêm audio cả bài (`audioUrl`). Mốc thời gian trên một file để sau (P1).
+3. **Có** "Che nghĩa" ở P0 (G2.3.6).
+4. Nhãn cột phiên âm do giảng viên đặt (`readingLabel`), mặc định "Phiên âm".
+5. Nhập hàng loạt **chỉ dán bảng** (tab hoặc `|`); không nhập file CSV.
+
+**Bổ sung khi viết test:** server tự gán `id` cho dòng/lượt chưa có `id` (nhập qua API, import) và giữ nguyên `id` đã có, để G4 luôn có khoá ổn định.
 
 ## G3 · Nhãn kỹ năng + hồ sơ 4 kỹ năng (chỉ đọc)
 
