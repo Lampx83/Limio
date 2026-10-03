@@ -23,6 +23,7 @@ async function findReference(
 ): Promise<Reference | null> {
   switch (kind) {
     case "lesson_video":
+    case "lesson_audio":
     case "lesson_image":
     case "lesson_pdf":
     case "lesson_html":
@@ -95,6 +96,7 @@ async function findReference(
 
 const REFERABLE: StoredFileKind[] = [
   "lesson_video",
+  "lesson_audio",
   "lesson_image",
   "lesson_pdf",
   "lesson_html",

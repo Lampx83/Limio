@@ -18,6 +18,7 @@ import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
 import LessonAnnotations from "@/components/lesson/LessonAnnotations";
+import { withoutHiddenAudioTranscripts } from "@/lib/lessonAudio";
 import SafeHtml from "@/components/SafeHtml";
 import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
 import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
@@ -341,9 +342,11 @@ export default async function LessonPage({
         </header>
         <div className="mt-8">
           <LessonContent
-            items={lesson.contentItems
-              .filter((c) => !c.isHidden)
-              .map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex }))}
+            items={withoutHiddenAudioTranscripts(
+              lesson.contentItems
+                .filter((c) => !c.isHidden)
+                .map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex })),
+            )}
             courseId={course.id}
             lessonId={lesson.id}
             interactive={!anonymous}
@@ -519,19 +522,21 @@ export default async function LessonPage({
   // Ghi chú giảng viên là một LOẠI nội dung riêng, không phải khối bị ẩn: học
   // viên không bao giờ nhận được nó, kể cả khi ai đó lỡ bật `isHidden` sai.
   const teacherNotes = lesson.contentItems.filter((c) => c.type === "teacher_note");
-  const visibleItems = lesson.contentItems
-    .filter((c) => !c.isHidden)
-    // Người dạy nhận ghi chú NGAY TỪ ĐẦU, bật/tắt chỉ là đổi hiển thị bằng CSS.
-    // Trước đây bật ghi chú phải đi một vòng lên máy chủ để render lại cả bài —
-    // mất vài giây, mà trong lúc ấy màn hình không đổi gì, nên người dạy tưởng
-    // nút hỏng và bấm tiếp. Học viên vẫn không bao giờ nhận được khối này.
-    .filter((c) => c.type !== "teacher_note" || canEdit)
-    .map((c) => ({
-      id: c.id,
-      type: c.type,
-      payload: c.payload,
-      orderIndex: c.orderIndex,
-    }));
+  const visibleItems = withoutHiddenAudioTranscripts(
+      lesson.contentItems
+      .filter((c) => !c.isHidden)
+      // Người dạy nhận ghi chú NGAY TỪ ĐẦU, bật/tắt chỉ là đổi hiển thị bằng CSS.
+      // Trước đây bật ghi chú phải đi một vòng lên máy chủ để render lại cả bài —
+      // mất vài giây, mà trong lúc ấy màn hình không đổi gì, nên người dạy tưởng
+      // nút hỏng và bấm tiếp. Học viên vẫn không bao giờ nhận được khối này.
+      .filter((c) => c.type !== "teacher_note" || canEdit)
+      .map((c) => ({
+        id: c.id,
+        type: c.type,
+        payload: c.payload,
+        orderIndex: c.orderIndex,
+      })),
+  );
 
   // Mục lục nổi "Trong bài này" (LessonSectionNav) chỉ hiện khi bài có từ 2 thẻ
   // h2 có id trở lên — cùng ngưỡng với chính component đó. Tính sẵn ở máy chủ

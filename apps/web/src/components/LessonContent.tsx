@@ -7,6 +7,7 @@ import { ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import SafeHtml from "./SafeHtml";
+import AudioLessonPlayer from "./AudioLessonPlayer";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
@@ -51,6 +52,14 @@ interface VideoPayload {
   transcriptUrl?: string;
   durationSec?: number;
   cuepoints?: Array<{ atSec: number; quizId: string }>;
+}
+interface AudioPayload {
+  url: string;
+  title?: string;
+  caption?: string;
+  transcript?: string;
+  showTranscript?: boolean;
+  durationSec?: number;
 }
 interface MarkdownPayload {
   body: string;
@@ -248,6 +257,18 @@ function ContentBlock({
             </a>
           )}
         </div>
+      );
+    }
+    case "audio": {
+      const p = payload as AudioPayload;
+      return (
+        <AudioLessonPlayer
+          url={p.url}
+          title={p.title}
+          caption={p.caption}
+          transcript={p.transcript}
+          showTranscript={p.showTranscript}
+        />
       );
     }
     case "markdown": {

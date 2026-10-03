@@ -18,6 +18,7 @@ export type StoredFileKind =
   | "org_branding"
   | "platform_branding"
   | "lesson_video"
+  | "lesson_audio"
   | "lesson_image"
   | "lesson_pdf"
   | "lesson_html"
@@ -43,6 +44,7 @@ const KIND_PREFIXES: ReadonlyArray<readonly [string, StoredFileKind]> = [
   ["org-signatures/", "org_branding"],
   ["branding/", "platform_branding"],
   ["lesson-media/videos/", "lesson_video"],
+  ["lesson-media/audio/", "lesson_audio"],
   ["lesson-media/images/", "lesson_image"],
   ["lesson-media/pdfs/", "lesson_pdf"],
   ["lesson-media/html/", "lesson_html"],

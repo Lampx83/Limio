@@ -41,7 +41,8 @@ type ContentType =
   | "scorm"
   | "lti"
   | "h5p"
-  | "html_block";
+  | "html_block"
+  | "audio";
 
 interface Props {
   item: {
@@ -70,6 +71,8 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   const [htmlBlockBody, setHtmlBlockBody] = useState<string>(
     String(initial.body ?? ""),
   );
+  const [audioTranscript, setAudioTranscript] = useState<string>(String(initial.transcript ?? ""));
+  const [audioShowTranscript, setAudioShowTranscript] = useState<boolean>(initial.showTranscript !== false);
 
   // Nội dung richtext đã qua AI format (heading màu, callout, bảng có style
   // riêng...) không có schema tương ứng trong RichTextEditor — mở thẳng bằng
@@ -144,6 +147,17 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
           url,
           title: linkTitle.trim() || undefined,
           body: htmlBlockBody.trim() || undefined,
+        };
+        break;
+      case "audio":
+        // Giữ nguyên các trường form này không sửa (caption, durationSec) —
+        // PATCH thay cả payload nên bỏ sót là mất.
+        payload = {
+          ...initial,
+          url: url.trim(),
+          title: linkTitle.trim() || undefined,
+          transcript: audioTranscript.trim() || undefined,
+          showTranscript: audioShowTranscript ? undefined : false,
         };
         break;
       case "scorm":
@@ -328,6 +342,61 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
             className="input"
           />
         </>
+      )}
+
+      {type === "audio" && (
+        <div className="space-y-2">
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề bài nghe"
+            className="input"
+          />
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+            type="text"
+            placeholder="URL audio"
+            className="input"
+          />
+          {url.trim() && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- bản nghe thử cho giảng viên
+            <audio src={url.trim()} controls preload="metadata" className="w-full" />
+          )}
+          <div>
+            <label
+              htmlFor="audio-transcript-edit"
+              className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint"
+            >
+              Lời thoại <span className="font-normal normal-case">(không bắt buộc)</span>
+            </label>
+            <textarea
+              id="audio-transcript-edit"
+              value={audioTranscript}
+              onChange={(e) => setAudioTranscript(e.target.value)}
+              maxLength={20000}
+              rows={5}
+              placeholder="Chép lại nội dung audio. Mỗi người nói một dòng, ví dụ: A：你好！"
+              className="input"
+            />
+          </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={audioShowTranscript}
+              onChange={(e) => setAudioShowTranscript(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Cho học viên xem lời thoại
+              <span className="block text-xs text-muted">
+                Bỏ chọn với bài nghe hiểu: lời thoại sẽ không được gửi tới học viên.
+              </span>
+            </span>
+          </label>
+        </div>
       )}
 
       {type === "pdf" && url.trim() && (

@@ -15,6 +15,7 @@ const TYPE_LABEL: Record<string, string> = {
   external_link: "Link ngoài",
   embed: "Embed",
   html_block: "HTML tự tải lên",
+  audio: "Audio (bài nghe)",
   teacher_note: "Ghi chú giảng viên",
   scorm: "SCORM",
   h5p: "H5P",

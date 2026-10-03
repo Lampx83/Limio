@@ -600,6 +600,10 @@ enum ContentType {
   // allow-same-origin — script trong file không được đọc cookie/session của
   // Limio). Khác "embed" (chỉ nhận URL ngoài) và "file" (chỉ tải xuống).
   html_block
+  // LANG G1 — bài nghe: file audio tự upload (mp3/m4a/ogg/webm) hoặc link https,
+  // có trình phát tốc độ/lặp và lời thoại tuỳ chọn. Khác "video" ở chỗ không có
+  // cuepoint và không có khung hình.
+  audio
 }
 
 model ContentItem {
