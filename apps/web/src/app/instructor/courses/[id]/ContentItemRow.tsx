@@ -13,6 +13,8 @@ import {
   FileType,
   Globe,
   Headphones,
+  BookA,
+  MessagesSquare,
   LayoutTemplate,
   Link2,
   NotebookPen,
@@ -24,6 +26,7 @@ import {
   Video,
 } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import { blockSummary } from "@/lib/langBlocks";
 import { toast } from "@/lib/toast";
 import EditContentItemForm from "./EditContentItemForm";
 import { apiUrl } from "@/lib/apiUrl";
@@ -66,6 +69,10 @@ function summarize(type: string, payload: unknown): string {
       return `${String(p.title ?? "HTML")} — ${String(p.url ?? "")}`;
     case "audio":
       return `${String(p.title ?? "Audio")} — ${String(p.url ?? "")}`;
+    case "vocab_list":
+      return `${String(p.title ?? "Từ vựng")} — ${blockSummary(type, payload)}`;
+    case "dialogue":
+      return `${String(p.title ?? "Hội thoại")} — ${blockSummary(type, payload)}`;
     case "scorm":
       return `${String(p.title ?? "SCORM")} — packageId=${String(p.packageId ?? "")}`;
     case "lti":
@@ -91,6 +98,8 @@ export const ICON: Record<string, typeof Video> = {
   h5p: Blocks,
   html_block: Globe,
   audio: Headphones,
+  vocab_list: BookA,
+  dialogue: MessagesSquare,
 };
 
 // Mỗi loại content 1 màu riêng để quét mắt nhanh giữa danh sách nhiều loại
@@ -110,6 +119,8 @@ export const TYPE_COLOR: Record<string, string> = {
   h5p: "bg-emerald-100 text-emerald-700",
   html_block: "bg-rose-100 text-rose-700",
   audio: "bg-sky-100 text-sky-700",
+  vocab_list: "bg-yellow-100 text-yellow-800",
+  dialogue: "bg-green-100 text-green-700",
 };
 export const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
 

@@ -604,6 +604,11 @@ enum ContentType {
   // có trình phát tốc độ/lặp và lời thoại tuỳ chọn. Khác "video" ở chỗ không có
   // cuepoint và không có khung hình.
   audio
+  // LANG G2 — bảng từ vựng (term/reading/meaning + ví dụ + audio từng dòng) và
+  // hội thoại (các lượt có người nói, phiên âm, bản dịch, audio từng lượt).
+  // Payload JSON; mỗi dòng/lượt có `id` ổn định do server gán.
+  vocab_list
+  dialogue
 }
 
 model ContentItem {

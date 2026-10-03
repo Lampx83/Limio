@@ -26,6 +26,18 @@ const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
 });
 
+import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import {
+  dialogueEditorFromPayload,
+  dialoguePayloadFromEditor,
+  validateDialogueEditor,
+  validateVocabEditor,
+  vocabEditorFromPayload,
+  vocabPayloadFromEditor,
+  type DialogueEditorValue,
+  type VocabEditorValue,
+} from "@/lib/langBlockEditor";
+
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
 });
@@ -42,7 +54,9 @@ type ContentType =
   | "lti"
   | "h5p"
   | "html_block"
-  | "audio";
+  | "audio"
+  | "vocab_list"
+  | "dialogue";
 
 interface Props {
   item: {
@@ -73,6 +87,8 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   );
   const [audioTranscript, setAudioTranscript] = useState<string>(String(initial.transcript ?? ""));
   const [audioShowTranscript, setAudioShowTranscript] = useState<boolean>(initial.showTranscript !== false);
+  const [vocabValue, setVocabValue] = useState<VocabEditorValue>(() => vocabEditorFromPayload(item.payload));
+  const [dialogueValue, setDialogueValue] = useState<DialogueEditorValue>(() => dialogueEditorFromPayload(item.payload));
 
   // Nội dung richtext đã qua AI format (heading màu, callout, bảng có style
   // riêng...) không có schema tương ứng trong RichTextEditor — mở thẳng bằng
@@ -149,6 +165,26 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
           body: htmlBlockBody.trim() || undefined,
         };
         break;
+      case "vocab_list": {
+        const problems = validateVocabEditor(vocabValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = vocabPayloadFromEditor(vocabValue);
+        break;
+      }
+      case "dialogue": {
+        const problems = validateDialogueEditor(dialogueValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = dialoguePayloadFromEditor(dialogueValue);
+        break;
+      }
       case "audio":
         // Giữ nguyên các trường form này không sửa (caption, durationSec) —
         // PATCH thay cả payload nên bỏ sót là mất.
@@ -343,6 +379,9 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
           />
         </>
       )}
+
+      {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
+      {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
 
       {type === "audio" && (
         <div className="space-y-2">

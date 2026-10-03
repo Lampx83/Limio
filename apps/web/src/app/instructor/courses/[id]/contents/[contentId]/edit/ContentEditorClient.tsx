@@ -16,6 +16,8 @@ const TYPE_LABEL: Record<string, string> = {
   embed: "Embed",
   html_block: "HTML tự tải lên",
   audio: "Audio (bài nghe)",
+  vocab_list: "Từ vựng",
+  dialogue: "Hội thoại",
   teacher_note: "Ghi chú giảng viên",
   scorm: "SCORM",
   h5p: "H5P",

@@ -8,6 +8,8 @@ import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import SafeHtml from "./SafeHtml";
 import AudioLessonPlayer from "./AudioLessonPlayer";
+import VocabListView, { type VocabViewItem } from "./VocabListView";
+import DialogueView, { type DialogueViewTurn } from "./DialogueView";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
@@ -268,6 +270,35 @@ function ContentBlock({
           caption={p.caption}
           transcript={p.transcript}
           showTranscript={p.showTranscript}
+        />
+      );
+    }
+    case "vocab_list": {
+      const p = (payload ?? {}) as {
+        title?: string;
+        readingLabel?: string;
+        items?: VocabViewItem[];
+      };
+      const items = Array.isArray(p.items) ? p.items : [];
+      if (items.length === 0) return null;
+      return <VocabListView title={p.title} readingLabel={p.readingLabel} items={items} />;
+    }
+    case "dialogue": {
+      const p = (payload ?? {}) as {
+        title?: string;
+        caption?: string;
+        readingLabel?: string;
+        audioUrl?: string;
+        turns?: DialogueViewTurn[];
+      };
+      const turns = Array.isArray(p.turns) ? p.turns : [];
+      if (turns.length === 0) return null;
+      return (
+        <DialogueView
+          title={p.title}
+          caption={p.caption}
+          audioUrl={p.audioUrl}
+          turns={turns}
         />
       );
     }
