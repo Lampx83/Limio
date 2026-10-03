@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LANGUAGE_SKILLS } from "@feedbackme/shared-types";
 import { prisma } from "@feedbackme/db";
 import type { DbClient } from "../auth/tokens";
 import { assertCanEditCourse, CourseAuthzError } from "./authz";
@@ -18,6 +19,8 @@ export const CreateLessonInput = z.object({
   orderIndex: z.number().int().nonnegative(),
   completionThresholdPct: z.number().int().min(1).max(100).optional(),
   durationSec: z.number().int().nonnegative().optional(),
+  // LANG G3 — kỹ năng chính của bài (nghe/nói/đọc/viết).
+  languageSkill: z.enum(LANGUAGE_SKILLS).optional(),
 });
 
 export const UpdateLessonInput = z.object({
@@ -29,6 +32,8 @@ export const UpdateLessonInput = z.object({
   previewable: z.boolean().optional(),
   isHidden: z.boolean().optional(),
   isLocked: z.boolean().optional(),
+  // null = bỏ gán kỹ năng.
+  languageSkill: z.enum(LANGUAGE_SKILLS).optional().nullable(),
 });
 
 async function getCourseIdForLesson(lessonId: string, db: DbClient): Promise<string> {
@@ -85,6 +90,11 @@ export async function updateLesson(
 
   if (parsed.data.title !== undefined) {
     await syncLessonTagName(lessonId, parsed.data.title, db);
+  }
+  // LANG G3 — đổi/bỏ nhãn kỹ năng thì Skill tự sinh của bài đổi theo (no-op khi
+  // khoá không cá nhân hoá, nên khoá thường không sinh dòng nào).
+  if (parsed.data.languageSkill !== undefined) {
+    await ensureLessonTag(lessonId, db);
   }
 }
 

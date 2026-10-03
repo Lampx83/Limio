@@ -239,6 +239,23 @@ export default async function LearnCoursePage({
       {/* Content grid */}
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-8">
+          {/* LANG G3 — lối vào Hồ sơ 4 kỹ năng. Dùng learningPath.enabled để lớp đối chứng
+              (B10) và khoá tắt cá nhân hoá không bao giờ thấy lối vào này. */}
+          {course.languageMode && learningPath.enabled && (
+            <section>
+              <Link
+                href={`/learn/${params.slug}/skills`}
+                className="flex items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4 transition-colors hover:bg-brand-soft"
+              >
+                <span>
+                  <span className="text-body font-medium">Hồ sơ 4 kỹ năng</span>
+                  <span className="text-meta block">Xem bạn đang mạnh và cần luyện kỹ năng nào: nghe, nói, đọc, viết.</span>
+                </span>
+                <span aria-hidden>→</span>
+              </Link>
+            </section>
+          )}
+
           {/* B4 — lộ trình cá nhân hoá */}
           {learningPath.steps.length > 0 && (
             <section>

@@ -70,6 +70,19 @@ export async function exportProfile(userId: string, db: DbClient = prisma) {
         },
       },
       enrollments: true,
+      // LANG G3 — mức nắm vững (BKT) của chính người dùng theo từng chủ đề: dữ liệu
+      // học tập nhạy cảm (§5 nguyên tắc 4) và là nền của hồ sơ 4 kỹ năng. Trước đây
+      // bản xuất bỏ sót nó.
+      skillStates: {
+        select: {
+          masteryProbability: true,
+          attempts: true,
+          correctCount: true,
+          lastUpdatedAt: true,
+          skill: { select: { code: true, name: true } },
+        },
+        orderBy: { lastUpdatedAt: "asc" },
+      },
       verificationTokens: { select: { id: true, purpose: true, createdAt: true, consumedAt: true } },
       portfolio: {
         select: {

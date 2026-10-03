@@ -117,14 +117,67 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 
 ## G3 · Nhãn kỹ năng + hồ sơ 4 kỹ năng (chỉ đọc)
 
-- [ ] **LANG.3.1** Khoá bật chế độ ngoại ngữ: giảng viên gắn nghe/nói/đọc/viết cho bài hoặc câu hỏi. Khoá thường không đổi gì, không sinh dữ liệu thừa.
-- [ ] **LANG.3.2** Câu hỏi kế thừa nhãn từ bài; nhãn gắn tay thắng nhãn kế thừa (quy tắc §4.4).
-- [ ] **LANG.3.3** Backfill idempotent, chỉ đụng khoá đã bật chế độ ngoại ngữ.
-- [ ] **LANG.3.4** Hồ sơ hiện radar 4 trục và nhãn Cần ôn (<60) / Nên luyện (60–85) / Vững (≥85); không hiện số %.
-- [ ] **LANG.3.5** Kỹ năng chưa đủ dữ liệu hiện "Chưa đủ dữ liệu", không gán nhãn (ngưỡng tối thiểu: cần chốt).
-- [ ] **LANG.3.6** Chỉ học viên đó và giảng viên của khoá xem được; người khác 403.
-- [ ] **LANG.3.7** "Luyện hôm nay" chỉ gợi ý kỹ năng yếu nhất.
-- [ ] **LANG.3.8** Hồ sơ nằm trong export/xoá dữ liệu cá nhân.
+**Thiết kế đề xuất.** Không thêm bảng mới và không thêm module: hồ sơ là một **phép gộp chỉ đọc** trên `LearnerSkillState` (đã do BKT cập nhật), nhóm theo "kỹ năng ngôn ngữ" của `Skill`.
+
+- `packages/shared-types`: `LanguageSkill` = `listening | speaking | reading | writing`, thứ tự hiển thị và nhãn tiếng Việt (Nghe, Nói, Đọc, Viết). Đặt ở đây vì `core-lms` (ghi) và `core-feedback` (đọc) đều cần mà không được import nhau.
+- Schema: enum `LanguageSkill`; `Course.languageMode` (mặc định `false`); `Lesson.languageSkill?` (nguồn do giảng viên đặt); `Skill.languageSkill?` (bản sao do `autoTags` đồng bộ từ bài, để phép gộp chỉ cần một join, và đề thi ở G5 dùng chung `Skill` nên tự vào cùng chiều).
+- **Một bài một kỹ năng chính** (P0). Muốn tách nghe/đọc trong cùng bài thì tách thành hai bài. Nhãn riêng từng câu hỏi để P1.
+- Gộp: với mỗi kỹ năng, lấy các `LearnerSkillState` của học viên thuộc `Skill` có `languageSkill` = kỹ năng đó trong khoá; `mastery` = trung bình các chủ đề đã có lượt trả lời; `evidence` = tổng `attempts`. Nhãn = `masteryLabel(mastery)` nếu đủ bằng chứng, ngược lại "Chưa đủ dữ liệu". Dùng lại ngưỡng sẵn có: **Cần ôn < 0.60 · Nên luyện thêm < 0.85 · Vững ≥ 0.85**.
+- Học viên **không bao giờ nhận số mastery** (cả trong JSON của API). Radar vẽ theo *nhãn* (ba vòng), không theo số.
+
+**Trạng thái code (2026-10-03, nhánh `feat/lang-g3-skill-profile`, chưa commit):** G3.1–G3.6 đã cài, test xanh (web 435 + 3 todo, core-lms 1214, core-feedback 285), typecheck sạch. **Chưa làm:** xem bằng mắt (trang `/learn/<slug>/skills`, công tắc "Chế độ ngoại ngữ" ở thông tin khoá, ô "Kỹ năng" trên thanh bài, mobile < 640px); áp migration `20261003130000_language_skills` lên DB dev dùng chung (đã áp lên DB test) — migration này thêm enum `LanguageSkill` và 3 cột mới (có mặc định/null), không chỉ thêm giá trị enum như G1/G2. Ghi chú đã làm: quyền xem hồ sơ người khác dùng `canGradeCourse` (gồm trợ giảng); API gộp mọi lý do "tắt" thành `unavailable` cho học viên để lớp đối chứng không tự biết mình là đối chứng; bất biến languageMode ⇒ personalizationEnabled ép ở `createCourse`/`updateCourse` theo cả hai chiều và có dòng nhật ký `course.language_mode.toggled`.
+
+### Dữ liệu và nhãn (G3.1)
+- [ ] **G3.1.1** Migration thêm enum `LanguageSkill`, ba cột nullable/mặc định nói trên; khoá và bài hiện có không đổi hành vi (`languageMode=false`, `languageSkill=null`).
+- [ ] **G3.1.2** Given giảng viên đặt kỹ năng cho bài, when lưu, then `Lesson.languageSkill` lưu và `Skill` tự sinh của bài (`lesson.<id>`) được đồng bộ; đổi hoặc bỏ nhãn thì `Skill` đổi theo.
+- [ ] **G3.1.3** Given khoá `personalizationEnabled=false`, then không sinh `Skill` nào dù bài có nhãn (giữ nguyên quy tắc "LMS thuần không để rác DB").
+- [ ] **G3.1.4** Given bật `personalizationEnabled` hoặc chạy backfill trên khoá đã có bài mang nhãn, then `Skill.languageSkill` của các bài đó được điền; chạy lại không đổi gì (idempotent).
+- [ ] **G3.1.5** `Skill` giảng viên tự tạo (không phải `lesson.*`) không bị `autoTags` đụng tới.
+- [ ] **G3.1.6** Giá trị `languageSkill` ngoài bốn giá trị cho phép bị từ chối (`validation_failed`).
+- [ ] **G3.1.7** Bật `languageMode` mà khoá chưa bật cá nhân hoá thì bị từ chối kèm thông báo rõ (hồ sơ cần tag kỹ năng, mà tag chỉ có khi cá nhân hoá bật).
+
+### Gộp và nhãn (G3.2)
+- [ ] **G3.2.1** Given học viên chưa có `LearnerSkillState` nào thuộc kỹ năng X, then X là "Chưa đủ dữ liệu".
+- [ ] **G3.2.2** Given tổng `attempts` của kỹ năng X dưới ngưỡng (đề xuất 5), then "Chưa đủ dữ liệu" dù mastery tính được.
+- [ ] **G3.2.3** Given đủ bằng chứng, then nhãn đúng ba mức tại các điểm biên (0.599 → Cần ôn · 0.60 → Nên luyện · 0.849 → Nên luyện · 0.85 → Vững).
+- [ ] **G3.2.4** Chủ đề chưa có lượt trả lời nào không kéo trung bình xuống (không tính mastery mặc định 0.1 của dòng `attempts = 0`).
+- [ ] **G3.2.5** Chỉ tính `Skill` thuộc bài của khoá này; trạng thái của khoá khác không lẫn vào.
+- [ ] **G3.2.6** Chỉ tính bài học viên thấy được (bỏ bài/module `isHidden`), cùng bộ lọc với lộ trình cá nhân hoá.
+- [ ] **G3.2.7** Kỹ năng không có bài nào được gán thì vẫn có mặt với "Chưa đủ dữ liệu" (radar luôn đủ 4 trục).
+
+### Quyền và riêng tư (G3.3)
+- [ ] **G3.3.1** Học viên xem được hồ sơ của chính mình (đã ghi danh); giảng viên của khoá (người sửa được khoá) xem được hồ sơ học viên đã ghi danh; người khác nhận 403; học viên A xem hồ sơ học viên B nhận 403.
+- [ ] **G3.3.2** Phản hồi dành cho học viên **không chứa** `mastery`, xác suất hay số % nào; phản hồi dành cho giảng viên có thêm số mastery và `evidence` từng kỹ năng.
+- [ ] **G3.3.3** Khoá `personalizationEnabled=false` hoặc `languageMode=false` → `enabled=false` kèm lý do, không lộ dữ liệu.
+- [ ] **G3.3.4** Học viên thuộc lớp đối chứng (`feedbackVariant="minimal"`, B10) → `enabled=false` với lý do `control_variant`; giảng viên vẫn xem được để quản lớp.
+- [ ] **G3.3.5** Chưa đăng nhập → 401.
+
+### Giao diện học viên (G3.4)
+- [ ] **G3.4.1** Trang `/learn/[slug]/skills` (link từ trang khoá khi `languageMode` bật): radar 4 trục Nghe, Nói, Đọc, Viết; ba vòng ứng với ba nhãn; kỹ năng chưa đủ dữ liệu là chấm rỗng viền đứt ở tâm.
+- [ ] **G3.4.2** Bốn thẻ kỹ năng: tên, nhãn, một câu giải thích ngắn, số bài đã làm trên số bài của kỹ năng đó; không hiện %.
+- [ ] **G3.4.3** "Luyện hôm nay": gợi ý một bài thuộc kỹ năng yếu nhất (ưu tiên Cần ôn, rồi Nên luyện; bài đã làm điểm thấp nhất, nếu chưa làm bài nào thì bài đầu chưa học của kỹ năng đó). Chỉ gợi ý, không chặn bài nào. Không có gì để gợi ý thì ẩn khối này.
+- [ ] **G3.4.4** Trạng thái rỗng: khoá chưa gán kỹ năng nào cho bài thì hiện lời mời liên hệ giảng viên, không hiện radar trống.
+- [ ] **G3.4.5** Mobile dưới `sm`: một cột, CTA "Luyện hôm nay" dính đáy; từ `lg`: radar và gợi ý cạnh nhau (theo §4.6).
+- [ ] **G3.4.6** Radar có văn bản thay thế đọc được bằng trình đọc màn hình ("Nghe: Cần ôn; Nói: chưa đủ dữ liệu; …").
+
+### Giao diện giảng viên (G3.5)
+- [ ] **G3.5.1** Cài đặt khoá có công tắc "Chế độ ngoại ngữ" (bị khoá kèm giải thích nếu cá nhân hoá đang tắt).
+- [ ] **G3.5.2** Form sửa bài có ô chọn "Kỹ năng" (Nghe/Nói/Đọc/Viết/Không gán), chỉ hiện khi `languageMode` bật.
+- [ ] **G3.5.3** Danh sách bài hiện nhãn kỹ năng nhỏ bên cạnh tên bài.
+- [ ] **G3.5.4** (P1, ngoài phạm vi G3) Màn riêng cho giảng viên xem hồ sơ từng học viên; P0 chỉ có API và quyền ở G3.3.
+
+### Export / xoá dữ liệu cá nhân (G3.6)
+- [ ] **G3.6.1** `exportProfile` hiện **không** có `LearnerSkillState` (nền của hồ sơ). Thêm: mã/tên chủ đề, mastery, attempts, correctCount, lần cập nhật — có test.
+- [ ] **G3.6.2** Xoá tài khoản (`deleteUser`) là *ẩn danh hoá*: gỡ định danh, giữ dòng và dữ liệu học tập dạng thống kê ẩn danh (cùng chính sách với `LearningEvent`), nên trạng thái kỹ năng không bị xoá. Hồ sơ không được kèm email hay tên hiển thị; test xác nhận phản hồi hồ sơ không chứa định danh. *(Sửa 2026-10-03: bản nháp đầu ghi nhầm là "cascade xoá".)*
+
+### Quyết định đã chốt (2026-10-03)
+1. Ngưỡng bằng chứng tối thiểu: tổng **5** lượt trả lời mỗi kỹ năng.
+2. Thứ tự trục radar: Nghe, Nói, Đọc, Viết. "Xem theo thời gian" để P1 (dựng lại từ event `skill.state.updated`).
+3. Một bài một kỹ năng chính ở P0; nhãn từng câu hỏi để P1.
+4. Giảng viên xem hồ sơ học viên: P0 chỉ có API và quyền, màn riêng để sau.
+5. Thêm `LearnerSkillState` vào export dữ liệu cá nhân ngay trong G3.
+
+**Ghi chú khi viết test:** "giảng viên" ở G3.3.1 dùng `canGradeCourse` (gồm trợ giảng), vì trợ giảng vốn chấm bài và thấy điểm học viên. Quyền kiểm ở `apps/web` (điều phối) rồi truyền `audience` vào `core-feedback`, vì `core-feedback` không được import `core-lms`.
 
 ## G4 · Flashcard + lịch ôn cách quãng
 
