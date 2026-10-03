@@ -10,6 +10,8 @@ import { getFooterSettings, getRegisterEnabled } from "@/lib/site-settings";
 const FOOTER_LINKS = [
   { href: "/", label: "Trang chủ" },
   { href: "/catalog", label: "Khoá học" },
+  { href: "/gioi-thieu", label: "Giới thiệu" },
+  { href: "/xp-guide", label: "Cách tính điểm" },
   { href: "/register", label: "Đăng ký", needsRegister: true },
   { href: "/signin", label: "Đăng nhập" },
 ];
@@ -30,7 +32,9 @@ export default async function Footer() {
         className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4"
       >
         {FOOTER_LINKS.filter((l) => registerEnabled || !l.needsRegister).map((l) => (
-          <Link key={l.href} href={l.href} className="link">
+          // `/gioi-thieu` là file tĩnh (rewrite), không phải route của Next —
+          // prefetch RSC sẽ trượt và gây request thừa trên mọi trang.
+          <Link key={l.href} href={l.href} className="link" prefetch={false}>
             {l.label}
           </Link>
         ))}

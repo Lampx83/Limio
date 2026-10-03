@@ -20,9 +20,17 @@ export const SITE_NAME = "Limio";
 export const SITE_TAGLINE = "Learn in Flow";
 export const SITE_LOCALE = "vi_VN";
 
+/**
+ * Title mặc định (trang chủ + mọi trang không tự khai). "Learn in Flow" là
+ * tagline thương hiệu nhưng không ai gõ nó vào Google; người Việt tìm "nền tảng
+ * học trực tuyến", "khoá học online" — nên từ khoá nằm ở title, tagline ở header.
+ * ≤ 60 ký tự để không bị cắt trên SERP.
+ */
+export const SITE_TITLE = `${SITE_NAME} — Nền tảng học trực tuyến có phản hồi cá nhân hoá`;
+
 export const SITE_DESCRIPTION =
-  "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và " +
-  "gamification. Học theo cách của bạn — fresh, focused, your own pace.";
+  "Limio là nền tảng học trực tuyến (LMS) với phản hồi cá nhân hoá bằng AI: khoá học, " +
+  "bài kiểm tra, trợ giảng AI và điểm thưởng giúp bạn học đúng chỗ còn yếu, theo nhịp của riêng bạn.";
 
 const RAW_SITE_URL = (
   process.env.SITE_URL ||
@@ -52,6 +60,12 @@ export const SITE_URL = BASE_PATH && !RAW_SITE_URL.endsWith(BASE_PATH)
  * ô vuông.
  */
 export const DEFAULT_OG_IMAGE = "/og-default.png";
+
+/**
+ * Logo PNG vuông cho JSON-LD + manifest. Google không nhận SVG làm logo của
+ * Organization (yêu cầu raster, tối thiểu 112×112) nên không dùng `favicon.svg`.
+ */
+export const LOGO_PNG = "/logo-512.png";
 
 /** Đường dẫn nội bộ (`/catalog/abc`) → URL tuyệt đối để crawler dùng được. */
 export function absoluteUrl(path = "/"): string {
@@ -93,6 +107,8 @@ type PageMetaInput = {
   image?: string | null;
   type?: "website" | "article";
   noIndex?: boolean;
+  /** Mặc định `vi_VN`; khoá học tiếng Anh truyền `en_US` để OG/Zalo/Facebook đúng ngôn ngữ. */
+  locale?: string;
   publishedTime?: Date | string | null;
   modifiedTime?: Date | string | null;
 };
@@ -105,6 +121,7 @@ export function pageMetadata({
   image,
   type = "website",
   noIndex = false,
+  locale = SITE_LOCALE,
   publishedTime,
   modifiedTime,
 }: PageMetaInput): Metadata {
@@ -141,7 +158,7 @@ export function pageMetadata({
       title,
       description: desc,
       siteName: SITE_NAME,
-      locale: SITE_LOCALE,
+      locale,
       images,
       ...(type === "article" && publishedTime
         ? { publishedTime: new Date(publishedTime).toISOString() }
@@ -173,7 +190,7 @@ export function organizationJsonLd() {
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
-    logo: absoluteUrl("/favicon.svg"),
+    logo: absoluteUrl(LOGO_PNG),
     description: SITE_DESCRIPTION,
   };
 }
@@ -233,9 +250,18 @@ export function courseJsonLd(course: {
   /** Khi admin tắt thanh toán toàn hệ thống, mọi khoá được khai là miễn phí. */
   paymentEnabled?: boolean;
   instructors?: string[];
+  /** Tên các module theo thứ tự — hiện thành `syllabusSections` để Google thấy cấu trúc khoá. */
+  modules?: string[];
 }) {
   const url = absoluteUrl(`/catalog/${course.slug}`);
   const isPaid = course.paymentEnabled === true && (course.priceCents ?? 0) > 0;
+  // VND không có đơn vị phụ: `priceCents` lưu thẳng số đồng (xem formatPrice).
+  const currency = isPaid ? (course.currency ?? "USD") : "VND";
+  const price = isPaid
+    ? currency === "VND"
+      ? String(course.priceCents)
+      : (course.priceCents! / 100).toFixed(2)
+    : "0";
 
   return {
     "@context": "https://schema.org",
@@ -258,14 +284,23 @@ export function courseJsonLd(course: {
       name: SITE_NAME,
       url: SITE_URL,
     },
+    ...(course.modules?.length
+      ? {
+          syllabusSections: course.modules.map((name, i) => ({
+            "@type": "Syllabus",
+            name,
+            position: i + 1,
+          })),
+        }
+      : {}),
     ...(course.instructors?.length
       ? { instructor: course.instructors.map((name) => ({ "@type": "Person", name })) }
       : {}),
     offers: {
       "@type": "Offer",
       category: isPaid ? "Paid" : "Free",
-      price: isPaid ? (course.priceCents! / 100).toFixed(2) : "0",
-      priceCurrency: isPaid ? (course.currency ?? "USD") : "VND",
+      price,
+      priceCurrency: currency,
       availability: "https://schema.org/InStock",
       url,
     },
