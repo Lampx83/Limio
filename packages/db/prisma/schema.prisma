@@ -434,6 +434,11 @@ model Course {
   // Only takes effect while `status = published`; a draft course is never public.
   // Default false — existing courses keep login-gated behaviour.
   publicAccess           Boolean      @default(false)
+  /// Khoá mẫu: admin đánh dấu để giảng viên chưa có khoá nào bấm vào xem một khoá
+  /// "dựng xong trông thế nào". Chỉ có tác dụng khi khoá đang published + publicAccess
+  /// (giảng viên mới không ghi danh nên cần đọc công khai mới xem được) — điều kiện
+  /// này được ép ở setCourseSample và lọc lại ở listSampleCourses.
+  isSample               Boolean      @default(false)
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents             Int?
   currency               String       @default("USD")

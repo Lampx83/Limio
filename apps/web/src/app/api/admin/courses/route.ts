@@ -39,6 +39,8 @@ export async function GET(req: Request) {
         status: true,
         priceCents: true,
         currency: true,
+        publicAccess: true,
+        isSample: true,
         _count: { select: { accessPlans: { where: { isActive: true } } } },
       },
     }),
@@ -51,6 +53,8 @@ export async function GET(req: Request) {
     status: c.status,
     priceCents: c.priceCents,
     currency: c.currency,
+    publicAccess: c.publicAccess,
+    isSample: c.isSample,
     activeAccessPlanCount: c._count.accessPlans,
   }));
 

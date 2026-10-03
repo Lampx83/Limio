@@ -17,6 +17,7 @@ import {
 import { prisma } from "@feedbackme/db";
 import {
   getInstructorSkillCoverage,
+  listSampleCourses,
   userIsAnyProctor,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
@@ -166,6 +167,8 @@ export default async function InstructorDashboard({
   });
 
   if (ownedCourses.length === 0) {
+    // Khoá mẫu do admin đánh dấu: cho giảng viên mới xem một khoá dựng xong trông thế nào.
+    const sampleCourses = await listSampleCourses();
     return (
       <main>
         <h1 className="text-2xl font-bold">{greeting()}</h1>
@@ -177,6 +180,32 @@ export default async function InstructorDashboard({
             + Tạo khoá đầu tiên
           </Link>
         </div>
+        {sampleCourses.length > 0 && (
+          <section className="mt-8" aria-labelledby="sample-courses-heading">
+            <h2 id="sample-courses-heading" className="text-base font-semibold">
+              Xem khoá mẫu
+            </h2>
+            <p className="mt-0.5 text-sm text-muted">
+              Xem một khoá đã dựng xong trông thế nào trước khi tạo khoá của bạn.
+            </p>
+            <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {sampleCourses.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href={`/catalog/${c.slug}`}
+                    className="card block h-full p-4 transition-colors hover:border-brand-300"
+                  >
+                    <p className="font-semibold leading-snug">{c.title}</p>
+                    <p className="mt-1 line-clamp-2 text-sm text-muted">
+                      {c.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
+                    </p>
+                    <p className="mt-3 text-xs font-medium text-brand-700">Xem khoá →</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {/* Chưa có khoá thì lịch không có gì để hiện (nó chỉ liệt kê hạn nộp của các khoá mình dạy) —
             đặt ở đây chỉ là một thẻ lạc chỗ dưới nút "Tạo khoá đầu tiên". Có khoá rồi mới hiện lịch. */}
         {shouldShowTour && (
