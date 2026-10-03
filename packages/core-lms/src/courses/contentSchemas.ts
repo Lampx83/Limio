@@ -111,6 +111,114 @@ export const HtmlBlockPayload = z.object({
   heightPx: z.number().int().positive().max(4000).optional(),
 });
 
+/**
+ * LANG G1 — bài nghe.
+ *
+ * `url` chặt hơn UrlOrPath: chỉ đường dẫn cùng-origin (file tự upload qua
+ * /api/lesson-media/audio) hoặc https. Audio http trên trang https bị trình duyệt
+ * chặn (mixed content) nên nhận vào chỉ là nhận một bài nghe sẽ im lặng. Đường
+ * dẫn bắt đầu bằng `//` hay `/\` là protocol-relative — trỏ sang host khác dù
+ * trông như đường dẫn nội bộ — nên bị loại.
+ */
+export const AudioUrl = z.string().refine(
+  (v) => (v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/\\")) || /^https:\/\//i.test(v),
+  { message: "must be an https URL or a same-origin path starting with a single /" },
+);
+
+export const AudioPayload = z.object({
+  url: AudioUrl,
+  title: z.string().max(200).optional(),
+  caption: z.string().max(600).optional(),
+  /** Văn bản thuần (không HTML). Hiển thị trong khối gấp lại được. */
+  transcript: z.string().max(20_000).optional(),
+  /**
+   * false = không gửi lời thoại cho học viên (bài nghe-hiểu: lời thoại là đáp án).
+   * Mặc định hiện. Phía hiển thị phải bỏ hẳn nội dung, không chỉ ẩn bằng CSS.
+   */
+  showTranscript: z.boolean().optional(),
+  durationSec: z.number().int().positive().optional(),
+});
+
+/**
+ * LANG G2 — khối từ vựng và hội thoại.
+ *
+ * Tên trường trung lập ngôn ngữ (`term`/`reading`/`meaning`) để dùng cho tiếng
+ * Trung (chữ Hán/pinyin) lẫn tiếng Anh (từ/IPA). Toàn bộ là văn bản thuần — chỗ
+ * hiển thị dùng text node, không bao giờ HTML.
+ *
+ * Mỗi dòng/lượt có `id` (uuid) ổn định để G4 gắn flashcard vào đúng từ qua các
+ * lần sửa. Server gán id cho dòng chưa có (nhập qua API, import) và giữ nguyên id
+ * đã có. Id trùng nhau trong cùng khối bị từ chối.
+ */
+const newId = () => globalThis.crypto.randomUUID();
+const reqText = (max: number) => z.string().trim().min(1).max(max);
+// "" từ form coi như không điền: bỏ khỏi payload cho gọn.
+const optText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .transform((v) => (v === "" ? undefined : v));
+
+function uniqueIds(items: Array<{ id?: string }>, ctx: z.RefinementCtx) {
+  const seen = new Set<string>();
+  items.forEach((it, i) => {
+    if (!it.id) return;
+    if (seen.has(it.id)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "duplicate id", path: [i, "id"] });
+    }
+    seen.add(it.id);
+  });
+}
+
+export const VocabItem = z.object({
+  id: z.string().uuid().optional(),
+  term: reqText(200),
+  reading: optText(200),
+  meaning: reqText(500),
+  example: optText(1000),
+  exampleReading: optText(1000),
+  exampleMeaning: optText(1000),
+  note: optText(500),
+  audioUrl: AudioUrl.optional(),
+});
+
+export const VocabListPayload = z.object({
+  title: optText(200),
+  /** Nhãn cột phiên âm do giảng viên đặt ("Pinyin", "IPA"...); mặc định hiển thị "Phiên âm". */
+  readingLabel: optText(40),
+  items: z
+    .array(VocabItem)
+    .min(1)
+    .max(300)
+    .superRefine(uniqueIds)
+    .transform((items) => items.map((it) => ({ ...it, id: it.id ?? newId() }))),
+});
+
+export const DialogueTurn = z.object({
+  id: z.string().uuid().optional(),
+  speaker: reqText(40),
+  text: reqText(1000),
+  reading: optText(1000),
+  translation: optText(1000),
+  audioUrl: AudioUrl.optional(),
+});
+
+export const DialoguePayload = z.object({
+  title: optText(200),
+  caption: optText(600),
+  readingLabel: optText(40),
+  /** Audio cả bài (tuỳ chọn), ngoài audio riêng từng lượt. */
+  audioUrl: AudioUrl.optional(),
+  turns: z
+    .array(DialogueTurn)
+    .min(1)
+    .max(100)
+    .superRefine(uniqueIds)
+    .transform((turns) => turns.map((t) => ({ ...t, id: t.id ?? newId() }))),
+});
+
 export const ScormPayload = z.object({
   packageId: z.string().uuid(),
   title: z.string().max(200).optional(),
@@ -155,6 +263,9 @@ const PAYLOAD_BY_TYPE = {
   h5p: H5pPayload,
   teacher_note: TeacherNotePayload,
   html_block: HtmlBlockPayload,
+  audio: AudioPayload,
+  vocab_list: VocabListPayload,
+  dialogue: DialoguePayload,
 } as const;
 
 export type ContentTypeKey = keyof typeof PAYLOAD_BY_TYPE;

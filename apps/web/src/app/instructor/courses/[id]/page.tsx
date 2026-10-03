@@ -351,6 +351,7 @@ export default async function InstructorCourseEditPage({
                 priceCents: course.priceCents,
                 currency: course.currency ?? "VND",
                 personalizationEnabled: course.personalizationEnabled,
+                languageMode: course.languageMode,
                 publicAccess: course.publicAccess,
                 enrollMode: course.enrollMode,
               }}
@@ -446,6 +447,7 @@ export default async function InstructorCourseEditPage({
                       title: m.title,
                     }))}
                     hideUntaggedWarning={!course.personalizationEnabled}
+                    languageMode={course.languageMode}
                     showResearch={canResearch}
                     titleAside={
                       <PreviewAsLearnerButton

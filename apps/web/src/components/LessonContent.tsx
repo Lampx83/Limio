@@ -7,6 +7,9 @@ import { ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import SafeHtml from "./SafeHtml";
+import AudioLessonPlayer from "./AudioLessonPlayer";
+import VocabListView, { type VocabViewItem } from "./VocabListView";
+import DialogueView, { type DialogueViewTurn } from "./DialogueView";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
@@ -51,6 +54,14 @@ interface VideoPayload {
   transcriptUrl?: string;
   durationSec?: number;
   cuepoints?: Array<{ atSec: number; quizId: string }>;
+}
+interface AudioPayload {
+  url: string;
+  title?: string;
+  caption?: string;
+  transcript?: string;
+  showTranscript?: boolean;
+  durationSec?: number;
 }
 interface MarkdownPayload {
   body: string;
@@ -248,6 +259,47 @@ function ContentBlock({
             </a>
           )}
         </div>
+      );
+    }
+    case "audio": {
+      const p = payload as AudioPayload;
+      return (
+        <AudioLessonPlayer
+          url={p.url}
+          title={p.title}
+          caption={p.caption}
+          transcript={p.transcript}
+          showTranscript={p.showTranscript}
+        />
+      );
+    }
+    case "vocab_list": {
+      const p = (payload ?? {}) as {
+        title?: string;
+        readingLabel?: string;
+        items?: VocabViewItem[];
+      };
+      const items = Array.isArray(p.items) ? p.items : [];
+      if (items.length === 0) return null;
+      return <VocabListView title={p.title} readingLabel={p.readingLabel} items={items} />;
+    }
+    case "dialogue": {
+      const p = (payload ?? {}) as {
+        title?: string;
+        caption?: string;
+        readingLabel?: string;
+        audioUrl?: string;
+        turns?: DialogueViewTurn[];
+      };
+      const turns = Array.isArray(p.turns) ? p.turns : [];
+      if (turns.length === 0) return null;
+      return (
+        <DialogueView
+          title={p.title}
+          caption={p.caption}
+          audioUrl={p.audioUrl}
+          turns={turns}
+        />
       );
     }
     case "markdown": {

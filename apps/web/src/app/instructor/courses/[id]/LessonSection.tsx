@@ -10,6 +10,7 @@ interface Lesson {
   previewable: boolean;
   isHidden: boolean;
   isLocked: boolean;
+  languageSkill?: "listening" | "speaking" | "reading" | "writing" | null;
   contentItems: Array<{
     id: string;
     type: string;
@@ -95,6 +96,7 @@ export default function LessonSection({
   siblingLessonIds,
   modules,
   hideUntaggedWarning = false,
+  languageMode = false,
   showResearch = false,
   titleAside,
 }: {
@@ -106,6 +108,8 @@ export default function LessonSection({
   siblingLessonIds?: string[];
   modules?: Array<{ id: string; title: string }>;
   hideUntaggedWarning?: boolean;
+  /** LANG G3 — khoá ở chế độ ngoại ngữ: hiện ô chọn kỹ năng của bài. */
+  languageMode?: boolean;
   /** Role Researcher: hiện các thiết lập dành cho nghiên cứu (vd. bài tập yêu cầu tự đánh giá). */
   showResearch?: boolean;
   titleAside?: React.ReactNode;
@@ -139,6 +143,8 @@ export default function LessonSection({
           modules={modules}
           courseSlug={courseSlug}
           hideUntaggedWarning={hideUntaggedWarning}
+          languageMode={languageMode}
+          languageSkill={lesson.languageSkill ?? null}
           titleAside={titleAside}
         />
 

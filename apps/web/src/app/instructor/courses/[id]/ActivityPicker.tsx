@@ -8,6 +8,9 @@ import {
   FileText,
   FileType,
   Globe,
+  BookA,
+  Headphones,
+  MessagesSquare,
   LayoutTemplate,
   Link2,
   ListChecks,
@@ -36,7 +39,10 @@ type ContentSubtype =
   | "h5p"
   | "lti"
   | "teacher_note"
-  | "html_block";
+  | "html_block"
+  | "audio"
+  | "vocab_list"
+  | "dialogue";
 
 type Tile = {
   /** Unique key */
@@ -118,6 +124,36 @@ const TILES: Tile[] = [
     description: "Embed YouTube/Vimeo/Loom hoặc upload file",
     keywords: "youtube vimeo loom mp4 webm",
     pick: { kind: "content", subtype: "video" },
+  },
+  {
+    key: "audio",
+    group: "resource",
+    icon: Headphones,
+    color: "bg-sky-100 text-sky-700",
+    name: "Audio (bài nghe)",
+    description: "Upload mp3/m4a hoặc dán link, có tốc độ, lặp lại và lời thoại",
+    keywords: "audio nghe listening mp3 m4a hội thoại ngoại ngữ",
+    pick: { kind: "content", subtype: "audio" },
+  },
+  {
+    key: "vocab_list",
+    group: "resource",
+    icon: BookA,
+    color: "bg-yellow-100 text-yellow-800",
+    name: "Từ vựng (bảng từ)",
+    description: "Bảng từ · phiên âm · nghĩa · ví dụ, có audio từng từ và che nghĩa tự kiểm tra",
+    keywords: "từ vựng vocabulary vocab flashcard hán tự pinyin ngoại ngữ",
+    pick: { kind: "content", subtype: "vocab_list" },
+  },
+  {
+    key: "dialogue",
+    group: "resource",
+    icon: MessagesSquare,
+    color: "bg-green-100 text-green-700",
+    name: "Hội thoại",
+    description: "Các lượt thoại có người nói, phiên âm, bản dịch và audio từng câu",
+    keywords: "hội thoại dialogue conversation nghe nói ngoại ngữ",
+    pick: { kind: "content", subtype: "dialogue" },
   },
   {
     key: "pdf",
