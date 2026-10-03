@@ -20,9 +20,11 @@ export const SITE_NAME = "Limio";
 export const SITE_TAGLINE = "Learn in Flow";
 export const SITE_LOCALE = "vi_VN";
 
+// Mô tả này hiện trong thẻ xem trước khi dán link vào Zalo/Facebook — người đọc
+// là thầy cô và học viên, không phải dev, nên không dùng thuật ngữ kỹ thuật.
 export const SITE_DESCRIPTION =
-  "Limio là LMS thế hệ mới: skill graph, BKT learner model, AI tutor và " +
-  "gamification. Học theo cách của bạn — fresh, focused, your own pace.";
+  "Limio là nền tảng dạy, học và thi trực tuyến: giáo viên soạn bài, mở lớp, " +
+  "thi cử gọn gàng; học viên biết mình vững chỗ nào, cần ôn gì tiếp.";
 
 const RAW_SITE_URL = (
   process.env.SITE_URL ||
@@ -51,7 +53,7 @@ export const SITE_URL = BASE_PATH && !RAW_SITE_URL.endsWith(BASE_PATH)
  * vì font mặc định của `ImageResponse` chỉ có Latin — tiếng Việt có dấu sẽ ra
  * ô vuông.
  */
-export const DEFAULT_OG_IMAGE = "/og-default.png";
+export const DEFAULT_OG_IMAGE = "/og-default-v2.png";
 
 /** Đường dẫn nội bộ (`/catalog/abc`) → URL tuyệt đối để crawler dùng được. */
 export function absoluteUrl(path = "/"): string {
