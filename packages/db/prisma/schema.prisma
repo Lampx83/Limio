@@ -66,6 +66,8 @@ model User {
   lessonEngagements              LessonEngagement[]
   verificationTokens             VerificationToken[]
   notes                          Note[]
+  lessonAnnotations              LessonAnnotation[]
+  lessonAnnotationReplies        LessonAnnotationReply[]
   courseProgress                 UserCourseProgress[]
   xpTransactions                 XpTransaction[]
   userBadges                     UserBadge[]
@@ -565,6 +567,7 @@ model Lesson {
   forumThreads      ForumThread[]
   aiConversations   AiConversation[]
   notes             Note[]
+  annotations       LessonAnnotation[]
   skillTags         ContentSkillMapping[] @relation("LessonSkill")
   classroomSessions ClassroomSession[]
 
@@ -610,6 +613,7 @@ model ContentItem {
 
   lesson         Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   notes          Note[]
+  annotations    LessonAnnotation[]
   lessonActivity LessonActivity?
 
   @@index([lessonId])
@@ -762,6 +766,59 @@ model Note {
   contentItem ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
 
   @@index([userId, lessonId])
+}
+
+// =====================================================================
+// A3 — Annotation theo vùng chọn. Học viên/giảng viên bôi đen một cụm chữ
+// trong bài rồi ghi chú. Khác `Note` (gắn cả bài, riêng tư tuyệt đối): có
+// toạ độ trong văn bản, và tác giả có thể PUBLISH để cả khoá cùng thấy + reply.
+//
+// Neo vị trí theo kiểu "text quote" (Hypothesis/W3C Web Annotation): lưu đoạn
+// trích + chữ liền trước/sau + offset trong khối nội dung. Offset để dựng lại
+// nhanh; quote/prefix/suffix để tìm lại khi giảng viên sửa bài làm offset lệch.
+// Không tìm lại được thì annotation thành "mồ côi" (vẫn còn dữ liệu, không vẽ).
+// =====================================================================
+enum AnnotationVisibility {
+  private
+  published
+}
+
+model LessonAnnotation {
+  id            String               @id @default(uuid())
+  userId        String
+  lessonId      String
+  contentItemId String
+  quote         String               @db.Text
+  prefix        String               @default("")
+  suffix        String               @default("")
+  startOffset   Int
+  endOffset     Int
+  body          String               @db.Text
+  visibility    AnnotationVisibility @default(private)
+  publishedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  contentItem ContentItem             @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  replies     LessonAnnotationReply[]
+
+  @@index([lessonId, visibility])
+  @@index([userId, lessonId])
+}
+
+model LessonAnnotationReply {
+  id           String   @id @default(uuid())
+  annotationId String
+  userId       String
+  body         String   @db.Text
+  createdAt    DateTime @default(now())
+
+  annotation LessonAnnotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([annotationId, createdAt])
 }
 
 // =====================================================================
@@ -3971,6 +4028,9 @@ model CourseSection {
   // Hạn nộp / lịch quiz riêng của lớp này (ghi đè hạn chung của bài).
   assignmentDues AssignmentSectionDue[]
   quizSchedules  QuizSectionSchedule[]
+
+  // Kỳ học của lớp — nhãn tự gõ (vd "HK1 2026-27"), chỉ để hiển thị/sắp xếp; không liên kết với AcademicTerm.
+  termLabel String?
 
   @@unique([courseId, name])
   @@unique([courseId, code])

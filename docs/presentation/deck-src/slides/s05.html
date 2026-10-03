@@ -1,0 +1,264 @@
+<section class="slide tone-dark" id="s05" data-title="Ba module, một nhật ký chung" data-section="Kiến trúc">
+  <div class="slide-in">
+    <div class="eyebrow rv">Kiến trúc</div>
+    <h2 class="h2 rv">Ba module độc lập, nối bằng một nhật ký chung</h2>
+
+    <div class="s05-dgwrap rv rv-s">
+      <svg class="dg" viewBox="0 0 1000 326" role="img" aria-label="Ba module Lớp học, Phản hồi AI và Điểm thưởng không gọi trực tiếp nhau mà cùng ghi và đọc một nhật ký học tập chung, cùng các bảng dùng chung">
+        <!-- làn nối module <-> nhật ký (trái: ghi xuống, phải: đọc lên) -->
+        <g class="lanes">
+          <line class="draw base" id="s05-w-lms" pathLength="1" x1="107" y1="112" x2="107" y2="188"/>
+          <line class="draw base" id="s05-r-lms" pathLength="1" x1="143" y1="112" x2="143" y2="188"/>
+          <line class="draw base" id="s05-w-fb"  pathLength="1" x1="482" y1="112" x2="482" y2="188"/>
+          <line class="draw base" id="s05-r-fb"  pathLength="1" x1="518" y1="112" x2="518" y2="188"/>
+          <line class="draw base" id="s05-w-gm"  pathLength="1" x1="857" y1="112" x2="857" y2="188"/>
+          <line class="draw base" id="s05-r-gm"  pathLength="1" x1="893" y1="112" x2="893" y2="188"/>
+          <line class="fd dn" x1="107" y1="118" x2="107" y2="182"/><line class="fd up" x1="143" y1="118" x2="143" y2="182"/>
+          <line class="fd dn" x1="482" y1="118" x2="482" y2="182"/><line class="fd up" x1="518" y1="118" x2="518" y2="182"/>
+          <line class="fd dn" x1="857" y1="118" x2="857" y2="182"/><line class="fd up" x1="893" y1="118" x2="893" y2="182"/>
+          <g class="tri"><polygon points="101,180 113,180 107,189"/><polygon points="476,180 488,180 482,189"/><polygon points="851,180 863,180 857,189"/>
+            <polygon points="137,121 149,121 143,112"/><polygon points="512,121 524,121 518,112"/><polygon points="887,121 899,121 893,112"/></g>
+        </g>
+
+        <!-- dấu × : không gọi trực tiếp -->
+        <g class="nogo">
+          <path d="M 258 38 L 367 38" class="gap"/><path d="M 633 38 L 742 38" class="gap"/>
+          <g class="xm" transform="translate(312 38)"><line x1="-10" y1="-10" x2="10" y2="10"/><line x1="-10" y1="10" x2="10" y2="-10"/></g>
+          <g class="xm" transform="translate(688 38)"><line x1="-10" y1="-10" x2="10" y2="10"/><line x1="-10" y1="10" x2="10" y2="-10"/></g>
+          <text class="t cap" x="312" y="78" text-anchor="middle">không gọi</text><text class="t cap" x="312" y="99" text-anchor="middle">trực tiếp</text>
+          <text class="t cap" x="688" y="78" text-anchor="middle">không gọi</text><text class="t cap" x="688" y="99" text-anchor="middle">trực tiếp</text>
+        </g>
+
+        <!-- ba module -->
+        <g class="mod" id="s05-m-lms" data-m="lms" tabindex="0" role="button" aria-label="Module Lớp học">
+          <rect class="pulse" x="0" y="0" width="250" height="110" rx="16"/>
+          <rect class="mbox" x="0" y="0" width="250" height="110" rx="16"/>
+          <use class="ic" href="#i-book" x="18" y="37" width="36" height="36"/>
+          <text class="t nm" x="68" y="63">Lớp học (LMS)</text>
+        </g>
+        <g class="mod" id="s05-m-fb" data-m="fb" tabindex="0" role="button" aria-label="Module Phản hồi AI">
+          <rect class="pulse" x="375" y="0" width="250" height="110" rx="16"/>
+          <rect class="mbox" x="375" y="0" width="250" height="110" rx="16"/>
+          <use class="ic" href="#i-cpu" x="393" y="37" width="36" height="36"/>
+          <text class="t nm" x="443" y="63">Phản hồi AI</text>
+        </g>
+        <g class="mod" id="s05-m-gm" data-m="gm" tabindex="0" role="button" aria-label="Module Điểm thưởng">
+          <rect class="pulse" x="750" y="0" width="250" height="110" rx="16"/>
+          <rect class="mbox" x="750" y="0" width="250" height="110" rx="16"/>
+          <use class="ic" href="#i-trophy" x="768" y="37" width="36" height="36"/>
+          <text class="t nm" x="818" y="63">Điểm thưởng</text>
+        </g>
+
+        <!-- nhật ký học tập chung (LearningEvent) -->
+        <g id="s05-bar">
+          <rect class="pulse" x="0" y="190" width="1000" height="70" rx="16"/>
+          <rect class="barbox" x="0" y="190" width="1000" height="70" rx="16"/>
+          <text class="t lg" x="26" y="236">Nhật ký học tập chung</text>
+          <g class="blks">
+            <rect x="620" y="211" width="28" height="28" rx="6" style="--d:0s"/><rect x="660" y="211" width="28" height="28" rx="6" style="--d:.45s"/>
+            <rect x="700" y="211" width="28" height="28" rx="6" style="--d:.9s"/><rect x="740" y="211" width="28" height="28" rx="6" style="--d:1.35s"/>
+            <rect x="780" y="211" width="28" height="28" rx="6" style="--d:1.8s"/><rect x="820" y="211" width="28" height="28" rx="6" style="--d:2.25s"/>
+            <rect x="860" y="211" width="28" height="28" rx="6" style="--d:2.7s"/><rect x="900" y="211" width="28" height="28" rx="6" class="nw" style="--d:3.15s"/>
+            <line x1="620" y1="250" x2="928" y2="250" class="tl"/>
+          </g>
+        </g>
+
+        <!-- bảng dùng chung -->
+        <text class="t cap2" x="0" y="311">Bảng dùng chung</text>
+        <g class="chip" id="s05-c-skill"><rect x="200" y="282" width="250" height="44" rx="11"/><text class="t" x="325" y="311" text-anchor="middle">Chủ đề kiến thức</text></g>
+        <g class="chip" id="s05-c-lss"><rect x="475" y="282" width="250" height="44" rx="11"/><text class="t" x="600" y="311" text-anchor="middle">Mức nắm vững</text></g>
+        <g class="chip" id="s05-c-xp"><rect x="750" y="282" width="250" height="44" rx="11"/><text class="t" x="875" y="311" text-anchor="middle">Điểm thưởng</text></g>
+
+        <g class="parts" id="s05-parts"></g>
+      </svg>
+    </div>
+
+    <div class="s05-step rv" id="s05-step" aria-live="off"><b class="sn"></b><span class="st"></span></div>
+  </div>
+
+  <aside class="notes">
+    <p>(≈ 100 giây)</p>
+    <p>Đây là điểm cốt lõi về kiến trúc. Hệ thống gồm ba module nghiệp vụ độc lập: lớp học (LMS Core), phản hồi AI (Feedback Engine) và điểm thưởng (Gamification). Chúng không gọi trực tiếp nhau; mọi giao tiếp đi qua hai cầu nối: nhật ký học tập chung (trong mã nguồn là bảng LearningEvent) và các bảng dùng chung (Skill, LearnerSkillState, XpTransaction…). Nhật ký này chỉ thêm, không sửa; mỗi loại sự kiện được kiểm tra schema; có thể phát lại để dựng lại trạng thái.</p>
+    <p>Hoạt cảnh tự lặp bốn bước bằng ngôn ngữ đời thường. (1) Học viên làm bài: LMS ghi sự kiện quiz.question.answered vào nhật ký. (2) Hệ thống cập nhật mức nắm vững: Feedback Engine đọc sự kiện đó, cập nhật bảng LearnerSkillState và ghi skill.state.updated. (3) Phản hồi đúng chỗ còn yếu: Feedback Engine sinh và ghi feedback.delivered. (4) Cộng điểm thưởng: Gamification đọc cùng dòng sự kiện, đối chiếu mức nắm vững để điều chỉnh XP, rồi ghi xp.awarded. Rê chuột vào một module để làm sáng module, làn ghi/đọc và bảng dùng chung của nó.</p>
+    <p>Thông điệp: ba module không biết nhau nhưng luôn nhìn cùng một dòng dữ liệu, nên mọi trạng thái học tập đều dựng lại được từ nhật ký; phản hồi, điểm thi, bài nộp và điểm thưởng luôn khớp nhau. Tiếp theo: mô hình người học vận hành trên dòng dữ liệu này.</p>
+  </aside>
+
+  <style>
+    #s05 .slide-in,#s05.slide .slide-in{gap:.9rem}
+    #s05 .eyebrow{font-size:1rem}
+    #s05 .h2{font-size:2.5rem;white-space:nowrap}
+    #s05 .s05-dgwrap{display:flex;align-items:center;justify-content:center;min-height:0}
+    #s05 svg.dg{width:100%;height:auto;max-height:24rem;display:block;overflow:visible}
+    #s05 .t{fill:var(--fg);font-family:var(--font)}
+    #s05 .t.nm{font-size:25px;font-weight:700}
+    #s05 .t.lg{font-size:31px;font-weight:700;fill:var(--acc)}
+    #s05 .t.cap{font-size:17px;fill:var(--hi);font-weight:600}
+    #s05 .t.cap2{font-size:20px;fill:var(--fg2);font-weight:600}
+    #s05 .mbox{fill:var(--card);stroke:var(--cardline);stroke-width:1.5;transition:stroke .4s var(--ease),fill .4s var(--ease)}
+    #s05 .ic{color:var(--acc);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    #s05 .pulse{fill:none;stroke:var(--acc);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
+    #s05 .mod.on .mbox{stroke:var(--acc);stroke-width:3;fill:var(--soft)}
+    #s05 .mod.on .pulse{animation:s05ring 1.5s var(--ease) both}
+    #s05 #s05-bar.hit .pulse{animation:s05ringb 1.1s var(--ease) both}
+    @keyframes s05ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.14,1.3)}}
+    @keyframes s05ringb{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.02,1.3)}}
+    #s05 .barbox{fill:var(--soft);stroke:var(--acc);stroke-width:1.8;stroke-opacity:.7}
+    #s05 .blks rect{fill:var(--acc);opacity:.22;animation:s05blk 3.6s ease-in-out infinite;animation-delay:var(--d)}
+    #s05 .blks rect.nw{fill:var(--hi)}
+    #s05 .blks .tl{stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 6;animation:s05dash 2.4s linear infinite}
+    @keyframes s05blk{0%,100%{opacity:.18}35%{opacity:.9}}
+    @keyframes s05dash{to{stroke-dashoffset:-18}}
+    #s05 .lanes .base{stroke:var(--acc);stroke-width:2;opacity:.38}
+    #s05 .lanes .fd{stroke:var(--acc);stroke-width:2.6;stroke-linecap:round;stroke-dasharray:2 10;opacity:.55}
+    #s05 .lanes .fd.dn{animation:s05fl 1.6s linear infinite}
+    #s05 .lanes .fd.up{animation:s05fl 1.6s linear infinite reverse}
+    @keyframes s05fl{to{stroke-dashoffset:-24}}
+    #s05 .lanes .tri polygon{fill:var(--acc);opacity:.7}
+    #s05 .nogo .gap{stroke:var(--hi);stroke-width:2;stroke-dasharray:5 6;opacity:.5;fill:none}
+    #s05 .nogo .xm line{stroke:var(--hi);stroke-width:3.4;stroke-linecap:round}
+    #s05 .nogo .xm{animation:s05x 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    @keyframes s05x{50%{opacity:.55}}
+    #s05 .chip{cursor:default;display:inline;background:none;border:0;padding:0;border-radius:0}
+    #s05 .chip rect{fill:var(--card);stroke:var(--cardline);stroke-width:1.5;transition:fill .4s var(--ease),stroke .4s var(--ease)}
+    #s05 .chip .t{font-size:20px;font-weight:600}
+    #s05 .chip.lit rect{fill:var(--soft);stroke:var(--acc);stroke-width:2.6}
+    #s05 .pt{filter:drop-shadow(0 0 5px currentColor)}
+    #s05 .pt.w{fill:#A3E635;color:#A3E635}
+    #s05 .pt.r{fill:#F472B6;color:#F472B6}
+
+    /* rê chuột: làm sáng module và làn của nó */
+    #s05 .mod{cursor:pointer;outline:none}
+    #s05 .mod,#s05 .lanes line,#s05 .lanes polygon,#s05 .nogo,#s05 .chip,#s05 #s05-bar{transition:opacity .7s var(--ease)}
+    #s05 svg.dg[data-focus] .mod:not(.focus){opacity:.3}
+    #s05 svg.dg[data-focus] .lanes [data-m]:not(.focus){opacity:.08}
+    #s05 svg.dg[data-focus] .nogo,#s05 svg.dg[data-focus] .chip:not(.fl){opacity:.25}
+    #s05 .mod.focus .mbox{stroke:var(--acc);stroke-width:3;fill:var(--soft)}
+    #s05 .mod:focus-visible .mbox{stroke:var(--acc);stroke-width:3}
+    #s05 .lanes .base.focus{opacity:.95;stroke-width:3}
+    #s05 .lanes .fd.focus{opacity:1;stroke-width:3.2}
+    #s05 .lanes polygon.focus{opacity:1}
+    #s05 .chip.fl rect{fill:var(--soft);stroke:var(--acc);stroke-width:2.6}
+
+    /* dòng chữ của bước đang chạy */
+    #s05 .s05-step{display:flex;align-items:center;justify-content:center;gap:.9rem;min-height:2.7rem;font-size:1.75rem;font-weight:700;color:var(--fg);text-align:center}
+    #s05 .s05-step .sn{display:none;place-items:center;width:2.2rem;height:2.2rem;border-radius:50%;background:var(--acc);color:var(--accink);font-size:1.2rem;font-weight:800;flex:none}
+    #s05 .s05-step.on .sn{display:grid}
+    #s05 .s05-step .st{opacity:0}
+    #s05 .s05-step.on .st{animation:s05txt .7s var(--ease) both}
+    #s05 .s05-step.on .sn{animation:s05txt .7s var(--ease) both}
+    @keyframes s05txt{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    #s05 .s05-step.out .st,#s05 .s05-step.out .sn{opacity:0;transition:opacity .5s var(--ease);animation:none}
+    @media (max-width:860px){#s05 .h2{white-space:normal;font-size:1.8rem}#s05 .s05-step{font-size:1.3rem}}
+  </style>
+
+  <script>(function(){
+    var NS='http://www.w3.org/2000/svg';
+    var STEPS=[
+      {m:'lms',txt:'Học viên làm bài',anim:[['w',0]]},
+      {m:'fb',txt:'Hệ thống cập nhật mức nắm vững',anim:[['r',0],['w',700]],chip:'lss'},
+      {m:'fb',txt:'Phản hồi đúng chỗ còn yếu',anim:[['w',0]]},
+      {m:'gm',txt:'Cộng điểm thưởng',anim:[['r',0],['w',700]],chip:'xp'}
+    ];
+    var GAP=2500;
+
+    Deck.on('s05',{
+      enter:function(c){
+        var R=c.root,svg=R.querySelector('svg.dg'),parts=R.querySelector('#s05-parts'),bar=R.querySelector('#s05-bar'),
+            step=R.querySelector('#s05-step'),sn=step.querySelector('.sn'),st=step.querySelector('.st');
+        function q(id){return R.querySelector(id)}
+        var mods={lms:q('#s05-m-lms'),fb:q('#s05-m-fb'),gm:q('#s05-m-gm')};
+        var chips={lss:q('#s05-c-lss'),xp:q('#s05-c-xp')};
+        function restart(el,cls,ms){el.classList.remove(cls);void svg.getBoundingClientRect();el.classList.add(cls);if(ms)c.timeout(function(){el.classList.remove(cls)},ms)}
+        function moveDot(line,down,cls,done){
+          var x=+line.getAttribute('x1'),ya=+line.getAttribute('y1'),yb=+line.getAttribute('y2');
+          var y0=down?ya:yb,y1=down?yb:ya;
+          var p=document.createElementNS(NS,'circle');p.setAttribute('r','7');p.setAttribute('class','pt '+cls);p.setAttribute('cx',x);p.setAttribute('cy',y0);parts.appendChild(p);
+          if(Deck.reduce){if(p.parentNode)p.parentNode.removeChild(p);done&&done();return}
+          var t0=null;(function f(t){
+            if(!c.alive){if(p.parentNode)p.parentNode.removeChild(p);return}
+            if(t0===null)t0=t;var k=Math.min(1,(t-t0)/850),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+            p.setAttribute('cy',y0+(y1-y0)*e);p.setAttribute('opacity',k<.12?k/.12:(k>.9?(1-k)/.1:1));
+            if(k<1)requestAnimationFrame(f);else{if(p.parentNode)p.parentNode.removeChild(p);done&&done()}
+          })(performance.now());
+        }
+        function fly(m,kind,delay){
+          c.timeout(function(){
+            if(kind==='w')moveDot(R.querySelector('#s05-w-'+m),true,'w',function(){restart(bar,'hit',1200)});
+            else moveDot(R.querySelector('#s05-r-'+m),false,'r');
+          },delay);
+        }
+        function showStep(i){
+          st.textContent=STEPS[i].txt;sn.textContent=i+1;
+          step.classList.remove('out');step.classList.remove('on');void step.offsetWidth;step.classList.add('on');
+        }
+        function run(s,i){
+          showStep(i);
+          restart(mods[s.m],'on',1550);
+          s.anim.forEach(function(a){fly(s.m,a[0],a[1])});
+          if(s.chip)c.timeout(function(){restart(chips[s.chip],'lit',1600)},400);
+        }
+        function reset(){
+          Object.keys(mods).forEach(function(k){mods[k].classList.remove('on')});
+          bar.classList.remove('hit');Object.keys(chips).forEach(function(k){chips[k].classList.remove('lit')});
+          parts.innerHTML='';step.classList.remove('on','out');st.textContent='';sn.textContent='';
+        }
+        var hold=false;
+        function play(){
+          reset();
+          STEPS.forEach(function(s,i){c.timeout(function(){if(!hold)run(s,i)},i*GAP)});
+          c.timeout(function(){step.classList.add('out')},STEPS.length*GAP+400);
+          c.timeout(again,STEPS.length*GAP+1100);
+        }
+        /* đang rê chuột vào module: giữ nguyên, chờ thả ra mới chạy vòng mới */
+        function again(){if(hold)c.timeout(again,400);else play()}
+
+        /* ---- rê / bấm vào module: làm sáng module, làn ghi–đọc và bảng dùng chung của nó ---- */
+        var INFO={lms:{},fb:{chip:'lss'},gm:{chip:'xp'}};
+        var laneEls=[].slice.call(R.querySelectorAll('.lanes line, .lanes polygon'));
+        laneEls.forEach(function(e){
+          var v=e.tagName==='polygon'?parseFloat(e.getAttribute('points')):parseFloat(e.getAttribute('x1'));
+          e.setAttribute('data-m',v<250?'lms':(v<625?'fb':'gm'));
+        });
+        var pinned=null,shown=null;
+        function focusMod(m){
+          if(shown===m)return;
+          shown=m;hold=true;
+          svg.setAttribute('data-focus',m);
+          Object.keys(mods).forEach(function(k){mods[k].classList.toggle('focus',k===m)});
+          laneEls.forEach(function(e){e.classList.toggle('focus',e.getAttribute('data-m')===m)});
+          Object.keys(chips).forEach(function(k){chips[k].classList.toggle('fl',INFO[m].chip===k)});
+        }
+        function release(){
+          if(shown===null)return;
+          shown=null;hold=false;
+          svg.removeAttribute('data-focus');
+          Object.keys(mods).forEach(function(k){mods[k].classList.remove('focus')});
+          laneEls.forEach(function(e){e.classList.remove('focus')});
+          Object.keys(chips).forEach(function(k){chips[k].classList.remove('fl')});
+        }
+        Object.keys(mods).forEach(function(k){
+          var el=mods[k];
+          c.on(el,'mouseenter',function(){if(!pinned)focusMod(k)});
+          c.on(el,'mouseleave',function(){if(!pinned)release()});
+          c.on(el,'focus',function(){if(!pinned)focusMod(k)});
+          c.on(el,'blur',function(){if(!pinned)release()});
+          c.on(el,'click',function(e){
+            e.stopPropagation();
+            if(pinned===k){pinned=null;release()}else{pinned=k;focusMod(k)}
+          });
+          c.on(el,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();e.stopPropagation();el.dispatchEvent(new Event('click'))}});
+        });
+        c.on(R,'click',function(){if(pinned){pinned=null;release()}});
+        release();
+        reset();
+        c.timeout(play,1700);
+      },
+      leave:function(c){
+        var R=c.root;R.querySelector('#s05-parts').innerHTML='';
+        Array.prototype.forEach.call(R.querySelectorAll('.mod.on,.mod.focus,.chip.lit,.chip.fl,.lanes .focus'),function(e){e.classList.remove('on','lit','focus','fl')});
+        R.querySelector('svg.dg').removeAttribute('data-focus');
+        R.querySelector('#s05-step').classList.remove('on','out');
+      }
+    });
+  })();</script>
+</section>

@@ -4,6 +4,7 @@ export {
   sendTemplatedEmail,
   renderTemplate,
   renderField,
+  renderPlain,
   composeEmailHtml,
   type TemplateKey,
   type RenderedTemplate,

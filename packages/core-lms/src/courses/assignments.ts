@@ -53,8 +53,10 @@ const CreateInput = z.object({
   description: z.string().trim().min(1).max(20_000),
   dueAt: z
     .union([z.string().datetime(), z.date()])
+    .nullable()
     .optional()
-    .transform((v) => (v === undefined ? null : new Date(v))),
+    // null = bỏ hạn chung. Khi sửa (partial) undefined = không đụng tới, nên chỉ null mới xoá hạn.
+    .transform((v) => (v == null ? null : new Date(v))),
   maxScore: z.number().int().positive().max(1000).default(100),
   isHidden: z.boolean().optional(),
   pedagogicalIntent: GenerativeActivityTypeSchema.nullable().optional(),

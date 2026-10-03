@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const { lessonId, prompt } = z
       .object({
         lessonId: z.string().uuid().optional(),
-        prompt: z.string().min(1).max(200),
+        prompt: z.string().min(1).max(1000),
       })
       .parse(body);
 

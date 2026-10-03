@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   AccessCodeError,
+  AnnotationError,
   AssignmentError,
   CourseAuthzError,
   CourseError,
@@ -90,6 +91,22 @@ export function mapKnownError(err: unknown): NextResponse | null {
         : err.code === "not_enrolled"
           ? 403
           : 400;
+    return NextResponse.json(
+      err.details ? { error: err.code, details: err.details } : { error: err.code },
+      { status },
+    );
+  }
+  if (err instanceof AnnotationError) {
+    const status =
+      err.code === "lesson_not_found" ||
+      err.code === "annotation_not_found" ||
+      err.code === "reply_not_found"
+        ? 404
+        : err.code === "not_enrolled"
+          ? 403
+          : err.code === "too_many"
+            ? 429
+            : 400;
     return NextResponse.json(
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },

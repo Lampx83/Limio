@@ -17,6 +17,7 @@ import LessonContent from "@/components/LessonContent";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
+import LessonAnnotations from "@/components/lesson/LessonAnnotations";
 import SafeHtml from "@/components/SafeHtml";
 import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
 import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
@@ -699,11 +700,12 @@ export default async function LessonPage({
             auto-placement đẩy vào cột 1 (16rem). Bài không có mục lục thì không
             dùng grid, nội dung thẳng hàng với tiêu đề. */}
         <div className={hasSectionNav ? "xl:col-start-2" : undefined}>
-        {/* Trên màn chiếu, tên bài phải luôn nhìn thấy: người vào muộn hoặc ngẩng
-            lên giữa chừng cần biết đang học bài nào mà không phải hỏi. Dính theo
-            mép trên vì cuộn tới mục 4 thì tiêu đề bài đã trôi mất từ lâu. */}
+        {/* Trên màn chiếu, tên bài nằm ở đầu trang và cuộn đi cùng nội dung. Từng
+            dính theo mép trên, nhưng header site bị ẩn nên offset 74px chừa một
+            khoảng hở cho nội dung chạy xuyên qua phía trên tiêu đề, và tiêu đề
+            che mất một phần màn chiếu dù giảng viên đã cuộn đi. */}
         {stageMode && (
-          <div className="sticky top-[74px] z-10 mb-4 border-b border-token bg-[rgb(var(--surface))] pb-2">
+          <div className="stage-title mb-4 border-b border-token pb-2">
             <p className="text-sm font-medium text-muted">{lesson.module.title}</p>
             <p className="h-display text-2xl font-bold leading-tight">{lesson.title}</p>
           </div>
@@ -773,6 +775,18 @@ export default async function LessonPage({
       )}
 
       {!previewMode && <AiTutorPanel lessonId={lesson.id} />}
+
+      {/* Bôi đen → chuột phải → annotation / hỏi AI. Không gắn khi chiếu lớp
+          (stage): menu chuột phải bất ngờ hiện trên màn chiếu là điều không ai
+          muốn. Cần có tài khoản — người đọc ẩn danh của khoá công khai không
+          có annotation để lưu. */}
+      {!previewMode && !stageMode && userId && (enrolled || canEdit) && (
+        <LessonAnnotations
+          lessonId={lesson.id}
+          canModerate={canEdit}
+          aiEnabled={!previewMode}
+        />
+      )}
     </main>
   );
 }

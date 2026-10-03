@@ -25,8 +25,11 @@ import {
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const ssoProviders = [];
+/** id các nhà cung cấp SSO đã cấu hình — để trang đăng nhập render nút ngay ở server. */
+export const enabledSsoProviderIds: string[] = [];
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  enabledSsoProviderIds.push("google");
   ssoProviders.push(
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -42,6 +45,7 @@ if (
   process.env.MICROSOFT_CLIENT_ID &&
   process.env.MICROSOFT_CLIENT_SECRET
 ) {
+  enabledSsoProviderIds.push("microsoft-entra-id");
   ssoProviders.push(
     MicrosoftEntraID({
       clientId: process.env.MICROSOFT_CLIENT_ID,

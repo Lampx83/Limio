@@ -8,7 +8,7 @@ import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
-import { WORD_COLORS } from "@/lib/wordCloudColors";
+import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -283,7 +283,7 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
             {sortedWords.length > 0 ? sortedWords.map(([word, freq], idx) => (
               <span
                 key={word}
-                className={`px-3 py-1.5 rounded-full font-semibold ${WORD_COLORS[idx % WORD_COLORS.length]} transition-transform hover:scale-110`}
+                className={`px-3 py-1.5 rounded-full font-semibold text-white ${WORD_GRADIENTS[idx % WORD_GRADIENTS.length]} transition-transform hover:scale-110`}
                 style={{ fontSize: `${getWordSize(freq, maxFrequency)}rem` }}
               >
                 {word}
@@ -444,10 +444,10 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateCloud()}
             placeholder="Nhập câu hỏi cho học viên..."
-            maxLength={200}
+            maxLength={1000}
             className="input w-full"
           />
-          <p className="text-xs text-muted mt-1">{prompt.length}/200</p>
+          <p className="text-xs text-muted mt-1">{prompt.length}/1000</p>
         </div>
 
         <button onClick={handleCreateCloud} disabled={isCreating} className="btn-primary w-full">

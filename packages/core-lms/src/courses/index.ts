@@ -4,6 +4,7 @@ export * from "./authz";
 export * from "./courses";
 export * from "./instructors";
 export * from "./sections";
+export * from "./sectionImport";
 export * from "./modules";
 export * from "./lessons";
 export * from "./contents";
