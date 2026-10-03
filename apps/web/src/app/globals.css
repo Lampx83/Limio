@@ -1030,3 +1030,24 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
     animation: none !important;
   }
 }
+
+/* Annotation theo vùng chọn (LessonAnnotations). CSS Custom Highlight API: tô
+   nền lên Range mà không chèn node vào DOM của bài. Ba màu để nhìn là biết ai
+   viết: vàng = của mình (riêng tư), xanh lá = của mình đã chia sẻ, xanh dương =
+   của người khác. "active" đè lên khi đang mở cuộc trao đổi. Không dùng màu chữ:
+   ::highlight chỉ nhận một nhóm thuộc tính hẹp, và đổi màu chữ dễ làm tụt tương
+   phản trong dark mode. */
+::highlight(annot-private) {
+  background-color: rgb(250 204 21 / 0.35);
+}
+::highlight(annot-shared) {
+  background-color: rgb(52 211 153 / 0.3);
+}
+::highlight(annot-others) {
+  background-color: rgb(96 165 250 / 0.3);
+}
+::highlight(annot-active) {
+  background-color: rgb(var(--brand) / 0.35);
+  text-decoration: underline;
+  text-decoration-color: rgb(var(--brand));
+}

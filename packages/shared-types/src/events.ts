@@ -12,6 +12,12 @@ export const LearningEventType = {
   LessonEngaged: "lesson.engaged",
   EnrollmentSectionChanged: "enrollment.section_changed",
   AiTutorAsked: "ai.tutor.asked",
+  // Annotation theo vùng chọn trong bài (LessonAnnotation). Payload không mang
+  // chữ của annotation — xem LessonAnnotationCreatedPayload.
+  LessonAnnotationCreated: "lesson.annotation.created",
+  LessonAnnotationPublished: "lesson.annotation.published",
+  LessonAnnotationReplied: "lesson.annotation.replied",
+  LessonAnnotationRemoved: "lesson.annotation.removed",
   /** In-video quiz cuepoint passed (formative — not a full QuizAttempt). */
   VideoCuepointPassed: "video.cuepoint.passed",
   QuizStarted: "quiz.started",
@@ -274,6 +280,45 @@ export interface AiTutorAskedPayload {
   questionLength: number;
   /** Lượt thứ mấy trong hội thoại này. Lượt 5 khác hẳn lượt 1. */
   turnIndex: number;
+}
+
+/**
+ * Annotation theo vùng chọn. Như B15, KHÔNG mang nội dung chữ: nó đã nằm
+ * nguyên văn ở LessonAnnotation / LessonAnnotationReply, nhân bản sang bảng
+ * append-only chỉ làm rộng bề mặt dữ liệu. Event trả lời "ai ghi chú ở bài
+ * nào, công khai hay riêng, ai xoá".
+ */
+export interface LessonAnnotationCreatedPayload {
+  annotationId: string;
+  lessonId: string;
+  contentItemId: string;
+  quoteLength: number;
+  bodyLength: number;
+  published: boolean;
+}
+
+export interface LessonAnnotationPublishedPayload {
+  annotationId: string;
+  lessonId: string;
+  /** false = tác giả thu hồi về riêng tư. */
+  published: boolean;
+}
+
+export interface LessonAnnotationRepliedPayload {
+  annotationId: string;
+  replyId: string;
+  lessonId: string;
+  /** Tác giả annotation — để dựng "ai được hồi đáp" mà không phải join. */
+  annotationAuthorId: string;
+}
+
+export interface LessonAnnotationRemovedPayload {
+  /** "annotation" hoặc "reply". */
+  kind: "annotation" | "reply";
+  targetId: string;
+  lessonId: string;
+  /** "author" tự xoá; "moderator" là giảng viên gỡ nội dung công khai. */
+  by: "author" | "moderator";
 }
 
 export interface EnrollmentCreatedPayload {

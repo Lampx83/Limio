@@ -17,6 +17,7 @@ import LessonContent from "@/components/LessonContent";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
+import LessonAnnotations from "@/components/lesson/LessonAnnotations";
 import SafeHtml from "@/components/SafeHtml";
 import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
 import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
@@ -774,6 +775,18 @@ export default async function LessonPage({
       )}
 
       {!previewMode && <AiTutorPanel lessonId={lesson.id} />}
+
+      {/* Bôi đen → chuột phải → annotation / hỏi AI. Không gắn khi chiếu lớp
+          (stage): menu chuột phải bất ngờ hiện trên màn chiếu là điều không ai
+          muốn. Cần có tài khoản — người đọc ẩn danh của khoá công khai không
+          có annotation để lưu. */}
+      {!previewMode && !stageMode && userId && (enrolled || canEdit) && (
+        <LessonAnnotations
+          lessonId={lesson.id}
+          canModerate={canEdit}
+          aiEnabled={!previewMode}
+        />
+      )}
     </main>
   );
 }

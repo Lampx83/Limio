@@ -83,6 +83,9 @@ async function resolveGlobalTokenCap(db: PrismaClient): Promise<number> {
 // Default model. gpt-4o-mini = cheap + fast. Override per-conversation if needed.
 export const DEFAULT_MODEL = "gpt-4o-mini";
 
+/** Số ký tự tối đa của đoạn bôi đen gửi kèm câu hỏi. */
+export const MAX_QUOTE_CHARS = 800;
+
 // Rough pricing per 1K tokens for cost log (USD). Update when models change.
 // Source: openai.com/api/pricing — values as of 2026-05.
 const PRICE_PER_1K_INPUT: Record<string, number> = {
@@ -292,6 +295,13 @@ interface ChatTurnInput {
   userId: string;
   /** The user's new message content. */
   userMessage: string;
+  /**
+   * Đoạn học viên bôi đen trong bài rồi chọn "Hỏi AI". Được lưu chung vào tin
+   * nhắn dưới dạng trích dẫn (blockquote) chứ không chỉ nhét vào system prompt:
+   * lịch sử hội thoại là thứ gửi lại cho model ở các lượt sau, nên câu hỏi
+   * "ý này nghĩa là gì?" vẫn còn nguyên nó đang hỏi về chỗ nào.
+   */
+  quote?: string;
   /** OpenAI client — caller injects so we can swap providers / mock in tests. */
   openai: OpenAI;
   model?: string;
@@ -331,6 +341,13 @@ export async function runChatTurn(
     throw new AiTutorError("validation_failed", "wrong_user");
   }
 
+  // Trích đoạn chỉ là ngữ cảnh — cắt để một cú dán cả trang không ăn hết ví token.
+  const quote = (input.quote ?? "").trim().slice(0, MAX_QUOTE_CHARS);
+  const rawText = input.userMessage.trim();
+  const userText = quote
+    ? `${quote.split("\n").map((l) => `> ${l}`).join("\n")}\n\n${rawText}`
+    : rawText;
+
   const ctx = await buildLessonContext(input.userId, conv.lessonId, db);
   const system = buildSystemPrompt(ctx);
   const model = input.model ?? conv.model ?? DEFAULT_MODEL;
@@ -340,7 +357,7 @@ export async function runChatTurn(
     data: {
       conversationId: conv.id,
       role: "user",
-      content: input.userMessage.trim(),
+      content: userText,
     },
   });
 
@@ -354,7 +371,7 @@ export async function runChatTurn(
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: system },
     ...recent,
-    { role: "user", content: input.userMessage.trim() },
+    { role: "user", content: userText },
   ];
 
   let assistantContent = "";
