@@ -1,0 +1,239 @@
+<section class="slide tone-dark" id="s09" data-title="Điểm thưởng bám theo việc học thật" data-section="Động lực">
+  <div class="slide-in">
+    <div class="split s9-split" style="--a:1.15fr;--b:1fr">
+      <div class="stack s9-left">
+        <div class="eyebrow rv">Động lực học tập</div>
+        <h2 class="h2 rv">Điểm thưởng bám sát việc học</h2>
+        <div class="demo s9-demo rv rv-s" data-src="img/ui9.jpg" data-url="limio.vn/learn/thiet-ke-ui-ux" data-video="video/learner-course.mp4" data-alt="Trang khoá học của người học: chuỗi ngày, XP và cấp độ, lộ trình gợi ý, bảng xếp hạng" data-steps='[
+          {"x":70,"y":20,"z":1.8,"cx":76.8,"cy":12.2,"click":1,"hl":[73,9.5,7.4,5.3],"t":"Chuỗi ngày học","d":3000},
+          {"x":55,"y":26,"z":1.9,"cx":74.7,"cy":30.8,"click":1,"hl":[50.5,22.6,29.9,11.3],"t":"XP và cấp độ","d":3400},
+          {"x":35,"y":62,"z":1.9,"cx":37.6,"cy":62.2,"click":1,"hl":[17.4,49.3,40.8,19.4],"t":"Lộ trình gợi ý","d":3400},
+          {"x":72,"y":74,"z":1.9,"cx":64.7,"cy":57.8,"click":1,"hl":[60.7,49.3,20.5,50.7],"t":"Bảng xếp hạng","d":3400}]'></div>
+      </div>
+
+      <div class="stack s9-right">
+        <h3 class="h3 rv">Ba chốt chặn chống lạm dụng</h3>
+        <div class="s9-guards">
+          <div class="card s9-g rv" data-g="cap">
+            <span class="ico"><svg class="i"><use href="#i-clock"/></svg></span><b>Trần theo ngày</b>
+          </div>
+          <div class="card s9-g rv" data-g="adapt">
+            <span class="ico"><svg class="i"><use href="#i-scale"/></svg></span><b>Theo năng lực</b>
+          </div>
+          <div class="card s9-g rv" data-g="speed">
+            <span class="ico pink"><svg class="i"><use href="#i-bolt"/></svg></span><b>Ngưỡng 10 giây</b>
+          </div>
+        </div>
+
+        <div class="card s9-sim rv">
+          <div class="s9-top">
+            <div class="s9-pills" role="group" aria-label="Chọn kịch bản">
+              <button type="button" data-sc="0">6 giây</button>
+              <button type="button" data-sc="1">48 giây · mới</button>
+              <button type="button" data-sc="2">48 giây · Vững</button>
+            </div>
+            <span class="chip hi">Minh hoạ</span>
+          </div>
+
+          <svg class="s9-svg" viewBox="0 13 420 101" role="img" aria-label="Đồng hồ bấm giờ làm quiz với vạch ngưỡng 10 giây">
+            <circle class="d-face" cx="50" cy="60" r="38"/>
+            <path class="d-zone" d="M50 60 L50 26 A34 34 0 0 1 79.4 43 Z"/>
+            <g class="d-ticks"></g>
+            <g class="d-hand" transform="rotate(0 50 60)"><line x1="50" y1="60" x2="50" y2="31"/></g>
+            <circle class="d-pin" cx="50" cy="60" r="3.6"/>
+
+            <text class="t-digit" x="130" y="34">0 s</text>
+            <rect class="z-zone" x="130" y="58" width="45" height="34" rx="4"/>
+            <line class="thr" x1="175" y1="50" x2="175" y2="94"/>
+            <text class="t-thr" x="182" y="55">ngưỡng 10 s</text>
+            <line class="axis" x1="130" y1="80" x2="400" y2="80"/>
+            <g class="tkl">
+              <line class="tk" x1="130" y1="84" x2="130" y2="90"/><text x="130" y="107" text-anchor="middle">0</text>
+              <line class="tk" x1="175" y1="84" x2="175" y2="90"/><text x="175" y="107" text-anchor="middle">10</text>
+              <line class="tk" x1="220" y1="84" x2="220" y2="90"/><text x="220" y="107" text-anchor="middle">20</text>
+              <line class="tk" x1="265" y1="84" x2="265" y2="90"/><text x="265" y="107" text-anchor="middle">30</text>
+              <line class="tk" x1="310" y1="84" x2="310" y2="90"/><text x="310" y="107" text-anchor="middle">40</text>
+              <line class="tk" x1="355" y1="84" x2="355" y2="90"/><text x="355" y="107" text-anchor="middle">50</text>
+              <line class="tk" x1="400" y1="84" x2="400" y2="90"/><text x="398" y="107" text-anchor="middle">60 s</text>
+            </g>
+            <rect class="bar low" x="130" y="76" width="0" height="8" rx="4"/>
+            <circle class="mk low" cx="130" cy="80" r="6"/>
+          </svg>
+
+          <div class="s9-res">
+            <div class="s9-who" aria-live="polite"><strong>Chuẩn bị…</strong></div>
+            <div class="s9-out wait"><span class="s9-xp">– XP</span><span class="s9-why">&nbsp;</span></div>
+          </div>
+
+          <div class="s9-try">
+            <label for="s9-range">Thời gian</label>
+            <input id="s9-range" type="range" min="0" max="60" step="1" value="0">
+            <output>0 s</output>
+            <span class="s9-lab">Thành thạo</span>
+            <div class="s9-mast" role="group" aria-label="Mức thành thạo kỹ năng của quiz">
+              <button type="button" title="Chưa có dữ liệu: hệ số 1,0">Mới<br>×1,0</button>
+              <button type="button" title="Mastery dưới 0,30: hệ số 1,5">&lt;0,3<br>×1,5</button>
+              <button type="button" title="Mastery trên 0,60 đến 0,85: hệ số 0,8">0,6–0,85<br>×0,8</button>
+              <button type="button" title="Mastery trên 0,85: hệ số 0,5">&gt;0,85<br>×0,5</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="s9-note rv">
+          <svg class="i"><use href="#i-lock"/></svg>
+          <span>Có thể rút khỏi bảng xếp hạng</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notes">
+    <p>(≈ 100 giây) Đây là lớp động lực. Màn hình bên trái tự chạy như một đoạn video ngắn: phóng vào chuỗi ngày học, XP và cấp độ, lộ trình gợi ý rồi bảng xếp hạng; bấm vào khung để tạm dừng. Người học thấy ngay bốn điều đó. Điểm thưởng dễ bị lạm dụng nên hệ thống có ba chốt chặn: trần theo ngày cho từng loại hành động, điều chỉnh XP theo mức thành thạo, và loại các lượt làm dưới 10 giây.</p>
+    <p>Ba chốt chặn nói chi tiết: mỗi loại hành động có trần mỗi ngày, vượt trần thì ghi 0 XP kèm vết kiểm toán; quiz dễ với người đã giỏi thì XP thấp hơn; lượt làm dưới 10 giây không được cộng điểm. Mô phỏng tự chạy ba kịch bản, dùng ví dụ minh hoạ: quiz độ khó 1, làm lần đầu, đạt toàn bộ điểm, XP cơ sở 50; hệ số lấy từ quy tắc trong mã nguồn. Sáu giây thì 0 XP và có bản ghi kiểm toán. Bốn mươi tám giây với người mới, hệ số 1,0, được 50 XP. Cùng quiz với người đã Vững, mastery trên 0,85, hệ số 0,5, được 25 XP. Nhấn mạnh: người học có thể rút khỏi bảng xếp hạng, và lời khen cá nhân nằm ở kênh điểm thưởng, không đi qua kênh phản hồi học tập. Ô thử tay bên dưới cho phép kéo thời gian và chọn mức thành thạo để thấy XP đổi theo. Tiếp theo, chúng ta chuyển sang phần kế tiếp của bài trình bày.</p>
+  </aside>
+
+  <style>
+    #s09 .eyebrow{font-size:.95rem}
+    #s09 .h2{font-size:2.5rem;max-width:none}
+    #s09 .demo-bar span{font-size:.95rem}
+    #s09 .demo-bar b{font-size:.95rem}
+    #s09 .demo-cap{font-size:1.15rem;padding:.4rem 1.1rem}
+    #s09 .chip{font-size:.95rem}
+    #s09 .s9-split{align-items:center;gap:2rem}
+    #s09 .s9-left{--g:.9rem}
+    #s09 .s9-right{--g:.55rem}
+    #s09 .s9-demo{width:100%}
+
+    #s09 .s9-guards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}
+    #s09 .s9-g{padding:.55rem .6rem;display:flex;flex-direction:column;align-items:flex-start;gap:.35rem;transition:border-color .6s,background .6s}
+    #s09 .s9-g .ico{width:2rem;height:2rem;border-radius:9px}
+    #s09 .s9-g .ico .i{width:1.1rem;height:1.1rem}
+    #s09 .s9-g b{font-size:1.1rem;line-height:1.2}
+    #s09 .s9-g.on{border-color:var(--acc);background:var(--soft)}
+
+    #s09 .s9-sim{padding:.75rem 1.1rem;display:flex;flex-direction:column;gap:.45rem}
+    #s09 .s9-top{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap}
+    #s09 .s9-pills{display:flex;gap:.35rem;flex-wrap:wrap}
+    #s09 .s9-pills button,#s09 .s9-mast button{border:1px solid var(--cardline);background:transparent;border-radius:99px;font-weight:600;color:var(--fg2);transition:background .3s,color .3s,border-color .3s}
+    #s09 .s9-pills button{padding:.25rem .75rem;font-size:1rem}
+    #s09 .s9-pills button.on,#s09 .s9-mast button.on{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+    #s09 .s9-svg{display:block;width:100%;height:auto;overflow:visible}
+    #s09 .d-face{fill:var(--card);stroke:rgba(63,98,18,.38);stroke-width:2}
+    #s09 .d-zone{fill:rgba(190,24,93,.16)}
+    #s09 .d-tick{stroke:var(--fg2);stroke-width:1.5;opacity:.55;stroke-linecap:round}
+    #s09 .d-hand line{stroke:var(--acc);stroke-width:3;stroke-linecap:round}
+    #s09 .d-pin{fill:var(--acc)}
+    #s09 .t-digit{font:700 26px var(--mono);fill:var(--fg)}
+    #s09 .z-zone{fill:rgba(190,24,93,.08);stroke:var(--hi);stroke-opacity:.5;stroke-dasharray:3 3;transition:fill .6s}
+    #s09 .z-zone.hit{fill:rgba(190,24,93,.22)}
+    #s09 .thr{stroke:var(--hi);stroke-width:2;stroke-dasharray:4 3}
+    #s09 .t-thr{font:700 15px var(--font);fill:var(--hi)}
+    #s09 .axis{stroke:rgba(63,98,18,.3);stroke-width:2}
+    #s09 .tk{stroke:var(--fg2);opacity:.5}
+    #s09 .tkl text{font:600 14px var(--font);fill:var(--fg2)}
+    #s09 .bar{fill:#65A30D}
+    #s09 .bar.low{fill:var(--hi)}
+    #s09 .mk{fill:var(--card);stroke:#65A30D;stroke-width:3}
+    #s09 .mk.low{stroke:var(--hi)}
+
+    #s09 .s9-res{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.4rem .8rem;border-radius:10px;background:var(--soft);border:1px solid var(--line)}
+    #s09 .s9-who{font-size:1rem;color:var(--fg2);line-height:1.3;min-width:0}
+    #s09 .s9-who strong{display:block;color:var(--fg);font-size:1.15rem}
+    #s09 .s9-out{text-align:right;flex:none;transition:opacity .5s}
+    #s09 .s9-out.wait{opacity:.3}
+    #s09 .s9-xp{display:block;font-size:2.2rem;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--acc)}
+    #s09 .s9-out.bad .s9-xp{color:var(--hi)}
+    #s09 .s9-why{display:block;font-size:1rem;color:var(--fg2)}
+
+    #s09 .s9-try{display:grid;grid-template-columns:5.8rem minmax(0,1fr) 3.4rem;gap:.35rem .6rem;align-items:center;font-size:1rem;color:var(--fg2)}
+    #s09 .s9-try input[type=range]{width:100%;accent-color:var(--acc);margin:0}
+    #s09 .s9-try output{font-family:var(--mono);color:var(--fg);text-align:right;font-size:1rem}
+    #s09 .s9-mast{grid-column:2 / 4;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.35rem}
+    #s09 .s9-mast button{padding:.25rem .1rem;font-size:.95rem;line-height:1.15;border-radius:9px}
+    #s09 .s9-note{display:flex;gap:.6rem;align-items:center;font-size:1.15rem;line-height:1.35;color:var(--fg);padding:.45rem .85rem;border-left:3px solid var(--hi);background:rgba(236,72,153,.06);border-radius:0 10px 10px 0}
+    #s09 .s9-note .i{color:var(--hi)}
+    @media (max-width:700px){#s09 .s9-guards{grid-template-columns:minmax(0,1fr)}#s09 .s9-try{grid-template-columns:minmax(0,1fr) 3.4rem}#s09 .s9-try label,#s09 .s9-lab{grid-column:1 / 3}#s09 .s9-mast{grid-column:1 / 3}}
+  </style>
+  <script>(function(){
+    var MULT=[1,1.5,0.8,0.5],
+        WHO=['Người học mới','Mastery dưới 0,3','Mastery 0,6–0,85','Đã Vững'],
+        SC=[{sec:6,m:0},{sec:48,m:0},{sec:48,m:3}],
+        BASE=50,TH=10,X0=130,PX=4.5,COUNT=1900,TOTAL=3600;
+    function fmt(n){return String(n).replace('.',',')}
+    function gain(sec,m){return sec<TH?0:Math.round(BASE*MULT[m])}
+
+    Deck.on('s09',{
+      enter:function(c){
+        var R=c.root;
+        function q(s){return R.querySelector(s)}
+        function qa(s){return Array.prototype.slice.call(R.querySelectorAll(s))}
+        var hand=q('.d-hand'),dig=q('.t-digit'),bar=q('.bar'),mk=q('.mk'),zone=q('.z-zone'),
+            who=q('.s9-who'),out=q('.s9-out'),xpEl=q('.s9-xp'),why=q('.s9-why'),
+            slider=q('.s9-try input[type=range]'),outv=q('.s9-try output'),
+            pills=qa('.s9-pills button'),mbts=qa('.s9-mast button'),
+            gSpeed=q('[data-g=speed]'),gAdapt=q('[data-g=adapt]'),sim=q('.s9-sim');
+        var tk='',i,a;
+        for(i=0;i<12;i++){a=i*Math.PI/6;var r1=(i%3===0?27:31);
+          tk+='<line class="d-tick" x1="'+(50+r1*Math.sin(a)).toFixed(1)+'" y1="'+(60-r1*Math.cos(a)).toFixed(1)+'" x2="'+(50+35*Math.sin(a)).toFixed(1)+'" y2="'+(60-35*Math.cos(a)).toFixed(1)+'"/>';}
+        q('.d-ticks').innerHTML=tk;
+
+        var st={sec:0,m:0,auto:true,started:false,touched:false,scen:0,t0:0},last={fin:null,sr:null,m:null};
+        function apply(sec,m,fin){
+          var s=Math.max(0,Math.min(60,sec)),low=s<TH,sr=Math.round(s);
+          st.sec=s;st.m=m;
+          hand.setAttribute('transform','rotate('+(s*6).toFixed(1)+' 50 60)');
+          dig.textContent=Math.floor(s+0.0001)+' s';
+          var w=s*PX;bar.setAttribute('width',w.toFixed(1));mk.setAttribute('cx',(X0+w).toFixed(1));
+          bar.classList.toggle('low',low);mk.classList.toggle('low',low);
+          zone.classList.toggle('hit',!!fin&&low);
+          if(+slider.value!==sr)slider.value=sr;
+          outv.textContent=sr+' s';
+          if(last.fin===fin&&last.sr===sr&&last.m===m)return;
+          if(last.m!==m)mbts.forEach(function(b,k){b.classList.toggle('on',k===m)});
+          last.fin=fin;last.sr=sr;last.m=m;
+          if(fin){
+            var g=gain(sr,m);
+            who.innerHTML='<strong>Xong sau '+sr+' giây</strong>'+WHO[m];
+            out.classList.remove('wait');out.classList.toggle('bad',sr<TH);
+            xpEl.textContent=sr<TH?'0 XP':'+'+g+' XP';
+            why.textContent=sr<TH?'Dưới ngưỡng 10 giây':BASE+' × '+fmt(MULT[m])+' = '+g;
+          }else{
+            who.innerHTML='<strong>Đang làm quiz…</strong>'+WHO[m];
+            out.classList.add('wait');out.classList.remove('bad');
+            xpEl.textContent='– XP';why.innerHTML='&nbsp;';
+          }
+          gSpeed.classList.toggle('on',!!fin&&sr<TH);
+          gAdapt.classList.toggle('on',!!fin&&sr>=TH&&MULT[m]!==1);
+        }
+        function runScenario(k){
+          st.scen=k;st.auto=true;st.t0=performance.now();last.fin=null;
+          pills.forEach(function(b,j){b.classList.toggle('on',j===k)});
+          apply(0,SC[k].m,false);
+        }
+        function goManual(sec,m){
+          st.auto=false;st.touched=true;
+          pills.forEach(function(b){b.classList.remove('on')});
+          apply(sec,m,true);
+        }
+        function tick(){
+          if(!st.auto||!st.started)return;
+          var el=performance.now()-st.t0,sc=SC[st.scen];
+          var p=Deck.reduce?1:Math.min(1,el/COUNT),e=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+          apply(sc.sec*e,sc.m,p>=1);
+          if(el>=TOTAL)runScenario((st.scen+1)%SC.length);
+        }
+
+        mbts.forEach(function(b,k){c.on(b,'click',function(){goManual(Math.round(st.sec),k)})});
+        c.on(slider,'input',function(){goManual(+slider.value,st.m)});
+        pills.forEach(function(b,k){c.on(b,'click',function(){st.touched=true;st.started=true;runScenario(k)})});
+
+        apply(0,0,false);
+        who.innerHTML='<strong>Chuẩn bị…</strong>';
+        var d=parseFloat(sim.style.getPropertyValue('--rvd'))||3;
+        c.timeout(function(){if(!st.touched){st.started=true;runScenario(0)}},d*1000+900);
+        c.interval(tick,40);
+      },
+      leave:function(c){}
+    });
+  })();</script>
+</section>

@@ -1,0 +1,69 @@
+/* ============ shell2.css — đối tượng, công cụ trình bày, demo động ============ */
+.audbtn{width:auto!important;padding:0 .7rem;gap:.45rem;display:flex!important;align-items:center;font-size:.78rem;font-weight:600;border:1px solid rgba(127,150,110,.3)!important;margin-right:.3rem}
+.audbtn .lbl{max-width:11rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:700px){.audbtn .lbl{display:none}}
+#audmodal .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));max-width:70rem}
+#audmodal .aud{text-align:left;display:flex;flex-direction:column;gap:.5rem;padding:1.2rem;border-radius:14px;border:1px solid rgba(190,242,100,.22);background:rgba(255,255,255,.04);color:#EEF6E4;transition:transform .35s var(--ease),border-color .3s,background .3s}
+#audmodal .aud:hover{transform:translateY(-3px);border-color:var(--l400);background:rgba(190,242,100,.08)}
+#audmodal .aud.on{border-color:var(--l400);box-shadow:0 0 0 1px var(--l400) inset}
+#audmodal .aud .tt{font-weight:700;font-size:1.15rem}
+#audmodal .aud .dd{color:#B6C8AA;font-size:.9rem}
+#audmodal .aud .cnt{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--l400)}
+#audmodal .ico{width:2.6rem;height:2.6rem;border-radius:11px;display:grid;place-items:center;background:rgba(190,242,100,.1);color:var(--l300);border:1px solid rgba(190,242,100,.2)}
+/* chọn đối tượng ngay trên slide mở đầu */
+.audpick{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center}
+.audpick .lead2{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--fg2);margin-right:.4rem}
+.audpick button{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem .95rem;border-radius:99px;font-weight:600;font-size:.92rem;background:rgba(255,255,255,.05);border:1px solid rgba(190,242,100,.25);color:#EEF6E4;transition:transform .3s var(--ease),background .3s,border-color .3s}
+.audpick button:hover{transform:translateY(-2px);border-color:var(--l400);background:rgba(190,242,100,.1)}
+.audpick button.on{background:var(--l400);border-color:var(--l400);color:#0B1A06}
+/* trang demo thật */
+#jump-body h6{margin:1.1rem 0 .4rem;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--l400)}
+#jump-body a.j{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.6rem .8rem;border-radius:10px;border:1px solid rgba(190,242,100,.16);background:rgba(255,255,255,.03);color:#EEF6E4;text-decoration:none;margin:.3rem 0;font-weight:600;transition:border-color .25s,background .25s,transform .25s var(--ease)}
+#jump-body a.j:hover{border-color:var(--l400);background:rgba(190,242,100,.08);transform:translateX(3px)}
+#jump-body a.j small{display:block;font-weight:400;color:#9DB090;font-size:.78rem}
+#jump-body .base{display:flex;gap:.4rem;margin-top:.6rem}
+#jump-body .base input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(190,242,100,.25);border-radius:8px;color:#fff;padding:.5rem .6rem;font:inherit;font-family:var(--mono);font-size:.82rem}
+#jump-body .base button{border:1px solid rgba(190,242,100,.3);background:transparent;color:#EEF6E4;border-radius:8px;padding:0 .8rem}
+.openreal{position:fixed;right:3.8rem;bottom:.4rem;z-index:32;display:inline-flex;align-items:center;gap:.5rem;padding:.42rem .95rem;border-radius:99px;font-size:.8rem;font-weight:700;text-decoration:none;color:#0B1A06;background:var(--l400);box-shadow:0 8px 24px -8px rgba(163,230,53,.6);transition:transform .3s var(--ease)}
+.openreal:hover{transform:translateY(-2px)}
+.openreal[hidden]{display:none}
+/* công cụ trình bày */
+.laser{position:fixed;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;z-index:70;pointer-events:none;background:radial-gradient(circle,#fff 0,#FDA4AF 30%,rgba(244,63,94,.0) 70%);box-shadow:0 0 18px 6px rgba(244,63,94,.55);will-change:transform}
+.spot{position:fixed;inset:0;z-index:65;pointer-events:none;background:radial-gradient(circle 170px at var(--sx,50%) var(--sy,50%),transparent 0,transparent 140px,rgba(3,8,2,.8) 300px)}
+.pen{position:fixed;inset:0;width:100vw;height:100vh;z-index:66;cursor:crosshair;touch-action:none}
+body.laser-on,body.laser-on *{cursor:none!important}
+.toast{position:fixed;left:50%;top:4rem;transform:translateX(-50%);z-index:80;padding:.5rem 1rem;border-radius:99px;background:rgba(11,26,6,.92);border:1px solid rgba(190,242,100,.3);color:#EEF6E4;font-size:.85rem;pointer-events:none;animation:toastIn .4s var(--ease)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}}
+/* ---- demo động: ảnh giao diện chuyển động như video ---- */
+.demo{border-radius:12px;overflow:hidden;border:1px solid var(--cardline);background:#0B1A06;box-shadow:0 30px 70px -28px rgba(0,0,0,.6);position:relative}
+.demo-bar{display:flex;align-items:center;gap:.4rem;padding:.45rem .8rem;background:rgba(127,150,110,.16);border-bottom:1px solid var(--cardline)}
+.demo-bar i{width:.55rem;height:.55rem;border-radius:50%;background:var(--fg2);opacity:.45}
+.demo-bar span{margin-left:.6rem;font-size:.74rem;color:var(--fg2);font-family:var(--mono);background:rgba(127,150,110,.14);padding:.1rem .7rem;border-radius:99px}
+.demo-bar b{margin-left:auto;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);display:flex;align-items:center;gap:.35rem}
+.demo-bar b::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--hi);animation:recDot 2.4s ease-in-out infinite}
+@keyframes recDot{50%{opacity:.35}}
+.demo-vp{position:relative;overflow:hidden;background:#10200B;aspect-ratio:var(--ar,1.6);cursor:pointer}
+.demo-stage{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;will-change:transform;transition:transform 1.7s cubic-bezier(.45,.05,.2,1)}
+.demo-stage img{display:block;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none}
+.demo video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0B1A06}
+.demo-hl{position:absolute;opacity:0;border-radius:6px;border:calc(2px/var(--z,1)) solid #A3E635;box-shadow:0 0 0 200vmax rgba(5,12,3,.42);transition:opacity .8s ease,left .9s var(--ease),top .9s var(--ease),width .9s var(--ease),height .9s var(--ease);pointer-events:none}
+.demo-hl.on{opacity:1}
+.demo-cur{position:absolute;width:0;height:0;transition:left 1.3s cubic-bezier(.45,.05,.2,1),top 1.3s cubic-bezier(.45,.05,.2,1);pointer-events:none}
+.demo-cur svg{position:absolute;left:-2px;top:-2px;width:26px;height:26px;transform:scale(calc(1/var(--z,1)));transform-origin:2px 2px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.demo-rip{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid #F472B6;opacity:0;pointer-events:none;transform:scale(calc(1/var(--z,1)))}
+.demo-rip.go{animation:rip 1s ease-out}
+@keyframes rip{0%{opacity:.9;transform:scale(calc(.3/var(--z,1)))}100%{opacity:0;transform:scale(calc(1.5/var(--z,1)))}}
+.demo-cap{position:absolute;left:50%;bottom:.9rem;transform:translateX(-50%);max-width:88%;padding:.5rem 1rem;border-radius:99px;background:rgba(11,26,6,.9);border:1px solid rgba(190,242,100,.3);color:#EEF6E4;font-size:.92rem;font-weight:600;text-align:center;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.demo-cap.on{opacity:1}
+.demo-dots{position:absolute;left:.8rem;top:.7rem;display:flex;gap:.35rem}
+.demo-dots button{width:.45rem;height:.45rem;padding:0;border:0;border-radius:50%;background:#fff;opacity:.35;transition:opacity .3s,width .4s var(--ease)}
+.demo-dots button.on{opacity:1;width:1.3rem;border-radius:3px;background:var(--grad)}
+.demo-zoom{position:absolute;right:.7rem;top:.6rem;width:2rem;height:2rem;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(11,26,6,.7);color:#fff;display:grid;place-items:center;opacity:.75}
+.demo-zoom:hover{opacity:1}
+
+.pfbox{margin:0 0 .6rem}
+.pfbtn{width:100%;padding:.65rem 1rem;border-radius:10px;border:1px solid var(--l400);background:rgba(163,230,53,.12);color:#EEF6E4;font-weight:700}
+.pfbtn:hover{background:rgba(163,230,53,.22)}
+#preflight .pf{display:flex;gap:.6rem;align-items:flex-start;padding:.4rem .2rem;font-size:.9rem}
+#preflight .pf i{flex:none;width:.65rem;height:.65rem;border-radius:50%;margin-top:.4rem}
+#preflight .pf small{display:block;color:#9DB090;font-size:.76rem;margin-top:.1rem}
