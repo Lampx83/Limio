@@ -5,6 +5,7 @@ import {
   emptyTurn,
   emptyVocabItem,
   moveItem,
+  nextSpeaker,
   validateDialogueEditor,
   validateVocabEditor,
   vocabEditorFromPayload,
@@ -116,5 +117,33 @@ describe("moveItem — đổi thứ tự dòng", () => {
     expect(moveItem(a, 0, -1)).toEqual([1, 2, 3]);
     expect(moveItem(a, 2, 1)).toEqual([1, 2, 3]);
     expect(a).toEqual([1, 2, 3]);
+  });
+});
+
+describe("nextSpeaker — gợi ý người nói cho lượt kế tiếp", () => {
+  const t = (speaker: string, text = "x") => ({ speaker, text });
+
+  it("chưa có lượt nào hoặc toàn lượt trống → không gợi ý", () => {
+    expect(nextSpeaker([])).toBe("");
+    expect(nextSpeaker([t("", ""), t("  ", "")])).toBe("");
+  });
+
+  it("chỉ có một người nói: nếu là một chữ cái thì gợi ý chữ kế tiếp, còn tên khác thì để trống", () => {
+    expect(nextSpeaker([t("A")])).toBe("B");
+    expect(nextSpeaker([t("B")])).toBe("C");
+    expect(nextSpeaker([t("Cô giáo")])).toBe("");
+    expect(nextSpeaker([t("Z")])).toBe("");
+  });
+
+  it("từ hai người trở lên: người kế tiếp theo vòng tròn sau lượt cuối", () => {
+    expect(nextSpeaker([t("A"), t("B")])).toBe("A");
+    expect(nextSpeaker([t("A"), t("B"), t("A")])).toBe("B");
+    expect(nextSpeaker([t("A"), t("B"), t("C")])).toBe("A");
+    expect(nextSpeaker([t("Cô giáo"), t("Học sinh")])).toBe("Cô giáo");
+  });
+
+  it("bỏ qua lượt trống ở cuối; so tên không phân biệt khoảng trắng thừa", () => {
+    expect(nextSpeaker([t("A"), t("B"), t("", "")])).toBe("A");
+    expect(nextSpeaker([t("A "), t(" B")])).toBe("A");
   });
 });

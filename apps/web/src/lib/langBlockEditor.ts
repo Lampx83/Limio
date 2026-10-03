@@ -194,3 +194,23 @@ export function moveItem<T>(arr: readonly T[], index: number, delta: -1 | 1): T[
   [next[index], next[to]] = [next[to]!, next[index]!];
   return next;
 }
+
+/**
+ * Gợi ý người nói cho lượt kế tiếp, để gõ hội thoại liền tay: A → B → A…
+ * Từ hai người nói trở lên thì đi vòng tròn theo thứ tự xuất hiện; chỉ có một người và
+ * đó là một chữ cái (A–Y) thì gợi ý chữ kế tiếp; còn lại để trống cho giảng viên tự điền.
+ */
+export function nextSpeaker(turns: ReadonlyArray<{ speaker: string; text?: string }>): string {
+  const filled = turns
+    .map((t) => ({ speaker: t.speaker.trim(), text: (t.text ?? "").trim() }))
+    .filter((t) => t.speaker !== "" || t.text !== "");
+  const order: string[] = [];
+  for (const t of filled) if (t.speaker && !order.includes(t.speaker)) order.push(t.speaker);
+  if (order.length === 0) return "";
+  if (order.length === 1) {
+    const only = order[0]!;
+    return /^[A-Y]$/.test(only) ? String.fromCharCode(only.charCodeAt(0) + 1) : "";
+  }
+  const last = [...filled].reverse().find((t) => t.speaker)?.speaker ?? order[0]!;
+  return order[(order.indexOf(last) + 1) % order.length]!;
+}
