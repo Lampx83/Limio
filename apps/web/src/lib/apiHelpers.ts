@@ -181,6 +181,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "attempt_limit_reached" ||
               err.code === "session_stale" ||
               err.code === "section_not_active" ||
+              err.code === "mock_disabled" ||
               err.code === "exam_not_open" ||
               err.code === "exam_window_closed" ||
               err.code === "attempt_not_in_progress" ||

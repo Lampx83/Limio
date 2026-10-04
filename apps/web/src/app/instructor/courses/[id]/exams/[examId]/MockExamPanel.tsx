@@ -34,17 +34,20 @@ const ERR_TEXT: Record<string, string> = {
 export default function MockExamPanel({
   examId,
   initialMockMode,
+  initialAllowMock,
   locked,
   lockedReason,
 }: {
   examId: string;
   initialMockMode: boolean;
+  initialAllowMock: boolean;
   /** true = không sửa được (đã xuất bản / đã có lượt thi / lưu trữ). */
   locked: boolean;
   lockedReason?: string;
 }) {
   const router = useRouter();
   const [mock, setMock] = useState(initialMockMode);
+  const [allowMock, setAllowMock] = useState(initialAllowMock);
   const [sections, setSections] = useState<Section[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -89,6 +92,10 @@ export default function MockExamPanel({
     }
   }
 
+  async function toggleAllowMock(next: boolean) {
+    if (await call(`/api/exams/${examId}`, { allowMock: next })) setAllowMock(next);
+  }
+
   async function patchSection(id: string, body: { durationMin?: number | null; languageSkill?: Skill | null }) {
     if (await call(`/api/exam-sections/${id}`, body)) await refresh();
     else await refresh();
@@ -119,6 +126,25 @@ export default function MockExamPanel({
       </label>
       {locked && lockedReason && <p className="mt-2 text-sm text-amber-700">{lockedReason}</p>}
       {err && <p role="alert" className="mt-2 text-sm text-red-700">{err}</p>}
+
+      {mock && (
+        <label className="mt-4 flex items-start gap-3 rounded border border-default p-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4"
+            checked={allowMock}
+            disabled={busy}
+            onChange={(e) => void toggleAllowMock(e.target.checked)}
+          />
+          <span>
+            <span className="font-medium">Cho thi thử</span>
+            <span className="block text-faint">
+              Tắt thì học viên không bắt đầu được lượt thi mới và đề biến mất khỏi mục “Luyện thi” (lượt đang làm dở vẫn
+              tiếp tục được). Đổi được bất cứ lúc nào, kể cả sau khi xuất bản.
+            </span>
+          </span>
+        </label>
+      )}
 
       {mock && (
         <div className="mt-4">

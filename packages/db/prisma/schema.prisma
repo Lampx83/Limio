@@ -3329,6 +3329,8 @@ model Exam {
   // LANG G5 — đề thi thử (HSK/IELTS/TOEIC...): bật giờ riêng từng phần, làm lần
   // lượt không quay lại. false = đề thi thật, mọi hành vi giữ nguyên.
   mockMode               Boolean             @default(false)
+  // LANG G5c — giảng viên tắt = học viên không tự bắt đầu thi thử mới được (lượt đang làm dở vẫn tiếp tục).
+  allowMock              Boolean             @default(true)
   attemptPolicy          ExamAttemptPolicy   @default(single)
   // Số lượt tối đa mỗi người khi attemptPolicy=multi (chỉ đề vấn đáp AI). Bỏ qua khi single.
   maxAttempts            Int                 @default(3)

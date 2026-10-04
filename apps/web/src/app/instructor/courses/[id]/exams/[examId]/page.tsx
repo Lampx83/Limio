@@ -318,6 +318,7 @@ export default async function EditExamPage({
             <MockExamPanel
               examId={exam.id}
               initialMockMode={exam.mockMode}
+              initialAllowMock={exam.allowMock}
               locked={exam.status !== "draft" || hasAttempts}
               lockedReason={
                 exam.status !== "draft"

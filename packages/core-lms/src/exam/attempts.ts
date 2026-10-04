@@ -116,6 +116,8 @@ async function loadExamForRuntime(examId: string, db: PrismaClient) {
       closeAt: true,
       durationMin: true,
       attemptPolicy: true,
+      mockMode: true,
+      allowMock: true,
       shuffleQuestions: true,
       shuffleOptions: true,
     },
@@ -136,6 +138,13 @@ export async function startExamAttempt(
   userId: string,
   examId: string,
   db: PrismaClient = prisma,
+  opts: {
+    /**
+     * LANG G5c — chỉ có tác dụng với đề thi thử: bắt đầu lượt MỚI sau khi đã nộp lượt trước.
+     * Mở lại link/F5 không có cờ này nên không tự đốt lượt; đề thường không bao giờ làm lại.
+     */
+    retake?: boolean;
+  } = {},
 ): Promise<{
   attemptId: string;
   sessionToken: string;
@@ -147,8 +156,11 @@ export async function startExamAttempt(
   // A5.8: composite unique was replaced with partial unique index in raw SQL;
   // Prisma can't model partial unique, so we use findFirst here. Still hits the
   // index because the where matches (examId, userId).
+  // Đề thi thử làm được nhiều lượt: ưu tiên lượt ĐANG LÀM DỞ (chỉ mục duy nhất cho phép
+  // tối đa một lượt dở mỗi người), không thì lượt gần nhất.
   const existing = await db.examAttempt.findFirst({
     where: { examId, userId },
+    orderBy: [{ status: "asc" }, { startedAt: "desc" }],
     select: {
       id: true,
       status: true,
@@ -180,12 +192,14 @@ export async function startExamAttempt(
         durationSec: existing.durationSec,
       };
     }
-    if (exam.attemptPolicy === "single") {
+    // LANG G5c — thi thử: lượt mới chỉ khi có chủ ý (retake); còn lại báo "đã nộp" để
+    // chuyển sang kết quả. Mọi đề khác giữ nguyên một lượt.
+    if (!(exam.mockMode && opts.retake)) {
       throw new ExamError("attempt_already_submitted");
     }
-    // multi attempts not implemented in P0; treat same as single for safety.
-    throw new ExamError("attempt_already_submitted");
   }
+  // Công tắc "Cho thi thử" tắt: không mở lượt MỚI (lượt đang làm dở ở trên vẫn tiếp tục được).
+  if (exam.mockMode && !exam.allowMock) throw new ExamError("mock_disabled");
 
   // A5.2 — eligibility (status, schedule window, cohort, enrollment, duration)
   // all live in assertEligibleForExam now. Legacy exam.openAt/closeAt is the

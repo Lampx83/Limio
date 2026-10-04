@@ -4,6 +4,7 @@ export class ExamError extends Error {
       | "validation_failed"
       | "section_not_active"
       | "audio_plays_exhausted"
+      | "mock_disabled"
       | "not_mock_exam"
       | "exam_not_found"
       | "exam_not_draft"

@@ -15,6 +15,8 @@ export interface MockExamCard {
   sections: { title: string; languageSkill: string | null; durationMin: number }[];
   /** Lượt thi gần nhất của học viên; null = chưa làm. */
   attempt: { attemptId: string; status: string; submittedAt: Date | null; scorePct: number | null } | null;
+  /** Số lượt đã làm (kể cả lượt đang dở). */
+  attemptCount: number;
 }
 
 export async function listMockExamsForLearner(
@@ -24,7 +26,7 @@ export async function listMockExamsForLearner(
 ): Promise<MockExamCard[]> {
   if (!(await isUserEnrolled(userId, courseId, db))) throw new ExamError("not_enrolled");
   const exams = await db.exam.findMany({
-    where: { courseId, mockMode: true, status: "published", kind: "written" },
+    where: { courseId, mockMode: true, allowMock: true, status: "published", kind: "written" },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
@@ -42,7 +44,11 @@ export async function listMockExamsForLearner(
     select: { id: true, examId: true, status: true, submittedAt: true, scorePct: true },
   });
   const latest = new Map<string, (typeof attempts)[number]>();
-  for (const a of attempts) if (!latest.has(a.examId)) latest.set(a.examId, a);
+  const counts = new Map<string, number>();
+  for (const a of attempts) {
+    if (!latest.has(a.examId)) latest.set(a.examId, a);
+    counts.set(a.examId, (counts.get(a.examId) ?? 0) + 1);
+  }
 
   return exams.map((e) => {
     const sections = e.sections.map((s) => ({
@@ -57,6 +63,7 @@ export async function listMockExamsForLearner(
       totalMinutes: sections.reduce((n, s) => n + s.durationMin, 0),
       sections,
       attempt: a ? { attemptId: a.id, status: a.status, submittedAt: a.submittedAt, scorePct: a.scorePct } : null,
+      attemptCount: counts.get(e.id) ?? 0,
     };
   });
 }

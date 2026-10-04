@@ -319,14 +319,28 @@ export default async function LearnCoursePage({
                       </ul>
                       <div className="mt-auto flex items-center justify-between gap-2">
                         <span className="text-meta">
-                          {!a ? "Chưa làm" : inProgress ? "Đang làm dở" : "Đã nộp"}
+                          {!a
+                            ? "Chưa làm"
+                            : inProgress
+                              ? `Đang làm dở · lượt ${e.attemptCount}`
+                              : `Đã thi ${e.attemptCount} lần${a.scorePct != null ? ` · gần nhất ${Math.round(a.scorePct)}%` : ""}`}
                         </span>
-                        <Link
-                          href={!a || inProgress ? href : `${href}/${a.attemptId}/result`}
-                          className="inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700"
-                        >
-                          {!a ? "Bắt đầu thi thử" : inProgress ? "Tiếp tục" : "Xem kết quả"}
-                        </Link>
+                        <span className="flex items-center gap-2">
+                          {a && !inProgress && (
+                            <Link
+                              href={`${href}/${a.attemptId}/result`}
+                              className="inline-flex h-9 items-center rounded-full border border-token px-4 text-sm hover:bg-brand-soft"
+                            >
+                              Xem kết quả
+                            </Link>
+                          )}
+                          <Link
+                            href={a && !inProgress ? `${href}?retake=1` : href}
+                            className="inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700"
+                          >
+                            {!a ? "Bắt đầu thi thử" : inProgress ? "Tiếp tục" : "Thi lại"}
+                          </Link>
+                        </span>
                       </div>
                     </div>
                   );
