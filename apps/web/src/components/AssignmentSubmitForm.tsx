@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
+import AudioRecorder from "@/components/AudioRecorder";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import {
   GENERATIVE_PRESETS,
@@ -37,10 +38,17 @@ export default function AssignmentSubmitForm({
   const [uploading, setUploading] = useState(false);
   const needUpload = requiresUpload(responseFormat);
 
+  // LANG G7 — bài nói: ghi âm ngay trong trang; chữ ghi chú không bắt buộc (bản ghi là bài làm).
+  const isSpeaking = responseFormat === "audio";
+
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
+    await uploadFile(f);
+  }
+
+  async function uploadFile(f: File) {
     setUploading(true);
     try {
       const fd = new FormData();
@@ -96,7 +104,7 @@ export default function AssignmentSubmitForm({
     }
     setBusy(true);
     const payload: Record<string, unknown> = {
-      body,
+      body: body.trim() || (isSpeaking ? "(bài nói)" : body),
       attachmentUrl: attachmentUrl.trim() || null,
     };
     if (selfRating !== "") payload.selfRating = Number(selfRating);
@@ -146,11 +154,12 @@ export default function AssignmentSubmitForm({
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        required
-        rows={6}
-        placeholder="Nội dung bài làm..."
+        required={!isSpeaking}
+        rows={isSpeaking ? 2 : 6}
+        placeholder={isSpeaking ? "Ghi chú thêm cho giảng viên (không bắt buộc)" : "Nội dung bài làm..."}
         className="textarea"
       />
+      {isSpeaking && <AudioRecorder onRecorded={(f) => void uploadFile(f)} disabled={uploading} />}
       {needUpload && (
         <div className="space-y-1 rounded-lg border border-token bg-[rgb(var(--surface))] p-2">
           <span className="text-xs font-medium text-default">

@@ -179,6 +179,8 @@ export default function SubmissionModal({
                 />
                 {/* LANG G6 — góp ý AI học viên đã nhờ (khoá ngoại ngữ): giảng viên sửa/duyệt/từ chối. Không hiện nếu chưa có bản nào. */}
                 <WritingFeedbackReview key={submission.id} submissionId={submission.id} />
+                {/* LANG G7 — góp ý bài nói: bản chữ máy nghe được + cùng quy trình duyệt. Không hiện nếu chưa có bản nào. */}
+                <WritingFeedbackReview key={`${submission.id}-speaking`} submissionId={submission.id} kind="speaking" />
               </div>
             </div>
           </div>

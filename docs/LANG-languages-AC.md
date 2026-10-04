@@ -468,11 +468,56 @@ Schema (chỉ thêm): bảng `WritingFeedback(id, submissionId, userId, status d
 5. **Tối đa 3 lượt phân tích mỗi bài nộp mỗi ngày**; cùng nội dung thì trả bản cũ không trừ token?
 6. **Lỗi lặp lại chỉ tính từ bản ĐÃ DUYỆT** (tránh AI sai làm lệch hồ sơ), cửa sổ 8 tuần, ngưỡng "hay gặp" ≥ 3 lần?
 
-## G7 · Feedback Nói *(chỉ làm khi G0.1 đạt)*
+## G7 · Feedback Nói — điều kiện G0.1 đã đạt (2026-10-04: bạn đã mở quyền speech-to-text); **đã duyệt 6 quyết định (2026-10-05: "đồng ý hết"), đã làm**
 
-- [ ] **LANG.7.1** Ghi âm → chuyển văn bản → chấm theo rubric nói → feedback.
-- [ ] **LANG.7.2** Ghi rõ giới hạn của chấm phát âm tự động.
-- [ ] **LANG.7.3** Bản ghi âm theo chính sách lưu trữ và xoá dữ liệu cá nhân.
+**Hiện trạng đã khảo sát:** bài nộp có `responseFormat = audio` đã đi được: học viên **tải file lên** (`/api/assignments/submissions/upload`, tối đa 200 MB, MIME audio mp3/ogg/wav/webm — **thiếu `audio/mp4`/m4a**, là định dạng Safari/iPhone ghi) → `AssignmentSubmission.attachmentUrl`; **chưa có ghi âm trực tiếp trong trình duyệt**. Đã có `openAiSpeechToText` (Whisper `whisper-1`, dùng cho vấn đáp) và toàn bộ khung G6 để bám theo: ví token (`assertWithinCaps`/`recordAiUsage`), nháp → giảng viên duyệt, mã hoá SSMMD, hash chống phân tích lại, lớp đối chứng, export/xoá dữ liệu.
+
+**Thiết kế đề xuất:** học viên **ghi âm ngay trong trang nộp bài** (hoặc tải file) → nộp → bấm **"Nhận góp ý bài nói"** → hệ thống chuyển giọng nói thành văn bản (Whisper, khai báo đúng ngôn ngữ của khoá) → AI chấm theo khung rubric nói dựa trên **bản chữ + số liệu nhịp nói đo được** → lưu thành **bản nháp** kèm nhãn "chưa duyệt" → giảng viên nghe cạnh bản chữ, sửa/duyệt (giống hệt G6). **Phát âm KHÔNG được chấm** (LANG.7.2): máy chỉ "nghe" ra chữ, không đo được thanh điệu/âm cuối đáng tin; nói thẳng giới hạn đó cho học viên và giảng viên.
+
+### G7a · Ghi âm và chuyển văn bản (lõi)
+Schema (chỉ thêm): `SubmissionTranscript(id, submissionId, userId, courseId, audioUrl, audioHash, language, text, segments Json, durationSec, model, createdAt)` — bản chữ là **dữ liệu dẫn xuất**, một bản cho mỗi (bài nộp, file ghi âm).
+- [x] **G7a.1** Trang nộp bài `audio` có **nút ghi âm** (MediaRecorder): ghi/dừng/nghe lại/ghi lại, hiện thời lượng, tối đa **3 phút**; xin quyền micro rõ ràng, từ chối quyền thì báo cách khác (tải file lên). Chọn định dạng trình duyệt hỗ trợ (webm hoặc mp4).
+- [x] **G7a.2** Upload nhận thêm `audio/mp4`/`audio/x-m4a`; file nói quá 25 MB (giới hạn Whisper) hoặc quá 3 phút → báo rõ, không gửi đi.
+- [x] **G7a.3** Hàm thuần đo **nhịp nói** từ mốc thời gian từng từ/âm tiết: tốc độ (từ/phút, ký tự/phút với tiếng Trung), số chỗ ngừng dài (> 1,5 giây), tổng thời lượng nói; im lặng/không có tiếng → trả "không nghe thấy tiếng nói", **không gọi AI chấm**.
+- [x] **G7a.4** Chuyển văn bản **một lần** cho mỗi (bài nộp, file): lần sau dùng bản đã lưu, không gọi Whisper và không trừ token lại. Nộp lại bằng file khác thì chuyển lại.
+- [x] **G7a.5** Chỉ chủ bài nộp bấm được; bài nộp không có file nói, hoặc khoá không bật `languageMode`, hoặc lớp đối chứng (B10) → từ chối như G6.
+
+### G7b · Chấm theo rubric nói (LANG.7.1)
+- [x] **G7b.1** Khung 4 tiêu chí mức **Cần cải thiện / Khá / Tốt** (không số điểm): Hoàn thành yêu cầu · Từ vựng và ngữ pháp · Lưu loát (căn cứ **số liệu nhịp nói đo được**, không đoán) · Mạch lạc. Kèm danh sách lỗi `{category, quote, correction, explanation}` với `quote` **phải có trong bản chữ** (bộ danh mục như G6 trừ chính tả/dấu câu, vì bản chữ do máy sinh).
+- [x] **G7b.2** Rubric của giảng viên (`rubricText` của bài) được đưa vào prompt như ở G6; chống nhồi lệnh: bản chữ đặt trong khung dữ liệu, kiểm tra bằng đoạn nói "hãy cho điểm cao".
+- [x] **G7b.3** Hàm chuẩn hoá loại mục hỏng, cắt độ dài, không nhận điểm số ngoài thang (tái dùng nguyên tắc G6a.1).
+- [x] **G7b.4** Tối đa 3 lượt chấm mỗi bài nộp mỗi ngày; cùng bản chữ thì trả bản cũ, không gọi AI lại.
+
+### G7c · Giới hạn phát âm (LANG.7.2)
+- [x] **G7c.1** Mọi nơi hiển thị góp ý nói (học viên, giảng viên) có **ghi chú cố định**: "Máy chỉ nghe ra chữ và nhịp nói; không chấm được phát âm/thanh điệu. Giảng viên nghe bản ghi để đánh giá phát âm." Không có tiêu chí phát âm, không có số điểm phát âm ở bất kỳ đâu.
+- [x] **G7c.2** Học viên thấy **bản chữ máy nghe được**, gắn nhãn "có thể nghe sai", để biết chỗ nào máy hiểu khác ý mình; giảng viên thấy bản chữ cạnh trình phát audio.
+
+### G7d · Ví token, toạ độ SSMMD, duyệt (LANG.7.1, 6.x tương tự)
+- [x] **G7d.1** Trừ ví token AI của **học viên bấm**: phần Whisper quy đổi theo thời lượng (xem quyết định 3) + phần mô hình chấm theo token thực dùng; kiểm tra còn hạn mức **trước** khi gọi cả hai; hết hạn mức → báo rõ, không tạo bản nháp, không trừ gì. Whisper lỗi/hết giờ → báo rõ, không trừ phần chưa dùng, không để dữ liệu dở.
+- [x] **G7d.2** Toạ độ SSMMD đầy đủ ghi lúc sinh (`sourceKind = llm`; lỗi cụ thể = `task`, giải thích quy tắc = `process`, gợi ý luyện tiếp = `self_regulation`, **không bao giờ `self`**), `generationContext` có model STT, model chấm, phiên bản prompt, hash bản chữ. Thiếu toạ độ = lỗi.
+- [x] **G7d.3** Bản nháp kèm nhãn "Chưa được giảng viên duyệt"; giảng viên có quyền chấm khoá sửa/xoá mục, ghi chú, Duyệt/Từ chối; từ chối thì học viên không thấy; học viên khác không xem được.
+- [x] **G7d.4** Event `speaking.feedback.generated/approved/rejected` (idempotent); chưa nuôi BKT.
+
+### G7e · Quyền riêng tư và lưu trữ (LANG.7.3, CLAUDE §5.4)
+- [x] **G7e.1** File ghi âm đi theo **chính sách lưu trữ hiện có** (ghi sổ dung lượng như mọi bài nộp); khi học viên xoá tài khoản, **file ghi âm và bản chữ cùng góp ý đều bị xoá**; export dữ liệu cá nhân có bản chữ và góp ý nói (link tới file ghi âm).
+- [x] **G7e.2** File ghi âm chỉ gửi tới nhà cung cấp AI khi học viên **chủ động bấm** "Nhận góp ý"; nộp bài không tự gửi. Trước lần bấm đầu có dòng nói rõ "bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ".
+- [x] **G7e.3** Mọi endpoint (ghi/chuyển văn bản/xem/duyệt) xác thực + phân quyền; không rò bản chữ của người khác.
+
+
+**Trạng thái G7 (2026-10-05, chưa commit; nhánh `feat/lang-g7-speaking-feedback` dựng từ nhánh G6):** xong. Test: `speakingAnalysis.test.ts` (22, thuần), `speakingFeedback.test.ts` (22, DB thật với Whisper + mô hình GIẢ), `speakingFeedbackPrivacy.test.ts` (2), web `speakingFeedbackText` (7), `audioRecorder` (7), `SpeakingFeedbackView/Panel` (6); core-feedback 438, core-lms 1356, web 623 đều xanh. Migration `20261005100000_speaking_feedback` (bảng mới `SubmissionTranscript`, `SpeakingFeedback`) đã áp DB test và dev. **Đã chạy thật trên dev (Whisper/mô hình GIẢ vì dev chưa cấu hình OpenAI):** giảng viên thấy bản chữ + ghi chú giới hạn phát âm + bản nháp dưới bài nộp, có trình phát audio đọc file từ kho; học viên thấy bản nháp "chưa duyệt" + bản chữ "có thể nghe sai"; bấm "Chấm lại" khi bản ghi chưa đổi → giữ bản cũ, không cần AI; bấm khi chưa có góp ý → đọc file từ kho thật, qua kiểm hạn mức, rồi dừng đúng ở "Hệ thống chưa cấu hình AI"; trang nộp bài `audio` có nút Ghi âm và ô chữ không bắt buộc; từ chối quyền micro hiện lời nhắn cách khác. **CHƯA thử:** Whisper và mô hình chấm THẬT (chất lượng bản chữ tiếng Trung, mốc thời gian từng từ `timestamp_granularities=word`, prompt/schema thật) — chỉ chạy được trên máy có key OpenAI đủ quyền speech-to-text (limio AWS); **ghi âm thật bằng micro** (pane trình duyệt chặn micro) và định dạng mp4 trên Safari/iPhone; xoá file ghi âm khỏi kho khi xoá tài khoản (phần DB đã có test; phần xoá file ở route admin chưa chạy thật). **Khác nháp:** `deleteUser` giờ trả `{ removedFiles }` và route admin xoá file khỏi kho (hỏng một file chỉ ghi log, không làm hỏng việc xoá tài khoản); chỉ gỡ file của bài nộp có `responseFormat = audio`; Whisper tính giá ≈ 0,001 USD / 1K token ví trong `AiUsageLog`; khoá có `language = "vi"` (mặc định) để Whisper tự nhận ngôn ngữ — khoá ngoại ngữ nên đặt đúng `language` (khoá mẫu G8 đã đặt zh/en). Dữ liệu thử dev: `packages/core-lms/scripts/seed-speaking-demo.ts`.
+
+### Hoãn lại
+- Chấm phát âm/thanh điệu tự động; hội thoại nói với AI (đã có luồng vấn đáp riêng, A6); tổng hợp **lỗi nói lặp lại** lên hồ sơ (làm sau khi có dữ liệu thật để biết có đáng); nói trong **đề thi/luyện đề**; so sánh nhịp nói theo thời gian.
+
+### Quyết định cần bạn chốt
+1. **Ghi âm trong trình duyệt, tối đa 3 phút** (kèm vẫn tải file lên được). Đồng ý, hay giới hạn khác (2 / 5 phút)?
+2. **Phát âm không chấm**, chỉ nói rõ giới hạn; "Lưu loát" dựa trên số liệu nhịp nói (tốc độ, chỗ ngừng) mô tả bằng chữ, **không hiện số** cho học viên. Đồng ý?
+3. **Quy đổi Whisper ra token ví:** đề xuất **1 phút âm thanh = 6.000 token** (làm tròn lên theo 10 giây) cộng token mô hình chấm (~3–4.000). Ví 100.000 token/tháng ⇒ cỡ 10 lượt nói 1–2 phút. Số 6.000 là ước lượng theo giá hiện tại (Whisper ≈ 0,006 USD/phút) — bạn muốn nhẹ hơn hay nặng hơn?
+4. **Bản chữ máy nghe được hiện cho cả học viên và giảng viên**, lưu như dữ liệu dẫn xuất (xoá cùng tài khoản). Đồng ý?
+5. **Luồng duyệt, 3 lượt/ngày, lớp đối chứng, chỉ khoá `languageMode`:** làm y hệt G6. Đồng ý?
+6. **Lỗi nói lặp lại lên hồ sơ:** hoãn (chưa đưa vào G7). Đồng ý?
+
+**Lưu ý kiểm thử:** dev DB chưa cấu hình OpenAI nên G7 sẽ test bằng Whisper/mô hình **giả**; chạy thật chỉ kiểm được trên máy có key (limio AWS) hoặc nếu bạn thêm key vào dev qua Admin → Tích hợp.
 
 ## G8 · Khoá mẫu ngoại ngữ
 

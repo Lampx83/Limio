@@ -76,10 +76,10 @@ export async function deleteUser(
   actorUserId: string,
   targetUserId: string,
   db: typeof prisma = prisma,
-): Promise<void> {
+): Promise<{ removedFiles: string[] }> {
   if (actorUserId === targetUserId) throw new DeleteUserError("cannot_delete_self");
 
-  await db.$transaction(async (tx) => {
+  return db.$transaction(async (tx) => {
     const user = await tx.user.findUnique({
       where: { id: targetUserId },
       select: { id: true, email: true, displayName: true },
@@ -100,6 +100,20 @@ export async function deleteUser(
     // LANG G6 — góp ý bài viết do AI chứa trích đoạn bài viết riêng của học viên (đã gửi tới nhà cung cấp
     // AI): nội dung riêng tư, không có giá trị thống kê sau khi ẩn danh, nên xoá hẳn như ghi chú.
     await tx.writingFeedback.deleteMany({ where: { userId: targetUserId } });
+    // LANG G7 — bài nói: file ghi âm là lời nói riêng của học viên. Bản chữ + góp ý xoá hẳn; liên kết file
+    // trên bài nộp được gỡ và TÊN FILE trả về cho tầng gọi (kho file thuộc apps/web) để xoá khỏi kho.
+    await tx.speakingFeedback.deleteMany({ where: { userId: targetUserId } });
+    await tx.submissionTranscript.deleteMany({ where: { userId: targetUserId } });
+    const audioSubs = await tx.assignmentSubmission.findMany({
+      where: { userId: targetUserId, attachmentUrl: { not: null }, assignment: { responseFormat: "audio" } },
+      select: { id: true, attachmentUrl: true },
+    });
+    const removedFiles: string[] = [];
+    for (const s of audioSubs) {
+      const m = /\/api\/assignment-media\/([A-Za-z0-9._-]+)$/.exec(s.attachmentUrl ?? "");
+      if (m) removedFiles.push(m[1]!);
+      await tx.assignmentSubmission.update({ where: { id: s.id }, data: { attachmentUrl: null } });
+    }
     // A8 — e-portfolio là trang trưng bày gắn danh tính; ẩn danh hoá mà giữ
     // lại thì /p/<slug> vẫn sống. Item cascade theo Portfolio.
     await tx.portfolio.deleteMany({ where: { userId: targetUserId } });
@@ -122,9 +136,10 @@ export async function deleteUser(
         action: "user.deleted",
         actorUserId,
         targetUserId,
-        payload: { mode: "anonymized" },
+        payload: { mode: "anonymized", removedAudioFiles: removedFiles.length },
       },
       tx,
     );
+    return { removedFiles };
   });
 }

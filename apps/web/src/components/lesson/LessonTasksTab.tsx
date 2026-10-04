@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AssignmentSubmitForm from "@/components/AssignmentSubmitForm";
 import WritingFeedbackPanel, { type LearnerFeedbackState } from "@/components/WritingFeedbackPanel";
+import SpeakingFeedbackPanel, { type LearnerSpeakingState } from "@/components/SpeakingFeedbackPanel";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import type {
@@ -36,6 +37,8 @@ export type AssignmentItem = {
     feedback: string | null;
     /** G6 — chỉ có ở khoá ngoại ngữ (và lớp không phải đối chứng): cho phép nhận góp ý AI. */
     writingFeedback?: { enabled: true; initial: LearnerFeedbackState | null };
+    /** G7 — bài nộp dạng ghi âm ở khoá ngoại ngữ (không phải lớp đối chứng): góp ý bài nói. */
+    speakingFeedback?: { enabled: true; initial: LearnerSpeakingState | null };
   } | null;
 };
 
@@ -158,6 +161,12 @@ function AssignmentCard({ item }: { item: AssignmentItem }) {
             <p className="mt-1 whitespace-pre-wrap text-sm text-success-700/90">
               {sub.feedback}
             </p>
+          </div>
+        )}
+
+        {sub?.speakingFeedback?.enabled && (
+          <div className="mt-4">
+            <SpeakingFeedbackPanel submissionId={sub.id} initial={sub.speakingFeedback.initial} />
           </div>
         )}
 
