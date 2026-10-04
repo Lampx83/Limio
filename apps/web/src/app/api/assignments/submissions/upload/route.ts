@@ -29,6 +29,9 @@ const MIME_TO_EXT: Record<string, { ext: string; kind: string }> = {
   "audio/ogg": { ext: "ogg", kind: "audio" },
   "audio/wav": { ext: "wav", kind: "audio" },
   "audio/webm": { ext: "webm", kind: "audio" },
+  // LANG G7 — Safari/iPhone ghi âm ra mp4/m4a.
+  "audio/mp4": { ext: "m4a", kind: "audio" },
+  "audio/x-m4a": { ext: "m4a", kind: "audio" },
   // video
   "video/mp4": { ext: "mp4", kind: "video" },
   "video/webm": { ext: "webm", kind: "video" },

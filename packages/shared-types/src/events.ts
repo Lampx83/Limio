@@ -88,6 +88,10 @@ export const LearningEventType = {
   WritingFeedbackGenerated: "writing.feedback.generated",
   WritingFeedbackApproved: "writing.feedback.approved",
   WritingFeedbackRejected: "writing.feedback.rejected",
+  // LANG G7 — góp ý bài nói do AI sinh (từ bản chữ máy nghe được): sinh ra, giảng viên duyệt, từ chối.
+  SpeakingFeedbackGenerated: "speaking.feedback.generated",
+  SpeakingFeedbackApproved: "speaking.feedback.approved",
+  SpeakingFeedbackRejected: "speaking.feedback.rejected",
   ExamAttemptForceSubmitted: "exam.attempt.force_submitted",
   ExamAttemptSessionReset: "exam.attempt.session_reset",
   ExamAttemptDisqualified: "exam.attempt.disqualified",

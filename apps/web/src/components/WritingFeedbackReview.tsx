@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { CATEGORY_LABEL } from "@/lib/writingFeedbackText";
 import WritingFeedbackView, { type WritingFeedbackBody } from "./WritingFeedbackView";
+import SpeakingFeedbackView from "./SpeakingFeedbackView";
+import { SPEAKING_NOTICE } from "@/lib/speakingFeedbackText";
 
 interface FeedbackRow {
   id: string;
@@ -18,8 +20,16 @@ interface FeedbackRow {
  * LANG G6c.3 — giảng viên duyệt góp ý AI cạnh bài nộp: sửa từng mục (bản sửa, giải thích), xoá mục, thêm
  * ghi chú, rồi Duyệt hoặc Từ chối. Chỉ sửa/xoá được lỗi đã có (không thêm lỗi mới, không đổi trích đoạn).
  */
-export default function WritingFeedbackReview({ submissionId }: { submissionId: string }) {
+export default function WritingFeedbackReview({
+  submissionId,
+  kind = "writing",
+}: {
+  submissionId: string;
+  /** G7 — "speaking": góp ý bài nói (có thêm bản chữ + ghi chú giới hạn phát âm); cùng quy trình duyệt. */
+  kind?: "writing" | "speaking";
+}) {
   const [rows, setRows] = useState<FeedbackRow[] | null>(null);
+  const [transcript, setTranscript] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, { correction: string; explanation: string }>>({});
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [note, setNote] = useState("");
@@ -28,22 +38,25 @@ export default function WritingFeedbackReview({ submissionId }: { submissionId: 
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(apiUrl(`/api/submissions/${submissionId}/writing-feedback/review`));
+      const res = await fetch(apiUrl(`/api/submissions/${submissionId}/${kind}-feedback/review`));
       if (!res.ok) {
         setRows([]);
         return;
       }
-      setRows(((await res.json()) as { feedbacks: FeedbackRow[] }).feedbacks);
+      const j = (await res.json()) as { feedbacks: FeedbackRow[]; transcript?: { text: string } | null };
+      setTranscript(j.transcript?.text ?? null);
+      setRows(j.feedbacks);
     } catch {
       setRows([]);
     }
-  }, [submissionId]);
+  }, [submissionId, kind]);
   useEffect(() => {
     void load();
   }, [load]);
 
   if (rows === null) return <p className="text-meta mt-4">Đang tải góp ý AI…</p>;
   if (rows.length === 0) return null; // học viên chưa nhờ AI góp ý — không có gì để duyệt
+  const speaking = kind === "speaking";
   const latest = rows[0]!;
   const draft = latest.status === "draft" ? latest : null;
 
@@ -61,7 +74,7 @@ export default function WritingFeedbackReview({ submissionId }: { submissionId: 
               editErrors: Object.entries(edits).map(([id, e]) => ({ id, correction: e.correction, explanation: e.explanation })),
             }
           : { action, note: note.trim() || undefined };
-      const res = await fetch(apiUrl(`/api/writing-feedback/${draft.id}/review`), {
+      const res = await fetch(apiUrl(`/api/${kind}-feedback/${draft.id}/review`), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
@@ -82,15 +95,31 @@ export default function WritingFeedbackReview({ submissionId }: { submissionId: 
   }
 
   return (
-    <section className="mt-6 rounded-lg border border-token p-3" aria-label="Duyệt góp ý AI" data-testid="writing-feedback-review">
-      <h3 className="text-sm font-semibold">Góp ý bài viết do AI tạo</h3>
+    <section className="mt-6 rounded-lg border border-token p-3" aria-label="Duyệt góp ý AI" data-testid={`${kind}-feedback-review`}>
+      <h3 className="text-sm font-semibold">{speaking ? "Góp ý bài nói do AI tạo" : "Góp ý bài viết do AI tạo"}</h3>
+      {speaking && (
+        <>
+          <p className="text-meta mt-1">{SPEAKING_NOTICE}</p>
+          {transcript && (
+            <p className="mt-2 whitespace-pre-wrap rounded border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-sm">
+              <span className="text-meta block">Máy nghe được (có thể nghe sai) — hãy nghe bản ghi để đối chiếu:</span>
+              {transcript}
+            </p>
+          )}
+        </>
+      )}
       {!draft ? (
         <div className="mt-2">
           <p className="text-meta mb-2">
             Bản gần nhất đã được <b>{latest.status === "approved" ? "duyệt" : "từ chối"}</b>
             {latest.status === "rejected" && " (học viên không thấy bản này)"}.
           </p>
-          {latest.status === "approved" && <WritingFeedbackView body={latest.body} review="approved" reviewerNote={latest.reviewerNote} />}
+          {latest.status === "approved" &&
+            (speaking ? (
+              <SpeakingFeedbackView body={latest.body} review="approved" reviewerNote={latest.reviewerNote} transcript={transcript ?? ""} />
+            ) : (
+              <WritingFeedbackView body={latest.body} review="approved" reviewerNote={latest.reviewerNote} />
+            ))}
         </div>
       ) : (
         <div className="mt-2 space-y-3">

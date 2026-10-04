@@ -10,7 +10,12 @@ import {
   listThreadsForLesson,
   resolveQuizScore,
 } from "@feedbackme/core-lms";
-import { getWritingFeedbackForLearner, resolveFeedbackVariant, shouldSkipLesson } from "@feedbackme/core-feedback";
+import {
+  getSpeakingFeedbackForLearner,
+  getWritingFeedbackForLearner,
+  resolveFeedbackVariant,
+  shouldSkipLesson,
+} from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import LessonContent from "@/components/LessonContent";
@@ -437,10 +442,17 @@ export default async function LessonPage({
     lesson.module.course.languageMode &&
     (await resolveFeedbackVariant(userId, lesson.module.course.id)).variant !== "minimal";
   const writingFeedbackBySubmission = new Map<string, Awaited<ReturnType<typeof getWritingFeedbackForLearner>>>();
+  // LANG G7 — bài nộp dạng ghi âm dùng góp ý bài NÓI (bản chữ + nhịp nói), không phải góp ý bài viết.
+  const speakingFeedbackBySubmission = new Map<string, Awaited<ReturnType<typeof getSpeakingFeedbackForLearner>>>();
   if (writingFeedbackEnabled) {
     for (const a of visibleAssignments) {
       const sub = a.submissions[0];
-      if (sub) writingFeedbackBySubmission.set(sub.id, await getWritingFeedbackForLearner(userId, sub.id));
+      if (!sub) continue;
+      if (a.responseFormat === "audio") {
+        speakingFeedbackBySubmission.set(sub.id, await getSpeakingFeedbackForLearner(userId, sub.id));
+      } else {
+        writingFeedbackBySubmission.set(sub.id, await getWritingFeedbackForLearner(userId, sub.id));
+      }
     }
   }
 
@@ -471,7 +483,17 @@ export default async function LessonPage({
       submission: a.submissions[0]
         ? {
             id: a.submissions[0].id,
-            writingFeedback: writingFeedbackEnabled
+            speakingFeedback:
+              writingFeedbackEnabled && a.responseFormat === "audio"
+                ? {
+                    enabled: true as const,
+                    initial: (() => {
+                      const f = speakingFeedbackBySubmission.get(a.submissions[0]!.id);
+                      return f ? { review: f.review, body: f.body, reviewerNote: f.reviewerNote, transcript: f.transcript } : null;
+                    })(),
+                  }
+                : undefined,
+            writingFeedback: writingFeedbackEnabled && a.responseFormat !== "audio"
               ? {
                   enabled: true as const,
                   initial: (() => {

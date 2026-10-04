@@ -179,10 +179,13 @@ model User {
   portfolio Portfolio?
 
   // A6 — Certification
-  certificates             Certificate[]
-  examPracticeSessions     ExamPracticeSession[]
-  writingFeedbacksReceived WritingFeedback[]     @relation("WritingFeedbackOwner")
-  writingFeedbacksReviewed WritingFeedback[]     @relation("WritingFeedbackReviewer")
+  certificates              Certificate[]
+  examPracticeSessions      ExamPracticeSession[]
+  writingFeedbacksReceived  WritingFeedback[]      @relation("WritingFeedbackOwner")
+  writingFeedbacksReviewed  WritingFeedback[]      @relation("WritingFeedbackReviewer")
+  submissionTranscripts     SubmissionTranscript[]
+  speakingFeedbacksReceived SpeakingFeedback[]     @relation("SpeakingFeedbackOwner")
+  speakingFeedbacksReviewed SpeakingFeedback[]     @relation("SpeakingFeedbackReviewer")
 
   @@index([createdAt])
 }
@@ -1674,12 +1677,14 @@ model AssignmentSubmission {
   reflection String? @db.Text
   aiFeedback Json?
 
-  assignment       Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  user             User              @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
-  grader           User?             @relation("Grader", fields: [graderId], references: [id])
+  assignment        Assignment             @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user              User                   @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
+  grader            User?                  @relation("Grader", fields: [graderId], references: [id])
   // A8 — bài này đang được ghim vào e-portfolio của học viên.
-  portfolioItems   PortfolioItem[]
-  writingFeedbacks WritingFeedback[]
+  portfolioItems    PortfolioItem[]
+  writingFeedbacks  WritingFeedback[]
+  transcripts       SubmissionTranscript[]
+  speakingFeedbacks SpeakingFeedback[]
 
   // Idempotent — one row per (assignment, user). Re-submission updates this row.
   @@unique([assignmentId, userId])
@@ -5337,6 +5342,67 @@ model WritingFeedback {
   submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   user       User                 @relation("WritingFeedbackOwner", fields: [userId], references: [id], onDelete: Cascade)
   reviewer   User?                @relation("WritingFeedbackReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([submissionId, generatedAt])
+  @@index([userId, courseId, status])
+}
+
+// LANG G7 — bản chữ do máy (Whisper) nghe được từ file ghi âm của một bài nộp. DỮ LIỆU DẪN XUẤT: một bản cho
+// mỗi (bài nộp, file ghi âm); nộp lại bằng file khác thì có bản mới. Chứa lời nói riêng của học viên nên bị xoá
+// cùng yêu cầu xoá tài khoản và nằm trong bản xuất dữ liệu cá nhân.
+model SubmissionTranscript {
+  id           String   @id @default(uuid())
+  submissionId String
+  userId       String
+  courseId     String
+  audioUrl     String
+  // Hash của bản chữ chuẩn hoá — cùng nội dung thì trả góp ý cũ, không gọi AI/trừ token lại.
+  textHash     String
+  language     String?
+  text         String   @db.Text
+  // { pauses: number[], longPauses: number, wordsPerMin: number, ... } — số liệu nhịp nói đo từ mốc thời gian.
+  metrics      Json
+  durationSec  Float
+  model        String
+  createdAt    DateTime @default(now())
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedbacks  SpeakingFeedback[]
+
+  @@unique([submissionId, audioUrl])
+  @@index([userId, courseId])
+}
+
+// LANG G7 — góp ý bài nói do AI sinh từ bản chữ + số liệu nhịp nói. Cùng vòng đời duyệt với WritingFeedback
+// (nháp "chưa duyệt" → giảng viên duyệt/từ chối) và cùng toạ độ SSMMD (§4.8). KHÔNG chấm phát âm.
+model SpeakingFeedback {
+  id                String                @id @default(uuid())
+  submissionId      String
+  transcriptId      String
+  userId            String
+  courseId          String
+  status            WritingFeedbackStatus @default(draft)
+  transcriptHash    String
+  // { summary, criteria[{key,level,comment}], errors[{id,category,quote,correction,explanation}], nextSteps[] }
+  body              Json
+  model             String
+  tokensIn          Int
+  tokensOut         Int
+  level             FeedbackLevel
+  levels            Json
+  elaboration       FeedbackElaboration
+  sourceKind        FeedbackSourceKind
+  generationContext Json
+  generatedAt       DateTime              @default(now())
+  reviewedById      String?
+  reviewedAt        DateTime?
+  reviewerNote      String?               @db.Text
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  transcript SubmissionTranscript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  user       User                 @relation("SpeakingFeedbackOwner", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer   User?                @relation("SpeakingFeedbackReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([submissionId, generatedAt])
   @@index([userId, courseId, status])

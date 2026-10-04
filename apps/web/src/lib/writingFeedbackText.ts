@@ -19,6 +19,9 @@ export const CRITERION_LABEL: Record<string, string> = {
   grammar: "Ngữ pháp",
   vocabulary: "Từ vựng",
   coherence: "Mạch lạc",
+  // LANG G7 — tiêu chí bài nói. "fluency" do HỆ THỐNG đo từ bản ghi (không phải mô hình đoán).
+  language: "Từ vựng và ngữ pháp",
+  fluency: "Lưu loát (đo từ bản ghi)",
 };
 
 export const LEVEL_LABEL: Record<string, { text: string; cls: string }> = {
