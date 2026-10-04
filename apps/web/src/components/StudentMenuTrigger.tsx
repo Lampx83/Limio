@@ -38,6 +38,7 @@ export default function StudentMenuTrigger({
     const teaching = searchParams.get("gv") === "1";
     return (
       <Link
+        data-app-chrome
         href={teaching ? "/instructor/dashboard" : "/me/dashboard"}
         aria-label={teaching ? "Về dashboard giảng viên" : "Về trang chủ học viên"}
         className={`fixed bottom-24 left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 ${

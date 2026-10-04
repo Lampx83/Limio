@@ -131,7 +131,7 @@ export default async function RootLayout({
         <Providers>
           <AiTokensPageProvider unlocked={aiTokensPageUnlocked}>
           <ImpersonationBanner />
-          <div data-print-hide className="sticky top-0 z-30">
+          <div data-print-hide data-app-chrome className="sticky top-0 z-30">
             <AppHeader />
           </div>
           <div className="flex flex-1 flex-col">{children}</div>

@@ -300,17 +300,121 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 
 **Trạng thái code (2026-10-03, nhánh `feat/lang-g4-flashcards`, chưa commit):** G4.1–G4.6 đã cài, test xanh (web 489 + 3 todo, core-lms 1217, core-feedback 331), typecheck sạch. **Chưa làm:** xem bằng mắt (`/learn/<slug>/flashcards`, khối "Từ vựng" trên hồ sơ, lối vào ở trang khoá, mobile < 640px, phím tắt, âm thanh); áp migration `20261003140000_flashcard_states` lên DB dev dùng chung (đã áp lên DB test) — migration chỉ thêm bảng `FlashcardState`, kiểu `FlashcardRating` và chỉ mục, không đổi bảng có sẵn. Nhãn chế độ dùng tên trung lập "Từ → nghĩa / Nghĩa → từ / Nghe → từ" (wireframe ghi "Hán → nghĩa"). Hàng đợi gửi lượt ôn thử lại với cùng `reviewId`; chỉ mục nóng `(userId, courseId, dueAt)`.
 
-## G5 · Thi thử
+## K1 · Tô sáng theo lượt trong Hội thoại *(chèn trước G5b, 2026-10-04)*
 
-- [ ] **LANG.5.1** Chế độ Thi thử: các phần làm lần lượt, giờ riêng, không quay lại, đồng hồ không dừng. Chế độ Luyện từng phần không ép giờ. *(Cần thêm giờ theo phần — xem G0.2.)*
-- [ ] **LANG.5.2** Audio theo `ExamPassageAudioPolicy` (nghe chỉ phát một lần).
-- [ ] **LANG.5.3** Màn trước phòng thi kiểm tra loa/mic và cảnh báo đồng hồ.
-- [ ] **LANG.5.4** Kết quả là khoảng ước lượng theo phần, so với lượt trước, luôn kèm "ước lượng, không phải điểm chính thức".
-- [ ] **LANG.5.5** Phần Viết/Nói chờ giảng viên duyệt; không hiện điểm giả.
-- [ ] **LANG.5.6** Kết quả gộp theo nhãn kỹ năng vào hồ sơ.
-- [ ] **LANG.5.7** Từ làm sai được *đề xuất* thêm vào thẻ ôn; chỉ thêm khi học viên đồng ý.
-- [ ] **LANG.5.8** Bảng quy đổi điểm lấy từ nguồn chính thức của từng kỳ thi.
-- [ ] **LANG.5.9** Đề do giảng viên tự soạn hoặc có giấy phép; không nhập đề thật có bản quyền.
+Đánh giá đầy đủ (K1 theo lượt → K2 bài nghe có mốc thời gian → K3 theo từng từ) nằm trong cuộc trao đổi; K1 chỉ làm phần **không cần mốc thời gian** vì mỗi lượt đã là một file audio riêng.
+- [x] **K1.1** Lượt đang phát được tô sáng (viền lime) và có `data-playing`; hết lượt thì mất.
+- [x] **K1.2** Lượt đang phát tự cuộn vào tầm nhìn (`nearest`, không giật trang nếu đã thấy; tôn trọng `prefers-reduced-motion`).
+- [x] **K1.3** Nút **Nghe cả đoạn** (chỉ hiện khi có lượt nào có audio) phát lần lượt các lượt có audio, bỏ qua lượt không có hoặc file lỗi; hết thì tự dừng; nút đổi thành **Dừng**.
+- [x] **K1.4** Bấm khung lượt có audio: khi rảnh → nghe riêng lượt đó; khi đang nghe cả đoạn → nhảy tới lượt đó và chạy tiếp. Đang bôi đen chữ thì không tính là bấm.
+- [x] **K1.5** Nút loa riêng của lượt = người học tự điều khiển: tắt chế độ chuỗi, không tự chạy tiếp.
+- [x] **K1.6** Người học bấm nút nghe của lượt khác trong lúc chạy chuỗi → chuỗi nhường; rời trang thì tắt tiếng và không phát tiếp.
+- Logic ở `apps/web/src/lib/turnSequencer.ts` (thuần, 11 test với audio giả; test viết trước đã bắt được một lỗi: nhảy lượt khi đang chạy chuỗi bị hiểu là "hết lượt" và sang lượt kế). Chưa làm: bài nghe (`audio`) có mốc thời gian, tô sáng từng từ (K2/K3); **chưa thử trên iOS Safari** (phát nối tiếp nhiều file có thể bị chặn tự phát).
+- Ghi chú chữ: caption của bài mẫu đang viết "Nghe cả đoạn một lần…" (nói về trình phát cả bài), trùng nhãn nút mới — có thể sửa caption mẫu.
+
+## G5 · Thi thử và luyện đề — đã duyệt (2026-10-03, bổ sung chế độ luyện đề 2026-10-04), đang làm G5a
+
+**Hiện trạng hệ thống đề thi (đã khảo sát, 2026-10-03)** — G5 nặng vì phần lớn thứ cần cho thi thử **chưa có**:
+- Chỉ có **một đồng hồ cho cả đề** (`ExamAttempt.durationSec`, hạn = `startedAt + durationSec`). `ExamSection` chỉ để nhóm câu và lấy ngẫu nhiên từ ngân hàng; **không có giờ riêng, không khoá thứ tự**; trình thi không đọc `ExamSection`. Điều hướng giữa các câu **hoàn toàn tự do**.
+- **Học viên không tự bắt đầu được**: cần giảng viên xuất bản đề và có ca thi đang mở. `attemptPolicy = single` chặn làm lại; làm nhiều lượt chỉ có ở thi vấn đáp.
+- **Nghe một lần chưa được thực thi ở đâu cả**: `audioPolicy`/`maxAudioPlays` chỉ được lưu; trình phát là `<audio controls>` thường (mã ghi "P1").
+- Kết quả chỉ có **điểm tổng**, không theo phần. **Không có đường nào từ bài thi sang `LearnerSkillState`**; thẻ kỹ năng của câu hỏi thi chỉ để hiển thị.
+- **Không có** khung đề HSK/IELTS/TOEIC. `ExamAttempt.sessionId` đã cho phép null.
+
+**Nguyên tắc.**
+- Mọi hành vi mới **chỉ bật khi đề được đánh dấu "Thi thử"** (`Exam.mockMode`, mặc định `false`). Đề thi thật giữ nguyên 100% (có test hồi quy).
+- Không đưa **đề thật** (có bản quyền) hay **bảng quy đổi chính thức** vào hệ thống. Điểm quy đổi luôn do giảng viên nhập và luôn mang nhãn "ước lượng, không phải điểm chính thức".
+- Thi thử **không cấp XP** và không chạm BKT (cùng lý do với flashcard).
+- Chia 4 bước, mỗi bước commit riêng và dừng để review: **G5a → G5b → G5c → G5d**.
+
+### G5a · Giờ riêng từng phần, làm lần lượt, không quay lại *(nặng nhất: chạm lõi luồng thi)*
+Schema (chỉ thêm): `Exam.mockMode`; `ExamSection.durationMin?`, `ExamSection.languageSkill?`; bảng `ExamAttemptSection(attemptId, sectionId, endedAt?, extraSec)` unique `(attemptId, sectionId)` — chỉ ghi khi học viên nộp sớm một phần hoặc giảng viên gia hạn. Phần đang chạy được **suy ra** từ giờ bắt đầu + giờ các phần (hàm thuần `resolveSectionTimeline`), nên hết giờ phần tự chuyển mà không cần ai mở trang và không có hàng nào để "quên cập nhật".
+- [x] **G5a.1** Given đề thi thử có ≥ 2 phần đều có giờ, when học viên bắt đầu, then `durationSec` = tổng giờ các phần; phần đầu chạy ngay, các phần sau ở trạng thái "chưa mở".
+- [x] **G5a.2** Given đang ở phần k, when lưu đáp án cho câu thuộc phần khác (đã xong hoặc chưa mở), then bị từ chối `section_not_active` (kiểm ở máy chủ, không tin giao diện).
+- [x] **G5a.3** Hết giờ phần k (tính theo giờ máy chủ) → lưu đáp án phần k bị từ chối, phần k đóng và phần k+1 mở liền, kể cả khi học viên không còn mở trang.
+- [x] **G5a.4** "Nộp phần này" kết thúc sớm phần hiện tại và mở phần kế; **không quay lại** phần đã đóng; phần cuối thì nộp cả bài. Có hộp xác nhận nói rõ "không quay lại được".
+- [x] **G5a.5** Trình thi chỉ hiện câu của phần hiện tại; có đồng hồ phần và đồng hồ cả bài; hết giờ phần thì tự chuyển. Máy chủ **chỉ gửi câu của phần hiện tại** (không giấu bằng giao diện).
+- [ ] **G5a.13** *(giao diện, yêu cầu 2026-10-03)* Phòng thi thử **bắt chước bố cục của kỳ thi thật bên ngoài** để thí sinh quen tay: thanh trên cùng có tên phần + đồng hồ phần/cả bài; màn chia đôi bài đọc/câu hỏi; thanh số câu phía dưới có trạng thái đã làm/đánh dấu; hộp xác nhận khi nộp phần; chỉnh cỡ chữ. Chỉ lấy **mẫu bố cục và thao tác**, không dùng logo, tên thương hiệu, màu nhận diện hay nội dung có bản quyền. Cần ảnh chụp giao diện thật từ chủ dự án để đối chiếu từng kỳ thi (HSK / IELTS / TOEIC) — làm sau khi phần máy chủ G5a xanh.
+- [x] **G5a.6** Tải lại trang / mất mạng rồi vào lại: thấy đúng phần hiện tại và thời gian còn lại theo máy chủ; không đặt lại được đồng hồ phần bằng cách tải lại.
+- [x] **G5a.7** `heartbeat` trả thêm phần hiện tại và thời gian còn lại của phần (giữ tương thích với máy khách cũ).
+- [x] **G5a.8** Cron tự nộp bài hết giờ xử lý đúng bài thi thử (hết tổng giờ → nộp đủ mọi phần).
+- [x] **G5a.9** Giảng viên gia hạn giờ thì cộng vào phần đang chạy.
+- [x] **G5a.10** Xuất bản đề thi thử bị chặn nếu: có phần không có câu nào, giờ phần ngoài 1–240 phút, có câu không thuộc phần nào, còn phần ngẫu nhiên chưa chốt.
+- [x] **G5a.11** Phát event `exam.section.started` / `exam.section.ended` (idempotent).
+- [x] **G5a.12** **Hồi quy:** đề không đánh dấu thi thử, hoặc phần không có giờ → điều hướng tự do và một đồng hồ như cũ.
+
+**Trạng thái G5a (2026-10-03, nhánh `feat/lang-g5-mock-exams`, chưa commit):** máy chủ + giao diện đã làm; migration `20261003150000_exam_mock_sections` đã áp lên DB test và DB dev. Test: core-lms 1252 xanh (`section-timeline.test.ts` 13, `mock-sections.test.ts` 22), web 524 xanh, typecheck sạch. **Đã xem chạy thật trên dev** (đề mẫu `scripts/seed-mock-exam.ts`, 3 phần 3/4/2 phút): vào phòng thi → chỉ thấy phần Nghe (HTML tải về **không chứa** nội dung phần Đọc/Viết) → "Nộp phần này" hiện hộp xác nhận nói rõ không quay lại → sang phần Đọc, câu đánh số tiếp từ 4, phần Nghe có dấu ✓ → hết giờ phần Đọc tự sang phần Viết (qua heartbeat, không cần thao tác) → "Nộp bài" ở phần cuối ra trang kết quả. **Chưa xem bằng mắt:** ảnh chụp màn hình (khung trình duyệt trong ứng dụng đang ẩn nên không chụp được) — mới kiểm bằng nội dung trang; mobile < 640px; **trang soạn đề của giảng viên** (ô "Đề thi thử" + bảng giờ/kỹ năng từng phần, `MockExamPanel.tsx`) mới qua typecheck, chưa mở thử; chưa có test cho component. Giao diện hiện là bố cục trung tính (thanh phần + đồng hồ phần/cả bài, các phần dạng chặng, cỡ chữ A−/A+, hộp xác nhận); **G5a.13** vẫn mở: chờ ảnh phòng thi thật để chỉnh bố cục cho giống. Giới hạn nói thẳng: kiểm "câu thuộc phần đang chạy" xảy ra trước khi ghi đáp án nên một lượt lưu đúng khoảnh khắc chuyển phần có thể lọt vài mili-giây; khi hết giờ phần, câu vừa gõ trong 2 giây cuối (chưa kịp tự lưu) có thể mất — trình thi đẩy nốt các câu chờ lưu khi còn 3 giây.
+
+### G5b · Nghe một lần và giới hạn lượt phát
+Schema: bảng `ExamPassagePlay(attemptId, passageId, plays)` unique `(attemptId, passageId)`.
+- [x] **G5b.1** Nút Phát gọi máy chủ xin một lượt trước khi phát: `free_replay` luôn được; `limited_replay` tối đa `maxAudioPlays` lượt; `once_only` đúng 1 lượt. Hết lượt → `audio_plays_exhausted` (403).
+- [x] **G5b.2** Xin lượt idempotent theo `playId` do máy khách sinh (thử lại vì mất mạng không tính hai lần).
+- [x] **G5b.3** Lượt đã dùng được máy chủ nhớ: tải lại trang không có thêm lượt.
+- [~] **G5b.4** Giao diện: hiện "Còn N lượt"; với `once_only` không có thanh tua, không phát lại; hết phần thì không phát tiếp.
+- [~] **G5b.5** Lời thoại (transcript) của audio ẩn với thí sinh trong khi thi (cùng nguyên tắc G1).
+- [x] **G5b.6** Chỉ áp cho đề thi thử trong G5b (đề thật giữ nguyên). **Giới hạn nói thẳng:** máy chủ đếm lượt phát, không chống được việc tải file audio.
+
+**Trạng thái G5b (2026-10-04, commit cùng G5a):** máy chủ xong, 17 test xanh (`audio-plays.test.ts`: giới hạn theo chính sách, gửi lại cùng `playId` không tính hai lần, hai yêu cầu song song chỉ được một nhờ khoá `pg_advisory_xact_lock`, chặn bịa `audioKey`, chặn xin lượt cho phần chưa mở, đề thường không bị ảnh hưởng). **Khác thiết kế nháp:** đếm theo **từng audio** (mỗi lượt phát một dòng `ExamAudioPlay`, khoá `(attemptId, playId)`) thay vì bảng đếm theo bài, vì một bài có thể có nhiều audio, mỗi audio một hạn mức. `GET` runtime trả `audioPlays` để giao diện hiện "Còn N lượt" sau khi tải lại. Giao diện (`ExamAudioPlayer`: nút Phát xin lượt trước; không tua, không dừng; thanh tiến độ chỉ để xem) **đã viết và qua typecheck nhưng CHƯA thử trên trình duyệt** — đề mẫu chưa có bài nghe có file audio thật. G5b.5 (ẩn lời thoại): đề thi không có trường lời thoại riêng (nội dung bài là do giảng viên đặt), nên **không áp**; chữ mô tả `alt` của audio vẫn hiện. Giới hạn nói thẳng: lượt đã cấp mà file không phát được (mất mạng giữa chừng) vẫn bị tính. Migration `20261004100000_exam_audio_plays` đã áp lên DB test và DB dev.
+
+**Làm sớm từ G5c (2026-10-04):** mục **"Luyện thi"** trên trang khoá của học viên (`listMockExamsForLearner`, 6 test) = G5c.2 phần liệt kê và G5c.6; phòng thi thử **ẩn khung hệ thống** (thanh trên, chân trang, nút nổi) và có liên kết "Rời phòng thi"; thanh đầu phòng thi theo kiểu phòng thi thường của Limio. Chưa làm: nút "Luyện đề", khung đề, màn trước phòng thi, nhiều lượt thi.
+
+### G5c · "Luyện thi" trên trang khoá, khung đề, học viên tự bắt đầu thi thử *(viết lại 2026-10-04 theo thiết kế hai chế độ)*
+Hiện **học viên không có đường nào vào đề thi** từ trang khoá (đã kiểm: `app/learn/[slug]` không liệt kê đề); chỉ vào được qua link giảng viên gửi. G5c thêm mục này.
+- [ ] **G5c.1** Giảng viên tạo đề thi thử từ **khung đề** (HSK · IELTS · TOEIC · Tuỳ chỉnh). Khung chỉ tạo **cấu trúc rỗng**: các phần, kỹ năng của từng phần, chính sách audio; **không kèm câu hỏi hay bảng quy đổi**. Giờ từng phần để giảng viên điền (hoặc điền sẵn số chính thức nếu chủ dự án cung cấp).
+- [ ] **G5c.2** Trang khoá của học viên có mục **"Luyện thi"** liệt kê các đề thi thử đã xuất bản của khoá, mỗi đề là một thẻ: tên, các phần (kỹ năng · số phút), trạng thái của học viên (chưa làm · đang làm dở · đã thi N lần, điểm gần nhất). Không có đề nào thì không hiện mục.
+- [ ] **G5c.3** Thẻ có hai nút: **Thi thử cả đề** (chế độ `mock`, như G5a) và **Luyện đề** (chế độ `practice`, xem G5e). Nút nào bị giảng viên tắt thì không hiện (G5c.7).
+- [ ] **G5c.4** Học viên đã ghi danh tự bấm "Thi thử" khi đề đã xuất bản và là đề thi thử; không cần ca thi do giảng viên mở (dùng ca mặc định luôn mở). Đang có lượt thi thử dở thì hiện **Tiếp tục** thay vì tạo lượt mới; làm được nhiều lượt, mỗi lượt độc lập.
+- [ ] **G5c.5** Màn trước phòng thi: cấu trúc các phần và giờ, quy tắc ("không quay lại", "nghe một lần"), nút thử loa, và xác nhận "Tôi đã sẵn sàng" trước khi đồng hồ chạy.
+- [ ] **G5c.6** Chưa ghi danh → 403; đề chưa xuất bản hoặc không phải đề thi thử → không tự bắt đầu được. Mục "Luyện thi" không bao giờ liệt kê đề thường, đề nháp, hay đề của khoá khác.
+- [ ] **G5c.7** Giảng viên có hai công tắc trên đề thi thử: **Cho thi thử** · **Cho luyện đề** (mặc định cả hai bật); đề nháp/đã tắt cả hai thì không hiện cho học viên.
+- [ ] **G5c.8** Không cấp XP; học viên lớp đối chứng (B10) vẫn dùng được (đây là công cụ luyện, không phải feedback cá nhân hoá).
+
+### G5d · Kết quả theo phần, so với lượt trước, và khối "Thi thử" trên hồ sơ
+Schema: `ExamAttempt.sectionResults Json?` (dẫn xuất, tính một lần khi chấm xong); `ExamSection.scoreBands Json?` (bảng quy đổi do giảng viên nhập).
+- [ ] **G5d.1** Hàm thuần `computeSectionResults`: mỗi phần có số câu đúng / tổng, điểm / điểm tối đa, và `pending` nếu còn câu tự luận chờ chấm.
+- [ ] **G5d.2** Phần có câu chờ chấm → "chờ giảng viên", **không hiện điểm giả**; điểm phần chốt khi chấm xong.
+- [ ] **G5d.3** Có bảng quy đổi → hiện **khoảng ước lượng** kèm nhãn "ước lượng, không phải điểm chính thức"; không có bảng → chỉ hiện "đúng X/Y câu".
+- [ ] **G5d.4** So với lượt trước theo từng phần: tăng · giảm · không đổi.
+- [ ] **G5d.5** Trang kết quả: theo phần, thời gian đã dùng so với được phép, xem lại bài làm theo chính sách hiện đáp án có sẵn.
+- [ ] **G5d.6** Hồ sơ 4 kỹ năng có khối "Thi thử" đọc `sectionResults` của lượt mới nhất và lượt trước, nhóm theo `languageSkill` của phần. **Không trộn vào nhãn Cần ôn / Nên luyện / Vững** vì chưa có đường từ bài thi sang BKT.
+- [ ] **G5d.7** Học viên chỉ xem kết quả của mình; giảng viên/trợ giảng xem qua API.
+- [ ] **G5d.8** Phần Nói nằm ngoài thi thử (có thi vấn đáp riêng); phần Viết là câu tự luận, chờ giảng viên chấm.
+
+### G5e · Luyện đề theo kỹ năng *(mới, 2026-10-04; làm sau G5c)*
+**Một bộ đề, hai cách chạy** (như Magoosh/PREP: đề đầy đủ có bấm giờ **và** luyện theo phần/kỹ năng). Khác thi thử: học viên tự chọn phạm vi, không ép giờ, quay lại tự do, xem đáp án ngay.
+Schema (chỉ thêm): `ExamAttempt.mode` (`mock` | `practice`; hàng cũ để trống = đề thường); `ExamAttempt.scope Json?` (danh sách phần học viên chọn). **Rủi ro lớn nhất:** chỉ mục SQL thô "mỗi người một lượt" trên `(examId, userId)` phải loại trừ lượt `practice` để cho nhiều lượt luyện — migration cần review tay.
+- [ ] **G5e.1** Học viên chọn phạm vi luyện: một hoặc nhiều **kỹ năng** (theo `ExamSection.languageSkill`), hoặc **từng phần**, hoặc cả đề; tuỳ chọn "chỉ câu chưa làm" / "chỉ câu từng sai". Phạm vi rỗng → không bắt đầu được.
+- [ ] **G5e.2** Lượt luyện chỉ chứa câu thuộc phạm vi (máy chủ chỉ gửi câu trong phạm vi). Không có đồng hồ ép buộc, không bị cron tự nộp; có công tắc **bấm giờ** tuỳ chọn (chỉ hiển thị, không ép).
+- [ ] **G5e.3** Điều hướng tự do, quay lại sửa đáp án được; **tạm dừng và làm tiếp** sau (lượt giữ nguyên tới khi nộp hoặc bỏ).
+- [ ] **G5e.4** Nút **Kiểm tra** (mặc định bật, học viên tắt được): sau khi trả lời một câu, máy chủ trả đúng/sai và đáp án đúng. **Endpoint này chỉ phục vụ lượt `practice` — lượt `mock` luôn bị từ chối** (không được lộ đáp án trong lúc thi thử, kể cả khi cố gọi trực tiếp).
+- [ ] **G5e.5** Audio: nghe lại tuỳ ý (bỏ qua `audioPolicy` của G5b); lời thoại hiện **sau khi** đã kiểm tra câu đó.
+- [ ] **G5e.6** Nhiều lượt luyện cùng đề, không giới hạn, độc lập với lượt thi thử và không ảnh hưởng chính sách một-lượt của đề thường.
+- [ ] **G5e.7** Kết thúc: kết quả **theo kỹ năng** (đúng X/Y), danh sách câu sai kèm đáp án đúng, nút **Làm lại câu sai** (mở lượt luyện mới chỉ với các câu đó).
+- [ ] **G5e.8** Không cấp XP. Mỗi câu đã trả lời phát `exam.practice.answered` kèm thẻ kỹ năng (để sau này nuôi BKT mà không phải làm lại), **nhưng chưa nuôi BKT** và không trộn vào nhãn Cần ôn / Nên luyện / Vững. Hồ sơ 4 kỹ năng có khối **"Luyện đề"** riêng: độ chính xác theo kỹ năng, số lượt, lần gần nhất.
+- [ ] **G5e.9** Chỉ học viên đã ghi danh luyện được; đề không bật "Cho luyện đề" (G5c.7) hoặc chưa xuất bản → 403.
+- [ ] **G5e.10** Giải thích đáp án: bước đầu chỉ hiện đáp án đúng. Trường giải thích (`ExamQuestion.explanation`, tuỳ chọn) làm **sau**; khi có thì hiện cùng đáp án.
+
+### Hoãn lại (không nằm trong G5)
+- **Từ làm sai → đề xuất thêm vào thẻ ôn** (cũ: LANG.5.7): cần ánh xạ câu hỏi ↔ từ vựng mà hiện chưa có.
+- ~~Luyện từng phần không ép giờ~~ → đã đưa vào **G5e**. Còn hoãn: thi thử phần Nói, đưa kết quả thi/luyện vào BKT, nghe một lần áp cho cả đề thật, trường giải thích đáp án (G5e.10).
+- **Từ khảo sát nền tảng luyện thi (2026-10-04), cân nhắc sau:** tô sáng/ghi chú trên bài đọc và **đánh dấu câu để xem lại** (cả hai có trong phòng thi máy của IELTS); thời gian đọc câu trước mỗi phần nghe; đề thi thử đầu vào làm điểm xuất phát cho lộ trình cá nhân hoá (B4); AI chấm Viết/Nói (G6/G7).
+
+### Quyết định đã chốt (2026-10-03: "đồng ý" cả 6 đề xuất)
+1. **Chia 4 bước** G5a → G5d, mỗi bước commit riêng và dừng review? *(đề xuất: vậy; G5a là bước rủi ro nhất)*
+2. **Cờ "Thi thử"**: hành vi mới chỉ bật với đề được đánh dấu, đề thật không đổi? *(đề xuất: vậy)*
+3. **Quy đổi điểm**: giảng viên tự nhập bảng cho từng phần; hệ thống không mang sẵn số liệu; mặc định chỉ hiện "đúng X/Y câu"? *(đề xuất: vậy)*
+4. **Khung đề HSK/IELTS/TOEIC**: chỉ cấu trúc (phần, kỹ năng, chính sách audio), giờ để trống. Bạn có muốn cung cấp số phút chính thức từng phần để điền sẵn? *(đề xuất: để trống tới khi bạn đối chiếu nguồn chính thức)*
+5. **Nghe một lần**: máy chủ đếm lượt phát, không tua, không phát lại, không chống tải file; áp cho đề thi thử trước? *(đề xuất: vậy)*
+6. **Số lượt thi thử mỗi học viên**: không giới hạn, hay có trần? *(đề xuất: không giới hạn)*
+
+### Quyết định chế độ luyện đề (2026-10-04: "đồng ý đề xuất")
+1. **Một bộ đề, hai chế độ** (thi thử · luyện đề), không tách hai loại đề.
+2. Luyện đề **chưa nuôi BKT**; phát event ngay để sau bật được. Hồ sơ có khối "Luyện đề" riêng.
+3. Xem đáp án **ngay sau từng câu** mặc định bật, học viên tắt được; giảng viên chưa cần khoá.
+4. Giải thích đáp án: bước đầu chỉ đáp án đúng; trường giải thích làm sau.
+5. **Không XP** cho luyện đề.
+6. Phạm vi luyện: **kỹ năng và phần** trước; nhóm câu (bài đọc/bài nghe) để sau.
+**Thứ tự mới:** G5a (đang làm; chờ bạn thử) → **G5b** nghe một lần (chỉ thi thử) → **G5c** "Luyện thi" hub + học viên tự bắt đầu → **G5e** luyện đề → **G5d** kết quả theo phần/kỹ năng cho cả hai chế độ.
 
 ## G6 · Feedback Viết bằng AI
 

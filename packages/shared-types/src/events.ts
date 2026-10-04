@@ -78,6 +78,9 @@ export const LearningEventType = {
   ExamIncidentFlagged: "exam.incident.flagged",
   // A5.3.5 — Instructor live actions
   ExamAttemptExtended: "exam.attempt.extended",
+  // LANG G5a — đề thi thử: phần thi bắt đầu/kết thúc (suy ra từ giờ, phát lười, idempotent).
+  ExamSectionStarted: "exam.section.started",
+  ExamSectionEnded: "exam.section.ended",
   ExamAttemptForceSubmitted: "exam.attempt.force_submitted",
   ExamAttemptSessionReset: "exam.attempt.session_reset",
   ExamAttemptDisqualified: "exam.attempt.disqualified",
@@ -433,6 +436,23 @@ export interface ExamPublishedPayload {
   courseId: string;
   questionCount: number;
   totalPoints: number;
+}
+
+export interface ExamSectionStartedPayload {
+  examId: string;
+  attemptId: string;
+  sectionId: string;
+  /** Vị trí phần trong đề, từ 0. */
+  sectionIndex: number;
+  languageSkill: string | null;
+  /** Giờ phần bắt đầu theo đồng hồ máy chủ (không phải lúc sự kiện được ghi). */
+  startedAt: string;
+}
+
+export interface ExamSectionEndedPayload extends ExamSectionStartedPayload {
+  endedAt: string;
+  /** Vì sao phần kết thúc: hết giờ phần hay học viên nộp sớm. */
+  reason: "time_up" | "submitted_early";
 }
 
 export interface ExamStartedPayload {

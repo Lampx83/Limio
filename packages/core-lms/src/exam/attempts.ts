@@ -11,6 +11,8 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 import { assertEligibleForExam } from "./cohorts";
 import { materializeRandomSections } from "./sections";
+import { assertQuestionInActiveSection, getSectionFlow, mockExamTotalSec } from "./mock-sections";
+import { listAudioPlayUsage } from "./audio-plays";
 import {
   assertSubjectOwnsAttempt,
   emitArgsForSubject,
@@ -189,7 +191,11 @@ export async function startExamAttempt(
   // all live in assertEligibleForExam now. Legacy exam.openAt/closeAt is the
   // fallback when no ExamSchedule rows exist. Chỉ cần khi BẮT ĐẦU bài mới.
   const eligibility = await assertEligibleForExam(userId, examId, db);
-  const durationSec = eligibility.durationSec;
+  // LANG G5a — đề thi thử: thời lượng là tổng giờ các phần (vẫn bị cắt theo
+  // cửa sổ ca nếu ca đóng sớm hơn).
+  const mockTotalSec = await mockExamTotalSec(examId, db);
+  const durationSec =
+    mockTotalSec === null ? eligibility.durationSec : Math.min(eligibility.durationSec, mockTotalSec);
   const attemptId = randomUUID();
   const sessionToken = randomUUID();
   const baseSnapshot = await buildShuffleSnapshot(
@@ -278,7 +284,11 @@ export async function getAttemptRuntime(
   });
   if (!attempt) throw new ExamError("attempt_not_found");
   assertSubjectOwnsAttempt(subject, attempt);
+  const sectionFlow = await getSectionFlow(subject, attemptId, db);
+  const audioPlays = await listAudioPlayUsage(attemptId, db);
   return {
+    sectionFlow,
+    audioPlays,
     attemptId: attempt.id,
     examId: attempt.examId,
     status: attempt.status as ExamAttemptStatus,
@@ -371,6 +381,8 @@ export async function saveAnswer(
   if (!question || question.examId !== attempt.examId) {
     throw new ExamError("question_not_in_exam");
   }
+  // LANG G5a — đề thi thử chỉ nhận đáp án của phần đang chạy (kiểm ở máy chủ).
+  await assertQuestionInActiveSection(attemptId, questionId, db);
 
   const newHash = hashAnswer(parsed.data.answerJson);
   const elapsedMs = Date.now() - attempt.startedAt.getTime();
