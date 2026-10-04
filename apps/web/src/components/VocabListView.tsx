@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { Eye, Pause, Volume2 } from "lucide-react";
+import { SOURCE_TEXT_COLOR } from "@/lib/langText";
 import { useExclusiveAudio } from "./useExclusiveAudio";
 
 export interface VocabViewItem {
@@ -19,106 +20,173 @@ export interface VocabViewItem {
 /**
  * LANG G2 — bảng từ vựng cho học viên.
  *
- * Mobile (< sm): mỗi từ là một thẻ xếp dọc. Từ `sm`: bảng cột (từ · phiên âm ·
- * nghĩa · nghe). Mọi chữ là text node — React tự thoát HTML.
+ * Mobile (< sm): mỗi từ là một thẻ xếp dọc. Từ `sm`: bảng cột (từ · phiên âm · nghĩa).
+ * Nút nghe nằm ngay trước chữ ở cột 1; bấm cả hàng cũng nghe được. Mọi chữ là
+ * text node — React tự thoát HTML.
  *
- * "Che nghĩa" chỉ làm mờ phần phiên âm/nghĩa để tự kiểm tra; nội dung vẫn nằm
- * trong DOM. Khác lời thoại bài nghe-hiểu (bị gỡ khỏi payload ở máy chủ), vì từ
- * vựng không phải là bí mật cần giấu.
+ * Tự kiểm tra bằng hai nút bật/tắt độc lập — phiên âm và nghĩa — cùng kiểu với khối
+ * hội thoại: tắt phiên âm để đoán cách đọc, tắt nghĩa để đoán nghĩa. Tắt chỉ làm
+ * mờ; nội dung vẫn nằm trong DOM. Khác lời thoại bài nghe-hiểu (bị gỡ khỏi payload
+ * ở máy chủ), vì từ vựng không phải là bí mật cần giấu. Cột "từ" không bao giờ bị che.
  */
 export default function VocabListView({
   title,
   readingLabel,
   items,
-  initialMasked = false,
+  initialShowReading = true,
+  initialShowMeaning = true,
 }: {
   title?: string;
   readingLabel?: string;
   items: VocabViewItem[];
-  initialMasked?: boolean;
+  initialShowReading?: boolean;
+  initialShowMeaning?: boolean;
 }) {
-  const [masked, setMasked] = useState(initialMasked);
+  const [showReading, setShowReading] = useState(initialShowReading);
+  const [showMeaning, setShowMeaning] = useState(initialShowMeaning);
   const { playingId, toggle } = useExclusiveAudio();
   const hasReading = items.some((i) => !!i.reading);
   const label = readingLabel?.trim() || "Phiên âm";
+  const anyAudio = items.some((i) => i.audioUrl);
   const cols = hasReading
-    ? "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.8fr)_2rem]"
-    : "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_2rem]";
+    ? "sm:grid-cols-[minmax(7rem,12rem)_minmax(5rem,9rem)_minmax(0,1fr)]"
+    : "sm:grid-cols-[minmax(7rem,12rem)_minmax(0,1fr)]";
   const mask = (on: boolean) => (on ? "true" : undefined);
-  const maskCls = masked ? "select-none blur-sm" : "";
+  const blur = (hidden: boolean) => (hidden ? "select-none blur-sm" : "");
 
   return (
-    <section className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <section className="space-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         {title ? <p className="text-body font-semibold">{title}</p> : <span />}
-        <button
-          type="button"
-          aria-pressed={masked}
-          onClick={() => setMasked((v) => !v)}
-          className={`rounded-lg border px-2.5 py-1 text-sm transition-colors ${
-            masked ? "border-brand-200 bg-brand-soft text-brand-700" : "border-token hover:bg-brand-soft"
-          }`}
+        <div
+          role="group"
+          aria-label="Hiển thị"
+          className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5 pl-3"
         >
-          Che nghĩa
-        </button>
+          <Eye size={15} aria-hidden className="mr-1.5 text-muted" />
+          {hasReading && (
+            <ToggleChip pressed={showReading} onClick={() => setShowReading((v) => !v)}>
+              {label}
+            </ToggleChip>
+          )}
+          <ToggleChip pressed={showMeaning} onClick={() => setShowMeaning((v) => !v)}>
+            Nghĩa
+          </ToggleChip>
+        </div>
       </div>
 
-      <div className={`hidden gap-x-4 text-caption sm:grid ${cols}`}>
-        <span>Từ</span>
+      <div className={`hidden gap-x-4 border-b border-token px-2 pb-1.5 text-caption font-medium uppercase tracking-wide sm:grid ${cols}`}>
+        <span className={anyAudio ? "pl-9" : undefined}>Từ</span>
         {hasReading && <span>{label}</span>}
         <span>Nghĩa</span>
-        <span />
       </div>
 
       <ul className="divide-y divide-[rgb(var(--border))]">
         {items.map((it) => {
           const playing = playingId === it.id;
           return (
-            <li key={it.id} className={`grid grid-cols-1 gap-x-4 gap-y-1 py-3 sm:items-baseline ${cols}`}>
-              <span className="text-lg font-medium">{it.term}</span>
-              {hasReading && (
-                <span data-masked={mask(masked && !!it.reading)} className={`text-meta ${maskCls}`}>
-                  {it.reading}
-                </span>
-              )}
-              <div className="space-y-1">
-                <p data-masked={mask(masked)} className={`text-body ${maskCls}`}>
-                  {it.meaning}
-                </p>
-                {it.example && (
-                  <p className="text-meta">
-                    <span>{it.example}</span>
-                    {it.exampleReading && (
-                      <span data-masked={mask(masked)} className={`ml-2 ${maskCls}`}>
-                        {it.exampleReading}
-                      </span>
-                    )}
-                    {it.exampleMeaning && (
-                      <span data-masked={mask(masked)} className={`ml-2 text-muted ${maskCls}`}>
-                        {it.exampleMeaning}
-                      </span>
-                    )}
-                  </p>
-                )}
-                {it.note && <p className="text-caption">{it.note}</p>}
-              </div>
-              <div>
+            <li
+              key={it.id}
+              id={`vocab-${it.id}`}
+              data-playing={playing ? "true" : undefined}
+              onClick={
+                it.audioUrl
+                  ? () => {
+                      if (window.getSelection()?.toString()) return; // đang bôi đen để copy/tra từ
+                      toggle(it.id, it.audioUrl!);
+                    }
+                  : undefined
+              }
+              className={`grid grid-cols-1 gap-x-4 gap-y-0.5 rounded-lg px-2 py-2 transition-colors sm:items-start ${cols} ${
+                playing ? "bg-brand-soft ring-2 ring-brand-300" : ""
+              } ${it.audioUrl ? "cursor-pointer hover:bg-[rgb(var(--surface-muted))/0.5]" : ""}`}
+            >
+              <div className="flex items-center gap-2">
                 {it.audioUrl && (
                   <button
                     type="button"
                     aria-label={`Nghe ${it.term}`}
                     aria-pressed={playing}
-                    onClick={() => toggle(it.id, it.audioUrl!)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-token hover:bg-brand-soft"
+                    onClick={(e) => {
+                      e.stopPropagation(); // không để hàng xử lý thêm một lần
+                      toggle(it.id, it.audioUrl!);
+                    }}
+                    className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                      playing
+                        ? "border-brand-400 bg-brand-100 text-brand-800"
+                        : "border-token bg-[rgb(var(--surface))] hover:bg-brand-soft"
+                    }`}
                   >
-                    {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
+                    {playing ? <Pause size={14} aria-hidden /> : <Volume2 size={14} aria-hidden />}
                   </button>
                 )}
+                {!it.audioUrl && anyAudio && <span className="h-7 w-7 shrink-0" aria-hidden />}
+                <span className={`text-xl font-medium leading-snug ${SOURCE_TEXT_COLOR}`}>{it.term}</span>
+              </div>
+              {hasReading && (
+                <span
+                  data-masked={mask(!showReading && !!it.reading)}
+                  className={`text-body text-muted sm:pt-0.5 ${blur(!showReading)}`}
+                >
+                  {it.reading}
+                </span>
+              )}
+              <div className="space-y-1 sm:pt-0.5">
+                <p data-masked={mask(!showMeaning)} className={`text-body font-medium text-muted ${blur(!showMeaning)}`}>
+                  {it.meaning}
+                </p>
+                {it.example && (
+                  // Ví dụ: câu gốc + phiên âm trên một dòng, bản dịch dòng dưới, vạch lime bên trái.
+                  <div className="border-l-2 border-brand-200 pl-2.5">
+                    <p className="text-meta text-muted">
+                      <span className={`text-body ${SOURCE_TEXT_COLOR}`}>{it.example}</span>
+                      {it.exampleReading && (
+                        <span
+                          data-masked={mask(!showReading)}
+                          className={`ml-2 text-meta text-muted ${blur(!showReading)}`}
+                        >
+                          {it.exampleReading}
+                        </span>
+                      )}
+                    </p>
+                    {it.exampleMeaning && (
+                      <p data-masked={mask(!showMeaning)} className={`text-meta text-muted ${blur(!showMeaning)}`}>
+                        {it.exampleMeaning}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {it.note && <p className="text-caption italic">{it.note}</p>}
               </div>
             </li>
           );
         })}
       </ul>
     </section>
+  );
+}
+
+function ToggleChip({
+  pressed,
+  onClick,
+  children,
+}: {
+  pressed: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={`h-8 rounded-full px-3.5 text-sm transition-colors ${
+        pressed
+          ? "bg-brand-100 font-medium text-brand-800 shadow-sm"
+          : "text-muted line-through decoration-[rgb(var(--text-muted))/0.5] hover:bg-brand-soft"
+      }`}
+    >
+      {children}
+    </button>
   );
 }

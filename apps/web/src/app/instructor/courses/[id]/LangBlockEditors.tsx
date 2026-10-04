@@ -127,6 +127,42 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+/**
+ * Gợi ý nhãn phiên âm theo ngôn ngữ — bấm để điền, vẫn gõ tự do được. Khối không biết
+ * ngôn ngữ của khoá nên nhãn do giảng viên chọn; để trống = học viên thấy “Phiên âm”.
+ */
+const READING_LABEL_PRESETS = [
+  { label: "Pinyin", hint: "tiếng Trung" },
+  { label: "IPA", hint: "tiếng Anh và các ngôn ngữ khác" },
+  { label: "Furigana", hint: "tiếng Nhật" },
+  { label: "Romaji", hint: "tiếng Nhật" },
+  { label: "Romanization", hint: "tiếng Hàn" },
+] as const;
+
+function ReadingLabelPresets({ value, onPick }: { value: string; onPick: (label: string) => void }) {
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5" role="group" aria-label="Gợi ý nhãn phiên âm">
+      {READING_LABEL_PRESETS.map((p) => {
+        const on = value.trim() === p.label;
+        return (
+          <button
+            key={p.label}
+            type="button"
+            title={p.hint}
+            aria-pressed={on}
+            onClick={() => onPick(on ? "" : p.label)}
+            className={`rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
+              on ? "border-brand-300 bg-brand-100 font-medium text-brand-800" : "border-token text-muted hover:bg-brand-soft"
+            }`}
+          >
+            {p.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Audio của một dòng, dạng gọn: chưa có → nút "Thêm audio"; có rồi → nghe thử / đổi / xoá. */
 function AudioChip({ id, url, onChange, label }: { id: string; url: string; onChange: (u: string) => void; label: string }) {
   const [busy, setBusy] = useState(false);
@@ -329,7 +365,8 @@ export function VocabListEditor({
           <label htmlFor="vocab-reading-label" className="mb-1 block text-sm font-medium">Nhãn cột phiên âm</label>
           <input id="vocab-reading-label" className="input" maxLength={40} value={value.readingLabel}
             onChange={(e) => onChange({ ...value, readingLabel: e.target.value })} placeholder="Vd: Pinyin, IPA" />
-          <p className="mt-1 text-xs text-muted">Bỏ trống thì học viên thấy chữ “Phiên âm”.</p>
+          <ReadingLabelPresets value={value.readingLabel} onPick={(label) => onChange({ ...value, readingLabel: label })} />
+          <p className="mt-1 text-xs text-muted">Chọn theo ngôn ngữ của khoá (Pinyin cho tiếng Trung, IPA cho tiếng Anh…). Bỏ trống thì học viên thấy chữ “Phiên âm”.</p>
         </div>
       </div>
 
@@ -627,7 +664,8 @@ export function DialogueEditor({
           <label htmlFor="dlg-reading-label" className="mb-1 block text-sm font-medium">Nhãn dòng phiên âm</label>
           <input id="dlg-reading-label" className="input" maxLength={40} value={value.readingLabel}
             onChange={(e) => onChange({ ...value, readingLabel: e.target.value })} placeholder="Vd: Pinyin, IPA" />
-          <p className="mt-1 text-xs text-muted">Bỏ trống thì học viên thấy chữ “Phiên âm”.</p>
+          <ReadingLabelPresets value={value.readingLabel} onPick={(label) => onChange({ ...value, readingLabel: label })} />
+          <p className="mt-1 text-xs text-muted">Chọn theo ngôn ngữ của khoá (Pinyin cho tiếng Trung, IPA cho tiếng Anh…). Bỏ trống thì học viên thấy chữ “Phiên âm”.</p>
         </div>
       </div>
       <div>

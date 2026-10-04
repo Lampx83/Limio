@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import VocabListView from "./VocabListView";
 import DialogueView from "./DialogueView";
 import LessonContent from "./LessonContent";
+import { SOURCE_TEXT_COLOR } from "@/lib/langText";
 
 // Như AudioLessonPlayer.test: các trình phát nặng của LessonContent không có gì
 // để vẽ ngoài trình duyệt. Hai khối ngôn ngữ phải import TĨNH để có trong HTML.
@@ -61,24 +62,67 @@ describe("VocabListView — G2.3.1 / 2.3.2 / 2.3.4 / 2.3.5 / 2.3.6", () => {
     expect(out).toContain("&lt;img");
   });
 
-  it("G2.3.6: có nút 'Che nghĩa' chưa bật mặc định; bật thì nghĩa và phiên âm được đánh dấu che", () => {
-    const off = render();
-    expect(text(off)).toContain("Che nghĩa");
-    expect(off).toMatch(/aria-pressed="false"[^>]*>[^<]*Che nghĩa|Che nghĩa[^]*aria-pressed="false"/);
-    expect(count(off, /data-masked="true"/g)).toBe(0);
+  it("G2.3.6: tự kiểm tra bằng hai nút bật/tắt độc lập — phiên âm và nghĩa (thay cho một nút 'Che nghĩa'); mặc định cả hai bật", () => {
+    const def = render();
+    const group = def.split('aria-label="Hiển thị"')[1] ?? "";
+    expect(text(group)).toContain("Phiên âm");
+    expect(text(group)).toContain("Nghĩa");
+    expect(count(def, /data-masked="true"/g)).toBe(0);
 
-    const on = render({ initialMasked: true });
-    expect(on).toMatch(/aria-pressed="true"/);
-    // mỗi dòng che nghĩa + phiên âm; dòng 1 còn che bản dịch ví dụ
-    expect(count(on, /data-masked="true"/g)).toBeGreaterThanOrEqual(items.length * 2);
+    // chỉ tắt nghĩa: mỗi dòng che nghĩa (+ ví dụ có bản dịch), phiên âm vẫn hiện
+    const noMeaning = render({ initialShowMeaning: false });
+    expect(count(noMeaning, /data-masked="true"/g)).toBeGreaterThanOrEqual(items.length);
+    expect(noMeaning).toMatch(/data-masked="true"[^>]*>xin chào|data-masked="true"[^>]*>bạn bè/);
+
+    // chỉ tắt phiên âm: chỉ dòng có phiên âm bị che (và phiên âm của ví dụ)
+    const noReading = render({ initialShowReading: false });
+    expect(count(noReading, /data-masked="true"/g)).toBeGreaterThanOrEqual(2);
+    expect(noReading).not.toMatch(/data-masked="true"[^>]*>bạn bè/);
+
+    const neither = render({ initialShowReading: false, initialShowMeaning: false });
+    expect(count(neither, /data-masked="true"/g)).toBeGreaterThanOrEqual(items.length * 2);
+  });
+
+  it("không dòng nào có phiên âm thì không có nút phiên âm", () => {
+    const t = text(render({ items: [{ id: "x", term: "a", meaning: "b" }] }).split('aria-label="Hiển thị"')[1] ?? "");
+    expect(t).not.toContain("Phiên âm");
+    expect(t).toContain("Nghĩa");
+  });
+
+  it("nút nghe nằm ngay trước chữ ở cột 1 (không còn cột nút riêng cuối hàng)", () => {
+    const row = render().split('id="vocab-i1"')[1]!.split("</li>")[0]!;
+    expect(row.indexOf('aria-label="Nghe 朋友"')).toBeGreaterThan(-1);
+    expect(row.indexOf('aria-label="Nghe 朋友"')).toBeLessThan(row.indexOf("朋友</"));
   });
 
   it("G2.3.6: phần 'từ' không bao giờ bị che (đó là câu hỏi để tự kiểm tra)", () => {
-    const on = render({ initialMasked: true });
+    const on = render({ initialShowReading: false, initialShowMeaning: false });
     const termCell = on.split("朋友")[0]!.split("<").pop() ?? "";
     expect(termCell).not.toContain("data-masked");
   });
 });
+
+describe("màu lời gốc (chữ Hán…)", () => {
+  it("từ, câu ví dụ trong từ vựng và lời trong hội thoại dùng cùng một màu riêng", () => {
+    const vocab = renderToStaticMarkup(<VocabListView items={items} />);
+    const dlg = renderToStaticMarkup(
+      <DialogueView turns={[{ id: "t1", speaker: "A", text: "你好！" }]} />,
+    );
+    const classOf = (html: string, str: string) => html.split(str)[0]!.split("<").pop() ?? "";
+    expect(classOf(vocab, ">朋友</")).toContain(SOURCE_TEXT_COLOR);
+    expect(classOf(vocab, ">他是我的朋友。</")).toContain(SOURCE_TEXT_COLOR);
+    expect(classOf(dlg, ">你好！</")).toContain(SOURCE_TEXT_COLOR);
+  });
+  it("phiên âm và nghĩa KHÔNG dùng màu của lời gốc", () => {
+    const vocab = renderToStaticMarkup(<VocabListView items={items} />);
+    expect(classOf2(vocab, ">péngyou</")).not.toContain(SOURCE_TEXT_COLOR);
+    expect(classOf2(vocab, ">bạn bè</")).not.toContain(SOURCE_TEXT_COLOR);
+  });
+});
+
+function classOf2(html: string, str: string) {
+  return html.split(str)[0]!.split("<").pop() ?? "";
+}
 
 describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
   const turns = [
@@ -96,9 +140,43 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
     }
   });
 
-  it("cùng một người nói luôn nằm cùng một bên; người đầu tiên bên trái", () => {
-    const sides = [...render().matchAll(/data-side="(left|right)"/g)].map((m) => m[1]);
-    expect(sides).toEqual(["left", "right", "left"]);
+  it("K1: có lượt nào có audio thì có nút 'Nghe cả đoạn'; không có lượt nào có audio thì không", () => {
+    expect(text(render())).toContain("Nghe cả đoạn");
+    const none = turns.map(({ audioUrl: _a, ...t }) => t);
+    expect(text(render({ turns: none }))).not.toContain("Nghe cả đoạn");
+  });
+
+  it("K1: mỗi lượt có id riêng trong DOM để tự cuộn tới lượt đang phát; chưa phát thì không tô sáng", () => {
+    const out = render();
+    for (const t of turns) expect(out).toContain(`id="dlg-turn-${t.id}"`);
+    expect(out).not.toContain("data-playing");
+  });
+
+  it("K1: lượt có audio là vùng bấm được; lượt không có audio thì không", () => {
+    const out = render();
+    const li = (id: string) => out.split(`id="dlg-turn-${id}"`)[1]!.split("</li>")[0]!;
+    expect(li("t1")).toContain("cursor-pointer");
+    expect(li("t2")).not.toContain("cursor-pointer");
+  });
+
+  it("mọi lượt cùng một cột (không chia trái/phải — có thể có nhiều hơn 2 người nói); người nói phân biệt bằng số thứ tự và màu avatar", () => {
+    const out = render();
+    expect(out).not.toContain("data-side");
+    expect(out).not.toContain("flex-row-reverse");
+    const idx = [...out.matchAll(/data-speaker="(\d+)"/g)].map((m) => m[1]);
+    expect(idx).toEqual(["0", "1", "0"]); // A, B, A: cùng người nói luôn cùng số
+  });
+
+  it("nhiều người nói (A B C D E F G): mỗi người một màu avatar; người nói cùng tên dùng lại đúng màu; quá số màu thì quay vòng", () => {
+    const names = ["A", "B", "C", "D", "E", "F", "G"];
+    const many = [...names, "A"].map((speaker, i) => ({ id: `m${i}`, speaker, text: `câu ${i}` }));
+    const out = render({ turns: many });
+    const avatar = (i: number) =>
+      out.split(`id="dlg-turn-m${i}"`)[1]!.match(/<span aria-hidden="true"[^>]*class="([^"]+)"/)![1]!.replace(/\s*ring-2 ring-brand-400\s*/, " ").trim();
+    const tones = names.map((_, i) => avatar(i));
+    expect(new Set(tones.slice(0, 6)).size).toBe(6); // 6 người đầu: 6 màu khác nhau
+    expect(tones[6]).toBe(tones[0]); // người thứ 7 quay vòng về màu thứ nhất
+    expect(avatar(7)).toBe(tones[0]); // A nói lại: cùng màu lần trước
   });
 
   it("nút nghe riêng chỉ có ở lượt có audio", () => {
@@ -109,9 +187,33 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
 
   it("có audio cả bài thì dùng trình phát audio đầy đủ; không có thì không có <audio>", () => {
     const withAll = render({ audioUrl: AUDIO });
-    expect(withAll).toMatch(/<audio[^>]*\bcontrols\b/);
+    expect(withAll).toMatch(/<audio\b/);
+    expect(withAll).toContain('aria-label="Tiến độ phát"'); // thanh phát tự vẽ của AudioLessonPlayer
     expect(withAll).toContain(`src="${AUDIO}"`);
     expect(render()).not.toContain("<audio");
+  });
+
+  it("phiên âm có nút bật/tắt riêng: nhãn mặc định 'Phiên âm', giảng viên đặt được (Pinyin, IPA…); không lượt nào có phiên âm thì không có nút", () => {
+    expect(text(render())).toContain("Phiên âm");
+    expect(text(render({ readingLabel: "IPA" }))).toContain("IPA");
+    expect(text(render({ readingLabel: "IPA" }))).not.toContain("Phiên âm");
+    const none = turns.map(({ reading: _r, ...t }) => t);
+    expect(text(render({ turns: none }))).not.toContain("Phiên âm");
+  });
+
+  it("ba dạng chữ: lời gốc luôn hiện; phiên âm và tiếng Việt tắt/bật độc lập", () => {
+    const both = render();
+    expect(count(both, /data-masked="true"/g)).toBe(0);
+    const noReading = render({ initialShowReading: false });
+    expect(count(noReading, /data-masked="true"/g)).toBe(1); // chỉ t1 có phiên âm
+    const noTranslation = render({ initialShowTranslation: false });
+    expect(count(noTranslation, /data-masked="true"/g)).toBe(2); // t1, t2 có bản dịch
+    const neither = render({ initialShowReading: false, initialShowTranslation: false });
+    expect(count(neither, /data-masked="true"/g)).toBe(3);
+    // chữ gốc không bao giờ bị che
+    for (const s of ["你好！", "你好，好久不见。", "最近忙吗？"]) expect(text(neither)).toContain(s);
+    const lineOf = (s: string) => neither.split(s)[0]!.split("<").pop() ?? "";
+    expect(lineOf("你好！")).not.toContain("data-masked");
   });
 
   it("nút 'Bản dịch' bật/tắt: tắt thì bản dịch được che, lời gốc vẫn hiện", () => {

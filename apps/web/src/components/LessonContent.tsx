@@ -297,6 +297,7 @@ function ContentBlock({
         <DialogueView
           title={p.title}
           caption={p.caption}
+          readingLabel={p.readingLabel}
           audioUrl={p.audioUrl}
           turns={turns}
         />
