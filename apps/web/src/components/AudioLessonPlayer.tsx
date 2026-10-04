@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Pause, Play, Repeat, Volume2, VolumeX } from "lucide-react";
 import { formatClock, progressPct } from "@/lib/audioClock";
+
+/** LANG K2 — điều khiển từ ngoài (hội thoại tua tới mốc của một lượt). */
+export interface AudioControl {
+  seek(sec: number, play?: boolean): void;
+  pause(): void;
+}
 
 const SPEEDS = [0.75, 1, 1.25] as const;
 const speedLabel = (s: number) => `${s === 1 ? "1" : String(s)}×`;
@@ -30,6 +36,10 @@ export default function AudioLessonPlayer({
   transcript,
   showTranscript = true,
   compact = false,
+  controlRef,
+  onTimeChange,
+  onPlayingChange,
+  onEnded,
 }: {
   url: string;
   title?: string;
@@ -38,6 +48,12 @@ export default function AudioLessonPlayer({
   showTranscript?: boolean;
   /** Gọn: trình phát và tốc độ/lặp lại nằm chung một hàng (dùng trong hội thoại, nơi chiều dọc quý). */
   compact?: boolean;
+  /** K2 — gắn bộ điều khiển (tua/tạm dừng) cho thành phần cha. */
+  controlRef?: MutableRefObject<AudioControl | null>;
+  /** K2 — báo vị trí phát hiện tại (giây): khi phát, khi kéo thanh tua. */
+  onTimeChange?: (sec: number) => void;
+  onPlayingChange?: (playing: boolean) => void;
+  onEnded?: () => void;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [speed, setSpeed] = useState<number>(1);
@@ -51,6 +67,26 @@ export default function AudioLessonPlayer({
   useEffect(() => {
     if (audioRef.current) audioRef.current.playbackRate = speed;
   }, [speed]);
+
+  useEffect(() => {
+    if (!controlRef) return;
+    controlRef.current = {
+      seek(sec, play) {
+        const a = audioRef.current;
+        if (!a) return;
+        a.currentTime = sec;
+        setCurrent(sec);
+        onTimeChange?.(sec);
+        if (play) void a.play().catch(() => setPlaying(false));
+      },
+      pause() {
+        audioRef.current?.pause();
+      },
+    };
+    return () => {
+      controlRef.current = null;
+    };
+  }, [controlRef, onTimeChange]);
 
   // Metadata có thể đã tải xong trước khi gắn sự kiện (preload="metadata").
   useEffect(() => {
@@ -69,6 +105,7 @@ export default function AudioLessonPlayer({
     const a = audioRef.current;
     if (a) a.currentTime = seeking;
     setCurrent(seeking);
+    onTimeChange?.(seeking);
     setSeeking(null);
   };
   const shown = seeking ?? current;
@@ -93,10 +130,23 @@ export default function AudioLessonPlayer({
         preload="metadata"
         loop={loop}
         muted={muted}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
-        onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
+        onPlay={() => {
+          setPlaying(true);
+          onPlayingChange?.(true);
+        }}
+        onPause={() => {
+          setPlaying(false);
+          onPlayingChange?.(false);
+        }}
+        onEnded={() => {
+          setPlaying(false);
+          onPlayingChange?.(false);
+          onEnded?.();
+        }}
+        onTimeUpdate={(e) => {
+          setCurrent(e.currentTarget.currentTime);
+          onTimeChange?.(e.currentTarget.currentTime);
+        }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
       />

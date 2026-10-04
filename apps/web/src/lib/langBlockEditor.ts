@@ -1,4 +1,5 @@
 import { newBlockItemId } from "@/lib/langBlocks";
+import { validateMarks } from "@/lib/dialogueTiming";
 
 /**
  * LANG G2 — state của form soạn từ vựng/hội thoại và chuyển đổi hai chiều với
@@ -31,6 +32,8 @@ export interface TurnEditorItem {
   reading: string;
   translation: string;
   audioUrl: string;
+  /** K2 — mốc bắt đầu của lượt trong audio cả đoạn (giây); thiếu = chưa có mốc. */
+  startSec?: number;
 }
 export interface DialogueEditorValue {
   title: string;
@@ -139,6 +142,7 @@ export function dialogueEditorFromPayload(payload: unknown): DialogueEditorValue
     reading: s(t.reading),
     translation: s(t.translation),
     audioUrl: s(t.audioUrl),
+    ...(typeof t.startSec === "number" && Number.isFinite(t.startSec) ? { startSec: t.startSec } : {}),
   }));
   return {
     title: s(p.title),
@@ -166,6 +170,7 @@ export function dialoguePayloadFromEditor(v: DialogueEditorValue) {
     put(row, "reading", t.reading);
     put(row, "translation", t.translation);
     put(row, "audioUrl", t.audioUrl);
+    if (t.startSec !== undefined) row.startSec = t.startSec;
     out.turns.push(row);
   }
   return out;
@@ -183,6 +188,8 @@ export function validateDialogueEditor(v: DialogueEditorValue): string[] {
     else errors.push(`Lượt ${idx + 1} thiếu lời thoại.`);
   });
   if (filled === 0 && errors.length === 0) errors.push("Cần ít nhất 1 lượt có đủ người nói và lời thoại.");
+  // K2 — mốc phải tăng dần theo thứ tự lượt (chỉ tính lượt có nội dung, đúng thứ tự sẽ lưu).
+  errors.push(...validateMarks(v.turns.filter((t) => !turnBlank(t))));
   return errors;
 }
 

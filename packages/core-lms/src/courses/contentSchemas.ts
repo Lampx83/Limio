@@ -196,6 +196,15 @@ export const VocabListPayload = z.object({
     .transform((items) => items.map((it) => ({ ...it, id: it.id ?? newId() }))),
 });
 
+/** LANG K2 — mốc bắt đầu của lượt trong audio cả đoạn: giây, làm tròn 0,1; tối đa 6 giờ. */
+const MAX_TURN_START_SEC = 6 * 60 * 60;
+const StartSec = z
+  .number()
+  .finite()
+  .min(0)
+  .max(MAX_TURN_START_SEC)
+  .transform((n) => Math.round(n * 10) / 10);
+
 export const DialogueTurn = z.object({
   id: z.string().uuid().optional(),
   speaker: reqText(40),
@@ -203,7 +212,25 @@ export const DialogueTurn = z.object({
   reading: optText(1000),
   translation: optText(1000),
   audioUrl: AudioUrl.optional(),
+  /** K2 — thời điểm lượt này bắt đầu trong `DialoguePayload.audioUrl`; thiếu = lượt chưa có mốc. */
+  startSec: StartSec.optional(),
 });
+
+/** K2a.2 — các lượt CÓ mốc phải tăng dần theo thứ tự lượt (lượt không mốc ở giữa không cản). */
+function increasingStartSec(turns: Array<{ startSec?: number }>, ctx: z.RefinementCtx) {
+  let prev: { idx: number; sec: number } | null = null;
+  turns.forEach((t, i) => {
+    if (t.startSec === undefined) return;
+    if (prev && t.startSec <= prev.sec) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [i, "startSec"],
+        message: `Lượt ${i + 1} bắt đầu ${t.startSec === prev.sec ? "cùng lúc với" : "trước"} lượt ${prev.idx + 1}: mốc thời gian phải tăng dần theo thứ tự lượt.`,
+      });
+    }
+    prev = { idx: i, sec: t.startSec };
+  });
+}
 
 export const DialoguePayload = z.object({
   title: optText(200),
@@ -216,6 +243,7 @@ export const DialoguePayload = z.object({
     .min(1)
     .max(100)
     .superRefine(uniqueIds)
+    .superRefine(increasingStartSec)
     .transform((turns) => turns.map((t) => ({ ...t, id: t.id ?? newId() }))),
 });
 

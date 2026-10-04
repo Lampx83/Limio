@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import VocabListView from "@/components/VocabListView";
 import DialogueView from "@/components/DialogueView";
+import DialogueTimingPanel from "./DialogueTimingPanel";
 import { useExclusiveAudio } from "@/components/useExclusiveAudio";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { AUDIO_UPLOAD_ACCEPT } from "@/lib/lessonAudio";
@@ -648,6 +649,7 @@ export function DialogueEditor({
     ...(t.reading.trim() ? { reading: t.reading.trim() } : {}),
     ...(t.translation.trim() ? { translation: t.translation.trim() } : {}),
     ...(t.audioUrl ? { audioUrl: t.audioUrl } : {}),
+    ...(t.startSec !== undefined ? { startSec: t.startSec } : {}),
   }));
 
   return (
@@ -678,6 +680,8 @@ export function DialogueEditor({
         <p className="mb-2 text-xs text-muted">Một file ghi âm toàn bộ hội thoại. Audio riêng từng lượt thêm ở danh sách bên dưới.</p>
         <AudioChip id="dlg-whole" url={value.audioUrl} onChange={(audioUrl) => onChange({ ...value, audioUrl })} label="cả đoạn" />
       </div>
+      {/* K2 — có audio cả đoạn thì đặt được mốc thời gian từng lượt bằng cách nghe và bấm. */}
+      {value.audioUrl && <DialogueTimingPanel audioUrl={value.audioUrl} turns={value.turns} onTurns={setTurns} />}
 
       {/* 2. Cách thêm lượt */}
       <section aria-labelledby="dlg-how">

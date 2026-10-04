@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Eye, Pause, Square, Volume2 } from "lucide-react";
-import AudioLessonPlayer from "./AudioLessonPlayer";
+import AudioLessonPlayer, { type AudioControl } from "./AudioLessonPlayer";
+import { activeTurnIndex, hasMarks, turnClickAction } from "@/lib/dialogueTiming";
 import { getBrowserAudioPlayer } from "@/lib/exclusiveAudio";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
 import { createTurnSequencer } from "@/lib/turnSequencer";
@@ -25,6 +26,8 @@ export interface DialogueViewTurn {
   reading?: string;
   translation?: string;
   audioUrl?: string;
+  /** K2 — giây mà lượt này bắt đầu trong audio cả đoạn (`audioUrl` của khối). */
+  startSec?: number;
 }
 
 /**
@@ -37,6 +40,9 @@ export interface DialogueViewTurn {
  * lần lượt audio từng lượt (không cần mốc thời gian vì mỗi lượt là một file).
  * Bấm vào khung lượt: khi rảnh thì nghe riêng lượt đó, khi đang nghe cả đoạn thì
  * nhảy tới lượt đó và chạy tiếp.
+ *
+ * K2: audio cả đoạn có mốc thời gian (`startSec` từng lượt) → lượt đang đọc tô sáng và tự cuộn theo audio;
+ * bấm một lượt có mốc thì audio cả đoạn tua tới đó. Chỉ một nguồn âm thanh chạy một lúc.
  *
  * Ba dạng chữ: lời gốc (luôn hiện) · phiên âm · tiếng Việt. Hai dạng sau tắt/bật
  * độc lập để học viên tự kiểm tra (đoán cách đọc, đoán nghĩa). Tắt chỉ làm mờ.
@@ -77,15 +83,41 @@ export default function DialogueView({
     () => false,
   );
   const hasTurnAudio = turns.some((t) => !!t.audioUrl);
-  // Cuộn lượt đang phát vào giữa tầm nhìn khi nó lệch ra ngoài ("nearest" nên lượt
-  // đã thấy rồi thì trang đứng yên).
+
+  // K2 — audio cả đoạn có mốc: vị trí phát → lượt đang đọc.
+  const wholeControl = useRef<AudioControl | null>(null);
+  const [wholeTime, setWholeTime] = useState(0);
+  const [wholePlaying, setWholePlaying] = useState(false);
+  const timed = !!audioUrl && hasMarks(turns);
+  const wholeIdx = timed ? activeTurnIndex(turns, wholeTime) : null;
+  const wholeLitId = wholeIdx === null ? null : turns[wholeIdx]!.id;
+  const onWholePlaying = useCallback(
+    (p: boolean) => {
+      setWholePlaying(p);
+      if (p) {
+        // Một nguồn âm thanh một lúc: nghe cả đoạn thì dừng audio riêng và chuỗi của K1.
+        sequencer?.cancel();
+        getBrowserAudioPlayer().stop();
+      }
+    },
+    [sequencer],
+  );
+  const onWholeEnded = useCallback(() => setWholeTime(0), []);
+  // Ngược lại: audio riêng/chuỗi bắt đầu thì audio cả đoạn nhường.
   useEffect(() => {
-    if (!playingId) return;
-    const el = document.getElementById(turnDomId(playingId));
+    if (playingId || sequenceOn) wholeControl.current?.pause();
+  }, [playingId, sequenceOn]);
+
+  // Cuộn lượt đang phát (audio riêng hoặc audio cả đoạn) vào tầm nhìn khi nó lệch ra ngoài
+  // ("nearest" nên lượt đã thấy rồi thì trang đứng yên).
+  const litId = playingId ?? (wholePlaying || wholeTime > 0 ? wholeLitId : null);
+  useEffect(() => {
+    if (!litId) return;
+    const el = document.getElementById(turnDomId(litId));
     if (!el) return;
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
-  }, [playingId]);
+  }, [litId]);
   const speakers: string[] = [];
   for (const t of turns) if (!speakers.includes(t.speaker)) speakers.push(t.speaker);
   const hasTranslation = turns.some((t) => !!t.translation);
@@ -136,13 +168,33 @@ export default function DialogueView({
         </div>
       </div>
 
-      {audioUrl && <AudioLessonPlayer url={audioUrl} compact />}
+      {audioUrl && (
+        <AudioLessonPlayer
+          url={audioUrl}
+          compact
+          controlRef={wholeControl}
+          onTimeChange={timed ? setWholeTime : undefined}
+          onPlayingChange={onWholePlaying}
+          onEnded={onWholeEnded}
+        />
+      )}
 
       <ul className="divide-y divide-[rgb(var(--border))]">
         {turns.map((t) => {
           const speakerIdx = speakers.indexOf(t.speaker);
           const tone = SPEAKER_TONES[speakerIdx % SPEAKER_TONES.length]!;
-          const playing = playingId === t.id;
+          const playing = litId === t.id; // tô sáng: audio riêng HOẶC audio cả đoạn đang ở lượt này
+          const ownPlaying = playingId === t.id; // nút loa riêng chỉ phản ánh audio riêng của lượt
+          const hasMark = timed && t.startSec !== undefined;
+          const clickAction = (): ReturnType<typeof turnClickAction> =>
+            turnClickAction({
+              hasOwnAudio: !!t.audioUrl,
+              hasMark,
+              hasWholeAudio: !!audioUrl,
+              wholePlaying,
+              sequenceOn,
+            });
+          const clickable = clickAction() !== "none";
           const graphemes = Array.from(t.speaker.trim());
           const initial = (graphemes[0] ?? "?").toUpperCase();
           // Tên dài hơn một ký tự thì avatar không đủ phân biệt → in tên nhỏ trước lời.
@@ -154,12 +206,21 @@ export default function DialogueView({
               data-speaker={speakerIdx}
               data-playing={playing ? "true" : undefined}
               onClick={
-                t.audioUrl
+                clickable
                   ? () => {
                       // Đang bôi đen chữ để copy/tra từ thì không coi là bấm phát.
                       if (window.getSelection()?.toString()) return;
-                      if (sequenceOn) sequencer?.start(t.id);
-                      else toggle(t.id, t.audioUrl!);
+                      switch (clickAction()) {
+                        case "seek_whole":
+                          wholeControl.current?.seek(t.startSec!, true);
+                          break;
+                        case "sequence_jump":
+                          sequencer?.start(t.id);
+                          break;
+                        case "play_own":
+                          toggle(t.id, t.audioUrl!);
+                          break;
+                      }
                     }
                   : undefined
               }
@@ -167,7 +228,7 @@ export default function DialogueView({
               // bản dịch sang cột phải cùng hàng để mỗi lượt chỉ cao bằng 2 dòng.
               className={`grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 rounded-lg px-2 py-2 transition-colors md:grid-cols-[1.75rem_minmax(0,1.15fr)_minmax(0,1fr)] ${
                 playing ? "bg-brand-soft ring-2 ring-brand-300" : ""
-              } ${t.audioUrl ? "cursor-pointer hover:bg-[rgb(var(--surface-muted))/0.5]" : ""}`}
+              } ${clickable ? "cursor-pointer hover:bg-[rgb(var(--surface-muted))/0.5]" : ""}`}
             >
               <span
                 aria-hidden
@@ -184,19 +245,19 @@ export default function DialogueView({
                     <button
                       type="button"
                       aria-label={`Nghe câu của ${t.speaker}`}
-                      aria-pressed={playing}
+                      aria-pressed={ownPlaying}
                       onClick={(e) => {
                         e.stopPropagation(); // không để hàng xử lý thêm một lần
                         sequencer?.cancel(); // nút riêng của lượt: người học tự điều khiển
                         toggle(t.id, t.audioUrl!);
                       }}
                       className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                        playing
+                        ownPlaying
                           ? "border-brand-400 bg-brand-100 text-brand-800"
                           : "border-token bg-[rgb(var(--surface))] hover:bg-brand-soft"
                       }`}
                     >
-                      {playing ? <Pause size={14} aria-hidden /> : <Volume2 size={14} aria-hidden />}
+                      {ownPlaying ? <Pause size={14} aria-hidden /> : <Volume2 size={14} aria-hidden />}
                     </button>
                   )}
                   {!t.audioUrl && hasTurnAudio && <span className="h-7 w-7 shrink-0" aria-hidden />}

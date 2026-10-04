@@ -167,6 +167,28 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
     expect(out).not.toContain("data-playing");
   });
 
+  it("K2b.5: không có mốc thì y như trước — không lượt nào bấm được chỉ vì có audio cả đoạn", () => {
+    const out = render({ audioUrl: AUDIO });
+    const li = (id: string) => out.split(`id="dlg-turn-${id}"`)[1]!.split("</li>")[0]!;
+    expect(li("t2")).not.toContain("cursor-pointer");
+    expect(out).not.toContain("data-playing");
+  });
+
+  it("K2b.2: có mốc + audio cả đoạn → lượt có mốc bấm được (tua) dù không có audio riêng; lượt không mốc thì không; chưa phát thì chưa tô sáng", () => {
+    const marked = turns.map((t, i) => (i === 1 ? { ...t, startSec: 4.2 } : t));
+    const out = render({ audioUrl: AUDIO, turns: marked });
+    const li = (id: string) => out.split(`id="dlg-turn-${id}"`)[1]!.split("</li>")[0]!;
+    expect(li("t2")).toContain("cursor-pointer");
+    expect(li("t3")).not.toContain("cursor-pointer");
+    expect(out).not.toContain("data-playing");
+  });
+
+  it("K2b.5: có mốc nhưng KHÔNG có audio cả đoạn → không bấm được", () => {
+    const marked = turns.map((t, i) => (i === 1 ? { ...t, startSec: 4.2 } : t));
+    const out = render({ turns: marked });
+    expect(out.split(`id="dlg-turn-t2"`)[1]!.split("</li>")[0]!).not.toContain("cursor-pointer");
+  });
+
   it("K1: lượt có audio là vùng bấm được; lượt không có audio thì không", () => {
     const out = render();
     const li = (id: string) => out.split(`id="dlg-turn-${id}"`)[1]!.split("</li>")[0]!;

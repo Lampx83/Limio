@@ -310,6 +310,43 @@ Chi tiết AUD.1–AUD.6 nằm trong phiên làm việc; tóm tắt:
 - [x] **K1.5** Nút loa riêng của lượt = người học tự điều khiển: tắt chế độ chuỗi, không tự chạy tiếp.
 - [x] **K1.6** Người học bấm nút nghe của lượt khác trong lúc chạy chuỗi → chuỗi nhường; rời trang thì tắt tiếng và không phát tiếp.
 - Logic ở `apps/web/src/lib/turnSequencer.ts` (thuần, 11 test với audio giả; test viết trước đã bắt được một lỗi: nhảy lượt khi đang chạy chuỗi bị hiểu là "hết lượt" và sang lượt kế). Chưa làm: bài nghe (`audio`) có mốc thời gian, tô sáng từng từ (K2/K3); **chưa thử trên iOS Safari** (phát nối tiếp nhiều file có thể bị chặn tự phát).
+
+## K2 · Hội thoại: audio cả đoạn có mốc thời gian — **đã duyệt 4 quyết định (2026-10-05: "đồng ý hết"), đã làm**
+
+**Hiện trạng:** hội thoại có thể có **audio cả đoạn** (`DialoguePayload.audioUrl`) nhưng nó chạy trên trình phát riêng, **không biết đang ở lượt nào**, nên không tô sáng được; chỉ audio từng lượt (K1) mới tô sáng. Giảng viên thường chỉ có MỘT file ghi cả đoạn.
+
+**Thiết kế đề xuất:** mỗi lượt có thêm **mốc bắt đầu** `startSec` (giây trong audio cả đoạn). Giảng viên đặt mốc bằng cách **nghe và bấm "Đánh dấu lượt kế"** đúng lúc mỗi lượt bắt đầu (không phải gõ số). Học viên nghe audio cả đoạn thì lượt tương ứng tô sáng và tự cuộn; bấm một lượt → tua tới lượt đó.
+
+### K2a · Dữ liệu và kiểm tra
+Không migration: `startSec` nằm trong payload JSON của khối hội thoại.
+- [x] **K2a.1** `DialogueTurn.startSec` tuỳ chọn, số giây ≥ 0 (tối đa 6 giờ, làm tròn 0,1 giây); thiếu = lượt chưa có mốc. Hội thoại cũ (không có mốc) chạy y như trước.
+- [x] **K2a.2** Các lượt CÓ mốc phải **tăng dần theo thứ tự lượt**; vi phạm → từ chối khi lưu, nói rõ lượt nào ("Lượt 3 bắt đầu trước lượt 2"). Mốc không có nghĩa nếu không có audio cả đoạn: lưu được, nhưng không dùng tới.
+- [x] **K2a.3** Đổi thứ tự/xoá lượt: mốc đi theo lượt; nếu thứ tự mới làm mốc không còn tăng dần, trình soạn báo ngay (chưa cho lưu) thay vì lưu mốc sai.
+
+### K2b · Học viên: tô sáng theo audio cả đoạn
+Hàm thuần `activeTurnAt(turns, time)`: lượt có mốc lớn nhất ≤ thời điểm hiện tại; trước mốc đầu tiên → không lượt nào; sau lượt cuối → giữ lượt cuối tới hết audio.
+- [x] **K2b.1** Khi audio cả đoạn đang chạy, lượt hiện tại có cùng giao diện tô sáng như K1 (`data-playing`, viền lime) và tự cuộn vào tầm nhìn (`nearest`, tôn trọng `prefers-reduced-motion`); tạm dừng thì giữ nguyên, hết audio hoặc tua về đầu thì tắt.
+- [x] **K2b.2** Bấm một lượt có mốc → audio cả đoạn **tua tới mốc đó và phát**. Lượt có cả audio riêng lẫn mốc: khi audio cả đoạn đang chạy thì bấm = tua; khi rảnh thì bấm = nghe audio riêng của lượt (như K1.4). Lượt không có mốc và không có audio riêng thì không bấm được. Đang bôi đen chữ không tính là bấm.
+- [x] **K2b.3** Chỉ MỘT nguồn âm thanh chạy một lúc: bật audio cả đoạn thì dừng audio riêng/chuỗi "Nghe cả đoạn" của K1 và ngược lại; rời trang thì dừng hết.
+- [x] **K2b.4** Khi kéo thanh tua, tô sáng đổi theo vị trí mới (kể cả lúc đang tạm dừng); tốc độ 0,75×/1,25× không làm lệch tô sáng (đọc `currentTime` thật).
+- [x] **K2b.5** Hội thoại không có mốc, hoặc có mốc nhưng không có audio cả đoạn → không thay đổi gì so với bây giờ.
+
+### K2c · Giảng viên: bấm đánh dấu khi nghe
+- [x] **K2c.1** Khi hội thoại có audio cả đoạn, trình soạn hiện khung **"Đặt mốc thời gian"**: trình phát + nút lớn **"Đánh dấu lượt kế"** (phím tắt **M**, không bắt khi đang gõ trong ô nhập) ghi thời điểm hiện tại làm mốc cho **lượt chưa có mốc đầu tiên**, rồi chuyển sang lượt kế; luôn hiện rõ "Sắp đánh dấu: lượt N — <người nói>: <đầu câu>".
+- [x] **K2c.2** Mỗi lượt hiện mốc dưới dạng `m:ss,d`: sửa tay (ô số, bước 0,1 giây), nút **"Nghe từ mốc này"**, nút xoá mốc; nút **Hoàn tác** (bỏ mốc vừa đặt) và **Xoá hết mốc**.
+- [x] **K2c.3** Đặt mốc kiểm tra tăng dần ngay trong lúc nhập (mốc nhỏ hơn mốc lượt trước bị từ chối kèm lời nhắn); xem trước (preview của trình soạn) dùng chính khối học viên nên thấy tô sáng chạy thật.
+- [x] **K2c.4** Chưa đặt hết mốc vẫn lưu được: lượt không có mốc không bao giờ sáng và không bấm-tua được; các lượt có mốc vẫn chạy bình thường (lượt trước đó giữ sáng cho tới mốc kế tiếp có mặt).
+
+**Trạng thái K2 (2026-10-05, chưa commit; nhánh `feat/lang-k2-turn-timing` từ `main`):** xong. Test: schema `contentLangBlocks` +6, `dialogueTiming.test.ts` (25, thuần: tô sáng theo thời điểm, đánh dấu, hoàn tác, sửa tay, kiểm tra tăng dần, định dạng m:ss,d, hành vi khi bấm), `langBlockEditor` +3, `DialogueTimingPanel.test.tsx` (7), `LangBlocks` +3; core-lms 1358, web 633 đều xanh, typecheck sạch. Không migration. **Đã chạy thật trên dev:** trong trình soạn khoá demo, khung "Đặt mốc thời gian" hiện dưới ô audio cả đoạn; đặt 6 mốc bằng phím M (đã thử: bị chặn khi mốc không lớn hơn mốc trước kèm lời nhắn; phím M không ăn khi đang gõ trong ô; Hoàn tác), lưu qua API thật (DB có `startSec` đúng); phía học viên tua audio cả đoạn tới từng đoạn thì đúng lượt (1–6) sáng, trước mốc đầu không lượt nào sáng; đang phát audio cả đoạn mà bấm lượt 3 → tua tới mốc lượt 3 và lượt đó sáng; bấm nút loa riêng của lượt 2 → audio cả đoạn tự dừng và lượt 2 sáng. 6 mốc trên dev là **mốc ước lượng theo độ dài chữ** (không phải nghe thật) — chỉ để thử. **CHƯA thử:** bấm M lúc nghe thật bằng tai (chỉ đặt `currentTime` bằng mã); độ trễ tô sáng (`timeupdate` ~4 lần/giây nên lượt có thể sáng chậm tới ~0,25 giây); iOS Safari; xem bằng mắt (pane không chụp được màn hình, mới kiểm bằng DOM).
+
+### Hoãn lại
+- **Tự căn mốc bằng Whisper** (so lời thoại với mốc thời gian từng từ của G7, tốn token giảng viên) — làm sau nếu việc bấm tay còn mệt; tô sáng **từng từ** (K3); cắt audio cả đoạn thành audio từng lượt.
+
+### Quyết định cần chốt
+1. **Bấm tay lúc nghe** (đề xuất) thay vì tự căn bằng Whisper ngay? Bấm tay không tốn token, chính xác theo tai giảng viên; Whisper tiện nhưng tốn ví và kém với tiếng Trung hội thoại ngắn.
+2. **Bấm vào lượt vừa có audio riêng vừa có mốc:** đang nghe cả đoạn thì tua, rảnh thì nghe riêng (K2b.2). Đồng ý?
+3. **Lượt chưa có mốc** (K2c.4): không bao giờ sáng, không chặn lưu. Đồng ý, hay bắt đặt đủ mốc mới cho lưu?
+4. **Phím tắt M** để đánh dấu. Đồng ý?
 - Ghi chú chữ: caption của bài mẫu đang viết "Nghe cả đoạn một lần…" (nói về trình phát cả bài), trùng nhãn nút mới — có thể sửa caption mẫu.
 
 ## G5 · Thi thử và luyện đề — đã duyệt (2026-10-03, bổ sung chế độ luyện đề 2026-10-04), đang làm G5a
