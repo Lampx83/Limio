@@ -26,6 +26,7 @@ export default function GradeForm({
   initialFeedback,
   isGraded,
   onDirtyChange,
+  onSavedNext,
 }: {
   submissionId: string;
   maxScore: number;
@@ -34,6 +35,8 @@ export default function GradeForm({
   isGraded: boolean;
   /** Báo khi điểm/nhận xét đang khác bản đã lưu — để modal hỏi trước khi chuyển bài. */
   onDirtyChange?: (dirty: boolean) => void;
+  /** Có bài kế tiếp → hiện nút "Chấm & bài tiếp"; gọi sau khi lưu thành công. */
+  onSavedNext?: (() => void) | null;
 }) {
   const router = useRouter();
   const [score, setScore] = useState(
@@ -94,12 +97,12 @@ export default function GradeForm({
     return null;
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  /** Lưu điểm + nhận xét. Trả true khi server đã lưu. */
+  async function save(): Promise<boolean> {
     const err = validateScore(score);
     if (err) {
       setScoreError(err);
-      return;
+      return false;
     }
     setBusy(true);
     setServerError(null);
@@ -115,12 +118,25 @@ export default function GradeForm({
     if (res.ok) {
       toast.success(isGraded ? "Đã cập nhật điểm" : "Đã chấm xong");
       router.refresh();
-    } else {
-      const d = await res.json().catch(() => ({}));
-      const msg = d.error ?? "Không lưu được điểm";
-      setServerError(msg);
-      toast.error(msg);
+      return true;
     }
+    const d = await res.json().catch(() => ({}));
+    const msg = d.error ?? "Không lưu được điểm";
+    setServerError(msg);
+    toast.error(msg);
+    return false;
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await save();
+  }
+
+  // Lưu xong mới chuyển; lưu lỗi thì ở lại để GV thấy lỗi và không mất nội dung.
+  async function saveAndNext() {
+    if (!onSavedNext || !(await save())) return;
+    onDirtyChange?.(false); // đã lưu: chuyển bài không cần hỏi "chưa lưu"
+    onSavedNext();
   }
 
   const scoreInputId = `grade-score-${submissionId}`;
@@ -204,6 +220,16 @@ export default function GradeForm({
         >
           {busy ? "Đang lưu..." : isGraded ? "Cập nhật điểm" : "✓ Chấm điểm"}
         </button>
+        {onSavedNext && (
+          <button
+            type="button"
+            onClick={saveAndNext}
+            disabled={busy || !!scoreError}
+            className="btn-secondary btn-sm"
+          >
+            {isGraded ? "Cập nhật & bài tiếp →" : "Chấm & bài tiếp →"}
+          </button>
+        )}
         {serverError && (
           <span className="text-xs text-danger-600" role="alert">
             {serverError}

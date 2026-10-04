@@ -176,6 +176,7 @@ export default function SubmissionModal({
                   initialFeedback={submission.feedback}
                   isGraded={isGraded}
                   onDirtyChange={setDirty}
+                  onSavedNext={nav?.onNext}
                 />
                 {/* LANG G6 — góp ý AI học viên đã nhờ (khoá ngoại ngữ): giảng viên sửa/duyệt/từ chối. Không hiện nếu chưa có bản nào. */}
                 <WritingFeedbackReview key={submission.id} submissionId={submission.id} />
