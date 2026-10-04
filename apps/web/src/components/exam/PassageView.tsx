@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import ExamAudioPlayer, { ExamAudioContext, type ExamAudioContextValue } from "./ExamAudioPlayer";
 
 export interface TiptapDoc {
   type: "doc";
@@ -10,6 +11,8 @@ export interface TiptapDoc {
 interface Props {
   passage: { id: string; title: string; contentJson: TiptapDoc };
   attemptId: string;
+  /** G5b — đề thi thử: giới hạn lượt nghe. Không truyền = trình phát gốc như cũ. */
+  audio?: Omit<ExamAudioContextValue, "attemptId" | "passageId">;
 }
 
 /**
@@ -21,7 +24,7 @@ interface Props {
  * `exam:{attemptId}:passage:{id}`. Notes (if needed later) can share the key.
  * No sync to server — explicit warning banner shown.
  */
-export default function PassageView({ passage, attemptId }: Props) {
+export default function PassageView({ passage, attemptId, audio }: Props) {
   const lsKey = `exam:${attemptId}:passage:${passage.id}`;
   const [note, setNote] = useState("");
 
@@ -46,7 +49,13 @@ export default function PassageView({ passage, attemptId }: Props) {
 
   const rendered = useMemo(() => renderDoc(passage.contentJson), [passage.contentJson]);
 
+  const audioCtx = useMemo<ExamAudioContextValue | null>(
+    () => (audio ? { ...audio, attemptId, passageId: passage.id } : null),
+    [audio, attemptId, passage.id],
+  );
+
   return (
+    <ExamAudioContext.Provider value={audioCtx}>
     <div>
       <h2 className="mb-3 text-base font-semibold">{passage.title}</h2>
       <div className="prose prose-sm max-w-none select-text">{rendered}</div>
@@ -63,6 +72,7 @@ export default function PassageView({ passage, attemptId }: Props) {
         />
       </details>
     </div>
+    </ExamAudioContext.Provider>
   );
 }
 
@@ -146,21 +156,9 @@ function RenderNode({ node }: { node: ElementNode }) {
       const src = node.attrs?.src as string | undefined;
       const alt = node.attrs?.alt as string | undefined;
       if (!src) return null;
-      // Play-count enforcement is P1; for now render native controls and surface
-      // alt text as a fallback caption so screen readers + users know what
-      // they're hearing.
-      return (
-        <div className="my-3 rounded border border-default bg-slate-50 p-3">
-          <audio src={src} controls preload="metadata" className="w-full">
-            <track kind="captions" />
-          </audio>
-          {alt && (
-            <p className="mt-1 text-xs text-faint" aria-label="Audio description">
-              🎵 {alt}
-            </p>
-          )}
-        </div>
-      );
+      // G5b: trong đề thi thử có giới hạn lượt thì ExamAudioPlayer xin lượt từ máy chủ;
+      // ngoài ra (đề thường, free_replay) là trình phát gốc.
+      return <ExamAudioPlayer src={src} alt={alt} />;
     }
     case "video": {
       const src = node.attrs?.src as string | undefined;

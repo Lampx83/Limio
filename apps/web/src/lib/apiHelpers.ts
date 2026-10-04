@@ -170,6 +170,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
         ? 404
         : err.code === "attempt_belongs_to_other" ||
             err.code === "not_enrolled" ||
+            err.code === "audio_plays_exhausted" ||
             err.code === "forbidden"
           ? 403
           : err.code === "exam_has_attempts" ||
@@ -179,6 +180,8 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "attempt_already_submitted" ||
               err.code === "attempt_limit_reached" ||
               err.code === "session_stale" ||
+              err.code === "section_not_active" ||
+              err.code === "mock_disabled" ||
               err.code === "exam_not_open" ||
               err.code === "exam_window_closed" ||
               err.code === "attempt_not_in_progress" ||

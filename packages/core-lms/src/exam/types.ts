@@ -2,6 +2,10 @@ export class ExamError extends Error {
   constructor(
     public readonly code:
       | "validation_failed"
+      | "section_not_active"
+      | "audio_plays_exhausted"
+      | "mock_disabled"
+      | "not_mock_exam"
       | "exam_not_found"
       | "exam_not_draft"
       | "exam_has_attempts"

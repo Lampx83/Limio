@@ -6,6 +6,7 @@ import { isInstructor } from "../auth/roles";
 import { emitEvent } from "../learning/events";
 import { ensureDefaultSession } from "./exam-rooms";
 import { ExamError } from "./types";
+import { validateMockExamForPublish } from "./mock-sections";
 import { importPreviewToExam } from "./blueprint";
 import { WizardConfigShape, type WizardConfigT, assembleWizardPool } from "./wizard";
 
@@ -26,6 +27,8 @@ export const CreateExamInput = z
     // migration riêng. Bỏ trống thì điền khung rất rộng.
     openAt: z.coerce.date().optional(),
     closeAt: z.coerce.date().optional(),
+    // LANG G5 — đề thi thử: giờ riêng từng phần, làm lần lượt, không quay lại.
+    mockMode: z.boolean().optional(),
     attemptPolicy: examAttemptPolicy.optional(),
     // Số lượt tối đa mỗi người khi attemptPolicy=multi (chỉ vấn đáp AI).
     maxAttempts: MAX_ATTEMPTS.optional(),
@@ -66,6 +69,9 @@ export const UpdateExamInput = z
     durationMin: z.number().int().positive().max(24 * 60).optional(),
     openAt: z.coerce.date().optional(),
     closeAt: z.coerce.date().optional(),
+    mockMode: z.boolean().optional(),
+    // LANG G5c — công tắc "Cho thi thử": tắt thì học viên không bắt đầu được lượt MỚI.
+    allowMock: z.boolean().optional(),
     attemptPolicy: examAttemptPolicy.optional(),
     maxAttempts: MAX_ATTEMPTS.optional(),
     gradingMode: examGradingMode.optional(),
@@ -121,6 +127,9 @@ export async function createExam(
   if (d.attemptPolicy === "multi" && d.kind !== "oral") {
     throw new ExamError("validation_failed", "attemptPolicy=multi chỉ áp dụng cho đề vấn đáp");
   }
+  if (d.mockMode && d.kind === "oral") {
+    throw new ExamError("validation_failed", "mockMode chỉ áp dụng cho đề viết");
+  }
   const exam = await db.exam.create({
     data: {
       courseId,
@@ -131,6 +140,7 @@ export async function createExam(
       // Khung rộng khi không truyền: cột còn NOT NULL nhưng giá trị đã vô nghĩa.
       openAt: d.openAt ?? new Date(),
       closeAt: d.closeAt ?? new Date(Date.now() + 365 * 24 * 60 * 60_000),
+      mockMode: d.mockMode ?? false,
       attemptPolicy: d.attemptPolicy ?? "single",
       ...(d.maxAttempts !== undefined ? { maxAttempts: d.maxAttempts } : {}),
       gradingMode: d.gradingMode ?? "hybrid",
@@ -314,6 +324,10 @@ export async function updateExam(
     throw new ExamError("validation_failed", "attemptPolicy=multi chỉ áp dụng cho đề vấn đáp");
   }
 
+  if (exam.kind === "oral" && data.mockMode === true) {
+    throw new ExamError("validation_failed", "mockMode chỉ áp dụng cho đề viết");
+  }
+
   // answerMode/language chỉ thuộc đề vấn đáp — đề viết không có khái niệm này.
   if (exam.kind !== "oral" && ("answerMode" in data || "language" in data)) {
     throw new ExamError("validation_failed", "answerMode/language chỉ áp dụng cho đề vấn đáp");
@@ -332,7 +346,7 @@ export async function updateExam(
       // Only title/description/closeAt allowed once attempts exist.
       // oralRubricText cũng được: chỉ ảnh hưởng cách CHẤM sau thi, không ảnh
       // hưởng câu hỏi SV nhận lúc thi nên không cần khoá theo tính công bằng.
-      const allowed = new Set(["title", "description", "closeAt", "oralRubricText"]);
+      const allowed = new Set(["title", "description", "closeAt", "oralRubricText", "allowMock"]);
       const rejected = Object.keys(data).filter((k) => !allowed.has(k));
       if (rejected.length > 0) {
         throw new ExamError("exam_has_attempts", { fields: rejected });
@@ -456,13 +470,26 @@ export async function publishExam(
     if (totalPoints <= 0) errors.push("total points must be > 0");
   }
 
+  // LANG G5a — đề thi thử: giờ từng phần là thứ quyết định thời lượng, nên bắt
+  // đủ trước khi publish và chuẩn hoá Exam.durationMin = tổng giờ các phần.
+  let mockTotalMin: number | null = null;
+  if (full.kind !== "oral") {
+    const mock = await validateMockExamForPublish(examId, db);
+    errors.push(...mock.errors);
+    mockTotalMin = mock.totalMinutes;
+  }
+
   if (errors.length > 0) {
     throw new ExamError("exam_not_publishable", { errors });
   }
 
   await db.exam.update({
     where: { id: examId },
-    data: { status: ExamStatus.published, publishedAt: new Date() },
+    data: {
+      status: ExamStatus.published,
+      publishedAt: new Date(),
+      ...(mockTotalMin !== null ? { durationMin: mockTotalMin } : {}),
+    },
   });
 
   // Ca thi là tầng DUY NHẤT quyết định giờ mở/đóng, nên đề publish mà không có

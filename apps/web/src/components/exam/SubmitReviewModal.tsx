@@ -14,6 +14,8 @@ interface Props {
   onCancel: () => void;
   onConfirm: () => void;
   onJump: (questionId: string) => void;
+  /** Đề thi thử nộp từng phần: đổi chữ và nói rõ không quay lại được. */
+  section?: { title: string; isLast: boolean };
 }
 
 /**
@@ -28,6 +30,7 @@ export default function SubmitReviewModal({
   onCancel,
   onConfirm,
   onJump,
+  section,
 }: Props) {
   if (!open) return null;
   const unanswered = items.filter((i) => !i.answered);
@@ -43,11 +46,18 @@ export default function SubmitReviewModal({
       <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-xl">
         <div className="border-b border-default px-5 py-3">
           <h2 id="submit-review-title" className="text-base font-semibold">
-            Xem lại trước khi nộp bài
+            {section && !section.isLast ? `Nộp ${section.title}?` : "Xem lại trước khi nộp bài"}
           </h2>
         </div>
 
         <div className="px-5 py-4 text-sm">
+          {section && (
+            <div className="mb-3 rounded border border-red-300 bg-red-50 p-3 font-medium text-red-800">
+              {section.isLast
+                ? "Đây là phần cuối: nộp phần này là nộp cả bài."
+                : "Sau khi nộp phần này bạn KHÔNG quay lại được. Thời gian còn lại của phần không được cộng sang phần sau."}
+            </div>
+          )}
           <p className="mb-3">
             Bạn đã trả lời{" "}
             <span className="font-semibold text-emerald-700">{answered}</span>
@@ -116,8 +126,12 @@ export default function SubmitReviewModal({
             {submitting
               ? "Đang nộp…"
               : unanswered.length > 0
-                ? "Vẫn nộp bài"
-                : "Nộp bài"}
+                ? section && !section.isLast
+                  ? "Vẫn nộp phần này"
+                  : "Vẫn nộp bài"
+                : section && !section.isLast
+                  ? "Nộp phần này"
+                  : "Nộp bài"}
           </button>
         </div>
       </div>

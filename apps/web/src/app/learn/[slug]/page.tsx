@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Lock } from "lucide-react";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, getCourseProgress, isUserEnrolled } from "@feedbackme/core-lms";
+import { canEditCourse, getCourseProgress, isUserEnrolled, listMockExamsForLearner } from "@feedbackme/core-lms";
+import { LANGUAGE_SKILL_LABEL, isLanguageSkill } from "@feedbackme/shared-types";
 import {
   getClearedChampionsLeaderboard,
   getCourseXpProgress,
@@ -105,6 +106,7 @@ export default async function LearnCoursePage({
     catalog,
     earned,
     flashcardStats,
+    mockExams,
   ] = await Promise.all([
     prisma.enrollment.findUniqueOrThrow({
       where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
@@ -120,6 +122,8 @@ export default async function LearnCoursePage({
     listBadgeCatalog(),
     listUserBadges(session.user.id),
     getFlashcardStats(session.user.id, course.id),
+    // Đề thi thử đã xuất bản của khoá. Lỗi ở đây không được làm hỏng cả trang khoá.
+    listMockExamsForLearner(session.user.id, course.id).catch(() => []),
   ]);
   const earnedCodes = new Set(earned.map((u) => u.badge.code));
   const completedSet = new Set(
@@ -277,6 +281,71 @@ export default async function LearnCoursePage({
                 </span>
                 <span aria-hidden>→</span>
               </Link>
+            </section>
+          )}
+
+          {/* LANG G5c — Luyện thi: đề thi thử đã xuất bản của khoá. Trước đây học viên không có
+              đường nào vào đề thi từ trang khoá (chỉ qua link giảng viên gửi). */}
+          {mockExams.length > 0 && (
+            <section aria-labelledby="mock-exams-title">
+              <h2 id="mock-exams-title" className="text-h3">Luyện thi</h2>
+              <p className="text-meta mt-1">
+                Thi thử theo cấu trúc đề thật: mỗi phần có giờ riêng, làm lần lượt và không quay lại phần đã nộp.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {mockExams.map((e) => {
+                  const a = e.attempt;
+                  const inProgress = a?.status === "in_progress";
+                  const href = `/learn/${params.slug}/exams/${e.examId}`;
+                  return (
+                    <div key={e.examId} className="flex flex-col gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+                      <div>
+                        <p className="text-body font-semibold">{e.title}</p>
+                        <p className="text-meta">
+                          {e.sections.length} phần · {e.totalMinutes} phút
+                        </p>
+                      </div>
+                      <ul className="flex flex-wrap gap-1.5">
+                        {e.sections.map((sec, i) => (
+                          <li key={i} className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs text-muted">
+                            {sec.languageSkill &&
+                            isLanguageSkill(sec.languageSkill) &&
+                            LANGUAGE_SKILL_LABEL[sec.languageSkill] !== sec.title
+                              ? `${LANGUAGE_SKILL_LABEL[sec.languageSkill]} · `
+                              : ""}
+                            {sec.title} · {sec.durationMin}′
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-auto flex items-center justify-between gap-2">
+                        <span className="text-meta">
+                          {!a
+                            ? "Chưa làm"
+                            : inProgress
+                              ? `Đang làm dở · lượt ${e.attemptCount}`
+                              : `Đã thi ${e.attemptCount} lần${a.scorePct != null ? ` · gần nhất ${Math.round(a.scorePct)}%` : ""}`}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          {a && !inProgress && (
+                            <Link
+                              href={`${href}/${a.attemptId}/result`}
+                              className="inline-flex h-9 items-center rounded-full border border-token px-4 text-sm hover:bg-brand-soft"
+                            >
+                              Xem kết quả
+                            </Link>
+                          )}
+                          <Link
+                            href={a && !inProgress ? `${href}?retake=1` : href}
+                            className="inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700"
+                          >
+                            {!a ? "Bắt đầu thi thử" : inProgress ? "Tiếp tục" : "Thi lại"}
+                          </Link>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </section>
           )}
 

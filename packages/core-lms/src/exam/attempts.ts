@@ -11,6 +11,8 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 import { assertEligibleForExam } from "./cohorts";
 import { materializeRandomSections } from "./sections";
+import { assertQuestionInActiveSection, getSectionFlow, mockExamTotalSec } from "./mock-sections";
+import { listAudioPlayUsage } from "./audio-plays";
 import {
   assertSubjectOwnsAttempt,
   emitArgsForSubject,
@@ -114,6 +116,8 @@ async function loadExamForRuntime(examId: string, db: PrismaClient) {
       closeAt: true,
       durationMin: true,
       attemptPolicy: true,
+      mockMode: true,
+      allowMock: true,
       shuffleQuestions: true,
       shuffleOptions: true,
     },
@@ -134,6 +138,13 @@ export async function startExamAttempt(
   userId: string,
   examId: string,
   db: PrismaClient = prisma,
+  opts: {
+    /**
+     * LANG G5c — chỉ có tác dụng với đề thi thử: bắt đầu lượt MỚI sau khi đã nộp lượt trước.
+     * Mở lại link/F5 không có cờ này nên không tự đốt lượt; đề thường không bao giờ làm lại.
+     */
+    retake?: boolean;
+  } = {},
 ): Promise<{
   attemptId: string;
   sessionToken: string;
@@ -145,8 +156,11 @@ export async function startExamAttempt(
   // A5.8: composite unique was replaced with partial unique index in raw SQL;
   // Prisma can't model partial unique, so we use findFirst here. Still hits the
   // index because the where matches (examId, userId).
+  // Đề thi thử làm được nhiều lượt: ưu tiên lượt ĐANG LÀM DỞ (chỉ mục duy nhất cho phép
+  // tối đa một lượt dở mỗi người), không thì lượt gần nhất.
   const existing = await db.examAttempt.findFirst({
     where: { examId, userId },
+    orderBy: [{ status: "asc" }, { startedAt: "desc" }],
     select: {
       id: true,
       status: true,
@@ -178,18 +192,24 @@ export async function startExamAttempt(
         durationSec: existing.durationSec,
       };
     }
-    if (exam.attemptPolicy === "single") {
+    // LANG G5c — thi thử: lượt mới chỉ khi có chủ ý (retake); còn lại báo "đã nộp" để
+    // chuyển sang kết quả. Mọi đề khác giữ nguyên một lượt.
+    if (!(exam.mockMode && opts.retake)) {
       throw new ExamError("attempt_already_submitted");
     }
-    // multi attempts not implemented in P0; treat same as single for safety.
-    throw new ExamError("attempt_already_submitted");
   }
+  // Công tắc "Cho thi thử" tắt: không mở lượt MỚI (lượt đang làm dở ở trên vẫn tiếp tục được).
+  if (exam.mockMode && !exam.allowMock) throw new ExamError("mock_disabled");
 
   // A5.2 — eligibility (status, schedule window, cohort, enrollment, duration)
   // all live in assertEligibleForExam now. Legacy exam.openAt/closeAt is the
   // fallback when no ExamSchedule rows exist. Chỉ cần khi BẮT ĐẦU bài mới.
   const eligibility = await assertEligibleForExam(userId, examId, db);
-  const durationSec = eligibility.durationSec;
+  // LANG G5a — đề thi thử: thời lượng là tổng giờ các phần (vẫn bị cắt theo
+  // cửa sổ ca nếu ca đóng sớm hơn).
+  const mockTotalSec = await mockExamTotalSec(examId, db);
+  const durationSec =
+    mockTotalSec === null ? eligibility.durationSec : Math.min(eligibility.durationSec, mockTotalSec);
   const attemptId = randomUUID();
   const sessionToken = randomUUID();
   const baseSnapshot = await buildShuffleSnapshot(
@@ -278,7 +298,11 @@ export async function getAttemptRuntime(
   });
   if (!attempt) throw new ExamError("attempt_not_found");
   assertSubjectOwnsAttempt(subject, attempt);
+  const sectionFlow = await getSectionFlow(subject, attemptId, db);
+  const audioPlays = await listAudioPlayUsage(attemptId, db);
   return {
+    sectionFlow,
+    audioPlays,
     attemptId: attempt.id,
     examId: attempt.examId,
     status: attempt.status as ExamAttemptStatus,
@@ -371,6 +395,8 @@ export async function saveAnswer(
   if (!question || question.examId !== attempt.examId) {
     throw new ExamError("question_not_in_exam");
   }
+  // LANG G5a — đề thi thử chỉ nhận đáp án của phần đang chạy (kiểm ở máy chủ).
+  await assertQuestionInActiveSection(attemptId, questionId, db);
 
   const newHash = hashAnswer(parsed.data.answerJson);
   const elapsedMs = Date.now() - attempt.startedAt.getTime();

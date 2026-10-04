@@ -9,5 +9,5 @@ export default function FooterGate({ children }: { children: React.ReactNode }) 
   if (HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return null;
   }
-  return <>{children}</>;
+  return <div data-app-chrome>{children}</div>;
 }

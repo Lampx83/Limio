@@ -9,6 +9,7 @@ import OralSessionControl from "./OralSessionControl";
 import DeleteOralExamButton from "@/components/exam/DeleteOralExamButton";
 import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
+import MockExamPanel from "./MockExamPanel";
 import OralMaterialsPanel from "./OralMaterialsPanel";
 import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
@@ -313,6 +314,19 @@ export default async function EditExamPage({
 
       {activeTab === "content" && (
         <>
+          {exam.kind !== "oral" && (
+            <MockExamPanel
+              examId={exam.id}
+              initialMockMode={exam.mockMode}
+              initialAllowMock={exam.allowMock}
+              locked={exam.status !== "draft" || hasAttempts}
+              lockedReason={
+                exam.status !== "draft"
+                  ? "Đề đã xuất bản nên không đổi chế độ hay giờ phần được."
+                  : undefined
+              }
+            />
+          )}
           <section className="mt-6 rounded border border-default bg-white p-5">
             <h2 className="mb-1 text-base font-semibold">Nội dung bài thi</h2>
             <p className="mb-4 text-sm text-faint">

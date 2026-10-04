@@ -59,7 +59,7 @@ export const SITE_URL = BASE_PATH && !RAW_SITE_URL.endsWith(BASE_PATH)
  * vì font mặc định của `ImageResponse` chỉ có Latin — tiếng Việt có dấu sẽ ra
  * ô vuông.
  */
-export const DEFAULT_OG_IMAGE = "/og-default.png";
+export const DEFAULT_OG_IMAGE = "/og-default-v2.png";
 
 /**
  * Logo PNG vuông cho JSON-LD + manifest. Google không nhận SVG làm logo của

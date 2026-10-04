@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Globe, Lock, MessageSquarePlus, Pencil, Send, Sparkles, Trash2, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Globe, Lock, MessageSquare, MessageSquarePlus, Pencil, Send, Sparkles, Trash2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   captureAnchor,
@@ -71,6 +72,9 @@ function makeHighlight(ranges: Range[]): unknown {
   return new Ctor(...ranges);
 }
 
+/** Chiều cao một dấu ở lề + khoảng cách tối thiểu giữa hai dấu liền kề (px). */
+const MARKER_H = 28;
+
 const HL_NAMES = ["annot-private", "annot-shared", "annot-others", "annot-active"] as const;
 const MENU_W = 232;
 const CARD_W = 380;
@@ -109,11 +113,14 @@ function errText(data: Record<string, unknown>): string {
 export default function LessonAnnotations({
   lessonId,
   containerId = "lesson-content",
+  gutterId = "lesson-annotation-gutter",
   canModerate,
   aiEnabled,
 }: {
   lessonId: string;
   containerId?: string;
+  /** Lề phải (do trang bài dựng sẵn, nằm NGOÀI containerId) chứa các dấu annotation. */
+  gutterId?: string;
   /** Người dạy khoá: gỡ được annotation/reply công khai của người khác. */
   canModerate: boolean;
   aiEnabled: boolean;
@@ -122,6 +129,9 @@ export default function LessonAnnotations({
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [composer, setComposer] = useState<{ anchor: CapturedAnchor; x: number; y: number } | null>(null);
   const [thread, setThread] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [markers, setMarkers] = useState<Array<{ id: string; top: number }>>([]);
+  const [gutter, setGutter] = useState<HTMLElement | null>(null);
+  const [hoverId, setHoverId] = useState<string | null>(null);
   const rangesRef = useRef<Map<string, Range>>(new Map());
   const lastPointer = useRef<string>("mouse");
   const menuRef = useRef<HTMLDivElement>(null);
@@ -138,6 +148,10 @@ export default function LessonAnnotations({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setGutter(document.getElementById(gutterId));
+  }, [gutterId]);
 
   // ---- Tô nền các đoạn đã có annotation ---------------------------------
   const paint = useCallback(() => {
@@ -160,9 +174,35 @@ export default function LessonAnnotations({
     reg.set("annot-private", makeHighlight(priv));
     reg.set("annot-shared", makeHighlight(shared));
     reg.set("annot-others", makeHighlight(others));
-    const active = thread ? map.get(thread.id) : undefined;
+    const activeId = thread?.id ?? hoverId;
+    const active = activeId ? map.get(activeId) : undefined;
     reg.set("annot-active", makeHighlight(active ? [active] : []));
-  }, [items, thread, containerId]);
+
+    // Lề: chừa chỗ bên phải bài (CSS theo data-annotated) khi có ít nhất một annotation vẽ được,
+    // và đặt mỗi dấu ngang dòng đầu của đoạn nó ghi chú. Dấu dồn lại nếu hai đoạn nằm sát nhau.
+    container.toggleAttribute("data-annotated", map.size > 0);
+    const wrap = document.getElementById(gutterId);
+    if (wrap) {
+      const base = wrap.getBoundingClientRect().top;
+      const raw: Array<{ id: string; top: number }> = [];
+      for (const [id, r] of map) {
+        const rect = Array.from(r.getClientRects()).find((x) => x.height > 0);
+        if (rect) raw.push({ id, top: rect.top - base });
+      }
+      raw.sort((a, b) => a.top - b.top);
+      let prev = -Infinity;
+      const next = raw.map((m) => {
+        const top = Math.max(m.top, prev + MARKER_H);
+        prev = top;
+        return { id: m.id, top: Math.round(top) };
+      });
+      setMarkers((cur) =>
+        cur.length === next.length && cur.every((c, i) => c.id === next[i]!.id && c.top === next[i]!.top)
+          ? cur
+          : next,
+      );
+    }
+  }, [items, thread, hoverId, containerId, gutterId]);
 
   useEffect(() => {
     paint();
@@ -176,9 +216,16 @@ export default function LessonAnnotations({
       t = setTimeout(paint, 120);
     });
     mo.observe(container, { childList: true, subtree: true, characterData: true });
+    // Đổi cỡ (cửa sổ, ảnh tải xong, lề mở ra làm chữ xuống dòng lại) thì vị trí dấu ở lề đổi theo.
+    const ro = new ResizeObserver(() => {
+      clearTimeout(t);
+      t = setTimeout(paint, 120);
+    });
+    ro.observe(container);
     return () => {
       clearTimeout(t);
       mo.disconnect();
+      ro.disconnect();
     };
   }, [paint, containerId]);
 
@@ -186,8 +233,9 @@ export default function LessonAnnotations({
     return () => {
       const reg = highlightRegistry();
       if (reg) for (const n of HL_NAMES) reg.delete(n);
+      document.getElementById(containerId)?.removeAttribute("data-annotated");
     };
-  }, []);
+  }, [containerId]);
 
   // ---- Chuột phải trên vùng bôi đen (và thanh nổi cho cảm ứng) ----------
   useEffect(() => {
@@ -326,6 +374,48 @@ export default function LessonAnnotations({
 
   return (
     <>
+      {gutter &&
+        createPortal(
+          markers.map((m) => {
+            const a = items.find((x) => x.id === m.id);
+            if (!a) return null;
+            const name = a.mine ? "Bạn" : a.author.displayName;
+            const kind = !a.mine ? "others" : a.visibility === "published" ? "shared" : "private";
+            const tone = {
+              private: "border-amber-300 bg-amber-100/80 text-amber-900",
+              shared: "border-emerald-300 bg-emerald-100/80 text-emerald-900",
+              others: "border-sky-300 bg-sky-100/80 text-sky-900",
+            }[kind];
+            const replies = a.replies.length;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                style={{ top: m.top }}
+                onMouseEnter={() => setHoverId(m.id)}
+                onMouseLeave={() => setHoverId((h) => (h === m.id ? null : h))}
+                onFocus={() => setHoverId(m.id)}
+                onBlur={() => setHoverId((h) => (h === m.id ? null : h))}
+                onClick={(e) => {
+                  setMenu(null);
+                  setComposer(null);
+                  setThread({ id: m.id, x: e.clientX, y: e.clientY });
+                }}
+                title={`${name}${kind === "private" ? " · riêng tư" : ""}${replies ? ` · ${replies} trả lời` : ""}`}
+                aria-label={`Annotation của ${name}${replies ? `, ${replies} trả lời` : ""}. Bấm để mở`}
+                className={`pointer-events-auto absolute left-2 flex h-6 max-w-[calc(100%-0.5rem)] items-center gap-1 rounded-full border px-1.5 text-[11px] font-medium leading-none shadow-sm transition-shadow hover:shadow-md ${tone} ${
+                  thread?.id === m.id ? "ring-2 ring-brand-500" : ""
+                }`}
+              >
+                <MessageSquare size={12} className="shrink-0" aria-hidden />
+                <span className="hidden min-w-0 truncate xl:inline">{name}</span>
+                {replies > 0 && <span className="text-[10px] font-bold">{replies}</span>}
+              </button>
+            );
+          }),
+          gutter,
+        )}
+
       {menu && (
         <div
           ref={menuRef}

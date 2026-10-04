@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { logAudit } from "../auth/audit";
+import { isAdmin } from "../auth/roles";
 import { uniqueCourseSlug } from "./slug";
 import { assertCanEditCourse, assertIsOwner, CourseAuthzError } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
@@ -73,6 +74,7 @@ export class CourseError extends Error {
       | "section_name_taken"
       | "section_has_enrollments"
       | "researcher_only"
+      | "sample_requires_public"
       | "language_mode_requires_personalization",
     public readonly details?: unknown,
   ) {
@@ -221,6 +223,63 @@ export async function updateCourse(
   if (personalizationTurnedOn) {
     await backfillCourseTags(courseId, { force: true }, db);
   }
+}
+
+/**
+ * Admin đánh dấu / bỏ đánh dấu "khoá mẫu". Chỉ admin nền tảng — khoá của giảng
+ * viên nào được đem ra làm mẫu cho người mới là quyết định của nền tảng, không
+ * phải của chủ khoá.
+ *
+ * Chỉ khoá đang published + publicAccess mới đánh dấu được: giảng viên mới chưa
+ * ghi danh khoá nào, nên chỉ xem được khoá nếu nó đọc công khai. Đánh dấu một
+ * khoá riêng tư sẽ cho ra nút bấm vào là bị chặn.
+ */
+export async function setCourseSample(
+  actorUserId: string,
+  courseId: string,
+  isSample: boolean,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  if (!(await isAdmin(actorUserId, db))) throw new CourseAuthzError("forbidden");
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: { status: true, publicAccess: true, isSample: true },
+  });
+  if (!course) throw new CourseAuthzError("not_found");
+  if (isSample && !(course.status === "published" && course.publicAccess)) {
+    throw new CourseError("sample_requires_public");
+  }
+  // Chỉ lần lật thật mới ghi (lưu lại form không đổi gì thì không phải sự kiện).
+  if (course.isSample === isSample) return;
+  await db.course.update({ where: { id: courseId }, data: { isSample } });
+  await logAudit(
+    {
+      action: "course.sample.toggled",
+      actorUserId,
+      payload: { courseId, from: course.isSample, to: isSample },
+    },
+    db,
+  );
+}
+
+/**
+ * Các khoá mẫu đang xem được. Lọc lại published + publicAccess ở đây (không tin
+ * mỗi cờ isSample): khoá từng là mẫu rồi sau đó bị gỡ publish hay chuyển riêng
+ * tư thì phải biến khỏi danh sách, không để lại link dẫn tới trang 404.
+ */
+export async function listSampleCourses(db: PrismaClient = prisma) {
+  return db.course.findMany({
+    where: { isSample: true, status: "published", publicAccess: true },
+    orderBy: { title: "asc" },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      coverUrl: true,
+      level: true,
+    },
+  });
 }
 
 /**

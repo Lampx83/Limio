@@ -1051,3 +1051,16 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   text-decoration: underline;
   text-decoration-color: rgb(var(--brand));
 }
+
+/* Lề annotation: chỉ chừa chỗ bên phải bài khi bài CÓ annotation (LessonAnnotations đặt data-annotated).
+   lg: lề hẹp chỉ đủ icon; xl: đủ icon + tên người tạo. Dưới lg không có lề — bấm thẳng vào đoạn tô nền. */
+@media (min-width: 1024px) {
+  #lesson-content[data-annotated] {
+    padding-right: 3.5rem;
+  }
+}
+@media (min-width: 1280px) {
+  #lesson-content[data-annotated] {
+    padding-right: 11rem;
+  }
+}

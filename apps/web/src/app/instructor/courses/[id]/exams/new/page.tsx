@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { canEditCourse } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ExamMetaForm from "../ExamMetaForm";
+import MockTemplatePicker from "../MockTemplatePicker";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,10 @@ export default async function NewExamPage({
         đọc và câu hỏi.
       </p>
 
-      <div className="mt-6">
+      <MockTemplatePicker courseId={course.id} />
+
+      <h2 className="mt-8 text-base font-semibold">Hoặc tạo đề thường</h2>
+      <div className="mt-3">
         <ExamMetaForm
           mode="create"
           courseId={course.id}

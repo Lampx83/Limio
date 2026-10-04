@@ -14,11 +14,20 @@ const render = (props: Partial<React.ComponentProps<typeof AudioLessonPlayer>> =
   renderToStaticMarkup(<AudioLessonPlayer url={URL_} {...props} />);
 
 describe("AudioLessonPlayer", () => {
-  it("AUD.2.3: dùng <audio controls> với src đúng và chỉ tải metadata (không tải cả file khi mới mở bài)", () => {
+  it("AUD.2.3: <audio> với src đúng, chỉ tải metadata (không tải cả file khi mới mở bài)", () => {
     const out = render();
-    expect(out).toMatch(/<audio[^>]*\bcontrols\b/);
+    expect(out).toMatch(/<audio\b/);
     expect(out).toContain(`src="${URL_}"`);
     expect(out).toContain('preload="metadata"');
+  });
+
+  it("thanh phát tự vẽ (để thanh tiến độ rõ, không phụ thuộc giao diện mặc định của trình duyệt): nút phát, thanh tua có nhãn, giờ, tắt tiếng", () => {
+    const out = render();
+    expect(out).not.toMatch(/<audio[^>]*\bcontrols\b/); // không dùng bộ điều khiển gốc nữa
+    expect(out).toContain('aria-label="Phát"');
+    expect(out).toMatch(/<input[^>]*type="range"[^>]*aria-label="Tiến độ phát"|<input[^>]*aria-label="Tiến độ phát"[^>]*type="range"/);
+    expect(text(out)).toContain("0:00");
+    expect(out).toContain('aria-label="Tắt tiếng"');
   });
 
   it("AUD.2.3: có nút tốc độ 0.75×, 1×, 1.25× (1× đang chọn) và nút lặp lại", () => {

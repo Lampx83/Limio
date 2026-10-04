@@ -62,7 +62,35 @@ interface InitialAnswer {
   answerHash: string | null;
 }
 
+/** LANG G5a — đề thi thử: phần đang chạy (máy chủ chỉ gửi câu của phần này). */
+interface MockInfo {
+  sections: {
+    id: string;
+    title: string;
+    languageSkill: string | null;
+    durationSec: number;
+    questionCount: number;
+    state: "done" | "active" | "upcoming";
+  }[];
+  activeSectionId: string;
+  activeIndex: number;
+  /** Giờ máy chủ phần này kết thúc (ISO). */
+  sectionEndsAt: string;
+  /** Số câu của các phần trước, để đánh số tiếp (phần 2 bắt đầu từ câu 41...). */
+  numberOffset: number;
+}
+
+const SKILL_LABEL: Record<string, string> = {
+  listening: "Nghe",
+  speaking: "Nói",
+  reading: "Đọc",
+  writing: "Viết",
+};
+
 interface Props {
+  mock?: MockInfo;
+  /** Đề thi thử: nơi quay về khi thí sinh chủ động rời phòng thi (đồng hồ vẫn chạy). */
+  exitHref?: string;
   attemptId: string;
   sessionToken: string;
   startedAt: string;
@@ -143,6 +171,16 @@ export default function ExamPlayer(props: Props) {
     calcRemainingSec(deadlineEpoch, Date.now(), clockSkewRef.current),
   );
 
+  const lastRefreshAtRef = useRef(0);
+  // Đồng hồ riêng của phần (đề thi thử). Hạn do máy chủ tính; hết giờ phần thì
+  // tải lại để nhận phần kế — máy chủ mới là bên quyết định, không phải đồng hồ này.
+  const sectionEndEpoch = props.mock ? new Date(props.mock.sectionEndsAt).getTime() : null;
+  const [sectionRemainingSec, setSectionRemainingSec] = useState<number | null>(() =>
+    sectionEndEpoch === null ? null : calcRemainingSec(sectionEndEpoch, Date.now(), clockSkewRef.current),
+  );
+  const [sectionConfirmOpen, setSectionConfirmOpen] = useState(false);
+  const [endingSection, setEndingSection] = useState(false);
+
   const clearLocalState = useCallback(() => {
     try {
       localStorage.removeItem(draftKey(props.attemptId));
@@ -165,6 +203,7 @@ export default function ExamPlayer(props: Props) {
         serverNow?: string;
         status?: string;
         durationSec?: number;
+        section?: { activeSectionId: string | null; remainingSec: number; finished: boolean };
       };
       const skew = estimateClockSkewMs(j.serverNow, t0, Date.now());
       if (skew !== null) clockSkewRef.current = skew;
@@ -174,11 +213,22 @@ export default function ExamPlayer(props: Props) {
         clearLocalState();
         router.replace(props.resultUrl);
       }
+      // Đề thi thử: máy chủ đã sang phần khác (hết giờ phần, hoặc nộp ở tab khác)
+      // → tải lại để nhận đúng phần. Giãn 3 giây để không dội liên tục.
+      if (
+        props.mock &&
+        j.section &&
+        (j.section.finished || j.section.activeSectionId !== props.mock.activeSectionId) &&
+        Date.now() - lastRefreshAtRef.current > 3_000
+      ) {
+        lastRefreshAtRef.current = Date.now();
+        router.refresh();
+      }
       return j;
     } catch {
       return null;
     }
-  }, [props.attemptId, props.resultUrl, router, clearLocalState]);
+  }, [props.attemptId, props.resultUrl, props.mock, router, clearLocalState]);
 
   // Hết giờ → tự nộp. Hỏi server một lần trước khi nộp: có thể vừa được gia hạn
   // mà heartbeat chưa kịp báo (tối đa 10s).
@@ -211,6 +261,29 @@ export default function ExamPlayer(props: Props) {
     }, 1_000);
     return () => clearInterval(t);
   }, [deadlineEpoch]);
+
+  // Đồng hồ phần (thi thử). Còn 3 giây thì đẩy nốt các câu đang chờ lưu; hết giờ
+  // thì hỏi lại máy chủ (tải lại) để sang phần kế.
+  const flushedForSectionRef = useRef(false);
+  useEffect(() => {
+    if (sectionEndEpoch === null) return;
+    const t = setInterval(() => {
+      const r = calcRemainingSec(sectionEndEpoch, Date.now(), clockSkewRef.current);
+      setSectionRemainingSec(r);
+      if (r <= 3 && !flushedForSectionRef.current) {
+        flushedForSectionRef.current = true;
+        for (const qid of [...pendingSync.current]) {
+          const v = answersRef.current[qid];
+          if (v !== undefined) void sendSaveRef.current(qid, v);
+        }
+      }
+      if (r <= 0 && Date.now() - lastRefreshAtRef.current > 2_000) {
+        lastRefreshAtRef.current = Date.now();
+        router.refresh();
+      }
+    }, 1_000);
+    return () => clearInterval(t);
+  }, [sectionEndEpoch, router]);
 
   // Build render order from shuffle snapshot.
   const passageQuestionMap = useMemo(() => {
@@ -307,6 +380,16 @@ export default function ExamPlayer(props: Props) {
           if (j?.error === "attempt_already_submitted") {
             clearLocalState();
             router.replace(props.resultUrl);
+            return false;
+          }
+          if (j?.error === "section_not_active") {
+            // Phần của câu này đã đóng (hết giờ / nộp rồi): bỏ khỏi hàng đợi, không thử lại.
+            pendingSync.current.delete(questionId);
+            setSaveState(pendingSync.current.size === 0 ? "saved" : "saving");
+            if (Date.now() - lastRefreshAtRef.current > 3_000) {
+              lastRefreshAtRef.current = Date.now();
+              router.refresh();
+            }
             return false;
           }
         }
@@ -690,6 +773,61 @@ export default function ExamPlayer(props: Props) {
   );
   submitAttemptRef.current = submitAttempt;
 
+  // "Nộp phần này" (thi thử): đẩy mọi câu đang chờ, báo máy chủ kết thúc phần, rồi
+  // sang phần kế (hoặc trang kết quả nếu là phần cuối).
+  const endSection = useCallback(async () => {
+    if (!props.mock || submittingRef.current) return;
+    setEndingSection(true);
+    setError(null);
+    try {
+      const queued = new Set<string>([
+        ...pendingSync.current,
+        ...Object.keys(pendingTimers.current),
+      ]);
+      for (const t of Object.values(pendingTimers.current)) clearTimeout(t);
+      pendingTimers.current = {};
+      for (const t of Object.values(retryTimers.current)) clearTimeout(t);
+      retryTimers.current = {};
+      await Promise.all(
+        [...queued].map((qid) => {
+          const v = answersRef.current[qid];
+          return v === undefined ? Promise.resolve(true) : sendSaveRef.current(qid, v);
+        }),
+      );
+      if (pendingSync.current.size > 0) {
+        setError(`Chưa lưu được ${pendingSync.current.size} câu trả lời lên hệ thống. ${humanizeSubmitError("network_error")}`);
+        return;
+      }
+      const res = await fetch(apiUrl(`/api/exam-attempts/${props.attemptId}/section/end`), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sectionId: props.mock.activeSectionId }),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(humanizeSubmitError(j?.error ?? "submit_failed"));
+        return;
+      }
+      const j = (await res.json()) as { finished: boolean };
+      if (j.finished) {
+        clearLocalState();
+        router.replace(props.resultUrl);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError(humanizeSubmitError("network_error"));
+    } finally {
+      setEndingSection(false);
+      setSectionConfirmOpen(false);
+    }
+  }, [props.mock, props.attemptId, props.resultUrl, router, clearLocalState]);
+
+  const isLastSection = props.mock ? props.mock.activeIndex === props.mock.sections.length - 1 : true;
+  const sMin = Math.floor((sectionRemainingSec ?? 0) / 60);
+  const sSec = (sectionRemainingSec ?? 0) % 60;
+  const sectionDanger = (sectionRemainingSec ?? 9999) < 120;
+
   const minutes = Math.floor(remainingSec / 60);
   const seconds = remainingSec % 60;
   const timerDanger = remainingSec < 300;
@@ -708,7 +846,7 @@ export default function ExamPlayer(props: Props) {
       active: boolean;
       stepIndex: number;
     }> = [];
-    let n = 1;
+    let n = 1 + (props.mock?.numberOffset ?? 0);
     steps.forEach((step, stepIndex) => {
       if (step.kind === "passage") {
         for (const qid of step.questionIds) {
@@ -716,7 +854,7 @@ export default function ExamPlayer(props: Props) {
             questionId: qid,
             displayNumber: n++,
             group: `passage:${step.passageId}`,
-            groupLabel: `Phần ${step.passageIndex + 1}`,
+            groupLabel: props.mock ? props.mock.sections[props.mock.activeIndex]!.title : `Phần ${step.passageIndex + 1}`,
             answered: isAnswered(answers[qid] ?? null),
             active: stepIndex === currentStepIndex,
             stepIndex,
@@ -735,7 +873,7 @@ export default function ExamPlayer(props: Props) {
       }
     });
     return items;
-  }, [steps, answers, currentStepIndex]);
+  }, [steps, answers, currentStepIndex, props.mock?.numberOffset]);
 
   const jumpToQuestion = useCallback(
     (questionId: string) => {
@@ -859,9 +997,38 @@ export default function ExamPlayer(props: Props) {
           submitAttempt(false);
         }}
         onJump={jumpToQuestion}
+        section={props.mock ? { title: props.mock.sections[props.mock.activeIndex]!.title, isLast: true } : undefined}
       />
+      {props.mock && (
+        <SubmitReviewModal
+          open={sectionConfirmOpen}
+          items={paletteItems}
+          submitting={endingSection}
+          onCancel={() => setSectionConfirmOpen(false)}
+          onConfirm={() => void endSection()}
+          onJump={jumpToQuestion}
+          section={{ title: props.mock.sections[props.mock.activeIndex]!.title, isLast: false }}
+        />
+      )}
       {/* Sticky header strip — palette + timer + submit always visible. */}
-      <div className="sticky top-[74px] z-20 -mx-4 mb-4 border-b border-default bg-white/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className={`sticky ${props.mock ? "top-0" : "top-[74px]"} z-20 -mx-4 mb-4 border-b border-default bg-white/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80`}>
+        {props.mock && (
+          <MockHeader
+            mock={props.mock}
+            title={props.exam.title}
+            saveBadge={<SaveBadge state={saveState} />}
+            onClaim={saveState === "stale" ? claimSession : undefined}
+            sectionRemaining={`${String(sMin).padStart(2, "0")}:${String(sSec).padStart(2, "0")}`}
+            sectionDanger={sectionDanger}
+            totalRemaining={`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
+            totalDanger={timerDanger}
+            isLast={isLastSection}
+            exitHref={props.exitHref}
+            busy={submitting || endingSection}
+            onEnd={() => (isLastSection ? setReviewOpen(true) : setSectionConfirmOpen(true))}
+          />
+        )}
+        {!props.mock && (
         <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-semibold leading-tight">{props.exam.title}</h1>
@@ -896,6 +1063,7 @@ export default function ExamPlayer(props: Props) {
             </button>
           </div>
         </header>
+        )}
         <QuestionPalette items={paletteItems} onJump={jumpToQuestion} />
       </div>
 
@@ -912,7 +1080,8 @@ export default function ExamPlayer(props: Props) {
         total={steps.length}
         onPrev={() => setCurrentStepIndex((i) => Math.max(0, i - 1))}
         onNext={() => setCurrentStepIndex((i) => Math.min(steps.length - 1, i + 1))}
-        onSubmit={() => setReviewOpen(true)}
+        onSubmit={() => (props.mock && !isLastSection ? setSectionConfirmOpen(true) : setReviewOpen(true))}
+        submitLabel={props.mock && !isLastSection ? "Nộp phần này" : "Nộp bài"}
         unansweredCount={paletteItems.filter((p) => !p.answered).length}
         submitting={submitting}
       />
@@ -963,6 +1132,7 @@ function StepNav({
   onPrev,
   onNext,
   onSubmit,
+  submitLabel,
   unansweredCount,
   submitting,
 }: {
@@ -971,6 +1141,7 @@ function StepNav({
   onPrev: () => void;
   onNext: () => void;
   onSubmit: () => void;
+  submitLabel: string;
   unansweredCount: number;
   submitting: boolean;
 }) {
@@ -1001,7 +1172,7 @@ function StepNav({
           disabled={submitting}
           className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
-          {submitting ? "Đang nộp…" : "Nộp bài"}
+          {submitting ? "Đang nộp…" : submitLabel}
         </button>
       ) : (
         <button
@@ -1027,4 +1198,113 @@ function SaveBadge({ state }: { state: SaveState }) {
   };
   const v = map[state];
   return <span className={v.cls}>{v.text}</span>;
+}
+
+/**
+ * Thanh trên cùng của phòng thi thử. Dùng CÙNG kiểu với phòng thi thường của Limio
+ * (tên đề + trạng thái lưu bên trái; đồng hồ dạng ô mono + nút xanh bên phải) để học
+ * viên thấy quen; chỉ thêm thông tin phần: "Phần 2/3 · Đọc", đồng hồ phần là đồng hồ
+ * chính, đồng hồ cả bài nhỏ bên cạnh, và nút "Nộp phần này".
+ */
+function MockHeader({
+  mock,
+  title,
+  saveBadge,
+  onClaim,
+  sectionRemaining,
+  sectionDanger,
+  totalRemaining,
+  totalDanger,
+  isLast,
+  exitHref,
+  busy,
+  onEnd,
+}: {
+  mock: MockInfo;
+  title: string;
+  saveBadge: React.ReactNode;
+  onClaim?: () => void;
+  sectionRemaining: string;
+  sectionDanger: boolean;
+  totalRemaining: string;
+  totalDanger: boolean;
+  isLast: boolean;
+  exitHref?: string;
+  busy: boolean;
+  onEnd: () => void;
+}) {
+  const active = mock.sections[mock.activeIndex]!;
+  const skill = active.languageSkill ? SKILL_LABEL[active.languageSkill] : null;
+  return (
+    <header className="mb-3" data-testid="mock-header">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold leading-tight">{title}</h1>
+          <p className="text-xs text-faint">
+            Phần {mock.activeIndex + 1}/{mock.sections.length}: {active.title}
+            {skill && skill !== active.title ? ` (${skill})` : ""} · Trạng thái lưu: {saveBadge}
+            {onClaim && (
+              <button type="button" onClick={onClaim} className="ml-2 text-blue-600 underline">
+                Tiếp tục trên thiết bị này
+              </button>
+            )}
+            {exitHref && (
+              <a
+                href={exitHref}
+                onClick={(e) => {
+                  if (!window.confirm("Rời phòng thi? Đồng hồ VẪN CHẠY. Bạn có thể quay lại bằng nút Tiếp tục ở trang khoá, nếu còn thời gian.")) {
+                    e.preventDefault();
+                  }
+                }}
+                className="ml-2 text-blue-600 underline"
+              >
+                Rời phòng thi
+              </a>
+            )}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span
+            className={`inline-flex items-center whitespace-nowrap rounded px-3 py-1 font-mono text-lg tabular-nums ${sectionDanger ? "bg-red-100 text-red-800 ring-2 ring-red-300" : "bg-slate-100 text-slate-900"}`}
+            aria-label="Thời gian còn lại của phần này"
+            title="Thời gian còn lại của phần này"
+            data-testid="section-timer"
+          >
+            <Timer className="mr-1 h-4 w-4 shrink-0" />
+            {sectionRemaining}
+          </span>
+          <span className={`text-xs tabular-nums ${totalDanger ? "text-red-700" : "text-faint"}`} title="Thời gian còn lại của cả bài">
+            Cả bài: {totalRemaining}
+          </span>
+          <button
+            type="button"
+            onClick={onEnd}
+            disabled={busy}
+            className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {busy ? "Đang nộp…" : isLast ? "Nộp bài" : "Nộp phần này"}
+          </button>
+        </div>
+      </div>
+      <ol className="mb-2 flex gap-1.5 overflow-x-auto text-xs" aria-label="Các phần của đề">
+        {mock.sections.map((s, i) => (
+          <li
+            key={s.id}
+            aria-current={s.state === "active" ? "step" : undefined}
+            className={`flex shrink-0 items-center gap-1 rounded border px-2.5 py-1 ${
+              s.state === "active"
+                ? "border-blue-600 bg-blue-50 font-medium text-blue-800"
+                : s.state === "done"
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                  : "border-default text-faint"
+            }`}
+          >
+            <span>{s.state === "done" ? "✓" : i + 1}.</span>
+            <span>{s.title}</span>
+            <span className="opacity-70">({Math.round(s.durationSec / 60)}′)</span>
+          </li>
+        ))}
+      </ol>
+    </header>
+  );
 }

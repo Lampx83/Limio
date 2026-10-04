@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
+import { Pause, Volume2 } from "lucide-react";
 import {
   FLASHCARD_RATINGS,
   FLASHCARD_RATING_LABEL,
@@ -54,7 +54,7 @@ export default function FlashcardStage({
           big ? "h-16 w-16" : "h-9 w-9"
         }`}
       >
-        {playing ? <Pause size={big ? 28 : 18} aria-hidden /> : <Play size={big ? 28 : 18} aria-hidden />}
+        {playing ? <Pause size={big ? 28 : 18} aria-hidden /> : <Volume2 size={big ? 28 : 18} aria-hidden />}
       </button>
     ) : null;
 
