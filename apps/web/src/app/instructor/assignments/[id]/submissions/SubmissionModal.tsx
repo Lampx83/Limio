@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { UserAvatar, StatusBadge, DateTime } from "@/components/ui";
 import GradeForm from "./GradeForm";
 import AttachmentPreview from "./AttachmentPreview";
+
+export type SubmissionNav = {
+  position: number;
+  total: number;
+  pendingOnly: boolean;
+  onTogglePendingOnly: (v: boolean) => void;
+  onPrev: (() => void) | null;
+  onNext: (() => void) | null;
+};
 
 export default function SubmissionModal({
   user,
   submission,
   maxScore,
+  nav,
   onClose,
 }: {
   user: { displayName: string; email: string };
@@ -22,11 +32,36 @@ export default function SubmissionModal({
     feedback: string | null;
   };
   maxScore: number;
+  nav?: SubmissionNav | null;
   onClose: () => void;
 }) {
+  // Điểm/nhận xét đang soạn dở: chuyển bài sẽ mất, nên hỏi trước.
+  const dirtyRef = useRef(false);
+  const setDirty = useCallback((d: boolean) => {
+    dirtyRef.current = d;
+  }, []);
+  const go = useCallback((fn: (() => void) | null | undefined) => {
+    if (!fn) return;
+    if (
+      dirtyRef.current &&
+      !window.confirm("Điểm/nhận xét bài này chưa lưu và sẽ mất. Vẫn chuyển sang bài khác?")
+    )
+      return;
+    fn();
+  }, []);
+  const onPrev = nav?.onPrev;
+  const onNext = nav?.onNext;
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      // ← → chuyển bài, trừ khi đang gõ trong ô nhập (mũi tên là di chuyển con trỏ).
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      e.preventDefault();
+      go(e.key === "ArrowLeft" ? onPrev : onNext);
     };
     document.addEventListener("keydown", onKeyDown);
     const prevOverflow = document.body.style.overflow;
@@ -35,7 +70,7 @@ export default function SubmissionModal({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [onClose]);
+  }, [onClose, go, onPrev, onNext]);
 
   const isGraded = submission.status === "graded";
   const hasAttachment = !!submission.attachmentUrl;
@@ -54,8 +89,8 @@ export default function SubmissionModal({
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between gap-3 border-b border-token px-5 py-4">
-          <div className="flex min-w-0 items-center gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-token px-5 py-4">
+          <div className="flex w-full min-w-0 items-center gap-3 sm:w-auto sm:flex-1">
             <UserAvatar name={user.displayName} size="sm" />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold leading-tight">
@@ -64,18 +99,48 @@ export default function SubmissionModal({
               <p className="truncate text-xs text-faint">{user.email}</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-secondary btn-sm shrink-0"
-            aria-label="Đóng"
-          >
-            ✕ Đóng
-          </button>
+          <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
+            {nav && (
+              <div className="flex items-center gap-1" role="group" aria-label="Chuyển bài nộp">
+                <button
+                  type="button"
+                  onClick={() => go(nav.onPrev)}
+                  disabled={!nav.onPrev}
+                  className="btn-secondary btn-sm"
+                  aria-label="Bài trước"
+                  title="Bài trước (←)"
+                >
+                  ← <span className="hidden sm:inline">Trước</span>
+                </button>
+                <span className="min-w-[3.5rem] text-center text-xs tabular-nums text-muted" aria-live="polite">
+                  {nav.position > 0 ? `${nav.position}/${nav.total}` : "—"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => go(nav.onNext)}
+                  disabled={!nav.onNext}
+                  className="btn-secondary btn-sm"
+                  aria-label="Bài sau"
+                  title="Bài sau (→)"
+                >
+                  <span className="hidden sm:inline">Sau</span> →
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary btn-sm"
+              aria-label="Đóng"
+            >
+              ✕ Đóng
+            </button>
+          </div>
         </header>
 
         <div className="max-h-[75vh] overflow-y-auto p-5">
           <div
+            key={submission.id}
             className={
               hasAttachment ? "grid gap-5 lg:grid-cols-2 lg:items-start" : ""
             }
@@ -109,13 +174,26 @@ export default function SubmissionModal({
                   initialScore={submission.score}
                   initialFeedback={submission.feedback}
                   isGraded={isGraded}
+                  onDirtyChange={setDirty}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <footer className="border-t border-token px-5 py-3 text-right">
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-token px-5 py-3">
+          {nav ? (
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={nav.pendingOnly}
+                onChange={(e) => nav.onTogglePendingOnly(e.target.checked)}
+              />
+              Chỉ chuyển qua bài chờ chấm
+            </label>
+          ) : (
+            <span />
+          )}
           <button type="button" onClick={onClose} className="btn-secondary btn-sm">
             ← Quay lại danh sách
           </button>

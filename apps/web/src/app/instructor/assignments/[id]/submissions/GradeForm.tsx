@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 
@@ -25,12 +25,15 @@ export default function GradeForm({
   initialScore,
   initialFeedback,
   isGraded,
+  onDirtyChange,
 }: {
   submissionId: string;
   maxScore: number;
   initialScore: number | null;
   initialFeedback: string | null;
   isGraded: boolean;
+  /** Báo khi điểm/nhận xét đang khác bản đã lưu — để modal hỏi trước khi chuyển bài. */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const router = useRouter();
   const [score, setScore] = useState(
@@ -38,6 +41,16 @@ export default function GradeForm({
   );
   const [feedback, setFeedback] = useState(initialFeedback ?? "");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const scoreDirty =
+      score.trim() === ""
+        ? initialScore !== null
+        : Number(score) !== initialScore;
+    const feedbackDirty = feedback.trim() !== (initialFeedback ?? "").trim();
+    onDirtyChange?.(scoreDirty || feedbackDirty);
+  }, [score, feedback, initialScore, initialFeedback, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const [scoreError, setScoreError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
