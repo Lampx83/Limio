@@ -372,29 +372,31 @@ Hiện **học viên không có đường nào vào đề thi** từ trang khoá
 **Trạng thái G5c (2026-10-04, chưa commit):** xong trừ nút "Luyện đề" (chờ G5e). Test mới: `mock-retake.test.ts` (9: thi lại có chủ ý, tiếp tục lượt dở, không tạo lượt song song, đề thường vẫn một lượt, công tắc, không XP), `mock-templates.test.ts` (8), `mock-catalog.test.ts` (6); core `exam` 625 xanh, web 572 xanh. Migration `20261004120000_exam_allow_mock` (cột `Exam.allowMock`, mặc định bật) đã áp lên DB test và DB dev. **Đã chạy thật trên dev:** thẻ "Luyện thi" → màn trước phòng thi (đồng hồ chưa chạy, không tạo lượt) → bấm sẵn sàng vào phòng thi → nộp hết → thẻ "Đã thi 1 lần · Xem kết quả · Thi lại" → `?retake=1` hiện "Lượt thi thử thứ 2"; mở link không có `?retake=1` sau khi đã nộp thì sang kết quả. **Chưa thử bằng mắt:** bộ chọn khung đề ở trang tạo đề của giảng viên (`MockTemplatePicker`) và công tắc "Cho thi thử" (cần đăng nhập giảng viên; logic đã có test ở core); nút "Thử loa" (âm 440 Hz tạo trong trình duyệt, bài mẫu không có audio nên nút không hiện). Lượt dở đã hết giờ nhưng chưa ai nộp (cron tự nộp chưa chạy trên dev) vẫn hiện "Tiếp tục" — bấm vào sẽ được nộp nốt và sang kết quả. G5c.3: mới có nút Thi thử; G5c.7: mới có công tắc "Cho thi thử" (công tắc "Cho luyện đề" thêm ở G5e). Khung đề: HSK = Nghe·Đọc·Viết; IELTS = Listening·Reading·Writing (không Speaking); TOEIC = Listening·Reading; Tuỳ chỉnh = trống — chỉ cấu trúc, không giờ/câu hỏi/quy đổi.
 
 ### G5d · Kết quả theo phần, so với lượt trước, và khối "Thi thử" trên hồ sơ
-Schema: `ExamAttempt.sectionResults Json?` (dẫn xuất, tính một lần khi chấm xong); `ExamSection.scoreBands Json?` (bảng quy đổi do giảng viên nhập).
-- [ ] **G5d.1** Hàm thuần `computeSectionResults`: mỗi phần có số câu đúng / tổng, điểm / điểm tối đa, và `pending` nếu còn câu tự luận chờ chấm.
-- [ ] **G5d.2** Phần có câu chờ chấm → "chờ giảng viên", **không hiện điểm giả**; điểm phần chốt khi chấm xong.
-- [ ] **G5d.3** Có bảng quy đổi → hiện **khoảng ước lượng** kèm nhãn "ước lượng, không phải điểm chính thức"; không có bảng → chỉ hiện "đúng X/Y câu".
-- [ ] **G5d.4** So với lượt trước theo từng phần: tăng · giảm · không đổi.
-- [ ] **G5d.5** Trang kết quả: theo phần, thời gian đã dùng so với được phép, xem lại bài làm theo chính sách hiện đáp án có sẵn.
-- [ ] **G5d.6** Hồ sơ 4 kỹ năng có khối "Thi thử" đọc `sectionResults` của lượt mới nhất và lượt trước, nhóm theo `languageSkill` của phần. **Không trộn vào nhãn Cần ôn / Nên luyện / Vững** vì chưa có đường từ bài thi sang BKT.
-- [ ] **G5d.7** Học viên chỉ xem kết quả của mình; giảng viên/trợ giảng xem qua API.
-- [ ] **G5d.8** Phần Nói nằm ngoài thi thử (có thi vấn đáp riêng); phần Viết là câu tự luận, chờ giảng viên chấm.
+Schema: `ExamSection.scoreBands Json?` (bảng quy đổi do giảng viên nhập). **Khác thiết kế nháp:** kết quả theo phần được **dẫn xuất khi đọc** (hàm thuần `computeSectionResults` + truy vấn đáp án đã chấm), KHÔNG lưu cột `ExamAttempt.sectionResults` — đề đã có lượt thi không đổi cấu trúc nên luôn dựng lại được, và không có bản sao nào để lệch.
+- [x] **G5d.1** Hàm thuần `computeSectionResults`: mỗi phần có số câu đúng / tổng, điểm / điểm tối đa, và `pending` nếu còn câu tự luận chờ chấm.
+- [x] **G5d.2** Phần có câu chờ chấm → "chờ giảng viên", **không hiện điểm giả**; điểm phần chốt khi chấm xong.
+- [x] **G5d.3** Có bảng quy đổi → hiện **khoảng ước lượng** kèm nhãn "ước lượng, không phải điểm chính thức"; không có bảng → chỉ hiện "đúng X/Y câu".
+- [x] **G5d.4** So với lượt trước theo từng phần: tăng · giảm · không đổi.
+- [x] **G5d.5** Trang kết quả: theo phần, thời gian đã dùng so với được phép, xem lại bài làm theo chính sách hiện đáp án có sẵn.
+- [x] **G5d.6** Hồ sơ 4 kỹ năng có khối "Thi thử" đọc `sectionResults` của lượt mới nhất và lượt trước, nhóm theo `languageSkill` của phần. **Không trộn vào nhãn Cần ôn / Nên luyện / Vững** vì chưa có đường từ bài thi sang BKT.
+- [x] **G5d.7** Học viên chỉ xem kết quả của mình; giảng viên/trợ giảng xem qua API.
+- [x] **G5d.8** Phần Nói nằm ngoài thi thử (có thi vấn đáp riêng); phần Viết là câu tự luận, chờ giảng viên chấm.
+
+**Trạng thái G5d (2026-10-04, chưa commit):** xong. Test: `section-results.test.ts` (15, thuần), `mock-results.test.ts` (11, dữ liệu thật gồm chấm tay), `scoreBandsText.test.ts` (4); core `exam` 651 xanh, web 585 xanh. Migration `20261004140000_exam_section_score_bands` đã áp DB test và dev. **Đã chạy thật trên dev:** API `section-results` (giảng viên xem lượt của học viên → 200 với đủ phần, ước lượng, xu hướng ▲); trang soạn đề của giảng viên (bảng giờ/kỹ năng, công tắc "Cho thi thử", ô bảng quy đổi: sai cú pháp báo đúng dòng, khoảng chồng nhau bị máy chủ từ chối, lưu thành công); hai khối hiển thị (bảng "Kết quả theo phần" và khối "Thi thử" ở hồ sơ) qua một trang xem thử tạm (đã xoá). **Chưa xem bằng mắt qua tài khoản học viên thật:** trang kết quả và hồ sơ `/learn/<khoá>/skills` (trình duyệt trong ứng dụng đang đăng nhập giảng viên). **Số liệu mẫu:** bảng quy đổi "100–150 / 150–200" đã đặt cho phần Nghe và Đọc của đề mẫu chỉ là SỐ MẪU để thử, không phải thang điểm chính thức. Giới hạn: "so với lần trước" so theo tỉ lệ điểm từng phần với lượt đã nộp ngay trước đó; phần còn câu chờ chấm ở một trong hai lượt thì không so.
 
 ### G5e · Luyện đề theo kỹ năng *(mới, 2026-10-04; làm sau G5c)*
 **Một bộ đề, hai cách chạy** (như Magoosh/PREP: đề đầy đủ có bấm giờ **và** luyện theo phần/kỹ năng). Khác thi thử: học viên tự chọn phạm vi, không ép giờ, quay lại tự do, xem đáp án ngay.
 Schema (chỉ thêm): `ExamAttempt.mode` (`mock` | `practice`; hàng cũ để trống = đề thường); `ExamAttempt.scope Json?` (danh sách phần học viên chọn). **Rủi ro lớn nhất:** chỉ mục SQL thô "mỗi người một lượt" trên `(examId, userId)` phải loại trừ lượt `practice` để cho nhiều lượt luyện — migration cần review tay.
-- [ ] **G5e.1** Học viên chọn phạm vi luyện: một hoặc nhiều **kỹ năng** (theo `ExamSection.languageSkill`), hoặc **từng phần**, hoặc cả đề; tuỳ chọn "chỉ câu chưa làm" / "chỉ câu từng sai". Phạm vi rỗng → không bắt đầu được.
-- [ ] **G5e.2** Lượt luyện chỉ chứa câu thuộc phạm vi (máy chủ chỉ gửi câu trong phạm vi). Không có đồng hồ ép buộc, không bị cron tự nộp; có công tắc **bấm giờ** tuỳ chọn (chỉ hiển thị, không ép).
-- [ ] **G5e.3** Điều hướng tự do, quay lại sửa đáp án được; **tạm dừng và làm tiếp** sau (lượt giữ nguyên tới khi nộp hoặc bỏ).
-- [ ] **G5e.4** Nút **Kiểm tra** (mặc định bật, học viên tắt được): sau khi trả lời một câu, máy chủ trả đúng/sai và đáp án đúng. **Endpoint này chỉ phục vụ lượt `practice` — lượt `mock` luôn bị từ chối** (không được lộ đáp án trong lúc thi thử, kể cả khi cố gọi trực tiếp).
-- [ ] **G5e.5** Audio: nghe lại tuỳ ý (bỏ qua `audioPolicy` của G5b); lời thoại hiện **sau khi** đã kiểm tra câu đó.
-- [ ] **G5e.6** Nhiều lượt luyện cùng đề, không giới hạn, độc lập với lượt thi thử và không ảnh hưởng chính sách một-lượt của đề thường.
-- [ ] **G5e.7** Kết thúc: kết quả **theo kỹ năng** (đúng X/Y), danh sách câu sai kèm đáp án đúng, nút **Làm lại câu sai** (mở lượt luyện mới chỉ với các câu đó).
-- [ ] **G5e.8** Không cấp XP. Mỗi câu đã trả lời phát `exam.practice.answered` kèm thẻ kỹ năng (để sau này nuôi BKT mà không phải làm lại), **nhưng chưa nuôi BKT** và không trộn vào nhãn Cần ôn / Nên luyện / Vững. Hồ sơ 4 kỹ năng có khối **"Luyện đề"** riêng: độ chính xác theo kỹ năng, số lượt, lần gần nhất.
-- [ ] **G5e.9** Chỉ học viên đã ghi danh luyện được; đề không bật "Cho luyện đề" (G5c.7) hoặc chưa xuất bản → 403.
-- [ ] **G5e.10** Giải thích đáp án: bước đầu chỉ hiện đáp án đúng. Trường giải thích (`ExamQuestion.explanation`, tuỳ chọn) làm **sau**; khi có thì hiện cùng đáp án.
+- [x] **G5e.1** Học viên chọn phạm vi luyện: một hoặc nhiều **kỹ năng** (theo `ExamSection.languageSkill`), hoặc **từng phần**, hoặc cả đề; tuỳ chọn "chỉ câu chưa làm" / "chỉ câu từng sai". Phạm vi rỗng → không bắt đầu được.
+- [x] **G5e.2** Lượt luyện chỉ chứa câu thuộc phạm vi (máy chủ chỉ gửi câu trong phạm vi). Không có đồng hồ ép buộc, không bị cron tự nộp; có công tắc **bấm giờ** tuỳ chọn (chỉ hiển thị, không ép).
+- [x] **G5e.3** Điều hướng tự do, quay lại sửa đáp án được; **tạm dừng và làm tiếp** sau (lượt giữ nguyên tới khi nộp hoặc bỏ).
+- [x] **G5e.4** Nút **Kiểm tra** (mặc định bật, học viên tắt được): sau khi trả lời một câu, máy chủ trả đúng/sai và đáp án đúng. **Endpoint này chỉ phục vụ lượt `practice` — lượt `mock` luôn bị từ chối** (không được lộ đáp án trong lúc thi thử, kể cả khi cố gọi trực tiếp).
+- [x] **G5e.5** Audio: nghe lại tuỳ ý (bỏ qua `audioPolicy` của G5b); lời thoại hiện **sau khi** đã kiểm tra câu đó.
+- [x] **G5e.6** Nhiều lượt luyện cùng đề, không giới hạn, độc lập với lượt thi thử và không ảnh hưởng chính sách một-lượt của đề thường.
+- [x] **G5e.7** Kết thúc: kết quả **theo kỹ năng** (đúng X/Y), danh sách câu sai kèm đáp án đúng, nút **Làm lại câu sai** (mở lượt luyện mới chỉ với các câu đó).
+- [x] **G5e.8** Không cấp XP. Mỗi câu đã trả lời phát `exam.practice.answered` kèm thẻ kỹ năng (để sau này nuôi BKT mà không phải làm lại), **nhưng chưa nuôi BKT** và không trộn vào nhãn Cần ôn / Nên luyện / Vững. Hồ sơ 4 kỹ năng có khối **"Luyện đề"** riêng: độ chính xác theo kỹ năng, số lượt, lần gần nhất.
+- [x] **G5e.9** Chỉ học viên đã ghi danh luyện được; đề không bật "Cho luyện đề" (G5c.7) hoặc chưa xuất bản → 403.
+- [x] **G5e.10** Giải thích đáp án: bước đầu chỉ hiện đáp án đúng. Trường giải thích (`ExamQuestion.explanation`, tuỳ chọn) làm **sau**; khi có thì hiện cùng đáp án.
 
 ### Hoãn lại (không nằm trong G5)
 - **Từ làm sai → đề xuất thêm vào thẻ ôn** (cũ: LANG.5.7): cần ánh xạ câu hỏi ↔ từ vựng mà hiện chưa có.
@@ -417,6 +419,8 @@ Schema (chỉ thêm): `ExamAttempt.mode` (`mock` | `practice`; hàng cũ để t
 5. **Không XP** cho luyện đề.
 6. Phạm vi luyện: **kỹ năng và phần** trước; nhóm câu (bài đọc/bài nghe) để sau.
 **Thứ tự mới:** G5a (đang làm; chờ bạn thử) → **G5b** nghe một lần (chỉ thi thử) → **G5c** "Luyện thi" hub + học viên tự bắt đầu → **G5e** luyện đề → **G5d** kết quả theo phần/kỹ năng cho cả hai chế độ.
+
+**Trạng thái G5e (2026-10-04, chưa commit):** xong. Test: `practice.test.ts` (25: phạm vi theo kỹ năng/phần/cả đề, bộ lọc chưa làm/từng sai, một buổi dở mỗi đề, không lộ đáp án qua dữ liệu buổi luyện, Kiểm tra, tự luận không có đúng/sai, id lượt thi bị từ chối, không ExamAttempt/XP, event, hồ sơ), `practiceSetup.test.ts` (4); core `exam` 676 xanh, web 589 xanh. Migration `20261004160000_exam_practice` (bảng mới + `Exam.allowPractice`) đã áp DB test và dev. **Đã chạy thật trên dev bằng tài khoản học viên thử:** thẻ "Luyện thi" có nút **Luyện đề** → chọn kỹ năng Nghe (nút hiện "3 câu") → làm bài, bấm **Kiểm tra** thấy "Chưa đúng" kèm đáp án đúng ✓ và lựa chọn của mình ✗ → **Kết thúc** → kết quả theo kỹ năng, 3 câu cần xem lại (câu bỏ trống có nhãn) → **Làm lại câu sai** mở buổi mới 3 câu. **Chưa xem bằng mắt:** công tắc "Cho luyện đề" của giảng viên (mới qua typecheck; cùng khuôn với "Cho thi thử" đã chạy được), khối "Luyện đề" trên hồ sơ, màn hình điện thoại hẹp. Khác nháp: câu tự luận không có đúng/sai tự động (hiện lời nhắc tự đối chiếu, không tính vào kết quả); bộ lọc "chưa làm/từng sai" chỉ dựa trên lịch sử LUYỆN (không tính bài thi thử); bài nghe phát tự do (đề mẫu chưa có audio nên chưa thử); đề tắt cả "Cho thi thử" và "Cho luyện đề" thì ẩn khỏi mục "Luyện thi".
 
 ## G6 · Feedback Viết bằng AI
 

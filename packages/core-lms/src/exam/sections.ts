@@ -19,6 +19,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
+import { ScoreBandsInput } from "./section-results";
 
 // ============================================================================
 // Pool filter schema + sampler
@@ -252,6 +253,8 @@ export const CreateSectionInput = z.object({
   // LANG G5a — chỉ có nghĩa khi đề là thi thử. null = bỏ giờ / bỏ nhãn.
   durationMin: z.number().int().min(1).max(240).nullable().optional(),
   languageSkill: z.enum(["listening", "speaking", "reading", "writing"]).nullable().optional(),
+  // LANG G5d — bảng quy đổi điểm thô → nhãn ước lượng; null/[] = bỏ bảng.
+  scoreBands: ScoreBandsInput.nullable().optional(),
 });
 
 async function assertExamEditable(
@@ -313,6 +316,7 @@ export interface SectionListItem {
   /** LANG G5a — chỉ có nghĩa khi đề là thi thử. */
   durationMin: number | null;
   languageSkill: "listening" | "speaking" | "reading" | "writing" | null;
+  scoreBands: { from: number; to: number; label: string }[] | null;
 }
 
 export async function listSections(
@@ -333,6 +337,7 @@ export async function listSections(
       poolFilter: true,
       durationMin: true,
       languageSkill: true,
+      scoreBands: true,
       _count: { select: { items: true } },
     },
   });
@@ -346,6 +351,7 @@ export async function listSections(
     itemCount: r._count.items,
     durationMin: r.durationMin,
     languageSkill: r.languageSkill,
+    scoreBands: Array.isArray(r.scoreBands) ? (r.scoreBands as unknown as { from: number; to: number; label: string }[]) : null,
   }));
 }
 
@@ -373,6 +379,9 @@ export async function updateSection(
     data.poolFilter = d.poolFilter as Prisma.InputJsonValue;
   if (d.durationMin !== undefined) data.durationMin = d.durationMin;
   if (d.languageSkill !== undefined) data.languageSkill = d.languageSkill;
+  if (d.scoreBands !== undefined) {
+    data.scoreBands = d.scoreBands && d.scoreBands.length > 0 ? (d.scoreBands as Prisma.InputJsonValue) : Prisma.JsonNull;
+  }
   if (Object.keys(data).length === 0) return;
   // Giờ phần đã có người thi thì không đổi được: đổi giữa chừng làm các lượt
   // thi không cùng điều kiện (cùng nguyên tắc với durationMin của đề).

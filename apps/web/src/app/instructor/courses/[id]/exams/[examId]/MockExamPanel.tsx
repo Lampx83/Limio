@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Timer } from "lucide-react";
+import { formatScoreBands, parseScoreBandsText, type Band } from "@/lib/scoreBandsText";
 
 type Skill = "listening" | "speaking" | "reading" | "writing";
 type Section = {
@@ -12,6 +13,7 @@ type Section = {
   selectionMode: "fixed" | "random_from_bank";
   durationMin: number | null;
   languageSkill: Skill | null;
+  scoreBands: Band[] | null;
 };
 
 const SKILL_OPTIONS: { value: Skill; label: string }[] = [
@@ -35,12 +37,14 @@ export default function MockExamPanel({
   examId,
   initialMockMode,
   initialAllowMock,
+  initialAllowPractice,
   locked,
   lockedReason,
 }: {
   examId: string;
   initialMockMode: boolean;
   initialAllowMock: boolean;
+  initialAllowPractice: boolean;
   /** true = không sửa được (đã xuất bản / đã có lượt thi / lưu trữ). */
   locked: boolean;
   lockedReason?: string;
@@ -48,6 +52,7 @@ export default function MockExamPanel({
   const router = useRouter();
   const [mock, setMock] = useState(initialMockMode);
   const [allowMock, setAllowMock] = useState(initialAllowMock);
+  const [allowPractice, setAllowPractice] = useState(initialAllowPractice);
   const [sections, setSections] = useState<Section[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -96,6 +101,10 @@ export default function MockExamPanel({
     if (await call(`/api/exams/${examId}`, { allowMock: next })) setAllowMock(next);
   }
 
+  async function toggleAllowPractice(next: boolean) {
+    if (await call(`/api/exams/${examId}`, { allowPractice: next })) setAllowPractice(next);
+  }
+
   async function patchSection(id: string, body: { durationMin?: number | null; languageSkill?: Skill | null }) {
     if (await call(`/api/exam-sections/${id}`, body)) await refresh();
     else await refresh();
@@ -141,6 +150,26 @@ export default function MockExamPanel({
             <span className="block text-faint">
               Tắt thì học viên không bắt đầu được lượt thi mới và đề biến mất khỏi mục “Luyện thi” (lượt đang làm dở vẫn
               tiếp tục được). Đổi được bất cứ lúc nào, kể cả sau khi xuất bản.
+            </span>
+          </span>
+        </label>
+      )}
+
+      {mock && (
+        <label className="mt-3 flex items-start gap-3 rounded border border-default p-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4"
+            checked={allowPractice}
+            disabled={busy}
+            onChange={(e) => void toggleAllowPractice(e.target.checked)}
+          />
+          <span>
+            <span className="font-medium">Cho luyện đề</span>
+            <span className="block text-faint">
+              Cho học viên luyện đề này theo kỹ năng hoặc từng phần: không bấm giờ, quay lại sửa tự do, xem đáp án ngay sau
+              từng câu. Kỹ năng lấy từ nhãn kỹ năng của từng phần. Tắt thì học viên không bắt đầu được buổi luyện mới.
+              Luyện đề không cộng XP và không ảnh hưởng điểm thi thử.
             </span>
           </span>
         </label>
@@ -210,6 +239,26 @@ export default function MockExamPanel({
                 <b>{total} phút</b>
                 {missing > 0 && <span className="ml-2 text-amber-700">· {missing} phần chưa có giờ — chưa xuất bản được</span>}
               </p>
+              <div className="mt-4 space-y-2" data-testid="score-bands">
+                <h3 className="text-sm font-semibold">Bảng quy đổi điểm (tuỳ chọn)</h3>
+                <p className="text-xs text-faint">
+                  Để học viên thấy <b>khoảng điểm ước lượng</b> theo từng phần. Hệ thống không mang sẵn số liệu chính thức của
+                  HSK/IELTS/TOEIC — bạn tự đối chiếu nguồn rồi nhập; học viên luôn thấy nhãn “không phải điểm chính thức”.
+                  Không nhập thì chỉ hiện “đúng X/Y câu”. Sửa được bất cứ lúc nào, kể cả sau khi có người thi.
+                </p>
+                {sections.map((sec) => (
+                  <BandsEditor
+                    key={sec.id}
+                    section={sec}
+                    disabled={busy}
+                    onSave={async (bands) => {
+                      const ok = await call(`/api/exam-sections/${sec.id}`, { scoreBands: bands });
+                      await refresh();
+                      return ok;
+                    }}
+                  />
+                ))}
+              </div>
             </>
           )}
         </div>
@@ -252,5 +301,64 @@ function DurationInput({
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
       }}
     />
+  );
+}
+
+/** Ô soạn bảng quy đổi của một phần: mỗi dòng "từ-đến: nhãn". */
+function BandsEditor({
+  section,
+  disabled,
+  onSave,
+}: {
+  section: Section;
+  disabled: boolean;
+  onSave: (bands: Band[]) => Promise<boolean>;
+}) {
+  const [text, setText] = useState(formatScoreBands(section.scoreBands));
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => setText(formatScoreBands(section.scoreBands)), [section.scoreBands]);
+
+  async function save() {
+    const parsed = parseScoreBandsText(text);
+    if (!parsed.ok) {
+      setMsg({ ok: false, text: `Dòng ${parsed.line} sai cú pháp. Dùng dạng “0-9: 100–150” (mỗi dòng một khoảng).` });
+      return;
+    }
+    const ok = await onSave(parsed.bands);
+    setMsg(ok ? { ok: true, text: parsed.bands.length ? "Đã lưu bảng quy đổi." : "Đã bỏ bảng quy đổi." } : { ok: false, text: "Không lưu được — các khoảng không được chồng nhau (từ ≤ đến)." });
+  }
+
+  return (
+    <details className="rounded border border-default px-3 py-2">
+      <summary className="cursor-pointer text-sm">
+        {section.title}
+        <span className="ml-2 text-xs text-faint">
+          {section.scoreBands && section.scoreBands.length > 0 ? `${section.scoreBands.length} khoảng` : "chưa có bảng"}
+        </span>
+      </summary>
+      <textarea
+        aria-label={`Bảng quy đổi của ${section.title}`}
+        className="mt-2 w-full rounded border border-default p-2 font-mono text-sm"
+        rows={5}
+        value={text}
+        placeholder={"0-9: 100–150\n10-19: 150–200"}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={disabled}
+          className="rounded border border-default px-3 py-1 text-sm hover:bg-slate-50 disabled:opacity-50"
+        >
+          Lưu bảng
+        </button>
+        {msg && (
+          <span role="status" className={`text-xs ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>
+            {msg.text}
+          </span>
+        )}
+      </div>
+    </details>
   );
 }

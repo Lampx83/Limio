@@ -72,6 +72,8 @@ export const UpdateExamInput = z
     mockMode: z.boolean().optional(),
     // LANG G5c — công tắc "Cho thi thử": tắt thì học viên không bắt đầu được lượt MỚI.
     allowMock: z.boolean().optional(),
+    // LANG G5e — công tắc "Cho luyện đề".
+    allowPractice: z.boolean().optional(),
     attemptPolicy: examAttemptPolicy.optional(),
     maxAttempts: MAX_ATTEMPTS.optional(),
     gradingMode: examGradingMode.optional(),
@@ -346,7 +348,7 @@ export async function updateExam(
       // Only title/description/closeAt allowed once attempts exist.
       // oralRubricText cũng được: chỉ ảnh hưởng cách CHẤM sau thi, không ảnh
       // hưởng câu hỏi SV nhận lúc thi nên không cần khoá theo tính công bằng.
-      const allowed = new Set(["title", "description", "closeAt", "oralRubricText", "allowMock"]);
+      const allowed = new Set(["title", "description", "closeAt", "oralRubricText", "allowMock", "allowPractice"]);
       const rejected = Object.keys(data).filter((k) => !allowed.has(k));
       if (rejected.length > 0) {
         throw new ExamError("exam_has_attempts", { fields: rejected });

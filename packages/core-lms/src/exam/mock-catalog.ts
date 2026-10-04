@@ -12,6 +12,8 @@ export interface MockExamCard {
   examId: string;
   title: string;
   totalMinutes: number;
+  allowMock: boolean;
+  allowPractice: boolean;
   sections: { title: string; languageSkill: string | null; durationMin: number }[];
   /** Lượt thi gần nhất của học viên; null = chưa làm. */
   attempt: { attemptId: string; status: string; submittedAt: Date | null; scorePct: number | null } | null;
@@ -26,11 +28,20 @@ export async function listMockExamsForLearner(
 ): Promise<MockExamCard[]> {
   if (!(await isUserEnrolled(userId, courseId, db))) throw new ExamError("not_enrolled");
   const exams = await db.exam.findMany({
-    where: { courseId, mockMode: true, allowMock: true, status: "published", kind: "written" },
+    where: {
+      courseId,
+      mockMode: true,
+      status: "published",
+      kind: "written",
+      // Còn hiện nếu thi thử HOẶC luyện đề đang bật (tắt cả hai thì học viên không có việc gì làm với đề).
+      OR: [{ allowMock: true }, { allowPractice: true }],
+    },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
       title: true,
+      allowMock: true,
+      allowPractice: true,
       sections: {
         orderBy: { orderIndex: "asc" },
         select: { title: true, languageSkill: true, durationMin: true },
@@ -61,6 +72,8 @@ export async function listMockExamsForLearner(
       examId: e.id,
       title: e.title,
       totalMinutes: sections.reduce((n, s) => n + s.durationMin, 0),
+      allowMock: e.allowMock,
+      allowPractice: e.allowPractice,
       sections,
       attempt: a ? { attemptId: a.id, status: a.status, submittedAt: a.submittedAt, scorePct: a.scorePct } : null,
       attemptCount: counts.get(e.id) ?? 0,

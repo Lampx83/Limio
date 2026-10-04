@@ -179,7 +179,8 @@ model User {
   portfolio Portfolio?
 
   // A6 — Certification
-  certificates Certificate[]
+  certificates         Certificate[]
+  examPracticeSessions ExamPracticeSession[]
 
   @@index([createdAt])
 }
@@ -3331,6 +3332,8 @@ model Exam {
   mockMode               Boolean             @default(false)
   // LANG G5c — giảng viên tắt = học viên không tự bắt đầu thi thử mới được (lượt đang làm dở vẫn tiếp tục).
   allowMock              Boolean             @default(true)
+  // LANG G5e — công tắc "Cho luyện đề": tắt thì học viên không bắt đầu được buổi luyện mới.
+  allowPractice          Boolean             @default(true)
   attemptPolicy          ExamAttemptPolicy   @default(single)
   // Số lượt tối đa mỗi người khi attemptPolicy=multi (chỉ đề vấn đáp AI). Bỏ qua khi single.
   maxAttempts            Int                 @default(3)
@@ -3394,21 +3397,22 @@ model Exam {
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 
-  course        Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  createdBy     User?              @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  wizardConfig  ExamWizardConfig?
-  blueprint     ExamBlueprint?
-  passages      ExamPassage[]
-  questions     ExamQuestion[]
-  attempts      ExamAttempt[]
-  assets        ExamAsset[]
-  messages      ExamMessage[]
-  candidates    ExamCandidate[]
-  schedules     ExamSession[]
-  sections      ExamSection[]
-  rooms         ExamRoom[]
-  oralMaterials OralExamMaterial[]
-  oralTopics    OralExamTopic[]
+  course           Course?               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy        User?                 @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  wizardConfig     ExamWizardConfig?
+  blueprint        ExamBlueprint?
+  passages         ExamPassage[]
+  questions        ExamQuestion[]
+  attempts         ExamAttempt[]
+  assets           ExamAsset[]
+  messages         ExamMessage[]
+  candidates       ExamCandidate[]
+  schedules        ExamSession[]
+  sections         ExamSection[]
+  rooms            ExamRoom[]
+  oralMaterials    OralExamMaterial[]
+  oralTopics       OralExamTopic[]
+  practiceSessions ExamPracticeSession[]
 
   @@index([courseId, status])
   @@index([status, openAt, closeAt])
@@ -3722,13 +3726,14 @@ model ExamQuestion {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  exam        Exam                   @relation(fields: [examId], references: [id], onDelete: Cascade)
-  passage     ExamPassage?           @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  answers     ExamAnswer[]
-  skillTags   ExamQuestionSkillTag[]
-  fromBank    ExamQuestionFromBank?
-  sectionItem ExamSectionItem?
-  stats       ExamQuestionStats?
+  exam            Exam                   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  passage         ExamPassage?           @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  answers         ExamAnswer[]
+  skillTags       ExamQuestionSkillTag[]
+  fromBank        ExamQuestionFromBank?
+  sectionItem     ExamSectionItem?
+  stats           ExamQuestionStats?
+  practiceAnswers ExamPracticeAnswer[]
 
   @@index([examId, orderInExam])
   @@index([passageId, orderInPassage])
@@ -4393,6 +4398,9 @@ model ExamSection {
   durationMin             Int?
   // LANG G5a/G5d — kỹ năng của phần, để gom kết quả theo kỹ năng.
   languageSkill           LanguageSkill?
+  // LANG G5d — bảng quy đổi điểm thô của phần → nhãn ước lượng, do giảng viên nhập:
+  // [{ from, to, label }] không chồng nhau. Hệ thống không mang sẵn số liệu chính thức.
+  scoreBands              Json?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
 
@@ -5238,4 +5246,53 @@ model ExamAudioPlay {
 
   @@unique([attemptId, playId])
   @@index([attemptId, passageId, audioKey])
+}
+
+// LANG G5e — LUYỆN ĐỀ theo kỹ năng. Cố ý là bảng RIÊNG, không dùng ExamAttempt: lượt luyện không có
+// giờ ép buộc, không có cron tự nộp, không vào bảng điểm/giám sát/thống kê của giảng viên, nên
+// không đụng chỉ mục "mỗi người một lượt dở" và mọi chỗ đếm ExamAttempt.
+enum ExamPracticeStatus {
+  in_progress
+  completed
+  abandoned
+}
+
+model ExamPracticeSession {
+  id           String             @id @default(uuid())
+  examId       String
+  userId       String
+  status       ExamPracticeStatus @default(in_progress)
+  // { sectionIds, questionIds (đã chốt lúc bắt đầu, theo thứ tự), filter, retryOfSessionId? }
+  scope        Json
+  // Học viên bật "Kiểm tra từng câu" (xem đúng/sai ngay sau khi trả lời).
+  checkEnabled Boolean            @default(true)
+  // Chỉ để HIỂN THỊ đồng hồ (không ép).
+  timed        Boolean            @default(false)
+  startedAt    DateTime           @default(now())
+  completedAt  DateTime?
+
+  exam    Exam                 @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers ExamPracticeAnswer[]
+
+  @@index([userId, examId, status])
+}
+
+model ExamPracticeAnswer {
+  id         String    @id @default(uuid())
+  sessionId  String
+  questionId String
+  answerJson Json
+  // null = chưa chấm hoặc câu chấm tay (tự luận) không có đúng/sai tự động.
+  isCorrect  Boolean?
+  score      Float?
+  checkedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  session  ExamPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question ExamQuestion        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@index([questionId])
 }

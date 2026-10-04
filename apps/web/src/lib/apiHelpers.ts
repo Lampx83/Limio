@@ -164,6 +164,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.code === "cohort_not_found" ||
       err.code === "schedule_not_found" ||
       err.code === "section_not_found" ||
+      err.code === "practice_session_not_found" ||
       err.code === "round_not_found" ||
       err.code === "material_not_found" ||
       err.code === "topic_not_found"
@@ -171,6 +172,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
         : err.code === "attempt_belongs_to_other" ||
             err.code === "not_enrolled" ||
             err.code === "audio_plays_exhausted" ||
+            err.code === "practice_disabled" ||
             err.code === "forbidden"
           ? 403
           : err.code === "exam_has_attempts" ||
@@ -182,6 +184,9 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "session_stale" ||
               err.code === "section_not_active" ||
               err.code === "mock_disabled" ||
+              err.code === "practice_session_closed" ||
+              err.code === "practice_check_disabled" ||
+              err.code === "practice_not_answered" ||
               err.code === "exam_not_open" ||
               err.code === "exam_window_closed" ||
               err.code === "attempt_not_in_progress" ||
@@ -196,6 +201,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "cohort_required"
             ? 409
             : err.code === "exam_not_publishable" ||
+                err.code === "practice_scope_empty" ||
                 err.code === "duration_extension_too_large" ||
                 err.code === "bank_question_not_publishable" ||
                 err.code === "bank_question_already_archived" ||

@@ -319,6 +319,7 @@ export default async function EditExamPage({
               examId={exam.id}
               initialMockMode={exam.mockMode}
               initialAllowMock={exam.allowMock}
+              initialAllowPractice={exam.allowPractice}
               locked={exam.status !== "draft" || hasAttempts}
               lockedReason={
                 exam.status !== "draft"
