@@ -556,11 +556,21 @@ export default async function InstructorCourseEditPage({
       {/* TAB: Lớp học (invite link) */}
       {tab === "sections" && (
         <div className="mt-8 space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold">Lớp học</h2>
-            <p className="mt-1 text-sm text-muted">
-              Cùng 1 khoá học có thể có nhiều lớp — mỗi lớp có link mời riêng để học viên tự đăng ký.
-            </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold">Lớp học</h2>
+              <p className="mt-1 text-sm text-muted">
+                Cùng 1 khoá học có thể có nhiều lớp — mỗi lớp có link mời riêng để học viên tự đăng ký.
+              </p>
+            </div>
+            {canEdit && (
+              <Link
+                href={`/instructor/courses/${course.id}/teams`}
+                className="btn-secondary btn-sm"
+              >
+                Nhóm làm bài tập
+              </Link>
+            )}
           </div>
           <SectionsClient courseId={course.id} showResearch={canResearch} />
         </div>

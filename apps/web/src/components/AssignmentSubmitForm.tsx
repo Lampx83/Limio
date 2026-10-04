@@ -21,12 +21,20 @@ export default function AssignmentSubmitForm({
   responseFormat = "text",
   requireSelfRating = false,
   requireReflection = false,
+  teamMode = false,
+  teamName = null,
+  alreadyGraded = false,
 }: {
   assignmentId: string;
   pedagogicalIntent?: GenerativeActivityType | null;
   responseFormat?: ResponseFormat;
   requireSelfRating?: boolean;
   requireReflection?: boolean;
+  /** Bài tập nộp theo nhóm: một người nộp là cả nhóm có bài (docs/group-submission-AC.md C2, C5). */
+  teamMode?: boolean;
+  teamName?: string | null;
+  /** Bài nhóm đã chấm — nộp lại sẽ đưa cả nhóm về chưa chấm, nên hỏi xác nhận trước. */
+  alreadyGraded?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -102,6 +110,13 @@ export default function AssignmentSubmitForm({
       toast.error("Hoạt động này cần tải lên file hoặc dán URL.");
       return;
     }
+    if (
+      teamMode &&
+      alreadyGraded &&
+      !window.confirm("Nộp lại sẽ đưa bài của cả nhóm về trạng thái chưa chấm. Tiếp tục?")
+    ) {
+      return;
+    }
     setBusy(true);
     const payload: Record<string, unknown> = {
       body: body.trim() || (isSpeaking ? "(bài nói)" : body),
@@ -118,9 +133,11 @@ export default function AssignmentSubmitForm({
     setBusy(false);
     if (res.ok) {
       toast.success("Đã nộp bài", {
-        description: pedagogicalIntent
-          ? "Phản hồi sẽ được tổng hợp dần."
-          : "Chờ instructor chấm điểm.",
+        description: teamMode
+          ? "Cả nhóm đã có bài. Chờ giảng viên chấm."
+          : pedagogicalIntent
+            ? "Phản hồi sẽ được tổng hợp dần."
+            : "Chờ instructor chấm điểm.",
       });
       reset();
       setOpen(false);
@@ -128,8 +145,12 @@ export default function AssignmentSubmitForm({
     } else {
       const d = await res.json().catch(() => ({}));
       toast.error("Nộp bài thất bại", {
-        description: d.error ?? "Vui lòng thử lại.",
+        description:
+          d.error === "no_team"
+            ? "Bài tập này nộp theo nhóm. Bạn cần vào một nhóm trước khi nộp."
+            : (d.error ?? "Vui lòng thử lại."),
       });
+      if (d.error === "no_team") router.refresh();
     }
   }
 
@@ -146,6 +167,12 @@ export default function AssignmentSubmitForm({
       onSubmit={onSubmit}
       className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
     >
+      {teamMode && (
+        <p className="text-xs text-muted">
+          {teamName ? <>Bạn nộp cho nhóm <span className="font-semibold">{teamName}</span>. </> : null}
+          Một người nộp là cả nhóm có bài.
+        </p>
+      )}
       {promptHint && (
         <p className="rounded-lg border border-brand-200 bg-brand-soft p-2 text-xs text-brand-700">
           💡 {promptHint}
@@ -273,7 +300,9 @@ export default function AssignmentSubmitForm({
         </button>
       </div>
       <p className="text-xs text-faint">
-        Nộp lại sẽ ghi đè bài cũ và trở về trạng thái &ldquo;chưa chấm&rdquo;.
+        {teamMode
+          ? <>Nộp lại sẽ ghi đè bài của cả nhóm và đưa cả nhóm về trạng thái &ldquo;chưa chấm&rdquo;.</>
+          : <>Nộp lại sẽ ghi đè bài cũ và trở về trạng thái &ldquo;chưa chấm&rdquo;.</>}
       </p>
     </form>
   );

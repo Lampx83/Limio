@@ -150,6 +150,7 @@ export default async function LessonPage({
           requireSelfRating: true,
           requireReflection: true,
           countsTowardGrade: true,
+          submissionMode: true,
           submissions: {
             // NEVER pass a nullable userId straight in: Prisma reads `undefined`
             // as "drop this condition", so an anonymous visitor would match every
@@ -165,6 +166,11 @@ export default async function LessonPage({
               feedback: true,
               selfRating: true,
               reflection: true,
+              // Nộp theo nhóm — ai nộp lần cuối, lúc nào, và "Phần việc của tôi".
+              teamId: true,
+              teamSubmittedAt: true,
+              contributionNote: true,
+              submittedBy: { select: { displayName: true } },
             },
           },
         },
@@ -405,6 +411,28 @@ export default async function LessonPage({
     visibleAssignments.map((a) => ({ id: a.id, courseId: lesson.module.course.id, dueAt: a.dueAt })),
   );
 
+  // Nộp theo nhóm — học viên đã có nhóm trong khoá chưa, và danh sách nhóm đã khoá chưa
+  // (thẻ bài tập nhóm dùng để chọn lời nhắc). Chỉ truy vấn khi bài có bài tập nhóm.
+  const hasTeamAssignment = visibleAssignments.some((a) => a.submissionMode === "team");
+  const [teamMembership, teamSettings] = hasTeamAssignment
+    ? await Promise.all([
+        prisma.courseTeamMember.findUnique({
+          where: { courseId_userId: { courseId: lesson.module.course.id, userId } },
+          select: { team: { select: { id: true, name: true } } },
+        }),
+        prisma.course.findUnique({
+          where: { id: lesson.module.course.id },
+          select: { teamsLockedAt: true },
+        }),
+      ])
+    : [null, null];
+  const teamContext = hasTeamAssignment
+    ? {
+        team: teamMembership?.team ?? null,
+        locked: teamSettings?.teamsLockedAt != null,
+      }
+    : null;
+
   const quizAttempts = visibleQuizzes.length
     ? await prisma.quizAttempt.findMany({
         where: { userId, quizId: { in: visibleQuizzes.map((q) => q.id) } },
@@ -480,6 +508,7 @@ export default async function LessonPage({
       responseFormat: a.responseFormat,
       requireSelfRating: a.requireSelfRating,
       requireReflection: a.requireReflection,
+      submissionMode: a.submissionMode,
       submission: a.submissions[0]
         ? {
             id: a.submissions[0].id,
@@ -506,6 +535,10 @@ export default async function LessonPage({
             submittedAt: a.submissions[0].submittedAt,
             score: a.submissions[0].score,
             feedback: a.submissions[0].feedback,
+            teamId: a.submissions[0].teamId,
+            teamSubmittedAt: a.submissions[0].teamSubmittedAt,
+            submittedByName: a.submissions[0].submittedBy?.displayName ?? null,
+            contributionNote: a.submissions[0].contributionNote,
           }
         : null,
       _sort: a.createdAt.getTime(),
@@ -786,7 +819,7 @@ export default async function LessonPage({
       >
         {{
           tasks: (
-            <LessonTasksTab items={tasks} courseSlug={params.slug} />
+            <LessonTasksTab items={tasks} courseSlug={params.slug} teamContext={teamContext} />
           ),
           forum: (
             <LessonForumSection

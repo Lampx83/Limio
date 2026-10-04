@@ -22,6 +22,7 @@ import {
   type GenerativeActivityType,
 } from "@/lib/generativeActivity";
 import GenerativeTypePicker from "@/components/GenerativeTypePicker";
+import SubmissionModeField, { type SubmissionMode } from "./SubmissionModeField";
 
 interface Assignment {
   id: string;
@@ -35,6 +36,7 @@ interface Assignment {
   requireReflection?: boolean;
   countsTowardGrade?: boolean;
   rubricText?: string | null;
+  submissionMode?: SubmissionMode;
 }
 
 export default function AssignmentSection({
@@ -69,6 +71,9 @@ export default function AssignmentSection({
   const [requireReflection, setRequireReflection] = useState(
     assignment.requireReflection ?? false,
   );
+  const [submissionMode, setSubmissionMode] = useState<SubmissionMode>(
+    assignment.submissionMode ?? "individual",
+  );
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -89,6 +94,10 @@ export default function AssignmentSection({
       requireSelfRating,
       requireReflection,
     };
+    // Chỉ gửi khi GV thực sự đổi — tránh lần lưu khác bị chặn vì "đã có bài nộp".
+    if (submissionMode !== (assignment.submissionMode ?? "individual")) {
+      payload.submissionMode = submissionMode;
+    }
     if (pedagogicalIntent) {
       payload.responseFormat =
         GENERATIVE_PRESETS[pedagogicalIntent].responseFormat;
@@ -101,7 +110,12 @@ export default function AssignmentSection({
     });
     if (!res.ok) {
       setBusy(false);
-      setError("Chưa lưu được bài tập. Kiểm tra rồi thử lại.");
+      const d = (await res.json().catch(() => ({}))) as { details?: unknown };
+      setError(
+        d.details === "submission_mode_locked"
+          ? "Không đổi được cách nộp vì đã có bài nộp."
+          : "Chưa lưu được bài tập. Kiểm tra rồi thử lại.",
+      );
       return;
     }
     // Hạn riêng từng lớp lưu tiếp ngay sau đó (cùng một lần bấm Lưu).
@@ -156,6 +170,9 @@ export default function AssignmentSection({
                   <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-700">
                     {GENERATIVE_PRESETS[assignment.pedagogicalIntent].label}
                   </span>
+                )}
+                {assignment.submissionMode === "team" && (
+                  <span className="chip bg-sky-100 text-sky-700">Nộp theo nhóm</span>
                 )}
                 {isHidden && <span className="chip-danger text-xs">👁️ Ẩn</span>}
               </div>
@@ -269,6 +286,11 @@ export default function AssignmentSection({
               className="input h-8 w-24"
             />
           </label>
+          <SubmissionModeField
+            name={`submission-mode-${assignment.id}`}
+            value={submissionMode}
+            onChange={setSubmissionMode}
+          />
           <SectionDeadlinesPanel
             ref={sectionsRef}
             kind="assignment"

@@ -3,6 +3,9 @@ import AssignmentSubmitForm from "@/components/AssignmentSubmitForm";
 import WritingFeedbackPanel, { type LearnerFeedbackState } from "@/components/WritingFeedbackPanel";
 import SpeakingFeedbackPanel, { type LearnerSpeakingState } from "@/components/SpeakingFeedbackPanel";
 import SafeHtml from "@/components/SafeHtml";
+import ContributionNoteEditor from "@/components/lesson/ContributionNoteEditor";
+import { DateTime } from "@/components/ui";
+import { COURSE_TEAM_ANCHOR } from "@/components/course/courseTeamAnchor";
 import { plainToRichHtml } from "@/lib/richText";
 import type {
   GenerativeActivityType,
@@ -29,6 +32,8 @@ export type AssignmentItem = {
   responseFormat: ResponseFormat;
   requireSelfRating: boolean;
   requireReflection: boolean;
+  /** Nộp theo nhóm: một người nộp, cả nhóm có bài (docs/group-submission-AC.md C). */
+  submissionMode?: "individual" | "team";
   submission: {
     id: string;
     status: string;
@@ -39,7 +44,19 @@ export type AssignmentItem = {
     writingFeedback?: { enabled: true; initial: LearnerFeedbackState | null };
     /** G7 — bài nộp dạng ghi âm ở khoá ngoại ngữ (không phải lớp đối chứng): góp ý bài nói. */
     speakingFeedback?: { enabled: true; initial: LearnerSpeakingState | null };
+    /** Bài nộp nhóm: có teamId; ai nộp lần cuối, lúc nào; "Phần việc của tôi". */
+    teamId?: string | null;
+    teamSubmittedAt?: Date | null;
+    submittedByName?: string | null;
+    contributionNote?: string | null;
   } | null;
+};
+
+/** Nhóm của học viên trong khoá — chỉ có khi bài học có bài tập nộp theo nhóm. */
+export type TeamContext = {
+  team: { id: string; name: string } | null;
+  /** Danh sách nhóm đã khoá: học viên không tự vào/đổi nhóm được nữa. */
+  locked: boolean;
 };
 
 export type TaskItem = QuizItem | AssignmentItem;
@@ -104,8 +121,18 @@ function QuizCard({ item, courseSlug }: { item: QuizItem; courseSlug: string }) 
   );
 }
 
-function AssignmentCard({ item }: { item: AssignmentItem }) {
+function AssignmentCard({
+  item,
+  courseSlug,
+  teamContext,
+}: {
+  item: AssignmentItem;
+  courseSlug: string;
+  teamContext: TeamContext | null;
+}) {
   const sub = item.submission;
+  const isTeam = item.submissionMode === "team";
+  const hasTeam = !!teamContext?.team;
   const chip = !sub ? (
     <StatusChip variant="todo">Chưa nộp</StatusChip>
   ) : sub.status === "graded" ? (
@@ -129,6 +156,9 @@ function AssignmentCard({ item }: { item: AssignmentItem }) {
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{item.title}</p>
             <p className="text-xs text-faint">
+              {isTeam && (
+                <span className="chip-brand mr-1.5 px-2 py-0 text-[11px]">Bài tập nhóm</span>
+              )}
               Assignment · max {item.maxScore}đ
               {item.dueAt && (
                 <> · hạn {formatDateTime(item.dueAt)}</>
@@ -155,6 +185,14 @@ function AssignmentCard({ item }: { item: AssignmentItem }) {
           />
         )}
 
+        {isTeam && sub?.teamSubmittedAt && (
+          <p className="text-meta mt-3">
+            Nộp lần cuối bởi{" "}
+            <span className="font-medium text-[rgb(var(--text))]">{sub.submittedByName ?? "một thành viên"}</span>{" "}
+            lúc <DateTime value={sub.teamSubmittedAt.toISOString()} />
+          </p>
+        )}
+
         {sub?.status === "graded" && sub.feedback && (
           <div className="mt-3 rounded-lg border border-success-100 bg-success-50 p-3">
             <p className="text-xs font-semibold text-success-700">Nhận xét</p>
@@ -176,14 +214,38 @@ function AssignmentCard({ item }: { item: AssignmentItem }) {
           </div>
         )}
 
+        {isTeam && sub?.teamId && (
+          <div className="mt-4">
+            <ContributionNoteEditor submissionId={sub.id} initialNote={sub.contributionNote ?? null} />
+          </div>
+        )}
+
         <div className="mt-4">
-          <AssignmentSubmitForm
-            assignmentId={item.id}
-            pedagogicalIntent={item.pedagogicalIntent}
-            responseFormat={item.responseFormat}
-            requireSelfRating={item.requireSelfRating}
-            requireReflection={item.requireReflection}
-          />
+          {isTeam && !hasTeam ? (
+            <div className="banner-info flex-col gap-1">
+              <p>Bài tập này nộp theo nhóm. Bạn cần vào một nhóm trước khi nộp.</p>
+              {teamContext?.locked ? (
+                <p className="text-meta">Danh sách nhóm đã khoá — bạn liên hệ giảng viên để được xếp nhóm.</p>
+              ) : (
+                <Link href={`/learn/${courseSlug}#${COURSE_TEAM_ANCHOR}`} className="link text-sm font-medium">
+                  Tạo hoặc vào nhóm →
+                </Link>
+              )}
+            </div>
+          ) : (
+            <AssignmentSubmitForm
+              assignmentId={item.id}
+              pedagogicalIntent={item.pedagogicalIntent}
+              responseFormat={item.responseFormat}
+              requireSelfRating={item.requireSelfRating}
+              requireReflection={item.requireReflection}
+              {...(isTeam && {
+                teamMode: true,
+                teamName: teamContext?.team?.name ?? null,
+                alreadyGraded: sub?.status === "graded",
+              })}
+            />
+          )}
         </div>
       </div>
     </details>
@@ -193,9 +255,11 @@ function AssignmentCard({ item }: { item: AssignmentItem }) {
 export default function LessonTasksTab({
   items,
   courseSlug,
+  teamContext = null,
 }: {
   items: TaskItem[];
   courseSlug: string;
+  teamContext?: TeamContext | null;
 }) {
   if (items.length === 0) {
     return (
@@ -212,7 +276,7 @@ export default function LessonTasksTab({
           {it.kind === "quiz" ? (
             <QuizCard item={it} courseSlug={courseSlug} />
           ) : (
-            <AssignmentCard item={it} />
+            <AssignmentCard item={it} courseSlug={courseSlug} teamContext={teamContext} />
           )}
         </li>
       ))}

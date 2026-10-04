@@ -111,7 +111,13 @@ export async function deleteUser(
     const removedFiles: string[] = [];
     for (const s of audioSubs) {
       const m = /\/api\/assignment-media\/([A-Za-z0-9._-]+)$/.exec(s.attachmentUrl ?? "");
-      if (m) removedFiles.push(m[1]!);
+      // Bài nộp nhóm: các thành viên khác trỏ cùng một tệp — chỉ gỡ liên kết của
+      // người bị xoá, KHÔNG xoá tệp khỏi kho khi người khác còn dùng.
+      const sharedWithOthers =
+        (await tx.assignmentSubmission.count({
+          where: { attachmentUrl: s.attachmentUrl, userId: { not: targetUserId } },
+        })) > 0;
+      if (m && !sharedWithOthers) removedFiles.push(m[1]!);
       await tx.assignmentSubmission.update({ where: { id: s.id }, data: { attachmentUrl: null } });
     }
     // A8 — e-portfolio là trang trưng bày gắn danh tính; ẩn danh hoá mà giữ

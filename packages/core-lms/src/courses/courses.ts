@@ -697,6 +697,8 @@ export async function duplicateCourse(
               requireSelfRating: a.requireSelfRating,
               requireReflection: a.requireReflection,
               countsTowardGrade: a.countsTowardGrade,
+              // Nhóm KHÔNG được chép sang khoá mới — chỉ chế độ nộp.
+              submissionMode: a.submissionMode,
             },
           });
           await attachLessonActivity(tx, newLesson.id, "assignment", newAssignment.id);

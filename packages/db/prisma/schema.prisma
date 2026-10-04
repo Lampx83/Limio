@@ -84,6 +84,9 @@ model User {
   tournamentRegistrations        TournamentRegistration[]
   tournamentCreated              Tournament[]              @relation("TournamentCreator")
   tournamentTeamsCaptained       TournamentTeam[]          @relation("TeamCaptain")
+  courseTeamsCaptained           CourseTeam[]              @relation("CourseTeamCaptain")
+  courseTeamMemberships          CourseTeamMember[]
+  teamSubmissionsSubmitted       AssignmentSubmission[]    @relation("TeamSubmitter")
   hackathonVotes                 HackathonVote[]           @relation("HackathonVoter")
   tournamentJudgeOf              TournamentJudge[]         @relation("TournamentJudge")
   missionSubmissions             MissionSubmission[]
@@ -453,10 +456,16 @@ model Course {
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents             Int?
   currency               String       @default("USD")
+  /// Nộp bài theo nhóm — số người tối đa mỗi nhóm (null = không giới hạn).
+  teamMaxSize            Int?
+  /// Nộp bài theo nhóm — khi khác null, sinh viên không tự tạo/vào/rời nhóm
+  /// được nữa; chỉ giảng viên chuyển người. Xem docs/group-submission-AC.md.
+  teamsLockedAt          DateTime?
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
 
   modules               Module[]
+  teams                 CourseTeam[]
   enrollments           Enrollment[]
   instructors           CourseInstructor[]
   liveDeckGroups        LiveDeckGroup[]
@@ -1590,6 +1599,9 @@ model Assignment {
   requireSelfRating Boolean                 @default(false)
   requireReflection Boolean                 @default(false)
   countsTowardGrade Boolean                 @default(true)
+  /// individual = mỗi học viên một bài; team = một người nộp cho cả nhóm
+  /// (CourseTeam), bài được chép thành một dòng cho từng thành viên.
+  submissionMode    SubmissionMode          @default(individual)
 
   // GV tự gõ, dùng làm ngữ cảnh khi bấm "Gợi ý điểm bằng AI" trên từng bài
   // nộp — không bắt buộc, AI vẫn chấm được nếu để trống (chỉ kém căn cứ hơn).
@@ -1677,8 +1689,25 @@ model AssignmentSubmission {
   reflection String? @db.Text
   aiFeedback Json?
 
+  // Nộp theo nhóm (Assignment.submissionMode = team). Mỗi thành viên lúc nộp
+  // có một dòng cùng body/attachmentUrl/teamId. teamScore = điểm GV chấm cho
+  // cả nhóm; score = điểm thực của người này (= teamScore trừ khi
+  // scoreOverridden — GV chỉnh riêng, chấm lại nhóm không ghi đè).
+  teamId            String?
+  submittedById     String?
+  // Mốc chung của một lần nộp nhóm — mọi dòng chép ra từ cùng một lần bấm nộp
+  // mang cùng giá trị. Chấm nhóm chỉ áp cho lần nộp mới nhất; dòng của người
+  // đã rời nhóm giữ mốc cũ nên không bị chấm đè.
+  teamSubmittedAt   DateTime?
+  contributionNote  String?   @db.Text
+  teamScore         Int?
+  scoreOverridden   Boolean   @default(false)
+  scoreOverrideNote String?
+
   assignment        Assignment             @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   user              User                   @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
+  team              CourseTeam?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  submittedBy       User?                  @relation("TeamSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
   grader            User?                  @relation("Grader", fields: [graderId], references: [id])
   // A8 — bài này đang được ghim vào e-portfolio của học viên.
   portfolioItems    PortfolioItem[]
@@ -1690,6 +1719,49 @@ model AssignmentSubmission {
   @@unique([assignmentId, userId])
   @@index([userId, submittedAt])
   @@index([assignmentId, status])
+  @@index([assignmentId, teamId])
+}
+
+enum SubmissionMode {
+  individual
+  team
+}
+
+/// Nhóm cố định của một khoá học, do học viên tự lập (trưởng nhóm tạo, gửi mã
+/// cho thành viên — cùng mẫu TournamentTeam). Mỗi khoá một bộ nhóm, mỗi học
+/// viên tối đa một nhóm trong một khoá. Xem docs/group-submission-AC.md.
+model CourseTeam {
+  id        String   @id @default(uuid())
+  courseId  String
+  name      String
+  // SetNull: trưởng nhóm bị xoá hẳn thì nhóm vẫn còn (bài nộp còn trỏ vào).
+  captainId String?
+  joinCode  String   @unique
+  createdAt DateTime @default(now())
+
+  course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  captain     User?                  @relation("CourseTeamCaptain", fields: [captainId], references: [id], onDelete: SetNull)
+  members     CourseTeamMember[]
+  submissions AssignmentSubmission[]
+
+  @@unique([courseId, name])
+  @@index([courseId])
+}
+
+model CourseTeamMember {
+  id       String   @id @default(uuid())
+  teamId   String
+  // Lặp lại courseId của nhóm để ép "mỗi học viên một nhóm trong một khoá"
+  // bằng unique index thay vì kiểm tra ở tầng ứng dụng.
+  courseId String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  team CourseTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+  @@index([teamId, joinedAt])
 }
 
 // =====================================================================

@@ -283,6 +283,7 @@ export async function duplicateLesson(
           dueAt: a.dueAt,
           maxScore: a.maxScore,
           isHidden: a.isHidden,
+          submissionMode: a.submissionMode,
         },
       });
       await attachLessonActivity(tx, dup.id, "assignment", aDup.id);

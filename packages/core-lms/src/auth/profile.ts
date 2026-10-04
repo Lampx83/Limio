@@ -139,6 +139,14 @@ const EXPORT_SELECT = {
           items: { select: { submissionId: true, note: true, createdAt: true } },
         },
       },
+      // Nộp theo nhóm — nhóm đang tham gia trong từng khoá. Lịch sử vào/rời nằm
+      // trong LearningEvent (course.team.*), đã có ở bản xuất hoạt động.
+      courseTeamMemberships: {
+        select: {
+          joinedAt: true,
+          team: { select: { name: true, course: { select: { slug: true, title: true } } } },
+        },
+      },
 } satisfies Prisma.UserSelect;
 
 export type ExportedProfile = Prisma.UserGetPayload<{ select: typeof EXPORT_SELECT }>;

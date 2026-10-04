@@ -30,6 +30,21 @@ export const LearningEventType = {
   AssignmentGraded: "assignment.graded",
   AssignmentSelfRated: "assignment.self_rated",
   AssignmentReflected: "assignment.reflected",
+  // Nộp theo nhóm (docs/group-submission-AC.md). "Phần việc của tôi" của một
+  // thành viên — payload chỉ mang độ dài, không mang chữ.
+  AssignmentContributionNoted: "assignment.contribution.noted",
+  // GV chỉnh điểm riêng một thành viên của bài nhóm (score = null ⇒ bỏ chỉnh, về điểm nhóm).
+  AssignmentScoreOverridden: "assignment.score.overridden",
+  // Nhóm cố định của khoá (CourseTeam). Subject là học viên bị ảnh hưởng;
+  // thao tác của GV mang actorId trong payload.
+  CourseTeamCreated: "course.team.created",
+  CourseTeamJoined: "course.team.joined",
+  CourseTeamLeft: "course.team.left",
+  CourseTeamCodeRegenerated: "course.team.code_regenerated",
+  CourseTeamCaptainChanged: "course.team.captain_changed",
+  CourseTeamMemberMoved: "course.team.member_moved",
+  // GV đổi số người tối đa / khoá-mở khoá danh sách nhóm. Subject là GV.
+  CourseTeamsSettingsChanged: "course.teams.settings_changed",
   ForumPosted: "forum.posted",
   ForumUpvoted: "forum.upvoted",
   ForumAnswered: "forum.answered",

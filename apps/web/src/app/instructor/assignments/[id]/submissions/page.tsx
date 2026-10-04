@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, isAdmin, listSubmissionsForInstructor } from "@feedbackme/core-lms";
+import {
+  canEditCourse,
+  isAdmin,
+  listSubmissionsForInstructor,
+  listTeamSubmissionsForInstructor,
+} from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import RosterTable from "./RosterTable";
+import TeamRosterTable from "./TeamRosterTable";
 import RubricBox from "./RubricBox";
 import { EmptyState } from "@/components/ui";
 
@@ -87,6 +93,49 @@ export default async function SubmissionsPage({
     };
   } else {
     notFound();
+  }
+
+  // Bài tập nộp theo nhóm (docs/group-submission-AC.md mục D): mỗi nhóm một dòng.
+  if (assignment.submissionMode === "team" && ctx.kind === "lesson") {
+    const teamView = await listTeamSubmissionsForInstructor(userId, params.id);
+    const { teams, submitted, graded } = teamView.counts;
+    return (
+      <main>
+        <Link href={ctx.backHref} className="link inline-flex items-center gap-1 text-sm">
+          ← {ctx.backLabel}
+        </Link>
+        <div className="mt-4">
+          <span className="chip-brand">Bài tập nhóm</span>
+          <h1 className="mt-3 text-2xl font-bold">{assignment.title}</h1>
+          <p className="mt-2 text-muted">
+            Bài học: <span className="font-medium text-[rgb(var(--text))]">{ctx.lessonTitle}</span> · Tối đa{" "}
+            <span className="font-semibold">{assignment.maxScore}</span> điểm
+          </p>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+          <Stat label="Số nhóm" value={teams} tone="brand" />
+          <Stat label="Nhóm đã nộp" value={submitted} tone={submitted < teams ? "accent" : "success"} />
+          <Stat
+            label="Chờ chấm"
+            value={submitted - graded}
+            tone={submitted - graded > 0 ? "accent" : "success"}
+          />
+          <Stat label="Đã chấm" value={graded} tone="success" />
+        </div>
+        <RubricBox assignmentId={assignment.id} initialRubric={assignment.rubricText} />
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold">
+            Danh sách nhóm <span className="text-sm font-normal text-faint">({teams})</span>
+          </h2>
+          <TeamRosterTable
+            entries={teamView.teams}
+            unassigned={teamView.unassigned}
+            maxScore={assignment.maxScore}
+            courseId={ctx.courseId}
+          />
+        </section>
+      </main>
+    );
   }
 
   const roster = await listSubmissionsForInstructor(userId, params.id);

@@ -3,7 +3,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Lock } from "lucide-react";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, getCourseProgress, isUserEnrolled, listMockExamsForLearner } from "@feedbackme/core-lms";
+import {
+  canEditCourse,
+  getCourseProgress,
+  getMyCourseTeam,
+  isUserEnrolled,
+  listMockExamsForLearner,
+} from "@feedbackme/core-lms";
 import { LANGUAGE_SKILL_LABEL, isLanguageSkill } from "@feedbackme/shared-types";
 import {
   getClearedChampionsLeaderboard,
@@ -21,6 +27,7 @@ import { StickyMobileCTA } from "@/components/ui";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 import LearningPathList from "@/components/LearningPathList";
+import CourseTeamPanel, { type CourseTeamState } from "@/components/course/CourseTeamPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +114,7 @@ export default async function LearnCoursePage({
     earned,
     flashcardStats,
     mockExams,
+    teamAssignmentCount,
   ] = await Promise.all([
     prisma.enrollment.findUniqueOrThrow({
       where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
@@ -124,7 +132,25 @@ export default async function LearnCoursePage({
     getFlashcardStats(session.user.id, course.id),
     // Đề thi thử đã xuất bản của khoá. Lỗi ở đây không được làm hỏng cả trang khoá.
     listMockExamsForLearner(session.user.id, course.id).catch(() => []),
+    // Khối "Nhóm của tôi" chỉ hiện khi khoá có bài tập nộp theo nhóm mà học viên thấy được.
+    prisma.assignment.count({
+      where: {
+        submissionMode: "team",
+        isHidden: false,
+        lesson: { isHidden: false, module: { courseId: course.id, isHidden: false } },
+      },
+    }),
   ]);
+  const myTeam: CourseTeamState | null =
+    teamAssignmentCount > 0
+      ? await getMyCourseTeam(session.user.id, course.id).then((t) => ({
+          settings: t.settings,
+          team: t.team && {
+            ...t.team,
+            members: t.team.members.map((m) => ({ ...m, joinedAt: m.joinedAt.toISOString() })),
+          },
+        }))
+      : null;
   const earnedCodes = new Set(earned.map((u) => u.badge.code));
   const completedSet = new Set(
     progress.modules.flatMap((m) => m.lessons.filter((l) => l.completed).map((l) => l.id)),
@@ -374,6 +400,11 @@ export default async function LearnCoursePage({
                 />
               </div>
             </section>
+          )}
+
+          {/* Nộp bài theo nhóm — docs/group-submission-AC.md A7 */}
+          {myTeam && (
+            <CourseTeamPanel courseId={course.id} currentUserId={session.user.id} initial={myTeam} />
           )}
 
           {/* Modules */}

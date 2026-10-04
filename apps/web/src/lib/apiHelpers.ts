@@ -5,6 +5,7 @@ import {
   AssignmentError,
   CourseAuthzError,
   CourseError,
+  CourseTeamError,
   EnrollError,
   ExamError,
   LanguageTemplateError,
@@ -229,6 +230,20 @@ export function mapKnownError(err: unknown): NextResponse | null {
       { status },
     );
   }
+  if (err instanceof CourseTeamError) {
+    const status =
+      err.code === "course_not_found" || err.code === "team_not_found" || err.code === "join_code_invalid"
+        ? 404
+        : err.code === "not_enrolled" || err.code === "not_captain"
+          ? 403
+          : err.code === "already_in_team" ||
+              err.code === "team_full" ||
+              err.code === "team_name_taken" ||
+              err.code === "teams_locked"
+            ? 409
+            : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
   if (err instanceof AssignmentError) {
     const status =
       err.code === "lesson_not_found" ||
@@ -237,7 +252,9 @@ export function mapKnownError(err: unknown): NextResponse | null {
         ? 404
         : err.code === "not_enrolled" || err.code === "forbidden"
           ? 403
-          : 400;
+          : err.code === "no_team"
+            ? 409
+            : 400;
     return NextResponse.json(
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },

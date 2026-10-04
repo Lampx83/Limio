@@ -5,6 +5,7 @@ import { assertCanEditCourse } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
 import { isUserEnrolled } from "../learning/enroll";
 import { emitEvent } from "../learning/events";
+import { getUserTeamInCourse } from "../teams/teams";
 
 export class AssignmentError extends Error {
   constructor(
@@ -14,6 +15,7 @@ export class AssignmentError extends Error {
       | "assignment_not_found"
       | "submission_not_found"
       | "not_enrolled"
+      | "no_team"
       | "forbidden",
     public readonly details?: unknown,
   ) {
@@ -67,6 +69,8 @@ const CreateInput = z.object({
   countsTowardGrade: z.boolean().optional(),
   // Ngữ cảnh cho "Gợi ý điểm bằng AI" trên từng bài nộp — không bắt buộc.
   rubricText: z.string().trim().max(5_000).nullable().optional(),
+  // Nộp theo nhóm (docs/group-submission-AC.md mục C).
+  submissionMode: z.enum(["individual", "team"]).optional(),
 });
 
 const UpdateInput = CreateInput.partial();
@@ -84,6 +88,14 @@ const GradeInput = z.object({
   score: z.number().int().min(0),
   feedback: z.string().trim().max(20_000).optional().nullable(),
 });
+
+const OverrideInput = z.object({
+  // null = bỏ điểm riêng, về lại điểm nhóm.
+  score: z.number().int().min(0).nullable(),
+  note: z.string().trim().max(500).optional().nullable(),
+});
+
+const CONTRIBUTION_MAX_CHARS = 1_000;
 
 async function loadLessonCourse(lessonId: string, db: PrismaClient) {
   const lesson = await db.lesson.findUnique({
@@ -179,6 +191,9 @@ export async function createAssignment(
         ...(parsed.data.rubricText !== undefined && {
           rubricText: parsed.data.rubricText,
         }),
+        ...(parsed.data.submissionMode !== undefined && {
+          submissionMode: parsed.data.submissionMode,
+        }),
       },
     });
     await attachLessonActivity(tx, lessonId, "assignment", created.id);
@@ -199,6 +214,18 @@ export async function updateAssignment(
   const parsed = UpdateInput.safeParse(rawInput);
   if (!parsed.success) {
     throw new AssignmentError("validation_failed", parsed.error.flatten());
+  }
+  if (parsed.data.submissionMode !== undefined) {
+    const current = await db.assignment.findUniqueOrThrow({
+      where: { id: assignmentId },
+      select: { submissionMode: true, lessonId: true, _count: { select: { submissions: true } } },
+    });
+    if (current.submissionMode !== parsed.data.submissionMode) {
+      // Bài tập gắn Tournament có cơ chế đội riêng — không dùng nhóm của khoá.
+      if (!current.lessonId) throw new AssignmentError("validation_failed", "submission_mode_not_supported");
+      // Đổi chế độ khi đã có bài nộp sẽ làm lệch dữ liệu (dòng cá nhân lẫn dòng nhóm).
+      if (current._count.submissions > 0) throw new AssignmentError("validation_failed", "submission_mode_locked");
+    }
   }
   await db.assignment.update({
     where: { id: assignmentId },
@@ -229,6 +256,9 @@ export async function updateAssignment(
       ...(parsed.data.rubricText !== undefined && {
         rubricText: parsed.data.rubricText,
       }),
+      ...(parsed.data.submissionMode !== undefined && {
+        submissionMode: parsed.data.submissionMode,
+      }),
     },
   });
 }
@@ -256,6 +286,7 @@ export async function submitAssignment(
       id: true,
       requireSelfRating: true,
       requireReflection: true,
+      submissionMode: true,
       lesson: { select: { module: { select: { courseId: true } } } },
       // Tournament MANUAL_REVIEW mission backing (lessonId null trong trường hợp này).
       tournamentMission: {
@@ -310,6 +341,18 @@ export async function submitAssignment(
   // Anti-farming: rating without any submission body is rejected up-front
   // by SubmitInput.body.min(1); reflection-only with empty body would also
   // fail there. Rating outside 1..5 caught by zod.
+
+  if (a.submissionMode === "team" && a.lesson && courseId) {
+    return submitTeamAssignment(db, {
+      userId,
+      assignmentId,
+      courseId,
+      body: parsed.data.body,
+      attachmentUrl: parsed.data.attachmentUrl ?? null,
+      selfRating,
+      reflection: reflectionTrimmed,
+    });
+  }
 
   const submission = await db.assignmentSubmission.upsert({
     where: { assignmentId_userId: { assignmentId, userId } },
@@ -372,7 +415,105 @@ export async function submitAssignment(
     assignmentId,
     selfRating,
     reflectionLength: reflectionTrimmed?.length ?? 0,
+    teamId: null as string | null,
   };
+}
+
+/**
+ * Nộp theo nhóm (AC C2–C5, C7): mỗi thành viên HIỆN TẠI của nhóm có một dòng
+ * cùng nội dung, cùng `teamSubmittedAt`. Tự đánh giá/suy ngẫm chỉ gắn vào dòng
+ * của người bấm nộp — đó là việc của riêng người đó, không chép cho cả nhóm.
+ * Toàn bộ ghi + sự kiện trong một transaction (CLAUDE.md §5.1).
+ */
+async function submitTeamAssignment(
+  db: PrismaClient,
+  i: {
+    userId: string;
+    assignmentId: string;
+    courseId: string;
+    body: string;
+    attachmentUrl: string | null;
+    selfRating: number | null;
+    reflection: string | null;
+  },
+) {
+  return db.$transaction(
+    async (tx) => {
+      const team = await getUserTeamInCourse(i.userId, i.courseId, tx);
+      if (!team) throw new AssignmentError("no_team");
+      const teamSubmittedAt = new Date();
+      let mySubmissionId = "";
+      for (const memberId of team.memberIds) {
+        const own = memberId === i.userId ? { selfRating: i.selfRating, reflection: i.reflection } : {};
+        const shared = {
+          body: i.body,
+          attachmentUrl: i.attachmentUrl,
+          teamId: team.teamId,
+          submittedById: i.userId,
+          teamSubmittedAt,
+        };
+        const row = await tx.assignmentSubmission.upsert({
+          where: { assignmentId_userId: { assignmentId: i.assignmentId, userId: memberId } },
+          create: { assignmentId: i.assignmentId, userId: memberId, ...shared, ...own },
+          update: {
+            ...shared,
+            ...own,
+            // Nộp lại = bài mới của cả nhóm: GV phải chấm lại, điểm chỉnh riêng cũng bỏ.
+            status: "submitted",
+            score: null,
+            feedback: null,
+            graderId: null,
+            gradedAt: null,
+            teamScore: null,
+            scoreOverridden: false,
+            scoreOverrideNote: null,
+          },
+          select: { id: true },
+        });
+        if (memberId === i.userId) mySubmissionId = row.id;
+        await emitEvent(
+          memberId,
+          LearningEventType.AssignmentSubmitted,
+          {
+            assignmentId: i.assignmentId,
+            submissionId: row.id,
+            teamId: team.teamId,
+            submittedById: i.userId,
+            teamSubmission: true,
+          },
+          { courseId: i.courseId },
+          tx,
+        );
+      }
+      if (i.selfRating != null) {
+        await emitEvent(
+          i.userId,
+          LearningEventType.AssignmentSelfRated,
+          { assignmentId: i.assignmentId, submissionId: mySubmissionId, rating: i.selfRating },
+          { courseId: i.courseId },
+          tx,
+        );
+      }
+      if (i.reflection) {
+        await emitEvent(
+          i.userId,
+          LearningEventType.AssignmentReflected,
+          { assignmentId: i.assignmentId, submissionId: mySubmissionId, length: i.reflection.length },
+          { courseId: i.courseId },
+          tx,
+        );
+      }
+      return {
+        submissionId: mySubmissionId,
+        courseId: i.courseId as string | null,
+        assignmentId: i.assignmentId,
+        selfRating: i.selfRating,
+        reflectionLength: i.reflection?.length ?? 0,
+        teamId: team.teamId as string | null,
+      };
+    },
+    { timeout: 15_000 },
+  );
 }
 
 export async function gradeSubmission(
@@ -386,10 +527,13 @@ export async function gradeSubmission(
     select: {
       id: true,
       userId: true,
+      teamId: true,
+      teamSubmittedAt: true,
       assignment: {
         select: {
           id: true,
           maxScore: true,
+          submissionMode: true,
           lesson: { select: { module: { select: { courseId: true } } } },
           tournamentMission: { select: { tournament: { select: { courseId: true, creatorId: true } } } },
         },
@@ -422,6 +566,50 @@ export async function gradeSubmission(
   }
   if (parsed.data.score > submission.assignment.maxScore) {
     throw new AssignmentError("validation_failed", "score_exceeds_max");
+  }
+
+  if (submission.assignment.submissionMode === "team" && submission.teamId && submission.teamSubmittedAt) {
+    // Chấm nhóm (AC D2/D3): áp cho mọi dòng của CÙNG lần nộp; dòng có điểm
+    // chỉnh riêng giữ điểm riêng, chỉ cập nhật teamScore + nhận xét.
+    const teamId = submission.teamId;
+    const teamSubmittedAt = submission.teamSubmittedAt;
+    await db.$transaction(async (tx) => {
+      const batch = await tx.assignmentSubmission.findMany({
+        where: { assignmentId: submission.assignment.id, teamId, teamSubmittedAt },
+        select: { id: true, userId: true, score: true, scoreOverridden: true },
+      });
+      const gradedAt = new Date();
+      for (const r of batch) {
+        const score = r.scoreOverridden && r.score != null ? r.score : parsed.data.score;
+        await tx.assignmentSubmission.update({
+          where: { id: r.id },
+          data: {
+            status: "graded",
+            teamScore: parsed.data.score,
+            score,
+            feedback: parsed.data.feedback ?? null,
+            graderId: userId,
+            gradedAt,
+          },
+        });
+        await emitEvent(
+          r.userId,
+          LearningEventType.AssignmentGraded,
+          {
+            assignmentId: submission.assignment.id,
+            submissionId: r.id,
+            score,
+            teamScore: parsed.data.score,
+            maxScore: submission.assignment.maxScore,
+            graderId: userId,
+            teamId,
+          },
+          { courseId },
+          tx,
+        );
+      }
+    });
+    return;
   }
 
   await db.assignmentSubmission.update({
@@ -629,4 +817,232 @@ export async function listSubmissionsForInstructor(
       submission: submissionByUserId.get(e.user.id) ?? null,
     }))
     .sort((a, b) => a.user.displayName.localeCompare(b.user.displayName, "vi"));
+}
+
+// ─── Nộp theo nhóm: chỉnh điểm riêng, "Phần việc của tôi", danh sách chấm ────
+
+/**
+ * GV chỉnh điểm riêng một thành viên của bài nhóm (AC D3). Chỉ sau khi nhóm đã
+ * được chấm; `score = null` bỏ điểm riêng, về lại điểm nhóm.
+ */
+export async function overrideSubmissionScore(
+  userId: string,
+  submissionId: string,
+  rawInput: unknown,
+  db: PrismaClient = prisma,
+) {
+  const sub = await db.assignmentSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      id: true,
+      userId: true,
+      teamId: true,
+      status: true,
+      teamScore: true,
+      assignment: {
+        select: { id: true, maxScore: true, lesson: { select: { module: { select: { courseId: true } } } } },
+      },
+    },
+  });
+  if (!sub) throw new AssignmentError("submission_not_found");
+  const courseId = sub.assignment.lesson?.module.courseId;
+  if (!courseId || !sub.teamId) throw new AssignmentError("validation_failed", "not_team_submission");
+  await assertCanEditCourse(userId, courseId, db);
+
+  const parsed = OverrideInput.safeParse(rawInput);
+  if (!parsed.success) throw new AssignmentError("validation_failed", parsed.error.flatten());
+  if (sub.status !== "graded" || sub.teamScore == null) {
+    throw new AssignmentError("validation_failed", "grade_team_first");
+  }
+  if (parsed.data.score != null && parsed.data.score > sub.assignment.maxScore) {
+    throw new AssignmentError("validation_failed", "score_exceeds_max");
+  }
+  const clearing = parsed.data.score == null;
+  const score = clearing ? sub.teamScore : parsed.data.score!;
+  await db.$transaction(async (tx) => {
+    await tx.assignmentSubmission.update({
+      where: { id: sub.id },
+      data: {
+        score,
+        scoreOverridden: !clearing,
+        scoreOverrideNote: clearing ? null : parsed.data.note?.trim() || null,
+      },
+    });
+    await emitEvent(
+      sub.userId,
+      LearningEventType.AssignmentScoreOverridden,
+      {
+        assignmentId: sub.assignment.id,
+        submissionId: sub.id,
+        score: clearing ? null : score,
+        teamScore: sub.teamScore,
+        actorId: userId,
+      },
+      { courseId },
+      tx,
+    );
+  });
+}
+
+/**
+ * "Phần việc của tôi" (AC C6) — chỉ chủ dòng sửa, không đưa bài về chưa chấm.
+ * Sự kiện chỉ mang độ dài, không mang chữ.
+ */
+export async function setSubmissionContributionNote(
+  userId: string,
+  submissionId: string,
+  rawNote: string,
+  db: PrismaClient = prisma,
+) {
+  const sub = await db.assignmentSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      id: true,
+      userId: true,
+      teamId: true,
+      assignment: { select: { id: true, lesson: { select: { module: { select: { courseId: true } } } } } },
+    },
+  });
+  if (!sub) throw new AssignmentError("submission_not_found");
+  if (sub.userId !== userId) throw new AssignmentError("forbidden");
+  if (!sub.teamId) throw new AssignmentError("validation_failed", "not_team_submission");
+  const note = (rawNote ?? "").trim();
+  if (note.length > CONTRIBUTION_MAX_CHARS) throw new AssignmentError("validation_failed", "note_too_long");
+  await db.$transaction(async (tx) => {
+    await tx.assignmentSubmission.update({ where: { id: sub.id }, data: { contributionNote: note || null } });
+    await emitEvent(
+      userId,
+      LearningEventType.AssignmentContributionNoted,
+      { assignmentId: sub.assignment.id, submissionId: sub.id, length: note.length },
+      { courseId: sub.assignment.lesson?.module.courseId ?? null },
+      tx,
+    );
+  });
+}
+
+type MiniUser = { id: string; displayName: string; email: string };
+
+export interface TeamSubmissionEntry {
+  team: { id: string; name: string; captainId: string | null };
+  currentMembers: MiniUser[];
+  /** Lần nộp mới nhất của nhóm; null = nhóm chưa nộp. */
+  latest: {
+    /** Dòng đại diện để mở bài / chấm (ưu tiên dòng của thành viên hiện tại). */
+    submissionId: string;
+    teamSubmittedAt: Date;
+    submittedBy: MiniUser | null;
+    body: string;
+    attachmentUrl: string | null;
+    status: "submitted" | "graded";
+    teamScore: number | null;
+    feedback: string | null;
+    gradedAt: Date | null;
+    members: {
+      submissionId: string;
+      user: MiniUser;
+      contributionNote: string | null;
+      score: number | null;
+      scoreOverridden: boolean;
+      scoreOverrideNote: string | null;
+      /** Đã rời nhóm sau lần nộp này. */
+      leftTeam: boolean;
+    }[];
+  } | null;
+  /** Vào nhóm sau lần nộp mới nhất — chưa có bài, lần nộp lại tới sẽ gồm họ. */
+  joinedAfterSubmit: MiniUser[];
+}
+
+/** Danh sách chấm bài nhóm, mỗi nhóm một mục (AC D1). */
+export async function listTeamSubmissionsForInstructor(
+  userId: string,
+  assignmentId: string,
+  db: PrismaClient = prisma,
+): Promise<{
+  teams: TeamSubmissionEntry[];
+  unassigned: MiniUser[];
+  counts: { teams: number; submitted: number; graded: number };
+}> {
+  const scope = await loadAssignmentCourse(assignmentId, db);
+  await assertCanGradeAssignment(userId, scope, db);
+  const courseId = scope.courseId;
+  if (!courseId) throw new AssignmentError("validation_failed", "not_team_submission");
+
+  const userSel = { select: { id: true, displayName: true, email: true } } as const;
+  const [teams, rows, enrollments] = await Promise.all([
+    db.courseTeam.findMany({
+      where: { courseId },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        captainId: true,
+        members: { orderBy: { joinedAt: "asc" }, select: { user: userSel } },
+      },
+    }),
+    db.assignmentSubmission.findMany({
+      where: { assignmentId, teamId: { not: null } },
+      include: { user: userSel, submittedBy: userSel },
+    }),
+    db.enrollment.findMany({
+      where: { courseId, status: { in: ["active", "completed"] } },
+      select: { user: userSel },
+    }),
+  ]);
+
+  const entries: TeamSubmissionEntry[] = teams
+    .map((t) => {
+      const current = t.members.map((m) => m.user);
+      const currentIds = new Set(current.map((u) => u.id));
+      const mine = rows.filter((r) => r.teamId === t.id && r.teamSubmittedAt);
+      const latestAt = mine.reduce<number>((max, r) => Math.max(max, r.teamSubmittedAt!.getTime()), 0);
+      const batch = mine.filter((r) => r.teamSubmittedAt!.getTime() === latestAt);
+      if (batch.length === 0) {
+        return { team: { id: t.id, name: t.name, captainId: t.captainId }, currentMembers: current, latest: null, joinedAfterSubmit: [] };
+      }
+      const rep = batch.find((r) => currentIds.has(r.userId)) ?? batch[0]!;
+      const inBatch = new Set(batch.map((r) => r.userId));
+      return {
+        team: { id: t.id, name: t.name, captainId: t.captainId },
+        currentMembers: current,
+        latest: {
+          submissionId: rep.id,
+          teamSubmittedAt: rep.teamSubmittedAt!,
+          submittedBy: rep.submittedBy,
+          body: rep.body,
+          attachmentUrl: rep.attachmentUrl,
+          status: batch.every((r) => r.status === "graded") ? ("graded" as const) : ("submitted" as const),
+          teamScore: rep.teamScore,
+          feedback: rep.feedback,
+          gradedAt: rep.gradedAt,
+          members: batch
+            .map((r) => ({
+              submissionId: r.id,
+              user: r.user,
+              contributionNote: r.contributionNote,
+              score: r.score,
+              scoreOverridden: r.scoreOverridden,
+              scoreOverrideNote: r.scoreOverrideNote,
+              leftTeam: !currentIds.has(r.userId),
+            }))
+            .sort((a, b) => a.user.displayName.localeCompare(b.user.displayName, "vi")),
+        },
+        joinedAfterSubmit: current.filter((u) => !inBatch.has(u.id)),
+      };
+    })
+    // Nhóm rỗng chưa từng nộp thì không có gì để chấm.
+    .filter((e) => e.currentMembers.length > 0 || e.latest);
+
+  const inTeam = new Set(teams.flatMap((t) => t.members.map((m) => m.user.id)));
+  return {
+    teams: entries,
+    unassigned: enrollments
+      .map((e) => e.user)
+      .filter((u) => !inTeam.has(u.id))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, "vi")),
+    counts: {
+      teams: entries.length,
+      submitted: entries.filter((e) => e.latest).length,
+      graded: entries.filter((e) => e.latest?.status === "graded").length,
+    },
+  };
 }
