@@ -89,6 +89,21 @@ describe("VocabListView — G2.3.1 / 2.3.2 / 2.3.4 / 2.3.5 / 2.3.6", () => {
     expect(t).toContain("Nghĩa");
   });
 
+  it("tối ưu chỗ: có câu ví dụ thì từ màn hình rộng (lg) ví dụ sang cột riêng cùng hàng với từ; header có cột 'Ví dụ'; không có ví dụ thì không có cột đó", () => {
+    const out = render();
+    expect(out).toContain("lg:col-start-4"); // ví dụ ở cột 4 (có phiên âm)
+    expect(out).toContain("lg:grid-cols-[");
+    expect(text(out.split('aria-label="Hiển thị"')[1] ?? "")).toContain("Ví dụ");
+    const noEx = render({ items: items.map((i) => ({ id: i.id, term: i.term, reading: i.reading, meaning: i.meaning })) });
+    expect(noEx).not.toContain("lg:col-start-4");
+    expect(text(noEx)).not.toContain("Ví dụ");
+    // không có phiên âm: ví dụ ở cột 3
+    const noReading = render({
+      items: items.map((i) => ({ id: i.id, term: i.term, meaning: i.meaning, example: i.example })),
+    });
+    expect(noReading).toContain("lg:col-start-3");
+  });
+
   it("nút nghe nằm ngay trước chữ ở cột 1 (không còn cột nút riêng cuối hàng)", () => {
     const row = render().split('id="vocab-i1"')[1]!.split("</li>")[0]!;
     expect(row.indexOf('aria-label="Nghe 朋友"')).toBeGreaterThan(-1);

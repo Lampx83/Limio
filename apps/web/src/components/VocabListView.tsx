@@ -48,9 +48,20 @@ export default function VocabListView({
   const hasReading = items.some((i) => !!i.reading);
   const label = readingLabel?.trim() || "Phiên âm";
   const anyAudio = items.some((i) => i.audioUrl);
+  const anyExample = items.some((i) => !!i.example);
+  // Từ md: từ · phiên âm · nghĩa, ví dụ nằm dưới nghĩa. Từ lg nếu có ví dụ: ví dụ sang
+  // cột riêng cùng hàng — mỗi từ chỉ cao một dòng thay vì ba, người học đỡ phải cuộn.
   const cols = hasReading
-    ? "sm:grid-cols-[minmax(7rem,12rem)_minmax(5rem,9rem)_minmax(0,1fr)]"
-    : "sm:grid-cols-[minmax(7rem,12rem)_minmax(0,1fr)]";
+    ? `sm:grid-cols-[minmax(7rem,12rem)_minmax(5rem,9rem)_minmax(0,1fr)] ${
+        anyExample ? "lg:grid-cols-[minmax(6.5rem,9rem)_minmax(4.5rem,6.5rem)_minmax(9rem,1fr)_minmax(0,1.5fr)]" : ""
+      }`
+    : `sm:grid-cols-[minmax(7rem,12rem)_minmax(0,1fr)] ${
+        anyExample ? "lg:grid-cols-[minmax(6.5rem,9rem)_minmax(9rem,1fr)_minmax(0,1.5fr)]" : ""
+      }`;
+  const meaningColStart = hasReading ? "sm:col-start-3" : "sm:col-start-2";
+  const exampleCls = hasReading
+    ? "sm:col-start-3 lg:col-start-4 lg:row-start-1"
+    : "sm:col-start-2 lg:col-start-3 lg:row-start-1";
   const mask = (on: boolean) => (on ? "true" : undefined);
   const blur = (hidden: boolean) => (hidden ? "select-none blur-sm" : "");
 
@@ -79,6 +90,7 @@ export default function VocabListView({
         <span className={anyAudio ? "pl-9" : undefined}>Từ</span>
         {hasReading && <span>{label}</span>}
         <span>Nghĩa</span>
+        {anyExample && <span className="hidden lg:inline">Ví dụ</span>}
       </div>
 
       <ul className="divide-y divide-[rgb(var(--border))]">
@@ -97,7 +109,7 @@ export default function VocabListView({
                     }
                   : undefined
               }
-              className={`grid grid-cols-1 gap-x-4 gap-y-0.5 rounded-lg px-2 py-2 transition-colors sm:items-start ${cols} ${
+              className={`grid grid-cols-1 gap-x-4 gap-y-0.5 rounded-lg px-2 py-1.5 transition-colors sm:items-start ${cols} ${
                 playing ? "bg-brand-soft ring-2 ring-brand-300" : ""
               } ${it.audioUrl ? "cursor-pointer hover:bg-[rgb(var(--surface-muted))/0.5]" : ""}`}
             >
@@ -131,33 +143,33 @@ export default function VocabListView({
                   {it.reading}
                 </span>
               )}
-              <div className="space-y-1 sm:pt-0.5">
+              <div className={`space-y-1 sm:pt-0.5 ${meaningColStart} ${!it.example && anyExample ? "lg:col-span-2" : ""}`}>
                 <p data-masked={mask(!showMeaning)} className={`text-body font-medium text-muted ${blur(!showMeaning)}`}>
                   {it.meaning}
                 </p>
-                {it.example && (
-                  // Ví dụ: câu gốc + phiên âm trên một dòng, bản dịch dòng dưới, vạch lime bên trái.
-                  <div className="border-l-2 border-brand-200 pl-2.5">
-                    <p className="text-meta text-muted">
-                      <span className={`text-body ${SOURCE_TEXT_COLOR}`}>{it.example}</span>
-                      {it.exampleReading && (
-                        <span
-                          data-masked={mask(!showReading)}
-                          className={`ml-2 text-meta text-muted ${blur(!showReading)}`}
-                        >
-                          {it.exampleReading}
-                        </span>
-                      )}
-                    </p>
-                    {it.exampleMeaning && (
-                      <p data-masked={mask(!showMeaning)} className={`text-meta text-muted ${blur(!showMeaning)}`}>
-                        {it.exampleMeaning}
-                      </p>
-                    )}
-                  </div>
-                )}
                 {it.note && <p className="text-caption italic">{it.note}</p>}
               </div>
+              {it.example && (
+                // Ví dụ: câu gốc + phiên âm trên một dòng, bản dịch dòng dưới, vạch lime bên trái.
+                <div className={`border-l-2 border-brand-200 pl-2.5 sm:pt-0.5 ${exampleCls}`}>
+                  <p className="text-meta text-muted">
+                    <span className={`text-body ${SOURCE_TEXT_COLOR}`}>{it.example}</span>
+                    {it.exampleReading && (
+                      <span
+                        data-masked={mask(!showReading)}
+                        className={`ml-2 text-meta text-muted ${blur(!showReading)}`}
+                      >
+                        {it.exampleReading}
+                      </span>
+                    )}
+                  </p>
+                  {it.exampleMeaning && (
+                    <p data-masked={mask(!showMeaning)} className={`text-meta text-muted ${blur(!showMeaning)}`}>
+                      {it.exampleMeaning}
+                    </p>
+                  )}
+                </div>
+              )}
             </li>
           );
         })}
