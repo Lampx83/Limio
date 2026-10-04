@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { UserAvatar, StatusBadge, DateTime } from "@/components/ui";
 import GradeForm from "./GradeForm";
+import AttachmentPreview from "./AttachmentPreview";
 
 export default function SubmissionModal({
   user,
@@ -37,6 +38,7 @@ export default function SubmissionModal({
   }, [onClose]);
 
   const isGraded = submission.status === "graded";
+  const hasAttachment = !!submission.attachmentUrl;
 
   return (
     <div
@@ -47,7 +49,9 @@ export default function SubmissionModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl bg-[rgb(var(--surface))] shadow-2xl"
+        className={`w-full rounded-2xl bg-[rgb(var(--surface))] shadow-2xl ${
+          hasAttachment ? "max-w-2xl lg:max-w-6xl" : "max-w-2xl"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between gap-3 border-b border-token px-5 py-4">
@@ -70,40 +74,44 @@ export default function SubmissionModal({
           </button>
         </header>
 
-        <div className="max-h-[70vh] overflow-y-auto p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <StatusBadge tone={isGraded ? "success" : "warning"} pulse={!isGraded}>
-              {isGraded ? "Đã chấm" : "Chờ chấm"}
-            </StatusBadge>
-            <DateTime
-              value={submission.submittedAt}
-              format="datetime"
-              className="text-xs text-muted"
-            />
-          </div>
+        <div className="max-h-[75vh] overflow-y-auto p-5">
+          <div
+            className={
+              hasAttachment ? "grid gap-5 lg:grid-cols-2 lg:items-start" : ""
+            }
+          >
+            {submission.attachmentUrl && (
+              <div className="lg:sticky lg:top-0">
+                <AttachmentPreview url={submission.attachmentUrl} />
+              </div>
+            )}
 
-          <p className="mt-4 whitespace-pre-wrap rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-sm">
-            {submission.body}
-          </p>
-          {submission.attachmentUrl && (
-            <a
-              href={submission.attachmentUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-secondary btn-sm mt-3 inline-flex"
-            >
-              📎 Tải file đính kèm
-            </a>
-          )}
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <StatusBadge tone={isGraded ? "success" : "warning"} pulse={!isGraded}>
+                  {isGraded ? "Đã chấm" : "Chờ chấm"}
+                </StatusBadge>
+                <DateTime
+                  value={submission.submittedAt}
+                  format="datetime"
+                  className="text-xs text-muted"
+                />
+              </div>
 
-          <div className="mt-4 border-t border-token pt-4">
-            <GradeForm
-              submissionId={submission.id}
-              maxScore={maxScore}
-              initialScore={submission.score}
-              initialFeedback={submission.feedback}
-              isGraded={isGraded}
-            />
+              <p className="mt-4 whitespace-pre-wrap rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-sm">
+                {submission.body}
+              </p>
+
+              <div className="mt-4 border-t border-token pt-4">
+                <GradeForm
+                  submissionId={submission.id}
+                  maxScore={maxScore}
+                  initialScore={submission.score}
+                  initialFeedback={submission.feedback}
+                  isGraded={isGraded}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

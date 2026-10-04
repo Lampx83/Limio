@@ -192,6 +192,12 @@ export default function AssignmentSubmitForm({
         }
         className="input text-xs"
       />
+      {/google\.com\//i.test(attachmentUrl) && (
+        <p className="banner-warning text-xs">
+          Hãy mở quyền chia sẻ của tài liệu là “Bất kỳ ai có đường liên kết”
+          (người xem) — nếu không, giảng viên sẽ không mở được bài của bạn để chấm.
+        </p>
+      )}
 
       {(requireSelfRating || requireReflection) && (
         <div className="space-y-2 rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
