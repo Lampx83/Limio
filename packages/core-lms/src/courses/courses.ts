@@ -624,6 +624,8 @@ export async function duplicateCourse(
         // causing the copy to lose personalization / pricing / org scope and
         // appear "hidden" or misconfigured to learners after publish.
         personalizationEnabled: src.personalizationEnabled,
+        // LANG G8 — chế độ ngoại ngữ (kéo theo nhãn kỹ năng của bài, bên dưới).
+        languageMode: src.languageMode,
         publicAccess: src.publicAccess,
         priceCents: src.priceCents,
         currency: src.currency,
@@ -653,6 +655,7 @@ export async function duplicateCourse(
             orderIndex: l.orderIndex,
             completionThresholdPct: l.completionThresholdPct,
             durationSec: l.durationSec,
+            languageSkill: l.languageSkill,
           },
         });
         for (const c of l.contentItems) {
@@ -686,6 +689,14 @@ export async function duplicateCourse(
               description: a.description,
               dueAt: a.dueAt,
               maxScore: a.maxScore,
+              // Cấu hình chấm: trước đây rơi về mặc định ⇒ bản sao mất rubric.
+              rubricText: a.rubricText,
+              pedagogicalIntent: a.pedagogicalIntent,
+              responseFormat: a.responseFormat,
+              assessmentModes: a.assessmentModes,
+              requireSelfRating: a.requireSelfRating,
+              requireReflection: a.requireReflection,
+              countsTowardGrade: a.countsTowardGrade,
             },
           });
           await attachLessonActivity(tx, newLesson.id, "assignment", newAssignment.id);

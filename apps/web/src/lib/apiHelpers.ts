@@ -7,6 +7,7 @@ import {
   CourseError,
   EnrollError,
   ExamError,
+  LanguageTemplateError,
   LearningError,
   MisconceptionError,
   NoteError,
@@ -24,6 +25,12 @@ export function mapKnownError(err: unknown): NextResponse | null {
   if (err instanceof CourseAuthzError) {
     const status = err.code === "not_found" ? 404 : 403;
     return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof LanguageTemplateError) {
+    return NextResponse.json(
+      err.details ? { error: err.code, details: err.details } : { error: err.code },
+      { status: err.code === "forbidden" ? 403 : 400 },
+    );
   }
   if (err instanceof CourseError) {
     const status =

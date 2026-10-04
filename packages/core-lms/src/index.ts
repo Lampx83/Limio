@@ -5,6 +5,7 @@ export * from "./courses/index";
 export * from "./learning/index";
 export * from "./quizzes/index";
 export * from "./exam/index";
+export * from "./languageTemplates/index";
 export * from "./scorm/index";
 export * from "./lti/index";
 export * from "./h5p/index";
