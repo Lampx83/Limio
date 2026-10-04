@@ -39,6 +39,7 @@ export * from "./mock-catalog";
 export * from "./mock-templates";
 export * from "./section-results";
 export * from "./mock-results";
+export * from "./practice";
 export * from "./clone";
 export * from "./analytics";
 export * from "./patterns";

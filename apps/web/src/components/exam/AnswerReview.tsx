@@ -19,7 +19,7 @@ export default function AnswerReview({ questions }: Props) {
   );
 }
 
-function QuestionCard({ q, idx }: { q: QuestionReview; idx: number }) {
+export function QuestionCard({ q, idx }: { q: QuestionReview; idx: number }) {
   const awarded = q.answer?.score ?? null;
   const correct = awarded !== null && awarded >= q.points;
   const partial = awarded !== null && !correct && awarded > 0;

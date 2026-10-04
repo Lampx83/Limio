@@ -37,12 +37,14 @@ export default function MockExamPanel({
   examId,
   initialMockMode,
   initialAllowMock,
+  initialAllowPractice,
   locked,
   lockedReason,
 }: {
   examId: string;
   initialMockMode: boolean;
   initialAllowMock: boolean;
+  initialAllowPractice: boolean;
   /** true = không sửa được (đã xuất bản / đã có lượt thi / lưu trữ). */
   locked: boolean;
   lockedReason?: string;
@@ -50,6 +52,7 @@ export default function MockExamPanel({
   const router = useRouter();
   const [mock, setMock] = useState(initialMockMode);
   const [allowMock, setAllowMock] = useState(initialAllowMock);
+  const [allowPractice, setAllowPractice] = useState(initialAllowPractice);
   const [sections, setSections] = useState<Section[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -98,6 +101,10 @@ export default function MockExamPanel({
     if (await call(`/api/exams/${examId}`, { allowMock: next })) setAllowMock(next);
   }
 
+  async function toggleAllowPractice(next: boolean) {
+    if (await call(`/api/exams/${examId}`, { allowPractice: next })) setAllowPractice(next);
+  }
+
   async function patchSection(id: string, body: { durationMin?: number | null; languageSkill?: Skill | null }) {
     if (await call(`/api/exam-sections/${id}`, body)) await refresh();
     else await refresh();
@@ -143,6 +150,26 @@ export default function MockExamPanel({
             <span className="block text-faint">
               Tắt thì học viên không bắt đầu được lượt thi mới và đề biến mất khỏi mục “Luyện thi” (lượt đang làm dở vẫn
               tiếp tục được). Đổi được bất cứ lúc nào, kể cả sau khi xuất bản.
+            </span>
+          </span>
+        </label>
+      )}
+
+      {mock && (
+        <label className="mt-3 flex items-start gap-3 rounded border border-default p-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4"
+            checked={allowPractice}
+            disabled={busy}
+            onChange={(e) => void toggleAllowPractice(e.target.checked)}
+          />
+          <span>
+            <span className="font-medium">Cho luyện đề</span>
+            <span className="block text-faint">
+              Cho học viên luyện đề này theo kỹ năng hoặc từng phần: không bấm giờ, quay lại sửa tự do, xem đáp án ngay sau
+              từng câu. Kỹ năng lấy từ nhãn kỹ năng của từng phần. Tắt thì học viên không bắt đầu được buổi luyện mới.
+              Luyện đề không cộng XP và không ảnh hưởng điểm thi thử.
             </span>
           </span>
         </label>

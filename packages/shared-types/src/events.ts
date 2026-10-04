@@ -81,6 +81,9 @@ export const LearningEventType = {
   // LANG G5a — đề thi thử: phần thi bắt đầu/kết thúc (suy ra từ giờ, phát lười, idempotent).
   ExamSectionStarted: "exam.section.started",
   ExamSectionEnded: "exam.section.ended",
+  // LANG G5e — luyện đề (bảng riêng, không phải lượt thi): trả lời một câu đã chấm, và kết thúc buổi.
+  ExamPracticeAnswered: "exam.practice.answered",
+  ExamPracticeCompleted: "exam.practice.completed",
   ExamAttemptForceSubmitted: "exam.attempt.force_submitted",
   ExamAttemptSessionReset: "exam.attempt.session_reset",
   ExamAttemptDisqualified: "exam.attempt.disqualified",
@@ -453,6 +456,27 @@ export interface ExamSectionEndedPayload extends ExamSectionStartedPayload {
   endedAt: string;
   /** Vì sao phần kết thúc: hết giờ phần hay học viên nộp sớm. */
   reason: "time_up" | "submitted_early";
+}
+
+export interface ExamPracticeAnsweredPayload {
+  examId: string;
+  sessionId: string;
+  questionId: string;
+  correct: boolean;
+  score: number | null;
+  maxScore: number;
+  /** Kỹ năng của phần chứa câu hỏi (nghe/nói/đọc/viết), null nếu phần chưa gán. */
+  languageSkill: string | null;
+  /** Thẻ kỹ năng của câu hỏi — để sau này nuôi mô hình người học mà không phải làm lại. */
+  skillIds: string[];
+}
+
+export interface ExamPracticeCompletedPayload {
+  examId: string;
+  sessionId: string;
+  questionCount: number;
+  correct: number;
+  total: number;
 }
 
 export interface ExamStartedPayload {

@@ -387,16 +387,16 @@ Schema: `ExamSection.scoreBands Json?` (bảng quy đổi do giảng viên nhậ
 ### G5e · Luyện đề theo kỹ năng *(mới, 2026-10-04; làm sau G5c)*
 **Một bộ đề, hai cách chạy** (như Magoosh/PREP: đề đầy đủ có bấm giờ **và** luyện theo phần/kỹ năng). Khác thi thử: học viên tự chọn phạm vi, không ép giờ, quay lại tự do, xem đáp án ngay.
 Schema (chỉ thêm): `ExamAttempt.mode` (`mock` | `practice`; hàng cũ để trống = đề thường); `ExamAttempt.scope Json?` (danh sách phần học viên chọn). **Rủi ro lớn nhất:** chỉ mục SQL thô "mỗi người một lượt" trên `(examId, userId)` phải loại trừ lượt `practice` để cho nhiều lượt luyện — migration cần review tay.
-- [ ] **G5e.1** Học viên chọn phạm vi luyện: một hoặc nhiều **kỹ năng** (theo `ExamSection.languageSkill`), hoặc **từng phần**, hoặc cả đề; tuỳ chọn "chỉ câu chưa làm" / "chỉ câu từng sai". Phạm vi rỗng → không bắt đầu được.
-- [ ] **G5e.2** Lượt luyện chỉ chứa câu thuộc phạm vi (máy chủ chỉ gửi câu trong phạm vi). Không có đồng hồ ép buộc, không bị cron tự nộp; có công tắc **bấm giờ** tuỳ chọn (chỉ hiển thị, không ép).
-- [ ] **G5e.3** Điều hướng tự do, quay lại sửa đáp án được; **tạm dừng và làm tiếp** sau (lượt giữ nguyên tới khi nộp hoặc bỏ).
-- [ ] **G5e.4** Nút **Kiểm tra** (mặc định bật, học viên tắt được): sau khi trả lời một câu, máy chủ trả đúng/sai và đáp án đúng. **Endpoint này chỉ phục vụ lượt `practice` — lượt `mock` luôn bị từ chối** (không được lộ đáp án trong lúc thi thử, kể cả khi cố gọi trực tiếp).
-- [ ] **G5e.5** Audio: nghe lại tuỳ ý (bỏ qua `audioPolicy` của G5b); lời thoại hiện **sau khi** đã kiểm tra câu đó.
-- [ ] **G5e.6** Nhiều lượt luyện cùng đề, không giới hạn, độc lập với lượt thi thử và không ảnh hưởng chính sách một-lượt của đề thường.
-- [ ] **G5e.7** Kết thúc: kết quả **theo kỹ năng** (đúng X/Y), danh sách câu sai kèm đáp án đúng, nút **Làm lại câu sai** (mở lượt luyện mới chỉ với các câu đó).
-- [ ] **G5e.8** Không cấp XP. Mỗi câu đã trả lời phát `exam.practice.answered` kèm thẻ kỹ năng (để sau này nuôi BKT mà không phải làm lại), **nhưng chưa nuôi BKT** và không trộn vào nhãn Cần ôn / Nên luyện / Vững. Hồ sơ 4 kỹ năng có khối **"Luyện đề"** riêng: độ chính xác theo kỹ năng, số lượt, lần gần nhất.
-- [ ] **G5e.9** Chỉ học viên đã ghi danh luyện được; đề không bật "Cho luyện đề" (G5c.7) hoặc chưa xuất bản → 403.
-- [ ] **G5e.10** Giải thích đáp án: bước đầu chỉ hiện đáp án đúng. Trường giải thích (`ExamQuestion.explanation`, tuỳ chọn) làm **sau**; khi có thì hiện cùng đáp án.
+- [x] **G5e.1** Học viên chọn phạm vi luyện: một hoặc nhiều **kỹ năng** (theo `ExamSection.languageSkill`), hoặc **từng phần**, hoặc cả đề; tuỳ chọn "chỉ câu chưa làm" / "chỉ câu từng sai". Phạm vi rỗng → không bắt đầu được.
+- [x] **G5e.2** Lượt luyện chỉ chứa câu thuộc phạm vi (máy chủ chỉ gửi câu trong phạm vi). Không có đồng hồ ép buộc, không bị cron tự nộp; có công tắc **bấm giờ** tuỳ chọn (chỉ hiển thị, không ép).
+- [x] **G5e.3** Điều hướng tự do, quay lại sửa đáp án được; **tạm dừng và làm tiếp** sau (lượt giữ nguyên tới khi nộp hoặc bỏ).
+- [x] **G5e.4** Nút **Kiểm tra** (mặc định bật, học viên tắt được): sau khi trả lời một câu, máy chủ trả đúng/sai và đáp án đúng. **Endpoint này chỉ phục vụ lượt `practice` — lượt `mock` luôn bị từ chối** (không được lộ đáp án trong lúc thi thử, kể cả khi cố gọi trực tiếp).
+- [x] **G5e.5** Audio: nghe lại tuỳ ý (bỏ qua `audioPolicy` của G5b); lời thoại hiện **sau khi** đã kiểm tra câu đó.
+- [x] **G5e.6** Nhiều lượt luyện cùng đề, không giới hạn, độc lập với lượt thi thử và không ảnh hưởng chính sách một-lượt của đề thường.
+- [x] **G5e.7** Kết thúc: kết quả **theo kỹ năng** (đúng X/Y), danh sách câu sai kèm đáp án đúng, nút **Làm lại câu sai** (mở lượt luyện mới chỉ với các câu đó).
+- [x] **G5e.8** Không cấp XP. Mỗi câu đã trả lời phát `exam.practice.answered` kèm thẻ kỹ năng (để sau này nuôi BKT mà không phải làm lại), **nhưng chưa nuôi BKT** và không trộn vào nhãn Cần ôn / Nên luyện / Vững. Hồ sơ 4 kỹ năng có khối **"Luyện đề"** riêng: độ chính xác theo kỹ năng, số lượt, lần gần nhất.
+- [x] **G5e.9** Chỉ học viên đã ghi danh luyện được; đề không bật "Cho luyện đề" (G5c.7) hoặc chưa xuất bản → 403.
+- [x] **G5e.10** Giải thích đáp án: bước đầu chỉ hiện đáp án đúng. Trường giải thích (`ExamQuestion.explanation`, tuỳ chọn) làm **sau**; khi có thì hiện cùng đáp án.
 
 ### Hoãn lại (không nằm trong G5)
 - **Từ làm sai → đề xuất thêm vào thẻ ôn** (cũ: LANG.5.7): cần ánh xạ câu hỏi ↔ từ vựng mà hiện chưa có.
@@ -419,6 +419,8 @@ Schema (chỉ thêm): `ExamAttempt.mode` (`mock` | `practice`; hàng cũ để t
 5. **Không XP** cho luyện đề.
 6. Phạm vi luyện: **kỹ năng và phần** trước; nhóm câu (bài đọc/bài nghe) để sau.
 **Thứ tự mới:** G5a (đang làm; chờ bạn thử) → **G5b** nghe một lần (chỉ thi thử) → **G5c** "Luyện thi" hub + học viên tự bắt đầu → **G5e** luyện đề → **G5d** kết quả theo phần/kỹ năng cho cả hai chế độ.
+
+**Trạng thái G5e (2026-10-04, chưa commit):** xong. Test: `practice.test.ts` (25: phạm vi theo kỹ năng/phần/cả đề, bộ lọc chưa làm/từng sai, một buổi dở mỗi đề, không lộ đáp án qua dữ liệu buổi luyện, Kiểm tra, tự luận không có đúng/sai, id lượt thi bị từ chối, không ExamAttempt/XP, event, hồ sơ), `practiceSetup.test.ts` (4); core `exam` 676 xanh, web 589 xanh. Migration `20261004160000_exam_practice` (bảng mới + `Exam.allowPractice`) đã áp DB test và dev. **Đã chạy thật trên dev bằng tài khoản học viên thử:** thẻ "Luyện thi" có nút **Luyện đề** → chọn kỹ năng Nghe (nút hiện "3 câu") → làm bài, bấm **Kiểm tra** thấy "Chưa đúng" kèm đáp án đúng ✓ và lựa chọn của mình ✗ → **Kết thúc** → kết quả theo kỹ năng, 3 câu cần xem lại (câu bỏ trống có nhãn) → **Làm lại câu sai** mở buổi mới 3 câu. **Chưa xem bằng mắt:** công tắc "Cho luyện đề" của giảng viên (mới qua typecheck; cùng khuôn với "Cho thi thử" đã chạy được), khối "Luyện đề" trên hồ sơ, màn hình điện thoại hẹp. Khác nháp: câu tự luận không có đúng/sai tự động (hiện lời nhắc tự đối chiếu, không tính vào kết quả); bộ lọc "chưa làm/từng sai" chỉ dựa trên lịch sử LUYỆN (không tính bài thi thử); bài nghe phát tự do (đề mẫu chưa có audio nên chưa thử); đề tắt cả "Cho thi thử" và "Cho luyện đề" thì ẩn khỏi mục "Luyện thi".
 
 ## G6 · Feedback Viết bằng AI
 

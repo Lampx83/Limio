@@ -111,10 +111,12 @@ describe("không cấp XP (G5c.8)", () => {
 });
 
 describe("công tắc 'Cho thi thử' (G5c.7)", () => {
-  it("tắt: không bắt đầu được lượt MỚI (mock_disabled) và biến mất khỏi mục Luyện thi", async () => {
+  it("tắt: không bắt đầu được lượt MỚI (mock_disabled); đề vẫn hiện (cho luyện đề) và chỉ biến mất khi tắt cả luyện đề", async () => {
     const s = await setup("off");
     await updateExam(s.ownerId, s.examId, { allowMock: false });
     await expect(startExamAttempt(s.learnerId, s.examId)).rejects.toMatchObject({ code: "mock_disabled" });
+    expect((await listMockExamsForLearner(s.learnerId, s.courseId))[0]).toMatchObject({ allowMock: false, allowPractice: true });
+    await updateExam(s.ownerId, s.examId, { allowPractice: false });
     expect(await listMockExamsForLearner(s.learnerId, s.courseId)).toEqual([]);
   });
 

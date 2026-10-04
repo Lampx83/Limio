@@ -290,7 +290,7 @@ export default async function LearnCoursePage({
             <section aria-labelledby="mock-exams-title">
               <h2 id="mock-exams-title" className="text-h3">Luyện thi</h2>
               <p className="text-meta mt-1">
-                Thi thử theo cấu trúc đề thật: mỗi phần có giờ riêng, làm lần lượt và không quay lại phần đã nộp.
+                Thi thử theo cấu trúc đề thật (mỗi phần có giờ riêng, làm lần lượt, không quay lại) hoặc luyện đề theo kỹ năng (không bấm giờ, xem đáp án ngay).
               </p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {mockExams.map((e) => {
@@ -334,12 +334,22 @@ export default async function LearnCoursePage({
                               Xem kết quả
                             </Link>
                           )}
-                          <Link
-                            href={a && !inProgress ? `${href}?retake=1` : href}
-                            className="inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700"
-                          >
-                            {!a ? "Bắt đầu thi thử" : inProgress ? "Tiếp tục" : "Thi lại"}
-                          </Link>
+                          {e.allowPractice && (
+                            <Link
+                              href={`${href}/practice`}
+                              className="inline-flex h-9 items-center rounded-full border border-brand-300 bg-brand-soft px-4 text-sm font-medium text-brand-800 hover:bg-brand-100"
+                            >
+                              Luyện đề
+                            </Link>
+                          )}
+                          {(e.allowMock || inProgress) && (
+                            <Link
+                              href={a && !inProgress ? `${href}?retake=1` : href}
+                              className="inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700"
+                            >
+                              {!a ? "Thi thử" : inProgress ? "Tiếp tục" : "Thi lại"}
+                            </Link>
+                          )}
                         </span>
                       </div>
                     </div>
