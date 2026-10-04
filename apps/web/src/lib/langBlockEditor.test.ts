@@ -147,3 +147,32 @@ describe("nextSpeaker — gợi ý người nói cho lượt kế tiếp", () =>
     expect(nextSpeaker([t("A "), t(" B")])).toBe("A");
   });
 });
+
+describe("hội thoại: mốc thời gian startSec (K2)", () => {
+  const A = "11111111-1111-4111-8111-111111111111";
+  const B = "22222222-2222-4222-8222-222222222222";
+  const payload = {
+    audioUrl: "/api/lesson-media/audio/a.mp3",
+    turns: [
+      { id: A, speaker: "A", text: "x", startSec: 1.5 },
+      { id: B, speaker: "B", text: "y" },
+    ],
+  };
+  it("khứ hồi giữ nguyên startSec; lượt không mốc không có trường", () => {
+    const v = dialogueEditorFromPayload(payload);
+    expect(v.turns.map((t) => t.startSec)).toEqual([1.5, undefined]);
+    expect(dialoguePayloadFromEditor(v)).toEqual(payload);
+  });
+  it("lượt mới trống chưa có mốc", () => {
+    expect(dialogueEditorFromPayload(null).turns[0]!.startSec).toBeUndefined();
+  });
+  it("validateDialogueEditor báo mốc không tăng dần (đổi thứ tự lượt) — chỉ tính lượt có đủ nội dung", () => {
+    const v = dialogueEditorFromPayload({
+      turns: [
+        { id: A, speaker: "A", text: "x", startSec: 5 },
+        { id: B, speaker: "B", text: "y", startSec: 2 },
+      ],
+    });
+    expect(validateDialogueEditor(v).some((e) => /lượt 2/i.test(e))).toBe(true);
+  });
+});

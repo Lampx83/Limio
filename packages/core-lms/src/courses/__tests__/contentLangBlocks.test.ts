@@ -252,3 +252,37 @@ describe("G2.4.2 — không phá lesson-as-tag", () => {
     expect(await prisma.contentSkillMapping.count({ where: { contentType: "lesson", contentId: lessonId } })).toBe(0);
   });
 });
+
+describe("dialogue — mốc thời gian startSec (LANG K2a, thuần)", () => {
+  const T = (speaker: string, startSec?: number) => ({ speaker, text: `lời ${speaker}`, ...(startSec === undefined ? {} : { startSec }) });
+
+  it("K2a.1: startSec tuỳ chọn; hội thoại cũ không có mốc vẫn hợp lệ và không bị thêm trường", () => {
+    const out = dialogue({ turns: [T("A"), T("B")] });
+    expect(out.turns.every((t) => !("startSec" in t))).toBe(true);
+  });
+
+  it("K2a.1: nhận số giây ≥ 0, làm tròn 0,1 giây; 0 là hợp lệ", () => {
+    const out = dialogue({ audioUrl: "/api/lesson-media/audio/a.mp3", turns: [T("A", 0), T("B", 3.14159), T("A", 7.96)] });
+    expect(out.turns.map((t) => t.startSec)).toEqual([0, 3.1, 8]);
+  });
+
+  it("K2a.1: từ chối số âm, không phải số, vô hạn, hoặc quá 6 giờ", () => {
+    for (const bad of [-1, Number.NaN, Number.POSITIVE_INFINITY, 21_601, "3"]) {
+      expect(() => dialogue({ turns: [{ ...T("A"), startSec: bad }] }), String(bad)).toThrow();
+    }
+    expect(() => dialogue({ turns: [T("A", 21_600)] })).not.toThrow();
+  });
+
+  it("K2a.2: các lượt CÓ mốc phải tăng dần; lượt không mốc ở giữa không cản", () => {
+    expect(() => dialogue({ turns: [T("A", 1), T("B"), T("A", 5), T("B", 9)] })).not.toThrow();
+  });
+
+  it("K2a.2: mốc giảm hoặc trùng bị từ chối, và lời nhắn chỉ ra lượt nào", () => {
+    expect(() => dialogue({ turns: [T("A", 5), T("B", 2)] })).toThrowError(/lượt 2/i);
+    expect(() => dialogue({ turns: [T("A", 5), T("B"), T("A", 5)] })).toThrowError(/lượt 3/i);
+  });
+
+  it("K2a.2: có mốc mà không có audio cả đoạn vẫn lưu được (không dùng tới)", () => {
+    expect(() => dialogue({ turns: [T("A", 1), T("B", 4)] })).not.toThrow();
+  });
+});
